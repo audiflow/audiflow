@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:extended_image/extended_image.dart';
@@ -5,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../download/presentation/helpers/batch_download_action_helper.dart';
 import '../widgets/smart_playlist_episode_list_tile.dart';
 
 /// Screen showing episodes within a smart playlist group.
@@ -53,6 +56,8 @@ class _SmartPlaylistGroupEpisodesScreenState
 
   late SortOrder _sortOrder;
   String _searchQuery = '';
+  final _searchController = TextEditingController();
+  Timer? _searchDebounce;
 
   @override
   void initState() {
@@ -69,6 +74,8 @@ class _SmartPlaylistGroupEpisodesScreenState
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
+    _searchController.dispose();
     _fallbackScrollController?.dispose();
     super.dispose();
   }
@@ -107,14 +114,47 @@ class _SmartPlaylistGroupEpisodesScreenState
     });
   }
 
+  void _onSearchChanged(String text) {
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(
+      const Duration(milliseconds: 300),
+      () => setState(() => _searchQuery = text),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      appBar: SearchableAppBar(
+      appBar: AppBar(
         title: Text(_formatGroupTitle()),
-        onSearchChanged: (query) => setState(() => _searchQuery = query),
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              if (value == 'download_all') {
+                handleBatchDownload(
+                  context: context,
+                  ref: ref,
+                  episodeIds: _episodeIds,
+                );
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                enabled: _episodeIds.isNotEmpty,
+                value: 'download_all',
+                child: ListTile(
+                  leading: const Icon(Icons.download),
+                  title: Text(l10n.downloadAllEpisodes),
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
       body: CustomScrollView(
         controller: _scrollController,
@@ -139,6 +179,45 @@ class _SmartPlaylistGroupEpisodesScreenState
     // Dedup only uses the shared thumbnail (never group.thumbnailUrl,
     // which may match only one episode and hide just that one).
     return [
+      SliverAppBar(
+        floating: true,
+        automaticallyImplyLeading: false,
+        toolbarHeight: 0,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(56),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: TextField(
+              controller: _searchController,
+              onChanged: _onSearchChanged,
+              decoration: InputDecoration(
+                hintText: 'Search...',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                  valueListenable: _searchController,
+                  builder: (context, value, child) {
+                    if (value.text.isEmpty) return const SizedBox.shrink();
+                    return IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        _searchController.clear();
+                        _searchDebounce?.cancel();
+                        setState(() => _searchQuery = '');
+                      },
+                    );
+                  },
+                ),
+                filled: true,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(28),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(vertical: 0),
+              ),
+            ),
+          ),
+        ),
+      ),
       SliverToBoxAdapter(
         child: _GroupHeader(
           title: _formatGroupTitle(),
