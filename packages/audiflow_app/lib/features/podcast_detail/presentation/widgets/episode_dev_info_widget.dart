@@ -51,89 +51,59 @@ class EpisodeDevInfoWidget extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: Spacing.sm),
-        Table(
-          columnWidths: const {0: IntrinsicColumnWidth(), 1: FlexColumnWidth()},
-          defaultVerticalAlignment: TableCellVerticalAlignment.baseline,
-          textBaseline: TextBaseline.alphabetic,
+
+        // RSS Feed URL
+        Text(l10n.developerRssFeedUrl, style: labelStyle),
+        const SizedBox(height: Spacing.xs),
+        Row(
           children: [
-            TableRow(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(
-                    right: Spacing.md,
-                    bottom: Spacing.xs,
-                  ),
-                  child: Text(l10n.developerRssFeedUrl, style: labelStyle),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: Spacing.xs),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          feedUrl,
-                          style: valueStyle?.copyWith(fontFamily: 'monospace'),
-                        ),
-                      ),
-                      SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: IconButton(
-                          padding: EdgeInsets.zero,
-                          iconSize: 16,
-                          icon: Icon(
-                            Symbols.content_copy,
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                          onPressed: () {
-                            Clipboard.setData(ClipboardData(text: feedUrl));
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(l10n.developerCopied)),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+            Expanded(
+              child: Text(
+                feedUrl,
+                style: valueStyle?.copyWith(fontFamily: 'monospace'),
+              ),
             ),
-            TableRow(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(
-                    right: Spacing.md,
-                    bottom: Spacing.xs,
-                  ),
-                  child: Text(l10n.developerPatternLabel, style: labelStyle),
+            SizedBox(
+              width: 24,
+              height: 24,
+              child: IconButton(
+                padding: EdgeInsets.zero,
+                iconSize: 16,
+                icon: Icon(
+                  Symbols.content_copy,
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: Spacing.xs),
-                  child: GestureDetector(
-                    onTap: () => launchUrl(
-                      Uri.parse(
-                        match != null
-                            ? SmartPlaylistUrls.patternDir(
-                                match.id,
-                                schemaVersion: schemaVersion,
-                              )
-                            : SmartPlaylistUrls.repoBranch(
-                                schemaVersion: schemaVersion,
-                              ),
-                      ),
-                      mode: LaunchMode.externalApplication,
-                    ),
-                    child: Text(
-                      match?.displayName ?? l10n.developerPatternNotDefined,
-                      style: valueStyle?.copyWith(
-                        color: theme.colorScheme.primary,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+                onPressed: () {
+                  Clipboard.setData(ClipboardData(text: feedUrl));
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text(l10n.developerCopied)));
+                },
+              ),
             ),
           ],
+        ),
+        const SizedBox(height: Spacing.sm),
+
+        // Smart Playlist Pattern
+        Text(l10n.developerPatternLabel, style: labelStyle),
+        const SizedBox(height: Spacing.xs),
+        GestureDetector(
+          onTap: () => launchUrl(
+            Uri.parse(
+              match != null
+                  ? SmartPlaylistUrls.patternDir(
+                      match.id,
+                      schemaVersion: schemaVersion,
+                    )
+                  : SmartPlaylistUrls.repoBranch(schemaVersion: schemaVersion),
+            ),
+            mode: LaunchMode.externalApplication,
+          ),
+          child: Text(
+            match?.displayName ?? l10n.developerPatternNotDefined,
+            style: valueStyle?.copyWith(color: theme.colorScheme.primary),
+          ),
         ),
       ],
     );
