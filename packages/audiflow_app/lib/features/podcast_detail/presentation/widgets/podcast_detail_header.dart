@@ -91,32 +91,29 @@ class _PodcastMetadata extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        SelectableText(
           podcast.name,
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
           ),
           maxLines: 2,
-          overflow: TextOverflow.ellipsis,
         ),
         const SizedBox(height: Spacing.xs),
-        Text(
+        SelectableText(
           podcast.artistName,
           style: theme.textTheme.bodyMedium?.copyWith(
             color: colorScheme.onSurfaceVariant,
           ),
           maxLines: 1,
-          overflow: TextOverflow.ellipsis,
         ),
         if (podcast.genres.isNotEmpty) ...[
           const SizedBox(height: Spacing.xs),
-          Text(
+          SelectableText(
             podcast.genres.join(', '),
             style: theme.textTheme.bodySmall?.copyWith(
               color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
             ),
             maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
         ],
       ],

@@ -4,6 +4,7 @@ import 'package:audiflow_app/features/podcast_detail/presentation/widgets/podcas
 import 'package:audiflow_app/features/subscription/presentation/controllers/subscription_controller.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_search/audiflow_search.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -207,6 +208,28 @@ void main() {
 
       expect(find.text('Retry'), findsOneWidget);
       expect(find.byIcon(Icons.refresh), findsOneWidget);
+    });
+
+    testWidgets('podcast title is selectable', (tester) async {
+      final container = ProviderContainer(
+        overrides: [
+          subscriptionControllerProvider(
+            'test-id',
+          ).overrideWith(() => _FakeSubscriptionController(false)),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(buildTestWidget(container, testPodcast));
+      await tester.pumpAndSettle();
+
+      final selectableTexts = tester.widgetList<SelectableText>(
+        find.byType(SelectableText),
+      );
+      final titleWidget = selectableTexts.where(
+        (w) => w.data == 'Test Podcast',
+      );
+      check(titleWidget.length).equals(1);
     });
   });
 }

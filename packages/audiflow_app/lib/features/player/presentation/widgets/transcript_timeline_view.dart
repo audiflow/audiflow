@@ -262,14 +262,13 @@ class _ChapterHeader extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 4),
-      child: Text(
+      child: SelectableText(
         chapter.title,
         style: theme.textTheme.labelLarge?.copyWith(
           color: colorScheme.primary,
           fontWeight: FontWeight.bold,
         ),
         maxLines: 1,
-        overflow: TextOverflow.ellipsis,
       ),
     );
   }
@@ -304,7 +303,7 @@ class _SegmentTile extends StatelessWidget {
             if (segment.speaker != null)
               Padding(
                 padding: const EdgeInsets.only(bottom: 2),
-                child: Text(
+                child: SelectableText(
                   segment.speaker!,
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: colorScheme.onSurfaceVariant,
@@ -312,7 +311,7 @@ class _SegmentTile extends StatelessWidget {
                   ),
                 ),
               ),
-            Text(
+            SelectableText(
               segment.body,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: isActive

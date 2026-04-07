@@ -432,13 +432,12 @@ class _PlayerInfo extends StatelessWidget {
           ExcludeSemantics(
             child: GestureDetector(
               onTap: onEpisodeTitleTap,
-              child: Text(
+              child: SelectableText(
                 episodeTitle,
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
                 maxLines: 2,
-                overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
               ),
             ),
@@ -447,13 +446,12 @@ class _PlayerInfo extends StatelessWidget {
           ExcludeSemantics(
             child: GestureDetector(
               onTap: onPodcastTitleTap,
-              child: Text(
+              child: SelectableText(
                 podcastTitle,
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: colorScheme.onSurfaceVariant,
                 ),
                 maxLines: 1,
-                overflow: TextOverflow.ellipsis,
               ),
             ),
           ),
