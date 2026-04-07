@@ -174,6 +174,7 @@ export 'src/features/queue/services/queue_service.dart';
 export 'src/features/settings/repositories/app_settings_repository.dart';
 export 'src/features/settings/repositories/app_settings_repository_impl.dart';
 export 'src/features/settings/providers/settings_providers.dart';
+export 'src/features/settings/providers/developer_settings_provider.dart';
 
 // Transcript feature
 export 'src/features/transcript/datasources/local/chapter_local_datasource.dart';
