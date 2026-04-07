@@ -11,7 +11,7 @@ class SmartPlaylistUrls {
   /// Points to the `dev/v{schemaVersion}` branch where pattern
   /// data lives.
   static String patternDir(String patternId, {required int schemaVersion}) =>
-      '$repo/tree/dev/v$schemaVersion/$patternId/';
+      '$repo/tree/dev/v$schemaVersion/patterns/$patternId';
 
   /// Returns the repo URL for the `dev/v{schemaVersion}` branch root.
   static String repoBranch({required int schemaVersion}) =>
