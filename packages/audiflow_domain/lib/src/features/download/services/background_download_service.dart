@@ -217,13 +217,16 @@ class BackgroundDownloadService {
       );
     } on DioException catch (e) {
       if (e.type == DioExceptionType.cancel) {
-        // Download cancelled by the time budget timer.
-        await _handleError(
-          task,
-          DownloadException(
-            DownloadErrorType.unknown,
-            'Download cancelled: time budget exhausted',
-          ),
+        // Download cancelled by the time budget timer. This is not a
+        // download failure, so reset the task to pending without consuming
+        // a retry attempt.
+        await _downloadRepo.updateStatus(
+          id: task.id,
+          status: const DownloadStatus.pending(),
+        );
+        _logger?.i(
+          'BackgroundDownloadService: paused episodeId=${task.episodeId} '
+          'because time budget was exhausted',
         );
         rethrow;
       } else if (e.type == DioExceptionType.connectionError ||
