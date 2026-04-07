@@ -6,10 +6,17 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('CopyableText', () {
+    tearDown(() {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(SystemChannels.platform, null);
+    });
+
     testWidgets('renders text value', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(body: CopyableText(text: '42')),
+          home: Scaffold(
+            body: CopyableText(text: '42', snackBarMessage: 'Copied'),
+          ),
         ),
       );
 
@@ -20,7 +27,11 @@ void main() {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
-            body: CopyableText(text: '42', label: 'Episode'),
+            body: CopyableText(
+              text: '42',
+              label: 'Episode',
+              snackBarMessage: 'Copied',
+            ),
           ),
         ),
       );
@@ -32,7 +43,9 @@ void main() {
     testWidgets('renders copy icon', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(body: CopyableText(text: '42')),
+          home: Scaffold(
+            body: CopyableText(text: '42', snackBarMessage: 'Copied'),
+          ),
         ),
       );
 
@@ -54,7 +67,9 @@ void main() {
 
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(body: CopyableText(text: 'test-value')),
+          home: Scaffold(
+            body: CopyableText(text: 'test-value', snackBarMessage: 'Copied'),
+          ),
         ),
       );
 
@@ -72,7 +87,9 @@ void main() {
 
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(body: CopyableText(text: 'value')),
+          home: Scaffold(
+            body: CopyableText(text: 'value', snackBarMessage: 'Copied'),
+          ),
         ),
       );
 
@@ -98,7 +115,11 @@ void main() {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
-            body: CopyableText(text: '42', label: 'Episode'),
+            body: CopyableText(
+              text: '42',
+              label: 'Episode',
+              snackBarMessage: 'Copied',
+            ),
           ),
         ),
       );
@@ -115,7 +136,11 @@ void main() {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
-            body: CopyableText(text: '42', style: style),
+            body: CopyableText(
+              text: '42',
+              style: style,
+              snackBarMessage: 'Copied',
+            ),
           ),
         ),
       );

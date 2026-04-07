@@ -235,7 +235,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                     InkWell(
                       onTap: () => _navigateToPodcast(context),
                       borderRadius: BorderRadius.circular(4),
-                      child: SelectableText(
+                      child: Text(
                         widget.podcastTitle,
                         style: theme.textTheme.titleMedium?.copyWith(
                           color: colorScheme.primary,

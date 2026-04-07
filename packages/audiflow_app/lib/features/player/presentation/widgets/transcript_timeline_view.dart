@@ -297,29 +297,31 @@ class _SegmentTile extends StatelessWidget {
         color: isActive
             ? colorScheme.primaryContainer.withValues(alpha: 0.3)
             : null,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (segment.speaker != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 2),
-                child: SelectableText(
-                  segment.speaker!,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w600,
+        child: SelectionArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (segment.speaker != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 2),
+                  child: Text(
+                    segment.speaker!,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
+              Text(
+                segment.body,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: isActive
+                      ? colorScheme.onPrimaryContainer
+                      : colorScheme.onSurface,
+                ),
               ),
-            SelectableText(
-              segment.body,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: isActive
-                    ? colorScheme.onPrimaryContainer
-                    : colorScheme.onSurface,
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
