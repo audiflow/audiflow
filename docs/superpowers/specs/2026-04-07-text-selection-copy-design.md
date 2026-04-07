@@ -113,7 +113,7 @@ Clipboard.setData(ClipboardData(text: value));
 | Unit | `CopyableText`: renders label + text, tap copies to clipboard, snackbar appears |
 | Widget | Episode detail: `SelectionArea` wraps description, title is `SelectableText`, metadata is `CopyableText` |
 | Widget | Podcast detail: selectable title/artist, `SelectionArea` on description |
-| Widget | Transcript: segment body is `SelectableText`, tap-to-seek still works |
+| Widget | Transcript: segment body uses `SelectionArea` + `Text`, tap-to-seek still works |
 | Integration | Clipboard contains correct value after `CopyableText` tap |
 
 Coverage target: 80%+ for `CopyableText` widget and modified screen sections.

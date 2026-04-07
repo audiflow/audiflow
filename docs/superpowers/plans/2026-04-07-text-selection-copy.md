@@ -4,9 +4,9 @@
 
 **Goal:** Enable users to select and copy text across the app using context-appropriate patterns (native selection for prose/titles, one-tap copy for metadata).
 
-**Architecture:** Three widget patterns — `SelectionArea` for HTML prose, `SelectableText` for standalone titles/segments, and a new `CopyableText` widget for metadata one-tap copy. Changes span `audiflow_ui` (new widget) and `audiflow_app` (four screens).
+**Architecture:** Three widget patterns -- `SelectionArea` + `Text` for titles/segments (preserves ellipsis and parent gesture handling), `SelectableText` for standalone non-tappable titles, and a new `CopyableText` widget for metadata one-tap copy. Changes span `audiflow_ui` (new widget) and `audiflow_app` (four screens).
 
-**Tech Stack:** Flutter built-in (`SelectionArea`, `SelectableText`, `Clipboard`), `flutter_html`, `package:checks` for tests.
+**Tech Stack:** Flutter built-in (`SelectionArea`, `Text`, `SelectableText`, `Clipboard`), `flutter_html`, `package:checks` for tests.
 
 ---
 
@@ -93,7 +93,7 @@ void main() {
     testWidgets('renders text value', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(body: CopyableText(text: '42')),
+          home: Scaffold(body: CopyableText(text: '42', snackBarMessage: 'Copied')),
         ),
       );
 
@@ -104,7 +104,7 @@ void main() {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
-            body: CopyableText(text: '42', label: 'Episode'),
+            body: CopyableText(text: '42', label: 'Episode', snackBarMessage: 'Copied'),
           ),
         ),
       );
@@ -116,7 +116,7 @@ void main() {
     testWidgets('renders copy icon', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(body: CopyableText(text: '42')),
+          home: Scaffold(body: CopyableText(text: '42', snackBarMessage: 'Copied')),
         ),
       );
 
@@ -138,7 +138,7 @@ void main() {
 
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(body: CopyableText(text: 'test-value')),
+          home: Scaffold(body: CopyableText(text: 'test-value', snackBarMessage: 'Copied')),
         ),
       );
 
@@ -156,7 +156,7 @@ void main() {
 
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(body: CopyableText(text: 'value')),
+          home: Scaffold(body: CopyableText(text: 'value', snackBarMessage: 'Copied')),
         ),
       );
 
@@ -182,7 +182,7 @@ void main() {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
-            body: CopyableText(text: '42', label: 'Episode'),
+            body: CopyableText(text: '42', label: 'Episode', snackBarMessage: 'Copied'),
           ),
         ),
       );
@@ -199,7 +199,7 @@ void main() {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
-            body: CopyableText(text: '42', style: style),
+            body: CopyableText(text: '42', style: style, snackBarMessage: 'Copied'),
           ),
         ),
       );
@@ -396,8 +396,10 @@ Text(
   ),
 ),
 
-// After:
-SelectableText(
+// After (ACTUAL IMPLEMENTATION):
+// Podcast title kept as Text inside InkWell -- tapping navigates to podcast page.
+// SelectableText would conflict with InkWell.onTap gesture.
+Text(
   widget.podcastTitle,
   style: theme.textTheme.titleMedium?.copyWith(
     color: colorScheme.primary,
