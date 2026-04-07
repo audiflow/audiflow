@@ -167,6 +167,19 @@ class BackgroundDownloadService {
         );
       }
 
+      // Final progress write to ensure downloadedBytes is up to date even
+      // if the file was smaller than minBytesDelta or the download completed
+      // before the throttle triggered. Best-effort -- failure does not block
+      // completion.
+      final fileSize = await File(localPath).length();
+      await _downloadRepo
+          .updateProgress(
+            id: task.id,
+            downloadedBytes: fileSize,
+            totalBytes: fileSize,
+          )
+          .catchError((_) {});
+
       await _downloadRepo.updateStatus(
         id: task.id,
         status: const DownloadStatus.completed(),

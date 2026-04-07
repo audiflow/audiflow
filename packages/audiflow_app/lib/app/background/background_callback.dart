@@ -537,19 +537,26 @@ Future<bool> _executeDownloadTask(Map<String, dynamic>? inputData) async {
     final count = await service.execute();
     _bgDebug('download service completed — $count downloaded');
 
-    // Check if pending downloads remain (failures or time budget exhaustion).
+    // Check if runnable pending downloads remain (failures or time budget
+    // exhaustion). When not on Wi-Fi, wifiOnly downloads are intentionally
+    // skipped and should not cause Workmanager retries.
     final remaining = await downloadRepo.getByStatus(
       const DownloadStatus.pending(),
     );
-    // Return false so workmanager retries with backoff when tasks remain.
-    success = remaining.isEmpty;
+    final runnableRemaining = isOnWifi
+        ? remaining
+        : remaining.where((download) => !download.wifiOnly).toList();
+    // Return false so workmanager retries with backoff only when runnable
+    // tasks remain.
+    success = runnableRemaining.isEmpty;
 
     if (sentryInitialized) {
       Sentry.addBreadcrumb(
         Breadcrumb(
           message:
               'Background download completed: $count files, '
-              '${remaining.length} remaining',
+              '${runnableRemaining.length} runnable remaining '
+              '(${remaining.length} total pending)',
           category: 'background.download',
         ),
       );
