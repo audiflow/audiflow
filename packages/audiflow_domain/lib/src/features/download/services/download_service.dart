@@ -177,20 +177,34 @@ class DownloadService {
 
   /// Cancels all active downloads for the given episode IDs.
   ///
-  /// Fetches fresh task state for each episode to avoid race conditions
-  /// where the queue picks up the next task before we cancel it.
+  /// Two-pass approach to prevent the queue from picking up the next
+  /// pending task after each cancellation:
+  /// 1. Mark all active tasks as cancelled (queue's getNextPending
+  ///    returns null).
+  /// 2. Cancel any in-progress file downloads.
+  ///
   /// Returns the number of downloads cancelled.
   Future<int> cancelEpisodeDownloads(List<int> episodeIds) async {
-    var cancelled = 0;
+    // Pass 1: collect active tasks and mark all as cancelled.
+    final activeTasks = <DownloadTask>[];
     for (final episodeId in episodeIds) {
       final task = await _repository.getByEpisodeId(episodeId);
       if (task == null) continue;
       if (!task.downloadStatus.isActive) continue;
-      await _queueService.cancelDownload(task.id);
-      cancelled++;
+      activeTasks.add(task);
+      await _repository.updateStatus(
+        id: task.id,
+        status: const DownloadStatus.cancelled(),
+      );
     }
-    _logger.i('Batch cancel: cancelled $cancelled downloads');
-    return cancelled;
+
+    // Pass 2: cancel in-progress file downloads.
+    for (final task in activeTasks) {
+      _fileService.cancelDownload(task.id);
+    }
+
+    _logger.i('Batch cancel: cancelled ${activeTasks.length} downloads');
+    return activeTasks.length;
   }
 
   /// Resumes all paused downloads for the given episode IDs.
