@@ -169,18 +169,15 @@ class BackgroundDownloadService {
         await dir.create(recursive: true);
       }
 
-      // Validate partial file before attempting resume. If the file is
-      // missing or shorter than expected, reset to a fresh download.
-      var resumeOffset = task.downloadedBytes;
-      if (0 < resumeOffset) {
+      // Use the on-disk file length as the source of truth for resume
+      // offset. The stored downloadedBytes may be stale (e.g., if the
+      // previous run was cancelled before a throttled progress write).
+      // A mismatch would send a wrong Range header and corrupt the file.
+      var resumeOffset = 0;
+      if (0 < task.downloadedBytes) {
         final existingFile = File(localPath);
-        if (!await existingFile.exists()) {
-          resumeOffset = 0;
-        } else {
-          final fileLength = await existingFile.length();
-          if (fileLength < resumeOffset) {
-            resumeOffset = 0;
-          }
+        if (await existingFile.exists()) {
+          resumeOffset = await existingFile.length();
         }
       }
 

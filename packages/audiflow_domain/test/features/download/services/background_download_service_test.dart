@@ -201,24 +201,37 @@ void main() {
       check(downloadRepo.statusUpdates.length).equals(4);
     });
 
-    test('handles missing episode by setting error and continuing', () async {
-      downloadRepo.pending.add(_task(id: 1, episodeId: 99));
-      // No episode in episodeRepo for id 99
+    test(
+      'handles missing episode by setting error and stopping further processing',
+      () async {
+        downloadRepo.pending.addAll([
+          _task(id: 1, episodeId: 99),
+          _task(id: 2, episodeId: 20, audioUrl: 'https://example.com/b.mp3'),
+        ]);
+        // No episode in episodeRepo for id 99
+        episodeRepo.episodes[20] = _episode(id: 20, title: 'Ep B');
 
-      final service = createService();
-      final count = await service.execute();
+        final service = createService();
+        final count = await service.execute();
 
-      check(count).equals(0);
-      // downloading + error handling (pending with lastError or failed)
-      final errorUpdates = downloadRepo.statusUpdates
-          .where(
-            (u) =>
-                u.status is DownloadStatusPending ||
-                u.status is DownloadStatusFailed,
-          )
-          .toList();
-      check(errorUpdates).isNotEmpty();
-    });
+        check(count).equals(0);
+        // Missing episode should produce an error-related update for the first
+        // task, and execution should stop before processing later pending tasks.
+        final errorUpdates = downloadRepo.statusUpdates
+            .where(
+              (u) =>
+                  u.id == 1 &&
+                  (u.status is DownloadStatusPending ||
+                      u.status is DownloadStatusFailed),
+            )
+            .toList();
+        check(errorUpdates).isNotEmpty();
+        final secondTaskUpdates = downloadRepo.statusUpdates
+            .where((u) => u.id == 2)
+            .toList();
+        check(secondTaskUpdates).isEmpty();
+      },
+    );
 
     test('increments retry count on error and breaks', () async {
       downloadRepo.pending.add(_task(id: 1, episodeId: 10, retryCount: 0));
