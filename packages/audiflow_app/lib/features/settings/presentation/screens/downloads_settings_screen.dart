@@ -1,3 +1,4 @@
+import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -90,7 +91,9 @@ class DownloadsSettingsScreen extends ConsumerWidget {
                 ),
                 onFieldSubmitted: (value) {
                   final parsed = int.tryParse(value);
-                  if (parsed != null && 1 <= parsed && parsed <= 500) {
+                  if (parsed != null &&
+                      SettingsDefaults.batchDownloadLimitMin <= parsed &&
+                      parsed <= SettingsDefaults.batchDownloadLimitMax) {
                     _update(ref, () => repo.setBatchDownloadLimit(parsed));
                   }
                 },

@@ -113,7 +113,10 @@ void main() {
     testWidgets('shows Max Batch Download label', (tester) async {
       await tester.pumpWidget(buildTestWidget());
 
-      check(find.text('Max Batch Download').evaluate()).isNotEmpty();
+      final l10n = AppLocalizations.of(
+        tester.element(find.byType(DownloadsSettingsScreen)),
+      );
+      check(find.text(l10n.downloadsBatchLimitTitle).evaluate()).isNotEmpty();
     });
 
     testWidgets('batch limit text field shows default value 25', (

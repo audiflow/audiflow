@@ -141,13 +141,23 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
   }
 
   @override
-  int getBatchDownloadLimit() =>
-      _ds.getInt(SettingsKeys.batchDownloadLimit) ??
-      SettingsDefaults.batchDownloadLimit;
+  int getBatchDownloadLimit() {
+    final raw =
+        _ds.getInt(SettingsKeys.batchDownloadLimit) ??
+        SettingsDefaults.batchDownloadLimit;
+    return raw.clamp(
+      SettingsDefaults.batchDownloadLimitMin,
+      SettingsDefaults.batchDownloadLimitMax,
+    );
+  }
 
   @override
   Future<void> setBatchDownloadLimit(int limit) async {
-    await _ds.setInt(SettingsKeys.batchDownloadLimit, limit);
+    final clamped = limit.clamp(
+      SettingsDefaults.batchDownloadLimitMin,
+      SettingsDefaults.batchDownloadLimitMax,
+    );
+    await _ds.setInt(SettingsKeys.batchDownloadLimit, clamped);
   }
 
   // -- Feed Sync --

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:audiflow_core/audiflow_core.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -160,7 +161,10 @@ class DownloadService {
   Future<int> downloadEpisodes(List<int> episodeIds, {bool? wifiOnly}) async {
     if (episodeIds.isEmpty) return 0;
 
-    final limit = _getBatchDownloadLimit();
+    final limit = _getBatchDownloadLimit().clamp(
+      SettingsDefaults.batchDownloadLimitMin,
+      SettingsDefaults.batchDownloadLimitMax,
+    );
     final capped = episodeIds.length <= limit
         ? episodeIds
         : episodeIds.sublist(0, limit);

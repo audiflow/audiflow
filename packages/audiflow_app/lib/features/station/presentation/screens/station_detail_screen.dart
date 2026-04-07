@@ -136,6 +136,13 @@ class _StationDetailContentState extends ConsumerState<_StationDetailContent> {
         actions: [
           PopupMenuButton<String>(
             onSelected: (value) {
+              if (value == 'edit') {
+                context.push(
+                  '${AppRoutes.library}/station/${widget.station.id}/edit',
+                );
+                return;
+              }
+
               final ids = episodesAsync.value
                   ?.map((se) => se.episodeId)
                   .toList();
@@ -147,10 +154,6 @@ class _StationDetailContentState extends ConsumerState<_StationDetailContent> {
               );
 
               switch (value) {
-                case 'edit':
-                  context.push(
-                    '${AppRoutes.library}/station/${widget.station.id}/edit',
-                  );
                 case 'download_all':
                   if (dlState.hasDownloadable) {
                     handleBatchDownload(

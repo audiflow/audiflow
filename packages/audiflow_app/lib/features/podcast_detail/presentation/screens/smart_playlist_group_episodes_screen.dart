@@ -227,7 +227,7 @@ class _SmartPlaylistGroupEpisodesScreenState
             controller: _searchController,
             onChanged: _onSearchChanged,
             decoration: InputDecoration(
-              hintText: 'Search...',
+              hintText: MaterialLocalizations.of(context).searchFieldLabel,
               prefixIcon: const Icon(Icons.search),
               suffixIcon: ValueListenableBuilder<TextEditingValue>(
                 valueListenable: _searchController,

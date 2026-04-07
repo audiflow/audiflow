@@ -121,6 +121,12 @@ class SettingsDefaults {
   /// Default batch download limit.
   static const int batchDownloadLimit = 25;
 
+  /// Minimum allowed batch download limit.
+  static const int batchDownloadLimitMin = 1;
+
+  /// Maximum allowed batch download limit.
+  static const int batchDownloadLimitMax = 500;
+
   /// Default auto-sync setting.
   static const bool autoSync = true;
 
