@@ -82,6 +82,82 @@ abstract class _$PatternSummaries extends $Notifier<List<PatternSummary>> {
   }
 }
 
+/// Holds the schema version from the most recent root meta.
+///
+/// Set alongside [PatternSummaries] on startup and
+/// pull-to-refresh. Used to construct GitHub branch URLs
+/// (e.g. `dev/v3`).
+
+@ProviderFor(SmartPlaylistSchemaVersion)
+final smartPlaylistSchemaVersionProvider =
+    SmartPlaylistSchemaVersionProvider._();
+
+/// Holds the schema version from the most recent root meta.
+///
+/// Set alongside [PatternSummaries] on startup and
+/// pull-to-refresh. Used to construct GitHub branch URLs
+/// (e.g. `dev/v3`).
+final class SmartPlaylistSchemaVersionProvider
+    extends $NotifierProvider<SmartPlaylistSchemaVersion, int> {
+  /// Holds the schema version from the most recent root meta.
+  ///
+  /// Set alongside [PatternSummaries] on startup and
+  /// pull-to-refresh. Used to construct GitHub branch URLs
+  /// (e.g. `dev/v3`).
+  SmartPlaylistSchemaVersionProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'smartPlaylistSchemaVersionProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$smartPlaylistSchemaVersionHash();
+
+  @$internal
+  @override
+  SmartPlaylistSchemaVersion create() => SmartPlaylistSchemaVersion();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(int value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<int>(value),
+    );
+  }
+}
+
+String _$smartPlaylistSchemaVersionHash() =>
+    r'd76bddeea6b8fee1124a65d8f39f4883c35de0f2';
+
+/// Holds the schema version from the most recent root meta.
+///
+/// Set alongside [PatternSummaries] on startup and
+/// pull-to-refresh. Used to construct GitHub branch URLs
+/// (e.g. `dev/v3`).
+
+abstract class _$SmartPlaylistSchemaVersion extends $Notifier<int> {
+  int build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<int, int>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<int, int>,
+              int,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
+}
+
 /// Provides the smart playlist config repository.
 ///
 /// Uses Dio for HTTP and path_provider for cache directory.

@@ -8,6 +8,7 @@ import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   // Use l10n keys instead of hardcoded English strings so tests survive
@@ -69,6 +70,13 @@ void main() {
       ..durationMs = 1800000,
   );
 
+  late SharedPreferences prefs;
+
+  setUp(() async {
+    SharedPreferences.setMockInitialValues({});
+    prefs = await SharedPreferences.getInstance();
+  });
+
   Widget buildTestWidget({
     PodcastItem? episode,
     EpisodeWithProgress? progress,
@@ -76,6 +84,7 @@ void main() {
   }) {
     return ProviderScope(
       overrides: [
+        sharedPreferencesProvider.overrideWithValue(prefs),
         audioPlayerControllerProvider.overrideWith(
           () => _FakeAudioPlayerController(),
         ),

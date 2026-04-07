@@ -49,6 +49,22 @@ class PatternSummaries extends _$PatternSummaries {
   }
 }
 
+/// Holds the schema version from the most recent root meta.
+///
+/// Set alongside [PatternSummaries] on startup and
+/// pull-to-refresh. Used to construct GitHub branch URLs
+/// (e.g. `dev/v3`).
+@Riverpod(keepAlive: true)
+class SmartPlaylistSchemaVersion extends _$SmartPlaylistSchemaVersion {
+  @override
+  int build() => 0;
+
+  /// Updates the schema version.
+  void setSchemaVersion(int version) {
+    state = version;
+  }
+}
+
 /// Provides the smart playlist config repository.
 ///
 /// Uses Dio for HTTP and path_provider for cache directory.

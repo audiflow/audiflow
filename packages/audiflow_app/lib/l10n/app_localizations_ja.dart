@@ -1178,4 +1178,40 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get commonCopiedToClipboard => 'クリップボードにコピーしました';
+
+  @override
+  String get settingsDeveloperTitle => '開発';
+
+  @override
+  String get settingsDeveloperSubtitle => 'スマートプレイリストパターンとデバッグ情報';
+
+  @override
+  String get developerContributeLabel => 'スマートプレイリストパターンを貢献';
+
+  @override
+  String get developerContributeRepo => 'audiflow/audiflow-smartplaylist';
+
+  @override
+  String get developerShowInfoTitle => '開発者情報を表示';
+
+  @override
+  String get developerShowInfoSubtitle => 'エピソード詳細にRSSフィードURLとパターンリンクを表示';
+
+  @override
+  String get developerPatternsHeader => 'スマートプレイリストパターン';
+
+  @override
+  String get developerSectionLabel => '開発者';
+
+  @override
+  String get developerRssFeedUrl => 'RSSフィードURL';
+
+  @override
+  String get developerCopyLabel => 'コピー';
+
+  @override
+  String get developerPatternLabel => 'スマートプレイリストパターン';
+
+  @override
+  String get developerPatternNotDefined => '未定義 — 追加しませんか？';
 }
