@@ -63,6 +63,7 @@ DownloadService downloadService(Ref ref) {
     logger: logger,
     getWifiOnly: () => ref.read(downloadWifiOnlyProvider),
     getAutoDeletePlayed: () => ref.read(downloadAutoDeletePlayedProvider),
+    getBatchDownloadLimit: () => ref.read(batchDownloadLimitProvider),
     reconcilerService: reconcilerService,
   );
 
@@ -80,6 +81,7 @@ class DownloadService {
     required Logger logger,
     required bool Function() getWifiOnly,
     required bool Function() getAutoDeletePlayed,
+    required int Function() getBatchDownloadLimit,
     StationReconcilerService? reconcilerService,
   }) : _repository = repository,
        _queueService = queueService,
@@ -88,6 +90,7 @@ class DownloadService {
        _logger = logger,
        _getWifiOnly = getWifiOnly,
        _getAutoDeletePlayed = getAutoDeletePlayed,
+       _getBatchDownloadLimit = getBatchDownloadLimit,
        _reconcilerService = reconcilerService;
 
   final DownloadRepository _repository;
@@ -97,6 +100,7 @@ class DownloadService {
   final Logger _logger;
   final bool Function() _getWifiOnly;
   final bool Function() _getAutoDeletePlayed;
+  final int Function() _getBatchDownloadLimit;
   final StationReconcilerService? _reconcilerService;
 
   /// Downloads a single episode.
@@ -146,6 +150,28 @@ class DownloadService {
     }
 
     _logger.i('Queued $queued downloads for season $seasonNumber');
+    return queued;
+  }
+
+  /// Downloads episodes by ID, capped at the user's batch limit.
+  ///
+  /// Episodes are processed in list order (reflecting display sort).
+  /// Returns the number of downloads actually queued.
+  Future<int> downloadEpisodes(List<int> episodeIds, {bool? wifiOnly}) async {
+    if (episodeIds.isEmpty) return 0;
+
+    final limit = _getBatchDownloadLimit();
+    final capped = episodeIds.length <= limit
+        ? episodeIds
+        : episodeIds.sublist(0, limit);
+
+    var queued = 0;
+    for (final id in capped) {
+      final task = await downloadEpisode(id, wifiOnly: wifiOnly);
+      if (task != null) queued++;
+    }
+
+    _logger.i('Batch download: queued $queued of ${capped.length} episodes');
     return queued;
   }
 
