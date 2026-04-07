@@ -31,6 +31,7 @@ class DeveloperSettingsScreen extends ConsumerWidget {
         onRefresh: () async {
           final repo = ref.read(smartPlaylistConfigRepositoryProvider);
           final rootMeta = await repo.fetchRootMeta();
+          await repo.reconcileCache(rootMeta.patterns);
           repo.setPatternSummaries(rootMeta.patterns);
           ref
               .read(patternSummariesProvider.notifier)
@@ -58,10 +59,11 @@ class DeveloperSettingsScreen extends ConsumerWidget {
               ),
               onTap: () async {
                 try {
-                  await launchUrl(
+                  final ok = await launchUrl(
                     Uri.parse(SmartPlaylistUrls.repo),
                     mode: LaunchMode.externalApplication,
                   );
+                  if (!ok) debugPrint('launchUrl returned false for repo URL');
                 } on Exception catch (e) {
                   debugPrint('Failed to launch repo URL: $e');
                 }
@@ -105,7 +107,7 @@ class DeveloperSettingsScreen extends ConsumerWidget {
                 onTap: 0 < schemaVersion
                     ? () async {
                         try {
-                          await launchUrl(
+                          final ok = await launchUrl(
                             Uri.parse(
                               SmartPlaylistUrls.patternDir(
                                 summary.id,
@@ -114,6 +116,11 @@ class DeveloperSettingsScreen extends ConsumerWidget {
                             ),
                             mode: LaunchMode.externalApplication,
                           );
+                          if (!ok) {
+                            debugPrint(
+                              'launchUrl returned false for pattern URL',
+                            );
+                          }
                         } on Exception catch (e) {
                           debugPrint('Failed to launch pattern URL: $e');
                         }

@@ -85,7 +85,7 @@ class EpisodeDevInfoWidget extends ConsumerWidget {
         // Smart Playlist Pattern
         Text(l10n.developerPatternLabel, style: labelStyle),
         const SizedBox(height: Spacing.xs),
-        GestureDetector(
+        InkWell(
           onTap: () async {
             final url = 0 < schemaVersion && match != null
                 ? SmartPlaylistUrls.patternDir(
@@ -94,10 +94,11 @@ class EpisodeDevInfoWidget extends ConsumerWidget {
                   )
                 : SmartPlaylistUrls.repo;
             try {
-              await launchUrl(
+              final ok = await launchUrl(
                 Uri.parse(url),
                 mode: LaunchMode.externalApplication,
               );
+              if (!ok) debugPrint('launchUrl returned false for pattern URL');
             } on Exception catch (e) {
               debugPrint('Failed to launch pattern URL: $e');
             }
