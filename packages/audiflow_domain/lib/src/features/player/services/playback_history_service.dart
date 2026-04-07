@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../download/services/download_service.dart';
 import '../../settings/providers/settings_providers.dart';
 import '../../station/services/station_reconciler_service.dart';
 import '../models/playback_progress.dart';
@@ -14,10 +15,12 @@ PlaybackHistoryService playbackHistoryService(Ref ref) {
   final repository = ref.watch(playbackHistoryRepositoryProvider);
   final settingsRepo = ref.watch(appSettingsRepositoryProvider);
   final reconcilerService = ref.watch(stationReconcilerServiceProvider);
+  final downloadService = ref.watch(downloadServiceProvider);
   return PlaybackHistoryService(
     repository,
     getCompletionThreshold: settingsRepo.getAutoCompleteThreshold,
     reconcilerService: reconcilerService,
+    downloadService: downloadService,
   );
 }
 
@@ -31,14 +34,17 @@ class PlaybackHistoryService {
     this._repository, {
     required double Function() getCompletionThreshold,
     StationReconcilerService? reconcilerService,
+    DownloadService? downloadService,
     DateTime Function()? clock,
   }) : _getCompletionThreshold = getCompletionThreshold,
        _reconcilerService = reconcilerService,
+       _downloadService = downloadService,
        _clock = clock ?? DateTime.now;
 
   final PlaybackHistoryRepository _repository;
   final double Function() _getCompletionThreshold;
   final StationReconcilerService? _reconcilerService;
+  final DownloadService? _downloadService;
 
   /// Injectable clock for testing.
   final DateTime Function() _clock;
@@ -131,6 +137,7 @@ class PlaybackHistoryService {
         if (!isAlreadyCompleted) {
           await _repository.markCompleted(episodeId);
           await _tryReconcile(episodeId);
+          await _tryAutoDeleteDownload(episodeId);
         }
       }
     }
@@ -194,6 +201,7 @@ class PlaybackHistoryService {
   Future<void> markCompleted(int episodeId) async {
     await _repository.markCompleted(episodeId);
     await _tryReconcile(episodeId);
+    await _tryAutoDeleteDownload(episodeId);
   }
 
   /// Manually marks an episode as incomplete.
@@ -208,6 +216,15 @@ class PlaybackHistoryService {
       await _reconcilerService?.onEpisodeChanged(episodeId);
     } on Exception {
       // Station reconciliation is best-effort; do not break playback.
+    }
+  }
+
+  /// Best-effort auto-delete of downloaded file when episode completes.
+  Future<void> _tryAutoDeleteDownload(int episodeId) async {
+    try {
+      await _downloadService?.onEpisodeCompleted(episodeId);
+    } on Exception {
+      // Auto-delete is best-effort; do not break playback flow.
     }
   }
 
