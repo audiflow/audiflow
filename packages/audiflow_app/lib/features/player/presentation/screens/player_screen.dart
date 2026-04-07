@@ -427,37 +427,39 @@ class _PlayerInfo extends StatelessWidget {
     return Semantics(
       container: true,
       label: '$episodeTitle by $podcastTitle',
-      child: Column(
-        children: [
-          ExcludeSemantics(
-            child: GestureDetector(
-              onTap: onEpisodeTitleTap,
-              child: Text(
-                episodeTitle,
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
+      child: SelectionArea(
+        child: Column(
+          children: [
+            ExcludeSemantics(
+              child: GestureDetector(
+                onTap: onEpisodeTitleTap,
+                child: Text(
+                  episodeTitle,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
                 ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
               ),
             ),
-          ),
-          const SizedBox(height: 8),
-          ExcludeSemantics(
-            child: GestureDetector(
-              onTap: onPodcastTitleTap,
-              child: Text(
-                podcastTitle,
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
+            const SizedBox(height: 8),
+            ExcludeSemantics(
+              child: GestureDetector(
+                onTap: onPodcastTitleTap,
+                child: Text(
+                  podcastTitle,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

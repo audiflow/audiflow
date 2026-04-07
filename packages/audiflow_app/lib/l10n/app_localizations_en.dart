@@ -1192,4 +1192,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get statsSection => 'Statistics';
+
+  @override
+  String get commonCopiedToClipboard => 'Copied to clipboard';
 }

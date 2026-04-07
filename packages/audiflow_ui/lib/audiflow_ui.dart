@@ -43,6 +43,9 @@ export 'src/widgets/lists/year_picker_bottom_sheet.dart';
 // Widgets - Search
 export 'src/widgets/search/searchable_app_bar.dart';
 
+// Widgets - Text
+export 'src/widgets/text/copyable_text.dart';
+
 // Utils
 export 'src/utils/responsive_grid.dart';
 export 'src/utils/search_filter.dart';

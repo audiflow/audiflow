@@ -402,5 +402,6 @@
   "statsFirstPlayed": "初回再生",
   "statsLastPlayed": "最終再生",
   "statsNever": "未再生",
-  "statsSection": "統計"
+  "statsSection": "統計",
+  "commonCopiedToClipboard": "クリップボードにコピーしました"
 }
