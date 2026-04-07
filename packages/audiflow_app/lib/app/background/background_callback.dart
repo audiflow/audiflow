@@ -512,8 +512,8 @@ Future<bool> _executeDownloadTask(Map<String, dynamic>? inputData) async {
       ),
     );
 
-    final settingsRepo = BackgroundSettingsRepository(inputData);
-    final wifiOnly = settingsRepo.getWifiOnlyDownload();
+    final connectivityResult = await Connectivity().checkConnectivity();
+    final isOnWifi = connectivityResult.contains(ConnectivityResult.wifi);
 
     final episodeDatasource = EpisodeLocalDatasource(isar);
     final episodeRepo = EpisodeRepositoryImpl(datasource: episodeDatasource);
@@ -529,7 +529,7 @@ Future<bool> _executeDownloadTask(Map<String, dynamic>? inputData) async {
       dio: dio,
       downloadsDir: downloadsDir,
       logger: logger,
-      wifiOnly: wifiOnly,
+      isOnWifi: isOnWifi,
     );
 
     _bgDebug('calling download service execute()');

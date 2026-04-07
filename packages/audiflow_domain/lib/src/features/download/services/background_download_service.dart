@@ -31,14 +31,14 @@ class BackgroundDownloadService {
     required String downloadsDir,
     Logger? logger,
     Duration timeBudget = const Duration(minutes: 5),
-    bool wifiOnly = false,
+    bool isOnWifi = false,
   }) : _downloadRepo = downloadRepo,
        _episodeRepo = episodeRepo,
        _dio = dio,
        _downloadsDir = downloadsDir,
        _logger = logger,
        _timeBudget = timeBudget,
-       _wifiOnly = wifiOnly;
+       _isOnWifi = isOnWifi;
 
   final DownloadRepository _downloadRepo;
   final EpisodeRepository _episodeRepo;
@@ -46,7 +46,7 @@ class BackgroundDownloadService {
   final String _downloadsDir;
   final Logger? _logger;
   final Duration _timeBudget;
-  final bool _wifiOnly;
+  final bool _isOnWifi;
 
   /// Processes all pending downloads within the time budget.
   ///
@@ -65,7 +65,7 @@ class BackgroundDownloadService {
         break;
       }
 
-      final task = await _downloadRepo.getNextPending(isOnWifi: _wifiOnly);
+      final task = await _downloadRepo.getNextPending(isOnWifi: _isOnWifi);
       if (task == null) break;
 
       try {

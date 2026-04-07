@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -74,7 +76,7 @@ class _AppLifecycleObserverState extends ConsumerState<AppLifecycleObserver> {
   /// refresh but not yet processed (e.g. download task was deferred
   /// or killed by the OS).
   void _processPendingDownloads() {
-    ref.read(downloadQueueServiceProvider).startQueue();
+    unawaited(ref.read(downloadQueueServiceProvider).startQueue());
   }
 
   @override

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
@@ -119,12 +121,21 @@ void main() {
     dioAdapter = DioAdapter(dio: dio);
     downloadRepo = _FakeDownloadRepository();
     episodeRepo = _FakeEpisodeRepository();
-    downloadsDir = '/tmp/audiflow_test_downloads';
+    downloadsDir = Directory.systemTemp
+        .createTempSync('audiflow_test_downloads_')
+        .path;
+  });
+
+  tearDown(() {
+    final dir = Directory(downloadsDir);
+    if (dir.existsSync()) {
+      dir.deleteSync(recursive: true);
+    }
   });
 
   BackgroundDownloadService createService({
     Duration timeBudget = const Duration(minutes: 5),
-    bool wifiOnly = false,
+    bool isOnWifi = false,
   }) {
     return BackgroundDownloadService(
       downloadRepo: downloadRepo,
@@ -132,7 +143,7 @@ void main() {
       dio: dio,
       downloadsDir: downloadsDir,
       timeBudget: timeBudget,
-      wifiOnly: wifiOnly,
+      isOnWifi: isOnWifi,
     );
   }
 
