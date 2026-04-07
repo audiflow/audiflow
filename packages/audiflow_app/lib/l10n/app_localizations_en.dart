@@ -1192,4 +1192,45 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get statsSection => 'Statistics';
+
+  @override
+  String get settingsDeveloperTitle => 'Developer';
+
+  @override
+  String get settingsDeveloperSubtitle =>
+      'Smart playlist patterns and debug info';
+
+  @override
+  String get developerContributeLabel => 'Contribute smart playlist patterns';
+
+  @override
+  String get developerContributeRepo => 'audiflow/audiflow-smartplaylist';
+
+  @override
+  String get developerShowInfoTitle => 'Show developer info';
+
+  @override
+  String get developerShowInfoSubtitle =>
+      'Display RSS feed URL and pattern links in episode details';
+
+  @override
+  String get developerPatternsHeader => 'Smart Playlist Patterns';
+
+  @override
+  String get developerSectionLabel => 'Developer';
+
+  @override
+  String get developerRssFeedUrl => 'RSS Feed URL';
+
+  @override
+  String get developerCopyLabel => 'Copy';
+
+  @override
+  String get developerCopied => 'Copied to clipboard';
+
+  @override
+  String get developerPatternLabel => 'Smart Playlist Pattern';
+
+  @override
+  String get developerPatternNotDefined => 'Not defined — add one?';
 }

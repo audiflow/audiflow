@@ -402,5 +402,19 @@
   "statsFirstPlayed": "初回再生",
   "statsLastPlayed": "最終再生",
   "statsNever": "未再生",
-  "statsSection": "統計"
+  "statsSection": "統計",
+
+  "settingsDeveloperTitle": "開発",
+  "settingsDeveloperSubtitle": "スマートプレイリストパターンとデバッグ情報",
+  "developerContributeLabel": "スマートプレイリストパターンを貢献",
+  "developerContributeRepo": "audiflow/audiflow-smartplaylist",
+  "developerShowInfoTitle": "開発者情報を表示",
+  "developerShowInfoSubtitle": "エピソード詳細にRSSフィードURLとパターンリンクを表示",
+  "developerPatternsHeader": "スマートプレイリストパターン",
+  "developerSectionLabel": "開発者",
+  "developerRssFeedUrl": "RSSフィードURL",
+  "developerCopyLabel": "コピー",
+  "developerCopied": "クリップボードにコピーしました",
+  "developerPatternLabel": "スマートプレイリストパターン",
+  "developerPatternNotDefined": "未定義 — 追加しませんか？"
 }

@@ -2263,6 +2263,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Statistics'**
   String get statsSection;
+
+  /// Settings grid card title for developer preferences
+  ///
+  /// In en, this message translates to:
+  /// **'Developer'**
+  String get settingsDeveloperTitle;
+
+  /// Settings grid card subtitle for developer preferences
+  ///
+  /// In en, this message translates to:
+  /// **'Smart playlist patterns and debug info'**
+  String get settingsDeveloperSubtitle;
+
+  /// Tappable row label linking to the smartplaylist repo
+  ///
+  /// In en, this message translates to:
+  /// **'Contribute smart playlist patterns'**
+  String get developerContributeLabel;
+
+  /// Short repo name shown below the contribute link
+  ///
+  /// In en, this message translates to:
+  /// **'audiflow/audiflow-smartplaylist'**
+  String get developerContributeRepo;
+
+  /// Toggle title for developer info in episode detail
+  ///
+  /// In en, this message translates to:
+  /// **'Show developer info'**
+  String get developerShowInfoTitle;
+
+  /// Toggle subtitle explaining what developer info shows
+  ///
+  /// In en, this message translates to:
+  /// **'Display RSS feed URL and pattern links in episode details'**
+  String get developerShowInfoSubtitle;
+
+  /// Section header for the pattern list
+  ///
+  /// In en, this message translates to:
+  /// **'Smart Playlist Patterns'**
+  String get developerPatternsHeader;
+
+  /// Section label in episode detail for developer info
+  ///
+  /// In en, this message translates to:
+  /// **'Developer'**
+  String get developerSectionLabel;
+
+  /// Label for the RSS feed URL field
+  ///
+  /// In en, this message translates to:
+  /// **'RSS Feed URL'**
+  String get developerRssFeedUrl;
+
+  /// Copy button label
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get developerCopyLabel;
+
+  /// Snackbar message after copying RSS URL
+  ///
+  /// In en, this message translates to:
+  /// **'Copied to clipboard'**
+  String get developerCopied;
+
+  /// Label for the pattern link field
+  ///
+  /// In en, this message translates to:
+  /// **'Smart Playlist Pattern'**
+  String get developerPatternLabel;
+
+  /// Shown when no smart playlist pattern matches the podcast
+  ///
+  /// In en, this message translates to:
+  /// **'Not defined — add one?'**
+  String get developerPatternNotDefined;
 }
 
 class _AppLocalizationsDelegate
