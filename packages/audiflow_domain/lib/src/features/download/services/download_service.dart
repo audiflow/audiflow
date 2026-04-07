@@ -186,7 +186,7 @@ class DownloadService {
     if (task != null) {
       _logger.i('Created download task for episode: $episodeId');
     } else {
-      _logger.i('Episode already has active download: $episodeId');
+      _logger.i('Episode already has an existing download task: $episodeId');
     }
 
     return task;
