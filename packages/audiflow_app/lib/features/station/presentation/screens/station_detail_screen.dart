@@ -163,6 +163,7 @@ class _StationDetailContentState extends ConsumerState<_StationDetailContent> {
                         context: context,
                         ref: ref,
                         episodeIds: ids,
+                        downloadableCount: dlState.downloadableCount,
                       ),
                     );
                   }
@@ -204,7 +205,7 @@ class _StationDetailContentState extends ConsumerState<_StationDetailContent> {
                     contentPadding: EdgeInsets.zero,
                   ),
                 ),
-                if (dlState.hasActive)
+                if (dlState.hasCancelable)
                   PopupMenuItem(
                     value: 'cancel_all',
                     child: ListTile(

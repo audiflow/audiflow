@@ -24,6 +24,9 @@ class BatchDownloadState {
   bool get hasDownloadable => 0 < downloadableCount;
   bool get hasActive => activeTaskIds.isNotEmpty;
   bool get hasPaused => pausedTaskIds.isNotEmpty;
+
+  /// True when there are tasks that can be cancelled (active or paused).
+  bool get hasCancelable => hasActive || hasPaused;
 }
 
 /// Computes download menu state for a set of episode IDs.
@@ -75,12 +78,13 @@ Future<void> handleBatchDownload({
   required BuildContext context,
   required WidgetRef ref,
   required List<int> episodeIds,
+  required int downloadableCount,
 }) async {
   if (episodeIds.isEmpty) return;
 
   final l10n = AppLocalizations.of(context);
   final limit = ref.read(batchDownloadLimitProvider);
-  final downloadCount = episodeIds.length <= limit ? episodeIds.length : limit;
+  final downloadCount = downloadableCount <= limit ? downloadableCount : limit;
 
   final confirmed = await showDialog<bool>(
     context: context,
@@ -91,7 +95,7 @@ Future<void> handleBatchDownload({
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(l10n.downloadAllConfirmContent(downloadCount)),
-          if (limit < episodeIds.length)
+          if (limit < downloadableCount)
             Padding(
               padding: const EdgeInsets.only(top: 8),
               child: Text(

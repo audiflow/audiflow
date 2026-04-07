@@ -151,18 +151,18 @@ class DownloadService {
       SettingsDefaults.batchDownloadLimitMin,
       SettingsDefaults.batchDownloadLimitMax,
     );
-    final capped = episodeIds.length <= limit
-        ? episodeIds
-        : episodeIds.sublist(0, limit);
 
     var queued = 0;
-    for (final id in capped) {
+    for (final id in episodeIds) {
+      if (limit <= queued) break;
       final task = await _createDownloadTask(id, wifiOnly: wifiOnly);
       if (task != null) queued++;
     }
 
     if (0 < queued) unawaited(_queueService.startQueue());
-    _logger.i('Batch download: queued $queued of ${capped.length} episodes');
+    _logger.i(
+      'Batch download: queued $queued of ${episodeIds.length} episodes',
+    );
     return queued;
   }
 

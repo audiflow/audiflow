@@ -92,11 +92,16 @@ class DownloadsSettingsScreen extends ConsumerWidget {
                 ),
                 onFieldSubmitted: (value) {
                   final parsed = int.tryParse(value);
-                  if (parsed != null &&
-                      SettingsDefaults.batchDownloadLimitMin <= parsed &&
-                      parsed <= SettingsDefaults.batchDownloadLimitMax) {
-                    _update(ref, () => repo.setBatchDownloadLimit(parsed));
+                  if (parsed == null) {
+                    // Reset to current value on non-numeric input.
+                    ref.invalidate(appSettingsRepositoryProvider);
+                    return;
                   }
+                  final clamped = parsed.clamp(
+                    SettingsDefaults.batchDownloadLimitMin,
+                    SettingsDefaults.batchDownloadLimitMax,
+                  );
+                  _update(ref, () => repo.setBatchDownloadLimit(clamped));
                 },
               ),
             ),

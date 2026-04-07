@@ -145,6 +145,7 @@ class _SmartPlaylistGroupEpisodesScreenState
                         context: context,
                         ref: ref,
                         episodeIds: _episodeIds,
+                        downloadableCount: dlState.downloadableCount,
                       ),
                     );
                   }
@@ -183,7 +184,7 @@ class _SmartPlaylistGroupEpisodesScreenState
                     contentPadding: EdgeInsets.zero,
                   ),
                 ),
-                if (dlState.hasActive)
+                if (dlState.hasCancelable)
                   PopupMenuItem(
                     value: 'cancel_all',
                     child: ListTile(
