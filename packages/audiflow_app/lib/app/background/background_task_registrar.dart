@@ -73,7 +73,10 @@ class BackgroundTaskRegistrar {
         constraints: Constraints(
           networkType: wifiOnly ? NetworkType.unmetered : NetworkType.connected,
         ),
-        existingWorkPolicy: ExistingWorkPolicy.keep,
+        // Use replace so the latest derived wifiOnly constraint is applied.
+        // With keep, a previously-enqueued task's constraints are preserved
+        // even when the pending-task mix has changed.
+        existingWorkPolicy: ExistingWorkPolicy.replace,
         backoffPolicy: BackoffPolicy.exponential,
         backoffPolicyDelay: const Duration(minutes: 1),
       );

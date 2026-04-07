@@ -181,6 +181,11 @@ class BackgroundDownloadService {
         localPath,
         deleteOnError: false,
         cancelToken: cancelToken,
+        // Append when resuming so the partial file is extended rather than
+        // overwritten, which would produce a corrupted tail-only file.
+        fileAccessMode: 0 < resumeOffset
+            ? FileAccessMode.append
+            : FileAccessMode.write,
         options: Options(headers: headers, responseType: ResponseType.stream),
         onReceiveProgress: (received, total) {
           final downloadedBytes = received + resumeOffset;
@@ -209,6 +214,32 @@ class BackgroundDownloadService {
           DownloadErrorType.serverError,
           'Server returned status ${response.statusCode}',
         );
+      }
+
+      // If we requested a Range but the server ignored it and returned the
+      // full file (200 instead of 206), the file on disk is corrupted
+      // (partial bytes + full file). Delete it, reset progress, and let
+      // the next cycle retry from scratch.
+      if (0 < resumeOffset && response.statusCode == 200) {
+        _logger?.w(
+          'BackgroundDownloadService: server ignored Range header for '
+          'episodeId=${task.episodeId}, discarding corrupted file',
+        );
+        try {
+          await File(localPath).delete();
+        } on FileSystemException {
+          // Best-effort cleanup; file may already be gone.
+        }
+        await _downloadRepo.updateProgress(
+          id: task.id,
+          downloadedBytes: 0,
+          totalBytes: null,
+        );
+        await _downloadRepo.updateStatus(
+          id: task.id,
+          status: const DownloadStatus.pending(),
+        );
+        return;
       }
 
       // Final progress write to ensure downloadedBytes is up to date even

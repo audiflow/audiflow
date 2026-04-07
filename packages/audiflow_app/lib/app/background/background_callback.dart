@@ -559,6 +559,17 @@ Future<bool> _executeDownloadTask(Map<String, dynamic>? inputData) async {
     // tasks remain.
     success = runnableRemaining.isEmpty;
 
+    // If we're on cellular and wifi-only downloads remain, schedule a
+    // dedicated wifi-only download task so they run when wifi becomes
+    // available instead of waiting for the next feed sync or app resume.
+    if (!isOnWifi && remaining.any((t) => t.wifiOnly)) {
+      _bgDebug(
+        'scheduling wifi-only download task for '
+        '${remaining.where((t) => t.wifiOnly).length} wifi-only task(s)',
+      );
+      await BackgroundTaskRegistrar.registerDownloadTask(wifiOnly: true);
+    }
+
     if (sentryInitialized) {
       Sentry.addBreadcrumb(
         Breadcrumb(
