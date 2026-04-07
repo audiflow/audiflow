@@ -3,11 +3,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 
-@GenerateMocks([PlaybackHistoryRepository])
+@GenerateMocks([PlaybackHistoryRepository, DownloadService])
 import 'playback_history_service_test.mocks.dart';
 
 void main() {
   late MockPlaybackHistoryRepository mockRepository;
+  late MockDownloadService mockDownloadService;
   late PlaybackHistoryService service;
   late DateTime now;
 
@@ -15,12 +16,16 @@ void main() {
 
   setUp(() {
     mockRepository = MockPlaybackHistoryRepository();
+    mockDownloadService = MockDownloadService();
     now = DateTime(2026, 1, 1, 12, 0, 0);
     service = PlaybackHistoryService(
       mockRepository,
       getCompletionThreshold: () => 0.95,
+      downloadService: mockDownloadService,
       clock: clock,
     );
+
+    when(mockDownloadService.onEpisodeCompleted(any)).thenAnswer((_) async {});
   });
 
   group('onProgressUpdate', () {
@@ -144,6 +149,55 @@ void main() {
       await service.onProgressUpdate(episodeId, progress);
 
       verify(mockRepository.markCompleted(episodeId)).called(1);
+    });
+
+    test('triggers auto-delete when auto-completing', () async {
+      const episodeId = 1;
+      final progress = PlaybackProgress(
+        position: const Duration(seconds: 570), // 95% of 10 minutes
+        duration: const Duration(minutes: 10),
+        bufferedPosition: const Duration(minutes: 10),
+      );
+
+      when(
+        mockRepository.saveProgress(
+          episodeId: anyNamed('episodeId'),
+          positionMs: anyNamed('positionMs'),
+          durationMs: anyNamed('durationMs'),
+          listenedDeltaMs: anyNamed('listenedDeltaMs'),
+          realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
+        ),
+      ).thenAnswer((_) async {});
+      when(mockRepository.isCompleted(any)).thenAnswer((_) async => false);
+      when(mockRepository.markCompleted(any)).thenAnswer((_) async {});
+
+      await service.onProgressUpdate(episodeId, progress);
+
+      verify(mockDownloadService.onEpisodeCompleted(episodeId)).called(1);
+    });
+
+    test('does not trigger auto-delete when already completed', () async {
+      const episodeId = 1;
+      final progress = PlaybackProgress(
+        position: const Duration(seconds: 570),
+        duration: const Duration(minutes: 10),
+        bufferedPosition: const Duration(minutes: 10),
+      );
+
+      when(
+        mockRepository.saveProgress(
+          episodeId: anyNamed('episodeId'),
+          positionMs: anyNamed('positionMs'),
+          durationMs: anyNamed('durationMs'),
+          listenedDeltaMs: anyNamed('listenedDeltaMs'),
+          realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
+        ),
+      ).thenAnswer((_) async {});
+      when(mockRepository.isCompleted(any)).thenAnswer((_) async => true);
+
+      await service.onProgressUpdate(episodeId, progress);
+
+      verifyNever(mockDownloadService.onEpisodeCompleted(any));
     });
 
     test('does not mark completed if already completed', () async {
@@ -299,6 +353,16 @@ void main() {
       await service.markCompleted(episodeId);
 
       verify(mockRepository.markCompleted(episodeId)).called(1);
+    });
+
+    test('triggers auto-delete on download service', () async {
+      const episodeId = 1;
+
+      when(mockRepository.markCompleted(any)).thenAnswer((_) async {});
+
+      await service.markCompleted(episodeId);
+
+      verify(mockDownloadService.onEpisodeCompleted(episodeId)).called(1);
     });
   });
 

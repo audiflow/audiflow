@@ -256,6 +256,7 @@ class _StationEpisodeTile extends ConsumerWidget {
           fallbackThumbnailUrl: subscription?.artworkUrl,
           progress: progress,
           siblingEpisodeIds: siblingEpisodeIds,
+          forceDisplayOrder: true,
           lastRefreshedAt: subscription?.lastRefreshedAt,
           itunesId: subscription?.itunesId,
           feedUrl: subscription?.feedUrl,
