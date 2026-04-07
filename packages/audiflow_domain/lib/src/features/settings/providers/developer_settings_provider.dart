@@ -19,9 +19,12 @@ class DevShowDeveloperInfo extends _$DevShowDeveloperInfo {
   }
 
   /// Toggles the current value and persists it.
-  void toggle() {
+  ///
+  /// Only updates in-memory state after the write succeeds,
+  /// preventing divergence when the disk write fails.
+  Future<void> toggle() async {
     final next = !state;
-    ref.read(sharedPreferencesProvider).setBool(_key, next);
+    await ref.read(sharedPreferencesProvider).setBool(_key, next);
     state = next;
   }
 }

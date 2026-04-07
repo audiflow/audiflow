@@ -24,7 +24,7 @@ void main() {
     });
 
     test('persists true after toggle', () async {
-      container.read(devShowDeveloperInfoProvider.notifier).toggle();
+      await container.read(devShowDeveloperInfoProvider.notifier).toggle();
       check(container.read(devShowDeveloperInfoProvider)).equals(true);
 
       // Verify persisted to SharedPreferences

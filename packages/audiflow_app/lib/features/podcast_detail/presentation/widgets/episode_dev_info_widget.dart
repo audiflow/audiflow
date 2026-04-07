@@ -27,12 +27,10 @@ class EpisodeDevInfoWidget extends ConsumerWidget {
 
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final summaries = ref.watch(patternSummariesProvider);
+    final repo = ref.watch(smartPlaylistConfigRepositoryProvider);
     final schemaVersion = ref.watch(smartPlaylistSchemaVersionProvider);
 
-    final match = summaries
-        .where((s) => feedUrl.contains(s.feedUrlHint))
-        .firstOrNull;
+    final match = repo.findMatchingPattern(null, feedUrl);
 
     final labelStyle = theme.textTheme.bodySmall?.copyWith(
       color: theme.colorScheme.onSurfaceVariant,
@@ -73,8 +71,9 @@ class EpisodeDevInfoWidget extends ConsumerWidget {
                   Symbols.content_copy,
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
-                onPressed: () {
-                  Clipboard.setData(ClipboardData(text: feedUrl));
+                onPressed: () async {
+                  await Clipboard.setData(ClipboardData(text: feedUrl));
+                  if (!context.mounted) return;
                   ScaffoldMessenger.of(
                     context,
                   ).showSnackBar(SnackBar(content: Text(l10n.developerCopied)));
@@ -89,17 +88,22 @@ class EpisodeDevInfoWidget extends ConsumerWidget {
         Text(l10n.developerPatternLabel, style: labelStyle),
         const SizedBox(height: Spacing.xs),
         GestureDetector(
-          onTap: () => launchUrl(
-            Uri.parse(
-              match != null
-                  ? SmartPlaylistUrls.patternDir(
-                      match.id,
-                      schemaVersion: schemaVersion,
-                    )
-                  : SmartPlaylistUrls.repoBranch(schemaVersion: schemaVersion),
-            ),
-            mode: LaunchMode.externalApplication,
-          ),
+          onTap: () async {
+            final url = 0 < schemaVersion && match != null
+                ? SmartPlaylistUrls.patternDir(
+                    match.id,
+                    schemaVersion: schemaVersion,
+                  )
+                : SmartPlaylistUrls.repo;
+            try {
+              await launchUrl(
+                Uri.parse(url),
+                mode: LaunchMode.externalApplication,
+              );
+            } on Exception catch (e) {
+              debugPrint('Failed to launch pattern URL: $e');
+            }
+          },
           child: Text(
             match?.displayName ?? l10n.developerPatternNotDefined,
             style: valueStyle?.copyWith(color: theme.colorScheme.primary),

@@ -53,10 +53,16 @@ class DeveloperSettingsScreen extends ConsumerWidget {
                 size: 18,
                 color: theme.colorScheme.primary,
               ),
-              onTap: () => launchUrl(
-                Uri.parse(SmartPlaylistUrls.repo),
-                mode: LaunchMode.externalApplication,
-              ),
+              onTap: () async {
+                try {
+                  await launchUrl(
+                    Uri.parse(SmartPlaylistUrls.repo),
+                    mode: LaunchMode.externalApplication,
+                  );
+                } on Exception catch (e) {
+                  debugPrint('Failed to launch repo URL: $e');
+                }
+              },
             ),
             const Divider(height: 1),
 
@@ -92,15 +98,23 @@ class DeveloperSettingsScreen extends ConsumerWidget {
                   size: 18,
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
-                onTap: () => launchUrl(
-                  Uri.parse(
-                    SmartPlaylistUrls.patternDir(
-                      summary.id,
-                      schemaVersion: schemaVersion,
-                    ),
-                  ),
-                  mode: LaunchMode.externalApplication,
-                ),
+                onTap: 0 < schemaVersion
+                    ? () async {
+                        try {
+                          await launchUrl(
+                            Uri.parse(
+                              SmartPlaylistUrls.patternDir(
+                                summary.id,
+                                schemaVersion: schemaVersion,
+                              ),
+                            ),
+                            mode: LaunchMode.externalApplication,
+                          );
+                        } on Exception catch (e) {
+                          debugPrint('Failed to launch pattern URL: $e');
+                        }
+                      }
+                    : null,
               ),
             ),
           ],

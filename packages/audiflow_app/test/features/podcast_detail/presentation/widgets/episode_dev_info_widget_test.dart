@@ -7,6 +7,37 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Fake repository that returns a pre-configured matching
+/// pattern. Only [findMatchingPattern] is used by the widget.
+class _FakeSmartPlaylistConfigRepository
+    implements SmartPlaylistConfigRepository {
+  _FakeSmartPlaylistConfigRepository({this.summaries = const []});
+
+  final List<PatternSummary> summaries;
+
+  @override
+  PatternSummary? findMatchingPattern(String? podcastGuid, String feedUrl) {
+    for (final s in summaries) {
+      if (feedUrl.contains(s.feedUrlHint)) return s;
+    }
+    return null;
+  }
+
+  @override
+  Future<RootMeta> fetchRootMeta() async =>
+      const RootMeta(dataVersion: 1, schemaVersion: 1, patterns: []);
+
+  @override
+  Future<SmartPlaylistPatternConfig> getConfig(PatternSummary summary) =>
+      throw UnimplementedError();
+
+  @override
+  Future<void> reconcileCache(List<PatternSummary> latest) async {}
+
+  @override
+  void setPatternSummaries(List<PatternSummary> summaries) {}
+}
+
 MaterialApp _localizedApp(Widget child) {
   return MaterialApp(
     localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -44,7 +75,12 @@ void main() {
       await prefs.setBool('dev_show_developer_info', true);
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+          overrides: [
+            sharedPreferencesProvider.overrideWithValue(prefs),
+            smartPlaylistConfigRepositoryProvider.overrideWithValue(
+              _FakeSmartPlaylistConfigRepository(),
+            ),
+          ],
           child: _localizedApp(
             const EpisodeDevInfoWidget(feedUrl: 'https://example.com/feed.xml'),
           ),
@@ -63,8 +99,8 @@ void main() {
         ProviderScope(
           overrides: [
             sharedPreferencesProvider.overrideWithValue(prefs),
-            patternSummariesProvider.overrideWith(
-              () => _EmptyPatternSummaries(),
+            smartPlaylistConfigRepositoryProvider.overrideWithValue(
+              _FakeSmartPlaylistConfigRepository(),
             ),
           ],
           child: _localizedApp(
@@ -81,7 +117,7 @@ void main() {
     testWidgets('shows pattern name when matched', (tester) async {
       await prefs.setBool('dev_show_developer_info', true);
       final summaries = [
-        PatternSummary(
+        const PatternSummary(
           id: 'coten_radio',
           dataVersion: 1,
           displayName: 'Coten Radio',
@@ -94,8 +130,8 @@ void main() {
         ProviderScope(
           overrides: [
             sharedPreferencesProvider.overrideWithValue(prefs),
-            patternSummariesProvider.overrideWith(
-              () => _PreloadedPatternSummaries(summaries),
+            smartPlaylistConfigRepositoryProvider.overrideWithValue(
+              _FakeSmartPlaylistConfigRepository(summaries: summaries),
             ),
           ],
           child: _localizedApp(
@@ -110,17 +146,4 @@ void main() {
       check(find.text('Coten Radio').evaluate()).isNotEmpty();
     });
   });
-}
-
-class _EmptyPatternSummaries extends PatternSummaries {
-  @override
-  List<PatternSummary> build() => [];
-}
-
-class _PreloadedPatternSummaries extends PatternSummaries {
-  _PreloadedPatternSummaries(this._initial);
-  final List<PatternSummary> _initial;
-
-  @override
-  List<PatternSummary> build() => _initial;
 }
