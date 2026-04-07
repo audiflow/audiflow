@@ -621,6 +621,33 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get downloadAllEpisodes => '全エピソードをダウンロード';
+
+  @override
+  String get downloadAllConfirmTitle => 'エピソードをダウンロードしますか？';
+
+  @override
+  String downloadAllConfirmContent(int count) {
+    return '$count件のエピソードをダウンロードします。';
+  }
+
+  @override
+  String downloadAllLimitNote(int limit) {
+    return '最初の$limit件に制限されます。';
+  }
+
+  @override
+  String downloadAllQueued(int count) {
+    return '$count件のダウンロードをキューに追加';
+  }
+
+  @override
+  String get downloadsBatchLimitTitle => '一括ダウンロード上限';
+
+  @override
+  String get downloadsBatchLimitSubtitle => '一度にダウンロードするエピソードの最大数';
+
+  @override
   String get opmlImportTitle => 'ポッドキャストをインポート';
 
   @override

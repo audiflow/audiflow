@@ -212,6 +212,30 @@
   "downloadEmptyTitle": "ダウンロードはありません",
   "downloadSectionCount": "{status}（{count}）",
 
+  "downloadAllEpisodes": "全エピソードをダウンロード",
+  "@downloadAllEpisodes": { "description": "一括ダウンロードメニュー項目" },
+  "downloadAllConfirmTitle": "エピソードをダウンロードしますか？",
+  "@downloadAllConfirmTitle": { "description": "一括ダウンロード確認ダイアログタイトル" },
+  "downloadAllConfirmContent": "{count}件のエピソードをダウンロードします。",
+  "@downloadAllConfirmContent": {
+    "description": "一括ダウンロード確認本文",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "downloadAllLimitNote": "最初の{limit}件に制限されます。",
+  "@downloadAllLimitNote": {
+    "description": "エピソード数が制限を超えた場合の注記",
+    "placeholders": { "limit": { "type": "int" } }
+  },
+  "downloadAllQueued": "{count}件のダウンロードをキューに追加",
+  "@downloadAllQueued": {
+    "description": "一括ダウンロード後のスナックバー",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "downloadsBatchLimitTitle": "一括ダウンロード上限",
+  "@downloadsBatchLimitTitle": { "description": "一括ダウンロード制限の設定ラベル" },
+  "downloadsBatchLimitSubtitle": "一度にダウンロードするエピソードの最大数",
+  "@downloadsBatchLimitSubtitle": { "description": "一括ダウンロード制限の設定サブタイトル" },
+
   "opmlImportTitle": "ポッドキャストをインポート",
   "opmlAlreadySubscribed": "購読済み",
   "opmlImportSelected": "選択をインポート ({count})",
