@@ -126,20 +126,19 @@ Future<void> handleBatchDownload({
   );
 }
 
-/// Cancels all active (pending/downloading) downloads for the given task IDs.
+/// Cancels all active downloads for the given episode IDs.
+///
+/// Uses episode-ID-based cancel to avoid race conditions where the
+/// download queue picks up the next task between cancellations.
 Future<void> handleBatchCancel({
   required BuildContext context,
   required WidgetRef ref,
-  required List<int> taskIds,
+  required List<int> episodeIds,
 }) async {
-  if (taskIds.isEmpty) return;
+  if (episodeIds.isEmpty) return;
 
   final downloadService = ref.read(downloadServiceProvider);
-  var cancelled = 0;
-  for (final taskId in taskIds) {
-    await downloadService.cancel(taskId);
-    cancelled++;
-  }
+  final cancelled = await downloadService.cancelEpisodeDownloads(episodeIds);
 
   if (!context.mounted) return;
   final l10n = AppLocalizations.of(context);
@@ -148,20 +147,16 @@ Future<void> handleBatchCancel({
   );
 }
 
-/// Resumes all paused downloads for the given task IDs.
+/// Resumes all paused downloads for the given episode IDs.
 Future<void> handleBatchResume({
   required BuildContext context,
   required WidgetRef ref,
-  required List<int> taskIds,
+  required List<int> episodeIds,
 }) async {
-  if (taskIds.isEmpty) return;
+  if (episodeIds.isEmpty) return;
 
   final downloadService = ref.read(downloadServiceProvider);
-  var resumed = 0;
-  for (final taskId in taskIds) {
-    await downloadService.resume(taskId);
-    resumed++;
-  }
+  final resumed = await downloadService.resumeEpisodeDownloads(episodeIds);
 
   if (!context.mounted) return;
   final l10n = AppLocalizations.of(context);

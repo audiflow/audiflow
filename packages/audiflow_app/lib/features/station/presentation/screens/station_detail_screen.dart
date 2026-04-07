@@ -163,13 +163,13 @@ class _StationDetailContentState extends ConsumerState<_StationDetailContent> {
                   handleBatchCancel(
                     context: context,
                     ref: ref,
-                    taskIds: dlState.activeTaskIds,
+                    episodeIds: ids,
                   );
                 case 'resume_all':
                   handleBatchResume(
                     context: context,
                     ref: ref,
-                    taskIds: dlState.pausedTaskIds,
+                    episodeIds: ids,
                   );
               }
             },

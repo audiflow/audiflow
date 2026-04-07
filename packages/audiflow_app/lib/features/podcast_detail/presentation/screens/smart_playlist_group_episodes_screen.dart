@@ -152,13 +152,13 @@ class _SmartPlaylistGroupEpisodesScreenState
                   handleBatchCancel(
                     context: context,
                     ref: ref,
-                    taskIds: dlState.activeTaskIds,
+                    episodeIds: _episodeIds,
                   );
                 case 'resume_all':
                   handleBatchResume(
                     context: context,
                     ref: ref,
-                    taskIds: dlState.pausedTaskIds,
+                    episodeIds: _episodeIds,
                   );
               }
             },

@@ -175,6 +175,40 @@ class DownloadService {
     return queued;
   }
 
+  /// Cancels all active downloads for the given episode IDs.
+  ///
+  /// Fetches fresh task state for each episode to avoid race conditions
+  /// where the queue picks up the next task before we cancel it.
+  /// Returns the number of downloads cancelled.
+  Future<int> cancelEpisodeDownloads(List<int> episodeIds) async {
+    var cancelled = 0;
+    for (final episodeId in episodeIds) {
+      final task = await _repository.getByEpisodeId(episodeId);
+      if (task == null) continue;
+      if (!task.downloadStatus.isActive) continue;
+      await _queueService.cancelDownload(task.id);
+      cancelled++;
+    }
+    _logger.i('Batch cancel: cancelled $cancelled downloads');
+    return cancelled;
+  }
+
+  /// Resumes all paused downloads for the given episode IDs.
+  ///
+  /// Returns the number of downloads resumed.
+  Future<int> resumeEpisodeDownloads(List<int> episodeIds) async {
+    var resumed = 0;
+    for (final episodeId in episodeIds) {
+      final task = await _repository.getByEpisodeId(episodeId);
+      if (task == null) continue;
+      if (task.downloadStatus is! DownloadStatusPaused) continue;
+      await _queueService.resumeDownload(task.id);
+      resumed++;
+    }
+    _logger.i('Batch resume: resumed $resumed downloads');
+    return resumed;
+  }
+
   /// Pauses an active download.
   Future<void> pause(int taskId) => _queueService.pauseDownload(taskId);
 
