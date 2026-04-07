@@ -70,7 +70,8 @@ class BackgroundDownloadService {
       if (task == null) break;
 
       try {
-        await _processDownload(task);
+        final remaining = _timeBudget - stopwatch.elapsed;
+        await _processDownload(task, remainingBudget: remaining);
         completedCount++;
       } catch (e, stack) {
         _logger?.e(
@@ -95,7 +96,10 @@ class BackgroundDownloadService {
     return completedCount;
   }
 
-  Future<void> _processDownload(DownloadTask task) async {
+  Future<void> _processDownload(
+    DownloadTask task, {
+    required Duration remainingBudget,
+  }) async {
     _logger?.i(
       'BackgroundDownloadService: downloading episodeId=${task.episodeId}',
     );
@@ -104,6 +108,14 @@ class BackgroundDownloadService {
       id: task.id,
       status: const DownloadStatus.downloading(),
     );
+
+    // Cancel the download if it exceeds the remaining time budget so
+    // a single long-running download does not keep the BGProcessingTask
+    // alive past the OS-imposed limit.
+    final cancelToken = CancelToken();
+    final budgetTimer = Timer(remainingBudget, () {
+      cancelToken.cancel('Time budget exhausted');
+    });
 
     try {
       final episode = await _episodeRepo.getById(task.episodeId);
@@ -123,27 +135,41 @@ class BackgroundDownloadService {
         await dir.create(recursive: true);
       }
 
-      final headers = <String, dynamic>{};
-      if (0 < task.downloadedBytes) {
-        headers['Range'] = 'bytes=${task.downloadedBytes}-';
+      // Validate partial file before attempting resume. If the file is
+      // missing or shorter than expected, reset to a fresh download.
+      var resumeOffset = task.downloadedBytes;
+      if (0 < resumeOffset) {
+        final existingFile = File(localPath);
+        if (!await existingFile.exists()) {
+          resumeOffset = 0;
+        } else {
+          final fileLength = await existingFile.length();
+          if (fileLength < resumeOffset) {
+            resumeOffset = 0;
+          }
+        }
       }
 
-      var lastUpdateBytes = task.downloadedBytes;
+      final headers = <String, dynamic>{};
+      if (0 < resumeOffset) {
+        headers['Range'] = 'bytes=$resumeOffset-';
+      }
+
+      var lastUpdateBytes = resumeOffset;
       const minBytesDelta = 256 * 1024; // 256 KB
 
       final response = await _dio.download(
         task.audioUrl,
         localPath,
         deleteOnError: false,
+        cancelToken: cancelToken,
         options: Options(headers: headers, responseType: ResponseType.stream),
         onReceiveProgress: (received, total) {
-          final downloadedBytes = received + task.downloadedBytes;
+          final downloadedBytes = received + resumeOffset;
           final bytesDelta = downloadedBytes - lastUpdateBytes;
           if (minBytesDelta <= bytesDelta) {
             lastUpdateBytes = downloadedBytes;
-            final totalBytes = total == -1
-                ? null
-                : total + task.downloadedBytes;
+            final totalBytes = total == -1 ? null : total + resumeOffset;
             unawaited(
               _downloadRepo
                   .updateProgress(
@@ -190,7 +216,17 @@ class BackgroundDownloadService {
         'BackgroundDownloadService: completed episodeId=${task.episodeId}',
       );
     } on DioException catch (e) {
-      if (e.type == DioExceptionType.connectionError ||
+      if (e.type == DioExceptionType.cancel) {
+        // Download cancelled by the time budget timer.
+        await _handleError(
+          task,
+          DownloadException(
+            DownloadErrorType.unknown,
+            'Download cancelled: time budget exhausted',
+          ),
+        );
+        rethrow;
+      } else if (e.type == DioExceptionType.connectionError ||
           e.type == DioExceptionType.connectionTimeout) {
         await _handleError(
           task,
@@ -233,6 +269,8 @@ class BackgroundDownloadService {
       );
       await _handleError(task, error);
       Error.throwWithStackTrace(error, stackTrace);
+    } finally {
+      budgetTimer.cancel();
     }
   }
 

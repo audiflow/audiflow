@@ -221,8 +221,10 @@ class PlaybackHistoryService {
 
   /// Best-effort auto-delete of downloaded file when episode completes.
   Future<void> _tryAutoDeleteDownload(int episodeId) async {
+    final service = _downloadService;
+    if (service == null) return;
     try {
-      await _downloadService?.onEpisodeCompleted(episodeId);
+      await service.onEpisodeCompleted(episodeId);
     } on Exception {
       // Auto-delete is best-effort; do not break playback flow.
     }
