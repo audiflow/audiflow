@@ -24,7 +24,8 @@ class DevShowDeveloperInfo extends _$DevShowDeveloperInfo {
   /// preventing divergence when the disk write fails.
   Future<void> toggle() async {
     final next = !state;
-    await ref.read(sharedPreferencesProvider).setBool(_key, next);
+    final ok = await ref.read(sharedPreferencesProvider).setBool(_key, next);
+    if (!ok) return;
     state = next;
   }
 }

@@ -66,8 +66,6 @@ New keys in `app_en.arb` and `app_ja.arb`:
 - `developerCopyLabel` — copy button
 - `developerPatternLabel` — pattern field label
 - `developerPatternNotDefined` — "Not defined — add one?"
-- `developerPullToRefresh` — pull to refresh hint
-
 ### Reused Components
 
 - `SmartPlaylistConfigRepository` — `fetchRootMeta()`, `findMatchingPattern()`

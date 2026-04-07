@@ -61,24 +61,22 @@ class EpisodeDevInfoWidget extends ConsumerWidget {
                 style: valueStyle?.copyWith(fontFamily: 'monospace'),
               ),
             ),
-            SizedBox(
-              width: 24,
-              height: 24,
-              child: IconButton(
-                padding: EdgeInsets.zero,
-                iconSize: 16,
-                icon: Icon(
-                  Symbols.content_copy,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-                onPressed: () async {
-                  await Clipboard.setData(ClipboardData(text: feedUrl));
-                  if (!context.mounted) return;
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text(l10n.developerCopied)));
-                },
+            IconButton(
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+              iconSize: 16,
+              tooltip: l10n.developerCopyLabel,
+              icon: Icon(
+                Symbols.content_copy,
+                color: theme.colorScheme.onSurfaceVariant,
               ),
+              onPressed: () async {
+                await Clipboard.setData(ClipboardData(text: feedUrl));
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text(l10n.developerCopied)));
+              },
             ),
           ],
         ),

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
@@ -29,6 +31,7 @@ class DeveloperSettingsScreen extends ConsumerWidget {
         onRefresh: () async {
           final repo = ref.read(smartPlaylistConfigRepositoryProvider);
           final rootMeta = await repo.fetchRootMeta();
+          repo.setPatternSummaries(rootMeta.patterns);
           ref
               .read(patternSummariesProvider.notifier)
               .setSummaries(rootMeta.patterns);
@@ -71,8 +74,9 @@ class DeveloperSettingsScreen extends ConsumerWidget {
               title: Text(l10n.developerShowInfoTitle),
               subtitle: Text(l10n.developerShowInfoSubtitle),
               value: devInfoEnabled,
-              onChanged: (_) =>
-                  ref.read(devShowDeveloperInfoProvider.notifier).toggle(),
+              onChanged: (_) => unawaited(
+                ref.read(devShowDeveloperInfoProvider.notifier).toggle(),
+              ),
             ),
             const Divider(height: 1),
 
