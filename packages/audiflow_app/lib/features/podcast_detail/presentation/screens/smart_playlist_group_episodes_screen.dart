@@ -126,19 +126,17 @@ class _SmartPlaylistGroupEpisodesScreenState
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
-    final allTasksAsync = ref.watch(allDownloadsProvider);
-
-    final dlState = computeBatchDownloadState(
-      episodeIds: _episodeIds,
-      allTasks: allTasksAsync.value ?? [],
-    );
-
     return Scaffold(
       appBar: AppBar(
         title: Text(_formatGroupTitle()),
         actions: [
           PopupMenuButton<String>(
             onSelected: (value) {
+              final allTasks = ref.read(allDownloadsProvider).value ?? [];
+              final dlState = computeBatchDownloadState(
+                episodeIds: _episodeIds,
+                allTasks: allTasks,
+              );
               switch (value) {
                 case 'download_all':
                   if (dlState.hasDownloadable) {
@@ -168,38 +166,45 @@ class _SmartPlaylistGroupEpisodesScreenState
                   );
               }
             },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                enabled: dlState.hasDownloadable,
-                value: 'download_all',
-                child: ListTile(
-                  leading: const Icon(Icons.download),
-                  title: Text(l10n.downloadAllEpisodes),
-                  dense: true,
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-              if (dlState.hasActive)
+            itemBuilder: (context) {
+              final allTasks = ref.read(allDownloadsProvider).value ?? [];
+              final dlState = computeBatchDownloadState(
+                episodeIds: _episodeIds,
+                allTasks: allTasks,
+              );
+              return [
                 PopupMenuItem(
-                  value: 'cancel_all',
+                  enabled: dlState.hasDownloadable,
+                  value: 'download_all',
                   child: ListTile(
-                    leading: const Icon(Icons.cancel_outlined),
-                    title: Text(l10n.downloadCancelAll),
+                    leading: const Icon(Icons.download),
+                    title: Text(l10n.downloadAllEpisodes),
                     dense: true,
                     contentPadding: EdgeInsets.zero,
                   ),
                 ),
-              if (dlState.hasPaused)
-                PopupMenuItem(
-                  value: 'resume_all',
-                  child: ListTile(
-                    leading: const Icon(Icons.play_arrow),
-                    title: Text(l10n.downloadResumeAll),
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
+                if (dlState.hasActive)
+                  PopupMenuItem(
+                    value: 'cancel_all',
+                    child: ListTile(
+                      leading: const Icon(Icons.cancel_outlined),
+                      title: Text(l10n.downloadCancelAll),
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
                   ),
-                ),
-            ],
+                if (dlState.hasPaused)
+                  PopupMenuItem(
+                    value: 'resume_all',
+                    child: ListTile(
+                      leading: const Icon(Icons.play_arrow),
+                      title: Text(l10n.downloadResumeAll),
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+              ];
+            },
           ),
         ],
       ),

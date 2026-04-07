@@ -130,7 +130,6 @@ class _StationDetailContentState extends ConsumerState<_StationDetailContent> {
   @override
   Widget build(BuildContext context) {
     final episodesAsync = ref.watch(stationEpisodesProvider(widget.station.id));
-    final allTasksAsync = ref.watch(allDownloadsProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -150,9 +149,10 @@ class _StationDetailContentState extends ConsumerState<_StationDetailContent> {
                   .toList();
               if (ids == null || ids.isEmpty) return;
 
+              final allTasks = ref.read(allDownloadsProvider).value ?? [];
               final dlState = computeBatchDownloadState(
                 episodeIds: ids,
-                allTasks: allTasksAsync.value ?? [],
+                allTasks: allTasks,
               );
 
               switch (value) {
@@ -188,9 +188,10 @@ class _StationDetailContentState extends ConsumerState<_StationDetailContent> {
               final l10n = AppLocalizations.of(context);
               final ids =
                   episodesAsync.value?.map((se) => se.episodeId).toList() ?? [];
+              final allTasks = ref.read(allDownloadsProvider).value ?? [];
               final dlState = computeBatchDownloadState(
                 episodeIds: ids,
-                allTasks: allTasksAsync.value ?? [],
+                allTasks: allTasks,
               );
               return [
                 PopupMenuItem(

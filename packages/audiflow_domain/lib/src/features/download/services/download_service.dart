@@ -109,25 +109,10 @@ class DownloadService {
   /// [wifiOnly] defaults to user's global setting if not specified.
   /// Returns the created download task, or null if already downloading.
   Future<DownloadTask?> downloadEpisode(int episodeId, {bool? wifiOnly}) async {
-    final episode = await _episodeRepo.getById(episodeId);
-    if (episode == null) {
-      _logger.w('Episode not found: $episodeId');
-      return null;
-    }
-
-    final task = await _repository.createDownload(
-      episodeId: episodeId,
-      audioUrl: episode.audioUrl,
-      wifiOnly: wifiOnly ?? _getWifiOnly(),
-    );
-
+    final task = await _createDownloadTask(episodeId, wifiOnly: wifiOnly);
     if (task != null) {
-      _logger.i('Created download task for episode: $episodeId');
       _queueService.startQueue();
-    } else {
-      _logger.i('Episode already has active download: $episodeId');
     }
-
     return task;
   }
 
@@ -146,10 +131,11 @@ class DownloadService {
 
     var queued = 0;
     for (final episode in seasonEpisodes) {
-      final task = await downloadEpisode(episode.id, wifiOnly: wifiOnly);
+      final task = await _createDownloadTask(episode.id, wifiOnly: wifiOnly);
       if (task != null) queued++;
     }
 
+    if (0 < queued) _queueService.startQueue();
     _logger.i('Queued $queued downloads for season $seasonNumber');
     return queued;
   }
@@ -171,12 +157,39 @@ class DownloadService {
 
     var queued = 0;
     for (final id in capped) {
-      final task = await downloadEpisode(id, wifiOnly: wifiOnly);
+      final task = await _createDownloadTask(id, wifiOnly: wifiOnly);
       if (task != null) queued++;
     }
 
+    if (0 < queued) _queueService.startQueue();
     _logger.i('Batch download: queued $queued of ${capped.length} episodes');
     return queued;
+  }
+
+  /// Creates a download task without starting the queue.
+  Future<DownloadTask?> _createDownloadTask(
+    int episodeId, {
+    bool? wifiOnly,
+  }) async {
+    final episode = await _episodeRepo.getById(episodeId);
+    if (episode == null) {
+      _logger.w('Episode not found: $episodeId');
+      return null;
+    }
+
+    final task = await _repository.createDownload(
+      episodeId: episodeId,
+      audioUrl: episode.audioUrl,
+      wifiOnly: wifiOnly ?? _getWifiOnly(),
+    );
+
+    if (task != null) {
+      _logger.i('Created download task for episode: $episodeId');
+    } else {
+      _logger.i('Episode already has active download: $episodeId');
+    }
+
+    return task;
   }
 
   /// Cancels all active downloads for the given episode IDs.

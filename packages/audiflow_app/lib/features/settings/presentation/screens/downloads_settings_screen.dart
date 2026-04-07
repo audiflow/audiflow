@@ -78,6 +78,7 @@ class DownloadsSettingsScreen extends ConsumerWidget {
             trailing: SizedBox(
               width: 72,
               child: TextFormField(
+                key: ValueKey(batchLimit),
                 initialValue: batchLimit.toString(),
                 keyboardType: TextInputType.number,
                 textAlign: TextAlign.center,
