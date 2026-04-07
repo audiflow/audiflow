@@ -111,7 +111,7 @@ class DownloadService {
   Future<DownloadTask?> downloadEpisode(int episodeId, {bool? wifiOnly}) async {
     final task = await _createDownloadTask(episodeId, wifiOnly: wifiOnly);
     if (task != null) {
-      _queueService.startQueue();
+      unawaited(_queueService.startQueue());
     }
     return task;
   }
@@ -135,7 +135,7 @@ class DownloadService {
       if (task != null) queued++;
     }
 
-    if (0 < queued) _queueService.startQueue();
+    if (0 < queued) unawaited(_queueService.startQueue());
     _logger.i('Queued $queued downloads for season $seasonNumber');
     return queued;
   }
@@ -161,7 +161,7 @@ class DownloadService {
       if (task != null) queued++;
     }
 
-    if (0 < queued) _queueService.startQueue();
+    if (0 < queued) unawaited(_queueService.startQueue());
     _logger.i('Batch download: queued $queued of ${capped.length} episodes');
     return queued;
   }
@@ -361,7 +361,7 @@ class DownloadService {
     }
 
     if (downloading.isNotEmpty) {
-      _queueService.startQueue();
+      unawaited(_queueService.startQueue());
     }
 
     _logger.i('Validation complete');
