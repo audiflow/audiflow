@@ -9,6 +9,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
 import '../../../podcast_detail/presentation/controllers/podcast_detail_controller.dart';
 import '../../../podcast_detail/presentation/widgets/smart_playlist_episode_list_tile.dart';
+import '../../../download/presentation/helpers/batch_download_action_helper.dart';
 import '../controllers/station_detail_controller.dart';
 
 /// Shows filtered episodes for a single [Station].
@@ -132,12 +133,51 @@ class _StationDetailContentState extends ConsumerState<_StationDetailContent> {
       appBar: AppBar(
         title: Text(widget.station.name),
         actions: [
-          IconButton(
-            icon: const Icon(Symbols.edit),
-            tooltip: AppLocalizations.of(context).stationEditTooltip,
-            onPressed: () => context.push(
-              '${AppRoutes.library}/station/${widget.station.id}/edit',
-            ),
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              switch (value) {
+                case 'edit':
+                  context.push(
+                    '${AppRoutes.library}/station/${widget.station.id}/edit',
+                  );
+                case 'download_all':
+                  final ids = episodesAsync.value
+                      ?.map((se) => se.episodeId)
+                      .toList();
+                  if (ids != null && ids.isNotEmpty) {
+                    handleBatchDownload(
+                      context: context,
+                      ref: ref,
+                      episodeIds: ids,
+                    );
+                  }
+              }
+            },
+            itemBuilder: (context) {
+              final l10n = AppLocalizations.of(context);
+              final episodeCount = episodesAsync.value?.length ?? 0;
+              return [
+                PopupMenuItem(
+                  value: 'edit',
+                  child: ListTile(
+                    leading: const Icon(Symbols.edit),
+                    title: Text(l10n.stationEditTooltip),
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                PopupMenuItem(
+                  enabled: 0 < episodeCount,
+                  value: 'download_all',
+                  child: ListTile(
+                    leading: const Icon(Icons.download),
+                    title: Text(l10n.downloadAllEpisodes),
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+              ];
+            },
           ),
         ],
       ),
