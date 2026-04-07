@@ -85,6 +85,12 @@ abstract class AppSettingsRepository {
   /// Persists the max concurrent downloads setting.
   Future<void> setMaxConcurrentDownloads(int count);
 
+  /// Maximum number of episodes to batch-download at once.
+  int getBatchDownloadLimit();
+
+  /// Persists the batch download limit.
+  Future<void> setBatchDownloadLimit(int limit);
+
   // -- Feed Sync --
 
   /// Whether automatic background sync is enabled.

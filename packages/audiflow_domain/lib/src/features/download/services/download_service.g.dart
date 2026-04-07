@@ -113,6 +113,53 @@ final class DownloadAutoDeletePlayedProvider
 String _$downloadAutoDeletePlayedHash() =>
     r'cbccc113b6e9ea5b66235d7a78f9b715167d3446';
 
+/// Provider for batch download limit setting.
+
+@ProviderFor(batchDownloadLimit)
+final batchDownloadLimitProvider = BatchDownloadLimitProvider._();
+
+/// Provider for batch download limit setting.
+
+final class BatchDownloadLimitProvider
+    extends $FunctionalProvider<int, int, int>
+    with $Provider<int> {
+  /// Provider for batch download limit setting.
+  BatchDownloadLimitProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'batchDownloadLimitProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$batchDownloadLimitHash();
+
+  @$internal
+  @override
+  $ProviderElement<int> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  int create(Ref ref) {
+    return batchDownloadLimit(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(int value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<int>(value),
+    );
+  }
+}
+
+String _$batchDownloadLimitHash() =>
+    r'5f51dc449b828c535ddc79fe53a2b4590b5bf4b7';
+
 /// Main service for managing episode downloads.
 ///
 /// Provides high-level API for downloading episodes, managing the queue,

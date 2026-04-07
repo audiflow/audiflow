@@ -35,6 +35,13 @@ bool downloadAutoDeletePlayed(Ref ref) {
   return repo.getAutoDeletePlayed();
 }
 
+/// Provider for batch download limit setting.
+@riverpod
+int batchDownloadLimit(Ref ref) {
+  final repo = ref.watch(appSettingsRepositoryProvider);
+  return repo.getBatchDownloadLimit();
+}
+
 /// Main service for managing episode downloads.
 ///
 /// Provides high-level API for downloading episodes, managing the queue,
