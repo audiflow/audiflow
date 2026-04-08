@@ -77,6 +77,9 @@ class BackgroundSettingsRepository implements AppSettingsRepository {
   int getMaxConcurrentDownloads() => SettingsDefaults.maxConcurrentDownloads;
 
   @override
+  int getBatchDownloadLimit() => SettingsDefaults.batchDownloadLimit;
+
+  @override
   String? getSearchCountry() => null;
 
   @override
@@ -125,6 +128,9 @@ class BackgroundSettingsRepository implements AppSettingsRepository {
 
   @override
   Future<void> setMaxConcurrentDownloads(int count) => _unsupported();
+
+  @override
+  Future<void> setBatchDownloadLimit(int limit) => _unsupported();
 
   @override
   Future<void> setAutoSync(bool enabled) => _unsupported();

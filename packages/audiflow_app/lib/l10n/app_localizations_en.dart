@@ -633,6 +633,50 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get downloadAllEpisodes => 'Download all episodes';
+
+  @override
+  String get downloadAllConfirmTitle => 'Download episodes?';
+
+  @override
+  String downloadAllConfirmContent(int count) {
+    return 'Download $count episodes.';
+  }
+
+  @override
+  String downloadAllLimitNote(int limit) {
+    return 'Limited to first $limit episodes.';
+  }
+
+  @override
+  String downloadAllQueued(int count) {
+    return 'Queued $count downloads';
+  }
+
+  @override
+  String get downloadCancelAll => 'Cancel downloads';
+
+  @override
+  String downloadCancelAllDone(int count) {
+    return 'Cancelled $count downloads';
+  }
+
+  @override
+  String get downloadResumeAll => 'Resume downloads';
+
+  @override
+  String downloadResumeAllDone(int count) {
+    return 'Resumed $count downloads';
+  }
+
+  @override
+  String get downloadsBatchLimitTitle => 'Max Batch Download';
+
+  @override
+  String get downloadsBatchLimitSubtitle =>
+      'Maximum number of episodes to download at once';
+
+  @override
   String get opmlImportTitle => 'Import Podcasts';
 
   @override

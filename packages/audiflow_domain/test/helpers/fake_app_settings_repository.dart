@@ -19,6 +19,7 @@ class FakeAppSettingsRepository implements AppSettingsRepository {
   bool wifiOnlyDownload = true;
   bool autoDeletePlayed = false;
   int maxConcurrentDownloads = 1;
+  int batchDownloadLimit = 25;
   bool autoSync = true;
   int syncIntervalMinutes = 60;
   bool wifiOnlySync = false;
@@ -108,6 +109,13 @@ class FakeAppSettingsRepository implements AppSettingsRepository {
       maxConcurrentDownloads = count;
 
   @override
+  int getBatchDownloadLimit() => batchDownloadLimit;
+
+  @override
+  Future<void> setBatchDownloadLimit(int limit) async =>
+      batchDownloadLimit = limit;
+
+  @override
   bool getAutoSync() => autoSync;
 
   @override
@@ -168,6 +176,7 @@ class FakeAppSettingsRepository implements AppSettingsRepository {
     wifiOnlyDownload = true;
     autoDeletePlayed = false;
     maxConcurrentDownloads = 1;
+    batchDownloadLimit = 25;
     autoSync = true;
     syncIntervalMinutes = 60;
     wifiOnlySync = false;

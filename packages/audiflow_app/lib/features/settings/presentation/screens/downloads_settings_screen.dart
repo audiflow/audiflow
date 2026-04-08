@@ -1,3 +1,4 @@
+import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,6 +19,7 @@ class DownloadsSettingsScreen extends ConsumerWidget {
     final wifiOnly = repo.getWifiOnlyDownload();
     final autoDelete = repo.getAutoDeletePlayed();
     final maxConcurrent = repo.getMaxConcurrentDownloads();
+    final batchLimit = repo.getBatchDownloadLimit();
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settingsDownloadsTitle)),
@@ -68,6 +70,40 @@ class DownloadsSettingsScreen extends ConsumerWidget {
                   ),
                 ),
               ],
+            ),
+          ),
+          ListTile(
+            title: Text(l10n.downloadsBatchLimitTitle),
+            subtitle: Text(l10n.downloadsBatchLimitSubtitle),
+            trailing: SizedBox(
+              width: 72,
+              child: TextFormField(
+                key: ValueKey(batchLimit),
+                initialValue: batchLimit.toString(),
+                keyboardType: TextInputType.number,
+                textAlign: TextAlign.center,
+                decoration: const InputDecoration(
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 8,
+                  ),
+                  border: OutlineInputBorder(),
+                ),
+                onFieldSubmitted: (value) {
+                  final parsed = int.tryParse(value);
+                  if (parsed == null) {
+                    // Reset to current value on non-numeric input.
+                    ref.invalidate(appSettingsRepositoryProvider);
+                    return;
+                  }
+                  final clamped = parsed.clamp(
+                    SettingsDefaults.batchDownloadLimitMin,
+                    SettingsDefaults.batchDownloadLimitMax,
+                  );
+                  _update(ref, () => repo.setBatchDownloadLimit(clamped));
+                },
+              ),
             ),
           ),
         ],

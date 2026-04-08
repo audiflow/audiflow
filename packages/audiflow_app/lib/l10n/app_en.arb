@@ -404,6 +404,44 @@
     }
   },
 
+  "downloadAllEpisodes": "Download all episodes",
+  "@downloadAllEpisodes": { "description": "Menu item to batch download episodes" },
+  "downloadAllConfirmTitle": "Download episodes?",
+  "@downloadAllConfirmTitle": { "description": "Batch download confirmation dialog title" },
+  "downloadAllConfirmContent": "Download {count} episodes.",
+  "@downloadAllConfirmContent": {
+    "description": "Batch download confirmation body",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "downloadAllLimitNote": "Limited to first {limit} episodes.",
+  "@downloadAllLimitNote": {
+    "description": "Note when episode count exceeds batch limit",
+    "placeholders": { "limit": { "type": "int" } }
+  },
+  "downloadAllQueued": "Queued {count} downloads",
+  "@downloadAllQueued": {
+    "description": "Snackbar after batch download",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "downloadCancelAll": "Cancel downloads",
+  "@downloadCancelAll": { "description": "Menu item to cancel active downloads" },
+  "downloadCancelAllDone": "Cancelled {count} downloads",
+  "@downloadCancelAllDone": {
+    "description": "Snackbar after cancelling batch downloads",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "downloadResumeAll": "Resume downloads",
+  "@downloadResumeAll": { "description": "Menu item to resume paused downloads" },
+  "downloadResumeAllDone": "Resumed {count} downloads",
+  "@downloadResumeAllDone": {
+    "description": "Snackbar after resuming batch downloads",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "downloadsBatchLimitTitle": "Max Batch Download",
+  "@downloadsBatchLimitTitle": { "description": "Settings label for batch download limit" },
+  "downloadsBatchLimitSubtitle": "Maximum number of episodes to download at once",
+  "@downloadsBatchLimitSubtitle": { "description": "Settings subtitle for batch download limit" },
+
   "opmlImportTitle": "Import Podcasts",
   "@opmlImportTitle": { "description": "OPML import screen title" },
   "opmlAlreadySubscribed": "Already subscribed",

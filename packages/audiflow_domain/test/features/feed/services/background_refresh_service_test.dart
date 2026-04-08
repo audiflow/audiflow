@@ -90,6 +90,10 @@ class FakeAppSettingsRepository implements AppSettingsRepository {
   @override
   Future<void> setMaxConcurrentDownloads(int count) async {}
   @override
+  int getBatchDownloadLimit() => 25;
+  @override
+  Future<void> setBatchDownloadLimit(int limit) async {}
+  @override
   Future<void> setAutoSync(bool enabled) async {}
   @override
   Future<void> setSyncIntervalMinutes(int minutes) async {}

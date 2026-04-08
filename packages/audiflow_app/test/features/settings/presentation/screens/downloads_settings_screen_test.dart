@@ -1,6 +1,7 @@
 import 'package:audiflow_app/features/settings/presentation/screens/downloads_settings_screen.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -108,5 +109,43 @@ void main() {
         expect(prefs.getInt('settings_max_concurrent_downloads'), equals(3));
       },
     );
+
+    testWidgets('shows Max Batch Download label', (tester) async {
+      await tester.pumpWidget(buildTestWidget());
+
+      final l10n = AppLocalizations.of(
+        tester.element(find.byType(DownloadsSettingsScreen)),
+      );
+      check(find.text(l10n.downloadsBatchLimitTitle).evaluate()).isNotEmpty();
+    });
+
+    testWidgets('batch limit text field shows default value 25', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildTestWidget());
+
+      final fields = tester
+          .widgetList<EditableText>(find.byType(EditableText))
+          .toList();
+      final batchField = fields.where((f) => f.controller.text == '25');
+      check(batchField.length).equals(1);
+    });
+
+    testWidgets('batch limit text field shows pre-set value from preferences', (
+      tester,
+    ) async {
+      SharedPreferences.setMockInitialValues({
+        'settings_batch_download_limit': 50,
+      });
+      prefs = await SharedPreferences.getInstance();
+
+      await tester.pumpWidget(buildTestWidget());
+
+      final fields = tester
+          .widgetList<EditableText>(find.byType(EditableText))
+          .toList();
+      final batchField = fields.where((f) => f.controller.text == '50');
+      check(batchField.length).equals(1);
+    });
   });
 }

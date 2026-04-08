@@ -271,6 +271,12 @@ class _FakeAppSettingsRepository implements AppSettingsRepository {
       throw UnimplementedError();
 
   @override
+  int getBatchDownloadLimit() => throw UnimplementedError();
+
+  @override
+  Future<void> setBatchDownloadLimit(int limit) => throw UnimplementedError();
+
+  @override
   bool getNotifyNewEpisodes() => throw UnimplementedError();
 
   @override

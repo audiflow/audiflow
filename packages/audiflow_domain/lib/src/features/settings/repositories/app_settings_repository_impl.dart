@@ -140,6 +140,26 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
     await _ds.setInt(SettingsKeys.maxConcurrentDownloads, count);
   }
 
+  @override
+  int getBatchDownloadLimit() {
+    final raw =
+        _ds.getInt(SettingsKeys.batchDownloadLimit) ??
+        SettingsDefaults.batchDownloadLimit;
+    return raw.clamp(
+      SettingsDefaults.batchDownloadLimitMin,
+      SettingsDefaults.batchDownloadLimitMax,
+    );
+  }
+
+  @override
+  Future<void> setBatchDownloadLimit(int limit) async {
+    final clamped = limit.clamp(
+      SettingsDefaults.batchDownloadLimitMin,
+      SettingsDefaults.batchDownloadLimitMax,
+    );
+    await _ds.setInt(SettingsKeys.batchDownloadLimit, clamped);
+  }
+
   // -- Feed Sync --
 
   @override
@@ -244,6 +264,7 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
       _ds.remove(SettingsKeys.wifiOnlyDownload),
       _ds.remove(SettingsKeys.autoDeletePlayed),
       _ds.remove(SettingsKeys.maxConcurrentDownloads),
+      _ds.remove(SettingsKeys.batchDownloadLimit),
       _ds.remove(SettingsKeys.autoSync),
       _ds.remove(SettingsKeys.syncIntervalMinutes),
       _ds.remove(SettingsKeys.wifiOnlySync),

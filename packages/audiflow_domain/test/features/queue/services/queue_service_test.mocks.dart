@@ -524,6 +524,23 @@ class MockAppSettingsRepository extends _i1.Mock
           as _i4.Future<void>);
 
   @override
+  int getBatchDownloadLimit() =>
+      (super.noSuchMethod(
+            Invocation.method(#getBatchDownloadLimit, []),
+            returnValue: 0,
+          )
+          as int);
+
+  @override
+  _i4.Future<void> setBatchDownloadLimit(int? limit) =>
+      (super.noSuchMethod(
+            Invocation.method(#setBatchDownloadLimit, [limit]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
   bool getAutoSync() =>
       (super.noSuchMethod(
             Invocation.method(#getAutoSync, []),

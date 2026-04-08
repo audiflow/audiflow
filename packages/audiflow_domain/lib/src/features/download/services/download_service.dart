@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:audiflow_core/audiflow_core.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -35,6 +36,13 @@ bool downloadAutoDeletePlayed(Ref ref) {
   return repo.getAutoDeletePlayed();
 }
 
+/// Provider for batch download limit setting.
+@riverpod
+int batchDownloadLimit(Ref ref) {
+  final repo = ref.watch(appSettingsRepositoryProvider);
+  return repo.getBatchDownloadLimit();
+}
+
 /// Main service for managing episode downloads.
 ///
 /// Provides high-level API for downloading episodes, managing the queue,
@@ -56,6 +64,7 @@ DownloadService downloadService(Ref ref) {
     logger: logger,
     getWifiOnly: () => ref.read(downloadWifiOnlyProvider),
     getAutoDeletePlayed: () => ref.read(downloadAutoDeletePlayedProvider),
+    getBatchDownloadLimit: () => ref.read(batchDownloadLimitProvider),
     reconcilerService: reconcilerService,
   );
 
@@ -73,6 +82,7 @@ class DownloadService {
     required Logger logger,
     required bool Function() getWifiOnly,
     required bool Function() getAutoDeletePlayed,
+    required int Function() getBatchDownloadLimit,
     StationReconcilerService? reconcilerService,
   }) : _repository = repository,
        _queueService = queueService,
@@ -81,6 +91,7 @@ class DownloadService {
        _logger = logger,
        _getWifiOnly = getWifiOnly,
        _getAutoDeletePlayed = getAutoDeletePlayed,
+       _getBatchDownloadLimit = getBatchDownloadLimit,
        _reconcilerService = reconcilerService;
 
   final DownloadRepository _repository;
@@ -90,6 +101,7 @@ class DownloadService {
   final Logger _logger;
   final bool Function() _getWifiOnly;
   final bool Function() _getAutoDeletePlayed;
+  final int Function() _getBatchDownloadLimit;
   final StationReconcilerService? _reconcilerService;
 
   /// Downloads a single episode.
@@ -97,25 +109,10 @@ class DownloadService {
   /// [wifiOnly] defaults to user's global setting if not specified.
   /// Returns the created download task, or null if already downloading.
   Future<DownloadTask?> downloadEpisode(int episodeId, {bool? wifiOnly}) async {
-    final episode = await _episodeRepo.getById(episodeId);
-    if (episode == null) {
-      _logger.w('Episode not found: $episodeId');
-      return null;
-    }
-
-    final task = await _repository.createDownload(
-      episodeId: episodeId,
-      audioUrl: episode.audioUrl,
-      wifiOnly: wifiOnly ?? _getWifiOnly(),
-    );
-
+    final task = await _createDownloadTask(episodeId, wifiOnly: wifiOnly);
     if (task != null) {
-      _logger.i('Created download task for episode: $episodeId');
-      _queueService.startQueue();
-    } else {
-      _logger.i('Episode already has active download: $episodeId');
+      unawaited(_queueService.startQueue());
     }
-
     return task;
   }
 
@@ -134,12 +131,113 @@ class DownloadService {
 
     var queued = 0;
     for (final episode in seasonEpisodes) {
-      final task = await downloadEpisode(episode.id, wifiOnly: wifiOnly);
+      final task = await _createDownloadTask(episode.id, wifiOnly: wifiOnly);
       if (task != null) queued++;
     }
 
+    if (0 < queued) unawaited(_queueService.startQueue());
     _logger.i('Queued $queued downloads for season $seasonNumber');
     return queued;
+  }
+
+  /// Downloads episodes by ID, capped at the user's batch limit.
+  ///
+  /// Episodes are processed in list order (reflecting display sort).
+  /// Returns the number of downloads actually queued.
+  Future<int> downloadEpisodes(List<int> episodeIds, {bool? wifiOnly}) async {
+    if (episodeIds.isEmpty) return 0;
+
+    final limit = _getBatchDownloadLimit().clamp(
+      SettingsDefaults.batchDownloadLimitMin,
+      SettingsDefaults.batchDownloadLimitMax,
+    );
+
+    var queued = 0;
+    for (final id in episodeIds) {
+      if (limit <= queued) break;
+      final task = await _createDownloadTask(id, wifiOnly: wifiOnly);
+      if (task != null) queued++;
+    }
+
+    if (0 < queued) unawaited(_queueService.startQueue());
+    _logger.i(
+      'Batch download: queued $queued of ${episodeIds.length} episodes',
+    );
+    return queued;
+  }
+
+  /// Creates a download task without starting the queue.
+  Future<DownloadTask?> _createDownloadTask(
+    int episodeId, {
+    bool? wifiOnly,
+  }) async {
+    final episode = await _episodeRepo.getById(episodeId);
+    if (episode == null) {
+      _logger.w('Episode not found: $episodeId');
+      return null;
+    }
+
+    final task = await _repository.createDownload(
+      episodeId: episodeId,
+      audioUrl: episode.audioUrl,
+      wifiOnly: wifiOnly ?? _getWifiOnly(),
+    );
+
+    if (task != null) {
+      _logger.i('Created download task for episode: $episodeId');
+    } else {
+      _logger.i('Episode already has an existing download task: $episodeId');
+    }
+
+    return task;
+  }
+
+  /// Cancels all active downloads for the given episode IDs.
+  ///
+  /// Two-pass approach to prevent the queue from picking up the next
+  /// pending task after each cancellation:
+  /// 1. Mark all active tasks as cancelled (queue's getNextPending
+  ///    returns null).
+  /// 2. Cancel any in-progress file downloads.
+  ///
+  /// Returns the number of downloads cancelled.
+  Future<int> cancelEpisodeDownloads(List<int> episodeIds) async {
+    // Pass 1: collect active tasks and mark all as cancelled.
+    final activeTasks = <DownloadTask>[];
+    for (final episodeId in episodeIds) {
+      final task = await _repository.getByEpisodeId(episodeId);
+      if (task == null) continue;
+      if (!task.downloadStatus.isActive) continue;
+      activeTasks.add(task);
+      await _repository.updateStatus(
+        id: task.id,
+        status: const DownloadStatus.cancelled(),
+      );
+    }
+
+    // Pass 2: cancel in-progress file downloads.
+    for (final task in activeTasks) {
+      _fileService.cancelDownload(task.id);
+    }
+
+    _logger.i('Batch cancel: cancelled ${activeTasks.length} downloads');
+    return activeTasks.length;
+  }
+
+  /// Resumes all paused downloads for the given episode IDs.
+  ///
+  /// Returns the number of downloads resumed.
+  Future<int> resumeEpisodeDownloads(List<int> episodeIds) async {
+    var resumed = 0;
+    for (final episodeId in episodeIds) {
+      final task = await _repository.getByEpisodeId(episodeId);
+      if (task == null) continue;
+      if (task.downloadStatus is! DownloadStatusPaused) continue;
+      await _queueService.resumeDownload(task.id);
+      resumed++;
+    }
+    _logger.i('Batch resume: resumed $resumed downloads');
+    return resumed;
   }
 
   /// Pauses an active download.
@@ -263,7 +361,7 @@ class DownloadService {
     }
 
     if (downloading.isNotEmpty) {
-      _queueService.startQueue();
+      unawaited(_queueService.startQueue());
     }
 
     _logger.i('Validation complete');

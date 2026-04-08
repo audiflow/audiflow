@@ -48,6 +48,9 @@ class SettingsKeys {
   static const String maxConcurrentDownloads =
       'settings_max_concurrent_downloads';
 
+  /// Maximum number of episodes to batch-download at once.
+  static const String batchDownloadLimit = 'settings_batch_download_limit';
+
   // -- Feed Sync --
 
   /// Enable automatic background feed sync.
@@ -114,6 +117,15 @@ class SettingsDefaults {
 
   /// Default maximum concurrent downloads.
   static const int maxConcurrentDownloads = 1;
+
+  /// Default batch download limit.
+  static const int batchDownloadLimit = 25;
+
+  /// Minimum allowed batch download limit.
+  static const int batchDownloadLimitMin = 1;
+
+  /// Maximum allowed batch download limit.
+  static const int batchDownloadLimitMax = 500;
 
   /// Default auto-sync setting.
   static const bool autoSync = true;

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +11,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
 import '../../../podcast_detail/presentation/controllers/podcast_detail_controller.dart';
 import '../../../podcast_detail/presentation/widgets/smart_playlist_episode_list_tile.dart';
+import '../../../download/presentation/helpers/batch_download_action_helper.dart';
 import '../controllers/station_detail_controller.dart';
 
 /// Shows filtered episodes for a single [Station].
@@ -132,12 +135,107 @@ class _StationDetailContentState extends ConsumerState<_StationDetailContent> {
       appBar: AppBar(
         title: Text(widget.station.name),
         actions: [
-          IconButton(
-            icon: const Icon(Symbols.edit),
-            tooltip: AppLocalizations.of(context).stationEditTooltip,
-            onPressed: () => context.push(
-              '${AppRoutes.library}/station/${widget.station.id}/edit',
-            ),
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              if (value == 'edit') {
+                context.push(
+                  '${AppRoutes.library}/station/${widget.station.id}/edit',
+                );
+                return;
+              }
+
+              final ids = episodesAsync.value
+                  ?.map((se) => se.episodeId)
+                  .toList();
+              if (ids == null || ids.isEmpty) return;
+
+              final allTasks = ref.read(allDownloadsProvider).value ?? [];
+              final dlState = computeBatchDownloadState(
+                episodeIds: ids,
+                allTasks: allTasks,
+              );
+
+              switch (value) {
+                case 'download_all':
+                  if (dlState.hasDownloadable) {
+                    unawaited(
+                      handleBatchDownload(
+                        context: context,
+                        ref: ref,
+                        episodeIds: ids,
+                        downloadableCount: dlState.downloadableCount,
+                      ),
+                    );
+                  }
+                case 'cancel_all':
+                  unawaited(
+                    handleBatchCancel(
+                      context: context,
+                      ref: ref,
+                      episodeIds: ids,
+                    ),
+                  );
+                case 'resume_all':
+                  unawaited(
+                    handleBatchResume(
+                      context: context,
+                      ref: ref,
+                      episodeIds: ids,
+                    ),
+                  );
+              }
+            },
+            itemBuilder: (context) {
+              final l10n = AppLocalizations.of(context);
+              final ids =
+                  episodesAsync.value?.map((se) => se.episodeId).toList() ?? [];
+              final allTasks = ref.read(allDownloadsProvider).value ?? [];
+              final dlState = computeBatchDownloadState(
+                episodeIds: ids,
+                allTasks: allTasks,
+              );
+              return [
+                PopupMenuItem(
+                  enabled: dlState.hasDownloadable,
+                  value: 'download_all',
+                  child: ListTile(
+                    leading: const Icon(Icons.download),
+                    title: Text(l10n.downloadAllEpisodes),
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                if (dlState.hasCancelable)
+                  PopupMenuItem(
+                    value: 'cancel_all',
+                    child: ListTile(
+                      leading: const Icon(Icons.cancel_outlined),
+                      title: Text(l10n.downloadCancelAll),
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                if (dlState.hasPaused)
+                  PopupMenuItem(
+                    value: 'resume_all',
+                    child: ListTile(
+                      leading: const Icon(Icons.play_arrow),
+                      title: Text(l10n.downloadResumeAll),
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                PopupMenuItem(
+                  value: 'edit',
+                  child: ListTile(
+                    leading: const Icon(Symbols.edit),
+                    title: Text(l10n.stationEditTooltip),
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+              ];
+            },
           ),
         ],
       ),

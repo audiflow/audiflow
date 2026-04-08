@@ -1,4 +1,5 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:logger/logger.dart';
 import 'package:mockito/annotations.dart';
@@ -57,6 +58,7 @@ void main() {
   late DownloadService service;
   late bool wifiOnly;
   late bool autoDeletePlayed;
+  late int batchDownloadLimit;
 
   setUp(() {
     mockRepository = MockDownloadRepository();
@@ -65,6 +67,7 @@ void main() {
     mockEpisodeRepo = MockEpisodeRepository();
     wifiOnly = false;
     autoDeletePlayed = false;
+    batchDownloadLimit = 25;
 
     service = DownloadService(
       repository: mockRepository,
@@ -74,6 +77,7 @@ void main() {
       logger: Logger(level: Level.off),
       getWifiOnly: () => wifiOnly,
       getAutoDeletePlayed: () => autoDeletePlayed,
+      getBatchDownloadLimit: () => batchDownloadLimit,
     );
   });
 
@@ -740,6 +744,87 @@ void main() {
     test('can be called without error', () {
       // Act & Assert - should not throw
       service.dispose();
+    });
+  });
+
+  group('downloadEpisodes', () {
+    test('returns 0 when episode list is empty', () async {
+      final queued = await service.downloadEpisodes([]);
+
+      check(queued).equals(0);
+    });
+
+    test('queues downloads for given episode IDs up to limit', () async {
+      batchDownloadLimit = 10;
+      final episodes = [_episode(id: 1), _episode(id: 2), _episode(id: 3)];
+
+      for (final ep in episodes) {
+        when(mockEpisodeRepo.getById(ep.id)).thenAnswer((_) async => ep);
+        when(
+          mockRepository.createDownload(
+            episodeId: ep.id,
+            audioUrl: ep.audioUrl,
+            wifiOnly: false,
+          ),
+        ).thenAnswer((_) async => _task(id: ep.id + 100, episodeId: ep.id));
+      }
+      when(mockQueueService.startQueue()).thenAnswer((_) async {});
+
+      final queued = await service.downloadEpisodes([1, 2, 3]);
+
+      check(queued).equals(3);
+    });
+
+    test('caps at batch limit when more episodes provided', () async {
+      batchDownloadLimit = 2;
+      final episodes = [_episode(id: 1), _episode(id: 2), _episode(id: 3)];
+
+      // Only first 2 should be attempted
+      for (final ep in episodes.take(2)) {
+        when(mockEpisodeRepo.getById(ep.id)).thenAnswer((_) async => ep);
+        when(
+          mockRepository.createDownload(
+            episodeId: ep.id,
+            audioUrl: ep.audioUrl,
+            wifiOnly: false,
+          ),
+        ).thenAnswer((_) async => _task(id: ep.id + 100, episodeId: ep.id));
+      }
+      when(mockQueueService.startQueue()).thenAnswer((_) async {});
+
+      final queued = await service.downloadEpisodes([1, 2, 3]);
+
+      check(queued).equals(2);
+      verifyNever(mockEpisodeRepo.getById(3));
+    });
+
+    test('skips episodes that already have active downloads', () async {
+      batchDownloadLimit = 10;
+      final ep1 = _episode(id: 1);
+      final ep2 = _episode(id: 2);
+
+      when(mockEpisodeRepo.getById(1)).thenAnswer((_) async => ep1);
+      when(
+        mockRepository.createDownload(
+          episodeId: 1,
+          audioUrl: ep1.audioUrl,
+          wifiOnly: false,
+        ),
+      ).thenAnswer((_) async => _task(id: 101, episodeId: 1));
+      when(mockQueueService.startQueue()).thenAnswer((_) async {});
+
+      when(mockEpisodeRepo.getById(2)).thenAnswer((_) async => ep2);
+      when(
+        mockRepository.createDownload(
+          episodeId: 2,
+          audioUrl: ep2.audioUrl,
+          wifiOnly: false,
+        ),
+      ).thenAnswer((_) async => null); // already has active download
+
+      final queued = await service.downloadEpisodes([1, 2]);
+
+      check(queued).equals(1);
     });
   });
 }

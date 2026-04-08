@@ -1244,6 +1244,72 @@ abstract class AppLocalizations {
   /// **'{status} ({count})'**
   String downloadSectionCount(String status, int count);
 
+  /// Menu item to batch download episodes
+  ///
+  /// In en, this message translates to:
+  /// **'Download all episodes'**
+  String get downloadAllEpisodes;
+
+  /// Batch download confirmation dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Download episodes?'**
+  String get downloadAllConfirmTitle;
+
+  /// Batch download confirmation body
+  ///
+  /// In en, this message translates to:
+  /// **'Download {count} episodes.'**
+  String downloadAllConfirmContent(int count);
+
+  /// Note when episode count exceeds batch limit
+  ///
+  /// In en, this message translates to:
+  /// **'Limited to first {limit} episodes.'**
+  String downloadAllLimitNote(int limit);
+
+  /// Snackbar after batch download
+  ///
+  /// In en, this message translates to:
+  /// **'Queued {count} downloads'**
+  String downloadAllQueued(int count);
+
+  /// Menu item to cancel active downloads
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel downloads'**
+  String get downloadCancelAll;
+
+  /// Snackbar after cancelling batch downloads
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled {count} downloads'**
+  String downloadCancelAllDone(int count);
+
+  /// Menu item to resume paused downloads
+  ///
+  /// In en, this message translates to:
+  /// **'Resume downloads'**
+  String get downloadResumeAll;
+
+  /// Snackbar after resuming batch downloads
+  ///
+  /// In en, this message translates to:
+  /// **'Resumed {count} downloads'**
+  String downloadResumeAllDone(int count);
+
+  /// Settings label for batch download limit
+  ///
+  /// In en, this message translates to:
+  /// **'Max Batch Download'**
+  String get downloadsBatchLimitTitle;
+
+  /// Settings subtitle for batch download limit
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum number of episodes to download at once'**
+  String get downloadsBatchLimitSubtitle;
+
   /// OPML import screen title
   ///
   /// In en, this message translates to:
