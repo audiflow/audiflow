@@ -2,6 +2,7 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:logger/logger.dart';
 
 import '../l10n/app_localizations.dart';
 import '../features/library/presentation/screens/library_screen.dart';
@@ -659,24 +660,49 @@ class _NotificationEpisodeScreen extends ConsumerStatefulWidget {
 
 class _NotificationEpisodeScreenState
     extends ConsumerState<_NotificationEpisodeScreen> {
+  final _logger = Logger(printer: PrefixPrinter(PrettyPrinter(methodCount: 0)));
+
   @override
   void initState() {
     super.initState();
+    _logger.i(
+      '[NotifResolve] initState: '
+      'podcastId=${widget.podcastId}, episodeId=${widget.episodeId}',
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) => _resolve());
   }
 
   Future<void> _resolve() async {
+    _logger.i('[NotifResolve] _resolve() started');
     final episodeRepo = ref.read(episodeRepositoryProvider);
     final subscriptionRepo = ref.read(subscriptionRepositoryProvider);
 
     final episode = await episodeRepo.getById(widget.episodeId);
+    _logger.i(
+      '[NotifResolve] episodeRepo.getById(${widget.episodeId}) -> '
+      '${episode == null ? "null" : "found (podcastId=${episode.podcastId}, guid=${episode.guid})"}',
+    );
     if (episode == null || episode.podcastId != widget.podcastId || !mounted) {
+      _logger.w(
+        '[NotifResolve] episode lookup failed or podcastId mismatch '
+        '(expected=${widget.podcastId}, '
+        'actual=${episode?.podcastId}, mounted=$mounted). '
+        'Falling back to library.',
+      );
       if (mounted) context.go(AppRoutes.library);
       return;
     }
 
     final subscription = await subscriptionRepo.getById(widget.podcastId);
+    _logger.i(
+      '[NotifResolve] subscriptionRepo.getById(${widget.podcastId}) -> '
+      '${subscription == null ? "null" : "found (itunesId=${subscription.itunesId}, title=${subscription.title})"}',
+    );
     if (subscription == null || !mounted) {
+      _logger.w(
+        '[NotifResolve] subscription lookup failed (mounted=$mounted). '
+        'Falling back to library.',
+      );
       if (mounted) context.go(AppRoutes.library);
       return;
     }
@@ -694,6 +720,8 @@ class _NotificationEpisodeScreenState
       'artworkUrl': subscription.artworkUrl,
       'itunesId': subscription.itunesId,
     };
+
+    _logger.i('[NotifResolve] navigating to: $episodePath');
 
     // Single atomic navigation via go(). GoRouter builds the full route
     // stack (library -> podcast detail -> episode detail) in one pass.
