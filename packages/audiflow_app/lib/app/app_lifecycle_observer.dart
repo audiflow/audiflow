@@ -58,21 +58,19 @@ class _AppLifecycleObserverState extends ConsumerState<AppLifecycleObserver> {
 
   Future<void> _scheduleBackgroundDownloads() async {
     final downloadRepo = ref.read(downloadRepositoryProvider);
-    final activeCount = await downloadRepo.getActiveCount();
-    if (0 < activeCount) {
-      final pending = await downloadRepo.getByStatus(
-        const DownloadStatus.pending(),
-      );
-      final downloading = await downloadRepo.getByStatus(
-        const DownloadStatus.downloading(),
-      );
-      final allActive = [...pending, ...downloading];
-      final requireWifiOnly =
-          allActive.isNotEmpty && allActive.every((t) => t.wifiOnly);
-      await BackgroundTaskRegistrar.registerDownloadTask(
-        wifiOnly: requireWifiOnly,
-      );
-    }
+    final pending = await downloadRepo.getByStatus(
+      const DownloadStatus.pending(),
+    );
+    final downloading = await downloadRepo.getByStatus(
+      const DownloadStatus.downloading(),
+    );
+    final allActive = [...pending, ...downloading];
+    if (allActive.isEmpty) return;
+
+    final requireWifiOnly = allActive.every((t) => t.wifiOnly);
+    await BackgroundTaskRegistrar.registerDownloadTask(
+      wifiOnly: requireWifiOnly,
+    );
   }
 
   Future<void> _updateBackgroundRegistration() async {
