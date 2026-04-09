@@ -696,6 +696,53 @@ void main() {
       verify(mockQueueService.startQueue()).called(1);
     });
 
+    test(
+      'migrates stale path when file exists at reconstructed location',
+      () async {
+        // Arrange: stored path has old container UUID, file exists at
+        // current downloads directory.
+        final completed = [
+          _task(
+            id: 1,
+            localPath: '/old-uuid/Documents/downloads/ep1.mp3',
+            status: 3,
+          ),
+        ];
+        when(
+          mockRepository.getByStatus(const DownloadStatus.completed()),
+        ).thenAnswer((_) async => completed);
+        when(
+          mockFileService.fileExists('/old-uuid/Documents/downloads/ep1.mp3'),
+        ).thenAnswer((_) async => false);
+        when(
+          mockFileService.fileExists('/downloads/ep1.mp3'),
+        ).thenAnswer((_) async => true);
+        when(
+          mockRepository.updateStatus(
+            id: 1,
+            status: const DownloadStatus.completed(),
+            localPath: '/downloads/ep1.mp3',
+          ),
+        ).thenAnswer((_) async {});
+        when(
+          mockRepository.getByStatus(const DownloadStatus.downloading()),
+        ).thenAnswer((_) async => []);
+
+        // Act
+        await service.validateDownloads();
+
+        // Assert: path is migrated, task is NOT deleted.
+        verify(
+          mockRepository.updateStatus(
+            id: 1,
+            status: const DownloadStatus.completed(),
+            localPath: '/downloads/ep1.mp3',
+          ),
+        ).called(1);
+        verifyNever(mockRepository.delete(1));
+      },
+    );
+
     test('does not start queue when no interrupted downloads', () async {
       // Arrange
       when(

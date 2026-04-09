@@ -339,7 +339,7 @@ GoRouter createAppRouter({int lastTabIndex = 0}) {
 /// Builds the podcast detail screen from route state.
 ///
 /// When [extra] contains a [Podcast], uses it directly. Otherwise falls back
-/// to a subscription-ID lookup from the `:id` path parameter (supports
+/// to an iTunes ID lookup from the `:id` path parameter (supports
 /// notification taps and deep links where extra is unavailable).
 Widget _buildPodcastDetailScreen(GoRouterState state) {
   final extra = state.extra;
