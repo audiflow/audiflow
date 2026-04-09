@@ -310,22 +310,48 @@ class DownloadService {
   }
 
   /// Returns the local file path for an episode if downloaded.
+  ///
+  /// On iOS the app container path can change between launches (the UUID
+  /// segment is rotated). When the stored absolute path is stale, we
+  /// reconstruct it from the current documents directory + the original
+  /// filename and update the record so future lookups are fast.
   Future<String?> getLocalPath(int episodeId) async {
     final task = await _repository.getCompletedForEpisode(episodeId);
     if (task?.localPath == null) return null;
 
-    // Verify file exists
-    if (!await _fileService.fileExists(task!.localPath!)) {
-      _logger.w('Download file missing: ${task.localPath}');
-      await _repository.updateStatus(
-        id: task.id,
-        status: const DownloadStatus.failed(),
-        lastError: 'File not found',
-      );
-      return null;
+    final storedPath = task!.localPath!;
+
+    // Fast path: file exists at the stored absolute path.
+    if (await _fileService.fileExists(storedPath)) {
+      return storedPath;
     }
 
-    return task.localPath;
+    // Slow path: container UUID may have changed. Reconstruct path from
+    // the current documents directory and the stored filename.
+    final filename = storedPath.split('/').last;
+    final currentDir = await _fileService.getDownloadsDirectory();
+    final reconstructed = '$currentDir/$filename';
+
+    if (await _fileService.fileExists(reconstructed)) {
+      _logger.i(
+        'Download path migrated for episode $episodeId: '
+        '$storedPath -> $reconstructed',
+      );
+      await _repository.updateStatus(
+        id: task.id,
+        status: const DownloadStatus.completed(),
+        localPath: reconstructed,
+      );
+      return reconstructed;
+    }
+
+    _logger.w('Download file missing: $storedPath (also tried $reconstructed)');
+    await _repository.updateStatus(
+      id: task.id,
+      status: const DownloadStatus.failed(),
+      lastError: 'File not found',
+    );
+    return null;
   }
 
   /// Validates all downloads on app startup.
@@ -340,9 +366,31 @@ class DownloadService {
       const DownloadStatus.completed(),
     );
 
+    final currentDir = await _fileService.getDownloadsDirectory();
     for (final task in completed) {
-      if (task.localPath == null ||
-          !await _fileService.fileExists(task.localPath!)) {
+      if (task.localPath == null) {
+        _logger.w('Orphaned download record (no path): ${task.id}');
+        await _repository.delete(task.id);
+        continue;
+      }
+
+      // Try stored path first, then reconstruct from current directory
+      // in case the iOS container UUID changed.
+      final storedPath = task.localPath!;
+      if (await _fileService.fileExists(storedPath)) continue;
+
+      final filename = storedPath.split('/').last;
+      final reconstructed = '$currentDir/$filename';
+      if (await _fileService.fileExists(reconstructed)) {
+        _logger.i(
+          'Startup migration: ${task.id} path updated to $reconstructed',
+        );
+        await _repository.updateStatus(
+          id: task.id,
+          status: const DownloadStatus.completed(),
+          localPath: reconstructed,
+        );
+      } else {
         _logger.w('Orphaned download record: ${task.id}');
         await _repository.delete(task.id);
       }

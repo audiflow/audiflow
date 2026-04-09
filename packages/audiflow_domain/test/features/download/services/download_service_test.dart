@@ -69,6 +69,11 @@ void main() {
     autoDeletePlayed = false;
     batchDownloadLimit = 25;
 
+    // Stub getDownloadsDirectory for path reconstruction fallback.
+    when(
+      mockFileService.getDownloadsDirectory(),
+    ).thenAnswer((_) async => '/downloads');
+
     service = DownloadService(
       repository: mockRepository,
       queueService: mockQueueService,
@@ -508,12 +513,16 @@ void main() {
       final task = _task(
         id: 1,
         episodeId: 10,
-        localPath: '/downloads/ep10.mp3',
+        localPath: '/old-container/downloads/ep10.mp3',
         status: 3,
       );
       when(
         mockRepository.getCompletedForEpisode(10),
       ).thenAnswer((_) async => task);
+      // Both stored and reconstructed paths are missing.
+      when(
+        mockFileService.fileExists('/old-container/downloads/ep10.mp3'),
+      ).thenAnswer((_) async => false);
       when(
         mockFileService.fileExists('/downloads/ep10.mp3'),
       ).thenAnswer((_) async => false);
@@ -539,6 +548,45 @@ void main() {
       ).called(1);
     });
 
+    test('migrates path when container UUID changed', () async {
+      // Arrange: stored path has old UUID, but file exists at current dir.
+      final task = _task(
+        id: 1,
+        episodeId: 10,
+        localPath: '/old-uuid/Documents/downloads/ep10.mp3',
+        status: 3,
+      );
+      when(
+        mockRepository.getCompletedForEpisode(10),
+      ).thenAnswer((_) async => task);
+      when(
+        mockFileService.fileExists('/old-uuid/Documents/downloads/ep10.mp3'),
+      ).thenAnswer((_) async => false);
+      when(
+        mockFileService.fileExists('/downloads/ep10.mp3'),
+      ).thenAnswer((_) async => true);
+      when(
+        mockRepository.updateStatus(
+          id: 1,
+          status: const DownloadStatus.completed(),
+          localPath: '/downloads/ep10.mp3',
+        ),
+      ).thenAnswer((_) async {});
+
+      // Act
+      final result = await service.getLocalPath(10);
+
+      // Assert
+      expect(result, '/downloads/ep10.mp3');
+      verify(
+        mockRepository.updateStatus(
+          id: 1,
+          status: const DownloadStatus.completed(),
+          localPath: '/downloads/ep10.mp3',
+        ),
+      ).called(1);
+    });
+
     test('returns null when localPath is null', () async {
       // Arrange
       final task = _task(id: 1, episodeId: 10, status: 3);
@@ -559,7 +607,11 @@ void main() {
       // Arrange
       final completed = [
         _task(id: 1, localPath: '/downloads/exists.mp3', status: 3),
-        _task(id: 2, localPath: '/downloads/missing.mp3', status: 3),
+        _task(
+          id: 2,
+          localPath: '/old-container/downloads/missing.mp3',
+          status: 3,
+        ),
       ];
       when(
         mockRepository.getByStatus(const DownloadStatus.completed()),
@@ -567,6 +619,10 @@ void main() {
       when(
         mockFileService.fileExists('/downloads/exists.mp3'),
       ).thenAnswer((_) async => true);
+      // Both stored and reconstructed paths are missing for task 2.
+      when(
+        mockFileService.fileExists('/old-container/downloads/missing.mp3'),
+      ).thenAnswer((_) async => false);
       when(
         mockFileService.fileExists('/downloads/missing.mp3'),
       ).thenAnswer((_) async => false);
