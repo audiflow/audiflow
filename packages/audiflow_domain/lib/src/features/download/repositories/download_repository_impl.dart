@@ -111,6 +111,11 @@ class DownloadRepositoryImpl implements DownloadRepository {
     final task = await _datasource.getById(id);
     if (task == null) return;
 
+    // Only set completedAt when transitioning to completed, not when
+    // the task is already completed (e.g. path migration updates).
+    final wasAlreadyCompleted =
+        DownloadStatus.fromDbValue(task.status) is DownloadStatusCompleted;
+
     task.status = status.toDbValue();
     if (localPath != null) {
       task.localPath = localPath;
@@ -118,7 +123,7 @@ class DownloadRepositoryImpl implements DownloadRepository {
     if (lastError != null) {
       task.lastError = lastError;
     }
-    if (status is DownloadStatusCompleted) {
+    if (status is DownloadStatusCompleted && !wasAlreadyCompleted) {
       task.completedAt = DateTime.now();
     }
     await _datasource.updateById(id, task);

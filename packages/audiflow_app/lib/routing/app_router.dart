@@ -686,7 +686,7 @@ class _NotificationEpisodeScreenState
     // Capture all navigation data before router.go() disposes this widget.
     final router = GoRouter.of(context);
     final episodePath =
-        '${AppRoutes.library}/podcast/${widget.podcastId}/${AppRoutes.episodeDetail}'
+        '${AppRoutes.library}/podcast/${subscription.itunesId}/${AppRoutes.episodeDetail}'
             .replaceAll(':episodeGuid', Uri.encodeComponent(episode.guid));
     final episodeExtra = <String, dynamic>{
       'episode': episode.toPodcastItem(feedUrl: subscription.feedUrl),
