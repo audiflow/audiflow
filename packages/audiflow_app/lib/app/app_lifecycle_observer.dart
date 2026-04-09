@@ -27,7 +27,10 @@ class _AppLifecycleObserverState extends ConsumerState<AppLifecycleObserver> {
   @override
   void initState() {
     super.initState();
-    _lifecycleListener = AppLifecycleListener(onResume: _onResume);
+    _lifecycleListener = AppLifecycleListener(
+      onResume: _onResume,
+      onHide: _onHide,
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) => _onLaunch());
   }
 
@@ -45,6 +48,31 @@ class _AppLifecycleObserverState extends ConsumerState<AppLifecycleObserver> {
     _syncFeeds(forceRefresh: false);
     _updateBackgroundRegistration();
     _processPendingDownloads();
+  }
+
+  /// Schedules a background download task when the app moves to background
+  /// so iOS can continue processing pending downloads via BGProcessingTask.
+  void _onHide() {
+    unawaited(_scheduleBackgroundDownloads());
+  }
+
+  Future<void> _scheduleBackgroundDownloads() async {
+    final downloadRepo = ref.read(downloadRepositoryProvider);
+    final activeCount = await downloadRepo.getActiveCount();
+    if (0 < activeCount) {
+      final pending = await downloadRepo.getByStatus(
+        const DownloadStatus.pending(),
+      );
+      final downloading = await downloadRepo.getByStatus(
+        const DownloadStatus.downloading(),
+      );
+      final allActive = [...pending, ...downloading];
+      final requireWifiOnly =
+          allActive.isNotEmpty && allActive.every((t) => t.wifiOnly);
+      await BackgroundTaskRegistrar.registerDownloadTask(
+        wifiOnly: requireWifiOnly,
+      );
+    }
   }
 
   Future<void> _updateBackgroundRegistration() async {
