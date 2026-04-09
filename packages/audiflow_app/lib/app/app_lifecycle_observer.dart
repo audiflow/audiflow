@@ -53,7 +53,23 @@ class _AppLifecycleObserverState extends ConsumerState<AppLifecycleObserver> {
   /// Schedules a background download task when the app moves to background
   /// so iOS can continue processing pending downloads via BGProcessingTask.
   void _onHide() {
-    unawaited(_scheduleBackgroundDownloads());
+    unawaited(
+      _scheduleBackgroundDownloads().catchError((
+        Object error,
+        StackTrace stackTrace,
+      ) {
+        FlutterError.reportError(
+          FlutterErrorDetails(
+            exception: error,
+            stack: stackTrace,
+            library: 'app_lifecycle_observer',
+            context: ErrorDescription(
+              'while scheduling background downloads on app hide',
+            ),
+          ),
+        );
+      }),
+    );
   }
 
   Future<void> _scheduleBackgroundDownloads() async {
