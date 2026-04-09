@@ -17,6 +17,7 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:logger/logger.dart';
 import 'package:workmanager/workmanager.dart';
 
 import 'app/app_lifecycle_observer.dart';
@@ -291,26 +292,40 @@ class _MyAppState extends ConsumerState<MyApp> {
   }
 
   Future<void> _initNotificationTapHandler() async {
-    final handler = NotificationTapHandler(router: _router);
+    final logger = Logger(
+      printer: PrefixPrinter(PrettyPrinter(methodCount: 0)),
+    );
+    logger.i('[NotifInit] _initNotificationTapHandler started');
+
+    final handler = NotificationTapHandler(router: _router, logger: logger);
     final plugin = FlutterLocalNotificationsPlugin();
     const initSettings = InitializationSettings(
       android: AndroidInitializationSettings('@mipmap/ic_launcher'),
       iOS: DarwinInitializationSettings(),
     );
+    logger.i('[NotifInit] calling plugin.initialize with tap handler');
     await plugin.initialize(
       settings: initSettings,
       onDidReceiveNotificationResponse:
           handler.onDidReceiveNotificationResponse,
     );
+    logger.i('[NotifInit] plugin.initialize completed');
 
     // Handle cold start: check if app was launched by notification
     final launchDetails = await plugin.getNotificationAppLaunchDetails();
+    logger.i(
+      '[NotifInit] launchDetails: '
+      'didNotificationLaunchApp=${launchDetails?.didNotificationLaunchApp}, '
+      'payload=${launchDetails?.notificationResponse?.payload}',
+    );
     if (launchDetails != null && launchDetails.didNotificationLaunchApp) {
       final route = NotificationTapHandler.parseNotificationRoute(
         launchDetails.notificationResponse?.payload,
       );
+      logger.i('[NotifInit] cold-start route=$route');
       if (route != null) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
+          logger.i('[NotifInit] cold-start pushing route=$route');
           _router.push(route);
         });
       }
