@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:audiflow_core/audiflow_core.dart';
 import 'package:logger/logger.dart';
+import 'package:path/path.dart' as p;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/providers/logger_provider.dart';
@@ -328,9 +329,9 @@ class DownloadService {
 
     // Slow path: container UUID may have changed. Reconstruct path from
     // the current documents directory and the stored filename.
-    final filename = storedPath.split('/').last;
+    final filename = p.basename(storedPath);
     final currentDir = await _fileService.getDownloadsDirectory();
-    final reconstructed = '$currentDir/$filename';
+    final reconstructed = p.join(currentDir, filename);
 
     if (await _fileService.fileExists(reconstructed)) {
       _logger.i(
@@ -379,8 +380,8 @@ class DownloadService {
       final storedPath = task.localPath!;
       if (await _fileService.fileExists(storedPath)) continue;
 
-      final filename = storedPath.split('/').last;
-      final reconstructed = '$currentDir/$filename';
+      final filename = p.basename(storedPath);
+      final reconstructed = p.join(currentDir, filename);
       if (await _fileService.fileExists(reconstructed)) {
         _logger.i(
           'Startup migration: ${task.id} path updated to $reconstructed',

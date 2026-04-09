@@ -28,14 +28,6 @@ import '../features/settings/presentation/screens/developer_settings_screen.dart
 import '../features/settings/presentation/screens/voice_settings_screen.dart';
 import 'scaffold_with_nav_bar.dart';
 
-/// Looks up a subscription by Isar ID for routes without [extra] data.
-final _subscriptionByIdProvider = FutureProvider.family<Subscription?, int>((
-  ref,
-  id,
-) {
-  return ref.watch(subscriptionRepositoryProvider).getById(id);
-});
-
 /// Application route paths.
 ///
 /// These constants define all route paths used in the application.
@@ -360,13 +352,12 @@ Widget _buildPodcastDetailScreen(GoRouterState state) {
     return PodcastDetailScreen(podcast: podcast);
   }
 
-  // Fallback: resolve from subscription ID in path parameter.
-  final idParam = state.pathParameters['id'] ?? '';
-  final subscriptionId = int.tryParse(idParam);
-  if (subscriptionId == null) {
+  // Fallback: resolve from iTunes ID in path parameter.
+  final itunesId = state.pathParameters['id'] ?? '';
+  if (itunesId.isEmpty) {
     return const _PodcastNotFoundScreen();
   }
-  return _PodcastDetailFromSubscription(subscriptionId: subscriptionId);
+  return _PodcastDetailFromSubscription(itunesId: itunesId);
 }
 
 /// Builds the smart playlist episodes screen from
@@ -623,29 +614,22 @@ class _EpisodeNotFoundScreen extends StatelessWidget {
   }
 }
 
-/// Resolves a podcast detail screen from a subscription ID via DB lookup.
+/// Resolves a podcast detail screen from an iTunes ID via DB lookup.
 ///
 /// Used when navigating without [extra] data (notification taps, deep links).
 class _PodcastDetailFromSubscription extends ConsumerWidget {
-  const _PodcastDetailFromSubscription({required this.subscriptionId});
+  const _PodcastDetailFromSubscription({required this.itunesId});
 
-  final int subscriptionId;
+  final String itunesId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final asyncSub = ref.watch(_subscriptionByIdProvider(subscriptionId));
+    final asyncSub = ref.watch(subscriptionByItunesIdProvider(itunesId));
 
     return asyncSub.when(
       data: (subscription) {
         if (subscription == null) return const _PodcastNotFoundScreen();
-        final podcast = Podcast(
-          id: subscription.itunesId,
-          name: subscription.title,
-          artistName: subscription.artistName,
-          feedUrl: subscription.feedUrl,
-          artworkUrl: subscription.artworkUrl,
-        );
-        return PodcastDetailScreen(podcast: podcast);
+        return PodcastDetailScreen(podcast: subscription.toPodcast());
       },
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),

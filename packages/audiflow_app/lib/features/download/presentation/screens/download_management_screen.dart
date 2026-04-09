@@ -230,19 +230,19 @@ class _DownloadTaskTileWithTitle extends ConsumerWidget {
     return DownloadTaskTile(
       task: task,
       episodeTitle: episode?.title ?? '',
-      onPause: () => ref
+      onPause: () async => ref
           .read(downloadManagementControllerProvider.notifier)
           .pause(task.id),
-      onResume: () => ref
+      onResume: () async => ref
           .read(downloadManagementControllerProvider.notifier)
           .resume(task.id),
-      onCancel: () => ref
+      onCancel: () async => ref
           .read(downloadManagementControllerProvider.notifier)
           .cancel(task.id),
-      onRetry: () => ref
+      onRetry: () async => ref
           .read(downloadManagementControllerProvider.notifier)
           .retry(task.id),
-      onDelete: () => ref
+      onDelete: () async => ref
           .read(downloadManagementControllerProvider.notifier)
           .delete(task.id),
     );
