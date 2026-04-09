@@ -338,8 +338,9 @@ GoRouter createAppRouter({int lastTabIndex = 0}) {
 
 /// Builds the podcast detail screen from route state.
 ///
-/// Returns [_PodcastNotFoundScreen] if podcast data
-/// is not available.
+/// When [extra] contains a [Podcast], uses it directly. Otherwise falls back
+/// to an iTunes ID lookup from the `:id` path parameter (supports
+/// notification taps and deep links where extra is unavailable).
 Widget _buildPodcastDetailScreen(GoRouterState state) {
   final extra = state.extra;
   final podcast = extra is Podcast
@@ -347,10 +348,16 @@ Widget _buildPodcastDetailScreen(GoRouterState state) {
       : extra is Map<String, dynamic>
       ? extra['podcast'] as Podcast?
       : null;
-  if (podcast == null) {
+  if (podcast != null) {
+    return PodcastDetailScreen(podcast: podcast);
+  }
+
+  // Fallback: resolve from iTunes ID in path parameter.
+  final itunesId = state.pathParameters['id'] ?? '';
+  if (itunesId.isEmpty) {
     return const _PodcastNotFoundScreen();
   }
-  return PodcastDetailScreen(podcast: podcast);
+  return _PodcastDetailFromSubscription(itunesId: itunesId);
 }
 
 /// Builds the smart playlist episodes screen from
@@ -607,6 +614,30 @@ class _EpisodeNotFoundScreen extends StatelessWidget {
   }
 }
 
+/// Resolves a podcast detail screen from an iTunes ID via DB lookup.
+///
+/// Used when navigating without [extra] data (notification taps, deep links).
+class _PodcastDetailFromSubscription extends ConsumerWidget {
+  const _PodcastDetailFromSubscription({required this.itunesId});
+
+  final String itunesId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final asyncSub = ref.watch(subscriptionByItunesIdProvider(itunesId));
+
+    return asyncSub.when(
+      data: (subscription) {
+        if (subscription == null) return const _PodcastNotFoundScreen();
+        return PodcastDetailScreen(podcast: subscription.toPodcast());
+      },
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (_, _) => const _PodcastNotFoundScreen(),
+    );
+  }
+}
+
 /// Resolves notification tap to the episode detail screen.
 ///
 /// Looks up [Episode] and [Subscription] from Isar by ID, converts
@@ -654,35 +685,21 @@ class _NotificationEpisodeScreenState
 
     // Capture all navigation data before router.go() disposes this widget.
     final router = GoRouter.of(context);
-    final itunesId = subscription.itunesId;
-    final podcast = Podcast(
-      id: itunesId,
-      name: subscription.title,
-      artistName: subscription.artistName,
-      feedUrl: subscription.feedUrl,
-      artworkUrl: subscription.artworkUrl,
-    );
     final episodePath =
-        '${AppRoutes.library}/podcast/${widget.podcastId}/${AppRoutes.episodeDetail}'
+        '${AppRoutes.library}/podcast/${subscription.itunesId}/${AppRoutes.episodeDetail}'
             .replaceAll(':episodeGuid', Uri.encodeComponent(episode.guid));
     final episodeExtra = <String, dynamic>{
       'episode': episode.toPodcastItem(feedUrl: subscription.feedUrl),
       'podcastTitle': subscription.title,
       'artworkUrl': subscription.artworkUrl,
-      'itunesId': itunesId,
+      'itunesId': subscription.itunesId,
     };
 
-    // Navigate: library -> podcast detail -> episode detail.
-    // Use Future.microtask chain with captured router reference so
-    // navigation does not depend on this widget remaining mounted.
-    router.go(AppRoutes.library);
-    await Future<void>.microtask(() {});
-    router.push(
-      '${AppRoutes.library}/podcast/${widget.podcastId}',
-      extra: podcast,
-    );
-    await Future<void>.microtask(() {});
-    router.push(episodePath, extra: episodeExtra);
+    // Single atomic navigation via go(). GoRouter builds the full route
+    // stack (library -> podcast detail -> episode detail) in one pass.
+    // The intermediate podcast detail screen resolves via the :id path
+    // parameter when extra is null (see _buildPodcastDetailScreen).
+    router.go(episodePath, extra: episodeExtra);
   }
 
   @override

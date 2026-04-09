@@ -224,16 +224,27 @@ class _DownloadTaskTileWithTitle extends ConsumerWidget {
       episodeByIdForDownloadProvider(task.episodeId),
     );
     final episode = episodeAsync.value;
-    final controller = ref.read(downloadManagementControllerProvider.notifier);
 
+    // Read controller fresh in each callback to avoid capturing a stale
+    // reference from an auto-dispose provider (fixes AUDIFLOW-3Q/3R).
     return DownloadTaskTile(
       task: task,
       episodeTitle: episode?.title ?? '',
-      onPause: () => controller.pause(task.id),
-      onResume: () => controller.resume(task.id),
-      onCancel: () => controller.cancel(task.id),
-      onRetry: () => controller.retry(task.id),
-      onDelete: () => controller.delete(task.id),
+      onPause: () async => ref
+          .read(downloadManagementControllerProvider.notifier)
+          .pause(task.id),
+      onResume: () async => ref
+          .read(downloadManagementControllerProvider.notifier)
+          .resume(task.id),
+      onCancel: () async => ref
+          .read(downloadManagementControllerProvider.notifier)
+          .cancel(task.id),
+      onRetry: () async => ref
+          .read(downloadManagementControllerProvider.notifier)
+          .retry(task.id),
+      onDelete: () async => ref
+          .read(downloadManagementControllerProvider.notifier)
+          .delete(task.id),
     );
   }
 }
