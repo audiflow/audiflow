@@ -27,7 +27,10 @@ class _AppLifecycleObserverState extends ConsumerState<AppLifecycleObserver> {
   @override
   void initState() {
     super.initState();
-    _lifecycleListener = AppLifecycleListener(onResume: _onResume);
+    _lifecycleListener = AppLifecycleListener(
+      onResume: _onResume,
+      onHide: _onHide,
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) => _onLaunch());
   }
 
@@ -45,6 +48,45 @@ class _AppLifecycleObserverState extends ConsumerState<AppLifecycleObserver> {
     _syncFeeds(forceRefresh: false);
     _updateBackgroundRegistration();
     _processPendingDownloads();
+  }
+
+  /// Schedules a background download task when the app moves to background
+  /// so iOS can continue processing pending downloads via BGProcessingTask.
+  void _onHide() {
+    unawaited(
+      _scheduleBackgroundDownloads().catchError((
+        Object error,
+        StackTrace stackTrace,
+      ) {
+        FlutterError.reportError(
+          FlutterErrorDetails(
+            exception: error,
+            stack: stackTrace,
+            library: 'app_lifecycle_observer',
+            context: ErrorDescription(
+              'while scheduling background downloads on app hide',
+            ),
+          ),
+        );
+      }),
+    );
+  }
+
+  Future<void> _scheduleBackgroundDownloads() async {
+    final downloadRepo = ref.read(downloadRepositoryProvider);
+    final pending = await downloadRepo.getByStatus(
+      const DownloadStatus.pending(),
+    );
+    final downloading = await downloadRepo.getByStatus(
+      const DownloadStatus.downloading(),
+    );
+    final allActive = [...pending, ...downloading];
+    if (allActive.isEmpty) return;
+
+    final requireWifiOnly = allActive.every((t) => t.wifiOnly);
+    await BackgroundTaskRegistrar.registerDownloadTask(
+      wifiOnly: requireWifiOnly,
+    );
   }
 
   Future<void> _updateBackgroundRegistration() async {

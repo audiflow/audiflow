@@ -542,6 +542,25 @@ Future<bool> _executeDownloadTask(Map<String, dynamic>? inputData) async {
       isOnWifi: isOnWifi,
     );
 
+    // Reset tasks stuck in "downloading" state from a suspended foreground
+    // isolate. The foreground DownloadQueueService sets status to
+    // "downloading" before starting the HTTP request; if iOS suspends the
+    // app mid-download, those tasks remain in that state and getNextPending()
+    // (which only queries "pending") would skip them.
+    final stuckDownloading = await downloadRepo.getByStatus(
+      const DownloadStatus.downloading(),
+    );
+    for (final task in stuckDownloading) {
+      _bgDebug(
+        'resetting stuck downloading task: id=${task.id} '
+        'episodeId=${task.episodeId}',
+      );
+      await downloadRepo.updateStatus(
+        id: task.id,
+        status: const DownloadStatus.pending(),
+      );
+    }
+
     _bgDebug('calling download service execute()');
     final count = await service.execute();
     _bgDebug('download service completed — $count downloaded');
