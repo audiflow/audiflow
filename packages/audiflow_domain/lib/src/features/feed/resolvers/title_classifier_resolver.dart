@@ -12,9 +12,11 @@ import 'smart_playlist_resolver.dart';
 /// Each group has a regex pattern, display name, and sort key.
 /// Episodes are matched against groups in order (first match wins).
 /// Groups without a pattern act as catch-all fallbacks.
-class CategoryResolver implements SmartPlaylistResolver {
+///
+/// Used when [presentation] in the definition is set to a grouped layout.
+class TitleClassifierResolver implements SmartPlaylistResolver {
   @override
-  String get type => 'category';
+  String get type => 'titleClassifier';
 
   @override
   SmartPlaylistSortRule get defaultSort => const SmartPlaylistSortRule(
@@ -107,7 +109,7 @@ class CategoryResolver implements SmartPlaylistResolver {
 
     // Return each category group as a separate SmartPlaylist.
     // The service wraps these into a parent playlist when
-    // playlistStructure == "grouped".
+    // presentation == "combined".
     final playlists = groups
         .map(
           (g) => SmartPlaylist(

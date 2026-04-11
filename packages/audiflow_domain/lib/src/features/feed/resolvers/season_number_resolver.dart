@@ -6,10 +6,10 @@ import '../models/smart_playlist_sort.dart';
 import '../models/smart_playlist_title_extractor.dart';
 import 'smart_playlist_resolver.dart';
 
-/// Resolver that groups episodes using RSS metadata (seasonNumber field).
-class RssMetadataResolver implements SmartPlaylistResolver {
+/// Resolver that groups episodes by the RSS seasonNumber field.
+class SeasonNumberResolver implements SmartPlaylistResolver {
   @override
-  String get type => 'rss';
+  String get type => 'seasonNumber';
 
   @override
   SmartPlaylistSortRule get defaultSort => const SmartPlaylistSortRule(
@@ -31,14 +31,11 @@ class RssMetadataResolver implements SmartPlaylistResolver {
   ) {
     final grouped = <int, List<Episode>>{};
     final ungrouped = <int>[];
-    final groupNullAs = definition?.nullSeasonGroupKey;
 
     for (final episode in episodes) {
       final seasonNum = episode.seasonNumber;
       if (seasonNum != null && 1 <= seasonNum) {
         grouped.putIfAbsent(seasonNum, () => []).add(episode);
-      } else if (groupNullAs != null) {
-        grouped.putIfAbsent(groupNullAs, () => []).add(episode);
       } else {
         ungrouped.add(episode.id);
       }

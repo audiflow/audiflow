@@ -20,9 +20,9 @@ import 'smart_playlist_resolver.dart';
 /// When a titleExtractor is provided in the definition, it uses that
 /// to extract playlist names. Otherwise, falls back to the first
 /// group's pattern with capture group 1.
-class TitleAppearanceOrderResolver implements SmartPlaylistResolver {
+class TitleDiscoveryResolver implements SmartPlaylistResolver {
   @override
-  String get type => 'titleAppearanceOrder';
+  String get type => 'titleDiscovery';
 
   @override
   SmartPlaylistSortRule get defaultSort => const SmartPlaylistSortRule(
