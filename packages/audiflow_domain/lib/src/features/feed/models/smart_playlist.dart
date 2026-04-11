@@ -1,21 +1,24 @@
 import 'episode_sort_rule.dart';
 import 'smart_playlist_sort.dart';
 
-/// Whether a smart playlist splits into separate playlists or
+/// Whether a smart playlist presents as separate playlists or
 /// groups inside one playlist.
-enum PlaylistStructure {
+enum Presentation {
   /// Each resolver result becomes a separate top-level playlist.
-  split,
+  separate,
 
   /// All resolver results are collected as groups inside a single
   /// parent playlist.
-  grouped;
+  combined;
 
-  /// Parses a string value to [PlaylistStructure], defaulting to [split].
-  static PlaylistStructure fromString(String? value) {
+  /// Parses a string value to [Presentation], defaulting to [separate].
+  ///
+  /// Accepts both v4 values ('separate'/'combined') and legacy v3 values
+  /// ('split'/'grouped') for Isar cache backward compatibility.
+  static Presentation fromString(String? value) {
     return switch (value) {
-      'grouped' => PlaylistStructure.grouped,
-      _ => PlaylistStructure.split,
+      'combined' || 'grouped' => Presentation.combined,
+      _ => Presentation.separate,
     };
   }
 }
@@ -117,7 +120,7 @@ final class SmartPlaylist {
     required this.sortKey,
     required this.episodeIds,
     this.thumbnailUrl,
-    this.playlistStructure = PlaylistStructure.split,
+    this.presentation = Presentation.separate,
     this.yearBinding = YearBinding.none,
     this.showDateRange = false,
     this.showYearHeaders = false,
@@ -143,8 +146,8 @@ final class SmartPlaylist {
   /// Thumbnail URL from the latest episode in this smart playlist.
   final String? thumbnailUrl;
 
-  /// Whether this playlist splits into separate playlists or groups.
-  final PlaylistStructure playlistStructure;
+  /// Whether this playlist presents as separate playlists or groups.
+  final Presentation presentation;
 
   /// How groups relate to year headers in the group list view.
   final YearBinding yearBinding;
@@ -168,7 +171,7 @@ final class SmartPlaylist {
   /// Groups may override this with their own episodeSort.
   final EpisodeSortRule? episodeSort;
 
-  /// Groups within this playlist (when playlistStructure == grouped).
+  /// Groups within this playlist (when presentation == combined).
   final List<SmartPlaylistGroup>? groups;
 
   /// Number of episodes in this smart playlist.
@@ -189,7 +192,7 @@ final class SmartPlaylist {
     int? sortKey,
     List<int>? episodeIds,
     String? thumbnailUrl,
-    PlaylistStructure? playlistStructure,
+    Presentation? presentation,
     YearBinding? yearBinding,
     bool? showDateRange,
     bool? showYearHeaders,
@@ -205,7 +208,7 @@ final class SmartPlaylist {
       sortKey: sortKey ?? this.sortKey,
       episodeIds: episodeIds ?? this.episodeIds,
       thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
-      playlistStructure: playlistStructure ?? this.playlistStructure,
+      presentation: presentation ?? this.presentation,
       yearBinding: yearBinding ?? this.yearBinding,
       showDateRange: showDateRange ?? this.showDateRange,
       showYearHeaders: showYearHeaders ?? this.showYearHeaders,
