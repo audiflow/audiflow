@@ -93,7 +93,10 @@ final class NumberingExtractor {
     return {
       'source': source,
       'pattern': pattern,
-      if (seasonGroup != null) 'seasonGroup': seasonGroup,
+      // Always include seasonGroup so null round-trips correctly
+      // (episode-only mode). Omitting it would cause fromJson to
+      // default to 1, changing behavior.
+      'seasonGroup': seasonGroup,
       'episodeGroup': episodeGroup,
       if (fallbackSeasonNumber != null)
         'fallbackSeasonNumber': fallbackSeasonNumber,
