@@ -3,7 +3,7 @@ import 'package:audiflow_podcast/parser.dart';
 import 'package:http/http.dart' as http;
 
 import '../adapters/episode_adapter.dart';
-import '../diagnostics/smart_playlist_episode_extractor_diagnostics.dart';
+import '../diagnostics/numbering_extractor_diagnostics.dart';
 import '../diagnostics/title_extractor_diagnostics.dart';
 import '../models/extraction_result.dart';
 import '../patterns/pattern_registry.dart';
@@ -145,7 +145,7 @@ class SmartPlaylistDebugCommand {
 
     // Extract season+episode from title prefix
     if (definition.episodeExtractor != null) {
-      final diagnostics = SmartPlaylistEpisodeExtractorDiagnostics(
+      final diagnostics = NumberingExtractorDiagnostics(
         definition.episodeExtractor!,
       );
       final result = diagnostics.run(episode);
