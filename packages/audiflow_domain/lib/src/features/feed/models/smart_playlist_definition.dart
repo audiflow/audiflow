@@ -11,15 +11,13 @@ final class SmartPlaylistDefinition {
     required this.id,
     required this.displayName,
     required this.resolverType,
-    this.priority = 0,
-    this.playlistStructure,
+    required this.presentation,
     this.episodeFilters,
-    this.nullSeasonGroupKey,
     this.titleExtractor,
     this.prependSeasonNumber = false,
     this.groupList,
     this.episodeList,
-    this.episodeExtractor,
+    this.numberingExtractor,
     this.groups,
   });
 
@@ -28,14 +26,12 @@ final class SmartPlaylistDefinition {
       id: json['id'] as String,
       displayName: json['displayName'] as String,
       resolverType: json['resolverType'] as String,
-      priority: (json['priority'] as int?) ?? 0,
-      playlistStructure: json['playlistStructure'] as String?,
+      presentation: json['presentation'] as String,
       episodeFilters: json['episodeFilters'] != null
           ? EpisodeFilters.fromJson(
               json['episodeFilters'] as Map<String, dynamic>,
             )
           : null,
-      nullSeasonGroupKey: json['nullSeasonGroupKey'] as int?,
       titleExtractor: json['titleExtractor'] != null
           ? SmartPlaylistTitleExtractor.fromJson(
               json['titleExtractor'] as Map<String, dynamic>,
@@ -50,9 +46,9 @@ final class SmartPlaylistDefinition {
               json['episodeList'] as Map<String, dynamic>,
             )
           : null,
-      episodeExtractor: json['episodeExtractor'] != null
-          ? SmartPlaylistEpisodeExtractor.fromJson(
-              json['episodeExtractor'] as Map<String, dynamic>,
+      numberingExtractor: json['numberingExtractor'] != null
+          ? NumberingExtractor.fromJson(
+              json['numberingExtractor'] as Map<String, dynamic>,
             )
           : null,
       groups: (json['groups'] as List<dynamic>?)
@@ -66,15 +62,12 @@ final class SmartPlaylistDefinition {
   final String id;
   final String displayName;
   final String resolverType;
-  final int priority;
 
-  /// Playlist structure: "split" or "grouped".
-  final String? playlistStructure;
+  /// Presentation mode: "separate" or "combined".
+  final String presentation;
 
   /// Episode filters applied before resolver processing.
   final EpisodeFilters? episodeFilters;
-
-  final int? nullSeasonGroupKey;
 
   /// Configuration for extracting display names from episode data.
   final SmartPlaylistTitleExtractor? titleExtractor;
@@ -82,14 +75,14 @@ final class SmartPlaylistDefinition {
   /// Whether to prepend season number label to group titles.
   final bool prependSeasonNumber;
 
-  /// Settings for the group list view (grouped mode only).
+  /// Settings for the group list view (combined mode only).
   final GroupListConfig? groupList;
 
   /// Default settings for episode lists within groups.
   final EpisodeListConfig? episodeList;
 
   /// Configuration for extracting season/episode numbers.
-  final SmartPlaylistEpisodeExtractor? episodeExtractor;
+  final NumberingExtractor? numberingExtractor;
 
   /// Static group definitions for category-based grouping.
   final List<SmartPlaylistGroupDef>? groups;
@@ -99,16 +92,14 @@ final class SmartPlaylistDefinition {
       'id': id,
       'displayName': displayName,
       'resolverType': resolverType,
-      if (priority != 0) 'priority': priority,
-      if (playlistStructure != null) 'playlistStructure': playlistStructure,
+      'presentation': presentation,
       if (episodeFilters != null) 'episodeFilters': episodeFilters!.toJson(),
-      if (nullSeasonGroupKey != null) 'nullSeasonGroupKey': nullSeasonGroupKey,
       if (titleExtractor != null) 'titleExtractor': titleExtractor!.toJson(),
       if (prependSeasonNumber) 'prependSeasonNumber': prependSeasonNumber,
       if (groupList != null) 'groupList': groupList!.toJson(),
       if (episodeList != null) 'episodeList': episodeList!.toJson(),
-      if (episodeExtractor != null)
-        'episodeExtractor': episodeExtractor!.toJson(),
+      if (numberingExtractor != null)
+        'numberingExtractor': numberingExtractor!.toJson(),
       if (groups != null) 'groups': groups!.map((g) => g.toJson()).toList(),
     };
   }
