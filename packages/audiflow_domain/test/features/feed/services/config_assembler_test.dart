@@ -15,12 +15,14 @@ void main() {
         SmartPlaylistDefinition(
           id: 'regular',
           displayName: 'Regular',
-          resolverType: 'rss',
+          resolverType: 'seasonNumber',
+          presentation: 'separate',
         ),
         SmartPlaylistDefinition(
           id: 'short',
           displayName: 'Short',
-          resolverType: 'rss',
+          resolverType: 'seasonNumber',
+          presentation: 'separate',
         ),
       ];
 
@@ -46,7 +48,8 @@ void main() {
         SmartPlaylistDefinition(
           id: 'main',
           displayName: 'Main',
-          resolverType: 'rss',
+          resolverType: 'seasonNumber',
+          presentation: 'separate',
         ),
       ];
 
@@ -63,8 +66,18 @@ void main() {
       );
       // Provide playlists in opposite order.
       final playlists = [
-        SmartPlaylistDefinition(id: 'a', displayName: 'A', resolverType: 'rss'),
-        SmartPlaylistDefinition(id: 'b', displayName: 'B', resolverType: 'rss'),
+        SmartPlaylistDefinition(
+          id: 'a',
+          displayName: 'A',
+          resolverType: 'seasonNumber',
+          presentation: 'separate',
+        ),
+        SmartPlaylistDefinition(
+          id: 'b',
+          displayName: 'B',
+          resolverType: 'seasonNumber',
+          presentation: 'separate',
+        ),
       ];
 
       final config = ConfigAssembler.assemble(meta, playlists);
@@ -80,11 +93,17 @@ void main() {
         playlists: ['a'],
       );
       final playlists = [
-        SmartPlaylistDefinition(id: 'a', displayName: 'A', resolverType: 'rss'),
+        SmartPlaylistDefinition(
+          id: 'a',
+          displayName: 'A',
+          resolverType: 'seasonNumber',
+          presentation: 'separate',
+        ),
         SmartPlaylistDefinition(
           id: 'extra',
           displayName: 'Extra',
-          resolverType: 'rss',
+          resolverType: 'seasonNumber',
+          presentation: 'separate',
         ),
       ];
 
@@ -106,7 +125,8 @@ void main() {
         SmartPlaylistDefinition(
           id: 'present',
           displayName: 'Present',
-          resolverType: 'rss',
+          resolverType: 'seasonNumber',
+          presentation: 'separate',
         ),
       ];
 

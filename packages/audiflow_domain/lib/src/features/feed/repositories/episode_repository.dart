@@ -2,7 +2,7 @@ import 'package:audiflow_podcast/audiflow_podcast.dart';
 
 import '../models/episode.dart';
 import '../models/feed_parse_progress.dart';
-import '../models/smart_playlist_episode_extractor.dart';
+import '../models/numbering_extractor.dart';
 import '../models/smart_playlist_pattern_config.dart';
 
 /// Repository interface for episode operations.
@@ -40,7 +40,7 @@ abstract class EpisodeRepository {
   Future<void> upsertFromFeedItems(
     int podcastId,
     List<PodcastItem> items, {
-    SmartPlaylistEpisodeExtractor? extractor,
+    NumberingExtractor? extractor,
   });
 
   /// Upserts episodes with per-group extractor resolution.

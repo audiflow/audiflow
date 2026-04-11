@@ -188,7 +188,8 @@ void main() {
         SmartPlaylistDefinition(
           id: 'main',
           displayName: 'Main Cached',
-          resolverType: 'rss',
+          resolverType: 'seasonNumber',
+          presentation: 'separate',
         ),
       );
 

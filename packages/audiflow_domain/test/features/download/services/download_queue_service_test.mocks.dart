@@ -16,7 +16,7 @@ import 'package:audiflow_domain/src/features/download/services/download_file_ser
 import 'package:audiflow_domain/src/features/feed/models/episode.dart' as _i9;
 import 'package:audiflow_domain/src/features/feed/models/feed_parse_progress.dart'
     as _i13;
-import 'package:audiflow_domain/src/features/feed/models/smart_playlist_episode_extractor.dart'
+import 'package:audiflow_domain/src/features/feed/models/numbering_extractor.dart'
     as _i11;
 import 'package:audiflow_domain/src/features/feed/models/smart_playlist_pattern_config.dart'
     as _i12;
@@ -375,7 +375,7 @@ class MockEpisodeRepository extends _i1.Mock implements _i8.EpisodeRepository {
   _i3.Future<void> upsertFromFeedItems(
     int? podcastId,
     List<_i10.PodcastItem>? items, {
-    _i11.SmartPlaylistEpisodeExtractor? extractor,
+    _i11.NumberingExtractor? extractor,
   }) =>
       (super.noSuchMethod(
             Invocation.method(

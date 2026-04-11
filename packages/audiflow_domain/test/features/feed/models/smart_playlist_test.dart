@@ -157,7 +157,7 @@ void main() {
 
       expect(grouping.playlists.length, 1);
       expect(grouping.ungroupedEpisodeIds, [10, 11]);
-      expect(grouping.resolverType, 'rss');
+      expect(grouping.resolverType, 'seasonNumber');
     });
 
     test('SmartPlaylistGrouping.hasUngrouped returns true '

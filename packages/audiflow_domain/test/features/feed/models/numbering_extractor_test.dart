@@ -1,6 +1,5 @@
 import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
-import 'package:audiflow_domain/src/features/feed/models/numbering_extractor.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
