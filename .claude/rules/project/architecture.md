@@ -605,14 +605,14 @@ All config data repos, the web editor, and the mobile app must conform to this s
      ┌───────────────────────────────────────────────────┐
      │ GitHub Pages                                       │
      │ audiflow.github.io/audiflow-smartplaylist/          │
-     │   /assets/v3/     (prod)                           │
-     │   /assets-stg/v3/ (staging)                        │
-     │   /assets-dev/v3/ (dev)                            │
+     │   /assets/v4/     (prod)                           │
+     │   /assets-stg/v4/ (staging)                        │
+     │   /assets-dev/v4/ (dev)                            │
      └───────────────────────┬─────────────────────────┘
                              │
                              v
      All flavors fetch from audiflow.github.io/
-     audiflow-smartplaylist/{assets,assets-stg,assets-dev}/v3/
+     audiflow-smartplaylist/{assets,assets-stg,assets-dev}/v4/
 ```
 
 ### 1. Config Data Repository (Static JSON)
@@ -621,9 +621,9 @@ Single repo with per-environment asset paths:
 
 | Repo | Environment | Path | Base URL |
 |------|-------------|------|----------|
-| `audiflow/audiflow-smartplaylist` | Production | `assets/v3/` | `https://audiflow.github.io/audiflow-smartplaylist/assets/v3/` |
-| `audiflow/audiflow-smartplaylist` | Staging | `assets-stg/v3/` | `https://audiflow.github.io/audiflow-smartplaylist/assets-stg/v3/` |
-| `audiflow/audiflow-smartplaylist` | Development | `assets-dev/v3/` | `https://audiflow.github.io/audiflow-smartplaylist/assets-dev/v3/` |
+| `audiflow/audiflow-smartplaylist` | Production | `assets/v4/` | `https://audiflow.github.io/audiflow-smartplaylist/assets/v4/` |
+| `audiflow/audiflow-smartplaylist` | Staging | `assets-stg/v4/` | `https://audiflow.github.io/audiflow-smartplaylist/assets-stg/v4/` |
+| `audiflow/audiflow-smartplaylist` | Development | `assets-dev/v4/` | `https://audiflow.github.io/audiflow-smartplaylist/assets-dev/v4/` |
 
 Each environment path shares the same directory structure:
 
@@ -682,7 +682,7 @@ Conformance tests at `packages/audiflow_domain/test/features/feed/models/schema_
 - Dart enum names and string constants match schema `oneOf`/`enum` definitions
 - `RootMeta` and `PatternMeta` toJson round-trips validate against their respective schemas
 
-**Valid resolver types** (from schema): `rss`, `category`, `year`, `titleAppearanceOrder`
+**Valid resolver types** (from schema): `seasonNumber`, `titleClassifier`, `year`, `titleDiscovery`
 
 Always use these exact values in test data. Never use legacy names like `rssSeason`, `categoryGroup`, or `flat`.
 
