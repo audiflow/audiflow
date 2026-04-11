@@ -25,9 +25,9 @@ import '../repositories/episode_repository.dart';
 import '../repositories/episode_repository_impl.dart';
 import '../repositories/smart_playlist_config_repository.dart';
 import '../repositories/smart_playlist_config_repository_impl.dart';
-import '../resolvers/category_resolver.dart';
-import '../resolvers/rss_metadata_resolver.dart';
-import '../resolvers/title_appearance_order_resolver.dart';
+import '../resolvers/season_number_resolver.dart';
+import '../resolvers/title_classifier_resolver.dart';
+import '../resolvers/title_discovery_resolver.dart';
 import '../resolvers/year_resolver.dart';
 import '../services/smart_playlist_resolver_service.dart';
 
@@ -53,7 +53,7 @@ class PatternSummaries extends _$PatternSummaries {
 ///
 /// Set alongside [PatternSummaries] on startup and
 /// pull-to-refresh. Used to construct GitHub branch URLs
-/// (e.g. `dev/v3`).
+/// (e.g. `dev/v4`).
 @Riverpod(keepAlive: true)
 class SmartPlaylistSchemaVersion extends _$SmartPlaylistSchemaVersion {
   @override
@@ -110,9 +110,9 @@ SmartPlaylistResolverService smartPlaylistResolverService(Ref ref) {
   final logger = ref.watch(namedLoggerProvider('SmartPlaylistResolverService'));
   return SmartPlaylistResolverService(
     resolvers: [
-      RssMetadataResolver(),
-      CategoryResolver(),
-      TitleAppearanceOrderResolver(),
+      SeasonNumberResolver(),
+      TitleClassifierResolver(),
+      TitleDiscoveryResolver(),
       YearResolver(),
     ],
     patterns: [],
@@ -287,11 +287,11 @@ Future<SmartPlaylistGrouping?> _buildGroupingFromCache(
 
     // Infer structure from persisted groups: if groups exist in
     // the database the playlist was originally resolved as
-    // "grouped", regardless of what the entity field says. This
+    // "combined", regardless of what the entity field says. This
     // handles stale records created before the field was added.
-    final playlistStructure = groups != null && groups.isNotEmpty
-        ? PlaylistStructure.grouped
-        : PlaylistStructure.fromString(entity.playlistStructure);
+    final presentation = groups != null && groups.isNotEmpty
+        ? Presentation.combined
+        : Presentation.fromString(entity.playlistStructure);
 
     playlists.add(
       SmartPlaylist(
@@ -300,7 +300,7 @@ Future<SmartPlaylistGrouping?> _buildGroupingFromCache(
         sortKey: entity.sortKey,
         episodeIds: episodeIds,
         thumbnailUrl: entity.thumbnailUrl,
-        playlistStructure: playlistStructure,
+        presentation: presentation,
         yearBinding: YearBinding.fromString(entity.yearHeaderMode),
         groups: groups,
       ),
@@ -351,9 +351,9 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
 
   final resolverService = SmartPlaylistResolverService(
     resolvers: [
-      RssMetadataResolver(),
-      CategoryResolver(),
-      TitleAppearanceOrderResolver(),
+      SeasonNumberResolver(),
+      TitleClassifierResolver(),
+      TitleDiscoveryResolver(),
       YearResolver(),
     ],
     patterns: config != null ? [config] : [],
@@ -534,7 +534,7 @@ void _enrichPlaylist(
       ..sortKey = playlist.sortKey
       ..resolverType = result.resolverType
       ..thumbnailUrl = thumbnailUrl
-      ..playlistStructure = playlist.playlistStructure.name
+      ..playlistStructure = playlist.presentation.name
       ..yearGrouped = playlist.yearBinding != YearBinding.none
       ..yearHeaderMode = playlist.yearBinding.name
       ..configVersion = configVersion,
@@ -751,9 +751,9 @@ Future<SmartPlaylistGrouping?> _reResolveFromEpisodes(
 
   final resolverService = SmartPlaylistResolverService(
     resolvers: [
-      RssMetadataResolver(),
-      CategoryResolver(),
-      TitleAppearanceOrderResolver(),
+      SeasonNumberResolver(),
+      TitleClassifierResolver(),
+      TitleDiscoveryResolver(),
       YearResolver(),
     ],
     patterns: config != null ? [config] : [],
