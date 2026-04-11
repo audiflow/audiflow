@@ -4,7 +4,7 @@ import '../models/numbering_extractor.dart';
 import '../models/smart_playlist_group_def.dart';
 import '../models/smart_playlist_pattern_config.dart';
 
-/// Resolves the appropriate [SmartPlaylistEpisodeExtractor] for an episode
+/// Resolves the appropriate [NumberingExtractor] for an episode
 /// by matching it against group patterns within the pattern config.
 ///
 /// For each episode, iterates definitions and their groups to find a
@@ -16,7 +16,7 @@ class EpisodeExtractorResolver {
   ///
   /// Returns the most specific extractor (group-level > definition-level),
   /// or null if no extractor is configured.
-  SmartPlaylistEpisodeExtractor? resolve(
+  NumberingExtractor? resolve(
     String title,
     String? description,
     SmartPlaylistPatternConfig config,
@@ -30,9 +30,9 @@ class EpisodeExtractorResolver {
 
       // Fall back to definition-level extractor only if episode
       // matches definition's filters (or if no filter exists).
-      if (definition.episodeExtractor != null &&
+      if (definition.numberingExtractor != null &&
           _matchesDefinition(title, description, definition)) {
-        return definition.episodeExtractor;
+        return definition.numberingExtractor;
       }
     }
     return null;
@@ -85,7 +85,7 @@ class EpisodeExtractorResolver {
 
   /// Finds a group-level extractor by matching the episode title
   /// against group patterns.
-  SmartPlaylistEpisodeExtractor? _findGroupExtractor(
+  NumberingExtractor? _findGroupExtractor(
     String title,
     String? description,
     List<SmartPlaylistGroupDef> groups,
@@ -97,8 +97,8 @@ class EpisodeExtractorResolver {
       if (regex.hasMatch(title)) {
         // Group matched; return its extractor (may be null, meaning
         // fall through to definition-level).
-        if (group.episodeExtractor != null) {
-          return group.episodeExtractor;
+        if (group.numberingExtractor != null) {
+          return group.numberingExtractor;
         }
       }
     }
