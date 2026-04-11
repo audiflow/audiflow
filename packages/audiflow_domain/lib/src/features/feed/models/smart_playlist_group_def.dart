@@ -10,7 +10,7 @@ final class SmartPlaylistGroupDef {
     this.pattern,
     this.display,
     this.episodeList,
-    this.episodeExtractor,
+    this.numberingExtractor,
   });
 
   factory SmartPlaylistGroupDef.fromJson(Map<String, dynamic> json) {
@@ -26,9 +26,9 @@ final class SmartPlaylistGroupDef {
               json['episodeList'] as Map<String, dynamic>,
             )
           : null,
-      episodeExtractor: json['episodeExtractor'] != null
-          ? SmartPlaylistEpisodeExtractor.fromJson(
-              json['episodeExtractor'] as Map<String, dynamic>,
+      numberingExtractor: json['numberingExtractor'] != null
+          ? NumberingExtractor.fromJson(
+              json['numberingExtractor'] as Map<String, dynamic>,
             )
           : null,
     );
@@ -47,7 +47,7 @@ final class SmartPlaylistGroupDef {
   final EpisodeListConfig? episodeList;
 
   /// Per-group override for episode number extraction.
-  final SmartPlaylistEpisodeExtractor? episodeExtractor;
+  final NumberingExtractor? numberingExtractor;
 
   Map<String, dynamic> toJson() {
     return {
@@ -56,8 +56,8 @@ final class SmartPlaylistGroupDef {
       if (pattern != null) 'pattern': pattern,
       if (display != null) 'display': display!.toJson(),
       if (episodeList != null) 'episodeList': episodeList!.toJson(),
-      if (episodeExtractor != null)
-        'episodeExtractor': episodeExtractor!.toJson(),
+      if (numberingExtractor != null)
+        'numberingExtractor': numberingExtractor!.toJson(),
     };
   }
 }
