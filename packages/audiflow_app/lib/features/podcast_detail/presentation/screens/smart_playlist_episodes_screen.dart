@@ -102,8 +102,7 @@ class _SmartPlaylistEpisodesScreenState
 
   Widget _buildSortHeader(ThemeData theme, {int? countOverride}) {
     final colorScheme = theme.colorScheme;
-    final isGroups =
-        widget.smartPlaylist.playlistStructure == PlaylistStructure.grouped;
+    final isGroups = widget.smartPlaylist.presentation == Presentation.combined;
     final count =
         countOverride ??
         (isGroups
@@ -167,7 +166,7 @@ class _SmartPlaylistEpisodesScreenState
   }
 
   List<Widget> _buildEpisodeList(BuildContext context, ThemeData theme) {
-    if (widget.smartPlaylist.playlistStructure == PlaylistStructure.grouped &&
+    if (widget.smartPlaylist.presentation == Presentation.combined &&
         widget.smartPlaylist.groups != null) {
       return _buildGroupList(context, theme);
     }
