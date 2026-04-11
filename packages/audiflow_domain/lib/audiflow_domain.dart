@@ -51,7 +51,7 @@ export 'src/features/feed/models/smart_playlist_pattern_config.dart';
 export 'src/features/feed/models/smart_playlist_sort.dart';
 export 'src/features/feed/models/smart_playlist_title_extractor.dart';
 export 'src/features/feed/models/smart_playlists.dart';
-export 'src/features/feed/models/smart_playlist_episode_extractor.dart';
+export 'src/features/feed/models/numbering_extractor.dart';
 export 'src/features/feed/services/smart_playlist_pattern_loader.dart';
 export 'src/features/feed/resolvers/category_resolver.dart';
 export 'src/features/feed/resolvers/rss_metadata_resolver.dart';
