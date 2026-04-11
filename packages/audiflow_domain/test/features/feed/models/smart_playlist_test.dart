@@ -2,11 +2,11 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  group('PlaylistStructure', () {
-    test('has split and grouped values', () {
-      expect(PlaylistStructure.values, hasLength(2));
-      expect(PlaylistStructure.split.name, 'split');
-      expect(PlaylistStructure.grouped.name, 'grouped');
+  group('Presentation', () {
+    test('has separate and combined values', () {
+      expect(Presentation.values, hasLength(2));
+      expect(Presentation.separate.name, 'separate');
+      expect(Presentation.combined.name, 'combined');
     });
   });
 
@@ -84,7 +84,7 @@ void main() {
       expect(playlist.episodeCount, 5);
     });
 
-    test('defaults to split playlistStructure with no year binding', () {
+    test('defaults to separate presentation with no year binding', () {
       final playlist = SmartPlaylist(
         id: 'p1',
         displayName: 'P1',
@@ -92,12 +92,12 @@ void main() {
         episodeIds: [1, 2],
       );
 
-      expect(playlist.playlistStructure, PlaylistStructure.split);
+      expect(playlist.presentation, Presentation.separate);
       expect(playlist.yearBinding, YearBinding.none);
       expect(playlist.groups, isNull);
     });
 
-    test('supports grouped playlistStructure', () {
+    test('supports combined presentation', () {
       final groups = [
         SmartPlaylistGroup(
           id: 'g1',
@@ -111,12 +111,12 @@ void main() {
         displayName: 'P1',
         sortKey: 1,
         episodeIds: [],
-        playlistStructure: PlaylistStructure.grouped,
+        presentation: Presentation.combined,
         yearBinding: YearBinding.pinToYear,
         groups: groups,
       );
 
-      expect(playlist.playlistStructure, PlaylistStructure.grouped);
+      expect(playlist.presentation, Presentation.combined);
       expect(playlist.yearBinding, YearBinding.pinToYear);
       expect(playlist.groups, hasLength(1));
       expect(playlist.groups!.first.id, 'g1');
@@ -128,12 +128,12 @@ void main() {
         displayName: 'P1',
         sortKey: 1,
         episodeIds: [],
-        playlistStructure: PlaylistStructure.grouped,
+        presentation: Presentation.combined,
         yearBinding: YearBinding.splitByYear,
       );
 
       final copied = playlist.copyWith(displayName: 'P2');
-      expect(copied.playlistStructure, PlaylistStructure.grouped);
+      expect(copied.presentation, Presentation.combined);
       expect(copied.yearBinding, YearBinding.splitByYear);
       expect(copied.displayName, 'P2');
     });
@@ -152,7 +152,7 @@ void main() {
           ),
         ],
         ungroupedEpisodeIds: [10, 11],
-        resolverType: 'rss',
+        resolverType: 'seasonNumber',
       );
 
       expect(grouping.playlists.length, 1);
@@ -165,12 +165,12 @@ void main() {
       final withUngrouped = SmartPlaylistGrouping(
         playlists: [],
         ungroupedEpisodeIds: [1],
-        resolverType: 'rss',
+        resolverType: 'seasonNumber',
       );
       final withoutUngrouped = SmartPlaylistGrouping(
         playlists: [],
         ungroupedEpisodeIds: [],
-        resolverType: 'rss',
+        resolverType: 'seasonNumber',
       );
 
       expect(withUngrouped.hasUngrouped, isTrue);

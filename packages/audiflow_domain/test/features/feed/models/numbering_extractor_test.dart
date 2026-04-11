@@ -1,5 +1,6 @@
 import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:audiflow_domain/src/features/feed/models/numbering_extractor.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -28,7 +29,7 @@ void main() {
     });
   });
 
-  group('SmartPlaylistEpisodeExtractor', () {
+  group('NumberingExtractor', () {
     EpisodeData makeEpisode({
       String title = 'Test Episode',
       int? seasonNumber,
@@ -55,7 +56,7 @@ void main() {
           'fallbackEpisodeCaptureGroup': 1,
         };
 
-        final extractor = SmartPlaylistEpisodeExtractor.fromJson(json);
+        final extractor = NumberingExtractor.fromJson(json);
 
         expect(extractor.source, 'title');
         expect(extractor.pattern, r'【(\d+)-(\d+)】');
@@ -69,7 +70,7 @@ void main() {
       test('uses default values when not specified', () {
         final json = {'source': 'title', 'pattern': r'S(\d+)E(\d+)'};
 
-        final extractor = SmartPlaylistEpisodeExtractor.fromJson(json);
+        final extractor = NumberingExtractor.fromJson(json);
 
         expect(extractor.seasonGroup, 1);
         expect(extractor.episodeGroup, 2);
@@ -87,7 +88,7 @@ void main() {
           'episodeGroup': 1,
         };
 
-        final extractor = SmartPlaylistEpisodeExtractor.fromJson(json);
+        final extractor = NumberingExtractor.fromJson(json);
 
         expect(extractor.seasonGroup, isNull);
         expect(extractor.episodeGroup, 1);
@@ -100,13 +101,13 @@ void main() {
           'fallbackToRss': true,
         };
 
-        final extractor = SmartPlaylistEpisodeExtractor.fromJson(json);
+        final extractor = NumberingExtractor.fromJson(json);
 
         expect(extractor.fallbackToRss, isTrue);
       });
 
       test('converts to JSON', () {
-        const extractor = SmartPlaylistEpisodeExtractor(
+        const extractor = NumberingExtractor(
           source: 'title',
           pattern: r'【(\d+)-(\d+)】',
           seasonGroup: 1,
@@ -126,7 +127,7 @@ void main() {
       });
 
       test('omits default values in JSON', () {
-        const extractor = SmartPlaylistEpisodeExtractor(
+        const extractor = NumberingExtractor(
           source: 'title',
           pattern: r'【(\d+)-(\d+)】',
         );
@@ -139,7 +140,7 @@ void main() {
       });
 
       test('omits seasonGroup when null', () {
-        const extractor = SmartPlaylistEpisodeExtractor(
+        const extractor = NumberingExtractor(
           source: 'title',
           pattern: r'E(\d+)',
           seasonGroup: null,
@@ -152,7 +153,7 @@ void main() {
       });
 
       test('includes fallbackToRss when true', () {
-        const extractor = SmartPlaylistEpisodeExtractor(
+        const extractor = NumberingExtractor(
           source: 'title',
           pattern: r'E(\d+)',
           fallbackToRss: true,
@@ -166,7 +167,7 @@ void main() {
 
     group('extract', () {
       test('extracts season and episode from primary pattern', () {
-        const extractor = SmartPlaylistEpisodeExtractor(
+        const extractor = NumberingExtractor(
           source: 'title',
           pattern: r'【(\d+)-(\d+)】',
         );
@@ -184,7 +185,7 @@ void main() {
       });
 
       test('uses fallback pattern when primary does not match', () {
-        const extractor = SmartPlaylistEpisodeExtractor(
+        const extractor = NumberingExtractor(
           source: 'title',
           pattern: r'【(\d+)-(\d+)】',
           fallbackSeasonNumber: 0,
@@ -200,7 +201,7 @@ void main() {
       });
 
       test('handles half-width hash in fallback pattern', () {
-        const extractor = SmartPlaylistEpisodeExtractor(
+        const extractor = NumberingExtractor(
           source: 'title',
           pattern: r'【(\d+)-(\d+)】',
           fallbackSeasonNumber: 0,
@@ -215,7 +216,7 @@ void main() {
       });
 
       test('returns empty result when no pattern matches', () {
-        const extractor = SmartPlaylistEpisodeExtractor(
+        const extractor = NumberingExtractor(
           source: 'title',
           pattern: r'【(\d+)-(\d+)】',
         );
@@ -229,7 +230,7 @@ void main() {
       });
 
       test('returns empty result when source field is null', () {
-        const extractor = SmartPlaylistEpisodeExtractor(
+        const extractor = NumberingExtractor(
           source: 'description',
           pattern: r'S(\d+)E(\d+)',
         );
@@ -242,7 +243,7 @@ void main() {
 
       test('extracts from description when source is '
           'description', () {
-        const extractor = SmartPlaylistEpisodeExtractor(
+        const extractor = NumberingExtractor(
           source: 'description',
           pattern: r'Season (\d+), Episode (\d+)',
         );
@@ -258,7 +259,7 @@ void main() {
       });
 
       test('handles custom capture groups', () {
-        const extractor = SmartPlaylistEpisodeExtractor(
+        const extractor = NumberingExtractor(
           source: 'title',
           // Episode first, then season
           pattern: r'E(\d+)S(\d+)',
@@ -274,7 +275,7 @@ void main() {
       });
 
       test('skips season extraction when seasonGroup is null', () {
-        const extractor = SmartPlaylistEpisodeExtractor(
+        const extractor = NumberingExtractor(
           source: 'title',
           pattern: r'\[(\d+)-(\d+)\]',
           seasonGroup: null,
@@ -291,7 +292,7 @@ void main() {
 
       test('falls back to RSS episodeNumber when enabled '
           'and no pattern matches', () {
-        const extractor = SmartPlaylistEpisodeExtractor(
+        const extractor = NumberingExtractor(
           source: 'title',
           pattern: r'【(\d+)-(\d+)】',
           fallbackToRss: true,
@@ -310,7 +311,7 @@ void main() {
 
       test('returns empty result when fallbackToRss is false '
           'and no pattern matches', () {
-        const extractor = SmartPlaylistEpisodeExtractor(
+        const extractor = NumberingExtractor(
           source: 'title',
           pattern: r'【(\d+)-(\d+)】',
         );
@@ -326,7 +327,7 @@ void main() {
 
       test('returns empty result when fallbackToRss is true '
           'but RSS episodeNumber is null', () {
-        const extractor = SmartPlaylistEpisodeExtractor(
+        const extractor = NumberingExtractor(
           source: 'title',
           pattern: r'【(\d+)-(\d+)】',
           fallbackToRss: true,
@@ -339,7 +340,7 @@ void main() {
       });
 
       test('prefers fallback pattern over RSS fallback', () {
-        const extractor = SmartPlaylistEpisodeExtractor(
+        const extractor = NumberingExtractor(
           source: 'title',
           pattern: r'【(\d+)-(\d+)】',
           fallbackSeasonNumber: 0,
@@ -358,7 +359,7 @@ void main() {
       });
 
       test('uses RSS fallback when both patterns fail', () {
-        const extractor = SmartPlaylistEpisodeExtractor(
+        const extractor = NumberingExtractor(
           source: 'title',
           pattern: r'【(\d+)-(\d+)】',
           fallbackEpisodePattern: r'【番外編[＃#](\d+)】',
@@ -377,7 +378,7 @@ void main() {
     });
 
     group('COTEN RADIO specific tests', () {
-      const cotenExtractor = SmartPlaylistEpisodeExtractor(
+      const cotenExtractor = NumberingExtractor(
         source: 'title',
         pattern: r'【(\d+)-(\d+)】',
         seasonGroup: 1,

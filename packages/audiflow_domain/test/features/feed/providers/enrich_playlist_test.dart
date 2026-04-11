@@ -183,9 +183,9 @@ void main() {
     return container;
   }
 
-  group('playlistStructure persistence', () {
+  group('presentation persistence', () {
     test(
-      'persists split structure for auto-detected season playlists',
+      'persists separate presentation for auto-detected season playlists',
       () async {
         final container = makeContainer(
           subscription: makeSubscription(),
@@ -202,12 +202,60 @@ void main() {
         final entities = await datasource.getByPodcastId(1);
         expect(entities, isNotEmpty);
         for (final entity in entities) {
-          expect(entity.playlistStructure, 'split');
+          expect(entity.playlistStructure, 'separate');
         }
       },
     );
 
-    test('persists grouped structure when config specifies grouped', () async {
+    test(
+      'persists combined presentation when config specifies combined',
+      () async {
+        final summary = PatternSummary(
+          id: 'test-pattern',
+          dataVersion: 1,
+          displayName: 'Test Pattern',
+          feedUrlHint: 'example.com',
+          playlistCount: 1,
+        );
+
+        final config = SmartPlaylistPatternConfig(
+          id: 'test-pattern',
+          feedUrls: ['https://example.com/feed.xml'],
+          playlists: [
+            const SmartPlaylistDefinition(
+              id: 'regular',
+              displayName: 'Regular Series',
+              resolverType: 'seasonNumber',
+              presentation: 'combined',
+            ),
+          ],
+        );
+
+        final container = makeContainer(
+          subscription: makeSubscription(),
+          episodes: makeSeasonedEpisodes(),
+          configRepo: _FakeConfigRepository(summary: summary, config: config),
+        );
+        addTearDown(container.dispose);
+
+        final grouping = await readSmartPlaylists(container, 1);
+
+        expect(grouping, isNotNull);
+        expect(grouping!.playlists, hasLength(1));
+
+        final playlist = grouping.playlists.first;
+        expect(playlist.presentation, Presentation.combined);
+        expect(playlist.groups, isNotNull);
+        expect(playlist.groups, isNotEmpty);
+
+        // Verify persisted entity has 'combined' playlistStructure
+        final entities = await datasource.getByPodcastId(1);
+        expect(entities, hasLength(1));
+        expect(entities.first.playlistStructure, 'combined');
+      },
+    );
+
+    test('cache round-trip preserves combined presentation', () async {
       final summary = PatternSummary(
         id: 'test-pattern',
         dataVersion: 1,
@@ -220,56 +268,11 @@ void main() {
         id: 'test-pattern',
         feedUrls: ['https://example.com/feed.xml'],
         playlists: [
-          SmartPlaylistDefinition(
+          const SmartPlaylistDefinition(
             id: 'regular',
             displayName: 'Regular Series',
-            resolverType: 'rss',
-            playlistStructure: 'grouped',
-          ),
-        ],
-      );
-
-      final container = makeContainer(
-        subscription: makeSubscription(),
-        episodes: makeSeasonedEpisodes(),
-        configRepo: _FakeConfigRepository(summary: summary, config: config),
-      );
-      addTearDown(container.dispose);
-
-      final grouping = await readSmartPlaylists(container, 1);
-
-      expect(grouping, isNotNull);
-      expect(grouping!.playlists, hasLength(1));
-
-      final playlist = grouping.playlists.first;
-      expect(playlist.playlistStructure, PlaylistStructure.grouped);
-      expect(playlist.groups, isNotNull);
-      expect(playlist.groups, isNotEmpty);
-
-      // Verify persisted entity has 'grouped' playlistStructure
-      final entities = await datasource.getByPodcastId(1);
-      expect(entities, hasLength(1));
-      expect(entities.first.playlistStructure, 'grouped');
-    });
-
-    test('cache round-trip preserves grouped playlistStructure', () async {
-      final summary = PatternSummary(
-        id: 'test-pattern',
-        dataVersion: 1,
-        displayName: 'Test Pattern',
-        feedUrlHint: 'example.com',
-        playlistCount: 1,
-      );
-
-      final config = SmartPlaylistPatternConfig(
-        id: 'test-pattern',
-        feedUrls: ['https://example.com/feed.xml'],
-        playlists: [
-          SmartPlaylistDefinition(
-            id: 'regular',
-            displayName: 'Regular Series',
-            resolverType: 'rss',
-            playlistStructure: 'grouped',
+            resolverType: 'seasonNumber',
+            presentation: 'combined',
           ),
         ],
       );
@@ -295,10 +298,7 @@ void main() {
 
       expect(cached, isNotNull);
       expect(cached!.playlists, hasLength(1));
-      expect(
-        cached.playlists.first.playlistStructure,
-        PlaylistStructure.grouped,
-      );
+      expect(cached.playlists.first.presentation, Presentation.combined);
     });
 
     test('infers grouped structure from persisted groups '
@@ -360,9 +360,9 @@ void main() {
 
       final playlist = grouping.playlists.first;
       expect(
-        playlist.playlistStructure,
-        PlaylistStructure.grouped,
-        reason: 'Should infer grouped from persisted groups',
+        playlist.presentation,
+        Presentation.combined,
+        reason: 'Should infer combined from persisted groups',
       );
       expect(playlist.groups, isNotNull);
       expect(playlist.groups, hasLength(1));
@@ -407,11 +407,11 @@ void main() {
           id: 'year-pattern',
           feedUrls: ['https://example.com/feed.xml'],
           playlists: [
-            SmartPlaylistDefinition(
+            const SmartPlaylistDefinition(
               id: 'yearly',
               displayName: 'By Year',
               resolverType: 'year',
-              playlistStructure: 'split',
+              presentation: 'separate',
             ),
           ],
         );

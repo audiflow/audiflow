@@ -20,15 +20,15 @@ Episode _makeEpisode({
 }
 
 void main() {
-  group('RssMetadataResolver', () {
-    late RssMetadataResolver resolver;
+  group('SeasonNumberResolver', () {
+    late SeasonNumberResolver resolver;
 
     setUp(() {
-      resolver = RssMetadataResolver();
+      resolver = SeasonNumberResolver();
     });
 
-    test('type is "rss"', () {
-      expect(resolver.type, 'rss');
+    test('type is "seasonNumber"', () {
+      expect(resolver.type, 'seasonNumber');
     });
 
     test('returns null when no episodes have season numbers', () {
@@ -77,44 +77,6 @@ void main() {
       expect(result!.playlists, hasLength(1));
       expect(result.ungroupedEpisodeIds, [2]);
     });
-
-    test(
-      'groups null/zero seasonNumber when nullSeasonGroupKey is configured',
-      () {
-        final definition = SmartPlaylistDefinition(
-          id: 'test',
-          displayName: 'Test',
-          resolverType: 'rss',
-          nullSeasonGroupKey: 0,
-        );
-        final episodes = [
-          _makeEpisode(id: 1, title: 'Ep1', seasonNumber: 62, episodeNumber: 1),
-          _makeEpisode(
-            id: 2,
-            title: 'Bangai1',
-            seasonNumber: null,
-            episodeNumber: 100,
-          ),
-          _makeEpisode(
-            id: 3,
-            title: 'Bangai2',
-            seasonNumber: 0,
-            episodeNumber: 101,
-          ),
-        ];
-
-        final result = resolver.resolve(episodes, definition);
-
-        expect(result, isNotNull);
-        expect(result!.playlists, hasLength(2));
-        expect(result.ungroupedEpisodeIds, isEmpty);
-
-        final playlist0 = result.playlists.firstWhere(
-          (s) => s.id == 'season_0',
-        );
-        expect(playlist0.episodeIds, containsAll([2, 3]));
-      },
-    );
 
     test('uses season number as sortKey', () {
       final episodes = [
@@ -184,7 +146,8 @@ void main() {
       final definition = SmartPlaylistDefinition(
         id: 'test',
         displayName: 'Test',
-        resolverType: 'rss',
+        resolverType: 'seasonNumber',
+        presentation: 'separate',
         titleExtractor: const SmartPlaylistTitleExtractor(
           source: 'title',
           pattern: r'(.+?) \d+$',

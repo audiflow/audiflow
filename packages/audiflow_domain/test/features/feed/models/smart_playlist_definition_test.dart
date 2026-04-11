@@ -3,8 +3,8 @@ import 'dart:convert';
 import 'package:audiflow_domain/src/features/feed/models/episode_filter_entry.dart';
 import 'package:audiflow_domain/src/features/feed/models/episode_filters.dart';
 import 'package:audiflow_domain/src/features/feed/models/group_list_config.dart';
+import 'package:audiflow_domain/src/features/feed/models/numbering_extractor.dart';
 import 'package:audiflow_domain/src/features/feed/models/smart_playlist_definition.dart';
-import 'package:audiflow_domain/src/features/feed/models/smart_playlist_episode_extractor.dart';
 import 'package:audiflow_domain/src/features/feed/models/smart_playlist_group_def.dart';
 import 'package:audiflow_domain/src/features/feed/models/smart_playlist_sort.dart';
 import 'package:audiflow_domain/src/features/feed/models/smart_playlist_title_extractor.dart';
@@ -12,17 +12,16 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('SmartPlaylistDefinition', () {
-    test('round-trip with full RSS config', () {
+    test('round-trip with full seasonNumber config', () {
       final def = SmartPlaylistDefinition(
         id: 'main',
         displayName: 'Main Episodes',
-        resolverType: 'rss',
-        priority: 1,
+        resolverType: 'seasonNumber',
+        presentation: 'separate',
         episodeFilters: EpisodeFilters(
           require: [EpisodeFilterEntry(title: r'^\[\d+')],
           exclude: [EpisodeFilterEntry(title: r'bonus')],
         ),
-        nullSeasonGroupKey: 0,
         groupList: GroupListConfig(
           sort: SmartPlaylistSortRule(
             field: SmartPlaylistSortField.playlistNumber,
@@ -33,7 +32,7 @@ void main() {
           source: 'seasonNumber',
           template: 'Season {value}',
         ),
-        episodeExtractor: const SmartPlaylistEpisodeExtractor(
+        numberingExtractor: const NumberingExtractor(
           source: 'title',
           pattern: r'\[(\d+)-(\d+)\]',
         ),
@@ -47,23 +46,23 @@ void main() {
 
       expect(decoded.id, 'main');
       expect(decoded.displayName, 'Main Episodes');
-      expect(decoded.resolverType, 'rss');
-      expect(decoded.priority, 1);
+      expect(decoded.resolverType, 'seasonNumber');
+      expect(decoded.presentation, 'separate');
       expect(decoded.episodeFilters, isNotNull);
       expect(decoded.episodeFilters!.require, hasLength(1));
       expect(decoded.episodeFilters!.exclude, hasLength(1));
-      expect(decoded.nullSeasonGroupKey, 0);
       expect(decoded.groupList, isNotNull);
       expect(decoded.groupList!.sort, isNotNull);
       expect(decoded.titleExtractor, isNotNull);
-      expect(decoded.episodeExtractor, isNotNull);
+      expect(decoded.numberingExtractor, isNotNull);
     });
 
-    test('round-trip with category groups', () {
+    test('round-trip with titleClassifier groups', () {
       const def = SmartPlaylistDefinition(
         id: 'categories',
         displayName: 'Categories',
-        resolverType: 'category',
+        resolverType: 'titleClassifier',
+        presentation: 'separate',
         groups: [
           SmartPlaylistGroupDef(
             id: 'tech',
@@ -91,14 +90,17 @@ void main() {
       const def = SmartPlaylistDefinition(
         id: 'simple',
         displayName: 'Simple',
-        resolverType: 'rss',
+        resolverType: 'seasonNumber',
+        presentation: 'separate',
       );
 
       final json = def.toJson();
 
       // Only required keys present
-      expect(json.keys, containsAll(['id', 'displayName', 'resolverType']));
-      expect(json.containsKey('priority'), isFalse);
+      expect(
+        json.keys,
+        containsAll(['id', 'displayName', 'resolverType', 'presentation']),
+      );
       expect(json.containsKey('groups'), isFalse);
       expect(json.containsKey('groupList'), isFalse);
       expect(json.containsKey('episodeFilters'), isFalse);
@@ -106,11 +108,11 @@ void main() {
       final decoded = SmartPlaylistDefinition.fromJson(json);
 
       expect(decoded.id, 'simple');
-      expect(decoded.priority, 0);
+      expect(decoded.presentation, 'separate');
       expect(decoded.prependSeasonNumber, isFalse);
       expect(decoded.groupList, isNull);
       expect(decoded.episodeFilters, isNull);
-      expect(decoded.episodeExtractor, isNull);
+      expect(decoded.numberingExtractor, isNull);
       expect(decoded.groups, isNull);
       expect(decoded.titleExtractor, isNull);
     });
@@ -119,7 +121,8 @@ void main() {
       const def = SmartPlaylistDefinition(
         id: 'toggle-test',
         displayName: 'Toggle Test',
-        resolverType: 'rss',
+        resolverType: 'seasonNumber',
+        presentation: 'combined',
         groupList: GroupListConfig(
           userSortable: true,
           sort: SmartPlaylistSortRule(

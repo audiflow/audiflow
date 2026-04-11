@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:audiflow_domain/src/features/feed/models/numbering_extractor.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:json_schema/json_schema.dart';
 
@@ -75,8 +76,8 @@ void main() {
       const def = SmartPlaylistDefinition(
         id: 'main',
         displayName: 'Main Episodes',
-        resolverType: 'rss',
-        playlistStructure: 'split',
+        resolverType: 'seasonNumber',
+        presentation: 'separate',
       );
       expect(validate(def.toJson()), isEmpty);
     });
@@ -85,15 +86,13 @@ void main() {
       final def = SmartPlaylistDefinition(
         id: 'seasons',
         displayName: 'Seasons',
-        resolverType: 'rss',
-        priority: 100,
-        playlistStructure: 'grouped',
+        resolverType: 'seasonNumber',
+        presentation: 'combined',
         prependSeasonNumber: true,
         episodeFilters: EpisodeFilters(
           require: [EpisodeFilterEntry(title: r'S\d+')],
           exclude: [EpisodeFilterEntry(title: r'Trailer')],
         ),
-        nullSeasonGroupKey: 0,
         groupList: GroupListConfig(
           yearBinding: YearBinding.pinToYear,
           userSortable: true,
@@ -124,7 +123,7 @@ void main() {
           group: 1,
           template: 'Season {value}',
         ),
-        episodeExtractor: SmartPlaylistEpisodeExtractor(
+        numberingExtractor: const NumberingExtractor(
           source: 'title',
           pattern: r'\[(\d+)-(\d+)\]',
           seasonGroup: 1,
@@ -138,7 +137,7 @@ void main() {
 
   group('enum values match vendored playlist-definition schema', () {
     test('resolverTypes match schema oneOf', () {
-      // The v3 schema validates definitions directly at root level
+      // The v4 schema validates definitions directly at root level
       final props = schema['properties'] as Map<String, dynamic>;
       final resolverType = props['resolverType'] as Map<String, dynamic>;
       final schemaValues = _extractEnum(resolverType);
@@ -148,15 +147,20 @@ void main() {
       // and audiflow_domain models need updating.
       expect(
         schemaValues,
-        containsAll(['rss', 'category', 'year', 'titleAppearanceOrder']),
+        containsAll([
+          'seasonNumber',
+          'titleClassifier',
+          'year',
+          'titleDiscovery',
+        ]),
       );
     });
 
-    test('playlistStructure values match schema', () {
+    test('presentation values match schema', () {
       final props = schema['properties'] as Map<String, dynamic>;
-      final ps = props['playlistStructure'] as Map<String, dynamic>;
+      final ps = props['presentation'] as Map<String, dynamic>;
       final schemaValues = _extractEnum(ps);
-      expect(schemaValues, containsAll(['split', 'grouped']));
+      expect(schemaValues, containsAll(['separate', 'combined']));
     });
 
     test('yearBinding values match schema', () {
@@ -207,32 +211,33 @@ void main() {
       );
     });
 
-    test('episodeExtractorSources match schema enum', () {
-      final episodeExtractor = defs['EpisodeExtractor'] as Map<String, dynamic>;
-      final props = episodeExtractor['properties'] as Map<String, dynamic>;
+    test('numberingExtractorSources match schema enum', () {
+      final numberingExtractor =
+          defs['NumberingExtractor'] as Map<String, dynamic>;
+      final props = numberingExtractor['properties'] as Map<String, dynamic>;
       final source = props['source'] as Map<String, dynamic>;
       final schemaValues = _extractEnum(source);
       expect(schemaValues, containsAll(['title', 'description']));
     });
 
-    test(r'playlist-definition schema has v3 $id', () {
+    test(r'playlist-definition schema has v4 $id', () {
       expect(
         schema[r'$id'],
-        equals('https://audiflow.app/schema/v3/playlist-definition.json'),
+        equals('https://audiflow.app/schema/v4/playlist-definition.json'),
       );
     });
 
-    test(r'pattern-index schema has v3 $id', () {
+    test(r'pattern-index schema has v4 $id', () {
       expect(
         patternIndexSchema[r'$id'],
-        equals('https://audiflow.app/schema/v3/pattern-index.json'),
+        equals('https://audiflow.app/schema/v4/pattern-index.json'),
       );
     });
 
-    test(r'pattern-meta schema has v3 $id', () {
+    test(r'pattern-meta schema has v4 $id', () {
       expect(
         patternMetaSchema[r'$id'],
-        equals('https://audiflow.app/schema/v3/pattern-meta.json'),
+        equals('https://audiflow.app/schema/v4/pattern-meta.json'),
       );
     });
   });
@@ -245,14 +250,14 @@ void main() {
     }
 
     test('minimal RootMeta round-trips', () {
-      final meta = RootMeta(dataVersion: 1, schemaVersion: 3, patterns: []);
+      final meta = RootMeta(dataVersion: 1, schemaVersion: 4, patterns: []);
       expect(validatePatternIndex(meta.toJson()), isEmpty);
     });
 
     test('full RootMeta with patterns round-trips', () {
       final meta = RootMeta(
         dataVersion: 5,
-        schemaVersion: 3,
+        schemaVersion: 4,
         patterns: [
           PatternSummary(
             id: 'coten_radio',

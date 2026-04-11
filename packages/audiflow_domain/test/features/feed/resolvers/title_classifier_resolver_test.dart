@@ -11,15 +11,15 @@ Episode _makeEpisode(int id, String title) {
 }
 
 void main() {
-  group('CategoryResolver', () {
-    late CategoryResolver resolver;
+  group('TitleClassifierResolver', () {
+    late TitleClassifierResolver resolver;
 
     setUp(() {
-      resolver = CategoryResolver();
+      resolver = TitleClassifierResolver();
     });
 
-    test('type is "category"', () {
-      expect(resolver.type, 'category');
+    test('type is "titleClassifier"', () {
+      expect(resolver.type, 'titleClassifier');
     });
 
     test('returns null without definition', () {
@@ -32,7 +32,8 @@ void main() {
       const definition = SmartPlaylistDefinition(
         id: 'empty',
         displayName: 'Empty',
-        resolverType: 'category',
+        resolverType: 'titleClassifier',
+        presentation: 'separate',
       );
       final episodes = [_makeEpisode(1, 'Episode 1')];
       final result = resolver.resolve(episodes, definition);
@@ -43,7 +44,8 @@ void main() {
       const definition = SmartPlaylistDefinition(
         id: 'test',
         displayName: 'Test',
-        resolverType: 'category',
+        resolverType: 'titleClassifier',
+        presentation: 'separate',
         groups: [
           SmartPlaylistGroupDef(
             id: 'saturday',
@@ -82,7 +84,8 @@ void main() {
       const definition = SmartPlaylistDefinition(
         id: 'test',
         displayName: 'Test',
-        resolverType: 'category',
+        resolverType: 'titleClassifier',
+        presentation: 'separate',
         groups: [
           SmartPlaylistGroupDef(
             id: 'saturday',
@@ -107,7 +110,8 @@ void main() {
       const definition = SmartPlaylistDefinition(
         id: 'overlap',
         displayName: 'Overlap',
-        resolverType: 'category',
+        resolverType: 'titleClassifier',
+        presentation: 'separate',
         groups: [
           SmartPlaylistGroupDef(
             id: 'first',
@@ -134,7 +138,8 @@ void main() {
       const definition = SmartPlaylistDefinition(
         id: 'empty',
         displayName: 'Empty',
-        resolverType: 'category',
+        resolverType: 'titleClassifier',
+        presentation: 'separate',
         groups: [],
       );
 
@@ -148,7 +153,8 @@ void main() {
       const definition = SmartPlaylistDefinition(
         id: 'test',
         displayName: 'Test',
-        resolverType: 'category',
+        resolverType: 'titleClassifier',
+        presentation: 'separate',
         groups: [
           SmartPlaylistGroupDef(
             id: 'matched',

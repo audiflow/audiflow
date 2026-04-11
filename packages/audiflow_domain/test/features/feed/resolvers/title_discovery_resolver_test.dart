@@ -12,15 +12,15 @@ Episode _makeEpisode(int id, String title, DateTime publishedAt) {
 }
 
 void main() {
-  group('TitleAppearanceOrderResolver', () {
-    late TitleAppearanceOrderResolver resolver;
+  group('TitleDiscoveryResolver', () {
+    late TitleDiscoveryResolver resolver;
 
     setUp(() {
-      resolver = TitleAppearanceOrderResolver();
+      resolver = TitleDiscoveryResolver();
     });
 
-    test('type is "titleAppearanceOrder"', () {
-      expect(resolver.type, 'titleAppearanceOrder');
+    test('type is "titleDiscovery"', () {
+      expect(resolver.type, 'titleDiscovery');
     });
 
     test('returns null when no definition provided', () {
@@ -36,7 +36,8 @@ void main() {
       const definition = SmartPlaylistDefinition(
         id: 'test',
         displayName: 'Test',
-        resolverType: 'titleAppearanceOrder',
+        resolverType: 'titleDiscovery',
+        presentation: 'separate',
         groups: [
           SmartPlaylistGroupDef(
             id: 'extract',
@@ -79,7 +80,8 @@ void main() {
       const definition = SmartPlaylistDefinition(
         id: 'test',
         displayName: 'Test',
-        resolverType: 'titleAppearanceOrder',
+        resolverType: 'titleDiscovery',
+        presentation: 'separate',
         groups: [
           SmartPlaylistGroupDef(
             id: 'extract',
@@ -104,7 +106,8 @@ void main() {
       const definition = SmartPlaylistDefinition(
         id: 'test',
         displayName: 'Test',
-        resolverType: 'titleAppearanceOrder',
+        resolverType: 'titleDiscovery',
+        presentation: 'separate',
         groups: [
           SmartPlaylistGroupDef(
             id: 'extract',
