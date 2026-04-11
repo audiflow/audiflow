@@ -1,7 +1,7 @@
 import 'episode_filters.dart';
 import 'episode_list_config.dart';
 import 'group_list_config.dart';
-import 'smart_playlist_episode_extractor.dart';
+import 'numbering_extractor.dart';
 import 'smart_playlist_group_def.dart';
 import 'smart_playlist_title_extractor.dart';
 

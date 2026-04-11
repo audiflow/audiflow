@@ -1,6 +1,6 @@
 import '../models/episode_filter_entry.dart';
 import '../models/smart_playlist_definition.dart';
-import '../models/smart_playlist_episode_extractor.dart';
+import '../models/numbering_extractor.dart';
 import '../models/smart_playlist_group_def.dart';
 import '../models/smart_playlist_pattern_config.dart';
 

@@ -1,4 +1,4 @@
-import 'smart_playlist_episode_extractor.dart';
+import 'numbering_extractor.dart';
 import 'smart_playlist_sort.dart';
 import 'smart_playlist_title_extractor.dart';
 

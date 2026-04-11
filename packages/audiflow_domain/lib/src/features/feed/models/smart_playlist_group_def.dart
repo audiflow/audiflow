@@ -1,6 +1,6 @@
 import 'episode_list_config.dart';
 import 'group_display_config.dart';
-import 'smart_playlist_episode_extractor.dart';
+import 'numbering_extractor.dart';
 
 /// Static group definition within a playlist.
 final class SmartPlaylistGroupDef {
