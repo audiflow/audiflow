@@ -97,15 +97,13 @@ class SmartPlaylistResolverService {
 
       resolverType ??= result.resolverType;
 
-      final playlistStructure = PlaylistStructure.fromString(
-        definition.playlistStructure,
-      );
+      final presentation = Presentation.fromString(definition.presentation);
       final yearBinding = definition.groupList?.yearBinding ?? YearBinding.none;
 
-      // When playlistStructure is "grouped", the resolver's playlists
+      // When presentation is "combined", the resolver's playlists
       // become groups inside a single parent playlist named after
       // the definition.
-      if (playlistStructure == PlaylistStructure.grouped) {
+      if (presentation == Presentation.combined) {
         final groupDefMap = {
           for (final g in definition.groups ?? <SmartPlaylistGroupDef>[])
             g.id: g,
@@ -136,7 +134,7 @@ class SmartPlaylistResolverService {
             displayName: definition.displayName,
             sortKey: allPlaylists.length,
             episodeIds: allEpisodeIds,
-            playlistStructure: playlistStructure,
+            presentation: presentation,
             yearBinding: yearBinding,
             showDateRange: definition.groupList?.showDateRange ?? false,
             showYearHeaders: definition.episodeList?.showYearHeaders ?? false,
@@ -152,7 +150,7 @@ class SmartPlaylistResolverService {
         // smart playlist.
         final decorated = result.playlists.map((playlist) {
           return playlist.copyWith(
-            playlistStructure: playlistStructure,
+            presentation: presentation,
             yearBinding: yearBinding,
             showDateRange: definition.groupList?.showDateRange ?? false,
             showYearHeaders: definition.episodeList?.showYearHeaders ?? false,
@@ -291,7 +289,6 @@ class SmartPlaylistResolverService {
   }
 
   /// Sorts definitions so filtered definitions process before fallbacks.
-  /// Within each group, sorts by priority ascending (lower number first).
   static List<SmartPlaylistDefinition> _sortByProcessingOrder(
     List<SmartPlaylistDefinition> definitions,
   ) {
@@ -305,9 +302,6 @@ class SmartPlaylistResolverService {
         fallbacks.add(def);
       }
     }
-
-    filtered.sort((a, b) => a.priority.compareTo(b.priority));
-    fallbacks.sort((a, b) => a.priority.compareTo(b.priority));
 
     return [...filtered, ...fallbacks];
   }
