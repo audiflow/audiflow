@@ -14,6 +14,8 @@ final class SmartPlaylistGroupDef {
   });
 
   factory SmartPlaylistGroupDef.fromJson(Map<String, dynamic> json) {
+    // Accept v3 alias 'episodeExtractor' for cached data compatibility.
+    final rawExtractor = json['numberingExtractor'] ?? json['episodeExtractor'];
     return SmartPlaylistGroupDef(
       id: json['id'] as String,
       displayName: json['displayName'] as String,
@@ -26,10 +28,8 @@ final class SmartPlaylistGroupDef {
               json['episodeList'] as Map<String, dynamic>,
             )
           : null,
-      numberingExtractor: json['numberingExtractor'] != null
-          ? NumberingExtractor.fromJson(
-              json['numberingExtractor'] as Map<String, dynamic>,
-            )
+      numberingExtractor: rawExtractor != null
+          ? NumberingExtractor.fromJson(rawExtractor as Map<String, dynamic>)
           : null,
     );
   }

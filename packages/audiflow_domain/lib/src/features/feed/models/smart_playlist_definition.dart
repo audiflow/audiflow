@@ -22,11 +22,20 @@ final class SmartPlaylistDefinition {
   });
 
   factory SmartPlaylistDefinition.fromJson(Map<String, dynamic> json) {
+    // Accept v3 field aliases for cached data backward compatibility:
+    // v3 'playlistStructure' -> v4 'presentation'
+    // v3 'episodeExtractor' -> v4 'numberingExtractor'
+    // v3 resolver types: 'rss' -> 'seasonNumber',
+    //   'category' -> 'titleClassifier',
+    //   'titleAppearanceOrder' -> 'titleDiscovery'
+    final rawExtractor = json['numberingExtractor'] ?? json['episodeExtractor'];
     return SmartPlaylistDefinition(
       id: json['id'] as String,
       displayName: json['displayName'] as String,
-      resolverType: json['resolverType'] as String,
-      presentation: json['presentation'] as String,
+      resolverType: _normalizeResolverType(json['resolverType'] as String),
+      presentation:
+          (json['presentation'] ?? json['playlistStructure'] ?? 'separate')
+              as String,
       episodeFilters: json['episodeFilters'] != null
           ? EpisodeFilters.fromJson(
               json['episodeFilters'] as Map<String, dynamic>,
@@ -46,10 +55,8 @@ final class SmartPlaylistDefinition {
               json['episodeList'] as Map<String, dynamic>,
             )
           : null,
-      numberingExtractor: json['numberingExtractor'] != null
-          ? NumberingExtractor.fromJson(
-              json['numberingExtractor'] as Map<String, dynamic>,
-            )
+      numberingExtractor: rawExtractor != null
+          ? NumberingExtractor.fromJson(rawExtractor as Map<String, dynamic>)
           : null,
       groups: (json['groups'] as List<dynamic>?)
           ?.map(
@@ -57,6 +64,16 @@ final class SmartPlaylistDefinition {
           )
           .toList(),
     );
+  }
+
+  /// Maps legacy v3 resolver type IDs to their v4 equivalents.
+  static String _normalizeResolverType(String type) {
+    return switch (type) {
+      'rss' => 'seasonNumber',
+      'category' => 'titleClassifier',
+      'titleAppearanceOrder' => 'titleDiscovery',
+      _ => type,
+    };
   }
 
   final String id;
