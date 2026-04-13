@@ -146,12 +146,14 @@ void main() {
       final definition = SmartPlaylistDefinition(
         id: 'test',
         displayName: 'Test',
-        resolverType: 'seasonNumber',
-        presentation: 'separate',
-        titleExtractor: const SmartPlaylistTitleExtractor(
-          source: 'title',
-          pattern: r'(.+?) \d+$',
-          group: 1,
+        grouping: const GroupingConfig(by: 'seasonNumber'),
+        priority: 0,
+        groupItem: const GroupItemConfig(
+          titleExtractor: SmartPlaylistTitleExtractor(
+            source: 'title',
+            pattern: r'(.+?) \d+$',
+            group: 1,
+          ),
         ),
       );
       final episodes = [

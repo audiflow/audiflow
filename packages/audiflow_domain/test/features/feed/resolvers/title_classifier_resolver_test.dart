@@ -32,8 +32,8 @@ void main() {
       const definition = SmartPlaylistDefinition(
         id: 'empty',
         displayName: 'Empty',
-        resolverType: 'titleClassifier',
-        presentation: 'separate',
+        grouping: GroupingConfig(by: 'titleClassifier'),
+        priority: 0,
       );
       final episodes = [_makeEpisode(1, 'Episode 1')];
       final result = resolver.resolve(episodes, definition);
@@ -44,21 +44,23 @@ void main() {
       const definition = SmartPlaylistDefinition(
         id: 'test',
         displayName: 'Test',
-        resolverType: 'titleClassifier',
-        presentation: 'separate',
-        groups: [
-          SmartPlaylistGroupDef(
-            id: 'saturday',
-            displayName: 'Saturday',
-            pattern: r'【土曜版',
-          ),
-          SmartPlaylistGroupDef(
-            id: 'news_talk',
-            displayName: 'News Talk',
-            pattern: r'【ニュース小話',
-          ),
-          SmartPlaylistGroupDef(id: 'other', displayName: 'Other'),
-        ],
+        grouping: GroupingConfig(
+          by: 'titleClassifier',
+          staticClassifiers: [
+            SmartPlaylistGroupDef(
+              id: 'saturday',
+              displayName: 'Saturday',
+              pattern: r'【土曜版',
+            ),
+            SmartPlaylistGroupDef(
+              id: 'news_talk',
+              displayName: 'News Talk',
+              pattern: r'【ニュース小話',
+            ),
+            SmartPlaylistGroupDef(id: 'other', displayName: 'Other'),
+          ],
+        ),
+        priority: 0,
       );
 
       final episodes = [
@@ -84,15 +86,17 @@ void main() {
       const definition = SmartPlaylistDefinition(
         id: 'test',
         displayName: 'Test',
-        resolverType: 'titleClassifier',
-        presentation: 'separate',
-        groups: [
-          SmartPlaylistGroupDef(
-            id: 'saturday',
-            displayName: 'Saturday',
-            pattern: r'【土曜版',
-          ),
-        ],
+        grouping: GroupingConfig(
+          by: 'titleClassifier',
+          staticClassifiers: [
+            SmartPlaylistGroupDef(
+              id: 'saturday',
+              displayName: 'Saturday',
+              pattern: r'【土曜版',
+            ),
+          ],
+        ),
+        priority: 0,
       );
 
       final episodes = [
@@ -110,20 +114,22 @@ void main() {
       const definition = SmartPlaylistDefinition(
         id: 'overlap',
         displayName: 'Overlap',
-        resolverType: 'titleClassifier',
-        presentation: 'separate',
-        groups: [
-          SmartPlaylistGroupDef(
-            id: 'first',
-            displayName: 'First',
-            pattern: r'Hello',
-          ),
-          SmartPlaylistGroupDef(
-            id: 'second',
-            displayName: 'Second',
-            pattern: r'Hello World',
-          ),
-        ],
+        grouping: GroupingConfig(
+          by: 'titleClassifier',
+          staticClassifiers: [
+            SmartPlaylistGroupDef(
+              id: 'first',
+              displayName: 'First',
+              pattern: r'Hello',
+            ),
+            SmartPlaylistGroupDef(
+              id: 'second',
+              displayName: 'Second',
+              pattern: r'Hello World',
+            ),
+          ],
+        ),
+        priority: 0,
       );
       final episodes = [_makeEpisode(1, 'Hello World')];
 
@@ -138,9 +144,8 @@ void main() {
       const definition = SmartPlaylistDefinition(
         id: 'empty',
         displayName: 'Empty',
-        resolverType: 'titleClassifier',
-        presentation: 'separate',
-        groups: [],
+        grouping: GroupingConfig(by: 'titleClassifier', staticClassifiers: []),
+        priority: 0,
       );
 
       final episodes = [_makeEpisode(1, 'Episode 1')];
@@ -153,16 +158,18 @@ void main() {
       const definition = SmartPlaylistDefinition(
         id: 'test',
         displayName: 'Test',
-        resolverType: 'titleClassifier',
-        presentation: 'separate',
-        groups: [
-          SmartPlaylistGroupDef(
-            id: 'matched',
-            displayName: 'Matched',
-            pattern: r'AAA',
-          ),
-          SmartPlaylistGroupDef(id: 'fallback', displayName: 'Fallback'),
-        ],
+        grouping: GroupingConfig(
+          by: 'titleClassifier',
+          staticClassifiers: [
+            SmartPlaylistGroupDef(
+              id: 'matched',
+              displayName: 'Matched',
+              pattern: r'AAA',
+            ),
+            SmartPlaylistGroupDef(id: 'fallback', displayName: 'Fallback'),
+          ],
+        ),
+        priority: 0,
       );
 
       final episodes = [

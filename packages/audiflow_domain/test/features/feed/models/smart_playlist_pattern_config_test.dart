@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:audiflow_domain/src/features/feed/models/grouping_config.dart';
 import 'package:audiflow_domain/src/features/feed/models/smart_playlist_definition.dart';
 import 'package:audiflow_domain/src/features/feed/models/smart_playlist_pattern_config.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -14,8 +15,8 @@ void main() {
           SmartPlaylistDefinition(
             id: 'main',
             displayName: 'Main',
-            resolverType: 'seasonNumber',
-            presentation: 'separate',
+            grouping: GroupingConfig(by: 'seasonNumber'),
+            priority: 0,
           ),
         ],
       );
@@ -40,8 +41,8 @@ void main() {
           SmartPlaylistDefinition(
             id: 'p1',
             displayName: 'P1',
-            resolverType: 'seasonNumber',
-            presentation: 'separate',
+            grouping: GroupingConfig(by: 'seasonNumber'),
+            priority: 0,
           ),
         ],
       );
@@ -60,8 +61,8 @@ void main() {
           SmartPlaylistDefinition(
             id: 'p1',
             displayName: 'P1',
-            resolverType: 'seasonNumber',
-            presentation: 'separate',
+            grouping: GroupingConfig(by: 'seasonNumber'),
+            priority: 0,
           ),
         ],
       );
@@ -77,8 +78,8 @@ void main() {
           SmartPlaylistDefinition(
             id: 'p1',
             displayName: 'P1',
-            resolverType: 'seasonNumber',
-            presentation: 'separate',
+            grouping: GroupingConfig(by: 'seasonNumber'),
+            priority: 0,
           ),
         ],
       );
@@ -94,8 +95,8 @@ void main() {
           SmartPlaylistDefinition(
             id: 'p1',
             displayName: 'P1',
-            resolverType: 'seasonNumber',
-            presentation: 'separate',
+            grouping: GroupingConfig(by: 'seasonNumber'),
+            priority: 0,
           ),
         ],
       );

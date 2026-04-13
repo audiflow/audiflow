@@ -75,8 +75,8 @@ void main() {
       const def = SmartPlaylistDefinition(
         id: 'main',
         displayName: 'Main Episodes',
-        resolverType: 'seasonNumber',
-        presentation: 'separate',
+        grouping: GroupingConfig(by: 'seasonNumber'),
+        priority: 0,
       );
       expect(validate(def.toJson()), isEmpty);
     });
@@ -85,49 +85,52 @@ void main() {
       final def = SmartPlaylistDefinition(
         id: 'seasons',
         displayName: 'Seasons',
-        resolverType: 'seasonNumber',
-        presentation: 'combined',
-        prependSeasonNumber: true,
-        episodeFilters: EpisodeFilters(
-          require: [EpisodeFilterEntry(title: r'S\d+')],
-          exclude: [EpisodeFilterEntry(title: r'Trailer')],
+        grouping: GroupingConfig(
+          by: 'titleClassifier',
+          numberingExtractor: const NumberingExtractor(
+            source: 'title',
+            pattern: r'\[(\d+)-(\d+)\]',
+            seasonGroup: 1,
+            episodeGroup: 2,
+            fallbackToRss: true,
+          ),
+          staticClassifiers: [
+            SmartPlaylistGroupDef(
+              id: 'main',
+              displayName: 'Main',
+              pattern: r'^Main\b',
+            ),
+            SmartPlaylistGroupDef(id: 'other', displayName: 'Other'),
+          ],
         ),
-        groupList: GroupListConfig(
+        priority: 0,
+        selector: const SelectorConfig(),
+        groupItem: GroupItemConfig(
+          prependSeasonNumber: true,
+          titleExtractor: SmartPlaylistTitleExtractor(
+            source: 'title',
+            pattern: r'\[(.+?)\]',
+            group: 1,
+            template: 'Season {value}',
+          ),
+        ),
+        groupListing: GroupListingConfig(
           yearBinding: YearBinding.pinToYear,
           userSortable: true,
-          showDateRange: true,
           sort: SmartPlaylistSortRule(
             field: SmartPlaylistSortField.playlistNumber,
             order: SortOrder.descending,
           ),
         ),
-        episodeList: EpisodeListConfig(
-          showYearHeaders: true,
+        episodeListing: EpisodeListingConfig(
           sort: EpisodeSortRule(
             field: EpisodeSortField.publishedAt,
             order: SortOrder.descending,
           ),
         ),
-        groups: [
-          SmartPlaylistGroupDef(
-            id: 'main',
-            displayName: 'Main',
-            pattern: r'^Main\b',
-          ),
-          SmartPlaylistGroupDef(id: 'other', displayName: 'Other'),
-        ],
-        titleExtractor: SmartPlaylistTitleExtractor(
-          source: 'title',
-          pattern: r'\[(.+?)\]',
-          group: 1,
-          template: 'Season {value}',
-        ),
-        numberingExtractor: const NumberingExtractor(
-          source: 'title',
-          pattern: r'\[(\d+)-(\d+)\]',
-          seasonGroup: 1,
-          episodeGroup: 2,
-          fallbackToRss: true,
+        episodeFilters: EpisodeFilters(
+          require: [EpisodeFilterEntry(title: r'S\d+')],
+          exclude: [EpisodeFilterEntry(title: r'Trailer')],
         ),
       );
       expect(validate(def.toJson()), isEmpty);
@@ -135,13 +138,14 @@ void main() {
   });
 
   group('enum values match vendored playlist-definition schema', () {
-    test('resolverTypes match schema oneOf', () {
-      // The v4 schema validates definitions directly at root level
-      final props = schema['properties'] as Map<String, dynamic>;
-      final resolverType = props['resolverType'] as Map<String, dynamic>;
-      final schemaValues = _extractEnum(resolverType);
+    test('groupingBy values match schema oneOf', () {
+      // The v5 schema uses grouping.by instead of top-level resolverType.
+      final groupingConfig = defs['GroupingConfig'] as Map<String, dynamic>;
+      final props = groupingConfig['properties'] as Map<String, dynamic>;
+      final by = props['by'] as Map<String, dynamic>;
+      final schemaValues = _extractEnum(by);
 
-      // These are the valid resolver type strings from the schema.
+      // These are the valid grouping.by strings from the schema.
       // If this fails, a resolver type was added/removed in the schema
       // and audiflow_domain models need updating.
       expect(
@@ -153,13 +157,6 @@ void main() {
           'titleDiscovery',
         ]),
       );
-    });
-
-    test('presentation values match schema', () {
-      final props = schema['properties'] as Map<String, dynamic>;
-      final ps = props['presentation'] as Map<String, dynamic>;
-      final schemaValues = _extractEnum(ps);
-      expect(schemaValues, containsAll(['separate', 'combined']));
     });
 
     test('yearBinding values match schema', () {

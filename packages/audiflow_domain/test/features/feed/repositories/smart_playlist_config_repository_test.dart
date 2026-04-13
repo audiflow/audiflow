@@ -149,7 +149,8 @@ void main() {
       fakeResponses['$baseUrl/test/playlists/main.json'] = jsonEncode({
         'id': 'main',
         'displayName': 'Main',
-        'resolverType': 'rss',
+        'grouping': {'by': 'seasonNumber'},
+        'priority': 0,
       });
 
       final summary = PatternSummary(
@@ -188,8 +189,8 @@ void main() {
         SmartPlaylistDefinition(
           id: 'main',
           displayName: 'Main Cached',
-          resolverType: 'seasonNumber',
-          presentation: 'separate',
+          grouping: GroupingConfig(by: 'seasonNumber'),
+          priority: 0,
         ),
       );
 
@@ -216,7 +217,8 @@ void main() {
       fakeResponses['$baseUrl/test/playlists/main.json'] = jsonEncode({
         'id': 'main',
         'displayName': 'Main',
-        'resolverType': 'rss',
+        'grouping': {'by': 'seasonNumber'},
+        'priority': 0,
       });
 
       // Override remote with counting wrapper

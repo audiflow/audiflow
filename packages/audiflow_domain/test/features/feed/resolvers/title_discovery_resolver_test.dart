@@ -36,15 +36,11 @@ void main() {
       const definition = SmartPlaylistDefinition(
         id: 'test',
         displayName: 'Test',
-        resolverType: 'titleDiscovery',
-        presentation: 'separate',
-        groups: [
-          SmartPlaylistGroupDef(
-            id: 'extract',
-            displayName: 'Extract',
-            pattern: r'\[(\w+)\s+\d+\]',
-          ),
-        ],
+        grouping: GroupingConfig(
+          by: 'titleDiscovery',
+          discoveryHint: r'\[(\w+)\s+\d+\]',
+        ),
+        priority: 0,
       );
 
       // Episodes in feed order (newest first typically)
@@ -80,15 +76,11 @@ void main() {
       const definition = SmartPlaylistDefinition(
         id: 'test',
         displayName: 'Test',
-        resolverType: 'titleDiscovery',
-        presentation: 'separate',
-        groups: [
-          SmartPlaylistGroupDef(
-            id: 'extract',
-            displayName: 'Extract',
-            pattern: r'\[(\w+)\s+\d+\]',
-          ),
-        ],
+        grouping: GroupingConfig(
+          by: 'titleDiscovery',
+          discoveryHint: r'\[(\w+)\s+\d+\]',
+        ),
+        priority: 0,
       );
 
       final episodes = [
@@ -106,15 +98,11 @@ void main() {
       const definition = SmartPlaylistDefinition(
         id: 'test',
         displayName: 'Test',
-        resolverType: 'titleDiscovery',
-        presentation: 'separate',
-        groups: [
-          SmartPlaylistGroupDef(
-            id: 'extract',
-            displayName: 'Extract',
-            pattern: r'\[(\w+)\s+\d+\]',
-          ),
-        ],
+        grouping: GroupingConfig(
+          by: 'titleDiscovery',
+          discoveryHint: r'\[(\w+)\s+\d+\]',
+        ),
+        priority: 0,
       );
 
       final episodes = [

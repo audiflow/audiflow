@@ -2,14 +2,6 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  group('Presentation', () {
-    test('has separate and combined values', () {
-      expect(Presentation.values, hasLength(2));
-      expect(Presentation.separate.name, 'separate');
-      expect(Presentation.combined.name, 'combined');
-    });
-  });
-
   group('YearBinding', () {
     test('has none, pinToYear, and splitByYear values', () {
       expect(YearBinding.values, hasLength(3));
@@ -84,7 +76,7 @@ void main() {
       expect(playlist.episodeCount, 5);
     });
 
-    test('defaults to separate presentation with no year binding', () {
+    test('defaults to not separate with no year binding', () {
       final playlist = SmartPlaylist(
         id: 'p1',
         displayName: 'P1',
@@ -92,12 +84,12 @@ void main() {
         episodeIds: [1, 2],
       );
 
-      expect(playlist.presentation, Presentation.separate);
+      expect(playlist.isSeparate, isFalse);
       expect(playlist.yearBinding, YearBinding.none);
       expect(playlist.groups, isNull);
     });
 
-    test('supports combined presentation', () {
+    test('supports grouped (non-separate) presentation', () {
       final groups = [
         SmartPlaylistGroup(
           id: 'g1',
@@ -111,12 +103,12 @@ void main() {
         displayName: 'P1',
         sortKey: 1,
         episodeIds: [],
-        presentation: Presentation.combined,
+        isSeparate: false,
         yearBinding: YearBinding.pinToYear,
         groups: groups,
       );
 
-      expect(playlist.presentation, Presentation.combined);
+      expect(playlist.isSeparate, isFalse);
       expect(playlist.yearBinding, YearBinding.pinToYear);
       expect(playlist.groups, hasLength(1));
       expect(playlist.groups!.first.id, 'g1');
@@ -128,12 +120,12 @@ void main() {
         displayName: 'P1',
         sortKey: 1,
         episodeIds: [],
-        presentation: Presentation.combined,
+        isSeparate: false,
         yearBinding: YearBinding.splitByYear,
       );
 
       final copied = playlist.copyWith(displayName: 'P2');
-      expect(copied.presentation, Presentation.combined);
+      expect(copied.isSeparate, isFalse);
       expect(copied.yearBinding, YearBinding.splitByYear);
       expect(copied.displayName, 'P2');
     });

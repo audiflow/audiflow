@@ -225,8 +225,8 @@ void main() {
             const SmartPlaylistDefinition(
               id: 'regular',
               displayName: 'Regular Series',
-              resolverType: 'seasonNumber',
-              presentation: 'combined',
+              grouping: GroupingConfig(by: 'seasonNumber'),
+              priority: 0,
             ),
           ],
         );
@@ -244,7 +244,7 @@ void main() {
         expect(grouping!.playlists, hasLength(1));
 
         final playlist = grouping.playlists.first;
-        expect(playlist.presentation, Presentation.combined);
+        expect(playlist.isSeparate, isFalse);
         expect(playlist.groups, isNotNull);
         expect(playlist.groups, isNotEmpty);
 
@@ -271,8 +271,8 @@ void main() {
           const SmartPlaylistDefinition(
             id: 'regular',
             displayName: 'Regular Series',
-            resolverType: 'seasonNumber',
-            presentation: 'combined',
+            grouping: GroupingConfig(by: 'seasonNumber'),
+            priority: 0,
           ),
         ],
       );
@@ -298,7 +298,7 @@ void main() {
 
       expect(cached, isNotNull);
       expect(cached!.playlists, hasLength(1));
-      expect(cached.playlists.first.presentation, Presentation.combined);
+      expect(cached.playlists.first.isSeparate, isFalse);
     });
 
     test('infers grouped structure from persisted groups '
@@ -360,8 +360,8 @@ void main() {
 
       final playlist = grouping.playlists.first;
       expect(
-        playlist.presentation,
-        Presentation.combined,
+        playlist.isSeparate,
+        isFalse,
         reason: 'Should infer combined from persisted groups',
       );
       expect(playlist.groups, isNotNull);
@@ -410,8 +410,9 @@ void main() {
             const SmartPlaylistDefinition(
               id: 'yearly',
               displayName: 'By Year',
-              resolverType: 'year',
-              presentation: 'separate',
+              grouping: GroupingConfig(by: 'year'),
+              priority: 0,
+              selector: SelectorConfig(),
             ),
           ],
         );

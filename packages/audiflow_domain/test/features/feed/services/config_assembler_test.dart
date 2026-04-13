@@ -15,14 +15,14 @@ void main() {
         SmartPlaylistDefinition(
           id: 'regular',
           displayName: 'Regular',
-          resolverType: 'seasonNumber',
-          presentation: 'separate',
+          grouping: GroupingConfig(by: 'seasonNumber'),
+          priority: 0,
         ),
         SmartPlaylistDefinition(
           id: 'short',
           displayName: 'Short',
-          resolverType: 'seasonNumber',
-          presentation: 'separate',
+          grouping: GroupingConfig(by: 'seasonNumber'),
+          priority: 1,
         ),
       ];
 
@@ -48,8 +48,8 @@ void main() {
         SmartPlaylistDefinition(
           id: 'main',
           displayName: 'Main',
-          resolverType: 'seasonNumber',
-          presentation: 'separate',
+          grouping: GroupingConfig(by: 'seasonNumber'),
+          priority: 0,
         ),
       ];
 
@@ -69,14 +69,14 @@ void main() {
         SmartPlaylistDefinition(
           id: 'a',
           displayName: 'A',
-          resolverType: 'seasonNumber',
-          presentation: 'separate',
+          grouping: GroupingConfig(by: 'seasonNumber'),
+          priority: 0,
         ),
         SmartPlaylistDefinition(
           id: 'b',
           displayName: 'B',
-          resolverType: 'seasonNumber',
-          presentation: 'separate',
+          grouping: GroupingConfig(by: 'seasonNumber'),
+          priority: 0,
         ),
       ];
 
@@ -96,14 +96,14 @@ void main() {
         SmartPlaylistDefinition(
           id: 'a',
           displayName: 'A',
-          resolverType: 'seasonNumber',
-          presentation: 'separate',
+          grouping: GroupingConfig(by: 'seasonNumber'),
+          priority: 0,
         ),
         SmartPlaylistDefinition(
           id: 'extra',
           displayName: 'Extra',
-          resolverType: 'seasonNumber',
-          presentation: 'separate',
+          grouping: GroupingConfig(by: 'seasonNumber'),
+          priority: 0,
         ),
       ];
 
@@ -125,8 +125,8 @@ void main() {
         SmartPlaylistDefinition(
           id: 'present',
           displayName: 'Present',
-          resolverType: 'seasonNumber',
-          presentation: 'separate',
+          grouping: GroupingConfig(by: 'seasonNumber'),
+          priority: 0,
         ),
       ];
 

@@ -90,8 +90,8 @@ void main() {
         final definition = SmartPlaylistDefinition(
           id: 'regular',
           displayName: 'Regular',
-          resolverType: 'seasonNumber',
-          presentation: 'separate',
+          grouping: GroupingConfig(by: 'seasonNumber'),
+          priority: 0,
         );
         await datasource.writePlaylist('coten_radio', 'regular', definition);
         final restored = await datasource.readPlaylist(
@@ -100,7 +100,7 @@ void main() {
         );
         expect(restored, isNotNull);
         expect(restored!.id, 'regular');
-        expect(restored.resolverType, 'seasonNumber');
+        expect(restored.grouping.by, 'seasonNumber');
       });
     });
 
