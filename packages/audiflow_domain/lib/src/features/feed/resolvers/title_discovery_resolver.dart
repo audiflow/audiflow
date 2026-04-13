@@ -37,8 +37,8 @@ class TitleDiscoveryResolver implements SmartPlaylistResolver {
   ) {
     if (definition == null) return null;
 
-    final titleExtractor = definition.titleExtractor;
-    final patternStr = definition.groups?.firstOrNull?.pattern;
+    final titleExtractor = definition.groupItem?.titleExtractor;
+    final patternStr = definition.grouping.discoveryHint;
 
     // Need either a titleExtractor or a group pattern
     if (titleExtractor == null && patternStr == null) {

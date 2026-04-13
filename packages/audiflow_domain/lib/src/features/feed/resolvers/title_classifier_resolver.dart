@@ -31,7 +31,7 @@ class TitleClassifierResolver implements SmartPlaylistResolver {
   ) {
     if (definition == null) return null;
 
-    final groupDefs = definition.groups;
+    final groupDefs = definition.grouping.staticClassifiers;
     if (groupDefs == null || groupDefs.isEmpty) return null;
 
     return _resolveWithGroups(episodes, groupDefs);

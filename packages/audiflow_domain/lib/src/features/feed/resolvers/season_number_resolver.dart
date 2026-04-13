@@ -43,7 +43,7 @@ class SeasonNumberResolver implements SmartPlaylistResolver {
 
     if (grouped.isEmpty) return null;
 
-    final titleExtractor = definition?.titleExtractor;
+    final titleExtractor = definition?.groupItem?.titleExtractor;
 
     final playlists = grouped.entries.map((entry) {
       final seasonNumber = entry.key;
