@@ -121,9 +121,10 @@ class SmartPlaylistResolverService {
             thumbnailUrl: p.thumbnailUrl,
             yearOverride:
                 gDef?.groupListing?.yearBinding ??
-                (gDef?.groupItem?.pinToYear == true
-                    ? YearBinding.pinToYear
-                    : null),
+                _resolvePinToYear(
+                  gDef?.groupItem?.pinToYear,
+                  definition.groupItem?.pinToYear,
+                ),
             showDateRange:
                 gDef?.groupItem?.showDateRange ??
                 definition.groupItem?.showDateRange ??
@@ -289,13 +290,31 @@ class SmartPlaylistResolverService {
     return null;
   }
 
+  /// Maps deprecated v3 resolver aliases to their v5 equivalents.
+  static const _deprecatedResolverAliases = {
+    'rss': 'seasonNumber',
+    'category': 'titleClassifier',
+    'titleAppearanceOrder': 'titleDiscovery',
+  };
+
   SmartPlaylistResolver? _findResolverByType(String type) {
+    final canonicalType = _deprecatedResolverAliases[type] ?? type;
     for (final resolver in _resolvers) {
-      if (resolver.type == type) {
+      if (resolver.type == canonicalType) {
         return resolver;
       }
     }
     return null;
+  }
+
+  /// Resolves the effective pinToYear override by checking the per-group
+  /// value first, then falling back to the playlist-level default.
+  static YearBinding? _resolvePinToYear(
+    bool? groupPinToYear,
+    bool? playlistPinToYear,
+  ) {
+    final effective = groupPinToYear ?? playlistPinToYear;
+    return effective == true ? YearBinding.pinToYear : null;
   }
 
   /// Sorts definitions so filtered definitions process before fallbacks,

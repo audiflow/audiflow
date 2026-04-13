@@ -235,9 +235,95 @@ void main() {
         reason: 'groupItem.pinToYear should set yearOverride',
       );
 
-      // season_2 has no groupDef, so yearOverride stays null
+      // season_2 has no groupDef, but inherits playlist-level pinToYear
+      // (in this test there is no playlist-level groupItem, so null)
       final season2 = playlist.groups!.firstWhere((g) => g.id == 'season_2');
       expect(season2.yearOverride, isNull);
+    });
+
+    test('playlist-level groupItem.pinToYear applies to all groups', () {
+      final serviceWithPlaylistPinToYear = SmartPlaylistResolverService(
+        resolvers: [SeasonNumberResolver()],
+        patterns: [
+          SmartPlaylistPatternConfig(
+            id: 'test',
+            feedUrls: ['https://example.com/feed'],
+            playlists: [
+              const SmartPlaylistDefinition(
+                id: 'regular',
+                displayName: 'Regular',
+                grouping: GroupingConfig(by: 'seasonNumber'),
+                priority: 0,
+                groupItem: GroupItemConfig(pinToYear: true),
+              ),
+            ],
+          ),
+        ],
+      );
+
+      final episodes = [
+        _makeEpisode(1, seasonNumber: 1, title: 'S1E1'),
+        _makeEpisode(2, seasonNumber: 2, title: 'S2E1'),
+      ];
+
+      final result = serviceWithPlaylistPinToYear.resolveSmartPlaylists(
+        podcastGuid: null,
+        feedUrl: 'https://example.com/feed',
+        episodes: episodes,
+      );
+
+      expect(result, isNotNull);
+      final playlist = result!.playlists.first;
+      expect(playlist.groups, isNotNull);
+
+      for (final group in playlist.groups!) {
+        expect(
+          group.yearOverride,
+          YearBinding.pinToYear,
+          reason:
+              'All groups should inherit playlist-level pinToYear: ${group.id}',
+        );
+      }
+    });
+
+    test('deprecated resolver aliases resolve correctly', () {
+      final serviceWithAliases = SmartPlaylistResolverService(
+        resolvers: [SeasonNumberResolver()],
+        patterns: [
+          SmartPlaylistPatternConfig(
+            id: 'test',
+            feedUrls: ['https://example.com/feed'],
+            playlists: [
+              const SmartPlaylistDefinition(
+                id: 'regular',
+                displayName: 'Regular',
+                // 'rss' is the deprecated v3 alias for 'seasonNumber'
+                grouping: GroupingConfig(by: 'rss'),
+                priority: 0,
+              ),
+            ],
+          ),
+        ],
+      );
+
+      final episodes = [
+        _makeEpisode(1, seasonNumber: 1, title: 'S1E1'),
+        _makeEpisode(2, seasonNumber: 2, title: 'S2E1'),
+      ];
+
+      final result = serviceWithAliases.resolveSmartPlaylists(
+        podcastGuid: null,
+        feedUrl: 'https://example.com/feed',
+        episodes: episodes,
+      );
+
+      expect(result, isNotNull);
+      expect(result!.playlists, isNotEmpty);
+      expect(
+        result.playlists.first.groups,
+        isNotNull,
+        reason: "Deprecated 'rss' alias should map to seasonNumber resolver",
+      );
     });
 
     test('multiple definitions produce separate parent playlists', () {
