@@ -3,7 +3,6 @@ import 'package:audiflow_domain/audiflow_domain.dart'
         EpisodeSortField,
         EpisodeSortRule,
         SmartPlaylist,
-        Presentation,
         SmartPlaylistEpisodeData,
         SmartPlaylistGroup,
         SortOrder,
@@ -115,7 +114,7 @@ List<Widget> _buildPlaylistData({
     ];
   }
 
-  if (playlist.presentation == Presentation.combined &&
+  if (!playlist.isSeparate &&
       playlist.groups != null &&
       playlist.groups!.isNotEmpty) {
     return _buildInlineGroupList(
