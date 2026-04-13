@@ -75,13 +75,13 @@
 - [ ] **Step 1: Copy v4 schemas from the smartplaylist repo**
 
 ```bash
-cp /Users/tohru/Documents/src/ghq/github.com/audiflow/audiflow-smartplaylist.feat-v4/schema/playlist-definition.schema.json \
+cp $SMARTPLAYLIST_REPO/schema/playlist-definition.schema.json \
    packages/audiflow_domain/test/fixtures/playlist-definition.schema.json
 
-cp /Users/tohru/Documents/src/ghq/github.com/audiflow/audiflow-smartplaylist.feat-v4/schema/pattern-index.schema.json \
+cp $SMARTPLAYLIST_REPO/schema/pattern-index.schema.json \
    packages/audiflow_domain/test/fixtures/pattern-index.schema.json
 
-cp /Users/tohru/Documents/src/ghq/github.com/audiflow/audiflow-smartplaylist.feat-v4/schema/pattern-meta.schema.json \
+cp $SMARTPLAYLIST_REPO/schema/pattern-meta.schema.json \
    packages/audiflow_domain/test/fixtures/pattern-meta.schema.json
 ```
 

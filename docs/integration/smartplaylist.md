@@ -60,7 +60,7 @@ All environments use the same GitHub Pages host with different asset paths. The 
 | Resolver | Type ID | Grouping logic |
 |----------|---------|----------------|
 | Season number | `seasonNumber` | Groups by season number from RSS metadata |
-| Title classifier | `titleClassifier` | Groups by category tags |
+| Title classifier | `titleClassifier` | Groups by matching episode titles against configured `groups` patterns (first match wins) |
 | Year | `year` | Groups by publication year |
 | Title discovery | `titleDiscovery` | Groups by title pattern matching and appearance order |
 
