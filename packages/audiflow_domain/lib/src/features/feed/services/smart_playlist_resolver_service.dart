@@ -70,45 +70,47 @@ class SmartPlaylistResolverService {
       final filtered = _filterEpisodes(episodes, definition, claimedIds);
       _logger?.d(
         'Definition "${definition.id}" '
-        'resolverType=${definition.resolverType}, '
+        'resolverType=${definition.grouping.by}, '
         'filtered=${filtered.length}/${episodes.length} episodes',
       );
       if (filtered.isEmpty) continue;
 
-      final resolver = _findResolverByType(definition.resolverType);
+      final resolver = _findResolverByType(definition.grouping.by);
       if (resolver == null) {
-        _logger?.w('No resolver found for type "${definition.resolverType}"');
+        _logger?.w('No resolver found for type "${definition.grouping.by}"');
         continue;
       }
 
       final result = resolver.resolve(filtered, definition);
       if (result == null) {
         _logger?.d(
-          'Resolver "${definition.resolverType}" returned null '
+          'Resolver "${definition.grouping.by}" returned null '
           'for "${definition.id}"',
         );
         continue;
       }
       _logger?.d(
-        'Resolver "${definition.resolverType}" produced '
+        'Resolver "${definition.grouping.by}" produced '
         '${result.playlists.length} playlists, '
         '${result.ungroupedEpisodeIds.length} ungrouped',
       );
 
       resolverType ??= result.resolverType;
 
-      final presentation = Presentation.fromString(definition.presentation);
-      final yearBinding = definition.groupList?.yearBinding ?? YearBinding.none;
+      final yearBinding =
+          definition.groupListing?.yearBinding ?? YearBinding.none;
 
-      // When presentation is "combined", the resolver's playlists
+      // When isSeparate is false, the resolver's playlists
       // become groups inside a single parent playlist named after
       // the definition.
-      if (presentation == Presentation.combined) {
+      if (!definition.isSeparate) {
         final groupDefMap = {
-          for (final g in definition.groups ?? <SmartPlaylistGroupDef>[])
+          for (final g
+              in definition.grouping.staticClassifiers ??
+                  <SmartPlaylistGroupDef>[])
             g.id: g,
         };
-        final defEpisodeSort = definition.episodeList?.sort;
+        final defEpisodeSort = definition.episodeListing?.sort;
         final groups = result.playlists.map((p) {
           final gDef = groupDefMap[p.id];
           return SmartPlaylistGroup(
@@ -117,13 +119,13 @@ class SmartPlaylistResolverService {
             sortKey: p.sortKey,
             episodeIds: p.episodeIds,
             thumbnailUrl: p.thumbnailUrl,
-            yearOverride: gDef?.display?.yearBinding,
+            yearOverride: gDef?.groupListing?.yearBinding,
             showDateRange:
-                gDef?.display?.showDateRange ??
-                definition.groupList?.showDateRange ??
+                gDef?.groupItem?.showDateRange ??
+                definition.groupItem?.showDateRange ??
                 false,
-            showYearHeaders: gDef?.episodeList?.showYearHeaders,
-            episodeSort: gDef?.episodeList?.sort ?? defEpisodeSort,
+            showYearHeaders: gDef?.episodeListing?.showYearHeaders,
+            episodeSort: gDef?.episodeListing?.sort ?? defEpisodeSort,
           );
         }).toList();
         final allEpisodeIds = groups.expand((g) => g.episodeIds).toList();
@@ -134,13 +136,15 @@ class SmartPlaylistResolverService {
             displayName: definition.displayName,
             sortKey: allPlaylists.length,
             episodeIds: allEpisodeIds,
-            presentation: presentation,
+            isSeparate: definition.isSeparate,
             yearBinding: yearBinding,
-            showDateRange: definition.groupList?.showDateRange ?? false,
-            showYearHeaders: definition.episodeList?.showYearHeaders ?? false,
-            userSortable: definition.groupList?.userSortable ?? true,
-            prependSeasonNumber: definition.prependSeasonNumber,
-            groupSort: definition.groupList?.sort,
+            showDateRange: definition.groupItem?.showDateRange ?? false,
+            showYearHeaders:
+                definition.episodeListing?.showYearHeaders ?? false,
+            userSortable: definition.groupListing?.userSortable ?? true,
+            prependSeasonNumber:
+                definition.groupItem?.prependSeasonNumber ?? false,
+            groupSort: definition.groupListing?.sort,
             episodeSort: defEpisodeSort,
             groups: groups,
           ),
@@ -150,14 +154,16 @@ class SmartPlaylistResolverService {
         // smart playlist.
         final decorated = result.playlists.map((playlist) {
           return playlist.copyWith(
-            presentation: presentation,
+            isSeparate: definition.isSeparate,
             yearBinding: yearBinding,
-            showDateRange: definition.groupList?.showDateRange ?? false,
-            showYearHeaders: definition.episodeList?.showYearHeaders ?? false,
-            userSortable: definition.groupList?.userSortable ?? true,
-            prependSeasonNumber: definition.prependSeasonNumber,
-            groupSort: definition.groupList?.sort,
-            episodeSort: definition.episodeList?.sort,
+            showDateRange: definition.groupItem?.showDateRange ?? false,
+            showYearHeaders:
+                definition.episodeListing?.showYearHeaders ?? false,
+            userSortable: definition.groupListing?.userSortable ?? true,
+            prependSeasonNumber:
+                definition.groupItem?.prependSeasonNumber ?? false,
+            groupSort: definition.groupListing?.sort,
+            episodeSort: definition.episodeListing?.sort,
           );
         }).toList();
         allPlaylists.addAll(decorated);
@@ -288,7 +294,8 @@ class SmartPlaylistResolverService {
     return null;
   }
 
-  /// Sorts definitions so filtered definitions process before fallbacks.
+  /// Sorts definitions so filtered definitions process before fallbacks,
+  /// with priority-based ordering within each group.
   static List<SmartPlaylistDefinition> _sortByProcessingOrder(
     List<SmartPlaylistDefinition> definitions,
   ) {
@@ -302,6 +309,9 @@ class SmartPlaylistResolverService {
         fallbacks.add(def);
       }
     }
+
+    filtered.sort((a, b) => a.priority.compareTo(b.priority));
+    fallbacks.sort((a, b) => a.priority.compareTo(b.priority));
 
     return [...filtered, ...fallbacks];
   }
