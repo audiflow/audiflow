@@ -136,17 +136,19 @@ class SmartPlaylistDebugCommand {
     String? playlistEpisodeError;
 
     // Extract title
-    if (definition.titleExtractor != null) {
-      final diagnostics = TitleExtractorDiagnostics(definition.titleExtractor!);
+    if (definition.groupItem?.titleExtractor != null) {
+      final diagnostics = TitleExtractorDiagnostics(
+        definition.groupItem!.titleExtractor!,
+      );
       final result = diagnostics.run(episode);
       extractedTitle = result.extractedValue;
       titleError = result.error;
     }
 
     // Extract season+episode from title prefix
-    if (definition.numberingExtractor != null) {
+    if (definition.grouping.numberingExtractor != null) {
       final diagnostics = NumberingExtractorDiagnostics(
-        definition.numberingExtractor!,
+        definition.grouping.numberingExtractor!,
       );
       final result = diagnostics.run(episode);
       if (result.hasValues) {
@@ -171,8 +173,9 @@ class SmartPlaylistDebugCommand {
       extractedSeasonNumber: extractedSeasonNumber,
       diagnostics: hasError
           ? ExtractionDiagnostics(
-              titlePattern: definition.titleExtractor?.pattern,
-              fallbackValue: definition.titleExtractor?.fallbackValue,
+              titlePattern: definition.groupItem?.titleExtractor?.pattern,
+              fallbackValue:
+                  definition.groupItem?.titleExtractor?.fallbackValue,
               error: error ?? 'extraction failed',
             )
           : null,
