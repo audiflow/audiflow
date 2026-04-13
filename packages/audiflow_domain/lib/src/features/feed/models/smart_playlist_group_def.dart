@@ -40,9 +40,11 @@ final class SmartPlaylistGroupDef {
               json['episodeItem'] as Map<String, dynamic>,
             )
           : null,
-      numberingExtractor: json['numberingExtractor'] != null
+      numberingExtractor:
+          (json['numberingExtractor'] ?? json['episodeExtractor']) != null
           ? NumberingExtractor.fromJson(
-              json['numberingExtractor'] as Map<String, dynamic>,
+              (json['numberingExtractor'] ?? json['episodeExtractor'])
+                  as Map<String, dynamic>,
             )
           : null,
     );

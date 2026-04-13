@@ -53,7 +53,7 @@ class PatternSummaries extends _$PatternSummaries {
 ///
 /// Set alongside [PatternSummaries] on startup and
 /// pull-to-refresh. Used to construct GitHub branch URLs
-/// (e.g. `dev/v4`).
+/// (e.g. `dev/v5`).
 @Riverpod(keepAlive: true)
 class SmartPlaylistSchemaVersion extends _$SmartPlaylistSchemaVersion {
   @override

@@ -21,7 +21,7 @@ class SmartPlaylistEntity {
   late String resolverType;
   String? thumbnailUrl;
   bool yearGrouped = false;
-  String playlistStructure = 'split';
+  String playlistStructure = 'separate';
   String yearHeaderMode = 'none';
 
   /// Config version for cache invalidation.
