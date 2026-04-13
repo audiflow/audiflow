@@ -287,11 +287,12 @@ Future<SmartPlaylistGrouping?> _buildGroupingFromCache(
 
     // Infer structure from persisted groups: if groups exist in
     // the database the playlist was originally resolved as
-    // "combined", regardless of what the entity field says. This
-    // handles stale records created before the field was added.
-    final presentation = groups != null && groups.isNotEmpty
-        ? Presentation.combined
-        : Presentation.fromString(entity.playlistStructure);
+    // non-separate (combined), regardless of what the entity field
+    // says. This handles stale records created before the field was
+    // added.
+    final isSeparate = groups == null || groups.isEmpty
+        ? entity.playlistStructure == 'separate'
+        : false;
 
     playlists.add(
       SmartPlaylist(
@@ -300,7 +301,7 @@ Future<SmartPlaylistGrouping?> _buildGroupingFromCache(
         sortKey: entity.sortKey,
         episodeIds: episodeIds,
         thumbnailUrl: entity.thumbnailUrl,
-        presentation: presentation,
+        isSeparate: isSeparate,
         yearBinding: YearBinding.fromString(entity.yearHeaderMode),
         groups: groups,
       ),
@@ -534,7 +535,7 @@ void _enrichPlaylist(
       ..sortKey = playlist.sortKey
       ..resolverType = result.resolverType
       ..thumbnailUrl = thumbnailUrl
-      ..playlistStructure = playlist.presentation.name
+      ..playlistStructure = playlist.isSeparate ? 'separate' : 'combined'
       ..yearGrouped = playlist.yearBinding != YearBinding.none
       ..yearHeaderMode = playlist.yearBinding.name
       ..configVersion = configVersion,
