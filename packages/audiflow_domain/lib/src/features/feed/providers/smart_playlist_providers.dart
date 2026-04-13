@@ -290,8 +290,11 @@ Future<SmartPlaylistGrouping?> _buildGroupingFromCache(
     // non-separate (combined), regardless of what the entity field
     // says. This handles stale records created before the field was
     // added.
+    // Accept both 'separate' (v5) and legacy 'split' (v4/v3)
+    // so cached data written before the rename still works.
     final isSeparate = groups == null || groups.isEmpty
-        ? entity.playlistStructure == 'separate'
+        ? entity.playlistStructure == 'separate' ||
+              entity.playlistStructure == 'split'
         : false;
 
     playlists.add(

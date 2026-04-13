@@ -369,6 +369,54 @@ void main() {
       expect(playlist.groups!.first.displayName, 'Season 1');
     });
 
+    test('legacy split value rehydrates as isSeparate true', () async {
+      final subscription = makeSubscription();
+      final episodes = makeSeasonedEpisodes();
+
+      final summary = PatternSummary(
+        id: 'test-pattern',
+        dataVersion: 1,
+        displayName: 'Test Pattern',
+        feedUrlHint: 'example.com',
+        playlistCount: 1,
+      );
+
+      // Insert entity with legacy 'split' value (written by v3/v4)
+      final entity = SmartPlaylistEntity()
+        ..podcastId = 1
+        ..playlistNumber = 1
+        ..playlistId = 'season_1'
+        ..displayName = 'Season 1'
+        ..sortKey = 0
+        ..resolverType = 'seasonNumber'
+        ..playlistStructure = 'split'
+        ..yearHeaderMode = 'none'
+        ..configVersion = 1;
+
+      await isar.writeTxn(() async {
+        await isar.smartPlaylistEntitys.put(entity);
+      });
+
+      final container = makeContainer(
+        subscription: subscription,
+        episodes: episodes,
+        configRepo: _FakeConfigRepository(summary: summary),
+      );
+      addTearDown(container.dispose);
+
+      final grouping = await readSmartPlaylists(container, 1);
+
+      expect(grouping, isNotNull);
+      expect(grouping!.playlists, hasLength(1));
+
+      final playlist = grouping.playlists.first;
+      expect(
+        playlist.isSeparate,
+        isTrue,
+        reason: "Legacy 'split' value should rehydrate as isSeparate",
+      );
+    });
+
     test(
       'cache round-trip preserves year-resolved playlist episode IDs',
       () async {

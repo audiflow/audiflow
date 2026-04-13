@@ -185,6 +185,61 @@ void main() {
       );
     });
 
+    test('groupItem.pinToYear sets yearOverride on group', () {
+      final serviceWithPinToYear = SmartPlaylistResolverService(
+        resolvers: [SeasonNumberResolver()],
+        patterns: [
+          SmartPlaylistPatternConfig(
+            id: 'test',
+            feedUrls: ['https://example.com/feed'],
+            playlists: [
+              SmartPlaylistDefinition(
+                id: 'regular',
+                displayName: 'Regular',
+                grouping: GroupingConfig(
+                  by: 'seasonNumber',
+                  staticClassifiers: [
+                    const SmartPlaylistGroupDef(
+                      id: 'season_1',
+                      displayName: 'Season 1',
+                      groupItem: GroupItemConfig(pinToYear: true),
+                    ),
+                  ],
+                ),
+                priority: 0,
+              ),
+            ],
+          ),
+        ],
+      );
+
+      final episodes = [
+        _makeEpisode(1, seasonNumber: 1, title: 'S1E1'),
+        _makeEpisode(2, seasonNumber: 2, title: 'S2E1'),
+      ];
+
+      final result = serviceWithPinToYear.resolveSmartPlaylists(
+        podcastGuid: null,
+        feedUrl: 'https://example.com/feed',
+        episodes: episodes,
+      );
+
+      expect(result, isNotNull);
+      final playlist = result!.playlists.first;
+      expect(playlist.groups, isNotNull);
+
+      final season1 = playlist.groups!.firstWhere((g) => g.id == 'season_1');
+      expect(
+        season1.yearOverride,
+        YearBinding.pinToYear,
+        reason: 'groupItem.pinToYear should set yearOverride',
+      );
+
+      // season_2 has no groupDef, so yearOverride stays null
+      final season2 = playlist.groups!.firstWhere((g) => g.id == 'season_2');
+      expect(season2.yearOverride, isNull);
+    });
+
     test('multiple definitions produce separate parent playlists', () {
       final serviceWithMultiple = SmartPlaylistResolverService(
         resolvers: [SeasonNumberResolver()],
