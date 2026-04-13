@@ -39,7 +39,7 @@ class YearResolver implements SmartPlaylistResolver {
       return null;
     }
 
-    final titleExtractor = definition?.titleExtractor;
+    final titleExtractor = definition?.groupItem?.titleExtractor;
 
     final playlists = grouped.entries.map((entry) {
       final playlistEpisodes = entry.value;

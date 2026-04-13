@@ -502,7 +502,7 @@ Future<SmartPlaylistGrouping?> sortedPodcastSmartPlaylists(
   // For single-playlist configs, use that playlist's
   // groupSort. Multi-playlist configs preserve config order.
   final groupSort = (pattern != null && pattern.playlists.length == 1)
-      ? pattern.playlists.first.groupList?.sort
+      ? pattern.playlists.first.groupListing?.sort
       : null;
   if (hasParentPlaylists) {
     // Preserve config order as-is.
