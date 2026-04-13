@@ -35,9 +35,9 @@ This document does not cover:
 
 | Environment | Base URL | Source repo |
 |-------------|----------|-------------|
-| Production | `https://audiflow.github.io/audiflow-smartplaylist/assets/v4/` | `audiflow-smartplaylist` |
-| Staging | `https://audiflow.github.io/audiflow-smartplaylist/assets-stg/v4/` | `audiflow-smartplaylist` |
-| Development | `https://audiflow.github.io/audiflow-smartplaylist/assets-dev/v4/` | `audiflow-smartplaylist` |
+| Production | `https://audiflow.github.io/audiflow-smartplaylist/assets/v5/` | `audiflow-smartplaylist` |
+| Staging | `https://audiflow.github.io/audiflow-smartplaylist/assets-stg/v5/` | `audiflow-smartplaylist` |
+| Development | `https://audiflow.github.io/audiflow-smartplaylist/assets-dev/v5/` | `audiflow-smartplaylist` |
 
 All environments use the same GitHub Pages host with different asset paths. The base URL is injected via `smartPlaylistConfigBaseUrlProvider`.
 
@@ -83,7 +83,7 @@ Valid resolver types: `seasonNumber`, `titleClassifier`, `year`, `titleDiscovery
 - Model JSON keys must match `sp_core` models in the editor repo exactly
 - Enum string values must match schema `oneOf`/`enum` definitions
 - Schema conformance tests validate round-trip serialization: `packages/audiflow_domain/test/features/feed/models/schema_conformance_test.dart`
-- Vendored schemas at `packages/audiflow_domain/test/fixtures/` (`playlist-definition.schema.json`, `pattern-index.schema.json`, `pattern-meta.schema.json`) must be kept in sync with upstream (v4 schema)
+- Vendored schemas at `packages/audiflow_domain/test/fixtures/` (`playlist-definition.schema.json`, `pattern-index.schema.json`, `pattern-meta.schema.json`) must be kept in sync with upstream (v5 schema)
 
 ## Schema update procedure
 

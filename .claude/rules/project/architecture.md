@@ -605,14 +605,14 @@ All config data repos, the web editor, and the mobile app must conform to this s
      ┌───────────────────────────────────────────────────┐
      │ GitHub Pages                                       │
      │ audiflow.github.io/audiflow-smartplaylist/          │
-     │   /assets/v4/     (prod)                           │
-     │   /assets-stg/v4/ (staging)                        │
-     │   /assets-dev/v4/ (dev)                            │
+     │   /assets/v5/     (prod)                           │
+     │   /assets-stg/v5/ (staging)                        │
+     │   /assets-dev/v5/ (dev)                            │
      └───────────────────────┬─────────────────────────┘
                              │
                              v
      All flavors fetch from audiflow.github.io/
-     audiflow-smartplaylist/{assets,assets-stg,assets-dev}/v4/
+     audiflow-smartplaylist/{assets,assets-stg,assets-dev}/v5/
 ```
 
 ### 1. Config Data Repository (Static JSON)
@@ -621,9 +621,9 @@ Single repo with per-environment asset paths:
 
 | Repo | Environment | Path | Base URL |
 |------|-------------|------|----------|
-| `audiflow/audiflow-smartplaylist` | Production | `assets/v4/` | `https://audiflow.github.io/audiflow-smartplaylist/assets/v4/` |
-| `audiflow/audiflow-smartplaylist` | Staging | `assets-stg/v4/` | `https://audiflow.github.io/audiflow-smartplaylist/assets-stg/v4/` |
-| `audiflow/audiflow-smartplaylist` | Development | `assets-dev/v4/` | `https://audiflow.github.io/audiflow-smartplaylist/assets-dev/v4/` |
+| `audiflow/audiflow-smartplaylist` | Production | `assets/v5/` | `https://audiflow.github.io/audiflow-smartplaylist/assets/v5/` |
+| `audiflow/audiflow-smartplaylist` | Staging | `assets-stg/v5/` | `https://audiflow.github.io/audiflow-smartplaylist/assets-stg/v5/` |
+| `audiflow/audiflow-smartplaylist` | Development | `assets-dev/v5/` | `https://audiflow.github.io/audiflow-smartplaylist/assets-dev/v5/` |
 
 Each environment path shares the same directory structure:
 
@@ -672,7 +672,7 @@ In `audiflow_domain`, the `feed` feature handles smart playlist configs:
 
 ### Schema Conformance Testing
 
-Vendored copies of the v3 JSON Schemas live at `packages/audiflow_domain/test/fixtures/` (copied from `audiflow-smartplaylist-editor/crates/sp_core/assets/`):
+Vendored copies of the v5 JSON Schemas live at `packages/audiflow_domain/test/fixtures/` (copied from `audiflow-smartplaylist-editor/crates/sp_core/assets/`):
 - `playlist-definition.schema.json` — validates `SmartPlaylistDefinition`
 - `pattern-index.schema.json` — validates `RootMeta` / `PatternSummary`
 - `pattern-meta.schema.json` — validates `PatternMeta`
