@@ -1,5 +1,7 @@
-import 'episode_list_config.dart';
-import 'group_display_config.dart';
+import 'episode_item_config.dart';
+import 'episode_listing_config.dart';
+import 'group_item_config.dart';
+import 'group_listing_config.dart';
 import 'numbering_extractor.dart';
 
 /// Static group definition within a playlist.
@@ -8,28 +10,40 @@ final class SmartPlaylistGroupDef {
     required this.id,
     required this.displayName,
     this.pattern,
-    this.display,
-    this.episodeList,
+    this.groupListing,
+    this.groupItem,
+    this.episodeListing,
+    this.episodeItem,
     this.numberingExtractor,
   });
 
   factory SmartPlaylistGroupDef.fromJson(Map<String, dynamic> json) {
-    // Accept v3 alias 'episodeExtractor' for cached data compatibility.
-    final rawExtractor = json['numberingExtractor'] ?? json['episodeExtractor'];
     return SmartPlaylistGroupDef(
       id: json['id'] as String,
       displayName: json['displayName'] as String,
       pattern: json['pattern'] as String?,
-      display: json['display'] != null
-          ? GroupDisplayConfig.fromJson(json['display'] as Map<String, dynamic>)
-          : null,
-      episodeList: json['episodeList'] != null
-          ? EpisodeListConfig.fromJson(
-              json['episodeList'] as Map<String, dynamic>,
+      groupListing: json['groupListing'] != null
+          ? GroupListingConfig.fromJson(
+              json['groupListing'] as Map<String, dynamic>,
             )
           : null,
-      numberingExtractor: rawExtractor != null
-          ? NumberingExtractor.fromJson(rawExtractor as Map<String, dynamic>)
+      groupItem: json['groupItem'] != null
+          ? GroupItemConfig.fromJson(json['groupItem'] as Map<String, dynamic>)
+          : null,
+      episodeListing: json['episodeListing'] != null
+          ? EpisodeListingConfig.fromJson(
+              json['episodeListing'] as Map<String, dynamic>,
+            )
+          : null,
+      episodeItem: json['episodeItem'] != null
+          ? EpisodeItemConfig.fromJson(
+              json['episodeItem'] as Map<String, dynamic>,
+            )
+          : null,
+      numberingExtractor: json['numberingExtractor'] != null
+          ? NumberingExtractor.fromJson(
+              json['numberingExtractor'] as Map<String, dynamic>,
+            )
           : null,
     );
   }
@@ -40,11 +54,17 @@ final class SmartPlaylistGroupDef {
   /// Regex pattern to match episode titles. Null = catch-all.
   final String? pattern;
 
-  /// Per-group display overrides for the group card.
-  final GroupDisplayConfig? display;
+  /// Per-group override for group list arrangement.
+  final GroupListingConfig? groupListing;
 
-  /// Per-group override for episode list settings.
-  final EpisodeListConfig? episodeList;
+  /// Per-group override for group card display.
+  final GroupItemConfig? groupItem;
+
+  /// Per-group override for episode list arrangement.
+  final EpisodeListingConfig? episodeListing;
+
+  /// Per-group override for episode row display.
+  final EpisodeItemConfig? episodeItem;
 
   /// Per-group override for episode number extraction.
   final NumberingExtractor? numberingExtractor;
@@ -54,8 +74,10 @@ final class SmartPlaylistGroupDef {
       'id': id,
       'displayName': displayName,
       if (pattern != null) 'pattern': pattern,
-      if (display != null) 'display': display!.toJson(),
-      if (episodeList != null) 'episodeList': episodeList!.toJson(),
+      if (groupListing != null) 'groupListing': groupListing!.toJson(),
+      if (groupItem != null) 'groupItem': groupItem!.toJson(),
+      if (episodeListing != null) 'episodeListing': episodeListing!.toJson(),
+      if (episodeItem != null) 'episodeItem': episodeItem!.toJson(),
       if (numberingExtractor != null)
         'numberingExtractor': numberingExtractor!.toJson(),
     };
