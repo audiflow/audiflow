@@ -219,10 +219,10 @@ void main() {
       expect(schemaValues, containsAll(['title', 'description']));
     });
 
-    test(r'playlist-definition schema has v4 $id', () {
+    test(r'playlist-definition schema has v5 $id', () {
       expect(
         schema[r'$id'],
-        equals('https://audiflow.app/schema/v4/playlist-definition.json'),
+        equals('https://audiflow.app/schema/v5/playlist-definition.json'),
       );
     });
 
