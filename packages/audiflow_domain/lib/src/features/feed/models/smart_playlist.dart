@@ -1,28 +1,6 @@
 import 'episode_sort_rule.dart';
 import 'smart_playlist_sort.dart';
 
-/// Whether a smart playlist presents as separate playlists or
-/// groups inside one playlist.
-enum Presentation {
-  /// Each resolver result becomes a separate top-level playlist.
-  separate,
-
-  /// All resolver results are collected as groups inside a single
-  /// parent playlist.
-  combined;
-
-  /// Parses a string value to [Presentation], defaulting to [separate].
-  ///
-  /// Accepts both v4 values ('separate'/'combined') and legacy v3 values
-  /// ('split'/'grouped') for Isar cache backward compatibility.
-  static Presentation fromString(String? value) {
-    return switch (value) {
-      'combined' || 'grouped' => Presentation.combined,
-      _ => Presentation.separate,
-    };
-  }
-}
-
 /// How groups relate to year headers in the group list view.
 enum YearBinding {
   /// No year headers.
@@ -120,7 +98,7 @@ final class SmartPlaylist {
     required this.sortKey,
     required this.episodeIds,
     this.thumbnailUrl,
-    this.presentation = Presentation.separate,
+    this.isSeparate = false,
     this.yearBinding = YearBinding.none,
     this.showDateRange = false,
     this.showYearHeaders = false,
@@ -146,8 +124,8 @@ final class SmartPlaylist {
   /// Thumbnail URL from the latest episode in this smart playlist.
   final String? thumbnailUrl;
 
-  /// Whether this playlist presents as separate playlists or groups.
-  final Presentation presentation;
+  /// Whether this playlist presents as a separate top-level entry.
+  final bool isSeparate;
 
   /// How groups relate to year headers in the group list view.
   final YearBinding yearBinding;
@@ -171,7 +149,7 @@ final class SmartPlaylist {
   /// Groups may override this with their own episodeSort.
   final EpisodeSortRule? episodeSort;
 
-  /// Groups within this playlist (when presentation == combined).
+  /// Groups within this playlist (when not isSeparate).
   final List<SmartPlaylistGroup>? groups;
 
   /// Number of episodes in this smart playlist.
@@ -192,7 +170,7 @@ final class SmartPlaylist {
     int? sortKey,
     List<int>? episodeIds,
     String? thumbnailUrl,
-    Presentation? presentation,
+    bool? isSeparate,
     YearBinding? yearBinding,
     bool? showDateRange,
     bool? showYearHeaders,
@@ -208,7 +186,7 @@ final class SmartPlaylist {
       sortKey: sortKey ?? this.sortKey,
       episodeIds: episodeIds ?? this.episodeIds,
       thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
-      presentation: presentation ?? this.presentation,
+      isSeparate: isSeparate ?? this.isSeparate,
       yearBinding: yearBinding ?? this.yearBinding,
       showDateRange: showDateRange ?? this.showDateRange,
       showYearHeaders: showYearHeaders ?? this.showYearHeaders,
