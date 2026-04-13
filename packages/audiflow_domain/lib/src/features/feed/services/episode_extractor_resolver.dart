@@ -22,7 +22,7 @@ class EpisodeExtractorResolver {
     SmartPlaylistPatternConfig config,
   ) {
     for (final definition in config.playlists) {
-      final groups = definition.groups;
+      final groups = definition.grouping.staticClassifiers;
       if (groups != null) {
         final groupExtractor = _findGroupExtractor(title, description, groups);
         if (groupExtractor != null) return groupExtractor;
@@ -30,9 +30,9 @@ class EpisodeExtractorResolver {
 
       // Fall back to definition-level extractor only if episode
       // matches definition's filters (or if no filter exists).
-      if (definition.numberingExtractor != null &&
+      if (definition.grouping.numberingExtractor != null &&
           _matchesDefinition(title, description, definition)) {
-        return definition.numberingExtractor;
+        return definition.grouping.numberingExtractor;
       }
     }
     return null;
