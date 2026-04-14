@@ -48,6 +48,7 @@ export 'src/features/feed/models/group_listing_config.dart';
 export 'src/features/feed/models/grouping_config.dart';
 export 'src/features/feed/models/selector_config.dart';
 export 'src/features/feed/models/smart_playlist_definition.dart';
+export 'src/features/feed/models/matcher.dart';
 export 'src/features/feed/models/smart_playlist_group_def.dart';
 export 'src/features/feed/models/smart_playlist_pattern.dart';
 export 'src/features/feed/models/smart_playlist_pattern_config.dart';

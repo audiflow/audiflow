@@ -15,7 +15,7 @@ final class SelectorConfig {
     );
   }
 
-  /// How to partition groups: group, seasonNumber, year.
+  /// How to partition groups: seasonNumber, year.
   final String? partitionBy;
 
   /// Names for partitioned selector entries.
