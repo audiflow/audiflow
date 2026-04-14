@@ -107,6 +107,8 @@ export 'src/features/player/services/now_playing_controller.dart';
 export 'src/features/player/services/player_lifecycle_events.dart';
 export 'src/features/player/services/sleep_timer_service.dart';
 export 'src/features/player/datasources/local/sleep_timer_preferences_datasource.dart';
+export 'src/features/player/controllers/sleep_timer_controller.dart';
+export 'src/features/player/providers/sleep_timer_providers.dart';
 
 // Player feature - Playback History
 export 'src/features/player/models/episode_with_progress.dart';
