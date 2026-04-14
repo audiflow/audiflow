@@ -2,6 +2,7 @@ import 'episode_item_config.dart';
 import 'episode_listing_config.dart';
 import 'group_item_config.dart';
 import 'group_listing_config.dart';
+import 'matcher.dart';
 import 'numbering_extractor.dart';
 
 /// Static group definition within a playlist.
@@ -21,7 +22,9 @@ final class SmartPlaylistGroupDef {
     return SmartPlaylistGroupDef(
       id: json['id'] as String,
       displayName: json['displayName'] as String,
-      pattern: json['pattern'] as String?,
+      pattern: json['pattern'] != null
+          ? Matcher.fromJson(json['pattern'] as Map<String, dynamic>)
+          : null,
       groupListing: json['groupListing'] != null
           ? GroupListingConfig.fromJson(
               json['groupListing'] as Map<String, dynamic>,
@@ -53,8 +56,8 @@ final class SmartPlaylistGroupDef {
   final String id;
   final String displayName;
 
-  /// Regex pattern to match episode titles. Null = catch-all.
-  final String? pattern;
+  /// Matcher defining the episode field and regex pattern. Null = catch-all.
+  final Matcher? pattern;
 
   /// Per-group override for group list arrangement.
   final GroupListingConfig? groupListing;
@@ -75,7 +78,7 @@ final class SmartPlaylistGroupDef {
     return {
       'id': id,
       'displayName': displayName,
-      if (pattern != null) 'pattern': pattern,
+      if (pattern != null) 'pattern': pattern!.toJson(),
       if (groupListing != null) 'groupListing': groupListing!.toJson(),
       if (groupItem != null) 'groupItem': groupItem!.toJson(),
       if (episodeListing != null) 'episodeListing': episodeListing!.toJson(),
