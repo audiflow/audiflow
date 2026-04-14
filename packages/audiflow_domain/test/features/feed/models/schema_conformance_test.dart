@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:audiflow_domain/src/features/feed/models/matcher.dart'
+    as domain;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:json_schema/json_schema.dart';
 
@@ -98,7 +100,7 @@ void main() {
             SmartPlaylistGroupDef(
               id: 'main',
               displayName: 'Main',
-              pattern: r'^Main\b',
+              pattern: domain.Matcher(source: 'title', pattern: r'^Main\b'),
             ),
             SmartPlaylistGroupDef(id: 'other', displayName: 'Other'),
           ],

@@ -1,4 +1,6 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:audiflow_domain/src/features/feed/models/matcher.dart'
+    as domain;
 import 'package:flutter_test/flutter_test.dart';
 
 Episode _makeEpisode(int id, String title) {
@@ -50,12 +52,12 @@ void main() {
             SmartPlaylistGroupDef(
               id: 'saturday',
               displayName: 'Saturday',
-              pattern: r'【土曜版',
+              pattern: domain.Matcher(source: 'title', pattern: r'【土曜版'),
             ),
             SmartPlaylistGroupDef(
               id: 'news_talk',
               displayName: 'News Talk',
-              pattern: r'【ニュース小話',
+              pattern: domain.Matcher(source: 'title', pattern: r'【ニュース小話'),
             ),
             SmartPlaylistGroupDef(id: 'other', displayName: 'Other'),
           ],
@@ -92,7 +94,7 @@ void main() {
             SmartPlaylistGroupDef(
               id: 'saturday',
               displayName: 'Saturday',
-              pattern: r'【土曜版',
+              pattern: domain.Matcher(source: 'title', pattern: r'【土曜版'),
             ),
           ],
         ),
@@ -120,12 +122,12 @@ void main() {
             SmartPlaylistGroupDef(
               id: 'first',
               displayName: 'First',
-              pattern: r'Hello',
+              pattern: domain.Matcher(source: 'title', pattern: r'Hello'),
             ),
             SmartPlaylistGroupDef(
               id: 'second',
               displayName: 'Second',
-              pattern: r'Hello World',
+              pattern: domain.Matcher(source: 'title', pattern: r'Hello World'),
             ),
           ],
         ),
@@ -164,7 +166,7 @@ void main() {
             SmartPlaylistGroupDef(
               id: 'matched',
               displayName: 'Matched',
-              pattern: r'AAA',
+              pattern: domain.Matcher(source: 'title', pattern: r'AAA'),
             ),
             SmartPlaylistGroupDef(id: 'fallback', displayName: 'Fallback'),
           ],

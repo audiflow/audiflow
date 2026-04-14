@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:audiflow_domain/src/features/feed/models/matcher.dart'
+    as domain;
 import 'package:audiflow_domain/src/features/feed/models/episode_filter_entry.dart';
 import 'package:audiflow_domain/src/features/feed/models/episode_filters.dart';
 import 'package:audiflow_domain/src/features/feed/models/group_item_config.dart';
@@ -75,7 +77,7 @@ void main() {
             SmartPlaylistGroupDef(
               id: 'tech',
               displayName: 'Tech',
-              pattern: r'tech',
+              pattern: domain.Matcher(source: 'title', pattern: r'tech'),
             ),
             SmartPlaylistGroupDef(id: 'other', displayName: 'Other'),
           ],
@@ -93,7 +95,8 @@ void main() {
       expect(decoded.id, 'categories');
       expect(decoded.grouping.staticClassifiers, hasLength(2));
       expect(decoded.grouping.staticClassifiers![0].id, 'tech');
-      expect(decoded.grouping.staticClassifiers![0].pattern, r'tech');
+      expect(decoded.grouping.staticClassifiers![0].pattern?.source, 'title');
+      expect(decoded.grouping.staticClassifiers![0].pattern?.pattern, r'tech');
       expect(decoded.grouping.staticClassifiers![1].pattern, isNull);
     });
 
