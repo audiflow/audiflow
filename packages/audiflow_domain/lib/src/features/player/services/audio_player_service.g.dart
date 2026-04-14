@@ -295,7 +295,7 @@ final class AudioPlayerControllerProvider
 }
 
 String _$audioPlayerControllerHash() =>
-    r'eb74c2082baa7fbabd9dc50bea09876047f53b6a';
+    r'9f1a2dac4685fef7b0bbaf3bda50711d1ff7f81e';
 
 /// Controller for managing audio playback.
 ///
@@ -329,3 +329,59 @@ abstract class _$AudioPlayerController extends $Notifier<PlaybackState> {
     element.handleCreate(ref, build);
   }
 }
+
+/// Broadcast stream of player lifecycle events.
+///
+/// Consumers observe this for "what just happened" hints (sleep timer, etc.)
+/// rather than polling player state.
+
+@ProviderFor(playerLifecycleEvents)
+final playerLifecycleEventsProvider = PlayerLifecycleEventsProvider._();
+
+/// Broadcast stream of player lifecycle events.
+///
+/// Consumers observe this for "what just happened" hints (sleep timer, etc.)
+/// rather than polling player state.
+
+final class PlayerLifecycleEventsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<PlayerLifecycleEvent>,
+          PlayerLifecycleEvent,
+          Stream<PlayerLifecycleEvent>
+        >
+    with
+        $FutureModifier<PlayerLifecycleEvent>,
+        $StreamProvider<PlayerLifecycleEvent> {
+  /// Broadcast stream of player lifecycle events.
+  ///
+  /// Consumers observe this for "what just happened" hints (sleep timer, etc.)
+  /// rather than polling player state.
+  PlayerLifecycleEventsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'playerLifecycleEventsProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$playerLifecycleEventsHash();
+
+  @$internal
+  @override
+  $StreamProviderElement<PlayerLifecycleEvent> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
+
+  @override
+  Stream<PlayerLifecycleEvent> create(Ref ref) {
+    return playerLifecycleEvents(ref);
+  }
+}
+
+String _$playerLifecycleEventsHash() =>
+    r'5cb4d357789af655d9eb42e51e5f4805ad7b9c66';

@@ -19,6 +19,7 @@ import '../repositories/playback_history_repository_impl.dart';
 import 'audio_playback_controller.dart';
 import 'now_playing_controller.dart';
 import 'playback_history_service.dart';
+import 'player_lifecycle_events.dart';
 
 part 'audio_player_service.g.dart';
 
@@ -96,6 +97,12 @@ class AudioPlayerController extends _$AudioPlayerController
   String? _currentUrl;
   int? _currentEpisodeId;
   bool _isLoadingSource = false;
+  final StreamController<PlayerLifecycleEvent> _lifecycleEvents =
+      StreamController<PlayerLifecycleEvent>.broadcast();
+
+  /// Broadcast stream of lifecycle events. Exposed via
+  /// [playerLifecycleEventsProvider].
+  Stream<PlayerLifecycleEvent> get lifecycleEvents => _lifecycleEvents.stream;
 
   @override
   PlaybackState build() {
@@ -150,6 +157,7 @@ class AudioPlayerController extends _$AudioPlayerController
 
         if (processingState == ProcessingState.completed) {
           _log.i('[StateStream] COMPLETED detected, advancing queue...');
+          _lifecycleEvents.add(const EpisodeCompletedLifecycle());
           // Save final progress before clearing
           await _saveProgressOnStop();
 
@@ -246,6 +254,7 @@ class AudioPlayerController extends _$AudioPlayerController
 
   void _cleanup() {
     _stateSubscription?.cancel();
+    _lifecycleEvents.close();
   }
 
   /// Plays audio from the specified URL.
@@ -263,6 +272,10 @@ class AudioPlayerController extends _$AudioPlayerController
   Future<void> play(String url, {NowPlayingInfo? metadata}) async {
     try {
       _log.i('[Play] Starting: url=$url');
+
+      if (_currentUrl != null && _currentUrl != url) {
+        _lifecycleEvents.add(const EpisodeSwitchedLifecycle());
+      }
 
       // Save progress of previous episode before switching
       if (_currentEpisodeId != null && _currentUrl != url) {
@@ -449,6 +462,7 @@ class AudioPlayerController extends _$AudioPlayerController
 
     final clampedMs = position.inMilliseconds.clamp(0, duration.inMilliseconds);
     await _player.seek(Duration(milliseconds: clampedMs));
+    _lifecycleEvents.add(SeekLifecycle(Duration(milliseconds: clampedMs)));
   }
 
   /// Skips forward by the user-configured duration.
@@ -480,4 +494,14 @@ class AudioPlayerController extends _$AudioPlayerController
     final settingsRepo = ref.read(appSettingsRepositoryProvider);
     await settingsRepo.setPlaybackSpeed(speed);
   }
+}
+
+/// Broadcast stream of player lifecycle events.
+///
+/// Consumers observe this for "what just happened" hints (sleep timer, etc.)
+/// rather than polling player state.
+@Riverpod(keepAlive: true)
+Stream<PlayerLifecycleEvent> playerLifecycleEvents(Ref ref) {
+  final controller = ref.watch(audioPlayerControllerProvider.notifier);
+  return controller.lifecycleEvents;
 }
