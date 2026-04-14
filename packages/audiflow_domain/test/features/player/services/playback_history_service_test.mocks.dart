@@ -186,6 +186,34 @@ class MockDownloadService extends _i1.Mock implements _i5.DownloadService {
           as _i3.Future<int>);
 
   @override
+  _i3.Future<int> downloadEpisodes(List<int>? episodeIds, {bool? wifiOnly}) =>
+      (super.noSuchMethod(
+            Invocation.method(
+              #downloadEpisodes,
+              [episodeIds],
+              {#wifiOnly: wifiOnly},
+            ),
+            returnValue: _i3.Future<int>.value(0),
+          )
+          as _i3.Future<int>);
+
+  @override
+  _i3.Future<int> cancelEpisodeDownloads(List<int>? episodeIds) =>
+      (super.noSuchMethod(
+            Invocation.method(#cancelEpisodeDownloads, [episodeIds]),
+            returnValue: _i3.Future<int>.value(0),
+          )
+          as _i3.Future<int>);
+
+  @override
+  _i3.Future<int> resumeEpisodeDownloads(List<int>? episodeIds) =>
+      (super.noSuchMethod(
+            Invocation.method(#resumeEpisodeDownloads, [episodeIds]),
+            returnValue: _i3.Future<int>.value(0),
+          )
+          as _i3.Future<int>);
+
+  @override
   _i3.Future<void> pause(int? taskId) =>
       (super.noSuchMethod(
             Invocation.method(#pause, [taskId]),

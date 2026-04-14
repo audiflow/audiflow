@@ -214,4 +214,4 @@ final class DownloadServiceProvider
   }
 }
 
-String _$downloadServiceHash() => r'750351a865e479c29f1e5ca2c9e9949595b188a8';
+String _$downloadServiceHash() => r'6d053a756abd80e395e073e00387d67de96cda80';

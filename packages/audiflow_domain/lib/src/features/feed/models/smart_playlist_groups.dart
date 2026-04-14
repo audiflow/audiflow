@@ -23,4 +23,19 @@ class SmartPlaylistGroupEntity {
   DateTime? earliestDate;
   DateTime? latestDate;
   int? totalDurationMs;
+
+  /// Whether this group shows date range metadata.
+  bool showDateRange = false;
+
+  /// Per-group override for showing year separator headers.
+  bool? showYearHeaders;
+
+  /// Per-group override for prepending season number to title.
+  bool? prependSeasonNumber;
+
+  /// Per-group episode sort field (e.g. 'publishedAt').
+  String? episodeSortField;
+
+  /// Per-group episode sort direction (e.g. 'ascending').
+  String? episodeSortOrder;
 }

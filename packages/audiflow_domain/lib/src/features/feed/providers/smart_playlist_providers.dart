@@ -263,6 +263,17 @@ Future<SmartPlaylistGrouping?> _buildGroupingFromCache(
           yearOverride: g.yearOverride != null
               ? YearBinding.fromString(g.yearOverride)
               : null,
+          showDateRange: g.showDateRange,
+          showYearHeaders: g.showYearHeaders,
+          prependSeasonNumber: g.prependSeasonNumber,
+          episodeSort: g.episodeSortField != null
+              ? EpisodeSortRule(
+                  field: EpisodeSortField.values.byName(g.episodeSortField!),
+                  order: SortOrder.values.byName(
+                    g.episodeSortOrder ?? 'ascending',
+                  ),
+                )
+              : null,
           earliestDate: g.earliestDate,
           latestDate: g.latestDate,
           totalDurationMs: g.totalDurationMs,
@@ -306,6 +317,28 @@ Future<SmartPlaylistGrouping?> _buildGroupingFromCache(
         thumbnailUrl: entity.thumbnailUrl,
         isSeparate: isSeparate,
         yearBinding: YearBinding.fromString(entity.yearHeaderMode),
+        showDateRange: entity.showDateRange,
+        showYearHeaders: entity.showYearHeaders,
+        userSortable: entity.userSortable,
+        prependSeasonNumber: entity.prependSeasonNumber,
+        groupSort: entity.groupSortField != null
+            ? SmartPlaylistSortRule(
+                field: SmartPlaylistSortField.values.byName(
+                  entity.groupSortField!,
+                ),
+                order: SortOrder.values.byName(
+                  entity.groupSortOrder ?? 'ascending',
+                ),
+              )
+            : null,
+        episodeSort: entity.episodeSortField != null
+            ? EpisodeSortRule(
+                field: EpisodeSortField.values.byName(entity.episodeSortField!),
+                order: SortOrder.values.byName(
+                  entity.episodeSortOrder ?? 'ascending',
+                ),
+              )
+            : null,
         groups: groups,
       ),
     );
@@ -430,7 +463,12 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
           ..yearOverride = g.yearOverride?.name
           ..earliestDate = g.earliestDate
           ..latestDate = g.latestDate
-          ..totalDurationMs = g.totalDurationMs;
+          ..totalDurationMs = g.totalDurationMs
+          ..showDateRange = g.showDateRange
+          ..showYearHeaders = g.showYearHeaders
+          ..prependSeasonNumber = g.prependSeasonNumber
+          ..episodeSortField = g.episodeSort?.field.name
+          ..episodeSortOrder = g.episodeSort?.order.name;
       }).toList();
       await playlistDatasource.upsertGroupsForPlaylist(
         podcastId,
@@ -541,6 +579,14 @@ void _enrichPlaylist(
       ..playlistStructure = playlist.isSeparate ? 'separate' : 'combined'
       ..yearGrouped = playlist.yearBinding != YearBinding.none
       ..yearHeaderMode = playlist.yearBinding.name
+      ..showDateRange = playlist.showDateRange
+      ..showYearHeaders = playlist.showYearHeaders
+      ..userSortable = playlist.userSortable
+      ..prependSeasonNumber = playlist.prependSeasonNumber
+      ..groupSortField = playlist.groupSort?.field.name
+      ..groupSortOrder = playlist.groupSort?.order.name
+      ..episodeSortField = playlist.episodeSort?.field.name
+      ..episodeSortOrder = playlist.episodeSort?.order.name
       ..configVersion = configVersion,
   );
 }

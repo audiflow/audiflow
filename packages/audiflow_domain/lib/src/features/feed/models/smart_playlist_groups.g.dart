@@ -33,35 +33,60 @@ const SmartPlaylistGroupEntitySchema = CollectionSchema(
       name: r'episodeIds',
       type: IsarType.string,
     ),
-    r'groupId': PropertySchema(id: 3, name: r'groupId', type: IsarType.string),
-    r'latestDate': PropertySchema(
+    r'episodeSortField': PropertySchema(
+      id: 3,
+      name: r'episodeSortField',
+      type: IsarType.string,
+    ),
+    r'episodeSortOrder': PropertySchema(
       id: 4,
+      name: r'episodeSortOrder',
+      type: IsarType.string,
+    ),
+    r'groupId': PropertySchema(id: 5, name: r'groupId', type: IsarType.string),
+    r'latestDate': PropertySchema(
+      id: 6,
       name: r'latestDate',
       type: IsarType.dateTime,
     ),
     r'playlistId': PropertySchema(
-      id: 5,
+      id: 7,
       name: r'playlistId',
       type: IsarType.string,
     ),
     r'podcastId': PropertySchema(
-      id: 6,
+      id: 8,
       name: r'podcastId',
       type: IsarType.long,
     ),
-    r'sortKey': PropertySchema(id: 7, name: r'sortKey', type: IsarType.long),
+    r'prependSeasonNumber': PropertySchema(
+      id: 9,
+      name: r'prependSeasonNumber',
+      type: IsarType.bool,
+    ),
+    r'showDateRange': PropertySchema(
+      id: 10,
+      name: r'showDateRange',
+      type: IsarType.bool,
+    ),
+    r'showYearHeaders': PropertySchema(
+      id: 11,
+      name: r'showYearHeaders',
+      type: IsarType.bool,
+    ),
+    r'sortKey': PropertySchema(id: 12, name: r'sortKey', type: IsarType.long),
     r'thumbnailUrl': PropertySchema(
-      id: 8,
+      id: 13,
       name: r'thumbnailUrl',
       type: IsarType.string,
     ),
     r'totalDurationMs': PropertySchema(
-      id: 9,
+      id: 14,
       name: r'totalDurationMs',
       type: IsarType.long,
     ),
     r'yearOverride': PropertySchema(
-      id: 10,
+      id: 15,
       name: r'yearOverride',
       type: IsarType.string,
     ),
@@ -114,6 +139,18 @@ int _smartPlaylistGroupEntityEstimateSize(
   var bytesCount = offsets.last;
   bytesCount += 3 + object.displayName.length * 3;
   bytesCount += 3 + object.episodeIds.length * 3;
+  {
+    final value = object.episodeSortField;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.episodeSortOrder;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   bytesCount += 3 + object.groupId.length * 3;
   bytesCount += 3 + object.playlistId.length * 3;
   {
@@ -140,14 +177,19 @@ void _smartPlaylistGroupEntitySerialize(
   writer.writeString(offsets[0], object.displayName);
   writer.writeDateTime(offsets[1], object.earliestDate);
   writer.writeString(offsets[2], object.episodeIds);
-  writer.writeString(offsets[3], object.groupId);
-  writer.writeDateTime(offsets[4], object.latestDate);
-  writer.writeString(offsets[5], object.playlistId);
-  writer.writeLong(offsets[6], object.podcastId);
-  writer.writeLong(offsets[7], object.sortKey);
-  writer.writeString(offsets[8], object.thumbnailUrl);
-  writer.writeLong(offsets[9], object.totalDurationMs);
-  writer.writeString(offsets[10], object.yearOverride);
+  writer.writeString(offsets[3], object.episodeSortField);
+  writer.writeString(offsets[4], object.episodeSortOrder);
+  writer.writeString(offsets[5], object.groupId);
+  writer.writeDateTime(offsets[6], object.latestDate);
+  writer.writeString(offsets[7], object.playlistId);
+  writer.writeLong(offsets[8], object.podcastId);
+  writer.writeBool(offsets[9], object.prependSeasonNumber);
+  writer.writeBool(offsets[10], object.showDateRange);
+  writer.writeBool(offsets[11], object.showYearHeaders);
+  writer.writeLong(offsets[12], object.sortKey);
+  writer.writeString(offsets[13], object.thumbnailUrl);
+  writer.writeLong(offsets[14], object.totalDurationMs);
+  writer.writeString(offsets[15], object.yearOverride);
 }
 
 SmartPlaylistGroupEntity _smartPlaylistGroupEntityDeserialize(
@@ -160,15 +202,20 @@ SmartPlaylistGroupEntity _smartPlaylistGroupEntityDeserialize(
   object.displayName = reader.readString(offsets[0]);
   object.earliestDate = reader.readDateTimeOrNull(offsets[1]);
   object.episodeIds = reader.readString(offsets[2]);
-  object.groupId = reader.readString(offsets[3]);
+  object.episodeSortField = reader.readStringOrNull(offsets[3]);
+  object.episodeSortOrder = reader.readStringOrNull(offsets[4]);
+  object.groupId = reader.readString(offsets[5]);
   object.id = id;
-  object.latestDate = reader.readDateTimeOrNull(offsets[4]);
-  object.playlistId = reader.readString(offsets[5]);
-  object.podcastId = reader.readLong(offsets[6]);
-  object.sortKey = reader.readLong(offsets[7]);
-  object.thumbnailUrl = reader.readStringOrNull(offsets[8]);
-  object.totalDurationMs = reader.readLongOrNull(offsets[9]);
-  object.yearOverride = reader.readStringOrNull(offsets[10]);
+  object.latestDate = reader.readDateTimeOrNull(offsets[6]);
+  object.playlistId = reader.readString(offsets[7]);
+  object.podcastId = reader.readLong(offsets[8]);
+  object.prependSeasonNumber = reader.readBoolOrNull(offsets[9]);
+  object.showDateRange = reader.readBool(offsets[10]);
+  object.showYearHeaders = reader.readBoolOrNull(offsets[11]);
+  object.sortKey = reader.readLong(offsets[12]);
+  object.thumbnailUrl = reader.readStringOrNull(offsets[13]);
+  object.totalDurationMs = reader.readLongOrNull(offsets[14]);
+  object.yearOverride = reader.readStringOrNull(offsets[15]);
   return object;
 }
 
@@ -186,20 +233,30 @@ P _smartPlaylistGroupEntityDeserializeProp<P>(
     case 2:
       return (reader.readString(offset)) as P;
     case 3:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 4:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 5:
       return (reader.readString(offset)) as P;
     case 6:
-      return (reader.readLong(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 7:
-      return (reader.readLong(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 8:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 9:
-      return (reader.readLongOrNull(offset)) as P;
+      return (reader.readBoolOrNull(offset)) as P;
     case 10:
+      return (reader.readBool(offset)) as P;
+    case 11:
+      return (reader.readBoolOrNull(offset)) as P;
+    case 12:
+      return (reader.readLong(offset)) as P;
+    case 13:
+      return (reader.readStringOrNull(offset)) as P;
+    case 14:
+      return (reader.readLongOrNull(offset)) as P;
+    case 15:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1223,6 +1280,420 @@ extension SmartPlaylistGroupEntityQueryFilter
     SmartPlaylistGroupEntity,
     QAfterFilterCondition
   >
+  episodeSortFieldIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'episodeSortField'),
+      );
+    });
+  }
+
+  QueryBuilder<
+    SmartPlaylistGroupEntity,
+    SmartPlaylistGroupEntity,
+    QAfterFilterCondition
+  >
+  episodeSortFieldIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'episodeSortField'),
+      );
+    });
+  }
+
+  QueryBuilder<
+    SmartPlaylistGroupEntity,
+    SmartPlaylistGroupEntity,
+    QAfterFilterCondition
+  >
+  episodeSortFieldEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'episodeSortField',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    SmartPlaylistGroupEntity,
+    SmartPlaylistGroupEntity,
+    QAfterFilterCondition
+  >
+  episodeSortFieldGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'episodeSortField',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    SmartPlaylistGroupEntity,
+    SmartPlaylistGroupEntity,
+    QAfterFilterCondition
+  >
+  episodeSortFieldLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'episodeSortField',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    SmartPlaylistGroupEntity,
+    SmartPlaylistGroupEntity,
+    QAfterFilterCondition
+  >
+  episodeSortFieldBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'episodeSortField',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    SmartPlaylistGroupEntity,
+    SmartPlaylistGroupEntity,
+    QAfterFilterCondition
+  >
+  episodeSortFieldStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'episodeSortField',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    SmartPlaylistGroupEntity,
+    SmartPlaylistGroupEntity,
+    QAfterFilterCondition
+  >
+  episodeSortFieldEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'episodeSortField',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    SmartPlaylistGroupEntity,
+    SmartPlaylistGroupEntity,
+    QAfterFilterCondition
+  >
+  episodeSortFieldContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'episodeSortField',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    SmartPlaylistGroupEntity,
+    SmartPlaylistGroupEntity,
+    QAfterFilterCondition
+  >
+  episodeSortFieldMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'episodeSortField',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    SmartPlaylistGroupEntity,
+    SmartPlaylistGroupEntity,
+    QAfterFilterCondition
+  >
+  episodeSortFieldIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'episodeSortField', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<
+    SmartPlaylistGroupEntity,
+    SmartPlaylistGroupEntity,
+    QAfterFilterCondition
+  >
+  episodeSortFieldIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'episodeSortField', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<
+    SmartPlaylistGroupEntity,
+    SmartPlaylistGroupEntity,
+    QAfterFilterCondition
+  >
+  episodeSortOrderIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'episodeSortOrder'),
+      );
+    });
+  }
+
+  QueryBuilder<
+    SmartPlaylistGroupEntity,
+    SmartPlaylistGroupEntity,
+    QAfterFilterCondition
+  >
+  episodeSortOrderIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'episodeSortOrder'),
+      );
+    });
+  }
+
+  QueryBuilder<
+    SmartPlaylistGroupEntity,
+    SmartPlaylistGroupEntity,
+    QAfterFilterCondition
+  >
+  episodeSortOrderEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'episodeSortOrder',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    SmartPlaylistGroupEntity,
+    SmartPlaylistGroupEntity,
+    QAfterFilterCondition
+  >
+  episodeSortOrderGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'episodeSortOrder',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    SmartPlaylistGroupEntity,
+    SmartPlaylistGroupEntity,
+    QAfterFilterCondition
+  >
+  episodeSortOrderLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'episodeSortOrder',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    SmartPlaylistGroupEntity,
+    SmartPlaylistGroupEntity,
+    QAfterFilterCondition
+  >
+  episodeSortOrderBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'episodeSortOrder',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    SmartPlaylistGroupEntity,
+    SmartPlaylistGroupEntity,
+    QAfterFilterCondition
+  >
+  episodeSortOrderStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'episodeSortOrder',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    SmartPlaylistGroupEntity,
+    SmartPlaylistGroupEntity,
+    QAfterFilterCondition
+  >
+  episodeSortOrderEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'episodeSortOrder',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    SmartPlaylistGroupEntity,
+    SmartPlaylistGroupEntity,
+    QAfterFilterCondition
+  >
+  episodeSortOrderContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'episodeSortOrder',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    SmartPlaylistGroupEntity,
+    SmartPlaylistGroupEntity,
+    QAfterFilterCondition
+  >
+  episodeSortOrderMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'episodeSortOrder',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    SmartPlaylistGroupEntity,
+    SmartPlaylistGroupEntity,
+    QAfterFilterCondition
+  >
+  episodeSortOrderIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'episodeSortOrder', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<
+    SmartPlaylistGroupEntity,
+    SmartPlaylistGroupEntity,
+    QAfterFilterCondition
+  >
+  episodeSortOrderIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'episodeSortOrder', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<
+    SmartPlaylistGroupEntity,
+    SmartPlaylistGroupEntity,
+    QAfterFilterCondition
+  >
   groupIdEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -1815,6 +2286,97 @@ extension SmartPlaylistGroupEntityQueryFilter
           upper: upper,
           includeUpper: includeUpper,
         ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    SmartPlaylistGroupEntity,
+    SmartPlaylistGroupEntity,
+    QAfterFilterCondition
+  >
+  prependSeasonNumberIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'prependSeasonNumber'),
+      );
+    });
+  }
+
+  QueryBuilder<
+    SmartPlaylistGroupEntity,
+    SmartPlaylistGroupEntity,
+    QAfterFilterCondition
+  >
+  prependSeasonNumberIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'prependSeasonNumber'),
+      );
+    });
+  }
+
+  QueryBuilder<
+    SmartPlaylistGroupEntity,
+    SmartPlaylistGroupEntity,
+    QAfterFilterCondition
+  >
+  prependSeasonNumberEqualTo(bool? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'prependSeasonNumber', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<
+    SmartPlaylistGroupEntity,
+    SmartPlaylistGroupEntity,
+    QAfterFilterCondition
+  >
+  showDateRangeEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'showDateRange', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<
+    SmartPlaylistGroupEntity,
+    SmartPlaylistGroupEntity,
+    QAfterFilterCondition
+  >
+  showYearHeadersIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'showYearHeaders'),
+      );
+    });
+  }
+
+  QueryBuilder<
+    SmartPlaylistGroupEntity,
+    SmartPlaylistGroupEntity,
+    QAfterFilterCondition
+  >
+  showYearHeadersIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'showYearHeaders'),
+      );
+    });
+  }
+
+  QueryBuilder<
+    SmartPlaylistGroupEntity,
+    SmartPlaylistGroupEntity,
+    QAfterFilterCondition
+  >
+  showYearHeadersEqualTo(bool? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'showYearHeaders', value: value),
       );
     });
   }
@@ -2468,6 +3030,34 @@ extension SmartPlaylistGroupEntityQuerySortBy
   }
 
   QueryBuilder<SmartPlaylistGroupEntity, SmartPlaylistGroupEntity, QAfterSortBy>
+  sortByEpisodeSortField() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'episodeSortField', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistGroupEntity, SmartPlaylistGroupEntity, QAfterSortBy>
+  sortByEpisodeSortFieldDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'episodeSortField', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistGroupEntity, SmartPlaylistGroupEntity, QAfterSortBy>
+  sortByEpisodeSortOrder() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'episodeSortOrder', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistGroupEntity, SmartPlaylistGroupEntity, QAfterSortBy>
+  sortByEpisodeSortOrderDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'episodeSortOrder', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistGroupEntity, SmartPlaylistGroupEntity, QAfterSortBy>
   sortByGroupId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'groupId', Sort.asc);
@@ -2520,6 +3110,48 @@ extension SmartPlaylistGroupEntityQuerySortBy
   sortByPodcastIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'podcastId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistGroupEntity, SmartPlaylistGroupEntity, QAfterSortBy>
+  sortByPrependSeasonNumber() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'prependSeasonNumber', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistGroupEntity, SmartPlaylistGroupEntity, QAfterSortBy>
+  sortByPrependSeasonNumberDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'prependSeasonNumber', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistGroupEntity, SmartPlaylistGroupEntity, QAfterSortBy>
+  sortByShowDateRange() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'showDateRange', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistGroupEntity, SmartPlaylistGroupEntity, QAfterSortBy>
+  sortByShowDateRangeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'showDateRange', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistGroupEntity, SmartPlaylistGroupEntity, QAfterSortBy>
+  sortByShowYearHeaders() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'showYearHeaders', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistGroupEntity, SmartPlaylistGroupEntity, QAfterSortBy>
+  sortByShowYearHeadersDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'showYearHeaders', Sort.desc);
     });
   }
 
@@ -2630,6 +3262,34 @@ extension SmartPlaylistGroupEntityQuerySortThenBy
   }
 
   QueryBuilder<SmartPlaylistGroupEntity, SmartPlaylistGroupEntity, QAfterSortBy>
+  thenByEpisodeSortField() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'episodeSortField', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistGroupEntity, SmartPlaylistGroupEntity, QAfterSortBy>
+  thenByEpisodeSortFieldDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'episodeSortField', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistGroupEntity, SmartPlaylistGroupEntity, QAfterSortBy>
+  thenByEpisodeSortOrder() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'episodeSortOrder', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistGroupEntity, SmartPlaylistGroupEntity, QAfterSortBy>
+  thenByEpisodeSortOrderDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'episodeSortOrder', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistGroupEntity, SmartPlaylistGroupEntity, QAfterSortBy>
   thenByGroupId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'groupId', Sort.asc);
@@ -2696,6 +3356,48 @@ extension SmartPlaylistGroupEntityQuerySortThenBy
   thenByPodcastIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'podcastId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistGroupEntity, SmartPlaylistGroupEntity, QAfterSortBy>
+  thenByPrependSeasonNumber() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'prependSeasonNumber', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistGroupEntity, SmartPlaylistGroupEntity, QAfterSortBy>
+  thenByPrependSeasonNumberDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'prependSeasonNumber', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistGroupEntity, SmartPlaylistGroupEntity, QAfterSortBy>
+  thenByShowDateRange() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'showDateRange', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistGroupEntity, SmartPlaylistGroupEntity, QAfterSortBy>
+  thenByShowDateRangeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'showDateRange', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistGroupEntity, SmartPlaylistGroupEntity, QAfterSortBy>
+  thenByShowYearHeaders() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'showYearHeaders', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistGroupEntity, SmartPlaylistGroupEntity, QAfterSortBy>
+  thenByShowYearHeadersDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'showYearHeaders', Sort.desc);
     });
   }
 
@@ -2785,6 +3487,26 @@ extension SmartPlaylistGroupEntityQueryWhereDistinct
   }
 
   QueryBuilder<SmartPlaylistGroupEntity, SmartPlaylistGroupEntity, QDistinct>
+  distinctByEpisodeSortField({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(
+        r'episodeSortField',
+        caseSensitive: caseSensitive,
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistGroupEntity, SmartPlaylistGroupEntity, QDistinct>
+  distinctByEpisodeSortOrder({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(
+        r'episodeSortOrder',
+        caseSensitive: caseSensitive,
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistGroupEntity, SmartPlaylistGroupEntity, QDistinct>
   distinctByGroupId({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'groupId', caseSensitive: caseSensitive);
@@ -2809,6 +3531,27 @@ extension SmartPlaylistGroupEntityQueryWhereDistinct
   distinctByPodcastId() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'podcastId');
+    });
+  }
+
+  QueryBuilder<SmartPlaylistGroupEntity, SmartPlaylistGroupEntity, QDistinct>
+  distinctByPrependSeasonNumber() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'prependSeasonNumber');
+    });
+  }
+
+  QueryBuilder<SmartPlaylistGroupEntity, SmartPlaylistGroupEntity, QDistinct>
+  distinctByShowDateRange() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'showDateRange');
+    });
+  }
+
+  QueryBuilder<SmartPlaylistGroupEntity, SmartPlaylistGroupEntity, QDistinct>
+  distinctByShowYearHeaders() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'showYearHeaders');
     });
   }
 
@@ -2875,6 +3618,20 @@ extension SmartPlaylistGroupEntityQueryProperty
     });
   }
 
+  QueryBuilder<SmartPlaylistGroupEntity, String?, QQueryOperations>
+  episodeSortFieldProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'episodeSortField');
+    });
+  }
+
+  QueryBuilder<SmartPlaylistGroupEntity, String?, QQueryOperations>
+  episodeSortOrderProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'episodeSortOrder');
+    });
+  }
+
   QueryBuilder<SmartPlaylistGroupEntity, String, QQueryOperations>
   groupIdProperty() {
     return QueryBuilder.apply(this, (query) {
@@ -2900,6 +3657,27 @@ extension SmartPlaylistGroupEntityQueryProperty
   podcastIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'podcastId');
+    });
+  }
+
+  QueryBuilder<SmartPlaylistGroupEntity, bool?, QQueryOperations>
+  prependSeasonNumberProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'prependSeasonNumber');
+    });
+  }
+
+  QueryBuilder<SmartPlaylistGroupEntity, bool, QQueryOperations>
+  showDateRangeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'showDateRange');
+    });
+  }
+
+  QueryBuilder<SmartPlaylistGroupEntity, bool?, QQueryOperations>
+  showYearHeadersProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'showYearHeaders');
     });
   }
 
