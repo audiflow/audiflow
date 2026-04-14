@@ -896,7 +896,9 @@ class _SmartPlaylistGroupCard extends StatelessWidget {
   static const _thumbnailSize = 72.0;
 
   String _formatTitle() {
-    return group.formattedDisplayName(prependSeasonNumber: prependSeasonNumber);
+    return group.formattedDisplayName(
+      parentPrependSeasonNumber: prependSeasonNumber,
+    );
   }
 
   @override

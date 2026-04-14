@@ -34,6 +34,7 @@ final class SmartPlaylistGroup {
     this.yearOverride,
     this.showDateRange = false,
     this.showYearHeaders,
+    this.prependSeasonNumber,
     this.episodeSort,
     this.earliestDate,
     this.latestDate,
@@ -65,6 +66,10 @@ final class SmartPlaylistGroup {
   /// When null, inherits from the parent playlist's showYearHeaders.
   final bool? showYearHeaders;
 
+  /// Per-group override for prepending season number to the title.
+  /// When null, inherits from the parent playlist's prependSeasonNumber.
+  final bool? prependSeasonNumber;
+
   /// Per-group episode sort rule.
   /// When null, inherits from the parent playlist's episodeSort.
   final EpisodeSortRule? episodeSort;
@@ -82,8 +87,12 @@ final class SmartPlaylistGroup {
   int get episodeCount => episodeIds.length;
 
   /// Returns display name with optional season number prefix.
-  String formattedDisplayName({required bool prependSeasonNumber}) {
-    if (prependSeasonNumber && 0 < sortKey) {
+  ///
+  /// The per-group [prependSeasonNumber] override takes precedence over
+  /// [parentPrependSeasonNumber] inherited from the parent playlist.
+  String formattedDisplayName({required bool parentPrependSeasonNumber}) {
+    final effective = prependSeasonNumber ?? parentPrependSeasonNumber;
+    if (effective && 0 < sortKey) {
       return 'S$sortKey $displayName';
     }
     return displayName;

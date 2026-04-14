@@ -121,7 +121,7 @@ class InlineGroupCard extends StatelessWidget {
                     children: [
                       Text(
                         group.formattedDisplayName(
-                          prependSeasonNumber: prependSeasonNumber,
+                          parentPrependSeasonNumber: prependSeasonNumber,
                         ),
                         style: theme.textTheme.titleSmall,
                         maxLines: 2,

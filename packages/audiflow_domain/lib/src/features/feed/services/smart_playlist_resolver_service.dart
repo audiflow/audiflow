@@ -130,6 +130,7 @@ class SmartPlaylistResolverService {
                 definition.groupItem?.showDateRange ??
                 false,
             showYearHeaders: gDef?.episodeListing?.showYearHeaders,
+            prependSeasonNumber: gDef?.groupItem?.prependSeasonNumber,
             episodeSort: gDef?.episodeListing?.sort ?? defEpisodeSort,
           );
         }).toList();
