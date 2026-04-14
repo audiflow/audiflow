@@ -102,8 +102,7 @@ class _SmartPlaylistEpisodesScreenState
 
   Widget _buildSortHeader(ThemeData theme, {int? countOverride}) {
     final colorScheme = theme.colorScheme;
-    final isGroups =
-        widget.smartPlaylist.playlistStructure == PlaylistStructure.grouped;
+    final isGroups = !widget.smartPlaylist.isSeparate;
     final count =
         countOverride ??
         (isGroups
@@ -167,7 +166,7 @@ class _SmartPlaylistEpisodesScreenState
   }
 
   List<Widget> _buildEpisodeList(BuildContext context, ThemeData theme) {
-    if (widget.smartPlaylist.playlistStructure == PlaylistStructure.grouped &&
+    if (!widget.smartPlaylist.isSeparate &&
         widget.smartPlaylist.groups != null) {
       return _buildGroupList(context, theme);
     }
@@ -897,7 +896,9 @@ class _SmartPlaylistGroupCard extends StatelessWidget {
   static const _thumbnailSize = 72.0;
 
   String _formatTitle() {
-    return group.formattedDisplayName(prependSeasonNumber: prependSeasonNumber);
+    return group.formattedDisplayName(
+      parentPrependSeasonNumber: prependSeasonNumber,
+    );
   }
 
   @override

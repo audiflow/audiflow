@@ -86,7 +86,7 @@ abstract class _$PatternSummaries extends $Notifier<List<PatternSummary>> {
 ///
 /// Set alongside [PatternSummaries] on startup and
 /// pull-to-refresh. Used to construct GitHub branch URLs
-/// (e.g. `dev/v3`).
+/// (e.g. `dev/v5`).
 
 @ProviderFor(SmartPlaylistSchemaVersion)
 final smartPlaylistSchemaVersionProvider =
@@ -96,14 +96,14 @@ final smartPlaylistSchemaVersionProvider =
 ///
 /// Set alongside [PatternSummaries] on startup and
 /// pull-to-refresh. Used to construct GitHub branch URLs
-/// (e.g. `dev/v3`).
+/// (e.g. `dev/v5`).
 final class SmartPlaylistSchemaVersionProvider
     extends $NotifierProvider<SmartPlaylistSchemaVersion, int> {
   /// Holds the schema version from the most recent root meta.
   ///
   /// Set alongside [PatternSummaries] on startup and
   /// pull-to-refresh. Used to construct GitHub branch URLs
-  /// (e.g. `dev/v3`).
+  /// (e.g. `dev/v5`).
   SmartPlaylistSchemaVersionProvider._()
     : super(
         from: null,
@@ -132,13 +132,13 @@ final class SmartPlaylistSchemaVersionProvider
 }
 
 String _$smartPlaylistSchemaVersionHash() =>
-    r'd76bddeea6b8fee1124a65d8f39f4883c35de0f2';
+    r'b24e483c03c0fe36bb03c5038d9865b69d68f515';
 
 /// Holds the schema version from the most recent root meta.
 ///
 /// Set alongside [PatternSummaries] on startup and
 /// pull-to-refresh. Used to construct GitHub branch URLs
-/// (e.g. `dev/v3`).
+/// (e.g. `dev/v5`).
 
 abstract class _$SmartPlaylistSchemaVersion extends $Notifier<int> {
   int build();
@@ -341,7 +341,7 @@ final class SmartPlaylistResolverServiceProvider
 }
 
 String _$smartPlaylistResolverServiceHash() =>
-    r'36c8fa9e7ad47a210fef7ce59b61020a779f06da';
+    r'053bf3fde103dff4470fd26ee1027b0f3a179c5b';
 
 /// Finds and loads the smart playlist config for a feed URL.
 ///

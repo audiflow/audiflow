@@ -1,4 +1,4 @@
-import 'smart_playlist_episode_extractor.dart';
+import 'numbering_extractor.dart';
 import 'smart_playlist_sort.dart';
 import 'smart_playlist_title_extractor.dart';
 
@@ -18,7 +18,7 @@ final class SmartPlaylistPattern {
     this.priority = 0,
     this.groupSort,
     this.titleExtractor,
-    this.episodeExtractor,
+    this.numberingExtractor,
     this.yearGroupedEpisodes = false,
   });
 
@@ -30,7 +30,7 @@ final class SmartPlaylistPattern {
   final int priority;
   final SmartPlaylistSortRule? groupSort;
   final SmartPlaylistTitleExtractor? titleExtractor;
-  final SmartPlaylistEpisodeExtractor? episodeExtractor;
+  final NumberingExtractor? numberingExtractor;
   final bool yearGroupedEpisodes;
 
   bool matchesPodcast(String? guid, String feedUrl) {

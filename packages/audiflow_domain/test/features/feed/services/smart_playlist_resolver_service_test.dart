@@ -23,7 +23,7 @@ void main() {
 
     setUp(() {
       service = SmartPlaylistResolverService(
-        resolvers: [RssMetadataResolver(), YearResolver()],
+        resolvers: [SeasonNumberResolver(), YearResolver()],
         patterns: [],
       );
     });
@@ -50,7 +50,7 @@ void main() {
       expect(result, isNull);
     });
 
-    test('uses first successful resolver (RssMetadataResolver)', () {
+    test('uses first successful resolver (SeasonNumberResolver)', () {
       final episodes = [
         _makeEpisode(1, seasonNumber: 1, publishedAt: DateTime(2024, 1, 1)),
         _makeEpisode(2, seasonNumber: 1, publishedAt: DateTime(2024, 2, 1)),
@@ -63,7 +63,7 @@ void main() {
       );
 
       expect(result, isNotNull);
-      expect(result!.resolverType, 'rss');
+      expect(result!.resolverType, 'seasonNumber');
     });
 
     test('falls back to next resolver when first fails', () {
@@ -84,16 +84,18 @@ void main() {
 
     test('uses custom pattern config when podcast matches', () {
       final serviceWithPattern = SmartPlaylistResolverService(
-        resolvers: [RssMetadataResolver(), YearResolver()],
+        resolvers: [SeasonNumberResolver(), YearResolver()],
         patterns: [
           SmartPlaylistPatternConfig(
             id: 'test_pattern',
             feedUrls: ['https://example.com/feed.rss'],
             playlists: [
-              SmartPlaylistDefinition(
+              const SmartPlaylistDefinition(
                 id: 'main',
                 displayName: 'Main',
-                resolverType: 'rss',
+                grouping: GroupingConfig(by: 'seasonNumber'),
+                priority: 0,
+                selector: SelectorConfig(),
               ),
             ],
           ),
@@ -126,69 +128,207 @@ void main() {
       );
 
       expect(result, isNotNull);
-      expect(result!.resolverType, 'rss');
+      expect(result!.resolverType, 'seasonNumber');
     });
 
-    test(
-      'wraps resolver playlists as groups when playlistStructure is grouped',
-      () {
-        final serviceWithGroups = SmartPlaylistResolverService(
-          resolvers: [RssMetadataResolver()],
-          patterns: [
-            SmartPlaylistPatternConfig(
-              id: 'test',
-              feedUrls: ['https://example.com/feed'],
-              playlists: [
-                SmartPlaylistDefinition(
-                  id: 'regular',
-                  displayName: 'Regular Series',
-                  resolverType: 'rss',
-                  playlistStructure: 'grouped',
-                  groupList: GroupListConfig(
-                    yearBinding: YearBinding.pinToYear,
-                  ),
+    test('wraps resolver playlists as groups when not isSeparate', () {
+      final serviceWithGroups = SmartPlaylistResolverService(
+        resolvers: [SeasonNumberResolver()],
+        patterns: [
+          SmartPlaylistPatternConfig(
+            id: 'test',
+            feedUrls: ['https://example.com/feed'],
+            playlists: [
+              const SmartPlaylistDefinition(
+                id: 'regular',
+                displayName: 'Regular Series',
+                grouping: GroupingConfig(by: 'seasonNumber'),
+                priority: 0,
+                groupListing: GroupListingConfig(
+                  yearBinding: YearBinding.pinToYear,
                 ),
-              ],
-            ),
-          ],
-        );
+              ),
+            ],
+          ),
+        ],
+      );
 
-        final episodes = [
-          _makeEpisode(1, seasonNumber: 1, title: 'S1E1'),
-          _makeEpisode(2, seasonNumber: 1, title: 'S1E2'),
-          _makeEpisode(3, seasonNumber: 2, title: 'S2E1'),
-        ];
+      final episodes = [
+        _makeEpisode(1, seasonNumber: 1, title: 'S1E1'),
+        _makeEpisode(2, seasonNumber: 1, title: 'S1E2'),
+        _makeEpisode(3, seasonNumber: 2, title: 'S2E1'),
+      ];
 
-        final result = serviceWithGroups.resolveSmartPlaylists(
-          podcastGuid: null,
-          feedUrl: 'https://example.com/feed',
-          episodes: episodes,
-        );
+      final result = serviceWithGroups.resolveSmartPlaylists(
+        podcastGuid: null,
+        feedUrl: 'https://example.com/feed',
+        episodes: episodes,
+      );
 
-        expect(result, isNotNull);
-        // One parent playlist, not two separate season playlists
-        expect(result!.playlists, hasLength(1));
+      expect(result, isNotNull);
+      // One parent playlist, not two separate season playlists
+      expect(result!.playlists, hasLength(1));
 
-        final playlist = result.playlists.first;
-        expect(playlist.id, 'regular');
-        expect(playlist.displayName, 'Regular Series');
-        expect(playlist.playlistStructure, PlaylistStructure.grouped);
-        expect(playlist.yearBinding, YearBinding.pinToYear);
-        expect(playlist.episodeIds, unorderedEquals([1, 2, 3]));
+      final playlist = result.playlists.first;
+      expect(playlist.id, 'regular');
+      expect(playlist.displayName, 'Regular Series');
+      expect(playlist.isSeparate, isFalse);
+      expect(playlist.yearBinding, YearBinding.pinToYear);
+      expect(playlist.episodeIds, unorderedEquals([1, 2, 3]));
 
-        // Seasons become groups inside the playlist
-        expect(playlist.groups, isNotNull);
-        expect(playlist.groups, hasLength(2));
+      // Seasons become groups inside the playlist
+      expect(playlist.groups, isNotNull);
+      expect(playlist.groups, hasLength(2));
+      expect(
+        playlist.groups!.map((g) => g.id),
+        containsAll(['season_1', 'season_2']),
+      );
+    });
+
+    test('groupItem.pinToYear sets yearOverride on group', () {
+      final serviceWithPinToYear = SmartPlaylistResolverService(
+        resolvers: [SeasonNumberResolver()],
+        patterns: [
+          SmartPlaylistPatternConfig(
+            id: 'test',
+            feedUrls: ['https://example.com/feed'],
+            playlists: [
+              SmartPlaylistDefinition(
+                id: 'regular',
+                displayName: 'Regular',
+                grouping: GroupingConfig(
+                  by: 'seasonNumber',
+                  staticClassifiers: [
+                    const SmartPlaylistGroupDef(
+                      id: 'season_1',
+                      displayName: 'Season 1',
+                      groupItem: GroupItemConfig(pinToYear: true),
+                    ),
+                  ],
+                ),
+                priority: 0,
+              ),
+            ],
+          ),
+        ],
+      );
+
+      final episodes = [
+        _makeEpisode(1, seasonNumber: 1, title: 'S1E1'),
+        _makeEpisode(2, seasonNumber: 2, title: 'S2E1'),
+      ];
+
+      final result = serviceWithPinToYear.resolveSmartPlaylists(
+        podcastGuid: null,
+        feedUrl: 'https://example.com/feed',
+        episodes: episodes,
+      );
+
+      expect(result, isNotNull);
+      final playlist = result!.playlists.first;
+      expect(playlist.groups, isNotNull);
+
+      final season1 = playlist.groups!.firstWhere((g) => g.id == 'season_1');
+      expect(
+        season1.yearOverride,
+        YearBinding.pinToYear,
+        reason: 'groupItem.pinToYear should set yearOverride',
+      );
+
+      // season_2 has no groupDef, but inherits playlist-level pinToYear
+      // (in this test there is no playlist-level groupItem, so null)
+      final season2 = playlist.groups!.firstWhere((g) => g.id == 'season_2');
+      expect(season2.yearOverride, isNull);
+    });
+
+    test('playlist-level groupItem.pinToYear applies to all groups', () {
+      final serviceWithPlaylistPinToYear = SmartPlaylistResolverService(
+        resolvers: [SeasonNumberResolver()],
+        patterns: [
+          SmartPlaylistPatternConfig(
+            id: 'test',
+            feedUrls: ['https://example.com/feed'],
+            playlists: [
+              const SmartPlaylistDefinition(
+                id: 'regular',
+                displayName: 'Regular',
+                grouping: GroupingConfig(by: 'seasonNumber'),
+                priority: 0,
+                groupItem: GroupItemConfig(pinToYear: true),
+              ),
+            ],
+          ),
+        ],
+      );
+
+      final episodes = [
+        _makeEpisode(1, seasonNumber: 1, title: 'S1E1'),
+        _makeEpisode(2, seasonNumber: 2, title: 'S2E1'),
+      ];
+
+      final result = serviceWithPlaylistPinToYear.resolveSmartPlaylists(
+        podcastGuid: null,
+        feedUrl: 'https://example.com/feed',
+        episodes: episodes,
+      );
+
+      expect(result, isNotNull);
+      final playlist = result!.playlists.first;
+      expect(playlist.groups, isNotNull);
+
+      for (final group in playlist.groups!) {
         expect(
-          playlist.groups!.map((g) => g.id),
-          containsAll(['season_1', 'season_2']),
+          group.yearOverride,
+          YearBinding.pinToYear,
+          reason:
+              'All groups should inherit playlist-level pinToYear: ${group.id}',
         );
-      },
-    );
+      }
+    });
+
+    test('deprecated resolver aliases resolve correctly', () {
+      final serviceWithAliases = SmartPlaylistResolverService(
+        resolvers: [SeasonNumberResolver()],
+        patterns: [
+          SmartPlaylistPatternConfig(
+            id: 'test',
+            feedUrls: ['https://example.com/feed'],
+            playlists: [
+              const SmartPlaylistDefinition(
+                id: 'regular',
+                displayName: 'Regular',
+                // 'rss' is the deprecated v3 alias for 'seasonNumber'
+                grouping: GroupingConfig(by: 'rss'),
+                priority: 0,
+              ),
+            ],
+          ),
+        ],
+      );
+
+      final episodes = [
+        _makeEpisode(1, seasonNumber: 1, title: 'S1E1'),
+        _makeEpisode(2, seasonNumber: 2, title: 'S2E1'),
+      ];
+
+      final result = serviceWithAliases.resolveSmartPlaylists(
+        podcastGuid: null,
+        feedUrl: 'https://example.com/feed',
+        episodes: episodes,
+      );
+
+      expect(result, isNotNull);
+      expect(result!.playlists, isNotEmpty);
+      expect(
+        result.playlists.first.groups,
+        isNotNull,
+        reason: "Deprecated 'rss' alias should map to seasonNumber resolver",
+      );
+    });
 
     test('multiple definitions produce separate parent playlists', () {
       final serviceWithMultiple = SmartPlaylistResolverService(
-        resolvers: [RssMetadataResolver()],
+        resolvers: [SeasonNumberResolver()],
         patterns: [
           SmartPlaylistPatternConfig(
             id: 'test',
@@ -197,18 +337,17 @@ void main() {
               SmartPlaylistDefinition(
                 id: 'main',
                 displayName: 'Main',
-                resolverType: 'rss',
-                playlistStructure: 'grouped',
-                priority: 10,
+                grouping: const GroupingConfig(by: 'seasonNumber'),
+                priority: 0,
                 episodeFilters: EpisodeFilters(
                   require: [EpisodeFilterEntry(title: r'Main')],
                 ),
               ),
-              SmartPlaylistDefinition(
+              const SmartPlaylistDefinition(
                 id: 'extras',
                 displayName: 'Extras',
-                resolverType: 'rss',
-                playlistStructure: 'grouped',
+                grouping: GroupingConfig(by: 'seasonNumber'),
+                priority: 1,
               ),
             ],
           ),
@@ -235,19 +374,20 @@ void main() {
       expect(result.playlists[1].displayName, 'Extras');
     });
 
-    test('episodes mode keeps resolver playlists as top-level', () {
+    test('isSeparate keeps resolver playlists as top-level', () {
       final serviceWithEpisodes = SmartPlaylistResolverService(
-        resolvers: [RssMetadataResolver()],
+        resolvers: [SeasonNumberResolver()],
         patterns: [
           SmartPlaylistPatternConfig(
             id: 'test',
             feedUrls: ['https://example.com/feed'],
             playlists: [
-              SmartPlaylistDefinition(
+              const SmartPlaylistDefinition(
                 id: 'all',
                 displayName: 'All',
-                resolverType: 'rss',
-                playlistStructure: 'split',
+                grouping: GroupingConfig(by: 'seasonNumber'),
+                priority: 0,
+                selector: SelectorConfig(),
               ),
             ],
           ),
@@ -266,14 +406,14 @@ void main() {
       );
 
       expect(result, isNotNull);
-      // Episodes mode: each season is a separate top-level playlist
+      // Separate: each season is a separate top-level playlist
       expect(result!.playlists, hasLength(2));
       expect(result.playlists.first.groups, isNull);
     });
 
     test('routes episodes by episodeFilters', () {
       final serviceWithFilters = SmartPlaylistResolverService(
-        resolvers: [RssMetadataResolver(), YearResolver()],
+        resolvers: [SeasonNumberResolver(), YearResolver()],
         patterns: [
           SmartPlaylistPatternConfig(
             id: 'filter_test',
@@ -282,8 +422,9 @@ void main() {
               SmartPlaylistDefinition(
                 id: 'bonus',
                 displayName: 'Bonus',
-                resolverType: 'year',
-                priority: 10,
+                grouping: const GroupingConfig(by: 'year'),
+                priority: 0,
+                selector: const SelectorConfig(),
                 episodeFilters: EpisodeFilters(
                   require: [EpisodeFilterEntry(title: r'Bonus')],
                 ),
@@ -291,7 +432,9 @@ void main() {
               SmartPlaylistDefinition(
                 id: 'main',
                 displayName: 'Main',
-                resolverType: 'year',
+                grouping: const GroupingConfig(by: 'year'),
+                priority: 1,
+                selector: const SelectorConfig(),
                 episodeFilters: EpisodeFilters(
                   exclude: [EpisodeFilterEntry(title: r'Bonus')],
                 ),
@@ -333,18 +476,18 @@ void main() {
       expect(result, isNotNull);
 
       // All episodes in 2024, so each definition produces one
-      // year-based playlist. Both have filters, so sorted by
-      // priority ascending: main (0) first, then bonus (10).
+      // year-based playlist. Playlists appear in definition order:
+      // bonus first, main second.
       expect(result!.playlists.length, 2);
 
       // Collect all episode IDs per playlist
       final firstIds = result.playlists[0].episodeIds;
       final secondIds = result.playlists[1].episodeIds;
 
-      // Main playlist (lower priority) gets episodes not matching excludeFilter
-      expect(firstIds, unorderedEquals([1, 3]));
-      // Bonus playlist gets episodes matching requireFilter
-      expect(secondIds, unorderedEquals([2, 4]));
+      // Bonus playlist (first in definition) gets episodes matching requireFilter
+      expect(firstIds, unorderedEquals([2, 4]));
+      // Main playlist (second in definition) gets episodes not matching excludeFilter
+      expect(secondIds, unorderedEquals([1, 3]));
     });
 
     test('require filters use OR across entries', () {
@@ -358,7 +501,9 @@ void main() {
               SmartPlaylistDefinition(
                 id: 'special',
                 displayName: 'Special',
-                resolverType: 'year',
+                grouping: const GroupingConfig(by: 'year'),
+                priority: 0,
+                selector: const SelectorConfig(),
                 episodeFilters: EpisodeFilters(
                   require: [
                     EpisodeFilterEntry(title: r'Bonus'),

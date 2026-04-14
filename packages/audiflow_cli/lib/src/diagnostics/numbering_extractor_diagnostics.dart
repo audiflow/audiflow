@@ -28,12 +28,11 @@ class SmartPlaylistEpisodeDiagnosticResult {
       extractedSeasonNumber != null || extractedEpisodeNumber != null;
 }
 
-/// Wraps [SmartPlaylistEpisodeExtractor] to capture
-/// diagnostic information.
-class SmartPlaylistEpisodeExtractorDiagnostics {
-  const SmartPlaylistEpisodeExtractorDiagnostics(this.extractor);
+/// Wraps [NumberingExtractor] to capture diagnostic information.
+class NumberingExtractorDiagnostics {
+  const NumberingExtractorDiagnostics(this.extractor);
 
-  final SmartPlaylistEpisodeExtractor extractor;
+  final NumberingExtractor extractor;
 
   /// Runs extraction and captures diagnostic details.
   SmartPlaylistEpisodeDiagnosticResult run(EpisodeData episode) {

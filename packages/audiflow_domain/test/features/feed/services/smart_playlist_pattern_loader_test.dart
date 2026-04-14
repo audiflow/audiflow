@@ -14,7 +14,12 @@ void main() {
             'id': 'test',
             'feedUrls': ['https://example.com/feed'],
             'playlists': [
-              {'id': 'main', 'displayName': 'Main', 'resolverType': 'rss'},
+              {
+                'id': 'main',
+                'displayName': 'Main',
+                'grouping': {'by': 'seasonNumber'},
+                'priority': 0,
+              },
             ],
           },
         ],

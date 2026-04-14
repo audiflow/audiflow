@@ -64,12 +64,13 @@ void main() {
       fakeResponses[url] = jsonEncode({
         'id': 'regular',
         'displayName': 'Regular',
-        'resolverType': 'rss',
+        'grouping': {'by': 'seasonNumber'},
+        'priority': 0,
       });
 
       final playlist = await datasource.fetchPlaylist('coten_radio', 'regular');
       expect(playlist.id, 'regular');
-      expect(playlist.resolverType, 'rss');
+      expect(playlist.grouping.by, 'seasonNumber');
     });
   });
 }

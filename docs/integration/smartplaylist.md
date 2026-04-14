@@ -35,9 +35,9 @@ This document does not cover:
 
 | Environment | Base URL | Source repo |
 |-------------|----------|-------------|
-| Production | `https://audiflow.github.io/audiflow-smartplaylist/assets/v3/` | `audiflow-smartplaylist` |
-| Staging | `https://audiflow.github.io/audiflow-smartplaylist/assets-stg/v3/` | `audiflow-smartplaylist` |
-| Development | `https://audiflow.github.io/audiflow-smartplaylist/assets-dev/v3/` | `audiflow-smartplaylist` |
+| Production | `https://audiflow.github.io/audiflow-smartplaylist/assets/v5/` | `audiflow-smartplaylist` |
+| Staging | `https://audiflow.github.io/audiflow-smartplaylist/assets-stg/v5/` | `audiflow-smartplaylist` |
+| Development | `https://audiflow.github.io/audiflow-smartplaylist/assets-dev/v5/` | `audiflow-smartplaylist` |
 
 All environments use the same GitHub Pages host with different asset paths. The base URL is injected via `smartPlaylistConfigBaseUrlProvider`.
 
@@ -59,12 +59,12 @@ All environments use the same GitHub Pages host with different asset paths. The 
 
 | Resolver | Type ID | Grouping logic |
 |----------|---------|----------------|
-| RSS metadata | `rss` | Groups by season number from RSS metadata |
-| Category | `category` | Groups by category tags |
+| Season number | `seasonNumber` | Groups by season number from RSS metadata |
+| Title classifier | `titleClassifier` | Groups by matching episode titles against configured `groups` patterns (first match wins) |
 | Year | `year` | Groups by publication year |
-| Title appearance order | `titleAppearanceOrder` | Groups by title pattern matching and appearance order |
+| Title discovery | `titleDiscovery` | Groups by title pattern matching and appearance order |
 
-Valid resolver types: `rss`, `category`, `year`, `titleAppearanceOrder`. Legacy names (`rssSeason`, `categoryGroup`, `flat`) are not valid.
+Valid resolver types: `seasonNumber`, `titleClassifier`, `year`, `titleDiscovery`. Legacy names (`rss`, `category`, `titleAppearanceOrder`) are not valid.
 
 ## Model files
 
@@ -83,14 +83,16 @@ Valid resolver types: `rss`, `category`, `year`, `titleAppearanceOrder`. Legacy 
 - Model JSON keys must match `sp_core` models in the editor repo exactly
 - Enum string values must match schema `oneOf`/`enum` definitions
 - Schema conformance tests validate round-trip serialization: `packages/audiflow_domain/test/features/feed/models/schema_conformance_test.dart`
-- Vendored schemas at `packages/audiflow_domain/test/fixtures/` (`playlist-definition.schema.json`, `pattern-index.schema.json`, `pattern-meta.schema.json`) must be kept in sync with upstream
+- Vendored schemas at `packages/audiflow_domain/test/fixtures/` (`playlist-definition.schema.json`, `pattern-index.schema.json`, `pattern-meta.schema.json`) must be kept in sync with upstream (v5 schema)
 
 ## Schema update procedure
 
-1. Copy all `*.schema.json` from `audiflow-smartplaylist-schema` (canonical source) to `packages/audiflow_domain/test/fixtures/`
+1. Copy all `*.schema.json` from `audiflow-smartplaylist-editor/crates/sp_core/assets/` (SSoT) to `packages/audiflow_domain/test/fixtures/`
 2. Run conformance tests: `flutter test packages/audiflow_domain/test/features/feed/models/schema_conformance_test.dart`
 3. Fix any drift (update models, enums, or test data to match)
 4. Run full domain test suite: `flutter test packages/audiflow_domain`
+
+**Never edit vendored schema files directly.** If the schema has a bug, fix it in the SSoT and re-vendor.
 
 ## Related documents
 

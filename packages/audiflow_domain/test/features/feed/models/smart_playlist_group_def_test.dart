@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:audiflow_domain/src/features/feed/models/matcher.dart'
+    as domain;
 import 'package:audiflow_domain/src/features/feed/models/smart_playlist_group_def.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -9,7 +11,7 @@ void main() {
       const def = SmartPlaylistGroupDef(
         id: 'main',
         displayName: 'Main Episodes',
-        pattern: r'^\[\d+-\d+\]',
+        pattern: domain.Matcher(source: 'title', pattern: r'^\[\d+-\d+\]'),
       );
 
       final json = def.toJson();
@@ -17,7 +19,8 @@ void main() {
 
       expect(decoded.id, 'main');
       expect(decoded.displayName, 'Main Episodes');
-      expect(decoded.pattern, r'^\[\d+-\d+\]');
+      expect(decoded.pattern?.source, 'title');
+      expect(decoded.pattern?.pattern, r'^\[\d+-\d+\]');
     });
 
     test('round-trip without pattern (fallback)', () {
@@ -37,7 +40,7 @@ void main() {
       const def = SmartPlaylistGroupDef(
         id: 'bonus',
         displayName: 'Bonus',
-        pattern: r'bonus',
+        pattern: domain.Matcher(source: 'title', pattern: r'bonus'),
       );
 
       final jsonString = jsonEncode(def.toJson());
@@ -47,7 +50,8 @@ void main() {
 
       expect(decoded.id, def.id);
       expect(decoded.displayName, def.displayName);
-      expect(decoded.pattern, def.pattern);
+      expect(decoded.pattern?.source, def.pattern?.source);
+      expect(decoded.pattern?.pattern, def.pattern?.pattern);
     });
   });
 }

@@ -28,44 +28,84 @@ const SmartPlaylistEntitySchema = CollectionSchema(
       name: r'displayName',
       type: IsarType.string,
     ),
-    r'playlistId': PropertySchema(
+    r'episodeSortField': PropertySchema(
       id: 2,
+      name: r'episodeSortField',
+      type: IsarType.string,
+    ),
+    r'episodeSortOrder': PropertySchema(
+      id: 3,
+      name: r'episodeSortOrder',
+      type: IsarType.string,
+    ),
+    r'groupSortField': PropertySchema(
+      id: 4,
+      name: r'groupSortField',
+      type: IsarType.string,
+    ),
+    r'groupSortOrder': PropertySchema(
+      id: 5,
+      name: r'groupSortOrder',
+      type: IsarType.string,
+    ),
+    r'playlistId': PropertySchema(
+      id: 6,
       name: r'playlistId',
       type: IsarType.string,
     ),
     r'playlistNumber': PropertySchema(
-      id: 3,
+      id: 7,
       name: r'playlistNumber',
       type: IsarType.long,
     ),
     r'playlistStructure': PropertySchema(
-      id: 4,
+      id: 8,
       name: r'playlistStructure',
       type: IsarType.string,
     ),
     r'podcastId': PropertySchema(
-      id: 5,
+      id: 9,
       name: r'podcastId',
       type: IsarType.long,
     ),
+    r'prependSeasonNumber': PropertySchema(
+      id: 10,
+      name: r'prependSeasonNumber',
+      type: IsarType.bool,
+    ),
     r'resolverType': PropertySchema(
-      id: 6,
+      id: 11,
       name: r'resolverType',
       type: IsarType.string,
     ),
-    r'sortKey': PropertySchema(id: 7, name: r'sortKey', type: IsarType.long),
+    r'showDateRange': PropertySchema(
+      id: 12,
+      name: r'showDateRange',
+      type: IsarType.bool,
+    ),
+    r'showYearHeaders': PropertySchema(
+      id: 13,
+      name: r'showYearHeaders',
+      type: IsarType.bool,
+    ),
+    r'sortKey': PropertySchema(id: 14, name: r'sortKey', type: IsarType.long),
     r'thumbnailUrl': PropertySchema(
-      id: 8,
+      id: 15,
       name: r'thumbnailUrl',
       type: IsarType.string,
     ),
+    r'userSortable': PropertySchema(
+      id: 16,
+      name: r'userSortable',
+      type: IsarType.bool,
+    ),
     r'yearGrouped': PropertySchema(
-      id: 9,
+      id: 17,
       name: r'yearGrouped',
       type: IsarType.bool,
     ),
     r'yearHeaderMode': PropertySchema(
-      id: 10,
+      id: 18,
       name: r'yearHeaderMode',
       type: IsarType.string,
     ),
@@ -112,6 +152,30 @@ int _smartPlaylistEntityEstimateSize(
 ) {
   var bytesCount = offsets.last;
   bytesCount += 3 + object.displayName.length * 3;
+  {
+    final value = object.episodeSortField;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.episodeSortOrder;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.groupSortField;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.groupSortOrder;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   bytesCount += 3 + object.playlistId.length * 3;
   bytesCount += 3 + object.playlistStructure.length * 3;
   bytesCount += 3 + object.resolverType.length * 3;
@@ -133,15 +197,23 @@ void _smartPlaylistEntitySerialize(
 ) {
   writer.writeLong(offsets[0], object.configVersion);
   writer.writeString(offsets[1], object.displayName);
-  writer.writeString(offsets[2], object.playlistId);
-  writer.writeLong(offsets[3], object.playlistNumber);
-  writer.writeString(offsets[4], object.playlistStructure);
-  writer.writeLong(offsets[5], object.podcastId);
-  writer.writeString(offsets[6], object.resolverType);
-  writer.writeLong(offsets[7], object.sortKey);
-  writer.writeString(offsets[8], object.thumbnailUrl);
-  writer.writeBool(offsets[9], object.yearGrouped);
-  writer.writeString(offsets[10], object.yearHeaderMode);
+  writer.writeString(offsets[2], object.episodeSortField);
+  writer.writeString(offsets[3], object.episodeSortOrder);
+  writer.writeString(offsets[4], object.groupSortField);
+  writer.writeString(offsets[5], object.groupSortOrder);
+  writer.writeString(offsets[6], object.playlistId);
+  writer.writeLong(offsets[7], object.playlistNumber);
+  writer.writeString(offsets[8], object.playlistStructure);
+  writer.writeLong(offsets[9], object.podcastId);
+  writer.writeBool(offsets[10], object.prependSeasonNumber);
+  writer.writeString(offsets[11], object.resolverType);
+  writer.writeBool(offsets[12], object.showDateRange);
+  writer.writeBool(offsets[13], object.showYearHeaders);
+  writer.writeLong(offsets[14], object.sortKey);
+  writer.writeString(offsets[15], object.thumbnailUrl);
+  writer.writeBool(offsets[16], object.userSortable);
+  writer.writeBool(offsets[17], object.yearGrouped);
+  writer.writeString(offsets[18], object.yearHeaderMode);
 }
 
 SmartPlaylistEntity _smartPlaylistEntityDeserialize(
@@ -153,16 +225,24 @@ SmartPlaylistEntity _smartPlaylistEntityDeserialize(
   final object = SmartPlaylistEntity();
   object.configVersion = reader.readLongOrNull(offsets[0]);
   object.displayName = reader.readString(offsets[1]);
+  object.episodeSortField = reader.readStringOrNull(offsets[2]);
+  object.episodeSortOrder = reader.readStringOrNull(offsets[3]);
+  object.groupSortField = reader.readStringOrNull(offsets[4]);
+  object.groupSortOrder = reader.readStringOrNull(offsets[5]);
   object.id = id;
-  object.playlistId = reader.readString(offsets[2]);
-  object.playlistNumber = reader.readLong(offsets[3]);
-  object.playlistStructure = reader.readString(offsets[4]);
-  object.podcastId = reader.readLong(offsets[5]);
-  object.resolverType = reader.readString(offsets[6]);
-  object.sortKey = reader.readLong(offsets[7]);
-  object.thumbnailUrl = reader.readStringOrNull(offsets[8]);
-  object.yearGrouped = reader.readBool(offsets[9]);
-  object.yearHeaderMode = reader.readString(offsets[10]);
+  object.playlistId = reader.readString(offsets[6]);
+  object.playlistNumber = reader.readLong(offsets[7]);
+  object.playlistStructure = reader.readString(offsets[8]);
+  object.podcastId = reader.readLong(offsets[9]);
+  object.prependSeasonNumber = reader.readBool(offsets[10]);
+  object.resolverType = reader.readString(offsets[11]);
+  object.showDateRange = reader.readBool(offsets[12]);
+  object.showYearHeaders = reader.readBool(offsets[13]);
+  object.sortKey = reader.readLong(offsets[14]);
+  object.thumbnailUrl = reader.readStringOrNull(offsets[15]);
+  object.userSortable = reader.readBool(offsets[16]);
+  object.yearGrouped = reader.readBool(offsets[17]);
+  object.yearHeaderMode = reader.readString(offsets[18]);
   return object;
 }
 
@@ -178,22 +258,38 @@ P _smartPlaylistEntityDeserializeProp<P>(
     case 1:
       return (reader.readString(offset)) as P;
     case 2:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 3:
-      return (reader.readLong(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 4:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 5:
-      return (reader.readLong(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 6:
       return (reader.readString(offset)) as P;
     case 7:
       return (reader.readLong(offset)) as P;
     case 8:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 9:
-      return (reader.readBool(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 10:
+      return (reader.readBool(offset)) as P;
+    case 11:
+      return (reader.readString(offset)) as P;
+    case 12:
+      return (reader.readBool(offset)) as P;
+    case 13:
+      return (reader.readBool(offset)) as P;
+    case 14:
+      return (reader.readLong(offset)) as P;
+    case 15:
+      return (reader.readStringOrNull(offset)) as P;
+    case 16:
+      return (reader.readBool(offset)) as P;
+    case 17:
+      return (reader.readBool(offset)) as P;
+    case 18:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -879,6 +975,642 @@ extension SmartPlaylistEntityQueryFilter
   }
 
   QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  episodeSortFieldIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'episodeSortField'),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  episodeSortFieldIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'episodeSortField'),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  episodeSortFieldEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'episodeSortField',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  episodeSortFieldGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'episodeSortField',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  episodeSortFieldLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'episodeSortField',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  episodeSortFieldBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'episodeSortField',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  episodeSortFieldStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'episodeSortField',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  episodeSortFieldEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'episodeSortField',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  episodeSortFieldContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'episodeSortField',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  episodeSortFieldMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'episodeSortField',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  episodeSortFieldIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'episodeSortField', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  episodeSortFieldIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'episodeSortField', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  episodeSortOrderIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'episodeSortOrder'),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  episodeSortOrderIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'episodeSortOrder'),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  episodeSortOrderEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'episodeSortOrder',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  episodeSortOrderGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'episodeSortOrder',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  episodeSortOrderLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'episodeSortOrder',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  episodeSortOrderBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'episodeSortOrder',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  episodeSortOrderStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'episodeSortOrder',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  episodeSortOrderEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'episodeSortOrder',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  episodeSortOrderContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'episodeSortOrder',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  episodeSortOrderMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'episodeSortOrder',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  episodeSortOrderIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'episodeSortOrder', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  episodeSortOrderIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'episodeSortOrder', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  groupSortFieldIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'groupSortField'),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  groupSortFieldIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'groupSortField'),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  groupSortFieldEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'groupSortField',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  groupSortFieldGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'groupSortField',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  groupSortFieldLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'groupSortField',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  groupSortFieldBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'groupSortField',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  groupSortFieldStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'groupSortField',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  groupSortFieldEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'groupSortField',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  groupSortFieldContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'groupSortField',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  groupSortFieldMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'groupSortField',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  groupSortFieldIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'groupSortField', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  groupSortFieldIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'groupSortField', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  groupSortOrderIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'groupSortOrder'),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  groupSortOrderIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'groupSortOrder'),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  groupSortOrderEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'groupSortOrder',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  groupSortOrderGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'groupSortOrder',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  groupSortOrderLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'groupSortOrder',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  groupSortOrderBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'groupSortOrder',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  groupSortOrderStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'groupSortOrder',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  groupSortOrderEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'groupSortOrder',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  groupSortOrderContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'groupSortOrder',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  groupSortOrderMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'groupSortOrder',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  groupSortOrderIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'groupSortOrder', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  groupSortOrderIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'groupSortOrder', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
   idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -1326,6 +2058,15 @@ extension SmartPlaylistEntityQueryFilter
   }
 
   QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  prependSeasonNumberEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'prependSeasonNumber', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
   resolverTypeEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -1462,6 +2203,24 @@ extension SmartPlaylistEntityQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         FilterCondition.greaterThan(property: r'resolverType', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  showDateRangeEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'showDateRange', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  showYearHeadersEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'showYearHeaders', value: value),
       );
     });
   }
@@ -1681,6 +2440,15 @@ extension SmartPlaylistEntityQueryFilter
   }
 
   QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  userSortableEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'userSortable', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
   yearGroupedEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -1878,6 +2646,62 @@ extension SmartPlaylistEntityQuerySortBy
   }
 
   QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterSortBy>
+  sortByEpisodeSortField() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'episodeSortField', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterSortBy>
+  sortByEpisodeSortFieldDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'episodeSortField', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterSortBy>
+  sortByEpisodeSortOrder() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'episodeSortOrder', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterSortBy>
+  sortByEpisodeSortOrderDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'episodeSortOrder', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterSortBy>
+  sortByGroupSortField() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'groupSortField', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterSortBy>
+  sortByGroupSortFieldDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'groupSortField', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterSortBy>
+  sortByGroupSortOrder() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'groupSortOrder', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterSortBy>
+  sortByGroupSortOrderDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'groupSortOrder', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterSortBy>
   sortByPlaylistId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'playlistId', Sort.asc);
@@ -1934,6 +2758,20 @@ extension SmartPlaylistEntityQuerySortBy
   }
 
   QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterSortBy>
+  sortByPrependSeasonNumber() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'prependSeasonNumber', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterSortBy>
+  sortByPrependSeasonNumberDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'prependSeasonNumber', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterSortBy>
   sortByResolverType() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'resolverType', Sort.asc);
@@ -1944,6 +2782,34 @@ extension SmartPlaylistEntityQuerySortBy
   sortByResolverTypeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'resolverType', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterSortBy>
+  sortByShowDateRange() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'showDateRange', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterSortBy>
+  sortByShowDateRangeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'showDateRange', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterSortBy>
+  sortByShowYearHeaders() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'showYearHeaders', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterSortBy>
+  sortByShowYearHeadersDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'showYearHeaders', Sort.desc);
     });
   }
 
@@ -1972,6 +2838,20 @@ extension SmartPlaylistEntityQuerySortBy
   sortByThumbnailUrlDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'thumbnailUrl', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterSortBy>
+  sortByUserSortable() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'userSortable', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterSortBy>
+  sortByUserSortableDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'userSortable', Sort.desc);
     });
   }
 
@@ -2031,6 +2911,62 @@ extension SmartPlaylistEntityQuerySortThenBy
   thenByDisplayNameDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'displayName', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterSortBy>
+  thenByEpisodeSortField() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'episodeSortField', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterSortBy>
+  thenByEpisodeSortFieldDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'episodeSortField', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterSortBy>
+  thenByEpisodeSortOrder() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'episodeSortOrder', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterSortBy>
+  thenByEpisodeSortOrderDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'episodeSortOrder', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterSortBy>
+  thenByGroupSortField() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'groupSortField', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterSortBy>
+  thenByGroupSortFieldDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'groupSortField', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterSortBy>
+  thenByGroupSortOrder() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'groupSortOrder', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterSortBy>
+  thenByGroupSortOrderDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'groupSortOrder', Sort.desc);
     });
   }
 
@@ -2105,6 +3041,20 @@ extension SmartPlaylistEntityQuerySortThenBy
   }
 
   QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterSortBy>
+  thenByPrependSeasonNumber() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'prependSeasonNumber', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterSortBy>
+  thenByPrependSeasonNumberDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'prependSeasonNumber', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterSortBy>
   thenByResolverType() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'resolverType', Sort.asc);
@@ -2115,6 +3065,34 @@ extension SmartPlaylistEntityQuerySortThenBy
   thenByResolverTypeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'resolverType', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterSortBy>
+  thenByShowDateRange() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'showDateRange', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterSortBy>
+  thenByShowDateRangeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'showDateRange', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterSortBy>
+  thenByShowYearHeaders() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'showYearHeaders', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterSortBy>
+  thenByShowYearHeadersDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'showYearHeaders', Sort.desc);
     });
   }
 
@@ -2143,6 +3121,20 @@ extension SmartPlaylistEntityQuerySortThenBy
   thenByThumbnailUrlDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'thumbnailUrl', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterSortBy>
+  thenByUserSortable() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'userSortable', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterSortBy>
+  thenByUserSortableDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'userSortable', Sort.desc);
     });
   }
 
@@ -2192,6 +3184,46 @@ extension SmartPlaylistEntityQueryWhereDistinct
   }
 
   QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QDistinct>
+  distinctByEpisodeSortField({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(
+        r'episodeSortField',
+        caseSensitive: caseSensitive,
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QDistinct>
+  distinctByEpisodeSortOrder({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(
+        r'episodeSortOrder',
+        caseSensitive: caseSensitive,
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QDistinct>
+  distinctByGroupSortField({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(
+        r'groupSortField',
+        caseSensitive: caseSensitive,
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QDistinct>
+  distinctByGroupSortOrder({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(
+        r'groupSortOrder',
+        caseSensitive: caseSensitive,
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QDistinct>
   distinctByPlaylistId({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'playlistId', caseSensitive: caseSensitive);
@@ -2223,9 +3255,30 @@ extension SmartPlaylistEntityQueryWhereDistinct
   }
 
   QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QDistinct>
+  distinctByPrependSeasonNumber() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'prependSeasonNumber');
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QDistinct>
   distinctByResolverType({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'resolverType', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QDistinct>
+  distinctByShowDateRange() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'showDateRange');
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QDistinct>
+  distinctByShowYearHeaders() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'showYearHeaders');
     });
   }
 
@@ -2240,6 +3293,13 @@ extension SmartPlaylistEntityQueryWhereDistinct
   distinctByThumbnailUrl({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'thumbnailUrl', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QDistinct>
+  distinctByUserSortable() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'userSortable');
     });
   }
 
@@ -2283,6 +3343,34 @@ extension SmartPlaylistEntityQueryProperty
     });
   }
 
+  QueryBuilder<SmartPlaylistEntity, String?, QQueryOperations>
+  episodeSortFieldProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'episodeSortField');
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, String?, QQueryOperations>
+  episodeSortOrderProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'episodeSortOrder');
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, String?, QQueryOperations>
+  groupSortFieldProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'groupSortField');
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, String?, QQueryOperations>
+  groupSortOrderProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'groupSortOrder');
+    });
+  }
+
   QueryBuilder<SmartPlaylistEntity, String, QQueryOperations>
   playlistIdProperty() {
     return QueryBuilder.apply(this, (query) {
@@ -2310,10 +3398,31 @@ extension SmartPlaylistEntityQueryProperty
     });
   }
 
+  QueryBuilder<SmartPlaylistEntity, bool, QQueryOperations>
+  prependSeasonNumberProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'prependSeasonNumber');
+    });
+  }
+
   QueryBuilder<SmartPlaylistEntity, String, QQueryOperations>
   resolverTypeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'resolverType');
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, bool, QQueryOperations>
+  showDateRangeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'showDateRange');
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, bool, QQueryOperations>
+  showYearHeadersProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'showYearHeaders');
     });
   }
 
@@ -2327,6 +3436,13 @@ extension SmartPlaylistEntityQueryProperty
   thumbnailUrlProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'thumbnailUrl');
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, bool, QQueryOperations>
+  userSortableProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'userSortable');
     });
   }
 

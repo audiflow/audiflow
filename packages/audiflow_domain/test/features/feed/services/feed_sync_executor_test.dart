@@ -137,7 +137,7 @@ class _FakeEpisodeRepository implements EpisodeRepository {
   Future<void> upsertFromFeedItems(
     int podcastId,
     List<PodcastItem> items, {
-    SmartPlaylistEpisodeExtractor? extractor,
+    NumberingExtractor? extractor,
   }) => throw UnimplementedError();
 
   @override

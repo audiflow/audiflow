@@ -12,15 +12,15 @@ Episode _makeEpisode(int id, String title, DateTime publishedAt) {
 }
 
 void main() {
-  group('TitleAppearanceOrderResolver', () {
-    late TitleAppearanceOrderResolver resolver;
+  group('TitleDiscoveryResolver', () {
+    late TitleDiscoveryResolver resolver;
 
     setUp(() {
-      resolver = TitleAppearanceOrderResolver();
+      resolver = TitleDiscoveryResolver();
     });
 
-    test('type is "titleAppearanceOrder"', () {
-      expect(resolver.type, 'titleAppearanceOrder');
+    test('type is "titleDiscovery"', () {
+      expect(resolver.type, 'titleDiscovery');
     });
 
     test('returns null when no definition provided', () {
@@ -36,14 +36,11 @@ void main() {
       const definition = SmartPlaylistDefinition(
         id: 'test',
         displayName: 'Test',
-        resolverType: 'titleAppearanceOrder',
-        groups: [
-          SmartPlaylistGroupDef(
-            id: 'extract',
-            displayName: 'Extract',
-            pattern: r'\[(\w+)\s+\d+\]',
-          ),
-        ],
+        grouping: GroupingConfig(
+          by: 'titleDiscovery',
+          discoveryHint: r'\[(\w+)\s+\d+\]',
+        ),
+        priority: 0,
       );
 
       // Episodes in feed order (newest first typically)
@@ -79,14 +76,11 @@ void main() {
       const definition = SmartPlaylistDefinition(
         id: 'test',
         displayName: 'Test',
-        resolverType: 'titleAppearanceOrder',
-        groups: [
-          SmartPlaylistGroupDef(
-            id: 'extract',
-            displayName: 'Extract',
-            pattern: r'\[(\w+)\s+\d+\]',
-          ),
-        ],
+        grouping: GroupingConfig(
+          by: 'titleDiscovery',
+          discoveryHint: r'\[(\w+)\s+\d+\]',
+        ),
+        priority: 0,
       );
 
       final episodes = [
@@ -104,14 +98,11 @@ void main() {
       const definition = SmartPlaylistDefinition(
         id: 'test',
         displayName: 'Test',
-        resolverType: 'titleAppearanceOrder',
-        groups: [
-          SmartPlaylistGroupDef(
-            id: 'extract',
-            displayName: 'Extract',
-            pattern: r'\[(\w+)\s+\d+\]',
-          ),
-        ],
+        grouping: GroupingConfig(
+          by: 'titleDiscovery',
+          discoveryHint: r'\[(\w+)\s+\d+\]',
+        ),
+        priority: 0,
       );
 
       final episodes = [

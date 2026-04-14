@@ -10,7 +10,7 @@ import '../../transcript/models/episode_transcript.dart';
 import '../datasources/local/episode_local_datasource.dart';
 import '../models/episode.dart';
 import '../models/feed_parse_progress.dart';
-import '../models/smart_playlist_episode_extractor.dart';
+import '../models/numbering_extractor.dart';
 import '../models/smart_playlist_pattern_config.dart';
 import '../services/episode_extractor_resolver.dart';
 import 'episode_repository.dart';
@@ -77,7 +77,7 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
   Future<void> upsertFromFeedItems(
     int podcastId,
     List<PodcastItem> items, {
-    SmartPlaylistEpisodeExtractor? extractor,
+    NumberingExtractor? extractor,
   }) async {
     final validItems = items
         .where((item) => item.guid != null && item.enclosureUrl != null)

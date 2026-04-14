@@ -1,25 +1,6 @@
 import 'episode_sort_rule.dart';
 import 'smart_playlist_sort.dart';
 
-/// Whether a smart playlist splits into separate playlists or
-/// groups inside one playlist.
-enum PlaylistStructure {
-  /// Each resolver result becomes a separate top-level playlist.
-  split,
-
-  /// All resolver results are collected as groups inside a single
-  /// parent playlist.
-  grouped;
-
-  /// Parses a string value to [PlaylistStructure], defaulting to [split].
-  static PlaylistStructure fromString(String? value) {
-    return switch (value) {
-      'grouped' => PlaylistStructure.grouped,
-      _ => PlaylistStructure.split,
-    };
-  }
-}
-
 /// How groups relate to year headers in the group list view.
 enum YearBinding {
   /// No year headers.
@@ -53,6 +34,7 @@ final class SmartPlaylistGroup {
     this.yearOverride,
     this.showDateRange = false,
     this.showYearHeaders,
+    this.prependSeasonNumber,
     this.episodeSort,
     this.earliestDate,
     this.latestDate,
@@ -84,6 +66,10 @@ final class SmartPlaylistGroup {
   /// When null, inherits from the parent playlist's showYearHeaders.
   final bool? showYearHeaders;
 
+  /// Per-group override for prepending season number to the title.
+  /// When null, inherits from the parent playlist's prependSeasonNumber.
+  final bool? prependSeasonNumber;
+
   /// Per-group episode sort rule.
   /// When null, inherits from the parent playlist's episodeSort.
   final EpisodeSortRule? episodeSort;
@@ -101,8 +87,12 @@ final class SmartPlaylistGroup {
   int get episodeCount => episodeIds.length;
 
   /// Returns display name with optional season number prefix.
-  String formattedDisplayName({required bool prependSeasonNumber}) {
-    if (prependSeasonNumber && 0 < sortKey) {
+  ///
+  /// The per-group [prependSeasonNumber] override takes precedence over
+  /// [parentPrependSeasonNumber] inherited from the parent playlist.
+  String formattedDisplayName({required bool parentPrependSeasonNumber}) {
+    final effective = prependSeasonNumber ?? parentPrependSeasonNumber;
+    if (effective && 0 < sortKey) {
       return 'S$sortKey $displayName';
     }
     return displayName;
@@ -117,7 +107,7 @@ final class SmartPlaylist {
     required this.sortKey,
     required this.episodeIds,
     this.thumbnailUrl,
-    this.playlistStructure = PlaylistStructure.split,
+    this.isSeparate = true,
     this.yearBinding = YearBinding.none,
     this.showDateRange = false,
     this.showYearHeaders = false,
@@ -143,8 +133,8 @@ final class SmartPlaylist {
   /// Thumbnail URL from the latest episode in this smart playlist.
   final String? thumbnailUrl;
 
-  /// Whether this playlist splits into separate playlists or groups.
-  final PlaylistStructure playlistStructure;
+  /// Whether this playlist presents as a separate top-level entry.
+  final bool isSeparate;
 
   /// How groups relate to year headers in the group list view.
   final YearBinding yearBinding;
@@ -168,7 +158,7 @@ final class SmartPlaylist {
   /// Groups may override this with their own episodeSort.
   final EpisodeSortRule? episodeSort;
 
-  /// Groups within this playlist (when playlistStructure == grouped).
+  /// Groups within this playlist (when not isSeparate).
   final List<SmartPlaylistGroup>? groups;
 
   /// Number of episodes in this smart playlist.
@@ -189,7 +179,7 @@ final class SmartPlaylist {
     int? sortKey,
     List<int>? episodeIds,
     String? thumbnailUrl,
-    PlaylistStructure? playlistStructure,
+    bool? isSeparate,
     YearBinding? yearBinding,
     bool? showDateRange,
     bool? showYearHeaders,
@@ -205,7 +195,7 @@ final class SmartPlaylist {
       sortKey: sortKey ?? this.sortKey,
       episodeIds: episodeIds ?? this.episodeIds,
       thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
-      playlistStructure: playlistStructure ?? this.playlistStructure,
+      isSeparate: isSeparate ?? this.isSeparate,
       yearBinding: yearBinding ?? this.yearBinding,
       showDateRange: showDateRange ?? this.showDateRange,
       showYearHeaders: showYearHeaders ?? this.showYearHeaders,

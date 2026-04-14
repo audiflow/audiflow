@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 5,
   "patterns": [
     {
       "id": "coten_radio",
@@ -11,105 +11,84 @@
         {
           "id": "regular",
           "displayName": "\u30ec\u30ae\u30e5\u30e9\u30fc\u30b7\u30ea\u30fc\u30ba",
-          "resolverType": "rss",
-          "contentType": "groups",
-          "yearHeaderMode": "firstEpisode",
-          "episodeYearHeaders": false,
-          "titleFilter": "\u3010\\d+-\\d+\u3011",
-          "excludeFilter": "\u3010COTEN RADIO\\s*\u30b7\u30e7\u30fc\u30c8",
-          "nullSeasonGroupKey": 0,
-          "customSort": {
-            "type": "composite",
-            "rules": [
-              {
-                "field": "playlistNumber",
-                "order": "ascending",
-                "condition": { "type": "sortKeyGreaterThan", "value": 0 }
-              },
-              {
-                "field": "newestEpisodeDate",
-                "order": "ascending"
-              }
-            ]
-          },
-          "titleExtractor": {
-            "source": "title",
-            "pattern": "\u3010?COTEN RADIO(\u30b7\u30e7\u30fc\u30c8)?\\s+(.+?)\u7de8?\\s*(\\d+|\u524d\u7de8|\u4e2d\u7de8|\u5f8c\u7de8)\u3011",
-            "group": 2,
-            "fallbackValue": "\u756a\u5916\u7de8",
-            "fallback": {
+          "priority": 1,
+          "grouping": {
+            "by": "seasonNumber",
+            "numberingExtractor": {
               "source": "title",
-              "pattern": "\u3010\u756a\u5916\u7de8",
-              "group": 0,
-              "template": "\u756a\u5916\u7de8"
+              "pattern": "\u3010(\\d+)-(\\d+)\u3011",
+              "seasonGroup": 1,
+              "episodeGroup": 2,
+              "fallbackSeasonNumber": 0,
+              "fallbackEpisodePattern": "\u3010\u756a\u5916\u7de8[\uff03#](\\d+)\u3011",
+              "fallbackEpisodeCaptureGroup": 1,
+              "fallbackToRss": true
             }
           },
-          "smartPlaylistEpisodeExtractor": {
-            "source": "title",
-            "pattern": "\u3010(\\d+)-(\\d+)\u3011",
-            "seasonGroup": 1,
-            "episodeGroup": 2,
-            "fallbackSeasonNumber": 0,
-            "fallbackEpisodePattern": "\u3010\u756a\u5916\u7de8[\uff03#](\\d+)\u3011",
-            "fallbackEpisodeCaptureGroup": 1,
-            "fallbackToRss": true
+          "episodeFilters": {
+            "require": [{ "title": "\u3010\\d+-\\d+\u3011" }],
+            "exclude": [{ "title": "\u3010COTEN RADIO\\s*\u30b7\u30e7\u30fc\u30c8" }]
+          },
+          "groupItem": {
+            "titleExtractor": {
+              "source": "title",
+              "pattern": "\u3010?COTEN RADIO(\u30b7\u30e7\u30fc\u30c8)?\\s+(.+?)\u7de8?\\s*(\\d+|\u524d\u7de8|\u4e2d\u7de8|\u5f8c\u7de8)\u3011",
+              "group": 2,
+              "fallbackValue": "\u756a\u5916\u7de8",
+              "fallback": {
+                "source": "title",
+                "pattern": "\u3010\u756a\u5916\u7de8",
+                "group": 0,
+                "template": "\u756a\u5916\u7de8"
+              }
+            }
           }
         },
         {
           "id": "short",
           "displayName": "\u30b7\u30e7\u30fc\u30c8\u30b7\u30ea\u30fc\u30ba",
-          "resolverType": "rss",
-          "contentType": "groups",
-          "yearHeaderMode": "firstEpisode",
-          "episodeYearHeaders": false,
-          "titleFilter": "\u3010\\d+-\\d+\u3011",
-          "requireFilter": "\u3010COTEN RADIO\\s*\u30b7\u30e7\u30fc\u30c8",
-          "nullSeasonGroupKey": 0,
-          "customSort": {
-            "type": "composite",
-            "rules": [
-              {
-                "field": "playlistNumber",
-                "order": "ascending",
-                "condition": { "type": "sortKeyGreaterThan", "value": 0 }
-              },
-              {
-                "field": "newestEpisodeDate",
-                "order": "ascending"
-              }
-            ]
-          },
-          "titleExtractor": {
-            "source": "title",
-            "pattern": "\u3010?COTEN RADIO(\u30b7\u30e7\u30fc\u30c8)?\\s+(.+?)\u7de8?\\s*(\\d+|\u524d\u7de8|\u4e2d\u7de8|\u5f8c\u7de8)\u3011",
-            "group": 2,
-            "fallbackValue": "\u756a\u5916\u7de8",
-            "fallback": {
+          "priority": 2,
+          "grouping": {
+            "by": "seasonNumber",
+            "numberingExtractor": {
               "source": "title",
-              "pattern": "\u3010\u756a\u5916\u7de8",
-              "group": 0,
-              "template": "\u756a\u5916\u7de8"
+              "pattern": "\u3010(\\d+)-(\\d+)\u3011",
+              "seasonGroup": 1,
+              "episodeGroup": 2,
+              "fallbackSeasonNumber": 0,
+              "fallbackEpisodePattern": "\u3010\u756a\u5916\u7de8[\uff03#](\\d+)\u3011",
+              "fallbackEpisodeCaptureGroup": 1,
+              "fallbackToRss": true
             }
           },
-          "smartPlaylistEpisodeExtractor": {
-            "source": "title",
-            "pattern": "\u3010(\\d+)-(\\d+)\u3011",
-            "seasonGroup": 1,
-            "episodeGroup": 2,
-            "fallbackSeasonNumber": 0,
-            "fallbackEpisodePattern": "\u3010\u756a\u5916\u7de8[\uff03#](\\d+)\u3011",
-            "fallbackEpisodeCaptureGroup": 1,
-            "fallbackToRss": true
+          "episodeFilters": {
+            "require": [
+              { "title": "\u3010\\d+-\\d+\u3011" },
+              { "title": "\u3010COTEN RADIO\\s*\u30b7\u30e7\u30fc\u30c8" }
+            ]
+          },
+          "groupItem": {
+            "titleExtractor": {
+              "source": "title",
+              "pattern": "\u3010?COTEN RADIO(\u30b7\u30e7\u30fc\u30c8)?\\s+(.+?)\u7de8?\\s*(\\d+|\u524d\u7de8|\u4e2d\u7de8|\u5f8c\u7de8)\u3011",
+              "group": 2,
+              "fallbackValue": "\u756a\u5916\u7de8",
+              "fallback": {
+                "source": "title",
+                "pattern": "\u3010\u756a\u5916\u7de8",
+                "group": 0,
+                "template": "\u756a\u5916\u7de8"
+              }
+            }
           }
         },
         {
           "id": "extras",
           "displayName": "\u305d\u306e\u4ed6(\u756a\u5916\u7de8\u306a\u3069)",
-          "resolverType": "rss",
-          "contentType": "groups",
-          "yearHeaderMode": "perEpisode",
-          "episodeYearHeaders": false,
-          "nullSeasonGroupKey": 0
+          "priority": 3,
+          "grouping": {
+            "by": "seasonNumber"
+          }
         }
       ]
     },
@@ -123,36 +102,36 @@
         {
           "id": "by_category",
           "displayName": "\u30ab\u30c6\u30b4\u30ea\u5225",
-          "resolverType": "category",
-          "contentType": "groups",
-          "yearHeaderMode": "none",
-          "episodeYearHeaders": true,
-          "groups": [
-            { "id": "daily_news", "displayName": "\u5e73\u65e5\u7248", "pattern": "\u3010\\d+\u6708\\d+\u65e5\u3011" },
-            { "id": "saturday", "displayName": "\u571f\u66dc\u7248", "pattern": "\u3010\u571f\u66dc\u7248" },
-            { "id": "news_talk", "displayName": "\u30cb\u30e5\u30fc\u30b9\u5c0f\u8a71", "pattern": "\u3010\u30cb\u30e5\u30fc\u30b9\u5c0f\u8a71" },
-            { "id": "special", "displayName": "\u7279\u5225\u7de8", "pattern": "\u3010.*?\u7279\u5225\u7de8.*?\u3011" },
-            { "id": "expat", "displayName": "\u8d8a\u5883\u65e5\u672c\u4eba\u7de8", "pattern": "\u3010\u8d8a\u5883\u65e5\u672c\u4eba\u7de8" },
-            { "id": "holiday", "displayName": "\u795d\u65e5\u7248", "pattern": "\u3010\u795d\u65e5\u7248" },
-            { "id": "other", "displayName": "\u305d\u306e\u4ed6" }
-          ]
+          "priority": 1,
+          "grouping": {
+            "by": "titleClassifier",
+            "staticClassifiers": [
+              { "id": "daily_news", "displayName": "\u5e73\u65e5\u7248", "pattern": { "source": "title", "pattern": "\u3010\\d+\u6708\\d+\u65e5\u3011" } },
+              { "id": "saturday", "displayName": "\u571f\u66dc\u7248", "pattern": { "source": "title", "pattern": "\u3010\u571f\u66dc\u7248" } },
+              { "id": "news_talk", "displayName": "\u30cb\u30e5\u30fc\u30b9\u5c0f\u8a71", "pattern": { "source": "title", "pattern": "\u3010\u30cb\u30e5\u30fc\u30b9\u5c0f\u8a71" } },
+              { "id": "special", "displayName": "\u7279\u5225\u7de8", "pattern": { "source": "title", "pattern": "\u3010.*?\u7279\u5225\u7de8.*?\u3011" } },
+              { "id": "expat", "displayName": "\u8d8a\u5883\u65e5\u672c\u4eba\u7de8", "pattern": { "source": "title", "pattern": "\u3010\u8d8a\u5883\u65e5\u672c\u4eba\u7de8" } },
+              { "id": "holiday", "displayName": "\u795d\u65e5\u7248", "pattern": { "source": "title", "pattern": "\u3010\u795d\u65e5\u7248" } },
+              { "id": "other", "displayName": "\u305d\u306e\u4ed6" }
+            ]
+          }
         },
         {
           "id": "by_year",
           "displayName": "\u5e74\u5225",
-          "resolverType": "category",
-          "contentType": "groups",
-          "yearHeaderMode": "perEpisode",
-          "episodeYearHeaders": false,
-          "groups": [
-            { "id": "daily_news", "displayName": "\u5e73\u65e5\u7248", "pattern": "\u3010\\d+\u6708\\d+\u65e5\u3011" },
-            { "id": "saturday", "displayName": "\u571f\u66dc\u7248", "pattern": "\u3010\u571f\u66dc\u7248" },
-            { "id": "news_talk", "displayName": "\u30cb\u30e5\u30fc\u30b9\u5c0f\u8a71", "pattern": "\u3010\u30cb\u30e5\u30fc\u30b9\u5c0f\u8a71" },
-            { "id": "special", "displayName": "\u7279\u5225\u7de8", "pattern": "\u3010.*?\u7279\u5225\u7de8.*?\u3011" },
-            { "id": "expat", "displayName": "\u8d8a\u5883\u65e5\u672c\u4eba\u7de8", "pattern": "\u3010\u8d8a\u5883\u65e5\u672c\u4eba\u7de8" },
-            { "id": "holiday", "displayName": "\u795d\u65e5\u7248", "pattern": "\u3010\u795d\u65e5\u7248" },
-            { "id": "other", "displayName": "\u305d\u306e\u4ed6" }
-          ]
+          "priority": 2,
+          "grouping": {
+            "by": "titleClassifier",
+            "staticClassifiers": [
+              { "id": "daily_news", "displayName": "\u5e73\u65e5\u7248", "pattern": { "source": "title", "pattern": "\u3010\\d+\u6708\\d+\u65e5\u3011" } },
+              { "id": "saturday", "displayName": "\u571f\u66dc\u7248", "pattern": { "source": "title", "pattern": "\u3010\u571f\u66dc\u7248" } },
+              { "id": "news_talk", "displayName": "\u30cb\u30e5\u30fc\u30b9\u5c0f\u8a71", "pattern": { "source": "title", "pattern": "\u3010\u30cb\u30e5\u30fc\u30b9\u5c0f\u8a71" } },
+              { "id": "special", "displayName": "\u7279\u5225\u7de8", "pattern": { "source": "title", "pattern": "\u3010.*?\u7279\u5225\u7de8.*?\u3011" } },
+              { "id": "expat", "displayName": "\u8d8a\u5883\u65e5\u672c\u4eba\u7de8", "pattern": { "source": "title", "pattern": "\u3010\u8d8a\u5883\u65e5\u672c\u4eba\u7de8" } },
+              { "id": "holiday", "displayName": "\u795d\u65e5\u7248", "pattern": { "source": "title", "pattern": "\u3010\u795d\u65e5\u7248" } },
+              { "id": "other", "displayName": "\u305d\u306e\u4ed6" }
+            ]
+          }
         }
       ]
     }

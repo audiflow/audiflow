@@ -21,8 +21,32 @@ class SmartPlaylistEntity {
   late String resolverType;
   String? thumbnailUrl;
   bool yearGrouped = false;
-  String playlistStructure = 'split';
+  String playlistStructure = 'separate';
   String yearHeaderMode = 'none';
+
+  /// Whether group cards should display a date range.
+  bool showDateRange = false;
+
+  /// Whether episode lists show year separator headers.
+  bool showYearHeaders = false;
+
+  /// Whether the user can toggle the sort order.
+  bool userSortable = true;
+
+  /// Whether to prepend season number to group titles.
+  bool prependSeasonNumber = false;
+
+  /// Persisted group sort field (e.g. 'playlistNumber').
+  String? groupSortField;
+
+  /// Persisted group sort direction (e.g. 'ascending').
+  String? groupSortOrder;
+
+  /// Persisted episode sort field (e.g. 'publishedAt').
+  String? episodeSortField;
+
+  /// Persisted episode sort direction (e.g. 'ascending').
+  String? episodeSortOrder;
 
   /// Config version for cache invalidation.
   ///

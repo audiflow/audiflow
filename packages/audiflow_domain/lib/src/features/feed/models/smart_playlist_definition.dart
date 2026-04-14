@@ -1,115 +1,106 @@
 import 'episode_filters.dart';
-import 'episode_list_config.dart';
-import 'group_list_config.dart';
-import 'smart_playlist_episode_extractor.dart';
-import 'smart_playlist_group_def.dart';
-import 'smart_playlist_title_extractor.dart';
+import 'episode_item_config.dart';
+import 'episode_listing_config.dart';
+import 'group_item_config.dart';
+import 'group_listing_config.dart';
+import 'grouping_config.dart';
+import 'selector_config.dart';
 
 /// Unified per-playlist definition with all fields strongly typed.
 final class SmartPlaylistDefinition {
   const SmartPlaylistDefinition({
     required this.id,
     required this.displayName,
-    required this.resolverType,
-    this.priority = 0,
-    this.playlistStructure,
+    required this.grouping,
+    required this.priority,
+    this.selector,
+    this.groupListing,
+    this.groupItem,
+    this.episodeListing,
+    this.episodeItem,
     this.episodeFilters,
-    this.nullSeasonGroupKey,
-    this.titleExtractor,
-    this.prependSeasonNumber = false,
-    this.groupList,
-    this.episodeList,
-    this.episodeExtractor,
-    this.groups,
   });
 
   factory SmartPlaylistDefinition.fromJson(Map<String, dynamic> json) {
     return SmartPlaylistDefinition(
       id: json['id'] as String,
       displayName: json['displayName'] as String,
-      resolverType: json['resolverType'] as String,
-      priority: (json['priority'] as int?) ?? 0,
-      playlistStructure: json['playlistStructure'] as String?,
+      grouping: GroupingConfig.fromJson(
+        json['grouping'] as Map<String, dynamic>,
+      ),
+      priority: json['priority'] as int,
+      selector: json['selector'] != null
+          ? SelectorConfig.fromJson(json['selector'] as Map<String, dynamic>)
+          : null,
+      groupListing: json['groupListing'] != null
+          ? GroupListingConfig.fromJson(
+              json['groupListing'] as Map<String, dynamic>,
+            )
+          : null,
+      groupItem: json['groupItem'] != null
+          ? GroupItemConfig.fromJson(json['groupItem'] as Map<String, dynamic>)
+          : null,
+      episodeListing: json['episodeListing'] != null
+          ? EpisodeListingConfig.fromJson(
+              json['episodeListing'] as Map<String, dynamic>,
+            )
+          : null,
+      episodeItem: json['episodeItem'] != null
+          ? EpisodeItemConfig.fromJson(
+              json['episodeItem'] as Map<String, dynamic>,
+            )
+          : null,
       episodeFilters: json['episodeFilters'] != null
           ? EpisodeFilters.fromJson(
               json['episodeFilters'] as Map<String, dynamic>,
             )
           : null,
-      nullSeasonGroupKey: json['nullSeasonGroupKey'] as int?,
-      titleExtractor: json['titleExtractor'] != null
-          ? SmartPlaylistTitleExtractor.fromJson(
-              json['titleExtractor'] as Map<String, dynamic>,
-            )
-          : null,
-      prependSeasonNumber: (json['prependSeasonNumber'] as bool?) ?? false,
-      groupList: json['groupList'] != null
-          ? GroupListConfig.fromJson(json['groupList'] as Map<String, dynamic>)
-          : null,
-      episodeList: json['episodeList'] != null
-          ? EpisodeListConfig.fromJson(
-              json['episodeList'] as Map<String, dynamic>,
-            )
-          : null,
-      episodeExtractor: json['episodeExtractor'] != null
-          ? SmartPlaylistEpisodeExtractor.fromJson(
-              json['episodeExtractor'] as Map<String, dynamic>,
-            )
-          : null,
-      groups: (json['groups'] as List<dynamic>?)
-          ?.map(
-            (g) => SmartPlaylistGroupDef.fromJson(g as Map<String, dynamic>),
-          )
-          .toList(),
     );
   }
 
   final String id;
   final String displayName;
-  final String resolverType;
+
+  /// Pipeline-oriented grouping configuration.
+  final GroupingConfig grouping;
+
+  /// Sort priority among playlists in the same pattern.
   final int priority;
 
-  /// Playlist structure: "split" or "grouped".
-  final String? playlistStructure;
+  /// When present, this playlist exposes a selector UI.
+  final SelectorConfig? selector;
+
+  /// Playlist-level default for group list arrangement.
+  final GroupListingConfig? groupListing;
+
+  /// Playlist-level default for group card display.
+  final GroupItemConfig? groupItem;
+
+  /// Playlist-level default for episode list arrangement.
+  final EpisodeListingConfig? episodeListing;
+
+  /// Playlist-level default for episode row display.
+  final EpisodeItemConfig? episodeItem;
 
   /// Episode filters applied before resolver processing.
   final EpisodeFilters? episodeFilters;
 
-  final int? nullSeasonGroupKey;
-
-  /// Configuration for extracting display names from episode data.
-  final SmartPlaylistTitleExtractor? titleExtractor;
-
-  /// Whether to prepend season number label to group titles.
-  final bool prependSeasonNumber;
-
-  /// Settings for the group list view (grouped mode only).
-  final GroupListConfig? groupList;
-
-  /// Default settings for episode lists within groups.
-  final EpisodeListConfig? episodeList;
-
-  /// Configuration for extracting season/episode numbers.
-  final SmartPlaylistEpisodeExtractor? episodeExtractor;
-
-  /// Static group definitions for category-based grouping.
-  final List<SmartPlaylistGroupDef>? groups;
+  /// True when this playlist renders as a separate top-level entry
+  /// (i.e. a selector is configured).
+  bool get isSeparate => selector != null;
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
       'displayName': displayName,
-      'resolverType': resolverType,
-      if (priority != 0) 'priority': priority,
-      if (playlistStructure != null) 'playlistStructure': playlistStructure,
+      'grouping': grouping.toJson(),
+      'priority': priority,
+      if (selector != null) 'selector': selector!.toJson(),
+      if (groupListing != null) 'groupListing': groupListing!.toJson(),
+      if (groupItem != null) 'groupItem': groupItem!.toJson(),
+      if (episodeListing != null) 'episodeListing': episodeListing!.toJson(),
+      if (episodeItem != null) 'episodeItem': episodeItem!.toJson(),
       if (episodeFilters != null) 'episodeFilters': episodeFilters!.toJson(),
-      if (nullSeasonGroupKey != null) 'nullSeasonGroupKey': nullSeasonGroupKey,
-      if (titleExtractor != null) 'titleExtractor': titleExtractor!.toJson(),
-      if (prependSeasonNumber) 'prependSeasonNumber': prependSeasonNumber,
-      if (groupList != null) 'groupList': groupList!.toJson(),
-      if (episodeList != null) 'episodeList': episodeList!.toJson(),
-      if (episodeExtractor != null)
-        'episodeExtractor': episodeExtractor!.toJson(),
-      if (groups != null) 'groups': groups!.map((g) => g.toJson()).toList(),
     };
   }
 }

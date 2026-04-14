@@ -25,8 +25,8 @@ final class SmartPlaylistEpisodeResult {
 /// - `[62-15] ...` encodes Playlist 62, Episode 15
 /// - `[bangai-hen #135] ...` encodes a special episode
 ///   (playlist 0, episode 135)
-final class SmartPlaylistEpisodeExtractor {
-  const SmartPlaylistEpisodeExtractor({
+final class NumberingExtractor {
+  const NumberingExtractor({
     required this.source,
     required this.pattern,
     this.seasonGroup = 1,
@@ -37,8 +37,8 @@ final class SmartPlaylistEpisodeExtractor {
     this.fallbackToRss = false,
   });
 
-  factory SmartPlaylistEpisodeExtractor.fromJson(Map<String, dynamic> json) {
-    return SmartPlaylistEpisodeExtractor(
+  factory NumberingExtractor.fromJson(Map<String, dynamic> json) {
+    return NumberingExtractor(
       source: json['source'] as String,
       pattern: json['pattern'] as String,
       seasonGroup: json.containsKey('seasonGroup')
@@ -93,7 +93,10 @@ final class SmartPlaylistEpisodeExtractor {
     return {
       'source': source,
       'pattern': pattern,
-      if (seasonGroup != null) 'seasonGroup': seasonGroup,
+      // Always include seasonGroup so null round-trips correctly
+      // (episode-only mode). Omitting it would cause fromJson to
+      // default to 1, changing behavior.
+      'seasonGroup': seasonGroup,
       'episodeGroup': episodeGroup,
       if (fallbackSeasonNumber != null)
         'fallbackSeasonNumber': fallbackSeasonNumber,

@@ -10,7 +10,7 @@ export 'src/commands/pattern_test_command.dart';
 export 'src/commands/smart_playlist_debug_command.dart';
 
 // Diagnostics
-export 'src/diagnostics/smart_playlist_episode_extractor_diagnostics.dart';
+export 'src/diagnostics/numbering_extractor_diagnostics.dart';
 export 'src/diagnostics/title_extractor_diagnostics.dart';
 
 // Models

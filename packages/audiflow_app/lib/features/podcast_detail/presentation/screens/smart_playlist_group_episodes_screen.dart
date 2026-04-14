@@ -102,7 +102,7 @@ class _SmartPlaylistGroupEpisodesScreenState
 
   String _formatGroupTitle() {
     return widget.group.formattedDisplayName(
-      prependSeasonNumber: widget.parentPlaylist.prependSeasonNumber,
+      parentPrependSeasonNumber: widget.parentPlaylist.prependSeasonNumber,
     );
   }
 

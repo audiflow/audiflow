@@ -1,10 +1,10 @@
 import '../models/episode_filter_entry.dart';
 import '../models/smart_playlist_definition.dart';
-import '../models/smart_playlist_episode_extractor.dart';
+import '../models/numbering_extractor.dart';
 import '../models/smart_playlist_group_def.dart';
 import '../models/smart_playlist_pattern_config.dart';
 
-/// Resolves the appropriate [SmartPlaylistEpisodeExtractor] for an episode
+/// Resolves the appropriate [NumberingExtractor] for an episode
 /// by matching it against group patterns within the pattern config.
 ///
 /// For each episode, iterates definitions and their groups to find a
@@ -16,13 +16,13 @@ class EpisodeExtractorResolver {
   ///
   /// Returns the most specific extractor (group-level > definition-level),
   /// or null if no extractor is configured.
-  SmartPlaylistEpisodeExtractor? resolve(
+  NumberingExtractor? resolve(
     String title,
     String? description,
     SmartPlaylistPatternConfig config,
   ) {
     for (final definition in config.playlists) {
-      final groups = definition.groups;
+      final groups = definition.grouping.staticClassifiers;
       if (groups != null) {
         final groupExtractor = _findGroupExtractor(title, description, groups);
         if (groupExtractor != null) return groupExtractor;
@@ -30,9 +30,9 @@ class EpisodeExtractorResolver {
 
       // Fall back to definition-level extractor only if episode
       // matches definition's filters (or if no filter exists).
-      if (definition.episodeExtractor != null &&
+      if (definition.grouping.numberingExtractor != null &&
           _matchesDefinition(title, description, definition)) {
-        return definition.episodeExtractor;
+        return definition.grouping.numberingExtractor;
       }
     }
     return null;
@@ -85,7 +85,7 @@ class EpisodeExtractorResolver {
 
   /// Finds a group-level extractor by matching the episode title
   /// against group patterns.
-  SmartPlaylistEpisodeExtractor? _findGroupExtractor(
+  NumberingExtractor? _findGroupExtractor(
     String title,
     String? description,
     List<SmartPlaylistGroupDef> groups,
@@ -93,12 +93,13 @@ class EpisodeExtractorResolver {
     for (final group in groups) {
       if (group.pattern == null) continue;
 
-      final regex = RegExp(group.pattern!, caseSensitive: false);
-      if (regex.hasMatch(title)) {
+      final regex = RegExp(group.pattern!.pattern, caseSensitive: false);
+      final text = group.pattern!.source == 'description' ? description : title;
+      if (text != null && regex.hasMatch(text)) {
         // Group matched; return its extractor (may be null, meaning
         // fall through to definition-level).
-        if (group.episodeExtractor != null) {
-          return group.episodeExtractor;
+        if (group.numberingExtractor != null) {
+          return group.numberingExtractor;
         }
       }
     }
