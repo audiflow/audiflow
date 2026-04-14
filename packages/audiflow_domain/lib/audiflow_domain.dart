@@ -99,6 +99,8 @@ export 'src/features/player/models/now_playing_info.dart';
 export 'src/features/player/models/playback_progress.dart';
 export 'src/features/player/models/playback_state.dart';
 export 'src/features/player/models/sleep_timer_config.dart';
+export 'src/features/player/models/sleep_timer_event.dart';
+export 'src/features/player/models/sleep_timer_state.dart';
 export 'src/features/player/services/audio_playback_controller.dart';
 export 'src/features/player/services/audio_player_service.dart';
 export 'src/features/player/services/now_playing_controller.dart';
