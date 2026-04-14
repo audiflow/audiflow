@@ -42,14 +42,16 @@ class TitleClassifierResolver implements SmartPlaylistResolver {
     List<SmartPlaylistGroupDef> groupDefs,
   ) {
     // Separate pattern groups from fallback
-    final patternGroups = <({RegExp regex, String id, String displayName})>[];
+    final patternGroups =
+        <({RegExp regex, String source, String id, String displayName})>[];
     String? fallbackId;
     String? fallbackDisplayName;
 
     for (final g in groupDefs) {
       if (g.pattern != null) {
         patternGroups.add((
-          regex: RegExp(g.pattern!, caseSensitive: false),
+          regex: RegExp(g.pattern!.pattern, caseSensitive: false),
+          source: g.pattern!.source,
           id: g.id,
           displayName: g.displayName,
         ));
@@ -66,7 +68,10 @@ class TitleClassifierResolver implements SmartPlaylistResolver {
     for (final episode in episodes) {
       var matched = false;
       for (final pg in patternGroups) {
-        if (pg.regex.hasMatch(episode.title)) {
+        final text = pg.source == 'description'
+            ? episode.description
+            : episode.title;
+        if (text != null && pg.regex.hasMatch(text)) {
           grouped.putIfAbsent(pg.id, () => []).add(episode.id);
           matched = true;
           break;

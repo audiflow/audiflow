@@ -93,8 +93,9 @@ class EpisodeExtractorResolver {
     for (final group in groups) {
       if (group.pattern == null) continue;
 
-      final regex = RegExp(group.pattern!, caseSensitive: false);
-      if (regex.hasMatch(title)) {
+      final regex = RegExp(group.pattern!.pattern, caseSensitive: false);
+      final text = group.pattern!.source == 'description' ? description : title;
+      if (text != null && regex.hasMatch(text)) {
         // Group matched; return its extractor (may be null, meaning
         // fall through to definition-level).
         if (group.numberingExtractor != null) {
