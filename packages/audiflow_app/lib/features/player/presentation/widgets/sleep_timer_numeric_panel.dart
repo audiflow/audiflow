@@ -56,46 +56,49 @@ class _SleepTimerNumericPanelState extends State<SleepTimerNumericPanel> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: widget.onBack,
-              ),
-              Expanded(
-                child: Text(
-                  widget.title,
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.titleMedium,
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: widget.onBack,
                 ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.close),
-                onPressed: widget.onClose,
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            _display.isEmpty ? '0' : _display,
-            style: theme.textTheme.displayMedium,
-          ),
-          const SizedBox(height: 16),
-          _Keypad(onDigit: _appendDigit, onBackspace: _backspace),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton(
-              onPressed: _value == 0 ? null : () => widget.onStart(_value),
-              child: Text(widget.startLabel),
+                Expanded(
+                  child: Text(
+                    widget.title,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.titleMedium,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: widget.onClose,
+                ),
+              ],
             ),
-          ),
-        ],
+            const SizedBox(height: 16),
+            Text(
+              _display.isEmpty ? '0' : _display,
+              style: theme.textTheme.displayMedium,
+            ),
+            const SizedBox(height: 16),
+            _Keypad(onDigit: _appendDigit, onBackspace: _backspace),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: _value == 0 ? null : () => widget.onStart(_value),
+                child: Text(widget.startLabel),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -133,73 +133,79 @@ class _MenuPanel extends StatelessWidget {
     final theme = Theme.of(context);
     final dimColor = theme.colorScheme.onSurface.withValues(alpha: 0.4);
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: Text(l10n.sleepTimerTitle, style: theme.textTheme.titleMedium),
-        ),
-        ListTile(
-          leading: Icon(
-            Icons.close,
-            color: _isOff ? dimColor : theme.colorScheme.error,
-          ),
-          title: Text(
-            l10n.sleepTimerOff,
-            style: TextStyle(
-              color: _isOff ? dimColor : theme.colorScheme.error,
+    return SafeArea(
+      top: false,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(
+              l10n.sleepTimerTitle,
+              style: theme.textTheme.titleMedium,
             ),
           ),
-          enabled: !_isOff,
-          onTap: _isOff ? null : onOff,
-        ),
-        ListTile(
-          leading: _isEndOfEpisode
-              ? const Icon(Icons.check)
-              : const SizedBox(width: 24),
-          title: Text(l10n.sleepTimerEndOfEpisode),
-          onTap: onEndOfEpisode,
-        ),
-        if (hasChapters)
           ListTile(
-            leading: _isEndOfChapter
+            leading: Icon(
+              Icons.close,
+              color: _isOff ? dimColor : theme.colorScheme.error,
+            ),
+            title: Text(
+              l10n.sleepTimerOff,
+              style: TextStyle(
+                color: _isOff ? dimColor : theme.colorScheme.error,
+              ),
+            ),
+            enabled: !_isOff,
+            onTap: _isOff ? null : onOff,
+          ),
+          ListTile(
+            leading: _isEndOfEpisode
                 ? const Icon(Icons.check)
                 : const SizedBox(width: 24),
-            title: Text(l10n.sleepTimerEndOfChapter),
-            onTap: onEndOfChapter,
+            title: Text(l10n.sleepTimerEndOfEpisode),
+            onTap: onEndOfEpisode,
           ),
-        ListTile(
-          leading: _isDuration
-              ? const Icon(Icons.check)
-              : const SizedBox(width: 24),
-          title: Text(
-            state.lastMinutes == 0
-                ? l10n.sleepTimerSetMinutes
-                : l10n.sleepTimerMinutesLabel(state.lastMinutes),
+          if (hasChapters)
+            ListTile(
+              leading: _isEndOfChapter
+                  ? const Icon(Icons.check)
+                  : const SizedBox(width: 24),
+              title: Text(l10n.sleepTimerEndOfChapter),
+              onTap: onEndOfChapter,
+            ),
+          ListTile(
+            leading: _isDuration
+                ? const Icon(Icons.check)
+                : const SizedBox(width: 24),
+            title: Text(
+              state.lastMinutes == 0
+                  ? l10n.sleepTimerSetMinutes
+                  : l10n.sleepTimerMinutesLabel(state.lastMinutes),
+            ),
+            trailing: state.lastMinutes == 0
+                ? null
+                : Icon(Icons.edit_outlined, size: 16, color: dimColor),
+            onTap: onShortTapMinutes,
+            onLongPress: onLongPressMinutes,
           ),
-          trailing: state.lastMinutes == 0
-              ? null
-              : Icon(Icons.edit_outlined, size: 16, color: dimColor),
-          onTap: onShortTapMinutes,
-          onLongPress: onLongPressMinutes,
-        ),
-        ListTile(
-          leading: _isEpisodes
-              ? const Icon(Icons.check)
-              : const SizedBox(width: 24),
-          title: Text(
-            state.lastEpisodes == 0
-                ? l10n.sleepTimerSetEpisodes
-                : l10n.sleepTimerEpisodesLabel(state.lastEpisodes),
+          ListTile(
+            leading: _isEpisodes
+                ? const Icon(Icons.check)
+                : const SizedBox(width: 24),
+            title: Text(
+              state.lastEpisodes == 0
+                  ? l10n.sleepTimerSetEpisodes
+                  : l10n.sleepTimerEpisodesLabel(state.lastEpisodes),
+            ),
+            trailing: state.lastEpisodes == 0
+                ? null
+                : Icon(Icons.edit_outlined, size: 16, color: dimColor),
+            onTap: onShortTapEpisodes,
+            onLongPress: onLongPressEpisodes,
           ),
-          trailing: state.lastEpisodes == 0
-              ? null
-              : Icon(Icons.edit_outlined, size: 16, color: dimColor),
-          onTap: onShortTapEpisodes,
-          onLongPress: onLongPressEpisodes,
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
