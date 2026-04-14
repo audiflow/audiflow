@@ -454,5 +454,49 @@
   "developerRssFeedUrl": "RSSフィードURL",
   "developerCopyLabel": "コピー",
   "developerPatternLabel": "スマートプレイリストパターン",
-  "developerPatternNotDefined": "未定義 — 追加しませんか？"
+  "developerPatternNotDefined": "未定義 — 追加しませんか？",
+
+  "sleepTimerTitle": "スリープタイマー",
+  "@sleepTimerTitle": { "description": "Sleep timer sheet title" },
+  "sleepTimerOff": "オフ",
+  "@sleepTimerOff": { "description": "Cancel the active sleep timer" },
+  "sleepTimerEndOfEpisode": "エピソードの終わり",
+  "@sleepTimerEndOfEpisode": { "description": "Stop when the current episode ends" },
+  "sleepTimerEndOfChapter": "チャプターの終わり",
+  "@sleepTimerEndOfChapter": { "description": "Stop when the current chapter ends" },
+  "sleepTimerSetMinutes": "分数を設定",
+  "@sleepTimerSetMinutes": { "description": "First-time label for the minutes entry" },
+  "sleepTimerSetEpisodes": "エピソード数を設定",
+  "@sleepTimerSetEpisodes": { "description": "First-time label for the episodes entry" },
+  "sleepTimerMinutesLabel": "{count}分",
+  "@sleepTimerMinutesLabel": {
+    "description": "Remembered minutes label",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "sleepTimerEpisodesLabel": "{count}エピソード",
+  "@sleepTimerEpisodesLabel": {
+    "description": "Remembered episodes label",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "sleepTimerChipEpisodeEnd": "スリープ · エピソード末",
+  "@sleepTimerChipEpisodeEnd": { "description": "Chip label when end-of-episode is active" },
+  "sleepTimerChipChapterEnd": "スリープ · チャプター末",
+  "@sleepTimerChipChapterEnd": { "description": "Chip label when end-of-chapter is active" },
+  "sleepTimerChipEpisodesLeft": "スリープ · 残り{count}本",
+  "@sleepTimerChipEpisodesLeft": {
+    "description": "Chip label for N-episode timer",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "sleepTimerChipDurationPrefix": "スリープ · ",
+  "@sleepTimerChipDurationPrefix": { "description": "Prefix shown before duration countdown on the chip" },
+  "sleepTimerFiredSnackbar": "スリープタイマーが終了しました",
+  "@sleepTimerFiredSnackbar": { "description": "Snackbar shown when a timer fires in the foreground" },
+  "sleepTimerNumericMinutesTitle": "分",
+  "@sleepTimerNumericMinutesTitle": { "description": "Numeric input panel title for minutes" },
+  "sleepTimerNumericEpisodesTitle": "エピソード",
+  "@sleepTimerNumericEpisodesTitle": { "description": "Numeric input panel title for episodes" },
+  "sleepTimerStart": "開始",
+  "@sleepTimerStart": { "description": "Primary CTA on the numeric input panel" },
+  "sleepTimerIconLabel": "スリープタイマー",
+  "@sleepTimerIconLabel": { "description": "Accessibility label for the sleep-timer icon button" }
 }

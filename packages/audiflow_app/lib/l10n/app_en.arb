@@ -818,5 +818,49 @@
   "developerPatternLabel": "Smart Playlist Pattern",
   "@developerPatternLabel": {"description": "Label for the pattern link field"},
   "developerPatternNotDefined": "Not defined — add one?",
-  "@developerPatternNotDefined": {"description": "Shown when no smart playlist pattern matches the podcast"}
+  "@developerPatternNotDefined": {"description": "Shown when no smart playlist pattern matches the podcast"},
+
+  "sleepTimerTitle": "Sleep Timer",
+  "@sleepTimerTitle": { "description": "Sleep timer sheet title" },
+  "sleepTimerOff": "Off",
+  "@sleepTimerOff": { "description": "Cancel the active sleep timer" },
+  "sleepTimerEndOfEpisode": "End of episode",
+  "@sleepTimerEndOfEpisode": { "description": "Stop when the current episode ends" },
+  "sleepTimerEndOfChapter": "End of chapter",
+  "@sleepTimerEndOfChapter": { "description": "Stop when the current chapter ends" },
+  "sleepTimerSetMinutes": "Set minutes",
+  "@sleepTimerSetMinutes": { "description": "First-time label for the minutes entry" },
+  "sleepTimerSetEpisodes": "Set episodes",
+  "@sleepTimerSetEpisodes": { "description": "First-time label for the episodes entry" },
+  "sleepTimerMinutesLabel": "{count, plural, one{{count} minute} other{{count} minutes}}",
+  "@sleepTimerMinutesLabel": {
+    "description": "Remembered minutes label",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "sleepTimerEpisodesLabel": "{count, plural, one{{count} episode} other{{count} episodes}}",
+  "@sleepTimerEpisodesLabel": {
+    "description": "Remembered episodes label",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "sleepTimerChipEpisodeEnd": "Sleep · Episode end",
+  "@sleepTimerChipEpisodeEnd": { "description": "Chip label when end-of-episode is active" },
+  "sleepTimerChipChapterEnd": "Sleep · Chapter end",
+  "@sleepTimerChipChapterEnd": { "description": "Chip label when end-of-chapter is active" },
+  "sleepTimerChipEpisodesLeft": "Sleep · {count} eps left",
+  "@sleepTimerChipEpisodesLeft": {
+    "description": "Chip label for N-episode timer",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "sleepTimerChipDurationPrefix": "Sleep · ",
+  "@sleepTimerChipDurationPrefix": { "description": "Prefix shown before duration countdown on the chip" },
+  "sleepTimerFiredSnackbar": "Sleep timer ended",
+  "@sleepTimerFiredSnackbar": { "description": "Snackbar shown when a timer fires in the foreground" },
+  "sleepTimerNumericMinutesTitle": "Minutes",
+  "@sleepTimerNumericMinutesTitle": { "description": "Numeric input panel title for minutes" },
+  "sleepTimerNumericEpisodesTitle": "Episodes",
+  "@sleepTimerNumericEpisodesTitle": { "description": "Numeric input panel title for episodes" },
+  "sleepTimerStart": "Start",
+  "@sleepTimerStart": { "description": "Primary CTA on the numeric input panel" },
+  "sleepTimerIconLabel": "Sleep timer",
+  "@sleepTimerIconLabel": { "description": "Accessibility label for the sleep-timer icon button" }
 }
