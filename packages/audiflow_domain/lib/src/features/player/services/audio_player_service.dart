@@ -97,6 +97,9 @@ class AudioPlayerController extends _$AudioPlayerController
   String? _currentUrl;
   int? _currentEpisodeId;
   bool _isLoadingSource = false;
+  Timer? _fadeTimer;
+  double? _preFadeVolume;
+  Completer<void>? _fadeCompleter;
   final StreamController<PlayerLifecycleEvent> _lifecycleEvents =
       StreamController<PlayerLifecycleEvent>.broadcast();
 
@@ -254,6 +257,7 @@ class AudioPlayerController extends _$AudioPlayerController
 
   void _cleanup() {
     _stateSubscription?.cancel();
+    _fadeTimer?.cancel();
     _lifecycleEvents.close();
   }
 
@@ -366,6 +370,64 @@ class AudioPlayerController extends _$AudioPlayerController
     } catch (e, stack) {
       _log.e('[Play] ERROR', error: e, stackTrace: stack);
       state = PlaybackState.error(message: 'Failed to play audio: $e');
+    }
+  }
+
+  /// Fades the player's volume to 0 linearly over [total], then pauses.
+  ///
+  /// Restores the original volume on completion so future playback starts
+  /// at the user's preferred level. Call [cancelFade] to abort in-flight
+  /// and restore volume without pausing.
+  Future<void> fadeOutAndPause({
+    Duration total = const Duration(seconds: 8),
+  }) async {
+    if (_fadeTimer != null) return;
+
+    _preFadeVolume = _player.volume;
+    final startVolume = _preFadeVolume ?? 1.0;
+    const stepMs = 100;
+    final steps = (total.inMilliseconds / stepMs).ceil().clamp(1, 1000);
+    var elapsedSteps = 0;
+
+    final completer = Completer<void>();
+    _fadeCompleter = completer;
+    _fadeTimer = Timer.periodic(const Duration(milliseconds: stepMs), (
+      timer,
+    ) async {
+      elapsedSteps += 1;
+      final progress = (elapsedSteps / steps).clamp(0.0, 1.0);
+      final next = (startVolume * (1.0 - progress)).clamp(0.0, 1.0);
+      await _player.setVolume(next);
+
+      if (steps <= elapsedSteps) {
+        timer.cancel();
+        _fadeTimer = null;
+        await _player.pause();
+        if (_preFadeVolume != null) {
+          await _player.setVolume(_preFadeVolume!);
+          _preFadeVolume = null;
+        }
+        if (!completer.isCompleted) completer.complete();
+        _fadeCompleter = null;
+      }
+    });
+
+    return completer.future;
+  }
+
+  /// Cancels an in-flight fade and restores the pre-fade volume.
+  void cancelFade() {
+    if (_fadeTimer == null) return;
+    _fadeTimer!.cancel();
+    _fadeTimer = null;
+    if (_preFadeVolume != null) {
+      _player.setVolume(_preFadeVolume!);
+      _preFadeVolume = null;
+    }
+    final completer = _fadeCompleter;
+    _fadeCompleter = null;
+    if (completer != null && !completer.isCompleted) {
+      completer.complete();
     }
   }
 
