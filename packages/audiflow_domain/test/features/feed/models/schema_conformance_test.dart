@@ -225,17 +225,17 @@ void main() {
       );
     });
 
-    test(r'pattern-index schema has v4 $id', () {
+    test(r'pattern-index schema has v5 $id', () {
       expect(
         patternIndexSchema[r'$id'],
-        equals('https://audiflow.app/schema/v4/pattern-index.json'),
+        equals('https://audiflow.app/schema/v5/pattern-index.json'),
       );
     });
 
-    test(r'pattern-meta schema has v4 $id', () {
+    test(r'pattern-meta schema has v5 $id', () {
       expect(
         patternMetaSchema[r'$id'],
-        equals('https://audiflow.app/schema/v4/pattern-meta.json'),
+        equals('https://audiflow.app/schema/v5/pattern-meta.json'),
       );
     });
   });
