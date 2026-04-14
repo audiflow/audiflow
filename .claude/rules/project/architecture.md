@@ -577,13 +577,10 @@ Smart playlist configurations (curated episode groupings per podcast) are manage
 
 ### Schema (Single Source of Truth)
 
-**[`audiflow/audiflow-smartplaylist-schema`](https://github.com/audiflow/audiflow-smartplaylist-schema)** is the canonical source for:
+Schema files in **`audiflow-smartplaylist-editor/crates/sp_core/assets/`** are the single source of truth for:
 - JSON Schema definitions (`playlist-definition.schema.json`, `pattern-index.schema.json`, `pattern-meta.schema.json`)
-- File structure documentation (`docs/file-structure.md`)
-- Validation scripts (`scripts/validate.sh`)
-- Example configurations (`examples/`)
 
-All config data repos, the web editor, and the mobile app must conform to this schema.
+All config data repos and the mobile app must conform to this schema. Never edit vendored copies — always edit the SSoT and re-vendor.
 
 ### Data Flow
 
@@ -668,7 +665,7 @@ In `audiflow_domain`, the `feed` feature handles smart playlist configs:
 - `SmartPlaylistConfigRepositoryImpl` coordinates cache vs remote with version-based invalidation
 - The base URL is injected via `smartPlaylistConfigBaseUrlProvider` (overridden in `main_stg.dart` / `main_prod.dart`)
 
-**When updating model serialization (JSON keys, field structure), changes must be coordinated across the schema repo (`audiflow-smartplaylist-schema`), data repos, web editor (`sp_shared`), and mobile app (`audiflow_domain`).**
+**When updating model serialization (JSON keys, field structure), changes must be coordinated across the editor (`sp_core` schema + `sp_shared` models), data repos, and mobile app (`audiflow_domain`).**
 
 ### Schema Conformance Testing
 
@@ -687,8 +684,9 @@ Conformance tests at `packages/audiflow_domain/test/features/feed/models/schema_
 Always use these exact values in test data. Never use legacy names like `rssSeason`, `categoryGroup`, or `flat`.
 
 **To update the vendored schemas:**
-1. Copy all `*.schema.json` from `audiflow-smartplaylist-schema` (canonical source) to `packages/audiflow_domain/test/fixtures/`
-   - Note: `audiflow-smartplaylist-editor/crates/sp_core/assets/` is kept in sync via CI but the schema repo is authoritative
+1. Copy all `*.schema.json` from `audiflow-smartplaylist-editor/crates/sp_core/assets/` (SSoT) to `packages/audiflow_domain/test/fixtures/`
 2. Run conformance tests: `flutter test packages/audiflow_domain/test/features/feed/models/schema_conformance_test.dart`
 3. Fix any drift (update models/enums/test data to match)
 4. Run full suite: `flutter test packages/audiflow_domain`
+
+**Never edit vendored schema files directly.** If the schema has a bug, fix it in the SSoT (`audiflow-smartplaylist-editor`) and re-vendor.

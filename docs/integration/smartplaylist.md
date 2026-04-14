@@ -87,10 +87,12 @@ Valid resolver types: `seasonNumber`, `titleClassifier`, `year`, `titleDiscovery
 
 ## Schema update procedure
 
-1. Copy all `*.schema.json` from `audiflow-smartplaylist-schema` (canonical source) to `packages/audiflow_domain/test/fixtures/`
+1. Copy all `*.schema.json` from `audiflow-smartplaylist-editor/crates/sp_core/assets/` (SSoT) to `packages/audiflow_domain/test/fixtures/`
 2. Run conformance tests: `flutter test packages/audiflow_domain/test/features/feed/models/schema_conformance_test.dart`
 3. Fix any drift (update models, enums, or test data to match)
 4. Run full domain test suite: `flutter test packages/audiflow_domain`
+
+**Never edit vendored schema files directly.** If the schema has a bug, fix it in the SSoT and re-vendor.
 
 ## Related documents
 
