@@ -54,6 +54,9 @@ class TitleDiscoveryResolver implements SmartPlaylistResolver {
     final grouped = <String, List<Episode>>{};
     final ungrouped = <int>[];
 
+    // Compile regex once outside the loop (patternStr is invariant)
+    final regex = patternStr != null ? RegExp(patternStr) : null;
+
     // Also process episodes without publish date at the end
     final allEpisodes = [
       ...sorted,
@@ -64,7 +67,7 @@ class TitleDiscoveryResolver implements SmartPlaylistResolver {
       final playlistName = _extractPlaylistName(
         episode: episode,
         titleExtractor: titleExtractor,
-        patternStr: patternStr,
+        regex: regex,
       );
 
       if (playlistName != null) {
@@ -83,7 +86,7 @@ class TitleDiscoveryResolver implements SmartPlaylistResolver {
     }
 
     final playlists = <SmartPlaylist>[];
-    for (var i = 0; playlistOrder.length - i != 0; i++) {
+    for (var i = 0; i < playlistOrder.length; i++) {
       final name = playlistOrder[i];
       final playlistEpisodes = grouped[name]!;
       playlists.add(
@@ -106,7 +109,7 @@ class TitleDiscoveryResolver implements SmartPlaylistResolver {
   String? _extractPlaylistName({
     required Episode episode,
     required SmartPlaylistTitleExtractor? titleExtractor,
-    required String? patternStr,
+    required RegExp? regex,
   }) {
     // Try titleExtractor first if available
     if (titleExtractor != null) {
@@ -114,8 +117,7 @@ class TitleDiscoveryResolver implements SmartPlaylistResolver {
     }
 
     // Fall back to group pattern
-    if (patternStr != null) {
-      final regex = RegExp(patternStr);
+    if (regex != null) {
       final match = regex.firstMatch(episode.title);
       if (match != null && 1 <= match.groupCount) {
         return match.group(1);
