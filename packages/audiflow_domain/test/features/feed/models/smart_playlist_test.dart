@@ -84,7 +84,7 @@ void main() {
         episodeIds: [1, 2],
       );
 
-      expect(playlist.isSeparate, isFalse);
+      expect(playlist.isSeparate, isTrue);
       expect(playlist.yearBinding, YearBinding.none);
       expect(playlist.groups, isNull);
     });

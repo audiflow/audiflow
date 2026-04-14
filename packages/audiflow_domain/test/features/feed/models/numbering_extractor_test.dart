@@ -148,7 +148,8 @@ void main() {
 
         final json = extractor.toJson();
 
-        expect(json.containsKey('seasonGroup'), isFalse);
+        expect(json.containsKey('seasonGroup'), isTrue);
+        expect(json['seasonGroup'], isNull);
       });
 
       test('includes fallbackToRss when true', () {

@@ -107,7 +107,7 @@ final class SmartPlaylist {
     required this.sortKey,
     required this.episodeIds,
     this.thumbnailUrl,
-    this.isSeparate = false,
+    this.isSeparate = true,
     this.yearBinding = YearBinding.none,
     this.showDateRange = false,
     this.showYearHeaders = false,
