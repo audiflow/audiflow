@@ -11,6 +11,7 @@ import 'package:material_symbols_icons/symbols.dart';
 import '../l10n/app_localizations.dart';
 import '../features/player/presentation/screens/player_screen.dart';
 import '../features/player/presentation/widgets/animated_mini_player.dart';
+import '../features/player/presentation/widgets/sleep_timer_chip.dart';
 import '../features/settings/presentation/controllers/last_tab_controller.dart';
 import '../features/voice/presentation/widgets/voice_command_panel.dart';
 import '../features/voice/presentation/widgets/voice_debug_panel.dart';
@@ -160,6 +161,7 @@ class _PhoneShell extends StatelessWidget {
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          const SleepTimerChip(),
           AnimatedMiniPlayer(onTap: onMiniPlayerTap),
           _CustomNavBar(
             currentIndex: currentIndex,
@@ -382,6 +384,7 @@ class _TabletPortraitShell extends StatelessWidget {
       body: Column(
         children: [
           Expanded(child: navigationShell),
+          const SleepTimerChip(),
           AnimatedMiniPlayer(onTap: onMiniPlayerTap),
         ],
       ),
@@ -434,6 +437,7 @@ class _TabletLandscapeShell extends StatelessWidget {
             child: Column(
               children: [
                 Expanded(child: navigationShell),
+                const SleepTimerChip(),
                 AnimatedMiniPlayer(onTap: onMiniPlayerTap),
               ],
             ),
