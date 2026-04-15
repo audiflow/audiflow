@@ -110,7 +110,7 @@ SmartPlaylistResolverService smartPlaylistResolverService(Ref ref) {
   final logger = ref.watch(namedLoggerProvider('SmartPlaylistResolverService'));
   return SmartPlaylistResolverService(
     resolvers: [
-      SeasonNumberResolver(),
+      SeasonNumberResolver(logger: logger),
       TitleClassifierResolver(),
       TitleDiscoveryResolver(),
       YearResolver(),
@@ -388,7 +388,7 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
 
   final resolverService = SmartPlaylistResolverService(
     resolvers: [
-      SeasonNumberResolver(),
+      SeasonNumberResolver(logger: logger),
       TitleClassifierResolver(),
       TitleDiscoveryResolver(),
       YearResolver(),
@@ -801,7 +801,7 @@ Future<SmartPlaylistGrouping?> _reResolveFromEpisodes(
 
   final resolverService = SmartPlaylistResolverService(
     resolvers: [
-      SeasonNumberResolver(),
+      SeasonNumberResolver(logger: logger),
       TitleClassifierResolver(),
       TitleDiscoveryResolver(),
       YearResolver(),

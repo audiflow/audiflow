@@ -1,3 +1,5 @@
+import 'package:logger/logger.dart';
+
 import '../models/episode.dart';
 import '../extensions/episode_extensions.dart';
 import '../models/smart_playlist.dart';
@@ -6,8 +8,41 @@ import '../models/smart_playlist_sort.dart';
 import '../models/smart_playlist_title_extractor.dart';
 import 'smart_playlist_resolver.dart';
 
+/// Whether a feed's `seasonNumber` metadata is trustworthy enough
+/// to auto-group episodes by season.
+///
+/// Returns false (treat as non-seasonal) when **either** of these holds:
+/// - No episode carries a `seasonNumber` of 2 or higher — the feed
+///   either omits seasons or only tags S1 cosmetically.
+/// - Episodes with a `seasonNumber` do not *strictly* outnumber those
+///   without. Ties and unseasoned-majority both fall here, since
+///   seasonal grouping would leave most episodes unassigned.
+///
+/// Returns true only when both conditions are false — see tests for
+/// the exact boundary behavior.
+bool hasReliableSeasonNumbers(Iterable<Episode> episodes) {
+  var withSeason = 0;
+  var withoutSeason = 0;
+  var hasMultiSeason = false;
+  for (final episode in episodes) {
+    final season = episode.seasonNumber;
+    if (season == null) {
+      withoutSeason++;
+      continue;
+    }
+    withSeason++;
+    if (1 < season) hasMultiSeason = true;
+  }
+  if (!hasMultiSeason) return false;
+  return withoutSeason < withSeason;
+}
+
 /// Resolver that groups episodes by the RSS seasonNumber field.
 class SeasonNumberResolver implements SmartPlaylistResolver {
+  SeasonNumberResolver({Logger? logger}) : _logger = logger;
+
+  final Logger? _logger;
+
   @override
   String get type => 'seasonNumber';
 
@@ -22,6 +57,18 @@ class SeasonNumberResolver implements SmartPlaylistResolver {
     List<Episode> episodes,
     SmartPlaylistDefinition? definition,
   ) {
+    // Auto-detect mode: skip when `seasonNumber` metadata looks broken.
+    // With an explicit definition, the smart-playlist config author
+    // opted in to seasonNumber grouping, so respect that and always
+    // resolve.
+    if (definition == null && !hasReliableSeasonNumbers(episodes)) {
+      _logger?.d(
+        'SeasonNumberResolver skipped in auto-detect: '
+        'unreliable seasonNumber metadata '
+        '(episodeCount=${episodes.length})',
+      );
+      return null;
+    }
     return _resolveBySeasonNumber(episodes, definition);
   }
 

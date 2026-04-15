@@ -53,7 +53,7 @@ void main() {
     test('uses first successful resolver (SeasonNumberResolver)', () {
       final episodes = [
         _makeEpisode(1, seasonNumber: 1, publishedAt: DateTime(2024, 1, 1)),
-        _makeEpisode(2, seasonNumber: 1, publishedAt: DateTime(2024, 2, 1)),
+        _makeEpisode(2, seasonNumber: 2, publishedAt: DateTime(2024, 2, 1)),
       ];
 
       final result = service.resolveSmartPlaylists(
@@ -64,6 +64,24 @@ void main() {
 
       expect(result, isNotNull);
       expect(result!.resolverType, 'seasonNumber');
+    });
+
+    test('falls through SeasonNumberResolver when metadata is unreliable', () {
+      // All S1 → SeasonNumberResolver treats as non-seasonal in auto-detect,
+      // so YearResolver takes over.
+      final episodes = [
+        _makeEpisode(1, seasonNumber: 1, publishedAt: DateTime(2023, 1, 1)),
+        _makeEpisode(2, seasonNumber: 1, publishedAt: DateTime(2024, 1, 1)),
+      ];
+
+      final result = service.resolveSmartPlaylists(
+        podcastGuid: null,
+        feedUrl: 'https://example.com/feed',
+        episodes: episodes,
+      );
+
+      expect(result, isNotNull);
+      expect(result!.resolverType, 'year');
     });
 
     test('falls back to next resolver when first fails', () {

@@ -24,6 +24,35 @@ bool shouldFetchRemote({
   return refreshWindow <= elapsed;
 }
 
+/// Whether the Episodes / Smart-Playlist toggle should be shown on
+/// the podcast detail screen.
+///
+/// - Hidden when no smart playlists are available.
+/// - Hidden when auto-detect collapses to a single bucket — the lone
+///   playlist mirrors the Episodes view, so the toggle is redundant.
+/// - Shown for pattern-driven configs even with a single playlist:
+///   the config author deliberately selected that grouping.
+bool shouldShowSmartPlaylistToggle({
+  required bool hasPattern,
+  required int displayPlaylistsCount,
+}) {
+  if (displayPlaylistsCount == 0) return false;
+  return hasPattern || 1 < displayPlaylistsCount;
+}
+
+/// The view mode actually used for rendering the podcast detail.
+///
+/// Coerces to [PodcastViewMode.episodes] whenever the toggle is
+/// hidden so a persisted `smartPlaylists` preference cannot strand
+/// the user on a playlist view with no way to switch back.
+PodcastViewMode effectivePodcastViewMode({
+  required PodcastViewMode preferredMode,
+  required bool showPlaylistToggle,
+}) {
+  if (!showPlaylistToggle) return PodcastViewMode.episodes;
+  return preferredMode;
+}
+
 /// Provider for subscription repository access.
 ///
 /// Re-exported from audiflow_domain for convenience.
