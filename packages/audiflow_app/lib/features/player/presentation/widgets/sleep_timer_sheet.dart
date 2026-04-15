@@ -185,7 +185,11 @@ class _MenuPanel extends StatelessWidget {
             ),
             trailing: state.lastMinutes == 0
                 ? null
-                : Icon(Icons.edit_outlined, size: 16, color: dimColor),
+                : IconButton(
+                    icon: Icon(Icons.edit_outlined, size: 16, color: dimColor),
+                    tooltip: l10n.sleepTimerNumericMinutesTitle,
+                    onPressed: onLongPressMinutes,
+                  ),
             onTap: onShortTapMinutes,
             onLongPress: onLongPressMinutes,
           ),
@@ -200,7 +204,11 @@ class _MenuPanel extends StatelessWidget {
             ),
             trailing: state.lastEpisodes == 0
                 ? null
-                : Icon(Icons.edit_outlined, size: 16, color: dimColor),
+                : IconButton(
+                    icon: Icon(Icons.edit_outlined, size: 16, color: dimColor),
+                    tooltip: l10n.sleepTimerNumericEpisodesTitle,
+                    onPressed: onLongPressEpisodes,
+                  ),
             onTap: onShortTapEpisodes,
             onLongPress: onLongPressEpisodes,
           ),
