@@ -140,6 +140,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playbackAutoPlayOrderAsDisplayed => 'As Displayed';
 
   @override
+  String get playbackDuckInterruptionBehaviorTitle =>
+      'Notification Interruption';
+
+  @override
+  String get playbackDuckInterruptionBehaviorSubtitle =>
+      'How to react when a short sound (like a notification) plays';
+
+  @override
+  String get playbackDuckInterruptionBehaviorDuck => 'Lower volume';
+
+  @override
+  String get playbackDuckInterruptionBehaviorPause => 'Pause';
+
+  @override
   String get downloadsWifiOnlyTitle => 'WiFi-Only Downloads';
 
   @override

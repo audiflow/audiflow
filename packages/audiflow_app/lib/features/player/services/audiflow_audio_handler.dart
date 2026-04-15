@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audio_service/audio_service.dart' as audio_service;
 import 'package:audio_session/audio_session.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
@@ -5,7 +7,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:logger/logger.dart';
 
+import 'audio_interruption_handler.dart';
+
 final _log = Logger(printer: PrefixPrinter(PrettyPrinter(methodCount: 0)));
+
+/// Volume applied while ducking; matches the common platform convention
+/// of roughly halving output while another short sound plays.
+const double _duckedVolume = 0.3;
+
+/// Full-volume level restored after a duck ends.
+const double _fullVolume = 1.0;
 
 /// Audio handler that bridges platform media controls to the app's
 /// existing playback infrastructure.
@@ -32,6 +43,30 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
 
   AudioPlayerController get _controller =>
       _ref.read(audioPlayerControllerProvider.notifier);
+
+  AppSettingsRepository get _settings =>
+      _ref.read(appSettingsRepositoryProvider);
+
+  /// Handles interruption begin/end decisions. Lazily built so tests may
+  /// override the internal callbacks; see [AudioInterruptionHandler].
+  late final AudioInterruptionHandler _interruptionHandler =
+      AudioInterruptionHandler(
+        // Re-resolve the repository on every call so a provider
+        // invalidation cannot leave the handler holding a stale
+        // method tear-off from an old repository instance.
+        readDuckBehavior: () => _settings.getDuckInterruptionBehavior(),
+        isPlaying: () => _player.playing,
+        currentPosition: () => _player.position,
+        seek: _controller.seek,
+        pause: _controller.pause,
+        resume: () async {
+          final session = await AudioSession.instance;
+          await _reactivateAndResume(session);
+        },
+        setVolume: _player.setVolume,
+        duckedVolume: _duckedVolume,
+        fullVolume: _fullVolume,
+      );
 
   /// Pipes just_audio's playbackEventStream directly to audio_service's
   /// playbackState BehaviorSubject, matching the official pattern.
@@ -90,23 +125,31 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
 
     session.interruptionEventStream.listen((event) {
       if (event.begin) {
-        switch (event.type) {
-          case AudioInterruptionType.duck:
-          case AudioInterruptionType.pause:
-          case AudioInterruptionType.unknown:
-            pause();
-        }
+        unawaited(
+          _interruptionHandler.onBegin(event.type).catchError((
+            Object e,
+            StackTrace s,
+          ) {
+            _log.e(
+              '[AudioHandler] Interruption begin handler failed',
+              error: e,
+              stackTrace: s,
+            );
+          }),
+        );
       } else {
-        switch (event.type) {
-          case AudioInterruptionType.duck:
-          case AudioInterruptionType.pause:
-            // Reactivate the session before resuming so iOS routes audio
-            // to the speaker again. Without this, just_audio reports
-            // "playing" but the deactivated session produces no sound.
-            _reactivateAndResume(session);
-          case AudioInterruptionType.unknown:
-            break;
-        }
+        unawaited(
+          _interruptionHandler.onEnd(event.type).catchError((
+            Object e,
+            StackTrace s,
+          ) {
+            _log.e(
+              '[AudioHandler] Interruption end handler failed',
+              error: e,
+              stackTrace: s,
+            );
+          }),
+        );
       }
     });
 

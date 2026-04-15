@@ -1,4 +1,5 @@
-import 'package:audiflow_core/audiflow_core.dart' show AutoPlayOrder;
+import 'package:audiflow_core/audiflow_core.dart'
+    show AutoPlayOrder, DuckInterruptionBehavior;
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,6 +21,7 @@ class PlaybackSettingsScreen extends ConsumerWidget {
     final threshold = repo.getAutoCompleteThreshold();
     final continuous = repo.getContinuousPlayback();
     final autoPlayOrder = repo.getAutoPlayOrder();
+    final duckBehavior = repo.getDuckInterruptionBehavior();
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settingsPlaybackTitle)),
@@ -52,6 +54,11 @@ class PlaybackSettingsScreen extends ConsumerWidget {
           _AutoPlayOrderTile(
             order: autoPlayOrder,
             onChanged: (v) => _update(ref, () => repo.setAutoPlayOrder(v)),
+          ),
+          _DuckInterruptionBehaviorTile(
+            behavior: duckBehavior,
+            onChanged: (v) =>
+                _update(ref, () => repo.setDuckInterruptionBehavior(v)),
           ),
         ],
       ),
@@ -247,6 +254,41 @@ class _AutoPlayOrderTile extends StatelessWidget {
           DropdownMenuItem(
             value: AutoPlayOrder.asDisplayed,
             child: Text(l10n.playbackAutoPlayOrderAsDisplayed),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DuckInterruptionBehaviorTile extends StatelessWidget {
+  const _DuckInterruptionBehaviorTile({
+    required this.behavior,
+    required this.onChanged,
+  });
+
+  final DuckInterruptionBehavior behavior;
+  final ValueChanged<DuckInterruptionBehavior> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return ListTile(
+      title: Text(l10n.playbackDuckInterruptionBehaviorTitle),
+      subtitle: Text(l10n.playbackDuckInterruptionBehaviorSubtitle),
+      trailing: DropdownButton<DuckInterruptionBehavior>(
+        value: behavior,
+        onChanged: (v) {
+          if (v != null) onChanged(v);
+        },
+        items: [
+          DropdownMenuItem(
+            value: DuckInterruptionBehavior.duck,
+            child: Text(l10n.playbackDuckInterruptionBehaviorDuck),
+          ),
+          DropdownMenuItem(
+            value: DuckInterruptionBehavior.pause,
+            child: Text(l10n.playbackDuckInterruptionBehaviorPause),
           ),
         ],
       ),

@@ -1,4 +1,5 @@
 import '../models/auto_play_order.dart';
+import '../models/duck_interruption_behavior.dart';
 
 /// Keys for SharedPreferences storage of user settings.
 class SettingsKeys {
@@ -35,6 +36,10 @@ class SettingsKeys {
 
   /// Auto-play order when queuing from a podcast's episode list.
   static const String autoPlayOrder = 'settings_auto_play_order';
+
+  /// How the player reacts to duckable audio focus loss (duck vs pause).
+  static const String duckInterruptionBehavior =
+      'settings_duck_interruption_behavior';
 
   // -- Downloads --
 
@@ -108,6 +113,14 @@ class SettingsDefaults {
 
   /// Default auto-play order (chronological, oldest first).
   static const AutoPlayOrder autoPlayOrder = AutoPlayOrder.oldestFirst;
+
+  /// Default behavior on duckable interruption (platform-idiomatic duck).
+  static const DuckInterruptionBehavior duckInterruptionBehavior =
+      DuckInterruptionBehavior.duck;
+
+  /// Seconds to rewind before an interruption-driven pause so the listener
+  /// does not miss content when playback resumes.
+  static const int interruptionRewindSeconds = 2;
 
   /// Default Wi-Fi only download setting.
   static const bool wifiOnlyDownload = true;

@@ -65,6 +65,13 @@ abstract class AppSettingsRepository {
   /// Persists the auto-play order preference.
   Future<void> setAutoPlayOrder(AutoPlayOrder order);
 
+  /// How the player reacts to a duckable audio focus loss (e.g. a short
+  /// notification chime): lower volume ("duck") or pause.
+  DuckInterruptionBehavior getDuckInterruptionBehavior();
+
+  /// Persists the duck interruption behavior preference.
+  Future<void> setDuckInterruptionBehavior(DuckInterruptionBehavior behavior);
+
   // -- Downloads --
 
   /// Whether downloads are restricted to Wi-Fi.
