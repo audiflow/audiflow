@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:just_audio/just_audio.dart';
+import 'package:riverpod/riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:rxdart/rxdart.dart';
 
@@ -562,8 +563,14 @@ class AudioPlayerController extends _$AudioPlayerController
 ///
 /// Consumers observe this for "what just happened" hints (sleep timer, etc.)
 /// rather than polling player state.
-@Riverpod(keepAlive: true)
-Stream<PlayerLifecycleEvent> playerLifecycleEvents(Ref ref) {
+///
+/// Exposed as a plain [Provider] of [Stream] (not a [StreamProvider]) so
+/// listeners can subscribe directly without the [AsyncValue] wrapper —
+/// the controller's lifecycle stream is long-lived and already broadcast,
+/// so materializing it through a stream provider only added friction.
+final playerLifecycleEventsProvider = Provider<Stream<PlayerLifecycleEvent>>((
+  ref,
+) {
   final controller = ref.watch(audioPlayerControllerProvider.notifier);
   return controller.lifecycleEvents;
-}
+});

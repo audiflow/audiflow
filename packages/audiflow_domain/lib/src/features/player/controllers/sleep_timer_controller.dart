@@ -53,21 +53,15 @@ class SleepTimerController extends _$SleepTimerController {
       lastEpisodes: ds.getLastEpisodes(),
     );
 
-    // Subscribe to the lifecycle provider at the container level so the
-    // underlying stream provider is kept active and its emissions flow
-    // through. (A plain `ref.listen` inside a notifier's `build()` does
-    // not keep the stream provider materialized in Riverpod 3.)
-    final lifecycleSub = ref.container.listen<AsyncValue<PlayerLifecycleEvent>>(
-      playerLifecycleEventsProvider,
-      (previous, next) {
-        final evt = next.value;
-        if (evt == null) return;
-        _onLifecycle(evt);
-      },
-    );
+    // playerLifecycleEventsProvider is a plain Provider<Stream<...>>, so
+    // ref.watch keeps it materialized and returns the underlying broadcast
+    // stream directly. One live subscription for the controller's lifetime,
+    // no AsyncValue wrapper.
+    final stream = ref.watch(playerLifecycleEventsProvider);
+    final lifecycleSub = stream.listen(_onLifecycle);
 
     ref.onDispose(() {
-      lifecycleSub.close();
+      lifecycleSub.cancel();
       _tick?.cancel();
       _events.close();
     });

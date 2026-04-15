@@ -9,13 +9,14 @@ void main() {
     final container = ProviderContainer();
     addTearDown(container.dispose);
 
-    // Eagerly materialize the provider. The provider's create() returns the
-    // underlying Stream<PlayerLifecycleEvent>; AsyncValue wraps its emissions.
-    final value = container.read(playerLifecycleEventsProvider);
-    expect(value, isA<AsyncValue<PlayerLifecycleEvent>>());
+    // Provider exposes the controller's lifecycle stream directly (no
+    // AsyncValue wrapping) so listeners can subscribe with a plain
+    // Stream.listen.
+    final stream = container.read(playerLifecycleEventsProvider);
+    expect(stream, isA<Stream<PlayerLifecycleEvent>>());
 
-    // Verify the controller's lifecycle stream (what the provider forwards) is
-    // a Stream<PlayerLifecycleEvent>. This is the "reachability" smoke check.
+    // Verify the controller's lifecycle stream (what the provider forwards)
+    // is also a Stream<PlayerLifecycleEvent>. Reachability smoke check.
     final controller = container.read(audioPlayerControllerProvider.notifier);
     expect(controller.lifecycleEvents, isA<Stream<PlayerLifecycleEvent>>());
   });

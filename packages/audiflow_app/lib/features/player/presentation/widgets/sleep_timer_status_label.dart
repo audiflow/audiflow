@@ -24,22 +24,38 @@ class _SleepTimerStatusLabelState extends ConsumerState<SleepTimerStatusLabel> {
   Timer? _uiTimer;
 
   @override
-  void initState() {
-    super.initState();
-    _uiTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) setState(() {});
-    });
-  }
-
-  @override
   void dispose() {
     _uiTimer?.cancel();
     super.dispose();
   }
 
+  /// Starts a 1Hz repaint timer only while a duration timer is active.
+  /// Other config kinds don't need a continuous countdown, so we avoid
+  /// the per-second rebuilds entirely.
+  void _ensureTimer(SleepTimerConfig config) {
+    final isDuration = config is SleepTimerConfigDuration;
+    if (isDuration && _uiTimer == null) {
+      _uiTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+        if (mounted) setState(() {});
+      });
+    } else if (!isDuration && _uiTimer != null) {
+      _uiTimer!.cancel();
+      _uiTimer = null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    // React to subsequent config changes (e.g. duration -> off).
+    ref.listen<SleepTimerState>(sleepTimerControllerProvider, (prev, next) {
+      _ensureTimer(next.config);
+    });
+
     final state = ref.watch(sleepTimerControllerProvider);
+    // Initial-state handling on first build. _ensureTimer never calls
+    // setState, so it's safe to invoke synchronously inside build().
+    _ensureTimer(state.config);
+
     final l10n = AppLocalizations.of(context);
     final label = formatSleepTimerShortLabel(state.config, l10n);
     if (label == null) return const SizedBox.shrink();
