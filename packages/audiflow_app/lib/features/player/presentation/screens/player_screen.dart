@@ -11,6 +11,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
 import '../../helpers/podcast_lookup.dart';
 import '../widgets/sleep_timer_icon_button.dart';
+import '../widgets/sleep_timer_status_label.dart';
 import '../widgets/transcript_tab.dart';
 
 /// Full player screen presented as a Cupertino sheet.
@@ -167,6 +168,8 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: const [
+                      SleepTimerStatusLabel(),
+                      SizedBox(width: 8),
                       SleepTimerIconButton(),
                       SizedBox(width: 16),
                       _PlaybackSpeedButton(),

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import 'sleep_timer_label_format.dart';
 
 /// Persistent status chip rendered above the mini player while a sleep
 /// timer is active.
@@ -40,7 +41,7 @@ class _SleepTimerChipState extends ConsumerState<SleepTimerChip> {
     final state = ref.watch(sleepTimerControllerProvider);
     final l10n = AppLocalizations.of(context);
 
-    final label = _labelFor(state.config, l10n);
+    final label = formatSleepTimerLabel(state.config, l10n);
     if (label == null) return const SizedBox.shrink();
 
     return Padding(
@@ -58,29 +59,5 @@ class _SleepTimerChipState extends ConsumerState<SleepTimerChip> {
         ),
       ),
     );
-  }
-
-  String? _labelFor(SleepTimerConfig config, AppLocalizations l10n) {
-    return switch (config) {
-      SleepTimerConfigOff() => null,
-      SleepTimerConfigEndOfEpisode() => l10n.sleepTimerChipEpisodeEnd,
-      SleepTimerConfigEndOfChapter() => l10n.sleepTimerChipChapterEnd,
-      SleepTimerConfigEpisodes(:final remaining) =>
-        l10n.sleepTimerChipEpisodesLeft(remaining),
-      SleepTimerConfigDuration(:final deadline) =>
-        '${l10n.sleepTimerChipDurationPrefix}${_formatRemaining(deadline)}',
-    };
-  }
-
-  String _formatRemaining(DateTime deadline) {
-    final remaining = deadline.difference(DateTime.now());
-    final clamped = remaining.isNegative ? Duration.zero : remaining;
-    final totalSeconds = clamped.inSeconds;
-    final hours = totalSeconds ~/ 3600;
-    final minutes = (totalSeconds % 3600) ~/ 60;
-    final seconds = totalSeconds % 60;
-    String pad2(int v) => v.toString().padLeft(2, '0');
-    if (0 < hours) return '${pad2(hours)}:${pad2(minutes)}:${pad2(seconds)}';
-    return '${pad2(minutes)}:${pad2(seconds)}';
   }
 }
