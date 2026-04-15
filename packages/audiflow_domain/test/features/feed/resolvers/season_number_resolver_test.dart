@@ -60,12 +60,15 @@ void main() {
       expect(playlist2.episodeIds, [3]);
     });
 
-    test('treats null seasonNumber as ungrouped by default', () {
+    test('treats null seasonNumber as ungrouped when metadata is reliable', () {
+      // S1 + S2 + null: hasMultiSeason=true, withSeason(2) > withoutSeason(1),
+      // so the feed is reliable and null seasons become ungrouped.
       final episodes = [
         _makeEpisode(id: 1, title: 'Ep1', seasonNumber: 1, episodeNumber: 1),
+        _makeEpisode(id: 2, title: 'Ep2', seasonNumber: 2, episodeNumber: 1),
         _makeEpisode(
-          id: 2,
-          title: 'Ep2',
+          id: 3,
+          title: 'Ep3',
           seasonNumber: null,
           episodeNumber: 100,
         ),
@@ -74,8 +77,8 @@ void main() {
       final result = resolver.resolve(episodes, null);
 
       expect(result, isNotNull);
-      expect(result!.playlists, hasLength(1));
-      expect(result.ungroupedEpisodeIds, [2]);
+      expect(result!.playlists, hasLength(2));
+      expect(result.ungroupedEpisodeIds, [3]);
     });
 
     test('uses season number as sortKey', () {
@@ -105,12 +108,14 @@ void main() {
       final episodes = [
         _makeEpisode(id: 1, title: 'Ep1', seasonNumber: 1),
         _makeEpisode(id: 2, title: 'Ep2', seasonNumber: 1),
+        _makeEpisode(id: 3, title: 'Ep3', seasonNumber: 2),
       ];
 
       final result = resolver.resolve(episodes, null);
 
       expect(result, isNotNull);
       expect(result!.playlists[0].sortKey, 1); // season number
+      expect(result.playlists[1].sortKey, 2);
     });
 
     test('sortKey is season number even with mixed episodeNumber values', () {
@@ -118,6 +123,7 @@ void main() {
         _makeEpisode(id: 1, title: 'Ep1', seasonNumber: 1, episodeNumber: null),
         _makeEpisode(id: 2, title: 'Ep2', seasonNumber: 1, episodeNumber: 7),
         _makeEpisode(id: 3, title: 'Ep3', seasonNumber: 1, episodeNumber: 3),
+        _makeEpisode(id: 4, title: 'Ep4', seasonNumber: 2, episodeNumber: 1),
       ];
 
       final result = resolver.resolve(episodes, null);
@@ -140,6 +146,122 @@ void main() {
       expect(result.playlists[0].sortKey, 1);
       expect(result.playlists[1].sortKey, 2);
       expect(result.playlists[2].sortKey, 3);
+    });
+
+    group('auto-detect fallback for unreliable seasonNumber metadata', () {
+      test('returns null when no episode has season greater than 1', () {
+        // All S1 → no multi-season → treat as non-seasonal.
+        final episodes = [
+          _makeEpisode(id: 1, title: 'Ep1', seasonNumber: 1),
+          _makeEpisode(id: 2, title: 'Ep2', seasonNumber: 1),
+          _makeEpisode(id: 3, title: 'Ep3', seasonNumber: 1),
+        ];
+
+        expect(resolver.resolve(episodes, null), isNull);
+      });
+
+      test(
+        'returns null when seasoned episodes do not outnumber unseasoned',
+        () {
+          // 2 with season vs 2 without → withSeason <= withoutSeason → skip.
+          final episodes = [
+            _makeEpisode(id: 1, title: 'Ep1', seasonNumber: 1),
+            _makeEpisode(id: 2, title: 'Ep2', seasonNumber: 2),
+            _makeEpisode(id: 3, title: 'Ep3'),
+            _makeEpisode(id: 4, title: 'Ep4'),
+          ];
+
+          expect(resolver.resolve(episodes, null), isNull);
+        },
+      );
+
+      test(
+        'still resolves when an explicit definition selects seasonNumber',
+        () {
+          // Broken metadata (all S1), but the smart-playlist config
+          // author explicitly selected seasonNumber grouping — respect
+          // the config and resolve anyway.
+          const definition = SmartPlaylistDefinition(
+            id: 'forced',
+            displayName: 'Forced',
+            grouping: GroupingConfig(by: 'seasonNumber'),
+            priority: 0,
+          );
+          final episodes = [
+            _makeEpisode(id: 1, title: 'Ep1', seasonNumber: 1),
+            _makeEpisode(id: 2, title: 'Ep2', seasonNumber: 1),
+          ];
+
+          final result = resolver.resolve(episodes, definition);
+          expect(result, isNotNull);
+          expect(result!.playlists, hasLength(1));
+        },
+      );
+    });
+
+    group('hasReliableSeasonNumbers', () {
+      test('returns false for an empty feed', () {
+        expect(hasReliableSeasonNumbers(const <Episode>[]), isFalse);
+      });
+
+      test('returns false when all seasonNumbers are 1', () {
+        final episodes = [
+          _makeEpisode(id: 1, title: 'Ep1', seasonNumber: 1),
+          _makeEpisode(id: 2, title: 'Ep2', seasonNumber: 1),
+        ];
+        expect(hasReliableSeasonNumbers(episodes), isFalse);
+      });
+
+      test('returns false when seasoned count equals unseasoned count', () {
+        final episodes = [
+          _makeEpisode(id: 1, title: 'Ep1', seasonNumber: 1),
+          _makeEpisode(id: 2, title: 'Ep2', seasonNumber: 2),
+          _makeEpisode(id: 3, title: 'Ep3'),
+          _makeEpisode(id: 4, title: 'Ep4'),
+        ];
+        expect(hasReliableSeasonNumbers(episodes), isFalse);
+      });
+
+      test('returns true when seasoned episodes outnumber unseasoned and '
+          'include a season greater than 1', () {
+        final episodes = [
+          _makeEpisode(id: 1, title: 'Ep1', seasonNumber: 1),
+          _makeEpisode(id: 2, title: 'Ep2', seasonNumber: 2),
+          _makeEpisode(id: 3, title: 'Ep3', seasonNumber: 2),
+          _makeEpisode(id: 4, title: 'Ep4'),
+        ];
+        expect(hasReliableSeasonNumbers(episodes), isTrue);
+      });
+
+      test('returns false when seasoned majority lacks any season above 1', () {
+        // Majority check passes (5 seasoned, 2 unseasoned) but every
+        // seasoned episode is S1, so the feed still looks cosmetic.
+        final episodes = [
+          _makeEpisode(id: 1, title: 'Ep1', seasonNumber: 1),
+          _makeEpisode(id: 2, title: 'Ep2', seasonNumber: 1),
+          _makeEpisode(id: 3, title: 'Ep3', seasonNumber: 1),
+          _makeEpisode(id: 4, title: 'Ep4', seasonNumber: 1),
+          _makeEpisode(id: 5, title: 'Ep5', seasonNumber: 1),
+          _makeEpisode(id: 6, title: 'Ep6'),
+          _makeEpisode(id: 7, title: 'Ep7'),
+        ];
+        expect(hasReliableSeasonNumbers(episodes), isFalse);
+      });
+
+      test('non-positive seasonNumbers still count toward the seasoned '
+          'tally (characterization)', () {
+        // Documents the current treatment: any non-null seasonNumber
+        // (including 0 or negative) counts as "seasoned" for the
+        // majority check, even though _resolveBySeasonNumber drops
+        // those episodes into `ungrouped`. Change intentionally if
+        // the heuristic is tightened.
+        final episodes = [
+          _makeEpisode(id: 1, title: 'Ep1', seasonNumber: 0),
+          _makeEpisode(id: 2, title: 'Ep2', seasonNumber: 2),
+          _makeEpisode(id: 3, title: 'Ep3', seasonNumber: 2),
+        ];
+        expect(hasReliableSeasonNumbers(episodes), isTrue);
+      });
     });
 
     test('uses titleExtractor for display names', () {

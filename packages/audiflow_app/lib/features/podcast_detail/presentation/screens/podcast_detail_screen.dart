@@ -5,7 +5,9 @@ import 'package:audiflow_domain/audiflow_domain.dart'
         SmartPlaylist,
         SmartPlaylistGroup,
         SortOrder,
+        namedLoggerProvider,
         podcastViewPreferenceControllerProvider,
+        smartPlaylistPatternByFeedUrlProvider,
         subscriptionByFeedUrlProvider;
 import 'package:audiflow_search/audiflow_search.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
@@ -124,21 +126,46 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
       sortedPodcastSmartPlaylistsProvider(feedUrl),
     );
 
+    // Pattern presence decides whether the toggle can hide for a
+    // single-bucket grouping, so gate on it too to avoid a flicker
+    // from pattern-driven configs loading after the first frame.
+    final patternAsync = ref.watch(
+      smartPlaylistPatternByFeedUrlProvider(feedUrl),
+    );
+
+    // Surface transient pattern-load errors — we deliberately fall
+    // back to "assume a pattern might exist" for UX, but the failure
+    // itself should still be observable.
+    ref.listen(smartPlaylistPatternByFeedUrlProvider(feedUrl), (prev, next) {
+      if (next.hasError && (prev == null || !prev.hasError)) {
+        ref
+            .read(namedLoggerProvider('PodcastDetailScreen'))
+            .e(
+              'Smart playlist pattern load failed for feedUrl=$feedUrl; '
+              'keeping toggle visible as a conservative fallback',
+              error: next.error,
+              stackTrace: next.stackTrace,
+            );
+      }
+    });
+
     // Show single loading indicator until all data is ready
     final allReady =
         feedAsync.hasValue &&
         !subscriptionAsync.isLoading &&
         (prefsAsync == null || prefsAsync.hasValue) &&
-        !playlistsAsync.isLoading;
+        !playlistsAsync.isLoading &&
+        !patternAsync.isLoading;
 
     if (!allReady) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    return _buildContent(feedUrl);
+    final hasPattern = patternAsync.value != null || patternAsync.hasError;
+    return _buildContent(feedUrl, hasPattern: hasPattern);
   }
 
-  Widget _buildContent(String feedUrl) {
+  Widget _buildContent(String feedUrl, {required bool hasPattern}) {
     _feedImageUrl = ref
         .watch(podcastDetailProvider(feedUrl))
         .value
@@ -183,8 +210,37 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
         ),
     ];
 
+    // Gate the toggle on the auto-detect-single-bucket heuristic.
+    // See `shouldShowSmartPlaylistToggle` for the decision table.
+    final showPlaylistToggle = shouldShowSmartPlaylistToggle(
+      hasPattern: hasPattern,
+      displayPlaylistsCount: displayPlaylists.length,
+    );
+    final effectiveViewMode = effectivePodcastViewMode(
+      preferredMode: viewMode,
+      showPlaylistToggle: showPlaylistToggle,
+    );
+
+    // When the toggle is hidden but the persisted preference still
+    // says `smartPlaylists`, clear it so the stored state matches
+    // what the user actually sees. Without this the UI would flip
+    // back to the playlist view the next time the toggle returns.
+    if (!showPlaylistToggle &&
+        subscription != null &&
+        prefs?.viewMode == PodcastViewMode.smartPlaylists) {
+      final subscriptionId = subscription.id;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ref
+            .read(
+              podcastViewPreferenceControllerProvider(subscriptionId).notifier,
+            )
+            .setViewMode(PodcastViewMode.episodes);
+      });
+    }
+
     SmartPlaylist? activePlaylist;
-    if (viewMode == PodcastViewMode.smartPlaylists &&
+    if (effectiveViewMode == PodcastViewMode.smartPlaylists &&
         displayPlaylists.isNotEmpty) {
       activePlaylist =
           displayPlaylists
@@ -203,7 +259,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
         controller: _scrollController,
         slivers: [
           SliverToBoxAdapter(child: PodcastDetailHeader(podcast: podcast)),
-          if (displayPlaylists.isNotEmpty)
+          if (showPlaylistToggle)
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(
@@ -212,7 +268,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
                 ),
                 child: SmartPlaylistViewToggle(
                   playlists: displayPlaylists,
-                  selectedMode: viewMode,
+                  selectedMode: effectiveViewMode,
                   selectedPlaylistId: activePlaylist?.id ?? selectedPlaylistId,
                   onEpisodesSelected: () {
                     _onEpisodesViewSelected(subscription?.id);
@@ -223,7 +279,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
                 ),
               ),
             ),
-          if (viewMode == PodcastViewMode.episodes)
+          if (effectiveViewMode == PodcastViewMode.episodes)
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.only(bottom: Spacing.sm),
@@ -247,7 +303,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
                 ),
               ),
             ),
-          if (viewMode == PodcastViewMode.episodes)
+          if (effectiveViewMode == PodcastViewMode.episodes)
             ...buildEpisodeListSlivers(
               ref: ref,
               feedUrl: feedUrl,

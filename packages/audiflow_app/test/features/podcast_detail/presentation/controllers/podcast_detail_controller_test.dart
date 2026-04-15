@@ -1,4 +1,5 @@
 import 'package:audiflow_app/features/podcast_detail/presentation/controllers/podcast_detail_controller.dart';
+import 'package:audiflow_domain/audiflow_domain.dart' show PodcastViewMode;
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -27,6 +28,101 @@ void main() {
       expect(
         shouldFetchRemote(lastFetchedAt: oldFetch, isOnline: true),
         isTrue,
+      );
+    });
+  });
+
+  group('shouldShowSmartPlaylistToggle', () {
+    test('hides toggle when no display playlists exist', () {
+      expect(
+        shouldShowSmartPlaylistToggle(
+          hasPattern: false,
+          displayPlaylistsCount: 0,
+        ),
+        isFalse,
+      );
+      expect(
+        shouldShowSmartPlaylistToggle(
+          hasPattern: true,
+          displayPlaylistsCount: 0,
+        ),
+        isFalse,
+      );
+    });
+
+    test('hides toggle for auto-detect single bucket', () {
+      expect(
+        shouldShowSmartPlaylistToggle(
+          hasPattern: false,
+          displayPlaylistsCount: 1,
+        ),
+        isFalse,
+      );
+    });
+
+    test('shows toggle for pattern-driven single bucket', () {
+      expect(
+        shouldShowSmartPlaylistToggle(
+          hasPattern: true,
+          displayPlaylistsCount: 1,
+        ),
+        isTrue,
+      );
+    });
+
+    test(
+      'shows toggle for multiple display playlists regardless of pattern',
+      () {
+        expect(
+          shouldShowSmartPlaylistToggle(
+            hasPattern: false,
+            displayPlaylistsCount: 2,
+          ),
+          isTrue,
+        );
+        expect(
+          shouldShowSmartPlaylistToggle(
+            hasPattern: true,
+            displayPlaylistsCount: 3,
+          ),
+          isTrue,
+        );
+      },
+    );
+  });
+
+  group('effectivePodcastViewMode', () {
+    test('coerces to episodes when toggle is hidden', () {
+      expect(
+        effectivePodcastViewMode(
+          preferredMode: PodcastViewMode.smartPlaylists,
+          showPlaylistToggle: false,
+        ),
+        PodcastViewMode.episodes,
+      );
+      expect(
+        effectivePodcastViewMode(
+          preferredMode: PodcastViewMode.episodes,
+          showPlaylistToggle: false,
+        ),
+        PodcastViewMode.episodes,
+      );
+    });
+
+    test('honours preferred mode when toggle is visible', () {
+      expect(
+        effectivePodcastViewMode(
+          preferredMode: PodcastViewMode.smartPlaylists,
+          showPlaylistToggle: true,
+        ),
+        PodcastViewMode.smartPlaylists,
+      );
+      expect(
+        effectivePodcastViewMode(
+          preferredMode: PodcastViewMode.episodes,
+          showPlaylistToggle: true,
+        ),
+        PodcastViewMode.episodes,
       );
     });
   });
