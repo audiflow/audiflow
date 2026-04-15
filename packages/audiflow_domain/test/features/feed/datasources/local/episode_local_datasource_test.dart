@@ -353,6 +353,98 @@ void main() {
     });
   });
 
+  group('deleteByPodcastIdAndGuids', () {
+    test('deletes only matching guids for the podcast', () async {
+      await datasource.upsert(
+        makeEpisode(
+          guid: 'keep',
+          title: 'Keep',
+          audioUrl: 'https://example.com/keep.mp3',
+        ),
+      );
+      await datasource.upsert(
+        makeEpisode(
+          guid: 'drop-1',
+          title: 'Drop 1',
+          audioUrl: 'https://example.com/drop1.mp3',
+        ),
+      );
+      await datasource.upsert(
+        makeEpisode(
+          guid: 'drop-2',
+          title: 'Drop 2',
+          audioUrl: 'https://example.com/drop2.mp3',
+        ),
+      );
+
+      final deleted = await datasource.deleteByPodcastIdAndGuids(1, {
+        'drop-1',
+        'drop-2',
+      });
+
+      expect(deleted, 2);
+      final remaining = await datasource.getByPodcastId(1);
+      expect(remaining.map((e) => e.guid), ['keep']);
+    });
+
+    test('returns 0 without opening a txn when guids is empty', () async {
+      await datasource.upsert(
+        makeEpisode(
+          guid: 'survivor',
+          title: 'Survivor',
+          audioUrl: 'https://example.com/survivor.mp3',
+        ),
+      );
+
+      final deleted = await datasource.deleteByPodcastIdAndGuids(1, const {});
+
+      expect(deleted, 0);
+      final remaining = await datasource.getByPodcastId(1);
+      expect(remaining, hasLength(1));
+    });
+
+    test(
+      'does not delete episodes from a different podcast with the same guid',
+      () async {
+        await isar.writeTxn(() async {
+          await isar.subscriptions.put(
+            Subscription()
+              ..itunesId = 'itunes-other'
+              ..feedUrl = 'https://example.com/other.xml'
+              ..title = 'Other'
+              ..artistName = 'Other Artist'
+              ..subscribedAt = DateTime.now(),
+          );
+        });
+
+        await datasource.upsert(
+          makeEpisode(
+            podcastId: 1,
+            guid: 'shared-guid',
+            title: 'Pod 1',
+            audioUrl: 'https://example.com/a.mp3',
+          ),
+        );
+        await datasource.upsert(
+          makeEpisode(
+            podcastId: 2,
+            guid: 'shared-guid',
+            title: 'Pod 2',
+            audioUrl: 'https://example.com/b.mp3',
+          ),
+        );
+
+        final deleted = await datasource.deleteByPodcastIdAndGuids(1, {
+          'shared-guid',
+        });
+
+        expect(deleted, 1);
+        expect(await datasource.getByPodcastId(1), isEmpty);
+        expect(await datasource.getByPodcastId(2), hasLength(1));
+      },
+    );
+  });
+
   group('getByIds', () {
     test('returns empty list for empty ids', () async {
       final episodes = await datasource.getByIds([]);

@@ -101,6 +101,10 @@ class FakeEpisodeRepository implements EpisodeRepository {
     required int? afterEpisodeNumber,
     required int limit,
   }) => throw UnimplementedError();
+
+  @override
+  Future<int> deleteByPodcastIdAndGuids(int podcastId, Set<String> guids) =>
+      throw UnimplementedError();
 }
 
 class FakeItunesChartsClient extends ItunesChartsClient {

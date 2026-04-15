@@ -80,6 +80,13 @@ abstract class EpisodeRepository {
     List<ParsedEpisodeMediaMeta> mediaMetas,
   );
 
+  /// Deletes episodes for [podcastId] whose guid is in [guids].
+  ///
+  /// Used during feed sync to remove episodes that have been dropped from
+  /// the remote RSS feed. Returns the number of deleted rows. Safe to call
+  /// with an empty [guids] set (returns 0 without touching the database).
+  Future<int> deleteByPodcastIdAndGuids(int podcastId, Set<String> guids);
+
   /// Gets episodes after a given episode number, ordered ascending.
   ///
   /// Returns episodes from [podcastId] with episode numbers greater than

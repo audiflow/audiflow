@@ -110,6 +110,27 @@ class EpisodeLocalDatasource {
     );
   }
 
+  /// Deletes episodes for [podcastId] whose guid is in [guids].
+  ///
+  /// Returns the number of deleted rows. Returns 0 immediately when [guids]
+  /// is empty, avoiding an unnecessary write transaction.
+  Future<int> deleteByPodcastIdAndGuids(
+    int podcastId,
+    Set<String> guids,
+  ) async {
+    if (guids.isEmpty) return 0;
+    return _isar.writeTxn(() async {
+      final targets = await _isar.episodes
+          .filter()
+          .podcastIdEqualTo(podcastId)
+          .anyOf(guids, (q, guid) => q.guidEqualTo(guid))
+          .findAll();
+      if (targets.isEmpty) return 0;
+      final ids = targets.map((e) => e.id).toList();
+      return _isar.episodes.deleteAll(ids);
+    });
+  }
+
   /// Returns episodes by their IDs.
   ///
   /// Order is not guaranteed; caller should sort as needed.
