@@ -165,34 +165,22 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
                       isPlaying,
                     ),
                   ),
-                  SizedBox(
-                    height: 48,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        // Centered icon + speed pair. Its width never changes,
-                        // so the controls stay pinned regardless of label.
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: const [
-                            SleepTimerIconButton(),
-                            SizedBox(width: 16),
-                            _PlaybackSpeedButton(),
-                          ],
-                        ),
-                        // Status label sits on the left edge. When no timer is
-                        // active, it renders SizedBox.shrink() and doesn't
-                        // consume space.
-                        const Align(
-                          alignment: Alignment.centerLeft,
-                          child: Padding(
-                            padding: EdgeInsets.only(left: 16),
+                  Row(
+                    children: const [
+                      Expanded(
+                        child: Padding(
+                          padding: EdgeInsets.only(right: 12),
+                          child: Align(
+                            alignment: Alignment.centerRight,
                             child: SleepTimerStatusLabel(),
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                      SleepTimerIconButton(),
+                      SizedBox(width: 16),
+                      _PlaybackSpeedButton(),
+                      Expanded(child: SizedBox.shrink()),
+                    ],
                   ),
                   const SizedBox(height: 16),
                 ],

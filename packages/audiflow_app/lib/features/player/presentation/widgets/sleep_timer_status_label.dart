@@ -47,6 +47,8 @@ class _SleepTimerStatusLabelState extends ConsumerState<SleepTimerStatusLabel> {
     final theme = Theme.of(context);
     return Text(
       label,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
       style: theme.textTheme.labelLarge?.copyWith(
         color: theme.colorScheme.primary,
       ),
