@@ -260,6 +260,11 @@ class FakeEpisodeRepository implements EpisodeRepository {
     required int? afterEpisodeNumber,
     required int limit,
   }) async => [];
+  @override
+  Future<int> deleteByPodcastIdAndGuids(
+    int podcastId,
+    Set<String> guids,
+  ) async => 0;
 }
 
 class FakeDownloadRepository implements DownloadRepository {

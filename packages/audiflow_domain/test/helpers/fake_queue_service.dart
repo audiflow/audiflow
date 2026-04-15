@@ -135,4 +135,10 @@ class _NoOpEpisodeRepository implements EpisodeRepository {
     required int? afterEpisodeNumber,
     required int limit,
   }) async => const [];
+
+  @override
+  Future<int> deleteByPodcastIdAndGuids(
+    int podcastId,
+    Set<String> guids,
+  ) async => 0;
 }

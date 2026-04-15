@@ -106,9 +106,11 @@ class _FakeSubscriptionRepository implements SubscriptionRepository {
 
 class _FakeEpisodeRepository implements EpisodeRepository {
   List<Episode> upsertedEpisodes = [];
+  Set<String> storedGuids = {};
+  List<({int podcastId, Set<String> guids})> deleteCalls = [];
 
   @override
-  Future<Set<String>> getGuidsByPodcastId(int podcastId) async => {};
+  Future<Set<String>> getGuidsByPodcastId(int podcastId) async => storedGuids;
 
   @override
   Future<Episode?> getNewestByPodcastId(int podcastId) async => null;
@@ -116,6 +118,15 @@ class _FakeEpisodeRepository implements EpisodeRepository {
   @override
   Future<void> upsertEpisodes(List<Episode> episodes) async {
     upsertedEpisodes.addAll(episodes);
+  }
+
+  @override
+  Future<int> deleteByPodcastIdAndGuids(
+    int podcastId,
+    Set<String> guids,
+  ) async {
+    deleteCalls.add((podcastId: podcastId, guids: Set.of(guids)));
+    return guids.length;
   }
 
   // Unused methods for this test suite
@@ -317,6 +328,11 @@ class _FakeFeedParserService extends FeedParserService {
     String xmlContent,
     int podcastId,
     Set<String> knownGuids,
+    Future<void> Function(
+      List<Episode> episodes,
+      List<ParsedEpisodeMediaMeta> mediaMetas,
+    )
+    onBatchReady,
   )
   _streamFactory;
 
@@ -334,7 +350,7 @@ class _FakeFeedParserService extends FeedParserService {
     onBatchReady,
     int batchSize = 20,
   }) {
-    return _streamFactory(xmlContent, podcastId, knownGuids);
+    return _streamFactory(xmlContent, podcastId, knownGuids, onBatchReady);
   }
 }
 
@@ -483,6 +499,32 @@ Response<String> _xmlResponse(String body) => Response<String>(
   requestOptions: RequestOptions(),
 );
 
+Episode _ep(int podcastId, String guid) => Episode()
+  ..podcastId = podcastId
+  ..guid = guid
+  ..title = guid
+  ..audioUrl = 'https://example.com/$guid.mp3';
+
+/// Builds a stream that invokes [onBatchReady] with the provided [batches]
+/// before emitting a [FeedParseComplete] event with [stoppedEarly].
+Stream<FeedParseProgress> _progressWithBatches({
+  required List<List<Episode>> batches,
+  required bool stoppedEarly,
+  required Future<void> Function(
+    List<Episode> episodes,
+    List<ParsedEpisodeMediaMeta> mediaMetas,
+  )
+  onBatchReady,
+}) async* {
+  var total = 0;
+  for (final batch in batches) {
+    await onBatchReady(batch, const []);
+    total += batch.length;
+    yield EpisodesBatchStored(totalSoFar: total);
+  }
+  yield FeedParseComplete(total: total, stoppedEarly: stoppedEarly);
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -505,7 +547,7 @@ void main() {
     final parser =
         feedParser ??
         _FakeFeedParserService(
-          (xml, id, guids) => Stream.value(
+          (xml, id, guids, _) => Stream.value(
             const FeedParseComplete(total: 0, stoppedEarly: false),
           ),
         );
@@ -540,7 +582,7 @@ void main() {
       );
 
       final parser = _FakeFeedParserService(
-        (xml, id, guids) => Stream.value(
+        (xml, id, guids, _) => Stream.value(
           const FeedParseComplete(total: 3, stoppedEarly: false),
         ),
       );
@@ -561,7 +603,7 @@ void main() {
       final sub = _subscription(lastRefreshedAt: null);
 
       final parser = _FakeFeedParserService(
-        (xml, id, guids) => Stream.value(
+        (xml, id, guids, _) => Stream.value(
           const FeedParseComplete(total: 5, stoppedEarly: false),
         ),
       );
@@ -606,7 +648,7 @@ void main() {
       final sub = _subscription(itunesId: 'itunes-42', lastRefreshedAt: null);
 
       final parser = _FakeFeedParserService(
-        (xml, id, guids) => Stream.value(
+        (xml, id, guids, _) => Stream.value(
           const FeedParseComplete(total: 1, stoppedEarly: false),
         ),
       );
@@ -628,7 +670,7 @@ void main() {
       );
 
       final parser = _FakeFeedParserService(
-        (xml, id, guids) => Stream.value(
+        (xml, id, guids, _) => Stream.value(
           const FeedParseComplete(total: 0, stoppedEarly: false),
         ),
       );
@@ -723,7 +765,7 @@ void main() {
       );
 
       final parser = _FakeFeedParserService(
-        (xml, id, guids) => Stream.value(
+        (xml, id, guids, _) => Stream.value(
           const FeedParseComplete(total: 0, stoppedEarly: false),
         ),
       );
@@ -748,7 +790,7 @@ void main() {
         final dio = _HeaderCapturingDio();
 
         final parser = _FakeFeedParserService(
-          (xml, id, guids) => Stream.value(
+          (xml, id, guids, _) => Stream.value(
             const FeedParseComplete(total: 0, stoppedEarly: false),
           ),
         );
@@ -762,6 +804,114 @@ void main() {
           dio.lastRequestHeaders?.containsKey('If-Modified-Since'),
           isFalse,
         );
+      },
+    );
+  });
+
+  group('FeedSyncExecutor dropped-episode deletion', () {
+    test('deletes episodes missing from a fully-parsed feed', () async {
+      final sub = _subscription(id: 7, lastRefreshedAt: null);
+      fakeEpisodeRepo.storedGuids = {'a', 'b', 'c'};
+
+      final parser = _FakeFeedParserService(
+        (xml, id, guids, onBatch) => _progressWithBatches(
+          batches: [
+            [_ep(sub.id, 'a'), _ep(sub.id, 'c')],
+          ],
+          stoppedEarly: false,
+          onBatchReady: onBatch,
+        ),
+      );
+
+      final executor = buildExecutor(
+        dio: _FakeDio((_) => _xmlResponse('<rss></rss>')),
+        feedParser: parser,
+      );
+
+      final result = await executor.syncFeed(sub);
+
+      expect(result.success, isTrue);
+      expect(fakeEpisodeRepo.deleteCalls, hasLength(1));
+      expect(fakeEpisodeRepo.deleteCalls.single.podcastId, sub.id);
+      expect(fakeEpisodeRepo.deleteCalls.single.guids, {'b'});
+    });
+
+    test(
+      'does not delete anything when the feed observed all known guids',
+      () async {
+        final sub = _subscription(id: 8, lastRefreshedAt: null);
+        fakeEpisodeRepo.storedGuids = {'a', 'b'};
+
+        final parser = _FakeFeedParserService(
+          (xml, id, guids, onBatch) => _progressWithBatches(
+            batches: [
+              [_ep(sub.id, 'a'), _ep(sub.id, 'b')],
+            ],
+            stoppedEarly: false,
+            onBatchReady: onBatch,
+          ),
+        );
+
+        final executor = buildExecutor(
+          dio: _FakeDio((_) => _xmlResponse('<rss></rss>')),
+          feedParser: parser,
+        );
+
+        await executor.syncFeed(sub);
+
+        expect(fakeEpisodeRepo.deleteCalls, isEmpty);
+      },
+    );
+
+    test(
+      'does not delete when parser stopped early (stoppedEarly=true)',
+      () async {
+        final sub = _subscription(id: 9, lastRefreshedAt: null);
+        fakeEpisodeRepo.storedGuids = {'a', 'b', 'c', 'd'};
+
+        final parser = _FakeFeedParserService(
+          (xml, id, guids, onBatch) => _progressWithBatches(
+            batches: [
+              [_ep(sub.id, 'a')],
+            ],
+            stoppedEarly: true,
+            onBatchReady: onBatch,
+          ),
+        );
+
+        final executor = buildExecutor(
+          dio: _FakeDio((_) => _xmlResponse('<rss></rss>')),
+          feedParser: parser,
+        );
+
+        await executor.syncFeed(sub);
+
+        expect(fakeEpisodeRepo.deleteCalls, isEmpty);
+      },
+    );
+
+    test(
+      'does not delete when feed parses to zero observed episodes',
+      () async {
+        final sub = _subscription(id: 10, lastRefreshedAt: null);
+        fakeEpisodeRepo.storedGuids = {'a', 'b'};
+
+        final parser = _FakeFeedParserService(
+          (xml, id, guids, onBatch) => _progressWithBatches(
+            batches: const [],
+            stoppedEarly: false,
+            onBatchReady: onBatch,
+          ),
+        );
+
+        final executor = buildExecutor(
+          dio: _FakeDio((_) => _xmlResponse('<rss></rss>')),
+          feedParser: parser,
+        );
+
+        await executor.syncFeed(sub);
+
+        expect(fakeEpisodeRepo.deleteCalls, isEmpty);
       },
     );
   });
