@@ -40,7 +40,7 @@ void main() {
     c.read(sleepTimerControllerProvider.notifier).setEndOfEpisode();
     await tester.pumpWidget(_wrap(c, const SleepTimerStatusLabel()));
     await tester.pumpAndSettle();
-    expect(find.text('Sleep · Episode end'), findsOneWidget);
+    expect(find.text('Episode end'), findsOneWidget);
   });
 
   testWidgets('renders N eps left when episodes active', (tester) async {
@@ -49,6 +49,6 @@ void main() {
     await c.read(sleepTimerControllerProvider.notifier).setEpisodes(3);
     await tester.pumpWidget(_wrap(c, const SleepTimerStatusLabel()));
     await tester.pumpAndSettle();
-    expect(find.text('Sleep · 3 eps left'), findsOneWidget);
+    expect(find.text('3 eps left'), findsOneWidget);
   });
 }

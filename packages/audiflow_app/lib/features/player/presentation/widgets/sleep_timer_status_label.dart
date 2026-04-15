@@ -41,7 +41,7 @@ class _SleepTimerStatusLabelState extends ConsumerState<SleepTimerStatusLabel> {
   Widget build(BuildContext context) {
     final state = ref.watch(sleepTimerControllerProvider);
     final l10n = AppLocalizations.of(context);
-    final label = formatSleepTimerLabel(state.config, l10n);
+    final label = formatSleepTimerShortLabel(state.config, l10n);
     if (label == null) return const SizedBox.shrink();
 
     final theme = Theme.of(context);
