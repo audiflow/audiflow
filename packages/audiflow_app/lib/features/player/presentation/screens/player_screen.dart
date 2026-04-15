@@ -165,15 +165,34 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
                       isPlaying,
                     ),
                   ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      SleepTimerStatusLabel(),
-                      SizedBox(width: 8),
-                      SleepTimerIconButton(),
-                      SizedBox(width: 16),
-                      _PlaybackSpeedButton(),
-                    ],
+                  SizedBox(
+                    height: 48,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        // Centered icon + speed pair. Its width never changes,
+                        // so the controls stay pinned regardless of label.
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: const [
+                            SleepTimerIconButton(),
+                            SizedBox(width: 16),
+                            _PlaybackSpeedButton(),
+                          ],
+                        ),
+                        // Status label sits on the left edge. When no timer is
+                        // active, it renders SizedBox.shrink() and doesn't
+                        // consume space.
+                        const Align(
+                          alignment: Alignment.centerLeft,
+                          child: Padding(
+                            padding: EdgeInsets.only(left: 16),
+                            child: SleepTimerStatusLabel(),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 16),
                 ],
