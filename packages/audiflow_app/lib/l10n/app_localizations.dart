@@ -2480,6 +2480,24 @@ abstract class AppLocalizations {
   /// **'Sleep · '**
   String get sleepTimerChipDurationPrefix;
 
+  /// Compact chip label (no prefix) when end-of-episode is active
+  ///
+  /// In en, this message translates to:
+  /// **'Episode end'**
+  String get sleepTimerShortEpisodeEnd;
+
+  /// Compact chip label (no prefix) when end-of-chapter is active
+  ///
+  /// In en, this message translates to:
+  /// **'Chapter end'**
+  String get sleepTimerShortChapterEnd;
+
+  /// Compact chip label (no prefix) for N-episode timer
+  ///
+  /// In en, this message translates to:
+  /// **'{count} eps left'**
+  String sleepTimerShortEpisodesLeft(int count);
+
   /// Snackbar shown when a timer fires in the foreground
   ///
   /// In en, this message translates to:

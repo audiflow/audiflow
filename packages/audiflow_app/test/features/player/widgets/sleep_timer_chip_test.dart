@@ -45,7 +45,7 @@ void main() {
     await tester.pumpWidget(wrap(c, const SleepTimerChip()));
     await tester.pumpAndSettle();
 
-    expect(find.text('Sleep · Episode end'), findsOneWidget);
+    expect(find.text('Episode end'), findsOneWidget);
   });
 
   testWidgets('renders Chapter end label when endOfChapter active', (
@@ -58,7 +58,7 @@ void main() {
     await tester.pumpWidget(wrap(c, const SleepTimerChip()));
     await tester.pumpAndSettle();
 
-    expect(find.text('Sleep · Chapter end'), findsOneWidget);
+    expect(find.text('Chapter end'), findsOneWidget);
   });
 
   testWidgets('renders N eps left when episodes active', (tester) async {
@@ -69,6 +69,6 @@ void main() {
     await tester.pumpWidget(wrap(c, const SleepTimerChip()));
     await tester.pumpAndSettle();
 
-    expect(find.text('Sleep · 3 eps left'), findsOneWidget);
+    expect(find.text('3 eps left'), findsOneWidget);
   });
 }

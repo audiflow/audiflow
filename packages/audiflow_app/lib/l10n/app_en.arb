@@ -853,6 +853,15 @@
   },
   "sleepTimerChipDurationPrefix": "Sleep · ",
   "@sleepTimerChipDurationPrefix": { "description": "Prefix shown before duration countdown on the chip" },
+  "sleepTimerShortEpisodeEnd": "Episode end",
+  "@sleepTimerShortEpisodeEnd": { "description": "Compact chip label (no prefix) when end-of-episode is active" },
+  "sleepTimerShortChapterEnd": "Chapter end",
+  "@sleepTimerShortChapterEnd": { "description": "Compact chip label (no prefix) when end-of-chapter is active" },
+  "sleepTimerShortEpisodesLeft": "{count} eps left",
+  "@sleepTimerShortEpisodesLeft": {
+    "description": "Compact chip label (no prefix) for N-episode timer",
+    "placeholders": { "count": { "type": "int" } }
+  },
   "sleepTimerFiredSnackbar": "Sleep timer ended",
   "@sleepTimerFiredSnackbar": { "description": "Snackbar shown when a timer fires in the foreground" },
   "sleepTimerNumericMinutesTitle": "Minutes",

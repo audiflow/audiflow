@@ -1333,6 +1333,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sleepTimerChipDurationPrefix => 'Sleep · ';
 
   @override
+  String get sleepTimerShortEpisodeEnd => 'Episode end';
+
+  @override
+  String get sleepTimerShortChapterEnd => 'Chapter end';
+
+  @override
+  String sleepTimerShortEpisodesLeft(int count) {
+    return '$count eps left';
+  }
+
+  @override
   String get sleepTimerFiredSnackbar => 'Sleep timer ended';
 
   @override

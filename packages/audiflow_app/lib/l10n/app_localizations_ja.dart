@@ -1301,6 +1301,17 @@ class AppLocalizationsJa extends AppLocalizations {
   String get sleepTimerChipDurationPrefix => 'スリープ · ';
 
   @override
+  String get sleepTimerShortEpisodeEnd => 'エピソード末';
+
+  @override
+  String get sleepTimerShortChapterEnd => 'チャプター末';
+
+  @override
+  String sleepTimerShortEpisodesLeft(int count) {
+    return '残り$count本';
+  }
+
+  @override
   String get sleepTimerFiredSnackbar => 'スリープタイマーが終了しました';
 
   @override

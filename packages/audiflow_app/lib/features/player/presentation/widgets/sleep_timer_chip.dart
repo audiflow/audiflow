@@ -41,16 +41,19 @@ class _SleepTimerChipState extends ConsumerState<SleepTimerChip> {
     final state = ref.watch(sleepTimerControllerProvider);
     final l10n = AppLocalizations.of(context);
 
-    final label = formatSleepTimerLabel(state.config, l10n);
+    final label = formatSleepTimerShortLabel(state.config, l10n);
     if (label == null) return const SizedBox.shrink();
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: const EdgeInsets.only(right: 12, top: 2, bottom: 0),
       child: Align(
-        alignment: Alignment.centerLeft,
+        alignment: Alignment.centerRight,
         child: Chip(
           avatar: const Icon(Icons.nights_stay, size: 16),
           label: Text(label),
+          labelStyle: Theme.of(context).textTheme.labelSmall,
+          labelPadding: const EdgeInsets.symmetric(horizontal: 6),
+          visualDensity: VisualDensity.compact,
           onDeleted: () {
             ref.read(sleepTimerControllerProvider.notifier).setOff();
           },

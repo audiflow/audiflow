@@ -489,6 +489,15 @@
   },
   "sleepTimerChipDurationPrefix": "スリープ · ",
   "@sleepTimerChipDurationPrefix": { "description": "Prefix shown before duration countdown on the chip" },
+  "sleepTimerShortEpisodeEnd": "エピソード末",
+  "@sleepTimerShortEpisodeEnd": { "description": "Compact chip label (no prefix) when end-of-episode is active" },
+  "sleepTimerShortChapterEnd": "チャプター末",
+  "@sleepTimerShortChapterEnd": { "description": "Compact chip label (no prefix) when end-of-chapter is active" },
+  "sleepTimerShortEpisodesLeft": "残り{count}本",
+  "@sleepTimerShortEpisodesLeft": {
+    "description": "Compact chip label (no prefix) for N-episode timer",
+    "placeholders": { "count": { "type": "int" } }
+  },
   "sleepTimerFiredSnackbar": "スリープタイマーが終了しました",
   "@sleepTimerFiredSnackbar": { "description": "Snackbar shown when a timer fires in the foreground" },
   "sleepTimerNumericMinutesTitle": "分",

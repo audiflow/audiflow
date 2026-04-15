@@ -19,6 +19,26 @@ String? formatSleepTimerLabel(SleepTimerConfig config, AppLocalizations l10n) {
   };
 }
 
+/// Compact label for the chip above the mini player.
+///
+/// Omits the "Sleep ·" prefix — the moon icon on the chip already
+/// communicates the context. Returns null when no timer is running.
+String? formatSleepTimerShortLabel(
+  SleepTimerConfig config,
+  AppLocalizations l10n,
+) {
+  return switch (config) {
+    SleepTimerConfigOff() => null,
+    SleepTimerConfigEndOfEpisode() => l10n.sleepTimerShortEpisodeEnd,
+    SleepTimerConfigEndOfChapter() => l10n.sleepTimerShortChapterEnd,
+    SleepTimerConfigEpisodes(:final remaining) =>
+      l10n.sleepTimerShortEpisodesLeft(remaining),
+    SleepTimerConfigDuration(:final deadline) => formatSleepTimerRemaining(
+      deadline,
+    ),
+  };
+}
+
 /// Pure formatter for the deadline countdown shown on duration timers.
 ///
 /// Returns "MM:SS" when remaining < 1h, "HH:MM:SS" otherwise. Negative
