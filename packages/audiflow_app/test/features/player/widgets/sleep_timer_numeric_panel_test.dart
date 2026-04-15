@@ -61,9 +61,12 @@ void main() {
     expect(find.text('99'), findsOneWidget);
   });
 
-  testWidgets('backspace removes last digit', (tester) async {
-    await pumpPanel(tester, initial: 30, maxValue: 999, onStart: (_) {});
+  testWidgets('backspace removes last digit after typing', (tester) async {
+    await pumpPanel(tester, initial: 0, maxValue: 999, onStart: (_) {});
 
+    await tester.tap(find.widgetWithText(TextButton, '3'));
+    await tester.tap(find.widgetWithText(TextButton, '0'));
+    await tester.pumpAndSettle();
     expect(find.text('30'), findsOneWidget);
 
     await tester.tap(find.byIcon(Icons.backspace_outlined));
@@ -71,5 +74,41 @@ void main() {
     // Readout shows '3'; keypad also contains a '3' button, so expect 2.
     expect(find.text('30'), findsNothing);
     expect(find.text('3'), findsNWidgets(2));
+  });
+
+  testWidgets('first digit press replaces remembered value (pristine state)', (
+    tester,
+  ) async {
+    var started = 0;
+    await pumpPanel(
+      tester,
+      initial: 999,
+      maxValue: 999,
+      onStart: (v) => started = v,
+    );
+    expect(find.text('999'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(TextButton, '3'));
+    await tester.pumpAndSettle();
+
+    // Display is now just "3", not "9993" or "999" with a digit appended.
+    expect(find.text('999'), findsNothing);
+    // Readout '3' + keypad button '3'.
+    expect(find.text('3'), findsNWidgets(2));
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Start'));
+    expect(started, 3);
+  });
+
+  testWidgets('first backspace clears remembered value (pristine state)', (
+    tester,
+  ) async {
+    await pumpPanel(tester, initial: 30, maxValue: 999, onStart: (_) {});
+    expect(find.text('30'), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.backspace_outlined));
+    await tester.pumpAndSettle();
+    // After pristine backspace, display is empty -> rendered as '0'.
+    expect(find.text('30'), findsNothing);
   });
 }

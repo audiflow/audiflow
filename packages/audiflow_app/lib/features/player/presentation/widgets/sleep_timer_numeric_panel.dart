@@ -31,6 +31,11 @@ class SleepTimerNumericPanel extends StatefulWidget {
 
 class _SleepTimerNumericPanelState extends State<SleepTimerNumericPanel> {
   late String _display;
+  // While true, the next digit press REPLACES the readout (instead of
+  // appending). Lets users open the panel with a remembered value
+  // pre-filled and immediately type a fresh number without having to
+  // backspace the old digits first.
+  bool _isPristine = true;
 
   @override
   void initState() {
@@ -41,13 +46,24 @@ class _SleepTimerNumericPanelState extends State<SleepTimerNumericPanel> {
   int get _value => int.tryParse(_display) ?? 0;
 
   void _appendDigit(String digit) {
-    final next = _display == '0' ? digit : '$_display$digit';
+    final base = _isPristine || _display == '0' ? '' : _display;
+    final next = '$base$digit';
     final candidate = int.tryParse(next) ?? 0;
     if (widget.maxValue < candidate) return;
-    setState(() => _display = next);
+    setState(() {
+      _display = next;
+      _isPristine = false;
+    });
   }
 
   void _backspace() {
+    if (_isPristine) {
+      setState(() {
+        _display = '';
+        _isPristine = false;
+      });
+      return;
+    }
     if (_display.isEmpty) return;
     setState(() => _display = _display.substring(0, _display.length - 1));
   }
