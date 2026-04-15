@@ -45,7 +45,7 @@ class _SleepTimerChipState extends ConsumerState<SleepTimerChip> {
     if (label == null) return const SizedBox.shrink();
 
     return Padding(
-      padding: const EdgeInsets.only(right: 12, top: 2, bottom: 0),
+      padding: const EdgeInsets.only(top: 2),
       child: Align(
         alignment: Alignment.centerRight,
         child: Chip(
