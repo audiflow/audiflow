@@ -2407,6 +2407,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not defined — add one?'**
   String get developerPatternNotDefined;
+
+  /// Sleep timer sheet title
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep Timer'**
+  String get sleepTimerTitle;
+
+  /// Cancel the active sleep timer
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get sleepTimerOff;
+
+  /// Stop when the current episode ends
+  ///
+  /// In en, this message translates to:
+  /// **'End of episode'**
+  String get sleepTimerEndOfEpisode;
+
+  /// Stop when the current chapter ends
+  ///
+  /// In en, this message translates to:
+  /// **'End of chapter'**
+  String get sleepTimerEndOfChapter;
+
+  /// First-time label for the minutes entry
+  ///
+  /// In en, this message translates to:
+  /// **'Set minutes'**
+  String get sleepTimerSetMinutes;
+
+  /// First-time label for the episodes entry
+  ///
+  /// In en, this message translates to:
+  /// **'Set episodes'**
+  String get sleepTimerSetEpisodes;
+
+  /// Remembered minutes label
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} minute} other{{count} minutes}}'**
+  String sleepTimerMinutesLabel(int count);
+
+  /// Remembered episodes label
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} episode} other{{count} episodes}}'**
+  String sleepTimerEpisodesLabel(int count);
+
+  /// Chip label when end-of-episode is active
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep · Episode end'**
+  String get sleepTimerChipEpisodeEnd;
+
+  /// Chip label when end-of-chapter is active
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep · Chapter end'**
+  String get sleepTimerChipChapterEnd;
+
+  /// Chip label for N-episode timer
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep · {count} eps left'**
+  String sleepTimerChipEpisodesLeft(int count);
+
+  /// Prefix shown before duration countdown on the chip
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep · '**
+  String get sleepTimerChipDurationPrefix;
+
+  /// Compact chip label (no prefix) when end-of-episode is active
+  ///
+  /// In en, this message translates to:
+  /// **'Episode end'**
+  String get sleepTimerShortEpisodeEnd;
+
+  /// Compact chip label (no prefix) when end-of-chapter is active
+  ///
+  /// In en, this message translates to:
+  /// **'Chapter end'**
+  String get sleepTimerShortChapterEnd;
+
+  /// Compact chip label (no prefix) for N-episode timer
+  ///
+  /// In en, this message translates to:
+  /// **'{count} eps left'**
+  String sleepTimerShortEpisodesLeft(int count);
+
+  /// Snackbar shown when a timer fires in the foreground
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep timer ended'**
+  String get sleepTimerFiredSnackbar;
+
+  /// Numeric input panel title for minutes
+  ///
+  /// In en, this message translates to:
+  /// **'Minutes'**
+  String get sleepTimerNumericMinutesTitle;
+
+  /// Numeric input panel title for episodes
+  ///
+  /// In en, this message translates to:
+  /// **'Episodes'**
+  String get sleepTimerNumericEpisodesTitle;
+
+  /// Primary CTA on the numeric input panel
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get sleepTimerStart;
+
+  /// Accessibility label for the sleep-timer icon button
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep timer'**
+  String get sleepTimerIconLabel;
 }
 
 class _AppLocalizationsDelegate

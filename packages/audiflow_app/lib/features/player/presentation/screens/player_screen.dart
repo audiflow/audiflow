@@ -10,6 +10,8 @@ import 'package:material_symbols_icons/symbols.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
 import '../../helpers/podcast_lookup.dart';
+import '../widgets/sleep_timer_icon_button.dart';
+import '../widgets/sleep_timer_status_label.dart';
 import '../widgets/transcript_tab.dart';
 
 /// Full player screen presented as a Cupertino sheet.
@@ -163,7 +165,23 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
                       isPlaying,
                     ),
                   ),
-                  const _PlaybackSpeedButton(),
+                  Row(
+                    children: const [
+                      Expanded(
+                        child: Padding(
+                          padding: EdgeInsets.only(right: 12),
+                          child: Align(
+                            alignment: Alignment.centerRight,
+                            child: SleepTimerStatusLabel(),
+                          ),
+                        ),
+                      ),
+                      SleepTimerIconButton(),
+                      SizedBox(width: 16),
+                      _PlaybackSpeedButton(),
+                      Expanded(child: SizedBox.shrink()),
+                    ],
+                  ),
                   const SizedBox(height: 16),
                 ],
               ),

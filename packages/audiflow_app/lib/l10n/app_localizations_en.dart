@@ -1277,4 +1277,84 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get developerPatternNotDefined => 'Not defined — add one?';
+
+  @override
+  String get sleepTimerTitle => 'Sleep Timer';
+
+  @override
+  String get sleepTimerOff => 'Off';
+
+  @override
+  String get sleepTimerEndOfEpisode => 'End of episode';
+
+  @override
+  String get sleepTimerEndOfChapter => 'End of chapter';
+
+  @override
+  String get sleepTimerSetMinutes => 'Set minutes';
+
+  @override
+  String get sleepTimerSetEpisodes => 'Set episodes';
+
+  @override
+  String sleepTimerMinutesLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count minutes',
+      one: '$count minute',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String sleepTimerEpisodesLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count episodes',
+      one: '$count episode',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sleepTimerChipEpisodeEnd => 'Sleep · Episode end';
+
+  @override
+  String get sleepTimerChipChapterEnd => 'Sleep · Chapter end';
+
+  @override
+  String sleepTimerChipEpisodesLeft(int count) {
+    return 'Sleep · $count eps left';
+  }
+
+  @override
+  String get sleepTimerChipDurationPrefix => 'Sleep · ';
+
+  @override
+  String get sleepTimerShortEpisodeEnd => 'Episode end';
+
+  @override
+  String get sleepTimerShortChapterEnd => 'Chapter end';
+
+  @override
+  String sleepTimerShortEpisodesLeft(int count) {
+    return '$count eps left';
+  }
+
+  @override
+  String get sleepTimerFiredSnackbar => 'Sleep timer ended';
+
+  @override
+  String get sleepTimerNumericMinutesTitle => 'Minutes';
+
+  @override
+  String get sleepTimerNumericEpisodesTitle => 'Episodes';
+
+  @override
+  String get sleepTimerStart => 'Start';
+
+  @override
+  String get sleepTimerIconLabel => 'Sleep timer';
 }

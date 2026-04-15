@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:just_audio/just_audio.dart';
+import 'package:riverpod/riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:rxdart/rxdart.dart';
 
@@ -19,6 +20,7 @@ import '../repositories/playback_history_repository_impl.dart';
 import 'audio_playback_controller.dart';
 import 'now_playing_controller.dart';
 import 'playback_history_service.dart';
+import 'player_lifecycle_events.dart';
 
 part 'audio_player_service.g.dart';
 
@@ -96,6 +98,15 @@ class AudioPlayerController extends _$AudioPlayerController
   String? _currentUrl;
   int? _currentEpisodeId;
   bool _isLoadingSource = false;
+  Timer? _fadeTimer;
+  double? _preFadeVolume;
+  Completer<void>? _fadeCompleter;
+  final StreamController<PlayerLifecycleEvent> _lifecycleEvents =
+      StreamController<PlayerLifecycleEvent>.broadcast();
+
+  /// Broadcast stream of lifecycle events. Exposed via
+  /// [playerLifecycleEventsProvider].
+  Stream<PlayerLifecycleEvent> get lifecycleEvents => _lifecycleEvents.stream;
 
   @override
   PlaybackState build() {
@@ -150,6 +161,7 @@ class AudioPlayerController extends _$AudioPlayerController
 
         if (processingState == ProcessingState.completed) {
           _log.i('[StateStream] COMPLETED detected, advancing queue...');
+          _lifecycleEvents.add(const EpisodeCompletedLifecycle());
           // Save final progress before clearing
           await _saveProgressOnStop();
 
@@ -246,6 +258,8 @@ class AudioPlayerController extends _$AudioPlayerController
 
   void _cleanup() {
     _stateSubscription?.cancel();
+    _fadeTimer?.cancel();
+    _lifecycleEvents.close();
   }
 
   /// Plays audio from the specified URL.
@@ -263,6 +277,10 @@ class AudioPlayerController extends _$AudioPlayerController
   Future<void> play(String url, {NowPlayingInfo? metadata}) async {
     try {
       _log.i('[Play] Starting: url=$url');
+
+      if (_currentUrl != null && _currentUrl != url) {
+        _lifecycleEvents.add(const EpisodeSwitchedLifecycle());
+      }
 
       // Save progress of previous episode before switching
       if (_currentEpisodeId != null && _currentUrl != url) {
@@ -353,6 +371,71 @@ class AudioPlayerController extends _$AudioPlayerController
     } catch (e, stack) {
       _log.e('[Play] ERROR', error: e, stackTrace: stack);
       state = PlaybackState.error(message: 'Failed to play audio: $e');
+    }
+  }
+
+  /// Fades the player's volume to 0 linearly over [total], then pauses.
+  ///
+  /// Restores the original volume on completion so future playback starts
+  /// at the user's preferred level. Call [cancelFade] to abort in-flight
+  /// and restore volume without pausing.
+  Future<void> fadeOutAndPause({
+    Duration total = const Duration(seconds: 8),
+  }) async {
+    // Already fading. Treat re-entry as a no-op — the in-flight fade will
+    // complete normally and pause the player. The returned future resolves
+    // immediately so callers using `unawaited(...)` don't accumulate work.
+    if (_fadeTimer != null) return;
+
+    _preFadeVolume = _player.volume;
+    final startVolume = _preFadeVolume ?? 1.0;
+    const stepMs = 100;
+    final steps = (total.inMilliseconds / stepMs).ceil().clamp(1, 1000);
+    var elapsedSteps = 0;
+
+    final completer = Completer<void>();
+    _fadeCompleter = completer;
+    _fadeTimer = Timer.periodic(const Duration(milliseconds: stepMs), (
+      timer,
+    ) async {
+      elapsedSteps += 1;
+      final progress = (elapsedSteps / steps).clamp(0.0, 1.0);
+      final next = (startVolume * (1.0 - progress)).clamp(0.0, 1.0);
+      await _player.setVolume(next);
+
+      if (steps <= elapsedSteps) {
+        timer.cancel();
+        _fadeTimer = null;
+        await _player.pause();
+        if (_preFadeVolume != null) {
+          await _player.setVolume(_preFadeVolume!);
+          _preFadeVolume = null;
+        }
+        if (!completer.isCompleted) completer.complete();
+        _fadeCompleter = null;
+      }
+    });
+
+    return completer.future;
+  }
+
+  /// Cancels an in-flight fade and restores the pre-fade volume.
+  ///
+  /// Awaits the volume restore so callers that resume playback immediately
+  /// after [cancelFade] don't briefly play at near-zero volume.
+  Future<void> cancelFade() async {
+    if (_fadeTimer == null) return;
+    _fadeTimer!.cancel();
+    _fadeTimer = null;
+    final completer = _fadeCompleter;
+    _fadeCompleter = null;
+    if (completer != null && !completer.isCompleted) {
+      completer.complete();
+    }
+    if (_preFadeVolume != null) {
+      final restoreTo = _preFadeVolume!;
+      _preFadeVolume = null;
+      await _player.setVolume(restoreTo);
     }
   }
 
@@ -449,6 +532,7 @@ class AudioPlayerController extends _$AudioPlayerController
 
     final clampedMs = position.inMilliseconds.clamp(0, duration.inMilliseconds);
     await _player.seek(Duration(milliseconds: clampedMs));
+    _lifecycleEvents.add(SeekLifecycle(Duration(milliseconds: clampedMs)));
   }
 
   /// Skips forward by the user-configured duration.
@@ -481,3 +565,19 @@ class AudioPlayerController extends _$AudioPlayerController
     await settingsRepo.setPlaybackSpeed(speed);
   }
 }
+
+/// Broadcast stream of player lifecycle events.
+///
+/// Consumers observe this for "what just happened" hints (sleep timer, etc.)
+/// rather than polling player state.
+///
+/// Exposed as a plain [Provider] of [Stream] (not a [StreamProvider]) so
+/// listeners can subscribe directly without the [AsyncValue] wrapper —
+/// the controller's lifecycle stream is long-lived and already broadcast,
+/// so materializing it through a stream provider only added friction.
+final playerLifecycleEventsProvider = Provider<Stream<PlayerLifecycleEvent>>((
+  ref,
+) {
+  final controller = ref.watch(audioPlayerControllerProvider.notifier);
+  return controller.lifecycleEvents;
+});

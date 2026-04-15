@@ -1257,4 +1257,72 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get developerPatternNotDefined => '未定義 — 追加しませんか？';
+
+  @override
+  String get sleepTimerTitle => 'スリープタイマー';
+
+  @override
+  String get sleepTimerOff => 'オフ';
+
+  @override
+  String get sleepTimerEndOfEpisode => 'エピソードの終わり';
+
+  @override
+  String get sleepTimerEndOfChapter => 'チャプターの終わり';
+
+  @override
+  String get sleepTimerSetMinutes => '分数を設定';
+
+  @override
+  String get sleepTimerSetEpisodes => 'エピソード数を設定';
+
+  @override
+  String sleepTimerMinutesLabel(int count) {
+    return '$count分';
+  }
+
+  @override
+  String sleepTimerEpisodesLabel(int count) {
+    return '$countエピソード';
+  }
+
+  @override
+  String get sleepTimerChipEpisodeEnd => 'スリープ · エピソード末';
+
+  @override
+  String get sleepTimerChipChapterEnd => 'スリープ · チャプター末';
+
+  @override
+  String sleepTimerChipEpisodesLeft(int count) {
+    return 'スリープ · 残り$count本';
+  }
+
+  @override
+  String get sleepTimerChipDurationPrefix => 'スリープ · ';
+
+  @override
+  String get sleepTimerShortEpisodeEnd => 'エピソード末';
+
+  @override
+  String get sleepTimerShortChapterEnd => 'チャプター末';
+
+  @override
+  String sleepTimerShortEpisodesLeft(int count) {
+    return '残り$count本';
+  }
+
+  @override
+  String get sleepTimerFiredSnackbar => 'スリープタイマーが終了しました';
+
+  @override
+  String get sleepTimerNumericMinutesTitle => '分';
+
+  @override
+  String get sleepTimerNumericEpisodesTitle => 'エピソード';
+
+  @override
+  String get sleepTimerStart => '開始';
+
+  @override
+  String get sleepTimerIconLabel => 'スリープタイマー';
 }

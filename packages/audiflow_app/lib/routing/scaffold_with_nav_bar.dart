@@ -9,8 +9,10 @@ import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../l10n/app_localizations.dart';
+import '../features/player/presentation/controllers/sleep_timer_ui_controller.dart';
 import '../features/player/presentation/screens/player_screen.dart';
 import '../features/player/presentation/widgets/animated_mini_player.dart';
+import '../features/player/presentation/widgets/sleep_timer_chip.dart';
 import '../features/settings/presentation/controllers/last_tab_controller.dart';
 import '../features/voice/presentation/widgets/voice_command_panel.dart';
 import '../features/voice/presentation/widgets/voice_debug_panel.dart';
@@ -156,10 +158,11 @@ class _PhoneShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: navigationShell,
+      body: SleepTimerSnackbarHost(child: navigationShell),
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          const SleepTimerChip(),
           AnimatedMiniPlayer(onTap: onMiniPlayerTap),
           _CustomNavBar(
             currentIndex: currentIndex,
@@ -379,11 +382,14 @@ class _TabletPortraitShell extends StatelessWidget {
         centerTitle: true,
         actions: [if (voiceEnabled) const VoiceTriggerButton()],
       ),
-      body: Column(
-        children: [
-          Expanded(child: navigationShell),
-          AnimatedMiniPlayer(onTap: onMiniPlayerTap),
-        ],
+      body: SleepTimerSnackbarHost(
+        child: Column(
+          children: [
+            Expanded(child: navigationShell),
+            const SleepTimerChip(),
+            AnimatedMiniPlayer(onTap: onMiniPlayerTap),
+          ],
+        ),
       ),
     );
   }
@@ -431,11 +437,14 @@ class _TabletLandscapeShell extends StatelessWidget {
           ),
           const VerticalDivider(width: 1, thickness: 1),
           Expanded(
-            child: Column(
-              children: [
-                Expanded(child: navigationShell),
-                AnimatedMiniPlayer(onTap: onMiniPlayerTap),
-              ],
+            child: SleepTimerSnackbarHost(
+              child: Column(
+                children: [
+                  Expanded(child: navigationShell),
+                  const SleepTimerChip(),
+                  AnimatedMiniPlayer(onTap: onMiniPlayerTap),
+                ],
+              ),
             ),
           ),
         ],
