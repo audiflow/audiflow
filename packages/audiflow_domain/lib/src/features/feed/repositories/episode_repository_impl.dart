@@ -339,6 +339,11 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
   }
 
   @override
+  Future<int> deleteByPodcastIdAndGuids(int podcastId, Set<String> guids) {
+    return _datasource.deleteByPodcastIdAndGuids(podcastId, guids);
+  }
+
+  @override
   Future<List<Episode>> getSubsequentEpisodes({
     required int podcastId,
     required int? afterEpisodeNumber,

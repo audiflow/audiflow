@@ -124,16 +124,38 @@ class FeedSyncExecutor {
       final knownGuids = await _episodeRepo.getGuidsByPodcastId(sub.id);
 
       var newEpisodeCount = 0;
+      var fullFeedParsed = false;
+      final observedGuids = <String>{};
       await for (final progress in _feedParser.parseWithProgress(
         xmlContent: xmlContent,
         podcastId: sub.id,
         knownGuids: knownGuids,
         onBatchReady: (episodes, mediaMetas) async {
+          observedGuids.addAll(episodes.map((e) => e.guid));
           await _episodeRepo.upsertEpisodes(episodes);
         },
       )) {
         if (progress is FeedParseComplete) {
           newEpisodeCount = progress.total;
+          fullFeedParsed = !progress.stoppedEarly;
+        }
+      }
+
+      // Remove episodes dropped from the feed.
+      //
+      // Only safe when the entire feed was parsed: early-stop means we did
+      // not observe the tail of the feed, so we cannot tell whether missing
+      // GUIDs were removed or simply weren't reached. Also require at least
+      // one observed GUID as a guard against malformed feeds that parse to
+      // zero items and would otherwise wipe the local cache.
+      if (fullFeedParsed && observedGuids.isNotEmpty) {
+        final droppedGuids = knownGuids.difference(observedGuids);
+        if (droppedGuids.isNotEmpty) {
+          final deleted = await _episodeRepo.deleteByPodcastIdAndGuids(
+            sub.id,
+            droppedGuids,
+          );
+          _logger?.i('Removed $deleted dropped episodes from "${sub.title}"');
         }
       }
 
