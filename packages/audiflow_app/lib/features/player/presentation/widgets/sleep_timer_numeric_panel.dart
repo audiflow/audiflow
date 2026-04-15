@@ -48,6 +48,12 @@ class _SleepTimerNumericPanelState extends State<SleepTimerNumericPanel> {
   void _appendDigit(String digit) {
     final base = _isPristine || _display == '0' ? '' : _display;
     final next = '$base$digit';
+    // Suppress leading zero — a number pad never shows "0" as a typed value
+    // before any non-zero digit.
+    if (next == '0') {
+      setState(() => _isPristine = false);
+      return;
+    }
     final candidate = int.tryParse(next) ?? 0;
     if (widget.maxValue < candidate) return;
     setState(() {

@@ -21,6 +21,7 @@ class SleepTimerSheet extends StatefulWidget {
     required this.onEndOfChapter,
     required this.onDurationStart,
     required this.onEpisodesStart,
+    required this.onCloseSheet,
     super.key,
   });
 
@@ -31,6 +32,7 @@ class SleepTimerSheet extends StatefulWidget {
   final VoidCallback onEndOfChapter;
   final ValueChanged<Duration> onDurationStart;
   final ValueChanged<int> onEpisodesStart;
+  final VoidCallback onCloseSheet;
 
   @override
   State<SleepTimerSheet> createState() => _SleepTimerSheetState();
@@ -80,7 +82,7 @@ class _SleepTimerSheetState extends State<SleepTimerSheet> {
           maxValue: 999,
           startLabel: l10n.sleepTimerStart,
           onBack: () => setState(() => _panel = _SheetPanel.menu),
-          onClose: () => Navigator.of(context).maybePop(),
+          onClose: widget.onCloseSheet,
           onStart: (v) => widget.onDurationStart(Duration(minutes: v)),
         );
       case _SheetPanel.episodes:
@@ -90,7 +92,7 @@ class _SleepTimerSheetState extends State<SleepTimerSheet> {
           maxValue: 99,
           startLabel: l10n.sleepTimerStart,
           onBack: () => setState(() => _panel = _SheetPanel.menu),
-          onClose: () => Navigator.of(context).maybePop(),
+          onClose: widget.onCloseSheet,
           onStart: widget.onEpisodesStart,
         );
     }

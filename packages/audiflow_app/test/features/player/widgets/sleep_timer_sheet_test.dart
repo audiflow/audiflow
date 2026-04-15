@@ -28,6 +28,7 @@ void main() {
           onEndOfChapter: () {},
           onDurationStart: (_) {},
           onEpisodesStart: (_) {},
+          onCloseSheet: () {},
         ),
       ),
     );
@@ -55,6 +56,7 @@ void main() {
           onEndOfChapter: () {},
           onDurationStart: (_) {},
           onEpisodesStart: (_) {},
+          onCloseSheet: () {},
         ),
       ),
     );
@@ -80,6 +82,7 @@ void main() {
           onEndOfChapter: () {},
           onDurationStart: (d) => started = d,
           onEpisodesStart: (_) {},
+          onCloseSheet: () {},
         ),
       ),
     );
@@ -107,6 +110,7 @@ void main() {
           onEndOfChapter: () {},
           onDurationStart: (_) {},
           onEpisodesStart: (_) {},
+          onCloseSheet: () {},
         ),
       ),
     );
@@ -132,6 +136,7 @@ void main() {
           onEndOfChapter: () {},
           onDurationStart: (_) {},
           onEpisodesStart: (_) {},
+          onCloseSheet: () {},
         ),
       ),
     );

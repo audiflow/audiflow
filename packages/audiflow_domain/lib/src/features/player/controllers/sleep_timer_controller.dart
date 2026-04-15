@@ -19,7 +19,7 @@ part 'sleep_timer_controller.g.dart';
 /// Used by [SleepTimerController] to hide the "End of chapter" menu entry
 /// and to evaluate chapter-dependent decisions. Returns false when no
 /// episode is playing or when the episode has no chapters.
-@Riverpod(keepAlive: true)
+@riverpod
 Future<bool> currentEpisodeHasChapters(Ref ref) async {
   final nowPlaying = ref.watch(nowPlayingControllerProvider);
   final episodeId = nowPlaying?.episode?.id;

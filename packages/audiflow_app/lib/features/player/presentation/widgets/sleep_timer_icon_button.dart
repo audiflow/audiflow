@@ -67,6 +67,7 @@ class SleepTimerIconButton extends ConsumerWidget {
                 await notifier.setEpisodes(n);
                 if (ctx.mounted) Navigator.of(ctx).pop();
               },
+              onCloseSheet: () => Navigator.of(ctx).pop(),
             );
           },
         );

@@ -111,4 +111,20 @@ void main() {
     // After pristine backspace, display is empty -> rendered as '0'.
     expect(find.text('30'), findsNothing);
   });
+
+  testWidgets('typing 0 first does not set display to "0"', (tester) async {
+    await pumpPanel(tester, initial: 0, maxValue: 999, onStart: (_) {});
+
+    await tester.tap(find.widgetWithText(TextButton, '0'));
+    await tester.pumpAndSettle();
+
+    // Display still falls through to the empty-state '0' rendering, but
+    // _display itself is empty — verify by tapping another digit and
+    // checking the result is "5", not "05".
+    await tester.tap(find.widgetWithText(TextButton, '5'));
+    await tester.pumpAndSettle();
+    // Readout '5' + keypad button '5'.
+    expect(find.text('5'), findsNWidgets(2));
+    expect(find.text('05'), findsNothing);
+  });
 }

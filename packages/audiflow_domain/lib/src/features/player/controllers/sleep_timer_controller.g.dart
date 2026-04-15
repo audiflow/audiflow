@@ -37,7 +37,7 @@ final class CurrentEpisodeHasChaptersProvider
         argument: null,
         retry: null,
         name: r'currentEpisodeHasChaptersProvider',
-        isAutoDispose: false,
+        isAutoDispose: true,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -57,7 +57,7 @@ final class CurrentEpisodeHasChaptersProvider
 }
 
 String _$currentEpisodeHasChaptersHash() =>
-    r'b3b47155f84569dc79d25846009cb74b0003b011';
+    r'938d723ddac11a76a3d76c02c749cc42da6a3aa8';
 
 /// Coordinates the sleep timer: subscribes to player lifecycle events,
 /// runs a 1s duration tick, and executes decisions from [SleepTimerService].

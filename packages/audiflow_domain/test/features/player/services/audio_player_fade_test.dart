@@ -32,7 +32,7 @@ void main() {
     );
 
     await Future<void>.delayed(const Duration(milliseconds: 50));
-    controller.cancelFade();
+    await controller.cancelFade();
     await fadeFuture;
 
     expect(player.volume, closeTo(1.0, 0.001));

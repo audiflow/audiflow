@@ -382,6 +382,9 @@ class AudioPlayerController extends _$AudioPlayerController
   Future<void> fadeOutAndPause({
     Duration total = const Duration(seconds: 8),
   }) async {
+    // Already fading. Treat re-entry as a no-op — the in-flight fade will
+    // complete normally and pause the player. The returned future resolves
+    // immediately so callers using `unawaited(...)` don't accumulate work.
     if (_fadeTimer != null) return;
 
     _preFadeVolume = _player.volume;
@@ -417,18 +420,22 @@ class AudioPlayerController extends _$AudioPlayerController
   }
 
   /// Cancels an in-flight fade and restores the pre-fade volume.
-  void cancelFade() {
+  ///
+  /// Awaits the volume restore so callers that resume playback immediately
+  /// after [cancelFade] don't briefly play at near-zero volume.
+  Future<void> cancelFade() async {
     if (_fadeTimer == null) return;
     _fadeTimer!.cancel();
     _fadeTimer = null;
-    if (_preFadeVolume != null) {
-      _player.setVolume(_preFadeVolume!);
-      _preFadeVolume = null;
-    }
     final completer = _fadeCompleter;
     _fadeCompleter = null;
     if (completer != null && !completer.isCompleted) {
       completer.complete();
+    }
+    if (_preFadeVolume != null) {
+      final restoreTo = _preFadeVolume!;
+      _preFadeVolume = null;
+      await _player.setVolume(restoreTo);
     }
   }
 
