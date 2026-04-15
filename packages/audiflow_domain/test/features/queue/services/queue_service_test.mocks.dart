@@ -473,6 +473,25 @@ class MockAppSettingsRepository extends _i1.Mock
           as _i4.Future<void>);
 
   @override
+  _i15.DuckInterruptionBehavior getDuckInterruptionBehavior() =>
+      (super.noSuchMethod(
+            Invocation.method(#getDuckInterruptionBehavior, []),
+            returnValue: _i15.DuckInterruptionBehavior.duck,
+          )
+          as _i15.DuckInterruptionBehavior);
+
+  @override
+  _i4.Future<void> setDuckInterruptionBehavior(
+    _i15.DuckInterruptionBehavior? behavior,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#setDuckInterruptionBehavior, [behavior]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
   bool getWifiOnlyDownload() =>
       (super.noSuchMethod(
             Invocation.method(#getWifiOnlyDownload, []),

@@ -71,6 +71,10 @@ class BackgroundSettingsRepository implements AppSettingsRepository {
   AutoPlayOrder getAutoPlayOrder() => SettingsDefaults.autoPlayOrder;
 
   @override
+  DuckInterruptionBehavior getDuckInterruptionBehavior() =>
+      SettingsDefaults.duckInterruptionBehavior;
+
+  @override
   bool getAutoDeletePlayed() => SettingsDefaults.autoDeletePlayed;
 
   @override
@@ -119,6 +123,10 @@ class BackgroundSettingsRepository implements AppSettingsRepository {
 
   @override
   Future<void> setAutoPlayOrder(AutoPlayOrder order) => _unsupported();
+
+  @override
+  Future<void> setDuckInterruptionBehavior(DuckInterruptionBehavior behavior) =>
+      _unsupported();
 
   @override
   Future<void> setWifiOnlyDownload(bool enabled) => _unsupported();

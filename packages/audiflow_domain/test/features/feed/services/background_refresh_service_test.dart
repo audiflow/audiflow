@@ -1,5 +1,5 @@
 import 'package:audiflow_core/audiflow_core.dart'
-    show AutoPlayOrder, SettingsDefaults;
+    show AutoPlayOrder, DuckInterruptionBehavior, SettingsDefaults;
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart' show ThemeMode;
 import 'package:flutter_test/flutter_test.dart';
@@ -79,6 +79,13 @@ class FakeAppSettingsRepository implements AppSettingsRepository {
   AutoPlayOrder getAutoPlayOrder() => AutoPlayOrder.oldestFirst;
   @override
   Future<void> setAutoPlayOrder(AutoPlayOrder order) async {}
+  @override
+  DuckInterruptionBehavior getDuckInterruptionBehavior() =>
+      DuckInterruptionBehavior.duck;
+  @override
+  Future<void> setDuckInterruptionBehavior(
+    DuckInterruptionBehavior behavior,
+  ) async {}
   @override
   Future<void> setWifiOnlyDownload(bool enabled) async {}
   @override

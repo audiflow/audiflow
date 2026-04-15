@@ -156,6 +156,51 @@ void main() {
     });
   });
 
+  group('DuckInterruptionBehavior', () {
+    test('returns default (duck) when no value stored', () {
+      expect(
+        repository.getDuckInterruptionBehavior(),
+        SettingsDefaults.duckInterruptionBehavior,
+      );
+      expect(
+        SettingsDefaults.duckInterruptionBehavior,
+        DuckInterruptionBehavior.duck,
+      );
+    });
+
+    test('persists and reads duck', () async {
+      await repository.setDuckInterruptionBehavior(
+        DuckInterruptionBehavior.duck,
+      );
+      expect(
+        repository.getDuckInterruptionBehavior(),
+        DuckInterruptionBehavior.duck,
+      );
+    });
+
+    test('persists and reads pause', () async {
+      await repository.setDuckInterruptionBehavior(
+        DuckInterruptionBehavior.pause,
+      );
+      expect(
+        repository.getDuckInterruptionBehavior(),
+        DuckInterruptionBehavior.pause,
+      );
+    });
+
+    test('returns default for unknown stored value', () async {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        SettingsKeys.duckInterruptionBehavior,
+        'something-else',
+      );
+      expect(
+        repository.getDuckInterruptionBehavior(),
+        SettingsDefaults.duckInterruptionBehavior,
+      );
+    });
+  });
+
   group('WifiOnlyDownload', () {
     test('returns default when no value stored', () {
       expect(

@@ -108,6 +108,19 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
     await _ds.setString(SettingsKeys.autoPlayOrder, order.name);
   }
 
+  @override
+  DuckInterruptionBehavior getDuckInterruptionBehavior() {
+    final name = _ds.getString(SettingsKeys.duckInterruptionBehavior);
+    return _parseDuckInterruptionBehavior(name);
+  }
+
+  @override
+  Future<void> setDuckInterruptionBehavior(
+    DuckInterruptionBehavior behavior,
+  ) async {
+    await _ds.setString(SettingsKeys.duckInterruptionBehavior, behavior.name);
+  }
+
   // -- Downloads --
 
   @override
@@ -261,6 +274,7 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
       _ds.remove(SettingsKeys.autoCompleteThreshold),
       _ds.remove(SettingsKeys.continuousPlayback),
       _ds.remove(SettingsKeys.autoPlayOrder),
+      _ds.remove(SettingsKeys.duckInterruptionBehavior),
       _ds.remove(SettingsKeys.wifiOnlyDownload),
       _ds.remove(SettingsKeys.autoDeletePlayed),
       _ds.remove(SettingsKeys.maxConcurrentDownloads),
@@ -282,6 +296,14 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
       'oldestFirst' => AutoPlayOrder.oldestFirst,
       'asDisplayed' => AutoPlayOrder.asDisplayed,
       _ => SettingsDefaults.autoPlayOrder,
+    };
+  }
+
+  DuckInterruptionBehavior _parseDuckInterruptionBehavior(String? name) {
+    return switch (name) {
+      'duck' => DuckInterruptionBehavior.duck,
+      'pause' => DuckInterruptionBehavior.pause,
+      _ => SettingsDefaults.duckInterruptionBehavior,
     };
   }
 

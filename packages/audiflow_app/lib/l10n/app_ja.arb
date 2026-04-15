@@ -47,6 +47,10 @@
   "playbackAutoPlayOrderSubtitle": "エピソードリストからの自動キュー追加時の順序",
   "playbackAutoPlayOrderOldestFirst": "配信順",
   "playbackAutoPlayOrderAsDisplayed": "表示順",
+  "playbackDuckInterruptionBehaviorTitle": "通知音での挙動",
+  "playbackDuckInterruptionBehaviorSubtitle": "通知音など短い割り込みにどう反応するか",
+  "playbackDuckInterruptionBehaviorDuck": "音量を下げる",
+  "playbackDuckInterruptionBehaviorPause": "一時停止",
 
   "downloadsWifiOnlyTitle": "WiFiのみダウンロード",
   "downloadsWifiOnlySubtitle": "WiFi接続時のみダウンロード",

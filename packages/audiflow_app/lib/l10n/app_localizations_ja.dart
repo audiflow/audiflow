@@ -138,6 +138,18 @@ class AppLocalizationsJa extends AppLocalizations {
   String get playbackAutoPlayOrderAsDisplayed => '表示順';
 
   @override
+  String get playbackDuckInterruptionBehaviorTitle => '通知音での挙動';
+
+  @override
+  String get playbackDuckInterruptionBehaviorSubtitle => '通知音など短い割り込みにどう反応するか';
+
+  @override
+  String get playbackDuckInterruptionBehaviorDuck => '音量を下げる';
+
+  @override
+  String get playbackDuckInterruptionBehaviorPause => '一時停止';
+
+  @override
   String get downloadsWifiOnlyTitle => 'WiFiのみダウンロード';
 
   @override

@@ -356,6 +356,30 @@ abstract class AppLocalizations {
   /// **'As Displayed'**
   String get playbackAutoPlayOrderAsDisplayed;
 
+  /// Title for the notification interruption behavior setting
+  ///
+  /// In en, this message translates to:
+  /// **'Notification Interruption'**
+  String get playbackDuckInterruptionBehaviorTitle;
+
+  /// Subtitle for the notification interruption behavior setting
+  ///
+  /// In en, this message translates to:
+  /// **'How to react when a short sound (like a notification) plays'**
+  String get playbackDuckInterruptionBehaviorSubtitle;
+
+  /// Duck interruption option: keep playing at lower volume
+  ///
+  /// In en, this message translates to:
+  /// **'Lower volume'**
+  String get playbackDuckInterruptionBehaviorDuck;
+
+  /// Duck interruption option: pause playback
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get playbackDuckInterruptionBehaviorPause;
+
   /// WiFi-only downloads setting title
   ///
   /// In en, this message translates to:
