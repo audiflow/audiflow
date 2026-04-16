@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:audiflow_core/audiflow_core.dart' show AutoPlayOrder;
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:extended_image/extended_image.dart';
@@ -9,6 +12,7 @@ import 'package:intl/intl.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
 import '../utils/group_sorting.dart';
+import '../widgets/play_order_bottom_sheet.dart';
 import '../widgets/smart_playlist_episode_list_tile.dart';
 
 /// Screen showing episodes within a single smart playlist.
@@ -45,6 +49,11 @@ class _SmartPlaylistEpisodesScreenState
 
   late SortOrder _sortOrder;
   String _searchQuery = '';
+  final _searchController = TextEditingController();
+  Timer? _searchDebounce;
+
+  /// Resolved effective play order for this playlist.
+  AutoPlayOrder? _resolvedPlayOrder;
 
   @override
   void initState() {
@@ -55,12 +64,62 @@ class _SmartPlaylistEpisodesScreenState
         (sp.userSortable && sp.groupSort != null
             ? sp.groupSort!.order
             : SortOrder.descending);
+    _resolvePlayOrder();
   }
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
+    _searchController.dispose();
     _fallbackScrollController?.dispose();
     super.dispose();
+  }
+
+  void _onSearchChanged(String text) {
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(
+      const Duration(milliseconds: 300),
+      () => setState(() => _searchQuery = text),
+    );
+  }
+
+  void _resolvePlayOrder() {
+    final feedUrl = widget.podcast.feedUrl;
+    if (feedUrl == null) return;
+    final subscription = ref.read(subscriptionByFeedUrlProvider(feedUrl)).value;
+    if (subscription == null) return;
+    final repo = ref.read(playOrderPreferenceRepositoryProvider);
+    repo.resolveForPlaylist(subscription.id, widget.smartPlaylist.id).then((
+      resolved,
+    ) {
+      if (!mounted) return;
+      setState(() => _resolvedPlayOrder = resolved);
+    });
+  }
+
+  void _showPlayOrderSheet() {
+    final feedUrl = widget.podcast.feedUrl;
+    if (feedUrl == null) return;
+    final subscription = ref.read(subscriptionByFeedUrlProvider(feedUrl)).value;
+    if (subscription == null) return;
+
+    final podcastId = subscription.id;
+    final playlistId = widget.smartPlaylist.id;
+    final repo = ref.read(playOrderPreferenceRepositoryProvider);
+    repo.getPlaylistPlayOrder(podcastId, playlistId).then((currentOrder) {
+      if (!mounted) return;
+      showPlayOrderBottomSheet(
+        context: context,
+        currentOrder: currentOrder ?? AutoPlayOrder.defaultOrder,
+        resolvedParentOrder: ref
+            .read(appSettingsRepositoryProvider)
+            .getAutoPlayOrder(),
+        onOrderSelected: (order) {
+          repo.setPlaylistPlayOrder(podcastId, playlistId, order);
+          _resolvePlayOrder();
+        },
+      );
+    });
   }
 
   void _toggleSortOrder() {
@@ -74,15 +133,63 @@ class _SmartPlaylistEpisodesScreenState
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      appBar: SearchableAppBar(
+      appBar: AppBar(
         title: Text(widget.smartPlaylist.formattedDisplayName),
-        onSearchChanged: (query) => setState(() => _searchQuery = query),
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              if (value == 'play_order') _showPlayOrderSheet();
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'play_order',
+                child: Text(l10n.playOrderMenuTitle),
+              ),
+            ],
+          ),
+        ],
       ),
       body: CustomScrollView(
         controller: _scrollController,
         slivers: [
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: TextField(
+                controller: _searchController,
+                onChanged: _onSearchChanged,
+                decoration: InputDecoration(
+                  hintText: MaterialLocalizations.of(context).searchFieldLabel,
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                    valueListenable: _searchController,
+                    builder: (context, value, child) {
+                      if (value.text.isEmpty) {
+                        return const SizedBox.shrink();
+                      }
+                      return IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _searchController.clear();
+                          _searchDebounce?.cancel();
+                          setState(() => _searchQuery = '');
+                        },
+                      );
+                    },
+                  ),
+                  filled: true,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(28),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                ),
+              ),
+            ),
+          ),
           SliverToBoxAdapter(
             child: _SmartPlaylistHeader(
               smartPlaylist: widget.smartPlaylist,
@@ -240,6 +347,7 @@ class _SmartPlaylistEpisodesScreenState
                 siblingEpisodeIds: widget.smartPlaylist.episodeIds,
                 itunesId: widget.podcast.id,
                 feedUrl: widget.podcast.feedUrl,
+                effectiveOrder: _resolvedPlayOrder,
               );
             },
           ),
@@ -335,6 +443,7 @@ class _SmartPlaylistEpisodesScreenState
         siblingEpisodeIds: widget.smartPlaylist.episodeIds,
         itunesId: widget.podcast.id,
         feedUrl: widget.podcast.feedUrl,
+        effectiveOrder: _resolvedPlayOrder,
       ),
       scrollController: _scrollController,
       yearGroupingEnabled: true,
