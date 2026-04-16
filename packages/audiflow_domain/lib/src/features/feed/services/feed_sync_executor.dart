@@ -49,6 +49,7 @@ class FeedSyncExecutor {
   Future<SingleFeedSyncResult> syncFeed(
     Subscription sub, {
     bool forceRefresh = false,
+    Set<String> protectedGuids = const {},
   }) async {
     try {
       if (!forceRefresh && !_shouldSync(sub.lastRefreshedAt)) {
@@ -124,7 +125,7 @@ class FeedSyncExecutor {
       final knownGuids = await _episodeRepo.getGuidsByPodcastId(sub.id);
 
       var newEpisodeCount = 0;
-      var fullFeedParsed = false;
+      var stoppedEarly = false;
       final observedGuids = <String>{};
       await for (final progress in _feedParser.parseWithProgress(
         xmlContent: xmlContent,
@@ -137,23 +138,34 @@ class FeedSyncExecutor {
       )) {
         if (progress is FeedParseComplete) {
           newEpisodeCount = progress.total;
-          fullFeedParsed = !progress.stoppedEarly;
+          stoppedEarly = progress.stoppedEarly;
+          observedGuids.addAll(progress.tailGuids);
         }
       }
 
-      // Remove episodes dropped from the feed.
-      //
-      // Only safe when the entire feed was parsed: early-stop means we did
-      // not observe the tail of the feed, so we cannot tell whether missing
-      // GUIDs were removed or simply weren't reached. Also require at least
-      // one observed GUID as a guard against malformed feeds that parse to
-      // zero items and would otherwise wipe the local cache.
-      if (fullFeedParsed && observedGuids.isNotEmpty) {
-        final droppedGuids = knownGuids.difference(observedGuids);
+      // Remove episodes whose GUIDs are no longer in the feed.
+      // observedGuids now includes both newly parsed episodes and GUIDs
+      // scanned (regex-only) after the early-stop point, giving a complete
+      // picture even for incremental syncs. Guard against malformed feeds
+      // that parse to zero items.
+      if (observedGuids.isNotEmpty) {
+        var droppedGuids = knownGuids.difference(observedGuids);
+
+        // When the feed was not fully parsed, the tail scan cannot match
+        // episodes stored under synthetic IDs (unknown-*) because those
+        // items lack both <guid> and <enclosure>. Exclude them to avoid
+        // false deletions; they will be cleaned up on the next full parse.
+        if (stoppedEarly) {
+          droppedGuids = droppedGuids
+              .where((g) => !g.startsWith('unknown-'))
+              .toSet();
+        }
+
         if (droppedGuids.isNotEmpty) {
           final deleted = await _episodeRepo.deleteByPodcastIdAndGuids(
             sub.id,
             droppedGuids,
+            protectedGuids: protectedGuids,
           );
           _logger?.i('Removed $deleted dropped episodes from "${sub.title}"');
         }

@@ -103,6 +103,7 @@ final class ParseComplete extends ParseProgress {
   const ParseComplete({
     required this.totalParsed,
     required this.stoppedEarly,
+    this.tailGuids = const {},
   });
 
   /// Total number of episodes parsed.
@@ -110,4 +111,9 @@ final class ParseComplete extends ParseProgress {
 
   /// True if parsing stopped early due to finding a known GUID.
   final bool stoppedEarly;
+
+  /// GUIDs observed after the early-stop point (regex-only, no DOM parse).
+  /// Lets callers build a complete picture of which GUIDs are still in the
+  /// feed even when it was not fully parsed.
+  final Set<String> tailGuids;
 }

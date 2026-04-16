@@ -123,10 +123,12 @@ class _FakeEpisodeRepository implements EpisodeRepository {
   @override
   Future<int> deleteByPodcastIdAndGuids(
     int podcastId,
-    Set<String> guids,
-  ) async {
-    deleteCalls.add((podcastId: podcastId, guids: Set.of(guids)));
-    return guids.length;
+    Set<String> guids, {
+    Set<String> protectedGuids = const {},
+  }) async {
+    final effective = guids.difference(protectedGuids);
+    deleteCalls.add((podcastId: podcastId, guids: Set.of(effective)));
+    return effective.length;
   }
 
   // Unused methods for this test suite
@@ -515,6 +517,7 @@ Stream<FeedParseProgress> _progressWithBatches({
     List<ParsedEpisodeMediaMeta> mediaMetas,
   )
   onBatchReady,
+  Set<String> tailGuids = const {},
 }) async* {
   var total = 0;
   for (final batch in batches) {
@@ -522,7 +525,11 @@ Stream<FeedParseProgress> _progressWithBatches({
     total += batch.length;
     yield EpisodesBatchStored(totalSoFar: total);
   }
-  yield FeedParseComplete(total: total, stoppedEarly: stoppedEarly);
+  yield FeedParseComplete(
+    total: total,
+    stoppedEarly: stoppedEarly,
+    tailGuids: tailGuids,
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -863,11 +870,38 @@ void main() {
       },
     );
 
+    test('deletes dropped episodes even when parser stopped early', () async {
+      final sub = _subscription(id: 9, lastRefreshedAt: null);
+      // Known: a, b, c, d. Feed has a (new), b, c (tail). d is dropped.
+      fakeEpisodeRepo.storedGuids = {'a', 'b', 'c', 'd'};
+
+      final parser = _FakeFeedParserService(
+        (xml, id, guids, onBatch) => _progressWithBatches(
+          batches: [
+            [_ep(sub.id, 'a')],
+          ],
+          stoppedEarly: true,
+          tailGuids: {'b', 'c'},
+          onBatchReady: onBatch,
+        ),
+      );
+
+      final executor = buildExecutor(
+        dio: _FakeDio((_) => _xmlResponse('<rss></rss>')),
+        feedParser: parser,
+      );
+
+      await executor.syncFeed(sub);
+
+      expect(fakeEpisodeRepo.deleteCalls, hasLength(1));
+      expect(fakeEpisodeRepo.deleteCalls.single.guids, {'d'});
+    });
+
     test(
-      'does not delete when parser stopped early (stoppedEarly=true)',
+      'does not delete when stopped early and tailGuids cover all known',
       () async {
-        final sub = _subscription(id: 9, lastRefreshedAt: null);
-        fakeEpisodeRepo.storedGuids = {'a', 'b', 'c', 'd'};
+        final sub = _subscription(id: 11, lastRefreshedAt: null);
+        fakeEpisodeRepo.storedGuids = {'a', 'b', 'c'};
 
         final parser = _FakeFeedParserService(
           (xml, id, guids, onBatch) => _progressWithBatches(
@@ -875,6 +909,7 @@ void main() {
               [_ep(sub.id, 'a')],
             ],
             stoppedEarly: true,
+            tailGuids: {'b', 'c'},
             onBatchReady: onBatch,
           ),
         );
@@ -889,6 +924,59 @@ void main() {
         expect(fakeEpisodeRepo.deleteCalls, isEmpty);
       },
     );
+
+    test('preserves synthetic-id episodes during early-stop sync', () async {
+      final sub = _subscription(id: 12, lastRefreshedAt: null);
+      // 'unknown-123' is a synthetic id from a guid-less, enclosure-less item
+      fakeEpisodeRepo.storedGuids = {'a', 'b', 'unknown-123'};
+
+      final parser = _FakeFeedParserService(
+        (xml, id, guids, onBatch) => _progressWithBatches(
+          batches: [
+            [_ep(sub.id, 'a')],
+          ],
+          stoppedEarly: true,
+          tailGuids: {'b'},
+          onBatchReady: onBatch,
+        ),
+      );
+
+      final executor = buildExecutor(
+        dio: _FakeDio((_) => _xmlResponse('<rss></rss>')),
+        feedParser: parser,
+      );
+
+      await executor.syncFeed(sub);
+
+      // 'unknown-123' should NOT be deleted during early-stop
+      expect(fakeEpisodeRepo.deleteCalls, isEmpty);
+    });
+
+    test('deletes synthetic-id episodes during full-parse sync', () async {
+      final sub = _subscription(id: 13, lastRefreshedAt: null);
+      fakeEpisodeRepo.storedGuids = {'a', 'b', 'unknown-123'};
+
+      final parser = _FakeFeedParserService(
+        (xml, id, guids, onBatch) => _progressWithBatches(
+          batches: [
+            [_ep(sub.id, 'a'), _ep(sub.id, 'b')],
+          ],
+          stoppedEarly: false,
+          onBatchReady: onBatch,
+        ),
+      );
+
+      final executor = buildExecutor(
+        dio: _FakeDio((_) => _xmlResponse('<rss></rss>')),
+        feedParser: parser,
+      );
+
+      await executor.syncFeed(sub);
+
+      // Full parse: synthetic-id episode is genuinely gone from the feed
+      expect(fakeEpisodeRepo.deleteCalls, hasLength(1));
+      expect(fakeEpisodeRepo.deleteCalls.single.guids, {'unknown-123'});
+    });
 
     test(
       'does not delete when feed parses to zero observed episodes',

@@ -61,11 +61,18 @@ final class EpisodesBatchStored extends FeedParseProgress {
 
 /// Emitted when parsing is complete.
 final class FeedParseComplete extends FeedParseProgress {
-  const FeedParseComplete({required this.total, required this.stoppedEarly});
+  const FeedParseComplete({
+    required this.total,
+    required this.stoppedEarly,
+    this.tailGuids = const {},
+  });
 
   /// Total episodes parsed and stored.
   final int total;
 
   /// True if stopped early due to known GUID.
   final bool stoppedEarly;
+
+  /// GUIDs observed after the early-stop point (regex-only scan).
+  final Set<String> tailGuids;
 }

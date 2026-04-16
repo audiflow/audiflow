@@ -193,6 +193,7 @@ class IsolateRssParser {
       // --- Episodes: scan for <item>...</item> blocks incrementally ---
       var parsedCount = 0;
       var stoppedEarly = false;
+      final tailGuids = <String>{};
       final cutoff = params.knownNewestPubDate;
       final cutoffGuid = params.knownNewestGuid;
       final itemOpenTag = RegExp(r'<item[\s>]');
@@ -211,9 +212,13 @@ class IsolateRssParser {
         // Quick-check guid and pubDate via lightweight regex before DOM-parsing
         final guid = _extractTagText(itemXml, 'guid');
 
+        // Decode once for comparison against database-stored (decoded) GUIDs
+        final decodedGuid = guid != null ? _decodeXmlEntities(guid) : null;
+
         // Early stop: GUID-set match (legacy path, used by parseWithProgress)
-        if (guid != null && params.knownGuids.contains(guid)) {
+        if (decodedGuid != null && params.knownGuids.contains(decodedGuid)) {
           stoppedEarly = true;
+          tailGuids.add(decodedGuid);
           break;
         }
 
@@ -222,8 +227,14 @@ class IsolateRssParser {
           final pubDateStr = _extractTagText(itemXml, 'pubDate');
           final pubDate = _parseDate(pubDateStr);
           if (pubDate != null && !cutoff.isBefore(pubDate)) {
-            if (cutoffGuid == null || cutoffGuid == guid) {
+            if (cutoffGuid == null || cutoffGuid == decodedGuid) {
               stoppedEarly = true;
+              final id =
+                  decodedGuid ??
+                  _decodeXmlEntities(
+                    _extractEnclosureUrl(itemXml) ?? '',
+                  );
+              if (id.isNotEmpty) tailGuids.add(id);
               break;
             }
           }
@@ -242,8 +253,31 @@ class IsolateRssParser {
         }
       }
 
+      // Scan remaining items for identifiers (no DOM parse) so callers can
+      // detect episodes dropped from the feed even after an early stop.
+      // Uses the same fallback chain as FeedParserService: guid, then
+      // enclosure URL. Items with neither are skipped (they would get a
+      // synthetic timestamp-based id that cannot be matched reliably).
+      // Values are XML-decoded to match what XmlDocument.parse produces
+      // for the fully-parsed episodes stored in the database.
+      if (stoppedEarly) {
+        while (itemMatches.moveNext()) {
+          final start = itemMatches.current.start;
+          final close = xml.indexOf(itemCloseTag, start);
+          if (close == -1) break;
+          final snippet = xml.substring(start, close + itemCloseTag.length);
+          final raw =
+              _extractTagText(snippet, 'guid') ?? _extractEnclosureUrl(snippet);
+          if (raw != null) tailGuids.add(_decodeXmlEntities(raw));
+        }
+      }
+
       params.sendPort.send(
-        ParseComplete(totalParsed: parsedCount, stoppedEarly: stoppedEarly),
+        ParseComplete(
+          totalParsed: parsedCount,
+          stoppedEarly: stoppedEarly,
+          tailGuids: tailGuids,
+        ),
       );
     } catch (e) {
       params.sendPort.send(_IsolateError(e.toString()));
@@ -291,6 +325,50 @@ class IsolateRssParser {
     );
     final match = re.firstMatch(xml);
     return _nullIfBlank(match?.group(1));
+  }
+
+  /// Extracts the `url` attribute from the first `<enclosure>` tag via regex.
+  /// Handles both self-closing (`<enclosure ... />`) and open/close forms.
+  static final _enclosureUrlRe = RegExp(
+    r'<enclosure\b[^>]*\burl\s*=\s*["\x27]([^"\x27]*)["\x27]',
+    caseSensitive: false,
+  );
+
+  static String? _extractEnclosureUrl(String xml) {
+    final match = _enclosureUrlRe.firstMatch(xml);
+    return _nullIfBlank(match?.group(1));
+  }
+
+  /// Decodes XML character references (named and numeric) so
+  /// regex-extracted values match what `XmlDocument.parse` produces.
+  static final _xmlEntityRe = RegExp(
+    r'&(?:(amp|lt|gt|quot|apos)|#(\d+)|#x([0-9a-fA-F]+));',
+  );
+
+  static String _decodeXmlEntities(String value) {
+    if (!value.contains('&')) return value;
+    return value.replaceAllMapped(_xmlEntityRe, (m) {
+      final named = m.group(1);
+      if (named != null) {
+        return switch (named) {
+          'amp' => '&',
+          'lt' => '<',
+          'gt' => '>',
+          'quot' => '"',
+          'apos' => "'",
+          _ => m.group(0)!,
+        };
+      }
+      final decimal = m.group(2);
+      if (decimal != null) {
+        return String.fromCharCode(int.parse(decimal));
+      }
+      final hex = m.group(3);
+      if (hex != null) {
+        return String.fromCharCode(int.parse(hex, radix: 16));
+      }
+      return m.group(0)!;
+    });
   }
 
   static ParsedEpisode _parseEpisode(XmlElement item) {

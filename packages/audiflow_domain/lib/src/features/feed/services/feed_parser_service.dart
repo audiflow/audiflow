@@ -292,7 +292,7 @@ class FeedParserService {
             yield EpisodesBatchStored(totalSoFar: totalParsed);
           }
 
-        case ParseComplete(:final stoppedEarly):
+        case ParseComplete(:final stoppedEarly, :final tailGuids):
           // Flush remaining buffer
           if (buffer.isNotEmpty) {
             await onBatchReady(buffer.toList(), mediaMetaBuffer.toList());
@@ -302,11 +302,12 @@ class FeedParserService {
 
           _logger?.i(
             'Parse complete: $totalParsed episodes, '
-            'stoppedEarly: $stoppedEarly',
+            'stoppedEarly: $stoppedEarly, tailGuids: ${tailGuids.length}',
           );
           yield FeedParseComplete(
             total: totalParsed,
             stoppedEarly: stoppedEarly,
+            tailGuids: tailGuids,
           );
       }
     }

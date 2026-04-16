@@ -13,7 +13,11 @@ void main() {
   });
 
   setUp(() async {
-    isar = await openTestIsar([SubscriptionSchema, EpisodeSchema]);
+    isar = await openTestIsar([
+      SubscriptionSchema,
+      EpisodeSchema,
+      DownloadTaskSchema,
+    ]);
     datasource = EpisodeLocalDatasource(isar);
 
     // Insert a test subscription (no FK in Isar, but keeps data coherent)
