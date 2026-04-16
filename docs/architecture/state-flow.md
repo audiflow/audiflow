@@ -22,7 +22,8 @@ These providers persist across navigation and screen changes:
 | `playbackProgressStreamProvider` | audiflow_domain | Combined position/duration/buffered stream |
 | `playbackSpeedProvider` | audiflow_domain | Current playback speed stream |
 | `nowPlayingControllerProvider` | audiflow_domain | Currently playing episode metadata |
-| `audioPlayerControllerProvider` | audiflow_domain | Play/pause/seek/stop commands |
+| `audioPlayerControllerProvider` | audiflow_domain | Play/pause/seek/stop/fadeOutAndPause commands |
+| `sleepTimerControllerProvider` | audiflow_domain | Sleep timer state, countdown, mode management |
 
 ### 2. Feature state (auto-disposed)
 
@@ -35,6 +36,7 @@ These providers are created when watched and disposed when no longer observed:
 - Search/discovery providers: search results, chart data
 - Transcript providers: transcript segments, chapter data
 - Station providers: station list, station detail, station edit state, station episode lists
+- Play order preference providers: per-scope (podcast, playlist, group) play order resolution
 
 ### 3. UI-only state
 
@@ -73,6 +75,10 @@ Features communicate through event streams, not direct provider coupling:
 PlayerEvent stream (audiflow_domain)
   |-- PlaybackStarted, PlaybackPaused, PlaybackCompleted
   |-- Watched by: queue service, history service, analytics, station reconciler
+
+PlayerLifecycleEvent stream (audiflow_domain)
+  |-- EpisodeCompleted, EpisodeSwitched, Seek
+  |-- Watched by: sleep timer controller
 
 DownloadEvent stream (audiflow_domain)
   |-- DownloadCompleted, DownloadFailed

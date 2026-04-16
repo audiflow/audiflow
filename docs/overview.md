@@ -13,11 +13,14 @@ Audiflow is a mobile podcast player for iOS and Android, built with Flutter. It 
 - Queue building and reordering
 - Smart playlist config fetching, caching, and rendering
 - Playback position persistence and resume
-- Sleep timer and playback speed control
+- Sleep timer with multiple modes (duration countdown, end of episode, end of chapter, episode count) and fade-out pause
+- Playback speed control
+- Configurable audio interruption behavior (duck volume or pause-and-rewind)
 - Podcast transcript and chapter display
 - On-device voice command processing
 - Station management (custom multi-podcast playlists with duration filters and episode sorting)
-- Background feed refresh with prioritized sync and new episode notifications
+- Background feed refresh with prioritized sync, dropped episode cleanup, and new episode notifications
+- Per-scope play order preferences with cascade resolution (group -> playlist -> podcast -> global)
 
 ## Non-responsibilities
 
@@ -28,11 +31,12 @@ Audiflow is a mobile podcast player for iOS and Android, built with Flutter. It 
 ## Main concepts
 
 - **Pattern**: A smart playlist config matched to a podcast by GUID or feed URL. Contains one or more playlist definitions.
-- **Resolver**: A strategy that groups episodes into smart playlists. Types: `rss`, `category`, `year`, `titleAppearanceOrder`.
+- **Resolver**: A strategy that groups episodes into smart playlists. Types: `seasonNumber`, `titleClassifier`, `year`, `titleDiscovery`. The `seasonNumber` resolver auto-detects whether season metadata is reliable before grouping.
 - **Isar collection**: A class annotated with `@collection` that serves as both database schema and domain entity (no separate DTOs).
 - **Feature module**: A vertical slice containing models, repositories, datasources, services, and events within `audiflow_domain`.
 - **Presentation layer**: Screens, controllers, and widgets in `audiflow_app` that consume domain providers via Riverpod.
 - **Station**: A user-created playlist that aggregates episodes from multiple subscribed podcasts, with configurable duration filters and episode sorting.
+- **Play order preference**: A per-scope (podcast, playlist, or group) override for episode play order, resolved via cascade (most specific scope wins, falls back to global setting).
 
 ## Primary entry points
 
@@ -48,6 +52,7 @@ Audiflow is a mobile podcast player for iOS and Android, built with Flutter. It 
 - `riverpod` (v3) + code generation: State management
 - `isar_community` + `isar_community_flutter_libs`: Local database
 - `just_audio` + `audio_service`: Audio playback and background support
+- `audio_session`: Audio focus and interruption handling
 - `dio` + `dio_cache_interceptor`: HTTP client with caching
 - `go_router` + `go_router_builder`: Type-safe routing
 - `freezed` + `json_serializable`: Immutable models and JSON serialization

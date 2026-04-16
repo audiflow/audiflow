@@ -31,11 +31,12 @@ Wraps the AudioPlayer to provide:
 | Provider | Type | Purpose |
 |----------|------|---------|
 | `audioPlayerProvider` | keepAlive sync | Singleton AudioPlayer |
-| `audioPlayerControllerProvider` | keepAlive Notifier | Play/pause/seek/stop/setSpeed commands |
+| `audioPlayerControllerProvider` | keepAlive Notifier | Play/pause/seek/stop/setSpeed commands, fade-out-and-pause |
 | `playbackProgressStreamProvider` | keepAlive Stream | Combined position + duration + buffered |
 | `playbackSpeedProvider` | keepAlive Stream | Current speed from player |
 | `nowPlayingControllerProvider` | keepAlive Notifier | Episode metadata for mini player and player screen |
 | `playbackHistoryServiceProvider` | keepAlive | Records completed episodes |
+| `sleepTimerControllerProvider` | keepAlive Notifier | Sleep timer state, countdown, and episode/chapter tracking |
 
 ### Layer 4: Presentation (audiflow_app + audiflow_ui)
 
@@ -44,6 +45,7 @@ Wraps the AudioPlayer to provide:
 - `PlayerScreen` (audiflow_app): Full-screen player with artwork, controls, progress
 - `MiniPlayerArtwork` (audiflow_ui): Episode artwork with placeholder fallback
 - `MiniPlayerProgressBar` (audiflow_ui): Thin progress indicator bar
+- Sleep timer widgets (audiflow_app): `SleepTimerSheet`, `SleepTimerChip`, `SleepTimerIconButton`, `SleepTimerStatusLabel`, `SleepTimerNumericPanel`
 
 ## Playback flow
 
@@ -73,20 +75,33 @@ When an episode has been downloaded:
 - If queue has next: auto-plays next episode
 - If queue empty and "stop at end" setting: returns to idle
 - Queue reordering triggers re-evaluation of next-up
+- Play order for ad-hoc queues is resolved via `PlayOrderPreferenceRepository` cascade (group -> playlist -> podcast -> global)
 
 ## Audio focus and interruptions
 
-- Phone call: Pause playback, resume when call ends
-- Other audio app: Duck volume or pause based on audio session category
-- Bluetooth disconnect: Pause playback
-- Headphone unplug: Pause playback
+Handled by `AudioInterruptionHandler` (pure-logic, callback-based for testability):
+
+- **Transient/duckable interruptions** (e.g. notification chimes): Behavior is user-configurable via `DuckInterruptionBehavior` setting:
+  - `duck`: Lower volume for the duration of the interruption
+  - `pause`: Pause playback with a short rewind so the listener does not miss content, resume when interruption ends
+- **Phone call**: Pause playback, resume when call ends
+- **Bluetooth disconnect / headphone unplug**: Pause playback
+- Resume-on-end only triggers when the handler itself paused playback, never when the user had already paused manually
 
 ## Sleep timer
 
-- Managed by `AudioPlayerController`
-- Counts down while playing, pauses when timer expires
+Managed by `SleepTimerController` (keepAlive Notifier, separate from `AudioPlayerController`):
+
+- **Modes**: Off, duration (minutes countdown), end of episode, end of chapter, episode count
+- Duration mode: 1-second tick timer counts down to a deadline; fires when expired
+- Episode mode: Decrements remaining count on episode completion
+- End-of-episode / end-of-chapter: Fires on the corresponding lifecycle event
+- **Fire action**: Fades out audio volume then pauses (`AudioPlayerController.fadeOutAndPause`)
 - Timer pauses when playback pauses, resumes when playback resumes
+- Remembers last-used minutes and episode count across sessions (persisted via `SleepTimerPreferencesDatasource`)
+- Decision logic is encapsulated in `SleepTimerService` (pure, stateless, testable)
+- Emits `SleepTimerEvent` stream for UI notifications (e.g. `SleepTimerFired`)
 
 ## When to update
 
-Update when: audio playback flow changes, new player features added (e.g., chapters, skip silence), queue behavior modified, background service configuration changes.
+Update when: audio playback flow changes, new player features added (e.g., chapters, skip silence), queue behavior modified, background service configuration changes, sleep timer modes or fire behavior changes, audio interruption handling logic changes.

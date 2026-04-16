@@ -23,6 +23,7 @@ audiflow_cli -> audiflow_domain, audiflow_podcast
 - Localization (ARB files for en, ja)
 - Root ProviderScope and app-level observers
 - Background task registration and workmanager lifecycle
+- Audio interruption handler wiring (`AudioInterruptionHandler`)
 
 #### Non-responsibilities
 - Business logic, data access, model definitions
@@ -43,12 +44,15 @@ audiflow_cli -> audiflow_domain, audiflow_podcast
 - Repository interfaces and implementations (co-located)
 - Datasources: local (Isar) and remote (HTTP via Dio)
 - Isar collection definitions (serve as domain entities)
-- Freezed models for non-persisted state (PlaybackState, NowPlayingInfo, PlaybackProgress)
+- Freezed models for non-persisted state (PlaybackState, NowPlayingInfo, PlaybackProgress, SleepTimerState, SleepTimerConfig)
 - Services for business logic orchestration
 - Riverpod providers for dependency injection and state
-- Cross-feature event streams
+- Cross-feature event streams (PlayerEvent, PlayerLifecycleEvent, DownloadEvent, SubscriptionEvent, FeedSyncEvent)
 - Background refresh service with prioritized sync
 - Background notification service for new episode alerts
+- Sleep timer controller and service (countdown, episode/chapter tracking, fade-out trigger)
+- Play order preference repository with cascade resolution (group -> playlist -> podcast -> global)
+- Feed sync executor with dropped episode cleanup (guards favorited, downloaded, and now-playing episodes)
 
 #### Non-responsibilities
 - UI rendering, navigation, routing
@@ -67,11 +71,13 @@ audiflow_cli -> audiflow_domain, audiflow_podcast
 
 #### Responsibilities
 - App constants and asset paths
+- Settings keys and defaults (e.g. `SettingsDefaults.interruptionRewindSeconds`)
 - Flavor configuration and feature flags
 - Error types: AppException hierarchy (NetworkException, StorageException, etc.)
 - Extension methods: String, DateTime, Duration
 - Utilities: validators, formatters, helpers
 - Logger configuration
+- Enums shared across packages: `AutoPlayOrder` (includes `defaultOrder` sentinel), `DuckInterruptionBehavior`
 
 #### Non-responsibilities
 - Business logic, data access, UI rendering
@@ -94,6 +100,8 @@ audiflow_cli -> audiflow_domain, audiflow_podcast
 - HTTP feed fetching with caching and conditional requests
 - Builder interface (`PodcastEntityBuilder`) for zero-copy entity construction
 - Graceful handling of malformed feeds
+- XML entity decoding in tail scan identifiers
+- Enclosure URL fallback for GUID resolution in tail scans
 
 #### Non-responsibilities
 - Podcast subscription management, episode storage
