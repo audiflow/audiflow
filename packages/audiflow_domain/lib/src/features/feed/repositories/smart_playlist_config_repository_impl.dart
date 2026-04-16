@@ -147,7 +147,6 @@ class SmartPlaylistConfigRepositoryImpl
   @override
   Future<void> clearDiskCache() async {
     await _cache.clearAll();
-    _summaries = [];
     _inFlight.clear();
   }
 }
