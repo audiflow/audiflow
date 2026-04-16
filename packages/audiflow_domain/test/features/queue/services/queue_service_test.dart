@@ -537,12 +537,12 @@ void main() {
       });
     });
 
-    group('with forceDisplayOrder', () {
+    group('with effectiveOrder', () {
       test(
         'preserves display order even when autoPlayOrder is chronological',
         () async {
           // Default setUp uses oldestFirst (chronological), which normally
-          // re-sorts by publishedAt. forceDisplayOrder should bypass that.
+          // re-sorts by publishedAt. effectiveOrder should override that.
           final siblingIds = [50, 30, 10, 40, 20];
           final starting = _episode(
             id: 30,
@@ -557,7 +557,7 @@ void main() {
             startingEpisodeId: 30,
             sourceContext: 'Station',
             siblingEpisodeIds: siblingIds,
-            forceDisplayOrder: true,
+            effectiveOrder: AutoPlayOrder.asDisplayed,
           );
 
           // Should preserve display order: after 30 comes [10, 40, 20]
@@ -584,7 +584,7 @@ void main() {
           startingEpisodeId: 30,
           sourceContext: 'Station',
           siblingEpisodeIds: siblingIds,
-          forceDisplayOrder: true,
+          effectiveOrder: AutoPlayOrder.asDisplayed,
         );
 
         verify(

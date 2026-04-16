@@ -27,7 +27,7 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
     this.lastRefreshedAt,
     this.itunesId,
     this.feedUrl,
-    this.forceDisplayOrder = false,
+    this.effectiveOrder,
   });
 
   final Episode episode;
@@ -48,9 +48,8 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
   /// Episode IDs in the same group, for adhoc queue building.
   final List<int>? siblingEpisodeIds;
 
-  /// When true, the queue preserves [siblingEpisodeIds] order regardless
-  /// of the user's auto-play order setting.
-  final bool forceDisplayOrder;
+  /// When provided, overrides the user's global auto-play order setting.
+  final AutoPlayOrder? effectiveOrder;
 
   /// iTunes ID for building universal share links.
   final String? itunesId;
@@ -447,7 +446,7 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
       startingEpisodeId: episode.id,
       sourceContext: podcastTitle,
       siblingEpisodeIds: siblingEpisodeIds,
-      forceDisplayOrder: forceDisplayOrder,
+      effectiveOrder: effectiveOrder,
     );
 
     controller.play(

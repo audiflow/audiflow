@@ -478,6 +478,17 @@ class MockEpisodeRepository extends _i1.Mock implements _i12.EpisodeRepository {
           as _i11.Future<void>);
 
   @override
+  _i11.Future<int> deleteByPodcastIdAndGuids(
+    int? podcastId,
+    Set<String>? guids,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#deleteByPodcastIdAndGuids, [podcastId, guids]),
+            returnValue: _i11.Future<int>.value(0),
+          )
+          as _i11.Future<int>);
+
+  @override
   _i11.Future<List<_i13.Episode>> getSubsequentEpisodes({
     required int? podcastId,
     required int? afterEpisodeNumber,
@@ -637,7 +648,7 @@ class MockAppSettingsRepository extends _i1.Mock
   _i20.AutoPlayOrder getAutoPlayOrder() =>
       (super.noSuchMethod(
             Invocation.method(#getAutoPlayOrder, []),
-            returnValue: _i20.AutoPlayOrder.oldestFirst,
+            returnValue: _i20.AutoPlayOrder.defaultOrder,
           )
           as _i20.AutoPlayOrder);
 
