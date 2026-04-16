@@ -109,4 +109,7 @@ class FakeSubscriptionRepository implements SubscriptionRepository {
     String? etag,
     String? lastModified,
   }) => throw UnimplementedError();
+
+  @override
+  Future<void> clearAllHttpCacheHeaders() => throw UnimplementedError();
 }

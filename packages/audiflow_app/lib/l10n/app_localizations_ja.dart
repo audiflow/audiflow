@@ -254,6 +254,22 @@ class AppLocalizationsJa extends AppLocalizations {
   String get storageCacheCleared => 'キャッシュをクリアしました';
 
   @override
+  String get storagePodcastCache => 'ポッドキャストキャッシュ';
+
+  @override
+  String get storagePodcastCacheSubtitle => 'スマートプレイリストのグループ分けをリセットし、フィードを再取得';
+
+  @override
+  String get storageClearPodcastCacheTitle => 'ポッドキャストキャッシュをクリアしますか？';
+
+  @override
+  String get storageClearPodcastCacheContent =>
+      'スマートプレイリストのグループ分けがリセットされ、次回アクセス時にフィードが再ダウンロードされます。再生履歴と設定は保持されます。';
+
+  @override
+  String get storagePodcastCacheCleared => 'ポッドキャストキャッシュをクリアしました';
+
+  @override
   String get storageSearchHistory => '検索履歴';
 
   @override

@@ -172,21 +172,38 @@ Future<SmartPlaylistGrouping?> podcastSmartPlaylists(
 
   // Check for cached smart playlists first
   final cachedPlaylists = await playlistDatasource.getByPodcastId(podcastId);
+  logger.d(
+    'podcastSmartPlaylists: podcastId=$podcastId, '
+    'feedUrl=${subscription.feedUrl}, '
+    'cachedCount=${cachedPlaylists.length}, '
+    'hasPattern=${matchedSummary != null}',
+  );
   if (cachedPlaylists.isNotEmpty) {
-    logger.d(
-      'Using ${cachedPlaylists.length} cached smart '
-      'playlists for podcastId=$podcastId',
-    );
-    return _buildGroupingFromCache(
+    for (final cp in cachedPlaylists) {
+      logger.d(
+        '  cached: playlistId=${cp.playlistId}, '
+        'resolverType=${cp.resolverType}, '
+        'displayName=${cp.displayName}, '
+        'configVersion=${cp.configVersion}',
+      );
+    }
+    final result = await _buildGroupingFromCache(
       ref,
       podcastId,
       cachedPlaylists,
       episodeRepo,
       subscription.feedUrl,
+      logger,
     );
+    logger.d(
+      'podcastSmartPlaylists: _buildGroupingFromCache returned '
+      '${result == null ? "null" : "${result.playlists.length} playlists"}',
+    );
+    return result;
   }
 
   // No cached smart playlists - resolve from episodes
+  logger.d('podcastSmartPlaylists: no cache, resolving from episodes');
   return _resolveAndPersistSmartPlaylists(
     ref,
     podcastId,
@@ -207,6 +224,7 @@ Future<SmartPlaylistGrouping?> _buildGroupingFromCache(
   List<SmartPlaylistEntity> cachedPlaylists,
   EpisodeRepository episodeRepo,
   String feedUrl,
+  Logger logger,
 ) async {
   final playlistDatasource = ref.watch(smartPlaylistLocalDatasourceProvider);
 
@@ -215,16 +233,57 @@ Future<SmartPlaylistGrouping?> _buildGroupingFromCache(
   final summary = configRepo.findMatchingPattern(null, feedUrl);
   if (summary != null) {
     final cachedVersion = cachedPlaylists.first.configVersion;
+    logger.d(
+      '_buildGroupingFromCache: pattern matched, '
+      'cachedVersion=$cachedVersion, '
+      'dataVersion=${summary.dataVersion}',
+    );
     if (cachedVersion == null || cachedVersion != summary.dataVersion) {
       // Config has been updated upstream -- re-resolve
       return _reResolveFromEpisodes(ref, podcastId, feedUrl);
     }
+  } else {
+    logger.d(
+      '_buildGroupingFromCache: no pattern match (auto-detect), '
+      'podcastId=$podcastId, feedUrl=$feedUrl',
+    );
   }
 
   final episodes = await episodeRepo.getByPodcastId(podcastId);
-  if (episodes.isEmpty) return null;
+
+  if (episodes.isEmpty) {
+    logger.d('_buildGroupingFromCache: no episodes, returning null');
+    return null;
+  }
 
   final resolverType = cachedPlaylists.first.resolverType;
+  logger.d(
+    '_buildGroupingFromCache: resolverType=$resolverType, '
+    'episodeCount=${episodes.length}, '
+    'cachedPlaylistCount=${cachedPlaylists.length}',
+  );
+
+  // Auto-detect seasonNumber cache may be stale: the
+  // hasReliableSeasonNumbers heuristic was added after some
+  // devices already cached a single-season grouping. Re-validate
+  // and purge when the heuristic now rejects the metadata.
+  // Legacy caches stored 'rss' as the resolver type.
+  if (summary == null &&
+      (resolverType == 'seasonNumber' || resolverType == 'rss')) {
+    final reliable = hasReliableSeasonNumbers(episodes);
+    logger.d(
+      '_buildGroupingFromCache: seasonNumber reliability check: '
+      'reliable=$reliable',
+    );
+    if (!reliable) {
+      await playlistDatasource.deleteByPodcastId(podcastId);
+      logger.i(
+        '_buildGroupingFromCache: purged stale seasonNumber cache '
+        'for podcastId=$podcastId',
+      );
+      return null;
+    }
+  }
   final ungroupedIds = <int>[];
   final allGroupedEpisodeIds = <int>{};
 

@@ -260,6 +260,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get storageCacheCleared => 'Cache cleared';
 
   @override
+  String get storagePodcastCache => 'Podcast Cache';
+
+  @override
+  String get storagePodcastCacheSubtitle =>
+      'Clear smart playlist groupings and force feed re-sync';
+
+  @override
+  String get storageClearPodcastCacheTitle => 'Clear Podcast Cache?';
+
+  @override
+  String get storageClearPodcastCacheContent =>
+      'This will reset smart playlist groupings and re-download feeds on next visit. Your play history and preferences are kept.';
+
+  @override
+  String get storagePodcastCacheCleared => 'Podcast cache cleared';
+
+  @override
   String get storageSearchHistory => 'Search History';
 
   @override

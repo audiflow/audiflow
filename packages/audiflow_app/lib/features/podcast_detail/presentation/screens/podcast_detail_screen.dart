@@ -293,6 +293,20 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
       showPlaylistToggle: showPlaylistToggle,
     );
 
+    // --- diagnostic logging for stale season grouping ---
+    ref
+        .read(namedLoggerProvider('PodcastDetailScreen'))
+        .d(
+          '_buildContent: feedUrl=$feedUrl, '
+          'hasPattern=$hasPattern, '
+          'grouping=${grouping?.resolverType}, '
+          'allPlaylists=${allPlaylists.length}, '
+          'displayPlaylists=${displayPlaylists.length}, '
+          'showToggle=$showPlaylistToggle, '
+          'viewMode=$viewMode, '
+          'effectiveViewMode=$effectiveViewMode',
+        );
+
     // When the toggle is hidden but the persisted preference still
     // says `smartPlaylists`, clear it so the stored state matches
     // what the user actually sees. Without this the UI would flip

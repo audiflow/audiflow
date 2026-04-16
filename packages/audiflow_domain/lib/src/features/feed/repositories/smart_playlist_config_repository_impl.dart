@@ -143,4 +143,7 @@ class SmartPlaylistConfigRepositoryImpl
   void setPatternSummaries(List<PatternSummary> summaries) {
     _summaries = summaries;
   }
+
+  /// Deletes all disk-cached config files.
+  Future<void> clearDiskCache() => _cache.clearAll();
 }

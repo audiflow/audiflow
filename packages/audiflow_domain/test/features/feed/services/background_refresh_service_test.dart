@@ -207,6 +207,9 @@ class FakeSubscriptionRepository implements SubscriptionRepository {
     String? etag,
     String? lastModified,
   }) async {}
+
+  @override
+  Future<void> clearAllHttpCacheHeaders() async {}
 }
 
 class FakeEpisodeRepository implements EpisodeRepository {

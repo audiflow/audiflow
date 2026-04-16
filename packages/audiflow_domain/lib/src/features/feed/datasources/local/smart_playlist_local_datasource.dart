@@ -121,6 +121,14 @@ class SmartPlaylistLocalDatasource {
     });
   }
 
+  /// Deletes all smart playlists and groups across all podcasts.
+  Future<void> clearAll() async {
+    await _isar.writeTxn(() async {
+      await _isar.smartPlaylistEntitys.clear();
+      await _isar.smartPlaylistGroupEntitys.clear();
+    });
+  }
+
   /// Returns count of smart playlists for a podcast.
   Future<int> countByPodcastId(int podcastId) {
     return _isar.smartPlaylistEntitys
