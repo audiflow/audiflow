@@ -212,10 +212,13 @@ class IsolateRssParser {
         // Quick-check guid and pubDate via lightweight regex before DOM-parsing
         final guid = _extractTagText(itemXml, 'guid');
 
+        // Decode once for comparison against database-stored (decoded) GUIDs
+        final decodedGuid = guid != null ? _decodeXmlEntities(guid) : null;
+
         // Early stop: GUID-set match (legacy path, used by parseWithProgress)
-        if (guid != null && params.knownGuids.contains(guid)) {
+        if (decodedGuid != null && params.knownGuids.contains(decodedGuid)) {
           stoppedEarly = true;
-          tailGuids.add(guid);
+          tailGuids.add(decodedGuid);
           break;
         }
 
@@ -224,10 +227,14 @@ class IsolateRssParser {
           final pubDateStr = _extractTagText(itemXml, 'pubDate');
           final pubDate = _parseDate(pubDateStr);
           if (pubDate != null && !cutoff.isBefore(pubDate)) {
-            if (cutoffGuid == null || cutoffGuid == guid) {
+            if (cutoffGuid == null || cutoffGuid == decodedGuid) {
               stoppedEarly = true;
-              final id = guid ?? _extractEnclosureUrl(itemXml);
-              if (id != null) tailGuids.add(id);
+              final id =
+                  decodedGuid ??
+                  _decodeXmlEntities(
+                    _extractEnclosureUrl(itemXml) ?? '',
+                  );
+              if (id.isNotEmpty) tailGuids.add(id);
               break;
             }
           }
@@ -251,15 +258,17 @@ class IsolateRssParser {
       // Uses the same fallback chain as FeedParserService: guid, then
       // enclosure URL. Items with neither are skipped (they would get a
       // synthetic timestamp-based id that cannot be matched reliably).
+      // Values are XML-decoded to match what XmlDocument.parse produces
+      // for the fully-parsed episodes stored in the database.
       if (stoppedEarly) {
         while (itemMatches.moveNext()) {
           final start = itemMatches.current.start;
           final close = xml.indexOf(itemCloseTag, start);
           if (close == -1) break;
           final snippet = xml.substring(start, close + itemCloseTag.length);
-          final id =
+          final raw =
               _extractTagText(snippet, 'guid') ?? _extractEnclosureUrl(snippet);
-          if (id != null) tailGuids.add(id);
+          if (raw != null) tailGuids.add(_decodeXmlEntities(raw));
         }
       }
 
@@ -328,6 +337,24 @@ class IsolateRssParser {
   static String? _extractEnclosureUrl(String xml) {
     final match = _enclosureUrlRe.firstMatch(xml);
     return _nullIfBlank(match?.group(1));
+  }
+
+  /// Decodes the five predefined XML entities so regex-extracted values
+  /// match what `XmlDocument.parse` returns for the same content.
+  static final _xmlEntityRe = RegExp(r'&(amp|lt|gt|quot|apos);');
+
+  static String _decodeXmlEntities(String value) {
+    if (!value.contains('&')) return value;
+    return value.replaceAllMapped(_xmlEntityRe, (m) {
+      return switch (m.group(1)) {
+        'amp' => '&',
+        'lt' => '<',
+        'gt' => '>',
+        'quot' => '"',
+        'apos' => "'",
+        _ => m.group(0)!,
+      };
+    });
   }
 
   static ParsedEpisode _parseEpisode(XmlElement item) {
