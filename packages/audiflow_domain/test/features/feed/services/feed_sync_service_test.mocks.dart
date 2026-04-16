@@ -1039,6 +1039,15 @@ class MockSmartPlaylistConfigRepository extends _i1.Mock
         Invocation.method(#setPatternSummaries, [summaries]),
         returnValueForMissingStub: null,
       );
+
+  @override
+  _i11.Future<void> clearDiskCache() =>
+      (super.noSuchMethod(
+            Invocation.method(#clearDiskCache, []),
+            returnValue: _i11.Future<void>.value(),
+            returnValueForMissingStub: _i11.Future<void>.value(),
+          )
+          as _i11.Future<void>);
 }
 
 /// A class which mocks [StationPodcastRepository].

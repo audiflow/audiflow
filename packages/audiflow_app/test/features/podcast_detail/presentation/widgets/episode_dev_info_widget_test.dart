@@ -36,6 +36,9 @@ class _FakeSmartPlaylistConfigRepository
 
   @override
   void setPatternSummaries(List<PatternSummary> summaries) {}
+
+  @override
+  Future<void> clearDiskCache() async {}
 }
 
 MaterialApp _localizedApp(Widget child) {

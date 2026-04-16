@@ -61,5 +61,10 @@ class SmartPlaylistEntity {
   /// Set when resolved without an explicit config pattern.
   /// When the app's heuristic version advances past this value,
   /// the cached grouping is discarded and re-resolved.
+  ///
+  /// Named 'zHeuristicVersion' in Isar to ensure the property id
+  /// sorts after all pre-existing fields, preserving schema
+  /// compatibility on upgrade.
+  @Name('zHeuristicVersion')
   int? heuristicVersion;
 }

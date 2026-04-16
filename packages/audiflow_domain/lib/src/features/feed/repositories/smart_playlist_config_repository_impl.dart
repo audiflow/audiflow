@@ -144,6 +144,6 @@ class SmartPlaylistConfigRepositoryImpl
     _summaries = summaries;
   }
 
-  /// Deletes all disk-cached config files.
+  @override
   Future<void> clearDiskCache() => _cache.clearAll();
 }
