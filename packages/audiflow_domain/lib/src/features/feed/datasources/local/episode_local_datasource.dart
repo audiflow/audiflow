@@ -1,5 +1,6 @@
 import 'package:isar_community/isar.dart';
 
+import '../../../download/models/download_status.dart';
 import '../../../download/models/download_task.dart';
 import '../../models/episode.dart';
 
@@ -133,11 +134,16 @@ class EpisodeLocalDatasource {
           .findAll();
       if (targets.isEmpty) return 0;
 
-      // Exclude episodes that have a download task
+      // Exclude episodes with an active or completed download.
+      // Failed and cancelled tasks do not protect the episode.
       final downloadedIds = <int>{};
       for (final ep in targets) {
         final task = await _isar.downloadTasks.getByEpisodeId(ep.id);
-        if (task != null) downloadedIds.add(ep.id);
+        if (task == null) continue;
+        final status = DownloadStatus.fromDbValue(task.status);
+        if (status.isActive || status is DownloadStatusCompleted) {
+          downloadedIds.add(ep.id);
+        }
       }
 
       final deletable = targets
