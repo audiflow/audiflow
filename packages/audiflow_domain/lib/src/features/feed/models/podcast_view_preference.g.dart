@@ -18,38 +18,43 @@ const PodcastViewPreferenceSchema = CollectionSchema(
   name: r'PodcastViewPreference',
   id: -5835931761276870986,
   properties: {
-    r'episodeFilter': PropertySchema(
+    r'autoPlayOrder': PropertySchema(
       id: 0,
+      name: r'autoPlayOrder',
+      type: IsarType.string,
+    ),
+    r'episodeFilter': PropertySchema(
+      id: 1,
       name: r'episodeFilter',
       type: IsarType.string,
     ),
     r'episodeSortOrder': PropertySchema(
-      id: 1,
+      id: 2,
       name: r'episodeSortOrder',
       type: IsarType.string,
     ),
     r'podcastId': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'podcastId',
       type: IsarType.long,
     ),
     r'seasonSortField': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'seasonSortField',
       type: IsarType.string,
     ),
     r'seasonSortOrder': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'seasonSortOrder',
       type: IsarType.string,
     ),
     r'selectedPlaylistId': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'selectedPlaylistId',
       type: IsarType.string,
     ),
     r'viewMode': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'viewMode',
       type: IsarType.string,
     ),
@@ -90,6 +95,12 @@ int _podcastViewPreferenceEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
+  {
+    final value = object.autoPlayOrder;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   bytesCount += 3 + object.episodeFilter.length * 3;
   bytesCount += 3 + object.episodeSortOrder.length * 3;
   bytesCount += 3 + object.seasonSortField.length * 3;
@@ -110,13 +121,14 @@ void _podcastViewPreferenceSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeString(offsets[0], object.episodeFilter);
-  writer.writeString(offsets[1], object.episodeSortOrder);
-  writer.writeLong(offsets[2], object.podcastId);
-  writer.writeString(offsets[3], object.seasonSortField);
-  writer.writeString(offsets[4], object.seasonSortOrder);
-  writer.writeString(offsets[5], object.selectedPlaylistId);
-  writer.writeString(offsets[6], object.viewMode);
+  writer.writeString(offsets[0], object.autoPlayOrder);
+  writer.writeString(offsets[1], object.episodeFilter);
+  writer.writeString(offsets[2], object.episodeSortOrder);
+  writer.writeLong(offsets[3], object.podcastId);
+  writer.writeString(offsets[4], object.seasonSortField);
+  writer.writeString(offsets[5], object.seasonSortOrder);
+  writer.writeString(offsets[6], object.selectedPlaylistId);
+  writer.writeString(offsets[7], object.viewMode);
 }
 
 PodcastViewPreference _podcastViewPreferenceDeserialize(
@@ -126,14 +138,15 @@ PodcastViewPreference _podcastViewPreferenceDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = PodcastViewPreference();
-  object.episodeFilter = reader.readString(offsets[0]);
-  object.episodeSortOrder = reader.readString(offsets[1]);
+  object.autoPlayOrder = reader.readStringOrNull(offsets[0]);
+  object.episodeFilter = reader.readString(offsets[1]);
+  object.episodeSortOrder = reader.readString(offsets[2]);
   object.id = id;
-  object.podcastId = reader.readLong(offsets[2]);
-  object.seasonSortField = reader.readString(offsets[3]);
-  object.seasonSortOrder = reader.readString(offsets[4]);
-  object.selectedPlaylistId = reader.readStringOrNull(offsets[5]);
-  object.viewMode = reader.readString(offsets[6]);
+  object.podcastId = reader.readLong(offsets[3]);
+  object.seasonSortField = reader.readString(offsets[4]);
+  object.seasonSortOrder = reader.readString(offsets[5]);
+  object.selectedPlaylistId = reader.readStringOrNull(offsets[6]);
+  object.viewMode = reader.readString(offsets[7]);
   return object;
 }
 
@@ -145,18 +158,20 @@ P _podcastViewPreferenceDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 1:
       return (reader.readString(offset)) as P;
     case 2:
-      return (reader.readLong(offset)) as P;
-    case 3:
       return (reader.readString(offset)) as P;
+    case 3:
+      return (reader.readLong(offset)) as P;
     case 4:
       return (reader.readString(offset)) as P;
     case 5:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 6:
+      return (reader.readStringOrNull(offset)) as P;
+    case 7:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -444,6 +459,213 @@ extension PodcastViewPreferenceQueryFilter
           PodcastViewPreference,
           QFilterCondition
         > {
+  QueryBuilder<
+    PodcastViewPreference,
+    PodcastViewPreference,
+    QAfterFilterCondition
+  >
+  autoPlayOrderIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'autoPlayOrder'),
+      );
+    });
+  }
+
+  QueryBuilder<
+    PodcastViewPreference,
+    PodcastViewPreference,
+    QAfterFilterCondition
+  >
+  autoPlayOrderIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'autoPlayOrder'),
+      );
+    });
+  }
+
+  QueryBuilder<
+    PodcastViewPreference,
+    PodcastViewPreference,
+    QAfterFilterCondition
+  >
+  autoPlayOrderEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'autoPlayOrder',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    PodcastViewPreference,
+    PodcastViewPreference,
+    QAfterFilterCondition
+  >
+  autoPlayOrderGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'autoPlayOrder',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    PodcastViewPreference,
+    PodcastViewPreference,
+    QAfterFilterCondition
+  >
+  autoPlayOrderLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'autoPlayOrder',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    PodcastViewPreference,
+    PodcastViewPreference,
+    QAfterFilterCondition
+  >
+  autoPlayOrderBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'autoPlayOrder',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    PodcastViewPreference,
+    PodcastViewPreference,
+    QAfterFilterCondition
+  >
+  autoPlayOrderStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'autoPlayOrder',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    PodcastViewPreference,
+    PodcastViewPreference,
+    QAfterFilterCondition
+  >
+  autoPlayOrderEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'autoPlayOrder',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    PodcastViewPreference,
+    PodcastViewPreference,
+    QAfterFilterCondition
+  >
+  autoPlayOrderContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'autoPlayOrder',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    PodcastViewPreference,
+    PodcastViewPreference,
+    QAfterFilterCondition
+  >
+  autoPlayOrderMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'autoPlayOrder',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    PodcastViewPreference,
+    PodcastViewPreference,
+    QAfterFilterCondition
+  >
+  autoPlayOrderIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'autoPlayOrder', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<
+    PodcastViewPreference,
+    PodcastViewPreference,
+    QAfterFilterCondition
+  >
+  autoPlayOrderIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'autoPlayOrder', value: ''),
+      );
+    });
+  }
+
   QueryBuilder<
     PodcastViewPreference,
     PodcastViewPreference,
@@ -1718,6 +1940,20 @@ extension PodcastViewPreferenceQueryLinks
 extension PodcastViewPreferenceQuerySortBy
     on QueryBuilder<PodcastViewPreference, PodcastViewPreference, QSortBy> {
   QueryBuilder<PodcastViewPreference, PodcastViewPreference, QAfterSortBy>
+  sortByAutoPlayOrder() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'autoPlayOrder', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PodcastViewPreference, PodcastViewPreference, QAfterSortBy>
+  sortByAutoPlayOrderDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'autoPlayOrder', Sort.desc);
+    });
+  }
+
+  QueryBuilder<PodcastViewPreference, PodcastViewPreference, QAfterSortBy>
   sortByEpisodeFilter() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'episodeFilter', Sort.asc);
@@ -1818,6 +2054,20 @@ extension PodcastViewPreferenceQuerySortBy
 
 extension PodcastViewPreferenceQuerySortThenBy
     on QueryBuilder<PodcastViewPreference, PodcastViewPreference, QSortThenBy> {
+  QueryBuilder<PodcastViewPreference, PodcastViewPreference, QAfterSortBy>
+  thenByAutoPlayOrder() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'autoPlayOrder', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PodcastViewPreference, PodcastViewPreference, QAfterSortBy>
+  thenByAutoPlayOrderDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'autoPlayOrder', Sort.desc);
+    });
+  }
+
   QueryBuilder<PodcastViewPreference, PodcastViewPreference, QAfterSortBy>
   thenByEpisodeFilter() {
     return QueryBuilder.apply(this, (query) {
@@ -1934,6 +2184,16 @@ extension PodcastViewPreferenceQuerySortThenBy
 extension PodcastViewPreferenceQueryWhereDistinct
     on QueryBuilder<PodcastViewPreference, PodcastViewPreference, QDistinct> {
   QueryBuilder<PodcastViewPreference, PodcastViewPreference, QDistinct>
+  distinctByAutoPlayOrder({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(
+        r'autoPlayOrder',
+        caseSensitive: caseSensitive,
+      );
+    });
+  }
+
+  QueryBuilder<PodcastViewPreference, PodcastViewPreference, QDistinct>
   distinctByEpisodeFilter({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(
@@ -2008,6 +2268,13 @@ extension PodcastViewPreferenceQueryProperty
   QueryBuilder<PodcastViewPreference, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<PodcastViewPreference, String?, QQueryOperations>
+  autoPlayOrderProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'autoPlayOrder');
     });
   }
 

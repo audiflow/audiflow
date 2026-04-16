@@ -15,4 +15,6 @@ class PodcastViewPreference {
   String seasonSortField = 'seasonNumber';
   String seasonSortOrder = 'desc';
   String? selectedPlaylistId;
+
+  String? autoPlayOrder;
 }
