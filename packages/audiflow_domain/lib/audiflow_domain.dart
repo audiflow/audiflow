@@ -68,6 +68,7 @@ export 'src/features/feed/services/config_assembler.dart';
 export 'src/features/feed/services/feed_parser_service.dart';
 export 'src/features/feed/services/background_notification_service.dart';
 export 'src/features/feed/services/background_refresh_service.dart';
+export 'src/features/feed/services/feed_sync_diagnostic.dart';
 export 'src/features/feed/services/feed_sync_executor.dart';
 export 'src/features/feed/services/feed_sync_service.dart';
 export 'src/features/feed/models/feed_sync_result.dart';

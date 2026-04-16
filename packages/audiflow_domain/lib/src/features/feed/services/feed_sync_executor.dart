@@ -8,6 +8,7 @@ import '../models/feed_parse_progress.dart';
 import '../models/feed_sync_result.dart';
 import '../repositories/episode_repository.dart';
 import 'feed_parser_service.dart';
+import 'feed_sync_diagnostic.dart';
 
 /// Pure feed sync executor with constructor-injected dependencies.
 ///
@@ -24,12 +25,14 @@ class FeedSyncExecutor {
     required FeedParserService feedParser,
     required Dio dio,
     Logger? logger,
+    FeedSyncDiagnosticSink? onDiagnostic,
   }) : _subscriptionRepo = subscriptionRepo,
        _episodeRepo = episodeRepo,
        _settingsRepo = settingsRepo,
        _feedParser = feedParser,
        _dio = dio,
-       _logger = logger;
+       _logger = logger,
+       _onDiagnostic = onDiagnostic ?? noopFeedSyncDiagnosticSink;
 
   final SubscriptionRepository _subscriptionRepo;
   final EpisodeRepository _episodeRepo;
@@ -37,6 +40,7 @@ class FeedSyncExecutor {
   final FeedParserService _feedParser;
   final Dio _dio;
   final Logger? _logger;
+  final FeedSyncDiagnosticSink _onDiagnostic;
 
   /// Sync interval derived from user settings.
   Duration get _syncInterval =>
@@ -54,6 +58,12 @@ class FeedSyncExecutor {
     try {
       if (!forceRefresh && !_shouldSync(sub.lastRefreshedAt)) {
         _logger?.d('Skipping sync for "${sub.title}" (recently refreshed)');
+        _onDiagnostic('feed-sync:skipped', {
+          'path': 'background',
+          'podcastId': sub.id,
+          'title': sub.title,
+          'reason': 'recently-refreshed',
+        });
         return SingleFeedSyncResult(
           podcastId: sub.id,
           success: true,
@@ -62,6 +72,15 @@ class FeedSyncExecutor {
       }
 
       _logger?.d('Syncing feed for "${sub.title}"');
+      _onDiagnostic('feed-sync:start', {
+        'path': 'background',
+        'podcastId': sub.id,
+        'title': sub.title,
+        'forceRefresh': forceRefresh,
+        'hasEtag': sub.httpEtag != null,
+        'hasLastModified': sub.httpLastModified != null,
+        'protectedGuidsCount': protectedGuids.length,
+      });
 
       // Build conditional request headers
       final conditionalHeaders = <String, String>{
@@ -89,6 +108,11 @@ class FeedSyncExecutor {
       // RFC 9110 allows 304 to include updated validators, so persist them.
       if (response.statusCode == 304) {
         _logger?.d('Feed not modified (304) for "${sub.title}"');
+        _onDiagnostic('feed-sync:not-modified', {
+          'path': 'background',
+          'podcastId': sub.id,
+          'title': sub.title,
+        });
         final newEtag = response.headers.value('etag');
         final newLastModified = response.headers.value('last-modified');
         await _subscriptionRepo.updateHttpCacheHeaders(
@@ -126,6 +150,7 @@ class FeedSyncExecutor {
 
       var newEpisodeCount = 0;
       var stoppedEarly = false;
+      var tailGuidCount = 0;
       final observedGuids = <String>{};
       await for (final progress in _feedParser.parseWithProgress(
         xmlContent: xmlContent,
@@ -139,9 +164,21 @@ class FeedSyncExecutor {
         if (progress is FeedParseComplete) {
           newEpisodeCount = progress.total;
           stoppedEarly = progress.stoppedEarly;
+          tailGuidCount = progress.tailGuids.length;
           observedGuids.addAll(progress.tailGuids);
         }
       }
+
+      _onDiagnostic('feed-sync:parse-complete', {
+        'path': 'background',
+        'podcastId': sub.id,
+        'title': sub.title,
+        'stoppedEarly': stoppedEarly,
+        'knownGuidsCount': knownGuids.length,
+        'observedGuidsCount': observedGuids.length,
+        'tailGuidsCount': tailGuidCount,
+        'newEpisodeCount': newEpisodeCount,
+      });
 
       // Remove episodes whose GUIDs are no longer in the feed.
       // observedGuids now includes both newly parsed episodes and GUIDs
@@ -149,7 +186,8 @@ class FeedSyncExecutor {
       // picture even for incremental syncs. Guard against malformed feeds
       // that parse to zero items.
       if (observedGuids.isNotEmpty) {
-        var droppedGuids = knownGuids.difference(observedGuids);
+        final droppedBefore = knownGuids.difference(observedGuids);
+        var droppedGuids = droppedBefore;
 
         // When the feed was not fully parsed, the tail scan cannot match
         // episodes stored under synthetic IDs (unknown-*) because those
@@ -161,6 +199,18 @@ class FeedSyncExecutor {
               .toSet();
         }
 
+        _onDiagnostic('feed-sync:drop-candidates', {
+          'path': 'background',
+          'podcastId': sub.id,
+          'title': sub.title,
+          'stoppedEarly': stoppedEarly,
+          'droppedBeforeSyntheticFilter': droppedBefore.length,
+          'droppedAfterSyntheticFilter': droppedGuids.length,
+          'protectedGuidsCount': protectedGuids.length,
+          // First 5 GUIDs to eyeball XML decoding / synthetic-ID issues.
+          'sampleDroppedGuids': droppedGuids.take(5).toList(),
+        });
+
         if (droppedGuids.isNotEmpty) {
           final deleted = await _episodeRepo.deleteByPodcastIdAndGuids(
             sub.id,
@@ -168,6 +218,17 @@ class FeedSyncExecutor {
             protectedGuids: protectedGuids,
           );
           _logger?.i('Removed $deleted dropped episodes from "${sub.title}"');
+          _onDiagnostic('feed-sync:drop-result', {
+            'path': 'background',
+            'podcastId': sub.id,
+            'title': sub.title,
+            'requested': droppedGuids.length,
+            'deleted': deleted,
+            // Skew > 0 means the datasource filtered some out because they
+            // were favorited, had an active/completed download, or were in
+            // protectedGuids. This is the interesting signal.
+            'skew': droppedGuids.length - deleted,
+          });
         }
       }
 

@@ -17,6 +17,7 @@ import '../providers/smart_playlist_providers.dart';
 import '../repositories/episode_repository_impl.dart';
 import 'episode_extractor_resolver.dart';
 import 'feed_parser_service.dart';
+import 'feed_sync_diagnostic.dart';
 
 part 'feed_sync_service.g.dart';
 
@@ -24,7 +25,8 @@ part 'feed_sync_service.g.dart';
 @Riverpod(keepAlive: true)
 FeedSyncService feedSyncService(Ref ref) {
   final logger = ref.watch(namedLoggerProvider('FeedSync'));
-  return FeedSyncService(ref: ref, logger: logger);
+  final onDiagnostic = ref.watch(feedSyncDiagnosticSinkProvider);
+  return FeedSyncService(ref: ref, logger: logger, onDiagnostic: onDiagnostic);
 }
 
 /// Service for syncing RSS feeds of subscribed podcasts.
@@ -32,12 +34,17 @@ FeedSyncService feedSyncService(Ref ref) {
 /// Fetches and parses feeds in parallel with early termination
 /// when known episode GUIDs are encountered.
 class FeedSyncService {
-  FeedSyncService({required Ref ref, required Logger logger})
-    : _ref = ref,
-      _logger = logger;
+  FeedSyncService({
+    required Ref ref,
+    required Logger logger,
+    FeedSyncDiagnosticSink? onDiagnostic,
+  }) : _ref = ref,
+       _logger = logger,
+       _onDiagnostic = onDiagnostic ?? noopFeedSyncDiagnosticSink;
 
   final Ref _ref;
   final Logger _logger;
+  final FeedSyncDiagnosticSink _onDiagnostic;
 
   /// Sync interval derived from user settings.
   Duration get _syncInterval {
@@ -170,6 +177,12 @@ class FeedSyncService {
     try {
       if (!forceRefresh && !_shouldSync(sub.lastRefreshedAt)) {
         _logger.d('Skipping sync for "${sub.title}" (recently refreshed)');
+        _onDiagnostic('feed-sync:skipped', {
+          'path': 'foreground',
+          'podcastId': sub.id,
+          'title': sub.title,
+          'reason': 'recently-refreshed',
+        });
         return SingleFeedSyncResult(
           podcastId: sub.id,
           success: true,
@@ -178,6 +191,14 @@ class FeedSyncService {
       }
 
       _logger.d('Syncing feed for "${sub.title}"');
+      _onDiagnostic('feed-sync:start', {
+        'path': 'foreground',
+        'podcastId': sub.id,
+        'title': sub.title,
+        'forceRefresh': forceRefresh,
+        'hasEtag': sub.httpEtag != null,
+        'hasLastModified': sub.httpLastModified != null,
+      });
 
       final dio = _ref.read(dioProvider);
       final episodeRepo = _ref.read(episodeRepositoryProvider);
@@ -211,6 +232,11 @@ class FeedSyncService {
       // RFC 9110 allows 304 to include updated validators, so persist them.
       if (response.statusCode == 304) {
         _logger.d('Feed not modified (304) for "${sub.title}"');
+        _onDiagnostic('feed-sync:not-modified', {
+          'path': 'foreground',
+          'podcastId': sub.id,
+          'title': sub.title,
+        });
         final newEtag = response.headers.value('etag');
         final newLastModified = response.headers.value('last-modified');
         await subscriptionRepo.updateHttpCacheHeaders(
@@ -308,6 +334,20 @@ class FeedSyncService {
       )) {
         if (progress is FeedParseComplete) {
           newEpisodeCount = progress.total;
+          // Foreground path does not perform dropped-episode cleanup
+          // (unlike FeedSyncExecutor). Emit a diagnostic so we can see
+          // in Sentry which path actually ran and whether stale episodes
+          // would have been cleaned up.
+          _onDiagnostic('feed-sync:parse-complete', {
+            'path': 'foreground',
+            'podcastId': sub.id,
+            'title': sub.title,
+            'stoppedEarly': progress.stoppedEarly,
+            'knownGuidsCount': knownGuids.length,
+            'tailGuidsCount': progress.tailGuids.length,
+            'newEpisodeCount': newEpisodeCount,
+            'cleanupPerformed': false,
+          });
         }
       }
 

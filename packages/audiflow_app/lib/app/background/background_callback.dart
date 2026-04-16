@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer' as developer;
 import 'dart:io';
 
@@ -286,6 +287,31 @@ void backgroundCallback() {
 
       final feedParser = FeedParserService(logger: logger);
 
+      // Diagnostic: bridge feed-sync structured events into Sentry so we
+      // can inspect real-device behavior (stoppedEarly, dropped-episode
+      // cleanup skew, etc.). Remove once investigation is resolved.
+      FeedSyncDiagnosticSink? feedSyncDiagnostic;
+      if (sentryInitialized) {
+        feedSyncDiagnostic = (event, data) {
+          _bgDebug('feed-sync event=$event data=$data');
+          Sentry.addBreadcrumb(
+            Breadcrumb(message: event, category: 'feed.sync', data: data),
+          );
+          // For the two highest-signal events capture messages so they
+          // show up in the Sentry issue stream (not only breadcrumbs).
+          if (event == 'feed-sync:drop-result' ||
+              event == 'feed-sync:parse-complete') {
+            unawaited(
+              Sentry.captureMessage(
+                event,
+                level: SentryLevel.info,
+                withScope: (scope) => scope.setContexts('feed_sync', data),
+              ),
+            );
+          }
+        };
+      }
+
       final executor = FeedSyncExecutor(
         subscriptionRepo: subscriptionRepo,
         episodeRepo: episodeRepo,
@@ -293,6 +319,7 @@ void backgroundCallback() {
         feedParser: feedParser,
         dio: dio,
         logger: logger,
+        onDiagnostic: feedSyncDiagnostic,
       );
 
       final notificationService = BackgroundNotificationService(logger: logger);

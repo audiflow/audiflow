@@ -53,4 +53,4 @@ final class FeedSyncServiceProvider
   }
 }
 
-String _$feedSyncServiceHash() => r'f5ac16dd61e75ed66d6c2816ce0a8500030ea188';
+String _$feedSyncServiceHash() => r'01897eca24090fcacf9f4edcfff56237486e9809';
