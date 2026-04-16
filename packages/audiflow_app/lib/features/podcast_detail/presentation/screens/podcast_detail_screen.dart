@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:audiflow_core/audiflow_core.dart' show AutoPlayOrder;
 import 'package:audiflow_domain/audiflow_domain.dart'
     show
         EpisodeFilter,
@@ -5,7 +8,9 @@ import 'package:audiflow_domain/audiflow_domain.dart'
         SmartPlaylist,
         SmartPlaylistGroup,
         SortOrder,
+        appSettingsRepositoryProvider,
         namedLoggerProvider,
+        playOrderPreferenceRepositoryProvider,
         podcastViewPreferenceControllerProvider,
         smartPlaylistPatternByFeedUrlProvider,
         subscriptionByFeedUrlProvider;
@@ -21,6 +26,7 @@ import '../controllers/podcast_detail_controller.dart';
 import '../widgets/episode_filter_chips.dart';
 import '../widgets/episode_list_section.dart';
 import '../widgets/inline_playlist_section.dart';
+import '../widgets/play_order_bottom_sheet.dart';
 import '../widgets/podcast_detail_empty_states.dart';
 import '../widgets/podcast_detail_header.dart';
 import '../widgets/smart_playlist_view_toggle.dart';
@@ -45,6 +51,11 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
       (_fallbackScrollController ??= ScrollController());
 
   String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
+  Timer? _searchDebounce;
+
+  /// Resolved effective play order for this podcast.
+  AutoPlayOrder? _resolvedPlayOrder;
 
   /// Local view mode for non-subscribed podcasts.
   PodcastViewMode _localViewMode = PodcastViewMode.episodes;
@@ -79,6 +90,8 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
+    _searchController.dispose();
     _fallbackScrollController?.dispose();
     final feedUrl = podcast.feedUrl;
     if (feedUrl != null) {
@@ -87,12 +100,65 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
     super.dispose();
   }
 
+  void _onSearchChanged(String text) {
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(
+      const Duration(milliseconds: 300),
+      () => setState(() => _searchQuery = text),
+    );
+  }
+
+  void _showPlayOrderSheet() {
+    final feedUrl = podcast.feedUrl;
+    if (feedUrl == null) return;
+    final subscription = ref.read(subscriptionByFeedUrlProvider(feedUrl)).value;
+    if (subscription == null) return;
+
+    final repo = ref.read(playOrderPreferenceRepositoryProvider);
+    repo.getPodcastPlayOrder(subscription.id).then((currentOrder) {
+      if (!mounted) return;
+      showPlayOrderBottomSheet(
+        context: context,
+        currentOrder: currentOrder ?? AutoPlayOrder.defaultOrder,
+        resolvedParentOrder: ref
+            .read(appSettingsRepositoryProvider)
+            .getAutoPlayOrder(),
+        onOrderSelected: (order) {
+          repo.setPodcastPlayOrder(subscription.id, order);
+          // Re-resolve after change.
+          _resolvePlayOrder(subscription.id);
+        },
+      );
+    });
+  }
+
+  void _resolvePlayOrder(int subscriptionId) {
+    final repo = ref.read(playOrderPreferenceRepositoryProvider);
+    repo.resolveForPodcast(subscriptionId).then((resolved) {
+      if (!mounted) return;
+      setState(() => _resolvedPlayOrder = resolved);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: SearchableAppBar(
+      appBar: AppBar(
         title: Text(podcast.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-        onSearchChanged: (query) => setState(() => _searchQuery = query),
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              if (value == 'play_order') _showPlayOrderSheet();
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'play_order',
+                child: Text(l10n.playOrderMenuTitle),
+              ),
+            ],
+          ),
+        ],
       ),
       body: _buildBody(),
     );
@@ -177,6 +243,11 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
     final subscription = subscriptionAsync.value;
     _lastRefreshedAt = subscription?.lastRefreshedAt;
 
+    // Resolve effective play order when subscription is available.
+    if (subscription != null && _resolvedPlayOrder == null) {
+      _resolvePlayOrder(subscription.id);
+    }
+
     final prefsAsync = subscription != null
         ? ref.watch(podcastViewPreferenceControllerProvider(subscription.id))
         : null;
@@ -258,6 +329,41 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
       child: CustomScrollView(
         controller: _scrollController,
         slivers: [
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: TextField(
+                controller: _searchController,
+                onChanged: _onSearchChanged,
+                decoration: InputDecoration(
+                  hintText: MaterialLocalizations.of(context).searchFieldLabel,
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                    valueListenable: _searchController,
+                    builder: (context, value, child) {
+                      if (value.text.isEmpty) {
+                        return const SizedBox.shrink();
+                      }
+                      return IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _searchController.clear();
+                          _searchDebounce?.cancel();
+                          setState(() => _searchQuery = '');
+                        },
+                      );
+                    },
+                  ),
+                  filled: true,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(28),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                ),
+              ),
+            ),
+          ),
           SliverToBoxAdapter(child: PodcastDetailHeader(podcast: podcast)),
           if (showPlaylistToggle)
             SliverToBoxAdapter(
@@ -318,6 +424,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
               scrollController: _scrollController,
               onToggleSortOrder: _toggleSortOrder,
               itunesId: podcast.id,
+              effectiveOrder: _resolvedPlayOrder,
             )
           else if (activePlaylist != null)
             ...buildInlinePlaylistSlivers(
@@ -334,6 +441,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
               onToggleSortOrder: _toggleSortOrder,
               onNavigateToGroup: _navigateToGroupEpisodes,
               itunesId: podcast.id,
+              effectiveOrder: _resolvedPlayOrder,
             ),
         ],
       ),

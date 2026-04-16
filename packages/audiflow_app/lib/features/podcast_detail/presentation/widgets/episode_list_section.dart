@@ -1,3 +1,4 @@
+import 'package:audiflow_core/audiflow_core.dart' show AutoPlayOrder;
 import 'package:audiflow_domain/audiflow_domain.dart'
     show PodcastItem, SortOrder, smartPlaylistPatternByFeedUrlProvider;
 import 'package:audiflow_ui/audiflow_ui.dart';
@@ -94,6 +95,7 @@ List<Widget> buildEpisodeListSlivers({
   required ScrollController scrollController,
   required VoidCallback onToggleSortOrder,
   String? itunesId,
+  AutoPlayOrder? effectiveOrder,
 }) {
   final patternAsync = ref.watch(
     smartPlaylistPatternByFeedUrlProvider(feedUrl),
@@ -115,6 +117,7 @@ List<Widget> buildEpisodeListSlivers({
       yearGrouped: yearGrouped,
       itunesId: itunesId,
       feedUrl: feedUrl,
+      effectiveOrder: effectiveOrder,
     ),
     loading: () => [
       const SliverToBoxAdapter(
@@ -155,6 +158,7 @@ List<Widget> _buildEpisodeData({
   required bool yearGrouped,
   String? itunesId,
   String? feedUrl,
+  AutoPlayOrder? effectiveOrder,
 }) {
   final displayEpisodes = filterBySearchQuery(
     items: episodes,
@@ -205,6 +209,7 @@ List<Widget> _buildEpisodeData({
         scrollController: scrollController,
         itunesId: itunesId,
         feedUrl: feedUrl,
+        effectiveOrder: effectiveOrder,
       ),
     ];
   }
@@ -228,6 +233,7 @@ List<Widget> _buildEpisodeData({
           feedImageUrl: feedImageUrl,
           progress: progress,
           siblingEpisodeIds: siblingEpisodeIds,
+          effectiveOrder: effectiveOrder,
           itunesId: itunesId,
           feedUrl: feedUrl,
         );
@@ -248,6 +254,7 @@ List<Widget> _buildYearGroupedEpisodeSlivers({
   required ScrollController scrollController,
   String? itunesId,
   String? feedUrl,
+  AutoPlayOrder? effectiveOrder,
 }) {
   final byYear = <int, List<PodcastItem>>{};
   for (final episode in episodes) {
@@ -281,6 +288,7 @@ List<Widget> _buildYearGroupedEpisodeSlivers({
         feedImageUrl: feedImageUrl,
         progress: progress,
         siblingEpisodeIds: siblingEpisodeIds,
+        effectiveOrder: effectiveOrder,
         itunesId: itunesId,
         feedUrl: feedUrl,
       );
