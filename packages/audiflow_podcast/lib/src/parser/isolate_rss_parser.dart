@@ -339,21 +339,35 @@ class IsolateRssParser {
     return _nullIfBlank(match?.group(1));
   }
 
-  /// Decodes the five predefined XML entities so regex-extracted values
-  /// match what `XmlDocument.parse` returns for the same content.
-  static final _xmlEntityRe = RegExp(r'&(amp|lt|gt|quot|apos);');
+  /// Decodes XML character references (named and numeric) so
+  /// regex-extracted values match what `XmlDocument.parse` produces.
+  static final _xmlEntityRe = RegExp(
+    r'&(?:(amp|lt|gt|quot|apos)|#(\d+)|#x([0-9a-fA-F]+));',
+  );
 
   static String _decodeXmlEntities(String value) {
     if (!value.contains('&')) return value;
     return value.replaceAllMapped(_xmlEntityRe, (m) {
-      return switch (m.group(1)) {
-        'amp' => '&',
-        'lt' => '<',
-        'gt' => '>',
-        'quot' => '"',
-        'apos' => "'",
-        _ => m.group(0)!,
-      };
+      final named = m.group(1);
+      if (named != null) {
+        return switch (named) {
+          'amp' => '&',
+          'lt' => '<',
+          'gt' => '>',
+          'quot' => '"',
+          'apos' => "'",
+          _ => m.group(0)!,
+        };
+      }
+      final decimal = m.group(2);
+      if (decimal != null) {
+        return String.fromCharCode(int.parse(decimal));
+      }
+      final hex = m.group(3);
+      if (hex != null) {
+        return String.fromCharCode(int.parse(hex, radix: 16));
+      }
+      return m.group(0)!;
     });
   }
 
