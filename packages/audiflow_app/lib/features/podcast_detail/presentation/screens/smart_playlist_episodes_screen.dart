@@ -115,8 +115,10 @@ class _SmartPlaylistEpisodesScreenState
             .read(appSettingsRepositoryProvider)
             .getAutoPlayOrder(),
         onOrderSelected: (order) {
-          repo.setPlaylistPlayOrder(podcastId, playlistId, order);
-          _resolvePlayOrder();
+          // Await the write before re-resolving to avoid reading stale data.
+          repo
+              .setPlaylistPlayOrder(podcastId, playlistId, order)
+              .then((_) => _resolvePlayOrder());
         },
       );
     });

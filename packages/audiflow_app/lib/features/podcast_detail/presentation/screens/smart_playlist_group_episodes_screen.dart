@@ -169,8 +169,10 @@ class _SmartPlaylistGroupEpisodesScreenState
           currentOrder: currentOrder ?? AutoPlayOrder.defaultOrder,
           resolvedParentOrder: parentOrder,
           onOrderSelected: (order) {
-            repo.setGroupPlayOrder(podcastId, playlistId, groupId, order);
-            _resolvePlayOrder();
+            // Await the write before re-resolving to avoid reading stale data.
+            repo
+                .setGroupPlayOrder(podcastId, playlistId, groupId, order)
+                .then((_) => _resolvePlayOrder());
           },
         );
       });

@@ -124,9 +124,10 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
             .read(appSettingsRepositoryProvider)
             .getAutoPlayOrder(),
         onOrderSelected: (order) {
-          repo.setPodcastPlayOrder(subscription.id, order);
-          // Re-resolve after change.
-          _resolvePlayOrder(subscription.id);
+          // Await the write before re-resolving to avoid reading stale data.
+          repo.setPodcastPlayOrder(subscription.id, order).then((_) {
+            _resolvePlayOrder(subscription.id);
+          });
         },
       );
     });
