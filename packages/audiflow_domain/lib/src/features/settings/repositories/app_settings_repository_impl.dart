@@ -293,6 +293,7 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
 
   AutoPlayOrder _parseAutoPlayOrder(String? name) {
     return switch (name) {
+      'defaultOrder' => AutoPlayOrder.defaultOrder,
       'oldestFirst' => AutoPlayOrder.oldestFirst,
       'asDisplayed' => AutoPlayOrder.asDisplayed,
       _ => SettingsDefaults.autoPlayOrder,
