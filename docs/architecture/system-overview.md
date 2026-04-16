@@ -13,10 +13,10 @@ This repository is part of:
 
 ## High-level structure
 
-- `audiflow_app`: Presentation layer -- screens, controllers, routing, localization, background task registration
-- `audiflow_domain`: Business logic -- repositories, datasources, Isar collections, services, Riverpod providers
-- `audiflow_core`: Foundation -- constants, extensions, error types, utilities, config
-- `audiflow_podcast`: RSS parsing -- streaming XML parser, feed models, HTTP caching
+- `audiflow_app`: Presentation layer -- screens, controllers, routing, localization, background task registration, audio interruption handler wiring
+- `audiflow_domain`: Business logic -- repositories, datasources, Isar collections, services, Riverpod providers, sleep timer controller, play order preference resolution
+- `audiflow_core`: Foundation -- constants, extensions, error types, utilities, config, shared enums (`AutoPlayOrder`, `DuckInterruptionBehavior`)
+- `audiflow_podcast`: RSS parsing -- streaming XML parser, feed models, HTTP caching, XML entity decoding
 - `audiflow_ui`: Shared UI -- reusable widgets, themes, styles
 - `audiflow_ai`: On-device AI capabilities (Flutter plugin for iOS/Android)
 - `audiflow_search`: Podcast search API client (iTunes API via Dio)
@@ -26,7 +26,7 @@ This repository is part of:
 
 1. User subscribes to a podcast via search (iTunes API) or direct URL
 2. `feed_remote_datasource` fetches RSS feed; `audiflow_podcast` parses it via streaming XML
-3. Parsed episodes are stored in Isar via `feed_local_datasource`
+3. Parsed episodes are stored in Isar via `feed_local_datasource`; episodes dropped from the RSS feed are removed (guarded: favorited, downloaded, and now-playing episodes are preserved)
 4. Smart playlist configs are fetched from static hosting, cached locally, resolved into groups
 5. User selects an episode; `audio_player_service` loads audio via `just_audio`
 6. `audio_service` manages background playback, system controls, and audio focus

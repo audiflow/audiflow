@@ -11,7 +11,7 @@ Part of the audiflow ecosystem. Consumes smart playlist config JSON from `audifl
 | Package | Role |
 |---------|------|
 | `audiflow_app` | Main Flutter app: routing, screens, controllers |
-| `audiflow_core` | Shared constants, extensions, utilities, error types |
+| `audiflow_core` | Shared constants, extensions, utilities, error types, enums |
 | `audiflow_domain` | Business logic, repositories, data sources, Isar collections |
 | `audiflow_podcast` | RSS parsing with streaming support, transcript/chapter extraction |
 | `audiflow_ui` | Reusable widgets, themes, styles |
@@ -23,12 +23,15 @@ Part of the audiflow ecosystem. Consumes smart playlist config JSON from `audifl
 
 - Podcast discovery, subscription, and feed management
 - Audio playback with background support and system controls
+- Configurable audio interruption behavior (duck or pause-and-rewind)
 - Episode download and queue management
 - Smart playlist config consumption and local caching
 - Podcast transcript and chapter display
+- Sleep timer with fade-out (duration, episode count, end-of-episode, end-of-chapter modes)
 - On-device voice commands
 - Station management (custom multi-podcast playlists)
-- Background feed refresh and new episode notifications
+- Background feed refresh, dropped episode cleanup, and new episode notifications
+- Per-scope play order preferences (group -> playlist -> podcast -> global cascade)
 
 ## Non-responsibilities
 
