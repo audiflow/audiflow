@@ -48,7 +48,18 @@ void main() {
         find.text('Clear temporary files and cached images'),
         findsOneWidget,
       );
-      expect(find.text('Clear Cache'), findsOneWidget);
+      // Three "Clear" buttons: Image Cache, Podcast Cache, Search History
+      expect(find.text('Clear'), findsNWidgets(3));
+    });
+
+    testWidgets('shows Podcast Cache tile', (tester) async {
+      await tester.pumpWidget(buildTestWidget());
+
+      expect(find.text('Podcast Cache'), findsOneWidget);
+      expect(
+        find.text('Clear smart playlist groupings and force feed re-sync'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('shows Search History tile', (tester) async {
@@ -81,12 +92,13 @@ void main() {
       );
     });
 
-    testWidgets('tapping Clear Cache shows confirmation dialog', (
+    testWidgets('tapping image cache Clear shows confirmation dialog', (
       tester,
     ) async {
       await tester.pumpWidget(buildTestWidget());
 
-      await tester.tap(find.text('Clear Cache'));
+      // Tap the first "Clear" button (Image Cache)
+      await tester.tap(find.text('Clear').first);
       await tester.pumpAndSettle();
 
       expect(find.text('Clear Cache?'), findsOneWidget);
