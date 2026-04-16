@@ -76,6 +76,8 @@ export 'src/features/feed/services/smart_playlist_resolver_service.dart';
 
 // Feed feature - Podcast View Preference
 export 'src/features/feed/models/podcast_view_preference.dart';
+export 'src/features/feed/models/smart_playlist_group_user_preference.dart';
+export 'src/features/feed/models/smart_playlist_user_preference.dart';
 export 'src/features/feed/providers/podcast_view_preference_providers.dart';
 export 'src/features/feed/repositories/podcast_view_preference_repository.dart';
 

@@ -8,7 +8,9 @@ import 'package:riverpod/riverpod.dart';
 import '../../features/download/models/download_task.dart';
 import '../../features/feed/models/episode.dart';
 import '../../features/feed/models/podcast_view_preference.dart';
+import '../../features/feed/models/smart_playlist_group_user_preference.dart';
 import '../../features/feed/models/smart_playlist_groups.dart';
+import '../../features/feed/models/smart_playlist_user_preference.dart';
 import '../../features/feed/models/smart_playlists.dart';
 import '../../features/player/models/playback_history.dart';
 import '../../features/queue/models/queue_item.dart';
@@ -32,6 +34,8 @@ const List<CollectionSchema<dynamic>> isarSchemas = [
   SmartPlaylistEntitySchema,
   SmartPlaylistGroupEntitySchema,
   PodcastViewPreferenceSchema,
+  SmartPlaylistUserPreferenceSchema,
+  SmartPlaylistGroupUserPreferenceSchema,
   QueueItemSchema,
   EpisodeTranscriptSchema,
   TranscriptSegmentSchema,
