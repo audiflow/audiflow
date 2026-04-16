@@ -109,17 +109,16 @@ class QueueService {
   /// When [siblingEpisodeIds] is null, subsequent episodes are fetched from
   /// the database by podcast and episode number.
   ///
-  /// When [forceDisplayOrder] is true, the queue always preserves the
-  /// order of [siblingEpisodeIds] regardless of the user's auto-play
-  /// order setting. Use this for contexts that define their own sort
-  /// (e.g., stations).
+  /// When [effectiveOrder] is provided, it overrides the user's global
+  /// auto-play order setting for this queue. Use this for contexts that
+  /// define their own sort (e.g., stations passing [AutoPlayOrder.asDisplayed]).
   ///
   /// [sourceContext] describes where the episodes came from (e.g., "Season 2").
   Future<void> createAdhocQueue({
     required int startingEpisodeId,
     required String sourceContext,
     List<int>? siblingEpisodeIds,
-    bool forceDisplayOrder = false,
+    AutoPlayOrder? effectiveOrder,
   }) async {
     final startingEpisode = await _episodeRepository.getById(startingEpisodeId);
     if (startingEpisode == null) {
@@ -132,8 +131,8 @@ class QueueService {
     List<int> episodeIds;
 
     if (siblingEpisodeIds != null) {
-      if (forceDisplayOrder ||
-          _settingsRepository.getAutoPlayOrder() == AutoPlayOrder.asDisplayed) {
+      final order = effectiveOrder ?? _settingsRepository.getAutoPlayOrder();
+      if (order == AutoPlayOrder.asDisplayed) {
         // Use IDs in their original display order, just remove
         // the starting episode and take everything after it.
         final startIndex = siblingEpisodeIds.indexOf(startingEpisodeId);

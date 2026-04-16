@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
@@ -354,7 +355,7 @@ class _StationEpisodeTile extends ConsumerWidget {
           fallbackThumbnailUrl: subscription?.artworkUrl,
           progress: progress,
           siblingEpisodeIds: siblingEpisodeIds,
-          forceDisplayOrder: true,
+          effectiveOrder: AutoPlayOrder.asDisplayed,
           lastRefreshedAt: subscription?.lastRefreshedAt,
           itunesId: subscription?.itunesId,
           feedUrl: subscription?.feedUrl,

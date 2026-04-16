@@ -140,6 +140,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playbackAutoPlayOrderAsDisplayed => 'As Displayed';
 
   @override
+  String get playOrderMenuTitle => 'Play order';
+
+  @override
+  String playOrderDefault(String resolvedOrder) {
+    return 'Default ($resolvedOrder)';
+  }
+
+  @override
+  String get playOrderOldestFirst => 'Oldest first';
+
+  @override
+  String get playOrderAsDisplayed => 'As displayed';
+
+  @override
   String get playbackDuckInterruptionBehaviorTitle =>
       'Notification Interruption';
 

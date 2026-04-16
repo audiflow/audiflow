@@ -138,6 +138,20 @@ class AppLocalizationsJa extends AppLocalizations {
   String get playbackAutoPlayOrderAsDisplayed => '表示順';
 
   @override
+  String get playOrderMenuTitle => '再生順序';
+
+  @override
+  String playOrderDefault(String resolvedOrder) {
+    return 'デフォルト ($resolvedOrder)';
+  }
+
+  @override
+  String get playOrderOldestFirst => '古い順';
+
+  @override
+  String get playOrderAsDisplayed => '表示順';
+
+  @override
   String get playbackDuckInterruptionBehaviorTitle => '通知音での挙動';
 
   @override

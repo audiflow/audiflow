@@ -341,7 +341,7 @@ final class SmartPlaylistResolverServiceProvider
 }
 
 String _$smartPlaylistResolverServiceHash() =>
-    r'053bf3fde103dff4470fd26ee1027b0f3a179c5b';
+    r'e6debfb575e9cf14eb9bd3dab8d1d8556964e285';
 
 /// Finds and loads the smart playlist config for a feed URL.
 ///

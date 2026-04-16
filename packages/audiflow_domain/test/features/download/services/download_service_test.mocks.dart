@@ -516,6 +516,17 @@ class MockEpisodeRepository extends _i1.Mock implements _i9.EpisodeRepository {
           as _i3.Future<void>);
 
   @override
+  _i3.Future<int> deleteByPodcastIdAndGuids(
+    int? podcastId,
+    Set<String>? guids,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#deleteByPodcastIdAndGuids, [podcastId, guids]),
+            returnValue: _i3.Future<int>.value(0),
+          )
+          as _i3.Future<int>);
+
+  @override
   _i3.Future<List<_i10.Episode>> getSubsequentEpisodes({
     required int? podcastId,
     required int? afterEpisodeNumber,

@@ -356,6 +356,30 @@ abstract class AppLocalizations {
   /// **'As Displayed'**
   String get playbackAutoPlayOrderAsDisplayed;
 
+  /// Menu entry for play order preference
+  ///
+  /// In en, this message translates to:
+  /// **'Play order'**
+  String get playOrderMenuTitle;
+
+  /// Default play order option showing resolved parent value
+  ///
+  /// In en, this message translates to:
+  /// **'Default ({resolvedOrder})'**
+  String playOrderDefault(String resolvedOrder);
+
+  /// Play order: chronological
+  ///
+  /// In en, this message translates to:
+  /// **'Oldest first'**
+  String get playOrderOldestFirst;
+
+  /// Play order: screen order
+  ///
+  /// In en, this message translates to:
+  /// **'As displayed'**
+  String get playOrderAsDisplayed;
+
   /// Title for the notification interruption behavior setting
   ///
   /// In en, this message translates to:

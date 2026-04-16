@@ -1,3 +1,4 @@
+import 'package:audiflow_core/audiflow_core.dart' show AutoPlayOrder;
 import 'package:audiflow_domain/audiflow_domain.dart'
     show
         EpisodeSortField,
@@ -40,6 +41,7 @@ List<Widget> buildInlinePlaylistSlivers({
   })
   onNavigateToGroup,
   String? itunesId,
+  AutoPlayOrder? effectiveOrder,
 }) {
   final episodesAsync = ref.watch(
     smartPlaylistEpisodesProvider(playlist.episodeIds),
@@ -60,6 +62,7 @@ List<Widget> buildInlinePlaylistSlivers({
       onNavigateToGroup: onNavigateToGroup,
       itunesId: itunesId,
       feedUrl: feedUrl,
+      effectiveOrder: effectiveOrder,
     ),
     loading: () => [
       const SliverToBoxAdapter(
@@ -107,6 +110,7 @@ List<Widget> _buildPlaylistData({
   onNavigateToGroup,
   String? itunesId,
   String? feedUrl,
+  AutoPlayOrder? effectiveOrder,
 }) {
   if (episodes.isEmpty) {
     return [
@@ -151,6 +155,7 @@ List<Widget> _buildPlaylistData({
       scrollController: scrollController,
       itunesId: itunesId,
       feedUrl: feedUrl,
+      effectiveOrder: effectiveOrder,
     );
   }
 
@@ -189,6 +194,7 @@ List<Widget> _buildPlaylistData({
           feedImageUrl: feedImageUrl,
           progress: data.progress,
           siblingEpisodeIds: siblingEpisodeIds,
+          effectiveOrder: effectiveOrder,
           itunesId: itunesId,
           feedUrl: feedUrl,
         );
@@ -389,6 +395,7 @@ List<Widget> _buildYearGroupedPlaylistSlivers({
   required ScrollController scrollController,
   String? itunesId,
   String? feedUrl,
+  AutoPlayOrder? effectiveOrder,
 }) {
   final byYear = <int, List<SmartPlaylistEpisodeData>>{};
   for (final data in episodes) {
@@ -426,6 +433,7 @@ List<Widget> _buildYearGroupedPlaylistSlivers({
       feedImageUrl: feedImageUrl,
       progress: data.progress,
       siblingEpisodeIds: siblingEpisodeIds,
+      effectiveOrder: effectiveOrder,
       itunesId: itunesId,
       feedUrl: feedUrl,
     ),

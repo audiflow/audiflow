@@ -26,6 +26,7 @@ class EpisodeListTile extends ConsumerWidget {
     this.progress,
     this.lastRefreshedAt,
     this.siblingEpisodeIds,
+    this.effectiveOrder,
     this.itunesId,
     this.feedUrl,
   });
@@ -48,6 +49,9 @@ class EpisodeListTile extends ConsumerWidget {
   /// When provided, the adhoc queue is built from these IDs instead of
   /// falling back to a database query by episode number.
   final List<int>? siblingEpisodeIds;
+
+  /// When provided, overrides the user's global auto-play order setting.
+  final AutoPlayOrder? effectiveOrder;
 
   /// iTunes ID for building universal share links.
   final String? itunesId;
@@ -495,6 +499,7 @@ class EpisodeListTile extends ConsumerWidget {
         startingEpisodeId: episodeId,
         sourceContext: podcastTitle,
         siblingEpisodeIds: siblingEpisodeIds,
+        effectiveOrder: effectiveOrder,
       );
     }
 

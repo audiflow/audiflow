@@ -292,6 +292,10 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
   // -- Helpers --
 
   AutoPlayOrder _parseAutoPlayOrder(String? name) {
+    // defaultOrder means "inherit from parent" and is only valid for
+    // per-scope overrides, not the global setting. Map it to the
+    // default to prevent the settings dropdown from receiving an
+    // unrecognised value.
     return switch (name) {
       'oldestFirst' => AutoPlayOrder.oldestFirst,
       'asDisplayed' => AutoPlayOrder.asDisplayed,

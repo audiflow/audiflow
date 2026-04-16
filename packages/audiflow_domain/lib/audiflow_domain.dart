@@ -76,8 +76,14 @@ export 'src/features/feed/services/smart_playlist_resolver_service.dart';
 
 // Feed feature - Podcast View Preference
 export 'src/features/feed/models/podcast_view_preference.dart';
+export 'src/features/feed/models/smart_playlist_group_user_preference.dart';
+export 'src/features/feed/models/smart_playlist_user_preference.dart';
 export 'src/features/feed/providers/podcast_view_preference_providers.dart';
 export 'src/features/feed/repositories/podcast_view_preference_repository.dart';
+
+// Feed feature - Play Order Preference
+export 'src/features/feed/datasources/local/play_order_preference_local_datasource.dart';
+export 'src/features/feed/repositories/play_order_preference_repository.dart';
 
 // Feed feature - Smart Playlist Providers
 export 'src/features/feed/providers/smart_playlist_providers.dart';

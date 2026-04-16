@@ -90,6 +90,19 @@
   "@playbackAutoPlayOrderOldestFirst": { "description": "Auto-play order: chronological" },
   "playbackAutoPlayOrderAsDisplayed": "As Displayed",
   "@playbackAutoPlayOrderAsDisplayed": { "description": "Auto-play order: screen order" },
+  "playOrderMenuTitle": "Play order",
+  "@playOrderMenuTitle": { "description": "Menu entry for play order preference" },
+  "playOrderDefault": "Default ({resolvedOrder})",
+  "@playOrderDefault": {
+    "description": "Default play order option showing resolved parent value",
+    "placeholders": {
+      "resolvedOrder": { "type": "String" }
+    }
+  },
+  "playOrderOldestFirst": "Oldest first",
+  "@playOrderOldestFirst": { "description": "Play order: chronological" },
+  "playOrderAsDisplayed": "As displayed",
+  "@playOrderAsDisplayed": { "description": "Play order: screen order" },
   "playbackDuckInterruptionBehaviorTitle": "Notification Interruption",
   "@playbackDuckInterruptionBehaviorTitle": { "description": "Title for the notification interruption behavior setting" },
   "playbackDuckInterruptionBehaviorSubtitle": "How to react when a short sound (like a notification) plays",
