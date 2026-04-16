@@ -104,17 +104,17 @@ class _PodcastCacheTile extends StatelessWidget {
 
     showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: Text(l10n.storageClearPodcastCacheTitle),
         content: Text(l10n.storageClearPodcastCacheContent),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: Text(l10n.commonCancel),
           ),
           FilledButton(
             onPressed: () async {
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
               final ds = ref.read(smartPlaylistLocalDatasourceProvider);
               final configRepo = ref.read(
                 smartPlaylistConfigRepositoryProvider,
