@@ -1,5 +1,6 @@
 import 'package:isar_community/isar.dart';
 
+import '../../../download/models/download_task.dart';
 import '../../models/episode.dart';
 
 /// Local datasource for episode operations using Isar.
@@ -116,18 +117,34 @@ class EpisodeLocalDatasource {
   /// is empty, avoiding an unnecessary write transaction.
   Future<int> deleteByPodcastIdAndGuids(
     int podcastId,
-    Set<String> guids,
-  ) async {
-    if (guids.isEmpty) return 0;
+    Set<String> guids, {
+    Set<String> protectedGuids = const {},
+  }) async {
+    final effectiveGuids = protectedGuids.isEmpty
+        ? guids
+        : guids.difference(protectedGuids);
+    if (effectiveGuids.isEmpty) return 0;
     return _isar.writeTxn(() async {
       final targets = await _isar.episodes
           .filter()
           .podcastIdEqualTo(podcastId)
-          .anyOf(guids, (q, guid) => q.guidEqualTo(guid))
+          .isFavoritedEqualTo(false)
+          .anyOf(effectiveGuids.toList(), (q, guid) => q.guidEqualTo(guid))
           .findAll();
       if (targets.isEmpty) return 0;
-      final ids = targets.map((e) => e.id).toList();
-      return _isar.episodes.deleteAll(ids);
+
+      // Exclude episodes that have a download task
+      final downloadedIds = <int>{};
+      for (final ep in targets) {
+        final task = await _isar.downloadTasks.getByEpisodeId(ep.id);
+        if (task != null) downloadedIds.add(ep.id);
+      }
+
+      final deletable = targets
+          .where((e) => !downloadedIds.contains(e.id))
+          .toList();
+      if (deletable.isEmpty) return 0;
+      return _isar.episodes.deleteAll(deletable.map((e) => e.id).toList());
     });
   }
 

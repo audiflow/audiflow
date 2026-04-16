@@ -103,8 +103,11 @@ class FakeEpisodeRepository implements EpisodeRepository {
   }) => throw UnimplementedError();
 
   @override
-  Future<int> deleteByPodcastIdAndGuids(int podcastId, Set<String> guids) =>
-      throw UnimplementedError();
+  Future<int> deleteByPodcastIdAndGuids(
+    int podcastId,
+    Set<String> guids, {
+    Set<String> protectedGuids = const {},
+  }) => throw UnimplementedError();
 }
 
 class FakeItunesChartsClient extends ItunesChartsClient {

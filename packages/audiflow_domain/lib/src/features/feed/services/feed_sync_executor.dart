@@ -49,6 +49,7 @@ class FeedSyncExecutor {
   Future<SingleFeedSyncResult> syncFeed(
     Subscription sub, {
     bool forceRefresh = false,
+    Set<String> protectedGuids = const {},
   }) async {
     try {
       if (!forceRefresh && !_shouldSync(sub.lastRefreshedAt)) {
@@ -151,6 +152,7 @@ class FeedSyncExecutor {
           final deleted = await _episodeRepo.deleteByPodcastIdAndGuids(
             sub.id,
             droppedGuids,
+            protectedGuids: protectedGuids,
           );
           _logger?.i('Removed $deleted dropped episodes from "${sub.title}"');
         }

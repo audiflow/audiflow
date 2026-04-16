@@ -123,10 +123,12 @@ class _FakeEpisodeRepository implements EpisodeRepository {
   @override
   Future<int> deleteByPodcastIdAndGuids(
     int podcastId,
-    Set<String> guids,
-  ) async {
-    deleteCalls.add((podcastId: podcastId, guids: Set.of(guids)));
-    return guids.length;
+    Set<String> guids, {
+    Set<String> protectedGuids = const {},
+  }) async {
+    final effective = guids.difference(protectedGuids);
+    deleteCalls.add((podcastId: podcastId, guids: Set.of(effective)));
+    return effective.length;
   }
 
   // Unused methods for this test suite
