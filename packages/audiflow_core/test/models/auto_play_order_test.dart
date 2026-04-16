@@ -3,16 +3,20 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('AutoPlayOrder', () {
-    test('has exactly two values', () {
-      expect(AutoPlayOrder.values.length, equals(2));
+    test('has exactly three values', () {
+      expect(AutoPlayOrder.values.length, equals(3));
     });
 
-    test('oldestFirst is the first value', () {
-      expect(AutoPlayOrder.values.first, AutoPlayOrder.oldestFirst);
+    test('defaultOrder is the first value', () {
+      expect(AutoPlayOrder.values[0], AutoPlayOrder.defaultOrder);
     });
 
-    test('asDisplayed is the second value', () {
-      expect(AutoPlayOrder.values.last, AutoPlayOrder.asDisplayed);
+    test('oldestFirst is the second value', () {
+      expect(AutoPlayOrder.values[1], AutoPlayOrder.oldestFirst);
+    });
+
+    test('asDisplayed is the third value', () {
+      expect(AutoPlayOrder.values[2], AutoPlayOrder.asDisplayed);
     });
   });
 }
