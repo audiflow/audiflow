@@ -181,6 +181,18 @@ class _SmartPlaylistGroupEpisodesScreenState
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
+
+    // Re-resolve play order when subscription finishes loading.
+    // initState reads synchronously and may miss a still-loading provider.
+    final itunesId = widget.itunesId;
+    if (itunesId != null) {
+      ref.listen(subscriptionByItunesIdProvider(itunesId), (prev, next) {
+        if (prev?.value == null && next.value != null) {
+          _resolvePlayOrder();
+        }
+      });
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text(_formatGroupTitle()),

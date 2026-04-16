@@ -135,6 +135,17 @@ class _SmartPlaylistEpisodesScreenState
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
 
+    // Re-resolve play order when subscription finishes loading.
+    // initState reads synchronously and may miss a still-loading provider.
+    final feedUrl = widget.podcast.feedUrl;
+    if (feedUrl != null) {
+      ref.listen(subscriptionByFeedUrlProvider(feedUrl), (prev, next) {
+        if (prev?.value == null && next.value != null) {
+          _resolvePlayOrder();
+        }
+      });
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.smartPlaylist.formattedDisplayName),
