@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:audiflow_core/audiflow_core.dart' show AutoPlayOrder;
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:extended_image/extended_image.dart';
@@ -8,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../download/presentation/helpers/batch_download_action_helper.dart';
+import '../widgets/play_order_bottom_sheet.dart';
 import '../widgets/smart_playlist_episode_list_tile.dart';
 
 /// Screen showing episodes within a smart playlist group.
@@ -59,6 +61,9 @@ class _SmartPlaylistGroupEpisodesScreenState
   final _searchController = TextEditingController();
   Timer? _searchDebounce;
 
+  /// Resolved effective play order for this group.
+  AutoPlayOrder? _resolvedPlayOrder;
+
   @override
   void initState() {
     super.initState();
@@ -70,6 +75,7 @@ class _SmartPlaylistGroupEpisodesScreenState
                 widget.parentPlaylist.groupSort != null
             ? widget.parentPlaylist.groupSort!.order
             : SortOrder.descending);
+    _resolvePlayOrder();
   }
 
   @override
@@ -122,6 +128,55 @@ class _SmartPlaylistGroupEpisodesScreenState
     );
   }
 
+  void _resolvePlayOrder() {
+    final itunesId = widget.itunesId;
+    if (itunesId == null) return;
+    final subscription = ref
+        .read(subscriptionByItunesIdProvider(itunesId))
+        .value;
+    if (subscription == null) return;
+    final repo = ref.read(playOrderPreferenceRepositoryProvider);
+    repo
+        .resolveForGroup(
+          subscription.id,
+          widget.parentPlaylist.id,
+          widget.group.id,
+        )
+        .then((resolved) {
+          if (!mounted) return;
+          setState(() => _resolvedPlayOrder = resolved);
+        });
+  }
+
+  void _showPlayOrderSheet() {
+    final itunesId = widget.itunesId;
+    if (itunesId == null) return;
+    final subscription = ref
+        .read(subscriptionByItunesIdProvider(itunesId))
+        .value;
+    if (subscription == null) return;
+
+    final podcastId = subscription.id;
+    final playlistId = widget.parentPlaylist.id;
+    final groupId = widget.group.id;
+    final repo = ref.read(playOrderPreferenceRepositoryProvider);
+    repo.getGroupPlayOrder(podcastId, playlistId, groupId).then((currentOrder) {
+      if (!mounted) return;
+      repo.resolveForPlaylist(podcastId, playlistId).then((parentOrder) {
+        if (!mounted) return;
+        showPlayOrderBottomSheet(
+          context: context,
+          currentOrder: currentOrder ?? AutoPlayOrder.defaultOrder,
+          resolvedParentOrder: parentOrder,
+          onOrderSelected: (order) {
+            repo.setGroupPlayOrder(podcastId, playlistId, groupId, order);
+            _resolvePlayOrder();
+          },
+        );
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -138,6 +193,8 @@ class _SmartPlaylistGroupEpisodesScreenState
                 allTasks: allTasks,
               );
               switch (value) {
+                case 'play_order':
+                  _showPlayOrderSheet();
                 case 'download_all':
                   if (dlState.hasDownloadable) {
                     unawaited(
@@ -174,6 +231,11 @@ class _SmartPlaylistGroupEpisodesScreenState
                 allTasks: allTasks,
               );
               return [
+                PopupMenuItem(
+                  value: 'play_order',
+                  child: Text(l10n.playOrderMenuTitle),
+                ),
+                const PopupMenuDivider(),
                 PopupMenuItem(
                   enabled: dlState.hasDownloadable,
                   value: 'download_all',
@@ -423,6 +485,7 @@ class _SmartPlaylistGroupEpisodesScreenState
                 siblingEpisodeIds: _episodeIds,
                 itunesId: widget.itunesId,
                 feedUrl: widget.feedUrl,
+                effectiveOrder: _resolvedPlayOrder,
               );
             },
           ),
@@ -489,6 +552,7 @@ class _SmartPlaylistGroupEpisodesScreenState
         siblingEpisodeIds: _episodeIds,
         itunesId: widget.itunesId,
         feedUrl: widget.feedUrl,
+        effectiveOrder: _resolvedPlayOrder,
       ),
       scrollController: _scrollController,
       yearGroupingEnabled: true,
