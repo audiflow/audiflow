@@ -226,7 +226,8 @@ class IsolateRssParser {
           if (pubDate != null && !cutoff.isBefore(pubDate)) {
             if (cutoffGuid == null || cutoffGuid == guid) {
               stoppedEarly = true;
-              if (guid != null) tailGuids.add(guid);
+              final id = guid ?? _extractEnclosureUrl(itemXml);
+              if (id != null) tailGuids.add(id);
               break;
             }
           }
@@ -245,16 +246,20 @@ class IsolateRssParser {
         }
       }
 
-      // Scan remaining items for GUIDs only (no DOM parse) so callers can
+      // Scan remaining items for identifiers (no DOM parse) so callers can
       // detect episodes dropped from the feed even after an early stop.
+      // Uses the same fallback chain as FeedParserService: guid, then
+      // enclosure URL. Items with neither are skipped (they would get a
+      // synthetic timestamp-based id that cannot be matched reliably).
       if (stoppedEarly) {
         while (itemMatches.moveNext()) {
           final start = itemMatches.current.start;
           final close = xml.indexOf(itemCloseTag, start);
           if (close == -1) break;
           final snippet = xml.substring(start, close + itemCloseTag.length);
-          final g = _extractTagText(snippet, 'guid');
-          if (g != null) tailGuids.add(g);
+          final id =
+              _extractTagText(snippet, 'guid') ?? _extractEnclosureUrl(snippet);
+          if (id != null) tailGuids.add(id);
         }
       }
 
@@ -310,6 +315,18 @@ class IsolateRssParser {
       ),
     );
     final match = re.firstMatch(xml);
+    return _nullIfBlank(match?.group(1));
+  }
+
+  /// Extracts the `url` attribute from the first `<enclosure>` tag via regex.
+  /// Handles both self-closing (`<enclosure ... />`) and open/close forms.
+  static final _enclosureUrlRe = RegExp(
+    r'<enclosure\b[^>]*\burl\s*=\s*["\x27]([^"\x27]*)["\x27]',
+    caseSensitive: false,
+  );
+
+  static String? _extractEnclosureUrl(String xml) {
+    final match = _enclosureUrlRe.firstMatch(xml);
     return _nullIfBlank(match?.group(1));
   }
 
