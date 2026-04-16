@@ -47,7 +47,7 @@ class _CacheTile extends StatelessWidget {
       subtitle: Text(l10n.storageImageCacheSubtitle),
       trailing: OutlinedButton(
         onPressed: () => _confirmClearCache(context),
-        child: Text(l10n.storageClearCache),
+        child: Text(l10n.commonClear),
       ),
     );
   }
@@ -94,7 +94,7 @@ class _PodcastCacheTile extends StatelessWidget {
       subtitle: Text(l10n.storagePodcastCacheSubtitle),
       trailing: OutlinedButton(
         onPressed: () => _confirmClear(context),
-        child: Text(l10n.storageClearCache),
+        child: Text(l10n.commonClear),
       ),
     );
   }

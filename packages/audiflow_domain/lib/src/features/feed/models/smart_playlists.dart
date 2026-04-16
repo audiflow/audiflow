@@ -55,4 +55,11 @@ class SmartPlaylistEntity {
   /// When the upstream config version changes, the cache is
   /// invalidated and re-resolved.
   int? configVersion;
+
+  /// Auto-detect heuristic version for cache invalidation.
+  ///
+  /// Set when resolved without an explicit config pattern.
+  /// When the app's heuristic version advances past this value,
+  /// the cached grouping is discarded and re-resolved.
+  int? heuristicVersion;
 }

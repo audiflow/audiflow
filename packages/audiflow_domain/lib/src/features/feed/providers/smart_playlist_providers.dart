@@ -33,6 +33,10 @@ import '../services/smart_playlist_resolver_service.dart';
 
 part 'smart_playlist_providers.g.dart';
 
+/// Bump this when auto-detect heuristics change so stale
+/// caches are invalidated on next visit.
+const autoDetectHeuristicVersion = 1;
+
 /// Provides the pattern summaries loaded from remote
 /// root meta.json.
 ///
@@ -172,38 +176,39 @@ Future<SmartPlaylistGrouping?> podcastSmartPlaylists(
 
   // Check for cached smart playlists first
   final cachedPlaylists = await playlistDatasource.getByPodcastId(podcastId);
-  logger.d(
-    'podcastSmartPlaylists: podcastId=$podcastId, '
-    'feedUrl=${subscription.feedUrl}, '
-    'cachedCount=${cachedPlaylists.length}, '
-    'hasPattern=${matchedSummary != null}',
-  );
   if (cachedPlaylists.isNotEmpty) {
-    for (final cp in cachedPlaylists) {
+    // Auto-detect caches carry a heuristicVersion. When null
+    // (pre-existing) or behind the current version, the cache
+    // is stale and must be re-resolved.
+    final isAutoDetect = matchedSummary == null;
+    final cacheStale =
+        isAutoDetect &&
+        cachedPlaylists.first.heuristicVersion != autoDetectHeuristicVersion;
+
+    if (cacheStale) {
+      await playlistDatasource.deleteByPodcastId(podcastId);
       logger.d(
-        '  cached: playlistId=${cp.playlistId}, '
-        'resolverType=${cp.resolverType}, '
-        'displayName=${cp.displayName}, '
-        'configVersion=${cp.configVersion}',
+        'Purged stale auto-detect cache for podcastId=$podcastId '
+        '(cached=${cachedPlaylists.first.heuristicVersion}, '
+        'current=$autoDetectHeuristicVersion)',
+      );
+    } else {
+      logger.d(
+        'Using ${cachedPlaylists.length} cached smart '
+        'playlists for podcastId=$podcastId',
+      );
+      return _buildGroupingFromCache(
+        ref,
+        podcastId,
+        cachedPlaylists,
+        episodeRepo,
+        subscription.feedUrl,
+        logger,
       );
     }
-    final result = await _buildGroupingFromCache(
-      ref,
-      podcastId,
-      cachedPlaylists,
-      episodeRepo,
-      subscription.feedUrl,
-      logger,
-    );
-    logger.d(
-      'podcastSmartPlaylists: _buildGroupingFromCache returned '
-      '${result == null ? "null" : "${result.playlists.length} playlists"}',
-    );
-    return result;
   }
 
-  // No cached smart playlists - resolve from episodes
-  logger.d('podcastSmartPlaylists: no cache, resolving from episodes');
+  // No usable cache - resolve from episodes
   return _resolveAndPersistSmartPlaylists(
     ref,
     podcastId,
@@ -233,57 +238,15 @@ Future<SmartPlaylistGrouping?> _buildGroupingFromCache(
   final summary = configRepo.findMatchingPattern(null, feedUrl);
   if (summary != null) {
     final cachedVersion = cachedPlaylists.first.configVersion;
-    logger.d(
-      '_buildGroupingFromCache: pattern matched, '
-      'cachedVersion=$cachedVersion, '
-      'dataVersion=${summary.dataVersion}',
-    );
     if (cachedVersion == null || cachedVersion != summary.dataVersion) {
-      // Config has been updated upstream -- re-resolve
       return _reResolveFromEpisodes(ref, podcastId, feedUrl);
     }
-  } else {
-    logger.d(
-      '_buildGroupingFromCache: no pattern match (auto-detect), '
-      'podcastId=$podcastId, feedUrl=$feedUrl',
-    );
   }
 
   final episodes = await episodeRepo.getByPodcastId(podcastId);
-
-  if (episodes.isEmpty) {
-    logger.d('_buildGroupingFromCache: no episodes, returning null');
-    return null;
-  }
+  if (episodes.isEmpty) return null;
 
   final resolverType = cachedPlaylists.first.resolverType;
-  logger.d(
-    '_buildGroupingFromCache: resolverType=$resolverType, '
-    'episodeCount=${episodes.length}, '
-    'cachedPlaylistCount=${cachedPlaylists.length}',
-  );
-
-  // Auto-detect seasonNumber cache may be stale: the
-  // hasReliableSeasonNumbers heuristic was added after some
-  // devices already cached a single-season grouping. Re-validate
-  // and purge when the heuristic now rejects the metadata.
-  // Legacy caches stored 'rss' as the resolver type.
-  if (summary == null &&
-      (resolverType == 'seasonNumber' || resolverType == 'rss')) {
-    final reliable = hasReliableSeasonNumbers(episodes);
-    logger.d(
-      '_buildGroupingFromCache: seasonNumber reliability check: '
-      'reliable=$reliable',
-    );
-    if (!reliable) {
-      await playlistDatasource.deleteByPodcastId(podcastId);
-      logger.i(
-        '_buildGroupingFromCache: purged stale seasonNumber cache '
-        'for podcastId=$podcastId',
-      );
-      return null;
-    }
-  }
   final ungroupedIds = <int>[];
   final allGroupedEpisodeIds = <int>{};
 
@@ -491,6 +454,7 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
   final podcastImage = podcastImageUrl ?? findPodcastImageUrl(episodes);
 
   final configVersion = summary?.dataVersion;
+  final heuristicVer = summary == null ? autoDetectHeuristicVersion : null;
 
   for (final playlist in result.playlists) {
     _enrichPlaylist(
@@ -502,6 +466,7 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
       entities,
       podcastImageUrl: podcastImage,
       configVersion: configVersion,
+      heuristicVersion: heuristicVer,
     );
   }
 
@@ -595,6 +560,7 @@ void _enrichPlaylist(
   List<SmartPlaylistEntity> entities, {
   String? podcastImageUrl,
   int? configVersion,
+  int? heuristicVersion,
 }) {
   // Get episodes for this playlist, sorted by publishedAt
   // (newest first)
@@ -646,7 +612,8 @@ void _enrichPlaylist(
       ..groupSortOrder = playlist.groupSort?.order.name
       ..episodeSortField = playlist.episodeSort?.field.name
       ..episodeSortOrder = playlist.episodeSort?.order.name
-      ..configVersion = configVersion,
+      ..configVersion = configVersion
+      ..heuristicVersion = heuristicVersion,
   );
 }
 
