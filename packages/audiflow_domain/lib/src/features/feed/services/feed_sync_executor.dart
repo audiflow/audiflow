@@ -125,6 +125,7 @@ class FeedSyncExecutor {
       final knownGuids = await _episodeRepo.getGuidsByPodcastId(sub.id);
 
       var newEpisodeCount = 0;
+      var stoppedEarly = false;
       final observedGuids = <String>{};
       await for (final progress in _feedParser.parseWithProgress(
         xmlContent: xmlContent,
@@ -137,6 +138,7 @@ class FeedSyncExecutor {
       )) {
         if (progress is FeedParseComplete) {
           newEpisodeCount = progress.total;
+          stoppedEarly = progress.stoppedEarly;
           observedGuids.addAll(progress.tailGuids);
         }
       }
@@ -147,7 +149,18 @@ class FeedSyncExecutor {
       // picture even for incremental syncs. Guard against malformed feeds
       // that parse to zero items.
       if (observedGuids.isNotEmpty) {
-        final droppedGuids = knownGuids.difference(observedGuids);
+        var droppedGuids = knownGuids.difference(observedGuids);
+
+        // When the feed was not fully parsed, the tail scan cannot match
+        // episodes stored under synthetic IDs (unknown-*) because those
+        // items lack both <guid> and <enclosure>. Exclude them to avoid
+        // false deletions; they will be cleaned up on the next full parse.
+        if (stoppedEarly) {
+          droppedGuids = droppedGuids
+              .where((g) => !g.startsWith('unknown-'))
+              .toSet();
+        }
+
         if (droppedGuids.isNotEmpty) {
           final deleted = await _episodeRepo.deleteByPodcastIdAndGuids(
             sub.id,
