@@ -9,6 +9,10 @@ abstract class SmartPlaylistResolver {
   /// Unique identifier for this resolver type.
   String get type;
 
+  /// Bump when auto-detect logic changes so cached results
+  /// are invalidated. See docs/architecture/smart-playlist-cache.md.
+  int get heuristicVersion;
+
   /// Default sort rule for smart playlists produced by this resolver.
   SmartPlaylistSortRule get defaultSort;
 

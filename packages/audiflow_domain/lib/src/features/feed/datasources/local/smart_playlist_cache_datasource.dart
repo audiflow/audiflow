@@ -102,6 +102,14 @@ class SmartPlaylistCacheDatasource {
     await file.writeAsString(jsonEncode(definition.toJson()));
   }
 
+  /// Deletes the entire smart playlist cache directory.
+  Future<void> clearAll() async {
+    final dir = Directory(_baseDir);
+    if (dir.existsSync()) {
+      await dir.delete(recursive: true);
+    }
+  }
+
   // -- eviction --
 
   /// Removes a pattern's entire cache directory and its

@@ -143,4 +143,10 @@ class SmartPlaylistConfigRepositoryImpl
   void setPatternSummaries(List<PatternSummary> summaries) {
     _summaries = summaries;
   }
+
+  @override
+  Future<void> clearDiskCache() async {
+    await _cache.clearAll();
+    _inFlight.clear();
+  }
 }

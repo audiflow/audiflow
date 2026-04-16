@@ -260,4 +260,13 @@ class MockSubscriptionRepository extends _i1.Mock
             returnValueForMissingStub: _i4.Future<void>.value(),
           )
           as _i4.Future<void>);
+
+  @override
+  _i4.Future<void> clearAllHttpCacheHeaders() =>
+      (super.noSuchMethod(
+            Invocation.method(#clearAllHttpCacheHeaders, []),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
 }

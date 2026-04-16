@@ -109,6 +109,11 @@ const SmartPlaylistEntitySchema = CollectionSchema(
       name: r'yearHeaderMode',
       type: IsarType.string,
     ),
+    r'zHeuristicVersion': PropertySchema(
+      id: 19,
+      name: r'zHeuristicVersion',
+      type: IsarType.long,
+    ),
   },
 
   estimateSize: _smartPlaylistEntityEstimateSize,
@@ -214,6 +219,7 @@ void _smartPlaylistEntitySerialize(
   writer.writeBool(offsets[16], object.userSortable);
   writer.writeBool(offsets[17], object.yearGrouped);
   writer.writeString(offsets[18], object.yearHeaderMode);
+  writer.writeLong(offsets[19], object.heuristicVersion);
 }
 
 SmartPlaylistEntity _smartPlaylistEntityDeserialize(
@@ -243,6 +249,7 @@ SmartPlaylistEntity _smartPlaylistEntityDeserialize(
   object.userSortable = reader.readBool(offsets[16]);
   object.yearGrouped = reader.readBool(offsets[17]);
   object.yearHeaderMode = reader.readString(offsets[18]);
+  object.heuristicVersion = reader.readLongOrNull(offsets[19]);
   return object;
 }
 
@@ -291,6 +298,8 @@ P _smartPlaylistEntityDeserializeProp<P>(
       return (reader.readBool(offset)) as P;
     case 18:
       return (reader.readString(offset)) as P;
+    case 19:
+      return (reader.readLongOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -2597,6 +2606,79 @@ extension SmartPlaylistEntityQueryFilter
       );
     });
   }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  heuristicVersionIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'zHeuristicVersion'),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  heuristicVersionIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'zHeuristicVersion'),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  heuristicVersionEqualTo(int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'zHeuristicVersion', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  heuristicVersionGreaterThan(int? value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'zHeuristicVersion',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  heuristicVersionLessThan(int? value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'zHeuristicVersion',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  heuristicVersionBetween(
+    int? lower,
+    int? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'zHeuristicVersion',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
 }
 
 extension SmartPlaylistEntityQueryObject
@@ -2882,6 +2964,20 @@ extension SmartPlaylistEntityQuerySortBy
       return query.addSortBy(r'yearHeaderMode', Sort.desc);
     });
   }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterSortBy>
+  sortByHeuristicVersion() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zHeuristicVersion', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterSortBy>
+  sortByHeuristicVersionDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zHeuristicVersion', Sort.desc);
+    });
+  }
 }
 
 extension SmartPlaylistEntityQuerySortThenBy
@@ -3165,6 +3261,20 @@ extension SmartPlaylistEntityQuerySortThenBy
       return query.addSortBy(r'yearHeaderMode', Sort.desc);
     });
   }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterSortBy>
+  thenByHeuristicVersion() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zHeuristicVersion', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterSortBy>
+  thenByHeuristicVersionDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zHeuristicVersion', Sort.desc);
+    });
+  }
 }
 
 extension SmartPlaylistEntityQueryWhereDistinct
@@ -3319,6 +3429,13 @@ extension SmartPlaylistEntityQueryWhereDistinct
       );
     });
   }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QDistinct>
+  distinctByHeuristicVersion() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'zHeuristicVersion');
+    });
+  }
 }
 
 extension SmartPlaylistEntityQueryProperty
@@ -3457,6 +3574,13 @@ extension SmartPlaylistEntityQueryProperty
   yearHeaderModeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'yearHeaderMode');
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, int?, QQueryOperations>
+  heuristicVersionProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'zHeuristicVersion');
     });
   }
 }

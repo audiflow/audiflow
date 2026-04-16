@@ -26,4 +26,7 @@ abstract class SmartPlaylistConfigRepository {
 
   /// Sets the current pattern summaries for matching.
   void setPatternSummaries(List<PatternSummary> summaries);
+
+  /// Deletes all disk-cached config files.
+  Future<void> clearDiskCache();
 }

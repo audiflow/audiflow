@@ -338,6 +338,15 @@ class MockSubscriptionRepository extends _i1.Mock
             returnValueForMissingStub: _i11.Future<void>.value(),
           )
           as _i11.Future<void>);
+
+  @override
+  _i11.Future<void> clearAllHttpCacheHeaders() =>
+      (super.noSuchMethod(
+            Invocation.method(#clearAllHttpCacheHeaders, []),
+            returnValue: _i11.Future<void>.value(),
+            returnValueForMissingStub: _i11.Future<void>.value(),
+          )
+          as _i11.Future<void>);
 }
 
 /// A class which mocks [EpisodeRepository].
@@ -480,10 +489,15 @@ class MockEpisodeRepository extends _i1.Mock implements _i12.EpisodeRepository {
   @override
   _i11.Future<int> deleteByPodcastIdAndGuids(
     int? podcastId,
-    Set<String>? guids,
-  ) =>
+    Set<String>? guids, {
+    Set<String>? protectedGuids = const {},
+  }) =>
       (super.noSuchMethod(
-            Invocation.method(#deleteByPodcastIdAndGuids, [podcastId, guids]),
+            Invocation.method(
+              #deleteByPodcastIdAndGuids,
+              [podcastId, guids],
+              {#protectedGuids: protectedGuids},
+            ),
             returnValue: _i11.Future<int>.value(0),
           )
           as _i11.Future<int>);
@@ -1025,6 +1039,15 @@ class MockSmartPlaylistConfigRepository extends _i1.Mock
         Invocation.method(#setPatternSummaries, [summaries]),
         returnValueForMissingStub: null,
       );
+
+  @override
+  _i11.Future<void> clearDiskCache() =>
+      (super.noSuchMethod(
+            Invocation.method(#clearDiskCache, []),
+            returnValue: _i11.Future<void>.value(),
+            returnValueForMissingStub: _i11.Future<void>.value(),
+          )
+          as _i11.Future<void>);
 }
 
 /// A class which mocks [StationPodcastRepository].

@@ -21,6 +21,7 @@ class StorageSettingsScreen extends ConsumerWidget {
       body: ListView(
         children: [
           _CacheTile(ref: ref),
+          _PodcastCacheTile(ref: ref),
           _SearchHistoryTile(context: context),
           const Divider(),
           const _OpmlSection(),
@@ -46,7 +47,7 @@ class _CacheTile extends StatelessWidget {
       subtitle: Text(l10n.storageImageCacheSubtitle),
       trailing: OutlinedButton(
         onPressed: () => _confirmClearCache(context),
-        child: Text(l10n.storageClearCache),
+        child: Text(l10n.commonClear),
       ),
     );
   }
@@ -70,6 +71,63 @@ class _CacheTile extends StatelessWidget {
               ScaffoldMessenger.of(
                 context,
               ).showSnackBar(SnackBar(content: Text(l10n.storageCacheCleared)));
+            },
+            child: Text(l10n.commonClear),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PodcastCacheTile extends StatelessWidget {
+  const _PodcastCacheTile({required this.ref});
+
+  final WidgetRef ref;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    return ListTile(
+      title: Text(l10n.storagePodcastCache),
+      subtitle: Text(l10n.storagePodcastCacheSubtitle),
+      trailing: OutlinedButton(
+        onPressed: () => _confirmClear(context),
+        child: Text(l10n.commonClear),
+      ),
+    );
+  }
+
+  void _confirmClear(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.storageClearPodcastCacheTitle),
+        content: Text(l10n.storageClearPodcastCacheContent),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.commonCancel),
+          ),
+          FilledButton(
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              final ds = ref.read(smartPlaylistLocalDatasourceProvider);
+              final configRepo = ref.read(
+                smartPlaylistConfigRepositoryProvider,
+              );
+              final subRepo = ref.read(subscriptionRepositoryProvider);
+              await ds.clearAll();
+              await configRepo.clearDiskCache();
+              await subRepo.clearAllHttpCacheHeaders();
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(l10n.storagePodcastCacheCleared)),
+                );
+              }
             },
             child: Text(l10n.commonClear),
           ),

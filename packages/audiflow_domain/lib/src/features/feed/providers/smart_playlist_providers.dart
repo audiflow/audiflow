@@ -33,6 +33,26 @@ import '../services/smart_playlist_resolver_service.dart';
 
 part 'smart_playlist_providers.g.dart';
 
+/// Combined heuristic version derived from all auto-detect
+/// resolvers. Changing any resolver's [heuristicVersion]
+/// automatically invalidates cached groupings.
+/// See docs/architecture/smart-playlist-cache.md.
+int get autoDetectHeuristicVersion => _autoDetectHeuristicVersion;
+
+final int _autoDetectHeuristicVersion = () {
+  final resolvers = [
+    SeasonNumberResolver(),
+    TitleClassifierResolver(),
+    TitleDiscoveryResolver(),
+    YearResolver(),
+  ];
+  var sum = 0;
+  for (final r in resolvers) {
+    sum += r.heuristicVersion;
+  }
+  return sum;
+}();
+
 /// Provides the pattern summaries loaded from remote
 /// root meta.json.
 ///
@@ -173,20 +193,38 @@ Future<SmartPlaylistGrouping?> podcastSmartPlaylists(
   // Check for cached smart playlists first
   final cachedPlaylists = await playlistDatasource.getByPodcastId(podcastId);
   if (cachedPlaylists.isNotEmpty) {
-    logger.d(
-      'Using ${cachedPlaylists.length} cached smart '
-      'playlists for podcastId=$podcastId',
-    );
-    return _buildGroupingFromCache(
-      ref,
-      podcastId,
-      cachedPlaylists,
-      episodeRepo,
-      subscription.feedUrl,
-    );
+    // Auto-detect caches carry a heuristicVersion. When null
+    // (pre-existing) or behind the current version, the cache
+    // is stale and must be re-resolved.
+    final isAutoDetect = matchedSummary == null;
+    final cacheStale =
+        isAutoDetect &&
+        cachedPlaylists.first.heuristicVersion != autoDetectHeuristicVersion;
+
+    if (cacheStale) {
+      await playlistDatasource.deleteByPodcastId(podcastId);
+      logger.d(
+        'Purged stale auto-detect cache for podcastId=$podcastId '
+        '(cached=${cachedPlaylists.first.heuristicVersion}, '
+        'current=$autoDetectHeuristicVersion)',
+      );
+    } else {
+      logger.d(
+        'Using ${cachedPlaylists.length} cached smart '
+        'playlists for podcastId=$podcastId',
+      );
+      return _buildGroupingFromCache(
+        ref,
+        podcastId,
+        cachedPlaylists,
+        episodeRepo,
+        subscription.feedUrl,
+        logger,
+      );
+    }
   }
 
-  // No cached smart playlists - resolve from episodes
+  // No usable cache - resolve from episodes
   return _resolveAndPersistSmartPlaylists(
     ref,
     podcastId,
@@ -207,6 +245,7 @@ Future<SmartPlaylistGrouping?> _buildGroupingFromCache(
   List<SmartPlaylistEntity> cachedPlaylists,
   EpisodeRepository episodeRepo,
   String feedUrl,
+  Logger logger,
 ) async {
   final playlistDatasource = ref.watch(smartPlaylistLocalDatasourceProvider);
 
@@ -216,7 +255,6 @@ Future<SmartPlaylistGrouping?> _buildGroupingFromCache(
   if (summary != null) {
     final cachedVersion = cachedPlaylists.first.configVersion;
     if (cachedVersion == null || cachedVersion != summary.dataVersion) {
-      // Config has been updated upstream -- re-resolve
       return _reResolveFromEpisodes(ref, podcastId, feedUrl);
     }
   }
@@ -432,6 +470,7 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
   final podcastImage = podcastImageUrl ?? findPodcastImageUrl(episodes);
 
   final configVersion = summary?.dataVersion;
+  final heuristicVer = summary == null ? autoDetectHeuristicVersion : null;
 
   for (final playlist in result.playlists) {
     _enrichPlaylist(
@@ -443,6 +482,7 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
       entities,
       podcastImageUrl: podcastImage,
       configVersion: configVersion,
+      heuristicVersion: heuristicVer,
     );
   }
 
@@ -536,6 +576,7 @@ void _enrichPlaylist(
   List<SmartPlaylistEntity> entities, {
   String? podcastImageUrl,
   int? configVersion,
+  int? heuristicVersion,
 }) {
   // Get episodes for this playlist, sorted by publishedAt
   // (newest first)
@@ -587,7 +628,8 @@ void _enrichPlaylist(
       ..groupSortOrder = playlist.groupSort?.order.name
       ..episodeSortField = playlist.episodeSort?.field.name
       ..episodeSortOrder = playlist.episodeSort?.order.name
-      ..configVersion = configVersion,
+      ..configVersion = configVersion
+      ..heuristicVersion = heuristicVersion,
   );
 }
 

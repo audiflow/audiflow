@@ -33,6 +33,9 @@ class _FakeSubscriptionRepository implements SubscriptionRepository {
     lastCacheLastModified = lastModified;
   }
 
+  @override
+  Future<void> clearAllHttpCacheHeaders() async {}
+
   // Unused methods for this test suite
   @override
   Future<Subscription> subscribe({

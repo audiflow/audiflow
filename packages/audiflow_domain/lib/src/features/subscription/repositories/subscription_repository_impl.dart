@@ -181,4 +181,9 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
       lastModified: lastModified,
     );
   }
+
+  @override
+  Future<void> clearAllHttpCacheHeaders() {
+    return _datasource.clearAllHttpCacheHeaders();
+  }
 }

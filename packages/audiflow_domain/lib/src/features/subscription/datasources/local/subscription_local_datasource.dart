@@ -210,4 +210,18 @@ class SubscriptionLocalDatasource {
       ..httpLastModified = lastModified;
     await _isar.writeTxn(() => _isar.subscriptions.put(existing));
   }
+
+  /// Clears HTTP cache headers on all subscriptions so the
+  /// next feed sync performs unconditional requests.
+  Future<void> clearAllHttpCacheHeaders() async {
+    final all = await _isar.subscriptions.where().findAll();
+    if (all.isEmpty) return;
+
+    for (final sub in all) {
+      sub
+        ..httpEtag = null
+        ..httpLastModified = null;
+    }
+    await _isar.writeTxn(() => _isar.subscriptions.putAll(all));
+  }
 }

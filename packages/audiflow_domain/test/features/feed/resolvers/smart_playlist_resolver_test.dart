@@ -7,6 +7,9 @@ class TestSmartPlaylistResolver implements SmartPlaylistResolver {
   String get type => 'test';
 
   @override
+  int get heuristicVersion => 1;
+
+  @override
   SmartPlaylistSortRule get defaultSort => const SmartPlaylistSortRule(
     field: SmartPlaylistSortField.playlistNumber,
     order: SortOrder.ascending,

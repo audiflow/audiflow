@@ -578,6 +578,36 @@ abstract class AppLocalizations {
   /// **'Cache cleared'**
   String get storageCacheCleared;
 
+  /// Podcast cache setting title
+  ///
+  /// In en, this message translates to:
+  /// **'Podcast Cache'**
+  String get storagePodcastCache;
+
+  /// Podcast cache setting subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Clear smart playlist groupings and force feed re-sync'**
+  String get storagePodcastCacheSubtitle;
+
+  /// Clear podcast cache dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Podcast Cache?'**
+  String get storageClearPodcastCacheTitle;
+
+  /// Clear podcast cache dialog content
+  ///
+  /// In en, this message translates to:
+  /// **'This will reset smart playlist groupings and re-download feeds on next visit. Your play history and preferences are kept.'**
+  String get storageClearPodcastCacheContent;
+
+  /// Podcast cache cleared snackbar
+  ///
+  /// In en, this message translates to:
+  /// **'Podcast cache cleared'**
+  String get storagePodcastCacheCleared;
+
   /// Search history setting title
   ///
   /// In en, this message translates to:

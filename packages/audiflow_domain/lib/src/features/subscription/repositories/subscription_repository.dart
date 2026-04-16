@@ -91,6 +91,9 @@ abstract class SubscriptionRepository {
     String? etag,
     String? lastModified,
   });
+
+  /// Clears HTTP cache headers on all subscriptions.
+  Future<void> clearAllHttpCacheHeaders();
 }
 
 /// Exception thrown when a subscription operation fails.

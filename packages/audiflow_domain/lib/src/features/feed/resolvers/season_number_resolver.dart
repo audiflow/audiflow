@@ -47,6 +47,9 @@ class SeasonNumberResolver implements SmartPlaylistResolver {
   String get type => 'seasonNumber';
 
   @override
+  int get heuristicVersion => 2;
+
+  @override
   SmartPlaylistSortRule get defaultSort => const SmartPlaylistSortRule(
     field: SmartPlaylistSortField.playlistNumber,
     order: SortOrder.ascending,

@@ -12,6 +12,9 @@ class YearResolver implements SmartPlaylistResolver {
   String get type => 'year';
 
   @override
+  int get heuristicVersion => 1;
+
+  @override
   SmartPlaylistSortRule get defaultSort => const SmartPlaylistSortRule(
     field: SmartPlaylistSortField.playlistNumber,
     order: SortOrder.descending, // Newest years first
