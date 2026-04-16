@@ -193,6 +193,7 @@ class IsolateRssParser {
       // --- Episodes: scan for <item>...</item> blocks incrementally ---
       var parsedCount = 0;
       var stoppedEarly = false;
+      final tailGuids = <String>{};
       final cutoff = params.knownNewestPubDate;
       final cutoffGuid = params.knownNewestGuid;
       final itemOpenTag = RegExp(r'<item[\s>]');
@@ -214,6 +215,7 @@ class IsolateRssParser {
         // Early stop: GUID-set match (legacy path, used by parseWithProgress)
         if (guid != null && params.knownGuids.contains(guid)) {
           stoppedEarly = true;
+          tailGuids.add(guid);
           break;
         }
 
@@ -224,6 +226,7 @@ class IsolateRssParser {
           if (pubDate != null && !cutoff.isBefore(pubDate)) {
             if (cutoffGuid == null || cutoffGuid == guid) {
               stoppedEarly = true;
+              if (guid != null) tailGuids.add(guid);
               break;
             }
           }
@@ -242,8 +245,25 @@ class IsolateRssParser {
         }
       }
 
+      // Scan remaining items for GUIDs only (no DOM parse) so callers can
+      // detect episodes dropped from the feed even after an early stop.
+      if (stoppedEarly) {
+        while (itemMatches.moveNext()) {
+          final start = itemMatches.current.start;
+          final close = xml.indexOf(itemCloseTag, start);
+          if (close == -1) break;
+          final snippet = xml.substring(start, close + itemCloseTag.length);
+          final g = _extractTagText(snippet, 'guid');
+          if (g != null) tailGuids.add(g);
+        }
+      }
+
       params.sendPort.send(
-        ParseComplete(totalParsed: parsedCount, stoppedEarly: stoppedEarly),
+        ParseComplete(
+          totalParsed: parsedCount,
+          stoppedEarly: stoppedEarly,
+          tailGuids: tailGuids,
+        ),
       );
     } catch (e) {
       params.sendPort.send(_IsolateError(e.toString()));

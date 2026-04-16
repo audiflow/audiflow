@@ -515,6 +515,7 @@ Stream<FeedParseProgress> _progressWithBatches({
     List<ParsedEpisodeMediaMeta> mediaMetas,
   )
   onBatchReady,
+  Set<String> tailGuids = const {},
 }) async* {
   var total = 0;
   for (final batch in batches) {
@@ -522,7 +523,11 @@ Stream<FeedParseProgress> _progressWithBatches({
     total += batch.length;
     yield EpisodesBatchStored(totalSoFar: total);
   }
-  yield FeedParseComplete(total: total, stoppedEarly: stoppedEarly);
+  yield FeedParseComplete(
+    total: total,
+    stoppedEarly: stoppedEarly,
+    tailGuids: tailGuids,
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -863,11 +868,38 @@ void main() {
       },
     );
 
+    test('deletes dropped episodes even when parser stopped early', () async {
+      final sub = _subscription(id: 9, lastRefreshedAt: null);
+      // Known: a, b, c, d. Feed has a (new), b, c (tail). d is dropped.
+      fakeEpisodeRepo.storedGuids = {'a', 'b', 'c', 'd'};
+
+      final parser = _FakeFeedParserService(
+        (xml, id, guids, onBatch) => _progressWithBatches(
+          batches: [
+            [_ep(sub.id, 'a')],
+          ],
+          stoppedEarly: true,
+          tailGuids: {'b', 'c'},
+          onBatchReady: onBatch,
+        ),
+      );
+
+      final executor = buildExecutor(
+        dio: _FakeDio((_) => _xmlResponse('<rss></rss>')),
+        feedParser: parser,
+      );
+
+      await executor.syncFeed(sub);
+
+      expect(fakeEpisodeRepo.deleteCalls, hasLength(1));
+      expect(fakeEpisodeRepo.deleteCalls.single.guids, {'d'});
+    });
+
     test(
-      'does not delete when parser stopped early (stoppedEarly=true)',
+      'does not delete when stopped early and tailGuids cover all known',
       () async {
-        final sub = _subscription(id: 9, lastRefreshedAt: null);
-        fakeEpisodeRepo.storedGuids = {'a', 'b', 'c', 'd'};
+        final sub = _subscription(id: 11, lastRefreshedAt: null);
+        fakeEpisodeRepo.storedGuids = {'a', 'b', 'c'};
 
         final parser = _FakeFeedParserService(
           (xml, id, guids, onBatch) => _progressWithBatches(
@@ -875,6 +907,7 @@ void main() {
               [_ep(sub.id, 'a')],
             ],
             stoppedEarly: true,
+            tailGuids: {'b', 'c'},
             onBatchReady: onBatch,
           ),
         );
