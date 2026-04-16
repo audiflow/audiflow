@@ -823,6 +823,7 @@ class _SmartPlaylistEpisodesScreenState
         'lastRefreshedAt': widget.lastRefreshedAt,
         'filteredEpisodeIds': filteredEpisodeIds,
         'itunesId': widget.podcast.id,
+        'feedUrl': widget.podcast.feedUrl,
       },
     );
   }

@@ -128,12 +128,23 @@ class _SmartPlaylistGroupEpisodesScreenState
     );
   }
 
-  void _resolvePlayOrder() {
+  /// Looks up the subscription by iTunes ID first, then falls back
+  /// to feed URL so feeds without an iTunes ID still work.
+  Subscription? _readSubscription() {
     final itunesId = widget.itunesId;
-    if (itunesId == null) return;
-    final subscription = ref
-        .read(subscriptionByItunesIdProvider(itunesId))
-        .value;
+    if (itunesId != null) {
+      final sub = ref.read(subscriptionByItunesIdProvider(itunesId)).value;
+      if (sub != null) return sub;
+    }
+    final feedUrl = widget.feedUrl;
+    if (feedUrl != null) {
+      return ref.read(subscriptionByFeedUrlProvider(feedUrl)).value;
+    }
+    return null;
+  }
+
+  void _resolvePlayOrder() {
+    final subscription = _readSubscription();
     if (subscription == null) return;
     final repo = ref.read(playOrderPreferenceRepositoryProvider);
     repo
@@ -149,11 +160,7 @@ class _SmartPlaylistGroupEpisodesScreenState
   }
 
   void _showPlayOrderSheet() {
-    final itunesId = widget.itunesId;
-    if (itunesId == null) return;
-    final subscription = ref
-        .read(subscriptionByItunesIdProvider(itunesId))
-        .value;
+    final subscription = _readSubscription();
     if (subscription == null) return;
 
     final podcastId = subscription.id;
@@ -186,9 +193,17 @@ class _SmartPlaylistGroupEpisodesScreenState
 
     // Re-resolve play order when subscription finishes loading.
     // initState reads synchronously and may miss a still-loading provider.
+    // Listen to whichever provider is available (itunesId preferred).
     final itunesId = widget.itunesId;
+    final feedUrl = widget.feedUrl;
     if (itunesId != null) {
       ref.listen(subscriptionByItunesIdProvider(itunesId), (prev, next) {
+        if (prev?.value == null && next.value != null) {
+          _resolvePlayOrder();
+        }
+      });
+    } else if (feedUrl != null) {
+      ref.listen(subscriptionByFeedUrlProvider(feedUrl), (prev, next) {
         if (prev?.value == null && next.value != null) {
           _resolvePlayOrder();
         }
