@@ -25,6 +25,9 @@ class TitleDiscoveryResolver implements SmartPlaylistResolver {
   String get type => 'titleDiscovery';
 
   @override
+  int get heuristicVersion => 1;
+
+  @override
   SmartPlaylistSortRule get defaultSort => const SmartPlaylistSortRule(
     field: SmartPlaylistSortField.playlistNumber,
     order: SortOrder.ascending,

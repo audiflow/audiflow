@@ -33,9 +33,25 @@ import '../services/smart_playlist_resolver_service.dart';
 
 part 'smart_playlist_providers.g.dart';
 
-/// Bump this when auto-detect heuristics change so stale
-/// caches are invalidated on next visit.
-const autoDetectHeuristicVersion = 1;
+/// Combined heuristic version derived from all auto-detect
+/// resolvers. Changing any resolver's [heuristicVersion]
+/// automatically invalidates cached groupings.
+/// See docs/architecture/smart-playlist-cache.md.
+int get autoDetectHeuristicVersion => _autoDetectHeuristicVersion;
+
+final int _autoDetectHeuristicVersion = () {
+  final resolvers = [
+    SeasonNumberResolver(),
+    TitleClassifierResolver(),
+    TitleDiscoveryResolver(),
+    YearResolver(),
+  ];
+  var sum = 0;
+  for (final r in resolvers) {
+    sum += r.heuristicVersion;
+  }
+  return sum;
+}();
 
 /// Provides the pattern summaries loaded from remote
 /// root meta.json.
