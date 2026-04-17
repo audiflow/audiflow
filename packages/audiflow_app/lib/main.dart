@@ -130,6 +130,25 @@ Future<void> _startApp(String smartPlaylistConfigBaseUrl) async {
   final prefs = await SharedPreferences.getInstance();
   final packageInfo = await PackageInfo.fromPlatform();
 
+  // Diagnostic: bridge foreground feed-sync structured events into Sentry
+  // so we can distinguish which sync path ran (foreground vs background)
+  // and inspect stoppedEarly / cleanup behavior. Remove once investigation
+  // is resolved.
+  void feedSyncDiagnostic(String event, Map<String, Object?> data) {
+    Sentry.addBreadcrumb(
+      Breadcrumb(message: event, category: 'feed.sync', data: data),
+    );
+    if (event == 'feed-sync:parse-complete') {
+      unawaited(
+        Sentry.captureMessage(
+          event,
+          level: SentryLevel.info,
+          withScope: (scope) => scope.setContexts('feed_sync', data),
+        ),
+      );
+    }
+  }
+
   final container = ProviderContainer(
     overrides: [
       isarProvider.overrideWithValue(isar),
@@ -140,6 +159,7 @@ Future<void> _startApp(String smartPlaylistConfigBaseUrl) async {
       smartPlaylistConfigBaseUrlProvider.overrideWithValue(
         smartPlaylistConfigBaseUrl,
       ),
+      feedSyncDiagnosticSinkProvider.overrideWithValue(feedSyncDiagnostic),
     ],
   );
 
