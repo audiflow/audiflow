@@ -49,7 +49,7 @@
   "playbackAutoPlayOrderAsDisplayed": "表示順",
   "playOrderMenuTitle": "再生順序",
   "playOrderDefault": "デフォルト ({resolvedOrder})",
-  "playOrderOldestFirst": "古い順",
+  "playOrderOldestFirst": "公開日順（古→新）",
   "playOrderAsDisplayed": "表示順",
   "playbackDuckInterruptionBehaviorTitle": "通知音での挙動",
   "playbackDuckInterruptionBehaviorSubtitle": "通知音など短い割り込みにどう反応するか",

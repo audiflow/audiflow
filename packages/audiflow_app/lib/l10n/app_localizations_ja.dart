@@ -146,7 +146,7 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get playOrderOldestFirst => '古い順';
+  String get playOrderOldestFirst => '公開日順（古→新）';
 
   @override
   String get playOrderAsDisplayed => '表示順';
