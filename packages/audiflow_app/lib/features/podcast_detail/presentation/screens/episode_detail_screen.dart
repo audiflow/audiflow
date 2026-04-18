@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
@@ -628,33 +630,76 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
       );
     }
 
-    // Preserve the pending timestamp across failed play() attempts (e.g.
-    // transient network errors). Only clear after a successful start so a
-    // retry still honours the shared `?t=` seek target.
+    // Kick off playback without awaiting: just_audio's play() future only
+    // completes when the session pauses/ends, so awaiting would leave the
+    // pending timestamp armed for the entire listening session and re-fire
+    // on the next pause/resume tap.
     final startAt = _pendingStartAt;
-    await controller.play(
-      url,
-      metadata: NowPlayingInfo(
-        episodeUrl: url,
-        episodeTitle: widget.episode.title,
-        podcastTitle: widget.podcastTitle,
-        artworkUrl: widget.artworkUrl ?? widget.episode.primaryImage?.url,
-        totalDuration: widget.episode.duration,
+    unawaited(
+      _startPlaybackAndClearPending(
+        controller: controller,
+        url: url,
+        startAt: startAt,
       ),
-      startAt: startAt,
     );
-    // Treat only terminal running states as success. `loading` can still
-    // transition to `error`, so clearing the pending seek target there
-    // would silently drop the shared `?t=` on a transient failure.
-    final didStart = ref
-        .read(audioPlayerControllerProvider)
-        .maybeWhen(
-          playing: (episodeUrl) => episodeUrl == url,
-          paused: (episodeUrl) => episodeUrl == url,
-          orElse: () => false,
+  }
+
+  /// Drives [AudioPlayerController.play] to completion and clears the
+  /// pending deep-link timestamp once the controller transitions to a
+  /// terminal running state. If playback errors out before reaching
+  /// `playing`/`paused`, the timestamp is preserved so a retry honours
+  /// the shared `?t=` target.
+  Future<void> _startPlaybackAndClearPending({
+    required AudioPlayerController controller,
+    required String url,
+    required Duration? startAt,
+  }) async {
+    // Subscribe before calling play() so we don't miss the transition.
+    final completer = Completer<bool>();
+    late final ProviderSubscription<PlaybackState> subscription;
+    subscription = ref.listenManual<PlaybackState>(
+      audioPlayerControllerProvider,
+      (previous, next) {
+        if (completer.isCompleted) return;
+        next.maybeWhen(
+          playing: (episodeUrl) {
+            if (episodeUrl == url) completer.complete(true);
+          },
+          paused: (episodeUrl) {
+            if (episodeUrl == url) completer.complete(true);
+          },
+          error: (_) => completer.complete(false),
+          orElse: () {},
         );
-    if (didStart) {
-      _pendingStartAt = null;
+      },
+    );
+
+    try {
+      unawaited(
+        controller.play(
+          url,
+          metadata: NowPlayingInfo(
+            episodeUrl: url,
+            episodeTitle: widget.episode.title,
+            podcastTitle: widget.podcastTitle,
+            artworkUrl: widget.artworkUrl ?? widget.episode.primaryImage?.url,
+            totalDuration: widget.episode.duration,
+          ),
+          startAt: startAt,
+        ),
+      );
+
+      // Bound the wait so we don't leak the subscription if something
+      // prevents the expected transition from ever happening.
+      final didStart = await completer.future.timeout(
+        const Duration(seconds: 30),
+        onTimeout: () => false,
+      );
+      if (didStart && mounted) {
+        _pendingStartAt = null;
+      }
+    } finally {
+      subscription.close();
     }
   }
 
