@@ -222,7 +222,15 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
         );
       }
       await play();
-      _controller.markPlayingByInterruption();
+      // Only force the UI into `playing` when just_audio actually
+      // reached `ready`. If the source is still loading or buffering
+      // after an interruption, the natural state stream will emit the
+      // correct `loading` / `buffering` -> `playing` transition; calling
+      // `markPlayingByInterruption` here would otherwise stomp on that
+      // legitimate intermediate state.
+      if (_player.playing && _player.processingState == ProcessingState.ready) {
+        _controller.markPlayingByInterruption();
+      }
     } catch (e, stack) {
       _log.e(
         '[AudioHandler] Failed to reactivate session',
