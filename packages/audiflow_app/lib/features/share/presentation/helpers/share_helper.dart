@@ -8,11 +8,13 @@ Future<String?> buildEpisodeShareUrl({
   required String? itunesId,
   required String? episodeGuid,
   required String? fallbackLink,
+  Duration? startAt,
 }) async {
   if (itunesId != null && episodeGuid != null) {
     final url = await shareLinkBuilder.buildEpisodeLink(
       itunesId: itunesId,
       episodeGuid: episodeGuid,
+      startAt: startAt,
     );
     if (url != null) return url;
   }
@@ -32,6 +34,7 @@ Future<void> shareEpisode({
   required String? itunesId,
   required String? episodeGuid,
   required String? fallbackLink,
+  Duration? startAt,
 }) async {
   final origin = _shareOriginFrom(context);
   final url = await buildEpisodeShareUrl(
@@ -39,6 +42,7 @@ Future<void> shareEpisode({
     itunesId: itunesId,
     episodeGuid: episodeGuid,
     fallbackLink: fallbackLink,
+    startAt: startAt,
   );
   if (url == null) return;
   await SharePlus.instance.share(

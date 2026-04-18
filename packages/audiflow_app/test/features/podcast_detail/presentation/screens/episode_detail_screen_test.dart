@@ -337,7 +337,11 @@ class _FakeAudioPlayerController extends AudioPlayerController {
   PlaybackState build() => const PlaybackState.idle();
 
   @override
-  Future<void> play(String url, {NowPlayingInfo? metadata}) async {}
+  Future<void> play(
+    String url, {
+    NowPlayingInfo? metadata,
+    Duration? startAt,
+  }) async {}
 
   @override
   Future<void> pause() async {}

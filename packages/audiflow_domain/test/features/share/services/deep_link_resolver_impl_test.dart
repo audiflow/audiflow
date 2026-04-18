@@ -384,6 +384,188 @@ void main() {
         },
       );
 
+      group('startAt (?t=) query param', () {
+        test('parses positive integer seconds into Duration', () async {
+          final subs = subsWithPodcast();
+          final eps = FakeEpisodeRepository();
+          eps.addEpisode(
+            podcastId: 10,
+            guid: guid,
+            title: 'Episode One',
+            audioUrl: 'https://audio.example.com/ep1.mp3',
+          );
+
+          final encodedGuid = encodeGuid(guid);
+          final resolver = _makeResolver(subscriptions: subs, episodes: eps);
+          final result = await resolver.resolve(
+            Uri.parse(
+              'https://audiflow.reedom.com/p/$itunesId/e/$encodedGuid?t=90',
+            ),
+          );
+
+          check(result)
+              .isNotNull()
+              .isA<EpisodeDeepLinkTarget>()
+              .has((t) => t.startAt, 'startAt')
+              .equals(const Duration(seconds: 90));
+        });
+
+        test('parses zero seconds into Duration.zero', () async {
+          final subs = subsWithPodcast();
+          final eps = FakeEpisodeRepository();
+          eps.addEpisode(
+            podcastId: 10,
+            guid: guid,
+            title: 'Episode One',
+            audioUrl: 'https://audio.example.com/ep1.mp3',
+          );
+
+          final encodedGuid = encodeGuid(guid);
+          final resolver = _makeResolver(subscriptions: subs, episodes: eps);
+          final result = await resolver.resolve(
+            Uri.parse(
+              'https://audiflow.reedom.com/p/$itunesId/e/$encodedGuid?t=0',
+            ),
+          );
+
+          check(result)
+              .isNotNull()
+              .isA<EpisodeDeepLinkTarget>()
+              .has((t) => t.startAt, 'startAt')
+              .equals(Duration.zero);
+        });
+
+        test('ignores non-numeric t', () async {
+          final subs = subsWithPodcast();
+          final eps = FakeEpisodeRepository();
+          eps.addEpisode(
+            podcastId: 10,
+            guid: guid,
+            title: 'Episode One',
+            audioUrl: 'https://audio.example.com/ep1.mp3',
+          );
+
+          final encodedGuid = encodeGuid(guid);
+          final resolver = _makeResolver(subscriptions: subs, episodes: eps);
+          final result = await resolver.resolve(
+            Uri.parse(
+              'https://audiflow.reedom.com/p/$itunesId/e/$encodedGuid?t=abc',
+            ),
+          );
+
+          check(result)
+              .isNotNull()
+              .isA<EpisodeDeepLinkTarget>()
+              .has((t) => t.startAt, 'startAt')
+              .isNull();
+        });
+
+        test('ignores negative t (sign rejected by digits-only)', () async {
+          final subs = subsWithPodcast();
+          final eps = FakeEpisodeRepository();
+          eps.addEpisode(
+            podcastId: 10,
+            guid: guid,
+            title: 'Episode One',
+            audioUrl: 'https://audio.example.com/ep1.mp3',
+          );
+
+          final encodedGuid = encodeGuid(guid);
+          final resolver = _makeResolver(subscriptions: subs, episodes: eps);
+          final result = await resolver.resolve(
+            Uri.parse(
+              'https://audiflow.reedom.com/p/$itunesId/e/$encodedGuid?t=-5',
+            ),
+          );
+
+          check(result)
+              .isNotNull()
+              .isA<EpisodeDeepLinkTarget>()
+              .has((t) => t.startAt, 'startAt')
+              .isNull();
+        });
+
+        test('ignores empty t', () async {
+          final subs = subsWithPodcast();
+          final eps = FakeEpisodeRepository();
+          eps.addEpisode(
+            podcastId: 10,
+            guid: guid,
+            title: 'Episode One',
+            audioUrl: 'https://audio.example.com/ep1.mp3',
+          );
+
+          final encodedGuid = encodeGuid(guid);
+          final resolver = _makeResolver(subscriptions: subs, episodes: eps);
+          final result = await resolver.resolve(
+            Uri.parse(
+              'https://audiflow.reedom.com/p/$itunesId/e/$encodedGuid?t=',
+            ),
+          );
+
+          check(result)
+              .isNotNull()
+              .isA<EpisodeDeepLinkTarget>()
+              .has((t) => t.startAt, 'startAt')
+              .isNull();
+        });
+
+        test('leaves startAt null when t is absent', () async {
+          final subs = subsWithPodcast();
+          final eps = FakeEpisodeRepository();
+          eps.addEpisode(
+            podcastId: 10,
+            guid: guid,
+            title: 'Episode One',
+            audioUrl: 'https://audio.example.com/ep1.mp3',
+          );
+
+          final encodedGuid = encodeGuid(guid);
+          final resolver = _makeResolver(subscriptions: subs, episodes: eps);
+          final result = await resolver.resolve(
+            Uri.parse('https://audiflow.reedom.com/p/$itunesId/e/$encodedGuid'),
+          );
+
+          check(result)
+              .isNotNull()
+              .isA<EpisodeDeepLinkTarget>()
+              .has((t) => t.startAt, 'startAt')
+              .isNull();
+        });
+
+        test('propagates startAt into feed-resolved episodes', () async {
+          final subs = subsWithPodcast();
+          final feedEpisode = PodcastItem.fromData(
+            parsedAt: DateTime.now(),
+            sourceUrl: feedUrl,
+            title: 'Feed Episode',
+            description: 'From feed',
+            guid: guid,
+            enclosureUrl: 'https://audio.example.com/feed-ep.mp3',
+          );
+
+          final feedParser = FakeFeedParserService();
+          feedParser.setEpisodes([feedEpisode]);
+
+          final encodedGuid = encodeGuid(guid);
+          final resolver = _makeResolver(
+            subscriptions: subs,
+            feedParser: feedParser,
+          );
+          final result = await resolver.resolve(
+            Uri.parse(
+              'https://audiflow.reedom.com/p/$itunesId/e/$encodedGuid?t=120',
+            ),
+          );
+
+          check(result)
+              .isNotNull()
+              .isA<EpisodeDeepLinkTarget>()
+              .has((t) => t.startAt, 'startAt')
+              .equals(const Duration(seconds: 120));
+        });
+      });
+
       test('propagates exception when feed parsing fails', () async {
         final subs = subsWithPodcast();
         final feedParser = FakeFeedParserService();

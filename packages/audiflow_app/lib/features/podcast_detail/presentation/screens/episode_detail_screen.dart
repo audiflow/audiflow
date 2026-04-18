@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
@@ -29,6 +31,7 @@ class EpisodeDetailScreen extends ConsumerStatefulWidget {
     this.artworkUrl,
     this.progress,
     this.itunesId,
+    this.startAt,
   });
 
   final PodcastItem episode;
@@ -39,6 +42,11 @@ class EpisodeDetailScreen extends ConsumerStatefulWidget {
   /// iTunes ID for building universal share links.
   final String? itunesId;
 
+  /// Position to seek to on the first user-initiated play, sourced from
+  /// a `?t=<seconds>` query param on an incoming universal link. One-shot:
+  /// consumed the first time playback starts, then ignored.
+  final Duration? startAt;
+
   @override
   ConsumerState<EpisodeDetailScreen> createState() =>
       _EpisodeDetailScreenState();
@@ -48,9 +56,15 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
   Brightness _artworkBrightness = Brightness.dark;
   double _collapseRatio = 0.0;
 
+  /// Pending one-shot seek position from a timestamped share link.
+  /// Cleared on the first user-initiated `play()` so later pause/resume
+  /// cycles fall back to saved-history resume semantics.
+  Duration? _pendingStartAt;
+
   @override
   void initState() {
     super.initState();
+    _pendingStartAt = widget.startAt;
     // Defer until after page transition completes
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _resolveArtworkBrightness().ignore();
@@ -573,6 +587,28 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
     }
 
     if (controller.isLoaded(url)) {
+      // Honour a pending `?t=` deep-link timestamp even when the episode is
+      // already loaded in the player — otherwise resume falls back to the
+      // in-memory position and the shared timestamp is silently ignored.
+      final startAt = _pendingStartAt;
+      if (startAt != null) {
+        // Observe the controller's lifecycle stream for the synchronous
+        // SeekLifecycle event that only fires when seek() actually
+        // committed. This avoids racing the progress provider, which can
+        // lag behind an in-flight seek.
+        var seekCommitted = false;
+        final subscription = controller.lifecycleEvents.listen((event) {
+          if (event is SeekLifecycle) seekCommitted = true;
+        });
+        try {
+          await controller.seek(startAt);
+        } finally {
+          await subscription.cancel();
+        }
+        if (seekCommitted) {
+          _pendingStartAt = null;
+        }
+      }
       controller.resume();
       return;
     }
@@ -594,16 +630,79 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
       );
     }
 
-    controller.play(
-      url,
-      metadata: NowPlayingInfo(
-        episodeUrl: url,
-        episodeTitle: widget.episode.title,
-        podcastTitle: widget.podcastTitle,
-        artworkUrl: widget.artworkUrl ?? widget.episode.primaryImage?.url,
-        totalDuration: widget.episode.duration,
+    // Kick off playback without awaiting: just_audio's play() future only
+    // completes when the session pauses/ends, so awaiting would leave the
+    // pending timestamp armed for the entire listening session and re-fire
+    // on the next pause/resume tap.
+    final startAt = _pendingStartAt;
+    unawaited(
+      _startPlaybackAndClearPending(
+        controller: controller,
+        url: url,
+        startAt: startAt,
       ),
     );
+  }
+
+  /// Drives [AudioPlayerController.play] to completion and clears the
+  /// pending deep-link timestamp once the controller transitions to a
+  /// terminal running state. If playback errors out before reaching
+  /// `playing`/`paused`, the timestamp is preserved so a retry honours
+  /// the shared `?t=` target.
+  Future<void> _startPlaybackAndClearPending({
+    required AudioPlayerController controller,
+    required String url,
+    required Duration? startAt,
+  }) async {
+    // Subscribe before calling play() so we don't miss the transition.
+    final completer = Completer<bool>();
+    late final ProviderSubscription<PlaybackState> subscription;
+    subscription = ref.listenManual<PlaybackState>(
+      audioPlayerControllerProvider,
+      (previous, next) {
+        if (completer.isCompleted) return;
+        // Only `playing` is a definitive success signal. just_audio can
+        // briefly emit `paused` as an intermediate state right after
+        // setUrl() and before _player.play() runs; treating that as
+        // success would clear the pending deep-link timestamp even when
+        // playback still fails afterwards.
+        next.maybeWhen(
+          playing: (episodeUrl) {
+            if (episodeUrl == url) completer.complete(true);
+          },
+          error: (_) => completer.complete(false),
+          orElse: () {},
+        );
+      },
+    );
+
+    try {
+      unawaited(
+        controller.play(
+          url,
+          metadata: NowPlayingInfo(
+            episodeUrl: url,
+            episodeTitle: widget.episode.title,
+            podcastTitle: widget.podcastTitle,
+            artworkUrl: widget.artworkUrl ?? widget.episode.primaryImage?.url,
+            totalDuration: widget.episode.duration,
+          ),
+          startAt: startAt,
+        ),
+      );
+
+      // Bound the wait so we don't leak the subscription if something
+      // prevents the expected transition from ever happening.
+      final didStart = await completer.future.timeout(
+        const Duration(seconds: 30),
+        onTimeout: () => false,
+      );
+      if (didStart && mounted) {
+        _pendingStartAt = null;
+      }
+    } finally {
+      subscription.close();
+    }
   }
 
   Future<bool> _showReplaceQueueDialog(BuildContext context) async {

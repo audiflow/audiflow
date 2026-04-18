@@ -6,12 +6,17 @@ import 'package:flutter_test/flutter_test.dart';
 class FakeShareLinkBuilder implements ShareLinkBuilder {
   String? episodeLinkResult;
   String? podcastLinkResult;
+  Duration? lastStartAt;
 
   @override
   Future<String?> buildEpisodeLink({
     required String itunesId,
     required String episodeGuid,
-  }) async => episodeLinkResult;
+    Duration? startAt,
+  }) async {
+    lastStartAt = startAt;
+    return episodeLinkResult;
+  }
 
   @override
   Future<String?> buildPodcastLink({required String itunesId}) async =>
@@ -75,6 +80,36 @@ void main() {
       );
 
       check(result).isNull();
+    });
+
+    test('forwards startAt to the underlying builder', () async {
+      final builder = FakeShareLinkBuilder()
+        ..episodeLinkResult = 'https://audiflow.app/episodes/42/abc-123?t=90';
+
+      final result = await buildEpisodeShareUrl(
+        shareLinkBuilder: builder,
+        itunesId: '42',
+        episodeGuid: 'abc-123',
+        fallbackLink: null,
+        startAt: const Duration(seconds: 90),
+      );
+
+      check(result).equals('https://audiflow.app/episodes/42/abc-123?t=90');
+      check(builder.lastStartAt).equals(const Duration(seconds: 90));
+    });
+
+    test('forwards null startAt when not supplied', () async {
+      final builder = FakeShareLinkBuilder()
+        ..episodeLinkResult = 'https://audiflow.app/episodes/42/abc-123';
+
+      await buildEpisodeShareUrl(
+        shareLinkBuilder: builder,
+        itunesId: '42',
+        episodeGuid: 'abc-123',
+        fallbackLink: null,
+      );
+
+      check(builder.lastStartAt).isNull();
     });
   });
 }
