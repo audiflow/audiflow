@@ -88,6 +88,41 @@ Handled by `AudioInterruptionHandler` (pure-logic, callback-based for testabilit
 - **Bluetooth disconnect / headphone unplug**: Pause playback
 - Resume-on-end only triggers when the handler itself paused playback, never when the user had already paused manually
 
+## Pause / resume triggers
+
+All the places that initiate a pause, resume, or new play, grouped by the
+state the iOS audio session is in when the call arrives. Only the
+interruption paths (rows 9–10) operate while iOS has deactivated the
+session, which is why fixes for the interruption bug must be scoped to
+`AudiflowAudioHandler`'s interruption wiring and must not be pushed into
+`AudioPlayerController` (that would regress the common paths).
+
+| # | Trigger | Entry point | Calls | Session state | Interruption-special |
+|---|---|---|---|---|---|
+| 1 | Mini-player button | `audiflow_app` `mini_player.dart` | `controller.pause` / `togglePlayPause` | active | No |
+| 2 | Full-player button | `audiflow_app` `player_screen.dart` | `controller.pause` / `resume` / `play` | active | No |
+| 3 | Episode tile toggle | `episode_list_tile.dart`, `smart_playlist_episode_list_tile.dart`, `episode_detail_screen.dart` | `controller.pause` / `resume` / `play` | active | No |
+| 4 | Queue tap | `queue_controller.dart` | `controller.play` | active | No |
+| 5 | Lock screen / Control Center | `audiflow_audio_handler.dart` `audio_service` overrides | `_controller.resume` / `pause` | active | No |
+| 6 | Headphone unplug (`becomingNoisy`) | `audiflow_audio_handler.dart` | `pause()` | active | No |
+| 7 | Voice command | `voice_command_executor.dart`, `voice_command_orchestrator.dart` | `_audioController.pause` / `resume` | active | No |
+| 8 | Sleep-timer fade | `sleep_timer_controller.dart` | `player.fadeOutAndPause` → `_player.pause` (bypasses controller history-save) | active | No |
+| 9 | Interruption begin (call / notification / Siri) | `audio_interruption_handler.dart` via wired `pause:` callback | `_controller.pause` | **deactivated by iOS** | **Yes — state-desync** |
+| 10 | Interruption end | `audio_interruption_handler.dart` via wired `resume:` callback → `_reactivateAndResume` | `session.setActive(true)` + `play()` → `_controller.resume` | **reactivation + re-prime needed** | **Yes — silent-resume** |
+
+### Known interruption-path pitfalls (iOS)
+
+- With `handleInterruptions: false`, `just_audio`'s internal `playing`
+  flag can stay `true` across an OS-initiated pause, so
+  `playerStateStream` does not emit a transition when the handler calls
+  `_player.pause()`. The UI's `PlaybackState` then stays `playing`
+  (progress bar keeps advancing, play/pause button stays "pause").
+- After `session.setActive(true)` + `play()`, AVPlayer's output
+  pipeline may remain torn down from the interruption — `_player.play()`
+  returns without producing audible sound. A position-neutral seek
+  (`_player.seek(_player.position)`) before `play()` rebuilds the
+  pipeline.
+
 ## Sleep timer
 
 Managed by `SleepTimerController` (keepAlive Notifier, separate from `AudioPlayerController`):
@@ -104,4 +139,4 @@ Managed by `SleepTimerController` (keepAlive Notifier, separate from `AudioPlaye
 
 ## When to update
 
-Update when: audio playback flow changes, new player features added (e.g., chapters, skip silence), queue behavior modified, background service configuration changes, sleep timer modes or fire behavior changes, audio interruption handling logic changes.
+Update when: audio playback flow changes, new player features added (e.g., chapters, skip silence), queue behavior modified, background service configuration changes, sleep timer modes or fire behavior changes, audio interruption handling logic changes, new pause/resume entry points added (keep the trigger matrix current).
