@@ -591,7 +591,15 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
       final startAt = _pendingStartAt;
       if (startAt != null) {
         await controller.seek(startAt);
-        _pendingStartAt = null;
+        // seek() is a silent no-op while the underlying duration hasn't
+        // resolved. Only clear the pending target when the player reports
+        // a known duration so a subsequent tap can retry the deep link.
+        final hasDuration =
+            (ref.read(playbackProgressProvider)?.duration ?? Duration.zero) !=
+            Duration.zero;
+        if (hasDuration) {
+          _pendingStartAt = null;
+        }
       }
       controller.resume();
       return;

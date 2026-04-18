@@ -306,6 +306,7 @@ class AudioPlayerController extends _$AudioPlayerController
       // the progress listener which would save stale position data under the
       // new episode ID.
       _isLoadingSource = true;
+      Duration? loadedDuration;
       try {
         _currentUrl = url;
         _currentEpisodeId = episode?.id;
@@ -335,7 +336,10 @@ class AudioPlayerController extends _$AudioPlayerController
         }
 
         _log.d('[Play] Calling setUrl...');
-        await _player.setUrl(playUrl);
+        // setUrl returns the resolved duration once loaded; prefer it over
+        // the property getter so an explicit startAt can be clamped against
+        // the real episode length even when durationStream hasn't pushed yet.
+        loadedDuration = await _player.setUrl(playUrl);
       } finally {
         _isLoadingSource = false;
       }
@@ -344,7 +348,8 @@ class AudioPlayerController extends _$AudioPlayerController
       // Otherwise, seek to saved position if resuming a previously played
       // episode. If position is within 2s of the end, replay from start.
       if (startAt != null) {
-        final duration = _player.duration;
+        final duration =
+            loadedDuration ?? _player.duration ?? await _awaitDuration();
         final clampedMs = duration == null
             ? startAt.inMilliseconds.clamp(0, 1 << 31)
             : startAt.inMilliseconds.clamp(0, duration.inMilliseconds);
@@ -388,6 +393,24 @@ class AudioPlayerController extends _$AudioPlayerController
     } catch (e, stack) {
       _log.e('[Play] ERROR', error: e, stackTrace: stack);
       state = PlaybackState.error(message: 'Failed to play audio: $e');
+    }
+  }
+
+  /// Waits briefly for [_player.duration] to resolve.
+  ///
+  /// Remote streams can publish duration asynchronously after [setUrl]
+  /// resolves; when we need to clamp an explicit seek target we want to
+  /// avoid racing that stream. Returns the first non-null duration or
+  /// null if the timeout elapses first.
+  Future<Duration?> _awaitDuration({
+    Duration timeout = const Duration(seconds: 2),
+  }) async {
+    try {
+      return await _player.durationStream
+          .firstWhere((duration) => duration != null)
+          .timeout(timeout);
+    } on TimeoutException {
+      return null;
     }
   }
 
@@ -540,11 +563,13 @@ class AudioPlayerController extends _$AudioPlayerController
   /// Seeks to the specified position.
   ///
   /// Clamps position between zero and duration to prevent invalid seeks.
-  /// No-op if no audio is loaded or duration is unknown.
+  /// No-op if no audio is loaded. If the duration has not resolved yet
+  /// (common transient state right after loading a remote source), waits
+  /// briefly for [durationStream] to publish before giving up.
   @override
   Future<void> seek(Duration position) async {
     if (_currentUrl == null) return;
-    final duration = _player.duration;
+    final duration = _player.duration ?? await _awaitDuration();
     if (duration == null) return;
 
     final clampedMs = position.inMilliseconds.clamp(0, duration.inMilliseconds);
