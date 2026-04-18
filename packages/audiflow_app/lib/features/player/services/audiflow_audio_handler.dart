@@ -59,7 +59,13 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
         isPlaying: () => _player.playing,
         currentPosition: () => _player.position,
         seek: _controller.seek,
-        pause: _controller.pause,
+        pause: () async {
+          await _controller.pause();
+          // just_audio's internal `playing` flag does not flip during
+          // an iOS OS-initiated interruption, so we force the UI state
+          // here. See `docs/architecture/playback-pipeline.md`.
+          _controller.markPausedByInterruption();
+        },
         resume: () async {
           final session = await AudioSession.instance;
           await _reactivateAndResume(session);
@@ -198,7 +204,13 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
   Future<void> _reactivateAndResume(AudioSession session) async {
     try {
       await session.setActive(true);
+      // iOS tears down AVPlayer's audio output pipeline during an
+      // interruption. `play()` alone returns "playing" but produces no
+      // sound; a position-neutral seek rebuilds the pipeline before we
+      // resume. See `docs/architecture/playback-pipeline.md`.
+      await _player.seek(_player.position);
       await play();
+      _controller.markPlayingByInterruption();
     } catch (e, stack) {
       _log.e(
         '[AudioHandler] Failed to reactivate session',
