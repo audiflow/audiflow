@@ -585,6 +585,14 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
     }
 
     if (controller.isLoaded(url)) {
+      // Honour a pending `?t=` deep-link timestamp even when the episode is
+      // already loaded in the player — otherwise resume falls back to the
+      // in-memory position and the shared timestamp is silently ignored.
+      final startAt = _pendingStartAt;
+      if (startAt != null) {
+        await controller.seek(startAt);
+        _pendingStartAt = null;
+      }
       controller.resume();
       return;
     }
@@ -606,9 +614,11 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
       );
     }
 
+    // Preserve the pending timestamp across failed play() attempts (e.g.
+    // transient network errors). Only clear after a successful start so a
+    // retry still honours the shared `?t=` seek target.
     final startAt = _pendingStartAt;
-    _pendingStartAt = null;
-    controller.play(
+    await controller.play(
       url,
       metadata: NowPlayingInfo(
         episodeUrl: url,
@@ -619,6 +629,17 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
       ),
       startAt: startAt,
     );
+    final didStart = ref
+        .read(audioPlayerControllerProvider)
+        .maybeWhen(
+          playing: (episodeUrl) => episodeUrl == url,
+          paused: (episodeUrl) => episodeUrl == url,
+          loading: (episodeUrl) => episodeUrl == url,
+          orElse: () => false,
+        );
+    if (didStart) {
+      _pendingStartAt = null;
+    }
   }
 
   Future<bool> _showReplaceQueueDialog(BuildContext context) async {
