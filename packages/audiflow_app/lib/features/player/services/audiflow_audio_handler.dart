@@ -208,7 +208,19 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
       // interruption. `play()` alone returns "playing" but produces no
       // sound; a position-neutral seek rebuilds the pipeline before we
       // resume. See `docs/architecture/playback-pipeline.md`.
-      await _player.seek(_player.position);
+      //
+      // Isolate the seek so that non-seekable sources (live streams,
+      // servers without range support) cannot abort the resume: a failed
+      // reprime is still better than leaving playback permanently paused.
+      try {
+        await _player.seek(_player.position);
+      } on Object catch (e, stack) {
+        _log.w(
+          '[AudioHandler] Seek-reprime failed; resuming without it',
+          error: e,
+          stackTrace: stack,
+        );
+      }
       await play();
       _controller.markPlayingByInterruption();
     } catch (e, stack) {
