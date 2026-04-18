@@ -273,8 +273,16 @@ class AudioPlayerController extends _$AudioPlayerController
   /// Optional [metadata] can be provided to display episode information
   /// in the mini player without needing to fetch it from the database.
   ///
+  /// When [startAt] is non-null, playback begins at that position and the
+  /// saved-resume history for this episode is ignored. Used by timestamped
+  /// share links (`?t=<seconds>`) to honour explicit user intent.
+  ///
   /// Integrates with [PlaybackHistoryService] to track playback progress.
-  Future<void> play(String url, {NowPlayingInfo? metadata}) async {
+  Future<void> play(
+    String url, {
+    NowPlayingInfo? metadata,
+    Duration? startAt,
+  }) async {
     try {
       _log.i('[Play] Starting: url=$url');
 
@@ -332,9 +340,18 @@ class AudioPlayerController extends _$AudioPlayerController
         _isLoadingSource = false;
       }
 
-      // Seek to saved position if resuming a previously played episode.
-      // If position is within 2s of the end, replay from start instead.
-      if (_currentEpisodeId != null) {
+      // Honour explicit startAt over saved history.
+      // Otherwise, seek to saved position if resuming a previously played
+      // episode. If position is within 2s of the end, replay from start.
+      if (startAt != null) {
+        final duration = _player.duration;
+        final clampedMs = duration == null
+            ? startAt.inMilliseconds.clamp(0, 1 << 31)
+            : startAt.inMilliseconds.clamp(0, duration.inMilliseconds);
+        _log.d('[Play] Honouring explicit startAt: ${clampedMs}ms');
+        await _player.seek(Duration(milliseconds: clampedMs));
+        _lifecycleEvents.add(SeekLifecycle(Duration(milliseconds: clampedMs)));
+      } else if (_currentEpisodeId != null) {
         final historyRepo = ref.read(playbackHistoryRepositoryProvider);
         final history = await historyRepo.getByEpisodeId(_currentEpisodeId!);
         if (history != null && 0 < history.positionMs) {

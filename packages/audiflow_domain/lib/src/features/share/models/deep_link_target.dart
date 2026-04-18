@@ -21,5 +21,6 @@ sealed class DeepLinkTarget with _$DeepLinkTarget {
     required String podcastTitle,
     String? artworkUrl,
     EpisodeWithProgress? progress,
+    Duration? startAt,
   }) = EpisodeDeepLinkTarget;
 }

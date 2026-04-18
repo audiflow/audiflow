@@ -44,5 +44,59 @@ void main() {
       check(encodedPart).not((s) => s.contains('/'));
       check(encodedPart).not((s) => s.contains('='));
     });
+
+    test('omits t= when startAt is null', () async {
+      final result = await builder.buildEpisodeLink(
+        itunesId: '1234567',
+        episodeGuid: 'test-guid',
+      );
+
+      check(result).isNotNull();
+      check(Uri.parse(result!).queryParameters).not((q) => q.containsKey('t'));
+    });
+
+    test('omits t= when startAt is zero', () async {
+      final result = await builder.buildEpisodeLink(
+        itunesId: '1234567',
+        episodeGuid: 'test-guid',
+        startAt: Duration.zero,
+      );
+
+      check(result).isNotNull();
+      check(Uri.parse(result!).queryParameters).not((q) => q.containsKey('t'));
+    });
+
+    test('omits t= when startAt rounds down to zero seconds', () async {
+      final result = await builder.buildEpisodeLink(
+        itunesId: '1234567',
+        episodeGuid: 'test-guid',
+        startAt: const Duration(milliseconds: 400),
+      );
+
+      check(result).isNotNull();
+      check(Uri.parse(result!).queryParameters).not((q) => q.containsKey('t'));
+    });
+
+    test('emits t= with integer seconds', () async {
+      final result = await builder.buildEpisodeLink(
+        itunesId: '1234567',
+        episodeGuid: 'test-guid',
+        startAt: const Duration(seconds: 42),
+      );
+
+      check(result).isNotNull();
+      check(Uri.parse(result!).queryParameters['t']).equals('42');
+    });
+
+    test('truncates sub-second fraction', () async {
+      final result = await builder.buildEpisodeLink(
+        itunesId: '1234567',
+        episodeGuid: 'test-guid',
+        startAt: const Duration(seconds: 7, milliseconds: 900),
+      );
+
+      check(result).isNotNull();
+      check(Uri.parse(result!).queryParameters['t']).equals('7');
+    });
   });
 }

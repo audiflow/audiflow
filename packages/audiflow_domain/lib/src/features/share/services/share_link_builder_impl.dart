@@ -18,10 +18,14 @@ class ShareLinkBuilderImpl implements ShareLinkBuilder {
   Future<String?> buildEpisodeLink({
     required String itunesId,
     required String episodeGuid,
+    Duration? startAt,
   }) async {
     final encodedGuid = base64Url
         .encode(utf8.encode(episodeGuid))
         .replaceAll('=', '');
-    return '$_baseUrl/p/$itunesId/e/$encodedGuid';
+    final base = '$_baseUrl/p/$itunesId/e/$encodedGuid';
+    final seconds = startAt?.inSeconds ?? 0;
+    if (seconds <= 0) return base;
+    return '$base?t=$seconds';
   }
 }

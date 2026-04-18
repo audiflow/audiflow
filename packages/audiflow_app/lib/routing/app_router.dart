@@ -416,6 +416,7 @@ Widget _buildEpisodeDetailScreen(GoRouterState state) {
   final artworkUrl = extra['artworkUrl'] as String?;
   final progress = extra['progress'] as EpisodeWithProgress?;
   final itunesId = extra['itunesId'] as String?;
+  final startAt = extra['startAt'] as Duration?;
 
   return EpisodeDetailScreen(
     episode: episode,
@@ -423,6 +424,7 @@ Widget _buildEpisodeDetailScreen(GoRouterState state) {
     artworkUrl: artworkUrl,
     progress: progress,
     itunesId: itunesId,
+    startAt: startAt,
   );
 }
 

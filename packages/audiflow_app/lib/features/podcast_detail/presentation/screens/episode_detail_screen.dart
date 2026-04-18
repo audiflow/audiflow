@@ -29,6 +29,7 @@ class EpisodeDetailScreen extends ConsumerStatefulWidget {
     this.artworkUrl,
     this.progress,
     this.itunesId,
+    this.startAt,
   });
 
   final PodcastItem episode;
@@ -39,6 +40,11 @@ class EpisodeDetailScreen extends ConsumerStatefulWidget {
   /// iTunes ID for building universal share links.
   final String? itunesId;
 
+  /// Position to seek to on the first user-initiated play, sourced from
+  /// a `?t=<seconds>` query param on an incoming universal link. One-shot:
+  /// consumed the first time playback starts, then ignored.
+  final Duration? startAt;
+
   @override
   ConsumerState<EpisodeDetailScreen> createState() =>
       _EpisodeDetailScreenState();
@@ -48,9 +54,15 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
   Brightness _artworkBrightness = Brightness.dark;
   double _collapseRatio = 0.0;
 
+  /// Pending one-shot seek position from a timestamped share link.
+  /// Cleared on the first user-initiated `play()` so later pause/resume
+  /// cycles fall back to saved-history resume semantics.
+  Duration? _pendingStartAt;
+
   @override
   void initState() {
     super.initState();
+    _pendingStartAt = widget.startAt;
     // Defer until after page transition completes
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _resolveArtworkBrightness().ignore();
@@ -594,6 +606,8 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
       );
     }
 
+    final startAt = _pendingStartAt;
+    _pendingStartAt = null;
     controller.play(
       url,
       metadata: NowPlayingInfo(
@@ -603,6 +617,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
         artworkUrl: widget.artworkUrl ?? widget.episode.primaryImage?.url,
         totalDuration: widget.episode.duration,
       ),
+      startAt: startAt,
     );
   }
 

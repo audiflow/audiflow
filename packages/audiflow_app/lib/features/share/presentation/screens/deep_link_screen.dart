@@ -59,6 +59,7 @@ class _DeepLinkScreenState extends ConsumerState<DeepLinkScreen> {
           :final podcastTitle,
           :final artworkUrl,
           :final progress,
+          :final startAt,
         ):
           final router = GoRouter.of(context);
           final podcast = Podcast(
@@ -87,6 +88,7 @@ class _DeepLinkScreenState extends ConsumerState<DeepLinkScreen> {
                 'artworkUrl': artworkUrl,
                 'itunesId': target.itunesId,
                 'progress': progress,
+                'startAt': startAt,
               },
             );
           });

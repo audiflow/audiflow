@@ -74,6 +74,8 @@ class DeepLinkResolverImpl implements DeepLinkResolver {
       );
     }
 
+    final startAt = _parseStartAt(uri.queryParameters['t']);
+
     if (subscriptionId != null) {
       final localEpisode = await _episodeRepository.getByPodcastIdAndGuid(
         subscriptionId,
@@ -86,6 +88,7 @@ class DeepLinkResolverImpl implements DeepLinkResolver {
           episode: localEpisode.toPodcastItem(feedUrl: feedUrl),
           podcastTitle: podcastTitle,
           artworkUrl: artworkUrl,
+          startAt: startAt,
         );
       }
     }
@@ -102,6 +105,7 @@ class DeepLinkResolverImpl implements DeepLinkResolver {
         episode: feedEpisode,
         podcastTitle: podcastTitle,
         artworkUrl: artworkUrl,
+        startAt: startAt,
       );
     }
 
@@ -113,6 +117,21 @@ class DeepLinkResolverImpl implements DeepLinkResolver {
       artworkUrl: artworkUrl,
     );
   }
+
+  /// Parses the `t=<seconds>` query param into a [Duration].
+  ///
+  /// Accepts only strings of ASCII digits representing a non-negative
+  /// integer count of seconds. Returns null on any malformed input so
+  /// playback falls back to the saved-resume position.
+  static Duration? _parseStartAt(String? raw) {
+    if (raw == null || raw.isEmpty) return null;
+    if (!_digitsOnly.hasMatch(raw)) return null;
+    final seconds = int.tryParse(raw);
+    if (seconds == null || seconds < 0) return null;
+    return Duration(seconds: seconds);
+  }
+
+  static final RegExp _digitsOnly = RegExp(r'^\d+$');
 
   bool _isAudioflowLink(Uri uri) => uri.scheme == _scheme && uri.host == _host;
 

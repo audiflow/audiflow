@@ -7,6 +7,7 @@ import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../download/presentation/helpers/download_action_helper.dart';
+import '../../../podcast_detail/presentation/screens/episode_detail_screen.dart';
 import '../../../share/presentation/helpers/share_helper.dart';
 
 /// Widget for displaying a queue item with swipe-to-remove and drag handle.
@@ -47,6 +48,7 @@ class QueueListTile extends ConsumerWidget {
       ),
       child: ListTile(
         onTap: onTap,
+        onLongPress: () => _showContextMenu(context, ref),
         leading: MiniPlayerArtwork(
           imageUrl: item.artworkUrl,
           size: 40,
@@ -131,6 +133,97 @@ class QueueListTile extends ConsumerWidget {
         ref: ref,
         episodeId: episodeId,
         task: task,
+      ),
+    );
+  }
+
+  void _showContextMenu(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: 0.3,
+        minChildSize: 0.2,
+        maxChildSize: 0.5,
+        builder: (sheetContext, scrollController) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 32,
+                height: 4,
+                margin: const EdgeInsets.symmetric(vertical: Spacing.sm),
+                decoration: BoxDecoration(
+                  color: Theme.of(
+                    sheetContext,
+                  ).colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: Spacing.md,
+                  vertical: Spacing.xs,
+                ),
+                child: Text(
+                  item.episode.title,
+                  style: Theme.of(sheetContext).textTheme.titleSmall,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              const Divider(),
+              Expanded(
+                child: ListView(
+                  controller: scrollController,
+                  shrinkWrap: true,
+                  children: [
+                    ListTile(
+                      leading: const Icon(Icons.info_outline),
+                      title: Text(l10n.goToEpisode),
+                      onTap: () {
+                        Navigator.pop(sheetContext);
+                        _navigateToEpisodeDetail(context, ref);
+                      },
+                    ),
+                    const SizedBox(height: Spacing.sm),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _navigateToEpisodeDetail(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    final subscription = await ref
+        .read(subscriptionRepositoryProvider)
+        .getById(item.episode.podcastId);
+
+    if (!context.mounted) return;
+
+    final podcastTitle = subscription?.title ?? '';
+    final feedUrl = subscription?.feedUrl ?? '';
+    final resolvedArtwork =
+        item.artworkUrl ?? subscription?.artworkUrl ?? item.episode.imageUrl;
+
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => EpisodeDetailScreen(
+          episode: item.episode.toPodcastItem(feedUrl: feedUrl),
+          podcastTitle: podcastTitle,
+          artworkUrl: resolvedArtwork,
+          itunesId: item.itunesId,
+        ),
       ),
     );
   }
