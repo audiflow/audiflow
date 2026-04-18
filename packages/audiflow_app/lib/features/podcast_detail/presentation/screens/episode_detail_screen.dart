@@ -590,14 +590,20 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
       // in-memory position and the shared timestamp is silently ignored.
       final startAt = _pendingStartAt;
       if (startAt != null) {
-        await controller.seek(startAt);
-        // seek() is a silent no-op while the underlying duration hasn't
-        // resolved. Only clear the pending target when the player reports
-        // a known duration so a subsequent tap can retry the deep link.
-        final hasDuration =
-            (ref.read(playbackProgressProvider)?.duration ?? Duration.zero) !=
-            Duration.zero;
-        if (hasDuration) {
+        // Observe the controller's lifecycle stream for the synchronous
+        // SeekLifecycle event that only fires when seek() actually
+        // committed. This avoids racing the progress provider, which can
+        // lag behind an in-flight seek.
+        var seekCommitted = false;
+        final subscription = controller.lifecycleEvents.listen((event) {
+          if (event is SeekLifecycle) seekCommitted = true;
+        });
+        try {
+          await controller.seek(startAt);
+        } finally {
+          await subscription.cancel();
+        }
+        if (seekCommitted) {
           _pendingStartAt = null;
         }
       }
@@ -637,12 +643,14 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
       ),
       startAt: startAt,
     );
+    // Treat only terminal running states as success. `loading` can still
+    // transition to `error`, so clearing the pending seek target there
+    // would silently drop the shared `?t=` on a transient failure.
     final didStart = ref
         .read(audioPlayerControllerProvider)
         .maybeWhen(
           playing: (episodeUrl) => episodeUrl == url,
           paused: (episodeUrl) => episodeUrl == url,
-          loading: (episodeUrl) => episodeUrl == url,
           orElse: () => false,
         );
     if (didStart) {
