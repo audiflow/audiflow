@@ -171,9 +171,13 @@ class DownloadFileService {
   }
 
   String _sanitizeFilename(String name) {
-    // Remove invalid characters and limit length
+    // Strip:
+    //   - filesystem-invalid chars: < > : " / \ | * ?
+    //   - URI-reserved chars that break file:// playback when the path is
+    //     parsed as a URI by just_audio/ExoPlayer: # (fragment), % (percent
+    //     encoding). `?` is already covered above.
     final sanitized = name
-        .replaceAll(RegExp(r'[<>:"/\\|?*]'), '')
+        .replaceAll(RegExp(r'[<>:"/\\|?*#%]'), '')
         .replaceAll(RegExp(r'\s+'), '_');
     final maxLength = sanitized.length < 50 ? sanitized.length : 50;
     return sanitized.substring(0, maxLength);

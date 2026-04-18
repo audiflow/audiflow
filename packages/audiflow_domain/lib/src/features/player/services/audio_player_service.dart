@@ -330,7 +330,10 @@ class AudioPlayerController extends _$AudioPlayerController
           final downloadService = ref.read(downloadServiceProvider);
           final localPath = await downloadService.getLocalPath(episode.id);
           if (localPath != null) {
-            playUrl = 'file://$localPath';
+            // Percent-encode the path so URI-reserved characters (#, ?, %)
+            // in the filename don't get parsed as fragment/query by the
+            // underlying player.
+            playUrl = Uri.file(localPath).toString();
             _log.d('[Play] Using local file: $playUrl');
           }
         }
