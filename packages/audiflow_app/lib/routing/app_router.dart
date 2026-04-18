@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:logger/logger.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 import '../l10n/app_localizations.dart';
 import '../features/library/presentation/screens/library_screen.dart';
@@ -669,11 +672,27 @@ class _NotificationEpisodeScreenState
       '[NotifResolve] initState: '
       'podcastId=${widget.podcastId}, episodeId=${widget.episodeId}',
     );
+    Sentry.addBreadcrumb(
+      Breadcrumb(
+        category: 'notification.resolve',
+        message: 'NotificationEpisodeScreen initState',
+        level: SentryLevel.info,
+        data: {'podcastId': widget.podcastId, 'episodeId': widget.episodeId},
+      ),
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) => _resolve());
   }
 
   Future<void> _resolve() async {
     _logger.i('[NotifResolve] _resolve() started');
+    Sentry.addBreadcrumb(
+      Breadcrumb(
+        category: 'notification.resolve',
+        message: '_resolve started',
+        level: SentryLevel.info,
+      ),
+    );
+
     final episodeRepo = ref.read(episodeRepositoryProvider);
     final subscriptionRepo = ref.read(subscriptionRepositoryProvider);
 
@@ -689,6 +708,21 @@ class _NotificationEpisodeScreenState
         'actual=${episode?.podcastId}, mounted=$mounted). '
         'Falling back to library.',
       );
+      unawaited(
+        Sentry.captureMessage(
+          'notif-resolve: episode lookup failed — falling back to library',
+          level: SentryLevel.warning,
+          withScope: (scope) {
+            scope.setContexts('notification_resolve', {
+              'expectedPodcastId': widget.podcastId,
+              'expectedEpisodeId': widget.episodeId,
+              'episodeFound': episode != null,
+              'actualPodcastId': episode?.podcastId,
+              'mounted': mounted,
+            });
+          },
+        ),
+      );
       if (mounted) context.go(AppRoutes.library);
       return;
     }
@@ -702,6 +736,20 @@ class _NotificationEpisodeScreenState
       _logger.w(
         '[NotifResolve] subscription lookup failed (mounted=$mounted). '
         'Falling back to library.',
+      );
+      unawaited(
+        Sentry.captureMessage(
+          'notif-resolve: subscription lookup failed — '
+          'falling back to library',
+          level: SentryLevel.warning,
+          withScope: (scope) {
+            scope.setContexts('notification_resolve', {
+              'expectedPodcastId': widget.podcastId,
+              'subscriptionFound': subscription != null,
+              'mounted': mounted,
+            });
+          },
+        ),
       );
       if (mounted) context.go(AppRoutes.library);
       return;
@@ -722,12 +770,35 @@ class _NotificationEpisodeScreenState
     };
 
     _logger.i('[NotifResolve] navigating to: $episodePath');
+    Sentry.addBreadcrumb(
+      Breadcrumb(
+        category: 'notification.resolve',
+        message: 'router.go to episode detail',
+        level: SentryLevel.info,
+        data: {'episodePath': episodePath, 'itunesId': subscription.itunesId},
+      ),
+    );
 
     // Single atomic navigation via go(). GoRouter builds the full route
     // stack (library -> podcast detail -> episode detail) in one pass.
     // The intermediate podcast detail screen resolves via the :id path
     // parameter when extra is null (see _buildPodcastDetailScreen).
-    router.go(episodePath, extra: episodeExtra);
+    try {
+      router.go(episodePath, extra: episodeExtra);
+    } on Object catch (e, stack) {
+      _logger.e('[NotifResolve] router.go failed', error: e, stackTrace: stack);
+      unawaited(
+        Sentry.captureException(
+          e,
+          stackTrace: stack,
+          withScope: (scope) {
+            scope.setContexts('notification_resolve', {
+              'episodePath': episodePath,
+            });
+          },
+        ),
+      );
+    }
   }
 
   @override
