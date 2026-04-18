@@ -357,6 +357,47 @@ void main() {
       expect(result, contains('.mp3'));
     });
 
+    test(
+      'strips URI-reserved characters from episode title in filename',
+      () async {
+        // Arrange
+        when(
+          mockDio.download(
+            any,
+            any,
+            cancelToken: anyNamed('cancelToken'),
+            deleteOnError: anyNamed('deleteOnError'),
+            options: anyNamed('options'),
+            onReceiveProgress: anyNamed('onReceiveProgress'),
+          ),
+        ).thenAnswer(
+          (_) => Future.value(
+            Response(
+              requestOptions: RequestOptions(path: '/test'),
+              statusCode: 200,
+            ),
+          ),
+        );
+
+        // Act — title contains #, ?, and % which would otherwise be parsed as
+        // fragment/query/percent-encoding when the path is handed to the
+        // underlying player as a file:// URI.
+        final result = await service.downloadFile(
+          taskId: 1,
+          url: 'https://example.com/ep.mp3',
+          episodeId: 7,
+          episodeTitle: 'News #211? 50% off',
+          onProgress: (_, _) {},
+        );
+
+        // Assert
+        expect(result, isNot(contains('#')));
+        expect(result, isNot(contains('?')));
+        expect(result, isNot(contains('%')));
+        expect(result, endsWith('.mp3'));
+      },
+    );
+
     test('throws serverError for non-200/206 status', () async {
       // Arrange
       when(
