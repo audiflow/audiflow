@@ -62,9 +62,11 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
         pause: () async {
           await _controller.pause();
           // just_audio's internal `playing` flag does not flip during
-          // an iOS OS-initiated interruption, so we force the UI state
-          // here. See `docs/architecture/playback-pipeline.md`.
+          // an iOS OS-initiated interruption, so we force the in-app
+          // UI state and the platform media-control state here. See
+          // `docs/architecture/playback-pipeline.md`.
           _controller.markPausedByInterruption();
+          _publishInterruptionPausedPlaybackState();
         },
         resume: () async {
           final session = await AudioSession.instance;
@@ -101,18 +103,66 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
     }
   }
 
-  /// Pipes just_audio's playbackEventStream directly to audio_service's
-  /// playbackState BehaviorSubject, matching the official pattern.
+  /// Forwards just_audio's playbackEventStream to audio_service's
+  /// playbackState BehaviorSubject.
+  ///
+  /// We use `listen(...add)` instead of `.pipe(...)` so the interruption
+  /// wiring can also emit manual updates (see
+  /// [_publishInterruptionPausedPlaybackState] and
+  /// [_publishInterruptionPlayingPlaybackState]) on iOS paths where
+  /// just_audio's own `playing` flag fails to flip and no event is
+  /// produced.
   void _pipePlaybackState() {
-    _player.playbackEventStream.map(_transformEvent).pipe(playbackState);
+    _player.playbackEventStream.map(_transformEvent).listen(playbackState.add);
+  }
+
+  /// Publishes a `paused` platform playback state that mirrors what
+  /// [_transformEvent] would emit if just_audio had produced a real
+  /// pause event. Used by the iOS interruption path where the library's
+  /// `playing` flag stays stuck at `true` after `_player.pause()`.
+  void _publishInterruptionPausedPlaybackState() {
+    playbackState.add(_interruptionPlaybackState(playing: false));
+  }
+
+  /// Counterpart to [_publishInterruptionPausedPlaybackState] for the
+  /// resume path, used only after we've confirmed the player is actually
+  /// playing and ready.
+  void _publishInterruptionPlayingPlaybackState() {
+    playbackState.add(_interruptionPlaybackState(playing: true));
+  }
+
+  /// Builds a platform [audio_service.PlaybackState] with an overridden
+  /// `playing` flag. All other fields are read from the live player so
+  /// the lock screen / Control Center position and speed remain accurate.
+  audio_service.PlaybackState _interruptionPlaybackState({
+    required bool playing,
+  }) {
+    return _buildPlaybackState(
+      playing: playing,
+      queueIndex: playbackState.valueOrNull?.queueIndex,
+    );
   }
 
   audio_service.PlaybackState _transformEvent(PlaybackEvent event) {
+    return _buildPlaybackState(
+      playing: _player.playing,
+      queueIndex: event.currentIndex,
+    );
+  }
+
+  /// Shared builder for platform playback state snapshots. Centralises
+  /// the control set, processing-state mapping, and read-through fields
+  /// so the natural event pipe and the interruption overrides can never
+  /// drift.
+  audio_service.PlaybackState _buildPlaybackState({
+    required bool playing,
+    required int? queueIndex,
+  }) {
     return audio_service.PlaybackState(
       controls: [
         audio_service.MediaControl.skipToPrevious,
         audio_service.MediaControl.rewind,
-        if (_player.playing)
+        if (playing)
           audio_service.MediaControl.pause
         else
           audio_service.MediaControl.play,
@@ -135,11 +185,11 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
         ProcessingState.completed =>
           audio_service.AudioProcessingState.completed,
       },
-      playing: _player.playing,
+      playing: playing,
       updatePosition: _player.position,
       bufferedPosition: _player.bufferedPosition,
       speed: _player.speed,
-      queueIndex: event.currentIndex,
+      queueIndex: queueIndex,
     );
   }
 
@@ -222,14 +272,15 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
         );
       }
       await play();
-      // Only force the UI into `playing` when just_audio actually
-      // reached `ready`. If the source is still loading or buffering
-      // after an interruption, the natural state stream will emit the
-      // correct `loading` / `buffering` -> `playing` transition; calling
-      // `markPlayingByInterruption` here would otherwise stomp on that
+      // Only force the UI / platform into `playing` when just_audio
+      // actually reached `ready`. If the source is still loading or
+      // buffering after an interruption, the natural state stream will
+      // emit the correct `loading` / `buffering` -> `playing`
+      // transition; overriding here would otherwise stomp on that
       // legitimate intermediate state.
       if (_player.playing && _player.processingState == ProcessingState.ready) {
         _controller.markPlayingByInterruption();
+        _publishInterruptionPlayingPlaybackState();
       }
     } catch (e, stack) {
       _log.e(
