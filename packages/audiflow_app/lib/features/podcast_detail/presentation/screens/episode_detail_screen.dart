@@ -661,11 +661,13 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
       audioPlayerControllerProvider,
       (previous, next) {
         if (completer.isCompleted) return;
+        // Only `playing` is a definitive success signal. just_audio can
+        // briefly emit `paused` as an intermediate state right after
+        // setUrl() and before _player.play() runs; treating that as
+        // success would clear the pending deep-link timestamp even when
+        // playback still fails afterwards.
         next.maybeWhen(
           playing: (episodeUrl) {
-            if (episodeUrl == url) completer.complete(true);
-          },
-          paused: (episodeUrl) {
             if (episodeUrl == url) completer.complete(true);
           },
           error: (_) => completer.complete(false),
