@@ -3,6 +3,20 @@ import 'dart:async';
 import 'package:audio_session/audio_session.dart';
 import 'package:audiflow_core/audiflow_core.dart';
 
+/// Structured diagnostic sink for interruption-handler decision points.
+///
+/// Kept as a plain callback so the class stays free of any telemetry SDK
+/// dependency (mirrors `FeedSyncDiagnosticSink`). The app layer wires
+/// this to Sentry breadcrumbs / captureMessage.
+///
+/// [event] is a stable identifier (e.g. `player.interruption:begin-entry`).
+/// [data] must hold JSON-friendly values (String, num, bool, null, or
+/// nested Maps/Lists of the same).
+typedef PlaybackInterruptionDiagnosticSink =
+    void Function(String event, Map<String, Object?> data);
+
+void _noopDiagnosticSink(String event, Map<String, Object?> data) {}
+
 /// Pure-logic handler for audio-focus interruption events.
 ///
 /// Owns the decision logic for how playback reacts to interruption
@@ -32,6 +46,7 @@ class AudioInterruptionHandler {
     ),
     double duckedVolume = 0.3,
     double fullVolume = 1.0,
+    PlaybackInterruptionDiagnosticSink onDiagnostic = _noopDiagnosticSink,
   }) : _readDuckBehavior = readDuckBehavior,
        _isPlaying = isPlaying,
        _currentPosition = currentPosition,
@@ -41,7 +56,8 @@ class AudioInterruptionHandler {
        _setVolume = setVolume,
        _rewindBeforePause = rewindBeforePause,
        _duckedVolume = duckedVolume,
-       _fullVolume = fullVolume;
+       _fullVolume = fullVolume,
+       _onDiagnostic = onDiagnostic;
 
   final DuckInterruptionBehavior Function() _readDuckBehavior;
   final bool Function() _isPlaying;
@@ -53,6 +69,7 @@ class AudioInterruptionHandler {
   final Duration _rewindBeforePause;
   final double _duckedVolume;
   final double _fullVolume;
+  final PlaybackInterruptionDiagnosticSink _onDiagnostic;
 
   /// True when playback was auto-paused by this handler and is awaiting
   /// an interruption-end event to resume. Exposed for diagnostics/tests.
@@ -67,13 +84,27 @@ class AudioInterruptionHandler {
   /// Called when an interruption begins (e.g. a notification sound starts
   /// playing on Android, or an incoming call on iOS).
   Future<void> onBegin(AudioInterruptionType type) async {
+    final entryIsPlaying = _isPlaying();
+    final behavior = _readDuckBehavior();
+    _onDiagnostic('player.interruption:begin-entry', {
+      'type': type.name,
+      'isPlaying': entryIsPlaying,
+      'behavior': behavior.name,
+      'committedAction': _committedAction?.name,
+    });
+
     // Reentrancy / duplicate-event guard: if a previous begin is still
     // active (awaiting its end), ignore the new one. The committed-state
     // mutation below happens synchronously before any `await`, so this
     // check is sufficient on Dart's single-threaded event loop.
-    if (_committedAction != null) return;
+    if (_committedAction != null) {
+      _onDiagnostic('player.interruption:begin-skip-reentrant', {
+        'type': type.name,
+        'committedAction': _committedAction?.name,
+      });
+      return;
+    }
 
-    final behavior = _readDuckBehavior();
     final treatAsDuck =
         type == AudioInterruptionType.duck &&
         behavior == DuckInterruptionBehavior.duck;
@@ -81,17 +112,42 @@ class AudioInterruptionHandler {
     // Only act on an active interruption if the player was actually
     // playing. If the user had manually paused, we must not touch
     // volume (duck path) or commit any action that onEnd would undo.
-    if (!_isPlaying()) return;
+    if (!entryIsPlaying) {
+      _onDiagnostic('player.interruption:begin-skip-not-playing', {
+        'type': type.name,
+        'treatAsDuck': treatAsDuck,
+      });
+      return;
+    }
 
     if (treatAsDuck) {
       _committedAction = _DuckAction.ducked;
       await _setVolume(_duckedVolume);
+      _onDiagnostic('player.interruption:begin-ducked', {
+        'duckedVolume': _duckedVolume,
+      });
       return;
     }
 
     _committedAction = _DuckAction.paused;
-    await _rewindBeforePauseSafely();
-    await _pause();
+    _onDiagnostic('player.interruption:begin-pausing', {
+      'type': type.name,
+      'rewindMs': _rewindBeforePause.inMilliseconds,
+      'positionMs': _currentPosition().inMilliseconds,
+    });
+    try {
+      await _rewindBeforePauseSafely();
+      await _pause();
+      _onDiagnostic('player.interruption:begin-paused', {
+        'isPlayingAfter': _isPlaying(),
+      });
+    } catch (e, stack) {
+      _onDiagnostic('player.interruption:begin-pause-failed', {
+        'error': e.toString(),
+        'stack': stack.toString(),
+      });
+      rethrow;
+    }
   }
 
   /// Called when an interruption ends. Drives behavior off the action
@@ -100,6 +156,11 @@ class AudioInterruptionHandler {
   /// in a ducked or forever-flagged state.
   Future<void> onEnd(AudioInterruptionType type) async {
     final action = _committedAction;
+    _onDiagnostic('player.interruption:end-entry', {
+      'type': type.name,
+      'committedAction': action?.name,
+      'isPlaying': _isPlaying(),
+    });
     if (action == null) return;
     // Clear before side-effects so a subsequent begin (if it races in
     // after our await) observes a clean slate.
@@ -108,13 +169,16 @@ class AudioInterruptionHandler {
     switch (action) {
       case _DuckAction.ducked:
         await _setVolume(_fullVolume);
+        _onDiagnostic('player.interruption:end-volume-restored', {});
       case _DuckAction.paused:
         if (type == AudioInterruptionType.unknown) {
           // "Unknown" end events are not reliably actionable; clear
           // state but do not auto-resume.
+          _onDiagnostic('player.interruption:end-unknown-no-resume', {});
           return;
         }
         await _resume();
+        _onDiagnostic('player.interruption:end-resumed', {});
     }
   }
 

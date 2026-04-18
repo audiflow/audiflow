@@ -13,6 +13,7 @@ class _RecordingTarget {
 
   final List<Duration> seekCalls = [];
   final List<double> volumeCalls = [];
+  final List<({String event, Map<String, Object?> data})> diagnostics = [];
   int pauseCalls = 0;
   int resumeCalls = 0;
 }
@@ -36,6 +37,8 @@ AudioInterruptionHandler _buildHandler(_RecordingTarget target) {
     setVolume: (v) async {
       target.volumeCalls.add(v);
     },
+    onDiagnostic: (event, data) =>
+        target.diagnostics.add((event: event, data: data)),
   );
 }
 
@@ -342,6 +345,64 @@ void main() {
       check(t.volumeCalls).length.equals(2);
       check(t.volumeCalls.last).equals(1.0);
       check(t.resumeCalls).equals(0);
+    });
+  });
+
+  group('AudioInterruptionHandler — diagnostic sink', () {
+    test('emits begin-entry → begin-pausing → begin-paused on pause path '
+        'and end-entry → end-resumed on resume path', () async {
+      final t = _RecordingTarget()
+        ..playing = true
+        ..behavior = DuckInterruptionBehavior.pause
+        ..position = const Duration(seconds: 30);
+      final handler = _buildHandler(t);
+
+      await handler.onBegin(AudioInterruptionType.pause);
+      await handler.onEnd(AudioInterruptionType.pause);
+
+      final events = t.diagnostics.map((d) => d.event).toList();
+      check(events).contains('player.interruption:begin-entry');
+      check(events).contains('player.interruption:begin-pausing');
+      check(events).contains('player.interruption:begin-paused');
+      check(events).contains('player.interruption:end-entry');
+      check(events).contains('player.interruption:end-resumed');
+
+      final entry = t.diagnostics.firstWhere(
+        (d) => d.event == 'player.interruption:begin-entry',
+      );
+      check(entry.data['type']).equals('pause');
+      check(entry.data['isPlaying']).equals(true);
+      check(entry.data['behavior']).equals('pause');
+
+      final paused = t.diagnostics.firstWhere(
+        (d) => d.event == 'player.interruption:begin-paused',
+      );
+      check(paused.data['isPlayingAfter']).equals(false);
+    });
+
+    test('emits begin-skip-not-playing when player was not playing', () async {
+      final t = _RecordingTarget()..playing = false;
+      final handler = _buildHandler(t);
+
+      await handler.onBegin(AudioInterruptionType.pause);
+
+      final events = t.diagnostics.map((d) => d.event).toList();
+      check(events).contains('player.interruption:begin-skip-not-playing');
+    });
+
+    test('emits end-unknown-no-resume when committed-paused ends with '
+        'unknown type', () async {
+      final t = _RecordingTarget()
+        ..playing = true
+        ..behavior = DuckInterruptionBehavior.pause
+        ..position = const Duration(seconds: 30);
+      final handler = _buildHandler(t);
+
+      await handler.onBegin(AudioInterruptionType.pause);
+      await handler.onEnd(AudioInterruptionType.unknown);
+
+      final events = t.diagnostics.map((d) => d.event).toList();
+      check(events).contains('player.interruption:end-unknown-no-resume');
     });
   });
 }

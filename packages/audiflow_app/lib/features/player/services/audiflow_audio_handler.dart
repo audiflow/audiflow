@@ -6,6 +6,7 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:logger/logger.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 import 'audio_interruption_handler.dart';
 
@@ -66,7 +67,33 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
         setVolume: _player.setVolume,
         duckedVolume: _duckedVolume,
         fullVolume: _fullVolume,
+        onDiagnostic: _emitInterruptionDiagnostic,
       );
+
+  /// Bridges [AudioInterruptionHandler] decision points into the logger and
+  /// Sentry so a real-device phone-call reproduction produces a structured
+  /// trail (breadcrumbs + a captureMessage at the pause commit). Remove
+  /// alongside the interruption investigation when it concludes.
+  void _emitInterruptionDiagnostic(String event, Map<String, Object?> data) {
+    _log.i('[Interruption] $event data=$data');
+    Sentry.addBreadcrumb(
+      Breadcrumb(message: event, category: 'player.interruption', data: data),
+    );
+    // Capture the post-pause state and the unwanted-unknown-end path as
+    // messages so the on-device session surfaces without needing a crash.
+    if (event == 'player.interruption:begin-paused' ||
+        event == 'player.interruption:begin-pause-failed' ||
+        event == 'player.interruption:end-unknown-no-resume') {
+      unawaited(
+        Sentry.captureMessage(
+          event,
+          level: SentryLevel.info,
+          withScope: (scope) =>
+              scope.setContexts('player_interruption', {...data}),
+        ),
+      );
+    }
+  }
 
   /// Pipes just_audio's playbackEventStream directly to audio_service's
   /// playbackState BehaviorSubject, matching the official pattern.
@@ -124,6 +151,16 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
     );
 
     session.interruptionEventStream.listen((event) {
+      // Raw breadcrumb so we can verify the OS actually delivered the
+      // interruption event (and with what type) independently of the
+      // handler's branch choices. Remove with the rest of the
+      // interruption investigation.
+      _emitInterruptionDiagnostic('player.interruption:raw-event', {
+        'begin': event.begin,
+        'type': event.type.name,
+        'isPlaying': _player.playing,
+        'processingState': _player.processingState.name,
+      });
       if (event.begin) {
         unawaited(
           _interruptionHandler.onBegin(event.type).catchError((
@@ -135,6 +172,7 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
               error: e,
               stackTrace: s,
             );
+            unawaited(Sentry.captureException(e, stackTrace: s));
           }),
         );
       } else {
@@ -148,6 +186,7 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
               error: e,
               stackTrace: s,
             );
+            unawaited(Sentry.captureException(e, stackTrace: s));
           }),
         );
       }
