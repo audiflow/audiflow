@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
@@ -243,11 +245,15 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
 
     // Unsubscribed fallback: route through the universal deep link so the
     // detail screen can resolve the episode from iTunes + feed when we have
-    // no local podcast record.
+    // no local podcast record. The deep-link resolver decodes the GUID
+    // segment as base64url (no padding), so encode it the same way here.
     final itunesId = nowPlaying.itunesId;
     final guid = nowPlaying.episodeGuid ?? episode?.guid;
     if (itunesId != null && guid != null && mounted) {
-      _popSheetAndPush('/p/$itunesId/e/${Uri.encodeComponent(guid)}');
+      final encodedGuid = base64Url
+          .encode(utf8.encode(guid))
+          .replaceAll('=', '');
+      _popSheetAndPush('/p/$itunesId/e/$encodedGuid');
     }
   }
 
