@@ -544,6 +544,33 @@ class AudioPlayerController extends _$AudioPlayerController
     ref.read(nowPlayingControllerProvider.notifier).clear();
   }
 
+  /// Forcibly syncs the controller's [PlaybackState] to paused.
+  ///
+  /// Used only by the interruption wiring in `AudiflowAudioHandler`. On
+  /// iOS, `_player.pause()` during an OS-initiated interruption does not
+  /// always flip just_audio's internal `playing` flag, so
+  /// `playerStateStream` never emits a transition and the UI would stay
+  /// in [PlaybackPlaying]. This bypasses the stream to guarantee UI sync.
+  ///
+  /// Scoped to the interruption path on purpose: the common pause
+  /// callers (user tap, becomingNoisy, voice command, lock screen) do
+  /// not have this problem because the session is still active.
+  void markPausedByInterruption() {
+    final url = _currentUrl;
+    if (url == null) return;
+    state = PlaybackState.paused(episodeUrl: url);
+  }
+
+  /// Counterpart to [markPausedByInterruption] used after
+  /// [AudiflowAudioHandler]'s resume path completes the
+  /// `setActive(true)` + seek-reprime + `play()` sequence. Belt-and-
+  /// suspenders in case just_audio fails to emit the transition.
+  void markPlayingByInterruption() {
+    final url = _currentUrl;
+    if (url == null) return;
+    state = PlaybackState.playing(episodeUrl: url);
+  }
+
   /// Returns the URL of the currently loaded audio, if any.
   String? get currentUrl => _currentUrl;
 
