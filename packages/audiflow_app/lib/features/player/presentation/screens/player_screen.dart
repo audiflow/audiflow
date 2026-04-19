@@ -211,7 +211,8 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
 
   bool _canNavigateToEpisode(NowPlayingInfo nowPlaying) {
     if (nowPlaying.episode != null) return true;
-    return nowPlaying.itunesId != null && nowPlaying.episodeGuid != null;
+    final guid = nowPlaying.episodeGuid;
+    return nowPlaying.itunesId != null && guid != null && guid.isNotEmpty;
   }
 
   Future<void> _navigateToEpisode(NowPlayingInfo nowPlaying) async {
@@ -249,7 +250,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
     // segment as base64url (no padding), so encode it the same way here.
     final itunesId = nowPlaying.itunesId;
     final guid = nowPlaying.episodeGuid ?? episode?.guid;
-    if (itunesId != null && guid != null && mounted) {
+    if (itunesId != null && guid != null && guid.isNotEmpty && mounted) {
       final encodedGuid = base64Url
           .encode(utf8.encode(guid))
           .replaceAll('=', '');
