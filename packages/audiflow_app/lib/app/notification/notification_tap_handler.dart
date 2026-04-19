@@ -3,46 +3,19 @@ import 'dart:convert';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:go_router/go_router.dart';
-import 'package:logger/logger.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 /// Handles notification tap responses by navigating to the
 /// appropriate screen via GoRouter.
 class NotificationTapHandler {
-  const NotificationTapHandler({required this.router, required this.logger});
+  const NotificationTapHandler({required this.router});
 
   final GoRouter router;
-  final Logger logger;
 
   /// Called when user taps a notification while the app is running.
   void onDidReceiveNotificationResponse(NotificationResponse response) {
-    logger.i(
-      '[NotifTap] onDidReceiveNotificationResponse fired. '
-      'actionId=${response.actionId}, '
-      'payload=${response.payload}, '
-      'notificationResponseType=${response.notificationResponseType}',
-    );
-    Sentry.addBreadcrumb(
-      Breadcrumb(
-        category: 'notification.tap',
-        message: 'onDidReceiveNotificationResponse fired',
-        level: SentryLevel.info,
-        data: {
-          'actionId': response.actionId,
-          'notificationResponseType': response.notificationResponseType
-              .toString(),
-          'payloadPresent': response.payload != null,
-          'payloadLength': response.payload?.length ?? 0,
-          'currentLocation': _currentLocation(),
-        },
-      ),
-    );
-
     final route = parseNotificationRoute(response.payload);
-    logger.i('[NotifTap] parsed route=$route');
-
     if (route == null) {
-      logger.w('[NotifTap] route is null, no navigation');
       unawaited(
         Sentry.captureMessage(
           'notif-tap: route parse returned null — no navigation',
@@ -61,19 +34,9 @@ class NotificationTapHandler {
       return;
     }
 
-    logger.i('[NotifTap] calling router.push($route)');
-    Sentry.addBreadcrumb(
-      Breadcrumb(
-        category: 'notification.tap',
-        message: 'router.push',
-        level: SentryLevel.info,
-        data: {'route': route, 'currentLocation': _currentLocation()},
-      ),
-    );
     try {
       router.push(route);
     } on Object catch (e, stack) {
-      logger.e('[NotifTap] router.push failed', error: e, stackTrace: stack);
       unawaited(
         Sentry.captureException(
           e,

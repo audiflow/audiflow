@@ -4,7 +4,6 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:logger/logger.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 import '../l10n/app_localizations.dart';
@@ -665,51 +664,18 @@ class _NotificationEpisodeScreen extends ConsumerStatefulWidget {
 
 class _NotificationEpisodeScreenState
     extends ConsumerState<_NotificationEpisodeScreen> {
-  final _logger = Logger(printer: PrefixPrinter(PrettyPrinter(methodCount: 0)));
-
   @override
   void initState() {
     super.initState();
-    _logger.i(
-      '[NotifResolve] initState: '
-      'podcastId=${widget.podcastId}, episodeId=${widget.episodeId}',
-    );
-    Sentry.addBreadcrumb(
-      Breadcrumb(
-        category: 'notification.resolve',
-        message: 'NotificationEpisodeScreen initState',
-        level: SentryLevel.info,
-        data: {'podcastId': widget.podcastId, 'episodeId': widget.episodeId},
-      ),
-    );
     WidgetsBinding.instance.addPostFrameCallback((_) => _resolve());
   }
 
   Future<void> _resolve() async {
-    _logger.i('[NotifResolve] _resolve() started');
-    Sentry.addBreadcrumb(
-      Breadcrumb(
-        category: 'notification.resolve',
-        message: '_resolve started',
-        level: SentryLevel.info,
-      ),
-    );
-
     final episodeRepo = ref.read(episodeRepositoryProvider);
     final subscriptionRepo = ref.read(subscriptionRepositoryProvider);
 
     final episode = await episodeRepo.getById(widget.episodeId);
-    _logger.i(
-      '[NotifResolve] episodeRepo.getById(${widget.episodeId}) -> '
-      '${episode == null ? "null" : "found (podcastId=${episode.podcastId}, guid=${episode.guid})"}',
-    );
     if (episode == null || episode.podcastId != widget.podcastId || !mounted) {
-      _logger.w(
-        '[NotifResolve] episode lookup failed or podcastId mismatch '
-        '(expected=${widget.podcastId}, '
-        'actual=${episode?.podcastId}, mounted=$mounted). '
-        'Falling back to library.',
-      );
       unawaited(
         Sentry.captureMessage(
           'notif-resolve: episode lookup failed — falling back to library',
@@ -730,15 +696,7 @@ class _NotificationEpisodeScreenState
     }
 
     final subscription = await subscriptionRepo.getById(widget.podcastId);
-    _logger.i(
-      '[NotifResolve] subscriptionRepo.getById(${widget.podcastId}) -> '
-      '${subscription == null ? "null" : "found (itunesId=${subscription.itunesId}, title=${subscription.title})"}',
-    );
     if (subscription == null || !mounted) {
-      _logger.w(
-        '[NotifResolve] subscription lookup failed (mounted=$mounted). '
-        'Falling back to library.',
-      );
       unawaited(
         Sentry.captureMessage(
           'notif-resolve: subscription lookup failed — '
@@ -771,16 +729,6 @@ class _NotificationEpisodeScreenState
       'itunesId': subscription.itunesId,
     };
 
-    _logger.i('[NotifResolve] navigating to: $episodePath');
-    Sentry.addBreadcrumb(
-      Breadcrumb(
-        category: 'notification.resolve',
-        message: 'router.go to episode detail',
-        level: SentryLevel.info,
-        data: {'episodePath': episodePath, 'itunesId': subscription.itunesId},
-      ),
-    );
-
     // Single atomic navigation via go(). GoRouter builds the full route
     // stack (library -> podcast detail -> episode detail) in one pass.
     // The intermediate podcast detail screen resolves via the :id path
@@ -788,7 +736,6 @@ class _NotificationEpisodeScreenState
     try {
       router.go(episodePath, extra: episodeExtra);
     } on Object catch (e, stack) {
-      _logger.e('[NotifResolve] router.go failed', error: e, stackTrace: stack);
       unawaited(
         Sentry.captureException(
           e,

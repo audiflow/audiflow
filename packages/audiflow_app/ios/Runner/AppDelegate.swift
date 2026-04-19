@@ -1,5 +1,6 @@
 import Flutter
 import UIKit
+import UserNotifications
 import workmanager_apple
 
 @main
@@ -26,7 +27,25 @@ import workmanager_apple
       GeneratedPluginRegistrant.register(with: registry)
     }
 
-    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+    let result = super.application(application, didFinishLaunchingWithOptions: launchOptions)
+
+    // Claim the UNUserNotificationCenter delegate slot. With the
+    // FlutterImplicitEngineDelegate pattern, super.didFinishLaunching does
+    // not auto-claim this because no plugins have been added to the
+    // application-delegate chain yet (that happens later in
+    // didInitializeImplicitFlutterEngine). Without a delegate, iOS still
+    // displays banners for background-delivered notifications but never
+    // calls userNotificationCenter(_:didReceive:withCompletionHandler:)
+    // on anyone, so taps never reach Dart's
+    // onDidReceiveNotificationResponse and notification deep-links fail
+    // silently. FlutterAppDelegate (our superclass) conforms to
+    // UNUserNotificationCenterDelegate and forwards didReceive/willPresent
+    // to every plugin registered via addApplicationDelegate: --
+    // including flutter_local_notifications once the implicit engine
+    // finishes registering plugins.
+    UNUserNotificationCenter.current().delegate = self
+
+    return result
   }
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
