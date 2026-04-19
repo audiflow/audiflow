@@ -17,10 +17,23 @@ class DeepLinkScreen extends ConsumerStatefulWidget {
 }
 
 class _DeepLinkScreenState extends ConsumerState<DeepLinkScreen> {
+  // The resolver only accepts fully qualified audiflow.reedom.com URLs.
+  // In-app navigation via GoRouter.push produces a relative `state.uri`
+  // with no scheme/host, so normalize it before handing it to the
+  // resolver. External universal links already carry scheme + host.
+  static const _canonicalScheme = 'https';
+  static const _canonicalHost = 'audiflow.reedom.com';
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) => _resolve());
+  }
+
+  Uri _canonicalizedUri() {
+    final uri = widget.uri;
+    if (uri.hasScheme && uri.host.isNotEmpty) return uri;
+    return uri.replace(scheme: _canonicalScheme, host: _canonicalHost);
   }
 
   Future<void> _resolve() async {
@@ -28,7 +41,7 @@ class _DeepLinkScreenState extends ConsumerState<DeepLinkScreen> {
     try {
       final target = await ref
           .read(deepLinkResolverProvider)
-          .resolve(widget.uri);
+          .resolve(_canonicalizedUri());
       if (!mounted) return;
 
       if (target == null) {
