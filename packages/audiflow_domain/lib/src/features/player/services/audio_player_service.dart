@@ -236,6 +236,10 @@ class AudioPlayerController extends _$AudioPlayerController
             totalDuration: nextEpisode.durationMs != null
                 ? Duration(milliseconds: nextEpisode.durationMs!)
                 : null,
+            episode: nextEpisode,
+            itunesId: subscription?.itunesId,
+            episodeGuid: nextEpisode.guid,
+            feedUrl: subscription?.feedUrl,
           ),
         );
         _log.i('[Complete] play() returned successfully');

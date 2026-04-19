@@ -59,6 +59,9 @@ class QueueController extends _$QueueController {
             ? Duration(milliseconds: episode.durationMs!)
             : null,
         episode: episode,
+        itunesId: subscription?.itunesId,
+        episodeGuid: episode.guid,
+        feedUrl: subscription?.feedUrl,
       ),
     );
   }

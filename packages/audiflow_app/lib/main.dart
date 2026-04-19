@@ -279,6 +279,9 @@ Future<void> _restoreLastPlayed(ProviderContainer container) async {
                 : null,
             savedPosition: Duration(milliseconds: lastPlayed.positionMs),
             episode: episode,
+            itunesId: subscription?.itunesId,
+            episodeGuid: episode.guid,
+            feedUrl: subscription?.feedUrl,
           ),
         );
   } catch (_) {

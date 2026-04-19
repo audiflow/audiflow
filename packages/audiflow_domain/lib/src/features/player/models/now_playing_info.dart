@@ -18,5 +18,8 @@ sealed class NowPlayingInfo with _$NowPlayingInfo {
     Duration? totalDuration,
     Duration? savedPosition,
     Episode? episode,
+    String? itunesId,
+    String? episodeGuid,
+    String? feedUrl,
   }) = _NowPlayingInfo;
 }

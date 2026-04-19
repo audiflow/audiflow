@@ -511,6 +511,9 @@ class EpisodeListTile extends ConsumerWidget {
         podcastTitle: podcastTitle,
         artworkUrl: artworkUrl ?? episode.primaryImage?.url,
         totalDuration: episode.duration,
+        itunesId: itunesId,
+        episodeGuid: episode.guid,
+        feedUrl: episode.sourceUrl,
       ),
     );
   }

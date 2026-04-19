@@ -124,12 +124,8 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
                       artworkUrl: nowPlaying.artworkUrl,
                       episodeTitle: nowPlaying.episodeTitle,
                       podcastTitle: nowPlaying.podcastTitle,
-                      onEpisodeTitleTap: nowPlaying.episode != null
-                          ? () => _navigateToEpisode(
-                              nowPlaying.episode!,
-                              nowPlaying.podcastTitle,
-                              nowPlaying.artworkUrl,
-                            )
+                      onEpisodeTitleTap: _canNavigateToEpisode(nowPlaying)
+                          ? () => _navigateToEpisode(nowPlaying)
                           : null,
                       onPodcastTitleTap: nowPlaying.episode != null
                           ? () => _navigateToPodcast(
@@ -211,26 +207,48 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
     );
   }
 
-  Future<void> _navigateToEpisode(
-    Episode episode,
-    String podcastTitle,
-    String? artworkUrl,
-  ) async {
-    final podcast = await _lookupPodcast(episode.podcastId, podcastTitle);
-    if (podcast == null || !mounted) return;
+  bool _canNavigateToEpisode(NowPlayingInfo nowPlaying) {
+    if (nowPlaying.episode != null) return true;
+    return nowPlaying.itunesId != null && nowPlaying.episodeGuid != null;
+  }
 
-    final episodePath = AppRoutes.episodeDetail.replaceAll(
-      ':episodeGuid',
-      Uri.encodeComponent(episode.guid),
-    );
-    _popSheetAndPush(
-      '${AppRoutes.library}/podcast/${podcast.id}/$episodePath',
-      extra: <String, dynamic>{
-        'episode': episode.toPodcastItem(feedUrl: podcast.feedUrl ?? ''),
-        'podcastTitle': podcastTitle,
-        'artworkUrl': artworkUrl,
-      },
-    );
+  Future<void> _navigateToEpisode(NowPlayingInfo nowPlaying) async {
+    final episode = nowPlaying.episode;
+
+    // Subscribed path: resolve the subscription and push the library route
+    // with full extras so progress, share, and DB-backed actions all wire up.
+    if (episode != null) {
+      final podcast = await _lookupPodcast(
+        episode.podcastId,
+        nowPlaying.podcastTitle,
+      );
+      if (!mounted) return;
+      if (podcast != null) {
+        final episodePath = AppRoutes.episodeDetail.replaceAll(
+          ':episodeGuid',
+          Uri.encodeComponent(episode.guid),
+        );
+        _popSheetAndPush(
+          '${AppRoutes.library}/podcast/${podcast.id}/$episodePath',
+          extra: <String, dynamic>{
+            'episode': episode.toPodcastItem(feedUrl: podcast.feedUrl ?? ''),
+            'podcastTitle': nowPlaying.podcastTitle,
+            'artworkUrl': nowPlaying.artworkUrl,
+            'itunesId': podcast.id,
+          },
+        );
+        return;
+      }
+    }
+
+    // Unsubscribed fallback: route through the universal deep link so the
+    // detail screen can resolve the episode from iTunes + feed when we have
+    // no local podcast record.
+    final itunesId = nowPlaying.itunesId;
+    final guid = nowPlaying.episodeGuid ?? episode?.guid;
+    if (itunesId != null && guid != null && mounted) {
+      _popSheetAndPush('/p/$itunesId/e/${Uri.encodeComponent(guid)}');
+    }
   }
 
   void _popSheetAndPush(String path, {Object? extra}) {

@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$NowPlayingInfo {
 
- String get episodeUrl; String get episodeTitle; String get podcastTitle; String? get artworkUrl; Duration? get totalDuration; Duration? get savedPosition; Episode? get episode;
+ String get episodeUrl; String get episodeTitle; String get podcastTitle; String? get artworkUrl; Duration? get totalDuration; Duration? get savedPosition; Episode? get episode; String? get itunesId; String? get episodeGuid; String? get feedUrl;
 /// Create a copy of NowPlayingInfo
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $NowPlayingInfoCopyWith<NowPlayingInfo> get copyWith => _$NowPlayingInfoCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is NowPlayingInfo&&(identical(other.episodeUrl, episodeUrl) || other.episodeUrl == episodeUrl)&&(identical(other.episodeTitle, episodeTitle) || other.episodeTitle == episodeTitle)&&(identical(other.podcastTitle, podcastTitle) || other.podcastTitle == podcastTitle)&&(identical(other.artworkUrl, artworkUrl) || other.artworkUrl == artworkUrl)&&(identical(other.totalDuration, totalDuration) || other.totalDuration == totalDuration)&&(identical(other.savedPosition, savedPosition) || other.savedPosition == savedPosition)&&(identical(other.episode, episode) || other.episode == episode));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is NowPlayingInfo&&(identical(other.episodeUrl, episodeUrl) || other.episodeUrl == episodeUrl)&&(identical(other.episodeTitle, episodeTitle) || other.episodeTitle == episodeTitle)&&(identical(other.podcastTitle, podcastTitle) || other.podcastTitle == podcastTitle)&&(identical(other.artworkUrl, artworkUrl) || other.artworkUrl == artworkUrl)&&(identical(other.totalDuration, totalDuration) || other.totalDuration == totalDuration)&&(identical(other.savedPosition, savedPosition) || other.savedPosition == savedPosition)&&(identical(other.episode, episode) || other.episode == episode)&&(identical(other.itunesId, itunesId) || other.itunesId == itunesId)&&(identical(other.episodeGuid, episodeGuid) || other.episodeGuid == episodeGuid)&&(identical(other.feedUrl, feedUrl) || other.feedUrl == feedUrl));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,episodeUrl,episodeTitle,podcastTitle,artworkUrl,totalDuration,savedPosition,episode);
+int get hashCode => Object.hash(runtimeType,episodeUrl,episodeTitle,podcastTitle,artworkUrl,totalDuration,savedPosition,episode,itunesId,episodeGuid,feedUrl);
 
 @override
 String toString() {
-  return 'NowPlayingInfo(episodeUrl: $episodeUrl, episodeTitle: $episodeTitle, podcastTitle: $podcastTitle, artworkUrl: $artworkUrl, totalDuration: $totalDuration, savedPosition: $savedPosition, episode: $episode)';
+  return 'NowPlayingInfo(episodeUrl: $episodeUrl, episodeTitle: $episodeTitle, podcastTitle: $podcastTitle, artworkUrl: $artworkUrl, totalDuration: $totalDuration, savedPosition: $savedPosition, episode: $episode, itunesId: $itunesId, episodeGuid: $episodeGuid, feedUrl: $feedUrl)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $NowPlayingInfoCopyWith<$Res>  {
   factory $NowPlayingInfoCopyWith(NowPlayingInfo value, $Res Function(NowPlayingInfo) _then) = _$NowPlayingInfoCopyWithImpl;
 @useResult
 $Res call({
- String episodeUrl, String episodeTitle, String podcastTitle, String? artworkUrl, Duration? totalDuration, Duration? savedPosition, Episode? episode
+ String episodeUrl, String episodeTitle, String podcastTitle, String? artworkUrl, Duration? totalDuration, Duration? savedPosition, Episode? episode, String? itunesId, String? episodeGuid, String? feedUrl
 });
 
 
@@ -62,7 +62,7 @@ class _$NowPlayingInfoCopyWithImpl<$Res>
 
 /// Create a copy of NowPlayingInfo
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? episodeUrl = null,Object? episodeTitle = null,Object? podcastTitle = null,Object? artworkUrl = freezed,Object? totalDuration = freezed,Object? savedPosition = freezed,Object? episode = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? episodeUrl = null,Object? episodeTitle = null,Object? podcastTitle = null,Object? artworkUrl = freezed,Object? totalDuration = freezed,Object? savedPosition = freezed,Object? episode = freezed,Object? itunesId = freezed,Object? episodeGuid = freezed,Object? feedUrl = freezed,}) {
   return _then(_self.copyWith(
 episodeUrl: null == episodeUrl ? _self.episodeUrl : episodeUrl // ignore: cast_nullable_to_non_nullable
 as String,episodeTitle: null == episodeTitle ? _self.episodeTitle : episodeTitle // ignore: cast_nullable_to_non_nullable
@@ -71,7 +71,10 @@ as String,artworkUrl: freezed == artworkUrl ? _self.artworkUrl : artworkUrl // i
 as String?,totalDuration: freezed == totalDuration ? _self.totalDuration : totalDuration // ignore: cast_nullable_to_non_nullable
 as Duration?,savedPosition: freezed == savedPosition ? _self.savedPosition : savedPosition // ignore: cast_nullable_to_non_nullable
 as Duration?,episode: freezed == episode ? _self.episode : episode // ignore: cast_nullable_to_non_nullable
-as Episode?,
+as Episode?,itunesId: freezed == itunesId ? _self.itunesId : itunesId // ignore: cast_nullable_to_non_nullable
+as String?,episodeGuid: freezed == episodeGuid ? _self.episodeGuid : episodeGuid // ignore: cast_nullable_to_non_nullable
+as String?,feedUrl: freezed == feedUrl ? _self.feedUrl : feedUrl // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -153,10 +156,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String episodeUrl,  String episodeTitle,  String podcastTitle,  String? artworkUrl,  Duration? totalDuration,  Duration? savedPosition,  Episode? episode)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String episodeUrl,  String episodeTitle,  String podcastTitle,  String? artworkUrl,  Duration? totalDuration,  Duration? savedPosition,  Episode? episode,  String? itunesId,  String? episodeGuid,  String? feedUrl)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _NowPlayingInfo() when $default != null:
-return $default(_that.episodeUrl,_that.episodeTitle,_that.podcastTitle,_that.artworkUrl,_that.totalDuration,_that.savedPosition,_that.episode);case _:
+return $default(_that.episodeUrl,_that.episodeTitle,_that.podcastTitle,_that.artworkUrl,_that.totalDuration,_that.savedPosition,_that.episode,_that.itunesId,_that.episodeGuid,_that.feedUrl);case _:
   return orElse();
 
 }
@@ -174,10 +177,10 @@ return $default(_that.episodeUrl,_that.episodeTitle,_that.podcastTitle,_that.art
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String episodeUrl,  String episodeTitle,  String podcastTitle,  String? artworkUrl,  Duration? totalDuration,  Duration? savedPosition,  Episode? episode)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String episodeUrl,  String episodeTitle,  String podcastTitle,  String? artworkUrl,  Duration? totalDuration,  Duration? savedPosition,  Episode? episode,  String? itunesId,  String? episodeGuid,  String? feedUrl)  $default,) {final _that = this;
 switch (_that) {
 case _NowPlayingInfo():
-return $default(_that.episodeUrl,_that.episodeTitle,_that.podcastTitle,_that.artworkUrl,_that.totalDuration,_that.savedPosition,_that.episode);}
+return $default(_that.episodeUrl,_that.episodeTitle,_that.podcastTitle,_that.artworkUrl,_that.totalDuration,_that.savedPosition,_that.episode,_that.itunesId,_that.episodeGuid,_that.feedUrl);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -191,10 +194,10 @@ return $default(_that.episodeUrl,_that.episodeTitle,_that.podcastTitle,_that.art
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String episodeUrl,  String episodeTitle,  String podcastTitle,  String? artworkUrl,  Duration? totalDuration,  Duration? savedPosition,  Episode? episode)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String episodeUrl,  String episodeTitle,  String podcastTitle,  String? artworkUrl,  Duration? totalDuration,  Duration? savedPosition,  Episode? episode,  String? itunesId,  String? episodeGuid,  String? feedUrl)?  $default,) {final _that = this;
 switch (_that) {
 case _NowPlayingInfo() when $default != null:
-return $default(_that.episodeUrl,_that.episodeTitle,_that.podcastTitle,_that.artworkUrl,_that.totalDuration,_that.savedPosition,_that.episode);case _:
+return $default(_that.episodeUrl,_that.episodeTitle,_that.podcastTitle,_that.artworkUrl,_that.totalDuration,_that.savedPosition,_that.episode,_that.itunesId,_that.episodeGuid,_that.feedUrl);case _:
   return null;
 
 }
@@ -206,8 +209,8 @@ return $default(_that.episodeUrl,_that.episodeTitle,_that.podcastTitle,_that.art
 
 
 class _NowPlayingInfo implements NowPlayingInfo {
-  const _NowPlayingInfo({required this.episodeUrl, required this.episodeTitle, required this.podcastTitle, this.artworkUrl, this.totalDuration, this.savedPosition, this.episode});
-  
+  const _NowPlayingInfo({required this.episodeUrl, required this.episodeTitle, required this.podcastTitle, this.artworkUrl, this.totalDuration, this.savedPosition, this.episode, this.itunesId, this.episodeGuid, this.feedUrl});
+
 
 @override final  String episodeUrl;
 @override final  String episodeTitle;
@@ -216,6 +219,9 @@ class _NowPlayingInfo implements NowPlayingInfo {
 @override final  Duration? totalDuration;
 @override final  Duration? savedPosition;
 @override final  Episode? episode;
+@override final  String? itunesId;
+@override final  String? episodeGuid;
+@override final  String? feedUrl;
 
 /// Create a copy of NowPlayingInfo
 /// with the given fields replaced by the non-null parameter values.
@@ -227,16 +233,16 @@ _$NowPlayingInfoCopyWith<_NowPlayingInfo> get copyWith => __$NowPlayingInfoCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _NowPlayingInfo&&(identical(other.episodeUrl, episodeUrl) || other.episodeUrl == episodeUrl)&&(identical(other.episodeTitle, episodeTitle) || other.episodeTitle == episodeTitle)&&(identical(other.podcastTitle, podcastTitle) || other.podcastTitle == podcastTitle)&&(identical(other.artworkUrl, artworkUrl) || other.artworkUrl == artworkUrl)&&(identical(other.totalDuration, totalDuration) || other.totalDuration == totalDuration)&&(identical(other.savedPosition, savedPosition) || other.savedPosition == savedPosition)&&(identical(other.episode, episode) || other.episode == episode));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _NowPlayingInfo&&(identical(other.episodeUrl, episodeUrl) || other.episodeUrl == episodeUrl)&&(identical(other.episodeTitle, episodeTitle) || other.episodeTitle == episodeTitle)&&(identical(other.podcastTitle, podcastTitle) || other.podcastTitle == podcastTitle)&&(identical(other.artworkUrl, artworkUrl) || other.artworkUrl == artworkUrl)&&(identical(other.totalDuration, totalDuration) || other.totalDuration == totalDuration)&&(identical(other.savedPosition, savedPosition) || other.savedPosition == savedPosition)&&(identical(other.episode, episode) || other.episode == episode)&&(identical(other.itunesId, itunesId) || other.itunesId == itunesId)&&(identical(other.episodeGuid, episodeGuid) || other.episodeGuid == episodeGuid)&&(identical(other.feedUrl, feedUrl) || other.feedUrl == feedUrl));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,episodeUrl,episodeTitle,podcastTitle,artworkUrl,totalDuration,savedPosition,episode);
+int get hashCode => Object.hash(runtimeType,episodeUrl,episodeTitle,podcastTitle,artworkUrl,totalDuration,savedPosition,episode,itunesId,episodeGuid,feedUrl);
 
 @override
 String toString() {
-  return 'NowPlayingInfo(episodeUrl: $episodeUrl, episodeTitle: $episodeTitle, podcastTitle: $podcastTitle, artworkUrl: $artworkUrl, totalDuration: $totalDuration, savedPosition: $savedPosition, episode: $episode)';
+  return 'NowPlayingInfo(episodeUrl: $episodeUrl, episodeTitle: $episodeTitle, podcastTitle: $podcastTitle, artworkUrl: $artworkUrl, totalDuration: $totalDuration, savedPosition: $savedPosition, episode: $episode, itunesId: $itunesId, episodeGuid: $episodeGuid, feedUrl: $feedUrl)';
 }
 
 
@@ -247,7 +253,7 @@ abstract mixin class _$NowPlayingInfoCopyWith<$Res> implements $NowPlayingInfoCo
   factory _$NowPlayingInfoCopyWith(_NowPlayingInfo value, $Res Function(_NowPlayingInfo) _then) = __$NowPlayingInfoCopyWithImpl;
 @override @useResult
 $Res call({
- String episodeUrl, String episodeTitle, String podcastTitle, String? artworkUrl, Duration? totalDuration, Duration? savedPosition, Episode? episode
+ String episodeUrl, String episodeTitle, String podcastTitle, String? artworkUrl, Duration? totalDuration, Duration? savedPosition, Episode? episode, String? itunesId, String? episodeGuid, String? feedUrl
 });
 
 
@@ -264,7 +270,7 @@ class __$NowPlayingInfoCopyWithImpl<$Res>
 
 /// Create a copy of NowPlayingInfo
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? episodeUrl = null,Object? episodeTitle = null,Object? podcastTitle = null,Object? artworkUrl = freezed,Object? totalDuration = freezed,Object? savedPosition = freezed,Object? episode = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? episodeUrl = null,Object? episodeTitle = null,Object? podcastTitle = null,Object? artworkUrl = freezed,Object? totalDuration = freezed,Object? savedPosition = freezed,Object? episode = freezed,Object? itunesId = freezed,Object? episodeGuid = freezed,Object? feedUrl = freezed,}) {
   return _then(_NowPlayingInfo(
 episodeUrl: null == episodeUrl ? _self.episodeUrl : episodeUrl // ignore: cast_nullable_to_non_nullable
 as String,episodeTitle: null == episodeTitle ? _self.episodeTitle : episodeTitle // ignore: cast_nullable_to_non_nullable
@@ -273,7 +279,10 @@ as String,artworkUrl: freezed == artworkUrl ? _self.artworkUrl : artworkUrl // i
 as String?,totalDuration: freezed == totalDuration ? _self.totalDuration : totalDuration // ignore: cast_nullable_to_non_nullable
 as Duration?,savedPosition: freezed == savedPosition ? _self.savedPosition : savedPosition // ignore: cast_nullable_to_non_nullable
 as Duration?,episode: freezed == episode ? _self.episode : episode // ignore: cast_nullable_to_non_nullable
-as Episode?,
+as Episode?,itunesId: freezed == itunesId ? _self.itunesId : itunesId // ignore: cast_nullable_to_non_nullable
+as String?,episodeGuid: freezed == episodeGuid ? _self.episodeGuid : episodeGuid // ignore: cast_nullable_to_non_nullable
+as String?,feedUrl: freezed == feedUrl ? _self.feedUrl : feedUrl // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
