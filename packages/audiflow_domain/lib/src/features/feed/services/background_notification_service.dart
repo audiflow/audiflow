@@ -75,10 +75,18 @@ class BackgroundNotificationService {
       // be granted via the foreground initialization in main.dart.
       // Requesting in background silently fails on iOS, preventing all
       // subsequent notifications from being shown.
+      //
+      // defaultPresent* mirror the foreground init so notifications posted
+      // from the background isolate are presented (banner/list/sound) even
+      // when the app happens to be in the foreground at delivery time.
+      // Without these, iOS silently discards the notification in foreground.
       iOS: DarwinInitializationSettings(
         requestAlertPermission: false,
         requestBadgePermission: false,
         requestSoundPermission: false,
+        defaultPresentBanner: true,
+        defaultPresentList: true,
+        defaultPresentSound: true,
       ),
     );
     await plugin.initialize(settings: initSettings);
@@ -114,7 +122,16 @@ class BackgroundNotificationService {
         importance: Importance.defaultImportance,
         priority: Priority.defaultPriority,
       ),
-      iOS: DarwinNotificationDetails(),
+      // presentBanner/presentList/presentSound ensure the notification is
+      // visible when the app is in the foreground. Without these flags iOS
+      // silently drops foreground banners, which hides both the debug-menu
+      // posted notification and any background-refresh result that arrives
+      // while the user has the app open.
+      iOS: DarwinNotificationDetails(
+        presentBanner: true,
+        presentList: true,
+        presentSound: true,
+      ),
     );
 
     final errors = <(Object, StackTrace)>[];

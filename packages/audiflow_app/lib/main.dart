@@ -17,7 +17,6 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:logger/logger.dart';
 import 'package:workmanager/workmanager.dart';
 
 import 'app/app_lifecycle_observer.dart';
@@ -312,68 +311,36 @@ class _MyAppState extends ConsumerState<MyApp> {
   }
 
   Future<void> _initNotificationTapHandler() async {
-    final logger = Logger(
-      printer: PrefixPrinter(PrettyPrinter(methodCount: 0)),
-    );
-    logger.i('[NotifInit] _initNotificationTapHandler started');
-    Sentry.addBreadcrumb(
-      Breadcrumb(
-        category: 'notification.init',
-        message: '_initNotificationTapHandler started',
-        level: SentryLevel.info,
-      ),
-    );
-
     try {
-      final handler = NotificationTapHandler(router: _router, logger: logger);
+      final handler = NotificationTapHandler(router: _router);
       final plugin = FlutterLocalNotificationsPlugin();
       const initSettings = InitializationSettings(
         android: AndroidInitializationSettings('@mipmap/ic_launcher'),
-        iOS: DarwinInitializationSettings(),
+        // defaultPresent* tells the UNUserNotificationCenterDelegate to show
+        // the banner/list/sound when a notification arrives while the app is
+        // in the foreground. Without these, iOS treats the notification as
+        // suppressed and it never lands in Notification Center at all.
+        iOS: DarwinInitializationSettings(
+          defaultPresentBanner: true,
+          defaultPresentList: true,
+          defaultPresentSound: true,
+        ),
       );
-      logger.i('[NotifInit] calling plugin.initialize with tap handler');
       await plugin.initialize(
         settings: initSettings,
         onDidReceiveNotificationResponse:
             handler.onDidReceiveNotificationResponse,
       );
-      logger.i('[NotifInit] plugin.initialize completed');
-      Sentry.addBreadcrumb(
-        Breadcrumb(
-          category: 'notification.init',
-          message: 'plugin.initialize completed; tap handler registered',
-          level: SentryLevel.info,
-        ),
-      );
 
       // Handle cold start: check if app was launched by notification.
       final launchDetails = await plugin.getNotificationAppLaunchDetails();
       final didLaunch = launchDetails?.didNotificationLaunchApp ?? false;
-      final coldStartPayload = launchDetails?.notificationResponse?.payload;
-      logger.i(
-        '[NotifInit] launchDetails: '
-        'didNotificationLaunchApp=$didLaunch, '
-        'payload=$coldStartPayload',
-      );
-      Sentry.addBreadcrumb(
-        Breadcrumb(
-          category: 'notification.init',
-          message: 'getNotificationAppLaunchDetails',
-          level: SentryLevel.info,
-          data: {
-            'didNotificationLaunchApp': didLaunch,
-            'payloadPresent': coldStartPayload != null,
-            'payloadLength': coldStartPayload?.length ?? 0,
-          },
-        ),
-      );
-
       if (!didLaunch) return;
 
+      final coldStartPayload = launchDetails?.notificationResponse?.payload;
       final route = NotificationTapHandler.parseNotificationRoute(
         coldStartPayload,
       );
-      logger.i('[NotifInit] cold-start route=$route');
 
       if (route == null) {
         unawaited(
@@ -392,32 +359,10 @@ class _MyAppState extends ConsumerState<MyApp> {
         return;
       }
 
-      Sentry.addBreadcrumb(
-        Breadcrumb(
-          category: 'notification.init',
-          message: 'cold-start scheduling router.push',
-          level: SentryLevel.info,
-          data: {'route': route},
-        ),
-      );
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        logger.i('[NotifInit] cold-start pushing route=$route');
         try {
           _router.push(route);
-          Sentry.addBreadcrumb(
-            Breadcrumb(
-              category: 'notification.init',
-              message: 'cold-start router.push completed',
-              level: SentryLevel.info,
-              data: {'route': route},
-            ),
-          );
         } on Object catch (e, stack) {
-          logger.e(
-            '[NotifInit] cold-start router.push failed',
-            error: e,
-            stackTrace: stack,
-          );
           unawaited(
             Sentry.captureException(
               e,
@@ -430,11 +375,6 @@ class _MyAppState extends ConsumerState<MyApp> {
         }
       });
     } on Object catch (e, stack) {
-      logger.e(
-        '[NotifInit] _initNotificationTapHandler failed',
-        error: e,
-        stackTrace: stack,
-      );
       unawaited(Sentry.captureException(e, stackTrace: stack));
     }
   }
