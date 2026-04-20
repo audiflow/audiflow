@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
@@ -124,12 +126,8 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
                       artworkUrl: nowPlaying.artworkUrl,
                       episodeTitle: nowPlaying.episodeTitle,
                       podcastTitle: nowPlaying.podcastTitle,
-                      onEpisodeTitleTap: nowPlaying.episode != null
-                          ? () => _navigateToEpisode(
-                              nowPlaying.episode!,
-                              nowPlaying.podcastTitle,
-                              nowPlaying.artworkUrl,
-                            )
+                      onEpisodeTitleTap: _canNavigateToEpisode(nowPlaying)
+                          ? () => _navigateToEpisode(nowPlaying)
                           : null,
                       onPodcastTitleTap: nowPlaying.episode != null
                           ? () => _navigateToPodcast(
@@ -211,26 +209,53 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
     );
   }
 
-  Future<void> _navigateToEpisode(
-    Episode episode,
-    String podcastTitle,
-    String? artworkUrl,
-  ) async {
-    final podcast = await _lookupPodcast(episode.podcastId, podcastTitle);
-    if (podcast == null || !mounted) return;
+  bool _canNavigateToEpisode(NowPlayingInfo nowPlaying) {
+    if (nowPlaying.episode != null) return true;
+    final guid = nowPlaying.episodeGuid;
+    return nowPlaying.itunesId != null && guid != null && guid.isNotEmpty;
+  }
 
-    final episodePath = AppRoutes.episodeDetail.replaceAll(
-      ':episodeGuid',
-      Uri.encodeComponent(episode.guid),
-    );
-    _popSheetAndPush(
-      '${AppRoutes.library}/podcast/${podcast.id}/$episodePath',
-      extra: <String, dynamic>{
-        'episode': episode.toPodcastItem(feedUrl: podcast.feedUrl ?? ''),
-        'podcastTitle': podcastTitle,
-        'artworkUrl': artworkUrl,
-      },
-    );
+  Future<void> _navigateToEpisode(NowPlayingInfo nowPlaying) async {
+    final episode = nowPlaying.episode;
+
+    // Subscribed path: resolve the subscription and push the library route
+    // with full extras so progress, share, and DB-backed actions all wire up.
+    if (episode != null) {
+      final podcast = await _lookupPodcast(
+        episode.podcastId,
+        nowPlaying.podcastTitle,
+      );
+      if (!mounted) return;
+      if (podcast != null) {
+        final episodePath = AppRoutes.episodeDetail.replaceAll(
+          ':episodeGuid',
+          Uri.encodeComponent(episode.guid),
+        );
+        _popSheetAndPush(
+          '${AppRoutes.library}/podcast/${podcast.id}/$episodePath',
+          extra: <String, dynamic>{
+            'episode': episode.toPodcastItem(feedUrl: podcast.feedUrl ?? ''),
+            'podcastTitle': nowPlaying.podcastTitle,
+            'artworkUrl': nowPlaying.artworkUrl,
+            'itunesId': podcast.id,
+          },
+        );
+        return;
+      }
+    }
+
+    // Unsubscribed fallback: route through the universal deep link so the
+    // detail screen can resolve the episode from iTunes + feed when we have
+    // no local podcast record. The deep-link resolver decodes the GUID
+    // segment as base64url (no padding), so encode it the same way here.
+    final itunesId = nowPlaying.itunesId;
+    final guid = nowPlaying.episodeGuid ?? episode?.guid;
+    if (itunesId != null && guid != null && guid.isNotEmpty && mounted) {
+      final encodedGuid = base64Url
+          .encode(utf8.encode(guid))
+          .replaceAll('=', '');
+      _popSheetAndPush('/p/$itunesId/e/$encodedGuid');
+    }
   }
 
   void _popSheetAndPush(String path, {Object? extra}) {

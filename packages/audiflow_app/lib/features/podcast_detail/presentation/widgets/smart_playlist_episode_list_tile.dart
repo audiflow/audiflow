@@ -459,6 +459,9 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
         totalDuration: episode.durationMs != null
             ? Duration(milliseconds: episode.durationMs!)
             : null,
+        itunesId: itunesId,
+        episodeGuid: episode.guid,
+        feedUrl: feedUrl,
       ),
     );
   }
