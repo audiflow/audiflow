@@ -140,6 +140,31 @@ void main() {
       // Should contain the wave dash separator.
       expect(result!.contains('\u301c'), isTrue);
     });
+
+    test('drops end year when start and end share a past year', () {
+      final earliest = DateTime(2022, 11, 28);
+      final latest = DateTime(2022, 12, 22);
+      final now = DateTime(2024, 1, 1);
+      final result = formatDateRange(earliest, latest, now: now);
+      expect(result, isNotNull);
+      // Start side carries the shared year; end side must not repeat it.
+      final parts = result!.split('\u301c');
+      expect(parts, hasLength(2));
+      expect(parts[0].contains('2022'), isTrue);
+      expect(parts[1].contains('2022'), isFalse);
+    });
+
+    test('keeps both years when start and end differ', () {
+      final earliest = DateTime(2022, 11, 28);
+      final latest = DateTime(2023, 2, 1);
+      final now = DateTime(2024, 1, 1);
+      final result = formatDateRange(earliest, latest, now: now);
+      expect(result, isNotNull);
+      final parts = result!.split('\u301c');
+      expect(parts, hasLength(2));
+      expect(parts[0].contains('2022'), isTrue);
+      expect(parts[1].contains('2023'), isTrue);
+    });
   });
 
   group('formatGroupDuration', () {

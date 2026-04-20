@@ -12,9 +12,11 @@ String? formatDateRange(DateTime? earliest, DateTime? latest, {DateTime? now}) {
   final now0 = now ?? DateTime.now();
   final bothCurrentYear =
       earliest.year == now0.year && latest.year == now0.year;
-  final fmt = bothCurrentYear ? DateFormat('M/d') : DateFormat.yMMMd();
-  if (DateUtils.isSameDay(earliest, latest)) return fmt.format(earliest);
-  return '${fmt.format(earliest)}\u301c${fmt.format(latest)}';
+  final startFmt = bothCurrentYear ? DateFormat('M/d') : DateFormat.yMMMd();
+  if (DateUtils.isSameDay(earliest, latest)) return startFmt.format(earliest);
+  final sameYear = earliest.year == latest.year;
+  final endFmt = bothCurrentYear || !sameYear ? startFmt : DateFormat.MMMd();
+  return '${startFmt.format(earliest)}\u301c${endFmt.format(latest)}';
 }
 
 /// Formats duration in ms using localized strings.
