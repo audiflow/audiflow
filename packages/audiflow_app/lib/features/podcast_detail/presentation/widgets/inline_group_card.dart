@@ -12,10 +12,10 @@ String? formatDateRange(DateTime? earliest, DateTime? latest, {DateTime? now}) {
   final now0 = now ?? DateTime.now();
   final bothCurrentYear =
       earliest.year == now0.year && latest.year == now0.year;
-  final startFmt = bothCurrentYear ? DateFormat('M/d') : DateFormat.yMMMd();
+  final startFmt = bothCurrentYear ? DateFormat.Md() : DateFormat.yMd();
   if (DateUtils.isSameDay(earliest, latest)) return startFmt.format(earliest);
   final sameYear = earliest.year == latest.year;
-  final endFmt = bothCurrentYear || !sameYear ? startFmt : DateFormat.MMMd();
+  final endFmt = bothCurrentYear || !sameYear ? startFmt : DateFormat.Md();
   return '${startFmt.format(earliest)}\u301c${endFmt.format(latest)}';
 }
 
