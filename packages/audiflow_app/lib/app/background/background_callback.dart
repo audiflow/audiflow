@@ -285,6 +285,11 @@ void backgroundCallback() {
         sentryEnabled: sentryInitialized,
       );
 
+      final playbackHistoryDatasource = PlaybackHistoryLocalDatasource(isar);
+      final playbackHistoryRepo = PlaybackHistoryRepositoryImpl(
+        datasource: playbackHistoryDatasource,
+      );
+
       final feedParser = FeedParserService(logger: logger);
 
       // Diagnostic: bridge feed-sync structured events into Sentry so we
@@ -328,6 +333,7 @@ void backgroundCallback() {
         subscriptionRepo: subscriptionRepo,
         episodeRepo: episodeRepo,
         downloadRepo: downloadRepo,
+        playbackHistoryRepo: playbackHistoryRepo,
         settingsRepo: settingsRepo,
         syncFeed: (sub) async {
           if (sentryInitialized) {

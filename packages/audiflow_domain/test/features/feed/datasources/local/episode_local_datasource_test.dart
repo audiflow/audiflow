@@ -17,6 +17,7 @@ void main() {
       SubscriptionSchema,
       EpisodeSchema,
       DownloadTaskSchema,
+      PlaybackHistorySchema,
     ]);
     datasource = EpisodeLocalDatasource(isar);
 
@@ -405,6 +406,102 @@ void main() {
       expect(deleted, 0);
       final remaining = await datasource.getByPodcastId(1);
       expect(remaining, hasLength(1));
+    });
+
+    test(
+      'protects episode with non-zero playback position from deletion',
+      () async {
+        final playedId = await datasource.upsert(
+          makeEpisode(
+            guid: 'played-in-progress',
+            title: 'Played',
+            audioUrl: 'https://example.com/played.mp3',
+          ),
+        );
+        await datasource.upsert(
+          makeEpisode(
+            guid: 'unplayed',
+            title: 'Unplayed',
+            audioUrl: 'https://example.com/unplayed.mp3',
+          ),
+        );
+
+        await isar.writeTxn(() async {
+          await isar.playbackHistorys.put(
+            PlaybackHistory()
+              ..episodeId = playedId
+              ..positionMs = 120000,
+          );
+        });
+
+        final deleted = await datasource.deleteByPodcastIdAndGuids(1, {
+          'played-in-progress',
+          'unplayed',
+        });
+
+        expect(deleted, 1);
+        final remaining = await datasource.getByPodcastId(1);
+        expect(remaining.map((e) => e.guid), ['played-in-progress']);
+      },
+    );
+
+    test('protects completed episode from deletion', () async {
+      final completedId = await datasource.upsert(
+        makeEpisode(
+          guid: 'completed',
+          title: 'Completed',
+          audioUrl: 'https://example.com/completed.mp3',
+        ),
+      );
+      await datasource.upsert(
+        makeEpisode(
+          guid: 'stale',
+          title: 'Stale',
+          audioUrl: 'https://example.com/stale.mp3',
+        ),
+      );
+
+      await isar.writeTxn(() async {
+        await isar.playbackHistorys.put(
+          PlaybackHistory()
+            ..episodeId = completedId
+            ..completedAt = DateTime.now(),
+        );
+      });
+
+      final deleted = await datasource.deleteByPodcastIdAndGuids(1, {
+        'completed',
+        'stale',
+      });
+
+      expect(deleted, 1);
+      final remaining = await datasource.getByPodcastId(1);
+      expect(remaining.map((e) => e.guid), ['completed']);
+    });
+
+    test('does not protect episode with zero-progress history', () async {
+      final zeroId = await datasource.upsert(
+        makeEpisode(
+          guid: 'zero-progress',
+          title: 'Zero',
+          audioUrl: 'https://example.com/zero.mp3',
+        ),
+      );
+
+      await isar.writeTxn(() async {
+        await isar.playbackHistorys.put(
+          PlaybackHistory()
+            ..episodeId = zeroId
+            ..positionMs = 0,
+        );
+      });
+
+      final deleted = await datasource.deleteByPodcastIdAndGuids(1, {
+        'zero-progress',
+      });
+
+      expect(deleted, 1);
+      expect(await datasource.getByPodcastId(1), isEmpty);
     });
 
     test(

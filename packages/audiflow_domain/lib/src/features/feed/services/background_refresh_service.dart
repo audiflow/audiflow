@@ -1,6 +1,8 @@
 import 'package:logger/logger.dart';
 
 import '../../download/repositories/download_repository.dart';
+import '../../player/models/playback_history.dart';
+import '../../player/repositories/playback_history_repository.dart';
 import '../../settings/repositories/app_settings_repository.dart';
 import '../../subscription/models/subscriptions.dart';
 import '../../subscription/repositories/subscription_repository.dart';
@@ -33,6 +35,7 @@ class BackgroundRefreshService {
     required SubscriptionRepository subscriptionRepo,
     required EpisodeRepository episodeRepo,
     required DownloadRepository downloadRepo,
+    required PlaybackHistoryRepository playbackHistoryRepo,
     required AppSettingsRepository settingsRepo,
     required SyncFeedCallback syncFeed,
     required ShowNotificationCallback showNotification,
@@ -41,6 +44,7 @@ class BackgroundRefreshService {
   }) : _subscriptionRepo = subscriptionRepo,
        _episodeRepo = episodeRepo,
        _downloadRepo = downloadRepo,
+       _playbackHistoryRepo = playbackHistoryRepo,
        _settingsRepo = settingsRepo,
        _syncFeed = syncFeed,
        _showNotification = showNotification,
@@ -50,6 +54,7 @@ class BackgroundRefreshService {
   final SubscriptionRepository _subscriptionRepo;
   final EpisodeRepository _episodeRepo;
   final DownloadRepository _downloadRepo;
+  final PlaybackHistoryRepository _playbackHistoryRepo;
   final AppSettingsRepository _settingsRepo;
   final SyncFeedCallback _syncFeed;
   final ShowNotificationCallback _showNotification;
@@ -113,7 +118,9 @@ class BackgroundRefreshService {
             final newestCount = newCount < remaining ? newCount : remaining;
             final newest = episodes.take(newestCount);
 
+            final history = await _playbackHistoryRepo.getByPodcastId(sub.id);
             for (final episode in newest) {
+              if (_hasBeenPlayed(history[episode.id])) continue;
               allNotifications.add(
                 NewEpisodeNotification(
                   episodeId: episode.id,
@@ -152,6 +159,11 @@ class BackgroundRefreshService {
         first.$3,
       );
     }
+  }
+
+  bool _hasBeenPlayed(PlaybackHistory? history) {
+    if (history == null) return false;
+    return history.completedAt != null || 0 < history.positionMs;
   }
 
   List<Subscription> _sortByLastAccessed(List<Subscription> subscriptions) {
