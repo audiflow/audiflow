@@ -334,6 +334,46 @@ class FakeDownloadRepository implements DownloadRepository {
   Future<int> deleteAllCompleted() async => 0;
 }
 
+class FakePlaybackHistoryRepository implements PlaybackHistoryRepository {
+  FakePlaybackHistoryRepository({Map<int, PlaybackHistory>? historyByEpisodeId})
+    : _historyByEpisodeId = historyByEpisodeId ?? {};
+
+  final Map<int, PlaybackHistory> _historyByEpisodeId;
+
+  @override
+  Future<Map<int, PlaybackHistory>> getByPodcastId(int podcastId) async =>
+      Map.unmodifiable(_historyByEpisodeId);
+
+  @override
+  Future<PlaybackHistory?> getByEpisodeId(int episodeId) async =>
+      _historyByEpisodeId[episodeId];
+
+  // Unused interface methods — no-op stubs
+  @override
+  Future<void> saveProgress({
+    required int episodeId,
+    required int positionMs,
+    int? durationMs,
+    int listenedDeltaMs = 0,
+    int realtimeDeltaMs = 0,
+  }) async {}
+  @override
+  Future<void> markCompleted(int episodeId) async {}
+  @override
+  Future<void> markIncomplete(int episodeId) async {}
+  @override
+  Future<void> incrementPlayCount(int episodeId) async {}
+  @override
+  Future<bool> isCompleted(int episodeId) async => false;
+  @override
+  Future<double?> getProgressPercent(int episodeId) async => null;
+  @override
+  Future<PlaybackHistory?> getLastPlayed() async => null;
+  @override
+  Stream<List<PlaybackHistory>> watchInProgress({int limit = 10}) =>
+      const Stream.empty();
+}
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -389,6 +429,7 @@ void main() {
         subscriptionRepo: subscriptionRepo,
         episodeRepo: episodeRepo,
         downloadRepo: downloadRepo,
+        playbackHistoryRepo: FakePlaybackHistoryRepository(),
         settingsRepo: settings,
         syncFeed: (sub) async {
           syncCallCount++;
@@ -449,6 +490,7 @@ void main() {
           subscriptionRepo: subscriptionRepo,
           episodeRepo: episodeRepo,
           downloadRepo: downloadRepo,
+          playbackHistoryRepo: FakePlaybackHistoryRepository(),
           settingsRepo: settings,
           syncFeed: (sub) async {
             syncedIds.add(sub.id);
@@ -491,6 +533,7 @@ void main() {
         subscriptionRepo: subscriptionRepo,
         episodeRepo: episodeRepo,
         downloadRepo: downloadRepo,
+        playbackHistoryRepo: FakePlaybackHistoryRepository(),
         settingsRepo: settings,
         syncFeed: (sub) async => SingleFeedSyncResult(
           podcastId: sub.id,
@@ -551,6 +594,7 @@ void main() {
         subscriptionRepo: subscriptionRepo,
         episodeRepo: episodeRepo,
         downloadRepo: downloadRepo,
+        playbackHistoryRepo: FakePlaybackHistoryRepository(),
         settingsRepo: settings,
         syncFeed: (sub) async => SingleFeedSyncResult(
           podcastId: sub.id,
@@ -591,6 +635,7 @@ void main() {
           subscriptionRepo: subscriptionRepo,
           episodeRepo: episodeRepo,
           downloadRepo: downloadRepo,
+          playbackHistoryRepo: FakePlaybackHistoryRepository(),
           settingsRepo: settings,
           syncFeed: (sub) async {
             syncedIds.add(sub.id);
@@ -624,6 +669,102 @@ void main() {
       },
     );
 
+    test('skips notifications for episodes already played', () async {
+      final sub = _makeSubscription(id: 10, title: 'My Podcast');
+      final episodes = [
+        _makeEpisode(id: 101, podcastId: 10, title: 'Already Listened'),
+        _makeEpisode(id: 102, podcastId: 10, title: 'Genuinely New'),
+      ];
+
+      final settings = FakeAppSettingsRepository(
+        autoSync: true,
+        notifyNewEpisodes: true,
+      );
+      final subscriptionRepo = FakeSubscriptionRepository(subscriptions: [sub]);
+      final episodeRepo = FakeEpisodeRepository(
+        episodesByPodcastId: {10: episodes},
+      );
+      final downloadRepo = FakeDownloadRepository();
+      final playbackHistoryRepo = FakePlaybackHistoryRepository(
+        historyByEpisodeId: {
+          101: PlaybackHistory()
+            ..episodeId = 101
+            ..completedAt = DateTime(2026, 4, 21),
+        },
+      );
+      List<NewEpisodeNotification>? captured;
+
+      final service = BackgroundRefreshService(
+        subscriptionRepo: subscriptionRepo,
+        episodeRepo: episodeRepo,
+        downloadRepo: downloadRepo,
+        playbackHistoryRepo: playbackHistoryRepo,
+        settingsRepo: settings,
+        syncFeed: (sub) async => SingleFeedSyncResult(
+          podcastId: sub.id,
+          success: true,
+          skipped: false,
+          newEpisodeCount: 2,
+        ),
+        showNotification: (notifications) async {
+          captured = notifications;
+        },
+        timeBudget: const Duration(seconds: 60),
+      );
+
+      await service.execute();
+
+      expect(captured, isNotNull);
+      expect(captured!.map((n) => n.episodeId), [102]);
+    });
+
+    test('skips notifications for episodes with in-progress history', () async {
+      final sub = _makeSubscription(id: 10, title: 'My Podcast');
+      final episodes = [
+        _makeEpisode(id: 201, podcastId: 10, title: 'Partially Heard'),
+      ];
+
+      final settings = FakeAppSettingsRepository(
+        autoSync: true,
+        notifyNewEpisodes: true,
+      );
+      final subscriptionRepo = FakeSubscriptionRepository(subscriptions: [sub]);
+      final episodeRepo = FakeEpisodeRepository(
+        episodesByPodcastId: {10: episodes},
+      );
+      final downloadRepo = FakeDownloadRepository();
+      final playbackHistoryRepo = FakePlaybackHistoryRepository(
+        historyByEpisodeId: {
+          201: PlaybackHistory()
+            ..episodeId = 201
+            ..positionMs = 30000,
+        },
+      );
+      var notifyCallCount = 0;
+
+      final service = BackgroundRefreshService(
+        subscriptionRepo: subscriptionRepo,
+        episodeRepo: episodeRepo,
+        downloadRepo: downloadRepo,
+        playbackHistoryRepo: playbackHistoryRepo,
+        settingsRepo: settings,
+        syncFeed: (sub) async => SingleFeedSyncResult(
+          podcastId: sub.id,
+          success: true,
+          skipped: false,
+          newEpisodeCount: 1,
+        ),
+        showNotification: (_) async {
+          notifyCallCount++;
+        },
+        timeBudget: const Duration(seconds: 60),
+      );
+
+      await service.execute();
+
+      expect(notifyCallCount, 0);
+    });
+
     test('does not notify when setting is disabled', () async {
       final sub = _makeSubscription(id: 1, title: 'Podcast 1');
       final episodes = [_makeEpisode(id: 11, podcastId: 1, title: 'Episode 1')];
@@ -643,6 +784,7 @@ void main() {
         subscriptionRepo: subscriptionRepo,
         episodeRepo: episodeRepo,
         downloadRepo: downloadRepo,
+        playbackHistoryRepo: FakePlaybackHistoryRepository(),
         settingsRepo: settings,
         syncFeed: (sub) async => SingleFeedSyncResult(
           podcastId: sub.id,
