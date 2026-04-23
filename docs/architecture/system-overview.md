@@ -26,7 +26,7 @@ This repository is part of:
 
 1. User subscribes to a podcast via search (iTunes API) or direct URL
 2. `feed_remote_datasource` fetches RSS feed; `audiflow_podcast` parses it via streaming XML
-3. Parsed episodes are stored in Isar via `feed_local_datasource`; episodes dropped from the RSS feed are removed (guarded: favorited, downloaded, and now-playing episodes are preserved)
+3. Parsed episodes are stored in Isar via `feed_local_datasource`; episodes dropped from the RSS feed are removed unconditionally (RSS is the source of truth)
 4. Smart playlist configs are fetched from static hosting, cached locally, resolved into groups
 5. User selects an episode; `audio_player_service` loads audio via `just_audio`
 6. `audio_service` manages background playback, system controls, and audio focus

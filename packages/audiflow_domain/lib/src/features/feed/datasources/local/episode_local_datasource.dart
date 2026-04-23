@@ -1,8 +1,5 @@
 import 'package:isar_community/isar.dart';
 
-import '../../../download/models/download_status.dart';
-import '../../../download/models/download_task.dart';
-import '../../../player/models/playback_history.dart';
 import '../../models/episode.dart';
 
 /// Local datasource for episode operations using Isar.
@@ -115,57 +112,26 @@ class EpisodeLocalDatasource {
 
   /// Deletes episodes for [podcastId] whose guid is in [guids].
   ///
+  /// No protection is applied: favorited, downloaded, or played episodes are
+  /// deleted just like any other. This matches the "RSS is the source of
+  /// truth" policy — if the feed drops an episode, the app drops it too.
+  ///
   /// Returns the number of deleted rows. Returns 0 immediately when [guids]
   /// is empty, avoiding an unnecessary write transaction.
   Future<int> deleteByPodcastIdAndGuids(
     int podcastId,
-    Set<String> guids, {
-    Set<String> protectedGuids = const {},
-  }) async {
-    final effectiveGuids = protectedGuids.isEmpty
-        ? guids
-        : guids.difference(protectedGuids);
-    if (effectiveGuids.isEmpty) return 0;
+    Set<String> guids,
+  ) async {
+    if (guids.isEmpty) return 0;
     return _isar.writeTxn(() async {
-      final targets = await _isar.episodes
+      final targetIds = await _isar.episodes
           .filter()
           .podcastIdEqualTo(podcastId)
-          .isFavoritedEqualTo(false)
-          .anyOf(effectiveGuids.toList(), (q, guid) => q.guidEqualTo(guid))
+          .anyOf(guids.toList(), (q, guid) => q.guidEqualTo(guid))
+          .idProperty()
           .findAll();
-      if (targets.isEmpty) return 0;
-
-      // Exclude episodes with an active or completed download.
-      // Failed and cancelled tasks do not protect the episode.
-      final downloadedIds = <int>{};
-      for (final ep in targets) {
-        final task = await _isar.downloadTasks.getByEpisodeId(ep.id);
-        if (task == null) continue;
-        final status = DownloadStatus.fromDbValue(task.status);
-        if (status.isActive || status is DownloadStatusCompleted) {
-          downloadedIds.add(ep.id);
-        }
-      }
-
-      // Exclude episodes the user has already listened to (any progress or
-      // completion). Preserves playback state across feed GUID churn, which
-      // otherwise resurrects the episode as "new" and re-notifies.
-      final playedIds = <int>{};
-      for (final ep in targets) {
-        final history = await _isar.playbackHistorys.getByEpisodeId(ep.id);
-        if (history == null) continue;
-        if (history.completedAt != null || 0 < history.positionMs) {
-          playedIds.add(ep.id);
-        }
-      }
-
-      final deletable = targets
-          .where(
-            (e) => !downloadedIds.contains(e.id) && !playedIds.contains(e.id),
-          )
-          .toList();
-      if (deletable.isEmpty) return 0;
-      return _isar.episodes.deleteAll(deletable.map((e) => e.id).toList());
+      if (targetIds.isEmpty) return 0;
+      return _isar.episodes.deleteAll(targetIds);
     });
   }
 

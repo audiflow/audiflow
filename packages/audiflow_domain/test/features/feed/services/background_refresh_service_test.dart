@@ -266,9 +266,8 @@ class FakeEpisodeRepository implements EpisodeRepository {
   @override
   Future<int> deleteByPodcastIdAndGuids(
     int podcastId,
-    Set<String> guids, {
-    Set<String> protectedGuids = const {},
-  }) async => 0;
+    Set<String> guids,
+  ) async => 0;
 }
 
 class FakeDownloadRepository implements DownloadRepository {

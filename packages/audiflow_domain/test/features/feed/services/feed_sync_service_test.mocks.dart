@@ -489,15 +489,10 @@ class MockEpisodeRepository extends _i1.Mock implements _i12.EpisodeRepository {
   @override
   _i11.Future<int> deleteByPodcastIdAndGuids(
     int? podcastId,
-    Set<String>? guids, {
-    Set<String>? protectedGuids = const {},
-  }) =>
+    Set<String>? guids,
+  ) =>
       (super.noSuchMethod(
-            Invocation.method(
-              #deleteByPodcastIdAndGuids,
-              [podcastId, guids],
-              {#protectedGuids: protectedGuids},
-            ),
+            Invocation.method(#deleteByPodcastIdAndGuids, [podcastId, guids]),
             returnValue: _i11.Future<int>.value(0),
           )
           as _i11.Future<int>);

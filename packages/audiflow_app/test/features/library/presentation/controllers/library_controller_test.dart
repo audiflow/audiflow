@@ -102,11 +102,8 @@ class _FakeEpisodeRepository implements EpisodeRepository {
     required int limit,
   }) => throw UnimplementedError();
   @override
-  Future<int> deleteByPodcastIdAndGuids(
-    int podcastId,
-    Set<String> guids, {
-    Set<String> protectedGuids = const {},
-  }) => throw UnimplementedError();
+  Future<int> deleteByPodcastIdAndGuids(int podcastId, Set<String> guids) =>
+      throw UnimplementedError();
 }
 
 Subscription _sub(int id, String title, DateTime subscribedAt) {

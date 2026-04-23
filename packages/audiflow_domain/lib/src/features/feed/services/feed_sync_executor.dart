@@ -50,10 +50,17 @@ class FeedSyncExecutor {
   ///
   /// Skips if the feed was refreshed within the sync interval,
   /// unless [forceRefresh] is true.
+  ///
+  /// When [skipConditionalHeaders] is true, `If-None-Match` and
+  /// `If-Modified-Since` are not sent. Added temporarily to debug the
+  /// dropped-episode cleanup path: some RSS hosts (e.g. Anchor.fm) keep
+  /// returning 304 even after episodes have been removed, which hides drops
+  /// behind the 304 short-circuit. Remove this parameter once the upstream
+  /// fix lands.
   Future<SingleFeedSyncResult> syncFeed(
     Subscription sub, {
     bool forceRefresh = false,
-    Set<String> protectedGuids = const {},
+    bool skipConditionalHeaders = false,
   }) async {
     try {
       if (!forceRefresh && !_shouldSync(sub.lastRefreshedAt)) {
@@ -79,18 +86,19 @@ class FeedSyncExecutor {
         'forceRefresh': forceRefresh,
         'hasEtag': sub.httpEtag != null,
         'hasLastModified': sub.httpLastModified != null,
-        'protectedGuidsCount': protectedGuids.length,
       });
 
       // Build conditional request headers
       final conditionalHeaders = <String, String>{
         'Accept': 'application/rss+xml, application/xml, text/xml',
       };
-      if (sub.httpEtag != null) {
-        conditionalHeaders['If-None-Match'] = sub.httpEtag!;
-      }
-      if (sub.httpLastModified != null) {
-        conditionalHeaders['If-Modified-Since'] = sub.httpLastModified!;
+      if (!skipConditionalHeaders) {
+        if (sub.httpEtag != null) {
+          conditionalHeaders['If-None-Match'] = sub.httpEtag!;
+        }
+        if (sub.httpLastModified != null) {
+          conditionalHeaders['If-Modified-Since'] = sub.httpLastModified!;
+        }
       }
 
       final response = await _dio.get<String>(
@@ -206,7 +214,6 @@ class FeedSyncExecutor {
           'stoppedEarly': stoppedEarly,
           'droppedBeforeSyntheticFilter': droppedBefore.length,
           'droppedAfterSyntheticFilter': droppedGuids.length,
-          'protectedGuidsCount': protectedGuids.length,
           // First 5 GUIDs to eyeball XML decoding / synthetic-ID issues.
           'sampleDroppedGuids': droppedGuids.take(5).toList(),
         });
@@ -215,7 +222,6 @@ class FeedSyncExecutor {
           final deleted = await _episodeRepo.deleteByPodcastIdAndGuids(
             sub.id,
             droppedGuids,
-            protectedGuids: protectedGuids,
           );
           _logger?.i('Removed $deleted dropped episodes from "${sub.title}"');
           _onDiagnostic('feed-sync:drop-result', {
@@ -224,10 +230,6 @@ class FeedSyncExecutor {
             'title': sub.title,
             'requested': droppedGuids.length,
             'deleted': deleted,
-            // Skew > 0 means the datasource filtered some out because they
-            // were favorited, had an active/completed download, or were in
-            // protectedGuids. This is the interesting signal.
-            'skew': droppedGuids.length - deleted,
           });
         }
       }

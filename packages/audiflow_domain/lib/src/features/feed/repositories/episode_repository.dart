@@ -82,14 +82,11 @@ abstract class EpisodeRepository {
 
   /// Deletes episodes for [podcastId] whose guid is in [guids].
   ///
-  /// Skips favorited episodes, episodes with downloads, and any GUIDs in
-  /// [protectedGuids] (e.g. the currently-playing episode).
+  /// No protection is applied — favorited, downloaded, and played episodes
+  /// are deleted unconditionally. RSS is the source of truth.
+  ///
   /// Returns the number of deleted rows.
-  Future<int> deleteByPodcastIdAndGuids(
-    int podcastId,
-    Set<String> guids, {
-    Set<String> protectedGuids = const {},
-  });
+  Future<int> deleteByPodcastIdAndGuids(int podcastId, Set<String> guids);
 
   /// Gets episodes after a given episode number, ordered ascending.
   ///
