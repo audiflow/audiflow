@@ -2,12 +2,17 @@ import 'dart:async';
 
 import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../l10n/app_localizations.dart';
+
+// TEMP: target RSS used to debug the dropped-episode cleanup path in
+// FeedSyncExecutor. Remove along with the ListTile once the bug is fixed.
+const _debugDropEpisodesFeedUrl = 'https://anchor.fm/s/105fe6388/podcast/rss';
 
 /// Settings screen for developer-oriented preferences.
 ///
@@ -82,6 +87,20 @@ class DeveloperSettingsScreen extends ConsumerWidget {
             ),
             const Divider(height: 1),
 
+            // TEMP: trigger a forced feed sync against the anchor.fm feed
+            // that has dropped episodes, to debug the drop-cleanup path in
+            // FeedSyncExecutor. Remove once the bug is fixed.
+            if (kDebugMode) ...[
+              ListTile(
+                leading: const Icon(Symbols.bug_report),
+                title: const Text('[DEBUG] Force sync anchor.fm feed'),
+                subtitle: const Text(_debugDropEpisodesFeedUrl),
+                trailing: const Icon(Symbols.play_arrow),
+                onTap: () => _runDebugFeedSync(context, ref),
+              ),
+              const Divider(height: 1),
+            ],
+
             // Pattern list header
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
@@ -135,5 +154,60 @@ class DeveloperSettingsScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  // TEMP debug helper. Looks up the subscription by feed URL and runs
+  // FeedSyncExecutor.syncFeed with forceRefresh=true so the drop-cleanup
+  // branch always executes. Diagnostics are printed via debugPrint so they
+  // can be read from the Flutter console alongside the existing Sentry
+  // breadcrumbs emitted by FeedSyncExecutor.
+  Future<void> _runDebugFeedSync(BuildContext context, WidgetRef ref) async {
+    final messenger = ScaffoldMessenger.of(context);
+
+    void showSnack(String message) {
+      if (!context.mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text(message)));
+    }
+
+    final subscriptionRepo = ref.read(subscriptionRepositoryProvider);
+    final subscription = await subscriptionRepo.getByFeedUrl(
+      _debugDropEpisodesFeedUrl,
+    );
+    if (subscription == null) {
+      showSnack('Not subscribed to $_debugDropEpisodesFeedUrl');
+      return;
+    }
+
+    final logger = ref.read(namedLoggerProvider('DebugFeedSync'));
+    final executor = FeedSyncExecutor(
+      subscriptionRepo: subscriptionRepo,
+      episodeRepo: ref.read(episodeRepositoryProvider),
+      settingsRepo: ref.read(appSettingsRepositoryProvider),
+      feedParser: ref.read(feedParserServiceProvider),
+      dio: ref.read(dioProvider),
+      logger: logger,
+      onDiagnostic: (event, data) {
+        debugPrint('[DebugFeedSync] $event $data');
+      },
+    );
+
+    showSnack('Syncing "${subscription.title}"...');
+    final result = await executor.syncFeed(
+      subscription,
+      forceRefresh: true,
+      // Bypass If-None-Match / If-Modified-Since so the server can't
+      // short-circuit us with a 304 and hide dropped episodes.
+      skipConditionalHeaders: true,
+    );
+
+    if (result.success) {
+      final count = result.newEpisodeCount ?? 0;
+      showSnack(
+        'Sync OK: $count new episodes '
+        '(skipped=${result.skipped}). Check console for drop diagnostics.',
+      );
+    } else {
+      showSnack('Sync failed: ${result.errorMessage ?? 'unknown error'}');
+    }
   }
 }

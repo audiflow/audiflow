@@ -339,16 +339,8 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
   }
 
   @override
-  Future<int> deleteByPodcastIdAndGuids(
-    int podcastId,
-    Set<String> guids, {
-    Set<String> protectedGuids = const {},
-  }) {
-    return _datasource.deleteByPodcastIdAndGuids(
-      podcastId,
-      guids,
-      protectedGuids: protectedGuids,
-    );
+  Future<int> deleteByPodcastIdAndGuids(int podcastId, Set<String> guids) {
+    return _datasource.deleteByPodcastIdAndGuids(podcastId, guids);
   }
 
   @override

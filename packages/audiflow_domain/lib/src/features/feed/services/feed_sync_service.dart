@@ -283,11 +283,14 @@ class FeedSyncService {
 
       // Parse with progress and batch storage
       var newEpisodeCount = 0;
+      var stoppedEarly = false;
+      final observedGuids = <String>{};
       await for (final progress in feedParser.parseWithProgress(
         xmlContent: xmlContent,
         podcastId: sub.id,
         knownGuids: knownGuids,
         onBatchReady: (episodes, mediaMetas) async {
+          observedGuids.addAll(episodes.map((e) => e.guid));
           // Apply per-group extractor resolution if pattern config
           // is available.
           if (resolver != null) {
@@ -334,19 +337,57 @@ class FeedSyncService {
       )) {
         if (progress is FeedParseComplete) {
           newEpisodeCount = progress.total;
-          // Foreground path does not perform dropped-episode cleanup
-          // (unlike FeedSyncExecutor). Emit a diagnostic so we can see
-          // in Sentry which path actually ran and whether stale episodes
-          // would have been cleaned up.
+          stoppedEarly = progress.stoppedEarly;
+          observedGuids.addAll(progress.tailGuids);
           _onDiagnostic('feed-sync:parse-complete', {
             'path': 'foreground',
             'podcastId': sub.id,
             'title': sub.title,
             'stoppedEarly': progress.stoppedEarly,
             'knownGuidsCount': knownGuids.length,
+            'observedGuidsCount': observedGuids.length,
             'tailGuidsCount': progress.tailGuids.length,
             'newEpisodeCount': newEpisodeCount,
-            'cleanupPerformed': false,
+          });
+        }
+      }
+
+      // Remove episodes whose GUIDs are no longer in the feed. Mirrors the
+      // logic in FeedSyncExecutor so the foreground and background paths
+      // stay consistent. RSS is the source of truth; no protection is
+      // applied. Synthetic IDs are skipped when parsing stopped early
+      // because the tail scan cannot match them.
+      if (observedGuids.isNotEmpty) {
+        final droppedBefore = knownGuids.difference(observedGuids);
+        var droppedGuids = droppedBefore;
+        if (stoppedEarly) {
+          droppedGuids = droppedGuids
+              .where((g) => !g.startsWith('unknown-'))
+              .toSet();
+        }
+
+        _onDiagnostic('feed-sync:drop-candidates', {
+          'path': 'foreground',
+          'podcastId': sub.id,
+          'title': sub.title,
+          'stoppedEarly': stoppedEarly,
+          'droppedBeforeSyntheticFilter': droppedBefore.length,
+          'droppedAfterSyntheticFilter': droppedGuids.length,
+          'sampleDroppedGuids': droppedGuids.take(5).toList(),
+        });
+
+        if (droppedGuids.isNotEmpty) {
+          final deleted = await episodeRepo.deleteByPodcastIdAndGuids(
+            sub.id,
+            droppedGuids,
+          );
+          _logger.i('Removed $deleted dropped episodes from "${sub.title}"');
+          _onDiagnostic('feed-sync:drop-result', {
+            'path': 'foreground',
+            'podcastId': sub.id,
+            'title': sub.title,
+            'requested': droppedGuids.length,
+            'deleted': deleted,
           });
         }
       }

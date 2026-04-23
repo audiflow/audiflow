@@ -408,21 +408,18 @@ void main() {
       expect(remaining, hasLength(1));
     });
 
+    // RSS is the source of truth: dropped episodes are deleted even when
+    // the user has played, completed, favorited, or downloaded them. These
+    // tests pin that invariant so the old protection behavior cannot
+    // accidentally return.
     test(
-      'protects episode with non-zero playback position from deletion',
+      'deletes episode even when it has non-zero playback position',
       () async {
         final playedId = await datasource.upsert(
           makeEpisode(
             guid: 'played-in-progress',
             title: 'Played',
             audioUrl: 'https://example.com/played.mp3',
-          ),
-        );
-        await datasource.upsert(
-          makeEpisode(
-            guid: 'unplayed',
-            title: 'Unplayed',
-            audioUrl: 'https://example.com/unplayed.mp3',
           ),
         );
 
@@ -436,28 +433,19 @@ void main() {
 
         final deleted = await datasource.deleteByPodcastIdAndGuids(1, {
           'played-in-progress',
-          'unplayed',
         });
 
         expect(deleted, 1);
-        final remaining = await datasource.getByPodcastId(1);
-        expect(remaining.map((e) => e.guid), ['played-in-progress']);
+        expect(await datasource.getByPodcastId(1), isEmpty);
       },
     );
 
-    test('protects completed episode from deletion', () async {
+    test('deletes episode even when it is marked completed', () async {
       final completedId = await datasource.upsert(
         makeEpisode(
           guid: 'completed',
           title: 'Completed',
           audioUrl: 'https://example.com/completed.mp3',
-        ),
-      );
-      await datasource.upsert(
-        makeEpisode(
-          guid: 'stale',
-          title: 'Stale',
-          audioUrl: 'https://example.com/stale.mp3',
         ),
       );
 
@@ -471,34 +459,22 @@ void main() {
 
       final deleted = await datasource.deleteByPodcastIdAndGuids(1, {
         'completed',
-        'stale',
       });
 
       expect(deleted, 1);
-      final remaining = await datasource.getByPodcastId(1);
-      expect(remaining.map((e) => e.guid), ['completed']);
+      expect(await datasource.getByPodcastId(1), isEmpty);
     });
 
-    test('does not protect episode with zero-progress history', () async {
-      final zeroId = await datasource.upsert(
+    test('deletes episode even when it is favorited', () async {
+      await datasource.upsert(
         makeEpisode(
-          guid: 'zero-progress',
-          title: 'Zero',
-          audioUrl: 'https://example.com/zero.mp3',
-        ),
+          guid: 'fav',
+          title: 'Favorited',
+          audioUrl: 'https://example.com/fav.mp3',
+        )..isFavorited = true,
       );
 
-      await isar.writeTxn(() async {
-        await isar.playbackHistorys.put(
-          PlaybackHistory()
-            ..episodeId = zeroId
-            ..positionMs = 0,
-        );
-      });
-
-      final deleted = await datasource.deleteByPodcastIdAndGuids(1, {
-        'zero-progress',
-      });
+      final deleted = await datasource.deleteByPodcastIdAndGuids(1, {'fav'});
 
       expect(deleted, 1);
       expect(await datasource.getByPodcastId(1), isEmpty);
