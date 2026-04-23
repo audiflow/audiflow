@@ -50,17 +50,9 @@ class FeedSyncExecutor {
   ///
   /// Skips if the feed was refreshed within the sync interval,
   /// unless [forceRefresh] is true.
-  ///
-  /// When [skipConditionalHeaders] is true, `If-None-Match` and
-  /// `If-Modified-Since` are not sent. Added temporarily to debug the
-  /// dropped-episode cleanup path: some RSS hosts (e.g. Anchor.fm) keep
-  /// returning 304 even after episodes have been removed, which hides drops
-  /// behind the 304 short-circuit. Remove this parameter once the upstream
-  /// fix lands.
   Future<SingleFeedSyncResult> syncFeed(
     Subscription sub, {
     bool forceRefresh = false,
-    bool skipConditionalHeaders = false,
   }) async {
     try {
       if (!forceRefresh && !_shouldSync(sub.lastRefreshedAt)) {
@@ -92,13 +84,11 @@ class FeedSyncExecutor {
       final conditionalHeaders = <String, String>{
         'Accept': 'application/rss+xml, application/xml, text/xml',
       };
-      if (!skipConditionalHeaders) {
-        if (sub.httpEtag != null) {
-          conditionalHeaders['If-None-Match'] = sub.httpEtag!;
-        }
-        if (sub.httpLastModified != null) {
-          conditionalHeaders['If-Modified-Since'] = sub.httpLastModified!;
-        }
+      if (sub.httpEtag != null) {
+        conditionalHeaders['If-None-Match'] = sub.httpEtag!;
+      }
+      if (sub.httpLastModified != null) {
+        conditionalHeaders['If-Modified-Since'] = sub.httpLastModified!;
       }
 
       final response = await _dio.get<String>(
