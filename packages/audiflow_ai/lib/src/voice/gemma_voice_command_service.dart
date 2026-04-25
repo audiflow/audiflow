@@ -19,12 +19,14 @@ class GemmaVoiceCommandService {
   /// Parse [audio] into a [VoiceCommand] using [settingsSnapshot] (from
   /// `SettingsMetadataRegistry.toJson()`) as the per-turn settings context.
   ///
-  /// Returns [VoiceCommand] with intent [VoiceIntent.unknown] when:
-  /// - Inference throws
-  /// - The model emits a tool name we don't recognize
-  /// - The model emits `changeSettings` with an empty `ambiguous` candidate
-  ///   list (the agreed "I didn't understand" signal per the system prompt)
-  /// - A required argument is missing or has an invalid type
+  /// Returns [VoiceCommand] with intent [VoiceIntent.unknown] in four
+  /// distinguishable cases (see [VoiceCommand.failureReason]):
+  /// - [VoiceCommandFailureReason.inferenceError] — session threw an Exception.
+  /// - [VoiceCommandFailureReason.unrecognizedTool] — unknown tool name.
+  /// - [VoiceCommandFailureReason.malformedPayload] — missing/invalid args.
+  /// - [VoiceCommandFailureReason.noCommandRecognized] — `changeSettings`
+  ///   with empty ambiguous candidates, the documented "didn't understand"
+  ///   signal from the system prompt.
   Future<VoiceCommand> dispatch({
     required Uint8List audio,
     required List<SettingsSnapshotEntry> settingsSnapshot,
@@ -39,12 +41,12 @@ class GemmaVoiceCommandService {
         tools: tools,
       );
     } on Exception {
-      return _unknown();
+      return _unknown(VoiceCommandFailureReason.inferenceError);
     }
 
     final intent = _intentFromName(call.name);
     if (intent == null) {
-      return _unknown();
+      return _unknown(VoiceCommandFailureReason.unrecognizedTool);
     }
     if (intent == VoiceIntent.changeSettings) {
       return _parseChangeSettings(call.args);
@@ -60,7 +62,7 @@ class GemmaVoiceCommandService {
   VoiceCommand _parseChangeSettings(Map<String, Object?> args) {
     final variant = args['variant'];
     if (variant is! String) {
-      return _unknown();
+      return _unknown(VoiceCommandFailureReason.malformedPayload);
     }
     final payload = switch (variant) {
       'absolute' => _parseAbsolute(args),
@@ -69,11 +71,11 @@ class GemmaVoiceCommandService {
       _ => null,
     };
     if (payload == null) {
-      return _unknown();
+      return _unknown(VoiceCommandFailureReason.malformedPayload);
     }
     if (payload is SettingsChangePayloadAmbiguous &&
         payload.candidates.isEmpty) {
-      return _unknown();
+      return _unknown(VoiceCommandFailureReason.noCommandRecognized);
     }
     final confidence = switch (payload) {
       SettingsChangePayloadAbsolute(:final confidence) => confidence,
@@ -193,11 +195,12 @@ class GemmaVoiceCommandService {
     return null;
   }
 
-  VoiceCommand _unknown() => const VoiceCommand(
+  VoiceCommand _unknown(VoiceCommandFailureReason reason) => VoiceCommand(
     intent: VoiceIntent.unknown,
-    parameters: {},
+    parameters: const {},
     confidence: 0,
     rawTranscription: '',
+    failureReason: reason,
   );
 
   // Confidence we assign to deterministic tool calls (play / pause / etc.).

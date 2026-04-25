@@ -159,22 +159,31 @@ void main() {
         );
         check(command.intent).equals(VoiceIntent.unknown);
         check(command.settingsPayload).isNull();
+        check(
+          command.failureReason,
+        ).equals(VoiceCommandFailureReason.noCommandRecognized);
       },
     );
 
-    test('ambiguous variant without candidates key -> unknown', () async {
-      final service = _serviceReturning(
-        const GemmaFunctionCall.constUnsafe(
-          name: 'changeSettings',
-          args: {'variant': 'ambiguous'},
-        ),
-      );
-      final command = await service.dispatch(
-        audio: audio,
-        settingsSnapshot: settingsSnapshot,
-      );
-      check(command.intent).equals(VoiceIntent.unknown);
-    });
+    test(
+      'ambiguous variant without candidates key -> malformedPayload',
+      () async {
+        final service = _serviceReturning(
+          const GemmaFunctionCall.constUnsafe(
+            name: 'changeSettings',
+            args: {'variant': 'ambiguous'},
+          ),
+        );
+        final command = await service.dispatch(
+          audio: audio,
+          settingsSnapshot: settingsSnapshot,
+        );
+        check(command.intent).equals(VoiceIntent.unknown);
+        check(
+          command.failureReason,
+        ).equals(VoiceCommandFailureReason.malformedPayload);
+      },
+    );
 
     test('relative variant with invalid direction -> unknown', () async {
       final service = _serviceReturning(
@@ -231,7 +240,7 @@ void main() {
       check(command.parameters['seconds']).equals('120');
     });
 
-    test('unknown tool name -> VoiceIntent.unknown', () async {
+    test('unknown tool name -> unrecognizedTool', () async {
       final service = _serviceReturning(
         const GemmaFunctionCall.constUnsafe(name: 'doSomethingWeird', args: {}),
       );
@@ -240,15 +249,21 @@ void main() {
         settingsSnapshot: settingsSnapshot,
       );
       check(command.intent).equals(VoiceIntent.unknown);
+      check(
+        command.failureReason,
+      ).equals(VoiceCommandFailureReason.unrecognizedTool);
     });
 
-    test('inference throws Exception -> VoiceIntent.unknown', () async {
+    test('inference throws Exception -> inferenceError', () async {
       final service = GemmaVoiceCommandService(session: _ThrowingSession());
       final command = await service.dispatch(
         audio: audio,
         settingsSnapshot: settingsSnapshot,
       );
       check(command.intent).equals(VoiceIntent.unknown);
+      check(
+        command.failureReason,
+      ).equals(VoiceCommandFailureReason.inferenceError);
     });
 
     test('inference throws Error -> propagates (programmer bug)', () async {
@@ -262,7 +277,7 @@ void main() {
     });
 
     test(
-      'changeSettings with malformed payload -> VoiceIntent.unknown',
+      'changeSettings with malformed payload -> malformedPayload',
       () async {
         final service = _serviceReturning(
           const GemmaFunctionCall.constUnsafe(
@@ -276,6 +291,9 @@ void main() {
           settingsSnapshot: settingsSnapshot,
         );
         check(command.intent).equals(VoiceIntent.unknown);
+        check(
+          command.failureReason,
+        ).equals(VoiceCommandFailureReason.malformedPayload);
       },
     );
   });
