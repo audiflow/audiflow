@@ -143,8 +143,10 @@ void main() {
     );
 
     test(
-      'empty ambiguous candidates surface as zero-confidence',
+      'empty ambiguous candidates collapse to VoiceIntent.unknown',
       () async {
+        // System prompt designates empty `ambiguous.candidates` as the
+        // "no command recognized" signal; honor that contract.
         final service = _serviceReturning(
           const GemmaFunctionCall(
             name: 'changeSettings',
@@ -155,13 +157,76 @@ void main() {
           audio: audio,
           settingsSnapshot: settingsSnapshot,
         );
-        // System prompt instructs the model to use this shape as the
-        // "no command recognized" signal -- but it still emits a valid
-        // ambiguous payload, so we surface that as unknown via confidence.
-        check(command.intent).equals(VoiceIntent.changeSettings);
-        check(command.confidence).equals(0);
+        check(command.intent).equals(VoiceIntent.unknown);
+        check(command.settingsPayload).isNull();
       },
     );
+
+    test('ambiguous variant without candidates key -> unknown', () async {
+      final service = _serviceReturning(
+        const GemmaFunctionCall(
+          name: 'changeSettings',
+          args: {'variant': 'ambiguous'},
+        ),
+      );
+      final command = await service.dispatch(
+        audio: audio,
+        settingsSnapshot: settingsSnapshot,
+      );
+      check(command.intent).equals(VoiceIntent.unknown);
+    });
+
+    test('relative variant with invalid direction -> unknown', () async {
+      final service = _serviceReturning(
+        const GemmaFunctionCall(
+          name: 'changeSettings',
+          args: {
+            'variant': 'relative',
+            'key': 'speed',
+            'direction': 'up',
+            'magnitude': 'small',
+            'confidence': 0.7,
+          },
+        ),
+      );
+      final command = await service.dispatch(
+        audio: audio,
+        settingsSnapshot: settingsSnapshot,
+      );
+      check(command.intent).equals(VoiceIntent.unknown);
+    });
+
+    test('integer confidence is accepted as 1.0', () async {
+      final service = _serviceReturning(
+        const GemmaFunctionCall(
+          name: 'changeSettings',
+          args: {
+            'variant': 'absolute',
+            'key': 'speed',
+            'value': '1.5',
+            'confidence': 1,
+          },
+        ),
+      );
+      final command = await service.dispatch(
+        audio: audio,
+        settingsSnapshot: settingsSnapshot,
+      );
+      check(command.confidence).equals(1);
+    });
+
+    test('whole-valued double seconds collapses to int form', () async {
+      // Models occasionally emit JSON numbers as doubles; downstream
+      // executors parse `seek.seconds` as int and would choke on "120.0".
+      final service = _serviceReturning(
+        const GemmaFunctionCall(name: 'seek', args: {'seconds': 120.0}),
+      );
+      final command = await service.dispatch(
+        audio: audio,
+        settingsSnapshot: settingsSnapshot,
+      );
+      check(command.parameters['seconds']).equals('120');
+    });
 
     test('unknown tool name -> VoiceIntent.unknown', () async {
       final service = _serviceReturning(
@@ -174,15 +239,23 @@ void main() {
       check(command.intent).equals(VoiceIntent.unknown);
     });
 
-    test('inference throws -> VoiceIntent.unknown', () async {
-      final service = GemmaVoiceCommandService(
-        session: _ThrowingSession(),
-      );
+    test('inference throws Exception -> VoiceIntent.unknown', () async {
+      final service = GemmaVoiceCommandService(session: _ThrowingSession());
       final command = await service.dispatch(
         audio: audio,
         settingsSnapshot: settingsSnapshot,
       );
       check(command.intent).equals(VoiceIntent.unknown);
+    });
+
+    test('inference throws Error -> propagates (programmer bug)', () async {
+      // Errors (OOM, programmer bugs) deliberately bypass the catch so they
+      // surface in crash reports instead of looking like an unrecognized
+      // command.
+      final service = GemmaVoiceCommandService(session: _ErrorSession());
+      await check(
+        service.dispatch(audio: audio, settingsSnapshot: settingsSnapshot),
+      ).throws<StateError>();
     });
 
     test(
@@ -244,5 +317,14 @@ class _ThrowingSession implements GemmaInferenceSession {
     required Uint8List audio,
     required String systemPrompt,
     required List<VoiceToolDefinition> tools,
-  }) async => throw StateError('boom');
+  }) async => throw Exception('boom');
+}
+
+class _ErrorSession implements GemmaInferenceSession {
+  @override
+  Future<GemmaFunctionCall> runWithAudio({
+    required Uint8List audio,
+    required String systemPrompt,
+    required List<VoiceToolDefinition> tools,
+  }) async => throw StateError('programmer bug');
 }

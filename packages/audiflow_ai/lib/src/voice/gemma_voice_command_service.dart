@@ -38,7 +38,7 @@ class GemmaVoiceCommandService {
         systemPrompt: voiceSystemPrompt,
         tools: tools,
       );
-    } on Object {
+    } on Exception {
       return _unknown();
     }
 
@@ -71,11 +71,15 @@ class GemmaVoiceCommandService {
     if (payload == null) {
       return _unknown();
     }
+    if (payload is SettingsChangePayloadAmbiguous &&
+        payload.candidates.isEmpty) {
+      return _unknown();
+    }
     final confidence = switch (payload) {
       SettingsChangePayloadAbsolute(:final confidence) => confidence,
       SettingsChangePayloadRelative(:final confidence) => confidence,
       SettingsChangePayloadAmbiguous(:final candidates) =>
-        candidates.isEmpty ? 0.0 : candidates.first.confidence,
+        candidates.first.confidence,
     };
     return VoiceCommand(
       intent: VoiceIntent.changeSettings,
@@ -166,9 +170,16 @@ class GemmaVoiceCommandService {
   Map<String, String> _stringifyArgs(Map<String, Object?> args) {
     final result = <String, String>{};
     args.forEach((key, value) {
-      if (value != null) {
-        result[key] = value.toString();
+      if (value == null) {
+        return;
       }
+      // Whole-valued doubles (e.g. 120.0 from a model that returned a JSON
+      // number) collapse to int form; downstream executors parse `seek`'s
+      // `seconds` as int and would choke on "120.0".
+      result[key] = switch (value) {
+        final num n when n == n.truncateToDouble() => n.toInt().toString(),
+        _ => value.toString(),
+      };
     });
     return result;
   }
