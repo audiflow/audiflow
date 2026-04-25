@@ -1181,13 +1181,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'This device doesn\'t have enough memory to run the on-device model.';
 
   @override
-  String voiceGemmaVariantE2b(int sizeMb) {
-    return 'Standard ($sizeMb MB)';
+  String voiceGemmaVariantE2b(String size) {
+    return 'Standard ($size)';
   }
 
   @override
-  String voiceGemmaVariantE4b(int sizeMb) {
-    return 'Larger ($sizeMb MB)';
+  String voiceGemmaVariantE4b(String size) {
+    return 'Larger ($size)';
   }
 
   @override

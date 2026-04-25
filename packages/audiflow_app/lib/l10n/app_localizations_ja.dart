@@ -1158,13 +1158,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get voiceGemmaUnsupportedRam => 'このデバイスのメモリではオンデバイスモデルを実行できません。';
 
   @override
-  String voiceGemmaVariantE2b(int sizeMb) {
-    return '標準（$sizeMb MB）';
+  String voiceGemmaVariantE2b(String size) {
+    return '標準（$size）';
   }
 
   @override
-  String voiceGemmaVariantE4b(int sizeMb) {
-    return '大きい（$sizeMb MB）';
+  String voiceGemmaVariantE4b(String size) {
+    return '大きい（$size）';
   }
 
   @override

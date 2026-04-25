@@ -348,12 +348,8 @@ class _VariantSelector extends ConsumerWidget {
 
   String _variantLabel(AppLocalizations l10n, GemmaModelVariant variant) =>
       switch (variant) {
-        GemmaModelVariant.e2b => l10n.voiceGemmaVariantE2b(
-          variant.approximateSizeMb,
-        ),
-        GemmaModelVariant.e4b => l10n.voiceGemmaVariantE4b(
-          variant.approximateSizeMb,
-        ),
+        GemmaModelVariant.e2b => l10n.voiceGemmaVariantE2b(variant.displaySize),
+        GemmaModelVariant.e4b => l10n.voiceGemmaVariantE4b(variant.displaySize),
       };
 
   Future<void> _persist(WidgetRef ref, String name) async {

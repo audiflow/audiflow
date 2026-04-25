@@ -2198,17 +2198,17 @@ abstract class AppLocalizations {
   /// **'This device doesn\'t have enough memory to run the on-device model.'**
   String get voiceGemmaUnsupportedRam;
 
-  /// Segmented-button label for the smaller, faster on-device model variant. Size in megabytes is interpolated.
+  /// Segmented-button label for the smaller, faster on-device model variant. Pre-formatted size string (e.g. "1.3 GB") is interpolated.
   ///
   /// In en, this message translates to:
-  /// **'Standard ({sizeMb} MB)'**
-  String voiceGemmaVariantE2b(int sizeMb);
+  /// **'Standard ({size})'**
+  String voiceGemmaVariantE2b(String size);
 
-  /// Segmented-button label for the larger, more accurate on-device model variant. Size in megabytes is interpolated.
+  /// Segmented-button label for the larger, more accurate on-device model variant. Pre-formatted size string (e.g. "2.5 GB") is interpolated.
   ///
   /// In en, this message translates to:
-  /// **'Larger ({sizeMb} MB)'**
-  String voiceGemmaVariantE4b(int sizeMb);
+  /// **'Larger ({size})'**
+  String voiceGemmaVariantE4b(String size);
 
   /// Description of the play/resume voice command
   ///

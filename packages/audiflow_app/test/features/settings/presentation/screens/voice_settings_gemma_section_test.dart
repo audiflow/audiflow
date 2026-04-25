@@ -154,7 +154,7 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        await tester.tap(find.text('Larger (2500 MB)'));
+        await tester.tap(find.text('Larger (2.5 GB)'));
         await tester.pumpAndSettle();
 
         expect(prefs.getString(SettingsKeys.voiceGemmaVariant), equals('e4b'));

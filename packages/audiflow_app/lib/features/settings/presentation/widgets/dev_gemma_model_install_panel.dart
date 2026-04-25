@@ -130,7 +130,7 @@ class _DevGemmaModelInstallPanelState
               const SizedBox(height: 8),
               Text(
                 '${widget.variant.fileName} '
-                '(~${widget.variant.approximateSizeMb} MB)',
+                '(~${widget.variant.displaySize})',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
               const SizedBox(height: 12),

@@ -36,4 +36,10 @@ enum GemmaModelVariant {
 
   /// Minimum total device RAM, in megabytes, required to run this variant.
   final int minimumDeviceRamMb;
+
+  /// Human-friendly download size for UI labels (e.g. "1.3 GB"). Derived
+  /// from [approximateSizeMb] so there's a single source of truth for the
+  /// number; the unit is GB because both shipped variants are >1 GB.
+  String get displaySize =>
+      '${(approximateSizeMb / 1000).toStringAsFixed(1)} GB';
 }
