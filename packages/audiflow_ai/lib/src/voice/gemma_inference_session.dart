@@ -1,15 +1,23 @@
-import 'dart:typed_data';
+import 'dart:collection';
+
+import 'package:flutter/foundation.dart';
 
 import 'voice_tool_schema.dart';
 
 /// One function call emitted by Gemma 4 in response to an audio query.
-class GemmaFunctionCall {
-  const GemmaFunctionCall({required this.name, required this.args});
+@immutable
+final class GemmaFunctionCall {
+  GemmaFunctionCall({required this.name, required Map<String, Object?> args})
+    : args = UnmodifiableMapView(args);
+
+  /// Const constructor for compile-time literals (test fixtures); the
+  /// supplied [args] map must already be `const`/immutable.
+  const GemmaFunctionCall.constUnsafe({required this.name, required this.args});
 
   /// The tool name Gemma 4 chose. Maps to [VoiceToolDefinition.name].
   final String name;
 
-  /// Arguments parsed from the function call payload.
+  /// Arguments parsed from the function call payload. Unmodifiable.
   final Map<String, Object?> args;
 
   @override

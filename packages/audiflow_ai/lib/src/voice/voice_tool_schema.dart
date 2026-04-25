@@ -1,3 +1,7 @@
+import 'dart:collection';
+
+import 'package:flutter/foundation.dart';
+
 import '../models/voice_command.dart';
 
 /// JSON-schema-shaped definition of one Gemma 4 function-callable tool.
@@ -6,7 +10,8 @@ import '../models/voice_command.dart';
 /// serialization `flutter_gemma`'s function-calling API requires. Each tool
 /// maps 1:1 to a [VoiceIntent] (excluding [VoiceIntent.unknown], which is the
 /// parse-failure fallback rather than an emitted choice).
-class VoiceToolDefinition {
+@immutable
+final class VoiceToolDefinition {
   const VoiceToolDefinition({
     required this.intent,
     required this.description,
@@ -215,7 +220,7 @@ Map<String, Object?> _buildChangeSettingsParameters(
       .whereType<String>()
       .toList(growable: false);
 
-  return {
+  return UnmodifiableMapView<String, Object?>({
     'type': 'object',
     'properties': {
       'variant': {
@@ -271,5 +276,5 @@ Map<String, Object?> _buildChangeSettingsParameters(
       },
     },
     'required': ['variant'],
-  };
+  });
 }

@@ -15,7 +15,7 @@ void main() {
   group('GemmaVoiceCommandService', () {
     test('maps a fixed tool to its VoiceIntent', () async {
       final service = _serviceReturning(
-        const GemmaFunctionCall(name: 'pause', args: {}),
+        const GemmaFunctionCall.constUnsafe(name: 'pause', args: {}),
       );
       final command = await service.dispatch(
         audio: audio,
@@ -29,7 +29,7 @@ void main() {
 
     test('preserves args for tools that take parameters', () async {
       final service = _serviceReturning(
-        const GemmaFunctionCall(
+        const GemmaFunctionCall.constUnsafe(
           name: 'seek',
           args: {'seconds': 120},
         ),
@@ -44,7 +44,7 @@ void main() {
 
     test('passes the system prompt and built tools to the session', () async {
       final session = _RecordingSession(
-        const GemmaFunctionCall(name: 'play', args: {}),
+        const GemmaFunctionCall.constUnsafe(name: 'play', args: {}),
       );
       final service = GemmaVoiceCommandService(session: session);
       await service.dispatch(audio: audio, settingsSnapshot: settingsSnapshot);
@@ -57,7 +57,7 @@ void main() {
 
     test('changeSettings absolute -> SettingsChangePayloadAbsolute', () async {
       final service = _serviceReturning(
-        const GemmaFunctionCall(
+        const GemmaFunctionCall.constUnsafe(
           name: 'changeSettings',
           args: {
             'variant': 'absolute',
@@ -84,7 +84,7 @@ void main() {
 
     test('changeSettings relative -> SettingsChangePayloadRelative', () async {
       final service = _serviceReturning(
-        const GemmaFunctionCall(
+        const GemmaFunctionCall.constUnsafe(
           name: 'changeSettings',
           args: {
             'variant': 'relative',
@@ -113,7 +113,7 @@ void main() {
       'changeSettings ambiguous (non-empty) -> SettingsChangePayloadAmbiguous',
       () async {
         final service = _serviceReturning(
-          const GemmaFunctionCall(
+          const GemmaFunctionCall.constUnsafe(
             name: 'changeSettings',
             args: {
               'variant': 'ambiguous',
@@ -148,7 +148,7 @@ void main() {
         // System prompt designates empty `ambiguous.candidates` as the
         // "no command recognized" signal; honor that contract.
         final service = _serviceReturning(
-          const GemmaFunctionCall(
+          const GemmaFunctionCall.constUnsafe(
             name: 'changeSettings',
             args: {'variant': 'ambiguous', 'candidates': []},
           ),
@@ -164,7 +164,7 @@ void main() {
 
     test('ambiguous variant without candidates key -> unknown', () async {
       final service = _serviceReturning(
-        const GemmaFunctionCall(
+        const GemmaFunctionCall.constUnsafe(
           name: 'changeSettings',
           args: {'variant': 'ambiguous'},
         ),
@@ -178,7 +178,7 @@ void main() {
 
     test('relative variant with invalid direction -> unknown', () async {
       final service = _serviceReturning(
-        const GemmaFunctionCall(
+        const GemmaFunctionCall.constUnsafe(
           name: 'changeSettings',
           args: {
             'variant': 'relative',
@@ -198,7 +198,7 @@ void main() {
 
     test('integer confidence is accepted as 1.0', () async {
       final service = _serviceReturning(
-        const GemmaFunctionCall(
+        const GemmaFunctionCall.constUnsafe(
           name: 'changeSettings',
           args: {
             'variant': 'absolute',
@@ -219,7 +219,10 @@ void main() {
       // Models occasionally emit JSON numbers as doubles; downstream
       // executors parse `seek.seconds` as int and would choke on "120.0".
       final service = _serviceReturning(
-        const GemmaFunctionCall(name: 'seek', args: {'seconds': 120.0}),
+        const GemmaFunctionCall.constUnsafe(
+          name: 'seek',
+          args: {'seconds': 120.0},
+        ),
       );
       final command = await service.dispatch(
         audio: audio,
@@ -230,7 +233,7 @@ void main() {
 
     test('unknown tool name -> VoiceIntent.unknown', () async {
       final service = _serviceReturning(
-        const GemmaFunctionCall(name: 'doSomethingWeird', args: {}),
+        const GemmaFunctionCall.constUnsafe(name: 'doSomethingWeird', args: {}),
       );
       final command = await service.dispatch(
         audio: audio,
@@ -262,7 +265,7 @@ void main() {
       'changeSettings with malformed payload -> VoiceIntent.unknown',
       () async {
         final service = _serviceReturning(
-          const GemmaFunctionCall(
+          const GemmaFunctionCall.constUnsafe(
             name: 'changeSettings',
             args: {'variant': 'absolute', 'key': 'speed'},
             // missing value + confidence

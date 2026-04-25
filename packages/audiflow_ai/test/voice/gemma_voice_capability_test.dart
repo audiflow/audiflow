@@ -10,9 +10,11 @@ void main() {
         deviceTotalRamMb: 16000,
         isMobilePlatform: false,
       );
-      check(
-        result,
-      ).equals(const GemmaVoiceCapability.unsupported(reason: 'non_mobile'));
+      check(result).equals(
+        const GemmaVoiceCapability.unsupported(
+          reason: GemmaVoiceUnsupportedReason.nonMobile,
+        ),
+      );
     });
 
     test('returns unsupported when RAM is below E2B threshold', () {
@@ -21,7 +23,9 @@ void main() {
         isMobilePlatform: true,
       );
       check(result).equals(
-        const GemmaVoiceCapability.unsupported(reason: 'insufficient_ram'),
+        const GemmaVoiceCapability.unsupported(
+          reason: GemmaVoiceUnsupportedReason.insufficientRam,
+        ),
       );
     });
 
@@ -31,8 +35,8 @@ void main() {
         isMobilePlatform: true,
       );
       check(result).equals(
-        const GemmaVoiceCapability.supported(
-          available: [GemmaModelVariant.e2b],
+        GemmaVoiceCapability.supported(
+          available: const [GemmaModelVariant.e2b],
         ),
       );
     });
@@ -43,8 +47,8 @@ void main() {
         isMobilePlatform: true,
       );
       check(result).equals(
-        const GemmaVoiceCapability.supported(
-          available: [GemmaModelVariant.e2b, GemmaModelVariant.e4b],
+        GemmaVoiceCapability.supported(
+          available: const [GemmaModelVariant.e2b, GemmaModelVariant.e4b],
         ),
       );
     });
@@ -55,8 +59,8 @@ void main() {
         isMobilePlatform: true,
       );
       check(result).equals(
-        const GemmaVoiceCapability.supported(
-          available: [GemmaModelVariant.e2b, GemmaModelVariant.e4b],
+        GemmaVoiceCapability.supported(
+          available: const [GemmaModelVariant.e2b, GemmaModelVariant.e4b],
         ),
       );
     });
