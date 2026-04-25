@@ -28,3 +28,12 @@ export 'src/services/voice_command_service.dart';
 export 'src/utils/prompt_templates.dart';
 export 'src/utils/text_chunker.dart';
 export 'src/utils/text_utils.dart';
+// Voice command — on-device Gemma 4 audio-in path.
+export 'src/voice/gemma_inference_session.dart';
+export 'src/voice/gemma_model_install_exception.dart';
+export 'src/voice/gemma_model_manager.dart';
+export 'src/voice/gemma_model_variant.dart';
+export 'src/voice/gemma_plugin.dart';
+export 'src/voice/gemma_voice_capability.dart';
+export 'src/voice/gemma_voice_command_service.dart';
+export 'src/voice/voice_tool_schema.dart';

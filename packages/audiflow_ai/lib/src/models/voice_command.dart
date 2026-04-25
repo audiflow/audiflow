@@ -5,6 +5,28 @@
 
 import 'settings_change_payload.dart';
 
+/// Reason a voice command parser produced an [VoiceIntent.unknown] result.
+///
+/// Null when [VoiceCommand.intent] is anything other than
+/// [VoiceIntent.unknown]. Lets the caller distinguish "user said something
+/// we couldn't parse" (the documented contract) from genuine failures
+/// like an inference crash or schema drift.
+enum VoiceCommandFailureReason {
+  /// The underlying inference engine threw an Exception.
+  inferenceError,
+
+  /// The model emitted a tool name not in the per-turn schema.
+  unrecognizedTool,
+
+  /// The model emitted a recognized tool but the arguments were missing
+  /// fields, had wrong types, or referenced unknown enum values.
+  malformedPayload,
+
+  /// The model honored the system prompt's "no command recognized" signal
+  /// (changeSettings ambiguous with empty candidates).
+  noCommandRecognized,
+}
+
 /// Intent types for voice commands.
 enum VoiceIntent {
   // Playback intents
@@ -44,6 +66,7 @@ class VoiceCommand {
     required this.confidence,
     required this.rawTranscription,
     this.settingsPayload,
+    this.failureReason,
   });
 
   /// The parsed intent.
@@ -62,6 +85,11 @@ class VoiceCommand {
   /// [VoiceIntent.changeSettings].
   final SettingsChangePayload? settingsPayload;
 
+  /// Why this command was classified as [VoiceIntent.unknown]. Null when
+  /// [intent] is anything else, or when the producer did not enrich the
+  /// failure with a reason.
+  final VoiceCommandFailureReason? failureReason;
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -70,14 +98,21 @@ class VoiceCommand {
           intent == other.intent &&
           confidence == other.confidence &&
           rawTranscription == other.rawTranscription &&
-          settingsPayload == other.settingsPayload;
+          settingsPayload == other.settingsPayload &&
+          failureReason == other.failureReason;
 
   @override
-  int get hashCode =>
-      Object.hash(intent, confidence, rawTranscription, settingsPayload);
+  int get hashCode => Object.hash(
+    intent,
+    confidence,
+    rawTranscription,
+    settingsPayload,
+    failureReason,
+  );
 
   @override
   String toString() =>
       'VoiceCommand(intent: $intent, confidence: $confidence, '
-      'params: $parameters)';
+      'params: $parameters'
+      '${failureReason == null ? '' : ', reason: $failureReason'})';
 }
