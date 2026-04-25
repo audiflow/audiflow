@@ -2,8 +2,7 @@
 ///
 /// Defined as an interface so unit tests can substitute a fake without
 /// pulling the native plugin into the test runner. The concrete
-/// `flutter_gemma` adapter is wired in audiflow_app at composition root
-/// (Phase 3 of the Gemma migration).
+/// `flutter_gemma` adapter is wired in audiflow_app at composition root.
 abstract interface class GemmaPlugin {
   /// Whether the model file [fileName] is already installed locally.
   Future<bool> isModelInstalled(String fileName);

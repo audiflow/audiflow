@@ -7,9 +7,8 @@ import 'voice_tool_schema.dart';
 
 /// Voice command parser backed by on-device Gemma 4 audio-in inference.
 ///
-/// Replaces the legacy STT + Gemini text-generation pipeline. Takes raw
-/// audio bytes, asks Gemma 4 to emit one function call from the per-turn
-/// tool list, and translates the result into a [VoiceCommand].
+/// Takes raw audio bytes, asks Gemma 4 to emit one function call from the
+/// per-turn tool list, and translates the result into a [VoiceCommand].
 class GemmaVoiceCommandService {
   GemmaVoiceCommandService({required GemmaInferenceSession session})
     : _session = session;
