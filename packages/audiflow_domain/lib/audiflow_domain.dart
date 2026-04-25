@@ -130,6 +130,7 @@ export 'src/features/voice/models/settings_metadata.dart';
 export 'src/features/voice/models/voice_recognition_state.dart';
 export 'src/features/voice/repositories/speech_recognition_repository.dart';
 export 'src/features/voice/repositories/speech_recognition_repository_impl.dart';
+export 'src/features/voice/services/gemma_voice_command_route.dart';
 export 'src/features/voice/services/play_podcast_by_name_service.dart';
 export 'src/features/voice/services/settings_intent_resolver.dart';
 export 'src/features/voice/services/settings_metadata_registry.dart';

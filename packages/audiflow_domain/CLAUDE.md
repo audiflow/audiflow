@@ -13,6 +13,18 @@ Sub-package of the `audiflow` Flutter monorepo. Depends on `audiflow_core`, `aud
 - Business services (feed sync, playback, download queue, voice commands, station reconciliation)
 - Smart playlist config consumption, caching, and resolver pipeline
 - Background refresh and new-episode notification orchestration
+- Composition seam for the new on-device Gemma 4 voice path (`GemmaVoiceCommandRoute`)
+
+## Voice command paths
+
+Two pipelines coexist while the Gemma 4 migration is in progress:
+
+| Path | Entry point | Notes |
+|------|-------------|-------|
+| Legacy text | `VoiceCommandOrchestrator` (3-tier: pattern / native NLU / LLM) | Currently consumed by audiflow_app |
+| Gemma 4 audio | `GemmaVoiceCommandRoute.dispatch(audioBytes)` | Wired in audiflow_app once audio capture lands |
+
+`GemmaVoiceCommandRoute` builds the per-turn settings snapshot from `SettingsMetadataRegistry.toJson(repo)` and delegates to `GemmaVoiceCommandService` (in audiflow_ai). The downstream `SettingsIntentResolver` and `VoiceCommandExecutor` are reused unchanged.
 
 ## Non-responsibilities
 

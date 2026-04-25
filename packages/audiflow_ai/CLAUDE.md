@@ -13,11 +13,30 @@ Depends only on audiflow_core. Consumed by audiflow_domain. Derived in part from
 - Text generation (`generateText()` returning `AiResponse` with `GenerationConfig`)
 - Text summarization with chunked progress reporting (`summarize()`, `SummarizationConfig`)
 - Episode summarization with podcast context (`summarizeEpisode()` returning `EpisodeSummary`)
-- Voice command parsing (`parseVoiceCommand()` returning `VoiceCommand`)
+- Voice command parsing (`parseVoiceCommand()` returning `VoiceCommand`) -- legacy text path
+- Voice command parsing via on-device Gemma 4 audio-in (`GemmaVoiceCommandService.dispatch(audio, settingsSnapshot)`) -- new path
 - Cancellation support via `CancellationToken`
 - Platform channel abstraction (`AudiflowAiChannel`)
 - Prompt template management (`PromptTemplates`)
 - Text chunking for long content (`TextChunker`)
+
+## Voice command migration (in progress)
+
+Two voice command pipelines coexist:
+
+| Path | Entry point | Status |
+|------|-------------|--------|
+| Legacy: STT text -> Gemini text-gen -> intent | `VoiceCommandService.parseVoiceCommand` | Active in app |
+| Gemma 4: audio bytes -> function call -> intent | `GemmaVoiceCommandService.dispatch` | Built, not wired |
+
+The Gemma 4 path is composed of:
+- `GemmaModelVariant` (E2B / E4B) + `detectGemmaVoiceCapability()` for device tiering
+- `GemmaPlugin` port + `GemmaModelManager` for download/install lifecycle
+- `GemmaInferenceSession` port + `GemmaVoiceCommandService` for inference
+- `voice_tool_schema.dart` defining the 14 tools (13 fixed + `changeSettings` discriminated-union)
+- `voiceSystemPrompt` constraining the model to English reasoning + one function call
+
+Both ports (`GemmaPlugin`, `GemmaInferenceSession`) are implemented host-side in audiflow_app, where `flutter_gemma` is wired in. audiflow_ai has no direct dependency on `flutter_gemma` and stays unit-testable.
 
 ## Non-responsibilities
 
