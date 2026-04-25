@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_gemma/flutter_gemma.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart' as intl;
@@ -37,6 +38,12 @@ Future<void> appMain({
       'https://audiflow.github.io/audiflow-smartplaylist/assets-dev/v5',
 }) async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // flutter_gemma's static API (FlutterGemma.isModelInstalled, .installModel,
+  // .getActiveModel) reaches into a global ServiceRegistry that throws on
+  // first access if not initialized. Init is idempotent and platform-aware,
+  // so call it once up front before any provider can touch it.
+  await FlutterGemma.initialize();
 
   final flavorConfig = switch (flavor) {
     Flavor.dev => FlavorConfig.dev,
