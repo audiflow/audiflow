@@ -151,6 +151,19 @@ abstract class AppSettingsRepository {
   /// Persists the voice commands enabled setting.
   Future<void> setVoiceEnabled(bool enabled);
 
+  /// Whether the on-device Gemma 4 voice command path is enabled.
+  bool getVoiceGemmaEnabled();
+
+  /// Persists the Gemma 4 voice path opt-in.
+  Future<void> setVoiceGemmaEnabled(bool enabled);
+
+  /// Selected Gemma 4 model variant name (`'e2b'` or `'e4b'`). Validation
+  /// against the device-supported set is the caller's responsibility.
+  String getVoiceGemmaVariant();
+
+  /// Persists the selected Gemma 4 model variant by name.
+  Future<void> setVoiceGemmaVariant(String variantName);
+
   // -- Data management --
 
   /// Removes all persisted settings, restoring defaults.

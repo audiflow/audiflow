@@ -121,6 +121,14 @@ class FakeAppSettingsRepository implements AppSettingsRepository {
   @override
   Future<void> setVoiceEnabled(bool enabled) async {}
   @override
+  bool getVoiceGemmaEnabled() => SettingsDefaults.voiceGemmaEnabled;
+  @override
+  Future<void> setVoiceGemmaEnabled(bool enabled) async {}
+  @override
+  String getVoiceGemmaVariant() => SettingsDefaults.voiceGemmaVariant;
+  @override
+  Future<void> setVoiceGemmaVariant(String variantName) async {}
+  @override
   Future<void> clearAll() async {}
 }
 

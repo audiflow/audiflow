@@ -323,6 +323,19 @@ class _FakeAppSettingsRepository implements AppSettingsRepository {
   Future<void> setVoiceEnabled(bool enabled) => throw UnimplementedError();
 
   @override
+  bool getVoiceGemmaEnabled() => SettingsDefaults.voiceGemmaEnabled;
+
+  @override
+  Future<void> setVoiceGemmaEnabled(bool enabled) => throw UnimplementedError();
+
+  @override
+  String getVoiceGemmaVariant() => SettingsDefaults.voiceGemmaVariant;
+
+  @override
+  Future<void> setVoiceGemmaVariant(String variantName) =>
+      throw UnimplementedError();
+
+  @override
   Future<void> clearAll() => throw UnimplementedError();
 }
 
