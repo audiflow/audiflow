@@ -8,9 +8,9 @@ part 'gemma_voice_capability_controller.g.dart';
 
 /// Resolves the device's [GemmaVoiceCapability] from `device_info_plus`.
 ///
-/// Cached for the lifetime of the process — RAM doesn't change at runtime,
-/// and the underlying plugin call is cheap but synchronously async, which
-/// would otherwise add a frame of jank to every settings rebuild.
+/// Cached for the lifetime of the process: total RAM is immutable at runtime,
+/// and the platform-channel hop in `device_info_plus` would otherwise flash
+/// a loading state on every settings rebuild.
 @Riverpod(keepAlive: true)
 Future<GemmaVoiceCapability> gemmaVoiceCapability(Ref ref) async {
   final info = DeviceInfoPlugin();

@@ -93,8 +93,8 @@ class SettingsKeys {
   static const String voiceGemmaEnabled = 'settings_voice_gemma_enabled';
 
   /// Selected Gemma 4 model variant. Stored as the enum's `.name` (e.g.
-  /// `'e2b'` or `'e4b'`). Validated at the boundary against the
-  /// device-supported set.
+  /// `'e2b'` or `'e4b'`). The repository performs no validation; consumers
+  /// must reconcile the stored value against the device-supported set.
   static const String voiceGemmaVariant = 'settings_voice_gemma_variant';
 }
 

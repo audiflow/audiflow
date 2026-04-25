@@ -95,6 +95,36 @@ void main() {
       expect(find.byType(SegmentedButton<GemmaModelVariant>), findsOneWidget);
     });
 
+    testWidgets('toggling off hides the selector and persists false', (
+      tester,
+    ) async {
+      SharedPreferences.setMockInitialValues({
+        SettingsKeys.voiceGemmaEnabled: true,
+      });
+      prefs = await SharedPreferences.getInstance();
+
+      await tester.pumpWidget(
+        buildTestWidget(
+          GemmaVoiceCapability.supported(
+            available: const [GemmaModelVariant.e2b, GemmaModelVariant.e4b],
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Selector is visible because we pre-seeded enabled=true.
+      expect(find.byType(SegmentedButton<GemmaModelVariant>), findsOneWidget);
+
+      final gemmaSwitch = tester
+          .widgetList<SwitchListTile>(find.byType(SwitchListTile))
+          .firstWhere((s) => (s.title! as Text).data == 'Use on-device AI');
+      gemmaSwitch.onChanged!(false);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SegmentedButton<GemmaModelVariant>), findsNothing);
+      expect(prefs.getBool(SettingsKeys.voiceGemmaEnabled), isFalse);
+    });
+
     testWidgets(
       'tapping a variant segment persists the choice to SharedPreferences',
       (tester) async {

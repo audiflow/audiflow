@@ -748,17 +748,17 @@
   "voiceGemmaUnsupported": "On-device AI not available",
   "@voiceGemmaUnsupported": { "description": "Header shown when the device cannot run any Gemma 4 variant" },
   "voiceGemmaUnsupportedNonMobile": "Only supported on phones and tablets.",
-  "@voiceGemmaUnsupportedNonMobile": { "description": "Reason: platform isn't mobile" },
+  "@voiceGemmaUnsupportedNonMobile": { "description": "Subtitle shown under the unsupported header when the device is not a phone or tablet (e.g. running on desktop)." },
   "voiceGemmaUnsupportedRam": "This device doesn't have enough memory to run the on-device model.",
-  "@voiceGemmaUnsupportedRam": { "description": "Reason: device RAM below the minimum supported variant" },
+  "@voiceGemmaUnsupportedRam": { "description": "Subtitle shown under the unsupported header when the device has less RAM than the smallest supported model variant requires." },
   "voiceGemmaVariantE2b": "Standard ({sizeMb} MB)",
   "@voiceGemmaVariantE2b": {
-    "description": "Label for the Gemma 4 E2B (2B params) variant",
+    "description": "Segmented-button label for the smaller, faster on-device model variant. Size in megabytes is interpolated.",
     "placeholders": { "sizeMb": { "type": "int", "example": "1300" } }
   },
   "voiceGemmaVariantE4b": "Larger ({sizeMb} MB)",
   "@voiceGemmaVariantE4b": {
-    "description": "Label for the Gemma 4 E4B (4B params) variant",
+    "description": "Segmented-button label for the larger, more accurate on-device model variant. Size in megabytes is interpolated.",
     "placeholders": { "sizeMb": { "type": "int", "example": "2500" } }
   },
   "voiceCommandPlay": "Play / Resume playback",

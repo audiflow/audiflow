@@ -186,7 +186,7 @@ class _ExperimentalBanner extends StatelessWidget {
   }
 }
 
-/// Divider + label introducing the on-device Gemma 4 section.
+/// Header label introducing the on-device Gemma 4 section.
 class _SectionHeader extends ConsumerWidget {
   const _SectionHeader();
 
