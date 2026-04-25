@@ -1,6 +1,7 @@
 import 'package:audiflow_ai/audiflow_ai.dart';
 import 'package:audiflow_app/features/settings/presentation/controllers/gemma_voice_capability_controller.dart';
 import 'package:audiflow_app/features/settings/presentation/screens/voice_settings_screen.dart';
+import 'package:audiflow_app/features/voice/gemma/gemma_voice_providers.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
@@ -17,11 +18,21 @@ void main() {
     prefs = await SharedPreferences.getInstance();
   });
 
+  // The debug-only DevGemmaModelInstallPanel renders inside the Gemma section
+  // when enabled; in tests `kDebugMode == true` so it always tries to ping
+  // GemmaModelManager. Override with a no-op plugin so the flutter_gemma
+  // native registry stays out of the test runner.
+  GemmaModelManager noOpManager() => GemmaModelManager(
+    plugin: _NoOpGemmaPlugin(),
+    urlResolver: (_) => 'https://example.test/model',
+  );
+
   Widget buildTestWidget(GemmaVoiceCapability capability) {
     return ProviderScope(
       overrides: [
         sharedPreferencesProvider.overrideWithValue(prefs),
         gemmaVoiceCapabilityProvider.overrideWith((ref) async => capability),
+        gemmaModelManagerProvider.overrideWith((ref) => noOpManager()),
       ],
       child: MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -185,6 +196,7 @@ void main() {
             gemmaVoiceCapabilityProvider.overrideWith(
               (ref) async => throw Exception('plugin failed'),
             ),
+            gemmaModelManagerProvider.overrideWith((ref) => noOpManager()),
           ],
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -198,4 +210,21 @@ void main() {
       expect(find.text('On-device AI not available'), findsOneWidget);
     });
   });
+}
+
+/// Minimal stub for the Gemma section tests that don't exercise install.
+class _NoOpGemmaPlugin implements GemmaPlugin {
+  @override
+  Future<bool> isModelInstalled(String fileName) async => false;
+
+  @override
+  Future<void> installFromNetwork({
+    required String url,
+    required String fileName,
+    String? authToken,
+    void Function(int percent)? onProgress,
+  }) async {}
+
+  @override
+  Future<void> uninstall(String fileName) async {}
 }

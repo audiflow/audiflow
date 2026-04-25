@@ -2,12 +2,14 @@ import 'dart:async';
 
 import 'package:audiflow_ai/audiflow_ai.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../controllers/gemma_voice_capability_controller.dart';
+import '../widgets/dev_gemma_model_install_panel.dart';
 
 /// Screen for configuring voice command settings.
 ///
@@ -253,7 +255,13 @@ class _GemmaVoiceSection extends ConsumerWidget {
               onChanged: (v) =>
                   unawaited(_update(ref, () => repo.setVoiceGemmaEnabled(v))),
             ),
-            if (enabled) _VariantSelector(repo: repo, available: available),
+            if (enabled) ...[
+              _VariantSelector(repo: repo, available: available),
+              if (kDebugMode)
+                DevGemmaModelInstallPanel(
+                  variant: resolveCurrentGemmaVariant(repo, available),
+                ),
+            ],
           ],
         ),
       },
@@ -282,6 +290,20 @@ class _GemmaVoiceSection extends ConsumerWidget {
   }
 }
 
+/// Resolve the persisted Gemma variant against the device-specific
+/// [available] list, falling back to the first offerable when the persisted
+/// name is gone (e.g. RAM tier changed across an OS upgrade).
+GemmaModelVariant resolveCurrentGemmaVariant(
+  AppSettingsRepository repo,
+  List<GemmaModelVariant> available,
+) {
+  final currentName = repo.getVoiceGemmaVariant();
+  for (final v in available) {
+    if (v.name == currentName) return v;
+  }
+  return available.first;
+}
+
 class _VariantSelector extends ConsumerWidget {
   const _VariantSelector({required this.repo, required this.available});
 
@@ -292,16 +314,14 @@ class _VariantSelector extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final currentName = repo.getVoiceGemmaVariant();
-    final matched = <GemmaModelVariant?>[
-      ...available,
-    ].firstWhere((v) => v?.name == currentName, orElse: () => null);
-    final current = matched ?? available.first;
+    final wasOfferable = available.any((v) => v.name == currentName);
+    final current = resolveCurrentGemmaVariant(repo, available);
 
     // Persisted variant is no longer offerable (e.g. RAM tier changed across
     // OS upgrade or backup-restore). Re-persist after the current frame so
     // storage and UI stay in sync; otherwise the next read silently
     // substitutes again and downstream consumers see the stale value.
-    if (matched == null) {
+    if (!wasOfferable) {
       WidgetsBinding.instance.addPostFrameCallback(
         (_) => unawaited(_persist(ref, current.name)),
       );
