@@ -237,7 +237,7 @@ final class GemmaInferenceSessionProvider
 }
 
 String _$gemmaInferenceSessionHash() =>
-    r'cd5422b569c2c76e3ba4f5fbb95aae2e6168bf03';
+    r'da18f06a48dcb94501e5e001518f4949b29c1f20';
 
 @ProviderFor(gemmaVoiceCommandService)
 final gemmaVoiceCommandServiceProvider = GemmaVoiceCommandServiceProvider._();
