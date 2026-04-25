@@ -1,5 +1,6 @@
-# iOS 14.0+ minimum; audiflow_ai (Apple Foundation Models) requires iOS 26+ at runtime
-platform :ios, '14.0'
+# iOS 16.0+ minimum (raised from 14.0 by flutter_gemma's MediaPipe transitive
+# requirement); audiflow_ai (Apple Foundation Models) requires iOS 26+ at runtime
+platform :ios, '16.0'
 
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'

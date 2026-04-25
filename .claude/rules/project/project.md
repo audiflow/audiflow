@@ -10,7 +10,7 @@ experience and modern Flutter patterns.
 ### Platform Requirements
 
 - Flutter 3.35+, Dart 3.9+
-- iOS 14+, Android 8.0+ (API 26+)
+- iOS 16+, Android 8.0+ (API 26+)
 - Mobile only (no web/desktop)
 - RSS-based podcasts only
 
