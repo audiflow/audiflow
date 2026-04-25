@@ -2162,6 +2162,54 @@ abstract class AppLocalizations {
   /// **'Available Commands'**
   String get voiceAvailableCommands;
 
+  /// Section header for the on-device Gemma 4 voice command opt-in
+  ///
+  /// In en, this message translates to:
+  /// **'On-Device AI (Gemma 4)'**
+  String get voiceGemmaSectionTitle;
+
+  /// Toggle label for the Gemma 4 voice command opt-in
+  ///
+  /// In en, this message translates to:
+  /// **'Use on-device AI'**
+  String get voiceGemmaEnabledTitle;
+
+  /// Toggle subtitle explaining the privacy benefit
+  ///
+  /// In en, this message translates to:
+  /// **'Process voice commands fully on this device. No audio leaves the phone.'**
+  String get voiceGemmaEnabledSubtitle;
+
+  /// Header shown when the device cannot run any Gemma 4 variant
+  ///
+  /// In en, this message translates to:
+  /// **'On-device AI not available'**
+  String get voiceGemmaUnsupported;
+
+  /// Reason: platform isn't mobile
+  ///
+  /// In en, this message translates to:
+  /// **'Only supported on phones and tablets.'**
+  String get voiceGemmaUnsupportedNonMobile;
+
+  /// Reason: device RAM below the minimum supported variant
+  ///
+  /// In en, this message translates to:
+  /// **'This device doesn\'t have enough memory to run the on-device model.'**
+  String get voiceGemmaUnsupportedRam;
+
+  /// Label for the Gemma 4 E2B (2B params) variant
+  ///
+  /// In en, this message translates to:
+  /// **'Standard ({sizeMb} MB)'**
+  String voiceGemmaVariantE2b(int sizeMb);
+
+  /// Label for the Gemma 4 E4B (4B params) variant
+  ///
+  /// In en, this message translates to:
+  /// **'Larger ({sizeMb} MB)'**
+  String voiceGemmaVariantE4b(int sizeMb);
+
   /// Description of the play/resume voice command
   ///
   /// In en, this message translates to:

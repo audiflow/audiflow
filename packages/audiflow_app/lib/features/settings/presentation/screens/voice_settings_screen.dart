@@ -1,11 +1,13 @@
 import 'dart:async';
 
+import 'package:audiflow_ai/audiflow_ai.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../controllers/gemma_voice_capability_controller.dart';
 
 /// Screen for configuring voice command settings.
 ///
@@ -35,6 +37,8 @@ class VoiceSettingsScreen extends ConsumerWidget {
               unawaited(_update(ref, () => repo.setVoiceEnabled(v)));
             },
           ),
+          const _SectionHeader(),
+          _GemmaVoiceSection(repo: repo),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Text(
@@ -179,6 +183,134 @@ class _ExperimentalBanner extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+/// Divider + label introducing the on-device Gemma 4 section.
+class _SectionHeader extends ConsumerWidget {
+  const _SectionHeader();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+      child: Text(
+        l10n.voiceGemmaSectionTitle,
+        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+          color: Theme.of(context).colorScheme.primary,
+        ),
+      ),
+    );
+  }
+}
+
+/// Gemma 4 opt-in toggle + variant selector. Capability detection is async
+/// (device_info_plus), so we render the section based on the resolved
+/// capability and gracefully degrade when the device isn't supported.
+class _GemmaVoiceSection extends ConsumerWidget {
+  const _GemmaVoiceSection({required this.repo});
+
+  final AppSettingsRepository repo;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final capability = ref.watch(gemmaVoiceCapabilityProvider);
+
+    return capability.when(
+      loading: () => const ListTile(title: LinearProgressIndicator()),
+      error: (_, _) => ListTile(
+        leading: const Icon(Symbols.error),
+        title: Text(l10n.voiceGemmaUnsupported),
+      ),
+      data: (cap) => switch (cap) {
+        GemmaVoiceCapabilityUnsupported(:final reason) => ListTile(
+          leading: const Icon(Symbols.do_not_disturb),
+          title: Text(l10n.voiceGemmaUnsupported),
+          subtitle: Text(_unsupportedSubtitle(l10n, reason)),
+        ),
+        GemmaVoiceCapabilitySupported(:final available) => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SwitchListTile(
+              title: Text(l10n.voiceGemmaEnabledTitle),
+              subtitle: Text(l10n.voiceGemmaEnabledSubtitle),
+              value: repo.getVoiceGemmaEnabled(),
+              onChanged: (v) =>
+                  unawaited(_update(ref, () => repo.setVoiceGemmaEnabled(v))),
+            ),
+            if (repo.getVoiceGemmaEnabled())
+              _VariantSelector(repo: repo, available: available),
+          ],
+        ),
+      },
+    );
+  }
+
+  String _unsupportedSubtitle(
+    AppLocalizations l10n,
+    GemmaVoiceUnsupportedReason reason,
+  ) => switch (reason) {
+    GemmaVoiceUnsupportedReason.nonMobile =>
+      l10n.voiceGemmaUnsupportedNonMobile,
+    GemmaVoiceUnsupportedReason.insufficientRam =>
+      l10n.voiceGemmaUnsupportedRam,
+  };
+
+  Future<void> _update(WidgetRef ref, Future<void> Function() setter) async {
+    await setter();
+    ref.invalidate(appSettingsRepositoryProvider);
+  }
+}
+
+class _VariantSelector extends ConsumerWidget {
+  const _VariantSelector({required this.repo, required this.available});
+
+  final AppSettingsRepository repo;
+  final List<GemmaModelVariant> available;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final currentName = repo.getVoiceGemmaVariant();
+    final current = available.firstWhere(
+      (v) => v.name == currentName,
+      orElse: () => available.first,
+    );
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      child: SegmentedButton<GemmaModelVariant>(
+        segments: [
+          for (final variant in available)
+            ButtonSegment(
+              value: variant,
+              label: Text(_variantLabel(l10n, variant)),
+            ),
+        ],
+        selected: {current},
+        onSelectionChanged: (selected) {
+          final picked = selected.single;
+          unawaited(_persist(ref, picked.name));
+        },
+      ),
+    );
+  }
+
+  String _variantLabel(AppLocalizations l10n, GemmaModelVariant variant) =>
+      switch (variant) {
+        GemmaModelVariant.e2b => l10n.voiceGemmaVariantE2b(
+          variant.approximateSizeMb,
+        ),
+        GemmaModelVariant.e4b => l10n.voiceGemmaVariantE4b(
+          variant.approximateSizeMb,
+        ),
+      };
+
+  Future<void> _persist(WidgetRef ref, String name) async {
+    final repo = ref.read(appSettingsRepositoryProvider);
+    await repo.setVoiceGemmaVariant(name);
+    ref.invalidate(appSettingsRepositoryProvider);
   }
 }
 
