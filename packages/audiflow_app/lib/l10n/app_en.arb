@@ -739,6 +739,28 @@
   "@voiceEnabledSubtitle": { "description": "Toggle subtitle for enabling voice commands" },
   "voiceAvailableCommands": "Available Commands",
   "@voiceAvailableCommands": { "description": "Section header listing available voice commands" },
+  "voiceGemmaSectionTitle": "On-Device AI (Gemma 4)",
+  "@voiceGemmaSectionTitle": { "description": "Section header for the on-device Gemma 4 voice command opt-in" },
+  "voiceGemmaEnabledTitle": "Use on-device AI",
+  "@voiceGemmaEnabledTitle": { "description": "Toggle label for the Gemma 4 voice command opt-in" },
+  "voiceGemmaEnabledSubtitle": "Process voice commands fully on this device. No audio leaves the phone.",
+  "@voiceGemmaEnabledSubtitle": { "description": "Toggle subtitle explaining the privacy benefit" },
+  "voiceGemmaUnsupported": "On-device AI not available",
+  "@voiceGemmaUnsupported": { "description": "Header shown when the device cannot run any Gemma 4 variant" },
+  "voiceGemmaUnsupportedNonMobile": "Only supported on phones and tablets.",
+  "@voiceGemmaUnsupportedNonMobile": { "description": "Subtitle shown under the unsupported header when the device is not a phone or tablet (e.g. running on desktop)." },
+  "voiceGemmaUnsupportedRam": "This device doesn't have enough memory to run the on-device model.",
+  "@voiceGemmaUnsupportedRam": { "description": "Subtitle shown under the unsupported header when the device has less RAM than the smallest supported model variant requires." },
+  "voiceGemmaVariantE2b": "Standard ({sizeMb} MB)",
+  "@voiceGemmaVariantE2b": {
+    "description": "Segmented-button label for the smaller, faster on-device model variant. Size in megabytes is interpolated.",
+    "placeholders": { "sizeMb": { "type": "int", "example": "1300" } }
+  },
+  "voiceGemmaVariantE4b": "Larger ({sizeMb} MB)",
+  "@voiceGemmaVariantE4b": {
+    "description": "Segmented-button label for the larger, more accurate on-device model variant. Size in megabytes is interpolated.",
+    "placeholders": { "sizeMb": { "type": "int", "example": "2500" } }
+  },
   "voiceCommandPlay": "Play / Resume playback",
   "@voiceCommandPlay": { "description": "Description of the play/resume voice command" },
   "voiceCommandPause": "Pause playback",

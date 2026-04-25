@@ -260,6 +260,24 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
   Future<void> setVoiceEnabled(bool enabled) =>
       _ds.setBool(SettingsKeys.voiceEnabled, enabled);
 
+  @override
+  bool getVoiceGemmaEnabled() =>
+      _ds.getBool(SettingsKeys.voiceGemmaEnabled) ??
+      SettingsDefaults.voiceGemmaEnabled;
+
+  @override
+  Future<void> setVoiceGemmaEnabled(bool enabled) =>
+      _ds.setBool(SettingsKeys.voiceGemmaEnabled, enabled);
+
+  @override
+  String getVoiceGemmaVariant() =>
+      _ds.getString(SettingsKeys.voiceGemmaVariant) ??
+      SettingsDefaults.voiceGemmaVariant;
+
+  @override
+  Future<void> setVoiceGemmaVariant(String variantName) =>
+      _ds.setString(SettingsKeys.voiceGemmaVariant, variantName);
+
   // -- Data management --
 
   @override
@@ -286,6 +304,8 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
       _ds.remove(SettingsKeys.searchCountry),
       _ds.remove(SettingsKeys.lastTabIndex),
       _ds.remove(SettingsKeys.voiceEnabled),
+      _ds.remove(SettingsKeys.voiceGemmaEnabled),
+      _ds.remove(SettingsKeys.voiceGemmaVariant),
     ]);
   }
 

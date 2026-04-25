@@ -946,7 +946,7 @@ final class SortedPodcastSmartPlaylistsProvider
 }
 
 String _$sortedPodcastSmartPlaylistsHash() =>
-    r'98d95f0efe3684f4dfe78d762d3c2921ca816afb';
+    r'0c3a7b3abfec6d89ff2861770e079779d0e65938';
 
 /// Provides sorted smart playlists for a podcast.
 ///

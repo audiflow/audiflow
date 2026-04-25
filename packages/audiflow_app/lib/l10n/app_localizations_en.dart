@@ -1160,6 +1160,37 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voiceAvailableCommands => 'Available Commands';
 
   @override
+  String get voiceGemmaSectionTitle => 'On-Device AI (Gemma 4)';
+
+  @override
+  String get voiceGemmaEnabledTitle => 'Use on-device AI';
+
+  @override
+  String get voiceGemmaEnabledSubtitle =>
+      'Process voice commands fully on this device. No audio leaves the phone.';
+
+  @override
+  String get voiceGemmaUnsupported => 'On-device AI not available';
+
+  @override
+  String get voiceGemmaUnsupportedNonMobile =>
+      'Only supported on phones and tablets.';
+
+  @override
+  String get voiceGemmaUnsupportedRam =>
+      'This device doesn\'t have enough memory to run the on-device model.';
+
+  @override
+  String voiceGemmaVariantE2b(int sizeMb) {
+    return 'Standard ($sizeMb MB)';
+  }
+
+  @override
+  String voiceGemmaVariantE4b(int sizeMb) {
+    return 'Larger ($sizeMb MB)';
+  }
+
+  @override
   String get voiceCommandPlay => 'Play / Resume playback';
 
   @override

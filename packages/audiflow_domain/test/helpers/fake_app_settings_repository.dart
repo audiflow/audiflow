@@ -29,6 +29,8 @@ class FakeAppSettingsRepository implements AppSettingsRepository {
   String? searchCountry;
   int lastTabIndex = 0;
   bool voiceEnabled = SettingsDefaults.voiceEnabled;
+  bool voiceGemmaEnabled = SettingsDefaults.voiceGemmaEnabled;
+  String voiceGemmaVariant = SettingsDefaults.voiceGemmaVariant;
 
   @override
   ThemeMode getThemeMode() => themeMode;
@@ -174,6 +176,20 @@ class FakeAppSettingsRepository implements AppSettingsRepository {
   Future<void> setVoiceEnabled(bool enabled) async => voiceEnabled = enabled;
 
   @override
+  bool getVoiceGemmaEnabled() => voiceGemmaEnabled;
+
+  @override
+  Future<void> setVoiceGemmaEnabled(bool enabled) async =>
+      voiceGemmaEnabled = enabled;
+
+  @override
+  String getVoiceGemmaVariant() => voiceGemmaVariant;
+
+  @override
+  Future<void> setVoiceGemmaVariant(String variantName) async =>
+      voiceGemmaVariant = variantName;
+
+  @override
   Future<void> clearAll() async {
     themeMode = ThemeMode.system;
     locale = null;
@@ -196,5 +212,7 @@ class FakeAppSettingsRepository implements AppSettingsRepository {
     searchCountry = null;
     lastTabIndex = 0;
     voiceEnabled = SettingsDefaults.voiceEnabled;
+    voiceGemmaEnabled = SettingsDefaults.voiceGemmaEnabled;
+    voiceGemmaVariant = SettingsDefaults.voiceGemmaVariant;
   }
 }

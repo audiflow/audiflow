@@ -87,6 +87,15 @@ class SettingsKeys {
 
   /// Whether voice commands are enabled.
   static const String voiceEnabled = 'settings_voice_enabled';
+
+  /// Whether the on-device Gemma 4 voice command path is enabled. Off by
+  /// default; opt-in via the voice settings screen.
+  static const String voiceGemmaEnabled = 'settings_voice_gemma_enabled';
+
+  /// Selected Gemma 4 model variant. Stored as the enum's `.name` (e.g.
+  /// `'e2b'` or `'e4b'`). The repository performs no validation; consumers
+  /// must reconcile the stored value against the device-supported set.
+  static const String voiceGemmaVariant = 'settings_voice_gemma_variant';
 }
 
 /// Default values for app settings when no preference has been saved.
@@ -160,4 +169,10 @@ class SettingsDefaults {
 
   /// Default voice commands enabled setting.
   static const bool voiceEnabled = false;
+
+  /// Default on-device Gemma 4 voice path setting (off; opt-in).
+  static const bool voiceGemmaEnabled = false;
+
+  /// Default Gemma 4 variant selection. Stored as the enum's `.name`.
+  static const String voiceGemmaVariant = 'e2b';
 }

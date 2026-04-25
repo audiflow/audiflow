@@ -279,6 +279,40 @@ void main() {
     });
   });
 
+  group('voiceGemmaEnabled', () {
+    test('defaults to false', () {
+      expect(repository.getVoiceGemmaEnabled(), isFalse);
+    });
+
+    test('persists and reads', () async {
+      await repository.setVoiceGemmaEnabled(true);
+      expect(repository.getVoiceGemmaEnabled(), isTrue);
+    });
+
+    test('clearAll resets to default', () async {
+      await repository.setVoiceGemmaEnabled(true);
+      await repository.clearAll();
+      expect(repository.getVoiceGemmaEnabled(), isFalse);
+    });
+  });
+
+  group('voiceGemmaVariant', () {
+    test('defaults to e2b', () {
+      expect(repository.getVoiceGemmaVariant(), 'e2b');
+    });
+
+    test('persists and reads', () async {
+      await repository.setVoiceGemmaVariant('e4b');
+      expect(repository.getVoiceGemmaVariant(), 'e4b');
+    });
+
+    test('clearAll resets to default', () async {
+      await repository.setVoiceGemmaVariant('e4b');
+      await repository.clearAll();
+      expect(repository.getVoiceGemmaVariant(), 'e2b');
+    });
+  });
+
   group('notifyNewEpisodes', () {
     test('returns default true when no value stored', () {
       final result = repository.getNotifyNewEpisodes();

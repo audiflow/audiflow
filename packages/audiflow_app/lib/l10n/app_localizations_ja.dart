@@ -1139,6 +1139,35 @@ class AppLocalizationsJa extends AppLocalizations {
   String get voiceAvailableCommands => '利用可能なコマンド';
 
   @override
+  String get voiceGemmaSectionTitle => 'オンデバイスAI（Gemma 4）';
+
+  @override
+  String get voiceGemmaEnabledTitle => 'オンデバイスAIを使用';
+
+  @override
+  String get voiceGemmaEnabledSubtitle =>
+      '音声コマンドをこのデバイス内で完結して処理します。音声データは外部に送信されません。';
+
+  @override
+  String get voiceGemmaUnsupported => 'オンデバイスAIは利用できません';
+
+  @override
+  String get voiceGemmaUnsupportedNonMobile => 'スマートフォンとタブレットでのみ利用可能です。';
+
+  @override
+  String get voiceGemmaUnsupportedRam => 'このデバイスのメモリではオンデバイスモデルを実行できません。';
+
+  @override
+  String voiceGemmaVariantE2b(int sizeMb) {
+    return '標準（$sizeMb MB）';
+  }
+
+  @override
+  String voiceGemmaVariantE4b(int sizeMb) {
+    return '大きい（$sizeMb MB）';
+  }
+
+  @override
   String get voiceCommandPlay => '再生 / 再生を再開';
 
   @override
