@@ -214,6 +214,10 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
   }
 
   void _transitionToIdle() {
+    // Clear the stop latch unconditionally — every terminal transition
+    // ends a session, so a stale `_stopping = true` left over from a
+    // cancel-during-stop race must not block the next start.
+    _stopping = false;
     state = const VoiceRecognitionState.idle();
     ref.read(voiceDebugInfoProvider.notifier).reset();
   }
@@ -221,34 +225,48 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
   /// Confirm a low-confidence settings change and apply it.
   Future<void> confirmSettingsChange(String key, String value) async {
     _logger?.i('Confirming settings change: $key = $value');
-    final result = await _applySetting(key: key, value: value);
-    if (!result.isSuccess) {
-      state = VoiceRecognitionState.error(
-        message: result.errorMessage ?? 'Failed to apply setting',
+    try {
+      final result = await _applySetting(key: key, value: value);
+      if (!result.isSuccess) {
+        state = VoiceRecognitionState.error(
+          message: result.errorMessage ?? 'Failed to apply setting',
+        );
+        return;
+      }
+      final metadata = _settingsResolver.registry.findByKey(key);
+      state = VoiceRecognitionState.settingsAutoApplied(
+        key: key,
+        displayNameKey: metadata?.displayNameKey ?? key,
+        oldValue: result.previousValue ?? '',
+        newValue: value,
       );
-      return;
+      unawaited(_resetToIdleAfterDelay());
+    } on Exception catch (e, st) {
+      _logger?.e('confirmSettingsChange failed', error: e, stackTrace: st);
+      state = const VoiceRecognitionState.error(
+        message: 'Failed to apply setting',
+      );
     }
-    final metadata = _settingsResolver.registry.findByKey(key);
-    state = VoiceRecognitionState.settingsAutoApplied(
-      key: key,
-      displayNameKey: metadata?.displayNameKey ?? key,
-      oldValue: result.previousValue ?? '',
-      newValue: value,
-    );
-    unawaited(_resetToIdleAfterDelay());
   }
 
   /// Revert a previously applied setting to [previousValue].
   Future<void> undoSettingsChange(String key, String previousValue) async {
     _logger?.i('Undoing settings change: $key -> $previousValue');
-    final result = await _applySetting(key: key, value: previousValue);
-    if (!result.isSuccess) {
-      state = VoiceRecognitionState.error(
-        message: result.errorMessage ?? 'Failed to undo setting',
+    try {
+      final result = await _applySetting(key: key, value: previousValue);
+      if (!result.isSuccess) {
+        state = VoiceRecognitionState.error(
+          message: result.errorMessage ?? 'Failed to undo setting',
+        );
+        return;
+      }
+      _transitionToIdle();
+    } on Exception catch (e, st) {
+      _logger?.e('undoSettingsChange failed', error: e, stackTrace: st);
+      state = const VoiceRecognitionState.error(
+        message: 'Failed to undo setting',
       );
-      return;
     }
-    _transitionToIdle();
   }
 
   /// Apply a candidate selected from a disambiguation prompt.
@@ -266,24 +284,31 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
       return;
     }
 
-    final result = await _applySetting(
-      key: candidate.key,
-      value: candidate.newValue,
-    );
-    if (!result.isSuccess) {
-      state = VoiceRecognitionState.error(
-        message: result.errorMessage ?? 'Failed to apply setting',
+    try {
+      final result = await _applySetting(
+        key: candidate.key,
+        value: candidate.newValue,
       );
-      return;
+      if (!result.isSuccess) {
+        state = VoiceRecognitionState.error(
+          message: result.errorMessage ?? 'Failed to apply setting',
+        );
+        return;
+      }
+      final metadata = _settingsResolver.registry.findByKey(candidate.key);
+      state = VoiceRecognitionState.settingsAutoApplied(
+        key: candidate.key,
+        displayNameKey: metadata?.displayNameKey ?? candidate.key,
+        oldValue: result.previousValue ?? '',
+        newValue: candidate.newValue,
+      );
+      unawaited(_resetToIdleAfterDelay());
+    } on Exception catch (e, st) {
+      _logger?.e('selectSettingsCandidate failed', error: e, stackTrace: st);
+      state = const VoiceRecognitionState.error(
+        message: 'Failed to apply setting',
+      );
     }
-    final metadata = _settingsResolver.registry.findByKey(candidate.key);
-    state = VoiceRecognitionState.settingsAutoApplied(
-      key: candidate.key,
-      displayNameKey: metadata?.displayNameKey ?? candidate.key,
-      oldValue: result.previousValue ?? '',
-      newValue: candidate.newValue,
-    );
-    unawaited(_resetToIdleAfterDelay());
   }
 
   Future<void> _executeCommand(VoiceCommand command, int epoch) async {
@@ -292,7 +317,7 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
     try {
       switch (command.intent) {
         case VoiceIntent.play:
-          await _handlePlayCommand(command);
+          await _handlePlayCommand(command, epoch);
         case VoiceIntent.pause:
           await _executor.pause();
           state = const VoiceRecognitionState.success(message: 'Paused');
@@ -457,22 +482,25 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
     }
   }
 
-  Future<void> _handlePlayCommand(VoiceCommand command) async {
+  Future<void> _handlePlayCommand(VoiceCommand command, int epoch) async {
     final podcastName = command.parameters['podcastName'];
     if (podcastName == null || podcastName.isEmpty) {
       // Bare "play" — resume current playback.
       await _executor.resume();
+      if (_epoch != epoch) return;
       state = const VoiceRecognitionState.success(message: 'Resuming playback');
       return;
     }
     _logger?.i('Playing latest episode of: $podcastName');
     try {
       await _playPodcast.playLatestEpisode(podcastName);
+      if (_epoch != epoch) return;
       state = VoiceRecognitionState.success(
         message: 'Playing latest episode of "$podcastName"',
       );
     } on Exception catch (e, st) {
       _logger?.e('Failed to play podcast', error: e, stackTrace: st);
+      if (_epoch != epoch) return;
       state = VoiceRecognitionState.error(
         message: 'Could not find or play "$podcastName"',
       );

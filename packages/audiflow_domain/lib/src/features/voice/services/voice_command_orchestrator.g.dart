@@ -75,7 +75,7 @@ final class VoiceCommandOrchestratorProvider
 }
 
 String _$voiceCommandOrchestratorHash() =>
-    r'4d99fc57e42dba5b3ff83c975cf7457ee35cdd36';
+    r'85080098f1751d9441598119e17e4e54cff32ca9';
 
 /// Orchestrates the on-device Gemma 4 voice command flow.
 ///

@@ -163,7 +163,7 @@ Future<void> _startApp(String smartPlaylistConfigBaseUrl) async {
       // The Gemma inference session lives behind a domain-side stub so the
       // domain layer stays free of the flutter_gemma plugin dependency.
       gemmaInferenceSessionProvider.overrideWith(
-        (ref) => buildFlutterGemmaInferenceSession(ref),
+        buildFlutterGemmaInferenceSession,
       ),
     ],
   );

@@ -43,13 +43,18 @@ VoiceAudioRecorder voiceAudioRecorder(Ref ref) {
   final recorder = RecordPackageVoiceAudioRecorder();
   ref.onDispose(() {
     unawaited(
-      recorder.dispose().catchError((Object e, StackTrace st) {
-        logger.w(
-          'voiceAudioRecorder.dispose() failed during teardown',
-          error: e,
-          stackTrace: st,
-        );
-      }),
+      recorder.dispose().catchError(
+        (Object e, StackTrace st) {
+          logger.w(
+            'voiceAudioRecorder.dispose() failed during teardown',
+            error: e,
+            stackTrace: st,
+          );
+        },
+        // Only swallow recoverable failures — `Error` subtypes signal
+        // programming bugs (e.g. LateInitializationError) and must propagate.
+        test: (e) => e is Exception,
+      ),
     );
   });
   return recorder;
@@ -77,6 +82,7 @@ class RecordPackageVoiceAudioRecorder implements VoiceAudioRecorder {
   StreamSubscription<Uint8List>? _subscription;
   BytesBuilder? _buffer;
   Object? _streamError;
+  StackTrace? _streamErrorStack;
 
   @override
   Future<bool> hasPermission() => _recorder.hasPermission();
@@ -90,12 +96,16 @@ class RecordPackageVoiceAudioRecorder implements VoiceAudioRecorder {
     final buffer = BytesBuilder(copy: false);
     _buffer = buffer;
     _streamError = null;
+    _streamErrorStack = null;
     _subscription = stream.listen(
       buffer.add,
       onError: (Object error, StackTrace stack) {
         // Latch the first stream error so stop() can rethrow it instead of
         // silently returning a truncated WAV.
-        _streamError ??= error;
+        if (_streamError == null) {
+          _streamError = error;
+          _streamErrorStack = stack;
+        }
       },
       cancelOnError: true,
     );
@@ -106,18 +116,28 @@ class RecordPackageVoiceAudioRecorder implements VoiceAudioRecorder {
     final subscription = _subscription;
     final buffer = _buffer;
     final streamError = _streamError;
+    final streamErrorStack = _streamErrorStack;
     if (subscription == null || buffer == null) {
       throw StateError('VoiceAudioRecorder.stop() called before start()');
     }
     _subscription = null;
     _buffer = null;
     _streamError = null;
-    await _recorder.stop();
-    await subscription.cancel();
+    _streamErrorStack = null;
+    try {
+      await _recorder.stop();
+    } finally {
+      // Always tear down the subscription — leaving it attached after a
+      // failed stop() leaks the native stream and breaks the next start().
+      await subscription.cancel();
+    }
     if (streamError != null) {
       // Force the typed catch in callers to fire even if the platform
-      // surfaced a non-Exception error.
-      throw _RecorderStreamException(streamError);
+      // surfaced a non-Exception error; preserve the original stack.
+      Error.throwWithStackTrace(
+        _RecorderStreamException(streamError),
+        streamErrorStack ?? StackTrace.current,
+      );
     }
     return wrapPcmAsWav(buffer.toBytes());
   }
@@ -127,11 +147,16 @@ class RecordPackageVoiceAudioRecorder implements VoiceAudioRecorder {
     final subscription = _subscription;
     _subscription = null;
     _buffer = null;
+    _streamError = null;
+    _streamErrorStack = null;
     if (subscription == null) {
       return;
     }
-    await _recorder.cancel();
-    await subscription.cancel();
+    try {
+      await _recorder.cancel();
+    } finally {
+      await subscription.cancel();
+    }
   }
 
   @override

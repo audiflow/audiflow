@@ -65,4 +65,4 @@ final class VoiceAudioRecorderProvider
 }
 
 String _$voiceAudioRecorderHash() =>
-    r'9d25e2ac141f6b67663624a060f6c9954df09ffb';
+    r'42145a1baba78e1b7a6b4161067f9d4bd85c67c7';

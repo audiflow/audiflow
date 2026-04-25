@@ -63,10 +63,9 @@ class VoiceCommandController extends _$VoiceCommandController {
     return currentState is! VoiceIdle;
   }
 
-  /// Start listening for a voice command.
-  ///
-  /// Returns once the entire voice command flow completes
-  /// (listening -> processing -> execution -> result).
+  /// Begin recording. Returns once the orchestrator transitions to
+  /// listening; `stop` / `cancel` drive the rest of the lifecycle
+  /// (hold-to-talk).
   Future<void> startVoiceCommand() async {
     final orchestrator = ref.read(voiceCommandOrchestratorProvider.notifier);
     await orchestrator.startVoiceCommand();
