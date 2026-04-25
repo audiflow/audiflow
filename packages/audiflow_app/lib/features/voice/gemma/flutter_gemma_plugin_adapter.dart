@@ -25,7 +25,8 @@ class FlutterGemmaPluginAdapter implements GemmaPlugin {
     String? authToken,
     void Function(int percent)? onProgress,
   }) async {
-    final basename = Uri.parse(url).pathSegments.last;
+    final segments = Uri.parse(url).pathSegments;
+    final basename = segments.isEmpty ? '' : segments.last;
     if (basename != fileName) {
       // flutter_gemma derives the installed model id from the URL basename;
       // a divergence here would silently break isModelInstalled() forever.

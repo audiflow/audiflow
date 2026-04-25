@@ -51,7 +51,9 @@ GemmaModelManager gemmaModelManager(Ref ref) {
 /// every voice command.
 @Riverpod(keepAlive: true)
 GemmaInferenceSession gemmaInferenceSession(Ref ref) {
-  final session = FlutterGemmaInferenceSession();
+  final session = FlutterGemmaInferenceSession(
+    logger: ref.watch(namedLoggerProvider('GemmaInference')),
+  );
   // `onDispose` takes `void Function()`; `session.dispose` returns a Future
   // whose errors are already swallowed but whose completion would otherwise
   // be silently dropped. `unawaited` makes the fire-and-forget explicit.

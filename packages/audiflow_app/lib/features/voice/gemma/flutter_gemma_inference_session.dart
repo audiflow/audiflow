@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:audiflow_ai/audiflow_ai.dart' as ai;
 import 'package:flutter_gemma/flutter_gemma.dart';
+import 'package:logger/logger.dart';
 
 /// [ai.GemmaInferenceSession] backed by `flutter_gemma`'s `InferenceModel` +
 /// `InferenceChat`.
@@ -20,12 +21,15 @@ import 'package:flutter_gemma/flutter_gemma.dart';
 /// Gemma 4 variants as audio-capable. Verify on device before shipping
 /// the wired voice command path.
 class FlutterGemmaInferenceSession implements ai.GemmaInferenceSession {
-  FlutterGemmaInferenceSession({this.maxTokens = 1024});
+  FlutterGemmaInferenceSession({this.maxTokens = 1024, Logger? logger})
+    : _logger = logger;
 
   /// Token budget for the chat session. Function-call output is small
   /// (well under 100 tokens), so 1024 leaves comfortable headroom for the
   /// audio token cost (25 tokens per second of audio, max 30 seconds).
   final int maxTokens;
+
+  final Logger? _logger;
 
   Future<InferenceModel>? _modelLoading;
   InferenceModel? _model;
@@ -100,8 +104,14 @@ class FlutterGemmaInferenceSession implements ai.GemmaInferenceSession {
     }
     try {
       await model.close();
-    } on Exception {
-      // Native close failure during teardown — nothing actionable here.
+    } on Exception catch (e, st) {
+      // Native close failure during teardown — log so a leaked native
+      // session shows up somewhere instead of silently piling up RAM.
+      _logger?.w(
+        'FlutterGemmaInferenceSession: model.close() failed during dispose',
+        error: e,
+        stackTrace: st,
+      );
     }
   }
 }
