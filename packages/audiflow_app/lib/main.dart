@@ -24,6 +24,7 @@ import 'app/notification/notification_tap_handler.dart';
 import 'app/background/background_callback.dart';
 import 'app/background/background_task_registrar.dart';
 import 'features/player/services/audio_handler_provider.dart';
+import 'features/voice/gemma/gemma_voice_providers.dart';
 import 'features/settings/presentation/controllers/last_tab_controller.dart';
 import 'features/settings/presentation/controllers/theme_controller.dart';
 import 'features/settings/presentation/widgets/opml_file_receiver.dart';
@@ -159,6 +160,11 @@ Future<void> _startApp(String smartPlaylistConfigBaseUrl) async {
         smartPlaylistConfigBaseUrl,
       ),
       feedSyncDiagnosticSinkProvider.overrideWithValue(feedSyncDiagnostic),
+      // The Gemma inference session lives behind a domain-side stub so the
+      // domain layer stays free of the flutter_gemma plugin dependency.
+      gemmaInferenceSessionProvider.overrideWith(
+        buildFlutterGemmaInferenceSession,
+      ),
     ],
   );
 

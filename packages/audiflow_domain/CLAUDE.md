@@ -15,16 +15,13 @@ Sub-package of the `audiflow` Flutter monorepo. Depends on `audiflow_core`, `aud
 - Background refresh and new-episode notification orchestration
 - Composition seam for on-device Gemma 4 voice commands (`GemmaVoiceCommandRoute`)
 
-## Voice command pipelines
+## Voice command pipeline
 
-Two entry points produce a `VoiceCommand`; the host app picks per turn:
+`VoiceCommandOrchestrator` is the single entry point: it owns mic capture (via `VoiceAudioRecorder`) and dispatches the captured audio bytes to `GemmaVoiceCommandRoute.dispatch(audioBytes)` for on-device Gemma 4 inference (audiflow_ai). The legacy text-only / 3-tier resolver path was removed in #388.
 
-| Entry point | Input | Backend |
-|-------------|-------|---------|
-| `VoiceCommandOrchestrator` | transcribed text | 3-tier resolver (pattern matcher / native NLU / LLM text-gen) |
-| `GemmaVoiceCommandRoute.dispatch(audioBytes)` | raw audio bytes | on-device Gemma 4 (audiflow_ai) |
+`GemmaVoiceCommandRoute` builds the per-turn settings snapshot from `SettingsMetadataRegistry.toJson(repo)` and delegates to `GemmaVoiceCommandService` (in audiflow_ai). Downstream `SettingsIntentResolver` and `VoiceCommandExecutor` consume the route's output unchanged. The route accepts an optional `Logger` to surface `SettingsMetadataRegistry.toJson()` contract violations.
 
-`GemmaVoiceCommandRoute` builds the per-turn settings snapshot from `SettingsMetadataRegistry.toJson(repo)` and delegates to `GemmaVoiceCommandService` (in audiflow_ai). Downstream `SettingsIntentResolver` and `VoiceCommandExecutor` consume both routes' output unchanged. The route accepts an optional `Logger` to surface `SettingsMetadataRegistry.toJson()` contract violations.
+`gemmaInferenceSessionProvider` is a stub in domain (throws `UnimplementedError`); the host app overrides it at the root `ProviderContainer` with a flutter_gemma-backed implementation, keeping the plugin dependency out of this package.
 
 ## Non-responsibilities
 

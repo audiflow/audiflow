@@ -80,7 +80,6 @@ dependencies:
 
   # On-device AI (Gemma 4 voice command path)
   flutter_gemma: ^0.13.6
-  record: ^6.2.0
 
 dev_dependencies:
   flutter_test:

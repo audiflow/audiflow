@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:audiflow_ai/audiflow_ai.dart';
 import 'package:logger/logger.dart';
@@ -7,10 +7,10 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/providers/logger_provider.dart';
 import '../../settings/providers/settings_providers.dart';
-import '../models/voice_debug_info.dart';
 import '../models/voice_recognition_state.dart';
-import '../repositories/speech_recognition_repository.dart';
-import '../repositories/speech_recognition_repository_impl.dart';
+import '../repositories/voice_audio_recorder.dart';
+import 'gemma_voice_command_route.dart';
+import 'gemma_voice_providers.dart';
 import 'play_podcast_by_name_service.dart';
 import 'settings_intent_resolver.dart';
 import 'settings_metadata_registry.dart';
@@ -20,217 +20,256 @@ import 'voice_debug_info_notifier.dart';
 
 part 'voice_command_orchestrator.g.dart';
 
-/// Orchestrates voice command flow from speech recognition to execution.
+/// Hard cap on a single utterance. Matches the Gemma audio token budget
+/// (25 tokens/sec, ~750 against the chat session's 1024-token cap).
+const Duration _maxRecordingDuration = Duration(seconds: 30);
+
+/// Orchestrates the on-device Gemma 4 voice command flow.
 ///
-/// Manages the state machine:
-/// idle -> listening -> processing -> executing -> success/error -> idle
+/// Hold-to-talk state machine:
+/// `idle -> listening (mic open) -> processing (Gemma) -> executing
+/// (executor) -> success | error | settingsXxx -> idle`
 ///
-/// Usage:
-/// ```dart
-/// final state = ref.watch(voiceCommandOrchestratorProvider);
-/// final orchestrator = ref.read(voiceCommandOrchestratorProvider.notifier);
-/// await orchestrator.startVoiceCommand();
-/// ```
+/// Settings change states (`settingsAutoApplied`, `settingsDisambiguation`,
+/// `settingsLowConfidence`) are emitted from the executing transition when
+/// the parsed command is `changeSettings`; the UI then calls back into
+/// [confirmSettingsChange] / [undoSettingsChange] /
+/// [selectSettingsCandidate] to resolve.
 @Riverpod(keepAlive: true)
 class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
-  SpeechRecognitionRepository? _speechRepository;
-  PlayPodcastByNameService? _playPodcastService;
-  VoiceCommandExecutor? _executor;
+  late VoiceAudioRecorder _recorder;
+  late GemmaVoiceCommandRoute _route;
+  late VoiceCommandExecutor _executor;
+  late PlayPodcastByNameService _playPodcast;
+  late SettingsIntentResolver _settingsResolver;
+  late SettingsMetadataRegistry _settingsRegistry;
   Logger? _logger;
-  SettingsIntentResolver? _settingsResolver;
-  SettingsMetadataRegistry? _settingsRegistry;
 
-  StateError _buildNotCalledError(String fieldName) => StateError(
-    'VoiceCommandOrchestrator.$fieldName accessed before build() was called',
-  );
+  Timer? _autoStopTimer;
 
-  SpeechRecognitionRepository get _speech =>
-      _speechRepository ?? (throw _buildNotCalledError('_speechRepository'));
-  PlayPodcastByNameService get _playPodcast =>
-      _playPodcastService ??
-      (throw _buildNotCalledError('_playPodcastService'));
-  VoiceCommandExecutor get _exec =>
-      _executor ?? (throw _buildNotCalledError('_executor'));
-  SettingsIntentResolver get _settings =>
-      _settingsResolver ?? (throw _buildNotCalledError('_settingsResolver'));
-  SettingsMetadataRegistry get _registry =>
-      _settingsRegistry ?? (throw _buildNotCalledError('_settingsRegistry'));
+  /// Bumped on every cancel and on every fresh start so async continuations
+  /// can detect "the session I belong to was cancelled" after each await.
+  int _epoch = 0;
 
-  bool _isInitialized = false;
-  Completer<void>? _listeningCompleter;
+  /// Synchronously latched at the top of [stop] so the manual-release vs
+  /// 30s-timer race can't double-stop the recorder.
+  bool _stopping = false;
+
+  /// Synchronously latched while a [start] is in flight so two concurrent
+  /// start calls can't both reach `_recorder.start()` (the second would hit
+  /// the recorder's re-entry StateError, an Error subtype that escapes our
+  /// `on Exception` catch).
+  bool _starting = false;
 
   @override
   VoiceRecognitionState build() {
-    _speechRepository = ref.watch(speechRecognitionRepositoryProvider);
-    _playPodcastService = ref.watch(playPodcastByNameServiceProvider);
+    _recorder = ref.watch(voiceAudioRecorderProvider);
+    _route = ref.watch(gemmaVoiceCommandRouteProvider);
     _executor = ref.watch(voiceCommandExecutorProvider);
+    _playPodcast = ref.watch(playPodcastByNameServiceProvider);
     _logger = ref.watch(namedLoggerProvider('VoiceOrchestrator'));
 
     final registry = SettingsMetadataRegistry();
     _settingsRegistry = registry;
     _settingsResolver = SettingsIntentResolver(registry);
 
-    // Reset initialization flag — dependencies may be new instances
-    _isInitialized = false;
-
-    ref.onDispose(_cleanup);
+    ref.onDispose(() {
+      _autoStopTimer?.cancel();
+      _autoStopTimer = null;
+    });
 
     return const VoiceRecognitionState.idle();
   }
 
-  /// Initialize the voice command system.
-  ///
-  /// Returns true if initialization succeeded.
-  Future<bool> initialize() async {
-    if (_isInitialized) return true;
-
-    _logger?.i('Initializing voice command system');
-
-    // Initialize speech recognition
-    final speechAvailable = await _speech.initialize();
-    if (!speechAvailable) {
-      _logger?.w('Speech recognition not available');
-      state = const VoiceRecognitionState.error(
-        message: 'Speech recognition is not available on this device',
-      );
-      return false;
-    }
-
-    // Initialize AI for voice command parsing
-    try {
-      if (!AudiflowAi.instance.isInitialized) {
-        _logger?.i('Initializing AudiflowAi for voice commands');
-        await AudiflowAi.instance.initialize();
-      }
-    } on AudiflowAiException catch (e) {
-      _logger?.w(
-        'AI initialization failed: $e - voice commands will have limited functionality',
-      );
-      // Continue anyway - we can still do basic pattern matching
-    }
-
-    _isInitialized = true;
-    _logger?.i('Voice command system initialized');
-    return true;
-  }
-
-  /// Start listening for a voice command.
-  ///
-  /// Transitions through the state machine and returns when complete.
+  /// Begin recording. No-op while already in a non-terminal state or while
+  /// another start is in flight.
   Future<void> startVoiceCommand() async {
-    // Ensure initialized
-    if (!_isInitialized) {
-      final success = await initialize();
-      if (!success) return;
-    }
-
-    // Don't start if already listening
-    if (state is VoiceListening) {
-      _logger?.w('Already listening for voice command');
+    if (_starting ||
+        (state is! VoiceIdle &&
+            state is! VoiceSuccess &&
+            state is! VoiceError)) {
       return;
     }
-
-    _logger?.i('Starting voice command');
-    state = const VoiceRecognitionState.listening();
-
-    _listeningCompleter = Completer<void>();
-    String? finalTranscription;
-
-    final started = await _speech.startListening(
-      onResult: (text, isFinal) {
-        if (isFinal) {
-          finalTranscription = text;
-          _listeningCompleter?.complete();
-        } else {
-          state = VoiceRecognitionState.listening(partialTranscript: text);
+    _starting = true;
+    final epoch = ++_epoch;
+    try {
+      if (!await _recorder.hasPermission()) {
+        if (_epoch == epoch) {
+          state = const VoiceRecognitionState.error(
+            message: 'Microphone permission denied',
+          );
         }
-      },
-      onError: (error) {
-        _logger?.e('Speech recognition error: $error');
-        state = VoiceRecognitionState.error(message: error);
-        _listeningCompleter?.complete();
-      },
-    );
+        return;
+      }
+      try {
+        await _recorder.start();
+      } on Exception catch (e, st) {
+        _logger?.e('recorder.start() failed', error: e, stackTrace: st);
+        if (_epoch == epoch) {
+          state = const VoiceRecognitionState.error(
+            message: 'Microphone unavailable',
+          );
+        }
+        return;
+      }
+      if (_epoch != epoch) {
+        // Cancelled while start() was in flight; tear down the recorder we
+        // just started so we don't leak a recording session.
+        try {
+          await _recorder.cancel();
+        } on Exception catch (e, st) {
+          _logger?.w(
+            'recorder.cancel() during start-cancel race failed',
+            error: e,
+            stackTrace: st,
+          );
+        }
+        return;
+      }
+      _stopping = false;
+      _autoStopTimer = Timer(_maxRecordingDuration, () {
+        // User is holding past the cap; stop and dispatch what we have.
+        unawaited(stopVoiceCommand());
+      });
+      state = const VoiceRecognitionState.listening();
+    } finally {
+      _starting = false;
+    }
+  }
 
-    if (!started) {
-      state = const VoiceRecognitionState.error(
-        message: 'Failed to start listening',
+  /// Stop recording, dispatch to Gemma, and execute the resulting command.
+  Future<void> stopVoiceCommand() async {
+    // Synchronous claim: manual release and the 30s timer can both call
+    // stop() in the same microtask; only the first one proceeds.
+    if (state is! VoiceListening || _stopping) {
+      return;
+    }
+    _stopping = true;
+    _autoStopTimer?.cancel();
+    _autoStopTimer = null;
+    final epoch = _epoch;
+
+    final Uint8List audio;
+    try {
+      audio = await _recorder.stop();
+    } on Exception catch (e, st) {
+      _logger?.e('recorder.stop() failed', error: e, stackTrace: st);
+      if (_epoch == epoch) {
+        state = const VoiceRecognitionState.error(
+          message: 'Failed to capture audio',
+        );
+      }
+      return;
+    }
+    if (_epoch != epoch) {
+      _logger?.d(
+        'stopVoiceCommand epoch mismatch; dropping ${audio.length}B audio',
       );
       return;
     }
 
-    // Wait for result or error
-    await _listeningCompleter?.future;
-    _listeningCompleter = null;
+    state = const VoiceRecognitionState.processing(transcription: '');
 
-    // Process transcription if we got one
-    if (finalTranscription != null && finalTranscription!.isNotEmpty) {
-      await _processTranscription(finalTranscription!);
-    } else if (state is! VoiceError) {
-      state = const VoiceRecognitionState.error(message: 'No speech detected');
+    final VoiceCommand command;
+    try {
+      command = await _route.dispatch(audio);
+    } on Exception catch (e, st) {
+      _logger?.e('Gemma route.dispatch() failed', error: e, stackTrace: st);
+      if (_epoch == epoch) {
+        state = const VoiceRecognitionState.error(
+          message: 'Voice processing failed',
+        );
+      }
+      return;
+    }
+    if (_epoch != epoch) {
+      return;
     }
 
-    // Auto-reset to idle after a delay
-    await _resetToIdleAfterDelay();
+    await _executeCommand(command, epoch);
   }
 
-  /// Cancel the current voice command operation.
+  /// Cancel any in-flight recording / dispatch and return to idle.
   Future<void> cancelVoiceCommand() async {
-    _logger?.i('Cancelling voice command');
-    await _speech.cancelListening();
-    _listeningCompleter?.complete();
-    _listeningCompleter = null;
+    _autoStopTimer?.cancel();
+    _autoStopTimer = null;
+    _epoch += 1;
+    final wasListening = state is VoiceListening;
     _transitionToIdle();
+    if (!wasListening) {
+      return;
+    }
+    try {
+      await _recorder.cancel();
+    } on Exception catch (e, st) {
+      _logger?.w('recorder.cancel() failed', error: e, stackTrace: st);
+    }
   }
 
-  /// Reset state to idle.
+  /// Reset state to idle. Bumps the epoch so any in-flight async work that
+  /// belongs to the previous session can't overwrite the new state.
   void resetToIdle() {
+    _epoch += 1;
     _transitionToIdle();
   }
 
-  /// Centralised idle transition that resets both state and debug info.
   void _transitionToIdle() {
+    // Clear the stop latch unconditionally — every terminal transition
+    // ends a session, so a stale `_stopping = true` left over from a
+    // cancel-during-stop race must not block the next start.
+    _stopping = false;
     state = const VoiceRecognitionState.idle();
     ref.read(voiceDebugInfoProvider.notifier).reset();
   }
 
-  /// Confirms a pending low-confidence settings change and applies it.
+  /// Confirm a low-confidence settings change and apply it.
   Future<void> confirmSettingsChange(String key, String value) async {
     _logger?.i('Confirming settings change: $key = $value');
-    final result = await _applySetting(key: key, value: value);
-    if (!result.isSuccess) {
-      state = VoiceRecognitionState.error(
-        message: result.errorMessage ?? 'Failed to apply setting',
+    try {
+      final result = await _applySetting(key: key, value: value);
+      if (!result.isSuccess) {
+        state = VoiceRecognitionState.error(
+          message: result.errorMessage ?? 'Failed to apply setting',
+        );
+        return;
+      }
+      final metadata = _settingsResolver.registry.findByKey(key);
+      state = VoiceRecognitionState.settingsAutoApplied(
+        key: key,
+        displayNameKey: metadata?.displayNameKey ?? key,
+        oldValue: result.previousValue ?? '',
+        newValue: value,
       );
-      return;
+      unawaited(_resetToIdleAfterDelay());
+    } on Exception catch (e, st) {
+      _logger?.e('confirmSettingsChange failed', error: e, stackTrace: st);
+      state = const VoiceRecognitionState.error(
+        message: 'Failed to apply setting',
+      );
     }
-    final metadata = _settings.registry.findByKey(key);
-    state = VoiceRecognitionState.settingsAutoApplied(
-      key: key,
-      displayNameKey: metadata?.displayNameKey ?? key,
-      oldValue: result.previousValue ?? '',
-      newValue: value,
-    );
-    unawaited(_resetToIdleAfterDelay());
   }
 
-  /// Reverts a previously applied setting to [previousValue].
+  /// Revert a previously applied setting to [previousValue].
   Future<void> undoSettingsChange(String key, String previousValue) async {
     _logger?.i('Undoing settings change: $key -> $previousValue');
-    final result = await _applySetting(key: key, value: previousValue);
-    if (!result.isSuccess) {
-      state = VoiceRecognitionState.error(
-        message: result.errorMessage ?? 'Failed to undo setting',
+    try {
+      final result = await _applySetting(key: key, value: previousValue);
+      if (!result.isSuccess) {
+        state = VoiceRecognitionState.error(
+          message: result.errorMessage ?? 'Failed to undo setting',
+        );
+        return;
+      }
+      _transitionToIdle();
+    } on Exception catch (e, st) {
+      _logger?.e('undoSettingsChange failed', error: e, stackTrace: st);
+      state = const VoiceRecognitionState.error(
+        message: 'Failed to undo setting',
       );
-      return;
     }
-    _transitionToIdle();
   }
 
-  /// Applies the selected candidate from a disambiguation prompt.
-  ///
-  /// If the candidate has an empty value (key-only disambiguation), the
-  /// setting cannot be applied and the user is shown an error.
+  /// Apply a candidate selected from a disambiguation prompt.
   Future<void> selectSettingsCandidate(
     SettingsResolutionCandidate candidate,
   ) async {
@@ -245,144 +284,64 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
       return;
     }
 
-    final result = await _applySetting(
-      key: candidate.key,
-      value: candidate.newValue,
-    );
-    if (!result.isSuccess) {
-      state = VoiceRecognitionState.error(
-        message: result.errorMessage ?? 'Failed to apply setting',
-      );
-      return;
-    }
-    final metadata = _settings.registry.findByKey(candidate.key);
-    state = VoiceRecognitionState.settingsAutoApplied(
-      key: candidate.key,
-      displayNameKey: metadata?.displayNameKey ?? candidate.key,
-      oldValue: result.previousValue ?? '',
-      newValue: candidate.newValue,
-    );
-    unawaited(_resetToIdleAfterDelay());
-  }
-
-  Future<void> _processTranscription(String transcription) async {
-    _logger?.i('Processing transcription: "$transcription"');
-    state = VoiceRecognitionState.processing(transcription: transcription);
-
-    // Try deterministic pattern matching first — fast, reliable for known
-    // commands (play, pause, skip, navigate). Only fall through to AI for
-    // commands the simple parser can't handle (settings changes, ambiguous).
-    final simpleCommand = _parseSimpleCommand(transcription);
-    if (simpleCommand != null) {
-      _logger?.i('Simple parser matched: ${simpleCommand.intent}');
-      ref
-          .read(voiceDebugInfoProvider.notifier)
-          .setParserSource(VoiceParserSource.simplePattern);
-      await _executeCommand(simpleCommand);
-      return;
-    }
-
-    // No simple match — try platform-native NLU for settings resolution first
-    final settingsRepo = ref.read(appSettingsRepositoryProvider);
-    final schemaJson = jsonEncode(_settings.registry.toJson(settingsRepo));
-
-    final platformResult = await AudiflowAi.instance.resolveSettingsIntent(
-      transcription: transcription,
-      settingsSchemaJson: schemaJson,
-    );
-
-    if (platformResult != null) {
-      final action = platformResult['action'] as String? ?? 'not_found';
-      if (action != 'not_found') {
-        _logger?.i('Platform NLU resolved: $action');
-        ref
-            .read(voiceDebugInfoProvider.notifier)
-            .setParserSource(VoiceParserSource.platformNlu);
-        final payload = _buildPayloadFromPlatformResult(platformResult);
-        if (payload != null) {
-          final command = VoiceCommand(
-            intent: VoiceIntent.changeSettings,
-            parameters: const {},
-            confidence:
-                (platformResult['confidence'] as num?)?.toDouble() ?? 0.8,
-            rawTranscription: transcription,
-            settingsPayload: payload,
-          );
-          await _executeCommand(command);
-          return;
-        }
-      }
-    }
-
-    // Platform couldn't resolve as settings — try on-device AI for other commands
     try {
-      if (!AudiflowAi.instance.isInitialized) {
-        _logger?.i('AI not initialized, attempting initialization');
-        await AudiflowAi.instance.initialize();
+      final result = await _applySetting(
+        key: candidate.key,
+        value: candidate.newValue,
+      );
+      if (!result.isSuccess) {
+        state = VoiceRecognitionState.error(
+          message: result.errorMessage ?? 'Failed to apply setting',
+        );
+        return;
       }
-      final command = await AudiflowAi.instance
-          .parseVoiceCommand(transcription: transcription)
-          .timeout(
-            const Duration(seconds: 5),
-            onTimeout: () => throw TimeoutException('AI call timed out'),
-          );
-      _logger?.i('AI parsed command: ${command.intent}');
-      ref
-          .read(voiceDebugInfoProvider.notifier)
-          .setParserSource(VoiceParserSource.onDeviceAi);
-      await _executeCommand(command);
-    } on TimeoutException catch (e) {
-      _logger?.e('AI parsing timed out', error: e);
-      state = const VoiceRecognitionState.error(
-        message: 'Voice processing timed out, please try again',
+      final metadata = _settingsResolver.registry.findByKey(candidate.key);
+      state = VoiceRecognitionState.settingsAutoApplied(
+        key: candidate.key,
+        displayNameKey: metadata?.displayNameKey ?? candidate.key,
+        oldValue: result.previousValue ?? '',
+        newValue: candidate.newValue,
       );
-    } on AudiflowAiException catch (e) {
-      _logger?.e('AI parsing failed', error: e);
-      state = VoiceRecognitionState.error(
-        message: 'Could not understand: "$transcription"',
-      );
-    } catch (e) {
-      _logger?.e('Unexpected error processing voice command', error: e);
+      unawaited(_resetToIdleAfterDelay());
+    } on Exception catch (e, st) {
+      _logger?.e('selectSettingsCandidate failed', error: e, stackTrace: st);
       state = const VoiceRecognitionState.error(
-        message: 'Failed to process voice command',
+        message: 'Failed to apply setting',
       );
     }
   }
 
-  Future<void> _executeCommand(VoiceCommand command) async {
+  Future<void> _executeCommand(VoiceCommand command, int epoch) async {
     ref.read(voiceDebugInfoProvider.notifier).setLastCommand(command);
     state = VoiceRecognitionState.executing(command: command);
-
     try {
       switch (command.intent) {
         case VoiceIntent.play:
-          await _handlePlayCommand(command);
+          await _handlePlayCommand(command, epoch);
         case VoiceIntent.pause:
-          await _exec.pause();
+          await _executor.pause();
           state = const VoiceRecognitionState.success(message: 'Paused');
         case VoiceIntent.stop:
-          await _exec.stop();
+          await _executor.stop();
           state = const VoiceRecognitionState.success(message: 'Stopped');
         case VoiceIntent.search:
-          // Search navigation is handled by the UI layer
-          // reacting to the success state with a query parameter.
+          // Search navigation is handled by the UI layer reacting to the
+          // success state with a query parameter.
           final query = command.parameters['query'] ?? '';
           state = VoiceRecognitionState.success(
             message: 'Searching for "$query"',
           );
         case VoiceIntent.skipForward:
-          await _exec.skipForward();
+          await _executor.skipForward();
           state = const VoiceRecognitionState.success(
             message: 'Skipping forward',
           );
         case VoiceIntent.skipBackward:
-          await _exec.skipBackward();
+          await _executor.skipBackward();
           state = const VoiceRecognitionState.success(
             message: 'Skipping backward',
           );
         case VoiceIntent.goToLibrary:
-          // Navigation intents are handled by the UI layer
-          // reacting to the executing/success state.
           state = const VoiceRecognitionState.success(
             message: 'Opening library',
           );
@@ -393,78 +352,84 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
             message: 'Opening settings',
           );
         case VoiceIntent.addToQueue:
-          // addToQueue requires episode context from the UI layer
+          // addToQueue requires episode context from the UI layer.
           state = const VoiceRecognitionState.success(
             message: 'Added to queue',
           );
         case VoiceIntent.removeFromQueue:
-          // removeFromQueue requires queue item ID from the UI layer
+          // removeFromQueue requires queue item ID from the UI layer.
           state = const VoiceRecognitionState.success(
             message: 'Removed from queue',
           );
         case VoiceIntent.clearQueue:
-          await _exec.clearQueue();
+          await _executor.clearQueue();
           state = const VoiceRecognitionState.success(message: 'Queue cleared');
         case VoiceIntent.seek:
           final seconds = int.tryParse(command.parameters['seconds'] ?? '');
           if (seconds != null) {
-            await _exec.seek(Duration(seconds: seconds));
+            await _executor.seek(Duration(seconds: seconds));
           }
           state = const VoiceRecognitionState.success(message: 'Seeking');
         case VoiceIntent.changeSettings:
-          await _handleChangeSettings(command);
+          await _handleChangeSettings(command, epoch);
         case VoiceIntent.unknown:
           state = VoiceRecognitionState.error(
-            message: 'Could not understand: "${command.rawTranscription}"',
+            message: _unknownMessageFor(command),
           );
       }
-    } catch (e) {
-      _logger?.e('Failed to execute command', error: e);
-      state = VoiceRecognitionState.error(message: 'Failed to execute: $e');
+    } on Exception catch (e, st) {
+      _logger?.e('Failed to execute command', error: e, stackTrace: st);
+      if (_epoch == epoch) {
+        state = VoiceRecognitionState.error(message: 'Failed to execute: $e');
+      }
+      return;
+    }
+
+    if (_epoch == epoch) {
+      unawaited(_resetToIdleAfterDelay());
     }
   }
 
-  Future<void> _handleChangeSettings(VoiceCommand command) async {
-    // Create snapshot service on-demand with a fresh repository reference
-    // to avoid stale data after _applySetting invalidates the provider.
+  String _unknownMessageFor(VoiceCommand command) {
+    return switch (command.failureReason) {
+      VoiceCommandFailureReason.unrecognizedTool =>
+        'Could not understand that command',
+      VoiceCommandFailureReason.malformedPayload =>
+        'Could not understand that command',
+      VoiceCommandFailureReason.noCommandRecognized => "I didn't catch that",
+      VoiceCommandFailureReason.inferenceError => 'Voice processing failed',
+      null => 'Could not understand that command',
+    };
+  }
+
+  Future<void> _handleChangeSettings(VoiceCommand command, int epoch) async {
+    final payload = command.settingsPayload;
+    if (payload == null) {
+      // Gemma classified the turn as changeSettings but emitted no
+      // structured payload — treat as inference failure.
+      state = const VoiceRecognitionState.error(
+        message: 'Could not understand the settings change',
+      );
+      return;
+    }
+
+    // Build the current values map from a fresh snapshot service so we see
+    // post-applySetting state if a previous turn just landed.
     final snapshotService = SettingsSnapshotService(
-      registry: _registry,
+      registry: _settingsRegistry,
       settingsRepository: ref.read(appSettingsRepositoryProvider),
     );
-
-    // Build the current values map from the snapshot service
     final currentValues = <String, String>{};
-    for (final metadata in _settings.registry.allSettings) {
+    for (final metadata in _settingsResolver.registry.allSettings) {
       currentValues[metadata.key] = snapshotService.getCurrentValue(
         metadata.key,
       );
     }
 
-    SettingsResolution? resolution;
-
-    if (command.settingsPayload != null) {
-      // Platform NLU produced a structured payload — resolve it directly.
-      _logger?.i('Resolving settings from platform payload');
-      resolution = _settings.resolve(
-        command.settingsPayload!,
-        currentValues: currentValues,
-      );
-    } else {
-      // No structured payload from the platform channel — try Dart-side
-      // keyword matching against the registry synonyms as a fallback.
-      _logger?.i(
-        'No platform payload; attempting Dart-side synonym resolution: '
-        '"${command.rawTranscription}"',
-      );
-      resolution = _resolveFromTranscription(command.rawTranscription);
-    }
-
-    if (resolution == null) {
-      state = VoiceRecognitionState.error(
-        message: 'Could not match a setting: "${command.rawTranscription}"',
-      );
-      return;
-    }
+    final resolution = _settingsResolver.resolve(
+      payload,
+      currentValues: currentValues,
+    );
 
     switch (resolution) {
       case SettingsResolutionAutoApply(
@@ -473,20 +438,20 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
         :final newValue,
       ):
         final result = await _applySetting(key: key, value: newValue);
+        if (_epoch != epoch) return;
         if (!result.isSuccess) {
           state = VoiceRecognitionState.error(
             message: result.errorMessage ?? 'Failed to apply setting',
           );
           return;
         }
-        final metadata = _settings.registry.findByKey(key);
+        final metadata = _settingsResolver.registry.findByKey(key);
         state = VoiceRecognitionState.settingsAutoApplied(
           key: key,
           displayNameKey: metadata?.displayNameKey ?? key,
           oldValue: oldValue,
           newValue: newValue,
         );
-        unawaited(_resetToIdleAfterDelay());
 
       case SettingsResolutionConfirm(
         :final key,
@@ -494,7 +459,7 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
         :final newValue,
         :final confidence,
       ):
-        final metadata = _settings.registry.findByKey(key);
+        final metadata = _settingsResolver.registry.findByKey(key);
         state = VoiceRecognitionState.settingsLowConfidence(
           key: key,
           displayNameKey: metadata?.displayNameKey ?? key,
@@ -502,44 +467,58 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
           newValue: newValue,
           confidence: confidence,
         );
-      // No auto-dismiss: UI must call confirmSettingsChange or resetToIdle
+      // No auto-dismiss: UI must call confirmSettingsChange or resetToIdle.
 
       case SettingsResolutionDisambiguate(:final candidates):
         state = VoiceRecognitionState.settingsDisambiguation(
           candidates: candidates,
         );
-      // No auto-dismiss: UI must call selectSettingsCandidate or resetToIdle
+      // No auto-dismiss: UI must call selectSettingsCandidate or resetToIdle.
 
       case SettingsResolutionNotFound():
         state = const VoiceRecognitionState.error(
-          message: 'Could not find a matching setting for that command',
+          message: 'Could not find a matching setting',
         );
     }
   }
 
-  Future<void> _handlePlayCommand(VoiceCommand command) async {
+  Future<void> _handlePlayCommand(VoiceCommand command, int epoch) async {
     final podcastName = command.parameters['podcastName'];
-
-    // Bare "play" / "再生" without podcast name = resume current playback
     if (podcastName == null || podcastName.isEmpty) {
-      await _exec.resume();
+      // Bare "play" — resume current playback.
+      await _executor.resume();
+      if (_epoch != epoch) return;
       state = const VoiceRecognitionState.success(message: 'Resuming playback');
       return;
     }
-
     _logger?.i('Playing latest episode of: $podcastName');
-
     try {
       await _playPodcast.playLatestEpisode(podcastName);
+      if (_epoch != epoch) return;
       state = VoiceRecognitionState.success(
         message: 'Playing latest episode of "$podcastName"',
       );
-    } catch (e) {
-      _logger?.e('Failed to play podcast', error: e);
+    } on Exception catch (e, st) {
+      _logger?.e('Failed to play podcast', error: e, stackTrace: st);
+      if (_epoch != epoch) return;
       state = VoiceRecognitionState.error(
         message: 'Could not find or play "$podcastName"',
       );
     }
+  }
+
+  /// Apply a setting and invalidate the settings provider so open settings
+  /// screens rebuild with the new value. Safe because [build] uses
+  /// `ref.read` (not `watch`) for the settings repository.
+  Future<SettingApplyResult> _applySetting({
+    required String key,
+    required String value,
+  }) async {
+    final result = await _executor.applySetting(key: key, value: value);
+    if (result.isSuccess) {
+      ref.invalidate(appSettingsRepositoryProvider);
+    }
+    return result;
   }
 
   Future<void> _resetToIdleAfterDelay() async {
@@ -549,359 +528,5 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
         state is VoiceSettingsAutoApplied) {
       _transitionToIdle();
     }
-  }
-
-  void _cleanup() {
-    _listeningCompleter?.complete();
-    _listeningCompleter = null;
-  }
-
-  /// Simple pattern-based command parser as fallback when AI is unavailable.
-  VoiceCommand? _parseSimpleCommand(String transcription) {
-    final text = transcription.trim();
-    final lower = text.toLowerCase();
-
-    // Try simple playback commands (bare "再生", "play")
-    if (_isResumeCommand(text, lower)) {
-      return VoiceCommand(
-        intent: VoiceIntent.play,
-        parameters: const {},
-        confidence: 0.9,
-        rawTranscription: transcription,
-      );
-    }
-
-    // Try play command with podcast name
-    final playResult = _tryParsePlayCommand(text, lower, transcription);
-    if (playResult != null) return playResult;
-
-    // Try stop command (must check before pause — "stop" is distinct)
-    if (_isStopCommand(text, lower)) {
-      return VoiceCommand(
-        intent: VoiceIntent.stop,
-        parameters: const {},
-        confidence: 0.9,
-        rawTranscription: transcription,
-      );
-    }
-
-    // Try pause command
-    if (_isPauseCommand(text, lower)) {
-      return VoiceCommand(
-        intent: VoiceIntent.pause,
-        parameters: const {},
-        confidence: 0.9,
-        rawTranscription: transcription,
-      );
-    }
-
-    // Try skip commands
-    final skipResult = _tryParseSkipCommand(text, lower, transcription);
-    if (skipResult != null) return skipResult;
-
-    // Try navigation commands
-    final navResult = _tryParseNavigationCommand(text, lower, transcription);
-    if (navResult != null) return navResult;
-
-    // Try search command
-    return _tryParseSearchCommand(text, lower, transcription);
-  }
-
-  /// Dart-side fallback resolution using registry synonym matching.
-  ///
-  /// When the platform NLU is unavailable and the on-device AI classified the
-  /// command as `changeSettings` without producing a structured payload, this
-  /// method attempts to match the raw transcription against known setting
-  /// synonyms. It can only identify *which* setting the user meant -- not the
-  /// target value -- so it returns [SettingsResolution.notFound] to show an
-  /// informative error rather than a dead-end disambiguation screen.
-  SettingsResolution? _resolveFromTranscription(String transcription) {
-    final matches = _registry.findBySynonym(transcription);
-    if (matches.isEmpty) return null;
-
-    // Synonym matching identified one or more candidate settings but cannot
-    // extract a target value from the raw transcription. Return notFound so
-    // the caller shows a clear error rather than a disambiguation UI where
-    // all candidates are disabled (empty values).
-    _logger?.i(
-      'Synonym match found ${matches.length} candidate(s) but no value; '
-      'returning notFound',
-    );
-    return const SettingsResolution.notFound();
-  }
-
-  /// Constructs a [SettingsChangePayload] from a platform channel result map.
-  ///
-  /// Returns null when the action is unrecognised or required fields are absent.
-  SettingsChangePayload? _buildPayloadFromPlatformResult(
-    Map<String, dynamic> result,
-  ) {
-    final action = result['action'] as String?;
-    final key = result['key'] as String?;
-
-    return switch (action) {
-      'absolute' => SettingsChangePayload.absolute(
-        key: key ?? '',
-        value: (result['value'] as String?) ?? '',
-        confidence: (result['confidence'] as num?)?.toDouble() ?? 0.8,
-      ),
-      'relative' => switch (result['direction'] as String?) {
-        'increase' => SettingsChangePayload.relative(
-          key: key ?? '',
-          direction: ChangeDirection.increase,
-          magnitude: switch (result['magnitude'] as String?) {
-            'medium' => ChangeMagnitude.medium,
-            'large' => ChangeMagnitude.large,
-            _ => ChangeMagnitude.small,
-          },
-          confidence: (result['confidence'] as num?)?.toDouble() ?? 0.8,
-        ),
-        'decrease' => SettingsChangePayload.relative(
-          key: key ?? '',
-          direction: ChangeDirection.decrease,
-          magnitude: switch (result['magnitude'] as String?) {
-            'medium' => ChangeMagnitude.medium,
-            'large' => ChangeMagnitude.large,
-            _ => ChangeMagnitude.small,
-          },
-          confidence: (result['confidence'] as num?)?.toDouble() ?? 0.8,
-        ),
-        // Unknown or missing direction -- treat as unrecognized payload
-        _ => null,
-      },
-      'ambiguous' => SettingsChangePayload.ambiguous(
-        candidates: ((result['candidates'] as List?) ?? [])
-            .map((e) => Map<String, dynamic>.from(e as Map))
-            .map(
-              (c) => SettingsCandidate(
-                key: c['key'] as String? ?? '',
-                value: c['value'] as String? ?? '',
-                confidence: (c['confidence'] as num?)?.toDouble() ?? 0.5,
-              ),
-            )
-            .toList(),
-      ),
-      _ => null,
-    };
-  }
-
-  /// Applies a setting and invalidates the settings provider so open
-  /// settings screens rebuild with the updated value.
-  ///
-  /// Safe because we use [ref.read] (not watch) for the settings repository
-  /// in [build], so invalidation won't trigger an orchestrator rebuild loop.
-  Future<SettingApplyResult> _applySetting({
-    required String key,
-    required String value,
-  }) async {
-    final result = await _exec.applySetting(key: key, value: value);
-    if (result.isSuccess) {
-      ref.invalidate(appSettingsRepositoryProvider);
-    }
-    return result;
-  }
-
-  bool _isResumeCommand(String text, String lower) {
-    const enResume = ['play', 'resume', 'start'];
-    const jaResume = ['再生', '再生して', '再生する', 'プレイ'];
-    // Exact match only — "再生速度" must NOT match
-    return enResume.contains(lower) || jaResume.contains(text);
-  }
-
-  VoiceCommand? _tryParsePlayCommand(
-    String text,
-    String lower,
-    String transcription,
-  ) {
-    // English patterns
-    final playPatternsEn = [
-      RegExp(
-        r'^play\s+(?:the\s+)?(?:latest\s+)?(?:episode\s+)?(?:of\s+)?(.+)$',
-        caseSensitive: false,
-      ),
-      RegExp(r'^play\s+(.+)$', caseSensitive: false),
-    ];
-
-    // Japanese patterns
-    final playPatternsJa = [
-      RegExp(r'^(.+?)の最新(?:話|エピソード)を再生(?:して)?$'),
-      RegExp(r'^(.+?)を再生(?:して)?$'),
-      RegExp(r'^(.+?)再生(?:して)?$'),
-    ];
-
-    // Try English patterns on lowercase text
-    for (final pattern in playPatternsEn) {
-      final name = _extractGroup(pattern, lower);
-      if (name != null) {
-        return _buildPlayCommand(name, transcription);
-      }
-    }
-
-    // Try Japanese patterns on original text
-    for (final pattern in playPatternsJa) {
-      final name = _extractGroup(pattern, text);
-      if (name != null) {
-        return _buildPlayCommand(name, transcription);
-      }
-    }
-
-    return null;
-  }
-
-  VoiceCommand _buildPlayCommand(String podcastName, String transcription) {
-    return VoiceCommand(
-      intent: VoiceIntent.play,
-      parameters: {'podcastName': podcastName},
-      confidence: 0.7,
-      rawTranscription: transcription,
-    );
-  }
-
-  bool _isStopCommand(String text, String lower) {
-    const enStop = ['stop', 'stop playback'];
-    const jaStop = ['停止', 'ストップ', '停止して'];
-    return enStop.contains(lower) || jaStop.contains(text);
-  }
-
-  bool _isPauseCommand(String text, String lower) {
-    const enPause = ['pause', 'pause playback'];
-    const jaPause = ['一時停止', 'ポーズ', '止めて'];
-    return enPause.contains(lower) || jaPause.contains(text);
-  }
-
-  VoiceCommand? _tryParseSkipCommand(
-    String text,
-    String lower,
-    String transcription,
-  ) {
-    // Skip forward
-    const enForward = ['skip', 'skip forward', 'next', 'forward'];
-    const jaForward = ['スキップ', '早送り', '次へ', '先送り'];
-    if (enForward.contains(lower) || jaForward.contains(text)) {
-      return VoiceCommand(
-        intent: VoiceIntent.skipForward,
-        parameters: const {},
-        confidence: 0.9,
-        rawTranscription: transcription,
-      );
-    }
-
-    // Skip backward
-    const enBackward = ['rewind', 'skip back', 'back', 'go back'];
-    const jaBackward = ['巻き戻し', '巻き戻して', '戻して', '前へ'];
-    if (enBackward.contains(lower) || jaBackward.contains(text)) {
-      return VoiceCommand(
-        intent: VoiceIntent.skipBackward,
-        parameters: const {},
-        confidence: 0.9,
-        rawTranscription: transcription,
-      );
-    }
-
-    return null;
-  }
-
-  VoiceCommand? _tryParseNavigationCommand(
-    String text,
-    String lower,
-    String transcription,
-  ) {
-    // Library
-    const enLibrary = [
-      'library',
-      'go to library',
-      'open library',
-      'my library',
-    ];
-    const jaLibrary = ['ライブラリ', 'マイライブラリ'];
-    if (enLibrary.contains(lower) || jaLibrary.contains(text)) {
-      return VoiceCommand(
-        intent: VoiceIntent.goToLibrary,
-        parameters: const {},
-        confidence: 0.9,
-        rawTranscription: transcription,
-      );
-    }
-
-    // Queue
-    const enQueue = ['queue', 'go to queue', 'open queue', 'show queue'];
-    const jaQueue = ['キュー', '再生キュー', '待ち行列'];
-    if (enQueue.contains(lower) || jaQueue.contains(text)) {
-      return VoiceCommand(
-        intent: VoiceIntent.goToQueue,
-        parameters: const {},
-        confidence: 0.9,
-        rawTranscription: transcription,
-      );
-    }
-
-    // Settings
-    const enSettings = [
-      'settings',
-      'go to settings',
-      'open settings',
-      'preferences',
-    ];
-    const jaSettings = ['設定', '設定を開く'];
-    if (enSettings.contains(lower) || jaSettings.contains(text)) {
-      return VoiceCommand(
-        intent: VoiceIntent.openSettings,
-        parameters: const {},
-        confidence: 0.9,
-        rawTranscription: transcription,
-      );
-    }
-
-    return null;
-  }
-
-  VoiceCommand? _tryParseSearchCommand(
-    String text,
-    String lower,
-    String transcription,
-  ) {
-    // English pattern
-    final searchMatchEn = RegExp(
-      r'^search\s+(?:for\s+)?(.+)$',
-      caseSensitive: false,
-    ).firstMatch(lower);
-    if (searchMatchEn != null) {
-      final query = searchMatchEn.group(1)?.trim();
-      if (query != null && query.isNotEmpty) {
-        return _buildSearchCommand(query, transcription);
-      }
-    }
-
-    // Japanese patterns
-    final searchPatternsJa = [
-      RegExp(r'^(.+?)を検索(?:して)?$'),
-      RegExp(r'^(.+?)検索(?:して)?$'),
-    ];
-
-    for (final pattern in searchPatternsJa) {
-      final query = _extractGroup(pattern, text);
-      if (query != null) {
-        return _buildSearchCommand(query, transcription);
-      }
-    }
-
-    return null;
-  }
-
-  VoiceCommand _buildSearchCommand(String query, String transcription) {
-    return VoiceCommand(
-      intent: VoiceIntent.search,
-      parameters: {'query': query},
-      confidence: 0.8,
-      rawTranscription: transcription,
-    );
-  }
-
-  /// Extracts the first capture group from a pattern match.
-  String? _extractGroup(RegExp pattern, String input) {
-    final match = pattern.firstMatch(input);
-    if (match == null) return null;
-    final value = match.group(1)?.trim();
-    return (value != null && value.isNotEmpty) ? value : null;
   }
 }
