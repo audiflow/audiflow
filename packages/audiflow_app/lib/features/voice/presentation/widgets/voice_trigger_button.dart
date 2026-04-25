@@ -44,24 +44,42 @@ class _VoiceTriggerButtonState extends ConsumerState<VoiceTriggerButton>
     super.dispose();
   }
 
+  /// Tap is reserved for resetting terminal states. Hold-to-talk handles
+  /// start/stop via long-press callbacks (see build()).
   void _handleTap(VoiceRecognitionState state) {
     final orchestrator = ref.read(voiceCommandOrchestratorProvider.notifier);
     switch (state) {
-      case VoiceIdle():
-        unawaited(orchestrator.startVoiceCommand());
-      case VoiceListening():
-        unawaited(orchestrator.cancelVoiceCommand());
       case VoiceSuccess():
-        orchestrator.resetToIdle();
       case VoiceError():
         orchestrator.resetToIdle();
-      // Processing, executing and settings states: tap is disabled (no-op).
+      // Idle: short tap is a no-op; press-and-hold to talk.
+      // Listening / processing / executing / settings: tap disabled.
+      case VoiceIdle():
+      case VoiceListening():
       case VoiceProcessing():
       case VoiceExecuting():
       case VoiceSettingsAutoApplied():
       case VoiceSettingsDisambiguation():
       case VoiceSettingsLowConfidence():
     }
+  }
+
+  void _handleLongPressStart(VoiceRecognitionState state) {
+    if (state is! VoiceIdle && state is! VoiceSuccess && state is! VoiceError) {
+      return;
+    }
+    final orchestrator = ref.read(voiceCommandOrchestratorProvider.notifier);
+    unawaited(orchestrator.startVoiceCommand());
+  }
+
+  void _handleLongPressEnd() {
+    final orchestrator = ref.read(voiceCommandOrchestratorProvider.notifier);
+    unawaited(orchestrator.stopVoiceCommand());
+  }
+
+  void _handleLongPressCancel() {
+    final orchestrator = ref.read(voiceCommandOrchestratorProvider.notifier);
+    unawaited(orchestrator.cancelVoiceCommand());
   }
 
   @override
@@ -103,28 +121,30 @@ class _VoiceTriggerButtonState extends ConsumerState<VoiceTriggerButton>
           child: SizedBox(
             width: 48,
             height: 48,
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(10),
-                onTap: disabled ? null : () => _handleTap(voiceState),
-                child: Center(
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    curve: Curves.easeInOut,
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: bgColor,
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: shadows,
-                    ),
-                    child: Icon(
-                      Symbols.mic,
-                      fill: fill,
-                      size: 20,
-                      color: iconColor,
-                    ),
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: disabled ? null : () => _handleTap(voiceState),
+              onLongPressStart: disabled
+                  ? null
+                  : (_) => _handleLongPressStart(voiceState),
+              onLongPressEnd: disabled ? null : (_) => _handleLongPressEnd(),
+              onLongPressCancel: disabled ? null : _handleLongPressCancel,
+              child: Center(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeInOut,
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: bgColor,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: shadows,
+                  ),
+                  child: Icon(
+                    Symbols.mic,
+                    fill: fill,
+                    size: 20,
+                    color: iconColor,
                   ),
                 ),
               ),

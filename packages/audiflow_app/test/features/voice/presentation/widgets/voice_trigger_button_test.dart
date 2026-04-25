@@ -7,18 +7,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
-// ---------------------------------------------------------------------------
-// Fakes
-// ---------------------------------------------------------------------------
-
 /// Controllable fake orchestrator. Tests can set [nextState] before pumping
-/// and inspect [startCalled], [cancelCalled], and [resetCalled] afterwards.
+/// and inspect call flags afterwards.
 class _FakeOrchestrator extends VoiceCommandOrchestrator {
   _FakeOrchestrator(this._initial);
 
   final VoiceRecognitionState _initial;
 
   bool startCalled = false;
+  bool stopCalled = false;
   bool cancelCalled = false;
   bool resetCalled = false;
 
@@ -31,6 +28,11 @@ class _FakeOrchestrator extends VoiceCommandOrchestrator {
   }
 
   @override
+  Future<void> stopVoiceCommand() async {
+    stopCalled = true;
+  }
+
+  @override
   Future<void> cancelVoiceCommand() async {
     cancelCalled = true;
   }
@@ -40,10 +42,6 @@ class _FakeOrchestrator extends VoiceCommandOrchestrator {
     resetCalled = true;
   }
 }
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
 
 Widget _buildTestApp(
   ProviderContainer container, {
@@ -65,10 +63,6 @@ ProviderContainer _containerFor(_FakeOrchestrator fake) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
-
 void main() {
   group('VoiceTriggerButton', () {
     group('idle state', () {
@@ -80,14 +74,46 @@ void main() {
         await tester.pumpWidget(_buildTestApp(container));
         await tester.pump();
 
-        // Outline mic: fill == 0 — find the Icon widget with Symbols.mic
         final iconFinder = find.byWidgetPredicate(
           (w) => w is Icon && w.icon == Symbols.mic && (w.fill ?? 0) != 1,
         );
         check(iconFinder.evaluate().length).equals(1);
       });
 
-      testWidgets('tapping calls startVoiceCommand', (tester) async {
+      testWidgets('hold-to-talk: long-press start calls startVoiceCommand', (
+        tester,
+      ) async {
+        final fake = _FakeOrchestrator(const VoiceRecognitionState.idle());
+        final container = _containerFor(fake);
+        addTearDown(container.dispose);
+
+        await tester.pumpWidget(_buildTestApp(container));
+        await tester.pump();
+
+        await tester.longPress(find.byType(VoiceTriggerButton));
+        await tester.pump();
+
+        // longPress fires both start and end; verify start was hit.
+        check(fake.startCalled).isTrue();
+      });
+
+      testWidgets('hold-to-talk: long-press release calls stopVoiceCommand', (
+        tester,
+      ) async {
+        final fake = _FakeOrchestrator(const VoiceRecognitionState.idle());
+        final container = _containerFor(fake);
+        addTearDown(container.dispose);
+
+        await tester.pumpWidget(_buildTestApp(container));
+        await tester.pump();
+
+        await tester.longPress(find.byType(VoiceTriggerButton));
+        await tester.pump(const Duration(milliseconds: 100));
+
+        check(fake.stopCalled).isTrue();
+      });
+
+      testWidgets('short tap does not start voice command', (tester) async {
         final fake = _FakeOrchestrator(const VoiceRecognitionState.idle());
         final container = _containerFor(fake);
         addTearDown(container.dispose);
@@ -98,7 +124,8 @@ void main() {
         await tester.tap(find.byType(VoiceTriggerButton));
         await tester.pump();
 
-        check(fake.startCalled).isTrue();
+        check(fake.startCalled).isFalse();
+        check(fake.stopCalled).isFalse();
       });
     });
 
@@ -131,26 +158,12 @@ void main() {
         final icon = tester.widget<Icon>(iconFinder);
         check(icon.color).equals(const Color(0xFFFFC107));
       });
-
-      testWidgets('tapping calls cancelVoiceCommand', (tester) async {
-        final fake = _FakeOrchestrator(const VoiceRecognitionState.listening());
-        final container = _containerFor(fake);
-        addTearDown(container.dispose);
-
-        await tester.pumpWidget(_buildTestApp(container));
-        await tester.pump();
-
-        await tester.tap(find.byType(VoiceTriggerButton));
-        await tester.pump();
-
-        check(fake.cancelCalled).isTrue();
-      });
     });
 
     group('processing state', () {
-      testWidgets('tap does not call any method', (tester) async {
+      testWidgets('tap and long-press are disabled', (tester) async {
         final fake = _FakeOrchestrator(
-          const VoiceRecognitionState.processing(transcription: 'play'),
+          const VoiceRecognitionState.processing(transcription: ''),
         );
         final container = _containerFor(fake);
         addTearDown(container.dispose);
@@ -159,16 +172,18 @@ void main() {
         await tester.pump();
 
         await tester.tap(find.byType(VoiceTriggerButton));
-        await tester.pump();
+        await tester.longPress(find.byType(VoiceTriggerButton));
+        await tester.pump(const Duration(milliseconds: 100));
 
         check(fake.startCalled).isFalse();
+        check(fake.stopCalled).isFalse();
         check(fake.cancelCalled).isFalse();
         check(fake.resetCalled).isFalse();
       });
     });
 
     group('success state', () {
-      testWidgets('tapping calls resetToIdle', (tester) async {
+      testWidgets('tap calls resetToIdle', (tester) async {
         final fake = _FakeOrchestrator(
           const VoiceRecognitionState.success(message: 'Done'),
         );
@@ -186,7 +201,7 @@ void main() {
     });
 
     group('error state', () {
-      testWidgets('tapping calls resetToIdle', (tester) async {
+      testWidgets('tap calls resetToIdle', (tester) async {
         final fake = _FakeOrchestrator(
           const VoiceRecognitionState.error(message: 'Oops'),
         );
@@ -203,7 +218,7 @@ void main() {
       });
     });
 
-    group('settings states — tap is disabled', () {
+    group('settings states — tap and long-press are disabled', () {
       for (final entry in <String, VoiceRecognitionState>{
         'autoApplied': const VoiceRecognitionState.settingsAutoApplied(
           key: 'speed',
@@ -222,7 +237,7 @@ void main() {
           confidence: 0.5,
         ),
       }.entries) {
-        testWidgets('${entry.key}: tap does not call any method', (
+        testWidgets('${entry.key}: gestures do not call any method', (
           tester,
         ) async {
           final fake = _FakeOrchestrator(entry.value);
@@ -233,9 +248,11 @@ void main() {
           await tester.pump();
 
           await tester.tap(find.byType(VoiceTriggerButton));
-          await tester.pump();
+          await tester.longPress(find.byType(VoiceTriggerButton));
+          await tester.pump(const Duration(milliseconds: 100));
 
           check(fake.startCalled).isFalse();
+          check(fake.stopCalled).isFalse();
           check(fake.cancelCalled).isFalse();
           check(fake.resetCalled).isFalse();
         });
@@ -243,7 +260,9 @@ void main() {
     });
 
     group('widget structure', () {
-      testWidgets('is 36x36 container', (tester) async {
+      testWidgets('contains an AnimatedContainer for the visual', (
+        tester,
+      ) async {
         final fake = _FakeOrchestrator(const VoiceRecognitionState.idle());
         final container = _containerFor(fake);
         addTearDown(container.dispose);
@@ -251,26 +270,11 @@ void main() {
         await tester.pumpWidget(_buildTestApp(container));
         await tester.pump();
 
-        // Verify the AnimatedContainer is present inside the button.
         final animContainerFinder = find.descendant(
           of: find.byType(VoiceTriggerButton),
           matching: find.byType(AnimatedContainer),
         );
         check(animContainerFinder.evaluate().isNotEmpty).isTrue();
-      });
-
-      testWidgets('wrapped in Padding on right side', (tester) async {
-        final fake = _FakeOrchestrator(const VoiceRecognitionState.idle());
-        final container = _containerFor(fake);
-        addTearDown(container.dispose);
-
-        await tester.pumpWidget(_buildTestApp(container));
-        await tester.pump();
-
-        // The widget itself should exist.
-        check(
-          find.byType(VoiceTriggerButton),
-        ).has((f) => f.evaluate().length, 'count').equals(1);
       });
     });
   });

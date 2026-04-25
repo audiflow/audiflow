@@ -682,6 +682,43 @@ class MockAppSettingsRepository extends _i1.Mock
           as _i4.Future<void>);
 
   @override
+  bool getVoiceGemmaEnabled() =>
+      (super.noSuchMethod(
+            Invocation.method(#getVoiceGemmaEnabled, []),
+            returnValue: false,
+          )
+          as bool);
+
+  @override
+  _i4.Future<void> setVoiceGemmaEnabled(bool? enabled) =>
+      (super.noSuchMethod(
+            Invocation.method(#setVoiceGemmaEnabled, [enabled]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
+  String getVoiceGemmaVariant() =>
+      (super.noSuchMethod(
+            Invocation.method(#getVoiceGemmaVariant, []),
+            returnValue: _i6.dummyValue<String>(
+              this,
+              Invocation.method(#getVoiceGemmaVariant, []),
+            ),
+          )
+          as String);
+
+  @override
+  _i4.Future<void> setVoiceGemmaVariant(String? variantName) =>
+      (super.noSuchMethod(
+            Invocation.method(#setVoiceGemmaVariant, [variantName]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
   _i4.Future<void> clearAll() =>
       (super.noSuchMethod(
             Invocation.method(#clearAll, []),

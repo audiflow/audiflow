@@ -46,34 +46,16 @@ GemmaModelManager gemmaModelManager(Ref ref) {
   );
 }
 
-/// The inference session is keepAlive + cached because it owns a loaded
-/// `InferenceModel`; recreating per-call would re-pay the model load cost
-/// every voice command.
-@Riverpod(keepAlive: true)
-GemmaInferenceSession gemmaInferenceSession(Ref ref) {
+/// Builds the flutter_gemma-backed [GemmaInferenceSession] used to override
+/// the domain-side stub at the composition root.
+///
+/// The session owns a loaded `InferenceModel`; recreating it per voice turn
+/// would re-pay the model load cost. Lifecycle (dispose) is wired into the
+/// passed [Ref] so it's torn down when the provider container shuts down.
+GemmaInferenceSession buildFlutterGemmaInferenceSession(Ref ref) {
   final session = FlutterGemmaInferenceSession(
     logger: ref.watch(namedLoggerProvider('GemmaInference')),
   );
-  // `onDispose` takes `void Function()`; `session.dispose` returns a Future
-  // whose errors are already swallowed but whose completion would otherwise
-  // be silently dropped. `unawaited` makes the fire-and-forget explicit.
   ref.onDispose(() => unawaited(session.dispose()));
   return session;
-}
-
-@Riverpod(keepAlive: true)
-GemmaVoiceCommandService gemmaVoiceCommandService(Ref ref) {
-  return GemmaVoiceCommandService(
-    session: ref.watch(gemmaInferenceSessionProvider),
-  );
-}
-
-@Riverpod(keepAlive: true)
-GemmaVoiceCommandRoute gemmaVoiceCommandRoute(Ref ref) {
-  return GemmaVoiceCommandRoute(
-    service: ref.watch(gemmaVoiceCommandServiceProvider),
-    registry: SettingsMetadataRegistry(),
-    settingsRepository: ref.watch(appSettingsRepositoryProvider),
-    logger: ref.watch(namedLoggerProvider('GemmaVoiceRoute')),
-  );
 }

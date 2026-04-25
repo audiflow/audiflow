@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import 'package:audiflow_app/features/voice/gemma/wav_header.dart';
+import 'package:audiflow_domain/src/features/voice/utils/wav_header.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 

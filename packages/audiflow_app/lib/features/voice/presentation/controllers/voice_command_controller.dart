@@ -48,12 +48,6 @@ class VoiceCommandController extends _$VoiceCommandController {
     return ref.read(voiceCommandOrchestratorProvider);
   }
 
-  /// Whether voice recognition is available on this device.
-  bool get isAvailable {
-    final repo = ref.read(speechRecognitionRepositoryProvider);
-    return repo.isAvailable;
-  }
-
   /// Whether the system is currently listening for voice input.
   bool get isListening {
     return currentState is VoiceListening;
@@ -88,15 +82,6 @@ class VoiceCommandController extends _$VoiceCommandController {
   void reset() {
     final orchestrator = ref.read(voiceCommandOrchestratorProvider.notifier);
     orchestrator.resetToIdle();
-  }
-
-  /// Initialize the voice command system.
-  ///
-  /// Call this early in the app lifecycle to pre-initialize
-  /// speech recognition.
-  Future<bool> initialize() async {
-    final orchestrator = ref.read(voiceCommandOrchestratorProvider.notifier);
-    return orchestrator.initialize();
   }
 
   /// Confirms a low-confidence settings change.

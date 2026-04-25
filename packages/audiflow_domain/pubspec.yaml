@@ -41,7 +41,7 @@ dependencies:
   connectivity_plus: ^7.0.0
   logger: ^2.6.2
   just_audio: ^0.10.5
-  speech_to_text: ^7.3.0
+  record: ^6.2.0
   rxdart: ^0.28.0
   meta: ^1.17.0
   xml: ^6.6.1

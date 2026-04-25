@@ -8,45 +8,45 @@ part of 'voice_command_orchestrator.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Orchestrates voice command flow from speech recognition to execution.
+/// Orchestrates the on-device Gemma 4 voice command flow.
 ///
-/// Manages the state machine:
-/// idle -> listening -> processing -> executing -> success/error -> idle
+/// Hold-to-talk state machine:
+/// `idle -> listening (mic open) -> processing (Gemma) -> executing
+/// (executor) -> success | error | settingsXxx -> idle`
 ///
-/// Usage:
-/// ```dart
-/// final state = ref.watch(voiceCommandOrchestratorProvider);
-/// final orchestrator = ref.read(voiceCommandOrchestratorProvider.notifier);
-/// await orchestrator.startVoiceCommand();
-/// ```
+/// Settings change states (`settingsAutoApplied`, `settingsDisambiguation`,
+/// `settingsLowConfidence`) are emitted from the executing transition when
+/// the parsed command is `changeSettings`; the UI then calls back into
+/// [confirmSettingsChange] / [undoSettingsChange] /
+/// [selectSettingsCandidate] to resolve.
 
 @ProviderFor(VoiceCommandOrchestrator)
 final voiceCommandOrchestratorProvider = VoiceCommandOrchestratorProvider._();
 
-/// Orchestrates voice command flow from speech recognition to execution.
+/// Orchestrates the on-device Gemma 4 voice command flow.
 ///
-/// Manages the state machine:
-/// idle -> listening -> processing -> executing -> success/error -> idle
+/// Hold-to-talk state machine:
+/// `idle -> listening (mic open) -> processing (Gemma) -> executing
+/// (executor) -> success | error | settingsXxx -> idle`
 ///
-/// Usage:
-/// ```dart
-/// final state = ref.watch(voiceCommandOrchestratorProvider);
-/// final orchestrator = ref.read(voiceCommandOrchestratorProvider.notifier);
-/// await orchestrator.startVoiceCommand();
-/// ```
+/// Settings change states (`settingsAutoApplied`, `settingsDisambiguation`,
+/// `settingsLowConfidence`) are emitted from the executing transition when
+/// the parsed command is `changeSettings`; the UI then calls back into
+/// [confirmSettingsChange] / [undoSettingsChange] /
+/// [selectSettingsCandidate] to resolve.
 final class VoiceCommandOrchestratorProvider
     extends $NotifierProvider<VoiceCommandOrchestrator, VoiceRecognitionState> {
-  /// Orchestrates voice command flow from speech recognition to execution.
+  /// Orchestrates the on-device Gemma 4 voice command flow.
   ///
-  /// Manages the state machine:
-  /// idle -> listening -> processing -> executing -> success/error -> idle
+  /// Hold-to-talk state machine:
+  /// `idle -> listening (mic open) -> processing (Gemma) -> executing
+  /// (executor) -> success | error | settingsXxx -> idle`
   ///
-  /// Usage:
-  /// ```dart
-  /// final state = ref.watch(voiceCommandOrchestratorProvider);
-  /// final orchestrator = ref.read(voiceCommandOrchestratorProvider.notifier);
-  /// await orchestrator.startVoiceCommand();
-  /// ```
+  /// Settings change states (`settingsAutoApplied`, `settingsDisambiguation`,
+  /// `settingsLowConfidence`) are emitted from the executing transition when
+  /// the parsed command is `changeSettings`; the UI then calls back into
+  /// [confirmSettingsChange] / [undoSettingsChange] /
+  /// [selectSettingsCandidate] to resolve.
   VoiceCommandOrchestratorProvider._()
     : super(
         from: null,
@@ -75,19 +75,19 @@ final class VoiceCommandOrchestratorProvider
 }
 
 String _$voiceCommandOrchestratorHash() =>
-    r'02829a0e5a1f3b1003d29ea6c951d6d60171a600';
+    r'4d99fc57e42dba5b3ff83c975cf7457ee35cdd36';
 
-/// Orchestrates voice command flow from speech recognition to execution.
+/// Orchestrates the on-device Gemma 4 voice command flow.
 ///
-/// Manages the state machine:
-/// idle -> listening -> processing -> executing -> success/error -> idle
+/// Hold-to-talk state machine:
+/// `idle -> listening (mic open) -> processing (Gemma) -> executing
+/// (executor) -> success | error | settingsXxx -> idle`
 ///
-/// Usage:
-/// ```dart
-/// final state = ref.watch(voiceCommandOrchestratorProvider);
-/// final orchestrator = ref.read(voiceCommandOrchestratorProvider.notifier);
-/// await orchestrator.startVoiceCommand();
-/// ```
+/// Settings change states (`settingsAutoApplied`, `settingsDisambiguation`,
+/// `settingsLowConfidence`) are emitted from the executing transition when
+/// the parsed command is `changeSettings`; the UI then calls back into
+/// [confirmSettingsChange] / [undoSettingsChange] /
+/// [selectSettingsCandidate] to resolve.
 
 abstract class _$VoiceCommandOrchestrator
     extends $Notifier<VoiceRecognitionState> {

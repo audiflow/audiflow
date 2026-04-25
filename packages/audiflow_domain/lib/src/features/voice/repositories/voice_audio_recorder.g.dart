@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'gemma_voice_capture_providers.dart';
+part of 'voice_audio_recorder.dart';
 
 // **************************************************************************
 // RiverpodGenerator
@@ -8,22 +8,16 @@ part of 'gemma_voice_capture_providers.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Mic recorder for the Gemma 4 voice command path.
-///
 /// keepAlive because the underlying `record` plugin holds a native
 /// `AVAudioRecorder` / `MediaRecorder` instance; recreating it per voice
-/// turn would re-pay the platform-channel initialization cost. Disposed
-/// when the provider container shuts down.
+/// turn would re-pay the platform-channel initialization cost.
 
 @ProviderFor(voiceAudioRecorder)
 final voiceAudioRecorderProvider = VoiceAudioRecorderProvider._();
 
-/// Mic recorder for the Gemma 4 voice command path.
-///
 /// keepAlive because the underlying `record` plugin holds a native
 /// `AVAudioRecorder` / `MediaRecorder` instance; recreating it per voice
-/// turn would re-pay the platform-channel initialization cost. Disposed
-/// when the provider container shuts down.
+/// turn would re-pay the platform-channel initialization cost.
 
 final class VoiceAudioRecorderProvider
     extends
@@ -33,12 +27,9 @@ final class VoiceAudioRecorderProvider
           VoiceAudioRecorder
         >
     with $Provider<VoiceAudioRecorder> {
-  /// Mic recorder for the Gemma 4 voice command path.
-  ///
   /// keepAlive because the underlying `record` plugin holds a native
   /// `AVAudioRecorder` / `MediaRecorder` instance; recreating it per voice
-  /// turn would re-pay the platform-channel initialization cost. Disposed
-  /// when the provider container shuts down.
+  /// turn would re-pay the platform-channel initialization cost.
   VoiceAudioRecorderProvider._()
     : super(
         from: null,
@@ -74,4 +65,4 @@ final class VoiceAudioRecorderProvider
 }
 
 String _$voiceAudioRecorderHash() =>
-    r'f992640c160cb8843d8c55c1c54a20e462adeb8e';
+    r'9d25e2ac141f6b67663624a060f6c9954df09ffb';

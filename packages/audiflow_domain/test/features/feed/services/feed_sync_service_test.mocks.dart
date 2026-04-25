@@ -16,15 +16,15 @@ import 'package:audiflow_domain/src/features/feed/models/numbering_extractor.dar
 import 'package:audiflow_domain/src/features/feed/models/pattern_summary.dart'
     as _i25;
 import 'package:audiflow_domain/src/features/feed/models/root_meta.dart'
-    as _i23;
+    as _i24;
 import 'package:audiflow_domain/src/features/feed/models/smart_playlist_pattern_config.dart'
     as _i16;
 import 'package:audiflow_domain/src/features/feed/repositories/episode_repository.dart'
     as _i12;
 import 'package:audiflow_domain/src/features/feed/repositories/smart_playlist_config_repository.dart'
-    as _i22;
+    as _i23;
 import 'package:audiflow_domain/src/features/feed/services/feed_parser_service.dart'
-    as _i21;
+    as _i22;
 import 'package:audiflow_domain/src/features/settings/repositories/app_settings_repository.dart'
     as _i18;
 import 'package:audiflow_domain/src/features/station/models/station_podcast.dart'
@@ -45,7 +45,7 @@ import 'package:dio/src/response.dart' as _i8;
 import 'package:dio/src/transformer.dart' as _i7;
 import 'package:flutter/material.dart' as _i19;
 import 'package:mockito/mockito.dart' as _i1;
-import 'package:mockito/src/dummies.dart' as _i24;
+import 'package:mockito/src/dummies.dart' as _i21;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -869,6 +869,43 @@ class MockAppSettingsRepository extends _i1.Mock
           as _i11.Future<void>);
 
   @override
+  bool getVoiceGemmaEnabled() =>
+      (super.noSuchMethod(
+            Invocation.method(#getVoiceGemmaEnabled, []),
+            returnValue: false,
+          )
+          as bool);
+
+  @override
+  _i11.Future<void> setVoiceGemmaEnabled(bool? enabled) =>
+      (super.noSuchMethod(
+            Invocation.method(#setVoiceGemmaEnabled, [enabled]),
+            returnValue: _i11.Future<void>.value(),
+            returnValueForMissingStub: _i11.Future<void>.value(),
+          )
+          as _i11.Future<void>);
+
+  @override
+  String getVoiceGemmaVariant() =>
+      (super.noSuchMethod(
+            Invocation.method(#getVoiceGemmaVariant, []),
+            returnValue: _i21.dummyValue<String>(
+              this,
+              Invocation.method(#getVoiceGemmaVariant, []),
+            ),
+          )
+          as String);
+
+  @override
+  _i11.Future<void> setVoiceGemmaVariant(String? variantName) =>
+      (super.noSuchMethod(
+            Invocation.method(#setVoiceGemmaVariant, [variantName]),
+            returnValue: _i11.Future<void>.value(),
+            returnValueForMissingStub: _i11.Future<void>.value(),
+          )
+          as _i11.Future<void>);
+
+  @override
   _i11.Future<void> clearAll() =>
       (super.noSuchMethod(
             Invocation.method(#clearAll, []),
@@ -881,7 +918,7 @@ class MockAppSettingsRepository extends _i1.Mock
 /// A class which mocks [FeedParserService].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockFeedParserService extends _i1.Mock implements _i21.FeedParserService {
+class MockFeedParserService extends _i1.Mock implements _i22.FeedParserService {
   MockFeedParserService() {
     _i1.throwOnMissingStub(this);
   }
@@ -976,23 +1013,23 @@ class MockFeedParserService extends _i1.Mock implements _i21.FeedParserService {
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockSmartPlaylistConfigRepository extends _i1.Mock
-    implements _i22.SmartPlaylistConfigRepository {
+    implements _i23.SmartPlaylistConfigRepository {
   MockSmartPlaylistConfigRepository() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i11.Future<_i23.RootMeta> fetchRootMeta() =>
+  _i11.Future<_i24.RootMeta> fetchRootMeta() =>
       (super.noSuchMethod(
             Invocation.method(#fetchRootMeta, []),
-            returnValue: _i11.Future<_i23.RootMeta>.value(
-              _i24.dummyValue<_i23.RootMeta>(
+            returnValue: _i11.Future<_i24.RootMeta>.value(
+              _i21.dummyValue<_i24.RootMeta>(
                 this,
                 Invocation.method(#fetchRootMeta, []),
               ),
             ),
           )
-          as _i11.Future<_i23.RootMeta>);
+          as _i11.Future<_i24.RootMeta>);
 
   @override
   _i11.Future<_i16.SmartPlaylistPatternConfig> getConfig(
@@ -1001,7 +1038,7 @@ class MockSmartPlaylistConfigRepository extends _i1.Mock
       (super.noSuchMethod(
             Invocation.method(#getConfig, [summary]),
             returnValue: _i11.Future<_i16.SmartPlaylistPatternConfig>.value(
-              _i24.dummyValue<_i16.SmartPlaylistPatternConfig>(
+              _i21.dummyValue<_i16.SmartPlaylistPatternConfig>(
                 this,
                 Invocation.method(#getConfig, [summary]),
               ),
