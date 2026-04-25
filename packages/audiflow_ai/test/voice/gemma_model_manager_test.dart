@@ -1,3 +1,4 @@
+import 'package:audiflow_ai/src/voice/gemma_model_install_exception.dart';
 import 'package:audiflow_ai/src/voice/gemma_model_manager.dart';
 import 'package:audiflow_ai/src/voice/gemma_model_variant.dart';
 import 'package:audiflow_ai/src/voice/gemma_plugin.dart';
@@ -66,6 +67,34 @@ void main() {
       await manager.uninstall(GemmaModelVariant.e2b);
       check(plugin.installed).isEmpty();
     });
+
+    test('download failures rethrow as GemmaModelInstallException', () async {
+      plugin.shouldThrowOnInstall = true;
+      try {
+        await manager.ensureInstalled(GemmaModelVariant.e2b);
+        fail('expected GemmaModelInstallException');
+      } on GemmaModelInstallException catch (e) {
+        check(e.variant).equals(GemmaModelVariant.e2b);
+        check(e.phase).equals(GemmaModelInstallPhase.download);
+      }
+    });
+
+    test('auth-token resolver failures rethrow with phase=auth', () async {
+      manager = GemmaModelManager(
+        plugin: plugin,
+        urlResolver: (variant) => 'https://example.test/${variant.fileName}',
+        authTokenResolver: (_) async => throw StateError('keychain locked'),
+      );
+      try {
+        await manager.ensureInstalled(GemmaModelVariant.e2b);
+        fail('expected GemmaModelInstallException');
+      } on GemmaModelInstallException catch (e) {
+        check(e.phase).equals(GemmaModelInstallPhase.authTokenResolution);
+        check(e.cause).isA<StateError>();
+      }
+      // The plugin was never asked to download.
+      check(plugin.installCalls).isEmpty();
+    });
   });
 }
 
@@ -84,6 +113,7 @@ class _FakeGemmaPlugin implements GemmaPlugin {
   final Set<String> installed = {};
   final List<_InstallCall> installCalls = [];
   List<int> progressToEmit = const [];
+  bool shouldThrowOnInstall = false;
 
   @override
   Future<bool> isModelInstalled(String fileName) async =>
@@ -96,6 +126,9 @@ class _FakeGemmaPlugin implements GemmaPlugin {
     String? authToken,
     void Function(int percent)? onProgress,
   }) async {
+    if (shouldThrowOnInstall) {
+      throw Exception('network down');
+    }
     installCalls.add(
       _InstallCall(url: url, fileName: fileName, authToken: authToken),
     );

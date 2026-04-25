@@ -1,3 +1,4 @@
+import 'gemma_model_install_exception.dart';
 import 'gemma_model_variant.dart';
 import 'gemma_plugin.dart';
 
@@ -37,6 +38,11 @@ class GemmaModelManager {
   /// [onProgress] is invoked with percentages in [0, 100] during the
   /// download. When the model is already present, returns immediately
   /// without invoking [onProgress].
+  ///
+  /// Failures in the auth-token resolver or the plugin's download are
+  /// rethrown as [GemmaModelInstallException] so callers can switch on
+  /// the failure phase without inspecting raw plugin / IO exception
+  /// types.
   Future<void> ensureInstalled(
     GemmaModelVariant variant, {
     void Function(int percent)? onProgress,
@@ -44,13 +50,32 @@ class GemmaModelManager {
     if (await _plugin.isModelInstalled(variant.fileName)) {
       return;
     }
-    final token = await _authTokenResolver?.call(variant);
-    await _plugin.installFromNetwork(
-      url: _urlResolver(variant),
-      fileName: variant.fileName,
-      authToken: token,
-      onProgress: onProgress,
-    );
+    final String? token;
+    try {
+      token = await _authTokenResolver?.call(variant);
+    } on Object catch (cause, stack) {
+      throw GemmaModelInstallException(
+        variant: variant,
+        phase: GemmaModelInstallPhase.authTokenResolution,
+        cause: cause,
+        stackTrace: stack,
+      );
+    }
+    try {
+      await _plugin.installFromNetwork(
+        url: _urlResolver(variant),
+        fileName: variant.fileName,
+        authToken: token,
+        onProgress: onProgress,
+      );
+    } on Object catch (cause, stack) {
+      throw GemmaModelInstallException(
+        variant: variant,
+        phase: GemmaModelInstallPhase.download,
+        cause: cause,
+        stackTrace: stack,
+      );
+    }
   }
 
   /// Remove [variant] from local storage. No-op if not installed.
