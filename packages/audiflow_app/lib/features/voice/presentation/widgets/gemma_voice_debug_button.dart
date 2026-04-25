@@ -17,18 +17,31 @@ class GemmaVoiceDebugButton extends ConsumerWidget {
     final state = ref.watch(gemmaVoiceCaptureControllerProvider);
     final notifier = ref.read(gemmaVoiceCaptureControllerProvider.notifier);
 
+    final theme = Theme.of(context);
+    final isRecording = state is GemmaCaptureRecording;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         GestureDetector(
+          behavior: HitTestBehavior.opaque,
           onLongPressStart: (_) => notifier.start(),
           onLongPressEnd: (_) => notifier.stop(),
           onLongPressCancel: notifier.cancel,
-          child: AbsorbPointer(
-            child: FilledButton.icon(
-              onPressed: () {},
-              icon: Icon(_iconFor(state)),
-              label: Text(_labelFor(state)),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: isRecording
+                  ? theme.colorScheme.errorContainer
+                  : theme.colorScheme.primaryContainer,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(_iconFor(state)),
+                const SizedBox(width: 8),
+                Text(_labelFor(state)),
+              ],
             ),
           ),
         ),

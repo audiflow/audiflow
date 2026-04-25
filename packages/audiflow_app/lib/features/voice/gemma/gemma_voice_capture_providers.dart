@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'voice_audio_recorder.dart';
@@ -14,7 +15,20 @@ part 'gemma_voice_capture_providers.g.dart';
 /// when the provider container shuts down.
 @Riverpod(keepAlive: true)
 VoiceAudioRecorder voiceAudioRecorder(Ref ref) {
+  // Capture the logger eagerly: by the time onDispose runs, ref.read may
+  // be unsafe and we'd lose the breadcrumb if dispose() rejects.
+  final logger = ref.read(namedLoggerProvider('GemmaVoiceCapture'));
   final recorder = RecordPackageVoiceAudioRecorder();
-  ref.onDispose(() => unawaited(recorder.dispose()));
+  ref.onDispose(() {
+    unawaited(
+      recorder.dispose().catchError((Object e, StackTrace st) {
+        logger.w(
+          'voiceAudioRecorder.dispose() failed during teardown',
+          error: e,
+          stackTrace: st,
+        );
+      }),
+    );
+  });
   return recorder;
 }

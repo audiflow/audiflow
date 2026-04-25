@@ -52,6 +52,7 @@ class RecordPackageVoiceAudioRecorder implements VoiceAudioRecorder {
 
   StreamSubscription<Uint8List>? _subscription;
   BytesBuilder? _buffer;
+  Object? _streamError;
 
   @override
   Future<bool> hasPermission() => _recorder.hasPermission();
@@ -64,12 +65,13 @@ class RecordPackageVoiceAudioRecorder implements VoiceAudioRecorder {
     final stream = await _recorder.startStream(_config);
     final buffer = BytesBuilder(copy: false);
     _buffer = buffer;
+    _streamError = null;
     _subscription = stream.listen(
       buffer.add,
       onError: (Object error, StackTrace stack) {
-        // Surface as an unhandled async error; the controller will catch
-        // it via the Future returned by stop().
-        _subscription?.cancel();
+        // Latch the first stream error so stop() can rethrow it instead of
+        // silently returning a truncated WAV.
+        _streamError ??= error;
       },
       cancelOnError: true,
     );
@@ -79,13 +81,20 @@ class RecordPackageVoiceAudioRecorder implements VoiceAudioRecorder {
   Future<Uint8List> stop() async {
     final subscription = _subscription;
     final buffer = _buffer;
+    final streamError = _streamError;
     if (subscription == null || buffer == null) {
       throw StateError('VoiceAudioRecorder.stop() called before start()');
     }
     _subscription = null;
     _buffer = null;
+    _streamError = null;
     await _recorder.stop();
     await subscription.cancel();
+    if (streamError != null) {
+      // Force the typed catch in callers to fire even if the platform
+      // surfaced a non-Exception error.
+      throw _RecorderStreamException(streamError);
+    }
     return wrapPcmAsWav(buffer.toBytes());
   }
 
@@ -106,4 +115,12 @@ class RecordPackageVoiceAudioRecorder implements VoiceAudioRecorder {
     await cancel();
     await _recorder.dispose();
   }
+}
+
+class _RecorderStreamException implements Exception {
+  _RecorderStreamException(this.cause);
+  final Object cause;
+
+  @override
+  String toString() => 'RecorderStreamException: $cause';
 }

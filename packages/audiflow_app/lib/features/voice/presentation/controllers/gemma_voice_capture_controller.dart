@@ -73,6 +73,17 @@ const Duration _maxRecordingDuration = Duration(seconds: 30);
 class GemmaVoiceCaptureController extends _$GemmaVoiceCaptureController {
   Timer? _autoStopTimer;
 
+  /// Bumped on every cancel/reset/new-start. Async continuations check the
+  /// epoch they captured at the start of their turn before mutating state,
+  /// so a late-arriving `route.dispatch` result can't resurrect a state
+  /// the user already cancelled.
+  int _epoch = 0;
+
+  /// Latched the first time a `stop()` for the current recording session
+  /// crosses the synchronous prelude. Prevents the manual-release vs
+  /// 30s-timer race from double-stopping the recorder.
+  bool _stopping = false;
+
   @override
   GemmaCaptureState build() {
     ref.onDispose(() {
@@ -93,21 +104,33 @@ class GemmaVoiceCaptureController extends _$GemmaVoiceCaptureController {
         state is! GemmaCaptureFailure) {
       return;
     }
+    final epoch = ++_epoch;
     if (!await _recorder.hasPermission()) {
-      state = const GemmaCaptureFailure(
-        GemmaCaptureFailureReason.permissionDenied,
-      );
+      if (_epoch == epoch) {
+        state = const GemmaCaptureFailure(
+          GemmaCaptureFailureReason.permissionDenied,
+        );
+      }
       return;
     }
     try {
       await _recorder.start();
     } on Exception catch (e, st) {
       _logger.e('recorder.start() failed', error: e, stackTrace: st);
-      state = const GemmaCaptureFailure(
-        GemmaCaptureFailureReason.recorderUnavailable,
-      );
+      if (_epoch == epoch) {
+        state = const GemmaCaptureFailure(
+          GemmaCaptureFailureReason.recorderUnavailable,
+        );
+      }
       return;
     }
+    if (_epoch != epoch) {
+      // The session was cancelled while start() was in flight; tear down
+      // the just-started recorder so we don't leak a recording session.
+      await _recorder.cancel();
+      return;
+    }
+    _stopping = false;
     _autoStopTimer = Timer(_maxRecordingDuration, () {
       // The user is holding past the cap; stop and dispatch what we have.
       unawaited(stop());
@@ -117,30 +140,45 @@ class GemmaVoiceCaptureController extends _$GemmaVoiceCaptureController {
 
   /// Stop recording, dispatch to the route, and emit the resulting state.
   Future<void> stop() async {
-    if (state is! GemmaCaptureRecording) {
+    // Synchronous claim: the manual-release callback and the 30s timer
+    // can both call stop() in the same microtask; only the first one
+    // proceeds.
+    if (state is! GemmaCaptureRecording || _stopping) {
       return;
     }
+    _stopping = true;
     _autoStopTimer?.cancel();
     _autoStopTimer = null;
+    final epoch = _epoch;
     final Uint8List audio;
     try {
       audio = await _recorder.stop();
     } on Exception catch (e, st) {
       _logger.e('recorder.stop() failed', error: e, stackTrace: st);
-      state = const GemmaCaptureFailure(
-        GemmaCaptureFailureReason.recordingError,
-      );
+      if (_epoch == epoch) {
+        state = const GemmaCaptureFailure(
+          GemmaCaptureFailureReason.recordingError,
+        );
+      }
+      return;
+    }
+    if (_epoch != epoch) {
+      // Cancelled mid-stop; drop the audio rather than dispatching it.
       return;
     }
     state = const GemmaCaptureDispatching();
     try {
       final command = await _route.dispatch(audio);
-      state = GemmaCaptureSuccess(command);
+      if (_epoch == epoch) {
+        state = GemmaCaptureSuccess(command);
+      }
     } on Exception catch (e, st) {
       _logger.e('route.dispatch() failed', error: e, stackTrace: st);
-      state = const GemmaCaptureFailure(
-        GemmaCaptureFailureReason.dispatchFailed,
-      );
+      if (_epoch == epoch) {
+        state = const GemmaCaptureFailure(
+          GemmaCaptureFailureReason.dispatchFailed,
+        );
+      }
     }
   }
 
@@ -148,10 +186,19 @@ class GemmaVoiceCaptureController extends _$GemmaVoiceCaptureController {
   Future<void> cancel() async {
     _autoStopTimer?.cancel();
     _autoStopTimer = null;
-    if (state is GemmaCaptureRecording) {
-      await _recorder.cancel();
-    }
+    _epoch += 1;
+    final wasRecording = state is GemmaCaptureRecording;
     state = const GemmaCaptureIdle();
+    if (!wasRecording) {
+      return;
+    }
+    try {
+      await _recorder.cancel();
+    } on Exception catch (e, st) {
+      // Already in Idle; recorder cleanup failed but the controller is in
+      // a defined state. Log and move on.
+      _logger.w('recorder.cancel() failed', error: e, stackTrace: st);
+    }
   }
 
   /// Reset to idle from a terminal state without touching the recorder.

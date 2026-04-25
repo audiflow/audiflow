@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:audiflow_ai/audiflow_ai.dart';
@@ -191,6 +192,63 @@ void main() {
     ).isA<GemmaCaptureIdle>();
     check(recorder.cancelCalls).equals(0);
   });
+
+  test(
+    'concurrent stop calls dispatch exactly once (race latch holds)',
+    () async {
+      // Hold recorder.stop() open until both stop() invocations have entered
+      // the controller, then complete it. The _stopping latch must keep the
+      // second call from also reaching recorder.stop().
+      recorder.stopGate = Completer<void>();
+      final container = makeContainer();
+      final notifier = container.read(
+        gemmaVoiceCaptureControllerProvider.notifier,
+      );
+      await notifier.start();
+
+      final manualStop = notifier.stop();
+      final racingStop = notifier.stop();
+      recorder.stopGate!.complete();
+      await Future.wait([manualStop, racingStop]);
+
+      check(recorder.stopCalls).equals(1);
+      check(route.dispatchCount).equals(1);
+    },
+  );
+
+  test(
+    'cancel during dispatch does not get overwritten by late success',
+    () async {
+      route.dispatchGate = Completer<void>();
+      final container = makeContainer();
+      final notifier = container.read(
+        gemmaVoiceCaptureControllerProvider.notifier,
+      );
+      await notifier.start();
+      final stopFuture = notifier.stop();
+      // Yield enough microtask hops for stop() to advance past the
+      // recorder.stop() await and assign state=Dispatching, then suspend
+      // on dispatchGate.
+      for (var i = 0; i < 10; i++) {
+        await Future<void>.value();
+      }
+      check(
+        container.read(gemmaVoiceCaptureControllerProvider),
+      ).isA<GemmaCaptureDispatching>();
+
+      await notifier.cancel();
+      check(
+        container.read(gemmaVoiceCaptureControllerProvider),
+      ).isA<GemmaCaptureIdle>();
+
+      // Late dispatch result must NOT resurrect the cancelled session.
+      route.dispatchGate!.complete();
+      await stopFuture;
+      check(
+        container.read(gemmaVoiceCaptureControllerProvider),
+      ).isA<GemmaCaptureIdle>();
+    },
+  );
 }
 
 class _FakeRecorder implements VoiceAudioRecorder {
@@ -199,7 +257,12 @@ class _FakeRecorder implements VoiceAudioRecorder {
   Object? stopError;
   Uint8List wav = Uint8List.fromList([1, 2, 3]);
 
+  /// When set, stop() awaits this completer before returning. Lets tests
+  /// hold a stop in flight to interleave a second stop call.
+  Completer<void>? stopGate;
+
   int startCalls = 0;
+  int stopCalls = 0;
   int cancelCalls = 0;
 
   @override
@@ -213,6 +276,10 @@ class _FakeRecorder implements VoiceAudioRecorder {
 
   @override
   Future<Uint8List> stop() async {
+    stopCalls += 1;
+    if (stopGate != null) {
+      await stopGate!.future;
+    }
     if (stopError != null) throw stopError!;
     return wav;
   }
@@ -228,7 +295,9 @@ class _FakeRecorder implements VoiceAudioRecorder {
 
 class _FakeRoute implements GemmaVoiceCommandRoute {
   Uint8List? dispatchedAudio;
+  int dispatchCount = 0;
   Object? error;
+  Completer<void>? dispatchGate;
   VoiceCommand command = VoiceCommand(
     intent: VoiceIntent.pause,
     parameters: const {},
@@ -238,7 +307,11 @@ class _FakeRoute implements GemmaVoiceCommandRoute {
 
   @override
   Future<VoiceCommand> dispatch(Uint8List audio) async {
+    dispatchCount += 1;
     dispatchedAudio = audio;
+    if (dispatchGate != null) {
+      await dispatchGate!.future;
+    }
     if (error != null) throw error!;
     return command;
   }
