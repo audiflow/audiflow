@@ -84,6 +84,12 @@ class GemmaVoiceCaptureController extends _$GemmaVoiceCaptureController {
   /// 30s-timer race from double-stopping the recorder.
   bool _stopping = false;
 
+  /// Latched while a `start()` is in flight so two concurrent start calls
+  /// can't both reach `_recorder.start()` — the second would hit the
+  /// recorder's re-entry `StateError` (an Error subtype, escaping our
+  /// `on Exception` catch).
+  bool _starting = false;
+
   @override
   GemmaCaptureState build() {
     ref.onDispose(() {
@@ -97,45 +103,62 @@ class GemmaVoiceCaptureController extends _$GemmaVoiceCaptureController {
   VoiceAudioRecorder get _recorder => ref.read(voiceAudioRecorderProvider);
   GemmaVoiceCommandRoute get _route => ref.read(gemmaVoiceCommandRouteProvider);
 
-  /// Begin recording. No-op if already recording or dispatching.
+  /// Begin recording. No-op if already recording, dispatching, or if
+  /// another start() is in flight.
   Future<void> start() async {
-    if (state is! GemmaCaptureIdle &&
-        state is! GemmaCaptureSuccess &&
-        state is! GemmaCaptureFailure) {
+    if (_starting ||
+        (state is! GemmaCaptureIdle &&
+            state is! GemmaCaptureSuccess &&
+            state is! GemmaCaptureFailure)) {
       return;
     }
+    _starting = true;
     final epoch = ++_epoch;
-    if (!await _recorder.hasPermission()) {
-      if (_epoch == epoch) {
-        state = const GemmaCaptureFailure(
-          GemmaCaptureFailureReason.permissionDenied,
-        );
-      }
-      return;
-    }
     try {
-      await _recorder.start();
-    } on Exception catch (e, st) {
-      _logger.e('recorder.start() failed', error: e, stackTrace: st);
-      if (_epoch == epoch) {
-        state = const GemmaCaptureFailure(
-          GemmaCaptureFailureReason.recorderUnavailable,
-        );
+      if (!await _recorder.hasPermission()) {
+        if (_epoch == epoch) {
+          state = const GemmaCaptureFailure(
+            GemmaCaptureFailureReason.permissionDenied,
+          );
+        }
+        return;
       }
-      return;
+      try {
+        await _recorder.start();
+      } on Exception catch (e, st) {
+        _logger.e('recorder.start() failed', error: e, stackTrace: st);
+        if (_epoch == epoch) {
+          state = const GemmaCaptureFailure(
+            GemmaCaptureFailureReason.recorderUnavailable,
+          );
+        }
+        return;
+      }
+      if (_epoch != epoch) {
+        // The session was cancelled while start() was in flight; tear down
+        // the just-started recorder so we don't leak a recording session.
+        // Wrap so a recorder cleanup failure can't escape to the user-tap
+        // handler as an unhandled async error.
+        try {
+          await _recorder.cancel();
+        } on Exception catch (e, st) {
+          _logger.w(
+            'recorder.cancel() during start-cancel race failed',
+            error: e,
+            stackTrace: st,
+          );
+        }
+        return;
+      }
+      _stopping = false;
+      _autoStopTimer = Timer(_maxRecordingDuration, () {
+        // The user is holding past the cap; stop and dispatch what we have.
+        unawaited(stop());
+      });
+      state = const GemmaCaptureRecording();
+    } finally {
+      _starting = false;
     }
-    if (_epoch != epoch) {
-      // The session was cancelled while start() was in flight; tear down
-      // the just-started recorder so we don't leak a recording session.
-      await _recorder.cancel();
-      return;
-    }
-    _stopping = false;
-    _autoStopTimer = Timer(_maxRecordingDuration, () {
-      // The user is holding past the cap; stop and dispatch what we have.
-      unawaited(stop());
-    });
-    state = const GemmaCaptureRecording();
   }
 
   /// Stop recording, dispatch to the route, and emit the resulting state.
@@ -164,6 +187,10 @@ class GemmaVoiceCaptureController extends _$GemmaVoiceCaptureController {
     }
     if (_epoch != epoch) {
       // Cancelled mid-stop; drop the audio rather than dispatching it.
+      // Logged so on-device traces explain why a tap produced no command.
+      _logger.d(
+        'stop() epoch mismatch; dropping ${audio.length}B captured audio',
+      );
       return;
     }
     state = const GemmaCaptureDispatching();
