@@ -2,6 +2,7 @@ import 'package:audiflow_ai/audiflow_ai.dart';
 import 'package:audiflow_app/features/settings/presentation/controllers/gemma_voice_capability_controller.dart';
 import 'package:audiflow_app/features/settings/presentation/screens/voice_settings_screen.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
+import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -92,6 +93,79 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(SegmentedButton<GemmaModelVariant>), findsOneWidget);
+    });
+
+    testWidgets(
+      'tapping a variant segment persists the choice to SharedPreferences',
+      (tester) async {
+        SharedPreferences.setMockInitialValues({
+          SettingsKeys.voiceGemmaEnabled: true,
+          SettingsKeys.voiceGemmaVariant: 'e2b',
+        });
+        prefs = await SharedPreferences.getInstance();
+
+        await tester.pumpWidget(
+          buildTestWidget(
+            GemmaVoiceCapability.supported(
+              available: const [GemmaModelVariant.e2b, GemmaModelVariant.e4b],
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Larger (2500 MB)'));
+        await tester.pumpAndSettle();
+
+        expect(prefs.getString(SettingsKeys.voiceGemmaVariant), equals('e4b'));
+      },
+    );
+
+    testWidgets(
+      'persisted variant unavailable on this device is rewritten to fallback',
+      (tester) async {
+        // Persisted E4B from a previous device; current device only offers
+        // E2B. The selector must show E2B AND re-persist E2B so the next
+        // read isn't stale.
+        SharedPreferences.setMockInitialValues({
+          SettingsKeys.voiceGemmaEnabled: true,
+          SettingsKeys.voiceGemmaVariant: 'e4b',
+        });
+        prefs = await SharedPreferences.getInstance();
+
+        await tester.pumpWidget(
+          buildTestWidget(
+            GemmaVoiceCapability.supported(
+              available: const [GemmaModelVariant.e2b],
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(prefs.getString(SettingsKeys.voiceGemmaVariant), equals('e2b'));
+      },
+    );
+
+    testWidgets('error state still renders the unsupported tile', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            sharedPreferencesProvider.overrideWithValue(prefs),
+            gemmaVoiceCapabilityProvider.overrideWith(
+              (ref) async => throw Exception('plugin failed'),
+            ),
+          ],
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const VoiceSettingsScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('On-device AI not available'), findsOneWidget);
     });
   });
 }

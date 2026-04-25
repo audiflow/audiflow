@@ -217,13 +217,26 @@ class _GemmaVoiceSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final capability = ref.watch(gemmaVoiceCapabilityProvider);
+    final enabled = repo.getVoiceGemmaEnabled();
 
     return capability.when(
       loading: () => const ListTile(title: LinearProgressIndicator()),
-      error: (_, _) => ListTile(
-        leading: const Icon(Symbols.error),
-        title: Text(l10n.voiceGemmaUnsupported),
-      ),
+      // device_info_plus failures are rare but real (missing plugin during
+      // integration tests, OEM channel quirks). Log the cause so they don't
+      // get conflated with legitimate-unsupported devices in telemetry.
+      error: (err, stack) {
+        ref
+            .read(namedLoggerProvider('GemmaVoiceCapability'))
+            .e(
+              'capability detection failed; treating as unsupported',
+              error: err,
+              stackTrace: stack,
+            );
+        return ListTile(
+          leading: const Icon(Symbols.error),
+          title: Text(l10n.voiceGemmaUnsupported),
+        );
+      },
       data: (cap) => switch (cap) {
         GemmaVoiceCapabilityUnsupported(:final reason) => ListTile(
           leading: const Icon(Symbols.do_not_disturb),
@@ -236,12 +249,11 @@ class _GemmaVoiceSection extends ConsumerWidget {
             SwitchListTile(
               title: Text(l10n.voiceGemmaEnabledTitle),
               subtitle: Text(l10n.voiceGemmaEnabledSubtitle),
-              value: repo.getVoiceGemmaEnabled(),
+              value: enabled,
               onChanged: (v) =>
                   unawaited(_update(ref, () => repo.setVoiceGemmaEnabled(v))),
             ),
-            if (repo.getVoiceGemmaEnabled())
-              _VariantSelector(repo: repo, available: available),
+            if (enabled) _VariantSelector(repo: repo, available: available),
           ],
         ),
       },
@@ -259,8 +271,14 @@ class _GemmaVoiceSection extends ConsumerWidget {
   };
 
   Future<void> _update(WidgetRef ref, Future<void> Function() setter) async {
-    await setter();
-    ref.invalidate(appSettingsRepositoryProvider);
+    try {
+      await setter();
+      ref.invalidate(appSettingsRepositoryProvider);
+    } on Exception catch (e, s) {
+      ref
+          .read(namedLoggerProvider('VoiceSettings'))
+          .e('failed to persist Gemma voice setting', error: e, stackTrace: s);
+    }
   }
 }
 
@@ -274,10 +292,21 @@ class _VariantSelector extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final currentName = repo.getVoiceGemmaVariant();
-    final current = available.firstWhere(
-      (v) => v.name == currentName,
-      orElse: () => available.first,
-    );
+    final matched = <GemmaModelVariant?>[
+      ...available,
+    ].firstWhere((v) => v?.name == currentName, orElse: () => null);
+    final current = matched ?? available.first;
+
+    // Persisted variant is no longer offerable (e.g. RAM tier changed across
+    // OS upgrade or backup-restore). Re-persist after the current frame so
+    // storage and UI stay in sync; otherwise the next read silently
+    // substitutes again and downstream consumers see the stale value.
+    if (matched == null) {
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => unawaited(_persist(ref, current.name)),
+      );
+    }
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       child: SegmentedButton<GemmaModelVariant>(
@@ -308,9 +337,15 @@ class _VariantSelector extends ConsumerWidget {
       };
 
   Future<void> _persist(WidgetRef ref, String name) async {
-    final repo = ref.read(appSettingsRepositoryProvider);
-    await repo.setVoiceGemmaVariant(name);
-    ref.invalidate(appSettingsRepositoryProvider);
+    try {
+      final repo = ref.read(appSettingsRepositoryProvider);
+      await repo.setVoiceGemmaVariant(name);
+      ref.invalidate(appSettingsRepositoryProvider);
+    } on Exception catch (e, s) {
+      ref
+          .read(namedLoggerProvider('VoiceSettings'))
+          .e('failed to persist voice variant', error: e, stackTrace: s);
+    }
   }
 }
 
