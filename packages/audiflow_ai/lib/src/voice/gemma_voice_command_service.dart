@@ -125,9 +125,6 @@ class GemmaVoiceCommandService {
     );
   }
 
-  // Empty candidates list is valid: the system prompt instructs the model
-  // to use it as the "no command recognized" signal. The caller turns that
-  // into VoiceIntent.unknown.
   SettingsChangePayload? _parseAmbiguous(Map<String, Object?> args) {
     final raw = args['candidates'];
     if (raw is! List) {
@@ -203,7 +200,9 @@ class GemmaVoiceCommandService {
     failureReason: reason,
   );
 
-  // Confidence we assign to deterministic tool calls (play / pause / etc.).
-  // Settings calls carry the model's own self-reported confidence.
-  static const double _fixedToolConfidence = 0.95;
+  // Fixed tools are deterministic dispatches: either the model emitted the
+  // function call or it didn't, and there is no consumer downstream that
+  // gates on confidence for non-settings intents. Settings calls carry the
+  // model's own self-reported confidence instead.
+  static const double _fixedToolConfidence = 1;
 }

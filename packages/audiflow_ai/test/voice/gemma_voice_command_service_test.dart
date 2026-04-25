@@ -22,7 +22,7 @@ void main() {
         settingsSnapshot: settingsSnapshot,
       );
       check(command.intent).equals(VoiceIntent.pause);
-      check(command.confidence).equals(0.95);
+      check(command.confidence).equals(1);
       check(command.parameters).isEmpty();
       check(command.settingsPayload).isNull();
     });
