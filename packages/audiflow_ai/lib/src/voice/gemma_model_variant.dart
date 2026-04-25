@@ -7,7 +7,7 @@ enum GemmaModelVariant {
   /// Gemma 4 E2B — 2B effective params, ~1.3 GB on disk, runs on mid-range
   /// phones.
   e2b(
-    fileName: 'gemma-4-e2b-it.litertlm',
+    fileName: 'gemma-4-E2B-it.litertlm',
     approximateSizeMb: 1300,
     minimumDeviceRamMb: 3000,
   ),
@@ -15,7 +15,7 @@ enum GemmaModelVariant {
   /// Gemma 4 E4B — 4B effective params, ~2.5 GB on disk, flagship-class
   /// devices only.
   e4b(
-    fileName: 'gemma-4-e4b-it.litertlm',
+    fileName: 'gemma-4-E4B-it.litertlm',
     approximateSizeMb: 2500,
     minimumDeviceRamMb: 5000,
   )
