@@ -2186,25 +2186,25 @@ abstract class AppLocalizations {
   /// **'On-device AI not available'**
   String get voiceGemmaUnsupported;
 
-  /// Reason: platform isn't mobile
+  /// Subtitle shown under the unsupported header when the device is not a phone or tablet (e.g. running on desktop).
   ///
   /// In en, this message translates to:
   /// **'Only supported on phones and tablets.'**
   String get voiceGemmaUnsupportedNonMobile;
 
-  /// Reason: device RAM below the minimum supported variant
+  /// Subtitle shown under the unsupported header when the device has less RAM than the smallest supported model variant requires.
   ///
   /// In en, this message translates to:
   /// **'This device doesn\'t have enough memory to run the on-device model.'**
   String get voiceGemmaUnsupportedRam;
 
-  /// Label for the Gemma 4 E2B (2B params) variant
+  /// Segmented-button label for the smaller, faster on-device model variant. Size in megabytes is interpolated.
   ///
   /// In en, this message translates to:
   /// **'Standard ({sizeMb} MB)'**
   String voiceGemmaVariantE2b(int sizeMb);
 
-  /// Label for the Gemma 4 E4B (4B params) variant
+  /// Segmented-button label for the larger, more accurate on-device model variant. Size in megabytes is interpolated.
   ///
   /// In en, this message translates to:
   /// **'Larger ({sizeMb} MB)'**
