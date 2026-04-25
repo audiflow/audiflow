@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audiflow_ai/audiflow_ai.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -50,7 +52,10 @@ GemmaModelManager gemmaModelManager(Ref ref) {
 @Riverpod(keepAlive: true)
 GemmaInferenceSession gemmaInferenceSession(Ref ref) {
   final session = FlutterGemmaInferenceSession();
-  ref.onDispose(session.dispose);
+  // `onDispose` takes `void Function()`; `session.dispose` returns a Future
+  // whose errors are already swallowed but whose completion would otherwise
+  // be silently dropped. `unawaited` makes the fire-and-forget explicit.
+  ref.onDispose(() => unawaited(session.dispose()));
   return session;
 }
 

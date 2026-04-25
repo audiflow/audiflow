@@ -27,6 +27,7 @@ class FlutterGemmaInferenceSession implements ai.GemmaInferenceSession {
   /// audio token cost (25 tokens per second of audio, max 30 seconds).
   final int maxTokens;
 
+  Future<InferenceModel>? _modelLoading;
   InferenceModel? _model;
 
   @override
@@ -57,17 +58,27 @@ class FlutterGemmaInferenceSession implements ai.GemmaInferenceSession {
     }
   }
 
-  Future<InferenceModel> _ensureModel() async {
+  Future<InferenceModel> _ensureModel() {
     final cached = _model;
     if (cached != null) {
-      return cached;
+      return Future.value(cached);
     }
-    final model = await FlutterGemma.getActiveModel(
-      maxTokens: maxTokens,
-      supportAudio: true,
-    );
-    _model = model;
-    return model;
+    // Cache the in-flight Future so concurrent runWithAudio calls share a
+    // single model load instead of each paying the multi-GB cost.
+    return _modelLoading ??= _loadModel();
+  }
+
+  Future<InferenceModel> _loadModel() async {
+    try {
+      final model = await FlutterGemma.getActiveModel(
+        maxTokens: maxTokens,
+        supportAudio: true,
+      );
+      _model = model;
+      return model;
+    } finally {
+      _modelLoading = null;
+    }
   }
 
   Tool _toFlutterGemmaTool(ai.VoiceToolDefinition def) =>
@@ -77,12 +88,20 @@ class FlutterGemmaInferenceSession implements ai.GemmaInferenceSession {
       parseFlutterGemmaResponse(response);
 
   /// Release the cached model. Call when the user disables the Gemma path
-  /// to free RAM; the next call will re-load.
+  /// to free RAM; the next call will re-load. Errors from the native close
+  /// are swallowed because dispose runs during provider teardown where
+  /// rethrowing turns into an unhandled async error.
   Future<void> dispose() async {
     final model = _model;
     _model = null;
-    if (model != null) {
+    _modelLoading = null;
+    if (model == null) {
+      return;
+    }
+    try {
       await model.close();
+    } on Exception {
+      // Native close failure during teardown — nothing actionable here.
     }
   }
 }
