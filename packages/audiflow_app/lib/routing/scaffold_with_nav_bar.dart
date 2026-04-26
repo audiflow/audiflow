@@ -535,7 +535,10 @@ class _VoiceCenterButtonState extends ConsumerState<_VoiceCenterButton>
       case VoiceIdle():
         unawaited(orchestrator.startVoiceCommand());
       case VoiceListening():
-        unawaited(orchestrator.cancelVoiceCommand());
+        // Tap-to-toggle commits the captured audio; use stopVoiceCommand
+        // (which dispatches to Gemma) rather than cancelVoiceCommand
+        // (which silently drops the audio).
+        unawaited(orchestrator.stopVoiceCommand());
       case VoiceSuccess():
         orchestrator.resetToIdle();
       case VoiceError():

@@ -212,6 +212,10 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
 
   /// Cancel any in-flight recording / dispatch and return to idle.
   Future<void> cancelVoiceCommand() async {
+    _logger?.i(
+      'cancelVoiceCommand: state=${state.runtimeType}, '
+      'discarding any captured audio',
+    );
     _autoStopTimer?.cancel();
     _autoStopTimer = null;
     _epoch += 1;
