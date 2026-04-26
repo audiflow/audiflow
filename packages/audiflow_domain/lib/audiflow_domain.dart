@@ -125,21 +125,6 @@ export 'src/features/player/repositories/playback_history_repository.dart';
 export 'src/features/player/repositories/playback_history_repository_impl.dart';
 export 'src/features/player/services/playback_history_service.dart';
 
-// Voice feature
-export 'src/features/voice/models/settings_metadata.dart';
-export 'src/features/voice/models/voice_recognition_state.dart';
-export 'src/features/voice/repositories/voice_audio_recorder.dart';
-export 'src/features/voice/services/gemma_voice_command_route.dart';
-export 'src/features/voice/services/gemma_voice_providers.dart';
-export 'src/features/voice/services/play_podcast_by_name_service.dart';
-export 'src/features/voice/services/settings_intent_resolver.dart';
-export 'src/features/voice/services/settings_metadata_registry.dart';
-export 'src/features/voice/services/settings_snapshot_service.dart';
-export 'src/features/voice/services/voice_command_executor.dart';
-export 'src/features/voice/services/voice_command_orchestrator.dart';
-export 'src/features/voice/models/voice_debug_info.dart';
-export 'src/features/voice/services/voice_debug_info_notifier.dart';
-
 // Download feature
 export 'src/features/download/models/download_status.dart';
 export 'src/features/download/datasources/local/download_local_datasource.dart';
@@ -175,10 +160,6 @@ export 'src/features/subscription/models/opml_entry.dart';
 export 'src/features/subscription/models/opml_import_result.dart';
 export 'src/features/subscription/services/opml_import_service.dart';
 export 'src/features/subscription/services/opml_parser_service.dart';
-
-// Re-export audiflow_ai types for voice feature
-export 'package:audiflow_ai/audiflow_ai.dart'
-    show VoiceCommand, VoiceIntent, AudiflowAi, AudiflowAiException;
 
 // Re-export audiflow_search types for subscription extension
 export 'package:audiflow_search/audiflow_search.dart' show Podcast;

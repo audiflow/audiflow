@@ -14,7 +14,7 @@ void main() {
       );
     }
 
-    /// Sets a surface size tall enough to render all 8
+    /// Sets a surface size tall enough to render all 7
     /// cards without scrolling, then restores it.
     Future<void> withTallSurface(
       WidgetTester tester,
@@ -41,11 +41,11 @@ void main() {
       expect(titleWidget.data, equals('Settings'));
     });
 
-    testWidgets('renders 8 category cards', (tester) async {
+    testWidgets('renders 7 category cards', (tester) async {
       await withTallSurface(tester, () async {
         await tester.pumpWidget(buildTestWidget());
 
-        expect(find.byType(SettingsCategoryCard), findsNWidgets(8));
+        expect(find.byType(SettingsCategoryCard), findsNWidgets(7));
       });
     });
 
@@ -58,7 +58,6 @@ void main() {
         expect(find.text('Downloads'), findsOneWidget);
         expect(find.text('Feed Sync'), findsOneWidget);
         expect(find.text('Storage & Data'), findsOneWidget);
-        expect(find.text('Voice'), findsOneWidget);
         expect(find.text('About'), findsOneWidget);
         expect(find.text('Developer'), findsOneWidget);
       });
@@ -79,7 +78,6 @@ void main() {
         expect(find.text('WiFi, auto-delete, concurrency'), findsOneWidget);
         expect(find.text('Refresh interval, background sync'), findsOneWidget);
         expect(find.text('Cache, OPML, data management'), findsOneWidget);
-        expect(find.text('Voice commands and recognition'), findsOneWidget);
         expect(find.text('Version, licenses, support'), findsOneWidget);
         expect(
           find.text('Smart playlist patterns and debug info'),

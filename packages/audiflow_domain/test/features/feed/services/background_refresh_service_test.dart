@@ -1,5 +1,5 @@
 import 'package:audiflow_core/audiflow_core.dart'
-    show AutoPlayOrder, DuckInterruptionBehavior, SettingsDefaults;
+    show AutoPlayOrder, DuckInterruptionBehavior;
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart' show ThemeMode;
 import 'package:flutter_test/flutter_test.dart';
@@ -116,18 +116,6 @@ class FakeAppSettingsRepository implements AppSettingsRepository {
   int getLastTabIndex() => 0;
   @override
   Future<void> setLastTabIndex(int index) async {}
-  @override
-  bool getVoiceEnabled() => SettingsDefaults.voiceEnabled;
-  @override
-  Future<void> setVoiceEnabled(bool enabled) async {}
-  @override
-  bool getVoiceGemmaEnabled() => SettingsDefaults.voiceGemmaEnabled;
-  @override
-  Future<void> setVoiceGemmaEnabled(bool enabled) async {}
-  @override
-  String getVoiceGemmaVariant() => SettingsDefaults.voiceGemmaVariant;
-  @override
-  Future<void> setVoiceGemmaVariant(String variantName) async {}
   @override
   Future<void> clearAll() async {}
 }

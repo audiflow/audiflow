@@ -89,15 +89,6 @@ class BackgroundSettingsRepository implements AppSettingsRepository {
   @override
   int getLastTabIndex() => SettingsDefaults.lastTabIndex;
 
-  @override
-  bool getVoiceEnabled() => SettingsDefaults.voiceEnabled;
-
-  @override
-  bool getVoiceGemmaEnabled() => SettingsDefaults.voiceGemmaEnabled;
-
-  @override
-  String getVoiceGemmaVariant() => SettingsDefaults.voiceGemmaVariant;
-
   // -- All setters are unsupported in background --
 
   Never _unsupported() =>
@@ -163,15 +154,6 @@ class BackgroundSettingsRepository implements AppSettingsRepository {
 
   @override
   Future<void> setLastTabIndex(int index) => _unsupported();
-
-  @override
-  Future<void> setVoiceEnabled(bool enabled) => _unsupported();
-
-  @override
-  Future<void> setVoiceGemmaEnabled(bool enabled) => _unsupported();
-
-  @override
-  Future<void> setVoiceGemmaVariant(String variantName) => _unsupported();
 
   @override
   Future<void> clearAll() => _unsupported();

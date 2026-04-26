@@ -34,9 +34,6 @@ void main() {
       return ProviderScope(
         overrides: [
           sharedPreferencesProvider.overrideWithValue(prefs),
-          voiceCommandOrchestratorProvider.overrideWith(
-            () => _MockVoiceCommandOrchestrator(),
-          ),
           appSettingsRepositoryProvider.overrideWithValue(
             FakeAppSettingsRepository(),
           ),
@@ -230,10 +227,4 @@ void main() {
       });
     });
   });
-}
-
-/// Mock orchestrator that returns idle state.
-class _MockVoiceCommandOrchestrator extends VoiceCommandOrchestrator {
-  @override
-  VoiceRecognitionState build() => const VoiceRecognitionState.idle();
 }

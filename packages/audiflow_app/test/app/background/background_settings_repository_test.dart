@@ -160,24 +160,6 @@ void main() {
         ).equals(SettingsDefaults.lastTabIndex);
       });
 
-      test('getVoiceEnabled returns default', () {
-        check(
-          repository.getVoiceEnabled(),
-        ).equals(SettingsDefaults.voiceEnabled);
-      });
-
-      test('getVoiceGemmaEnabled returns default', () {
-        check(
-          repository.getVoiceGemmaEnabled(),
-        ).equals(SettingsDefaults.voiceGemmaEnabled);
-      });
-
-      test('getVoiceGemmaVariant returns default', () {
-        check(
-          repository.getVoiceGemmaVariant(),
-        ).equals(SettingsDefaults.voiceGemmaVariant);
-      });
-
       test('getLocale returns null', () {
         check(repository.getLocale()).isNull();
       });
@@ -213,18 +195,6 @@ void main() {
       test('setNotifyNewEpisodes throws', () {
         check(
           () => repository.setNotifyNewEpisodes(false),
-        ).throws<UnsupportedError>();
-      });
-
-      test('setVoiceGemmaEnabled throws', () {
-        check(
-          () => repository.setVoiceGemmaEnabled(true),
-        ).throws<UnsupportedError>();
-      });
-
-      test('setVoiceGemmaVariant throws', () {
-        check(
-          () => repository.setVoiceGemmaVariant('e4b'),
         ).throws<UnsupportedError>();
       });
 

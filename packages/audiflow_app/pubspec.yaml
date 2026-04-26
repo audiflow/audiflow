@@ -55,8 +55,6 @@ dependencies:
   isar_community: ^3.3.0
 
   # Internal packages
-  audiflow_ai:
-    path: ../audiflow_ai
   audiflow_core:
     path: ../audiflow_core
   audiflow_domain:
@@ -76,10 +74,6 @@ dependencies:
   flutter_local_notifications: ^21.0.0
   connectivity_plus: ^7.0.0
   permission_handler: ^12.0.1
-  device_info_plus: ^12.1.0
-
-  # On-device AI (Gemma 4 voice command path)
-  flutter_gemma: ^0.13.6
 
 dev_dependencies:
   flutter_test:

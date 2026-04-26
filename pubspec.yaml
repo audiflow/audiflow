@@ -7,7 +7,6 @@ environment:
   sdk: ^3.10.0
 
 workspace:
-  - packages/audiflow_ai
   - packages/audiflow_app
   - packages/audiflow_cli
   - packages/audiflow_core
