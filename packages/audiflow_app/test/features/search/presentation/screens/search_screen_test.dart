@@ -4,8 +4,7 @@ import 'package:audiflow_app/features/search/presentation/screens/search_screen.
 import 'package:audiflow_app/features/search/presentation/widgets/podcast_search_result_tile.dart';
 import 'package:audiflow_app/features/search/presentation/widgets/search_country_chip.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
-import 'package:audiflow_domain/audiflow_domain.dart'
-    hide podcastSearchServiceProvider;
+import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_search/audiflow_search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

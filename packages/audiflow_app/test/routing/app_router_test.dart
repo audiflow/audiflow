@@ -5,8 +5,7 @@ import 'package:audiflow_app/features/settings/presentation/screens/settings_scr
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_app/routing/app_router.dart';
 import 'package:audiflow_app/routing/scaffold_with_nav_bar.dart';
-import 'package:audiflow_domain/audiflow_domain.dart'
-    hide podcastSearchServiceProvider;
+import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';

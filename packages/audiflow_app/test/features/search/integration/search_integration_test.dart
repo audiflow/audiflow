@@ -3,8 +3,7 @@ import 'package:audiflow_app/features/search/presentation/controllers/search_sta
 import 'package:audiflow_app/features/search/presentation/screens/search_screen.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_app/routing/app_router.dart';
-import 'package:audiflow_domain/audiflow_domain.dart'
-    hide podcastSearchServiceProvider;
+import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
