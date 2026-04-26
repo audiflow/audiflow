@@ -1,3 +1,5 @@
+import 'package:logger/logger.dart';
+
 import 'gemma_model_install_exception.dart';
 import 'gemma_model_variant.dart';
 import 'gemma_plugin.dart';
@@ -21,13 +23,16 @@ class GemmaModelManager {
     required GemmaPlugin plugin,
     required GemmaModelUrlResolver urlResolver,
     GemmaModelAuthTokenResolver? authTokenResolver,
+    Logger? logger,
   }) : _plugin = plugin,
        _urlResolver = urlResolver,
-       _authTokenResolver = authTokenResolver;
+       _authTokenResolver = authTokenResolver,
+       _logger = logger;
 
   final GemmaPlugin _plugin;
   final GemmaModelUrlResolver _urlResolver;
   final GemmaModelAuthTokenResolver? _authTokenResolver;
+  final Logger? _logger;
 
   /// Whether [variant] is already installed on the device.
   Future<bool> isInstalled(GemmaModelVariant variant) =>
@@ -51,10 +56,20 @@ class GemmaModelManager {
     GemmaModelVariant variant, {
     void Function(int percent)? onProgress,
   }) async {
+    final isAlready = await _plugin.isModelInstalled(variant.fileName);
+    _logger?.i(
+      'ensureInstalled: variant=${variant.name}, '
+      'cacheHit=$isAlready (will still re-mark active)',
+    );
     final String? token;
     try {
       token = await _authTokenResolver?.call(variant);
     } on Object catch (cause, stack) {
+      _logger?.e(
+        'ensureInstalled: auth-token resolver failed',
+        error: cause,
+        stackTrace: stack,
+      );
       throw GemmaModelInstallException(
         variant: variant,
         phase: GemmaModelInstallPhase.authTokenResolution,
@@ -62,14 +77,25 @@ class GemmaModelManager {
         stackTrace: stack,
       );
     }
+    final url = _urlResolver(variant);
+    _logger?.d(
+      'ensureInstalled: token=${token == null ? 'null' : 'present'}, '
+      'url=$url',
+    );
+    final start = DateTime.now();
     try {
       await _plugin.installFromNetwork(
-        url: _urlResolver(variant),
+        url: url,
         fileName: variant.fileName,
         authToken: token,
         onProgress: onProgress,
       );
     } on Object catch (cause, stack) {
+      _logger?.e(
+        'ensureInstalled: plugin.installFromNetwork failed',
+        error: cause,
+        stackTrace: stack,
+      );
       throw GemmaModelInstallException(
         variant: variant,
         phase: GemmaModelInstallPhase.download,
@@ -77,6 +103,11 @@ class GemmaModelManager {
         stackTrace: stack,
       );
     }
+    final ms = DateTime.now().difference(start).inMilliseconds;
+    _logger?.i(
+      'ensureInstalled: complete in ${ms}ms '
+      '(${isAlready ? 'no-op + setActive' : 'downloaded'})',
+    );
   }
 
   /// Remove [variant] from local storage. No-op if not installed.

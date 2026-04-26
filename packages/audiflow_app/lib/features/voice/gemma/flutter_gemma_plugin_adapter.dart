@@ -1,4 +1,5 @@
 import 'package:audiflow_ai/audiflow_ai.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_gemma/flutter_gemma.dart';
 
 /// [GemmaPlugin] backed by `flutter_gemma`.
@@ -36,6 +37,9 @@ class FlutterGemmaPluginAdapter implements GemmaPlugin {
         'URL basename "$basename" must match fileName "$fileName"',
       );
     }
+    debugPrint(
+      '[FlutterGemmaPluginAdapter] installModel($fileName).fromNetwork(...)',
+    );
     final builder = FlutterGemma.installModel(
       modelType: ModelType.gemmaIt,
       fileType: ModelFileType.task,
@@ -44,6 +48,7 @@ class FlutterGemmaPluginAdapter implements GemmaPlugin {
       builder.withProgress(onProgress);
     }
     await builder.install();
+    debugPrint('[FlutterGemmaPluginAdapter] install() returned');
   }
 
   @override

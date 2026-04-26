@@ -33,9 +33,21 @@ class GemmaVoiceCommandRoute {
   /// Builds the per-turn settings snapshot from the live registry +
   /// repository, hands it to [GemmaVoiceCommandService], and returns
   /// the parsed [VoiceCommand].
-  Future<VoiceCommand> dispatch(Uint8List audio) {
+  Future<VoiceCommand> dispatch(Uint8List audio) async {
     final snapshot = _buildSnapshot();
-    return _service.dispatch(audio: audio, settingsSnapshot: snapshot);
+    _logger?.i(
+      'dispatch: ${audio.length}B audio, '
+      '${snapshot.length} settings entries',
+    );
+    final command = await _service.dispatch(
+      audio: audio,
+      settingsSnapshot: snapshot,
+    );
+    _logger?.i(
+      'dispatch: parsed intent=${command.intent.name}'
+      '${command.failureReason != null ? ' (failureReason=${command.failureReason!.name})' : ''}',
+    );
+    return command;
   }
 
   List<SettingsSnapshotEntry> _buildSnapshot() {

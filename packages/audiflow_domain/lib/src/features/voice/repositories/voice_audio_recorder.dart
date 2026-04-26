@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:logger/logger.dart';
 import 'package:record/record.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -40,7 +41,7 @@ abstract interface class VoiceAudioRecorder {
 @Riverpod(keepAlive: true)
 VoiceAudioRecorder voiceAudioRecorder(Ref ref) {
   final logger = ref.read(namedLoggerProvider('VoiceAudioRecorder'));
-  final recorder = RecordPackageVoiceAudioRecorder();
+  final recorder = RecordPackageVoiceAudioRecorder(logger: logger);
   ref.onDispose(() {
     unawaited(
       recorder.dispose().catchError(
@@ -63,8 +64,9 @@ VoiceAudioRecorder voiceAudioRecorder(Ref ref) {
 /// [VoiceAudioRecorder] backed by the `record` package, streaming PCM into
 /// a [BytesBuilder] and prepending a WAV header on [stop].
 class RecordPackageVoiceAudioRecorder implements VoiceAudioRecorder {
-  RecordPackageVoiceAudioRecorder({AudioRecorder? recorder})
-    : _recorder = recorder ?? AudioRecorder();
+  RecordPackageVoiceAudioRecorder({AudioRecorder? recorder, Logger? logger})
+    : _recorder = recorder ?? AudioRecorder(),
+      _logger = logger;
 
   static const _config = RecordConfig(
     encoder: AudioEncoder.pcm16bits,
@@ -78,11 +80,13 @@ class RecordPackageVoiceAudioRecorder implements VoiceAudioRecorder {
   );
 
   final AudioRecorder _recorder;
+  final Logger? _logger;
 
   StreamSubscription<Uint8List>? _subscription;
   BytesBuilder? _buffer;
   Object? _streamError;
   StackTrace? _streamErrorStack;
+  DateTime? _startedAt;
 
   @override
   Future<bool> hasPermission() => _recorder.hasPermission();
@@ -92,11 +96,13 @@ class RecordPackageVoiceAudioRecorder implements VoiceAudioRecorder {
     if (_subscription != null) {
       throw StateError('VoiceAudioRecorder already recording');
     }
+    _logger?.i('start: opening 16kHz mono PCM stream');
     final stream = await _recorder.startStream(_config);
     final buffer = BytesBuilder(copy: false);
     _buffer = buffer;
     _streamError = null;
     _streamErrorStack = null;
+    _startedAt = DateTime.now();
     _subscription = stream.listen(
       buffer.add,
       onError: (Object error, StackTrace stack) {
@@ -106,9 +112,11 @@ class RecordPackageVoiceAudioRecorder implements VoiceAudioRecorder {
           _streamError = error;
           _streamErrorStack = stack;
         }
+        _logger?.w('start: stream error latched', error: error);
       },
       cancelOnError: true,
     );
+    _logger?.i('start: stream open, buffering PCM');
   }
 
   @override
@@ -124,6 +132,16 @@ class RecordPackageVoiceAudioRecorder implements VoiceAudioRecorder {
     _buffer = null;
     _streamError = null;
     _streamErrorStack = null;
+    final pcmBytes = buffer.toBytes().length;
+    final startedAt = _startedAt;
+    _startedAt = null;
+    final durationMs = startedAt == null
+        ? null
+        : DateTime.now().difference(startedAt).inMilliseconds;
+    _logger?.i(
+      'stop: closing stream (PCM=${pcmBytes}B, '
+      'duration=${durationMs ?? '?'}ms)',
+    );
     try {
       await _recorder.stop();
     } finally {
@@ -139,7 +157,9 @@ class RecordPackageVoiceAudioRecorder implements VoiceAudioRecorder {
         streamErrorStack ?? StackTrace.current,
       );
     }
-    return wrapPcmAsWav(buffer.toBytes());
+    final wav = wrapPcmAsWav(buffer.toBytes());
+    _logger?.i('stop: WAV payload ${wav.length}B ready');
+    return wav;
   }
 
   @override

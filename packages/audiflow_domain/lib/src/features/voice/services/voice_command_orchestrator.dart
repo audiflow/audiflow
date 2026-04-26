@@ -88,12 +88,18 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
         (state is! VoiceIdle &&
             state is! VoiceSuccess &&
             state is! VoiceError)) {
+      _logger?.d(
+        'startVoiceCommand: skipping (starting=$_starting, '
+        'state=${state.runtimeType})',
+      );
       return;
     }
     _starting = true;
     final epoch = ++_epoch;
+    _logger?.i('startVoiceCommand: epoch=$epoch, checking permission');
     try {
       if (!await _recorder.hasPermission()) {
+        _logger?.w('startVoiceCommand: microphone permission denied');
         if (_epoch == epoch) {
           state = const VoiceRecognitionState.error(
             message: 'Microphone permission denied',
@@ -101,6 +107,7 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
         }
         return;
       }
+      _logger?.i('startVoiceCommand: permission OK, starting recorder');
       try {
         await _recorder.start();
       } on Exception catch (e, st) {
@@ -113,8 +120,7 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
         return;
       }
       if (_epoch != epoch) {
-        // Cancelled while start() was in flight; tear down the recorder we
-        // just started so we don't leak a recording session.
+        _logger?.w('startVoiceCommand: cancelled mid-start, tearing down');
         try {
           await _recorder.cancel();
         } on Exception catch (e, st) {
@@ -128,10 +134,11 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
       }
       _stopping = false;
       _autoStopTimer = Timer(_maxRecordingDuration, () {
-        // User is holding past the cap; stop and dispatch what we have.
+        _logger?.w('startVoiceCommand: 30s cap reached, auto-stopping');
         unawaited(stopVoiceCommand());
       });
       state = const VoiceRecognitionState.listening();
+      _logger?.i('startVoiceCommand: now listening (epoch=$epoch)');
     } finally {
       _starting = false;
     }
@@ -142,12 +149,17 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
     // Synchronous claim: manual release and the 30s timer can both call
     // stop() in the same microtask; only the first one proceeds.
     if (state is! VoiceListening || _stopping) {
+      _logger?.d(
+        'stopVoiceCommand: skipping (state=${state.runtimeType}, '
+        'stopping=$_stopping)',
+      );
       return;
     }
     _stopping = true;
     _autoStopTimer?.cancel();
     _autoStopTimer = null;
     final epoch = _epoch;
+    _logger?.i('stopVoiceCommand: stopping recorder (epoch=$epoch)');
 
     final Uint8List audio;
     try {
@@ -161,6 +173,7 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
       }
       return;
     }
+    _logger?.i('stopVoiceCommand: captured ${audio.length}B audio');
     if (_epoch != epoch) {
       _logger?.d(
         'stopVoiceCommand epoch mismatch; dropping ${audio.length}B audio',
@@ -169,8 +182,10 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
     }
 
     state = const VoiceRecognitionState.processing(transcription: '');
+    _logger?.i('stopVoiceCommand: dispatching to Gemma');
 
     final VoiceCommand command;
+    final dispatchStart = DateTime.now();
     try {
       command = await _route.dispatch(audio);
     } on Exception catch (e, st) {
@@ -182,7 +197,13 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
       }
       return;
     }
+    final dispatchMs = DateTime.now().difference(dispatchStart).inMilliseconds;
+    _logger?.i(
+      'stopVoiceCommand: Gemma returned intent=${command.intent.name} '
+      'in ${dispatchMs}ms',
+    );
     if (_epoch != epoch) {
+      _logger?.d('stopVoiceCommand: epoch mismatch after dispatch, dropping');
       return;
     }
 

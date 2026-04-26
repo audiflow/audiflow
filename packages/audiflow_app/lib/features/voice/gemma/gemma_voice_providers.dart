@@ -43,6 +43,7 @@ GemmaModelManager gemmaModelManager(Ref ref) {
     plugin: const FlutterGemmaPluginAdapter(),
     urlResolver: ref.watch(gemmaModelUrlResolverProvider),
     authTokenResolver: ref.watch(gemmaModelAuthTokenResolverProvider),
+    logger: ref.watch(namedLoggerProvider('GemmaModelManager')),
   );
 }
 

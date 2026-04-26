@@ -50,7 +50,12 @@ class FlutterGemmaInferenceSession implements ai.GemmaInferenceSession {
     required String systemPrompt,
     required List<ai.VoiceToolDefinition> tools,
   }) async {
+    _logger?.i(
+      'runWithAudio: audio=${audio.length}B, tools=${tools.length}, '
+      'prompt=${systemPrompt.length} chars',
+    );
     final model = await _ensureModel();
+    _logger?.d('runWithAudio: creating chat session');
     final chat = await model.createChat(
       tools: tools.map(_toFlutterGemmaTool).toList(growable: false),
       supportsFunctionCalls: true,
@@ -62,10 +67,18 @@ class FlutterGemmaInferenceSession implements ai.GemmaInferenceSession {
       randomSeed: 1,
     );
     try {
+      _logger?.d('runWithAudio: adding audio chunk');
       await chat.addQueryChunk(
         Message.audioOnly(audioBytes: audio, isUser: true),
       );
+      _logger?.i('runWithAudio: generating response');
+      final genStart = DateTime.now();
       final response = await chat.generateChatResponse();
+      final genMs = DateTime.now().difference(genStart).inMilliseconds;
+      _logger?.i(
+        'runWithAudio: model returned ${response.runtimeType} '
+        'in ${genMs}ms',
+      );
       return _parseResponse(response);
     } finally {
       await chat.session.close();
@@ -83,17 +96,22 @@ class FlutterGemmaInferenceSession implements ai.GemmaInferenceSession {
   }
 
   Future<InferenceModel> _loadModel() async {
+    final start = DateTime.now();
     try {
       // The active-inference-model pointer in flutter_gemma is process-
       // scoped — `getActiveModel` throws StateError on a fresh launch even
       // when the model file is still on disk. Run ensureInstalled first;
       // it's documented idempotent so the cached path is just a re-mark
       // of the active spec.
+      _logger?.i('_loadModel: ensuring active model');
       await _ensureModelReady();
+      _logger?.i('_loadModel: calling getActiveModel(supportAudio: true)');
       final model = await FlutterGemma.getActiveModel(
         maxTokens: maxTokens,
         supportAudio: true,
       );
+      final ms = DateTime.now().difference(start).inMilliseconds;
+      _logger?.i('_loadModel: loaded in ${ms}ms');
       _model = model;
       return model;
     } finally {
