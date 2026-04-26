@@ -529,26 +529,45 @@ class _VoiceCenterButtonState extends ConsumerState<_VoiceCenterButton>
     super.dispose();
   }
 
+  /// Tap is reserved for resetting terminal Success/Error states. Hold-to-
+  /// talk handles start/stop via long-press callbacks (see build()), matching
+  /// the AppBar [VoiceTriggerButton]'s gesture model so users don't have to
+  /// learn two interaction patterns.
   void _handleTap(VoiceRecognitionState state) {
     final orchestrator = ref.read(voiceCommandOrchestratorProvider.notifier);
     switch (state) {
-      case VoiceIdle():
-        unawaited(orchestrator.startVoiceCommand());
-      case VoiceListening():
-        // Tap-to-toggle commits the captured audio; use stopVoiceCommand
-        // (which dispatches to Gemma) rather than cancelVoiceCommand
-        // (which silently drops the audio).
-        unawaited(orchestrator.stopVoiceCommand());
       case VoiceSuccess():
-        orchestrator.resetToIdle();
       case VoiceError():
         orchestrator.resetToIdle();
+      // Idle: short tap is a no-op; press-and-hold to talk.
+      // Listening / processing / executing / settings: tap disabled or
+      // unhandled here.
+      case VoiceIdle():
+      case VoiceListening():
       case VoiceProcessing():
       case VoiceExecuting():
       case VoiceSettingsAutoApplied():
       case VoiceSettingsDisambiguation():
       case VoiceSettingsLowConfidence():
     }
+  }
+
+  void _handleLongPressStart(VoiceRecognitionState state) {
+    if (state is! VoiceIdle && state is! VoiceSuccess && state is! VoiceError) {
+      return;
+    }
+    final orchestrator = ref.read(voiceCommandOrchestratorProvider.notifier);
+    unawaited(orchestrator.startVoiceCommand());
+  }
+
+  void _handleLongPressEnd() {
+    final orchestrator = ref.read(voiceCommandOrchestratorProvider.notifier);
+    unawaited(orchestrator.stopVoiceCommand());
+  }
+
+  void _handleLongPressCancel() {
+    final orchestrator = ref.read(voiceCommandOrchestratorProvider.notifier);
+    unawaited(orchestrator.cancelVoiceCommand());
   }
 
   // Style methods delegate to shared VoiceTriggerStyle / CenterButtonStyle
@@ -589,7 +608,13 @@ class _VoiceCenterButtonState extends ConsumerState<_VoiceCenterButton>
           return Opacity(opacity: opacity, child: child);
         },
         child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
           onTap: disabled ? null : () => _handleTap(voiceState),
+          onLongPressStart: disabled
+              ? null
+              : (_) => _handleLongPressStart(voiceState),
+          onLongPressEnd: disabled ? null : (_) => _handleLongPressEnd(),
+          onLongPressCancel: disabled ? null : _handleLongPressCancel,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             curve: Curves.easeInOut,
