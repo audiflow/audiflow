@@ -52,9 +52,23 @@ GemmaModelManager gemmaModelManager(Ref ref) {
 /// The session owns a loaded `InferenceModel`; recreating it per voice turn
 /// would re-pay the model load cost. Lifecycle (dispose) is wired into the
 /// passed [Ref] so it's torn down when the provider container shuts down.
+///
+/// The `ensureModelReady` closure resolves the user's currently-selected
+/// variant on every first-load and re-runs install (cheap on cache hit) so
+/// the process-scoped active-model pointer is restored after every app
+/// launch.
 GemmaInferenceSession buildFlutterGemmaInferenceSession(Ref ref) {
   final session = FlutterGemmaInferenceSession(
     logger: ref.watch(namedLoggerProvider('GemmaInference')),
+    ensureModelReady: () async {
+      final repo = ref.read(appSettingsRepositoryProvider);
+      final variantName = repo.getVoiceGemmaVariant();
+      final variant = GemmaModelVariant.values.firstWhere(
+        (v) => v.name == variantName,
+        orElse: () => GemmaModelVariant.e2b,
+      );
+      await ref.read(gemmaModelManagerProvider).ensureInstalled(variant);
+    },
   );
   ref.onDispose(() => unawaited(session.dispose()));
   return session;

@@ -25,16 +25,24 @@ void main() {
       check(await manager.isInstalled(GemmaModelVariant.e4b)).isFalse();
     });
 
-    test('ensureInstalled is a no-op when already installed', () async {
-      plugin.installed.add(GemmaModelVariant.e2b.fileName);
-      var progressCalls = 0;
-      await manager.ensureInstalled(
-        GemmaModelVariant.e2b,
-        onProgress: (_) => progressCalls++,
-      );
-      check(plugin.installCalls).isEmpty();
-      check(progressCalls).equals(0);
-    });
+    test(
+      'ensureInstalled re-runs install on cache hit so the active-model '
+      'pointer gets re-flipped, but emits no progress',
+      () async {
+        plugin.installed.add(GemmaModelVariant.e2b.fileName);
+        var progressCalls = 0;
+        await manager.ensureInstalled(
+          GemmaModelVariant.e2b,
+          onProgress: (_) => progressCalls++,
+        );
+        // The plugin is invoked even when cached — its install() is
+        // idempotent and is also where flutter_gemma sets active.
+        check(plugin.installCalls).length.equals(1);
+        // No progress because the fake's progressToEmit is empty by default;
+        // a real download path would emit, a cache-hit path would not.
+        check(progressCalls).equals(0);
+      },
+    );
 
     test('ensureInstalled downloads with resolved URL and token', () async {
       final progress = <int>[];

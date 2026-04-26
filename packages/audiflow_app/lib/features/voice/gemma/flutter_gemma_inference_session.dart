@@ -21,13 +21,23 @@ import 'package:logger/logger.dart';
 /// Gemma 4 variants as audio-capable. Verify on device before shipping
 /// the wired voice command path.
 class FlutterGemmaInferenceSession implements ai.GemmaInferenceSession {
-  FlutterGemmaInferenceSession({this.maxTokens = 1024, Logger? logger})
-    : _logger = logger;
+  FlutterGemmaInferenceSession({
+    required Future<void> Function() ensureModelReady,
+    this.maxTokens = 1024,
+    Logger? logger,
+  }) : _ensureModelReady = ensureModelReady,
+       _logger = logger;
 
   /// Token budget for the chat session. Function-call output is small
   /// (well under 100 tokens), so 1024 leaves comfortable headroom for the
   /// audio token cost (25 tokens per second of audio, max 30 seconds).
   final int maxTokens;
+
+  /// Hook invoked before the first [getActiveModel] call to guarantee the
+  /// model file is installed AND the process-scoped active-model pointer
+  /// is set. The host wires this to `GemmaModelManager.ensureInstalled`
+  /// for the user's currently-selected variant.
+  final Future<void> Function() _ensureModelReady;
 
   final Logger? _logger;
 
@@ -74,6 +84,12 @@ class FlutterGemmaInferenceSession implements ai.GemmaInferenceSession {
 
   Future<InferenceModel> _loadModel() async {
     try {
+      // The active-inference-model pointer in flutter_gemma is process-
+      // scoped — `getActiveModel` throws StateError on a fresh launch even
+      // when the model file is still on disk. Run ensureInstalled first;
+      // it's documented idempotent so the cached path is just a re-mark
+      // of the active spec.
+      await _ensureModelReady();
       final model = await FlutterGemma.getActiveModel(
         maxTokens: maxTokens,
         supportAudio: true,

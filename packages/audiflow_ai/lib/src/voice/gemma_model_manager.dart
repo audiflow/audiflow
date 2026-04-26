@@ -33,11 +33,15 @@ class GemmaModelManager {
   Future<bool> isInstalled(GemmaModelVariant variant) =>
       _plugin.isModelInstalled(variant.fileName);
 
-  /// Ensure [variant] is installed, downloading if necessary.
+  /// Ensure [variant] is installed AND set as the active inference model.
   ///
-  /// [onProgress] is invoked with percentages in [0, 100] during the
-  /// download. When the model is already present, returns immediately
-  /// without invoking [onProgress].
+  /// Returns when the model file is present locally and the underlying
+  /// plugin has flipped its active-inference-model pointer to [variant].
+  /// Idempotent: when the file is already cached the underlying plugin
+  /// skips the download but still re-marks the model active (the active-
+  /// model pointer in `flutter_gemma` is process-scoped and resets on
+  /// every app launch). [onProgress] is therefore only invoked during a
+  /// real download.
   ///
   /// Failures in the auth-token resolver or the plugin's download are
   /// rethrown as [GemmaModelInstallException] so callers can switch on
@@ -47,9 +51,6 @@ class GemmaModelManager {
     GemmaModelVariant variant, {
     void Function(int percent)? onProgress,
   }) async {
-    if (await _plugin.isModelInstalled(variant.fileName)) {
-      return;
-    }
     final String? token;
     try {
       token = await _authTokenResolver?.call(variant);
