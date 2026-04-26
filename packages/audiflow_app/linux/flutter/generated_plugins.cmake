@@ -4,10 +4,8 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   dynamic_color
-  flutter_gemma
   gtk
   isar_community_flutter_libs
-  record_linux
   sentry_flutter
   url_launcher_linux
 )

@@ -6,10 +6,8 @@ list(APPEND FLUTTER_PLUGIN_LIST
   app_links
   connectivity_plus
   dynamic_color
-  flutter_gemma
   isar_community_flutter_libs
   permission_handler_windows
-  record_windows
   sentry_flutter
   share_plus
   url_launcher_windows

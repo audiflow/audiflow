@@ -1089,31 +1089,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sharePodcast => 'Share podcast';
 
   @override
-  String get voiceCommandButton => 'Voice command';
-
-  @override
-  String get voiceListening => 'Listening...';
-
-  @override
-  String get voiceProcessing => 'Processing...';
-
-  @override
-  String voiceExecuting(String intent) {
-    return 'Executing: $intent';
-  }
-
-  @override
-  String voiceCouldNotUnderstand(String transcription) {
-    return 'Could not understand: \"$transcription\"';
-  }
-
-  @override
-  String get voiceSettingsWhichSetting => 'Which setting do you mean?';
-
-  @override
-  String get voiceSettingsChanged => 'Setting changed';
-
-  @override
   String get undo => 'Undo';
 
   @override
@@ -1121,9 +1096,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cancel => 'Cancel';
-
-  @override
-  String get voiceTapMicToRetry => 'Tap mic to try again';
 
   @override
   String get navSearch => 'Search';
@@ -1136,134 +1108,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get navSettings => 'Settings';
-
-  @override
-  String get settingsVoiceTitle => 'Voice';
-
-  @override
-  String get settingsVoiceSubtitle => 'Voice commands and recognition';
-
-  @override
-  String get voiceExperimentalLabel => 'Experimental';
-
-  @override
-  String get voiceExperimentalDescription =>
-      'Voice commands are an experimental feature and may not work reliably on most devices. Accuracy and availability will improve as on-device AI capabilities evolve.';
-
-  @override
-  String get voiceEnabledTitle => 'Voice Commands';
-
-  @override
-  String get voiceEnabledSubtitle => 'Enable voice control for the app';
-
-  @override
-  String get voiceAvailableCommands => 'Available Commands';
-
-  @override
-  String get voiceGemmaSectionTitle => 'On-Device AI (Gemma 4)';
-
-  @override
-  String get voiceGemmaEnabledTitle => 'Use on-device AI';
-
-  @override
-  String get voiceGemmaEnabledSubtitle =>
-      'Process voice commands fully on this device. No audio leaves the phone.';
-
-  @override
-  String get voiceGemmaUnsupported => 'On-device AI not available';
-
-  @override
-  String get voiceGemmaUnsupportedNonMobile =>
-      'Only supported on phones and tablets.';
-
-  @override
-  String get voiceGemmaUnsupportedRam =>
-      'This device doesn\'t have enough memory to run the on-device model.';
-
-  @override
-  String voiceGemmaVariantE2b(int sizeMb) {
-    return 'Standard ($sizeMb MB)';
-  }
-
-  @override
-  String voiceGemmaVariantE4b(int sizeMb) {
-    return 'Larger ($sizeMb MB)';
-  }
-
-  @override
-  String get voiceCommandPlay => 'Play / Resume playback';
-
-  @override
-  String get voiceCommandPause => 'Pause playback';
-
-  @override
-  String get voiceCommandStop => 'Stop playback';
-
-  @override
-  String get voiceCommandSkipForward => 'Skip forward';
-
-  @override
-  String get voiceCommandSkipBackward => 'Skip backward';
-
-  @override
-  String get voiceCommandSearch => 'Search for podcasts';
-
-  @override
-  String get voiceCommandGoToLibrary => 'Go to Library';
-
-  @override
-  String get voiceCommandGoToQueue => 'Go to Queue';
-
-  @override
-  String get voiceCommandOpenSettings => 'Open Settings';
-
-  @override
-  String get voiceCommandChangeSettings => 'Change a setting';
-
-  @override
-  String get voiceIntentPlay => 'Play';
-
-  @override
-  String get voiceIntentPause => 'Pause';
-
-  @override
-  String get voiceIntentStop => 'Stop';
-
-  @override
-  String get voiceIntentSkipForward => 'Skip forward';
-
-  @override
-  String get voiceIntentSkipBackward => 'Skip backward';
-
-  @override
-  String get voiceIntentSeek => 'Seek';
-
-  @override
-  String get voiceIntentSearch => 'Search';
-
-  @override
-  String get voiceIntentGoToLibrary => 'Library';
-
-  @override
-  String get voiceIntentGoToQueue => 'Queue';
-
-  @override
-  String get voiceIntentOpenSettings => 'Settings';
-
-  @override
-  String get voiceIntentAddToQueue => 'Add to queue';
-
-  @override
-  String get voiceIntentRemoveFromQueue => 'Remove from queue';
-
-  @override
-  String get voiceIntentClearQueue => 'Clear queue';
-
-  @override
-  String get voiceIntentChangeSettings => 'Change setting';
-
-  @override
-  String get voiceIntentUnknown => 'Unknown';
 
   @override
   String get playNext => 'Play next';

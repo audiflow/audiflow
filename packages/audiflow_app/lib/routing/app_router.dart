@@ -28,7 +28,6 @@ import '../features/settings/presentation/screens/playback_settings_screen.dart'
 import '../features/settings/presentation/screens/settings_screen.dart';
 import '../features/settings/presentation/screens/storage_settings_screen.dart';
 import '../features/settings/presentation/screens/developer_settings_screen.dart';
-import '../features/settings/presentation/screens/voice_settings_screen.dart';
 import 'scaffold_with_nav_bar.dart';
 
 /// Application route paths.
@@ -53,7 +52,6 @@ class AppRoutes {
   static const String settingsFeedSync = '/settings/feed-sync';
   static const String settingsStorage = '/settings/storage';
   static const String settingsAbout = '/settings/about';
-  static const String settingsVoice = '/settings/voice';
   static const String settingsDeveloper = '/settings/developer';
   static const String settingsDownloadManagement =
       '/settings/downloads/management';
@@ -291,10 +289,6 @@ GoRouter createAppRouter({int lastTabIndex = 0}) {
                   GoRoute(
                     path: 'about',
                     builder: (context, state) => const AboutScreen(),
-                  ),
-                  GoRoute(
-                    path: 'voice',
-                    builder: (context, state) => const VoiceSettingsScreen(),
                   ),
                   GoRoute(
                     path: 'developer',

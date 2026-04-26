@@ -70,12 +70,6 @@ class SettingsScreen extends StatelessWidget {
                     onTap: () => context.go(AppRoutes.settingsStorage),
                   ),
                   SettingsCategoryCard(
-                    icon: Symbols.mic,
-                    title: l10n.settingsVoiceTitle,
-                    subtitle: l10n.settingsVoiceSubtitle,
-                    onTap: () => context.go(AppRoutes.settingsVoice),
-                  ),
-                  SettingsCategoryCard(
                     icon: Symbols.info,
                     title: l10n.settingsAboutTitle,
                     subtitle: l10n.settingsAboutSubtitle,

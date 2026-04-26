@@ -28,9 +28,6 @@ class FakeAppSettingsRepository implements AppSettingsRepository {
   bool notifyNewEpisodes = true;
   String? searchCountry;
   int lastTabIndex = 0;
-  bool voiceEnabled = SettingsDefaults.voiceEnabled;
-  bool voiceGemmaEnabled = SettingsDefaults.voiceGemmaEnabled;
-  String voiceGemmaVariant = SettingsDefaults.voiceGemmaVariant;
 
   @override
   ThemeMode getThemeMode() => themeMode;
@@ -167,28 +164,6 @@ class FakeAppSettingsRepository implements AppSettingsRepository {
   @override
   Future<void> setLastTabIndex(int index) async => lastTabIndex = index;
 
-  // -- Voice --
-
-  @override
-  bool getVoiceEnabled() => voiceEnabled;
-
-  @override
-  Future<void> setVoiceEnabled(bool enabled) async => voiceEnabled = enabled;
-
-  @override
-  bool getVoiceGemmaEnabled() => voiceGemmaEnabled;
-
-  @override
-  Future<void> setVoiceGemmaEnabled(bool enabled) async =>
-      voiceGemmaEnabled = enabled;
-
-  @override
-  String getVoiceGemmaVariant() => voiceGemmaVariant;
-
-  @override
-  Future<void> setVoiceGemmaVariant(String variantName) async =>
-      voiceGemmaVariant = variantName;
-
   @override
   Future<void> clearAll() async {
     themeMode = ThemeMode.system;
@@ -211,8 +186,5 @@ class FakeAppSettingsRepository implements AppSettingsRepository {
     notifyNewEpisodes = true;
     searchCountry = null;
     lastTabIndex = 0;
-    voiceEnabled = SettingsDefaults.voiceEnabled;
-    voiceGemmaEnabled = SettingsDefaults.voiceGemmaEnabled;
-    voiceGemmaVariant = SettingsDefaults.voiceGemmaVariant;
   }
 }
