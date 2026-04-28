@@ -11,11 +11,12 @@ import '../../../../l10n/app_localizations.dart';
 class MigrationGuideScreen extends StatelessWidget {
   const MigrationGuideScreen({super.key});
 
-  // Pocket Casts–authored shortcut, redistributed unchanged on iCloud;
-  // chosen over per-author forks because it remains the most-shared
-  // community link and works on both iOS and macOS.
+  // Dom Christie's writeup hosts a generic-OPML shortcut (forked from the
+  // Pocket Casts version) plus context on what the shortcut does. We link
+  // there instead of the raw iCloud install URL so users see the
+  // explanation before being prompted to install a shortcut.
   static const _appleShortcutUrl =
-      'https://www.icloud.com/shortcuts/68ca7952a5374d4c8fa129e3db3798b9';
+      'https://domchristie.co.uk/posts/apple-podcasts-opml/';
   static const _pocketCastsUrl = 'https://pocketcasts.com';
   static const _overcastUrl = 'https://overcast.fm';
 
