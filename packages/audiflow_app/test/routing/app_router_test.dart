@@ -20,9 +20,13 @@ void main() {
     late SharedPreferences prefs;
 
     setUp(() async {
-      SharedPreferences.setMockInitialValues({});
+      // Treat onboarding as already completed so these tests assert the
+      // post-onboarding routing behaviour rather than the carousel redirect.
+      SharedPreferences.setMockInitialValues({
+        'onboarding.carousel_completed_v1': true,
+      });
       prefs = await SharedPreferences.getInstance();
-      router = createAppRouter();
+      router = createAppRouter(prefs: prefs);
     });
 
     tearDown(() {

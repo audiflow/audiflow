@@ -1277,4 +1277,202 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sleepTimerIconLabel => 'Sleep timer';
+
+  @override
+  String get onboardingCarouselSkip => 'Skip';
+
+  @override
+  String get onboardingCarouselNext => 'Next';
+
+  @override
+  String get onboardingCarouselGetStarted => 'Get started';
+
+  @override
+  String get onboardingPageSearchTitle => 'Search, don\'t browse.';
+
+  @override
+  String get onboardingPageSearchBody =>
+      'Audiflow has no top-10 charts. Type a podcast name, host, or topic — and subscribe.';
+
+  @override
+  String get onboardingPageStationsTitle => 'Make stations.';
+
+  @override
+  String get onboardingPageStationsBody =>
+      'Mix episodes from multiple podcasts. Try a Morning Commute station of news + tech.';
+
+  @override
+  String get onboardingPageSmartPlaylistsTitle => 'Smart playlists, by theme.';
+
+  @override
+  String get onboardingPageSmartPlaylistsBody =>
+      'Episodes grouped by topic — interviews, deep dives, weekly recaps — curated by the Audiflow community.';
+
+  @override
+  String get gettingStartedTitle => 'Getting started';
+
+  @override
+  String get gettingStartedMigrateTitle => 'Migrate from another app';
+
+  @override
+  String get gettingStartedMigrateSubtitle =>
+      'Bring your subscriptions from Apple Podcasts, Pocket Casts, and others.';
+
+  @override
+  String get gettingStartedSearchTitle => 'Find podcasts';
+
+  @override
+  String get gettingStartedSearchSubtitle =>
+      'Search by name, host, or topic — Audiflow has no charts.';
+
+  @override
+  String get gettingStartedStationsTitle => 'Stations';
+
+  @override
+  String get gettingStartedStationsSubtitle =>
+      'Combine episodes from multiple podcasts into one playlist.';
+
+  @override
+  String get gettingStartedSmartPlaylistsTitle => 'Smart playlists';
+
+  @override
+  String get gettingStartedSmartPlaylistsSubtitle =>
+      'Theme-based groupings curated by the community.';
+
+  @override
+  String get gettingStartedReplayCarousel => 'Show intro again';
+
+  @override
+  String get migrationGuideTitle => 'Migrate from another app';
+
+  @override
+  String get migrationGuideIntro =>
+      'Most podcast apps export your subscriptions as an OPML file. Get the file from your old app, then share it with Audiflow.';
+
+  @override
+  String get migrationStepsLabel => 'Steps';
+
+  @override
+  String get migrationOpenLinkLabel => 'Open link';
+
+  @override
+  String get migrationApplePodcastsTitle => 'From Apple Podcasts';
+
+  @override
+  String get migrationApplePodcastsBody =>
+      'Apple Podcasts has no built-in export. A community shortcut produces an OPML file you can share with Audiflow.';
+
+  @override
+  String get migrationApplePodcastsIosLabel => 'On iPhone or iPad';
+
+  @override
+  String get migrationApplePodcastsIosStep1 =>
+      'Open the shortcut link below on your iPhone or iPad.';
+
+  @override
+  String get migrationApplePodcastsIosStep2 =>
+      'Tap \'Get Shortcut\' to add it to the Shortcuts app.';
+
+  @override
+  String get migrationApplePodcastsIosStep3 =>
+      'Run the shortcut. It saves your subscriptions as an .opml file.';
+
+  @override
+  String get migrationApplePodcastsIosStep4 =>
+      'Open the saved file and tap Share → Audiflow.';
+
+  @override
+  String get migrationApplePodcastsMacLabel => 'On Mac';
+
+  @override
+  String get migrationApplePodcastsMacBody =>
+      'The same shortcut runs on macOS. Advanced users can also extract feeds directly from the Apple Podcasts SQLite library.';
+
+  @override
+  String get migrationApplePodcastsOpenShortcut => 'Open community shortcut';
+
+  @override
+  String get migrationPocketCastsTitle => 'From Pocket Casts';
+
+  @override
+  String get migrationPocketCastsWebLabel => 'On the web';
+
+  @override
+  String get migrationPocketCastsWebStep1 =>
+      'Open pocketcasts.com in a browser and sign in.';
+
+  @override
+  String get migrationPocketCastsWebStep2 =>
+      'Go to Settings → Import & Export.';
+
+  @override
+  String get migrationPocketCastsWebStep3 =>
+      'Choose Export OPML and download the file.';
+
+  @override
+  String get migrationPocketCastsWebStep4 =>
+      'Open the file on your phone and share it with Audiflow.';
+
+  @override
+  String get migrationPocketCastsAppLabel => 'In the mobile app';
+
+  @override
+  String get migrationPocketCastsAppBody =>
+      'In the Pocket Casts app (iOS or Android): Profile → Settings → Import & Export → Export OPML.';
+
+  @override
+  String get migrationPocketCastsOpenWeb => 'Open Pocket Casts on web';
+
+  @override
+  String get migrationOvercastTitle => 'From Overcast';
+
+  @override
+  String get migrationOvercastBody =>
+      'Overcast is iOS-only. Export from the web account page.';
+
+  @override
+  String get migrationOvercastStep1 => 'Open overcast.fm and sign in.';
+
+  @override
+  String get migrationOvercastStep2 =>
+      'Scroll to the bottom of the Account page.';
+
+  @override
+  String get migrationOvercastStep3 =>
+      'Tap \'Export OPML\' to download the file.';
+
+  @override
+  String get migrationOvercastStep4 =>
+      'Share the file with Audiflow from the Files app.';
+
+  @override
+  String get migrationOvercastOpen => 'Open Overcast on web';
+
+  @override
+  String get migrationCastboxTitle => 'From Castbox';
+
+  @override
+  String get migrationCastboxBody =>
+      'In the Castbox app: Profile → Settings → Backup & Restore → Export. Then share the file with Audiflow.';
+
+  @override
+  String get migrationSpotifyTitle => 'From Spotify';
+
+  @override
+  String get migrationSpotifyBody =>
+      'Spotify does not support OPML export. You will need to find your podcasts again via search — open Audiflow\'s Search tab and look up each show by name.';
+
+  @override
+  String get migrationOtherTitle => 'From other apps';
+
+  @override
+  String get migrationOtherBody =>
+      'Look for \'Export OPML\' or \'Backup\' in your app\'s settings, then share the OPML file with Audiflow.';
+
+  @override
+  String get settingsGettingStartedTitle => 'Getting Started';
+
+  @override
+  String get settingsGettingStartedSubtitle =>
+      'Migrate from another app, learn the basics';
 }

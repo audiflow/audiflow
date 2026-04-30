@@ -308,6 +308,7 @@ class _MyAppState extends ConsumerState<MyApp> {
   void initState() {
     super.initState();
     _router = createAppRouter(
+      prefs: ref.read(sharedPreferencesProvider),
       lastTabIndex: ref.read(lastTabControllerProvider),
     );
     unawaited(_initNotificationTapHandler());

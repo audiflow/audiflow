@@ -2365,6 +2365,348 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sleep timer'**
   String get sleepTimerIconLabel;
+
+  /// Skip button on the onboarding carousel
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get onboardingCarouselSkip;
+
+  /// Next button on the onboarding carousel
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get onboardingCarouselNext;
+
+  /// Final button on the last onboarding carousel page
+  ///
+  /// In en, this message translates to:
+  /// **'Get started'**
+  String get onboardingCarouselGetStarted;
+
+  /// Title of carousel page about search-first model
+  ///
+  /// In en, this message translates to:
+  /// **'Search, don\'t browse.'**
+  String get onboardingPageSearchTitle;
+
+  /// Body of carousel page about search-first model
+  ///
+  /// In en, this message translates to:
+  /// **'Audiflow has no top-10 charts. Type a podcast name, host, or topic — and subscribe.'**
+  String get onboardingPageSearchBody;
+
+  /// Title of carousel page about stations
+  ///
+  /// In en, this message translates to:
+  /// **'Make stations.'**
+  String get onboardingPageStationsTitle;
+
+  /// Body of carousel page about stations
+  ///
+  /// In en, this message translates to:
+  /// **'Mix episodes from multiple podcasts. Try a Morning Commute station of news + tech.'**
+  String get onboardingPageStationsBody;
+
+  /// Title of carousel page about smart playlists
+  ///
+  /// In en, this message translates to:
+  /// **'Smart playlists, by theme.'**
+  String get onboardingPageSmartPlaylistsTitle;
+
+  /// Body of carousel page about smart playlists
+  ///
+  /// In en, this message translates to:
+  /// **'Episodes grouped by topic — interviews, deep dives, weekly recaps — curated by the Audiflow community.'**
+  String get onboardingPageSmartPlaylistsBody;
+
+  /// Title of the Getting Started hub
+  ///
+  /// In en, this message translates to:
+  /// **'Getting started'**
+  String get gettingStartedTitle;
+
+  /// Hub card: migration entry point
+  ///
+  /// In en, this message translates to:
+  /// **'Migrate from another app'**
+  String get gettingStartedMigrateTitle;
+
+  /// Hub card subtitle: migration
+  ///
+  /// In en, this message translates to:
+  /// **'Bring your subscriptions from Apple Podcasts, Pocket Casts, and others.'**
+  String get gettingStartedMigrateSubtitle;
+
+  /// Hub card: search explainer
+  ///
+  /// In en, this message translates to:
+  /// **'Find podcasts'**
+  String get gettingStartedSearchTitle;
+
+  /// Hub card subtitle: search
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name, host, or topic — Audiflow has no charts.'**
+  String get gettingStartedSearchSubtitle;
+
+  /// Hub card: stations
+  ///
+  /// In en, this message translates to:
+  /// **'Stations'**
+  String get gettingStartedStationsTitle;
+
+  /// Hub card subtitle: stations
+  ///
+  /// In en, this message translates to:
+  /// **'Combine episodes from multiple podcasts into one playlist.'**
+  String get gettingStartedStationsSubtitle;
+
+  /// Hub card: smart playlists
+  ///
+  /// In en, this message translates to:
+  /// **'Smart playlists'**
+  String get gettingStartedSmartPlaylistsTitle;
+
+  /// Hub card subtitle: smart playlists
+  ///
+  /// In en, this message translates to:
+  /// **'Theme-based groupings curated by the community.'**
+  String get gettingStartedSmartPlaylistsSubtitle;
+
+  /// Replay onboarding carousel from hub
+  ///
+  /// In en, this message translates to:
+  /// **'Show intro again'**
+  String get gettingStartedReplayCarousel;
+
+  /// Migration guide screen title
+  ///
+  /// In en, this message translates to:
+  /// **'Migrate from another app'**
+  String get migrationGuideTitle;
+
+  /// Migration guide intro text
+  ///
+  /// In en, this message translates to:
+  /// **'Most podcast apps export your subscriptions as an OPML file. Get the file from your old app, then share it with Audiflow.'**
+  String get migrationGuideIntro;
+
+  /// Label preceding step list
+  ///
+  /// In en, this message translates to:
+  /// **'Steps'**
+  String get migrationStepsLabel;
+
+  /// Generic open-link button label
+  ///
+  /// In en, this message translates to:
+  /// **'Open link'**
+  String get migrationOpenLinkLabel;
+
+  /// Migration source: Apple Podcasts
+  ///
+  /// In en, this message translates to:
+  /// **'From Apple Podcasts'**
+  String get migrationApplePodcastsTitle;
+
+  /// Migration source intro: Apple Podcasts
+  ///
+  /// In en, this message translates to:
+  /// **'Apple Podcasts has no built-in export. A community shortcut produces an OPML file you can share with Audiflow.'**
+  String get migrationApplePodcastsBody;
+
+  /// Section label: Apple Podcasts iOS
+  ///
+  /// In en, this message translates to:
+  /// **'On iPhone or iPad'**
+  String get migrationApplePodcastsIosLabel;
+
+  /// Apple Podcasts iOS step 1
+  ///
+  /// In en, this message translates to:
+  /// **'Open the shortcut link below on your iPhone or iPad.'**
+  String get migrationApplePodcastsIosStep1;
+
+  /// Apple Podcasts iOS step 2
+  ///
+  /// In en, this message translates to:
+  /// **'Tap \'Get Shortcut\' to add it to the Shortcuts app.'**
+  String get migrationApplePodcastsIosStep2;
+
+  /// Apple Podcasts iOS step 3
+  ///
+  /// In en, this message translates to:
+  /// **'Run the shortcut. It saves your subscriptions as an .opml file.'**
+  String get migrationApplePodcastsIosStep3;
+
+  /// Apple Podcasts iOS step 4
+  ///
+  /// In en, this message translates to:
+  /// **'Open the saved file and tap Share → Audiflow.'**
+  String get migrationApplePodcastsIosStep4;
+
+  /// Section label: Apple Podcasts macOS
+  ///
+  /// In en, this message translates to:
+  /// **'On Mac'**
+  String get migrationApplePodcastsMacLabel;
+
+  /// Apple Podcasts macOS instructions
+  ///
+  /// In en, this message translates to:
+  /// **'The same shortcut runs on macOS. Advanced users can also extract feeds directly from the Apple Podcasts SQLite library.'**
+  String get migrationApplePodcastsMacBody;
+
+  /// Button: open Apple Podcasts shortcut
+  ///
+  /// In en, this message translates to:
+  /// **'Open community shortcut'**
+  String get migrationApplePodcastsOpenShortcut;
+
+  /// Migration source: Pocket Casts
+  ///
+  /// In en, this message translates to:
+  /// **'From Pocket Casts'**
+  String get migrationPocketCastsTitle;
+
+  /// Section label: Pocket Casts web
+  ///
+  /// In en, this message translates to:
+  /// **'On the web'**
+  String get migrationPocketCastsWebLabel;
+
+  /// Pocket Casts web step 1
+  ///
+  /// In en, this message translates to:
+  /// **'Open pocketcasts.com in a browser and sign in.'**
+  String get migrationPocketCastsWebStep1;
+
+  /// Pocket Casts web step 2
+  ///
+  /// In en, this message translates to:
+  /// **'Go to Settings → Import & Export.'**
+  String get migrationPocketCastsWebStep2;
+
+  /// Pocket Casts web step 3
+  ///
+  /// In en, this message translates to:
+  /// **'Choose Export OPML and download the file.'**
+  String get migrationPocketCastsWebStep3;
+
+  /// Pocket Casts web step 4
+  ///
+  /// In en, this message translates to:
+  /// **'Open the file on your phone and share it with Audiflow.'**
+  String get migrationPocketCastsWebStep4;
+
+  /// Section label: Pocket Casts mobile
+  ///
+  /// In en, this message translates to:
+  /// **'In the mobile app'**
+  String get migrationPocketCastsAppLabel;
+
+  /// Pocket Casts mobile body
+  ///
+  /// In en, this message translates to:
+  /// **'In the Pocket Casts app (iOS or Android): Profile → Settings → Import & Export → Export OPML.'**
+  String get migrationPocketCastsAppBody;
+
+  /// Button: open Pocket Casts web
+  ///
+  /// In en, this message translates to:
+  /// **'Open Pocket Casts on web'**
+  String get migrationPocketCastsOpenWeb;
+
+  /// Migration source: Overcast
+  ///
+  /// In en, this message translates to:
+  /// **'From Overcast'**
+  String get migrationOvercastTitle;
+
+  /// Overcast intro
+  ///
+  /// In en, this message translates to:
+  /// **'Overcast is iOS-only. Export from the web account page.'**
+  String get migrationOvercastBody;
+
+  /// Overcast step 1
+  ///
+  /// In en, this message translates to:
+  /// **'Open overcast.fm and sign in.'**
+  String get migrationOvercastStep1;
+
+  /// Overcast step 2
+  ///
+  /// In en, this message translates to:
+  /// **'Scroll to the bottom of the Account page.'**
+  String get migrationOvercastStep2;
+
+  /// Overcast step 3
+  ///
+  /// In en, this message translates to:
+  /// **'Tap \'Export OPML\' to download the file.'**
+  String get migrationOvercastStep3;
+
+  /// Overcast step 4
+  ///
+  /// In en, this message translates to:
+  /// **'Share the file with Audiflow from the Files app.'**
+  String get migrationOvercastStep4;
+
+  /// Button: open Overcast web
+  ///
+  /// In en, this message translates to:
+  /// **'Open Overcast on web'**
+  String get migrationOvercastOpen;
+
+  /// Migration source: Castbox
+  ///
+  /// In en, this message translates to:
+  /// **'From Castbox'**
+  String get migrationCastboxTitle;
+
+  /// Castbox body
+  ///
+  /// In en, this message translates to:
+  /// **'In the Castbox app: Profile → Settings → Backup & Restore → Export. Then share the file with Audiflow.'**
+  String get migrationCastboxBody;
+
+  /// Migration source: Spotify
+  ///
+  /// In en, this message translates to:
+  /// **'From Spotify'**
+  String get migrationSpotifyTitle;
+
+  /// Spotify body
+  ///
+  /// In en, this message translates to:
+  /// **'Spotify does not support OPML export. You will need to find your podcasts again via search — open Audiflow\'s Search tab and look up each show by name.'**
+  String get migrationSpotifyBody;
+
+  /// Migration source: other / generic
+  ///
+  /// In en, this message translates to:
+  /// **'From other apps'**
+  String get migrationOtherTitle;
+
+  /// Generic OPML guidance
+  ///
+  /// In en, this message translates to:
+  /// **'Look for \'Export OPML\' or \'Backup\' in your app\'s settings, then share the OPML file with Audiflow.'**
+  String get migrationOtherBody;
+
+  /// Settings tile: Getting Started hub
+  ///
+  /// In en, this message translates to:
+  /// **'Getting Started'**
+  String get settingsGettingStartedTitle;
+
+  /// Settings tile subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Migrate from another app, learn the basics'**
+  String get settingsGettingStartedSubtitle;
 }
 
 class _AppLocalizationsDelegate

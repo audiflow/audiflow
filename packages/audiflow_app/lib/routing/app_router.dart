@@ -5,10 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../l10n/app_localizations.dart';
 import '../features/library/presentation/screens/library_screen.dart';
 import '../features/library/presentation/screens/subscriptions_list_screen.dart';
+import '../features/onboarding/presentation/screens/getting_started_hub_screen.dart';
+import '../features/onboarding/presentation/screens/migration_guide_screen.dart';
+import '../features/onboarding/presentation/screens/onboarding_carousel_screen.dart';
 import '../features/podcast_detail/presentation/screens/episode_detail_screen.dart';
 import '../features/station/presentation/screens/station_detail_screen.dart';
 import '../features/station/presentation/screens/station_edit_screen.dart';
@@ -29,6 +33,13 @@ import '../features/settings/presentation/screens/settings_screen.dart';
 import '../features/settings/presentation/screens/storage_settings_screen.dart';
 import '../features/settings/presentation/screens/developer_settings_screen.dart';
 import 'scaffold_with_nav_bar.dart';
+
+/// SharedPreferences key for the onboarding-completion flag.
+///
+/// Mirrored in [OnboardingCompletionController]; defined here so the
+/// router redirect can check it synchronously without depending on
+/// the controller layer.
+const _kOnboardingCompletedKey = 'onboarding.carousel_completed_v1';
 
 /// Application route paths.
 ///
@@ -55,6 +66,9 @@ class AppRoutes {
   static const String settingsDeveloper = '/settings/developer';
   static const String settingsDownloadManagement =
       '/settings/downloads/management';
+  static const String settingsGettingStarted = '/settings/getting-started';
+  static const String migrationGuide = '/settings/getting-started/migration';
+  static const String onboarding = '/onboarding';
   static const String transcript = '/transcript';
   static const String deepLinkPodcast = '/p/:itunesId';
   static const String deepLinkEpisode = '/p/:itunesId/e/:encodedGuid';
@@ -89,7 +103,10 @@ final _settingsNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'settings');
 ///   - `/search/podcast/:id`
 /// - `/library`
 /// - `/settings`
-GoRouter createAppRouter({int lastTabIndex = 0}) {
+GoRouter createAppRouter({
+  required SharedPreferences prefs,
+  int lastTabIndex = 0,
+}) {
   final initialLocation = switch (lastTabIndex) {
     1 => AppRoutes.library,
     2 => AppRoutes.queue,
@@ -103,6 +120,17 @@ GoRouter createAppRouter({int lastTabIndex = 0}) {
     // are handled by OpmlFileReceiverController via app_links,
     // not by the router. Redirect to home on unknown routes.
     onException: (_, _, router) => router.go(AppRoutes.search),
+    redirect: (context, state) {
+      final completed = prefs.getBool(_kOnboardingCompletedKey) ?? false;
+      final atOnboarding = state.matchedLocation == AppRoutes.onboarding;
+      if (!completed && !atOnboarding) {
+        return AppRoutes.onboarding;
+      }
+      if (completed && atOnboarding) {
+        return AppRoutes.search;
+      }
+      return null;
+    },
     routes: [
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
@@ -295,11 +323,28 @@ GoRouter createAppRouter({int lastTabIndex = 0}) {
                     builder: (context, state) =>
                         const DeveloperSettingsScreen(),
                   ),
+                  GoRoute(
+                    path: 'getting-started',
+                    builder: (context, state) =>
+                        const GettingStartedHubScreen(),
+                    routes: [
+                      GoRoute(
+                        path: 'migration',
+                        builder: (context, state) =>
+                            const MigrationGuideScreen(),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ],
           ),
         ],
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: AppRoutes.onboarding,
+        builder: (context, state) => const OnboardingCarouselScreen(),
       ),
       GoRoute(
         parentNavigatorKey: rootNavigatorKey,

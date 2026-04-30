@@ -1242,4 +1242,195 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get sleepTimerIconLabel => 'スリープタイマー';
+
+  @override
+  String get onboardingCarouselSkip => 'スキップ';
+
+  @override
+  String get onboardingCarouselNext => '次へ';
+
+  @override
+  String get onboardingCarouselGetStarted => 'はじめる';
+
+  @override
+  String get onboardingPageSearchTitle => '検索で見つけよう';
+
+  @override
+  String get onboardingPageSearchBody =>
+      'Audiflow にランキングはありません。番組名・ホスト・トピックで検索して、購読しましょう。';
+
+  @override
+  String get onboardingPageStationsTitle => 'ステーションを作る';
+
+  @override
+  String get onboardingPageStationsBody =>
+      '複数のポッドキャストのエピソードをまとめて再生。たとえば「通勤用ニュース＋テック」のステーション。';
+
+  @override
+  String get onboardingPageSmartPlaylistsTitle => 'スマートプレイリスト';
+
+  @override
+  String get onboardingPageSmartPlaylistsBody =>
+      'テーマでまとめたエピソード（インタビュー、深掘り、週次まとめなど）。コミュニティが整備しています。';
+
+  @override
+  String get gettingStartedTitle => 'はじめに';
+
+  @override
+  String get gettingStartedMigrateTitle => '他のアプリから移行';
+
+  @override
+  String get gettingStartedMigrateSubtitle =>
+      'Apple Podcasts、Pocket Casts などから購読を持ち込みましょう。';
+
+  @override
+  String get gettingStartedSearchTitle => 'ポッドキャストを探す';
+
+  @override
+  String get gettingStartedSearchSubtitle =>
+      '番組名・ホスト・トピックで検索。Audiflow にランキング機能はありません。';
+
+  @override
+  String get gettingStartedStationsTitle => 'ステーション';
+
+  @override
+  String get gettingStartedStationsSubtitle =>
+      '複数のポッドキャストのエピソードを 1 つのプレイリストにまとめます。';
+
+  @override
+  String get gettingStartedSmartPlaylistsTitle => 'スマートプレイリスト';
+
+  @override
+  String get gettingStartedSmartPlaylistsSubtitle => 'コミュニティが整備するテーマ別のまとめ。';
+
+  @override
+  String get gettingStartedReplayCarousel => 'イントロをもう一度見る';
+
+  @override
+  String get migrationGuideTitle => '他のアプリから移行';
+
+  @override
+  String get migrationGuideIntro =>
+      '多くのポッドキャストアプリは購読リストを OPML ファイルとして書き出せます。元のアプリからファイルを取り出して、Audiflow に共有してください。';
+
+  @override
+  String get migrationStepsLabel => '手順';
+
+  @override
+  String get migrationOpenLinkLabel => 'リンクを開く';
+
+  @override
+  String get migrationApplePodcastsTitle => 'Apple Podcasts から';
+
+  @override
+  String get migrationApplePodcastsBody =>
+      'Apple Podcasts には書き出し機能がありませんが、コミュニティ製のショートカットで OPML を生成できます。';
+
+  @override
+  String get migrationApplePodcastsIosLabel => 'iPhone / iPad で';
+
+  @override
+  String get migrationApplePodcastsIosStep1 =>
+      '下記のショートカットのリンクを iPhone または iPad で開きます。';
+
+  @override
+  String get migrationApplePodcastsIosStep2 =>
+      '「ショートカットを取得」をタップしてショートカット App に追加します。';
+
+  @override
+  String get migrationApplePodcastsIosStep3 =>
+      'ショートカットを実行すると、購読リストが .opml ファイルとして保存されます。';
+
+  @override
+  String get migrationApplePodcastsIosStep4 =>
+      '保存されたファイルを開き、共有 → Audiflow を選択します。';
+
+  @override
+  String get migrationApplePodcastsMacLabel => 'Mac で';
+
+  @override
+  String get migrationApplePodcastsMacBody =>
+      '同じショートカットは macOS でも動作します。上級者向けには、Apple Podcasts の SQLite ライブラリから直接フィードを抽出する方法もあります。';
+
+  @override
+  String get migrationApplePodcastsOpenShortcut => 'コミュニティショートカットを開く';
+
+  @override
+  String get migrationPocketCastsTitle => 'Pocket Casts から';
+
+  @override
+  String get migrationPocketCastsWebLabel => 'Web で';
+
+  @override
+  String get migrationPocketCastsWebStep1 =>
+      'ブラウザで pocketcasts.com を開いてログインします。';
+
+  @override
+  String get migrationPocketCastsWebStep2 => '設定 → インポート＆エクスポート に移動します。';
+
+  @override
+  String get migrationPocketCastsWebStep3 =>
+      '「OPML をエクスポート」を選択してファイルをダウンロードします。';
+
+  @override
+  String get migrationPocketCastsWebStep4 => 'ファイルをスマホで開き、Audiflow に共有します。';
+
+  @override
+  String get migrationPocketCastsAppLabel => 'モバイルアプリで';
+
+  @override
+  String get migrationPocketCastsAppBody =>
+      'Pocket Casts アプリ (iOS / Android)：プロフィール → 設定 → インポート＆エクスポート → OPML をエクスポート。';
+
+  @override
+  String get migrationPocketCastsOpenWeb => 'Pocket Casts を Web で開く';
+
+  @override
+  String get migrationOvercastTitle => 'Overcast から';
+
+  @override
+  String get migrationOvercastBody =>
+      'Overcast は iOS のみ。Web のアカウントページから書き出します。';
+
+  @override
+  String get migrationOvercastStep1 => 'overcast.fm を開いてログインします。';
+
+  @override
+  String get migrationOvercastStep2 => 'アカウントページを最下部までスクロールします。';
+
+  @override
+  String get migrationOvercastStep3 => '「Export OPML」をタップしてダウンロードします。';
+
+  @override
+  String get migrationOvercastStep4 => 'ファイル App から Audiflow に共有します。';
+
+  @override
+  String get migrationOvercastOpen => 'Overcast を Web で開く';
+
+  @override
+  String get migrationCastboxTitle => 'Castbox から';
+
+  @override
+  String get migrationCastboxBody =>
+      'Castbox アプリ：プロフィール → 設定 → バックアップ＆復元 → エクスポート。出力したファイルを Audiflow に共有してください。';
+
+  @override
+  String get migrationSpotifyTitle => 'Spotify から';
+
+  @override
+  String get migrationSpotifyBody =>
+      'Spotify は OPML エクスポートに対応していません。Audiflow の検索タブで番組名を 1 つずつ検索して再登録してください。';
+
+  @override
+  String get migrationOtherTitle => 'その他のアプリから';
+
+  @override
+  String get migrationOtherBody =>
+      'アプリの設定で「OPML エクスポート」または「バックアップ」を探し、出力したファイルを Audiflow に共有してください。';
+
+  @override
+  String get settingsGettingStartedTitle => 'はじめに';
+
+  @override
+  String get settingsGettingStartedSubtitle => '他のアプリから移行、基本の使い方';
 }

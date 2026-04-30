@@ -41,11 +41,11 @@ void main() {
       expect(titleWidget.data, equals('Settings'));
     });
 
-    testWidgets('renders 7 category cards', (tester) async {
+    testWidgets('renders 8 category cards', (tester) async {
       await withTallSurface(tester, () async {
         await tester.pumpWidget(buildTestWidget());
 
-        expect(find.byType(SettingsCategoryCard), findsNWidgets(7));
+        expect(find.byType(SettingsCategoryCard), findsNWidgets(8));
       });
     });
 
@@ -59,6 +59,7 @@ void main() {
         expect(find.text('Feed Sync'), findsOneWidget);
         expect(find.text('Storage & Data'), findsOneWidget);
         expect(find.text('About'), findsOneWidget);
+        expect(find.text('Getting Started'), findsOneWidget);
         expect(find.text('Developer'), findsOneWidget);
       });
     });
