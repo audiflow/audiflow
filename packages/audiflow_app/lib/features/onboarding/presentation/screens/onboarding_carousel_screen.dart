@@ -47,7 +47,10 @@ class _OnboardingCarouselScreenState
         .read(onboardingCompletionControllerProvider.notifier)
         .markCompleted();
     if (!mounted) return;
-    context.go(AppRoutes.search);
+    // Drop the user onto the Getting Started hub so the migration pitch
+    // and feature highlights stay actionable in the moment they finish
+    // the carousel — landing on an empty Search tab loses that thread.
+    context.go(AppRoutes.settingsGettingStarted);
   }
 
   @override
