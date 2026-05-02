@@ -253,7 +253,17 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
 
   Future<void> _reactivateAndResume(AudioSession session) async {
     try {
-      await session.setActive(true);
+      final activated = await session.setActive(true);
+      if (!activated) {
+        // Another app holds the audio session (e.g. user switched to
+        // Spotify mid-call). Bail without `play()` so we don't barge in
+        // on their playback.
+        _emitInterruptionDiagnostic(
+          'player.interruption:resume-skipped-session-busy',
+          {'isPlaying': _player.playing},
+        );
+        return;
+      }
       // iOS tears down AVPlayer's audio output pipeline during an
       // interruption. `play()` alone returns "playing" but produces no
       // sound; a position-neutral seek rebuilds the pipeline before we
@@ -327,14 +337,23 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
   Future<void> play() async {
     // Ensure the audio session is configured before first playback.
     await _sessionReady;
+    // The user explicitly asked to play. If we are mid-interruption
+    // (e.g. a long phone call), drop the committed pause so the
+    // upcoming interruption-end event does not double-resume or fight
+    // the user's own action.
+    _interruptionHandler.markUserOverride();
     await _controller.resume();
   }
 
   @override
-  Future<void> pause() async => _controller.pause();
+  Future<void> pause() async {
+    _interruptionHandler.markUserOverride();
+    await _controller.pause();
+  }
 
   @override
   Future<void> stop() async {
+    _interruptionHandler.markUserOverride();
     await _controller.stop();
     await super.stop();
   }

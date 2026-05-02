@@ -81,6 +81,26 @@ class AudioInterruptionHandler {
   /// player ducked forever or flag-stuck-set forever.
   _DuckAction? _committedAction;
 
+  /// Called when the user explicitly drives playback (play/pause/stop)
+  /// while an interruption is active — e.g. tapping the lock-screen
+  /// pause button during a phone call. Clears the committed action so
+  /// the upcoming [onEnd] cannot override the user's choice. The
+  /// ducked-arm restores volume so a manually-paused-while-ducked
+  /// session does not stay at half volume after the user resumes.
+  void markUserOverride() {
+    final action = _committedAction;
+    if (action == null) return;
+    _committedAction = null;
+    _onDiagnostic('player.interruption:user-override', {
+      'committedAction': action.name,
+    });
+    if (action == _DuckAction.ducked) {
+      // Fire-and-forget: the user just took control, we just want the
+      // volume reset before they hit play again.
+      unawaited(_setVolume(_fullVolume));
+    }
+  }
+
   /// Called when an interruption begins (e.g. a notification sound starts
   /// playing on Android, or an incoming call on iOS).
   Future<void> onBegin(AudioInterruptionType type) async {
@@ -171,14 +191,13 @@ class AudioInterruptionHandler {
         await _setVolume(_fullVolume);
         _onDiagnostic('player.interruption:end-volume-restored', {});
       case _DuckAction.paused:
-        if (type == AudioInterruptionType.unknown) {
-          // "Unknown" end events are not reliably actionable; clear
-          // state but do not auto-resume.
-          _onDiagnostic('player.interruption:end-unknown-no-resume', {});
-          return;
-        }
+        // iOS strips `AVAudioSessionInterruptionOptionShouldResume` from
+        // the end notification for long phone calls (~30s+), which
+        // surfaces as `AudioInterruptionType.unknown` here. Resume
+        // anyway — the resume path checks `setActive(true)` and bails
+        // gracefully if another app has taken the audio session.
         await _resume();
-        _onDiagnostic('player.interruption:end-resumed', {});
+        _onDiagnostic('player.interruption:end-resumed', {'type': type.name});
     }
   }
 
