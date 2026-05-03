@@ -163,20 +163,23 @@ void main() {
   });
 
   group('AudioInterruptionHandler — unknown interruption type on end', () {
-    test('clears flag but does not auto-resume', () async {
-      final t = _RecordingTarget()
-        ..playing = true
-        ..position = const Duration(seconds: 20);
-      final handler = _buildHandler(t);
+    test(
+      'resumes anyway (iOS strips shouldResume on long phone calls)',
+      () async {
+        final t = _RecordingTarget()
+          ..playing = true
+          ..position = const Duration(seconds: 20);
+        final handler = _buildHandler(t);
 
-      await handler.onBegin(AudioInterruptionType.pause);
-      check(handler.playInterrupted).isTrue();
+        await handler.onBegin(AudioInterruptionType.pause);
+        check(handler.playInterrupted).isTrue();
 
-      await handler.onEnd(AudioInterruptionType.unknown);
+        await handler.onEnd(AudioInterruptionType.unknown);
 
-      check(t.resumeCalls).equals(0);
-      check(handler.playInterrupted).isFalse();
-    });
+        check(t.resumeCalls).equals(1);
+        check(handler.playInterrupted).isFalse();
+      },
+    );
   });
 
   group('AudioInterruptionHandler — duck interruption while paused', () {
@@ -390,19 +393,105 @@ void main() {
       check(events).contains('player.interruption:begin-skip-not-playing');
     });
 
-    test('emits end-unknown-no-resume when committed-paused ends with '
-        'unknown type', () async {
+    test(
+      'emits end-resumed even on unknown end type (long iOS call path)',
+      () async {
+        final t = _RecordingTarget()
+          ..playing = true
+          ..behavior = DuckInterruptionBehavior.pause
+          ..position = const Duration(seconds: 30);
+        final handler = _buildHandler(t);
+
+        await handler.onBegin(AudioInterruptionType.pause);
+        await handler.onEnd(AudioInterruptionType.unknown);
+
+        final events = t.diagnostics.map((d) => d.event).toList();
+        check(events).contains('player.interruption:end-resumed');
+        check(
+          events,
+        ).not((it) => it.contains('player.interruption:end-unknown-no-resume'));
+        final resumed = t.diagnostics.firstWhere(
+          (d) => d.event == 'player.interruption:end-resumed',
+        );
+        check(resumed.data['type']).equals('unknown');
+      },
+    );
+  });
+
+  group('AudioInterruptionHandler — user override during interruption', () {
+    test(
+      'user pause during paused-interruption clears state, no resume on end',
+      () async {
+        final t = _RecordingTarget()
+          ..playing = true
+          ..behavior = DuckInterruptionBehavior.pause
+          ..position = const Duration(seconds: 30);
+        final handler = _buildHandler(t);
+
+        await handler.onBegin(AudioInterruptionType.pause);
+        check(handler.playInterrupted).isTrue();
+
+        // User taps pause on the lock screen while the call is still active.
+        handler.markUserOverride();
+        check(handler.playInterrupted).isFalse();
+
+        await handler.onEnd(AudioInterruptionType.pause);
+
+        check(t.resumeCalls).equals(0);
+      },
+    );
+
+    test(
+      'user play during paused-interruption clears state, onEnd is no-op',
+      () async {
+        final t = _RecordingTarget()
+          ..playing = true
+          ..behavior = DuckInterruptionBehavior.pause
+          ..position = const Duration(seconds: 30);
+        final handler = _buildHandler(t);
+
+        await handler.onBegin(AudioInterruptionType.pause);
+        handler.markUserOverride();
+
+        await handler.onEnd(AudioInterruptionType.unknown);
+
+        // The handler must not duplicate the user's resume — it had already
+        // released the committed pause, so this onEnd is a pure no-op.
+        check(t.resumeCalls).equals(0);
+      },
+    );
+
+    test('user override while ducked restores volume to full', () async {
       final t = _RecordingTarget()
         ..playing = true
-        ..behavior = DuckInterruptionBehavior.pause
-        ..position = const Duration(seconds: 30);
+        ..behavior = DuckInterruptionBehavior.duck
+        ..position = const Duration(seconds: 10);
       final handler = _buildHandler(t);
 
-      await handler.onBegin(AudioInterruptionType.pause);
-      await handler.onEnd(AudioInterruptionType.unknown);
+      await handler.onBegin(AudioInterruptionType.duck);
+      check(t.volumeCalls.last).equals(0.3);
 
-      final events = t.diagnostics.map((d) => d.event).toList();
-      check(events).contains('player.interruption:end-unknown-no-resume');
+      handler.markUserOverride();
+      // Microtask gap so the unawaited setVolume completes before assert.
+      await Future<void>.delayed(Duration.zero);
+
+      check(t.volumeCalls.last).equals(1.0);
+
+      // The end event arrives later — must be a no-op (no double restore).
+      await handler.onEnd(AudioInterruptionType.duck);
+      check(t.volumeCalls.length).equals(2);
+    });
+
+    test('user override with no committed action is a no-op', () async {
+      final t = _RecordingTarget();
+      final handler = _buildHandler(t);
+
+      handler.markUserOverride();
+
+      check(t.volumeCalls).isEmpty();
+      check(
+        t.diagnostics.map((d) => d.event),
+      ).not((it) => it.contains('player.interruption:user-override'));
     });
   });
 }
