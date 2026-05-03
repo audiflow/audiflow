@@ -1,3 +1,5 @@
+import 'package:logger/logger.dart';
+
 import '../datasources/local/smart_playlist_cache_datasource.dart';
 import '../datasources/remote/smart_playlist_remote_datasource.dart';
 import '../models/pattern_summary.dart';
@@ -15,11 +17,14 @@ class SmartPlaylistConfigRepositoryImpl
   SmartPlaylistConfigRepositoryImpl({
     required SmartPlaylistRemoteDatasource remote,
     required SmartPlaylistCacheDatasource cache,
+    Logger? logger,
   }) : _remote = remote,
-       _cache = cache;
+       _cache = cache,
+       _logger = logger;
 
   final SmartPlaylistRemoteDatasource _remote;
   final SmartPlaylistCacheDatasource _cache;
+  final Logger? _logger;
   final Map<String, Future<SmartPlaylistPatternConfig>> _inFlight = {};
   List<PatternSummary> _summaries = [];
 
@@ -57,8 +62,19 @@ class SmartPlaylistConfigRepositoryImpl
     final cachedVersion = versions[summary.id];
 
     if (cachedVersion == summary.dataVersion) {
+      _logger?.d(
+        'cache hit for pattern="${summary.id}" '
+        '(displayName="${summary.displayName}", '
+        'dataVersion=${summary.dataVersion}); skipping remote fetch',
+      );
       final config = await _tryLoadFromCache(summary.id);
       if (config != null) return config;
+    } else {
+      _logger?.d(
+        'cache miss for pattern="${summary.id}" '
+        '(cached=$cachedVersion, latest=${summary.dataVersion}); '
+        'will re-fetch',
+      );
     }
 
     return _fetchAndCache(summary, versions);

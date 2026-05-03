@@ -103,7 +103,11 @@ SmartPlaylistConfigRepository smartPlaylistConfigRepository(Ref ref) {
   );
   final cache = SmartPlaylistCacheDatasource(cacheDir: cacheDir);
 
-  final repo = SmartPlaylistConfigRepositoryImpl(remote: remote, cache: cache);
+  final repo = SmartPlaylistConfigRepositoryImpl(
+    remote: remote,
+    cache: cache,
+    logger: ref.watch(namedLoggerProvider('SmartPlaylistConfigRepository')),
+  );
 
   // Seed with current summaries so findMatchingPattern works.
   final summaries = ref.watch(patternSummariesProvider);

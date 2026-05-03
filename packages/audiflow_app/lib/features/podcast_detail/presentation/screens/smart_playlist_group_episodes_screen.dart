@@ -639,24 +639,49 @@ class _SmartPlaylistGroupEpisodesScreenState
   /// rendered inside this group, walking the
   /// group → playlist → meta cascade defined by schema v6.
   bool _resolveEpisodeRowThumbnail() {
+    final logger = ref.read(
+      namedLoggerProvider('SmartPlaylistEpisodeRowThumbnail'),
+    );
     final feedUrl = widget.feedUrl;
-    if (feedUrl == null) return true;
+    if (feedUrl == null) {
+      logger.d('feedUrl=null, defaulting to true');
+      return true;
+    }
 
     final config = ref
         .watch(smartPlaylistPatternByFeedUrlProvider(feedUrl))
         .value;
-    if (config == null) return true;
+    if (config == null) {
+      logger.d('no pattern config matched for feedUrl=$feedUrl');
+      return true;
+    }
 
     final playlistDef = config.findPlaylist(widget.parentPlaylist.id);
-    if (playlistDef == null) return true;
+    if (playlistDef == null) {
+      logger.d(
+        'playlist "${widget.parentPlaylist.id}" not found in config '
+        '(have: ${config.playlists.map((p) => p.id).toList()})',
+      );
+      return true;
+    }
 
     final groupDef = playlistDef.grouping.findStaticClassifier(widget.group.id);
-
-    return EffectiveThumbnails.episodeRowInGroup(
+    final result = EffectiveThumbnails.episodeRowInGroup(
       showEpisodeThumbnail: config.showEpisodeThumbnail,
       playlist: playlistDef,
       group: groupDef,
     );
+    logger.d(
+      'group="${widget.group.displayName}" (id=${widget.group.id}, '
+      'playlist=${widget.parentPlaylist.id}): '
+      'meta.showEpisodeThumbnail=${config.showEpisodeThumbnail}, '
+      'playlist.episodeItem.showThumbnail='
+      '${playlistDef.episodeItem?.showThumbnail}, '
+      'group.episodeItem.showThumbnail='
+      '${groupDef?.episodeItem?.showThumbnail}, '
+      'resolved=$result',
+    );
+    return result;
   }
 }
 
