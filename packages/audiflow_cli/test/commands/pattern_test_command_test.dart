@@ -34,7 +34,9 @@ void main() {
       expect(output.toString().toLowerCase(), contains('error'));
     });
 
-    test('uses fallback for null seasonNumber', () {
+    test('returns error when titleFallback set but title pattern misses', () {
+      // schema v6: fallbackValue no longer short-circuits a `title` source —
+      // it only applies to seasonNumber/episodeNumber sources.
       final output = StringBuffer();
       final command = PatternTestCommand(output);
 
@@ -47,8 +49,8 @@ void main() {
         episodeNumber: 135,
       );
 
-      expect(exitCode, 0);
-      expect(output.toString(), contains('番外編'));
+      expect(exitCode, 1);
+      expect(output.toString().toLowerCase(), contains('error'));
     });
   });
 }

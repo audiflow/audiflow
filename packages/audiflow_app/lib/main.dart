@@ -33,7 +33,7 @@ import 'routing/app_router.dart';
 Future<void> appMain({
   required Flavor flavor,
   String smartPlaylistConfigBaseUrl =
-      'https://audiflow.github.io/audiflow-smartplaylist/assets-dev/v5',
+      'https://audiflow.github.io/audiflow-smartplaylist/assets-dev/v6',
 }) async {
   WidgetsFlutterBinding.ensureInitialized();
 

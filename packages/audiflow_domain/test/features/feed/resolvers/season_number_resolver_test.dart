@@ -274,7 +274,7 @@ void main() {
           titleExtractor: SmartPlaylistTitleExtractor(
             source: 'title',
             pattern: r'(.+?) \d+$',
-            group: 1,
+            template: r'${1}',
           ),
         ),
       );

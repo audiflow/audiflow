@@ -7,6 +7,7 @@ final class GroupItemConfig {
     this.pinToYear,
     this.prependSeasonNumber,
     this.titleExtractor,
+    this.showThumbnail,
   });
 
   factory GroupItemConfig.fromJson(Map<String, dynamic> json) {
@@ -19,6 +20,7 @@ final class GroupItemConfig {
               json['titleExtractor'] as Map<String, dynamic>,
             )
           : null,
+      showThumbnail: json['showThumbnail'] as bool?,
     );
   }
 
@@ -34,6 +36,10 @@ final class GroupItemConfig {
   /// Generates group display names from episode data.
   final SmartPlaylistTitleExtractor? titleExtractor;
 
+  /// Whether group cards show a thumbnail.
+  /// Tri-state: `null` means unset (defaults to `true` per schema).
+  final bool? showThumbnail;
+
   Map<String, dynamic> toJson() {
     return {
       if (showDateRange != null) 'showDateRange': showDateRange,
@@ -41,6 +47,7 @@ final class GroupItemConfig {
       if (prependSeasonNumber != null)
         'prependSeasonNumber': prependSeasonNumber,
       if (titleExtractor != null) 'titleExtractor': titleExtractor!.toJson(),
+      if (showThumbnail != null) 'showThumbnail': showThumbnail,
     };
   }
 }

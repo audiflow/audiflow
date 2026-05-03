@@ -3,53 +3,40 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  group('SmartPlaylistTitleExtractor', () {
-    test('creates from JSON config with regex pattern', () {
-      final json = {
+  group('SmartPlaylistTitleExtractor (JSON)', () {
+    test('parses pattern + template', () {
+      final extractor = SmartPlaylistTitleExtractor.fromJson({
         'source': 'title',
-        'pattern': r'\[(.+?)\s+\d+\]',
-        'group': 1,
-      };
-
-      final extractor = SmartPlaylistTitleExtractor.fromJson(json);
+        'pattern': r'\[(.+?)\s+(\d+)\]',
+        'template': r'${1} ${2}',
+      });
 
       expect(extractor.source, 'title');
-      expect(extractor.pattern, r'\[(.+?)\s+\d+\]');
-      expect(extractor.group, 1);
+      expect(extractor.pattern, r'\[(.+?)\s+(\d+)\]');
+      expect(extractor.template, r'${1} ${2}');
     });
 
-    test('creates from JSON config with template', () {
-      final json = {'source': 'seasonNumber', 'template': 'Season {value}'};
-
-      final extractor = SmartPlaylistTitleExtractor.fromJson(json);
-
-      expect(extractor.source, 'seasonNumber');
-      expect(extractor.template, 'Season {value}');
-    });
-
-    test('creates from JSON config with fallback', () {
-      final json = {
+    test('parses fallback chain', () {
+      final extractor = SmartPlaylistTitleExtractor.fromJson({
         'source': 'title',
         'pattern': r'\[(.+?)\]',
-        'group': 1,
-        'fallback': {'source': 'seasonNumber', 'template': 'Season {value}'},
-      };
-
-      final extractor = SmartPlaylistTitleExtractor.fromJson(json);
+        'template': r'${1}',
+        'fallback': {'source': 'seasonNumber', 'template': r'Season ${0}'},
+      });
 
       expect(extractor.fallback, isNotNull);
       expect(extractor.fallback!.source, 'seasonNumber');
-      expect(extractor.fallback!.template, 'Season {value}');
+      expect(extractor.fallback!.template, r'Season ${0}');
     });
 
-    test('converts to JSON', () {
+    test('toJson round-trip preserves pattern/template/fallback', () {
       final extractor = SmartPlaylistTitleExtractor(
         source: 'title',
         pattern: r'\[(.+?)\]',
-        group: 1,
-        fallback: SmartPlaylistTitleExtractor(
+        template: r'${1}',
+        fallback: const SmartPlaylistTitleExtractor(
           source: 'seasonNumber',
-          template: 'Season {value}',
+          template: r'Season ${0}',
         ),
       );
 
@@ -57,41 +44,28 @@ void main() {
 
       expect(json['source'], 'title');
       expect(json['pattern'], r'\[(.+?)\]');
-      expect(json['group'], 1);
+      expect(json['template'], r'${1}');
       expect(json['fallback'], isA<Map<String, dynamic>>());
     });
 
-    test('group defaults to 0 when not specified', () {
-      final json = {'source': 'title', 'pattern': r'Season (\d+)'};
+    test('parses fallbackValue', () {
+      final extractor = SmartPlaylistTitleExtractor.fromJson({
+        'source': 'seasonNumber',
+        'template': r'Season ${0}',
+        'fallbackValue': 'Extras',
+      });
 
-      final extractor = SmartPlaylistTitleExtractor.fromJson(json);
-
-      expect(extractor.group, 0);
+      expect(extractor.fallbackValue, 'Extras');
     });
 
-    test('creates from JSON config with fallbackValue', () {
-      final json = {
-        'source': 'title',
-        'pattern': r'【COTEN RADIO (ショート)?\s*(.+?)\s+\d+】',
-        'group': 2,
-        'fallbackValue': '番外編',
-      };
-
-      final extractor = SmartPlaylistTitleExtractor.fromJson(json);
-
-      expect(extractor.fallbackValue, '番外編');
-    });
-
-    test('converts to JSON with fallbackValue', () {
+    test('toJson includes fallbackValue when set', () {
       final extractor = SmartPlaylistTitleExtractor(
-        source: 'title',
-        pattern: r'【COTEN RADIO】',
-        fallbackValue: '番外編',
+        source: 'episodeNumber',
+        template: r'Episode ${0}',
+        fallbackValue: 'Bonus',
       );
 
-      final json = extractor.toJson();
-
-      expect(json['fallbackValue'], '番外編');
+      expect(extractor.toJson()['fallbackValue'], 'Bonus');
     });
   });
 
@@ -99,66 +73,125 @@ void main() {
     EpisodeData makeEpisode({
       String title = 'Test Episode',
       int? seasonNumber,
+      int? episodeNumber,
       String? description,
     }) {
       return SimpleEpisodeData(
         title: title,
         seasonNumber: seasonNumber,
+        episodeNumber: episodeNumber,
         description: description,
       );
     }
 
-    test('extracts from title using regex', () {
-      final extractor = SmartPlaylistTitleExtractor(
-        source: 'title',
-        pattern: r'\[(.+?)\s+\d+\]',
-        group: 1,
-      );
-
-      final episode = makeEpisode(title: '[Rome 1] First Steps');
-      final result = extractor.extract(episode);
-
-      expect(result, 'Rome');
-    });
-
-    test('extracts full match when group is 0', () {
+    test(r'renders ${0} as full match', () {
       final extractor = SmartPlaylistTitleExtractor(
         source: 'title',
         pattern: r'\[.+?\s+\d+\]',
-        group: 0,
+        template: r'[${0}]',
       );
 
-      final episode = makeEpisode(title: '[Rome 1] First Steps');
-      final result = extractor.extract(episode);
+      final result = extractor.extract(
+        makeEpisode(title: '[Rome 1] First Steps'),
+      );
 
-      expect(result, '[Rome 1]');
+      expect(result, '[[Rome 1]]');
     });
 
-    test('uses template with seasonNumber', () {
+    test('combines multiple capture groups via template', () {
       final extractor = SmartPlaylistTitleExtractor(
-        source: 'seasonNumber',
-        template: 'Season {value}',
+        source: 'title',
+        pattern: r'\[(.+?)\s+(\d+)\]',
+        template: r'${1} - ${2}',
       );
 
-      final episode = makeEpisode(seasonNumber: 3);
-      final result = extractor.extract(episode);
+      final result = extractor.extract(
+        makeEpisode(title: '[Rome 1] First Steps'),
+      );
+
+      expect(result, 'Rome - 1');
+    });
+
+    test('out-of-range capture renders empty', () {
+      final extractor = SmartPlaylistTitleExtractor(
+        source: 'title',
+        pattern: r'^(\w+) (\w+)$',
+        template: r'${1}/${5}/${2}',
+      );
+
+      final result = extractor.extract(makeEpisode(title: 'foo bar'));
+
+      expect(result, 'foo//bar');
+    });
+
+    test('omitted template returns full match (group 0)', () {
+      final extractor = SmartPlaylistTitleExtractor(
+        source: 'title',
+        pattern: r'\d+',
+      );
+
+      final result = extractor.extract(makeEpisode(title: 'Episode 99'));
+
+      expect(result, '99');
+    });
+
+    test(r'no pattern + template substitutes ${0} with source value', () {
+      final extractor = SmartPlaylistTitleExtractor(
+        source: 'seasonNumber',
+        template: r'Season ${0}',
+      );
+
+      final result = extractor.extract(makeEpisode(seasonNumber: 3));
 
       expect(result, 'Season 3');
     });
 
-    test('uses fallback when pattern does not match', () {
+    test('no pattern + no template returns source value', () {
+      final extractor = SmartPlaylistTitleExtractor(source: 'title');
+
+      final result = extractor.extract(makeEpisode(title: 'Just the title'));
+
+      expect(result, 'Just the title');
+    });
+
+    test(r'literal $ outside ${...} preserved', () {
+      final extractor = SmartPlaylistTitleExtractor(
+        source: 'title',
+        pattern: r'^(\w+)$',
+        template: r'${1} - $5 cost',
+      );
+
+      final result = extractor.extract(makeEpisode(title: 'Promo'));
+
+      expect(result, r'Promo - $5 cost');
+    });
+
+    test(r'malformed ${...} emitted literally', () {
+      final extractor = SmartPlaylistTitleExtractor(
+        source: 'title',
+        pattern: r'^(\w+)$',
+        template: r'${1} ${abc} ${',
+      );
+
+      final result = extractor.extract(makeEpisode(title: 'ok'));
+
+      expect(result, r'ok ${abc} ${');
+    });
+
+    test('uses fallback extractor when pattern does not match', () {
       final extractor = SmartPlaylistTitleExtractor(
         source: 'title',
         pattern: r'\[(.+?)\]',
-        group: 1,
-        fallback: SmartPlaylistTitleExtractor(
+        template: r'${1}',
+        fallback: const SmartPlaylistTitleExtractor(
           source: 'seasonNumber',
-          template: 'Season {value}',
+          template: r'Season ${0}',
         ),
       );
 
-      final episode = makeEpisode(title: 'No brackets here', seasonNumber: 2);
-      final result = extractor.extract(episode);
+      final result = extractor.extract(
+        makeEpisode(title: 'No brackets here', seasonNumber: 2),
+      );
 
       expect(result, 'Season 2');
     });
@@ -167,11 +200,10 @@ void main() {
       final extractor = SmartPlaylistTitleExtractor(
         source: 'title',
         pattern: r'\[(.+?)\]',
-        group: 1,
+        template: r'${1}',
       );
 
-      final episode = makeEpisode(title: 'No brackets here');
-      final result = extractor.extract(episode);
+      final result = extractor.extract(makeEpisode(title: 'No brackets here'));
 
       expect(result, isNull);
     });
@@ -180,94 +212,78 @@ void main() {
       final extractor = SmartPlaylistTitleExtractor(
         source: 'description',
         pattern: r'Part of the (.+?) arc',
-        group: 1,
+        template: r'${1}',
       );
 
-      final episode = makeEpisode(
-        description: 'Part of the Mystery arc - episode 5',
+      final result = extractor.extract(
+        makeEpisode(description: 'Part of the Mystery arc - episode 5'),
       );
-      final result = extractor.extract(episode);
 
       expect(result, 'Mystery');
     });
 
-    test('returns null when source field is null', () {
+    test('returns null when source field is null and no fallback', () {
       final extractor = SmartPlaylistTitleExtractor(
-        source: 'seasonNumber',
-        template: 'Season {value}',
+        source: 'description',
+        template: r'${0}',
       );
 
-      final episode = makeEpisode(seasonNumber: null);
-      final result = extractor.extract(episode);
+      final result = extractor.extract(makeEpisode(description: null));
 
       expect(result, isNull);
     });
 
-    test('uses fallback string for null seasonNumber', () {
+    test('fallbackValue triggers for missing seasonNumber when source is '
+        'seasonNumber', () {
       final extractor = SmartPlaylistTitleExtractor(
-        source: 'title',
-        pattern: r'【COTEN RADIO (ショート)?\s*(.+?)\s+\d+】',
-        group: 2,
-        fallbackValue: '番外編',
+        source: 'seasonNumber',
+        template: r'Season ${0}',
+        fallbackValue: 'Extras',
       );
 
-      final episode = makeEpisode(title: '【番外編＃135】仏教のこと', seasonNumber: null);
-      final result = extractor.extract(episode);
-
-      expect(result, '番外編');
+      expect(extractor.extract(makeEpisode()), 'Extras');
+      expect(extractor.extract(makeEpisode(seasonNumber: 1)), 'Season 1');
     });
 
-    test('uses fallback string for seasonNumber zero', () {
+    test('fallbackValue triggers for missing episodeNumber when source is '
+        'episodeNumber', () {
       final extractor = SmartPlaylistTitleExtractor(
-        source: 'title',
-        pattern: r'【COTEN RADIO (ショート)?\s*(.+?)\s+\d+】',
-        group: 2,
-        fallbackValue: '番外編',
+        source: 'episodeNumber',
+        template: r'Episode ${0}',
+        fallbackValue: 'Bonus',
       );
 
-      final episode = makeEpisode(title: '【番外編＃135】仏教のこと', seasonNumber: 0);
-      final result = extractor.extract(episode);
-
-      expect(result, '番外編');
+      expect(extractor.extract(makeEpisode()), 'Bonus');
+      expect(extractor.extract(makeEpisode(episodeNumber: 7)), 'Episode 7');
     });
 
-    test('extracts COTEN RADIO playlist title from '
-        'regular episode', () {
+    test('fallbackValue does NOT short-circuit non-numeric sources', () {
       final extractor = SmartPlaylistTitleExtractor(
         source: 'title',
-        pattern: r'【COTEN RADIO (ショート\s)?(.+?)\d+】',
-        group: 2,
-        fallbackValue: '番外編',
+        pattern: r'^(.+)$',
+        template: r'${1}',
+        fallbackValue: 'Should never appear',
       );
 
-      final episode = makeEpisode(
-        title:
-            '【62-15】何が変わった？'
-            '【COTEN RADIO リンカン編15】',
-        seasonNumber: 62,
-      );
-      final result = extractor.extract(episode);
-
-      expect(result, 'リンカン編');
+      final episode = makeEpisode(title: 'Real title');
+      // Episode lacks season number; with new semantics title still wins.
+      expect(extractor.extract(episode), 'Real title');
     });
 
-    test('extracts COTEN RADIO short playlist title', () {
+    test('fallback chain uses new template semantics per link', () {
       final extractor = SmartPlaylistTitleExtractor(
         source: 'title',
-        pattern: r'【COTEN RADIO (ショート\s)?(.+?)\d+】',
-        group: 2,
-        fallbackValue: '番外編',
+        pattern: r'^primary-(\w+)-(\w+)$',
+        template: r'P:${1}+${2}',
+        fallback: const SmartPlaylistTitleExtractor(
+          source: 'title',
+          pattern: r'^backup-(\w+)$',
+          template: r'F:${1}',
+        ),
       );
 
-      final episode = makeEpisode(
-        title:
-            '【1-1】概要'
-            '【COTEN RADIO ショート 織田信長編1】',
-        seasonNumber: 1,
-      );
-      final result = extractor.extract(episode);
-
-      expect(result, '織田信長編');
+      expect(extractor.extract(makeEpisode(title: 'primary-aa-bb')), 'P:aa+bb');
+      expect(extractor.extract(makeEpisode(title: 'backup-cc')), 'F:cc');
     });
   });
 }

@@ -109,13 +109,14 @@ void main() {
         selector: const SelectorConfig(),
         groupItem: GroupItemConfig(
           prependSeasonNumber: true,
+          showThumbnail: true,
           titleExtractor: SmartPlaylistTitleExtractor(
             source: 'title',
             pattern: r'\[(.+?)\]',
-            group: 1,
-            template: 'Season {value}',
+            template: r'Season ${1}',
           ),
         ),
+        episodeItem: EpisodeItemConfig(showThumbnail: false),
         groupListing: GroupListingConfig(
           yearBinding: YearBinding.pinToYear,
           userSortable: true,
@@ -218,24 +219,24 @@ void main() {
       expect(schemaValues, containsAll(['title', 'description']));
     });
 
-    test(r'playlist-definition schema has v5 $id', () {
+    test(r'playlist-definition schema has v6 $id', () {
       expect(
         schema[r'$id'],
-        equals('https://audiflow.app/schema/v5/playlist-definition.json'),
+        equals('https://audiflow.app/schema/v6/playlist-definition.json'),
       );
     });
 
-    test(r'pattern-index schema has v5 $id', () {
+    test(r'pattern-index schema has v6 $id', () {
       expect(
         patternIndexSchema[r'$id'],
-        equals('https://audiflow.app/schema/v5/pattern-index.json'),
+        equals('https://audiflow.app/schema/v6/pattern-index.json'),
       );
     });
 
-    test(r'pattern-meta schema has v5 $id', () {
+    test(r'pattern-meta schema has v6 $id', () {
       expect(
         patternMetaSchema[r'$id'],
-        equals('https://audiflow.app/schema/v5/pattern-meta.json'),
+        equals('https://audiflow.app/schema/v6/pattern-meta.json'),
       );
     });
   });
@@ -297,9 +298,12 @@ void main() {
           'https://alt-feed.example.com/rss',
         ],
         yearGroupedEpisodes: true,
+        showEpisodeThumbnail: false,
         playlists: ['regular', 'short', 'extras'],
       );
-      expect(validatePatternMeta(meta.toJson()), isEmpty);
+      final json = meta.toJson();
+      expect(json['showEpisodeThumbnail'], isFalse);
+      expect(validatePatternMeta(json), isEmpty);
     });
   });
 }

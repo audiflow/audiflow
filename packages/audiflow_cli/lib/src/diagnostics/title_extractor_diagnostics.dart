@@ -6,6 +6,7 @@ class TitleDiagnosticResult {
     this.extractedValue,
     this.patternUsed,
     this.matchResult,
+    this.templateUsed,
     this.fallbackValue,
     this.fallbackConditionMet,
     this.error,
@@ -14,12 +15,14 @@ class TitleDiagnosticResult {
   final String? extractedValue;
   final String? patternUsed;
   final String? matchResult;
+  final String? templateUsed;
   final String? fallbackValue;
   final bool? fallbackConditionMet;
   final String? error;
 }
 
-/// Wraps [SmartPlaylistTitleExtractor] to capture diagnostic information.
+/// Wraps [SmartPlaylistTitleExtractor] to capture diagnostic
+/// information about each extraction step.
 class TitleExtractorDiagnostics {
   const TitleExtractorDiagnostics(this.extractor);
 
@@ -27,19 +30,25 @@ class TitleExtractorDiagnostics {
 
   /// Runs extraction and captures diagnostic details.
   TitleDiagnosticResult run(EpisodeData episode) {
-    final seasonNum = episode.seasonNumber;
-
-    // Step 1: Check fallbackValue condition
-    if (extractor.fallbackValue != null &&
-        (seasonNum == null || 1 > seasonNum)) {
-      return TitleDiagnosticResult(
-        extractedValue: extractor.fallbackValue,
-        fallbackValue: extractor.fallbackValue,
-        fallbackConditionMet: true,
-      );
+    // Step 1: fallbackValue short-circuit only applies to numeric sources.
+    if (extractor.fallbackValue != null) {
+      final source = extractor.source;
+      final numeric = switch (source) {
+        'seasonNumber' => episode.seasonNumber,
+        'episodeNumber' => episode.episodeNumber,
+        _ => null,
+      };
+      if ((source == 'seasonNumber' || source == 'episodeNumber') &&
+          (numeric == null || 1 > numeric)) {
+        return TitleDiagnosticResult(
+          extractedValue: extractor.fallbackValue,
+          fallbackValue: extractor.fallbackValue,
+          fallbackConditionMet: true,
+        );
+      }
     }
 
-    // Step 2: Get source value
+    // Step 2: get source value.
     final sourceValue = _getSourceValue(episode);
     if (sourceValue == null) {
       return TitleDiagnosticResult(
@@ -47,62 +56,43 @@ class TitleExtractorDiagnostics {
       );
     }
 
-    // Step 3: Try pattern match
-    if (extractor.pattern != null) {
-      final regex = RegExp(extractor.pattern!);
-      final match = regex.firstMatch(sourceValue);
-
+    // Step 3: pattern + template.
+    final pattern = extractor.pattern;
+    if (pattern != null) {
+      final match = RegExp(pattern).firstMatch(sourceValue);
       if (match == null) {
-        // Try fallback extractor if available
         if (extractor.fallback != null) {
-          final fallbackDiagnostics = TitleExtractorDiagnostics(
+          final fallbackResult = TitleExtractorDiagnostics(
             extractor.fallback!,
-          );
-          final fallbackResult = fallbackDiagnostics.run(episode);
+          ).run(episode);
           if (fallbackResult.extractedValue != null) {
             return fallbackResult;
           }
         }
         return TitleDiagnosticResult(
-          patternUsed: extractor.pattern,
+          patternUsed: pattern,
           fallbackValue: extractor.fallbackValue,
           error: 'pattern did not match title: "$sourceValue"',
         );
       }
 
-      final groupValue = extractor.group == 0
-          ? match.group(0)
-          : (extractor.group <= match.groupCount
-                ? match.group(extractor.group)
-                : null);
-
-      if (groupValue == null) {
-        return TitleDiagnosticResult(
-          patternUsed: extractor.pattern,
-          matchResult: match.group(0),
-          error: 'capture group ${extractor.group} not found',
-        );
-      }
-
-      var result = groupValue;
-      if (extractor.template != null) {
-        result = extractor.template!.replaceAll('{value}', result);
-      }
-
+      final fullMatch = match.group(0);
+      final result = extractor.extract(episode);
       return TitleDiagnosticResult(
         extractedValue: result,
-        patternUsed: extractor.pattern,
-        matchResult: groupValue,
+        patternUsed: pattern,
+        matchResult: fullMatch,
+        templateUsed: extractor.template,
       );
     }
 
-    // No pattern - use source directly
-    var result = sourceValue;
-    if (extractor.template != null) {
-      result = extractor.template!.replaceAll('{value}', result);
-    }
-
-    return TitleDiagnosticResult(extractedValue: result);
+    // No pattern: source value substitutes ${0}.
+    final result = extractor.extract(episode);
+    return TitleDiagnosticResult(
+      extractedValue: result,
+      matchResult: sourceValue,
+      templateUsed: extractor.template,
+    );
   }
 
   String? _getSourceValue(EpisodeData episode) {

@@ -16,17 +16,16 @@ SimpleEpisodeData _makeEpisode({
 
 void main() {
   group('TitleExtractorDiagnostics', () {
-    test('returns fallbackValue result when seasonNumber is null', () {
+    test('returns fallbackValue result when seasonNumber source is null', () {
       final extractor = SmartPlaylistTitleExtractor(
-        source: 'title',
-        pattern: r'COTEN RADIO (.+?)\d+',
-        group: 1,
+        source: 'seasonNumber',
+        template: r'Season ${0}',
         fallbackValue: 'Extra',
       );
 
       final diagnostics = TitleExtractorDiagnostics(extractor);
       final result = diagnostics.run(
-        _makeEpisode(title: 'Extra#135 Test', seasonNumber: null),
+        _makeEpisode(title: 'Anything', seasonNumber: null),
       );
 
       expect(result.extractedValue, 'Extra');
@@ -35,11 +34,11 @@ void main() {
       expect(result.error, isNull);
     });
 
-    test('returns pattern match result for positive seasonNumber', () {
+    test('renders template with multi-capture pattern match', () {
       final extractor = SmartPlaylistTitleExtractor(
         source: 'title',
         pattern: r'COTEN RADIO (Short)?\s*(.+?)\s*\d+',
-        group: 2,
+        template: r'${2}',
         fallbackValue: 'Extra',
       );
 
@@ -53,7 +52,8 @@ void main() {
 
       expect(result.extractedValue, 'Lincoln');
       expect(result.patternUsed, r'COTEN RADIO (Short)?\s*(.+?)\s*\d+');
-      expect(result.matchResult, 'Lincoln');
+      expect(result.matchResult, contains('COTEN RADIO'));
+      expect(result.templateUsed, r'${2}');
       expect(result.error, isNull);
     });
 
@@ -61,7 +61,7 @@ void main() {
       final extractor = SmartPlaylistTitleExtractor(
         source: 'title',
         pattern: r'COTEN RADIO (.+?)\d+',
-        group: 1,
+        template: r'${1}',
       );
 
       final diagnostics = TitleExtractorDiagnostics(extractor);

@@ -10,6 +10,7 @@ final class PatternMeta {
     this.podcastGuid,
     required this.feedUrls,
     this.yearGroupedEpisodes = false,
+    this.showEpisodeThumbnail,
     required this.playlists,
   });
 
@@ -20,6 +21,7 @@ final class PatternMeta {
       podcastGuid: json['podcastGuid'] as String?,
       feedUrls: (json['feedUrls'] as List<dynamic>).cast<String>(),
       yearGroupedEpisodes: (json['yearGroupedEpisodes'] as bool?) ?? false,
+      showEpisodeThumbnail: json['showEpisodeThumbnail'] as bool?,
       playlists: (json['playlists'] as List<dynamic>).cast<String>(),
     );
   }
@@ -45,6 +47,10 @@ final class PatternMeta {
   /// Whether episodes should be grouped by year.
   final bool yearGroupedEpisodes;
 
+  /// Whether the main podcast episode list shows per-episode thumbnails.
+  /// Tri-state: `null` means unset (defaults to `true` per schema).
+  final bool? showEpisodeThumbnail;
+
   /// Ordered list of playlist IDs. Each corresponds to
   /// `playlists/{id}.json` in the pattern directory.
   final List<String> playlists;
@@ -57,6 +63,8 @@ final class PatternMeta {
       if (podcastGuid != null) 'podcastGuid': podcastGuid,
       'feedUrls': feedUrls,
       if (yearGroupedEpisodes) 'yearGroupedEpisodes': yearGroupedEpisodes,
+      if (showEpisodeThumbnail != null)
+        'showEpisodeThumbnail': showEpisodeThumbnail,
       'playlists': playlists,
     };
   }
