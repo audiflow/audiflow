@@ -39,6 +39,20 @@ final class GroupingConfig {
   /// Group definitions for titleClassifier.
   final List<SmartPlaylistGroupDef>? staticClassifiers;
 
+  /// Returns the static classifier group with the given [id], or `null`.
+  ///
+  /// Only meaningful when [by] is `titleClassifier`. Other grouping
+  /// strategies generate groups dynamically and have no per-group
+  /// override config.
+  SmartPlaylistGroupDef? findStaticClassifier(String id) {
+    final list = staticClassifiers;
+    if (list == null) return null;
+    for (final g in list) {
+      if (g.id == id) return g;
+    }
+    return null;
+  }
+
   Map<String, dynamic> toJson() {
     return {
       'by': by,

@@ -1,6 +1,7 @@
 import 'package:audiflow_core/audiflow_core.dart' show AutoPlayOrder;
 import 'package:audiflow_domain/audiflow_domain.dart'
     show
+        EffectiveThumbnails,
         EpisodeSortField,
         EpisodeSortRule,
         SmartPlaylist,
@@ -9,7 +10,8 @@ import 'package:audiflow_domain/audiflow_domain.dart'
         SortOrder,
         YearBinding,
         sortEpisodeData,
-        smartPlaylistEpisodesProvider;
+        smartPlaylistEpisodesProvider,
+        smartPlaylistPatternByFeedUrlProvider;
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -47,6 +49,12 @@ List<Widget> buildInlinePlaylistSlivers({
     smartPlaylistEpisodesProvider(playlist.episodeIds),
   );
 
+  final showEpisodeRowThumbnail = _resolveEpisodeRowThumbnail(
+    ref: ref,
+    feedUrl: feedUrl,
+    playlistId: playlist.id,
+  );
+
   return episodesAsync.when(
     data: (episodes) => _buildPlaylistData(
       episodes: episodes,
@@ -63,6 +71,7 @@ List<Widget> buildInlinePlaylistSlivers({
       itunesId: itunesId,
       feedUrl: feedUrl,
       effectiveOrder: effectiveOrder,
+      showEpisodeRowThumbnail: showEpisodeRowThumbnail,
     ),
     loading: () => [
       const SliverToBoxAdapter(
@@ -91,6 +100,27 @@ List<Widget> buildInlinePlaylistSlivers({
   );
 }
 
+/// Resolves the effective `showThumbnail` flag for episode rows
+/// rendered inline (no group context). Returns `true` when no smart
+/// playlist config matches.
+bool _resolveEpisodeRowThumbnail({
+  required WidgetRef ref,
+  required String? feedUrl,
+  required String playlistId,
+}) {
+  if (feedUrl == null) return true;
+  final config = ref
+      .watch(smartPlaylistPatternByFeedUrlProvider(feedUrl))
+      .value;
+  if (config == null) return true;
+  final playlistDef = config.findPlaylist(playlistId);
+  if (playlistDef == null) return true;
+  return EffectiveThumbnails.episodeRowInGroup(
+    showEpisodeThumbnail: config.showEpisodeThumbnail,
+    playlist: playlistDef,
+  );
+}
+
 List<Widget> _buildPlaylistData({
   required List<SmartPlaylistEpisodeData> episodes,
   required SmartPlaylist playlist,
@@ -102,6 +132,7 @@ List<Widget> _buildPlaylistData({
   required DateTime? lastRefreshedAt,
   required ScrollController scrollController,
   required VoidCallback onToggleSortOrder,
+  required bool showEpisodeRowThumbnail,
   required void Function(
     SmartPlaylist playlist,
     SmartPlaylistGroup group, {
@@ -129,6 +160,7 @@ List<Widget> _buildPlaylistData({
       scrollController: scrollController,
       onToggleSortOrder: onToggleSortOrder,
       onNavigateToGroup: onNavigateToGroup,
+      feedUrl: feedUrl,
     );
   }
 
@@ -156,6 +188,7 @@ List<Widget> _buildPlaylistData({
       itunesId: itunesId,
       feedUrl: feedUrl,
       effectiveOrder: effectiveOrder,
+      showThumbnail: showEpisodeRowThumbnail,
     );
   }
 
@@ -192,6 +225,7 @@ List<Widget> _buildPlaylistData({
           podcastTitle: podcastTitle,
           artworkUrl: artworkUrl,
           feedImageUrl: feedImageUrl,
+          showThumbnail: showEpisodeRowThumbnail,
           progress: data.progress,
           siblingEpisodeIds: siblingEpisodeIds,
           effectiveOrder: effectiveOrder,
@@ -216,6 +250,7 @@ List<Widget> _buildInlineGroupList({
     List<int>? filteredEpisodeIds,
   })
   onNavigateToGroup,
+  String? feedUrl,
 }) {
   final groups = playlist.groups!;
   final displayGroups = filterBySearchQuery(
@@ -260,6 +295,8 @@ List<Widget> _buildInlineGroupList({
           return InlineGroupCard(
             group: group,
             prependSeasonNumber: playlist.prependSeasonNumber,
+            feedUrl: feedUrl,
+            playlistId: playlist.id,
             onTap: () => onNavigateToGroup(playlist, group),
           );
         },
@@ -280,6 +317,7 @@ List<Widget> _buildInlineGroupList({
       scrollController: scrollController,
       onToggleSortOrder: onToggleSortOrder,
       onNavigateToGroup: onNavigateToGroup,
+      feedUrl: feedUrl,
     );
   }
 
@@ -292,6 +330,7 @@ List<Widget> _buildInlineGroupList({
     scrollController: scrollController,
     onToggleSortOrder: onToggleSortOrder,
     onNavigateToGroup: onNavigateToGroup,
+    feedUrl: feedUrl,
   );
 }
 
@@ -308,6 +347,7 @@ List<Widget> _buildPerEpisodeInlineGroups({
     List<int>? filteredEpisodeIds,
   })
   onNavigateToGroup,
+  String? feedUrl,
 }) {
   final byYear = <int, List<YearFilteredInlineGroup>>{};
   for (final group in groups) {
@@ -367,6 +407,8 @@ List<Widget> _buildPerEpisodeInlineGroups({
       itemBuilder: (context, item) => InlineGroupCard(
         group: item.group,
         prependSeasonNumber: playlist.prependSeasonNumber,
+        feedUrl: feedUrl,
+        playlistId: playlist.id,
         episodeCountOverride: item.filteredEpisodeIds.length,
         earliestDateOverride: item.earliestDate,
         latestDateOverride: item.latestDate,
@@ -393,6 +435,7 @@ List<Widget> _buildYearGroupedPlaylistSlivers({
   required String? feedImageUrl,
   required DateTime? lastRefreshedAt,
   required ScrollController scrollController,
+  required bool showThumbnail,
   String? itunesId,
   String? feedUrl,
   AutoPlayOrder? effectiveOrder,
@@ -431,6 +474,7 @@ List<Widget> _buildYearGroupedPlaylistSlivers({
       podcastTitle: podcastTitle,
       artworkUrl: artworkUrl,
       feedImageUrl: feedImageUrl,
+      showThumbnail: showThumbnail,
       progress: data.progress,
       siblingEpisodeIds: siblingEpisodeIds,
       effectiveOrder: effectiveOrder,
@@ -457,6 +501,7 @@ List<Widget> _buildMixedYearInlineGroups({
     List<int>? filteredEpisodeIds,
   })
   onNavigateToGroup,
+  String? feedUrl,
 }) {
   final byYear = <int, List<YearFilteredInlineGroup>>{};
 
@@ -536,6 +581,8 @@ List<Widget> _buildMixedYearInlineGroups({
       itemBuilder: (context, item) => InlineGroupCard(
         group: item.group,
         prependSeasonNumber: playlist.prependSeasonNumber,
+        feedUrl: feedUrl,
+        playlistId: playlist.id,
         episodeCountOverride: item.filteredEpisodeIds.length,
         earliestDateOverride: item.earliestDate,
         latestDateOverride: item.latestDate,

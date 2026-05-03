@@ -440,6 +440,8 @@ class _SmartPlaylistGroupEpisodesScreenState
 
     final effectiveFeedImageUrl = headerThumbnailUrl ?? widget.feedImageUrl;
 
+    final showThumbnail = _resolveEpisodeRowThumbnail();
+
     return episodesAsync.when(
       data: (episodes) {
         final displayEpisodes = filterBySearchQuery(
@@ -509,6 +511,7 @@ class _SmartPlaylistGroupEpisodesScreenState
                 podcastTitle: widget.podcastTitle,
                 artworkUrl: widget.podcastArtworkUrl,
                 feedImageUrl: effectiveFeedImageUrl,
+                showThumbnail: showThumbnail,
                 lastRefreshedAt: widget.lastRefreshedAt,
                 progress: data.progress,
                 siblingEpisodeIds: _episodeIds,
@@ -577,6 +580,7 @@ class _SmartPlaylistGroupEpisodesScreenState
         podcastTitle: widget.podcastTitle,
         artworkUrl: widget.podcastArtworkUrl,
         feedImageUrl: feedImageUrl,
+        showThumbnail: _resolveEpisodeRowThumbnail(),
         progress: data.progress,
         siblingEpisodeIds: _episodeIds,
         itunesId: widget.itunesId,
@@ -610,6 +614,30 @@ class _SmartPlaylistGroupEpisodesScreenState
           ),
         ],
       ),
+    );
+  }
+
+  /// Resolves the effective `showThumbnail` flag for episode rows
+  /// rendered inside this group, walking the
+  /// group → playlist → meta cascade defined by schema v6.
+  bool _resolveEpisodeRowThumbnail() {
+    final feedUrl = widget.feedUrl;
+    if (feedUrl == null) return true;
+
+    final config = ref
+        .watch(smartPlaylistPatternByFeedUrlProvider(feedUrl))
+        .value;
+    if (config == null) return true;
+
+    final playlistDef = config.findPlaylist(widget.parentPlaylist.id);
+    if (playlistDef == null) return true;
+
+    final groupDef = playlistDef.grouping.findStaticClassifier(widget.group.id);
+
+    return EffectiveThumbnails.episodeRowInGroup(
+      showEpisodeThumbnail: config.showEpisodeThumbnail,
+      playlist: playlistDef,
+      group: groupDef,
     );
   }
 }
