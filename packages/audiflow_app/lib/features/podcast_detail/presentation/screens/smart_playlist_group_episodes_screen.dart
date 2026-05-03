@@ -317,8 +317,26 @@ class _SmartPlaylistGroupEpisodesScreenState
         .whenData(_resolveSharedThumbnail)
         .value;
 
-    // Header shows group.thumbnailUrl or the shared thumbnail.
-    final headerThumbnailUrl = widget.group.thumbnailUrl ?? sharedThumbnailUrl;
+    // Header shows group.thumbnailUrl, then the shared thumbnail,
+    // then podcast-level artwork. Page header artwork should always
+    // render (the smart playlist showThumbnail flags do not apply
+    // here per schema v6).
+    final headerThumbnailUrl =
+        widget.group.thumbnailUrl ??
+        sharedThumbnailUrl ??
+        widget.podcastArtworkUrl ??
+        widget.feedImageUrl;
+
+    final logger = ref.read(namedLoggerProvider('SmartPlaylistGroupHeader'));
+    logger.d(
+      'Header artwork resolution for group="${widget.group.displayName}" '
+      '(id=${widget.group.id}, episodes=${widget.group.episodeIds.length}): '
+      'group.thumbnailUrl=${widget.group.thumbnailUrl}, '
+      'sharedThumbnailUrl=$sharedThumbnailUrl, '
+      'podcastArtworkUrl=${widget.podcastArtworkUrl}, '
+      'feedImageUrl=${widget.feedImageUrl}, '
+      'resolved=$headerThumbnailUrl',
+    );
 
     // Dedup only uses the shared thumbnail (never group.thumbnailUrl,
     // which may match only one episode and hide just that one).
