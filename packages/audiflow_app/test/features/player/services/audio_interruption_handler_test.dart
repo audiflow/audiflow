@@ -471,9 +471,7 @@ void main() {
       await handler.onBegin(AudioInterruptionType.duck);
       check(t.volumeCalls.last).equals(0.3);
 
-      handler.markUserOverride();
-      // Microtask gap so the unawaited setVolume completes before assert.
-      await Future<void>.delayed(Duration.zero);
+      await handler.markUserOverride();
 
       check(t.volumeCalls.last).equals(1.0);
 
@@ -486,12 +484,97 @@ void main() {
       final t = _RecordingTarget();
       final handler = _buildHandler(t);
 
-      handler.markUserOverride();
+      await handler.markUserOverride();
 
       check(t.volumeCalls).isEmpty();
       check(
         t.diagnostics.map((d) => d.event),
       ).not((it) => it.contains('player.interruption:user-override'));
     });
+
+    test(
+      'volume-restore failure surfaces a diagnostic and does not throw',
+      () async {
+        final t = _RecordingTarget()
+          ..playing = true
+          ..behavior = DuckInterruptionBehavior.duck
+          ..position = const Duration(seconds: 10);
+        final handler = AudioInterruptionHandler(
+          readDuckBehavior: () => t.behavior,
+          isPlaying: () => t.playing,
+          currentPosition: () => t.position,
+          seek: (d) async => t.seekCalls.add(d),
+          pause: () async {
+            t.pauseCalls++;
+            t.playing = false;
+          },
+          resume: () async {
+            t.resumeCalls++;
+            t.playing = true;
+          },
+          setVolume: (v) async {
+            t.volumeCalls.add(v);
+            if (v == 1.0) throw StateError('platform-volume-failure');
+          },
+          onDiagnostic: (event, data) =>
+              t.diagnostics.add((event: event, data: data)),
+        );
+
+        await handler.onBegin(AudioInterruptionType.duck);
+        // The override must not throw even though setVolume(1.0) does.
+        await handler.markUserOverride();
+
+        final events = t.diagnostics.map((d) => d.event).toList();
+        check(
+          events,
+        ).contains('player.interruption:user-override-volume-failed');
+      },
+    );
+  });
+
+  group('AudioInterruptionHandler — pause-arm failure', () {
+    test(
+      'seek failure clears _committedAction so onEnd does not force-resume',
+      () async {
+        final t = _RecordingTarget()
+          ..playing = true
+          ..behavior = DuckInterruptionBehavior.pause
+          ..position = const Duration(seconds: 30);
+        final handler = AudioInterruptionHandler(
+          readDuckBehavior: () => t.behavior,
+          isPlaying: () => t.playing,
+          currentPosition: () => t.position,
+          seek: (_) async => throw StateError('seek-unsupported'),
+          pause: () async {
+            t.pauseCalls++;
+            t.playing = false;
+          },
+          resume: () async {
+            t.resumeCalls++;
+            t.playing = true;
+          },
+          setVolume: (v) async => t.volumeCalls.add(v),
+          onDiagnostic: (event, data) =>
+              t.diagnostics.add((event: event, data: data)),
+        );
+
+        // The seek inside `_rewindBeforePauseSafely` throws; onBegin
+        // rethrows so the audio handler's catch can capture it.
+        await check(
+          handler.onBegin(AudioInterruptionType.pause),
+        ).throws<StateError>();
+
+        // Pause never landed; the previous half-armed bug would now
+        // force-resume on the iOS `unknown` end notification. After
+        // the fix, _committedAction is cleared on failure, so onEnd
+        // is a clean no-op.
+        check(handler.playInterrupted).isFalse();
+        await handler.onEnd(AudioInterruptionType.unknown);
+        check(t.resumeCalls).equals(0);
+
+        final events = t.diagnostics.map((d) => d.event).toList();
+        check(events).contains('player.interruption:begin-pause-failed');
+      },
+    );
   });
 }

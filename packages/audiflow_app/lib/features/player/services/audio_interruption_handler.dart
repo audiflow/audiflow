@@ -85,19 +85,30 @@ class AudioInterruptionHandler {
   /// while an interruption is active — e.g. tapping the lock-screen
   /// pause button during a phone call. Clears the committed action so
   /// the upcoming [onEnd] cannot override the user's choice. The
-  /// ducked-arm restores volume so a manually-paused-while-ducked
-  /// session does not stay at half volume after the user resumes.
-  void markUserOverride() {
+  /// ducked arm also restores full volume so any user-driven action
+  /// (play/pause/stop) leaves the next playback at its natural level.
+  ///
+  /// Returns a future that completes after the volume restore, so
+  /// callers can serialize the user's next playback action behind it
+  /// and a racing [onBegin] cannot have its `_setVolume(ducked)` get
+  /// stomped by an in-flight restore from this method.
+  Future<void> markUserOverride() async {
     final action = _committedAction;
     if (action == null) return;
     _committedAction = null;
     _onDiagnostic('player.interruption:user-override', {
       'committedAction': action.name,
     });
-    if (action == _DuckAction.ducked) {
-      // Fire-and-forget: the user just took control, we just want the
-      // volume reset before they hit play again.
-      unawaited(_setVolume(_fullVolume));
+    if (action != _DuckAction.ducked) return;
+    try {
+      await _setVolume(_fullVolume);
+    } catch (e, stack) {
+      // Volume restore is best-effort: capture and swallow so the
+      // user's primary action (play/pause/stop) still proceeds.
+      _onDiagnostic('player.interruption:user-override-volume-failed', {
+        'error': e.toString(),
+        'stack': stack.toString(),
+      });
     }
   }
 
@@ -162,6 +173,10 @@ class AudioInterruptionHandler {
         'isPlayingAfter': _isPlaying(),
       });
     } catch (e, stack) {
+      // Half-armed state would be worse than a missed pause: the
+      // matching onEnd would force-resume on iOS `unknown` even though
+      // we never paused. Clear the commit so onEnd is a no-op.
+      _committedAction = null;
       _onDiagnostic('player.interruption:begin-pause-failed', {
         'error': e.toString(),
         'stack': stack.toString(),

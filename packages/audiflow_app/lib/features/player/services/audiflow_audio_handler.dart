@@ -87,11 +87,13 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
     Sentry.addBreadcrumb(
       Breadcrumb(message: event, category: 'player.interruption', data: data),
     );
-    // Capture the post-pause state and the unwanted-unknown-end path as
-    // messages so the on-device session surfaces without needing a crash.
+    // Capture the post-pause state and the long-call resume outcomes
+    // (success bail-out vs. unexpected failure) so the on-device session
+    // surfaces without needing a crash.
     if (event == 'player.interruption:begin-paused' ||
         event == 'player.interruption:begin-pause-failed' ||
-        event == 'player.interruption:end-unknown-no-resume') {
+        event == 'player.interruption:resume-skipped-session-busy' ||
+        event == 'player.interruption:resume-failed') {
       unawaited(
         Sentry.captureMessage(
           event,
@@ -248,7 +250,22 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
       }
     });
 
-    session.becomingNoisyEventStream.listen((_) => pause());
+    session.becomingNoisyEventStream.listen((_) {
+      // Headphone disconnect ("becoming noisy"). pause() is async and
+      // routes through the controller; capture failures so a stuck
+      // mid-state-transition cannot silently leave audio blaring out
+      // of the speaker.
+      unawaited(
+        pause().catchError((Object e, StackTrace s) {
+          _log.e(
+            '[AudioHandler] becomingNoisy pause failed',
+            error: e,
+            stackTrace: s,
+          );
+          unawaited(Sentry.captureException(e, stackTrace: s));
+        }),
+      );
+    });
   }
 
   Future<void> _reactivateAndResume(AudioSession session) async {
@@ -293,11 +310,19 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
         _publishInterruptionPlayingPlaybackState();
       }
     } catch (e, stack) {
+      // The `resume-failed` event is the *actual* "long phone call
+      // didn't resume" signal — without Sentry capture here, the very
+      // failure mode this handler is meant to make observable would
+      // stay invisible in production.
       _log.e(
         '[AudioHandler] Failed to reactivate session',
         error: e,
         stackTrace: stack,
       );
+      _emitInterruptionDiagnostic('player.interruption:resume-failed', {
+        'error': e.toString(),
+      });
+      unawaited(Sentry.captureException(e, stackTrace: stack));
     }
   }
 
@@ -340,20 +365,24 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
     // The user explicitly asked to play. If we are mid-interruption
     // (e.g. a long phone call), drop the committed pause so the
     // upcoming interruption-end event does not double-resume or fight
-    // the user's own action.
-    _interruptionHandler.markUserOverride();
+    // the user's own action. Awaited so the volume restore finishes
+    // before the controller resumes — prevents a racing onBegin(duck)
+    // from being clobbered by an in-flight restore.
+    await _interruptionHandler.markUserOverride();
     await _controller.resume();
   }
 
   @override
   Future<void> pause() async {
-    _interruptionHandler.markUserOverride();
+    // Same rationale as play(): keep onEnd from undoing the user's
+    // action and serialize the volume restore.
+    await _interruptionHandler.markUserOverride();
     await _controller.pause();
   }
 
   @override
   Future<void> stop() async {
-    _interruptionHandler.markUserOverride();
+    await _interruptionHandler.markUserOverride();
     await _controller.stop();
     await super.stop();
   }
