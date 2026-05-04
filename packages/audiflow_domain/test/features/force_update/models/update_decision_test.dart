@@ -57,5 +57,28 @@ void main() {
       const b = SoftUpdate(messageKey: 'b');
       check(a == b).equals(false);
     });
+
+    test('equal SoftUpdates share hashCode (contract)', () {
+      // Map.of() defeats const canonicalization so we exercise the contract
+      // on truly-distinct map instances.
+      final a = SoftUpdate(
+        messageKey: 'k',
+        messageOverride: Map.of({'en': 'x', 'ja': 'y'}),
+        updateUrl: 'https://u',
+      );
+      final b = SoftUpdate(
+        messageKey: 'k',
+        messageOverride: Map.of({'en': 'x', 'ja': 'y'}),
+        updateUrl: 'https://u',
+      );
+      check(a).equals(b);
+      check(a.hashCode).equals(b.hashCode);
+    });
+
+    test('SoftUpdate and HardUpdate with identical fields are not equal', () {
+      const soft = SoftUpdate(messageKey: 'k');
+      const hard = HardUpdate(messageKey: 'k');
+      check(soft == hard).equals(false);
+    });
   });
 }
