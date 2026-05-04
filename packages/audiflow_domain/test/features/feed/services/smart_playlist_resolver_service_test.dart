@@ -67,11 +67,22 @@ void main() {
     });
 
     test('falls through SeasonNumberResolver when metadata is unreliable', () {
-      // All S1 → SeasonNumberResolver treats as non-seasonal in auto-detect,
-      // so YearResolver takes over.
+      // All S1 -> SeasonNumberResolver treats as non-seasonal in auto-detect,
+      // so YearResolver takes over. Use enough episodes to clear the
+      // YearResolver auto-detect threshold.
       final episodes = [
-        _makeEpisode(1, seasonNumber: 1, publishedAt: DateTime(2023, 1, 1)),
-        _makeEpisode(2, seasonNumber: 1, publishedAt: DateTime(2024, 1, 1)),
+        for (var i = 0; i < 15; i++)
+          _makeEpisode(
+            i + 1,
+            seasonNumber: 1,
+            publishedAt: DateTime(2023, 1, (i % 28) + 1),
+          ),
+        for (var i = 0; i < 15; i++)
+          _makeEpisode(
+            i + 16,
+            seasonNumber: 1,
+            publishedAt: DateTime(2024, 1, (i % 28) + 1),
+          ),
       ];
 
       final result = service.resolveSmartPlaylists(
@@ -86,8 +97,10 @@ void main() {
 
     test('falls back to next resolver when first fails', () {
       final episodes = [
-        _makeEpisode(1, publishedAt: DateTime(2023, 6, 1)),
-        _makeEpisode(2, publishedAt: DateTime(2024, 3, 1)),
+        for (var i = 0; i < 15; i++)
+          _makeEpisode(i + 1, publishedAt: DateTime(2023, 6, (i % 28) + 1)),
+        for (var i = 0; i < 15; i++)
+          _makeEpisode(i + 16, publishedAt: DateTime(2024, 3, (i % 28) + 1)),
       ];
 
       final result = service.resolveSmartPlaylists(
