@@ -439,24 +439,44 @@ void backgroundCallback() {
       await refreshService.execute();
       _bgDebug('refreshService.execute() completed');
 
-      // Schedule background download task if any pending downloads exist
-      // (newly enqueued by this feed sync or left over from prior runs).
+      // Schedule background download task if any pending OR stuck
+      // "downloading" tasks exist. The stuck-downloading state arises when
+      // the foreground isolate was suspended/killed mid-download; without
+      // including them here, those tasks linger forever (the recovery loop
+      // inside _executeDownloadTask only runs when the task is scheduled).
       final pendingDownloads = await downloadRepo.getByStatus(
         const DownloadStatus.pending(),
       );
-      if (pendingDownloads.isNotEmpty) {
-        // Derive wifi constraint from actual pending tasks instead of the
-        // global setting. If all pending tasks are wifi-only, require
+      final stuckDownloads = await downloadRepo.getByStatus(
+        const DownloadStatus.downloading(),
+      );
+      final activeDownloads = [...pendingDownloads, ...stuckDownloads];
+      if (activeDownloads.isNotEmpty) {
+        // Derive wifi constraint from actual active tasks instead of the
+        // global setting. If all active tasks are wifi-only, require
         // unmetered; otherwise allow connected so cellular-eligible tasks
         // are not blocked.
-        final requireWifiOnly = pendingDownloads.every(
+        final requireWifiOnly = activeDownloads.every(
           (download) => download.wifiOnly,
         );
         _bgDebug(
           'scheduling download task for '
-          '${pendingDownloads.length} pending download(s) '
+          '${pendingDownloads.length} pending + '
+          '${stuckDownloads.length} stuck download(s) '
           '(wifiOnly=$requireWifiOnly)',
         );
+        if (sentryInitialized) {
+          Sentry.addBreadcrumb(
+            Breadcrumb(
+              message:
+                  'Scheduling download task: '
+                  'pending=${pendingDownloads.length}, '
+                  'stuck=${stuckDownloads.length}, '
+                  'wifiOnly=$requireWifiOnly',
+              category: 'background.download',
+            ),
+          );
+        }
         await BackgroundTaskRegistrar.registerDownloadTask(
           wifiOnly: requireWifiOnly,
         );
@@ -513,6 +533,7 @@ void backgroundCallback() {
 /// which mirrors the download logic from [DownloadFileService] but runs
 /// independently of the Riverpod container.
 Future<bool> _executeDownloadTask(Map<String, dynamic>? inputData) async {
+  await _initDiagLog();
   _bgDebug('download task started');
 
   final logger = Logger(printer: PrefixPrinter(PrettyPrinter(methodCount: 0)));
@@ -544,6 +565,13 @@ Future<bool> _executeDownloadTask(Map<String, dynamic>? inputData) async {
   Isar? isar;
   Dio? dio;
   var success = false;
+  var completedCount = 0;
+  var pendingAtStart = 0;
+  var stuckAtStart = 0;
+  var pendingAtEnd = 0;
+  var runnableRemainingCount = 0;
+  var isOnWifi = false;
+  var rescheduledWifiOnly = false;
 
   try {
     final dir = await getApplicationDocumentsDirectory();
@@ -556,7 +584,7 @@ Future<bool> _executeDownloadTask(Map<String, dynamic>? inputData) async {
     );
 
     final connectivityResult = await Connectivity().checkConnectivity();
-    final isOnWifi = connectivityResult.contains(ConnectivityResult.wifi);
+    isOnWifi = connectivityResult.contains(ConnectivityResult.wifi);
 
     final episodeDatasource = EpisodeLocalDatasource(isar);
     final episodeRepo = EpisodeRepositoryImpl(datasource: episodeDatasource);
@@ -583,6 +611,7 @@ Future<bool> _executeDownloadTask(Map<String, dynamic>? inputData) async {
     final stuckDownloading = await downloadRepo.getByStatus(
       const DownloadStatus.downloading(),
     );
+    stuckAtStart = stuckDownloading.length;
     for (final task in stuckDownloading) {
       _bgDebug(
         'resetting stuck downloading task: id=${task.id} '
@@ -594,9 +623,30 @@ Future<bool> _executeDownloadTask(Map<String, dynamic>? inputData) async {
       );
     }
 
-    _bgDebug('calling download service execute()');
-    final count = await service.execute();
-    _bgDebug('download service completed — $count downloaded');
+    final pendingAtStartList = await downloadRepo.getByStatus(
+      const DownloadStatus.pending(),
+    );
+    pendingAtStart = pendingAtStartList.length;
+
+    if (sentryInitialized) {
+      await Sentry.captureMessage(
+        'bg-download: started',
+        level: SentryLevel.info,
+        withScope: (scope) => scope.setContexts('download_diag', {
+          'isOnWifi': isOnWifi,
+          'pendingAtStart': pendingAtStart,
+          'stuckResetCount': stuckAtStart,
+        }),
+      );
+    }
+
+    _bgDebug(
+      'calling download service execute() '
+      '(pending=$pendingAtStart, stuckReset=$stuckAtStart, '
+      'isOnWifi=$isOnWifi)',
+    );
+    completedCount = await service.execute();
+    _bgDebug('download service completed — $completedCount downloaded');
 
     // Check if runnable pending downloads remain (failures or time budget
     // exhaustion). When not on Wi-Fi, wifiOnly downloads are intentionally
@@ -604,9 +654,11 @@ Future<bool> _executeDownloadTask(Map<String, dynamic>? inputData) async {
     final remaining = await downloadRepo.getByStatus(
       const DownloadStatus.pending(),
     );
+    pendingAtEnd = remaining.length;
     final runnableRemaining = isOnWifi
         ? remaining
         : remaining.where((download) => !download.wifiOnly).toList();
+    runnableRemainingCount = runnableRemaining.length;
     // Return false so workmanager retries with backoff only when runnable
     // tasks remain.
     success = runnableRemaining.isEmpty;
@@ -615,6 +667,7 @@ Future<bool> _executeDownloadTask(Map<String, dynamic>? inputData) async {
     // dedicated wifi-only download task so they run when wifi becomes
     // available instead of waiting for the next feed sync or app resume.
     if (!isOnWifi && remaining.any((t) => t.wifiOnly)) {
+      rescheduledWifiOnly = true;
       _bgDebug(
         'scheduling wifi-only download task for '
         '${remaining.where((t) => t.wifiOnly).length} wifi-only task(s)',
@@ -626,18 +679,42 @@ Future<bool> _executeDownloadTask(Map<String, dynamic>? inputData) async {
       Sentry.addBreadcrumb(
         Breadcrumb(
           message:
-              'Background download completed: $count files, '
+              'Background download completed: $completedCount files, '
               '${runnableRemaining.length} runnable remaining '
               '(${remaining.length} total pending)',
           category: 'background.download',
         ),
+      );
+      await Sentry.captureMessage(
+        'bg-download: completed',
+        level: SentryLevel.info,
+        withScope: (scope) => scope.setContexts('download_diag', {
+          'isOnWifi': isOnWifi,
+          'pendingAtStart': pendingAtStart,
+          'stuckResetCount': stuckAtStart,
+          'completed': completedCount,
+          'pendingAtEnd': pendingAtEnd,
+          'runnableRemaining': runnableRemainingCount,
+          'rescheduledWifiOnly': rescheduledWifiOnly,
+          'workmanagerSuccess': success,
+        }),
       );
     }
   } catch (e, stack) {
     _bgDebug('download task FAILED: $e');
     logger.e('Background download failed', error: e, stackTrace: stack);
     if (sentryInitialized) {
-      await Sentry.captureException(e, stackTrace: stack);
+      await Sentry.captureException(
+        e,
+        stackTrace: stack,
+        withScope: (scope) => scope.setContexts('download_diag', {
+          'isOnWifi': isOnWifi,
+          'pendingAtStart': pendingAtStart,
+          'stuckResetCount': stuckAtStart,
+          'completed': completedCount,
+          'pendingAtEnd': pendingAtEnd,
+        }),
+      );
     }
   } finally {
     dio?.close();
