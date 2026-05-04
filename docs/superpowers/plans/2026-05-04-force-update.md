@@ -1,42 +1,127 @@
-# Force Upgrade Implementation Plan
+# Force Update Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add a remote-controlled force-upgrade feature: hard block / soft nudge / maintenance mode, driven by a static JSON config on GitHub Pages, with i18n, fail-open-then-closed cache semantics, and an in-app gate that runs before the router.
+**Goal:** Add a remote-controlled force-update feature: hard block / soft nudge / maintenance mode, driven by a static JSON config on GitHub Pages, with i18n, fail-open-then-closed cache semantics, and an in-app gate that runs before the router.
 
-**Architecture:** New feature module under `packages/audiflow_app/lib/features/force_update/` with `data/`, `domain/`, `presentation/` layers. Pure-function evaluator (testable in isolation). Repository coordinates Dio remote + SharedPreferences cache. Riverpod `keepAlive` controller exposes `AsyncValue<UpdateDecision>`. Gate widget wraps `MaterialApp.router` and either mounts the router (with optional banner) or renders a full-screen `ForceUpdateScreen`. Localized via existing intl ARB files (en, ja). Sentry breadcrumbs/events for failure modes and decision transitions.
+**Architecture (post-Task-1 revision):** Split across two packages per the project architecture rule:
+
+- **`audiflow_domain`** owns the data layer: constants, config model (Freezed + JSON), sealed `UpdateDecision`, pure-function evaluator, local data source (`SharedPreferences`), remote data source (Dio), repository (interface + impl), and Riverpod providers. No Flutter UI dependencies.
+- **`audiflow_app`** owns the presentation layer: Riverpod controller, gate widget that wraps `MaterialApp.router`, full-screen splash, soft banner, i18n message resolver, update-URL resolver, build-time env-var wiring.
+
+Localized via existing intl ARB files (en, ja). Sentry breadcrumbs/events for failure modes and decision transitions.
 
 **Tech Stack:** Flutter / Dart, Riverpod 3 (`@riverpod` codegen), Freezed + json_serializable (`fieldRename: FieldRename.snake`), Dio, shared_preferences, package_info_plus, url_launcher, pub_semver, sentry_flutter, intl/flutter_localizations, `package:checks` for tests.
 
-**Spec:** `docs/superpowers/specs/2026-05-04-force-upgrade-design.md`
+**Spec:** `docs/superpowers/specs/2026-05-04-force-update-design.md`
+
+**Existing common providers reused (audiflow_domain):** `dioProvider` (in `lib/src/common/providers/http_client_provider.dart`), `sharedPreferencesProvider` (in `lib/src/common/providers/platform_providers.dart`), `namedLoggerProvider` (in `lib/src/common/providers/logger_provider.dart`).
 
 ---
 
 ## File Structure
 
+### `audiflow_domain` (data layer)
+
 | File | Responsibility |
 |---|---|
-| `packages/audiflow_app/lib/features/force_update/constants.dart` | Constants (refresh interval, timeout, cache keys, env var name) |
-| `packages/audiflow_app/lib/features/force_update/data/force_update_config.dart` | Freezed model + JSON (snake_case) |
-| `packages/audiflow_app/lib/features/force_update/data/force_update_local_data_source.dart` | SharedPreferences read/write |
-| `packages/audiflow_app/lib/features/force_update/data/force_update_remote_data_source.dart` | Dio fetch with timeout |
-| `packages/audiflow_app/lib/features/force_update/data/force_update_repository.dart` | Coordinates remote + cache |
-| `packages/audiflow_app/lib/features/force_update/domain/update_decision.dart` | Sealed `UpdateDecision` types |
-| `packages/audiflow_app/lib/features/force_update/domain/force_update_evaluator.dart` | Pure function `evaluate()` |
-| `packages/audiflow_app/lib/features/force_update/domain/update_url_resolver.dart` | configUrl ?? platform store fallback |
-| `packages/audiflow_app/lib/features/force_update/domain/i18n_message_resolver.dart` | Resolve `messageKey` + `messageOverride` to displayable strings |
-| `packages/audiflow_app/lib/features/force_update/presentation/force_update_controller.dart` | Riverpod async controller w/ lifecycle observer |
+| `packages/audiflow_domain/lib/src/features/force_update/constants.dart` | Refresh interval, timeout, cache keys, supported schema version. **Already exists from Task 1.** |
+| `packages/audiflow_domain/lib/src/features/force_update/models/force_update_config.dart` | Freezed model + JSON (snake_case) |
+| `packages/audiflow_domain/lib/src/features/force_update/models/update_decision.dart` | Sealed `UpdateDecision` types |
+| `packages/audiflow_domain/lib/src/features/force_update/services/force_update_evaluator.dart` | Pure function `evaluate()` + `configValidationFailure` |
+| `packages/audiflow_domain/lib/src/features/force_update/datasources/local/force_update_local_data_source.dart` | SharedPreferences read/write |
+| `packages/audiflow_domain/lib/src/features/force_update/datasources/remote/force_update_remote_data_source.dart` | Dio fetch with timeout |
+| `packages/audiflow_domain/lib/src/features/force_update/repositories/force_update_repository.dart` | Abstract interface |
+| `packages/audiflow_domain/lib/src/features/force_update/repositories/force_update_repository_impl.dart` | Implementation; coordinates remote + cache |
+| `packages/audiflow_domain/lib/src/features/force_update/providers/force_update_providers.dart` | `forceUpdateConfigUrlProvider` (override-required), `forceUpdateRepositoryProvider` |
+| `packages/audiflow_domain/lib/audiflow_domain.dart` | Modify: add new exports |
+
+### `audiflow_app` (presentation layer)
+
+| File | Responsibility |
+|---|---|
+| `packages/audiflow_app/lib/features/force_update/constants.dart` | Just `forceUpdateConfigUrlEnv` (build-time env var name). **Already exists from Task 1.** |
+| `packages/audiflow_app/lib/features/force_update/presentation/force_update_controller.dart` | Riverpod async controller exposing `AsyncValue<UpdateDecision>` |
 | `packages/audiflow_app/lib/features/force_update/presentation/force_update_screen.dart` | Full-screen splash (hard / maintenance) |
 | `packages/audiflow_app/lib/features/force_update/presentation/force_update_banner.dart` | Soft banner widget |
 | `packages/audiflow_app/lib/features/force_update/presentation/force_update_gate.dart` | Wraps MaterialApp content; renders splash or child |
+| `packages/audiflow_app/lib/features/force_update/presentation/i18n_message_resolver.dart` | Resolve `messageKey` + `messageOverride` to displayable strings (uses `AppLocalizations`) |
+| `packages/audiflow_app/lib/features/force_update/presentation/update_url_resolver.dart` | `configUrl ?? platform store` fallback |
 | `packages/audiflow_app/lib/features/force_update/force_update.dart` | Barrel export |
 | `packages/audiflow_app/lib/l10n/app_en.arb` | Modify: add `forceUpdate*` keys |
 | `packages/audiflow_app/lib/l10n/app_ja.arb` | Modify: add `forceUpdate*` keys |
-| `packages/audiflow_app/lib/main.dart` | Modify: wrap router with `ForceUpdateGate`, init controller |
-| `packages/audiflow_app/pubspec.yaml` | Modify: add `pub_semver`, `url_launcher` (already present, verify) |
-| `.env.dev` / `.env.stg` / `.env.prod` | Modify: add `FORCE_UPDATE_CONFIG_URL=...` |
+| `packages/audiflow_app/lib/main.dart` | Modify: override `forceUpdateConfigUrlProvider` and `currentAppVersionProvider`; wrap router builder with `ForceUpdateGate` |
+| `packages/audiflow_app/pubspec.yaml` | Modify: add `pub_semver` (already done in Task 1) |
+| `.env.dev` / `.env.stg` / `.env.prod` | Update locally (gitignored — secrets-bearing files); each engineer/CI environment sets its own URL |
 
-**Test files:** mirror lib structure under `packages/audiflow_app/test/features/force_update/`.
+**Test files:**
+- Domain tests: `packages/audiflow_domain/test/features/force_update/` — mirrors lib structure
+- App tests: `packages/audiflow_app/test/features/force_update/` — mirrors lib structure
+
+---
+
+## ⚠️ PLAN AMENDMENT (after Task 1 spec/quality review)
+
+**The original task bodies below were drafted under an "everything in `audiflow_app`" assumption.** The reviewer flagged that the data layer belongs in `audiflow_domain` per the project architecture rule. Tasks 2-18 below still contain the original paths — **use the path translation table here for the canonical file locations**:
+
+### Path translation (apply before reading any task body)
+
+| Old path (in task bodies below) | Canonical path |
+|---|---|
+| `packages/audiflow_app/lib/features/force_update/data/force_update_config.dart` | `packages/audiflow_domain/lib/src/features/force_update/models/force_update_config.dart` |
+| `packages/audiflow_app/lib/features/force_update/domain/update_decision.dart` | `packages/audiflow_domain/lib/src/features/force_update/models/update_decision.dart` |
+| `packages/audiflow_app/lib/features/force_update/domain/force_update_evaluator.dart` | `packages/audiflow_domain/lib/src/features/force_update/services/force_update_evaluator.dart` |
+| `packages/audiflow_app/lib/features/force_update/data/force_update_local_data_source.dart` | `packages/audiflow_domain/lib/src/features/force_update/datasources/local/force_update_local_data_source.dart` |
+| `packages/audiflow_app/lib/features/force_update/data/force_update_remote_data_source.dart` | `packages/audiflow_domain/lib/src/features/force_update/datasources/remote/force_update_remote_data_source.dart` |
+| `packages/audiflow_app/lib/features/force_update/data/force_update_repository.dart` | Split into two files: `packages/audiflow_domain/lib/src/features/force_update/repositories/force_update_repository.dart` (abstract interface) and `..._impl.dart` (implementation) |
+| `packages/audiflow_app/lib/features/force_update/domain/i18n_message_resolver.dart` | `packages/audiflow_app/lib/features/force_update/presentation/i18n_message_resolver.dart` |
+| `packages/audiflow_app/lib/features/force_update/domain/update_url_resolver.dart` | `packages/audiflow_app/lib/features/force_update/presentation/update_url_resolver.dart` |
+| `packages/audiflow_app/lib/features/force_update/presentation/*.dart` | Unchanged |
+
+### Test path translation
+
+| Old test path | Canonical path |
+|---|---|
+| `packages/audiflow_app/test/features/force_update/data/*` | `packages/audiflow_domain/test/features/force_update/{models,datasources,repositories}/*` (mirrored to lib subdirs) |
+| `packages/audiflow_app/test/features/force_update/domain/{update_decision,force_update_evaluator}_test.dart` | `packages/audiflow_domain/test/features/force_update/{models,services}/*` |
+| `packages/audiflow_app/test/features/force_update/domain/{i18n_message_resolver,update_url_resolver}_test.dart` | `packages/audiflow_app/test/features/force_update/presentation/*` |
+| `packages/audiflow_app/test/features/force_update/presentation/*` | Unchanged |
+
+### Import translation
+
+In every code/test snippet below:
+
+| Old import | Canonical import |
+|---|---|
+| `import 'package:audiflow_app/features/force_update/data/...';` | `import 'package:audiflow_domain/audiflow_domain.dart';` (data types are re-exported via barrel) |
+| `import 'package:audiflow_app/features/force_update/domain/update_decision.dart';` | `import 'package:audiflow_domain/audiflow_domain.dart';` |
+| `import 'package:audiflow_app/features/force_update/domain/force_update_evaluator.dart';` | `import 'package:audiflow_domain/audiflow_domain.dart';` |
+| `import 'package:audiflow_app/features/force_update/domain/i18n_message_resolver.dart';` | `import 'package:audiflow_app/features/force_update/presentation/i18n_message_resolver.dart';` |
+| `import 'package:audiflow_app/features/force_update/domain/update_url_resolver.dart';` | `import 'package:audiflow_app/features/force_update/presentation/update_url_resolver.dart';` |
+| Relative `import '../constants.dart';` (from `data/` files in app) | `import 'package:audiflow_domain/audiflow_domain.dart';` (constants re-exported) |
+
+### Repository structure split (Task 7)
+
+The original Task 7 created a single `force_update_repository.dart` file with the implementation. The canonical structure is:
+
+- `packages/audiflow_domain/lib/src/features/force_update/repositories/force_update_repository.dart` — abstract class
+- `packages/audiflow_domain/lib/src/features/force_update/repositories/force_update_repository_impl.dart` — implementation
+
+This matches the existing pattern in `audiflow_domain` (e.g., `app_settings_repository.dart` + `app_settings_repository_impl.dart`).
+
+### Provider locations
+
+- `audiflow_domain` provides: `forceUpdateConfigUrlProvider` (Riverpod, override-required) and `forceUpdateRepositoryProvider` (reads dio, prefs, URL providers). Place these in `packages/audiflow_domain/lib/src/features/force_update/providers/force_update_providers.dart`.
+- `audiflow_app` provides: `currentAppVersionProvider`, `forceUpdateControllerProvider`. Place these alongside the controller at `packages/audiflow_app/lib/features/force_update/presentation/force_update_controller.dart`.
+- App overrides `forceUpdateConfigUrlProvider` with `String.fromEnvironment(forceUpdateConfigUrlEnv)` at bootstrap.
+
+### Domain barrel export
+
+After each new domain file is created, add the corresponding `export 'src/features/force_update/...';` line to `packages/audiflow_domain/lib/audiflow_domain.dart`. The constants export was already added.
+
+### App barrel export
+
+Update `packages/audiflow_app/lib/features/force_update/force_update.dart` to export only the presentation surface (controller, gate, screen, banner, resolvers). Constants stay imported per file.
 
 ---
 
