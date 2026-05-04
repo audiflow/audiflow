@@ -116,9 +116,26 @@ class _AppLifecycleObserverState extends ConsumerState<AppLifecycleObserver> {
 
   /// Picks up any pending downloads that were enqueued by background
   /// refresh but not yet processed (e.g. download task was deferred
-  /// or killed by the OS).
+  /// or killed by the OS). Also recovers tasks stuck in "downloading"
+  /// status from a prior foreground isolate that was suspended/killed
+  /// mid-download — without this, those tasks linger forever because
+  /// `getNextPending` only matches "pending".
   void _processPendingDownloads() {
-    unawaited(ref.read(downloadQueueServiceProvider).startQueue());
+    unawaited(_recoverAndStartQueue());
+  }
+
+  Future<void> _recoverAndStartQueue() async {
+    final downloadRepo = ref.read(downloadRepositoryProvider);
+    final stuck = await downloadRepo.getByStatus(
+      const DownloadStatus.downloading(),
+    );
+    for (final task in stuck) {
+      await downloadRepo.updateStatus(
+        id: task.id,
+        status: const DownloadStatus.pending(),
+      );
+    }
+    await ref.read(downloadQueueServiceProvider).startQueue();
   }
 
   @override
