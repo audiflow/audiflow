@@ -44,13 +44,20 @@ ForceUpdateConfigInvalidReason? configValidationFailure(
 bool configIsValid(ForceUpdateConfig config) =>
     configValidationFailure(config) == null;
 
-/// Pure decision function. Caller is responsible for validating the config
-/// via [configIsValid] / [configValidationFailure] first; passing an invalid
-/// config produces undefined behaviour.
+/// Pure decision function. Caller MUST validate the config via
+/// [configValidationFailure] (or [configIsValid]) first.
+///
+/// Passing an invalid config will throw [FormatException] when the
+/// version strings cannot be parsed; debug builds assert validity to
+/// surface misuse in tests.
 UpdateDecision evaluate({
   required ForceUpdateConfig config,
   required Version currentVersion,
 }) {
+  assert(
+    configIsValid(config),
+    'evaluate called with invalid config; call configValidationFailure first',
+  );
   if (config.maintenanceMode) {
     return Maintenance(
       messageKey: config.messageKey,

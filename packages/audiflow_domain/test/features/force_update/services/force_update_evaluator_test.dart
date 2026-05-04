@@ -90,6 +90,28 @@ void main() {
       check(hard.messageOverride!['en']).equals('x');
       check(hard.updateUrl).equals('https://y');
     });
+
+    test('maintenance wins over hard-update when both apply', () {
+      final result = evaluate(
+        config: _cfg(maintenanceMode: true, messageKey: 'maintenance'),
+        currentVersion: Version.parse('1.0.0'),
+      );
+      check(result).isA<Maintenance>();
+    });
+
+    test(
+      'pre-release (e.g. 2.0.0-rc.1) compares below 2.0.0 -> HardUpdate',
+      () {
+        // Documents pub_semver pre-release ordering: 2.0.0-rc.1 < 2.0.0.
+        // If product wants RCs to satisfy minVersion: 2.0.0, change config to
+        // 2.0.0-0 or evaluator semantics - this test pins current behavior.
+        final result = evaluate(
+          config: _cfg(),
+          currentVersion: Version.parse('2.0.0-rc.1'),
+        );
+        check(result).isA<HardUpdate>();
+      },
+    );
   });
 
   group('configValidationFailure', () {
