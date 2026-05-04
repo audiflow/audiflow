@@ -1,3 +1,5 @@
+import 'package:audiflow_core/audiflow_core.dart' show AppConstants;
+
 import '../models/episode.dart';
 import '../extensions/episode_extensions.dart';
 import '../models/smart_playlist.dart';
@@ -11,8 +13,11 @@ class YearResolver implements SmartPlaylistResolver {
   @override
   String get type => 'year';
 
+  /// Bumped to 2 when the auto-detect minimum-episode threshold was
+  /// added. The bump invalidates cached auto-detect groupings so feeds
+  /// previously below the threshold drop their cached year tab.
   @override
-  int get heuristicVersion => 1;
+  int get heuristicVersion => 2;
 
   @override
   SmartPlaylistSortRule get defaultSort => const SmartPlaylistSortRule(
@@ -25,6 +30,14 @@ class YearResolver implements SmartPlaylistResolver {
     List<Episode> episodes,
     SmartPlaylistDefinition? definition,
   ) {
+    // Auto-detect path: skip year grouping for small feeds. Explicit
+    // year configs (definition != null) bypass the threshold so curated
+    // patterns can group small podcasts.
+    if (definition == null &&
+        episodes.length < AppConstants.autoYearGroupingMinEpisodes) {
+      return null;
+    }
+
     final grouped = <int, List<Episode>>{};
     final ungrouped = <int>[];
 
