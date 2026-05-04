@@ -3,39 +3,42 @@ import 'package:audiflow_core/audiflow_core.dart';
 /// Configuration for extracting smart playlist display names from
 /// episode data.
 ///
-/// Supports JSON-based configuration that can be downloaded from web.
+/// Reads a value, optionally matches a regex pattern, and formats the
+/// result via a `${N}` template (`${0}` = full match, `${1}`, `${2}`,
+/// ... = capture groups). Out-of-range references render as empty.
+/// When [template] is omitted the raw match (or source value when no
+/// pattern is set) is returned.
 ///
 /// Example JSON configs:
 /// ```json
-/// // Extract from title using regex
+/// // Multi-capture template
 /// {
 ///   "source": "title",
-///   "pattern": "\\[(.+?)\\s+\\d+\\]",
-///   "group": 1
+///   "pattern": "\\[(.+?)\\s+(\\d+)\\]",
+///   "template": "${1} ${2}"
 /// }
 ///
 /// // Use seasonNumber with template
 /// {
 ///   "source": "seasonNumber",
-///   "template": "Season {value}"
+///   "template": "Season ${0}"
 /// }
 ///
-/// // With fallback
+/// // With fallback chain
 /// {
 ///   "source": "title",
 ///   "pattern": "\\[(.+?)\\]",
-///   "group": 1,
+///   "template": "${1}",
 ///   "fallback": {
 ///     "source": "seasonNumber",
-///     "template": "Season {value}"
+///     "template": "Season ${0}"
 ///   }
 /// }
 /// ```
 final class SmartPlaylistTitleExtractor {
-  const SmartPlaylistTitleExtractor({
+  SmartPlaylistTitleExtractor({
     required this.source,
     this.pattern,
-    this.group = 0,
     this.template,
     this.fallback,
     this.fallbackValue,
@@ -46,7 +49,6 @@ final class SmartPlaylistTitleExtractor {
     return SmartPlaylistTitleExtractor(
       source: json['source'] as String,
       pattern: json['pattern'] as String?,
-      group: (json['group'] as int?) ?? 0,
       template: json['template'] as String?,
       fallback: json['fallback'] != null
           ? SmartPlaylistTitleExtractor.fromJson(
@@ -63,35 +65,41 @@ final class SmartPlaylistTitleExtractor {
   /// "episodeNumber"
   final String source;
 
-  /// Regex pattern to extract value (optional).
-  ///
-  /// When provided, the pattern is matched against the source
-  /// field.
+  /// Regex pattern to match against the source value (optional).
   final String? pattern;
 
-  /// Capture group to use from regex match (default: 0 = full
-  /// match).
-  final int group;
-
-  /// Template for formatting the extracted value.
-  ///
-  /// Use `{value}` as placeholder for the extracted/source value.
-  /// Example: "Season {value}" with seasonNumber=3 produces
-  /// "Season 3"
+  /// Template using `${N}` references (`${0}` = full match,
+  /// `${1}`, `${2}`, ... = capture groups). When `null`, behaves
+  /// as `${0}`.
   final String? template;
 
-  /// Fallback extractor to use when this one fails.
+  /// Fallback extractor used when this one fails.
   final SmartPlaylistTitleExtractor? fallback;
 
-  /// Fallback string value for null/zero seasonNumber episodes.
+  /// Fallback string used when `source` is `seasonNumber` or
+  /// `episodeNumber` and the value is missing or `< 1`. Has no
+  /// effect for `title` / `description` sources.
   final String? fallbackValue;
+
+  /// Cached compiled regex. `null` when [pattern] is `null` or when
+  /// the pattern fails to compile (treated as "no match"; the
+  /// fallback chain still applies).
+  late final RegExp? _compiledPattern = _compile(pattern);
+
+  static RegExp? _compile(String? pattern) {
+    if (pattern == null) return null;
+    try {
+      return RegExp(pattern);
+    } on FormatException {
+      return null;
+    }
+  }
 
   /// Converts to JSON representation.
   Map<String, dynamic> toJson() {
     return {
       'source': source,
       if (pattern != null) 'pattern': pattern,
-      if (group != 0) 'group': group,
       if (template != null) 'template': template,
       if (fallback != null) 'fallback': fallback!.toJson(),
       if (fallbackValue != null) 'fallbackValue': fallbackValue,
@@ -102,35 +110,38 @@ final class SmartPlaylistTitleExtractor {
   ///
   /// Returns null if extraction fails and no fallback is available.
   String? extract(EpisodeData episode) {
-    // For null/zero seasonNumber, use fallbackValue if available
-    final seasonNum = episode.seasonNumber;
-    if (fallbackValue != null && (seasonNum == null || 1 > seasonNum)) {
-      return fallbackValue;
+    if (fallbackValue != null) {
+      final numeric = switch (source) {
+        'seasonNumber' => episode.seasonNumber,
+        'episodeNumber' => episode.episodeNumber,
+        _ => null,
+      };
+      if ((source == 'seasonNumber' || source == 'episodeNumber') &&
+          (numeric == null || numeric < 1)) {
+        return fallbackValue;
+      }
     }
 
     final sourceValue = _getSourceValue(episode);
-
     if (sourceValue == null) {
       return fallback?.extract(episode);
     }
 
-    String? result;
-
+    final List<String?> groups;
+    final compiled = _compiledPattern;
     if (pattern != null) {
-      result = _extractWithPattern(sourceValue);
+      // Compiled may be null when the configured pattern failed
+      // to compile; treat as "no match" and route to fallback.
+      final match = compiled?.firstMatch(sourceValue);
+      if (match == null) {
+        return fallback?.extract(episode);
+      }
+      groups = List.generate(match.groupCount + 1, match.group);
     } else {
-      result = sourceValue;
+      groups = [sourceValue];
     }
 
-    if (result == null) {
-      return fallback?.extract(episode);
-    }
-
-    if (template != null) {
-      result = template!.replaceAll('{value}', result);
-    }
-
-    return result;
+    return _render(template, groups);
   }
 
   String? _getSourceValue(EpisodeData episode) {
@@ -143,22 +154,42 @@ final class SmartPlaylistTitleExtractor {
     };
   }
 
-  String? _extractWithPattern(String value) {
-    final regex = RegExp(pattern!);
-    final match = regex.firstMatch(value);
-
-    if (match == null) {
-      return null;
+  static String _render(String? template, List<String?> groups) {
+    if (template == null) {
+      return _groupValue(groups, 0);
     }
+    return _expandTemplate(template, groups);
+  }
 
-    if (group == 0) {
-      return match.group(0);
+  static String _groupValue(List<String?> groups, int n) {
+    if (n < 0 || groups.length <= n) return '';
+    return groups[n] ?? '';
+  }
+
+  /// Expands `${N}` tokens in [template]. Out-of-range groups become
+  /// empty. Malformed tokens (e.g. `${abc}`, unclosed `${`) are
+  /// emitted literally.
+  static String _expandTemplate(String template, List<String?> groups) {
+    final out = StringBuffer();
+    var i = 0;
+    while (i < template.length) {
+      if (i + 1 < template.length &&
+          template.codeUnitAt(i) == 0x24 /* $ */ &&
+          template.codeUnitAt(i + 1) == 0x7B /* { */ ) {
+        final close = template.indexOf('}', i + 2);
+        if (close != -1) {
+          final inner = template.substring(i + 2, close);
+          final n = int.tryParse(inner);
+          if (n != null && 0 <= n) {
+            out.write(_groupValue(groups, n));
+            i = close + 1;
+            continue;
+          }
+        }
+      }
+      out.write(template[i]);
+      i++;
     }
-
-    if (match.groupCount < group) {
-      return null;
-    }
-
-    return match.group(group);
+    return out.toString();
   }
 }

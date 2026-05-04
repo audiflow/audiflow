@@ -23,6 +23,7 @@ class EpisodeListTile extends ConsumerWidget {
     required this.podcastTitle,
     this.artworkUrl,
     this.feedImageUrl,
+    this.showThumbnail = true,
     this.progress,
     this.lastRefreshedAt,
     this.siblingEpisodeIds,
@@ -37,6 +38,11 @@ class EpisodeListTile extends ConsumerWidget {
 
   /// RSS feed-level image URL for thumbnail deduplication.
   final String? feedImageUrl;
+
+  /// When `false`, suppresses the row thumbnail (smart playlist
+  /// `showEpisodeThumbnail` opt-out). Page header artwork is
+  /// unaffected.
+  final bool showThumbnail;
 
   /// Pre-fetched progress data. If null, episode is not yet in database.
   final EpisodeWithProgress? progress;
@@ -98,6 +104,7 @@ class EpisodeListTile extends ConsumerWidget {
       thumbnailUrl: episode.primaryImage?.url,
       podcastArtworkUrl: artworkUrl,
       feedImageUrl: feedImageUrl,
+      showThumbnail: showThumbnail,
       isPlaying: isPlaying,
       isLoading: isLoading,
       isNew: isNew,

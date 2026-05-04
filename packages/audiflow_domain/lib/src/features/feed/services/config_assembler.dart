@@ -35,6 +35,7 @@ final class ConfigAssembler {
       podcastGuid: meta.podcastGuid,
       feedUrls: meta.feedUrls,
       yearGroupedEpisodes: meta.yearGroupedEpisodes,
+      showEpisodeThumbnail: meta.showEpisodeThumbnail,
       playlists: ordered,
     );
   }

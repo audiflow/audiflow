@@ -1,6 +1,10 @@
 import 'package:audiflow_core/audiflow_core.dart' show AutoPlayOrder;
 import 'package:audiflow_domain/audiflow_domain.dart'
-    show PodcastItem, SortOrder, smartPlaylistPatternByFeedUrlProvider;
+    show
+        EffectiveThumbnails,
+        PodcastItem,
+        SortOrder,
+        smartPlaylistPatternByFeedUrlProvider;
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -101,6 +105,9 @@ List<Widget> buildEpisodeListSlivers({
     smartPlaylistPatternByFeedUrlProvider(feedUrl),
   );
   final yearGrouped = patternAsync.value?.yearGroupedEpisodes ?? false;
+  final showEpisodeThumbnail = EffectiveThumbnails.podcastEpisodeList(
+    showEpisodeThumbnail: patternAsync.value?.showEpisodeThumbnail,
+  );
 
   return episodesAsync.when(
     data: (episodes) => _buildEpisodeData(
@@ -115,6 +122,7 @@ List<Widget> buildEpisodeListSlivers({
       scrollController: scrollController,
       onToggleSortOrder: onToggleSortOrder,
       yearGrouped: yearGrouped,
+      showThumbnail: showEpisodeThumbnail,
       itunesId: itunesId,
       feedUrl: feedUrl,
       effectiveOrder: effectiveOrder,
@@ -156,6 +164,7 @@ List<Widget> _buildEpisodeData({
   required ScrollController scrollController,
   required VoidCallback onToggleSortOrder,
   required bool yearGrouped,
+  required bool showThumbnail,
   String? itunesId,
   String? feedUrl,
   AutoPlayOrder? effectiveOrder,
@@ -207,6 +216,7 @@ List<Widget> _buildEpisodeData({
         feedImageUrl: feedImageUrl,
         lastRefreshedAt: lastRefreshedAt,
         scrollController: scrollController,
+        showThumbnail: showThumbnail,
         itunesId: itunesId,
         feedUrl: feedUrl,
         effectiveOrder: effectiveOrder,
@@ -231,6 +241,7 @@ List<Widget> _buildEpisodeData({
           podcastTitle: podcastTitle,
           artworkUrl: artworkUrl,
           feedImageUrl: feedImageUrl,
+          showThumbnail: showThumbnail,
           progress: progress,
           siblingEpisodeIds: siblingEpisodeIds,
           effectiveOrder: effectiveOrder,
@@ -252,6 +263,7 @@ List<Widget> _buildYearGroupedEpisodeSlivers({
   required String? feedImageUrl,
   required DateTime? lastRefreshedAt,
   required ScrollController scrollController,
+  required bool showThumbnail,
   String? itunesId,
   String? feedUrl,
   AutoPlayOrder? effectiveOrder,
@@ -286,6 +298,7 @@ List<Widget> _buildYearGroupedEpisodeSlivers({
         podcastTitle: podcastTitle,
         artworkUrl: artworkUrl,
         feedImageUrl: feedImageUrl,
+        showThumbnail: showThumbnail,
         progress: progress,
         siblingEpisodeIds: siblingEpisodeIds,
         effectiveOrder: effectiveOrder,

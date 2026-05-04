@@ -72,7 +72,7 @@ void main() {
       test('has GitHub Pages smart playlist config base url', () {
         expect(
           config.smartPlaylistConfigBaseUrl,
-          'https://audiflow.github.io/audiflow-smartplaylist/assets-dev/v5',
+          'https://audiflow.github.io/audiflow-smartplaylist/assets-dev/v6',
         );
       });
 
@@ -111,7 +111,7 @@ void main() {
       test('has GitHub Pages smart playlist config base url', () {
         expect(
           config.smartPlaylistConfigBaseUrl,
-          'https://audiflow.github.io/audiflow-smartplaylist/assets-stg/v5',
+          'https://audiflow.github.io/audiflow-smartplaylist/assets-stg/v6',
         );
       });
 
@@ -150,7 +150,7 @@ void main() {
       test('has GitHub Pages smart playlist config base url', () {
         expect(
           config.smartPlaylistConfigBaseUrl,
-          'https://audiflow.github.io/audiflow-smartplaylist/assets/v5',
+          'https://audiflow.github.io/audiflow-smartplaylist/assets/v6',
         );
       });
 

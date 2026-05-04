@@ -22,6 +22,7 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
     this.artworkUrl,
     this.feedImageUrl,
     this.fallbackThumbnailUrl,
+    this.showThumbnail = true,
     this.progress,
     this.siblingEpisodeIds,
     this.lastRefreshedAt,
@@ -40,6 +41,11 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
   /// Shown when episode has no image. Use in contexts where podcast
   /// artwork is not already visible (e.g. station lists).
   final String? fallbackThumbnailUrl;
+
+  /// When `false`, suppresses the row thumbnail (smart playlist
+  /// per-group / per-playlist `showThumbnail` opt-out).
+  final bool showThumbnail;
+
   final EpisodeWithProgress? progress;
 
   /// Subscription's last refresh timestamp for "new" badge logic.
@@ -87,6 +93,7 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
       fallbackThumbnailUrl: fallbackThumbnailUrl,
       podcastArtworkUrl: artworkUrl,
       feedImageUrl: feedImageUrl,
+      showThumbnail: showThumbnail,
       isPlaying: isPlaying,
       isLoading: isLoading,
       isNew: isNew,

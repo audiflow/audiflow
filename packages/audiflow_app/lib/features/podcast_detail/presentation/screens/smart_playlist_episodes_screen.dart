@@ -343,6 +343,8 @@ class _SmartPlaylistEpisodesScreenState
         final sorted = List.of(displayEpisodes);
         sortEpisodeData(sorted, effectiveRule);
 
+        final showThumbnail = _resolveEpisodeRowThumbnail();
+
         return [
           sortHeader,
           SliverList.builder(
@@ -355,6 +357,7 @@ class _SmartPlaylistEpisodesScreenState
                 podcastTitle: widget.podcastTitle,
                 artworkUrl: widget.podcastArtworkUrl,
                 feedImageUrl: widget.feedImageUrl,
+                showThumbnail: showThumbnail,
                 lastRefreshedAt: widget.lastRefreshedAt,
                 progress: data.progress,
                 siblingEpisodeIds: widget.smartPlaylist.episodeIds,
@@ -443,6 +446,8 @@ class _SmartPlaylistEpisodesScreenState
             : (a, b) => a.compareTo(b),
       );
 
+    final showThumbnail = _resolveEpisodeRowThumbnail();
+
     return buildYearGroupedSlivers<SmartPlaylistEpisodeData>(
       itemsByYear: byYear,
       sortedYears: sortedYears,
@@ -452,6 +457,7 @@ class _SmartPlaylistEpisodesScreenState
         podcastTitle: widget.podcastTitle,
         artworkUrl: widget.podcastArtworkUrl,
         feedImageUrl: widget.feedImageUrl,
+        showThumbnail: showThumbnail,
         progress: data.progress,
         siblingEpisodeIds: widget.smartPlaylist.episodeIds,
         itunesId: widget.podcast.id,
@@ -857,6 +863,26 @@ class _SmartPlaylistEpisodesScreenState
           ),
         ],
       ),
+    );
+  }
+
+  /// Resolves the effective `showThumbnail` flag for episode rows in
+  /// this playlist, walking the playlist → meta cascade. No group
+  /// context is available at this surface.
+  bool _resolveEpisodeRowThumbnail() {
+    final feedUrl = widget.podcast.feedUrl;
+    if (feedUrl == null) return true;
+    final config = ref
+        .watch(smartPlaylistPatternByFeedUrlProvider(feedUrl))
+        .value;
+    if (config == null) return true;
+
+    final playlistDef = config.findPlaylist(widget.smartPlaylist.id);
+    if (playlistDef == null) return true;
+
+    return EffectiveThumbnails.episodeRowInGroup(
+      showEpisodeThumbnail: config.showEpisodeThumbnail,
+      playlist: playlistDef,
     );
   }
 }

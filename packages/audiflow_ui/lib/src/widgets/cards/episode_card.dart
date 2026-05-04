@@ -31,6 +31,7 @@ class EpisodeCard extends StatelessWidget {
     this.fallbackThumbnailUrl,
     this.podcastArtworkUrl,
     this.feedImageUrl,
+    this.showThumbnail = true,
     this.isPlaying = false,
     this.isLoading = false,
     this.isNew = false,
@@ -68,6 +69,11 @@ class EpisodeCard extends StatelessWidget {
   /// thumbnail deduplication since the two come from different sources.
   final String? feedImageUrl;
 
+  /// When `false`, the thumbnail is suppressed regardless of any
+  /// available URL. Driven by the smart playlist `showThumbnail` /
+  /// `showEpisodeThumbnail` flags.
+  final bool showThumbnail;
+
   final bool isPlaying;
   final bool isLoading;
 
@@ -104,7 +110,7 @@ class EpisodeCard extends StatelessWidget {
     return fallbackThumbnailUrl;
   }
 
-  bool get _showThumbnail => _displayThumbnailUrl != null;
+  bool get _showThumbnail => showThumbnail && _displayThumbnailUrl != null;
 
   @override
   Widget build(BuildContext context) {

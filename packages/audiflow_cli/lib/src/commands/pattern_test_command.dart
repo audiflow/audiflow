@@ -37,7 +37,7 @@ class PatternTestCommand {
       final extractor = SmartPlaylistTitleExtractor(
         source: 'title',
         pattern: titlePattern,
-        group: titleGroup,
+        template: '\${$titleGroup}',
         fallbackValue: titleFallback,
       );
 
