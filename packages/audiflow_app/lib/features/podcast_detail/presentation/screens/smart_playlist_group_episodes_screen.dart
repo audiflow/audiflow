@@ -663,20 +663,55 @@ class _GroupHeader extends StatelessWidget {
   final String podcastTitle;
   final String? thumbnailUrl;
 
+  void _showArtworkOverlay(BuildContext context, String artworkUrl) {
+    Navigator.of(context).push(
+      PageRouteBuilder<void>(
+        opaque: false,
+        barrierDismissible: true,
+        barrierColor: Colors.black87,
+        transitionDuration: const Duration(milliseconds: 300),
+        reverseTransitionDuration: const Duration(milliseconds: 250),
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return ArtworkOverlay(
+            imageUrl: artworkUrl,
+            heroTag: 'group_artwork_$artworkUrl',
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final url = thumbnailUrl;
+
+    final artwork = ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: _buildArtwork(colorScheme),
+    );
 
     return Padding(
       padding: const EdgeInsets.all(Spacing.md),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: _buildArtwork(colorScheme),
-          ),
+          if (url != null)
+            Semantics(
+              label: 'View group artwork',
+              button: true,
+              child: Material(
+                type: MaterialType.transparency,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(8),
+                  onTap: () => _showArtworkOverlay(context, url),
+                  child: Hero(tag: 'group_artwork_$url', child: artwork),
+                ),
+              ),
+            )
+          else
+            artwork,
           const SizedBox(width: Spacing.md),
           Expanded(
             child: Column(
