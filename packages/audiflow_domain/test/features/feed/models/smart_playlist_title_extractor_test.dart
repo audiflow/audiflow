@@ -34,7 +34,7 @@ void main() {
         source: 'title',
         pattern: r'\[(.+?)\]',
         template: r'${1}',
-        fallback: const SmartPlaylistTitleExtractor(
+        fallback: SmartPlaylistTitleExtractor(
           source: 'seasonNumber',
           template: r'Season ${0}',
         ),
@@ -183,7 +183,7 @@ void main() {
         source: 'title',
         pattern: r'\[(.+?)\]',
         template: r'${1}',
-        fallback: const SmartPlaylistTitleExtractor(
+        fallback: SmartPlaylistTitleExtractor(
           source: 'seasonNumber',
           template: r'Season ${0}',
         ),
@@ -275,7 +275,7 @@ void main() {
         source: 'title',
         pattern: r'^primary-(\w+)-(\w+)$',
         template: r'P:${1}+${2}',
-        fallback: const SmartPlaylistTitleExtractor(
+        fallback: SmartPlaylistTitleExtractor(
           source: 'title',
           pattern: r'^backup-(\w+)$',
           template: r'F:${1}',

@@ -36,7 +36,7 @@ import 'package:audiflow_core/audiflow_core.dart';
 /// }
 /// ```
 final class SmartPlaylistTitleExtractor {
-  const SmartPlaylistTitleExtractor({
+  SmartPlaylistTitleExtractor({
     required this.source,
     this.pattern,
     this.template,
@@ -81,6 +81,20 @@ final class SmartPlaylistTitleExtractor {
   /// effect for `title` / `description` sources.
   final String? fallbackValue;
 
+  /// Cached compiled regex. `null` when [pattern] is `null` or when
+  /// the pattern fails to compile (treated as "no match"; the
+  /// fallback chain still applies).
+  late final RegExp? _compiledPattern = _compile(pattern);
+
+  static RegExp? _compile(String? pattern) {
+    if (pattern == null) return null;
+    try {
+      return RegExp(pattern);
+    } on FormatException {
+      return null;
+    }
+  }
+
   /// Converts to JSON representation.
   Map<String, dynamic> toJson() {
     return {
@@ -103,7 +117,7 @@ final class SmartPlaylistTitleExtractor {
         _ => null,
       };
       if ((source == 'seasonNumber' || source == 'episodeNumber') &&
-          (numeric == null || 1 > numeric)) {
+          (numeric == null || numeric < 1)) {
         return fallbackValue;
       }
     }
@@ -114,9 +128,11 @@ final class SmartPlaylistTitleExtractor {
     }
 
     final List<String?> groups;
-    final patternValue = pattern;
-    if (patternValue != null) {
-      final match = RegExp(patternValue).firstMatch(sourceValue);
+    final compiled = _compiledPattern;
+    if (pattern != null) {
+      // Compiled may be null when the configured pattern failed
+      // to compile; treat as "no match" and route to fallback.
+      final match = compiled?.firstMatch(sourceValue);
       if (match == null) {
         return fallback?.extract(episode);
       }

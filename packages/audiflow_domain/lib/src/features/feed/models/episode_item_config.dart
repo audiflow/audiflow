@@ -18,8 +18,10 @@ final class EpisodeItemConfig {
   /// Transforms episode display names.
   final SmartPlaylistTitleExtractor? titleExtractor;
 
-  /// Whether episode rows inside groups show a thumbnail.
-  /// Tri-state: `null` means unset (defaults to `true` per schema).
+  /// Whether episode rows show a thumbnail. Applies to rows
+  /// rendered both inside groups and inline at the playlist level.
+  /// Tri-state: `null` means inherit from the parent surface; see
+  /// `EffectiveThumbnails`.
   final bool? showThumbnail;
 
   Map<String, dynamic> toJson() {

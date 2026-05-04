@@ -36,7 +36,7 @@ void main() {
             order: SortOrder.ascending,
           ),
         ),
-        groupItem: const GroupItemConfig(
+        groupItem: GroupItemConfig(
           titleExtractor: SmartPlaylistTitleExtractor(
             source: 'seasonNumber',
             template: 'Season {value}',

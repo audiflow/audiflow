@@ -343,6 +343,8 @@ class _SmartPlaylistEpisodesScreenState
         final sorted = List.of(displayEpisodes);
         sortEpisodeData(sorted, effectiveRule);
 
+        final showThumbnail = _resolveEpisodeRowThumbnail();
+
         return [
           sortHeader,
           SliverList.builder(
@@ -355,7 +357,7 @@ class _SmartPlaylistEpisodesScreenState
                 podcastTitle: widget.podcastTitle,
                 artworkUrl: widget.podcastArtworkUrl,
                 feedImageUrl: widget.feedImageUrl,
-                showThumbnail: _resolveEpisodeRowThumbnail(),
+                showThumbnail: showThumbnail,
                 lastRefreshedAt: widget.lastRefreshedAt,
                 progress: data.progress,
                 siblingEpisodeIds: widget.smartPlaylist.episodeIds,
@@ -444,6 +446,8 @@ class _SmartPlaylistEpisodesScreenState
             : (a, b) => a.compareTo(b),
       );
 
+    final showThumbnail = _resolveEpisodeRowThumbnail();
+
     return buildYearGroupedSlivers<SmartPlaylistEpisodeData>(
       itemsByYear: byYear,
       sortedYears: sortedYears,
@@ -453,7 +457,7 @@ class _SmartPlaylistEpisodesScreenState
         podcastTitle: widget.podcastTitle,
         artworkUrl: widget.podcastArtworkUrl,
         feedImageUrl: widget.feedImageUrl,
-        showThumbnail: _resolveEpisodeRowThumbnail(),
+        showThumbnail: showThumbnail,
         progress: data.progress,
         siblingEpisodeIds: widget.smartPlaylist.episodeIds,
         itunesId: widget.podcast.id,

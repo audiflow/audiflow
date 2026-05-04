@@ -36,8 +36,8 @@ final class GroupItemConfig {
   /// Generates group display names from episode data.
   final SmartPlaylistTitleExtractor? titleExtractor;
 
-  /// Whether group cards show a thumbnail.
-  /// Tri-state: `null` means unset (defaults to `true` per schema).
+  /// Whether group cards show a thumbnail. Tri-state: `null` means
+  /// inherit from the parent surface; see `EffectiveThumbnails`.
   final bool? showThumbnail;
 
   Map<String, dynamic> toJson() {

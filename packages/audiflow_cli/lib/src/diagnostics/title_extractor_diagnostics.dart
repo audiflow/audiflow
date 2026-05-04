@@ -39,7 +39,7 @@ class TitleExtractorDiagnostics {
         _ => null,
       };
       if ((source == 'seasonNumber' || source == 'episodeNumber') &&
-          (numeric == null || 1 > numeric)) {
+          (numeric == null || numeric < 1)) {
         return TitleDiagnosticResult(
           extractedValue: extractor.fallbackValue,
           fallbackValue: extractor.fallbackValue,

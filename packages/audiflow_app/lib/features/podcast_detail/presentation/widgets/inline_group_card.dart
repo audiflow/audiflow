@@ -56,8 +56,8 @@ class InlineGroupCard extends ConsumerWidget {
   final bool prependSeasonNumber;
 
   /// Feed URL of the parent podcast. When set together with
-  /// [playlistId], the card resolves the schema v6 `showThumbnail`
-  /// flag from the smart playlist config.
+  /// [playlistId], the card resolves the `showThumbnail` flag
+  /// from the matched smart playlist config.
   final String? feedUrl;
 
   /// Parent playlist id. See [feedUrl].

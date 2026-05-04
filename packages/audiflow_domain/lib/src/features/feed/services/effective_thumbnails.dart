@@ -2,7 +2,7 @@ import '../models/smart_playlist_definition.dart';
 import '../models/smart_playlist_group_def.dart';
 
 /// Resolves thumbnail visibility for the smart playlist surfaces
-/// introduced by schema v6.
+/// driven by the `showEpisodeThumbnail` / `showThumbnail` flags.
 ///
 /// Rule: the pattern-level `showEpisodeThumbnail` flag flips the
 /// default for unset descendants. Explicit per-surface flags always
@@ -11,10 +11,8 @@ import '../models/smart_playlist_group_def.dart';
 final class EffectiveThumbnails {
   const EffectiveThumbnails._();
 
-  /// `true` unless the pattern explicitly opts out via
-  /// `showEpisodeThumbnail = false`.
   static bool _metaDefault(bool? showEpisodeThumbnail) =>
-      showEpisodeThumbnail != false;
+      showEpisodeThumbnail ?? true;
 
   /// Visibility of episode thumbnails in the main podcast episode
   /// list (outside any smart playlist).
@@ -31,8 +29,9 @@ final class EffectiveThumbnails {
       playlist.groupItem?.showThumbnail ??
       _metaDefault(showEpisodeThumbnail);
 
-  /// Visibility of the thumbnail on an episode row rendered inside
-  /// a smart playlist group.
+  /// Visibility of the thumbnail on a smart playlist episode row.
+  /// Pass [group] for rows inside a group; omit it for inline
+  /// playlist rows.
   static bool episodeRowInGroup({
     bool? showEpisodeThumbnail,
     required SmartPlaylistDefinition playlist,

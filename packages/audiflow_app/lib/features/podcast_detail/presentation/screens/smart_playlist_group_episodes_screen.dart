@@ -318,25 +318,14 @@ class _SmartPlaylistGroupEpisodesScreenState
         .value;
 
     // Header shows group.thumbnailUrl, then the shared thumbnail,
-    // then podcast-level artwork. Page header artwork should always
-    // render (the smart playlist showThumbnail flags do not apply
-    // here per schema v6).
+    // then podcast-level artwork. Page header artwork always
+    // renders; the smart playlist showThumbnail flags apply only
+    // to inline group cards and episode rows, not to this header.
     final headerThumbnailUrl =
         widget.group.thumbnailUrl ??
         sharedThumbnailUrl ??
         widget.podcastArtworkUrl ??
         widget.feedImageUrl;
-
-    final logger = ref.read(namedLoggerProvider('SmartPlaylistGroupHeader'));
-    logger.d(
-      'Header artwork resolution for group="${widget.group.displayName}" '
-      '(id=${widget.group.id}, episodes=${widget.group.episodeIds.length}): '
-      'group.thumbnailUrl=${widget.group.thumbnailUrl}, '
-      'sharedThumbnailUrl=$sharedThumbnailUrl, '
-      'podcastArtworkUrl=${widget.podcastArtworkUrl}, '
-      'feedImageUrl=${widget.feedImageUrl}, '
-      'resolved=$headerThumbnailUrl',
-    );
 
     // Dedup only uses the shared thumbnail (never group.thumbnailUrl,
     // which may match only one episode and hide just that one).
@@ -589,6 +578,8 @@ class _SmartPlaylistGroupEpisodesScreenState
             : (a, b) => a.compareTo(b),
       );
 
+    final showThumbnail = _resolveEpisodeRowThumbnail();
+
     return buildYearGroupedSlivers<SmartPlaylistEpisodeData>(
       itemsByYear: byYear,
       sortedYears: sortedYears,
@@ -598,7 +589,7 @@ class _SmartPlaylistGroupEpisodesScreenState
         podcastTitle: widget.podcastTitle,
         artworkUrl: widget.podcastArtworkUrl,
         feedImageUrl: feedImageUrl,
-        showThumbnail: _resolveEpisodeRowThumbnail(),
+        showThumbnail: showThumbnail,
         progress: data.progress,
         siblingEpisodeIds: _episodeIds,
         itunesId: widget.itunesId,
@@ -637,51 +628,26 @@ class _SmartPlaylistGroupEpisodesScreenState
 
   /// Resolves the effective `showThumbnail` flag for episode rows
   /// rendered inside this group, walking the
-  /// group → playlist → meta cascade defined by schema v6.
+  /// group → playlist → pattern cascade.
   bool _resolveEpisodeRowThumbnail() {
-    final logger = ref.read(
-      namedLoggerProvider('SmartPlaylistEpisodeRowThumbnail'),
-    );
     final feedUrl = widget.feedUrl;
-    if (feedUrl == null) {
-      logger.d('feedUrl=null, defaulting to true');
-      return true;
-    }
+    if (feedUrl == null) return true;
 
     final config = ref
         .watch(smartPlaylistPatternByFeedUrlProvider(feedUrl))
         .value;
-    if (config == null) {
-      logger.d('no pattern config matched for feedUrl=$feedUrl');
-      return true;
-    }
+    if (config == null) return true;
 
     final playlistDef = config.findPlaylist(widget.parentPlaylist.id);
-    if (playlistDef == null) {
-      logger.d(
-        'playlist "${widget.parentPlaylist.id}" not found in config '
-        '(have: ${config.playlists.map((p) => p.id).toList()})',
-      );
-      return true;
-    }
+    if (playlistDef == null) return true;
 
     final groupDef = playlistDef.grouping.findStaticClassifier(widget.group.id);
-    final result = EffectiveThumbnails.episodeRowInGroup(
+
+    return EffectiveThumbnails.episodeRowInGroup(
       showEpisodeThumbnail: config.showEpisodeThumbnail,
       playlist: playlistDef,
       group: groupDef,
     );
-    logger.d(
-      'group="${widget.group.displayName}" (id=${widget.group.id}, '
-      'playlist=${widget.parentPlaylist.id}): '
-      'meta.showEpisodeThumbnail=${config.showEpisodeThumbnail}, '
-      'playlist.episodeItem.showThumbnail='
-      '${playlistDef.episodeItem?.showThumbnail}, '
-      'group.episodeItem.showThumbnail='
-      '${groupDef?.episodeItem?.showThumbnail}, '
-      'resolved=$result',
-    );
-    return result;
   }
 }
 

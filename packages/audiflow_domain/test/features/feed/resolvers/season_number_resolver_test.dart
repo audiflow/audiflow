@@ -270,7 +270,7 @@ void main() {
         displayName: 'Test',
         grouping: const GroupingConfig(by: 'seasonNumber'),
         priority: 0,
-        groupItem: const GroupItemConfig(
+        groupItem: GroupItemConfig(
           titleExtractor: SmartPlaylistTitleExtractor(
             source: 'title',
             pattern: r'(.+?) \d+$',
