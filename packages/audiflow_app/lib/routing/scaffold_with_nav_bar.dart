@@ -278,13 +278,16 @@ class _TabletPortraitShell extends StatelessWidget {
         ),
         centerTitle: true,
       ),
-      body: SleepTimerSnackbarHost(
-        child: Column(
-          children: [
-            Expanded(child: navigationShell),
-            const SleepTimerChip(),
-            AnimatedMiniPlayer(onTap: onMiniPlayerTap),
-          ],
+      body: SafeArea(
+        top: false,
+        child: SleepTimerSnackbarHost(
+          child: Column(
+            children: [
+              Expanded(child: navigationShell),
+              const SleepTimerChip(),
+              AnimatedMiniPlayer(onTap: onMiniPlayerTap),
+            ],
+          ),
         ),
       ),
     );
@@ -308,34 +311,36 @@ class _TabletLandscapeShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Row(
-        children: [
-          NavigationRail(
-            selectedIndex: currentIndex,
-            onDestinationSelected: onDestinationSelected,
-            labelType: NavigationRailLabelType.all,
-            destinations: [
-              for (final d in ScaffoldWithNavBar._destinations)
-                NavigationRailDestination(
-                  icon: Icon(d.icon),
-                  selectedIcon: Icon(d.selectedIcon, fill: 1),
-                  label: Text(d.resolveLabel(AppLocalizations.of(context))),
+      body: SafeArea(
+        child: Row(
+          children: [
+            NavigationRail(
+              selectedIndex: currentIndex,
+              onDestinationSelected: onDestinationSelected,
+              labelType: NavigationRailLabelType.all,
+              destinations: [
+                for (final d in ScaffoldWithNavBar._destinations)
+                  NavigationRailDestination(
+                    icon: Icon(d.icon),
+                    selectedIcon: Icon(d.selectedIcon, fill: 1),
+                    label: Text(d.resolveLabel(AppLocalizations.of(context))),
+                  ),
+              ],
+            ),
+            const VerticalDivider(width: 1, thickness: 1),
+            Expanded(
+              child: SleepTimerSnackbarHost(
+                child: Column(
+                  children: [
+                    Expanded(child: navigationShell),
+                    const SleepTimerChip(),
+                    AnimatedMiniPlayer(onTap: onMiniPlayerTap),
+                  ],
                 ),
-            ],
-          ),
-          const VerticalDivider(width: 1, thickness: 1),
-          Expanded(
-            child: SleepTimerSnackbarHost(
-              child: Column(
-                children: [
-                  Expanded(child: navigationShell),
-                  const SleepTimerChip(),
-                  AnimatedMiniPlayer(onTap: onMiniPlayerTap),
-                ],
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
