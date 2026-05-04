@@ -1,6 +1,5 @@
-const forceUpdateRefreshInterval = Duration(hours: 6);
-const forceUpdateFetchTimeout = Duration(seconds: 5);
-const forceUpdateCacheKey = 'force_update_config_v1';
-const forceUpdateLastFetchKey = 'force_update_last_fetch_at';
+/// Build-time `--dart-define` key for the force-update config URL.
+///
+/// Read with `String.fromEnvironment(forceUpdateConfigUrlEnv)` in app bootstrap;
+/// the value is supplied per flavor via `.env.{dev,stg,prod}` files.
 const forceUpdateConfigUrlEnv = 'FORCE_UPDATE_CONFIG_URL';
-const forceUpdateSupportedSchemaVersion = 1;

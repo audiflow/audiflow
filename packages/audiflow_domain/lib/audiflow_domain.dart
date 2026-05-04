@@ -15,6 +15,9 @@ export 'package:audiflow_podcast/audiflow_podcast.dart'
         PodcastException,
         CacheOptions;
 
+// Force update
+export 'src/features/force_update/constants.dart';
+
 // Common models
 export 'src/common/models/result.dart';
 export 'src/common/models/paginated_response.dart';

@@ -1,4 +1,4 @@
-# Force Upgrade
+# Force Update
 
 Remote-controlled minimum/recommended version enforcement and maintenance mode for the Audiflow app.
 
