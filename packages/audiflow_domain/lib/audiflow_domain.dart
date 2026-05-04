@@ -17,6 +17,7 @@ export 'package:audiflow_podcast/audiflow_podcast.dart'
 
 // Force update
 export 'src/features/force_update/constants.dart';
+export 'src/features/force_update/models/force_update_config.dart';
 
 // Common models
 export 'src/common/models/result.dart';
