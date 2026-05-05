@@ -42,7 +42,14 @@ final class KeepDecision extends SleepTimerDecision {
 }
 
 final class FireDecision extends SleepTimerDecision {
-  const FireDecision();
+  const FireDecision({this.immediate = false});
+
+  /// When true, the controller should pause without fading.
+  ///
+  /// Set for end-of-episode triggers where audio has already reached silence:
+  /// fading would only take effect against the auto-advanced next episode,
+  /// which is the bug this flag prevents.
+  final bool immediate;
 }
 
 final class DecrementEpisodesDecision extends SleepTimerDecision {
@@ -69,7 +76,9 @@ class SleepTimerService {
       case SleepTimerConfigOff():
         return const KeepDecision();
       case SleepTimerConfigEndOfEpisode():
-        if (event is EpisodeCompletedEvent) return const FireDecision();
+        if (event is EpisodeCompletedEvent) {
+          return const FireDecision(immediate: true);
+        }
         return const KeepDecision();
       case SleepTimerConfigEndOfChapter():
         if (!currentEpisodeHasChapters) return const KeepDecision();
@@ -85,7 +94,7 @@ class SleepTimerService {
         return const KeepDecision();
       case SleepTimerConfigEpisodes(:final remaining):
         if (event is EpisodeCompletedEvent) {
-          if (remaining <= 1) return const FireDecision();
+          if (remaining <= 1) return const FireDecision(immediate: true);
           return const DecrementEpisodesDecision();
         }
         return const KeepDecision();

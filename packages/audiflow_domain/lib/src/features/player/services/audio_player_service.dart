@@ -101,6 +101,7 @@ class AudioPlayerController extends _$AudioPlayerController
   Timer? _fadeTimer;
   double? _preFadeVolume;
   Completer<void>? _fadeCompleter;
+  bool _suppressNextAutoAdvance = false;
   final StreamController<PlayerLifecycleEvent> _lifecycleEvents =
       StreamController<PlayerLifecycleEvent>.broadcast();
 
@@ -162,8 +163,21 @@ class AudioPlayerController extends _$AudioPlayerController
         if (processingState == ProcessingState.completed) {
           _log.i('[StateStream] COMPLETED detected, advancing queue...');
           _lifecycleEvents.add(const EpisodeCompletedLifecycle());
-          // Save final progress before clearing
+          // Save final progress before clearing.
+          // Yielding here drains microtasks, letting the sleep timer
+          // observe EpisodeCompletedLifecycle and call
+          // suppressNextAutoAdvance() before we decide whether to advance.
           await _saveProgressOnStop();
+
+          if (_suppressNextAutoAdvance) {
+            _suppressNextAutoAdvance = false;
+            _log.i(
+              '[StateStream] Auto-advance suppressed by sleep timer; '
+              'pausing at episode end',
+            );
+            state = PlaybackState.paused(episodeUrl: url);
+            return;
+          }
 
           // Try to auto-play next from queue
           await _handlePlaybackComplete();
@@ -464,6 +478,16 @@ class AudioPlayerController extends _$AudioPlayerController
     });
 
     return completer.future;
+  }
+
+  /// Marks the next [ProcessingState.completed] transition to skip the
+  /// queue auto-advance.
+  ///
+  /// Called by the sleep timer when firing for end-of-episode triggers so
+  /// the player stops at the current episode's end instead of starting and
+  /// fading out the next one. Consumed exactly once.
+  void suppressNextAutoAdvance() {
+    _suppressNextAutoAdvance = true;
   }
 
   /// Cancels an in-flight fade and restores the pre-fade volume.
