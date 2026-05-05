@@ -167,8 +167,8 @@ class SleepTimerController extends _$SleepTimerController {
     switch (decision) {
       case KeepDecision():
         return;
-      case FireDecision():
-        _fire();
+      case FireDecision(:final immediate):
+        _fire(immediate: immediate);
       case DecrementEpisodesDecision():
         final cfg = state.config;
         if (cfg is SleepTimerConfigEpisodes) {
@@ -184,11 +184,19 @@ class SleepTimerController extends _$SleepTimerController {
     }
   }
 
-  void _fire() {
+  void _fire({bool immediate = false}) {
     _tick?.cancel();
     _tick = null;
     final player = ref.read(audioPlayerControllerProvider.notifier);
-    unawaited(player.fadeOutAndPause());
+    if (immediate) {
+      // Stop at the current episode's end without fading. The fade is
+      // useless here because audio is already silent, and without
+      // suppression the queue auto-advance would start the next episode.
+      player.suppressNextAutoAdvance();
+      unawaited(player.pause());
+    } else {
+      unawaited(player.fadeOutAndPause());
+    }
     _events.add(const SleepTimerFired());
     state = state.copyWith(config: const SleepTimerConfig.off());
   }
