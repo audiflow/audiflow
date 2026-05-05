@@ -329,10 +329,17 @@ void backgroundCallback() {
 
       final notificationService = BackgroundNotificationService(logger: logger);
 
+      final autoDownloadEnqueuer = AutoDownloadEnqueuer(
+        episodeRepo: episodeRepo,
+        downloadRepo: downloadRepo,
+        logger: logger,
+        onDiagnostic: feedSyncDiagnostic,
+      );
+
       final refreshService = BackgroundRefreshService(
         subscriptionRepo: subscriptionRepo,
         episodeRepo: episodeRepo,
-        downloadRepo: downloadRepo,
+        autoDownloadEnqueuer: autoDownloadEnqueuer,
         playbackHistoryRepo: playbackHistoryRepo,
         settingsRepo: settingsRepo,
         syncFeed: (sub) async {

@@ -88,6 +88,19 @@ abstract class EpisodeRepository {
   /// Returns the number of deleted rows.
   Future<int> deleteByPodcastIdAndGuids(int podcastId, Set<String> guids);
 
+  /// Returns episodes for [podcastId] that have not yet been processed by
+  /// the auto-download pipeline, ordered by publish date (newest first).
+  ///
+  /// Used by the auto-download enqueue path to find new episodes regardless
+  /// of which sync path (foreground or background) first ingested them.
+  Future<List<Episode>> getPendingAutoDownloadByPodcastId(int podcastId);
+
+  /// Marks the given episode IDs as processed by the auto-download pipeline.
+  ///
+  /// Set after the auto-download enqueuer inspects the episode (regardless of
+  /// whether a download was actually created). Idempotent.
+  Future<void> markAutoDownloadEnqueued(Iterable<int> ids);
+
   /// Gets episodes after a given episode number, ordered ascending.
   ///
   /// Returns episodes from [podcastId] with episode numbers greater than

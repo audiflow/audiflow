@@ -30,4 +30,14 @@ class Episode {
 
   bool isFavorited = false;
   DateTime? favoritedAt;
+
+  /// Whether this episode has been considered for auto-download enqueueing.
+  ///
+  /// Set to true after the auto-download path inspects the episode (regardless
+  /// of whether a download was actually created — duplicates and disabled
+  /// auto-download both still mark the episode processed). This makes
+  /// auto-download idempotent across foreground and background sync paths so
+  /// new episodes detected by either path are not lost.
+  @Index()
+  bool autoDownloadEnqueued = false;
 }

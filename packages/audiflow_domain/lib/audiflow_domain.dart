@@ -132,6 +132,7 @@ export 'src/features/download/datasources/local/download_local_datasource.dart';
 export 'src/features/download/providers/download_providers.dart';
 export 'src/features/download/repositories/download_repository.dart';
 export 'src/features/download/repositories/download_repository_impl.dart';
+export 'src/features/download/services/auto_download_enqueuer.dart';
 export 'src/features/download/services/download_file_service.dart';
 export 'src/features/download/services/download_queue_service.dart';
 export 'src/features/download/services/background_download_service.dart';

@@ -22,60 +22,65 @@ const EpisodeSchema = CollectionSchema(
       name: r'audioUrl',
       type: IsarType.string,
     ),
-    r'contentEncoded': PropertySchema(
+    r'autoDownloadEnqueued': PropertySchema(
       id: 1,
+      name: r'autoDownloadEnqueued',
+      type: IsarType.bool,
+    ),
+    r'contentEncoded': PropertySchema(
+      id: 2,
       name: r'contentEncoded',
       type: IsarType.string,
     ),
     r'description': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'description',
       type: IsarType.string,
     ),
     r'durationMs': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'durationMs',
       type: IsarType.long,
     ),
     r'episodeNumber': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'episodeNumber',
       type: IsarType.long,
     ),
     r'favoritedAt': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'favoritedAt',
       type: IsarType.dateTime,
     ),
-    r'guid': PropertySchema(id: 6, name: r'guid', type: IsarType.string),
+    r'guid': PropertySchema(id: 7, name: r'guid', type: IsarType.string),
     r'imageUrl': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'imageUrl',
       type: IsarType.string,
     ),
     r'isFavorited': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'isFavorited',
       type: IsarType.bool,
     ),
-    r'link': PropertySchema(id: 9, name: r'link', type: IsarType.string),
+    r'link': PropertySchema(id: 10, name: r'link', type: IsarType.string),
     r'podcastId': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'podcastId',
       type: IsarType.long,
     ),
     r'publishedAt': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'publishedAt',
       type: IsarType.dateTime,
     ),
     r'seasonNumber': PropertySchema(
-      id: 12,
+      id: 13,
       name: r'seasonNumber',
       type: IsarType.long,
     ),
-    r'summary': PropertySchema(id: 13, name: r'summary', type: IsarType.string),
-    r'title': PropertySchema(id: 14, name: r'title', type: IsarType.string),
+    r'summary': PropertySchema(id: 14, name: r'summary', type: IsarType.string),
+    r'title': PropertySchema(id: 15, name: r'title', type: IsarType.string),
   },
 
   estimateSize: _episodeEstimateSize,
@@ -99,6 +104,19 @@ const EpisodeSchema = CollectionSchema(
           name: r'guid',
           type: IndexType.hash,
           caseSensitive: true,
+        ),
+      ],
+    ),
+    r'autoDownloadEnqueued': IndexSchema(
+      id: 7730221933380023826,
+      name: r'autoDownloadEnqueued',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'autoDownloadEnqueued',
+          type: IndexType.value,
+          caseSensitive: false,
         ),
       ],
     ),
@@ -161,20 +179,21 @@ void _episodeSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeString(offsets[0], object.audioUrl);
-  writer.writeString(offsets[1], object.contentEncoded);
-  writer.writeString(offsets[2], object.description);
-  writer.writeLong(offsets[3], object.durationMs);
-  writer.writeLong(offsets[4], object.episodeNumber);
-  writer.writeDateTime(offsets[5], object.favoritedAt);
-  writer.writeString(offsets[6], object.guid);
-  writer.writeString(offsets[7], object.imageUrl);
-  writer.writeBool(offsets[8], object.isFavorited);
-  writer.writeString(offsets[9], object.link);
-  writer.writeLong(offsets[10], object.podcastId);
-  writer.writeDateTime(offsets[11], object.publishedAt);
-  writer.writeLong(offsets[12], object.seasonNumber);
-  writer.writeString(offsets[13], object.summary);
-  writer.writeString(offsets[14], object.title);
+  writer.writeBool(offsets[1], object.autoDownloadEnqueued);
+  writer.writeString(offsets[2], object.contentEncoded);
+  writer.writeString(offsets[3], object.description);
+  writer.writeLong(offsets[4], object.durationMs);
+  writer.writeLong(offsets[5], object.episodeNumber);
+  writer.writeDateTime(offsets[6], object.favoritedAt);
+  writer.writeString(offsets[7], object.guid);
+  writer.writeString(offsets[8], object.imageUrl);
+  writer.writeBool(offsets[9], object.isFavorited);
+  writer.writeString(offsets[10], object.link);
+  writer.writeLong(offsets[11], object.podcastId);
+  writer.writeDateTime(offsets[12], object.publishedAt);
+  writer.writeLong(offsets[13], object.seasonNumber);
+  writer.writeString(offsets[14], object.summary);
+  writer.writeString(offsets[15], object.title);
 }
 
 Episode _episodeDeserialize(
@@ -185,21 +204,22 @@ Episode _episodeDeserialize(
 ) {
   final object = Episode();
   object.audioUrl = reader.readString(offsets[0]);
-  object.contentEncoded = reader.readStringOrNull(offsets[1]);
-  object.description = reader.readStringOrNull(offsets[2]);
-  object.durationMs = reader.readLongOrNull(offsets[3]);
-  object.episodeNumber = reader.readLongOrNull(offsets[4]);
-  object.favoritedAt = reader.readDateTimeOrNull(offsets[5]);
-  object.guid = reader.readString(offsets[6]);
+  object.autoDownloadEnqueued = reader.readBool(offsets[1]);
+  object.contentEncoded = reader.readStringOrNull(offsets[2]);
+  object.description = reader.readStringOrNull(offsets[3]);
+  object.durationMs = reader.readLongOrNull(offsets[4]);
+  object.episodeNumber = reader.readLongOrNull(offsets[5]);
+  object.favoritedAt = reader.readDateTimeOrNull(offsets[6]);
+  object.guid = reader.readString(offsets[7]);
   object.id = id;
-  object.imageUrl = reader.readStringOrNull(offsets[7]);
-  object.isFavorited = reader.readBool(offsets[8]);
-  object.link = reader.readStringOrNull(offsets[9]);
-  object.podcastId = reader.readLong(offsets[10]);
-  object.publishedAt = reader.readDateTimeOrNull(offsets[11]);
-  object.seasonNumber = reader.readLongOrNull(offsets[12]);
-  object.summary = reader.readStringOrNull(offsets[13]);
-  object.title = reader.readString(offsets[14]);
+  object.imageUrl = reader.readStringOrNull(offsets[8]);
+  object.isFavorited = reader.readBool(offsets[9]);
+  object.link = reader.readStringOrNull(offsets[10]);
+  object.podcastId = reader.readLong(offsets[11]);
+  object.publishedAt = reader.readDateTimeOrNull(offsets[12]);
+  object.seasonNumber = reader.readLongOrNull(offsets[13]);
+  object.summary = reader.readStringOrNull(offsets[14]);
+  object.title = reader.readString(offsets[15]);
   return object;
 }
 
@@ -213,32 +233,34 @@ P _episodeDeserializeProp<P>(
     case 0:
       return (reader.readString(offset)) as P;
     case 1:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 2:
       return (reader.readStringOrNull(offset)) as P;
     case 3:
-      return (reader.readLongOrNull(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 4:
       return (reader.readLongOrNull(offset)) as P;
     case 5:
-      return (reader.readDateTimeOrNull(offset)) as P;
-    case 6:
-      return (reader.readString(offset)) as P;
-    case 7:
-      return (reader.readStringOrNull(offset)) as P;
-    case 8:
-      return (reader.readBool(offset)) as P;
-    case 9:
-      return (reader.readStringOrNull(offset)) as P;
-    case 10:
-      return (reader.readLong(offset)) as P;
-    case 11:
-      return (reader.readDateTimeOrNull(offset)) as P;
-    case 12:
       return (reader.readLongOrNull(offset)) as P;
-    case 13:
+    case 6:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 7:
+      return (reader.readString(offset)) as P;
+    case 8:
       return (reader.readStringOrNull(offset)) as P;
+    case 9:
+      return (reader.readBool(offset)) as P;
+    case 10:
+      return (reader.readStringOrNull(offset)) as P;
+    case 11:
+      return (reader.readLong(offset)) as P;
+    case 12:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 13:
+      return (reader.readLongOrNull(offset)) as P;
     case 14:
+      return (reader.readStringOrNull(offset)) as P;
+    case 15:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -366,6 +388,14 @@ extension EpisodeQueryWhereSort on QueryBuilder<Episode, Episode, QWhere> {
   QueryBuilder<Episode, Episode, QAfterWhere> anyId() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(const IdWhereClause.any());
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterWhere> anyAutoDownloadEnqueued() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'autoDownloadEnqueued'),
+      );
     });
   }
 }
@@ -603,6 +633,62 @@ extension EpisodeQueryWhere on QueryBuilder<Episode, Episode, QWhereClause> {
       }
     });
   }
+
+  QueryBuilder<Episode, Episode, QAfterWhereClause> autoDownloadEnqueuedEqualTo(
+    bool autoDownloadEnqueued,
+  ) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(
+          indexName: r'autoDownloadEnqueued',
+          value: [autoDownloadEnqueued],
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterWhereClause>
+  autoDownloadEnqueuedNotEqualTo(bool autoDownloadEnqueued) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'autoDownloadEnqueued',
+                lower: [],
+                upper: [autoDownloadEnqueued],
+                includeUpper: false,
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'autoDownloadEnqueued',
+                lower: [autoDownloadEnqueued],
+                includeLower: false,
+                upper: [],
+              ),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'autoDownloadEnqueued',
+                lower: [autoDownloadEnqueued],
+                includeLower: false,
+                upper: [],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'autoDownloadEnqueued',
+                lower: [],
+                upper: [autoDownloadEnqueued],
+                includeUpper: false,
+              ),
+            );
+      }
+    });
+  }
 }
 
 extension EpisodeQueryFilter
@@ -749,6 +835,18 @@ extension EpisodeQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         FilterCondition.greaterThan(property: r'audioUrl', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterFilterCondition>
+  autoDownloadEnqueuedEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'autoDownloadEnqueued',
+          value: value,
+        ),
       );
     });
   }
@@ -2379,6 +2477,19 @@ extension EpisodeQuerySortBy on QueryBuilder<Episode, Episode, QSortBy> {
     });
   }
 
+  QueryBuilder<Episode, Episode, QAfterSortBy> sortByAutoDownloadEnqueued() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'autoDownloadEnqueued', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterSortBy>
+  sortByAutoDownloadEnqueuedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'autoDownloadEnqueued', Sort.desc);
+    });
+  }
+
   QueryBuilder<Episode, Episode, QAfterSortBy> sortByContentEncoded() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'contentEncoded', Sort.asc);
@@ -2559,6 +2670,19 @@ extension EpisodeQuerySortThenBy
   QueryBuilder<Episode, Episode, QAfterSortBy> thenByAudioUrlDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'audioUrl', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterSortBy> thenByAutoDownloadEnqueued() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'autoDownloadEnqueued', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterSortBy>
+  thenByAutoDownloadEnqueuedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'autoDownloadEnqueued', Sort.desc);
     });
   }
 
@@ -2753,6 +2877,12 @@ extension EpisodeQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Episode, Episode, QDistinct> distinctByAutoDownloadEnqueued() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'autoDownloadEnqueued');
+    });
+  }
+
   QueryBuilder<Episode, Episode, QDistinct> distinctByContentEncoded({
     bool caseSensitive = true,
   }) {
@@ -2866,6 +2996,12 @@ extension EpisodeQueryProperty
   QueryBuilder<Episode, String, QQueryOperations> audioUrlProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'audioUrl');
+    });
+  }
+
+  QueryBuilder<Episode, bool, QQueryOperations> autoDownloadEnqueuedProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'autoDownloadEnqueued');
     });
   }
 
