@@ -7,6 +7,7 @@ import '../../../common/providers/http_client_provider.dart';
 import '../../../common/providers/logger_provider.dart';
 import '../../../features/subscription/models/subscriptions.dart';
 import '../../../features/subscription/repositories/subscription_repository_impl.dart';
+import '../../download/providers/download_providers.dart';
 import '../../station/repositories/station_podcast_repository_impl.dart';
 import '../../station/services/station_reconciler_service.dart';
 import '../models/episode.dart';
@@ -406,6 +407,16 @@ class FeedSyncService {
 
       // Invalidate smart playlist providers to pick up new episodes
       _ref.invalidate(podcastSmartPlaylistsProvider(sub.id));
+
+      // Process auto-downloads for any pending episodes (covers both new
+      // episodes from this sync and any leftover from a previous sync that
+      // ran on a different code path).
+      final settingsRepo = _ref.read(appSettingsRepositoryProvider);
+      final enqueuer = _ref.read(autoDownloadEnqueuerProvider);
+      await enqueuer.enqueueForSubscription(
+        sub,
+        wifiOnly: settingsRepo.getWifiOnlyDownload(),
+      );
 
       _logger.i('Synced "${sub.title}": $newEpisodeCount episodes processed');
 

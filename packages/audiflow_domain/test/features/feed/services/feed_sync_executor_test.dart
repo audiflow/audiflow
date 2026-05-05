@@ -180,6 +180,14 @@ class _FakeEpisodeRepository implements EpisodeRepository {
     required int? afterEpisodeNumber,
     required int limit,
   }) => throw UnimplementedError();
+
+  @override
+  Future<List<Episode>> getPendingAutoDownloadByPodcastId(int podcastId) =>
+      throw UnimplementedError();
+
+  @override
+  Future<void> markAutoDownloadEnqueued(Iterable<int> ids) =>
+      throw UnimplementedError();
 }
 
 class _FakeAppSettingsRepository implements AppSettingsRepository {

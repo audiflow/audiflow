@@ -1,12 +1,28 @@
 import 'package:riverpod/riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../common/providers/logger_provider.dart';
+import '../../feed/repositories/episode_repository_impl.dart';
+import '../../feed/services/feed_sync_diagnostic.dart';
 import '../models/download_status.dart';
 import '../models/download_task.dart';
 import '../repositories/download_repository_impl.dart';
+import '../services/auto_download_enqueuer.dart';
 import '../services/download_service.dart';
 
 part 'download_providers.g.dart';
+
+/// Provides a singleton [AutoDownloadEnqueuer] used by both foreground and
+/// background sync paths.
+@Riverpod(keepAlive: true)
+AutoDownloadEnqueuer autoDownloadEnqueuer(Ref ref) {
+  return AutoDownloadEnqueuer(
+    episodeRepo: ref.watch(episodeRepositoryProvider),
+    downloadRepo: ref.watch(downloadRepositoryProvider),
+    logger: ref.watch(namedLoggerProvider('AutoDownloadEnqueuer')),
+    onDiagnostic: ref.watch(feedSyncDiagnosticSinkProvider),
+  );
+}
 
 /// Watches download task for a specific episode.
 final episodeDownloadProvider = StreamProvider.family<DownloadTask?, int>((

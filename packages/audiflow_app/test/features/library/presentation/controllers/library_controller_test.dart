@@ -104,6 +104,12 @@ class _FakeEpisodeRepository implements EpisodeRepository {
   @override
   Future<int> deleteByPodcastIdAndGuids(int podcastId, Set<String> guids) =>
       throw UnimplementedError();
+  @override
+  Future<List<Episode>> getPendingAutoDownloadByPodcastId(int podcastId) =>
+      throw UnimplementedError();
+  @override
+  Future<void> markAutoDownloadEnqueued(Iterable<int> ids) =>
+      throw UnimplementedError();
 }
 
 Subscription _sub(int id, String title, DateTime subscribedAt) {

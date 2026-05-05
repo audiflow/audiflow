@@ -1,12 +1,11 @@
 import 'package:logger/logger.dart';
 
-import '../../download/repositories/download_repository.dart';
+import '../../download/services/auto_download_enqueuer.dart';
 import '../../player/models/playback_history.dart';
 import '../../player/repositories/playback_history_repository.dart';
 import '../../settings/repositories/app_settings_repository.dart';
 import '../../subscription/models/subscriptions.dart';
 import '../../subscription/repositories/subscription_repository.dart';
-import '../models/episode.dart';
 import '../models/feed_sync_result.dart';
 import '../models/new_episode_notification.dart';
 import '../repositories/episode_repository.dart';
@@ -34,7 +33,7 @@ class BackgroundRefreshService {
   BackgroundRefreshService({
     required SubscriptionRepository subscriptionRepo,
     required EpisodeRepository episodeRepo,
-    required DownloadRepository downloadRepo,
+    required AutoDownloadEnqueuer autoDownloadEnqueuer,
     required PlaybackHistoryRepository playbackHistoryRepo,
     required AppSettingsRepository settingsRepo,
     required SyncFeedCallback syncFeed,
@@ -43,7 +42,7 @@ class BackgroundRefreshService {
     Duration timeBudget = const Duration(seconds: 25),
   }) : _subscriptionRepo = subscriptionRepo,
        _episodeRepo = episodeRepo,
-       _downloadRepo = downloadRepo,
+       _autoDownloadEnqueuer = autoDownloadEnqueuer,
        _playbackHistoryRepo = playbackHistoryRepo,
        _settingsRepo = settingsRepo,
        _syncFeed = syncFeed,
@@ -53,7 +52,7 @@ class BackgroundRefreshService {
 
   final SubscriptionRepository _subscriptionRepo;
   final EpisodeRepository _episodeRepo;
-  final DownloadRepository _downloadRepo;
+  final AutoDownloadEnqueuer _autoDownloadEnqueuer;
   final PlaybackHistoryRepository _playbackHistoryRepo;
   final AppSettingsRepository _settingsRepo;
   final SyncFeedCallback _syncFeed;
@@ -93,27 +92,22 @@ class BackgroundRefreshService {
       try {
         final result = await _syncFeed(sub);
 
+        // Always run the auto-download enqueuer so backlog items left over
+        // from a foreground sync that ingested episodes without enqueueing
+        // them get picked up here. The enqueuer is a no-op when there are
+        // no pending episodes for the podcast.
+        await _autoDownloadEnqueuer.enqueueForSubscription(
+          sub,
+          wifiOnly: _settingsRepo.getWifiOnlyDownload(),
+        );
+
         final newCount = result.newEpisodeCount ?? 0;
         if (0 < newCount) {
           totalNewEpisodes += newCount;
 
-          // Fetch episodes once and reuse for both auto-download and
-          // notification collection to avoid duplicate Isar reads.
-          final needsEpisodes =
-              sub.autoDownload ||
-              (notificationsEnabled &&
-                  allNotifications.length < _maxNotifications);
-
-          final episodes = needsEpisodes
-              ? await _episodeRepo.getByPodcastId(sub.id)
-              : const <Episode>[];
-
-          if (sub.autoDownload) {
-            await _enqueueAutoDownloads(sub, newCount, episodes: episodes);
-          }
-
           if (notificationsEnabled &&
               allNotifications.length < _maxNotifications) {
+            final episodes = await _episodeRepo.getByPodcastId(sub.id);
             final remaining = _maxNotifications - allNotifications.length;
             final newestCount = newCount < remaining ? newCount : remaining;
             final newest = episodes.take(newestCount);
@@ -174,23 +168,5 @@ class BackgroundRefreshService {
       return bTime.compareTo(aTime);
     });
     return sorted;
-  }
-
-  Future<void> _enqueueAutoDownloads(
-    Subscription sub,
-    int newEpisodeCount, {
-    required List<Episode> episodes,
-  }) async {
-    final toDownload = episodes.take(newEpisodeCount);
-    final wifiOnly = _settingsRepo.getWifiOnlyDownload();
-
-    for (final episode in toDownload) {
-      if (episode.audioUrl.isEmpty) continue;
-      await _downloadRepo.createDownload(
-        episodeId: episode.id,
-        audioUrl: episode.audioUrl,
-        wifiOnly: wifiOnly,
-      );
-    }
   }
 }

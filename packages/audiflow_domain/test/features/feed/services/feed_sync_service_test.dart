@@ -16,6 +16,20 @@ import 'package:riverpod/riverpod.dart';
 ])
 import 'feed_sync_service_test.mocks.dart';
 
+class _NoopAutoDownloadEnqueuer implements AutoDownloadEnqueuer {
+  @override
+  Future<AutoDownloadEnqueueResult> enqueueForSubscription(
+    Subscription subscription, {
+    required bool wifiOnly,
+  }) async {
+    return const AutoDownloadEnqueueResult(
+      inspected: 0,
+      created: 0,
+      skipped: 0,
+    );
+  }
+}
+
 Subscription _subscription({
   int id = 1,
   String itunesId = 'itunes-1',
@@ -58,6 +72,7 @@ void main() {
     // Default settings
     when(mockSettingsRepo.getAutoSync()).thenReturn(true);
     when(mockSettingsRepo.getSyncIntervalMinutes()).thenReturn(60);
+    when(mockSettingsRepo.getWifiOnlyDownload()).thenReturn(false);
 
     // Smart playlist config: no pattern matches by default
     when(mockConfigRepo.findMatchingPattern(any, any)).thenReturn(null);
@@ -73,6 +88,9 @@ void main() {
           mockStationPodcastRepo,
         ),
         dioProvider.overrideWithValue(mockDio),
+        autoDownloadEnqueuerProvider.overrideWithValue(
+          _NoopAutoDownloadEnqueuer(),
+        ),
       ],
     );
 

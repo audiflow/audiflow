@@ -218,7 +218,7 @@ final class SmartPlaylistConfigRepositoryProvider
 }
 
 String _$smartPlaylistConfigRepositoryHash() =>
-    r'41d5591c1fe62e328ad5f4b20d1dc4099d7859e4';
+    r'34b637cd66b645a0d30994bfc7322fb621dc60e6';
 
 /// Provides the smart playlist local datasource for database
 /// operations.

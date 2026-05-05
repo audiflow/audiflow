@@ -498,6 +498,27 @@ class MockEpisodeRepository extends _i1.Mock implements _i12.EpisodeRepository {
           as _i11.Future<int>);
 
   @override
+  _i11.Future<List<_i13.Episode>> getPendingAutoDownloadByPodcastId(
+    int? podcastId,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#getPendingAutoDownloadByPodcastId, [podcastId]),
+            returnValue: _i11.Future<List<_i13.Episode>>.value(
+              <_i13.Episode>[],
+            ),
+          )
+          as _i11.Future<List<_i13.Episode>>);
+
+  @override
+  _i11.Future<void> markAutoDownloadEnqueued(Iterable<int>? ids) =>
+      (super.noSuchMethod(
+            Invocation.method(#markAutoDownloadEnqueued, [ids]),
+            returnValue: _i11.Future<void>.value(),
+            returnValueForMissingStub: _i11.Future<void>.value(),
+          )
+          as _i11.Future<void>);
+
+  @override
   _i11.Future<List<_i13.Episode>> getSubsequentEpisodes({
     required int? podcastId,
     required int? afterEpisodeNumber,

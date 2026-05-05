@@ -8,6 +8,62 @@ part of 'download_providers.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Provides a singleton [AutoDownloadEnqueuer] used by both foreground and
+/// background sync paths.
+
+@ProviderFor(autoDownloadEnqueuer)
+final autoDownloadEnqueuerProvider = AutoDownloadEnqueuerProvider._();
+
+/// Provides a singleton [AutoDownloadEnqueuer] used by both foreground and
+/// background sync paths.
+
+final class AutoDownloadEnqueuerProvider
+    extends
+        $FunctionalProvider<
+          AutoDownloadEnqueuer,
+          AutoDownloadEnqueuer,
+          AutoDownloadEnqueuer
+        >
+    with $Provider<AutoDownloadEnqueuer> {
+  /// Provides a singleton [AutoDownloadEnqueuer] used by both foreground and
+  /// background sync paths.
+  AutoDownloadEnqueuerProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'autoDownloadEnqueuerProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$autoDownloadEnqueuerHash();
+
+  @$internal
+  @override
+  $ProviderElement<AutoDownloadEnqueuer> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  AutoDownloadEnqueuer create(Ref ref) {
+    return autoDownloadEnqueuer(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(AutoDownloadEnqueuer value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<AutoDownloadEnqueuer>(value),
+    );
+  }
+}
+
+String _$autoDownloadEnqueuerHash() =>
+    r'6ca4b31ddcf661f0d0b1bbc922de3c9ce423d6f9';
+
 /// Returns count of downloads needing attention (failed).
 
 @ProviderFor(downloadsNeedingAttention)

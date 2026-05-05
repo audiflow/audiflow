@@ -344,6 +344,16 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
   }
 
   @override
+  Future<List<Episode>> getPendingAutoDownloadByPodcastId(int podcastId) {
+    return _datasource.getPendingAutoDownloadByPodcastId(podcastId);
+  }
+
+  @override
+  Future<void> markAutoDownloadEnqueued(Iterable<int> ids) {
+    return _datasource.markAutoDownloadEnqueued(ids);
+  }
+
+  @override
   Future<List<Episode>> getSubsequentEpisodes({
     required int podcastId,
     required int? afterEpisodeNumber,

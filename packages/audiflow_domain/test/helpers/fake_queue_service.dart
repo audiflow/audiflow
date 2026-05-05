@@ -141,4 +141,12 @@ class _NoOpEpisodeRepository implements EpisodeRepository {
     int podcastId,
     Set<String> guids,
   ) async => 0;
+
+  @override
+  Future<List<Episode>> getPendingAutoDownloadByPodcastId(
+    int podcastId,
+  ) async => const [];
+
+  @override
+  Future<void> markAutoDownloadEnqueued(Iterable<int> ids) async {}
 }

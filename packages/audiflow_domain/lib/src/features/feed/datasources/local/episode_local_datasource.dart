@@ -144,6 +144,39 @@ class EpisodeLocalDatasource {
     return results.whereType<Episode>().toList();
   }
 
+  /// Returns episodes for [podcastId] not yet processed by the
+  /// auto-download pipeline, ordered by publish date (newest first).
+  ///
+  /// Used to enqueue auto-downloads for new episodes regardless of which
+  /// sync path (foreground or background) first ingested them.
+  Future<List<Episode>> getPendingAutoDownloadByPodcastId(int podcastId) {
+    return _isar.episodes
+        .filter()
+        .podcastIdEqualTo(podcastId)
+        .autoDownloadEnqueuedEqualTo(false)
+        .sortByPublishedAtDesc()
+        .findAll();
+  }
+
+  /// Marks the given episode IDs as processed by the auto-download
+  /// pipeline. Idempotent — episodes already marked stay marked.
+  Future<void> markAutoDownloadEnqueued(Iterable<int> ids) async {
+    if (ids.isEmpty) return;
+    await _isar.writeTxn(() async {
+      final episodes = await _isar.episodes.getAll(ids.toList());
+      final updated = <Episode>[];
+      for (final episode in episodes) {
+        if (episode == null) continue;
+        if (episode.autoDownloadEnqueued) continue;
+        episode.autoDownloadEnqueued = true;
+        updated.add(episode);
+      }
+      if (updated.isNotEmpty) {
+        await _isar.episodes.putAll(updated);
+      }
+    });
+  }
+
   /// Gets episodes after a given episode number, ordered by episode
   /// number ascending.
   ///

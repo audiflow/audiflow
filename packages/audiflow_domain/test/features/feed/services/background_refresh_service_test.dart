@@ -264,6 +264,33 @@ class FakeEpisodeRepository implements EpisodeRepository {
     int podcastId,
     Set<String> guids,
   ) async => 0;
+  @override
+  Future<List<Episode>> getPendingAutoDownloadByPodcastId(
+    int podcastId,
+  ) async => const [];
+  @override
+  Future<void> markAutoDownloadEnqueued(Iterable<int> ids) async {}
+}
+
+class FakeAutoDownloadEnqueuer implements AutoDownloadEnqueuer {
+  final List<({int podcastId, bool autoDownload, bool wifiOnly})> calls = [];
+
+  @override
+  Future<AutoDownloadEnqueueResult> enqueueForSubscription(
+    Subscription subscription, {
+    required bool wifiOnly,
+  }) async {
+    calls.add((
+      podcastId: subscription.id,
+      autoDownload: subscription.autoDownload,
+      wifiOnly: wifiOnly,
+    ));
+    return const AutoDownloadEnqueueResult(
+      inspected: 0,
+      created: 0,
+      skipped: 0,
+    );
+  }
 }
 
 class FakeDownloadRepository implements DownloadRepository {
@@ -416,14 +443,14 @@ void main() {
         subscriptions: [_makeSubscription(id: 1, title: 'Podcast 1')],
       );
       final episodeRepo = FakeEpisodeRepository();
-      final downloadRepo = FakeDownloadRepository();
+      final autoDownloadEnqueuer = FakeAutoDownloadEnqueuer();
       var syncCallCount = 0;
       var notifyCallCount = 0;
 
       final service = BackgroundRefreshService(
         subscriptionRepo: subscriptionRepo,
         episodeRepo: episodeRepo,
-        downloadRepo: downloadRepo,
+        autoDownloadEnqueuer: autoDownloadEnqueuer,
         playbackHistoryRepo: FakePlaybackHistoryRepository(),
         settingsRepo: settings,
         syncFeed: (sub) async {
@@ -478,13 +505,13 @@ void main() {
           subscriptions: [subA, subB, subC],
         );
         final episodeRepo = FakeEpisodeRepository();
-        final downloadRepo = FakeDownloadRepository();
+        final autoDownloadEnqueuer = FakeAutoDownloadEnqueuer();
         final syncedIds = <int>[];
 
         final service = BackgroundRefreshService(
           subscriptionRepo: subscriptionRepo,
           episodeRepo: episodeRepo,
-          downloadRepo: downloadRepo,
+          autoDownloadEnqueuer: autoDownloadEnqueuer,
           playbackHistoryRepo: FakePlaybackHistoryRepository(),
           settingsRepo: settings,
           syncFeed: (sub) async {
@@ -521,13 +548,13 @@ void main() {
       final episodeRepo = FakeEpisodeRepository(
         episodesByPodcastId: {10: episodes},
       );
-      final downloadRepo = FakeDownloadRepository();
+      final autoDownloadEnqueuer = FakeAutoDownloadEnqueuer();
       List<NewEpisodeNotification>? capturedNotifications;
 
       final service = BackgroundRefreshService(
         subscriptionRepo: subscriptionRepo,
         episodeRepo: episodeRepo,
-        downloadRepo: downloadRepo,
+        autoDownloadEnqueuer: autoDownloadEnqueuer,
         playbackHistoryRepo: FakePlaybackHistoryRepository(),
         settingsRepo: settings,
         syncFeed: (sub) async => SingleFeedSyncResult(
@@ -582,13 +609,13 @@ void main() {
       final episodeRepo = FakeEpisodeRepository(
         episodesByPodcastId: episodesByPodcastId,
       );
-      final downloadRepo = FakeDownloadRepository();
+      final autoDownloadEnqueuer = FakeAutoDownloadEnqueuer();
       List<NewEpisodeNotification>? capturedNotifications;
 
       final service = BackgroundRefreshService(
         subscriptionRepo: subscriptionRepo,
         episodeRepo: episodeRepo,
-        downloadRepo: downloadRepo,
+        autoDownloadEnqueuer: autoDownloadEnqueuer,
         playbackHistoryRepo: FakePlaybackHistoryRepository(),
         settingsRepo: settings,
         syncFeed: (sub) async => SingleFeedSyncResult(
@@ -623,13 +650,13 @@ void main() {
           subscriptions: subs,
         );
         final episodeRepo = FakeEpisodeRepository();
-        final downloadRepo = FakeDownloadRepository();
+        final autoDownloadEnqueuer = FakeAutoDownloadEnqueuer();
         final syncedIds = <int>[];
 
         final service = BackgroundRefreshService(
           subscriptionRepo: subscriptionRepo,
           episodeRepo: episodeRepo,
-          downloadRepo: downloadRepo,
+          autoDownloadEnqueuer: autoDownloadEnqueuer,
           playbackHistoryRepo: FakePlaybackHistoryRepository(),
           settingsRepo: settings,
           syncFeed: (sub) async {
@@ -679,7 +706,7 @@ void main() {
       final episodeRepo = FakeEpisodeRepository(
         episodesByPodcastId: {10: episodes},
       );
-      final downloadRepo = FakeDownloadRepository();
+      final autoDownloadEnqueuer = FakeAutoDownloadEnqueuer();
       final playbackHistoryRepo = FakePlaybackHistoryRepository(
         historyByEpisodeId: {
           101: PlaybackHistory()
@@ -692,7 +719,7 @@ void main() {
       final service = BackgroundRefreshService(
         subscriptionRepo: subscriptionRepo,
         episodeRepo: episodeRepo,
-        downloadRepo: downloadRepo,
+        autoDownloadEnqueuer: autoDownloadEnqueuer,
         playbackHistoryRepo: playbackHistoryRepo,
         settingsRepo: settings,
         syncFeed: (sub) async => SingleFeedSyncResult(
@@ -727,7 +754,7 @@ void main() {
       final episodeRepo = FakeEpisodeRepository(
         episodesByPodcastId: {10: episodes},
       );
-      final downloadRepo = FakeDownloadRepository();
+      final autoDownloadEnqueuer = FakeAutoDownloadEnqueuer();
       final playbackHistoryRepo = FakePlaybackHistoryRepository(
         historyByEpisodeId: {
           201: PlaybackHistory()
@@ -740,7 +767,7 @@ void main() {
       final service = BackgroundRefreshService(
         subscriptionRepo: subscriptionRepo,
         episodeRepo: episodeRepo,
-        downloadRepo: downloadRepo,
+        autoDownloadEnqueuer: autoDownloadEnqueuer,
         playbackHistoryRepo: playbackHistoryRepo,
         settingsRepo: settings,
         syncFeed: (sub) async => SingleFeedSyncResult(
@@ -760,6 +787,58 @@ void main() {
       expect(notifyCallCount, 0);
     });
 
+    test(
+      'invokes auto-download enqueuer for every synced subscription, '
+      'including those with no new episodes (foreground race coverage)',
+      () async {
+        final subs = [
+          _makeSubscription(id: 1, title: 'Podcast 1', autoDownload: true),
+          _makeSubscription(id: 2, title: 'Podcast 2', autoDownload: false),
+        ];
+        final settings = FakeAppSettingsRepository(
+          autoSync: true,
+          wifiOnlyDownload: true,
+        );
+        final subscriptionRepo = FakeSubscriptionRepository(
+          subscriptions: subs,
+        );
+        final episodeRepo = FakeEpisodeRepository();
+        final autoDownloadEnqueuer = FakeAutoDownloadEnqueuer();
+
+        final service = BackgroundRefreshService(
+          subscriptionRepo: subscriptionRepo,
+          episodeRepo: episodeRepo,
+          autoDownloadEnqueuer: autoDownloadEnqueuer,
+          playbackHistoryRepo: FakePlaybackHistoryRepository(),
+          settingsRepo: settings,
+          syncFeed: (sub) async => SingleFeedSyncResult(
+            podcastId: sub.id,
+            success: true,
+            skipped: false,
+            // Zero new episodes — emulates the case where the foreground
+            // path already ingested the GUIDs before this background pass.
+            newEpisodeCount: 0,
+          ),
+          showNotification: (_) async {},
+          timeBudget: const Duration(seconds: 60),
+        );
+
+        await service.execute();
+
+        // Both subscriptions still hit the enqueuer so any backlog left
+        // by the foreground path is cleaned up.
+        expect(autoDownloadEnqueuer.calls.length, 2);
+        expect(
+          autoDownloadEnqueuer.calls.map((c) => c.podcastId),
+          containsAll([1, 2]),
+        );
+        expect(
+          autoDownloadEnqueuer.calls.every((c) => c.wifiOnly == true),
+          isTrue,
+        );
+      },
+    );
+
     test('does not notify when setting is disabled', () async {
       final sub = _makeSubscription(id: 1, title: 'Podcast 1');
       final episodes = [_makeEpisode(id: 11, podcastId: 1, title: 'Episode 1')];
@@ -772,13 +851,13 @@ void main() {
       final episodeRepo = FakeEpisodeRepository(
         episodesByPodcastId: {1: episodes},
       );
-      final downloadRepo = FakeDownloadRepository();
+      final autoDownloadEnqueuer = FakeAutoDownloadEnqueuer();
       var notifyCallCount = 0;
 
       final service = BackgroundRefreshService(
         subscriptionRepo: subscriptionRepo,
         episodeRepo: episodeRepo,
-        downloadRepo: downloadRepo,
+        autoDownloadEnqueuer: autoDownloadEnqueuer,
         playbackHistoryRepo: FakePlaybackHistoryRepository(),
         settingsRepo: settings,
         syncFeed: (sub) async => SingleFeedSyncResult(
