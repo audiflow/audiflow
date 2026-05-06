@@ -189,11 +189,13 @@ class SleepTimerController extends _$SleepTimerController {
     _tick = null;
     final player = ref.read(audioPlayerControllerProvider.notifier);
     if (immediate) {
-      // Stop at the current episode's end without fading. The fade is
-      // useless here because audio is already silent, and without
-      // suppression the queue auto-advance would start the next episode.
+      // Audio already reached silence at end-of-stream. Calling pause()
+      // here would emit a redundant playerStateStream event that re-enters
+      // the completed-state handler concurrently and consumes the
+      // suppression flag, letting the original handler advance the queue.
+      // The audio_player_service's completed-state branch sets
+      // PlaybackState.paused itself once it observes the flag.
       player.suppressNextAutoAdvance();
-      unawaited(player.pause());
     } else {
       unawaited(player.fadeOutAndPause());
     }
