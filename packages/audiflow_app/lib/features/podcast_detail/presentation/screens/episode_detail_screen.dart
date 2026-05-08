@@ -329,7 +329,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                           : null,
                     ),
 
-                    const Divider(height: Spacing.lg),
+                    const Divider(height: Spacing.xl),
 
                     // Description / show notes
                     _DescriptionSection(episode: widget.episode),
@@ -472,7 +472,11 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                         ),
                         onTap: () {
                           Navigator.pop(sheetContext);
-                          _togglePlayedStatus(enclosureUrl, isCompleted);
+                          _togglePlayedStatus(
+                            enclosureUrl,
+                            isCompleted,
+                            knownEpisodeId: episodeId,
+                          );
                         },
                       ),
                     if (episodeId != null)
@@ -745,17 +749,32 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
 
   Future<void> _togglePlayedStatus(
     String audioUrl,
-    bool isCurrentlyCompleted,
-  ) async {
-    final episodeRepo = ref.read(episodeRepositoryProvider);
-    final ep = await episodeRepo.getByAudioUrl(audioUrl);
-    if (ep == null) return;
+    bool isCurrentlyCompleted, {
+    int? knownEpisodeId,
+  }) async {
+    var episodeId = knownEpisodeId;
+    if (episodeId == null) {
+      final episodeRepo = ref.read(episodeRepositoryProvider);
+      final ep = await episodeRepo.getByAudioUrl(audioUrl);
+      if (ep == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Episode not yet saved'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+        return;
+      }
+      episodeId = ep.id;
+    }
 
     final historyService = ref.read(playbackHistoryServiceProvider);
     if (isCurrentlyCompleted) {
-      await historyService.markIncomplete(ep.id);
+      await historyService.markIncomplete(episodeId);
     } else {
-      await historyService.markCompleted(ep.id);
+      await historyService.markCompleted(episodeId);
     }
 
     ref.invalidate(episodeProgressProvider(audioUrl));
