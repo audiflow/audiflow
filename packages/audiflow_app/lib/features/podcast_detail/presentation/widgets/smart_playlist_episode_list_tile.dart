@@ -396,6 +396,11 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
     if (feedUrl != null) {
       ref.invalidate(podcastEpisodeProgressProvider(feedUrl!));
     }
+    // Smart playlist screens read smartPlaylistEpisodesProvider keyed by
+    // an episode-id list this widget does not know. Invalidate the whole
+    // family so any open group/playlist screen refetches with the new
+    // history snapshot.
+    ref.invalidate(smartPlaylistEpisodesProvider);
   }
 
   Widget _buildDownloadButton(
