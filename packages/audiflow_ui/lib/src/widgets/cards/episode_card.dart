@@ -17,7 +17,7 @@ const double _actionRowHeight = 44.0;
 ///
 /// Layout:
 /// - Main row (80dp): optional thumbnail, title (up to 2 lines), description
-/// - Action row (44dp): play/pause button, subtitle, action buttons
+/// - Action row (44dp): play pill, date label, action buttons
 /// - Vertical padding: 8dp (4dp top + 4dp bottom)
 /// - Divider: 1dp
 ///
@@ -26,7 +26,8 @@ class EpisodeCard extends StatelessWidget {
   const EpisodeCard({
     super.key,
     required this.title,
-    required this.subtitle,
+    required this.pillLabel,
+    this.dateLabel,
     this.description,
     this.thumbnailUrl,
     this.fallbackThumbnailUrl,
@@ -37,7 +38,9 @@ class EpisodeCard extends StatelessWidget {
     this.isLoading = false,
     this.isNew = false,
     this.isCompleted = false,
+    this.isInProgress = false,
     this.isCurrentEpisode = false,
+    this.progressFraction,
     this.hasTranscript = false,
     this.transcriptLabel,
     this.onTap,
@@ -48,8 +51,11 @@ class EpisodeCard extends StatelessWidget {
 
   final String title;
 
-  /// Date + duration string shown below the title.
-  final String subtitle;
+  /// Pre-formatted state label rendered inside the play pill.
+  final String pillLabel;
+
+  /// Pre-formatted publish date rendered next to the pill. Null hides it.
+  final String? dateLabel;
 
   /// Episode description snippet. Shown only when there is vertical space
   /// remaining after the title (similar to Apple Podcasts).
@@ -81,7 +87,12 @@ class EpisodeCard extends StatelessWidget {
   /// Show "new" badge for unplayed episodes.
   final bool isNew;
   final bool isCompleted;
+  final bool isInProgress;
   final bool isCurrentEpisode;
+
+  /// Progress through the episode in `[0.0, 1.0]`. Drives the pill ring
+  /// when [isPlaying] or [isInProgress] is true. Null is treated as 0.
+  final double? progressFraction;
 
   /// Whether the episode has a transcript available.
   final bool hasTranscript;
@@ -223,17 +234,31 @@ class EpisodeCard extends StatelessWidget {
     return Row(
       children: [
         Flexible(
-          flex: 1,
           fit: FlexFit.loose,
           child: EpisodePlayPill(
-            label: subtitle,
+            label: pillLabel,
             isPlaying: isPlaying,
             isLoading: isLoading,
             isCompleted: isCompleted,
-            isInProgress: false,
+            isInProgress: isInProgress,
+            progressFraction: progressFraction,
             onPressed: onPlayPause,
           ),
         ),
+        if (dateLabel != null) ...[
+          const SizedBox(width: Spacing.sm),
+          Flexible(
+            fit: FlexFit.loose,
+            child: Text(
+              dateLabel!,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ],
         if (hasTranscript) ...[
           const SizedBox(width: Spacing.xs),
           _TranscriptBadge(
@@ -245,6 +270,7 @@ class EpisodeCard extends StatelessWidget {
           const SizedBox(width: Spacing.xs),
           _NewBadge(color: colorScheme.primary),
         ],
+        const Spacer(),
         ...actionButtons,
       ],
     );

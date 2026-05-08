@@ -87,7 +87,10 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
 
     return EpisodeCard(
       title: episode.title,
-      subtitle: _buildSubtitleText(l10n),
+      pillLabel: _buildPillLabel(progress, isCompleted, l10n),
+      dateLabel: _buildDateLabel(l10n),
+      isInProgress: progress?.isInProgress ?? false,
+      progressFraction: _buildProgressFraction(progress),
       description: episode.description,
       thumbnailUrl: episode.imageUrl,
       fallbackThumbnailUrl: fallbackThumbnailUrl,
@@ -141,39 +144,39 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
     return threshold.isBefore(publishDate);
   }
 
-  String _buildSubtitleText(AppLocalizations l10n) {
-    final parts = <String>[];
+  String _buildPillLabel(
+    EpisodeWithProgress? p,
+    bool isCompleted,
+    AppLocalizations l10n,
+  ) {
+    if (isCompleted) return l10n.episodePillCompleted;
 
-    if (progress != null && progress!.isInProgress) {
-      final remaining = progress!.remainingTimeFormatted;
+    if (p != null && p.isInProgress) {
+      final remaining = p.remainingDuration;
       if (remaining != null) {
-        parts.add(remaining);
-      } else if (episode.durationMs != null) {
-        parts.add(_formatDuration(episode.durationMs!));
+        return l10n.episodePillRemaining(remaining.podcastShortLabel);
       }
-    } else if (episode.durationMs != null) {
-      parts.add(_formatDuration(episode.durationMs!));
     }
 
-    if (episode.publishedAt != null) {
-      parts.add(
-        episode.publishedAt!.formatEpisodeDate(
-          todayLabel: l10n.dateToday,
-          yesterdayLabel: l10n.dateYesterday,
-        ),
-      );
+    final totalMs = episode.durationMs;
+    if (totalMs != null) {
+      return Duration(milliseconds: totalMs).podcastShortLabel;
     }
-
-    return parts.join('  ');
+    return '';
   }
 
-  String _formatDuration(int durationMs) {
-    final duration = Duration(milliseconds: durationMs);
-    final hours = duration.inHours;
-    final minutes = duration.inMinutes.remainder(60);
+  String? _buildDateLabel(AppLocalizations l10n) {
+    final date = episode.publishedAt;
+    if (date == null) return null;
+    return date.formatEpisodeDate(
+      todayLabel: l10n.dateToday,
+      yesterdayLabel: l10n.dateYesterday,
+    );
+  }
 
-    if (0 < hours) return '${hours}h ${minutes}min';
-    return '$minutes min';
+  double? _buildProgressFraction(EpisodeWithProgress? p) {
+    if (p == null) return null;
+    return p.progressPercent;
   }
 
   void _navigateToDetail(BuildContext context) {

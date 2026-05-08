@@ -99,7 +99,10 @@ class EpisodeListTile extends ConsumerWidget {
 
     return EpisodeCard(
       title: episode.title,
-      subtitle: _buildSubtitleText(l10n),
+      pillLabel: _buildPillLabel(progress, isCompleted, l10n),
+      dateLabel: _buildDateLabel(l10n),
+      isInProgress: progress?.isInProgress ?? false,
+      progressFraction: _buildProgressFraction(progress),
       description: episode.description,
       thumbnailUrl: episode.primaryImage?.url,
       podcastArtworkUrl: artworkUrl,
@@ -163,30 +166,37 @@ class EpisodeListTile extends ConsumerWidget {
     return threshold.isBefore(publishDate);
   }
 
-  String _buildSubtitleText(AppLocalizations l10n) {
-    final parts = <String>[];
+  String _buildPillLabel(
+    EpisodeWithProgress? p,
+    bool isCompleted,
+    AppLocalizations l10n,
+  ) {
+    if (isCompleted) return l10n.episodePillCompleted;
 
-    if (progress != null && progress!.isInProgress) {
-      final remaining = progress!.remainingTimeFormatted;
+    if (p != null && p.isInProgress) {
+      final remaining = p.remainingDuration;
       if (remaining != null) {
-        parts.add(remaining);
-      } else if (episode.formattedDuration != null) {
-        parts.add(episode.formattedDuration!);
+        return l10n.episodePillRemaining(remaining.podcastShortLabel);
       }
-    } else if (episode.formattedDuration != null) {
-      parts.add(episode.formattedDuration!);
     }
 
-    if (episode.publishDate != null) {
-      parts.add(
-        episode.publishDate!.formatEpisodeDate(
-          todayLabel: l10n.dateToday,
-          yesterdayLabel: l10n.dateYesterday,
-        ),
-      );
-    }
+    final total = episode.duration;
+    if (total != null) return total.podcastShortLabel;
+    return '';
+  }
 
-    return parts.join('  ');
+  String? _buildDateLabel(AppLocalizations l10n) {
+    final date = episode.publishDate;
+    if (date == null) return null;
+    return date.formatEpisodeDate(
+      todayLabel: l10n.dateToday,
+      yesterdayLabel: l10n.dateYesterday,
+    );
+  }
+
+  double? _buildProgressFraction(EpisodeWithProgress? p) {
+    if (p == null) return null;
+    return p.progressPercent;
   }
 
   void _navigateToDetail(BuildContext context) {
