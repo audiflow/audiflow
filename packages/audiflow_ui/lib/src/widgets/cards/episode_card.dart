@@ -242,31 +242,36 @@ class EpisodeCard extends StatelessWidget {
           progressFraction: progressFraction,
           onPressed: onPlayPause,
         ),
-        if (dateLabel != null) ...[
-          const SizedBox(width: Spacing.sm),
-          Flexible(
-            child: Text(
-              dateLabel!,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
+        if (dateLabel != null) const SizedBox(width: Spacing.sm),
+        Expanded(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (dateLabel != null)
+                Flexible(
+                  child: Text(
+                    dateLabel!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              if (hasTranscript) ...[
+                const SizedBox(width: Spacing.xs),
+                _TranscriptBadge(
+                  color: colorScheme.onSurfaceVariant,
+                  label: transcriptLabel,
+                ),
+              ],
+              if (isNew) ...[
+                const SizedBox(width: Spacing.xs),
+                _NewBadge(color: colorScheme.primary),
+              ],
+            ],
           ),
-        ],
-        if (hasTranscript) ...[
-          const SizedBox(width: Spacing.xs),
-          _TranscriptBadge(
-            color: colorScheme.onSurfaceVariant,
-            label: transcriptLabel,
-          ),
-        ],
-        if (isNew) ...[
-          const SizedBox(width: Spacing.xs),
-          _NewBadge(color: colorScheme.primary),
-        ],
-        const Spacer(),
+        ),
         ...actionButtons,
       ],
     );
