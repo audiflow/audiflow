@@ -68,7 +68,7 @@ void main() {
       await tester.pumpWidget(buildSubject(isPlaying: true));
 
       check(
-        find.byIcon(Icons.pause_circle_filled),
+        find.byIcon(Icons.pause),
       ).has((f) => f.evaluate().length, 'count').equals(1);
     });
 
@@ -82,26 +82,6 @@ void main() {
       check(
         find.byIcon(Icons.play_circle_filled),
       ).has((f) => f.evaluate().length, 'count').equals(0);
-    });
-
-    testWidgets('loading placeholder is 44x44', (tester) async {
-      await tester.pumpWidget(buildSubject(isLoading: true));
-
-      final sizedBoxes = find.byType(SizedBox).evaluate().where((e) {
-        final widget = e.widget as SizedBox;
-        return widget.width == 44 && widget.height == 44;
-      });
-      check(sizedBoxes.length).isGreaterThan(0);
-    });
-
-    testWidgets('play button has 44x44 minimum touch target', (tester) async {
-      await tester.pumpWidget(buildSubject());
-
-      final iconButton = tester.widget<IconButton>(
-        find.widgetWithIcon(IconButton, Icons.play_circle_filled),
-      );
-      check(iconButton.constraints?.minWidth).equals(44);
-      check(iconButton.constraints?.minHeight).equals(44);
     });
 
     testWidgets('shows new badge when isNew is true', (tester) async {

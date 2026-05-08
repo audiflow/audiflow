@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../styles/spacing.dart';
+import '../buttons/episode_play_pill.dart';
 
 /// Fixed height for the episode card, used as itemExtent in sliver lists.
 const double episodeCardExtent = 140.0;
@@ -215,69 +216,35 @@ class EpisodeCard extends StatelessWidget {
     );
   }
 
-  Widget _buildPlayButton(ColorScheme colorScheme) {
-    if (isLoading) {
-      return const SizedBox(
-        width: 44,
-        height: 44,
-        child: Center(
-          child: SizedBox(
-            width: 20,
-            height: 20,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-        ),
-      );
-    }
-
-    return IconButton(
-      icon: Icon(
-        isPlaying ? Icons.pause_circle_filled : Icons.play_circle_filled,
-        size: 24,
-      ),
-      iconSize: 24,
-      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-      padding: const EdgeInsets.symmetric(horizontal: 6),
-      color: colorScheme.primary,
-      onPressed: onPlayPause,
-    );
-  }
-
   Widget _buildActionRow(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     return Row(
       children: [
-        _buildPlayButton(colorScheme),
-        const SizedBox(width: Spacing.xs),
-        Expanded(
-          child: Row(
-            children: [
-              Flexible(
-                child: Text(
-                  subtitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-              if (hasTranscript) ...[
-                const SizedBox(width: Spacing.xs),
-                _TranscriptBadge(
-                  color: colorScheme.onSurfaceVariant,
-                  label: transcriptLabel,
-                ),
-              ],
-              if (isNew) ...[
-                const SizedBox(width: Spacing.xs),
-                _NewBadge(color: colorScheme.primary),
-              ],
-            ],
+        Flexible(
+          flex: 1,
+          fit: FlexFit.loose,
+          child: EpisodePlayPill(
+            label: subtitle,
+            isPlaying: isPlaying,
+            isLoading: isLoading,
+            isCompleted: isCompleted,
+            isInProgress: false,
+            onPressed: onPlayPause,
           ),
         ),
+        if (hasTranscript) ...[
+          const SizedBox(width: Spacing.xs),
+          _TranscriptBadge(
+            color: colorScheme.onSurfaceVariant,
+            label: transcriptLabel,
+          ),
+        ],
+        if (isNew) ...[
+          const SizedBox(width: Spacing.xs),
+          _NewBadge(color: colorScheme.primary),
+        ],
         ...actionButtons,
       ],
     );
