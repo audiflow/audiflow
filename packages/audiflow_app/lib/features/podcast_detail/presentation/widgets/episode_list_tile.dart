@@ -452,14 +452,22 @@ class EpisodeListTile extends ConsumerWidget {
     EpisodeWithProgress? progress,
     DownloadTask? downloadTask,
   ) {
-    return IconButton(
-      icon: const Icon(Icons.more_horiz, size: 20),
-      iconSize: 20,
-      tooltip: MaterialLocalizations.of(context).moreButtonTooltip,
-      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-      padding: const EdgeInsets.symmetric(horizontal: 6),
-      onPressed: () =>
-          _showContextMenu(context, ref, enclosureUrl, progress, downloadTask),
+    void open() =>
+        _showContextMenu(context, ref, enclosureUrl, progress, downloadTask);
+    return Tooltip(
+      message: MaterialLocalizations.of(context).moreButtonTooltip,
+      child: InkWell(
+        onTap: open,
+        onLongPress: open,
+        customBorder: const CircleBorder(),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+          child: const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 6),
+            child: Icon(Icons.more_horiz, size: 20),
+          ),
+        ),
+      ),
     );
   }
 

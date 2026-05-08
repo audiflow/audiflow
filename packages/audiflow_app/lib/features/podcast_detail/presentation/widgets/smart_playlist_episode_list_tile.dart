@@ -422,14 +422,19 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
     EpisodeWithProgress? progress,
     DownloadTask? downloadTask,
   ) {
-    return IconButton(
-      icon: const Icon(Icons.more_horiz, size: 20),
-      iconSize: 20,
-      tooltip: MaterialLocalizations.of(context).moreButtonTooltip,
-      constraints: const BoxConstraints(minWidth: 40, minHeight: 36),
-      padding: EdgeInsets.zero,
-      onPressed: () =>
-          _showContextMenu(context, ref, audioUrl, progress, downloadTask),
+    void open() =>
+        _showContextMenu(context, ref, audioUrl, progress, downloadTask);
+    return Tooltip(
+      message: MaterialLocalizations.of(context).moreButtonTooltip,
+      child: InkWell(
+        onTap: open,
+        onLongPress: open,
+        customBorder: const CircleBorder(),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minWidth: 40, minHeight: 36),
+          child: const Icon(Icons.more_horiz, size: 20),
+        ),
+      ),
     );
   }
 
