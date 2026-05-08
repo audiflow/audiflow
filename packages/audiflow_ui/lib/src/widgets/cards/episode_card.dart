@@ -126,45 +126,44 @@ class EpisodeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      onLongPress: onLongPress,
-      behavior: HitTestBehavior.opaque,
-      child: SizedBox(
-        height: episodeCardExtent,
-        child: Column(
-          children: [
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: Spacing.md,
-                  vertical: Spacing.xs,
-                ),
-                child: Column(
-                  children: [
-                    SizedBox(
-                      height: _mainRowHeight,
+    return SizedBox(
+      height: episodeCardExtent,
+      child: Column(
+        children: [
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: Spacing.md,
+                vertical: Spacing.xs,
+              ),
+              child: Column(
+                children: [
+                  SizedBox(
+                    height: _mainRowHeight,
+                    child: InkWell(
+                      onTap: onTap,
+                      onLongPress: onLongPress,
                       child: _buildMainRow(context),
                     ),
-                    SizedBox(
-                      height: _actionRowHeight,
-                      child: _buildActionRow(context),
-                    ),
-                  ],
-                ),
+                  ),
+                  SizedBox(
+                    height: _actionRowHeight,
+                    child: _buildActionRow(context),
+                  ),
+                ],
               ),
             ),
-            Divider(
-              height: 1,
-              thickness: 0.5,
-              color: Theme.of(
-                context,
-              ).colorScheme.outlineVariant.withValues(alpha: 0.5),
-              indent: Spacing.md,
-              endIndent: Spacing.md,
-            ),
-          ],
-        ),
+          ),
+          Divider(
+            height: 1,
+            thickness: 0.5,
+            color: Theme.of(
+              context,
+            ).colorScheme.outlineVariant.withValues(alpha: 0.5),
+            indent: Spacing.md,
+            endIndent: Spacing.md,
+          ),
+        ],
       ),
     );
   }
