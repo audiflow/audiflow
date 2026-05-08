@@ -61,6 +61,11 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
   /// cycles fall back to saved-history resume semantics.
   Duration? _pendingStartAt;
 
+  /// Local override after manually toggling played status. Wins over the
+  /// reactive provider value because the provider re-fetches by audio URL
+  /// and may briefly miss when the URL doesn't round-trip cleanly.
+  EpisodeWithProgress? _localProgress;
+
   @override
   void initState() {
     super.initState();
@@ -102,7 +107,8 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
     final reactiveProgress = enclosureUrl != null
         ? ref.watch(episodeProgressProvider(enclosureUrl)).value
         : null;
-    final effectiveProgress = reactiveProgress ?? widget.progress;
+    final effectiveProgress =
+        _localProgress ?? reactiveProgress ?? widget.progress;
 
     // Derive episodeId from effectiveProgress so that DB-backed actions
     // (download, queue) remain available even when the screen is opened
@@ -777,11 +783,24 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
       await historyService.markCompleted(episodeId);
     }
 
-    // Drop the cached value, then await the next read so the UI rebuilds
-    // with the updated completion state before this method returns.
+    // Drop the cached value so any other watchers refetch.
     ref.invalidate(episodeProgressProvider(audioUrl));
-    await ref.read(episodeProgressProvider(audioUrl).future);
-    if (mounted) setState(() {});
+
+    // Fetch the canonical row by id (avoids audio-URL lookup mismatches)
+    // and stash it locally so this screen rebuilds immediately even when
+    // the provider can't resolve the same URL we just toggled.
+    final episodeRepo = ref.read(episodeRepositoryProvider);
+    final historyRepo = ref.read(playbackHistoryRepositoryProvider);
+    final freshEpisode = await episodeRepo.getById(episodeId);
+    if (freshEpisode == null || !mounted) return;
+    final freshHistory = await historyRepo.getByEpisodeId(episodeId);
+    if (!mounted) return;
+    setState(() {
+      _localProgress = EpisodeWithProgress(
+        episode: freshEpisode,
+        history: freshHistory,
+      );
+    });
   }
 }
 
