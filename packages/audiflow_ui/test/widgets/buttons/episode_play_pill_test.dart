@@ -144,6 +144,27 @@ void main() {
       check(size.height).isGreaterOrEqual(44.0);
     });
 
+    testWidgets('empty label: hides text, keeps tap target', (tester) async {
+      await tester.pumpWidget(
+        host(
+          const EpisodePlayPill(
+            label: '',
+            isPlaying: false,
+            isLoading: false,
+            isCompleted: false,
+            isInProgress: false,
+          ),
+        ),
+      );
+      // No Text widget for the (empty) label.
+      check(find.byType(Text).evaluate().length).equals(0);
+      // Leading icon still rendered.
+      check(find.byIcon(Icons.play_circle_filled).evaluate().length).equals(1);
+      // 44dp tap target still enforced.
+      final size = tester.getSize(find.byType(EpisodePlayPill));
+      check(size.height).isGreaterOrEqual(44.0);
+    });
+
     testWidgets('tap fires onPressed', (tester) async {
       var tapped = 0;
       await tester.pumpWidget(
