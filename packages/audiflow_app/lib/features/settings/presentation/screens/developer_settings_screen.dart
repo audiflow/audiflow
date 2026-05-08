@@ -102,9 +102,9 @@ class DeveloperSettingsScreen extends ConsumerWidget {
                 dense: true,
                 trailing: enabled
                     ? Icon(
-                        Symbols.chevron_right,
+                        Symbols.open_in_new,
                         size: 18,
-                        color: theme.colorScheme.onSurfaceVariant,
+                        color: theme.colorScheme.primary,
                       )
                     : null,
                 onTap: enabled
