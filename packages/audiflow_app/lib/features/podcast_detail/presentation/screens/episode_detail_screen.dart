@@ -777,7 +777,11 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
       await historyService.markCompleted(episodeId);
     }
 
+    // Drop the cached value, then await the next read so the UI rebuilds
+    // with the updated completion state before this method returns.
     ref.invalidate(episodeProgressProvider(audioUrl));
+    await ref.read(episodeProgressProvider(audioUrl).future);
+    if (mounted) setState(() {});
   }
 }
 
