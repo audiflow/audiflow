@@ -124,7 +124,7 @@ void main() {
       await tester.pumpWidget(buildTestWidget());
       await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.play_arrow_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.play_circle_filled), findsOneWidget);
     });
 
     testWidgets('renders more actions button in app bar', (tester) async {
@@ -318,7 +318,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.playlist_add), findsOneWidget);
+      expect(find.byType(AddToQueueButton), findsOneWidget);
     });
 
     testWidgets('does not show played status chip', (tester) async {
