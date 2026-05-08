@@ -1,4 +1,5 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Episode _makeTestEpisode() {
@@ -267,7 +268,7 @@ void main() {
             ..audioUrl = 'a',
           history: null,
         );
-        expect(ep.remainingDuration, isNull);
+        check(ep.remainingDuration).isNull();
       });
 
       test('null when durationMs is null', () {
@@ -282,7 +283,7 @@ void main() {
             ..positionMs = 1000
             ..durationMs = null,
         );
-        expect(ep.remainingDuration, isNull);
+        check(ep.remainingDuration).isNull();
       });
 
       test('returns Duration of remaining ms', () {
@@ -297,7 +298,7 @@ void main() {
             ..positionMs = 30000
             ..durationMs = 90000,
         );
-        expect(ep.remainingDuration, const Duration(milliseconds: 60000));
+        check(ep.remainingDuration).equals(const Duration(milliseconds: 60000));
       });
     });
   });
