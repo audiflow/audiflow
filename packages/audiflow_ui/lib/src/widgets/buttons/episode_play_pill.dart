@@ -39,15 +39,14 @@ class EpisodePlayPill extends StatelessWidget {
     final foreground = isCompleted
         ? colorScheme.onSurfaceVariant
         : colorScheme.primary;
-    final borderColor = isCompleted
-        ? colorScheme.outlineVariant
-        : colorScheme.outline;
+    final borderColor = colorScheme.outlineVariant;
+    final backgroundColor = colorScheme.surfaceContainerLow;
 
     return ConstrainedBox(
       constraints: const BoxConstraints(minHeight: 44),
       child: Material(
-        color: Colors.transparent,
-        shape: StadiumBorder(side: BorderSide(color: borderColor)),
+        color: backgroundColor,
+        shape: StadiumBorder(side: BorderSide(color: borderColor, width: 0.5)),
         child: InkWell(
           customBorder: const StadiumBorder(),
           onTap: onPressed,
