@@ -99,7 +99,7 @@ class EpisodeListTile extends ConsumerWidget {
 
     return EpisodeCard(
       title: episode.title,
-      pillLabel: _buildPillLabel(progress, isCompleted, l10n),
+      pillLabel: _buildPillLabel(progress, isCompleted, isPlaying, l10n),
       dateLabel: _buildDateLabel(l10n),
       isInProgress: progress?.isInProgress ?? false,
       progressFraction: _buildProgressFraction(progress),
@@ -169,12 +169,14 @@ class EpisodeListTile extends ConsumerWidget {
   String _buildPillLabel(
     EpisodeWithProgress? p,
     bool isCompleted,
+    bool isPlaying,
     AppLocalizations l10n,
   ) {
     if (isCompleted) return l10n.episodePillCompleted;
 
-    if (p != null && p.isInProgress) {
-      final remaining = p.remainingDuration;
+    final inProgress = isPlaying || (p?.isInProgress ?? false);
+    if (inProgress) {
+      final remaining = p?.remainingDuration ?? episode.duration;
       if (remaining != null) {
         return l10n.episodePillRemaining(remaining.podcastShortLabel);
       }

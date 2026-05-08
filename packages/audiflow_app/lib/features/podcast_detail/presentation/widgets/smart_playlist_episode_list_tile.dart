@@ -87,7 +87,7 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
 
     return EpisodeCard(
       title: episode.title,
-      pillLabel: _buildPillLabel(progress, isCompleted, l10n),
+      pillLabel: _buildPillLabel(progress, isCompleted, isPlaying, l10n),
       dateLabel: _buildDateLabel(l10n),
       isInProgress: progress?.isInProgress ?? false,
       progressFraction: _buildProgressFraction(progress),
@@ -147,14 +147,22 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
   String _buildPillLabel(
     EpisodeWithProgress? p,
     bool isCompleted,
+    bool isPlaying,
     AppLocalizations l10n,
   ) {
     if (isCompleted) return l10n.episodePillCompleted;
 
-    if (p != null && p.isInProgress) {
-      final remaining = p.remainingDuration;
-      if (remaining != null) {
-        return l10n.episodePillRemaining(remaining.podcastShortLabel);
+    final inProgress = isPlaying || (p?.isInProgress ?? false);
+    if (inProgress) {
+      final remainingDuration = p?.remainingDuration;
+      if (remainingDuration != null) {
+        return l10n.episodePillRemaining(remainingDuration.podcastShortLabel);
+      }
+      final totalMs = episode.durationMs;
+      if (totalMs != null) {
+        return l10n.episodePillRemaining(
+          Duration(milliseconds: totalMs).podcastShortLabel,
+        );
       }
     }
 
