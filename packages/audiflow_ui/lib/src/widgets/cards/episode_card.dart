@@ -233,22 +233,18 @@ class EpisodeCard extends StatelessWidget {
 
     return Row(
       children: [
-        Flexible(
-          fit: FlexFit.loose,
-          child: EpisodePlayPill(
-            label: pillLabel,
-            isPlaying: isPlaying,
-            isLoading: isLoading,
-            isCompleted: isCompleted,
-            isInProgress: isInProgress,
-            progressFraction: progressFraction,
-            onPressed: onPlayPause,
-          ),
+        EpisodePlayPill(
+          label: pillLabel,
+          isPlaying: isPlaying,
+          isLoading: isLoading,
+          isCompleted: isCompleted,
+          isInProgress: isInProgress,
+          progressFraction: progressFraction,
+          onPressed: onPlayPause,
         ),
         if (dateLabel != null) ...[
           const SizedBox(width: Spacing.sm),
           Flexible(
-            fit: FlexFit.loose,
             child: Text(
               dateLabel!,
               maxLines: 1,

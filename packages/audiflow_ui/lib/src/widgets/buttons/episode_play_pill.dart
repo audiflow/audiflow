@@ -52,7 +52,7 @@ class EpisodePlayPill extends StatelessWidget {
           customBorder: const StadiumBorder(),
           onTap: onPressed,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
