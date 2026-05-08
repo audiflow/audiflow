@@ -421,10 +421,9 @@ class EpisodeListTile extends ConsumerWidget {
       await historyService.markCompleted(episode.id);
     }
 
-    ref.invalidate(episodeProgressProvider(audioUrl));
-    if (feedUrl != null) {
-      ref.invalidate(podcastEpisodeProgressProvider(feedUrl!));
-    }
+    ref.invalidate(episodeProgressProvider);
+    ref.invalidate(podcastEpisodeProgressProvider);
+    ref.invalidate(smartPlaylistEpisodesProvider);
   }
 
   Widget _buildDownloadButton(

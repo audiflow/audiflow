@@ -392,14 +392,11 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
       await historyService.markCompleted(dbEpisode.id);
     }
 
-    ref.invalidate(episodeProgressProvider(audioUrl));
-    if (feedUrl != null) {
-      ref.invalidate(podcastEpisodeProgressProvider(feedUrl!));
-    }
-    // Smart playlist screens read smartPlaylistEpisodesProvider keyed by
-    // an episode-id list this widget does not know. Invalidate the whole
-    // family so any open group/playlist screen refetches with the new
-    // history snapshot.
+    // Family-level invalidate covers every keyed instance any open
+    // screen might watch (episode by audio URL, podcast batch by feed
+    // URL, smart playlist by episode-id list).
+    ref.invalidate(episodeProgressProvider);
+    ref.invalidate(podcastEpisodeProgressProvider);
     ref.invalidate(smartPlaylistEpisodesProvider);
   }
 
