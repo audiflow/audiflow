@@ -261,7 +261,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
 
                     // Metadata row
                     _MetadataRow(episode: widget.episode),
-                    const SizedBox(height: Spacing.md),
+                    const SizedBox(height: Spacing.sm),
 
                     // Progress indicator -- only render the wrapper Padding
                     // when the indicator will actually display content to
@@ -281,13 +281,9 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
 
                     // Action bar
                     _ActionBar(
-                      episode: widget.episode,
-                      progress: effectiveProgress,
                       enclosureUrl: enclosureUrl,
                       isPlaying: isPlaying,
                       isLoading: isLoading,
-                      isCompleted: isCompleted,
-                      isInProgress: isInProgress,
                       episodeId: episodeId,
                       downloadTask: downloadTask,
                       onPlayPause: enclosureUrl != null
@@ -333,7 +329,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                           : null,
                     ),
 
-                    const Divider(height: Spacing.xl),
+                    const Divider(height: Spacing.lg),
 
                     // Description / show notes
                     _DescriptionSection(episode: widget.episode),
@@ -777,6 +773,9 @@ class _MetadataRow extends StatelessWidget {
     final theme = Theme.of(context);
     final parts = <String>[];
 
+    if (episode.formattedDuration != null) {
+      parts.add(episode.formattedDuration!);
+    }
     if (episode.publishDate != null) {
       parts.add(DateFormat.yMMMd().format(episode.publishDate!));
     }
@@ -821,17 +820,14 @@ class _MetadataRow extends StatelessWidget {
   }
 }
 
-/// Action bar with the play pill on the left and queue + download
-/// buttons aligned to the right (matching the episode list tile order).
+/// Action bar with a large play/pause button on the left and queue +
+/// download buttons aligned to the right (matching the episode list
+/// tile order).
 class _ActionBar extends StatelessWidget {
   const _ActionBar({
-    required this.episode,
-    required this.progress,
     required this.enclosureUrl,
     required this.isPlaying,
     required this.isLoading,
-    required this.isCompleted,
-    required this.isInProgress,
     required this.episodeId,
     required this.downloadTask,
     required this.onPlayPause,
@@ -840,13 +836,9 @@ class _ActionBar extends StatelessWidget {
     required this.onQueuePlayNext,
   });
 
-  final PodcastItem episode;
-  final EpisodeWithProgress? progress;
   final String? enclosureUrl;
   final bool isPlaying;
   final bool isLoading;
-  final bool isCompleted;
-  final bool isInProgress;
   final int? episodeId;
   final DownloadTask? downloadTask;
   final VoidCallback? onPlayPause;
@@ -856,19 +848,36 @@ class _ActionBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Row(
       children: [
-        EpisodePlayPill(
-          label: _buildPillLabel(l10n),
-          isPlaying: isPlaying,
-          isLoading: isLoading,
-          isCompleted: isCompleted,
-          isInProgress: isInProgress,
-          progressFraction: progress?.progressPercent,
-          onPressed: onPlayPause,
-        ),
+        if (isLoading)
+          const SizedBox(
+            width: 56,
+            height: 56,
+            child: Padding(
+              padding: EdgeInsets.all(12),
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          )
+        else
+          IconButton.filled(
+            iconSize: 32,
+            style: IconButton.styleFrom(
+              backgroundColor: enclosureUrl != null
+                  ? colorScheme.primary
+                  : colorScheme.surfaceContainerHighest,
+              foregroundColor: enclosureUrl != null
+                  ? colorScheme.onPrimary
+                  : colorScheme.onSurfaceVariant,
+              minimumSize: const Size(56, 56),
+            ),
+            icon: Icon(
+              isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+            ),
+            onPressed: onPlayPause,
+          ),
         const Spacer(),
         if (episodeId != null && onQueuePlayLater != null)
           AddToQueueButton(
@@ -883,22 +892,6 @@ class _ActionBar extends StatelessWidget {
           ),
       ],
     );
-  }
-
-  String _buildPillLabel(AppLocalizations l10n) {
-    if (isCompleted) return l10n.episodePillCompleted;
-
-    final inProgress = isPlaying || (progress?.isInProgress ?? false);
-    if (inProgress) {
-      final remaining = progress?.remainingDuration ?? episode.duration;
-      if (remaining != null) {
-        return l10n.episodePillRemaining(remaining.podcastShortLabel);
-      }
-    }
-
-    final total = episode.duration;
-    if (total != null) return total.podcastShortLabel;
-    return '';
   }
 }
 
