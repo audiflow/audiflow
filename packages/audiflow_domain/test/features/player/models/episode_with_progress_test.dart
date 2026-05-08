@@ -256,5 +256,49 @@ void main() {
         expect(ewp.remainingTimeFormatted, '1 hr left');
       });
     });
+
+    group('remainingDuration', () {
+      test('null when history is null', () {
+        final ep = EpisodeWithProgress(
+          episode: Episode()
+            ..podcastId = 1
+            ..guid = 'g'
+            ..title = 't'
+            ..audioUrl = 'a',
+          history: null,
+        );
+        expect(ep.remainingDuration, isNull);
+      });
+
+      test('null when durationMs is null', () {
+        final ep = EpisodeWithProgress(
+          episode: Episode()
+            ..podcastId = 1
+            ..guid = 'g'
+            ..title = 't'
+            ..audioUrl = 'a',
+          history: PlaybackHistory()
+            ..episodeId = 1
+            ..positionMs = 1000
+            ..durationMs = null,
+        );
+        expect(ep.remainingDuration, isNull);
+      });
+
+      test('returns Duration of remaining ms', () {
+        final ep = EpisodeWithProgress(
+          episode: Episode()
+            ..podcastId = 1
+            ..guid = 'g'
+            ..title = 't'
+            ..audioUrl = 'a',
+          history: PlaybackHistory()
+            ..episodeId = 1
+            ..positionMs = 30000
+            ..durationMs = 90000,
+        );
+        expect(ep.remainingDuration, const Duration(milliseconds: 60000));
+      });
+    });
   });
 }
