@@ -43,31 +43,38 @@ class EpisodePlayPill extends StatelessWidget {
         ? colorScheme.outlineVariant
         : colorScheme.outline;
 
-    return Material(
-      color: Colors.transparent,
-      shape: StadiumBorder(side: BorderSide(color: borderColor)),
-      child: InkWell(
-        customBorder: const StadiumBorder(),
-        onTap: onPressed,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(width: 20, height: 20, child: _buildLeading(foreground)),
-              const SizedBox(width: 6),
-              Flexible(
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: foreground,
-                    fontWeight: FontWeight.w500,
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 44),
+      child: Material(
+        color: Colors.transparent,
+        shape: StadiumBorder(side: BorderSide(color: borderColor)),
+        child: InkWell(
+          customBorder: const StadiumBorder(),
+          onTap: onPressed,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: _buildLeading(foreground),
+                ),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: foreground,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
