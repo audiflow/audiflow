@@ -128,23 +128,7 @@ void main() {
       check(ring.value).isNotNull().equals(1.0);
     });
 
-    testWidgets('enforces 44dp minimum tap-target height', (tester) async {
-      await tester.pumpWidget(
-        host(
-          const EpisodePlayPill(
-            label: '33m',
-            isPlaying: false,
-            isLoading: false,
-            isCompleted: false,
-            isInProgress: false,
-          ),
-        ),
-      );
-      final size = tester.getSize(find.byType(EpisodePlayPill));
-      check(size.height).isGreaterOrEqual(44.0);
-    });
-
-    testWidgets('empty label: hides text, keeps tap target', (tester) async {
+    testWidgets('empty label: hides text', (tester) async {
       await tester.pumpWidget(
         host(
           const EpisodePlayPill(
@@ -160,9 +144,6 @@ void main() {
       check(find.byType(Text).evaluate().length).equals(0);
       // Leading icon still rendered.
       check(find.byIcon(Icons.play_circle_filled).evaluate().length).equals(1);
-      // 44dp tap target still enforced.
-      final size = tester.getSize(find.byType(EpisodePlayPill));
-      check(size.height).isGreaterOrEqual(44.0);
     });
 
     testWidgets('tap fires onPressed', (tester) async {

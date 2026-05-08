@@ -39,43 +39,37 @@ class EpisodePlayPill extends StatelessWidget {
     final foreground = isCompleted
         ? colorScheme.onSurfaceVariant
         : colorScheme.primary;
-    final borderColor = colorScheme.outlineVariant;
-    final backgroundColor = colorScheme.surfaceContainerLow;
+    final borderColor = isCompleted
+        ? colorScheme.outlineVariant
+        : colorScheme.outline;
 
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: 44),
-      child: Material(
-        color: backgroundColor,
-        shape: StadiumBorder(side: BorderSide(color: borderColor, width: 0.5)),
-        child: InkWell(
-          customBorder: const StadiumBorder(),
-          onTap: onPressed,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: _buildLeading(foreground),
-                ),
-                if (label.isNotEmpty) ...[
-                  const SizedBox(width: 6),
-                  Flexible(
-                    child: Text(
-                      label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        color: foreground,
-                        fontWeight: FontWeight.w500,
-                      ),
+    return Material(
+      color: Colors.transparent,
+      shape: StadiumBorder(side: BorderSide(color: borderColor, width: 0.5)),
+      child: InkWell(
+        customBorder: const StadiumBorder(),
+        onTap: onPressed,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(width: 20, height: 20, child: _buildLeading(foreground)),
+              if (label.isNotEmpty) ...[
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: foreground,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
-                ],
+                ),
               ],
-            ),
+            ],
           ),
         ),
       ),
