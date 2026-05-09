@@ -1,10 +1,12 @@
 import 'package:audiflow_core/audiflow_core.dart' show AutoPlayOrder;
 import 'package:audiflow_domain/audiflow_domain.dart'
     show
+        EffectiveEpisodeTitle,
         EffectiveThumbnails,
         EpisodeSortField,
         EpisodeSortRule,
         SmartPlaylist,
+        SmartPlaylistDefinition,
         SmartPlaylistEpisodeData,
         SmartPlaylistGroup,
         SortOrder,
@@ -12,6 +14,8 @@ import 'package:audiflow_domain/audiflow_domain.dart'
         sortEpisodeData,
         smartPlaylistEpisodesProvider,
         smartPlaylistPatternByFeedUrlProvider;
+
+import '../utils/smart_playlist_def_resolver.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -54,11 +58,17 @@ List<Widget> buildInlinePlaylistSlivers({
     feedUrl: feedUrl,
     playlistId: playlist.id,
   );
+  final playlistDef = resolveSmartPlaylistDef(
+    ref: ref,
+    feedUrl: feedUrl,
+    playlistId: playlist.id,
+  );
 
   return episodesAsync.when(
     data: (episodes) => _buildPlaylistData(
       episodes: episodes,
       playlist: playlist,
+      playlistDef: playlistDef,
       searchQuery: searchQuery,
       sortOrder: sortOrder,
       podcastTitle: podcastTitle,
@@ -124,6 +134,7 @@ bool _resolveEpisodeRowThumbnail({
 List<Widget> _buildPlaylistData({
   required List<SmartPlaylistEpisodeData> episodes,
   required SmartPlaylist playlist,
+  required SmartPlaylistDefinition? playlistDef,
   required String searchQuery,
   required SortOrder sortOrder,
   required String podcastTitle,
@@ -179,6 +190,7 @@ List<Widget> _buildPlaylistData({
     return _buildYearGroupedPlaylistSlivers(
       episodes: displayEpisodes,
       playlist: playlist,
+      playlistDef: playlistDef,
       sortOrder: sortOrder,
       podcastTitle: podcastTitle,
       artworkUrl: artworkUrl,
@@ -231,6 +243,10 @@ List<Widget> _buildPlaylistData({
           effectiveOrder: effectiveOrder,
           itunesId: itunesId,
           feedUrl: feedUrl,
+          displayTitle: EffectiveEpisodeTitle.forPlaylist(
+            playlist: playlistDef,
+            episode: data.episode,
+          ),
         );
       },
     ),
@@ -429,6 +445,7 @@ List<Widget> _buildPerEpisodeInlineGroups({
 List<Widget> _buildYearGroupedPlaylistSlivers({
   required List<SmartPlaylistEpisodeData> episodes,
   required SmartPlaylist playlist,
+  required SmartPlaylistDefinition? playlistDef,
   required SortOrder sortOrder,
   required String podcastTitle,
   required String? artworkUrl,
@@ -480,6 +497,10 @@ List<Widget> _buildYearGroupedPlaylistSlivers({
       effectiveOrder: effectiveOrder,
       itunesId: itunesId,
       feedUrl: feedUrl,
+      displayTitle: EffectiveEpisodeTitle.forPlaylist(
+        playlist: playlistDef,
+        episode: data.episode,
+      ),
     ),
     scrollController: scrollController,
     yearGroupingEnabled: true,

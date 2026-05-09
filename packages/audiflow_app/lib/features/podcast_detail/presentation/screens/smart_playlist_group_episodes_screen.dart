@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../download/presentation/helpers/batch_download_action_helper.dart';
+import '../utils/smart_playlist_def_resolver.dart';
 import '../widgets/play_order_bottom_sheet.dart';
 import '../widgets/smart_playlist_episode_list_tile.dart';
 
@@ -506,6 +507,8 @@ class _SmartPlaylistGroupEpisodesScreenState
         final sorted = List.of(displayEpisodes);
         sortEpisodeData(sorted, effectiveRule);
 
+        final playlistDef = _resolvePlaylistDef();
+
         return [
           sortHeaderSliver,
           SliverList.builder(
@@ -525,6 +528,10 @@ class _SmartPlaylistGroupEpisodesScreenState
                 itunesId: widget.itunesId,
                 feedUrl: widget.feedUrl,
                 effectiveOrder: _resolvedPlayOrder,
+                displayTitle: EffectiveEpisodeTitle.forPlaylist(
+                  playlist: playlistDef,
+                  episode: data.episode,
+                ),
               );
             },
           ),
@@ -579,6 +586,7 @@ class _SmartPlaylistGroupEpisodesScreenState
       );
 
     final showThumbnail = _resolveEpisodeRowThumbnail();
+    final playlistDef = _resolvePlaylistDef();
 
     return buildYearGroupedSlivers<SmartPlaylistEpisodeData>(
       itemsByYear: byYear,
@@ -595,6 +603,10 @@ class _SmartPlaylistGroupEpisodesScreenState
         itunesId: widget.itunesId,
         feedUrl: widget.feedUrl,
         effectiveOrder: _resolvedPlayOrder,
+        displayTitle: EffectiveEpisodeTitle.forPlaylist(
+          playlist: playlistDef,
+          episode: data.episode,
+        ),
       ),
       scrollController: _scrollController,
       yearGroupingEnabled: true,
@@ -649,6 +661,12 @@ class _SmartPlaylistGroupEpisodesScreenState
       group: groupDef,
     );
   }
+
+  SmartPlaylistDefinition? _resolvePlaylistDef() => resolveSmartPlaylistDef(
+    ref: ref,
+    feedUrl: widget.feedUrl,
+    playlistId: widget.parentPlaylist.id,
+  );
 }
 
 /// Header with artwork + title, mirroring podcast detail layout.
