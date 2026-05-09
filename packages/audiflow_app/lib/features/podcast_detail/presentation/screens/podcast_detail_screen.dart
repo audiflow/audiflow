@@ -4,6 +4,7 @@ import 'package:audiflow_core/audiflow_core.dart' show AutoPlayOrder;
 import 'package:audiflow_domain/audiflow_domain.dart'
     show
         EpisodeFilter,
+        PodcastItem,
         PodcastViewMode,
         SmartPlaylist,
         SmartPlaylistGroup,
@@ -76,6 +77,12 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
 
   /// Subscription's last refresh timestamp for "new" badge.
   DateTime? _lastRefreshedAt;
+
+  /// Last successful filtered episode list, kept across provider-key
+  /// switches (filter / sort changes) so the sliver tree -- and the
+  /// CustomScrollView's total scroll extent -- stays stable while the
+  /// new key is still resolving.
+  List<PodcastItem>? _lastFilteredEpisodes;
 
   @override
   void initState() {
@@ -260,6 +267,15 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
         prefs?.selectedPlaylistId ?? _localSelectedPlaylistId;
     final sortOrder = prefs?.episodeSortOrder ?? _localSortOrder;
 
+    ref.listen(filteredSortedEpisodesProvider(feedUrl, filter, sortOrder), (
+      prev,
+      next,
+    ) {
+      next.whenData((data) {
+        if (!mounted) return;
+        setState(() => _lastFilteredEpisodes = data);
+      });
+    });
     final filteredAsync = ref.watch(
       filteredSortedEpisodesProvider(feedUrl, filter, sortOrder),
     );
@@ -424,6 +440,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
               lastRefreshedAt: _lastRefreshedAt,
               scrollController: _scrollController,
               onToggleSortOrder: _toggleSortOrder,
+              fallbackEpisodes: _lastFilteredEpisodes,
               itunesId: podcast.id,
               effectiveOrder: _resolvedPlayOrder,
             )

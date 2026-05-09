@@ -100,6 +100,7 @@ List<Widget> buildEpisodeListSlivers({
   required VoidCallback onToggleSortOrder,
   String? itunesId,
   AutoPlayOrder? effectiveOrder,
+  List<PodcastItem>? fallbackEpisodes,
 }) {
   final patternAsync = ref.watch(
     smartPlaylistPatternByFeedUrlProvider(feedUrl),
@@ -108,6 +109,33 @@ List<Widget> buildEpisodeListSlivers({
   final showEpisodeThumbnail = EffectiveThumbnails.podcastEpisodeList(
     showEpisodeThumbnail: patternAsync.value?.showEpisodeThumbnail,
   );
+
+  // Filter is a provider-family key, so toggling the chip switches to a
+  // different provider whose AsyncValue starts as loading -- collapsing
+  // the sliver tree to a spinner placeholder and snapping the user's
+  // scroll position to top once the new max extent is shorter than the
+  // current offset. Render the caller-supplied last-known episode list
+  // while the new key is still loading so the sliver tree (and scroll
+  // extent) stay stable across the transition.
+  if (episodesAsync is AsyncLoading && fallbackEpisodes != null) {
+    return _buildEpisodeData(
+      episodes: fallbackEpisodes,
+      progressMapAsync: progressMapAsync,
+      sortOrder: sortOrder,
+      searchQuery: searchQuery,
+      podcastTitle: podcastTitle,
+      artworkUrl: artworkUrl,
+      feedImageUrl: feedImageUrl,
+      lastRefreshedAt: lastRefreshedAt,
+      scrollController: scrollController,
+      onToggleSortOrder: onToggleSortOrder,
+      yearGrouped: yearGrouped,
+      showThumbnail: showEpisodeThumbnail,
+      itunesId: itunesId,
+      feedUrl: feedUrl,
+      effectiveOrder: effectiveOrder,
+    );
+  }
 
   return episodesAsync.when(
     data: (episodes) => _buildEpisodeData(
@@ -128,23 +156,10 @@ List<Widget> buildEpisodeListSlivers({
       effectiveOrder: effectiveOrder,
     ),
     loading: () => [
-      // Reserve a viewport-tall placeholder so the scroll extent does
-      // not collapse mid-scroll while the filtered query re-runs --
-      // otherwise tapping a filter chip snaps the user back to the top.
-      // Pin the spinner near the top of the placeholder so it stays
-      // visible even when the user is scrolled past the header.
-      SliverToBoxAdapter(
-        child: Builder(
-          builder: (context) => SizedBox(
-            height: MediaQuery.of(context).size.height,
-            child: const Align(
-              alignment: Alignment.topCenter,
-              child: Padding(
-                padding: EdgeInsets.only(top: Spacing.lg),
-                child: CircularProgressIndicator(),
-              ),
-            ),
-          ),
+      const SliverToBoxAdapter(
+        child: Padding(
+          padding: EdgeInsets.all(Spacing.lg),
+          child: Center(child: CircularProgressIndicator()),
         ),
       ),
     ],
@@ -190,27 +205,10 @@ List<Widget> _buildEpisodeData({
   );
 
   if (displayEpisodes.isEmpty) {
-    final empty = 2 <= searchQuery.length
-        ? const _PodcastDetailNoResultsMessage()
-        : const PodcastDetailEmptyFilterState();
-    // Reserve a viewport-tall placeholder so the scroll extent does not
-    // collapse below the user's offset when the filter result is empty.
-    return [
-      SliverToBoxAdapter(
-        child: Builder(
-          builder: (context) => SizedBox(
-            height: MediaQuery.of(context).size.height,
-            child: Align(
-              alignment: Alignment.topCenter,
-              child: Padding(
-                padding: const EdgeInsets.only(top: Spacing.xl),
-                child: empty,
-              ),
-            ),
-          ),
-        ),
-      ),
-    ];
+    if (2 <= searchQuery.length) {
+      return [const PodcastDetailSearchEmptyState()];
+    }
+    return [const SliverFillRemaining(child: PodcastDetailEmptyFilterState())];
   }
 
   final progressMap = progressMapAsync.value ?? {};
@@ -340,22 +338,4 @@ List<Widget> _buildYearGroupedEpisodeSlivers({
     yearGroupingEnabled: true,
     itemExtent: episodeCardExtent,
   );
-}
-
-/// Plain (non-Sliver) "no search results" message used inside the
-/// viewport-tall empty placeholder.
-class _PodcastDetailNoResultsMessage extends StatelessWidget {
-  const _PodcastDetailNoResultsMessage();
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    return Text(
-      AppLocalizations.of(context).podcastDetailNoResults,
-      style: theme.textTheme.titleMedium?.copyWith(
-        color: colorScheme.onSurfaceVariant,
-      ),
-    );
-  }
 }
