@@ -128,10 +128,15 @@ List<Widget> buildEpisodeListSlivers({
       effectiveOrder: effectiveOrder,
     ),
     loading: () => [
-      const SliverToBoxAdapter(
-        child: Padding(
-          padding: EdgeInsets.all(Spacing.lg),
-          child: Center(child: CircularProgressIndicator()),
+      // Reserve a viewport-tall placeholder so the scroll extent does
+      // not collapse mid-scroll while the filtered query re-runs --
+      // otherwise tapping a filter chip snaps the user back to the top.
+      SliverToBoxAdapter(
+        child: Builder(
+          builder: (context) => SizedBox(
+            height: MediaQuery.of(context).size.height,
+            child: const Center(child: CircularProgressIndicator()),
+          ),
         ),
       ),
     ],
