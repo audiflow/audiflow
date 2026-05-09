@@ -91,7 +91,10 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
 
     return EpisodeCard(
       title: displayTitle ?? episode.title,
-      subtitle: _buildSubtitleText(l10n),
+      pillLabel: _buildPillLabel(progress, isCompleted, isPlaying, l10n),
+      dateLabel: _buildDateLabel(l10n),
+      isInProgress: progress?.isInProgress ?? false,
+      progressFraction: _buildProgressFraction(progress),
       description: episode.description,
       thumbnailUrl: episode.imageUrl,
       fallbackThumbnailUrl: fallbackThumbnailUrl,
@@ -145,39 +148,47 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
     return threshold.isBefore(publishDate);
   }
 
-  String _buildSubtitleText(AppLocalizations l10n) {
-    final parts = <String>[];
+  String _buildPillLabel(
+    EpisodeWithProgress? p,
+    bool isCompleted,
+    bool isPlaying,
+    AppLocalizations l10n,
+  ) {
+    if (isCompleted) return l10n.episodePillCompleted;
 
-    if (progress != null && progress!.isInProgress) {
-      final remaining = progress!.remainingTimeFormatted;
-      if (remaining != null) {
-        parts.add(remaining);
-      } else if (episode.durationMs != null) {
-        parts.add(_formatDuration(episode.durationMs!));
+    final inProgress = isPlaying || (p?.isInProgress ?? false);
+    if (inProgress) {
+      final remainingDuration = p?.remainingDuration;
+      if (remainingDuration != null) {
+        return l10n.episodePillRemaining(remainingDuration.podcastShortLabel);
       }
-    } else if (episode.durationMs != null) {
-      parts.add(_formatDuration(episode.durationMs!));
+      final totalMs = episode.durationMs;
+      if (totalMs != null) {
+        return l10n.episodePillRemaining(
+          Duration(milliseconds: totalMs).podcastShortLabel,
+        );
+      }
     }
 
-    if (episode.publishedAt != null) {
-      parts.add(
-        episode.publishedAt!.formatEpisodeDate(
-          todayLabel: l10n.dateToday,
-          yesterdayLabel: l10n.dateYesterday,
-        ),
-      );
+    final totalMs = episode.durationMs;
+    if (totalMs != null) {
+      return Duration(milliseconds: totalMs).podcastShortLabel;
     }
-
-    return parts.join('  ');
+    return '';
   }
 
-  String _formatDuration(int durationMs) {
-    final duration = Duration(milliseconds: durationMs);
-    final hours = duration.inHours;
-    final minutes = duration.inMinutes.remainder(60);
+  String? _buildDateLabel(AppLocalizations l10n) {
+    final date = episode.publishedAt;
+    if (date == null) return null;
+    return date.formatEpisodeDate(
+      todayLabel: l10n.dateToday,
+      yesterdayLabel: l10n.dateYesterday,
+    );
+  }
 
-    if (0 < hours) return '${hours}h ${minutes}min';
-    return '$minutes min';
+  double? _buildProgressFraction(EpisodeWithProgress? p) {
+    if (p == null) return null;
+    return p.progressPercent;
   }
 
   void _navigateToDetail(BuildContext context) {
@@ -385,10 +396,12 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
       await historyService.markCompleted(dbEpisode.id);
     }
 
-    ref.invalidate(episodeProgressProvider(audioUrl));
-    if (feedUrl != null) {
-      ref.invalidate(podcastEpisodeProgressProvider(feedUrl!));
-    }
+    // Family-level invalidate covers every keyed instance any open
+    // screen might watch (episode by audio URL, podcast batch by feed
+    // URL, smart playlist by episode-id list).
+    ref.invalidate(episodeProgressProvider);
+    ref.invalidate(podcastEpisodeProgressProvider);
+    ref.invalidate(smartPlaylistEpisodesProvider);
   }
 
   Widget _buildDownloadButton(
@@ -415,14 +428,19 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
     EpisodeWithProgress? progress,
     DownloadTask? downloadTask,
   ) {
-    return IconButton(
-      icon: const Icon(Icons.more_horiz, size: 20),
-      iconSize: 20,
-      tooltip: MaterialLocalizations.of(context).moreButtonTooltip,
-      constraints: const BoxConstraints(minWidth: 40, minHeight: 36),
-      padding: EdgeInsets.zero,
-      onPressed: () =>
-          _showContextMenu(context, ref, audioUrl, progress, downloadTask),
+    void open() =>
+        _showContextMenu(context, ref, audioUrl, progress, downloadTask);
+    return Tooltip(
+      message: MaterialLocalizations.of(context).moreButtonTooltip,
+      child: InkWell(
+        onTap: open,
+        onLongPress: open,
+        customBorder: const CircleBorder(),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minWidth: 40, minHeight: 36),
+          child: const Icon(Icons.more_horiz, size: 20),
+        ),
+      ),
     );
   }
 

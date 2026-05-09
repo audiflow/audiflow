@@ -42,6 +42,15 @@ sealed class EpisodeWithProgress with _$EpisodeWithProgress {
     return duration - history!.positionMs;
   }
 
+  /// Returns the remaining duration as a [Duration].
+  ///
+  /// Null when there is no history or no recorded total duration.
+  Duration? get remainingDuration {
+    final ms = remainingMs;
+    if (ms == null) return null;
+    return Duration(milliseconds: ms);
+  }
+
   /// Returns formatted remaining time (e.g., "18 min left").
   String? get remainingTimeFormatted {
     final remaining = remainingMs;

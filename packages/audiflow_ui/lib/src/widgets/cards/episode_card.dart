@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../styles/spacing.dart';
+import '../buttons/episode_play_pill.dart';
 
 /// Fixed height for the episode card, used as itemExtent in sliver lists.
 const double episodeCardExtent = 140.0;
@@ -16,7 +17,7 @@ const double _actionRowHeight = 44.0;
 ///
 /// Layout:
 /// - Main row (80dp): optional thumbnail, title (up to 2 lines), description
-/// - Action row (44dp): play/pause button, subtitle, action buttons
+/// - Action row (44dp): play pill, date label, action buttons
 /// - Vertical padding: 8dp (4dp top + 4dp bottom)
 /// - Divider: 1dp
 ///
@@ -25,7 +26,8 @@ class EpisodeCard extends StatelessWidget {
   const EpisodeCard({
     super.key,
     required this.title,
-    required this.subtitle,
+    required this.pillLabel,
+    this.dateLabel,
     this.description,
     this.thumbnailUrl,
     this.fallbackThumbnailUrl,
@@ -36,7 +38,9 @@ class EpisodeCard extends StatelessWidget {
     this.isLoading = false,
     this.isNew = false,
     this.isCompleted = false,
+    this.isInProgress = false,
     this.isCurrentEpisode = false,
+    this.progressFraction,
     this.hasTranscript = false,
     this.transcriptLabel,
     this.onTap,
@@ -47,8 +51,11 @@ class EpisodeCard extends StatelessWidget {
 
   final String title;
 
-  /// Date + duration string shown below the title.
-  final String subtitle;
+  /// Pre-formatted state label rendered inside the play pill.
+  final String pillLabel;
+
+  /// Pre-formatted publish date rendered next to the pill. Null hides it.
+  final String? dateLabel;
 
   /// Episode description snippet. Shown only when there is vertical space
   /// remaining after the title (similar to Apple Podcasts).
@@ -80,7 +87,12 @@ class EpisodeCard extends StatelessWidget {
   /// Show "new" badge for unplayed episodes.
   final bool isNew;
   final bool isCompleted;
+  final bool isInProgress;
   final bool isCurrentEpisode;
+
+  /// Progress through the episode in `[0.0, 1.0]`. Drives the pill ring
+  /// when [isPlaying] or [isInProgress] is true. Null is treated as 0.
+  final double? progressFraction;
 
   /// Whether the episode has a transcript available.
   final bool hasTranscript;
@@ -114,45 +126,44 @@ class EpisodeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      onLongPress: onLongPress,
-      behavior: HitTestBehavior.opaque,
-      child: SizedBox(
-        height: episodeCardExtent,
-        child: Column(
-          children: [
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: Spacing.md,
-                  vertical: Spacing.xs,
-                ),
-                child: Column(
-                  children: [
-                    SizedBox(
-                      height: _mainRowHeight,
+    return SizedBox(
+      height: episodeCardExtent,
+      child: Column(
+        children: [
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: Spacing.md,
+                vertical: Spacing.xs,
+              ),
+              child: Column(
+                children: [
+                  SizedBox(
+                    height: _mainRowHeight,
+                    child: InkWell(
+                      onTap: onTap,
+                      onLongPress: onLongPress,
                       child: _buildMainRow(context),
                     ),
-                    SizedBox(
-                      height: _actionRowHeight,
-                      child: _buildActionRow(context),
-                    ),
-                  ],
-                ),
+                  ),
+                  SizedBox(
+                    height: _actionRowHeight,
+                    child: _buildActionRow(context),
+                  ),
+                ],
               ),
             ),
-            Divider(
-              height: 1,
-              thickness: 0.5,
-              color: Theme.of(
-                context,
-              ).colorScheme.outlineVariant.withValues(alpha: 0.5),
-              indent: Spacing.md,
-              endIndent: Spacing.md,
-            ),
-          ],
-        ),
+          ),
+          Divider(
+            height: 1,
+            thickness: 0.5,
+            color: Theme.of(
+              context,
+            ).colorScheme.outlineVariant.withValues(alpha: 0.5),
+            indent: Spacing.md,
+            endIndent: Spacing.md,
+          ),
+        ],
       ),
     );
   }
@@ -215,55 +226,37 @@ class EpisodeCard extends StatelessWidget {
     );
   }
 
-  Widget _buildPlayButton(ColorScheme colorScheme) {
-    if (isLoading) {
-      return const SizedBox(
-        width: 44,
-        height: 44,
-        child: Center(
-          child: SizedBox(
-            width: 20,
-            height: 20,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-        ),
-      );
-    }
-
-    return IconButton(
-      icon: Icon(
-        isPlaying ? Icons.pause_circle_filled : Icons.play_circle_filled,
-        size: 24,
-      ),
-      iconSize: 24,
-      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-      padding: const EdgeInsets.symmetric(horizontal: 6),
-      color: colorScheme.primary,
-      onPressed: onPlayPause,
-    );
-  }
-
   Widget _buildActionRow(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     return Row(
       children: [
-        _buildPlayButton(colorScheme),
-        const SizedBox(width: Spacing.xs),
+        EpisodePlayPill(
+          label: pillLabel,
+          isPlaying: isPlaying,
+          isLoading: isLoading,
+          isCompleted: isCompleted,
+          isInProgress: isInProgress,
+          progressFraction: progressFraction,
+          onPressed: onPlayPause,
+        ),
+        if (dateLabel != null) const SizedBox(width: Spacing.sm),
         Expanded(
           child: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Flexible(
-                child: Text(
-                  subtitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
+              if (dateLabel != null)
+                Flexible(
+                  child: Text(
+                    dateLabel!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
-              ),
               if (hasTranscript) ...[
                 const SizedBox(width: Spacing.xs),
                 _TranscriptBadge(

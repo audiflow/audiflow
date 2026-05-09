@@ -100,6 +100,7 @@ List<Widget> buildEpisodeListSlivers({
   required VoidCallback onToggleSortOrder,
   String? itunesId,
   AutoPlayOrder? effectiveOrder,
+  List<PodcastItem>? fallbackEpisodes,
 }) {
   final patternAsync = ref.watch(
     smartPlaylistPatternByFeedUrlProvider(feedUrl),
@@ -108,6 +109,36 @@ List<Widget> buildEpisodeListSlivers({
   final showEpisodeThumbnail = EffectiveThumbnails.podcastEpisodeList(
     showEpisodeThumbnail: patternAsync.value?.showEpisodeThumbnail,
   );
+
+  // Filter is a provider-family key, so toggling the chip switches to a
+  // different provider whose AsyncValue starts as loading -- collapsing
+  // the sliver tree to a spinner placeholder and snapping the user's
+  // scroll position to top once the new max extent is shorter than the
+  // current offset. Render the caller-supplied last-known episode list
+  // while the new key is still loading so the sliver tree (and scroll
+  // extent) stay stable across the transition.
+  if (episodesAsync is AsyncLoading && fallbackEpisodes != null) {
+    return [
+      const _EpisodeListLoadingBar(),
+      ..._buildEpisodeData(
+        episodes: fallbackEpisodes,
+        progressMapAsync: progressMapAsync,
+        sortOrder: sortOrder,
+        searchQuery: searchQuery,
+        podcastTitle: podcastTitle,
+        artworkUrl: artworkUrl,
+        feedImageUrl: feedImageUrl,
+        lastRefreshedAt: lastRefreshedAt,
+        scrollController: scrollController,
+        onToggleSortOrder: onToggleSortOrder,
+        yearGrouped: yearGrouped,
+        showThumbnail: showEpisodeThumbnail,
+        itunesId: itunesId,
+        feedUrl: feedUrl,
+        effectiveOrder: effectiveOrder,
+      ),
+    ];
+  }
 
   return episodesAsync.when(
     data: (episodes) => _buildEpisodeData(
@@ -310,4 +341,17 @@ List<Widget> _buildYearGroupedEpisodeSlivers({
     yearGroupingEnabled: true,
     itemExtent: episodeCardExtent,
   );
+}
+
+/// Thin progress bar shown while a new filter result is being fetched
+/// and the cached previous list is still on screen.
+class _EpisodeListLoadingBar extends StatelessWidget {
+  const _EpisodeListLoadingBar();
+
+  @override
+  Widget build(BuildContext context) {
+    return const SliverToBoxAdapter(
+      child: SizedBox(height: 2, child: LinearProgressIndicator(minHeight: 2)),
+    );
+  }
 }

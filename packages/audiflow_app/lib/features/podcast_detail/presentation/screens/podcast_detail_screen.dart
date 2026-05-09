@@ -4,6 +4,7 @@ import 'package:audiflow_core/audiflow_core.dart' show AutoPlayOrder;
 import 'package:audiflow_domain/audiflow_domain.dart'
     show
         EpisodeFilter,
+        PodcastItem,
         PodcastViewMode,
         SmartPlaylist,
         SmartPlaylistGroup,
@@ -77,6 +78,24 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
   /// Subscription's last refresh timestamp for "new" badge.
   DateTime? _lastRefreshedAt;
 
+  /// Last successful filtered episode list, kept across provider-key
+  /// switches (filter / sort changes) so the sliver tree -- and the
+  /// CustomScrollView's total scroll extent -- stays stable while the
+  /// new key is still resolving.
+  List<PodcastItem>? _lastFilteredEpisodes;
+
+  // ---- diagnostics for scroll-jump investigation ----------------------
+  // Logs the controller's offset on every scroll callback and flags any
+  // transition larger than _kJumpThresholdPx as a JUMP. Wired in
+  // initState's postFrameCallback so the controller (which may come from
+  // an ancestor PrimaryScrollController) is resolvable. Remove once the
+  // root cause is confirmed.
+  static const double _kJumpThresholdPx = 200;
+  double? _lastScrollOffset;
+  bool _scrollListenerAttached = false;
+  EpisodeFilter? _previouslyLoggedFilter;
+  AsyncValue<List<PodcastItem>>? _previouslyLoggedEpisodes;
+
   @override
   void initState() {
     super.initState();
@@ -86,6 +105,32 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
     if (feedUrl != null) {
       PodcastMetadataHints.set(feedUrl, podcast);
     }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _attachScrollLogger();
+    });
+  }
+
+  void _attachScrollLogger() {
+    if (_scrollListenerAttached) return;
+    final controller = _scrollController;
+    final logger = ref.read(namedLoggerProvider('PodcastDetailScroll'));
+    controller.addListener(() {
+      if (!controller.hasClients) return;
+      final offset = controller.offset;
+      final last = _lastScrollOffset;
+      final maxExtent = controller.position.maxScrollExtent;
+      if (last != null && (last - offset).abs() >= _kJumpThresholdPx) {
+        logger.w(
+          'SCROLL JUMP: ${last.toStringAsFixed(1)} -> '
+          '${offset.toStringAsFixed(1)} (max=${maxExtent.toStringAsFixed(1)})',
+        );
+      }
+      _lastScrollOffset = offset;
+    });
+    _scrollListenerAttached = true;
+    logger.i('Scroll logger attached (controller=$controller)');
   }
 
   @override
@@ -260,9 +305,45 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
         prefs?.selectedPlaylistId ?? _localSelectedPlaylistId;
     final sortOrder = prefs?.episodeSortOrder ?? _localSortOrder;
 
+    final scrollLogger = ref.read(namedLoggerProvider('PodcastDetailScroll'));
+    if (_previouslyLoggedFilter != filter) {
+      scrollLogger.i(
+        'Filter changed: $_previouslyLoggedFilter -> $filter '
+        '(offset=${_lastScrollOffset?.toStringAsFixed(1)})',
+      );
+      _previouslyLoggedFilter = filter;
+    }
+
+    ref.listen(filteredSortedEpisodesProvider(feedUrl, filter, sortOrder), (
+      prev,
+      next,
+    ) {
+      scrollLogger.d(
+        'episodesAsync: ${prev?.runtimeType} (len=${prev?.value?.length}) '
+        '-> ${next.runtimeType} (len=${next.value?.length}) '
+        'offset=${_lastScrollOffset?.toStringAsFixed(1)}',
+      );
+      next.whenData((data) {
+        if (!mounted) return;
+        setState(() => _lastFilteredEpisodes = data);
+      });
+    });
     final filteredAsync = ref.watch(
       filteredSortedEpisodesProvider(feedUrl, filter, sortOrder),
     );
+
+    if (_previouslyLoggedEpisodes?.runtimeType != filteredAsync.runtimeType ||
+        _previouslyLoggedEpisodes?.value?.length !=
+            filteredAsync.value?.length) {
+      scrollLogger.d(
+        'build: filter=$filter '
+        'episodesAsync=${filteredAsync.runtimeType} '
+        '(len=${filteredAsync.value?.length}, '
+        'fallbackLen=${_lastFilteredEpisodes?.length}) '
+        'offset=${_lastScrollOffset?.toStringAsFixed(1)}',
+      );
+      _previouslyLoggedEpisodes = filteredAsync;
+    }
     final progressMapAsync = ref.watch(podcastEpisodeProgressProvider(feedUrl));
 
     final playlistsAsync = ref.watch(
@@ -424,6 +505,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
               lastRefreshedAt: _lastRefreshedAt,
               scrollController: _scrollController,
               onToggleSortOrder: _toggleSortOrder,
+              fallbackEpisodes: _lastFilteredEpisodes,
               itunesId: podcast.id,
               effectiveOrder: _resolvedPlayOrder,
             )

@@ -99,7 +99,10 @@ class EpisodeListTile extends ConsumerWidget {
 
     return EpisodeCard(
       title: episode.title,
-      subtitle: _buildSubtitleText(l10n),
+      pillLabel: _buildPillLabel(progress, isCompleted, isPlaying, l10n),
+      dateLabel: _buildDateLabel(l10n),
+      isInProgress: progress?.isInProgress ?? false,
+      progressFraction: _buildProgressFraction(progress),
       description: episode.description,
       thumbnailUrl: episode.primaryImage?.url,
       podcastArtworkUrl: artworkUrl,
@@ -163,30 +166,39 @@ class EpisodeListTile extends ConsumerWidget {
     return threshold.isBefore(publishDate);
   }
 
-  String _buildSubtitleText(AppLocalizations l10n) {
-    final parts = <String>[];
+  String _buildPillLabel(
+    EpisodeWithProgress? p,
+    bool isCompleted,
+    bool isPlaying,
+    AppLocalizations l10n,
+  ) {
+    if (isCompleted) return l10n.episodePillCompleted;
 
-    if (progress != null && progress!.isInProgress) {
-      final remaining = progress!.remainingTimeFormatted;
+    final inProgress = isPlaying || (p?.isInProgress ?? false);
+    if (inProgress) {
+      final remaining = p?.remainingDuration ?? episode.duration;
       if (remaining != null) {
-        parts.add(remaining);
-      } else if (episode.formattedDuration != null) {
-        parts.add(episode.formattedDuration!);
+        return l10n.episodePillRemaining(remaining.podcastShortLabel);
       }
-    } else if (episode.formattedDuration != null) {
-      parts.add(episode.formattedDuration!);
     }
 
-    if (episode.publishDate != null) {
-      parts.add(
-        episode.publishDate!.formatEpisodeDate(
-          todayLabel: l10n.dateToday,
-          yesterdayLabel: l10n.dateYesterday,
-        ),
-      );
-    }
+    final total = episode.duration;
+    if (total != null) return total.podcastShortLabel;
+    return '';
+  }
 
-    return parts.join('  ');
+  String? _buildDateLabel(AppLocalizations l10n) {
+    final date = episode.publishDate;
+    if (date == null) return null;
+    return date.formatEpisodeDate(
+      todayLabel: l10n.dateToday,
+      yesterdayLabel: l10n.dateYesterday,
+    );
+  }
+
+  double? _buildProgressFraction(EpisodeWithProgress? p) {
+    if (p == null) return null;
+    return p.progressPercent;
   }
 
   void _navigateToDetail(BuildContext context) {
@@ -409,10 +421,9 @@ class EpisodeListTile extends ConsumerWidget {
       await historyService.markCompleted(episode.id);
     }
 
-    ref.invalidate(episodeProgressProvider(audioUrl));
-    if (feedUrl != null) {
-      ref.invalidate(podcastEpisodeProgressProvider(feedUrl!));
-    }
+    ref.invalidate(episodeProgressProvider);
+    ref.invalidate(podcastEpisodeProgressProvider);
+    ref.invalidate(smartPlaylistEpisodesProvider);
   }
 
   Widget _buildDownloadButton(
@@ -440,14 +451,22 @@ class EpisodeListTile extends ConsumerWidget {
     EpisodeWithProgress? progress,
     DownloadTask? downloadTask,
   ) {
-    return IconButton(
-      icon: const Icon(Icons.more_horiz, size: 20),
-      iconSize: 20,
-      tooltip: MaterialLocalizations.of(context).moreButtonTooltip,
-      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-      padding: const EdgeInsets.symmetric(horizontal: 6),
-      onPressed: () =>
-          _showContextMenu(context, ref, enclosureUrl, progress, downloadTask),
+    void open() =>
+        _showContextMenu(context, ref, enclosureUrl, progress, downloadTask);
+    return Tooltip(
+      message: MaterialLocalizations.of(context).moreButtonTooltip,
+      child: InkWell(
+        onTap: open,
+        onLongPress: open,
+        customBorder: const CircleBorder(),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+          child: const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 6),
+            child: Icon(Icons.more_horiz, size: 20),
+          ),
+        ),
+      ),
     );
   }
 

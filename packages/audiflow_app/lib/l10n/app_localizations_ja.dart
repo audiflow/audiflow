@@ -795,6 +795,14 @@ class AppLocalizationsJa extends AppLocalizations {
   String get episodeTranscriptAvailable => '書き起こしあり';
 
   @override
+  String get episodePillCompleted => '再生済み';
+
+  @override
+  String episodePillRemaining(String time) {
+    return '残り $time';
+  }
+
+  @override
   String get podcastAutoDownloadTitle => '新しいエピソードを自動ダウンロード';
 
   @override

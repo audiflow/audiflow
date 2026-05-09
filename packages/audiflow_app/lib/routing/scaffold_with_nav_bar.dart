@@ -179,7 +179,7 @@ class _CustomNavBar extends StatelessWidget {
   }
 }
 
-/// A single nav item: icon (filled when selected with indicator pill) + label.
+/// A single nav item: icon + label, both colored by selected state.
 class _NavItem extends StatelessWidget {
   const _NavItem({
     required this.destination,
@@ -196,11 +196,8 @@ class _NavItem extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context);
     final label = destination.resolveLabel(l10n);
-    final iconColor = isSelected
-        ? colorScheme.onSecondaryContainer
-        : colorScheme.onSurfaceVariant;
-    final labelColor = isSelected
-        ? colorScheme.onSurface
+    final foreground = isSelected
+        ? colorScheme.primary
         : colorScheme.onSurfaceVariant;
 
     return Semantics(
@@ -212,28 +209,20 @@ class _NavItem extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Indicator pill behind icon when selected
-            Container(
-              width: 64,
+            SizedBox(
               height: 32,
-              decoration: isSelected
-                  ? BoxDecoration(
-                      color: colorScheme.secondaryContainer,
-                      borderRadius: BorderRadius.circular(16),
-                    )
-                  : null,
               child: Icon(
                 isSelected ? destination.selectedIcon : destination.icon,
                 fill: isSelected ? 1 : 0,
                 size: 24,
-                color: iconColor,
+                color: foreground,
               ),
             ),
             const SizedBox(height: 4),
             Text(
               label,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: labelColor,
+                color: foreground,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               ),
             ),
