@@ -1,4 +1,5 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Episode _makeTestEpisode() {
@@ -254,6 +255,50 @@ void main() {
           history: _history(positionMs: 0, durationMs: 3600000, playCount: 0),
         );
         expect(ewp.remainingTimeFormatted, '1 hr left');
+      });
+    });
+
+    group('remainingDuration', () {
+      test('null when history is null', () {
+        final ep = EpisodeWithProgress(
+          episode: Episode()
+            ..podcastId = 1
+            ..guid = 'g'
+            ..title = 't'
+            ..audioUrl = 'a',
+          history: null,
+        );
+        check(ep.remainingDuration).isNull();
+      });
+
+      test('null when durationMs is null', () {
+        final ep = EpisodeWithProgress(
+          episode: Episode()
+            ..podcastId = 1
+            ..guid = 'g'
+            ..title = 't'
+            ..audioUrl = 'a',
+          history: PlaybackHistory()
+            ..episodeId = 1
+            ..positionMs = 1000
+            ..durationMs = null,
+        );
+        check(ep.remainingDuration).isNull();
+      });
+
+      test('returns Duration of remaining ms', () {
+        final ep = EpisodeWithProgress(
+          episode: Episode()
+            ..podcastId = 1
+            ..guid = 'g'
+            ..title = 't'
+            ..audioUrl = 'a',
+          history: PlaybackHistory()
+            ..episodeId = 1
+            ..positionMs = 30000
+            ..durationMs = 90000,
+        );
+        check(ep.remainingDuration).equals(const Duration(milliseconds: 60000));
       });
     });
   });

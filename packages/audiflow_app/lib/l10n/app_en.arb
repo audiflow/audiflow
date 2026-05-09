@@ -531,6 +531,16 @@
   "episodeTranscriptAvailable": "Transcript available",
   "@episodeTranscriptAvailable": { "description": "Accessibility label for transcript indicator icon" },
 
+  "episodePillCompleted": "Completed",
+  "@episodePillCompleted": { "description": "Pill label shown on a fully-played episode" },
+  "episodePillRemaining": "{time} left",
+  "@episodePillRemaining": {
+    "description": "Pill label for an episode with playback progress, showing remaining time",
+    "placeholders": {
+      "time": { "type": "String", "example": "12m" }
+    }
+  },
+
   "podcastAutoDownloadTitle": "Auto-download new episodes",
   "@podcastAutoDownloadTitle": { "description": "Per-podcast auto-download toggle title" },
   "podcastAutoDownloadSubtitle": "Download new episodes automatically during background refresh",

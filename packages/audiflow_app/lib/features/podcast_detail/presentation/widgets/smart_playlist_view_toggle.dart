@@ -217,7 +217,9 @@ class _ToggleSegment extends StatelessWidget {
           left: isLeft ? const Radius.circular(20) : Radius.zero,
           right: isLeft ? Radius.zero : const Radius.circular(20),
         ),
-        side: BorderSide(color: colorScheme.outline),
+        side: BorderSide(
+          color: isSelected ? colorScheme.primary : colorScheme.outline,
+        ),
       ),
       child: InkWell(
         onTap: onTap,
@@ -276,7 +278,9 @@ class _PlaylistSegment extends StatelessWidget {
       color: bgColor,
       shape: RoundedRectangleBorder(
         borderRadius: const BorderRadius.horizontal(right: Radius.circular(20)),
-        side: BorderSide(color: colorScheme.outline),
+        side: BorderSide(
+          color: isSelected ? colorScheme.primary : colorScheme.outline,
+        ),
       ),
       child: SizedBox(
         height: 40,

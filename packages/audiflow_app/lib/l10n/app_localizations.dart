@@ -1550,6 +1550,18 @@ abstract class AppLocalizations {
   /// **'Transcript available'**
   String get episodeTranscriptAvailable;
 
+  /// Pill label shown on a fully-played episode
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get episodePillCompleted;
+
+  /// Pill label for an episode with playback progress, showing remaining time
+  ///
+  /// In en, this message translates to:
+  /// **'{time} left'**
+  String episodePillRemaining(String time);
+
   /// Per-podcast auto-download toggle title
   ///
   /// In en, this message translates to:

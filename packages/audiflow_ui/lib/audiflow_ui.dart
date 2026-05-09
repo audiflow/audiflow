@@ -14,6 +14,7 @@ export 'src/styles/borders.dart';
 export 'src/widgets/artwork_overlay.dart';
 
 // Widgets - Buttons
+export 'src/widgets/buttons/episode_play_pill.dart';
 export 'src/widgets/buttons/overlay_action_button.dart';
 
 // Widgets - Cards

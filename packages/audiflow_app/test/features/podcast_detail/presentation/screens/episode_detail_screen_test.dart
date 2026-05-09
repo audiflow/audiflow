@@ -318,7 +318,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.playlist_add), findsOneWidget);
+      expect(find.byType(AddToQueueButton), findsOneWidget);
     });
 
     testWidgets('does not show played status chip', (tester) async {

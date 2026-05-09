@@ -811,6 +811,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get episodeTranscriptAvailable => 'Transcript available';
 
   @override
+  String get episodePillCompleted => 'Completed';
+
+  @override
+  String episodePillRemaining(String time) {
+    return '$time left';
+  }
+
+  @override
   String get podcastAutoDownloadTitle => 'Auto-download new episodes';
 
   @override

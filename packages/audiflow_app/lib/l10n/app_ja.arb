@@ -294,6 +294,9 @@
 
   "episodeTranscriptAvailable": "書き起こしあり",
 
+  "episodePillCompleted": "再生済み",
+  "episodePillRemaining": "残り {time}",
+
   "podcastAutoDownloadTitle": "新しいエピソードを自動ダウンロード",
   "podcastAutoDownloadSubtitle": "バックグラウンド更新時に新しいエピソードを自動でダウンロード",
 

@@ -1,4 +1,5 @@
 import 'package:audiflow_core/audiflow_core.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -127,6 +128,40 @@ void main() {
           ).formatHoursMinutesSeconds(),
           '01:02:03',
         );
+      });
+    });
+
+    group('podcastShortLabel', () {
+      test('renders zero as 0:00', () {
+        check(Duration.zero.podcastShortLabel).equals('0:00');
+      });
+
+      test('renders single-digit seconds zero-padded', () {
+        check(const Duration(seconds: 9).podcastShortLabel).equals('0:09');
+      });
+
+      test('renders 59 seconds as 0:59', () {
+        check(const Duration(seconds: 59).podcastShortLabel).equals('0:59');
+      });
+
+      test('renders exactly 60 seconds as 1m', () {
+        check(const Duration(seconds: 60).podcastShortLabel).equals('1m');
+      });
+
+      test('truncates seconds within minute', () {
+        check(const Duration(seconds: 90).podcastShortLabel).equals('1m');
+      });
+
+      test('renders typical episode minutes', () {
+        check(const Duration(minutes: 33).podcastShortLabel).equals('33m');
+      });
+
+      test('renders very long episodes without ceiling', () {
+        check(const Duration(minutes: 9999).podcastShortLabel).equals('9999m');
+      });
+
+      test('treats negative duration as zero', () {
+        check(const Duration(seconds: -5).podcastShortLabel).equals('0:00');
       });
     });
   });

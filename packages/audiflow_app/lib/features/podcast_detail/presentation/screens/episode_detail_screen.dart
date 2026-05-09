@@ -61,6 +61,11 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
   /// cycles fall back to saved-history resume semantics.
   Duration? _pendingStartAt;
 
+  /// Local override after manually toggling played status. Wins over the
+  /// reactive provider value because the provider re-fetches by audio URL
+  /// and may briefly miss when the URL doesn't round-trip cleanly.
+  EpisodeWithProgress? _localProgress;
+
   @override
   void initState() {
     super.initState();
@@ -102,7 +107,8 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
     final reactiveProgress = enclosureUrl != null
         ? ref.watch(episodeProgressProvider(enclosureUrl)).value
         : null;
-    final effectiveProgress = reactiveProgress ?? widget.progress;
+    final effectiveProgress =
+        _localProgress ?? reactiveProgress ?? widget.progress;
 
     // Derive episodeId from effectiveProgress so that DB-backed actions
     // (download, queue) remain available even when the screen is opened
@@ -261,7 +267,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
 
                     // Metadata row
                     _MetadataRow(episode: widget.episode),
-                    const SizedBox(height: Spacing.md),
+                    const SizedBox(height: Spacing.sm),
 
                     // Progress indicator -- only render the wrapper Padding
                     // when the indicator will actually display content to
@@ -309,6 +315,19 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(l10n.queueAddedToQueue),
+                                  duration: const Duration(seconds: 1),
+                                ),
+                              );
+                            }
+                          : null,
+                      onQueuePlayNext: episodeId != null
+                          ? () {
+                              ref
+                                  .read(queueControllerProvider.notifier)
+                                  .playNext(episodeId);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(l10n.queuePlayingNext),
                                   duration: const Duration(seconds: 1),
                                 ),
                               );
@@ -459,7 +478,11 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                         ),
                         onTap: () {
                           Navigator.pop(sheetContext);
-                          _togglePlayedStatus(enclosureUrl, isCompleted);
+                          _togglePlayedStatus(
+                            enclosureUrl,
+                            isCompleted,
+                            knownEpisodeId: episodeId,
+                          );
                         },
                       ),
                     if (episodeId != null)
@@ -732,20 +755,52 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
 
   Future<void> _togglePlayedStatus(
     String audioUrl,
-    bool isCurrentlyCompleted,
-  ) async {
-    final episodeRepo = ref.read(episodeRepositoryProvider);
-    final ep = await episodeRepo.getByAudioUrl(audioUrl);
-    if (ep == null) return;
+    bool isCurrentlyCompleted, {
+    int? knownEpisodeId,
+  }) async {
+    var episodeId = knownEpisodeId;
+    if (episodeId == null) {
+      final episodeRepo = ref.read(episodeRepositoryProvider);
+      final ep = await episodeRepo.getByAudioUrl(audioUrl);
+      if (ep == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Episode not yet saved'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+        return;
+      }
+      episodeId = ep.id;
+    }
 
     final historyService = ref.read(playbackHistoryServiceProvider);
     if (isCurrentlyCompleted) {
-      await historyService.markIncomplete(ep.id);
+      await historyService.markIncomplete(episodeId);
     } else {
-      await historyService.markCompleted(ep.id);
+      await historyService.markCompleted(episodeId);
     }
 
+    // Drop the cached value so any other watchers refetch.
     ref.invalidate(episodeProgressProvider(audioUrl));
+
+    // Fetch the canonical row by id (avoids audio-URL lookup mismatches)
+    // and stash it locally so this screen rebuilds immediately even when
+    // the provider can't resolve the same URL we just toggled.
+    final episodeRepo = ref.read(episodeRepositoryProvider);
+    final historyRepo = ref.read(playbackHistoryRepositoryProvider);
+    final freshEpisode = await episodeRepo.getById(episodeId);
+    if (freshEpisode == null || !mounted) return;
+    final freshHistory = await historyRepo.getByEpisodeId(episodeId);
+    if (!mounted) return;
+    setState(() {
+      _localProgress = EpisodeWithProgress(
+        episode: freshEpisode,
+        history: freshHistory,
+      );
+    });
   }
 }
 
@@ -807,7 +862,9 @@ class _MetadataRow extends StatelessWidget {
   }
 }
 
-/// Action bar with play, download, and queue buttons.
+/// Action bar with a large play/pause button on the left and queue +
+/// download buttons aligned to the right (matching the episode list
+/// tile order).
 class _ActionBar extends StatelessWidget {
   const _ActionBar({
     required this.enclosureUrl,
@@ -818,6 +875,7 @@ class _ActionBar extends StatelessWidget {
     required this.onPlayPause,
     required this.onDownloadTap,
     required this.onQueuePlayLater,
+    required this.onQueuePlayNext,
   });
 
   final String? enclosureUrl;
@@ -828,15 +886,14 @@ class _ActionBar extends StatelessWidget {
   final VoidCallback? onPlayPause;
   final VoidCallback? onDownloadTap;
   final VoidCallback? onQueuePlayLater;
+  final VoidCallback? onQueuePlayNext;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final l10n = AppLocalizations.of(context);
 
     return Row(
       children: [
-        // Play/Pause button (large, primary)
         if (isLoading)
           const SizedBox(
             width: 56,
@@ -863,22 +920,17 @@ class _ActionBar extends StatelessWidget {
             ),
             onPressed: onPlayPause,
           ),
-        const SizedBox(width: Spacing.md),
-
-        // Download
+        const Spacer(),
+        if (episodeId != null && onQueuePlayLater != null)
+          AddToQueueButton(
+            onPlayLater: onQueuePlayLater!,
+            onPlayNext: onQueuePlayNext ?? onQueuePlayLater!,
+          ),
         if (episodeId != null)
           DownloadStatusIcon(
             task: downloadTask,
             size: 28,
             onTap: onDownloadTap,
-          ),
-
-        // Queue
-        if (episodeId != null && onQueuePlayLater != null)
-          IconButton(
-            icon: const Icon(Icons.playlist_add),
-            onPressed: onQueuePlayLater,
-            tooltip: l10n.addToQueue,
           ),
       ],
     );
