@@ -285,6 +285,16 @@ Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
       ref.invalidate(hasSmartPlaylistViewProvider(subscription.id));
       ref.invalidate(podcastSmartPlaylistsByFeedUrlProvider(feedUrl));
       ref.invalidate(hasSmartPlaylistViewByFeedUrlProvider(feedUrl));
+
+      // The parser may have early-stopped after the newest known
+      // pubDate, so result.episodes only contains the newly fetched
+      // items. Return the full set from Isar so callers see every
+      // historical episode, not just the delta.
+      final allEpisodes = await episodeRepo.getByPodcastId(subscription.id);
+      final podcastItems = allEpisodes
+          .map((e) => e.toPodcastItem(feedUrl: feedUrl))
+          .toList();
+      return ParsedFeed(podcast: result.podcast, episodes: podcastItems);
     }
 
     return result;
