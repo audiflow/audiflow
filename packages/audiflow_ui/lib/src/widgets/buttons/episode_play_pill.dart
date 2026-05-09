@@ -41,7 +41,7 @@ class EpisodePlayPill extends StatelessWidget {
         : colorScheme.primary;
     final borderColor = isCompleted
         ? colorScheme.outlineVariant
-        : colorScheme.outline;
+        : colorScheme.primary;
 
     return Material(
       color: Colors.transparent,
