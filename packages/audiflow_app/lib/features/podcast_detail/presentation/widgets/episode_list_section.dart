@@ -131,11 +131,19 @@ List<Widget> buildEpisodeListSlivers({
       // Reserve a viewport-tall placeholder so the scroll extent does
       // not collapse mid-scroll while the filtered query re-runs --
       // otherwise tapping a filter chip snaps the user back to the top.
+      // Pin the spinner near the top of the placeholder so it stays
+      // visible even when the user is scrolled past the header.
       SliverToBoxAdapter(
         child: Builder(
           builder: (context) => SizedBox(
             height: MediaQuery.of(context).size.height,
-            child: const Center(child: CircularProgressIndicator()),
+            child: const Align(
+              alignment: Alignment.topCenter,
+              child: Padding(
+                padding: EdgeInsets.only(top: Spacing.lg),
+                child: CircularProgressIndicator(),
+              ),
+            ),
           ),
         ),
       ),
