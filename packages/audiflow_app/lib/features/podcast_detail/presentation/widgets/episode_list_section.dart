@@ -190,10 +190,27 @@ List<Widget> _buildEpisodeData({
   );
 
   if (displayEpisodes.isEmpty) {
-    if (2 <= searchQuery.length) {
-      return [const PodcastDetailSearchEmptyState()];
-    }
-    return [const SliverFillRemaining(child: PodcastDetailEmptyFilterState())];
+    final empty = 2 <= searchQuery.length
+        ? const _PodcastDetailNoResultsMessage()
+        : const PodcastDetailEmptyFilterState();
+    // Reserve a viewport-tall placeholder so the scroll extent does not
+    // collapse below the user's offset when the filter result is empty.
+    return [
+      SliverToBoxAdapter(
+        child: Builder(
+          builder: (context) => SizedBox(
+            height: MediaQuery.of(context).size.height,
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: Padding(
+                padding: const EdgeInsets.only(top: Spacing.xl),
+                child: empty,
+              ),
+            ),
+          ),
+        ),
+      ),
+    ];
   }
 
   final progressMap = progressMapAsync.value ?? {};
@@ -323,4 +340,22 @@ List<Widget> _buildYearGroupedEpisodeSlivers({
     yearGroupingEnabled: true,
     itemExtent: episodeCardExtent,
   );
+}
+
+/// Plain (non-Sliver) "no search results" message used inside the
+/// viewport-tall empty placeholder.
+class _PodcastDetailNoResultsMessage extends StatelessWidget {
+  const _PodcastDetailNoResultsMessage();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    return Text(
+      AppLocalizations.of(context).podcastDetailNoResults,
+      style: theme.textTheme.titleMedium?.copyWith(
+        color: colorScheme.onSurfaceVariant,
+      ),
+    );
+  }
 }
