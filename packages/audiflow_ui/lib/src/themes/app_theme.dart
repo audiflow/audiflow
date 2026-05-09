@@ -116,7 +116,12 @@ class AppTheme {
             }
             return scheme.onSurfaceVariant;
           }),
-          side: WidgetStatePropertyAll(BorderSide(color: scheme.outline)),
+          side: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return BorderSide(color: scheme.primary);
+            }
+            return BorderSide(color: scheme.outline);
+          }),
         ),
       ),
       chipTheme: ChipThemeData(
@@ -124,7 +129,12 @@ class AppTheme {
         selectedColor: scheme.secondaryContainer,
         labelStyle: TextStyle(color: scheme.onSurface),
         secondaryLabelStyle: TextStyle(color: scheme.onSecondaryContainer),
-        side: BorderSide(color: scheme.outlineVariant),
+        side: WidgetStateBorderSide.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return BorderSide(color: scheme.primary);
+          }
+          return BorderSide(color: scheme.outlineVariant);
+        }),
         checkmarkColor: scheme.primary,
       ),
       switchTheme: SwitchThemeData(
