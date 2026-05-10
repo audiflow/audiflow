@@ -29,11 +29,15 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
     this.itunesId,
     this.feedUrl,
     this.effectiveOrder,
+    this.displayTitle,
   });
 
   final Episode episode;
   final String podcastTitle;
   final String? artworkUrl;
+
+  /// Title rendered in the row. Falls back to `episode.title` when null.
+  final String? displayTitle;
 
   /// RSS feed-level image URL for thumbnail deduplication.
   final String? feedImageUrl;
@@ -86,7 +90,7 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
 
     return EpisodeCard(
-      title: episode.title,
+      title: displayTitle ?? episode.title,
       pillLabel: _buildPillLabel(progress, isCompleted, isPlaying, l10n),
       dateLabel: _buildDateLabel(l10n),
       isInProgress: progress?.isInProgress ?? false,

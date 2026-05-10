@@ -12,6 +12,7 @@ import 'package:intl/intl.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
 import '../utils/group_sorting.dart';
+import '../utils/smart_playlist_def_resolver.dart';
 import '../widgets/play_order_bottom_sheet.dart';
 import '../widgets/smart_playlist_episode_list_tile.dart';
 
@@ -344,6 +345,7 @@ class _SmartPlaylistEpisodesScreenState
         sortEpisodeData(sorted, effectiveRule);
 
         final showThumbnail = _resolveEpisodeRowThumbnail();
+        final playlistDef = _resolvePlaylistDef();
 
         return [
           sortHeader,
@@ -364,6 +366,10 @@ class _SmartPlaylistEpisodesScreenState
                 itunesId: widget.podcast.id,
                 feedUrl: widget.podcast.feedUrl,
                 effectiveOrder: _resolvedPlayOrder,
+                displayTitle: EffectiveEpisodeTitle.forPlaylist(
+                  playlist: playlistDef,
+                  episode: data.episode,
+                ),
               );
             },
           ),
@@ -447,6 +453,7 @@ class _SmartPlaylistEpisodesScreenState
       );
 
     final showThumbnail = _resolveEpisodeRowThumbnail();
+    final playlistDef = _resolvePlaylistDef();
 
     return buildYearGroupedSlivers<SmartPlaylistEpisodeData>(
       itemsByYear: byYear,
@@ -463,6 +470,10 @@ class _SmartPlaylistEpisodesScreenState
         itunesId: widget.podcast.id,
         feedUrl: widget.podcast.feedUrl,
         effectiveOrder: _resolvedPlayOrder,
+        displayTitle: EffectiveEpisodeTitle.forPlaylist(
+          playlist: playlistDef,
+          episode: data.episode,
+        ),
       ),
       scrollController: _scrollController,
       yearGroupingEnabled: true,
@@ -885,6 +896,12 @@ class _SmartPlaylistEpisodesScreenState
       playlist: playlistDef,
     );
   }
+
+  SmartPlaylistDefinition? _resolvePlaylistDef() => resolveSmartPlaylistDef(
+    ref: ref,
+    feedUrl: widget.podcast.feedUrl,
+    playlistId: widget.smartPlaylist.id,
+  );
 }
 
 class _SmartPlaylistHeader extends StatelessWidget {
