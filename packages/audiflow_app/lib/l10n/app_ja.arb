@@ -303,6 +303,7 @@
 
   "stationSectionTitle": "ステーション",
   "stationNew": "新規ステーション",
+  "stationAdd": "ステーションを追加…",
   "stationName": "ステーション名",
   "stationNameHint": "例: ニュース、テック、お笑い",
   "stationPodcasts": "ポッドキャスト",

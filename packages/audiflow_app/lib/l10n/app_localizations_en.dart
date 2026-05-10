@@ -835,6 +835,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stationNew => 'New Station';
 
   @override
+  String get stationAdd => 'Add station…';
+
+  @override
   String get stationName => 'Station Name';
 
   @override

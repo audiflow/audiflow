@@ -55,11 +55,6 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.libraryTitle)),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push(AppRoutes.stationNew),
-        tooltip: l10n.stationNew,
-        child: const Icon(Icons.add),
-      ),
       body: subscriptionsAsync.when(
         data: (subscriptions) => _buildContent(
           context,
@@ -114,6 +109,9 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
+                  ),
+                  _AddStationAction(
+                    onTap: () => context.push(AppRoutes.stationNew),
                   ),
                 ],
               ),
@@ -314,6 +312,43 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
               onPressed: onRetry,
               icon: const Icon(Icons.refresh),
               label: Text(l10n.commonRetry),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AddStationAction extends StatelessWidget {
+  const _AddStationAction({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: Spacing.sm,
+          vertical: Spacing.xxs,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.add, size: 16, color: colorScheme.primary),
+            const SizedBox(width: 4),
+            Text(
+              l10n.stationAdd,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colorScheme.primary,
+              ),
             ),
           ],
         ),

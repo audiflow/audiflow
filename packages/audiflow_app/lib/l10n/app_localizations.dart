@@ -1592,6 +1592,12 @@ abstract class AppLocalizations {
   /// **'New Station'**
   String get stationNew;
 
+  /// Inline action label next to the Stations section header for creating a new station
+  ///
+  /// In en, this message translates to:
+  /// **'Add station…'**
+  String get stationAdd;
+
   /// Label for station name input field
   ///
   /// In en, this message translates to:

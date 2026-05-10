@@ -818,6 +818,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get stationNew => '新規ステーション';
 
   @override
+  String get stationAdd => 'ステーションを追加…';
+
+  @override
   String get stationName => 'ステーション名';
 
   @override
