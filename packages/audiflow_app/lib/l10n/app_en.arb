@@ -269,6 +269,8 @@
   "@librarySortBySubscribedAt": { "description": "Sort podcasts by subscription date" },
   "librarySortByAlphabetical": "Alphabetical",
   "@librarySortByAlphabetical": { "description": "Sort podcasts alphabetically" },
+  "librarySortTooltip": "Sort",
+  "@librarySortTooltip": { "description": "Tooltip for the podcast sort menu button" },
 
   "searchTitle": "Search Podcasts",
   "@searchTitle": { "description": "Search screen title" },
@@ -550,6 +552,8 @@
   "@stationSectionTitle": { "description": "Section title for Stations" },
   "stationNew": "New Station",
   "@stationNew": { "description": "Button label for creating a new station" },
+  "stationAdd": "Add station",
+  "@stationAdd": { "description": "Inline action label next to the Stations section header for creating a new station" },
   "stationName": "Station Name",
   "@stationName": { "description": "Label for station name input field" },
   "stationNameHint": "e.g., News, Tech, Comedy",

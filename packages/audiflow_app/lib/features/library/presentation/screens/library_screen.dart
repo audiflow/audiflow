@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +12,7 @@ import '../../../../routing/app_router.dart';
 import '../controllers/library_controller.dart';
 import '../../../station/presentation/controllers/station_list_controller.dart';
 import '../../../station/presentation/widgets/station_list_tile.dart';
+import '../widgets/subscription_list_tile.dart';
 
 class LibraryScreen extends ConsumerStatefulWidget {
   const LibraryScreen({super.key});
@@ -46,19 +49,19 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   @override
   Widget build(BuildContext context) {
     final subscriptionsAsync = ref.watch(librarySubscriptionsProvider);
+    final sortedSubscriptionsAsync = ref.watch(sortedSubscriptionsProvider);
     final stationsAsync = ref.watch(stationListProvider);
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.libraryTitle)),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push(AppRoutes.stationNew),
-        tooltip: l10n.stationNew,
-        child: const Icon(Icons.add),
-      ),
       body: subscriptionsAsync.when(
-        data: (subscriptions) =>
-            _buildContent(context, subscriptions, stationsAsync),
+        data: (subscriptions) => _buildContent(
+          context,
+          subscriptions,
+          sortedSubscriptionsAsync,
+          stationsAsync,
+        ),
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => _buildErrorState(
           context,
@@ -72,6 +75,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   Widget _buildContent(
     BuildContext context,
     List<Subscription> subscriptions,
+    AsyncValue<List<Subscription>> sortedSubscriptionsAsync,
     AsyncValue<List<Station>> stationsAsync,
   ) {
     final stations = stationsAsync.value ?? [];
@@ -83,6 +87,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
 
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
+    final sortOrderAsync = ref.watch(podcastSortOrderControllerProvider);
 
     return RefreshIndicator(
       onRefresh: _onRefresh,
@@ -104,6 +109,9 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
+                  ),
+                  _AddStationAction(
+                    onTap: () => context.push(AppRoutes.stationNew),
                   ),
                 ],
               ),
@@ -145,11 +153,29 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                 Spacing.md,
                 Spacing.sm,
               ),
-              child: Text(
-                l10n.libraryYourPodcasts,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    l10n.libraryYourPodcasts,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  if (hasSubscriptions)
+                    _SortMenuButton(
+                      currentOrder:
+                          sortOrderAsync.value ??
+                          PodcastSortOrder.latestEpisode,
+                      onSelected: (order) {
+                        unawaited(
+                          ref
+                              .read(podcastSortOrderControllerProvider.notifier)
+                              .setSortOrder(order),
+                        );
+                      },
+                    ),
+                ],
               ),
             ),
           ),
@@ -169,27 +195,47 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
               ),
             )
           else
-            SliverToBoxAdapter(
-              child: ListTile(
-                leading: const Icon(Icons.podcasts),
-                title: Text(
-                  l10n.stationPodcastCount(
-                    subscriptions.where((s) => !s.isCached).length,
-                  ),
-                ),
-                trailing: Icon(
-                  Symbols.chevron_right,
-                  color: theme.colorScheme.onSurfaceVariant.withValues(
-                    alpha: 0.5,
-                  ),
-                ),
-                onTap: () => context.push(AppRoutes.subscriptions),
-              ),
-            ),
+            ..._buildSubscriptionsSlivers(context, sortedSubscriptionsAsync),
           const SliverToBoxAdapter(child: SizedBox(height: Spacing.xl)),
         ],
       ),
     );
+  }
+
+  List<Widget> _buildSubscriptionsSlivers(
+    BuildContext context,
+    AsyncValue<List<Subscription>> sortedSubscriptionsAsync,
+  ) {
+    return [
+      sortedSubscriptionsAsync.when(
+        data: (sorted) => SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: Spacing.md),
+          sliver: SliverList(
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final subscription = sorted[index];
+              return SubscriptionListTile(
+                key: ValueKey(subscription.itunesId),
+                subscription: subscription,
+                onTap: () {
+                  final podcast = subscription.toPodcast();
+                  context.push(
+                    '${AppRoutes.library}/podcast/${podcast.id}',
+                    extra: podcast,
+                  );
+                },
+              );
+            }, childCount: sorted.length),
+          ),
+        ),
+        loading: () => const SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: Spacing.md),
+            child: Center(child: CircularProgressIndicator()),
+          ),
+        ),
+        error: (_, _) => const SliverToBoxAdapter(child: SizedBox.shrink()),
+      ),
+    ];
   }
 
   Widget _buildEmptyState(BuildContext context) {
@@ -269,6 +315,127 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _AddStationAction extends StatelessWidget {
+  const _AddStationAction({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: Spacing.sm,
+          vertical: Spacing.xxs,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.add, size: 16, color: colorScheme.primary),
+            const SizedBox(width: 4),
+            Text(
+              l10n.stationAdd,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colorScheme.primary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SortMenuButton extends StatelessWidget {
+  const _SortMenuButton({required this.currentOrder, required this.onSelected});
+
+  final PodcastSortOrder currentOrder;
+  final ValueChanged<PodcastSortOrder> onSelected;
+
+  String _labelFor(AppLocalizations l10n, PodcastSortOrder order) {
+    switch (order) {
+      case PodcastSortOrder.latestEpisode:
+        return l10n.librarySortByLatestEpisode;
+      case PodcastSortOrder.subscribedAt:
+        return l10n.librarySortBySubscribedAt;
+      case PodcastSortOrder.alphabetical:
+        return l10n.librarySortByAlphabetical;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
+
+    return PopupMenuButton<PodcastSortOrder>(
+      tooltip: l10n.librarySortTooltip,
+      onSelected: onSelected,
+      itemBuilder: (context) => [
+        _buildItem(
+          PodcastSortOrder.latestEpisode,
+          l10n.librarySortByLatestEpisode,
+        ),
+        _buildItem(
+          PodcastSortOrder.subscribedAt,
+          l10n.librarySortBySubscribedAt,
+        ),
+        _buildItem(
+          PodcastSortOrder.alphabetical,
+          l10n.librarySortByAlphabetical,
+        ),
+      ],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: Spacing.sm,
+          vertical: Spacing.xxs,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.sort, size: 16, color: colorScheme.onSurfaceVariant),
+            const SizedBox(width: 4),
+            Text(
+              _labelFor(l10n, currentOrder),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  PopupMenuItem<PodcastSortOrder> _buildItem(
+    PodcastSortOrder order,
+    String label,
+  ) {
+    return PopupMenuItem<PodcastSortOrder>(
+      value: order,
+      child: Row(
+        children: [
+          if (order == currentOrder)
+            const Padding(
+              padding: EdgeInsets.only(right: 8),
+              child: Icon(Icons.check, size: 20),
+            )
+          else
+            const SizedBox(width: 28),
+          Flexible(child: Text(label, overflow: TextOverflow.ellipsis)),
+        ],
       ),
     );
   }

@@ -411,6 +411,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get librarySortByAlphabetical => '名前順';
 
   @override
+  String get librarySortTooltip => '並び替え';
+
+  @override
   String get searchTitle => 'ポッドキャストを検索';
 
   @override
@@ -813,6 +816,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get stationNew => '新規ステーション';
+
+  @override
+  String get stationAdd => 'ステーションを追加';
 
   @override
   String get stationName => 'ステーション名';

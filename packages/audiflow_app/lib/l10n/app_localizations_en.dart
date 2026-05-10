@@ -421,6 +421,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get librarySortByAlphabetical => 'Alphabetical';
 
   @override
+  String get librarySortTooltip => 'Sort';
+
+  @override
   String get searchTitle => 'Search Podcasts';
 
   @override
@@ -830,6 +833,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get stationNew => 'New Station';
+
+  @override
+  String get stationAdd => 'Add station';
 
   @override
   String get stationName => 'Station Name';
