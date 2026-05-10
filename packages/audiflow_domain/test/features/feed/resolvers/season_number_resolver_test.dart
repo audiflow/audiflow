@@ -248,6 +248,58 @@ void main() {
         expect(hasReliableSeasonNumbers(episodes), isFalse);
       });
 
+      test('returns false for the anchor.fm fat-finger pattern', () {
+        // Real-world feed: 80 episodes, S1×77, S2×1, S46×1, S47×1.
+        // Producer typo'd episode numbers into the season field on
+        // three items. Auto-grouping would show three useless
+        // single-episode buckets next to S1.
+        final episodes = <Episode>[
+          for (var i = 1; i <= 77; i++)
+            _makeEpisode(id: i, title: 'E$i', seasonNumber: 1),
+          _makeEpisode(id: 78, title: 'E78', seasonNumber: 2),
+          _makeEpisode(id: 79, title: 'E79', seasonNumber: 46),
+          _makeEpisode(id: 80, title: 'E80', seasonNumber: 47),
+        ];
+        expect(hasReliableSeasonNumbers(episodes), isFalse);
+      });
+
+      test('returns false when one season dominates and two singletons '
+          'sit beside it', () {
+        // Smaller variant of the anchor.fm pattern.
+        final episodes = [
+          for (var i = 1; i <= 10; i++)
+            _makeEpisode(id: i, title: 'E$i', seasonNumber: 1),
+          _makeEpisode(id: 11, title: 'E11', seasonNumber: 5),
+          _makeEpisode(id: 12, title: 'E12', seasonNumber: 9),
+        ];
+        expect(hasReliableSeasonNumbers(episodes), isFalse);
+      });
+
+      test('returns true when one season dominates but only a single '
+          'singleton sits beside it', () {
+        // Just-started S2 — only one tiny bucket. Don't reject.
+        final episodes = [
+          for (var i = 1; i <= 10; i++)
+            _makeEpisode(id: i, title: 'E$i', seasonNumber: 1),
+          _makeEpisode(id: 11, title: 'E11', seasonNumber: 2),
+        ];
+        expect(hasReliableSeasonNumbers(episodes), isTrue);
+      });
+
+      test('returns true when buckets are balanced even with a singleton '
+          'tail', () {
+        // Largest share is below the dominance threshold, so the
+        // singleton is treated as a normal early-season bucket.
+        final episodes = [
+          for (var i = 1; i <= 5; i++)
+            _makeEpisode(id: i, title: 'E$i', seasonNumber: 1),
+          for (var i = 6; i <= 10; i++)
+            _makeEpisode(id: i, title: 'E$i', seasonNumber: 2),
+          _makeEpisode(id: 11, title: 'E11', seasonNumber: 3),
+        ];
+        expect(hasReliableSeasonNumbers(episodes), isTrue);
+      });
+
       test('non-positive seasonNumbers still count toward the seasoned '
           'tally (characterization)', () {
         // Documents the current treatment: any non-null seasonNumber
