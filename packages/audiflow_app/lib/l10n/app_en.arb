@@ -552,7 +552,7 @@
   "@stationSectionTitle": { "description": "Section title for Stations" },
   "stationNew": "New Station",
   "@stationNew": { "description": "Button label for creating a new station" },
-  "stationAdd": "Add station…",
+  "stationAdd": "Add station",
   "@stationAdd": { "description": "Inline action label next to the Stations section header for creating a new station" },
   "stationName": "Station Name",
   "@stationName": { "description": "Label for station name input field" },
