@@ -411,6 +411,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get librarySortByAlphabetical => '名前順';
 
   @override
+  String get librarySortTooltip => '並び替え';
+
+  @override
   String get searchTitle => 'ポッドキャストを検索';
 
   @override

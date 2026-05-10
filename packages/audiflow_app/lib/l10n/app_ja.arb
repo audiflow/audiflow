@@ -137,6 +137,7 @@
   "librarySortByLatestEpisode": "最新エピソード順",
   "librarySortBySubscribedAt": "登録日順",
   "librarySortByAlphabetical": "名前順",
+  "librarySortTooltip": "並び替え",
 
   "searchTitle": "ポッドキャストを検索",
   "searchHint": "ポッドキャストを検索...",

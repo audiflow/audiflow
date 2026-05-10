@@ -421,6 +421,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get librarySortByAlphabetical => 'Alphabetical';
 
   @override
+  String get librarySortTooltip => 'Sort';
+
+  @override
   String get searchTitle => 'Search Podcasts';
 
   @override

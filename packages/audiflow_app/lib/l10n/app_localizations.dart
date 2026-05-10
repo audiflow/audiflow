@@ -860,6 +860,12 @@ abstract class AppLocalizations {
   /// **'Alphabetical'**
   String get librarySortByAlphabetical;
 
+  /// Tooltip for the podcast sort menu button
+  ///
+  /// In en, this message translates to:
+  /// **'Sort'**
+  String get librarySortTooltip;
+
   /// Search screen title
   ///
   /// In en, this message translates to:

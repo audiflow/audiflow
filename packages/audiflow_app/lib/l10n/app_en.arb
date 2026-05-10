@@ -269,6 +269,8 @@
   "@librarySortBySubscribedAt": { "description": "Sort podcasts by subscription date" },
   "librarySortByAlphabetical": "Alphabetical",
   "@librarySortByAlphabetical": { "description": "Sort podcasts alphabetically" },
+  "librarySortTooltip": "Sort",
+  "@librarySortTooltip": { "description": "Tooltip for the podcast sort menu button" },
 
   "searchTitle": "Search Podcasts",
   "@searchTitle": { "description": "Search screen title" },

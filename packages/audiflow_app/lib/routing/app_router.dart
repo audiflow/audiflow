@@ -9,7 +9,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../l10n/app_localizations.dart';
 import '../features/library/presentation/screens/library_screen.dart';
-import '../features/library/presentation/screens/subscriptions_list_screen.dart';
 import '../features/onboarding/presentation/screens/getting_started_hub_screen.dart';
 import '../features/onboarding/presentation/screens/migration_guide_screen.dart';
 import '../features/onboarding/presentation/screens/onboarding_carousel_screen.dart';
@@ -55,7 +54,6 @@ class AppRoutes {
   static const String smartPlaylistGroupEpisodesPath = 'group/:groupId';
   static const String smartPlaylistDirectGroup =
       'smart-playlist/:playlistId/group/:groupId';
-  static const String subscriptions = '/library/subscriptions';
   static const String stationNew = '/library/station/new';
   static const String settingsAppearance = '/settings/appearance';
   static const String settingsPlayback = '/settings/playback';
@@ -226,42 +224,6 @@ GoRouter createAppRouter({
                         path: 'edit',
                         builder: (context, state) =>
                             _buildStationEditScreen(state),
-                      ),
-                    ],
-                  ),
-                  GoRoute(
-                    path: 'subscriptions',
-                    builder: (context, state) =>
-                        const SubscriptionsListScreen(),
-                    routes: [
-                      GoRoute(
-                        path: 'podcast/:id',
-                        builder: (context, state) =>
-                            _buildPodcastDetailScreen(state),
-                        routes: [
-                          GoRoute(
-                            path: AppRoutes.smartPlaylistEpisodes,
-                            builder: (context, state) =>
-                                _buildSmartPlaylistEpisodesScreen(state),
-                            routes: [
-                              GoRoute(
-                                path: AppRoutes.smartPlaylistGroupEpisodesPath,
-                                builder: (context, state) =>
-                                    _buildGroupEpisodesScreen(state),
-                              ),
-                            ],
-                          ),
-                          GoRoute(
-                            path: AppRoutes.smartPlaylistDirectGroup,
-                            builder: (context, state) =>
-                                _buildGroupEpisodesScreen(state),
-                          ),
-                          GoRoute(
-                            path: AppRoutes.episodeDetail,
-                            builder: (context, state) =>
-                                _buildEpisodeDetailScreen(state),
-                          ),
-                        ],
                       ),
                     ],
                   ),
