@@ -170,6 +170,11 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
   }
 
   @override
+  Future<void> updateDescription(int id, String? description) {
+    return _datasource.updateDescription(id, description);
+  }
+
+  @override
   Future<void> updateHttpCacheHeaders(
     int id, {
     String? etag,

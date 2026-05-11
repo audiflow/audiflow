@@ -143,6 +143,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playOrderMenuTitle => 'Play order';
 
   @override
+  String get podcastDetailDescriptionMenuTitle => 'Description';
+
+  @override
+  String get podcastDetailDescriptionSheetTitle => 'Description';
+
+  @override
+  String get podcastDetailNoDescription => 'No description available';
+
+  @override
+  String get podcastDetailSettingsTooltip => 'Settings';
+
+  @override
+  String get podcastDetailSettingsSheetTitle => 'Settings';
+
+  @override
   String playOrderDefault(String resolvedOrder) {
     return 'Default ($resolvedOrder)';
   }

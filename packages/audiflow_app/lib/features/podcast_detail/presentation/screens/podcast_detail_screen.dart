@@ -28,8 +28,10 @@ import '../widgets/episode_filter_chips.dart';
 import '../widgets/episode_list_section.dart';
 import '../widgets/inline_playlist_section.dart';
 import '../widgets/play_order_bottom_sheet.dart';
+import '../widgets/podcast_description_sheet.dart';
 import '../widgets/podcast_detail_empty_states.dart';
 import '../widgets/podcast_detail_header.dart';
+import '../widgets/podcast_settings_sheet.dart';
 import '../widgets/smart_playlist_view_toggle.dart';
 
 /// Displays podcast details and episode list with
@@ -189,21 +191,45 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final feedUrl = podcast.feedUrl;
+    final subscription = feedUrl == null
+        ? null
+        : ref.watch(subscriptionByFeedUrlProvider(feedUrl)).value;
+    final isSubscribed = subscription != null && !subscription.isCached;
     return Scaffold(
       appBar: AppBar(
         title: Text(podcast.name, maxLines: 1, overflow: TextOverflow.ellipsis),
         actions: [
           PopupMenuButton<String>(
             onSelected: (value) {
-              if (value == 'play_order') _showPlayOrderSheet();
+              switch (value) {
+                case 'description':
+                  showPodcastDescriptionSheet(
+                    context: context,
+                    podcast: podcast,
+                  );
+                case 'play_order':
+                  _showPlayOrderSheet();
+              }
             },
             itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'description',
+                child: Text(l10n.podcastDetailDescriptionMenuTitle),
+              ),
               PopupMenuItem(
                 value: 'play_order',
                 child: Text(l10n.playOrderMenuTitle),
               ),
             ],
           ),
+          if (isSubscribed)
+            IconButton(
+              icon: const Icon(Icons.settings_outlined),
+              tooltip: l10n.podcastDetailSettingsTooltip,
+              onPressed: () =>
+                  showPodcastSettingsSheet(context: context, podcast: podcast),
+            ),
         ],
       ),
       body: _buildBody(),

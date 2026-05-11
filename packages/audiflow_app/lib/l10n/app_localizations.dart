@@ -362,6 +362,36 @@ abstract class AppLocalizations {
   /// **'Play order'**
   String get playOrderMenuTitle;
 
+  /// Menu entry for showing the podcast description
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get podcastDetailDescriptionMenuTitle;
+
+  /// Title for the podcast description modal sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get podcastDetailDescriptionSheetTitle;
+
+  /// Shown when the podcast has no description
+  ///
+  /// In en, this message translates to:
+  /// **'No description available'**
+  String get podcastDetailNoDescription;
+
+  /// Tooltip for the podcast settings icon button
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get podcastDetailSettingsTooltip;
+
+  /// Title for the podcast settings modal sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get podcastDetailSettingsSheetTitle;
+
   /// Default play order option showing resolved parent value
   ///
   /// In en, this message translates to:
