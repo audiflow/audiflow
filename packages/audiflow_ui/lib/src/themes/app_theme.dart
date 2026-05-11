@@ -6,7 +6,7 @@ import 'text_styles.dart';
 ///
 /// Defines the shared light and dark themes built on top of
 /// [AppColorScheme]. Component-level theming is centralized here so the
-/// brand orange accent shows up consistently across navigation, tabs,
+/// brand accent shows up consistently across navigation, tabs,
 /// switches, sliders, and chips.
 class AppTheme {
   AppTheme._();
