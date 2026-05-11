@@ -47,11 +47,11 @@ class PodcastDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
-  ScrollController? _fallbackScrollController;
+  late final ScrollController _ownScrollController = ScrollController(
+    initialScrollOffset: _kSearchBarHeight,
+  );
 
-  ScrollController get _scrollController =>
-      PrimaryScrollController.maybeOf(context) ??
-      (_fallbackScrollController ??= ScrollController());
+  ScrollController get _scrollController => _ownScrollController;
 
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
@@ -93,6 +93,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
   // an ancestor PrimaryScrollController) is resolvable. Remove once the
   // root cause is confirmed.
   static const double _kJumpThresholdPx = 200;
+  static const double _kSearchBarHeight = 64;
   double? _lastScrollOffset;
   bool _scrollListenerAttached = false;
   EpisodeFilter? _previouslyLoggedFilter;
@@ -139,7 +140,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
   void dispose() {
     _searchDebounce?.cancel();
     _searchController.dispose();
-    _fallbackScrollController?.dispose();
+    _ownScrollController.dispose();
     final feedUrl = podcast.feedUrl;
     if (feedUrl != null) {
       PodcastMetadataHints.remove(feedUrl);
@@ -438,36 +439,44 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
         controller: _scrollController,
         slivers: [
           SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: TextField(
-                controller: _searchController,
-                onChanged: _onSearchChanged,
-                decoration: InputDecoration(
-                  hintText: MaterialLocalizations.of(context).searchFieldLabel,
-                  prefixIcon: const Icon(Icons.search),
-                  suffixIcon: ValueListenableBuilder<TextEditingValue>(
-                    valueListenable: _searchController,
-                    builder: (context, value, child) {
-                      if (value.text.isEmpty) {
-                        return const SizedBox.shrink();
-                      }
-                      return IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _searchController.clear();
-                          _searchDebounce?.cancel();
-                          setState(() => _searchQuery = '');
-                        },
-                      );
-                    },
+            child: SizedBox(
+              height: _kSearchBarHeight,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                child: TextField(
+                  controller: _searchController,
+                  onChanged: _onSearchChanged,
+                  decoration: InputDecoration(
+                    hintText: MaterialLocalizations.of(
+                      context,
+                    ).searchFieldLabel,
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                      valueListenable: _searchController,
+                      builder: (context, value, child) {
+                        if (value.text.isEmpty) {
+                          return const SizedBox.shrink();
+                        }
+                        return IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () {
+                            _searchController.clear();
+                            _searchDebounce?.cancel();
+                            setState(() => _searchQuery = '');
+                          },
+                        );
+                      },
+                    ),
+                    filled: true,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(28),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 0),
                   ),
-                  filled: true,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(28),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 0),
                 ),
               ),
             ),
@@ -552,6 +561,13 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
               itunesId: podcast.id,
               effectiveOrder: _resolvedPlayOrder,
             ),
+          // Transparent trailing spacer so the CustomScrollView's scroll
+          // extent is always large enough to keep the search bar hidden
+          // by the initial jumpTo offset, even when the episode list is
+          // empty or shorter than the viewport.
+          SliverToBoxAdapter(
+            child: SizedBox(height: MediaQuery.sizeOf(context).height),
+          ),
         ],
       ),
     );
@@ -569,6 +585,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
         _localViewMode = PodcastViewMode.episodes;
       });
     }
+    _hideSearchBarOnViewChange();
   }
 
   void _onPlaylistSelected(int? subscriptionId, SmartPlaylist playlist) {
@@ -584,6 +601,25 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
         _localSelectedPlaylistId = playlist.id;
       });
     }
+    _hideSearchBarOnViewChange();
+  }
+
+  /// Restores the hidden-search initial offset after a view-mode switch
+  /// when the user wasn't already revealing the search bar. The sliver
+  /// tree gets rebuilt around the switch and the scroll position can be
+  /// clamped to 0 while extent is momentarily small.
+  void _hideSearchBarOnViewChange() {
+    final controller = _scrollController;
+    if (!controller.hasClients) return;
+    if (controller.offset < _kSearchBarHeight) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !controller.hasClients) return;
+      final target = _kSearchBarHeight.clamp(
+        0.0,
+        controller.position.maxScrollExtent,
+      );
+      controller.jumpTo(target);
+    });
   }
 
   void _toggleSortOrder() {
