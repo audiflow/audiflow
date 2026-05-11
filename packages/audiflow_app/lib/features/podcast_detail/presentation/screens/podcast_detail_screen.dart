@@ -7,12 +7,14 @@ import 'package:audiflow_domain/audiflow_domain.dart'
         PodcastItem,
         PodcastViewMode,
         SmartPlaylist,
+        SmartPlaylistEpisodeData,
         SmartPlaylistGroup,
         SortOrder,
         appSettingsRepositoryProvider,
         namedLoggerProvider,
         playOrderPreferenceRepositoryProvider,
         podcastViewPreferenceControllerProvider,
+        smartPlaylistEpisodesProvider,
         smartPlaylistPatternByFeedUrlProvider,
         subscriptionByFeedUrlProvider;
 import 'package:audiflow_search/audiflow_search.dart';
@@ -86,6 +88,11 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
   /// new key is still resolving.
   List<PodcastItem>? _lastFilteredEpisodes;
 
+  /// Last successful smart-playlist episode data, used the same way as
+  /// [_lastFilteredEpisodes] to keep the sliver tree stable while a
+  /// different playlist key is loading.
+  List<SmartPlaylistEpisodeData>? _lastPlaylistEpisodes;
+
   // ---- diagnostics for scroll-jump investigation ----------------------
   // Logs the controller's offset on every scroll callback and flags any
   // transition larger than _kJumpThresholdPx as a JUMP. Wired in
@@ -98,6 +105,13 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
   bool _scrollListenerAttached = false;
   EpisodeFilter? _previouslyLoggedFilter;
   AsyncValue<List<PodcastItem>>? _previouslyLoggedEpisodes;
+
+  /// Latches once content has been built successfully. After this,
+  /// `_buildBody` never returns a non-`CustomScrollView` widget, so
+  /// transient provider loading states cannot unmount the scroll view
+  /// and destroy its [ScrollPosition] (which would otherwise reset
+  /// scroll offset to `initialScrollOffset` on remount).
+  bool _contentEverRendered = false;
 
   @override
   void initState() {
@@ -296,11 +310,16 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
         !playlistsAsync.isLoading &&
         !patternAsync.isLoading;
 
-    if (!allReady) {
+    // After the first successful content render, never return a
+    // non-CustomScrollView body. Transient provider loading states
+    // would otherwise unmount the CSV, destroy the ScrollPosition,
+    // and reset the offset to initialScrollOffset on remount.
+    if (!allReady && !_contentEverRendered) {
       return const Center(child: CircularProgressIndicator());
     }
 
     final hasPattern = patternAsync.value != null || patternAsync.hasError;
+    _contentEverRendered = true;
     return _buildContent(feedUrl, hasPattern: hasPattern);
   }
 
@@ -340,7 +359,6 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
       );
       _previouslyLoggedFilter = filter;
     }
-
     ref.listen(filteredSortedEpisodesProvider(feedUrl, filter, sortOrder), (
       prev,
       next,
@@ -545,21 +563,9 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
               effectiveOrder: _resolvedPlayOrder,
             )
           else if (activePlaylist != null)
-            ...buildInlinePlaylistSlivers(
-              ref: ref,
-              playlist: activePlaylist,
-              feedUrl: podcast.feedUrl,
-              searchQuery: _searchQuery,
+            ..._buildInlinePlaylistSliversWithFallback(
+              activePlaylist: activePlaylist,
               sortOrder: sortOrder,
-              podcastTitle: podcast.name,
-              artworkUrl: podcast.artworkUrl,
-              feedImageUrl: _feedImageUrl,
-              lastRefreshedAt: _lastRefreshedAt,
-              scrollController: _scrollController,
-              onToggleSortOrder: _toggleSortOrder,
-              onNavigateToGroup: _navigateToGroupEpisodes,
-              itunesId: podcast.id,
-              effectiveOrder: _resolvedPlayOrder,
             ),
           // Transparent trailing spacer so the CustomScrollView's scroll
           // extent is always large enough to keep the search bar hidden
@@ -585,7 +591,6 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
         _localViewMode = PodcastViewMode.episodes;
       });
     }
-    _hideSearchBarOnViewChange();
   }
 
   void _onPlaylistSelected(int? subscriptionId, SmartPlaylist playlist) {
@@ -601,25 +606,39 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
         _localSelectedPlaylistId = playlist.id;
       });
     }
-    _hideSearchBarOnViewChange();
   }
 
-  /// Restores the hidden-search initial offset after a view-mode switch
-  /// when the user wasn't already revealing the search bar. The sliver
-  /// tree gets rebuilt around the switch and the scroll position can be
-  /// clamped to 0 while extent is momentarily small.
-  void _hideSearchBarOnViewChange() {
-    final controller = _scrollController;
-    if (!controller.hasClients) return;
-    if (controller.offset < _kSearchBarHeight) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !controller.hasClients) return;
-      final target = _kSearchBarHeight.clamp(
-        0.0,
-        controller.position.maxScrollExtent,
-      );
-      controller.jumpTo(target);
+  /// Wraps [buildInlinePlaylistSlivers] with a fallback-episodes cache
+  /// so view-mode / playlist switches do not collapse the sliver tree
+  /// while the new provider key is still loading.
+  List<Widget> _buildInlinePlaylistSliversWithFallback({
+    required SmartPlaylist activePlaylist,
+    required SortOrder sortOrder,
+  }) {
+    final episodeIds = activePlaylist.episodeIds;
+    ref.listen(smartPlaylistEpisodesProvider(episodeIds), (prev, next) {
+      next.whenData((data) {
+        if (!mounted) return;
+        setState(() => _lastPlaylistEpisodes = data);
+      });
     });
+    return buildInlinePlaylistSlivers(
+      ref: ref,
+      playlist: activePlaylist,
+      feedUrl: podcast.feedUrl,
+      searchQuery: _searchQuery,
+      sortOrder: sortOrder,
+      podcastTitle: podcast.name,
+      artworkUrl: podcast.artworkUrl,
+      feedImageUrl: _feedImageUrl,
+      lastRefreshedAt: _lastRefreshedAt,
+      scrollController: _scrollController,
+      onToggleSortOrder: _toggleSortOrder,
+      onNavigateToGroup: _navigateToGroupEpisodes,
+      itunesId: podcast.id,
+      effectiveOrder: _resolvedPlayOrder,
+      fallbackEpisodes: _lastPlaylistEpisodes,
+    );
   }
 
   void _toggleSortOrder() {

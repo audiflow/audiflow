@@ -48,6 +48,7 @@ List<Widget> buildInlinePlaylistSlivers({
   onNavigateToGroup,
   String? itunesId,
   AutoPlayOrder? effectiveOrder,
+  List<SmartPlaylistEpisodeData>? fallbackEpisodes,
 }) {
   final episodesAsync = ref.watch(
     smartPlaylistEpisodesProvider(playlist.episodeIds),
@@ -63,6 +64,35 @@ List<Widget> buildInlinePlaylistSlivers({
     feedUrl: feedUrl,
     playlistId: playlist.id,
   );
+
+  // Mirrors the fallback pattern in buildEpisodeListSlivers: when the
+  // user just switched view mode (or playlist) the new provider key
+  // starts as AsyncLoading, which would otherwise collapse the sliver
+  // tree to a spinner and snap the scroll position. Render the cached
+  // last-known list with a thin progress bar until the new key resolves.
+  if (episodesAsync is AsyncLoading && fallbackEpisodes != null) {
+    return [
+      const _PlaylistListLoadingBar(),
+      ..._buildPlaylistData(
+        episodes: fallbackEpisodes,
+        playlist: playlist,
+        playlistDef: playlistDef,
+        searchQuery: searchQuery,
+        sortOrder: sortOrder,
+        podcastTitle: podcastTitle,
+        artworkUrl: artworkUrl,
+        feedImageUrl: feedImageUrl,
+        lastRefreshedAt: lastRefreshedAt,
+        scrollController: scrollController,
+        onToggleSortOrder: onToggleSortOrder,
+        onNavigateToGroup: onNavigateToGroup,
+        itunesId: itunesId,
+        feedUrl: feedUrl,
+        effectiveOrder: effectiveOrder,
+        showEpisodeRowThumbnail: showEpisodeRowThumbnail,
+      ),
+    ];
+  }
 
   return episodesAsync.when(
     data: (episodes) => _buildPlaylistData(
@@ -655,4 +685,17 @@ List<Widget> _buildMixedYearInlineGroups({
   }
 
   return (earliest, latest, hasDuration ? totalMs : null);
+}
+
+/// Thin progress bar shown while a new smart playlist provider key is
+/// being fetched and the cached previous list is still on screen.
+class _PlaylistListLoadingBar extends StatelessWidget {
+  const _PlaylistListLoadingBar();
+
+  @override
+  Widget build(BuildContext context) {
+    return const SliverToBoxAdapter(
+      child: SizedBox(height: 2, child: LinearProgressIndicator(minHeight: 2)),
+    );
+  }
 }
