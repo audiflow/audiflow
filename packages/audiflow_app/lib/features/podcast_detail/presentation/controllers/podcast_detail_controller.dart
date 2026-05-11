@@ -243,6 +243,18 @@ Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
       // Update last accessed timestamp
       await subscriptionRepo.updateLastAccessed(subscription.id);
 
+      // Persist RSS description so 304 Not Modified responses can return
+      // it via the rebuild-from-Isar path. iTunes-sourced descriptions
+      // are often empty; RSS provides the rich content.
+      final feedDescription = result.podcast.description.trim();
+      if (feedDescription.isNotEmpty &&
+          feedDescription != (subscription.description ?? '')) {
+        await subscriptionRepo.updateDescription(
+          subscription.id,
+          feedDescription,
+        );
+      }
+
       final episodeRepo = ref.read(episodeRepositoryProvider);
 
       // Look up smart playlist pattern for per-group extraction

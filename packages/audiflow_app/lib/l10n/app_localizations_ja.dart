@@ -141,6 +141,21 @@ class AppLocalizationsJa extends AppLocalizations {
   String get playOrderMenuTitle => '再生順序';
 
   @override
+  String get podcastDetailDescriptionMenuTitle => '概要';
+
+  @override
+  String get podcastDetailDescriptionSheetTitle => '概要';
+
+  @override
+  String get podcastDetailNoDescription => '概要はありません';
+
+  @override
+  String get podcastDetailSettingsTooltip => '設定';
+
+  @override
+  String get podcastDetailSettingsSheetTitle => '設定';
+
+  @override
   String playOrderDefault(String resolvedOrder) {
     return 'デフォルト ($resolvedOrder)';
   }

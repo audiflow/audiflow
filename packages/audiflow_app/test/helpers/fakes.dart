@@ -86,6 +86,10 @@ class FakeSubscriptionRepository implements SubscriptionRepository {
       throw UnimplementedError();
 
   @override
+  Future<void> updateDescription(int id, String? description) =>
+      throw UnimplementedError();
+
+  @override
   Future<void> updateHttpCacheHeaders(
     int id, {
     String? etag,

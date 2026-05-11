@@ -7,12 +7,14 @@ import 'package:audiflow_domain/audiflow_domain.dart'
         PodcastItem,
         PodcastViewMode,
         SmartPlaylist,
+        SmartPlaylistEpisodeData,
         SmartPlaylistGroup,
         SortOrder,
         appSettingsRepositoryProvider,
         namedLoggerProvider,
         playOrderPreferenceRepositoryProvider,
         podcastViewPreferenceControllerProvider,
+        smartPlaylistEpisodesProvider,
         smartPlaylistPatternByFeedUrlProvider,
         subscriptionByFeedUrlProvider;
 import 'package:audiflow_search/audiflow_search.dart';
@@ -28,8 +30,10 @@ import '../widgets/episode_filter_chips.dart';
 import '../widgets/episode_list_section.dart';
 import '../widgets/inline_playlist_section.dart';
 import '../widgets/play_order_bottom_sheet.dart';
+import '../widgets/podcast_description_sheet.dart';
 import '../widgets/podcast_detail_empty_states.dart';
 import '../widgets/podcast_detail_header.dart';
+import '../widgets/podcast_settings_sheet.dart';
 import '../widgets/smart_playlist_view_toggle.dart';
 
 /// Displays podcast details and episode list with
@@ -45,11 +49,11 @@ class PodcastDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
-  ScrollController? _fallbackScrollController;
+  late final ScrollController _ownScrollController = ScrollController(
+    initialScrollOffset: _kSearchBarHeight,
+  );
 
-  ScrollController get _scrollController =>
-      PrimaryScrollController.maybeOf(context) ??
-      (_fallbackScrollController ??= ScrollController());
+  ScrollController get _scrollController => _ownScrollController;
 
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
@@ -84,6 +88,11 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
   /// new key is still resolving.
   List<PodcastItem>? _lastFilteredEpisodes;
 
+  /// Last successful smart-playlist episode data, used the same way as
+  /// [_lastFilteredEpisodes] to keep the sliver tree stable while a
+  /// different playlist key is loading.
+  List<SmartPlaylistEpisodeData>? _lastPlaylistEpisodes;
+
   // ---- diagnostics for scroll-jump investigation ----------------------
   // Logs the controller's offset on every scroll callback and flags any
   // transition larger than _kJumpThresholdPx as a JUMP. Wired in
@@ -91,10 +100,18 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
   // an ancestor PrimaryScrollController) is resolvable. Remove once the
   // root cause is confirmed.
   static const double _kJumpThresholdPx = 200;
+  static const double _kSearchBarHeight = 64;
   double? _lastScrollOffset;
   bool _scrollListenerAttached = false;
   EpisodeFilter? _previouslyLoggedFilter;
   AsyncValue<List<PodcastItem>>? _previouslyLoggedEpisodes;
+
+  /// Latches once content has been built successfully. After this,
+  /// `_buildBody` never returns a non-`CustomScrollView` widget, so
+  /// transient provider loading states cannot unmount the scroll view
+  /// and destroy its [ScrollPosition] (which would otherwise reset
+  /// scroll offset to `initialScrollOffset` on remount).
+  bool _contentEverRendered = false;
 
   @override
   void initState() {
@@ -137,7 +154,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
   void dispose() {
     _searchDebounce?.cancel();
     _searchController.dispose();
-    _fallbackScrollController?.dispose();
+    _ownScrollController.dispose();
     final feedUrl = podcast.feedUrl;
     if (feedUrl != null) {
       PodcastMetadataHints.remove(feedUrl);
@@ -189,21 +206,45 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final feedUrl = podcast.feedUrl;
+    final subscription = feedUrl == null
+        ? null
+        : ref.watch(subscriptionByFeedUrlProvider(feedUrl)).value;
+    final isSubscribed = subscription != null && !subscription.isCached;
     return Scaffold(
       appBar: AppBar(
         title: Text(podcast.name, maxLines: 1, overflow: TextOverflow.ellipsis),
         actions: [
           PopupMenuButton<String>(
             onSelected: (value) {
-              if (value == 'play_order') _showPlayOrderSheet();
+              switch (value) {
+                case 'description':
+                  showPodcastDescriptionSheet(
+                    context: context,
+                    podcast: podcast,
+                  );
+                case 'play_order':
+                  _showPlayOrderSheet();
+              }
             },
             itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'description',
+                child: Text(l10n.podcastDetailDescriptionMenuTitle),
+              ),
               PopupMenuItem(
                 value: 'play_order',
                 child: Text(l10n.playOrderMenuTitle),
               ),
             ],
           ),
+          if (isSubscribed)
+            IconButton(
+              icon: const Icon(Icons.settings_outlined),
+              tooltip: l10n.podcastDetailSettingsTooltip,
+              onPressed: () =>
+                  showPodcastSettingsSheet(context: context, podcast: podcast),
+            ),
         ],
       ),
       body: _buildBody(),
@@ -269,11 +310,16 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
         !playlistsAsync.isLoading &&
         !patternAsync.isLoading;
 
-    if (!allReady) {
+    // After the first successful content render, never return a
+    // non-CustomScrollView body. Transient provider loading states
+    // would otherwise unmount the CSV, destroy the ScrollPosition,
+    // and reset the offset to initialScrollOffset on remount.
+    if (!allReady && !_contentEverRendered) {
       return const Center(child: CircularProgressIndicator());
     }
 
     final hasPattern = patternAsync.value != null || patternAsync.hasError;
+    _contentEverRendered = true;
     return _buildContent(feedUrl, hasPattern: hasPattern);
   }
 
@@ -313,7 +359,6 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
       );
       _previouslyLoggedFilter = filter;
     }
-
     ref.listen(filteredSortedEpisodesProvider(feedUrl, filter, sortOrder), (
       prev,
       next,
@@ -412,36 +457,44 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
         controller: _scrollController,
         slivers: [
           SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: TextField(
-                controller: _searchController,
-                onChanged: _onSearchChanged,
-                decoration: InputDecoration(
-                  hintText: MaterialLocalizations.of(context).searchFieldLabel,
-                  prefixIcon: const Icon(Icons.search),
-                  suffixIcon: ValueListenableBuilder<TextEditingValue>(
-                    valueListenable: _searchController,
-                    builder: (context, value, child) {
-                      if (value.text.isEmpty) {
-                        return const SizedBox.shrink();
-                      }
-                      return IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _searchController.clear();
-                          _searchDebounce?.cancel();
-                          setState(() => _searchQuery = '');
-                        },
-                      );
-                    },
+            child: SizedBox(
+              height: _kSearchBarHeight,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                child: TextField(
+                  controller: _searchController,
+                  onChanged: _onSearchChanged,
+                  decoration: InputDecoration(
+                    hintText: MaterialLocalizations.of(
+                      context,
+                    ).searchFieldLabel,
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                      valueListenable: _searchController,
+                      builder: (context, value, child) {
+                        if (value.text.isEmpty) {
+                          return const SizedBox.shrink();
+                        }
+                        return IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () {
+                            _searchController.clear();
+                            _searchDebounce?.cancel();
+                            setState(() => _searchQuery = '');
+                          },
+                        );
+                      },
+                    ),
+                    filled: true,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(28),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 0),
                   ),
-                  filled: true,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(28),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 0),
                 ),
               ),
             ),
@@ -510,22 +563,17 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
               effectiveOrder: _resolvedPlayOrder,
             )
           else if (activePlaylist != null)
-            ...buildInlinePlaylistSlivers(
-              ref: ref,
-              playlist: activePlaylist,
-              feedUrl: podcast.feedUrl,
-              searchQuery: _searchQuery,
+            ..._buildInlinePlaylistSliversWithFallback(
+              activePlaylist: activePlaylist,
               sortOrder: sortOrder,
-              podcastTitle: podcast.name,
-              artworkUrl: podcast.artworkUrl,
-              feedImageUrl: _feedImageUrl,
-              lastRefreshedAt: _lastRefreshedAt,
-              scrollController: _scrollController,
-              onToggleSortOrder: _toggleSortOrder,
-              onNavigateToGroup: _navigateToGroupEpisodes,
-              itunesId: podcast.id,
-              effectiveOrder: _resolvedPlayOrder,
             ),
+          // Transparent trailing spacer so the CustomScrollView's scroll
+          // extent is always large enough to keep the search bar hidden
+          // by the initial jumpTo offset, even when the episode list is
+          // empty or shorter than the viewport.
+          SliverToBoxAdapter(
+            child: SizedBox(height: MediaQuery.sizeOf(context).height),
+          ),
         ],
       ),
     );
@@ -558,6 +606,39 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
         _localSelectedPlaylistId = playlist.id;
       });
     }
+  }
+
+  /// Wraps [buildInlinePlaylistSlivers] with a fallback-episodes cache
+  /// so view-mode / playlist switches do not collapse the sliver tree
+  /// while the new provider key is still loading.
+  List<Widget> _buildInlinePlaylistSliversWithFallback({
+    required SmartPlaylist activePlaylist,
+    required SortOrder sortOrder,
+  }) {
+    final episodeIds = activePlaylist.episodeIds;
+    ref.listen(smartPlaylistEpisodesProvider(episodeIds), (prev, next) {
+      next.whenData((data) {
+        if (!mounted) return;
+        setState(() => _lastPlaylistEpisodes = data);
+      });
+    });
+    return buildInlinePlaylistSlivers(
+      ref: ref,
+      playlist: activePlaylist,
+      feedUrl: podcast.feedUrl,
+      searchQuery: _searchQuery,
+      sortOrder: sortOrder,
+      podcastTitle: podcast.name,
+      artworkUrl: podcast.artworkUrl,
+      feedImageUrl: _feedImageUrl,
+      lastRefreshedAt: _lastRefreshedAt,
+      scrollController: _scrollController,
+      onToggleSortOrder: _toggleSortOrder,
+      onNavigateToGroup: _navigateToGroupEpisodes,
+      itunesId: podcast.id,
+      effectiveOrder: _resolvedPlayOrder,
+      fallbackEpisodes: _lastPlaylistEpisodes,
+    );
   }
 
   void _toggleSortOrder() {

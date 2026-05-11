@@ -28,7 +28,12 @@ class SubscriptionController extends _$SubscriptionController {
 
     state = await AsyncValue.guard(() async {
       if (isCurrentlySubscribed) {
+        final feedUrl = podcast.feedUrl;
         await repository.unsubscribe(podcast.id);
+        ref.invalidate(subscriptionByItunesIdProvider(podcast.id));
+        if (feedUrl != null) {
+          ref.invalidate(subscriptionByFeedUrlProvider(feedUrl));
+        }
         return false;
       } else {
         final feedUrl = podcast.feedUrl;
@@ -52,6 +57,8 @@ class SubscriptionController extends _$SubscriptionController {
         // Invalidate feed provider to trigger episode persistence
         // (episodes are only persisted when subscribed)
         ref.invalidate(podcastDetailProvider(feedUrl));
+        ref.invalidate(subscriptionByItunesIdProvider(podcast.id));
+        ref.invalidate(subscriptionByFeedUrlProvider(feedUrl));
 
         return true;
       }

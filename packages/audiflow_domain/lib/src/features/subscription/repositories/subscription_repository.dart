@@ -82,6 +82,10 @@ abstract class SubscriptionRepository {
   /// Updates the auto-download setting for a subscription.
   Future<void> updateAutoDownload(int id, {required bool autoDownload});
 
+  /// Updates the description for a subscription. Used to persist
+  /// RSS-parsed descriptions so they survive 304 Not Modified cache hits.
+  Future<void> updateDescription(int id, String? description);
+
   /// Updates HTTP cache headers (ETag / Last-Modified) for a subscription.
   ///
   /// Used by conditional requests (If-None-Match / If-Modified-Since)

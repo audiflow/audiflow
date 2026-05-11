@@ -183,6 +183,17 @@ class SubscriptionLocalDatasource {
     return 1;
   }
 
+  /// Updates the description for a subscription.
+  ///
+  /// Does nothing if no subscription is found for the given [id].
+  Future<void> updateDescription(int id, String? description) async {
+    final existing = await _isar.subscriptions.get(id);
+    if (existing == null) return;
+
+    existing.description = description;
+    await _isar.writeTxn(() => _isar.subscriptions.put(existing));
+  }
+
   /// Updates the auto-download setting for a subscription.
   ///
   /// Does nothing if no subscription is found for the given [id].

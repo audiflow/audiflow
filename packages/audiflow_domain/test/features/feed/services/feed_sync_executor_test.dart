@@ -105,6 +105,10 @@ class _FakeSubscriptionRepository implements SubscriptionRepository {
   @override
   Future<void> updateAutoDownload(int id, {required bool autoDownload}) =>
       throw UnimplementedError();
+
+  @override
+  Future<void> updateDescription(int id, String? description) =>
+      throw UnimplementedError();
 }
 
 class _FakeEpisodeRepository implements EpisodeRepository {
