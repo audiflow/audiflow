@@ -2,6 +2,7 @@ import 'package:audio_service/audio_service.dart' hide PlaybackState;
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../podcast_detail/presentation/controllers/podcast_detail_controller.dart';
 import 'audiflow_audio_handler.dart';
 
 part 'audio_handler_provider.g.dart';
@@ -40,6 +41,18 @@ Future<AudiflowAudioHandler> audioHandler(Ref ref) async {
     if (progress == null) return;
     handler.updateDuration(progress.duration);
   });
+
+  // Invalidate cached episode progress / list views when the player
+  // marks an episode as completed, so already-rendered list screens
+  // reflect the new state without a manual reload.
+  final lifecycleStream = ref.read(playerLifecycleEventsProvider);
+  final lifecycleSub = lifecycleStream.listen((event) {
+    if (event is! EpisodeCompletedLifecycle) return;
+    ref.invalidate(podcastEpisodeProgressProvider);
+    ref.invalidate(filteredSortedEpisodesProvider);
+    ref.invalidate(smartPlaylistEpisodesProvider);
+  });
+  ref.onDispose(lifecycleSub.cancel);
 
   return handler;
 }

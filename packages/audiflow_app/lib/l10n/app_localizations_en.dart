@@ -622,6 +622,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get podcastDetailNewestFirst => 'Newest first';
 
   @override
+  String episodePillDurationMinutes(int minutes) {
+    return '${minutes}m';
+  }
+
+  @override
+  String get episodeFilterAll => 'All';
+
+  @override
+  String get episodeFilterUnplayed => 'Unplayed';
+
+  @override
+  String get episodeFilterInProgress => 'In Progress';
+
+  @override
   String podcastDetailFailedToLoad(String error) {
     return 'Failed to load: $error';
   }

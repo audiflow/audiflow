@@ -11,6 +11,7 @@ import '../../../download/presentation/helpers/download_action_helper.dart';
 import '../../../queue/presentation/controllers/queue_controller.dart';
 import '../../../share/presentation/helpers/share_helper.dart';
 import '../controllers/podcast_detail_controller.dart';
+import 'episode_pill_duration_label.dart';
 
 /// Displays a single episode (PodcastItem) with playback controls.
 ///
@@ -97,12 +98,24 @@ class EpisodeListTile extends ConsumerWidget {
 
     final l10n = AppLocalizations.of(context);
 
+    final livePlayback = isCurrentEpisode
+        ? ref.watch(playbackProgressProvider)
+        : null;
+    final liveFraction = _liveFraction(livePlayback);
+    final liveRemaining = _liveRemaining(livePlayback);
+
     return EpisodeCard(
       title: episode.title,
-      pillLabel: _buildPillLabel(progress, isCompleted, isPlaying, l10n),
+      pillLabel: _buildPillLabel(
+        progress,
+        isCompleted,
+        isPlaying,
+        l10n,
+        liveRemaining,
+      ),
       dateLabel: _buildDateLabel(l10n),
-      isInProgress: progress?.isInProgress ?? false,
-      progressFraction: _buildProgressFraction(progress),
+      isInProgress: (progress?.isInProgress ?? false) || (liveFraction != null),
+      progressFraction: liveFraction ?? _buildProgressFraction(progress),
       description: episode.description,
       thumbnailUrl: episode.primaryImage?.url,
       podcastArtworkUrl: artworkUrl,
@@ -171,20 +184,37 @@ class EpisodeListTile extends ConsumerWidget {
     bool isCompleted,
     bool isPlaying,
     AppLocalizations l10n,
+    Duration? liveRemaining,
   ) {
     if (isCompleted) return l10n.episodePillCompleted;
 
     final inProgress = isPlaying || (p?.isInProgress ?? false);
     if (inProgress) {
-      final remaining = p?.remainingDuration ?? episode.duration;
+      final remaining =
+          liveRemaining ?? p?.remainingDuration ?? episode.duration;
       if (remaining != null) {
-        return l10n.episodePillRemaining(remaining.podcastShortLabel);
+        return l10n.episodePillRemaining(
+          episodePillDurationLabel(remaining, l10n),
+        );
       }
     }
 
     final total = episode.duration;
-    if (total != null) return total.podcastShortLabel;
+    if (total != null) return episodePillDurationLabel(total, l10n);
     return '';
+  }
+
+  double? _liveFraction(PlaybackProgress? p) {
+    if (p == null) return null;
+    if (p.duration.inMilliseconds <= 0) return null;
+    return p.progress;
+  }
+
+  Duration? _liveRemaining(PlaybackProgress? p) {
+    if (p == null) return null;
+    if (p.duration.inMilliseconds <= 0) return null;
+    final remaining = p.duration - p.position;
+    return remaining.isNegative ? Duration.zero : remaining;
   }
 
   String? _buildDateLabel(AppLocalizations l10n) {

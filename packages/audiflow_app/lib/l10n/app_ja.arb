@@ -206,6 +206,10 @@
   "podcastDetailGroupCount": "{count}グループ",
   "podcastDetailOldestFirst": "公開日順（古→新）",
   "podcastDetailNewestFirst": "公開日順（新→古）",
+  "episodePillDurationMinutes": "{minutes}分",
+  "episodeFilterAll": "すべて",
+  "episodeFilterUnplayed": "未再生",
+  "episodeFilterInProgress": "再生途中",
   "podcastDetailFailedToLoad": "読み込み失敗: {error}",
 
   "episodeReplaceQueueTitle": "キューを置き換えますか？",

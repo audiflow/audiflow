@@ -607,6 +607,20 @@ class AppLocalizationsJa extends AppLocalizations {
   String get podcastDetailNewestFirst => '公開日順（新→古）';
 
   @override
+  String episodePillDurationMinutes(int minutes) {
+    return '$minutes分';
+  }
+
+  @override
+  String get episodeFilterAll => 'すべて';
+
+  @override
+  String get episodeFilterUnplayed => '未再生';
+
+  @override
+  String get episodeFilterInProgress => '再生途中';
+
+  @override
   String podcastDetailFailedToLoad(String error) {
     return '読み込み失敗: $error';
   }

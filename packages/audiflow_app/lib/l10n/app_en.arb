@@ -393,6 +393,19 @@
   "@podcastDetailOldestFirst": { "description": "Sort order oldest first" },
   "podcastDetailNewestFirst": "Newest first",
   "@podcastDetailNewestFirst": { "description": "Sort order newest first" },
+  "episodePillDurationMinutes": "{minutes}m",
+  "@episodePillDurationMinutes": {
+    "description": "Compact pill duration label in minutes (e.g. 8m)",
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "episodeFilterAll": "All",
+  "@episodeFilterAll": { "description": "Episode filter chip: show all episodes" },
+  "episodeFilterUnplayed": "Unplayed",
+  "@episodeFilterUnplayed": { "description": "Episode filter chip: show unplayed episodes" },
+  "episodeFilterInProgress": "In Progress",
+  "@episodeFilterInProgress": { "description": "Episode filter chip: show partially played episodes" },
   "podcastDetailFailedToLoad": "Failed to load: {error}",
   "@podcastDetailFailedToLoad": { "description": "Generic load failure", "placeholders": { "error": { "type": "String" } } },
 

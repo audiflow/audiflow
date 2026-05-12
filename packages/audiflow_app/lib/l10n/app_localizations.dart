@@ -1220,6 +1220,30 @@ abstract class AppLocalizations {
   /// **'Newest first'**
   String get podcastDetailNewestFirst;
 
+  /// Compact pill duration label in minutes (e.g. 8m)
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes}m'**
+  String episodePillDurationMinutes(int minutes);
+
+  /// Episode filter chip: show all episodes
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get episodeFilterAll;
+
+  /// Episode filter chip: show unplayed episodes
+  ///
+  /// In en, this message translates to:
+  /// **'Unplayed'**
+  String get episodeFilterUnplayed;
+
+  /// Episode filter chip: show partially played episodes
+  ///
+  /// In en, this message translates to:
+  /// **'In Progress'**
+  String get episodeFilterInProgress;
+
   /// Generic load failure
   ///
   /// In en, this message translates to:
