@@ -45,39 +45,78 @@ const List<CollectionSchema<dynamic>> isarSchemas = [
   StationEpisodeSchema,
 ];
 
-/// Opens Isar with automatic recovery on any [IsarError].
+/// Opens Isar with automatic recovery on schema-mismatch [IsarError]s.
 ///
-/// When Isar fails to open (e.g. schema mismatch after app update,
-/// corrupted files, or other internal errors), this deletes **all**
-/// Isar database files matching `$name.isar*` and retries opening
-/// with the full [isarSchemas] list.
+/// When Isar fails to open with a schema-mismatch error (e.g. after an
+/// app update changed a collection or field), this deletes **all** Isar
+/// database files matching `$name.isar*` and retries opening with the
+/// full [isarSchemas] list.
 ///
 /// This is a last-resort recovery mechanism that drops every Isar
 /// collection (subscriptions, episodes, playback history, download
 /// tasks, queue, smart playlists, view preferences, transcripts,
 /// stations, etc. per [isarSchemas]). Subscriptions and episodes can
 /// be re-synced from RSS, but other local-only state is permanently
-/// lost. This trade-off is accepted to recover from corruption that
-/// would otherwise prevent the app from opening its database at all.
+/// lost. This trade-off is accepted to recover from schema mismatches
+/// that would otherwise prevent the app from opening its database at
+/// all.
+///
+/// Non-schema [IsarError]s (e.g. lock contention, transient FS issues,
+/// disk full) are **rethrown** so the caller can surface or retry the
+/// real cause instead of silently wiping user data. The full error
+/// message is always logged so unknown failures can be diagnosed and
+/// matched in [_isSchemaMismatchError] in future releases.
 ///
 /// Note: [IsarError] extends [Error] with only a `message` string and
-/// no structured error codes, so narrowing the catch is not feasible.
+/// no structured error codes, so substring matching is the only way
+/// to narrow the catch.
 Future<Isar> openIsarWithRecovery({
   required String directory,
   String name = 'audiflow',
   Logger? logger,
+  bool inspector = false,
 }) async {
   try {
-    return await Isar.open(isarSchemas, directory: directory, name: name);
+    return await Isar.open(
+      isarSchemas,
+      directory: directory,
+      name: name,
+      inspector: inspector,
+    );
   } on IsarError catch (e, stack) {
+    if (!_isSchemaMismatchError(e.message)) {
+      logger?.e(
+        'Isar open failed with non-schema error; rethrowing without deleting data',
+        error: e,
+        stackTrace: stack,
+      );
+      rethrow;
+    }
     logger?.w(
-      'Isar open failed, deleting database for recovery',
+      'Isar open failed with schema mismatch, deleting database for recovery',
       error: e,
       stackTrace: stack,
     );
     await _deleteIsarFiles(directory: directory, name: name, logger: logger);
-    return Isar.open(isarSchemas, directory: directory, name: name);
+    return Isar.open(
+      isarSchemas,
+      directory: directory,
+      name: name,
+      inspector: inspector,
+    );
   }
+}
+
+/// Heuristic match for Isar schema-mismatch errors.
+///
+/// `isar_community` 3.x surfaces native error messages as plain strings
+/// without error codes. Schema-mismatch messages reliably contain the
+/// word "schema"; "migration" is also accepted as a fallback marker
+/// since migration-required errors imply the on-disk schema differs
+/// from the code-defined schema.
+bool _isSchemaMismatchError(String message) {
+  final lower = message.toLowerCase();
+  return lower.contains('schema') || lower.contains('migration');
 }
 
 Future<void> _deleteIsarFiles({

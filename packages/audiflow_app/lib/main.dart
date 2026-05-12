@@ -11,6 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart' as intl;
 import 'package:isar_community/isar.dart';
+import 'package:logger/logger.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sentry_dio/sentry_dio.dart';
@@ -114,7 +115,54 @@ Future<void> _startApp(String smartPlaylistConfigBaseUrl) async {
   await _configureOrientation();
 
   final dir = await getApplicationDocumentsDirectory();
-  final isar = await openIsarWithRecovery(directory: dir.path);
+  // Standalone logger: ProviderContainer cannot be built before Isar is
+  // open (Isar is a container override), so the logger provider is not
+  // yet available. A plain Logger is sufficient for surfacing open
+  // failures.
+  final isarOpenLogger = Logger(
+    printer: PrettyPrinter(
+      methodCount: 0,
+      errorMethodCount: 8,
+      lineLength: 80,
+      colors: true,
+      printEmojis: false,
+      dateTimeFormat: DateTimeFormat.onlyTimeAndSinceStart,
+    ),
+    level: Level.debug,
+  );
+  Sentry.addBreadcrumb(
+    Breadcrumb(
+      message: 'Opening Isar database',
+      category: 'database',
+      data: {'directory': dir.path},
+    ),
+  );
+  final Isar isar;
+  try {
+    isar = await openIsarWithRecovery(
+      directory: dir.path,
+      logger: isarOpenLogger,
+    );
+    Sentry.addBreadcrumb(
+      Breadcrumb(message: 'Isar opened', category: 'database'),
+    );
+  } on IsarError catch (e, stack) {
+    // Schema-mismatch errors are recovered inside openIsarWithRecovery
+    // by deleting the database; reaching this catch means the recovery
+    // path was skipped (non-schema error) or the retried open also
+    // failed. Capture explicitly so the failure mode is visible in
+    // Sentry even though it would otherwise propagate to the zone
+    // error handler — a breadcrumb alone would not carry the message.
+    await Sentry.captureException(
+      e,
+      stackTrace: stack,
+      withScope: (scope) {
+        scope.setTag('subsystem', 'isar_open');
+        scope.setContexts('isar', {'message': e.message});
+      },
+    );
+    rethrow;
+  }
   final dio = Dio(
     BaseOptions(
       connectTimeout: const Duration(seconds: 30),
