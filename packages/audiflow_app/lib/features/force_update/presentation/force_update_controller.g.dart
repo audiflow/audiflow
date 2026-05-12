@@ -117,7 +117,7 @@ final class ForceUpdateControllerProvider
 }
 
 String _$forceUpdateControllerHash() =>
-    r'720d0164ca52a940743f4210d0ec26397a3fe2c1';
+    r'78bb027a8400ad1dbeb9b7ab08253cd4bf054e3a';
 
 /// AsyncNotifier exposing the current [UpdateDecision].
 ///
