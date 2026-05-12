@@ -111,7 +111,7 @@ final class FeedHttpClientProvider extends $FunctionalProvider<Dio, Dio, Dio>
   }
 }
 
-String _$feedHttpClientHash() => r'1f78c2cb06966ea95e535a2df41522826f3e0f46';
+String _$feedHttpClientHash() => r'00cc3ab53e71d29af830fe79c08364e43d59b080';
 
 /// Fetches and provides parsed podcast feed data for a given feed URL.
 ///
@@ -196,7 +196,7 @@ final class PodcastDetailProvider
   }
 }
 
-String _$podcastDetailHash() => r'315a0220b95ffe171895482b0a0c32e2c309d286';
+String _$podcastDetailHash() => r'00a4f2c9b45a6539a1ab79efd63eebce114a6597';
 
 /// Fetches and provides parsed podcast feed data for a given feed URL.
 ///

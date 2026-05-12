@@ -4,6 +4,8 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:pub_semver/pub_semver.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import 'force_update_reporter.dart';
+
 part 'force_update_controller.g.dart';
 
 /// Running app's semver, derived from [PackageInfo.version].
@@ -84,18 +86,56 @@ class ForceUpdateController extends _$ForceUpdateController {
       // rebuilds while keeping the AsyncData path stable.
       final current = state.value;
       if (current == null || current != next) {
+        _recordTransition(current, next);
         state = AsyncData(next);
       }
     } catch (e, stack) {
       // Fail-open: keep current state, surface the error to the logger
-      // so transient remote failures do not vanish silently.
+      // so transient remote failures do not vanish silently. Also send
+      // a Sentry capture via the reporter seam so controller-level
+      // refresh throws (a rare path the repo's fail-open hides) remain
+      // visible in monitoring.
       ref
           .read(namedLoggerProvider('ForceUpdate'))
           .w('Force-update refresh failed', error: e, stackTrace: stack);
+      await ref
+          .read(forceUpdateReporterProvider)
+          .captureException(
+            e,
+            stackTrace: stack,
+            message: 'ForceUpdate refresh threw',
+          );
     } finally {
       _refreshInFlight = false;
     }
   }
+
+  /// Annotates each decision transition as a Sentry breadcrumb.
+  ///
+  /// Breadcrumbs are cheap and provide context if a later capture lands
+  /// in the same session; they intentionally do not capture exceptions.
+  void _recordTransition(UpdateDecision? from, UpdateDecision to) {
+    final reporter = ref.read(forceUpdateReporterProvider);
+    reporter.addBreadcrumb(
+      message: 'decision ${_label(from)} -> ${_label(to)}',
+      level: _severityFor(to),
+      data: {'from': _label(from), 'to': _label(to)},
+    );
+  }
+
+  String _label(UpdateDecision? decision) => switch (decision) {
+    null => 'none',
+    NoUpdate() => 'NoUpdate',
+    SoftUpdate() => 'SoftUpdate',
+    HardUpdate() => 'HardUpdate',
+    Maintenance() => 'Maintenance',
+  };
+
+  ForceUpdateLogLevel _severityFor(UpdateDecision decision) =>
+      switch (decision) {
+        HardUpdate() || Maintenance() => ForceUpdateLogLevel.warning,
+        _ => ForceUpdateLogLevel.info,
+      };
 
   UpdateDecision _decideOrNoUpdate(ForceUpdateConfig? config, Version version) {
     if (config == null) return const NoUpdate();
