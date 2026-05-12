@@ -71,13 +71,13 @@ Invariants enforced at parse time: `minVersion <= recommendedVersion`. Violation
 
 ## Hosting
 
-New repo `audiflow/audiflow-app-config` (or new path within an existing config repo — coordinate with smartplaylist hosting). Path convention:
+Public repo `audiflow/audiflow-app-config` (separate from the smartplaylist repo so its public PR flow can never affect the kill switch). GitHub Pages, write-restricted to the maintainer via branch ruleset + CODEOWNERS. URLs:
 
-- `https://<host>/audiflow-app-config/v1/app_config.json` (prod)
-- `https://<host>/audiflow-app-config/v1/app_config.dev.json` (dev)
-- `https://<host>/audiflow-app-config/v1/app_config.stg.json` (stg)
+- `https://audiflow.github.io/audiflow-app-config/v1/app_config.json` (prod)
+- `https://audiflow.github.io/audiflow-app-config/v1/app_config.stg.json` (stg)
+- `https://audiflow.github.io/audiflow-app-config/v1/app_config.dev.json` (dev)
 
-Edit by PR; merge → GH Pages deploy. CDN cache TTL short (e.g., 5 min) so emergency rollouts propagate.
+Edit by PR; merge to `main` → GH Pages workflow validates JSON + schema, then deploys. CDN cache TTL is short (minutes) so emergency rollouts propagate quickly. Public read is acceptable because the URL is already embedded in the shipped app binary — secrecy of the JSON adds nothing; security comes from write control (and, optionally, client-side signature verification as a later hardening).
 
 ## Decision Evaluator
 

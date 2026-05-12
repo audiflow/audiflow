@@ -3116,6 +3116,6 @@ If validation surfaces small fixes, commit them as a single chore commit.
 
 ## Open items (not blocking implementation, surface in PR description)
 
-1. **Hosting repo:** create `audiflow/audiflow-app-config` (or new path under existing infra) and seed prod/stg/dev JSON files before promoting `FORCE_UPDATE_CONFIG_URL` to a real endpoint. Until then, fail-open keeps the app working.
+1. **Hosting repo:** `audiflow/audiflow-app-config` is live (public, maintainer-only write via branch ruleset + CODEOWNERS). Seeded prod/stg/dev JSON is served from `https://audiflow.github.io/audiflow-app-config/v1/app_config{,.stg,.dev}.json` and the three `.env.{prod,stg,dev}` files in this repo already point at those URLs. No action remaining.
 2. **App Store ID:** if Audiflow is not yet listed in the App Store, the iOS fallback URL in `update_url_resolver.dart` is a placeholder. Replace before shipping force-upgrade in production.
 3. **Coverage of error paths:** integration test does not cover Dio timeout / 5xx specifically (covered at unit level). If desired, add a `DioAdapter`-backed integration test that drives a real `ForceUpdateRepository` with simulated failures.
