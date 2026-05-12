@@ -1476,4 +1476,59 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get settingsGettingStartedSubtitle => '他のアプリから移行、基本の使い方';
+
+  @override
+  String get forceUpdateDefaultTitle => 'アップデートが必要です';
+
+  @override
+  String get forceUpdateDefaultBody => 'Audiflow を続けて使うには新しいバージョンが必要です。';
+
+  @override
+  String get forceUpdateDefaultSoftBody => 'Audiflow の新しいバージョンが利用できます。';
+
+  @override
+  String get forceUpdateSecurityCriticalTitle => 'セキュリティアップデート';
+
+  @override
+  String get forceUpdateSecurityCriticalBody =>
+      '重要なセキュリティ修正を含むアップデートを適用してください。';
+
+  @override
+  String get forceUpdateSecurityCriticalSoftBody => '重要なセキュリティアップデートが利用できます。';
+
+  @override
+  String get forceUpdateBreakingChangeTitle => 'アップデートが必要です';
+
+  @override
+  String get forceUpdateBreakingChangeBody => '互換性のため Audiflow をアップデートしてください。';
+
+  @override
+  String get forceUpdateBreakingChangeSoftBody => '互換性のためのアップデートが利用できます。';
+
+  @override
+  String get forceUpdateOsDriftTitle => 'アップデートが必要です';
+
+  @override
+  String get forceUpdateOsDriftBody => 'プラットフォーム要件に合わせてアップデートしてください。';
+
+  @override
+  String get forceUpdateOsDriftSoftBody => 'プラットフォーム改善を含む新しいバージョンが利用できます。';
+
+  @override
+  String get forceUpdateMaintenanceTitle => 'メンテナンス中';
+
+  @override
+  String get forceUpdateMaintenanceBody => 'Audiflow は一時的に利用できません。後ほどお試しください。';
+
+  @override
+  String get forceUpdateActionUpdateNow => '今すぐアップデート';
+
+  @override
+  String get forceUpdateActionLater => 'あとで';
+
+  @override
+  String get forceUpdateActionRetry => '再試行';
+
+  @override
+  String get forceUpdateActionQuit => '終了';
 }

@@ -616,5 +616,29 @@
   "settingsGettingStartedTitle": "はじめに",
   "@settingsGettingStartedTitle": { "description": "Settings tile: Getting Started hub" },
   "settingsGettingStartedSubtitle": "他のアプリから移行、基本の使い方",
-  "@settingsGettingStartedSubtitle": { "description": "Settings tile subtitle" }
+  "@settingsGettingStartedSubtitle": { "description": "Settings tile subtitle" },
+
+  "forceUpdateDefaultTitle": "アップデートが必要です",
+  "forceUpdateDefaultBody": "Audiflow を続けて使うには新しいバージョンが必要です。",
+  "forceUpdateDefaultSoftBody": "Audiflow の新しいバージョンが利用できます。",
+
+  "forceUpdateSecurityCriticalTitle": "セキュリティアップデート",
+  "forceUpdateSecurityCriticalBody": "重要なセキュリティ修正を含むアップデートを適用してください。",
+  "forceUpdateSecurityCriticalSoftBody": "重要なセキュリティアップデートが利用できます。",
+
+  "forceUpdateBreakingChangeTitle": "アップデートが必要です",
+  "forceUpdateBreakingChangeBody": "互換性のため Audiflow をアップデートしてください。",
+  "forceUpdateBreakingChangeSoftBody": "互換性のためのアップデートが利用できます。",
+
+  "forceUpdateOsDriftTitle": "アップデートが必要です",
+  "forceUpdateOsDriftBody": "プラットフォーム要件に合わせてアップデートしてください。",
+  "forceUpdateOsDriftSoftBody": "プラットフォーム改善を含む新しいバージョンが利用できます。",
+
+  "forceUpdateMaintenanceTitle": "メンテナンス中",
+  "forceUpdateMaintenanceBody": "Audiflow は一時的に利用できません。後ほどお試しください。",
+
+  "forceUpdateActionUpdateNow": "今すぐアップデート",
+  "forceUpdateActionLater": "あとで",
+  "forceUpdateActionRetry": "再試行",
+  "forceUpdateActionQuit": "終了"
 }

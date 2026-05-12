@@ -981,5 +981,47 @@
   "settingsGettingStartedTitle": "Getting Started",
   "@settingsGettingStartedTitle": { "description": "Settings tile: Getting Started hub" },
   "settingsGettingStartedSubtitle": "Migrate from another app, learn the basics",
-  "@settingsGettingStartedSubtitle": { "description": "Settings tile subtitle" }
+  "@settingsGettingStartedSubtitle": { "description": "Settings tile subtitle" },
+
+  "forceUpdateDefaultTitle": "Update Required",
+  "@forceUpdateDefaultTitle": { "description": "Default force-update title" },
+  "forceUpdateDefaultBody": "A newer version of Audiflow is required to continue.",
+  "@forceUpdateDefaultBody": { "description": "Default hard-update body" },
+  "forceUpdateDefaultSoftBody": "A newer version of Audiflow is available.",
+  "@forceUpdateDefaultSoftBody": { "description": "Default soft-update body" },
+
+  "forceUpdateSecurityCriticalTitle": "Security Update Required",
+  "@forceUpdateSecurityCriticalTitle": { "description": "Security-critical title" },
+  "forceUpdateSecurityCriticalBody": "Please update Audiflow to address an important security issue.",
+  "@forceUpdateSecurityCriticalBody": { "description": "Security-critical body" },
+  "forceUpdateSecurityCriticalSoftBody": "An important security update is available.",
+  "@forceUpdateSecurityCriticalSoftBody": { "description": "Security-critical soft body" },
+
+  "forceUpdateBreakingChangeTitle": "Update Required",
+  "@forceUpdateBreakingChangeTitle": { "description": "Breaking change title" },
+  "forceUpdateBreakingChangeBody": "Audiflow has changes that require an updated app to continue.",
+  "@forceUpdateBreakingChangeBody": { "description": "Breaking change body" },
+  "forceUpdateBreakingChangeSoftBody": "An update with required changes is available.",
+  "@forceUpdateBreakingChangeSoftBody": { "description": "Breaking change soft body" },
+
+  "forceUpdateOsDriftTitle": "Update Required",
+  "@forceUpdateOsDriftTitle": { "description": "OS drift title" },
+  "forceUpdateOsDriftBody": "Please update Audiflow to keep up with the latest platform requirements.",
+  "@forceUpdateOsDriftBody": { "description": "OS drift body" },
+  "forceUpdateOsDriftSoftBody": "A newer version is available with platform improvements.",
+  "@forceUpdateOsDriftSoftBody": { "description": "OS drift soft body" },
+
+  "forceUpdateMaintenanceTitle": "Under Maintenance",
+  "@forceUpdateMaintenanceTitle": { "description": "Maintenance title" },
+  "forceUpdateMaintenanceBody": "Audiflow is temporarily unavailable. Please try again later.",
+  "@forceUpdateMaintenanceBody": { "description": "Maintenance body" },
+
+  "forceUpdateActionUpdateNow": "Update now",
+  "@forceUpdateActionUpdateNow": { "description": "Update now button" },
+  "forceUpdateActionLater": "Later",
+  "@forceUpdateActionLater": { "description": "Later (dismiss soft banner)" },
+  "forceUpdateActionRetry": "Retry",
+  "@forceUpdateActionRetry": { "description": "Retry maintenance check" },
+  "forceUpdateActionQuit": "Quit",
+  "@forceUpdateActionQuit": { "description": "Quit app (Android only)" }
 }
