@@ -7,7 +7,7 @@ import '../../../../l10n/app_localizations.dart';
 
 /// Per-source migration guide. Each section describes how to
 /// produce an OPML file from a third-party podcast app, then
-/// share it with Audiflow via the system share sheet.
+/// share it with audiflow via the system share sheet.
 class MigrationGuideScreen extends StatelessWidget {
   const MigrationGuideScreen({super.key});
 

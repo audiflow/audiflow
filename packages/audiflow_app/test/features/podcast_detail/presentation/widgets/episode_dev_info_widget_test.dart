@@ -91,7 +91,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      check(find.text('Developer').evaluate()).isNotEmpty();
+      check(find.text('Developer info').evaluate()).isNotEmpty();
       check(find.text('https://example.com/feed.xml').evaluate()).isNotEmpty();
       check(find.byType(IconButton).evaluate()).isNotEmpty();
     });

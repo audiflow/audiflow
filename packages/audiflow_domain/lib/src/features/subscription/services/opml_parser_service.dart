@@ -54,7 +54,7 @@ class OpmlParserService {
         builder.element(
           'head',
           nest: () {
-            builder.element('title', nest: 'Audiflow Podcast Subscriptions');
+            builder.element('title', nest: 'audiflow Podcast Subscriptions');
             builder.element(
               'dateCreated',
               nest: DateTime.now().toUtc().toIso8601String(),

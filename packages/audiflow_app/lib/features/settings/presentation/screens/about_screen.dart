@@ -48,7 +48,7 @@ class _AppHeader extends StatelessWidget {
         children: [
           Icon(Symbols.podcasts, size: 64, color: theme.colorScheme.primary),
           const SizedBox(height: 16),
-          Text('Audiflow', style: theme.textTheme.headlineSmall),
+          Text('audiflow', style: theme.textTheme.headlineSmall),
           const SizedBox(height: 4),
           Text(
             l10n.aboutTagline,
@@ -92,7 +92,7 @@ class _LicensesTile extends StatelessWidget {
       title: Text(l10n.aboutLicenses),
       trailing: const Icon(Icons.chevron_right),
       onTap: () =>
-          showLicensePage(context: context, applicationName: 'Audiflow'),
+          showLicensePage(context: context, applicationName: 'audiflow'),
     );
   }
 }

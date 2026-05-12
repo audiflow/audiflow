@@ -1,4 +1,4 @@
-/// Shared UI components for Audiflow
+/// Shared UI components for audiflow
 library;
 
 // Themes

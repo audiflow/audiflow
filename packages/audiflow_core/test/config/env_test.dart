@@ -22,7 +22,7 @@ void main() {
         expect(Env.mixpanelToken, isA<String>());
       });
 
-      test('appName defaults to Audiflow', () {
+      test('appName defaults to audiflow', () {
         expect(Env.appName, isA<String>());
       });
     });

@@ -1,4 +1,4 @@
-/// Core utilities and constants for Audiflow
+/// Core utilities and constants for audiflow
 library;
 
 // Constants

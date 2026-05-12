@@ -622,6 +622,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get podcastDetailNewestFirst => 'Newest first';
 
   @override
+  String episodePillDurationMinutes(int minutes) {
+    return '${minutes}m';
+  }
+
+  @override
+  String get episodeFilterAll => 'All';
+
+  @override
+  String get episodeFilterUnplayed => 'Unplayed';
+
+  @override
+  String get episodeFilterInProgress => 'In Progress';
+
+  @override
   String podcastDetailFailedToLoad(String error) {
     return 'Failed to load: $error';
   }
@@ -1213,7 +1227,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get developerPatternsHeader => 'Smart Playlist Patterns';
 
   @override
-  String get developerSectionLabel => 'Developer';
+  String get developerSectionLabel => 'Developer info';
 
   @override
   String get developerRssFeedUrl => 'RSS Feed URL';
@@ -1321,7 +1335,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingPageSearchBody =>
-      'Audiflow has no top-10 charts. Type a podcast name, host, or topic — and subscribe.';
+      'audiflow has no top-10 charts. Type a podcast name, host, or topic — and subscribe.';
 
   @override
   String get onboardingPageStationsTitle => 'Make stations.';
@@ -1335,7 +1349,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingPageSmartPlaylistsBody =>
-      'Episodes grouped by topic — interviews, deep dives, weekly recaps — curated by the Audiflow community.';
+      'Episodes grouped by topic — interviews, deep dives, weekly recaps — curated by the audiflow community.';
 
   @override
   String get gettingStartedTitle => 'Getting started';
@@ -1352,7 +1366,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get gettingStartedSearchSubtitle =>
-      'Search by name, host, or topic — Audiflow has no charts.';
+      'Search by name, host, or topic — audiflow has no charts.';
 
   @override
   String get gettingStartedStationsTitle => 'Stations';
@@ -1376,7 +1390,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get migrationGuideIntro =>
-      'Most podcast apps export your subscriptions as an OPML file. Get the file from your old app, then share it with Audiflow.';
+      'Most podcast apps export your subscriptions as an OPML file. Get the file from your old app, then share it with audiflow.';
 
   @override
   String get migrationStepsLabel => 'Steps';
@@ -1389,7 +1403,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get migrationApplePodcastsBody =>
-      'Apple Podcasts has no built-in export. A community shortcut produces an OPML file you can share with Audiflow.';
+      'Apple Podcasts has no built-in export. A community shortcut produces an OPML file you can share with audiflow.';
 
   @override
   String get migrationApplePodcastsIosLabel => 'On iPhone or iPad';
@@ -1408,7 +1422,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get migrationApplePodcastsIosStep4 =>
-      'Open the saved file and tap Share → Audiflow.';
+      'Open the saved file and tap Share → audiflow.';
 
   @override
   String get migrationApplePodcastsMacLabel => 'On Mac';
@@ -1440,7 +1454,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get migrationPocketCastsWebStep4 =>
-      'Open the file on your phone and share it with Audiflow.';
+      'Open the file on your phone and share it with audiflow.';
 
   @override
   String get migrationPocketCastsAppLabel => 'In the mobile app';
@@ -1472,7 +1486,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get migrationOvercastStep4 =>
-      'Share the file with Audiflow from the Files app.';
+      'Share the file with audiflow from the Files app.';
 
   @override
   String get migrationOvercastOpen => 'Open Overcast on web';
@@ -1482,21 +1496,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get migrationCastboxBody =>
-      'In the Castbox app: Profile → Settings → Backup & Restore → Export. Then share the file with Audiflow.';
+      'In the Castbox app: Profile → Settings → Backup & Restore → Export. Then share the file with audiflow.';
 
   @override
   String get migrationSpotifyTitle => 'From Spotify';
 
   @override
   String get migrationSpotifyBody =>
-      'Spotify does not support OPML export. You will need to find your podcasts again via search — open Audiflow\'s Search tab and look up each show by name.';
+      'Spotify does not support OPML export. You will need to find your podcasts again via search — open audiflow\'s Search tab and look up each show by name.';
 
   @override
   String get migrationOtherTitle => 'From other apps';
 
   @override
   String get migrationOtherBody =>
-      'Look for \'Export OPML\' or \'Backup\' in your app\'s settings, then share the OPML file with Audiflow.';
+      'Look for \'Export OPML\' or \'Backup\' in your app\'s settings, then share the OPML file with audiflow.';
 
   @override
   String get settingsGettingStartedTitle => 'Getting Started';

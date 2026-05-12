@@ -1,4 +1,4 @@
-/// CLI tools for debugging Audiflow features.
+/// CLI tools for debugging audiflow features.
 library;
 
 // Adapters

@@ -2,6 +2,8 @@ import 'package:audiflow_domain/audiflow_domain.dart' show EpisodeFilter;
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../l10n/app_localizations.dart';
+
 /// Chip row for filtering episodes by playback status.
 class EpisodeFilterChips extends StatelessWidget {
   const EpisodeFilterChips({
@@ -15,6 +17,7 @@ class EpisodeFilterChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: Spacing.md),
@@ -24,7 +27,7 @@ class EpisodeFilterChips extends StatelessWidget {
           return Padding(
             padding: const EdgeInsets.only(right: Spacing.xs),
             child: FilterChip(
-              label: Text(filter.label),
+              label: Text(_labelFor(l10n, filter)),
               selected: isSelected,
               onSelected: (_) => onSelected(filter),
             ),
@@ -32,5 +35,16 @@ class EpisodeFilterChips extends StatelessWidget {
         }).toList(),
       ),
     );
+  }
+
+  String _labelFor(AppLocalizations l10n, EpisodeFilter filter) {
+    switch (filter) {
+      case EpisodeFilter.all:
+        return l10n.episodeFilterAll;
+      case EpisodeFilter.unplayed:
+        return l10n.episodeFilterUnplayed;
+      case EpisodeFilter.inProgress:
+        return l10n.episodeFilterInProgress;
+    }
   }
 }

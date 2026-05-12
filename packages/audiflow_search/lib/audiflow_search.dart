@@ -1,4 +1,4 @@
-/// Podcast search and discovery API client for Audiflow.
+/// Podcast search and discovery API client for audiflow.
 ///
 /// This package provides podcast search and chart discovery functionality
 /// via the iTunes Search API, with support for zero-copy entity construction

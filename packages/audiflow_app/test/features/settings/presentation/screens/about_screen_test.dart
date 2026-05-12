@@ -11,7 +11,7 @@ void main() {
 
   setUp(() {
     packageInfo = PackageInfo(
-      appName: 'Audiflow',
+      appName: 'audiflow',
       packageName: 'com.audiflow.app',
       version: '1.0.0',
       buildNumber: '42',
@@ -47,7 +47,7 @@ void main() {
     testWidgets('shows app name in header', (tester) async {
       await tester.pumpWidget(buildTestWidget());
 
-      expect(find.text('Audiflow'), findsOneWidget);
+      expect(find.text('audiflow'), findsOneWidget);
       expect(find.text('Your podcast companion'), findsOneWidget);
     });
 

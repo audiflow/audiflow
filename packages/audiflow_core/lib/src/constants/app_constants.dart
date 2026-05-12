@@ -3,7 +3,7 @@ class AppConstants {
   AppConstants._();
 
   /// Application name
-  static const String appName = 'Audiflow';
+  static const String appName = 'audiflow';
 
   /// API timeout duration
   static const Duration apiTimeout = Duration(seconds: 30);

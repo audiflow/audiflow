@@ -607,6 +607,20 @@ class AppLocalizationsJa extends AppLocalizations {
   String get podcastDetailNewestFirst => '公開日順（新→古）';
 
   @override
+  String episodePillDurationMinutes(int minutes) {
+    return '$minutes分';
+  }
+
+  @override
+  String get episodeFilterAll => 'すべて';
+
+  @override
+  String get episodeFilterUnplayed => '未再生';
+
+  @override
+  String get episodeFilterInProgress => '再生途中';
+
+  @override
   String podcastDetailFailedToLoad(String error) {
     return '読み込み失敗: $error';
   }
@@ -1190,7 +1204,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get developerPatternsHeader => 'スマートプレイリストパターン';
 
   @override
-  String get developerSectionLabel => '開発者';
+  String get developerSectionLabel => '開発者向け情報';
 
   @override
   String get developerRssFeedUrl => 'RSSフィードURL';
@@ -1286,7 +1300,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get onboardingPageSearchBody =>
-      'Audiflow にランキングはありません。番組名・ホスト・トピックで検索して、購読しましょう。';
+      'audiflow にランキングはありません。番組名・ホスト・トピックで検索して、購読しましょう。';
 
   @override
   String get onboardingPageStationsTitle => 'ステーションを作る';
@@ -1317,7 +1331,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get gettingStartedSearchSubtitle =>
-      '番組名・ホスト・トピックで検索。Audiflow にランキング機能はありません。';
+      '番組名・ホスト・トピックで検索。audiflow にランキング機能はありません。';
 
   @override
   String get gettingStartedStationsTitle => 'ステーション';
@@ -1340,7 +1354,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get migrationGuideIntro =>
-      '多くのポッドキャストアプリは購読リストを OPML ファイルとして書き出せます。元のアプリからファイルを取り出して、Audiflow に共有してください。';
+      '多くのポッドキャストアプリは購読リストを OPML ファイルとして書き出せます。元のアプリからファイルを取り出して、audiflow に共有してください。';
 
   @override
   String get migrationStepsLabel => '手順';
@@ -1372,7 +1386,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get migrationApplePodcastsIosStep4 =>
-      '保存されたファイルを開き、共有 → Audiflow を選択します。';
+      '保存されたファイルを開き、共有 → audiflow を選択します。';
 
   @override
   String get migrationApplePodcastsMacLabel => 'Mac で';
@@ -1402,7 +1416,7 @@ class AppLocalizationsJa extends AppLocalizations {
       '「OPML をエクスポート」を選択してファイルをダウンロードします。';
 
   @override
-  String get migrationPocketCastsWebStep4 => 'ファイルをスマホで開き、Audiflow に共有します。';
+  String get migrationPocketCastsWebStep4 => 'ファイルをスマホで開き、audiflow に共有します。';
 
   @override
   String get migrationPocketCastsAppLabel => 'モバイルアプリで';
@@ -1431,7 +1445,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get migrationOvercastStep3 => '「Export OPML」をタップしてダウンロードします。';
 
   @override
-  String get migrationOvercastStep4 => 'ファイル App から Audiflow に共有します。';
+  String get migrationOvercastStep4 => 'ファイル App から audiflow に共有します。';
 
   @override
   String get migrationOvercastOpen => 'Overcast を Web で開く';
@@ -1441,21 +1455,21 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get migrationCastboxBody =>
-      'Castbox アプリ：プロフィール → 設定 → バックアップ＆復元 → エクスポート。出力したファイルを Audiflow に共有してください。';
+      'Castbox アプリ：プロフィール → 設定 → バックアップ＆復元 → エクスポート。出力したファイルを audiflow に共有してください。';
 
   @override
   String get migrationSpotifyTitle => 'Spotify から';
 
   @override
   String get migrationSpotifyBody =>
-      'Spotify は OPML エクスポートに対応していません。Audiflow の検索タブで番組名を 1 つずつ検索して再登録してください。';
+      'Spotify は OPML エクスポートに対応していません。audiflow の検索タブで番組名を 1 つずつ検索して再登録してください。';
 
   @override
   String get migrationOtherTitle => 'その他のアプリから';
 
   @override
   String get migrationOtherBody =>
-      'アプリの設定で「OPML エクスポート」または「バックアップ」を探し、出力したファイルを Audiflow に共有してください。';
+      'アプリの設定で「OPML エクスポート」または「バックアップ」を探し、出力したファイルを audiflow に共有してください。';
 
   @override
   String get settingsGettingStartedTitle => 'はじめに';
