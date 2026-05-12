@@ -71,7 +71,7 @@ Dio feedHttpClient(Ref ref) {
       sendTimeout: const Duration(seconds: 10),
       headers: {
         'Accept': 'application/rss+xml, application/xml, text/xml, */*',
-        'User-Agent': 'Audiflow/2.0 (Podcast Player)',
+        'User-Agent': 'audiflow/2.0 (Podcast Player)',
       },
     ),
   );

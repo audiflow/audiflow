@@ -21,7 +21,7 @@ Future<AudiflowAudioHandler> audioHandler(Ref ref) async {
     builder: () => AudiflowAudioHandler(ref),
     config: const AudioServiceConfig(
       androidNotificationChannelId: 'com.audiflow.player',
-      androidNotificationChannelName: 'Audiflow Playback',
+      androidNotificationChannelName: 'audiflow Playback',
       androidNotificationOngoing: true,
       androidStopForegroundOnPause: true,
     ),

@@ -2471,7 +2471,7 @@ abstract class AppLocalizations {
   /// Body of carousel page about search-first model
   ///
   /// In en, this message translates to:
-  /// **'Audiflow has no top-10 charts. Type a podcast name, host, or topic — and subscribe.'**
+  /// **'audiflow has no top-10 charts. Type a podcast name, host, or topic — and subscribe.'**
   String get onboardingPageSearchBody;
 
   /// Title of carousel page about stations
@@ -2495,7 +2495,7 @@ abstract class AppLocalizations {
   /// Body of carousel page about smart playlists
   ///
   /// In en, this message translates to:
-  /// **'Episodes grouped by topic — interviews, deep dives, weekly recaps — curated by the Audiflow community.'**
+  /// **'Episodes grouped by topic — interviews, deep dives, weekly recaps — curated by the audiflow community.'**
   String get onboardingPageSmartPlaylistsBody;
 
   /// Title of the Getting Started hub
@@ -2525,7 +2525,7 @@ abstract class AppLocalizations {
   /// Hub card subtitle: search
   ///
   /// In en, this message translates to:
-  /// **'Search by name, host, or topic — Audiflow has no charts.'**
+  /// **'Search by name, host, or topic — audiflow has no charts.'**
   String get gettingStartedSearchSubtitle;
 
   /// Hub card: stations
@@ -2567,7 +2567,7 @@ abstract class AppLocalizations {
   /// Migration guide intro text
   ///
   /// In en, this message translates to:
-  /// **'Most podcast apps export your subscriptions as an OPML file. Get the file from your old app, then share it with Audiflow.'**
+  /// **'Most podcast apps export your subscriptions as an OPML file. Get the file from your old app, then share it with audiflow.'**
   String get migrationGuideIntro;
 
   /// Label preceding step list
@@ -2591,7 +2591,7 @@ abstract class AppLocalizations {
   /// Migration source intro: Apple Podcasts
   ///
   /// In en, this message translates to:
-  /// **'Apple Podcasts has no built-in export. A community shortcut produces an OPML file you can share with Audiflow.'**
+  /// **'Apple Podcasts has no built-in export. A community shortcut produces an OPML file you can share with audiflow.'**
   String get migrationApplePodcastsBody;
 
   /// Section label: Apple Podcasts iOS
@@ -2621,7 +2621,7 @@ abstract class AppLocalizations {
   /// Apple Podcasts iOS step 4
   ///
   /// In en, this message translates to:
-  /// **'Open the saved file and tap Share → Audiflow.'**
+  /// **'Open the saved file and tap Share → audiflow.'**
   String get migrationApplePodcastsIosStep4;
 
   /// Section label: Apple Podcasts macOS
@@ -2675,7 +2675,7 @@ abstract class AppLocalizations {
   /// Pocket Casts web step 4
   ///
   /// In en, this message translates to:
-  /// **'Open the file on your phone and share it with Audiflow.'**
+  /// **'Open the file on your phone and share it with audiflow.'**
   String get migrationPocketCastsWebStep4;
 
   /// Section label: Pocket Casts mobile
@@ -2729,7 +2729,7 @@ abstract class AppLocalizations {
   /// Overcast step 4
   ///
   /// In en, this message translates to:
-  /// **'Share the file with Audiflow from the Files app.'**
+  /// **'Share the file with audiflow from the Files app.'**
   String get migrationOvercastStep4;
 
   /// Button: open Overcast web
@@ -2747,7 +2747,7 @@ abstract class AppLocalizations {
   /// Castbox body
   ///
   /// In en, this message translates to:
-  /// **'In the Castbox app: Profile → Settings → Backup & Restore → Export. Then share the file with Audiflow.'**
+  /// **'In the Castbox app: Profile → Settings → Backup & Restore → Export. Then share the file with audiflow.'**
   String get migrationCastboxBody;
 
   /// Migration source: Spotify
@@ -2759,7 +2759,7 @@ abstract class AppLocalizations {
   /// Spotify body
   ///
   /// In en, this message translates to:
-  /// **'Spotify does not support OPML export. You will need to find your podcasts again via search — open Audiflow\'s Search tab and look up each show by name.'**
+  /// **'Spotify does not support OPML export. You will need to find your podcasts again via search — open audiflow\'s Search tab and look up each show by name.'**
   String get migrationSpotifyBody;
 
   /// Migration source: other / generic
@@ -2771,7 +2771,7 @@ abstract class AppLocalizations {
   /// Generic OPML guidance
   ///
   /// In en, this message translates to:
-  /// **'Look for \'Export OPML\' or \'Backup\' in your app\'s settings, then share the OPML file with Audiflow.'**
+  /// **'Look for \'Export OPML\' or \'Backup\' in your app\'s settings, then share the OPML file with audiflow.'**
   String get migrationOtherBody;
 
   /// Settings tile: Getting Started hub

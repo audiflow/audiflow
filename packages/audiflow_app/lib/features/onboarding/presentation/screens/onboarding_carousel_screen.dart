@@ -7,7 +7,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
 import '../controllers/onboarding_completion_controller.dart';
 
-/// Forced first-launch carousel introducing Audiflow's core ideas:
+/// Forced first-launch carousel introducing audiflow's core ideas:
 /// search-first discovery, stations, and smart playlists.
 ///
 /// Skip and Get Started both persist the completion flag and

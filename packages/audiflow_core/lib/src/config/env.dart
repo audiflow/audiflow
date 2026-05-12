@@ -17,7 +17,7 @@ class Env {
   static String get mixpanelToken => _mixpanelToken ?? '';
 
   /// Application name
-  static String get appName => _appName ?? 'Audiflow';
+  static String get appName => _appName ?? 'audiflow';
 
   /// Initialize environment variables
   static void initialize({

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 /// Application color schemes.
 ///
-/// Seeded from Material's deep purple to keep the original Audiflow
+/// Seeded from Material's deep purple to keep the original audiflow
 /// brand feel. Component-level theming in [AppTheme] consumes the
 /// resulting [ColorScheme] so light and dark variants stay consistent.
 class AppColorScheme {

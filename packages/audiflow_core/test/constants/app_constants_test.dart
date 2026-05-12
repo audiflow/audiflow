@@ -3,8 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('AppConstants', () {
-    test('appName is Audiflow', () {
-      expect(AppConstants.appName, 'Audiflow');
+    test('appName is audiflow', () {
+      expect(AppConstants.appName, 'audiflow');
     });
 
     test('apiTimeout is 30 seconds', () {

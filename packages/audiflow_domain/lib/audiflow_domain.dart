@@ -1,4 +1,4 @@
-/// Business logic and data layer for Audiflow
+/// Business logic and data layer for audiflow
 library;
 
 // Re-export audiflow_core types

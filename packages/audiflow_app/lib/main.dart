@@ -448,7 +448,7 @@ class _MyAppState extends ConsumerState<MyApp> {
         context,
       ).copyWith(textScaler: TextScaler.linear(textScale)),
       child: MaterialApp.router(
-        title: 'Audiflow',
+        title: 'audiflow',
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         localeResolutionCallback: (locale, supportedLocales) {
