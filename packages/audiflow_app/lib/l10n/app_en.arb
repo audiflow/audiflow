@@ -795,7 +795,7 @@
   "@developerShowInfoSubtitle": {"description": "Toggle subtitle explaining what developer info shows"},
   "developerPatternsHeader": "Smart Playlist Patterns",
   "@developerPatternsHeader": {"description": "Section header for the pattern list"},
-  "developerSectionLabel": "Developer",
+  "developerSectionLabel": "Developer info",
   "@developerSectionLabel": {"description": "Section label in episode detail for developer info"},
   "developerRssFeedUrl": "RSS Feed URL",
   "@developerRssFeedUrl": {"description": "Label for the RSS feed URL field"},

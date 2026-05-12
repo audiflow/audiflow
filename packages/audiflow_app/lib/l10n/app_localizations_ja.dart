@@ -1204,7 +1204,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get developerPatternsHeader => 'スマートプレイリストパターン';
 
   @override
-  String get developerSectionLabel => '開発者';
+  String get developerSectionLabel => '開発者向け情報';
 
   @override
   String get developerRssFeedUrl => 'RSSフィードURL';

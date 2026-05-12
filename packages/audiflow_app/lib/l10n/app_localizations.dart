@@ -2297,7 +2297,7 @@ abstract class AppLocalizations {
   /// Section label in episode detail for developer info
   ///
   /// In en, this message translates to:
-  /// **'Developer'**
+  /// **'Developer info'**
   String get developerSectionLabel;
 
   /// Label for the RSS feed URL field

@@ -1227,7 +1227,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get developerPatternsHeader => 'Smart Playlist Patterns';
 
   @override
-  String get developerSectionLabel => 'Developer';
+  String get developerSectionLabel => 'Developer info';
 
   @override
   String get developerRssFeedUrl => 'RSS Feed URL';

@@ -395,9 +395,9 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
       isScrollControlled: true,
       builder: (_) => DraggableScrollableSheet(
         expand: false,
-        initialChildSize: 0.45,
+        initialChildSize: 0.7,
         minChildSize: 0.3,
-        maxChildSize: 0.7,
+        maxChildSize: 0.9,
         builder: (sheetContext, scrollController) => SafeArea(
           child: Column(
             mainAxisSize: MainAxisSize.min,
