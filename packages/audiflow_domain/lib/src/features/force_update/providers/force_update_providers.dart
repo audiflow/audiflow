@@ -22,14 +22,27 @@ String forceUpdateConfigUrl(Ref ref) {
   );
 }
 
+/// Sink for non-fatal warnings raised by the force-update repository
+/// (failed fetch, invalid payload, etc).
+///
+/// The default is a no-op so the domain layer stays free of monitoring
+/// dependencies. The composition root (audiflow_app) overrides this
+/// provider with a sink that forwards to logger + Sentry.
+@Riverpod(keepAlive: true)
+ForceUpdateWarningSink forceUpdateWarningSink(Ref ref) {
+  return (String _, {Object? error, StackTrace? stackTrace}) {};
+}
+
 /// Singleton [ForceUpdateRepository] wired to the shared Dio + prefs.
 @Riverpod(keepAlive: true)
 ForceUpdateRepository forceUpdateRepository(Ref ref) {
   final dio = ref.watch(dioProvider);
   final prefs = ref.watch(sharedPreferencesProvider);
   final url = ref.watch(forceUpdateConfigUrlProvider);
+  final sink = ref.watch(forceUpdateWarningSinkProvider);
   return ForceUpdateRepositoryImpl(
     remote: ForceUpdateRemoteDataSource(dio: dio, configUrl: url),
     local: ForceUpdateLocalDataSource(prefs),
+    onWarning: sink,
   );
 }

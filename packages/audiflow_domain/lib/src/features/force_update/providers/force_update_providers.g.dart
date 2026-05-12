@@ -70,6 +70,74 @@ final class ForceUpdateConfigUrlProvider
 String _$forceUpdateConfigUrlHash() =>
     r'ec3b98d6a7eb009078e793f286854640c8b5ef19';
 
+/// Sink for non-fatal warnings raised by the force-update repository
+/// (failed fetch, invalid payload, etc).
+///
+/// The default is a no-op so the domain layer stays free of monitoring
+/// dependencies. The composition root (audiflow_app) overrides this
+/// provider with a sink that forwards to logger + Sentry.
+
+@ProviderFor(forceUpdateWarningSink)
+final forceUpdateWarningSinkProvider = ForceUpdateWarningSinkProvider._();
+
+/// Sink for non-fatal warnings raised by the force-update repository
+/// (failed fetch, invalid payload, etc).
+///
+/// The default is a no-op so the domain layer stays free of monitoring
+/// dependencies. The composition root (audiflow_app) overrides this
+/// provider with a sink that forwards to logger + Sentry.
+
+final class ForceUpdateWarningSinkProvider
+    extends
+        $FunctionalProvider<
+          ForceUpdateWarningSink,
+          ForceUpdateWarningSink,
+          ForceUpdateWarningSink
+        >
+    with $Provider<ForceUpdateWarningSink> {
+  /// Sink for non-fatal warnings raised by the force-update repository
+  /// (failed fetch, invalid payload, etc).
+  ///
+  /// The default is a no-op so the domain layer stays free of monitoring
+  /// dependencies. The composition root (audiflow_app) overrides this
+  /// provider with a sink that forwards to logger + Sentry.
+  ForceUpdateWarningSinkProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'forceUpdateWarningSinkProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$forceUpdateWarningSinkHash();
+
+  @$internal
+  @override
+  $ProviderElement<ForceUpdateWarningSink> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  ForceUpdateWarningSink create(Ref ref) {
+    return forceUpdateWarningSink(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(ForceUpdateWarningSink value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<ForceUpdateWarningSink>(value),
+    );
+  }
+}
+
+String _$forceUpdateWarningSinkHash() =>
+    r'a57dfa3b78d72df00e13c0cba1c7dc53870c2808';
+
 /// Singleton [ForceUpdateRepository] wired to the shared Dio + prefs.
 
 @ProviderFor(forceUpdateRepository)
@@ -121,4 +189,4 @@ final class ForceUpdateRepositoryProvider
 }
 
 String _$forceUpdateRepositoryHash() =>
-    r'70c9b1cfedc1d966025a1efb533a80f032a7c8e0';
+    r'1a82444c3a05e1ebdcb9b4b1c93d882528a0f02b';

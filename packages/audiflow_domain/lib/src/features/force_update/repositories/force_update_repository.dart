@@ -1,5 +1,13 @@
 import '../models/force_update_config.dart';
 
+/// Optional sink for non-fatal warnings (failed fetch, invalid payload).
+///
+/// Lives on the repository interface so callers can construct sinks
+/// without importing the implementation. Wire through to logger /
+/// Sentry at the composition root.
+typedef ForceUpdateWarningSink =
+    void Function(String message, {Object? error, StackTrace? stackTrace});
+
 /// Coordinates the remote fetch and the local cache for the
 /// force-update config.
 ///
