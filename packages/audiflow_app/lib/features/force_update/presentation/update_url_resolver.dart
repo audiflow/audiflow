@@ -6,11 +6,7 @@ import 'package:flutter/foundation.dart';
 /// pure function (no `defaultTargetPlatform` dependency in tests).
 enum TargetUpdatePlatform { ios, android, other }
 
-// TODO(audiflow): switch to the live App Store URL once the app is
-// listed; bundle id is `com.reedom.audiflow` (release flavor). Until then
-// we point at the App Store home so the device at least opens the Store
-// app rather than landing on an empty search results page.
-const _appStoreFallbackUrl = 'https://apps.apple.com/';
+const _appStoreFallbackUrl = 'https://apps.apple.com/app/id6479216840';
 const _androidPackage = 'com.reedom.audiflow_app';
 
 /// Resolves the URL to open when the user taps "Update now".
