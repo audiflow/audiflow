@@ -21,11 +21,11 @@ class _RecordingSink {
 
 Map<String, Object?> _invalidJson() => const <String, Object?>{
   // recommended < min triggers configValidationFailure
-  'schema_version': 1,
-  'min_version': '3.0.0',
-  'recommended_version': '2.0.0',
-  'maintenance_mode': false,
-  'message_key': 'default',
+  'schemaVersion': 1,
+  'minVersion': '3.0.0',
+  'recommendedVersion': '2.0.0',
+  'maintenanceMode': false,
+  'messageKey': 'default',
 };
 
 void main() {

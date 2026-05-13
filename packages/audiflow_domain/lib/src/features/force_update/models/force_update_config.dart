@@ -13,7 +13,6 @@ part 'force_update_config.g.dart';
 /// "update available" hint.
 @Freezed(toJson: true, fromJson: true)
 abstract class ForceUpdateConfig with _$ForceUpdateConfig {
-  @JsonSerializable(fieldRename: FieldRename.snake)
   const factory ForceUpdateConfig({
     required int schemaVersion,
     required String minVersion,

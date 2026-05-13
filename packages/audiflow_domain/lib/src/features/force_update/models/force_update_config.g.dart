@@ -8,24 +8,24 @@ part of 'force_update_config.dart';
 
 _ForceUpdateConfig _$ForceUpdateConfigFromJson(Map<String, dynamic> json) =>
     _ForceUpdateConfig(
-      schemaVersion: (json['schema_version'] as num).toInt(),
-      minVersion: json['min_version'] as String,
-      recommendedVersion: json['recommended_version'] as String,
-      maintenanceMode: json['maintenance_mode'] as bool,
-      messageKey: json['message_key'] as String,
-      messageOverride: (json['message_override'] as Map<String, dynamic>?)?.map(
+      schemaVersion: (json['schemaVersion'] as num).toInt(),
+      minVersion: json['minVersion'] as String,
+      recommendedVersion: json['recommendedVersion'] as String,
+      maintenanceMode: json['maintenanceMode'] as bool,
+      messageKey: json['messageKey'] as String,
+      messageOverride: (json['messageOverride'] as Map<String, dynamic>?)?.map(
         (k, e) => MapEntry(k, e as String),
       ),
-      updateUrl: json['update_url'] as String?,
+      updateUrl: json['updateUrl'] as String?,
     );
 
 Map<String, dynamic> _$ForceUpdateConfigToJson(_ForceUpdateConfig instance) =>
     <String, dynamic>{
-      'schema_version': instance.schemaVersion,
-      'min_version': instance.minVersion,
-      'recommended_version': instance.recommendedVersion,
-      'maintenance_mode': instance.maintenanceMode,
-      'message_key': instance.messageKey,
-      'message_override': instance.messageOverride,
-      'update_url': instance.updateUrl,
+      'schemaVersion': instance.schemaVersion,
+      'minVersion': instance.minVersion,
+      'recommendedVersion': instance.recommendedVersion,
+      'maintenanceMode': instance.maintenanceMode,
+      'messageKey': instance.messageKey,
+      'messageOverride': instance.messageOverride,
+      'updateUrl': instance.updateUrl,
     };

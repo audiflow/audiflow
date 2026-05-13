@@ -212,8 +212,8 @@ return $default(_that.schemaVersion,_that.minVersion,_that.recommendedVersion,_t
 }
 
 /// @nodoc
+@JsonSerializable()
 
-@JsonSerializable(fieldRename: FieldRename.snake)
 class _ForceUpdateConfig implements ForceUpdateConfig {
   const _ForceUpdateConfig({required this.schemaVersion, required this.minVersion, required this.recommendedVersion, required this.maintenanceMode, required this.messageKey, final  Map<String, String>? messageOverride, this.updateUrl}): _messageOverride = messageOverride;
   factory _ForceUpdateConfig.fromJson(Map<String, dynamic> json) => _$ForceUpdateConfigFromJson(json);

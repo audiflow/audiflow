@@ -19,11 +19,11 @@ void main() {
   test('returns parsed config on 200', () async {
     adapter.onGet(url, (server) {
       server.reply(200, {
-        'schema_version': 1,
-        'min_version': '2.0.0',
-        'recommended_version': '2.1.0',
-        'maintenance_mode': false,
-        'message_key': 'default',
+        'schemaVersion': 1,
+        'minVersion': '2.0.0',
+        'recommendedVersion': '2.1.0',
+        'maintenanceMode': false,
+        'messageKey': 'default',
       });
     });
 

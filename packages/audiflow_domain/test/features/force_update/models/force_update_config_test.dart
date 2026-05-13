@@ -6,11 +6,11 @@ void main() {
   group('ForceUpdateConfig.fromJson', () {
     test('parses minimal valid payload', () {
       final json = {
-        'schema_version': 1,
-        'min_version': '2.0.0',
-        'recommended_version': '2.1.0',
-        'maintenance_mode': false,
-        'message_key': 'default',
+        'schemaVersion': 1,
+        'minVersion': '2.0.0',
+        'recommendedVersion': '2.1.0',
+        'maintenanceMode': false,
+        'messageKey': 'default',
       };
 
       final cfg = ForceUpdateConfig.fromJson(json);
@@ -26,13 +26,13 @@ void main() {
 
     test('parses full payload with override and url', () {
       final json = {
-        'schema_version': 1,
-        'min_version': '2.0.0',
-        'recommended_version': '2.1.0',
-        'maintenance_mode': true,
-        'message_key': 'security_critical',
-        'message_override': {'en': 'Update', 'ja': 'アップデート'},
-        'update_url': 'https://example.com/update',
+        'schemaVersion': 1,
+        'minVersion': '2.0.0',
+        'recommendedVersion': '2.1.0',
+        'maintenanceMode': true,
+        'messageKey': 'security_critical',
+        'messageOverride': {'en': 'Update', 'ja': 'アップデート'},
+        'updateUrl': 'https://example.com/update',
       };
 
       final cfg = ForceUpdateConfig.fromJson(json);

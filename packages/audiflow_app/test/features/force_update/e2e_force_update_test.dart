@@ -85,12 +85,12 @@ Map<String, Object?> _configJson({
   String messageKey = 'default',
   String? updateUrl,
 }) => {
-  'schema_version': schemaVersion,
-  'min_version': min,
-  'recommended_version': rec,
-  'maintenance_mode': maintenance,
-  'message_key': messageKey,
-  'update_url': ?updateUrl,
+  'schemaVersion': schemaVersion,
+  'minVersion': min,
+  'recommendedVersion': rec,
+  'maintenanceMode': maintenance,
+  'messageKey': messageKey,
+  'updateUrl': ?updateUrl,
 };
 
 /// Counts outbound GET requests for the force-update endpoint so tests
@@ -194,14 +194,14 @@ Widget _wrap(ProviderContainer container) => UncontrolledProviderScope(
 /// Pre-canned valid (NoUpdate-for-2.x) cached config used by the
 /// invalid-payload fallback scenario.
 String _cachedNoUpdateJson() =>
-    '{"schema_version":1,"min_version":"1.0.0","recommended_version":"1.0.0",'
-    '"maintenance_mode":false,"message_key":"default"}';
+    '{"schemaVersion":1,"minVersion":"1.0.0","recommendedVersion":"1.0.0",'
+    '"maintenanceMode":false,"messageKey":"default"}';
 
 /// Pre-canned valid (HardUpdate-for-1.x) cached config used by the
 /// offline-block scenario.
 String _cachedHardUpdateJson() =>
-    '{"schema_version":1,"min_version":"2.0.0","recommended_version":"2.0.0",'
-    '"maintenance_mode":false,"message_key":"default"}';
+    '{"schemaVersion":1,"minVersion":"2.0.0","recommendedVersion":"2.0.0",'
+    '"maintenanceMode":false,"messageKey":"default"}';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -434,7 +434,7 @@ void main() {
       );
       addTearDown(h.container.dispose);
 
-      // recommended_version below min_version: validator rejects.
+      // recommendedVersion below minVersion: validator rejects.
       h.adapter.onGet(_configUrl, (server) {
         server.reply(200, _configJson(min: '5.0.0', rec: '1.0.0'));
       });
