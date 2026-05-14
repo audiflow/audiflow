@@ -401,6 +401,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aboutRateApp => 'Rate the App';
 
   @override
+  String get aboutRateAppLaunchFailed => 'Could not open the store';
+
+  @override
   String get libraryTitle => 'Library';
 
   @override

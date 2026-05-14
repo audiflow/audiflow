@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../utils/rate_app_service.dart';
 
 class AboutScreen extends ConsumerWidget {
   const AboutScreen({super.key});
@@ -26,7 +27,7 @@ class AboutScreen extends ConsumerWidget {
           const Divider(),
           _LicensesTile(context: context),
           _FeedbackTile(context: context),
-          _RateAppTile(context: context),
+          const _RateAppTile(),
         ],
       ),
     );
@@ -118,22 +119,26 @@ class _FeedbackTile extends StatelessWidget {
   }
 }
 
-class _RateAppTile extends StatelessWidget {
-  const _RateAppTile({required this.context});
-
-  final BuildContext context;
+class _RateAppTile extends ConsumerWidget {
+  const _RateAppTile();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
 
     return ListTile(
       title: Text(l10n.aboutRateApp),
       trailing: const Icon(Icons.chevron_right),
-      onTap: () {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.commonComingSoon)));
+      onTap: () async {
+        final messenger = ScaffoldMessenger.of(context);
+        final service = ref.read(rateAppServiceProvider);
+        try {
+          await service.openStoreListing();
+        } catch (_) {
+          messenger.showSnackBar(
+            SnackBar(content: Text(l10n.aboutRateAppLaunchFailed)),
+          );
+        }
       },
     );
   }

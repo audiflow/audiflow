@@ -258,6 +258,8 @@
   "@aboutSendFeedback": { "description": "Send feedback label" },
   "aboutRateApp": "Rate the App",
   "@aboutRateApp": { "description": "Rate app label" },
+  "aboutRateAppLaunchFailed": "Could not open the store",
+  "@aboutRateAppLaunchFailed": { "description": "Snackbar when launching the store URL fails" },
 
   "libraryTitle": "Library",
   "@libraryTitle": { "description": "Library screen title" },

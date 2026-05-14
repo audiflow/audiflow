@@ -392,6 +392,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get aboutRateApp => 'アプリを評価';
 
   @override
+  String get aboutRateAppLaunchFailed => 'ストアを開けませんでした';
+
+  @override
   String get libraryTitle => 'ライブラリ';
 
   @override

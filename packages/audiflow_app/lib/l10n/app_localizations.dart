@@ -830,6 +830,12 @@ abstract class AppLocalizations {
   /// **'Rate the App'**
   String get aboutRateApp;
 
+  /// Snackbar when launching the store URL fails
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the store'**
+  String get aboutRateAppLaunchFailed;
+
   /// Library screen title
   ///
   /// In en, this message translates to:

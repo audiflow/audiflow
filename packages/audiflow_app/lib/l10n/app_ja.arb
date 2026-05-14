@@ -131,6 +131,7 @@
   "aboutLicenses": "オープンソースライセンス",
   "aboutSendFeedback": "フィードバックを送る",
   "aboutRateApp": "アプリを評価",
+  "aboutRateAppLaunchFailed": "ストアを開けませんでした",
 
   "libraryTitle": "ライブラリ",
   "librarySyncResult": "{successCount}件のフィードを同期、{errorCount}件が失敗",

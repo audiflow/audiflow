@@ -1,13 +1,29 @@
 import 'package:audiflow_app/features/settings/presentation/screens/about_screen.dart';
+import 'package:audiflow_app/features/settings/presentation/utils/rate_app_service.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+class _FakeRateAppService implements RateAppService {
+  int calls = 0;
+  Object? errorToThrow;
+
+  @override
+  Future<void> openStoreListing() async {
+    calls++;
+    if (errorToThrow != null) {
+      throw errorToThrow!;
+    }
+  }
+}
+
 void main() {
   late PackageInfo packageInfo;
+  late _FakeRateAppService rateAppService;
 
   setUp(() {
     packageInfo = PackageInfo(
@@ -16,11 +32,15 @@ void main() {
       version: '1.0.0',
       buildNumber: '42',
     );
+    rateAppService = _FakeRateAppService();
   });
 
   Widget buildTestWidget() {
     return ProviderScope(
-      overrides: [packageInfoProvider.overrideWithValue(packageInfo)],
+      overrides: [
+        packageInfoProvider.overrideWithValue(packageInfo),
+        rateAppServiceProvider.overrideWithValue(rateAppService),
+      ],
       child: MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
@@ -87,15 +107,25 @@ void main() {
       expect(find.text('Coming soon'), findsOneWidget);
     });
 
-    testWidgets('tapping Rate the App shows coming soon snackbar', (
-      tester,
-    ) async {
+    testWidgets('tapping Rate the App opens store listing', (tester) async {
       await tester.pumpWidget(buildTestWidget());
 
       await tester.tap(find.text('Rate the App'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Coming soon'), findsOneWidget);
+      check(rateAppService.calls).equals(1);
+    });
+
+    testWidgets('shows failure snackbar when openStoreListing throws', (
+      tester,
+    ) async {
+      rateAppService.errorToThrow = Exception('boom');
+      await tester.pumpWidget(buildTestWidget());
+
+      await tester.tap(find.text('Rate the App'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Could not open the store'), findsOneWidget);
     });
   });
 }
