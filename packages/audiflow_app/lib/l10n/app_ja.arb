@@ -132,6 +132,11 @@
   "aboutSendFeedback": "フィードバックを送る",
   "aboutRateApp": "アプリを評価",
   "aboutRateAppLaunchFailed": "ストアを開けませんでした",
+  "reviewPromptTitle": "audiflow はいかがですか？",
+  "reviewPromptBody": "audiflow を気に入っていただけたら、評価で他のリスナーにも教えてあげてください。",
+  "reviewPromptRateNow": "今すぐ評価",
+  "reviewPromptLater": "あとで",
+  "reviewPromptDontAskAgain": "今後表示しない",
 
   "libraryTitle": "ライブラリ",
   "librarySyncResult": "{successCount}件のフィードを同期、{errorCount}件が失敗",

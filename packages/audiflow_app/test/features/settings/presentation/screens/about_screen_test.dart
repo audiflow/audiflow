@@ -21,9 +21,40 @@ class _FakeRateAppService implements RateAppService {
   }
 }
 
+class _FakeReviewPromptRepository implements ReviewPromptRepository {
+  ReviewPromptStats _stats = const ReviewPromptStats();
+  int markUserRatedCalls = 0;
+
+  @override
+  ReviewPromptStats getStats() => _stats;
+
+  @override
+  Future<void> addListenedMs(int deltaMs) async {}
+
+  @override
+  Future<void> markOptedOut() async {
+    _stats = _stats.copyWith(userOptedOut: true);
+  }
+
+  @override
+  Future<void> markUserRated() async {
+    markUserRatedCalls++;
+    _stats = _stats.copyWith(userTappedRateNow: true);
+  }
+
+  @override
+  Future<void> recordPromptShown(DateTime shownAt) async {}
+
+  @override
+  Future<void> reset() async {
+    _stats = const ReviewPromptStats();
+  }
+}
+
 void main() {
   late PackageInfo packageInfo;
   late _FakeRateAppService rateAppService;
+  late _FakeReviewPromptRepository reviewPromptRepository;
 
   setUp(() {
     packageInfo = PackageInfo(
@@ -33,6 +64,7 @@ void main() {
       buildNumber: '42',
     );
     rateAppService = _FakeRateAppService();
+    reviewPromptRepository = _FakeReviewPromptRepository();
   });
 
   Widget buildTestWidget() {
@@ -40,6 +72,9 @@ void main() {
       overrides: [
         packageInfoProvider.overrideWithValue(packageInfo),
         rateAppServiceProvider.overrideWithValue(rateAppService),
+        reviewPromptRepositoryProvider.overrideWithValue(
+          reviewPromptRepository,
+        ),
       ],
       child: MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -114,6 +149,16 @@ void main() {
       await tester.pumpAndSettle();
 
       check(rateAppService.calls).equals(1);
+    });
+
+    testWidgets('tapping Rate the App marks the user as rated', (tester) async {
+      await tester.pumpWidget(buildTestWidget());
+
+      await tester.tap(find.text('Rate the App'));
+      await tester.pumpAndSettle();
+
+      check(reviewPromptRepository.markUserRatedCalls).equals(1);
+      check(reviewPromptRepository.getStats().userTappedRateNow).isTrue();
     });
 
     testWidgets('shows failure snackbar when openStoreListing throws', (

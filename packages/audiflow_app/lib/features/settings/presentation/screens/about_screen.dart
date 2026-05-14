@@ -132,6 +132,9 @@ class _RateAppTile extends ConsumerWidget {
       onTap: () async {
         final messenger = ScaffoldMessenger.of(context);
         final service = ref.read(rateAppServiceProvider);
+        // Tapping the explicit rate tile = user willing to rate → never
+        // auto-prompt again, even if the store launch itself fails.
+        await ref.read(reviewPromptRepositoryProvider).markUserRated();
         try {
           await service.openStoreListing();
         } catch (_) {

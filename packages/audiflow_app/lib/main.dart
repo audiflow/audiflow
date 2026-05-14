@@ -27,6 +27,7 @@ import 'app/background/background_callback.dart';
 import 'app/background/background_task_registrar.dart';
 import 'features/force_update/force_update.dart';
 import 'features/player/services/audio_handler_provider.dart';
+import 'features/review_prompt/presentation/review_prompt_gate.dart';
 import 'features/settings/presentation/controllers/last_tab_controller.dart';
 import 'features/settings/presentation/controllers/theme_controller.dart';
 import 'features/settings/presentation/widgets/opml_file_receiver.dart';
@@ -492,8 +493,9 @@ class _MyAppState extends ConsumerState<MyApp> {
         // access to MaterialLocalizations + AppLocalizations and sits
         // above the router subtree — HardUpdate / Maintenance render
         // before any route mounts.
-        builder: (context, child) =>
-            ForceUpdateGate(child: OpmlFileReceiver(child: child!)),
+        builder: (context, child) => ForceUpdateGate(
+          child: ReviewPromptGate(child: OpmlFileReceiver(child: child!)),
+        ),
         routerConfig: _router,
       ),
     );

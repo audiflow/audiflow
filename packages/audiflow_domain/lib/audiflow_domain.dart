@@ -230,3 +230,11 @@ export 'src/features/share/models/deep_link_target.dart';
 export 'src/features/share/services/share_link_builder.dart';
 export 'src/features/share/services/deep_link_resolver.dart';
 export 'src/features/share/providers/share_providers.dart';
+
+// Review prompt feature
+export 'src/features/review_prompt/models/review_prompt_stats.dart';
+export 'src/features/review_prompt/providers/review_prompt_providers.dart';
+export 'src/features/review_prompt/repositories/review_prompt_repository.dart';
+export 'src/features/review_prompt/repositories/review_prompt_repository_impl.dart';
+export 'src/features/review_prompt/services/review_prompt_evaluator.dart';
+export 'src/features/review_prompt/services/review_prompt_trigger.dart';
