@@ -25,6 +25,7 @@ import 'app/app_lifecycle_observer.dart';
 import 'app/notification/notification_tap_handler.dart';
 import 'app/background/background_callback.dart';
 import 'app/background/background_task_registrar.dart';
+import 'features/force_update/force_update.dart';
 import 'features/player/services/audio_handler_provider.dart';
 import 'features/settings/presentation/controllers/last_tab_controller.dart';
 import 'features/settings/presentation/controllers/theme_controller.dart';
@@ -197,6 +198,8 @@ Future<void> _startApp(String smartPlaylistConfigBaseUrl) async {
     }
   }
 
+  const forceUpdateConfigUrl = String.fromEnvironment(forceUpdateConfigUrlEnv);
+
   final container = ProviderContainer(
     overrides: [
       isarProvider.overrideWithValue(isar),
@@ -208,6 +211,27 @@ Future<void> _startApp(String smartPlaylistConfigBaseUrl) async {
         smartPlaylistConfigBaseUrl,
       ),
       feedSyncDiagnosticSinkProvider.overrideWithValue(feedSyncDiagnostic),
+      forceUpdateConfigUrlProvider.overrideWithValue(forceUpdateConfigUrl),
+      // Wire repository warnings through logger + reporter without
+      // capturing a late container reference: the override builder reads
+      // both seams from its own `ref`, so the sink closure is bound to
+      // the container under construction.
+      forceUpdateWarningSinkProvider.overrideWith((ref) {
+        final logger = ref.watch(namedLoggerProvider('ForceUpdate'));
+        final reporter = ref.watch(forceUpdateReporterProvider);
+        return (String message, {Object? error, StackTrace? stackTrace}) {
+          logger.w(message, error: error, stackTrace: stackTrace);
+          if (error != null) {
+            unawaited(
+              reporter.captureException(
+                error,
+                stackTrace: stackTrace,
+                message: message,
+              ),
+            );
+          }
+        };
+      }),
     ],
   );
 
@@ -464,7 +488,12 @@ class _MyAppState extends ConsumerState<MyApp> {
         theme: AppTheme.light(),
         darkTheme: AppTheme.dark(),
         themeMode: themeMode,
-        builder: (context, child) => OpmlFileReceiver(child: child!),
+        // The gate is placed inside MaterialApp.builder so it has
+        // access to MaterialLocalizations + AppLocalizations and sits
+        // above the router subtree — HardUpdate / Maintenance render
+        // before any route mounts.
+        builder: (context, child) =>
+            ForceUpdateGate(child: OpmlFileReceiver(child: child!)),
         routerConfig: _router,
       ),
     );

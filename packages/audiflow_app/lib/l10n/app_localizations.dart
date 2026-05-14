@@ -2785,6 +2785,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Migrate from another app, learn the basics'**
   String get settingsGettingStartedSubtitle;
+
+  /// Default force-update title
+  ///
+  /// In en, this message translates to:
+  /// **'Update Required'**
+  String get forceUpdateDefaultTitle;
+
+  /// Default hard-update body
+  ///
+  /// In en, this message translates to:
+  /// **'A newer version of Audiflow is required to continue.'**
+  String get forceUpdateDefaultBody;
+
+  /// Default soft-update body
+  ///
+  /// In en, this message translates to:
+  /// **'A newer version of Audiflow is available.'**
+  String get forceUpdateDefaultSoftBody;
+
+  /// Security-critical title
+  ///
+  /// In en, this message translates to:
+  /// **'Security Update Required'**
+  String get forceUpdateSecurityCriticalTitle;
+
+  /// Security-critical body
+  ///
+  /// In en, this message translates to:
+  /// **'Please update Audiflow to address an important security issue.'**
+  String get forceUpdateSecurityCriticalBody;
+
+  /// Security-critical soft body
+  ///
+  /// In en, this message translates to:
+  /// **'An important security update is available.'**
+  String get forceUpdateSecurityCriticalSoftBody;
+
+  /// Breaking change title
+  ///
+  /// In en, this message translates to:
+  /// **'Update Required'**
+  String get forceUpdateBreakingChangeTitle;
+
+  /// Breaking change body
+  ///
+  /// In en, this message translates to:
+  /// **'Audiflow has changes that require an updated app to continue.'**
+  String get forceUpdateBreakingChangeBody;
+
+  /// Breaking change soft body
+  ///
+  /// In en, this message translates to:
+  /// **'An update with required changes is available.'**
+  String get forceUpdateBreakingChangeSoftBody;
+
+  /// OS drift title
+  ///
+  /// In en, this message translates to:
+  /// **'Update Required'**
+  String get forceUpdateOsDriftTitle;
+
+  /// OS drift body
+  ///
+  /// In en, this message translates to:
+  /// **'Please update Audiflow to keep up with the latest platform requirements.'**
+  String get forceUpdateOsDriftBody;
+
+  /// OS drift soft body
+  ///
+  /// In en, this message translates to:
+  /// **'A newer version is available with platform improvements.'**
+  String get forceUpdateOsDriftSoftBody;
+
+  /// Maintenance title
+  ///
+  /// In en, this message translates to:
+  /// **'Under Maintenance'**
+  String get forceUpdateMaintenanceTitle;
+
+  /// Maintenance body
+  ///
+  /// In en, this message translates to:
+  /// **'Audiflow is temporarily unavailable. Please try again later.'**
+  String get forceUpdateMaintenanceBody;
+
+  /// Update now button
+  ///
+  /// In en, this message translates to:
+  /// **'Update now'**
+  String get forceUpdateActionUpdateNow;
+
+  /// Later (dismiss soft banner)
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get forceUpdateActionLater;
+
+  /// Retry maintenance check
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get forceUpdateActionRetry;
+
+  /// Quit app (Android only)
+  ///
+  /// In en, this message translates to:
+  /// **'Quit'**
+  String get forceUpdateActionQuit;
 }
 
 class _AppLocalizationsDelegate

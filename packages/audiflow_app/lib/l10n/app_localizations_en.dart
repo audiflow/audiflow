@@ -1518,4 +1518,67 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get settingsGettingStartedSubtitle =>
       'Migrate from another app, learn the basics';
+
+  @override
+  String get forceUpdateDefaultTitle => 'Update Required';
+
+  @override
+  String get forceUpdateDefaultBody =>
+      'A newer version of Audiflow is required to continue.';
+
+  @override
+  String get forceUpdateDefaultSoftBody =>
+      'A newer version of Audiflow is available.';
+
+  @override
+  String get forceUpdateSecurityCriticalTitle => 'Security Update Required';
+
+  @override
+  String get forceUpdateSecurityCriticalBody =>
+      'Please update Audiflow to address an important security issue.';
+
+  @override
+  String get forceUpdateSecurityCriticalSoftBody =>
+      'An important security update is available.';
+
+  @override
+  String get forceUpdateBreakingChangeTitle => 'Update Required';
+
+  @override
+  String get forceUpdateBreakingChangeBody =>
+      'Audiflow has changes that require an updated app to continue.';
+
+  @override
+  String get forceUpdateBreakingChangeSoftBody =>
+      'An update with required changes is available.';
+
+  @override
+  String get forceUpdateOsDriftTitle => 'Update Required';
+
+  @override
+  String get forceUpdateOsDriftBody =>
+      'Please update Audiflow to keep up with the latest platform requirements.';
+
+  @override
+  String get forceUpdateOsDriftSoftBody =>
+      'A newer version is available with platform improvements.';
+
+  @override
+  String get forceUpdateMaintenanceTitle => 'Under Maintenance';
+
+  @override
+  String get forceUpdateMaintenanceBody =>
+      'Audiflow is temporarily unavailable. Please try again later.';
+
+  @override
+  String get forceUpdateActionUpdateNow => 'Update now';
+
+  @override
+  String get forceUpdateActionLater => 'Later';
+
+  @override
+  String get forceUpdateActionRetry => 'Retry';
+
+  @override
+  String get forceUpdateActionQuit => 'Quit';
 }
