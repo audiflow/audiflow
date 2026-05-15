@@ -256,6 +256,8 @@
   "@aboutLicenses": { "description": "Licenses label" },
   "aboutSendFeedback": "Send Feedback",
   "@aboutSendFeedback": { "description": "Send feedback label" },
+  "aboutSendFeedbackLaunchFailed": "Could not open the feedback page",
+  "@aboutSendFeedbackLaunchFailed": { "description": "Snackbar when launching the feedback URL fails" },
   "aboutRateApp": "Rate the App",
   "@aboutRateApp": { "description": "Rate app label" },
   "aboutRateAppLaunchFailed": "Could not open the store",

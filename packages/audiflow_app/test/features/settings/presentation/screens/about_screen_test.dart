@@ -1,4 +1,5 @@
 import 'package:audiflow_app/features/settings/presentation/screens/about_screen.dart';
+import 'package:audiflow_app/features/settings/presentation/utils/feedback_service.dart';
 import 'package:audiflow_app/features/settings/presentation/utils/rate_app_service.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
@@ -19,6 +20,21 @@ class _FakeRateAppService implements RateAppService {
     if (errorToThrow != null) {
       throw errorToThrow!;
     }
+  }
+}
+
+class _FakeFeedbackService implements FeedbackService {
+  int calls = 0;
+  bool result = true;
+  Object? errorToThrow;
+
+  @override
+  Future<bool> openFeedback() async {
+    calls++;
+    if (errorToThrow != null) {
+      throw errorToThrow!;
+    }
+    return result;
   }
 }
 
@@ -58,6 +74,7 @@ class _FakeReviewPromptRepository implements ReviewPromptRepository {
 void main() {
   late PackageInfo packageInfo;
   late _FakeRateAppService rateAppService;
+  late _FakeFeedbackService feedbackService;
   late _FakeReviewPromptRepository reviewPromptRepository;
 
   setUp(() {
@@ -68,6 +85,7 @@ void main() {
       buildNumber: '42',
     );
     rateAppService = _FakeRateAppService();
+    feedbackService = _FakeFeedbackService();
     reviewPromptRepository = _FakeReviewPromptRepository();
   });
 
@@ -76,6 +94,7 @@ void main() {
       overrides: [
         packageInfoProvider.overrideWithValue(packageInfo),
         rateAppServiceProvider.overrideWithValue(rateAppService),
+        feedbackServiceProvider.overrideWithValue(feedbackService),
         reviewPromptRepositoryProvider.overrideWithValue(
           reviewPromptRepository,
         ),
@@ -128,13 +147,32 @@ void main() {
       expect(find.text('Rate the App'), findsOneWidget);
     });
 
-    testWidgets('tapping Send Feedback shows coming soon snackbar', (
-      tester,
-    ) async {
+    testWidgets('tapping Send Feedback opens feedback page', (tester) async {
       await tester.pumpWidget(buildTestWidget());
       await tester.tap(find.text('Send Feedback'));
       await tester.pumpAndSettle();
-      expect(find.text('Coming soon'), findsOneWidget);
+      check(feedbackService.calls).equals(1);
+      expect(find.text('Could not open the feedback page'), findsNothing);
+    });
+
+    testWidgets('shows failure snackbar when openFeedback returns false', (
+      tester,
+    ) async {
+      feedbackService.result = false;
+      await tester.pumpWidget(buildTestWidget());
+      await tester.tap(find.text('Send Feedback'));
+      await tester.pumpAndSettle();
+      expect(find.text('Could not open the feedback page'), findsOneWidget);
+    });
+
+    testWidgets('shows failure snackbar when openFeedback throws', (
+      tester,
+    ) async {
+      feedbackService.errorToThrow = PlatformException(code: 'X');
+      await tester.pumpWidget(buildTestWidget());
+      await tester.tap(find.text('Send Feedback'));
+      await tester.pumpAndSettle();
+      expect(find.text('Could not open the feedback page'), findsOneWidget);
     });
 
     testWidgets('tapping Rate the App opens store listing', (tester) async {

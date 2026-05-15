@@ -824,6 +824,12 @@ abstract class AppLocalizations {
   /// **'Send Feedback'**
   String get aboutSendFeedback;
 
+  /// Snackbar when launching the feedback URL fails
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the feedback page'**
+  String get aboutSendFeedbackLaunchFailed;
+
   /// Rate app label
   ///
   /// In en, this message translates to:

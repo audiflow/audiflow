@@ -389,6 +389,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get aboutSendFeedback => 'フィードバックを送る';
 
   @override
+  String get aboutSendFeedbackLaunchFailed => 'フィードバックページを開けませんでした';
+
+  @override
   String get aboutRateApp => 'アプリを評価';
 
   @override

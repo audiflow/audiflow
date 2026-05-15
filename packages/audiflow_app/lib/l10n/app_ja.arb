@@ -130,6 +130,7 @@
   "aboutVersion": "バージョン",
   "aboutLicenses": "オープンソースライセンス",
   "aboutSendFeedback": "フィードバックを送る",
+  "aboutSendFeedbackLaunchFailed": "フィードバックページを開けませんでした",
   "aboutRateApp": "アプリを評価",
   "aboutRateAppLaunchFailed": "ストアを開けませんでした",
   "reviewPromptTitle": "audiflow はいかがですか？",
