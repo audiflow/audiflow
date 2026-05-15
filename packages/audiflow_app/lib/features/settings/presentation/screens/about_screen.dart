@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../utils/feedback_service.dart';
 import '../utils/rate_app_service.dart';
 
 class AboutScreen extends ConsumerWidget {
@@ -27,7 +28,7 @@ class AboutScreen extends ConsumerWidget {
           ),
           const Divider(),
           _LicensesTile(context: context),
-          _FeedbackTile(context: context),
+          const _FeedbackTile(),
           const _RateAppTile(),
         ],
       ),
@@ -99,22 +100,43 @@ class _LicensesTile extends StatelessWidget {
   }
 }
 
-class _FeedbackTile extends StatelessWidget {
-  const _FeedbackTile({required this.context});
-
-  final BuildContext context;
+class _FeedbackTile extends ConsumerWidget {
+  const _FeedbackTile();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
 
     return ListTile(
       title: Text(l10n.aboutSendFeedback),
       trailing: const Icon(Icons.chevron_right),
-      onTap: () {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.commonComingSoon)));
+      onTap: () async {
+        final messenger = ScaffoldMessenger.of(context);
+        final logger = ref.read(appLoggerProvider);
+        final service = ref.read(feedbackServiceProvider);
+        try {
+          final ok = await service.openFeedback();
+          if (!ok) {
+            logger.w('[Feedback] openFeedback returned false');
+            messenger.showSnackBar(
+              SnackBar(content: Text(l10n.aboutSendFeedbackLaunchFailed)),
+            );
+          }
+        } on PlatformException catch (e, st) {
+          logger.w('[Feedback] openFeedback failed', error: e, stackTrace: st);
+          messenger.showSnackBar(
+            SnackBar(content: Text(l10n.aboutSendFeedbackLaunchFailed)),
+          );
+        } on MissingPluginException catch (e, st) {
+          logger.w(
+            '[Feedback] url_launcher plugin missing',
+            error: e,
+            stackTrace: st,
+          );
+          messenger.showSnackBar(
+            SnackBar(content: Text(l10n.aboutSendFeedbackLaunchFailed)),
+          );
+        }
       },
     );
   }

@@ -398,6 +398,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aboutSendFeedback => 'Send Feedback';
 
   @override
+  String get aboutSendFeedbackLaunchFailed =>
+      'Could not open the feedback page';
+
+  @override
   String get aboutRateApp => 'Rate the App';
 
   @override
