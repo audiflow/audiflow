@@ -55,7 +55,7 @@ final class ReviewPromptRepositoryProvider
 }
 
 String _$reviewPromptRepositoryHash() =>
-    r'2f9580bae6e418b100361e0e936dfc4695883706';
+    r'3f70ad3d0597096aafa3f381c7b6508669f96827';
 
 @ProviderFor(reviewPromptTrigger)
 final reviewPromptTriggerProvider = ReviewPromptTriggerProvider._();
@@ -103,25 +103,22 @@ final class ReviewPromptTriggerProvider
 }
 
 String _$reviewPromptTriggerHash() =>
-    r'6c6d3f49ed1c5b226f9680123067e1b239748de2';
+    r'67bfb74fa7c89e9fcb933471377b15b386a19a3b';
 
-/// Subscribe to this from the presentation layer to know when to show
-/// the review prompt. The gate widget checks foreground state before
-/// actually displaying the dialog.
+/// Stream of "prompt-ready" events. Consumers are responsible for
+/// foreground gating; this stream fires regardless of app state.
 
 @ProviderFor(reviewPromptTriggerEvents)
 final reviewPromptTriggerEventsProvider = ReviewPromptTriggerEventsProvider._();
 
-/// Subscribe to this from the presentation layer to know when to show
-/// the review prompt. The gate widget checks foreground state before
-/// actually displaying the dialog.
+/// Stream of "prompt-ready" events. Consumers are responsible for
+/// foreground gating; this stream fires regardless of app state.
 
 final class ReviewPromptTriggerEventsProvider
     extends $FunctionalProvider<AsyncValue<void>, void, Stream<void>>
     with $FutureModifier<void>, $StreamProvider<void> {
-  /// Subscribe to this from the presentation layer to know when to show
-  /// the review prompt. The gate widget checks foreground state before
-  /// actually displaying the dialog.
+  /// Stream of "prompt-ready" events. Consumers are responsible for
+  /// foreground gating; this stream fires regardless of app state.
   ReviewPromptTriggerEventsProvider._()
     : super(
         from: null,

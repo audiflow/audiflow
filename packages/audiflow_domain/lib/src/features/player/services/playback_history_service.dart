@@ -142,7 +142,9 @@ class PlaybackHistoryService {
 
     // Accumulate into the app-wide review-prompt counter.
     if (0 < durations.listenedMs) {
-      await _reviewPromptRepository?.addListenedMs(durations.listenedMs);
+      await _reviewPromptRepository?.addListened(
+        Duration(milliseconds: durations.listenedMs),
+      );
     }
 
     // Notify stations once per session when episode transitions to in-progress.
@@ -192,7 +194,9 @@ class PlaybackHistoryService {
     );
 
     if (0 < durations.listenedMs) {
-      await _reviewPromptRepository?.addListenedMs(durations.listenedMs);
+      await _reviewPromptRepository?.addListened(
+        Duration(milliseconds: durations.listenedMs),
+      );
     }
 
     // Pausing within the trigger delay should not surprise the user.
@@ -223,7 +227,9 @@ class PlaybackHistoryService {
     );
 
     if (0 < durations.listenedMs) {
-      await _reviewPromptRepository?.addListenedMs(durations.listenedMs);
+      await _reviewPromptRepository?.addListened(
+        Duration(milliseconds: durations.listenedMs),
+      );
     }
 
     _reviewPromptTrigger?.cancel();

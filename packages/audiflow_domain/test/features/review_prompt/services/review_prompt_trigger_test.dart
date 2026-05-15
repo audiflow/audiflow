@@ -3,50 +3,17 @@ import 'package:checks/checks.dart';
 import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-class _FakeRepository implements ReviewPromptRepository {
-  ReviewPromptStats stats = const ReviewPromptStats();
-
-  @override
-  ReviewPromptStats getStats() => stats;
-
-  @override
-  Future<void> addListenedMs(int deltaMs) async {
-    stats = stats.copyWith(totalListenedMs: stats.totalListenedMs + deltaMs);
-  }
-
-  @override
-  Future<void> markOptedOut() async {
-    stats = stats.copyWith(userOptedOut: true);
-  }
-
-  @override
-  Future<void> markUserRated() async {
-    stats = stats.copyWith(userTappedRateNow: true);
-  }
-
-  @override
-  Future<void> recordPromptShown(DateTime shownAt) async {
-    stats = stats.copyWith(
-      nextPromptThresholdMs:
-          stats.nextPromptThresholdMs + ReviewPromptStats.promptIntervalMs,
-      lastPromptedAt: shownAt,
-    );
-  }
-
-  @override
-  Future<void> reset() async {
-    stats = const ReviewPromptStats();
-  }
-}
+import '../fakes/fake_review_prompt_repository.dart';
 
 void main() {
   group('ReviewPromptTrigger', () {
     test('emits after delay when threshold reached', () {
       fakeAsync((async) {
-        final repo = _FakeRepository()
-          ..stats = const ReviewPromptStats(
-            totalListenedMs: ReviewPromptStats.initialThresholdMs,
-          );
+        final repo = FakeReviewPromptRepository(
+          initial: const ReviewPromptStats(
+            totalListened: reviewPromptInitialThreshold,
+          ),
+        );
         final trigger = ReviewPromptTrigger(repository: repo);
         var emitted = 0;
         trigger.events.listen((_) => emitted++);
@@ -63,8 +30,11 @@ void main() {
 
     test('does not emit when threshold not reached', () {
       fakeAsync((async) {
-        final repo = _FakeRepository()
-          ..stats = const ReviewPromptStats(totalListenedMs: 1000);
+        final repo = FakeReviewPromptRepository(
+          initial: const ReviewPromptStats(
+            totalListened: Duration(milliseconds: 1000),
+          ),
+        );
         final trigger = ReviewPromptTrigger(repository: repo);
         var emitted = 0;
         trigger.events.listen((_) => emitted++);
@@ -77,13 +47,14 @@ void main() {
       });
     });
 
-    test('does not emit when user opted out', () {
+    test('does not emit when opted out', () {
       fakeAsync((async) {
-        final repo = _FakeRepository()
-          ..stats = const ReviewPromptStats(
-            totalListenedMs: ReviewPromptStats.initialThresholdMs,
-            userOptedOut: true,
-          );
+        final repo = FakeReviewPromptRepository(
+          initial: const ReviewPromptStats(
+            totalListened: reviewPromptInitialThreshold,
+            status: ReviewPromptStatus.optedOut,
+          ),
+        );
         final trigger = ReviewPromptTrigger(repository: repo);
         var emitted = 0;
         trigger.events.listen((_) => emitted++);
@@ -98,10 +69,11 @@ void main() {
 
     test('cancel before delay prevents emit', () {
       fakeAsync((async) {
-        final repo = _FakeRepository()
-          ..stats = const ReviewPromptStats(
-            totalListenedMs: ReviewPromptStats.initialThresholdMs,
-          );
+        final repo = FakeReviewPromptRepository(
+          initial: const ReviewPromptStats(
+            totalListened: reviewPromptInitialThreshold,
+          ),
+        );
         final trigger = ReviewPromptTrigger(repository: repo);
         var emitted = 0;
         trigger.events.listen((_) => emitted++);
@@ -118,10 +90,11 @@ void main() {
 
     test('re-arming resets the timer', () {
       fakeAsync((async) {
-        final repo = _FakeRepository()
-          ..stats = const ReviewPromptStats(
-            totalListenedMs: ReviewPromptStats.initialThresholdMs,
-          );
+        final repo = FakeReviewPromptRepository(
+          initial: const ReviewPromptStats(
+            totalListened: reviewPromptInitialThreshold,
+          ),
+        );
         final trigger = ReviewPromptTrigger(repository: repo);
         var emitted = 0;
         trigger.events.listen((_) => emitted++);
@@ -135,6 +108,35 @@ void main() {
         check(emitted).equals(1);
 
         trigger.dispose();
+      });
+    });
+
+    test('single arm emits exactly once even if more time passes', () {
+      fakeAsync((async) {
+        final repo = FakeReviewPromptRepository(
+          initial: const ReviewPromptStats(
+            totalListened: reviewPromptInitialThreshold,
+          ),
+        );
+        final trigger = ReviewPromptTrigger(repository: repo);
+        var emitted = 0;
+        trigger.events.listen((_) => emitted++);
+
+        trigger.armForPlayback();
+        async.elapse(const Duration(seconds: 30));
+        check(emitted).equals(1);
+
+        trigger.dispose();
+      });
+    });
+
+    test('arm after dispose is a no-op (no throw)', () {
+      fakeAsync((async) {
+        final repo = FakeReviewPromptRepository();
+        final trigger = ReviewPromptTrigger(repository: repo);
+        trigger.dispose();
+        trigger.armForPlayback();
+        async.elapse(const Duration(seconds: 5));
       });
     });
   });

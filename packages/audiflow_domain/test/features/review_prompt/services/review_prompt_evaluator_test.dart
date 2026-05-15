@@ -5,46 +5,48 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   group('shouldShowReviewPrompt', () {
     test('false when total below initial threshold', () {
-      const stats = ReviewPromptStats(totalListenedMs: 1000);
+      const stats = ReviewPromptStats(
+        totalListened: Duration(milliseconds: 1000),
+      );
       check(shouldShowReviewPrompt(stats)).isFalse();
     });
 
     test('true when total reaches threshold exactly', () {
       const stats = ReviewPromptStats(
-        totalListenedMs: ReviewPromptStats.initialThresholdMs,
+        totalListened: reviewPromptInitialThreshold,
       );
       check(shouldShowReviewPrompt(stats)).isTrue();
     });
 
     test('true when total well past threshold', () {
-      const stats = ReviewPromptStats(
-        totalListenedMs: ReviewPromptStats.initialThresholdMs * 2,
+      final stats = ReviewPromptStats(
+        totalListened: reviewPromptInitialThreshold * 2,
       );
       check(shouldShowReviewPrompt(stats)).isTrue();
     });
 
-    test('false when user opted out, regardless of total', () {
-      const stats = ReviewPromptStats(
-        totalListenedMs: ReviewPromptStats.initialThresholdMs * 10,
-        userOptedOut: true,
+    test('false when opted out, regardless of total', () {
+      final stats = ReviewPromptStats(
+        totalListened: reviewPromptInitialThreshold * 10,
+        status: ReviewPromptStatus.optedOut,
       );
       check(shouldShowReviewPrompt(stats)).isFalse();
     });
 
-    test('false when user tapped rate-now, regardless of total', () {
-      const stats = ReviewPromptStats(
-        totalListenedMs: ReviewPromptStats.initialThresholdMs * 10,
-        userTappedRateNow: true,
+    test('false when rated, regardless of total', () {
+      final stats = ReviewPromptStats(
+        totalListened: reviewPromptInitialThreshold * 10,
+        status: ReviewPromptStatus.rated,
       );
       check(shouldShowReviewPrompt(stats)).isFalse();
     });
 
-    test('false when threshold advanced and total has not caught up', () {
-      const stats = ReviewPromptStats(
-        totalListenedMs: ReviewPromptStats.initialThresholdMs + 1,
-        nextPromptThresholdMs:
-            ReviewPromptStats.initialThresholdMs +
-            ReviewPromptStats.promptIntervalMs,
+    test('false when threshold advanced past total', () {
+      final stats = ReviewPromptStats(
+        totalListened:
+            reviewPromptInitialThreshold + const Duration(milliseconds: 1),
+        nextPromptThreshold:
+            reviewPromptInitialThreshold + reviewPromptInterval,
       );
       check(shouldShowReviewPrompt(stats)).isFalse();
     });

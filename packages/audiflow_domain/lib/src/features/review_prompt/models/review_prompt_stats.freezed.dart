@@ -14,16 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ReviewPromptStats {
 
-/// Cumulative content listened since the feature was installed.
- int get totalListenedMs;/// Next milestone at which the prompt should fire.
-///
-/// First prompt fires when [totalListenedMs] reaches this value
-/// (default 10 hours). Each shown prompt advances it by 100 hours.
- int get nextPromptThresholdMs;/// User selected "Don't ask again" — never auto-prompt again.
- bool get userOptedOut;/// User tapped "Rate now" or the manual "Rate the App" tile — assume
-/// they rated; never auto-prompt again.
- bool get userTappedRateNow;/// Timestamp of the last shown prompt (debugging / future throttling).
- DateTime? get lastPromptedAt;
+ Duration get totalListened; Duration get nextPromptThreshold; ReviewPromptStatus get status; DateTime? get lastPromptedAt;
 /// Create a copy of ReviewPromptStats
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -34,16 +25,16 @@ $ReviewPromptStatsCopyWith<ReviewPromptStats> get copyWith => _$ReviewPromptStat
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReviewPromptStats&&(identical(other.totalListenedMs, totalListenedMs) || other.totalListenedMs == totalListenedMs)&&(identical(other.nextPromptThresholdMs, nextPromptThresholdMs) || other.nextPromptThresholdMs == nextPromptThresholdMs)&&(identical(other.userOptedOut, userOptedOut) || other.userOptedOut == userOptedOut)&&(identical(other.userTappedRateNow, userTappedRateNow) || other.userTappedRateNow == userTappedRateNow)&&(identical(other.lastPromptedAt, lastPromptedAt) || other.lastPromptedAt == lastPromptedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReviewPromptStats&&(identical(other.totalListened, totalListened) || other.totalListened == totalListened)&&(identical(other.nextPromptThreshold, nextPromptThreshold) || other.nextPromptThreshold == nextPromptThreshold)&&(identical(other.status, status) || other.status == status)&&(identical(other.lastPromptedAt, lastPromptedAt) || other.lastPromptedAt == lastPromptedAt));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,totalListenedMs,nextPromptThresholdMs,userOptedOut,userTappedRateNow,lastPromptedAt);
+int get hashCode => Object.hash(runtimeType,totalListened,nextPromptThreshold,status,lastPromptedAt);
 
 @override
 String toString() {
-  return 'ReviewPromptStats(totalListenedMs: $totalListenedMs, nextPromptThresholdMs: $nextPromptThresholdMs, userOptedOut: $userOptedOut, userTappedRateNow: $userTappedRateNow, lastPromptedAt: $lastPromptedAt)';
+  return 'ReviewPromptStats(totalListened: $totalListened, nextPromptThreshold: $nextPromptThreshold, status: $status, lastPromptedAt: $lastPromptedAt)';
 }
 
 
@@ -54,7 +45,7 @@ abstract mixin class $ReviewPromptStatsCopyWith<$Res>  {
   factory $ReviewPromptStatsCopyWith(ReviewPromptStats value, $Res Function(ReviewPromptStats) _then) = _$ReviewPromptStatsCopyWithImpl;
 @useResult
 $Res call({
- int totalListenedMs, int nextPromptThresholdMs, bool userOptedOut, bool userTappedRateNow, DateTime? lastPromptedAt
+ Duration totalListened, Duration nextPromptThreshold, ReviewPromptStatus status, DateTime? lastPromptedAt
 });
 
 
@@ -71,13 +62,12 @@ class _$ReviewPromptStatsCopyWithImpl<$Res>
 
 /// Create a copy of ReviewPromptStats
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? totalListenedMs = null,Object? nextPromptThresholdMs = null,Object? userOptedOut = null,Object? userTappedRateNow = null,Object? lastPromptedAt = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? totalListened = null,Object? nextPromptThreshold = null,Object? status = null,Object? lastPromptedAt = freezed,}) {
   return _then(_self.copyWith(
-totalListenedMs: null == totalListenedMs ? _self.totalListenedMs : totalListenedMs // ignore: cast_nullable_to_non_nullable
-as int,nextPromptThresholdMs: null == nextPromptThresholdMs ? _self.nextPromptThresholdMs : nextPromptThresholdMs // ignore: cast_nullable_to_non_nullable
-as int,userOptedOut: null == userOptedOut ? _self.userOptedOut : userOptedOut // ignore: cast_nullable_to_non_nullable
-as bool,userTappedRateNow: null == userTappedRateNow ? _self.userTappedRateNow : userTappedRateNow // ignore: cast_nullable_to_non_nullable
-as bool,lastPromptedAt: freezed == lastPromptedAt ? _self.lastPromptedAt : lastPromptedAt // ignore: cast_nullable_to_non_nullable
+totalListened: null == totalListened ? _self.totalListened : totalListened // ignore: cast_nullable_to_non_nullable
+as Duration,nextPromptThreshold: null == nextPromptThreshold ? _self.nextPromptThreshold : nextPromptThreshold // ignore: cast_nullable_to_non_nullable
+as Duration,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as ReviewPromptStatus,lastPromptedAt: freezed == lastPromptedAt ? _self.lastPromptedAt : lastPromptedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,
   ));
 }
@@ -160,10 +150,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int totalListenedMs,  int nextPromptThresholdMs,  bool userOptedOut,  bool userTappedRateNow,  DateTime? lastPromptedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Duration totalListened,  Duration nextPromptThreshold,  ReviewPromptStatus status,  DateTime? lastPromptedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ReviewPromptStats() when $default != null:
-return $default(_that.totalListenedMs,_that.nextPromptThresholdMs,_that.userOptedOut,_that.userTappedRateNow,_that.lastPromptedAt);case _:
+return $default(_that.totalListened,_that.nextPromptThreshold,_that.status,_that.lastPromptedAt);case _:
   return orElse();
 
 }
@@ -181,10 +171,10 @@ return $default(_that.totalListenedMs,_that.nextPromptThresholdMs,_that.userOpte
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int totalListenedMs,  int nextPromptThresholdMs,  bool userOptedOut,  bool userTappedRateNow,  DateTime? lastPromptedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Duration totalListened,  Duration nextPromptThreshold,  ReviewPromptStatus status,  DateTime? lastPromptedAt)  $default,) {final _that = this;
 switch (_that) {
 case _ReviewPromptStats():
-return $default(_that.totalListenedMs,_that.nextPromptThresholdMs,_that.userOptedOut,_that.userTappedRateNow,_that.lastPromptedAt);}
+return $default(_that.totalListened,_that.nextPromptThreshold,_that.status,_that.lastPromptedAt);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -198,10 +188,10 @@ return $default(_that.totalListenedMs,_that.nextPromptThresholdMs,_that.userOpte
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int totalListenedMs,  int nextPromptThresholdMs,  bool userOptedOut,  bool userTappedRateNow,  DateTime? lastPromptedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Duration totalListened,  Duration nextPromptThreshold,  ReviewPromptStatus status,  DateTime? lastPromptedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _ReviewPromptStats() when $default != null:
-return $default(_that.totalListenedMs,_that.nextPromptThresholdMs,_that.userOptedOut,_that.userTappedRateNow,_that.lastPromptedAt);case _:
+return $default(_that.totalListened,_that.nextPromptThreshold,_that.status,_that.lastPromptedAt);case _:
   return null;
 
 }
@@ -213,22 +203,12 @@ return $default(_that.totalListenedMs,_that.nextPromptThresholdMs,_that.userOpte
 
 
 class _ReviewPromptStats implements ReviewPromptStats {
-  const _ReviewPromptStats({this.totalListenedMs = 0, this.nextPromptThresholdMs = reviewPromptInitialThresholdMs, this.userOptedOut = false, this.userTappedRateNow = false, this.lastPromptedAt});
+  const _ReviewPromptStats({this.totalListened = Duration.zero, this.nextPromptThreshold = reviewPromptInitialThreshold, this.status = ReviewPromptStatus.accumulating, this.lastPromptedAt});
 
 
-/// Cumulative content listened since the feature was installed.
-@override@JsonKey() final  int totalListenedMs;
-/// Next milestone at which the prompt should fire.
-///
-/// First prompt fires when [totalListenedMs] reaches this value
-/// (default 10 hours). Each shown prompt advances it by 100 hours.
-@override@JsonKey() final  int nextPromptThresholdMs;
-/// User selected "Don't ask again" — never auto-prompt again.
-@override@JsonKey() final  bool userOptedOut;
-/// User tapped "Rate now" or the manual "Rate the App" tile — assume
-/// they rated; never auto-prompt again.
-@override@JsonKey() final  bool userTappedRateNow;
-/// Timestamp of the last shown prompt (debugging / future throttling).
+@override@JsonKey() final  Duration totalListened;
+@override@JsonKey() final  Duration nextPromptThreshold;
+@override@JsonKey() final  ReviewPromptStatus status;
 @override final  DateTime? lastPromptedAt;
 
 /// Create a copy of ReviewPromptStats
@@ -241,16 +221,16 @@ _$ReviewPromptStatsCopyWith<_ReviewPromptStats> get copyWith => __$ReviewPromptS
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReviewPromptStats&&(identical(other.totalListenedMs, totalListenedMs) || other.totalListenedMs == totalListenedMs)&&(identical(other.nextPromptThresholdMs, nextPromptThresholdMs) || other.nextPromptThresholdMs == nextPromptThresholdMs)&&(identical(other.userOptedOut, userOptedOut) || other.userOptedOut == userOptedOut)&&(identical(other.userTappedRateNow, userTappedRateNow) || other.userTappedRateNow == userTappedRateNow)&&(identical(other.lastPromptedAt, lastPromptedAt) || other.lastPromptedAt == lastPromptedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReviewPromptStats&&(identical(other.totalListened, totalListened) || other.totalListened == totalListened)&&(identical(other.nextPromptThreshold, nextPromptThreshold) || other.nextPromptThreshold == nextPromptThreshold)&&(identical(other.status, status) || other.status == status)&&(identical(other.lastPromptedAt, lastPromptedAt) || other.lastPromptedAt == lastPromptedAt));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,totalListenedMs,nextPromptThresholdMs,userOptedOut,userTappedRateNow,lastPromptedAt);
+int get hashCode => Object.hash(runtimeType,totalListened,nextPromptThreshold,status,lastPromptedAt);
 
 @override
 String toString() {
-  return 'ReviewPromptStats(totalListenedMs: $totalListenedMs, nextPromptThresholdMs: $nextPromptThresholdMs, userOptedOut: $userOptedOut, userTappedRateNow: $userTappedRateNow, lastPromptedAt: $lastPromptedAt)';
+  return 'ReviewPromptStats(totalListened: $totalListened, nextPromptThreshold: $nextPromptThreshold, status: $status, lastPromptedAt: $lastPromptedAt)';
 }
 
 
@@ -261,7 +241,7 @@ abstract mixin class _$ReviewPromptStatsCopyWith<$Res> implements $ReviewPromptS
   factory _$ReviewPromptStatsCopyWith(_ReviewPromptStats value, $Res Function(_ReviewPromptStats) _then) = __$ReviewPromptStatsCopyWithImpl;
 @override @useResult
 $Res call({
- int totalListenedMs, int nextPromptThresholdMs, bool userOptedOut, bool userTappedRateNow, DateTime? lastPromptedAt
+ Duration totalListened, Duration nextPromptThreshold, ReviewPromptStatus status, DateTime? lastPromptedAt
 });
 
 
@@ -278,13 +258,12 @@ class __$ReviewPromptStatsCopyWithImpl<$Res>
 
 /// Create a copy of ReviewPromptStats
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? totalListenedMs = null,Object? nextPromptThresholdMs = null,Object? userOptedOut = null,Object? userTappedRateNow = null,Object? lastPromptedAt = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? totalListened = null,Object? nextPromptThreshold = null,Object? status = null,Object? lastPromptedAt = freezed,}) {
   return _then(_ReviewPromptStats(
-totalListenedMs: null == totalListenedMs ? _self.totalListenedMs : totalListenedMs // ignore: cast_nullable_to_non_nullable
-as int,nextPromptThresholdMs: null == nextPromptThresholdMs ? _self.nextPromptThresholdMs : nextPromptThresholdMs // ignore: cast_nullable_to_non_nullable
-as int,userOptedOut: null == userOptedOut ? _self.userOptedOut : userOptedOut // ignore: cast_nullable_to_non_nullable
-as bool,userTappedRateNow: null == userTappedRateNow ? _self.userTappedRateNow : userTappedRateNow // ignore: cast_nullable_to_non_nullable
-as bool,lastPromptedAt: freezed == lastPromptedAt ? _self.lastPromptedAt : lastPromptedAt // ignore: cast_nullable_to_non_nullable
+totalListened: null == totalListened ? _self.totalListened : totalListened // ignore: cast_nullable_to_non_nullable
+as Duration,nextPromptThreshold: null == nextPromptThreshold ? _self.nextPromptThreshold : nextPromptThreshold // ignore: cast_nullable_to_non_nullable
+as Duration,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as ReviewPromptStatus,lastPromptedAt: freezed == lastPromptedAt ? _self.lastPromptedAt : lastPromptedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,
   ));
 }

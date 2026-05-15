@@ -1,5 +1,6 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
@@ -131,13 +132,28 @@ class _RateAppTile extends ConsumerWidget {
       trailing: const Icon(Icons.chevron_right),
       onTap: () async {
         final messenger = ScaffoldMessenger.of(context);
+        final logger = ref.read(appLoggerProvider);
         final service = ref.read(rateAppServiceProvider);
         // Tapping the explicit rate tile = user willing to rate → never
         // auto-prompt again, even if the store launch itself fails.
-        await ref.read(reviewPromptRepositoryProvider).markUserRated();
+        await ref.read(reviewPromptRepositoryProvider).markRated();
         try {
           await service.openStoreListing();
-        } catch (_) {
+        } on PlatformException catch (e, st) {
+          logger.w(
+            '[RateApp] openStoreListing failed',
+            error: e,
+            stackTrace: st,
+          );
+          messenger.showSnackBar(
+            SnackBar(content: Text(l10n.aboutRateAppLaunchFailed)),
+          );
+        } on MissingPluginException catch (e, st) {
+          logger.w(
+            '[RateApp] in_app_review plugin missing',
+            error: e,
+            stackTrace: st,
+          );
           messenger.showSnackBar(
             SnackBar(content: Text(l10n.aboutRateAppLaunchFailed)),
           );

@@ -1,31 +1,31 @@
+import 'package:meta/meta.dart';
+
 import '../models/review_prompt_stats.dart';
 
 /// Persists the state used by the review-prompt auto-trigger.
 ///
-/// Reads are synchronous (kept hot in SharedPreferences); writes are
-/// async because the underlying storage is async.
+/// Reads return a cached in-memory snapshot loaded once at construction;
+/// external SharedPreferences writes are not observed. Writes are async
+/// because they hit disk and may fail (errors are logged, never thrown).
 abstract class ReviewPromptRepository {
-  /// Returns the current snapshot. Never throws — returns defaults if
-  /// the underlying store is empty.
   ReviewPromptStats getStats();
 
-  /// Adds a delta to the cumulative listened total and persists.
-  Future<void> addListenedMs(int deltaMs);
+  /// Adds [delta] to the cumulative listened total. Non-positive deltas
+  /// are ignored.
+  Future<void> addListened(Duration delta);
 
-  /// Marks a prompt as shown: advances the threshold by
-  /// [ReviewPromptStats.promptIntervalMs] and records [shownAt].
-  ///
-  /// Idempotent if called twice at the same instant.
-  Future<void> recordPromptShown(DateTime shownAt);
+  /// Advances `nextPromptThreshold` by [reviewPromptInterval] and records
+  /// the current time as `lastPromptedAt`. No-op when the status is
+  /// terminal (`optedOut` / `rated`).
+  Future<void> recordPromptShown();
 
-  /// Records that the user picked "Don't ask again" — never prompt again.
+  /// Transitions the state to [ReviewPromptStatus.optedOut].
   Future<void> markOptedOut();
 
-  /// Records that the user tapped "Rate now" (auto-prompt) or the manual
-  /// "Rate the App" tile in Settings — assume they rated, never prompt
-  /// again.
-  Future<void> markUserRated();
+  /// Transitions the state to [ReviewPromptStatus.rated].
+  Future<void> markRated();
 
-  /// Test/debug helper.
+  /// Clears all persisted prompt state. Test-only.
+  @visibleForTesting
   Future<void> reset();
 }
