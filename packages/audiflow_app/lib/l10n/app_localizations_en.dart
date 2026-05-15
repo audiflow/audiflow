@@ -401,6 +401,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aboutRateApp => 'Rate the App';
 
   @override
+  String get aboutRateAppLaunchFailed => 'Could not open the store';
+
+  @override
+  String get reviewPromptTitle => 'Enjoying audiflow?';
+
+  @override
+  String get reviewPromptBody =>
+      'If audiflow has earned a spot on your phone, a quick rating helps other listeners discover it.';
+
+  @override
+  String get reviewPromptRateNow => 'Rate now';
+
+  @override
+  String get reviewPromptLater => 'Later';
+
+  @override
+  String get reviewPromptDontAskAgain => 'Don\'t ask again';
+
+  @override
   String get libraryTitle => 'Library';
 
   @override

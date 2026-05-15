@@ -1,6 +1,9 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../download/services/download_service.dart';
+import '../../review_prompt/providers/review_prompt_providers.dart';
+import '../../review_prompt/repositories/review_prompt_repository.dart';
+import '../../review_prompt/services/review_prompt_trigger.dart';
 import '../../settings/providers/settings_providers.dart';
 import '../../station/services/station_reconciler_service.dart';
 import '../models/playback_progress.dart';
@@ -16,11 +19,15 @@ PlaybackHistoryService playbackHistoryService(Ref ref) {
   final settingsRepo = ref.watch(appSettingsRepositoryProvider);
   final reconcilerService = ref.watch(stationReconcilerServiceProvider);
   final downloadService = ref.watch(downloadServiceProvider);
+  final reviewPromptRepository = ref.watch(reviewPromptRepositoryProvider);
+  final reviewPromptTrigger = ref.watch(reviewPromptTriggerProvider);
   return PlaybackHistoryService(
     repository,
     getCompletionThreshold: settingsRepo.getAutoCompleteThreshold,
     reconcilerService: reconcilerService,
     downloadService: downloadService,
+    reviewPromptRepository: reviewPromptRepository,
+    reviewPromptTrigger: reviewPromptTrigger,
   );
 }
 
@@ -35,16 +42,22 @@ class PlaybackHistoryService {
     required double Function() getCompletionThreshold,
     StationReconcilerService? reconcilerService,
     DownloadService? downloadService,
+    ReviewPromptRepository? reviewPromptRepository,
+    ReviewPromptTrigger? reviewPromptTrigger,
     DateTime Function()? clock,
   }) : _getCompletionThreshold = getCompletionThreshold,
        _reconcilerService = reconcilerService,
        _downloadService = downloadService,
+       _reviewPromptRepository = reviewPromptRepository,
+       _reviewPromptTrigger = reviewPromptTrigger,
        _clock = clock ?? DateTime.now;
 
   final PlaybackHistoryRepository _repository;
   final double Function() _getCompletionThreshold;
   final StationReconcilerService? _reconcilerService;
   final DownloadService? _downloadService;
+  final ReviewPromptRepository? _reviewPromptRepository;
+  final ReviewPromptTrigger? _reviewPromptTrigger;
 
   /// Injectable clock for testing.
   final DateTime Function() _clock;
@@ -82,6 +95,10 @@ class PlaybackHistoryService {
     if (positionMs < fromBeginningThresholdMs) {
       await _repository.incrementPlayCount(episodeId);
     }
+
+    // Arm the review-prompt trigger; it fires after the configured delay
+    // unless playback is paused or stopped first.
+    _reviewPromptTrigger?.armForPlayback();
   }
 
   /// Called on each progress update during playback.
@@ -122,6 +139,13 @@ class PlaybackHistoryService {
       listenedDeltaMs: durations.listenedMs,
       realtimeDeltaMs: durations.realtimeMs,
     );
+
+    // Accumulate into the app-wide review-prompt counter.
+    if (0 < durations.listenedMs) {
+      await _reviewPromptRepository?.addListened(
+        Duration(milliseconds: durations.listenedMs),
+      );
+    }
 
     // Notify stations once per session when episode transitions to in-progress.
     if (!_notifiedInProgressThisSession && 0 < positionMs) {
@@ -168,6 +192,15 @@ class PlaybackHistoryService {
       listenedDeltaMs: durations.listenedMs,
       realtimeDeltaMs: durations.realtimeMs,
     );
+
+    if (0 < durations.listenedMs) {
+      await _reviewPromptRepository?.addListened(
+        Duration(milliseconds: durations.listenedMs),
+      );
+    }
+
+    // Pausing within the trigger delay should not surprise the user.
+    _reviewPromptTrigger?.cancel();
   }
 
   /// Called when playback stops or switches to a different episode.
@@ -192,6 +225,14 @@ class PlaybackHistoryService {
       listenedDeltaMs: durations.listenedMs,
       realtimeDeltaMs: durations.realtimeMs,
     );
+
+    if (0 < durations.listenedMs) {
+      await _reviewPromptRepository?.addListened(
+        Duration(milliseconds: durations.listenedMs),
+      );
+    }
+
+    _reviewPromptTrigger?.cancel();
 
     _lastSavedPositionMs = 0;
     _lastSaveTime = null;

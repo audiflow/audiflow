@@ -392,6 +392,24 @@ class AppLocalizationsJa extends AppLocalizations {
   String get aboutRateApp => 'アプリを評価';
 
   @override
+  String get aboutRateAppLaunchFailed => 'ストアを開けませんでした';
+
+  @override
+  String get reviewPromptTitle => 'audiflow はいかがですか？';
+
+  @override
+  String get reviewPromptBody => 'audiflow を気に入っていただけたら、評価で他のリスナーにも教えてあげてください。';
+
+  @override
+  String get reviewPromptRateNow => '今すぐ評価';
+
+  @override
+  String get reviewPromptLater => 'あとで';
+
+  @override
+  String get reviewPromptDontAskAgain => '今後表示しない';
+
+  @override
   String get libraryTitle => 'ライブラリ';
 
   @override

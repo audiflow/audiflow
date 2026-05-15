@@ -830,6 +830,42 @@ abstract class AppLocalizations {
   /// **'Rate the App'**
   String get aboutRateApp;
 
+  /// Snackbar when launching the store URL fails
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the store'**
+  String get aboutRateAppLaunchFailed;
+
+  /// Title of the auto-shown rate prompt
+  ///
+  /// In en, this message translates to:
+  /// **'Enjoying audiflow?'**
+  String get reviewPromptTitle;
+
+  /// Body of the auto-shown rate prompt
+  ///
+  /// In en, this message translates to:
+  /// **'If audiflow has earned a spot on your phone, a quick rating helps other listeners discover it.'**
+  String get reviewPromptBody;
+
+  /// Primary action: open the store listing now
+  ///
+  /// In en, this message translates to:
+  /// **'Rate now'**
+  String get reviewPromptRateNow;
+
+  /// Defer the prompt; ask again after the next milestone
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get reviewPromptLater;
+
+  /// Permanently silence the auto-prompt
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t ask again'**
+  String get reviewPromptDontAskAgain;
+
   /// Library screen title
   ///
   /// In en, this message translates to:

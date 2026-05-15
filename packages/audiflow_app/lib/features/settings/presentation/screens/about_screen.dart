@@ -1,9 +1,11 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../utils/rate_app_service.dart';
 
 class AboutScreen extends ConsumerWidget {
   const AboutScreen({super.key});
@@ -26,7 +28,7 @@ class AboutScreen extends ConsumerWidget {
           const Divider(),
           _LicensesTile(context: context),
           _FeedbackTile(context: context),
-          _RateAppTile(context: context),
+          const _RateAppTile(),
         ],
       ),
     );
@@ -118,22 +120,44 @@ class _FeedbackTile extends StatelessWidget {
   }
 }
 
-class _RateAppTile extends StatelessWidget {
-  const _RateAppTile({required this.context});
-
-  final BuildContext context;
+class _RateAppTile extends ConsumerWidget {
+  const _RateAppTile();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
 
     return ListTile(
       title: Text(l10n.aboutRateApp),
       trailing: const Icon(Icons.chevron_right),
-      onTap: () {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.commonComingSoon)));
+      onTap: () async {
+        final messenger = ScaffoldMessenger.of(context);
+        final logger = ref.read(appLoggerProvider);
+        final service = ref.read(rateAppServiceProvider);
+        // Tapping the explicit rate tile = user willing to rate → never
+        // auto-prompt again, even if the store launch itself fails.
+        await ref.read(reviewPromptRepositoryProvider).markRated();
+        try {
+          await service.openStoreListing();
+        } on PlatformException catch (e, st) {
+          logger.w(
+            '[RateApp] openStoreListing failed',
+            error: e,
+            stackTrace: st,
+          );
+          messenger.showSnackBar(
+            SnackBar(content: Text(l10n.aboutRateAppLaunchFailed)),
+          );
+        } on MissingPluginException catch (e, st) {
+          logger.w(
+            '[RateApp] in_app_review plugin missing',
+            error: e,
+            stackTrace: st,
+          );
+          messenger.showSnackBar(
+            SnackBar(content: Text(l10n.aboutRateAppLaunchFailed)),
+          );
+        }
       },
     );
   }
