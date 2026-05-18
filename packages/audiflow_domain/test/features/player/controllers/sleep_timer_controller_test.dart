@@ -37,6 +37,7 @@ void main() {
             (ref) => fakeLifecycle.stream,
           ),
           currentEpisodeHasChaptersProvider.overrideWith((ref) async => false),
+          analyticsServiceProvider.overrideWithValue(FakeAnalyticsService()),
         ],
       );
     }
@@ -143,6 +144,82 @@ void main() {
 
       final state = container.read(sleepTimerControllerProvider);
       expect(state.config, const SleepTimerConfig.off());
+    });
+
+    test('setDuration emits SleepTimerSet(duration, minutes)', () async {
+      final analytics = FakeAnalyticsService();
+      final prefs = await SharedPreferences.getInstance();
+      final container = ProviderContainer(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          playerLifecycleEventsProvider.overrideWith(
+            (ref) => fakeLifecycle.stream,
+          ),
+          currentEpisodeHasChaptersProvider.overrideWith((ref) async => false),
+          analyticsServiceProvider.overrideWithValue(analytics),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await container
+          .read(sleepTimerControllerProvider.notifier)
+          .setDuration(const Duration(minutes: 20));
+      await Future<void>.delayed(Duration.zero);
+
+      expect(analytics.events.length, 1);
+      final e = analytics.events.single as SleepTimerSet;
+      expect(e.mode, SleepTimerMode.duration);
+      expect(e.value, 20);
+    });
+
+    test('setEpisodes emits SleepTimerSet(episodes, count)', () async {
+      final analytics = FakeAnalyticsService();
+      final prefs = await SharedPreferences.getInstance();
+      final container = ProviderContainer(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          playerLifecycleEventsProvider.overrideWith(
+            (ref) => fakeLifecycle.stream,
+          ),
+          currentEpisodeHasChaptersProvider.overrideWith((ref) async => false),
+          analyticsServiceProvider.overrideWithValue(analytics),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await container
+          .read(sleepTimerControllerProvider.notifier)
+          .setEpisodes(5);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(analytics.events.length, 1);
+      final e = analytics.events.single as SleepTimerSet;
+      expect(e.mode, SleepTimerMode.episodes);
+      expect(e.value, 5);
+    });
+
+    test('setEndOfEpisode emits SleepTimerSet(endOfEpisode, null)', () async {
+      final analytics = FakeAnalyticsService();
+      final prefs = await SharedPreferences.getInstance();
+      final container = ProviderContainer(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          playerLifecycleEventsProvider.overrideWith(
+            (ref) => fakeLifecycle.stream,
+          ),
+          currentEpisodeHasChaptersProvider.overrideWith((ref) async => false),
+          analyticsServiceProvider.overrideWithValue(analytics),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      container.read(sleepTimerControllerProvider.notifier).setEndOfEpisode();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(analytics.events.length, 1);
+      final e = analytics.events.single as SleepTimerSet;
+      expect(e.mode, SleepTimerMode.endOfEpisode);
+      expect(e.value, null);
     });
   });
 }
