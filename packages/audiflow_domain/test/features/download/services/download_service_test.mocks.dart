@@ -3,30 +3,36 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'dart:async' as _i3;
+import 'dart:async' as _i4;
 
 import 'package:audiflow_domain/src/features/download/models/download_status.dart'
-    as _i5;
-import 'package:audiflow_domain/src/features/download/models/download_task.dart'
-    as _i4;
-import 'package:audiflow_domain/src/features/download/repositories/download_repository.dart'
-    as _i2;
-import 'package:audiflow_domain/src/features/download/services/download_file_service.dart'
-    as _i7;
-import 'package:audiflow_domain/src/features/download/services/download_queue_service.dart'
     as _i6;
-import 'package:audiflow_domain/src/features/feed/models/episode.dart' as _i10;
+import 'package:audiflow_domain/src/features/download/models/download_task.dart'
+    as _i5;
+import 'package:audiflow_domain/src/features/download/repositories/download_repository.dart'
+    as _i3;
+import 'package:audiflow_domain/src/features/download/services/download_file_service.dart'
+    as _i8;
+import 'package:audiflow_domain/src/features/download/services/download_queue_service.dart'
+    as _i7;
+import 'package:audiflow_domain/src/features/feed/models/episode.dart' as _i11;
 import 'package:audiflow_domain/src/features/feed/models/feed_parse_progress.dart'
-    as _i14;
+    as _i15;
 import 'package:audiflow_domain/src/features/feed/models/numbering_extractor.dart'
-    as _i12;
-import 'package:audiflow_domain/src/features/feed/models/smart_playlist_pattern_config.dart'
     as _i13;
+import 'package:audiflow_domain/src/features/feed/models/smart_playlist_pattern_config.dart'
+    as _i14;
 import 'package:audiflow_domain/src/features/feed/repositories/episode_repository.dart'
-    as _i9;
-import 'package:audiflow_podcast/audiflow_podcast.dart' as _i11;
+    as _i10;
+import 'package:audiflow_domain/src/features/monitoring/models/analytics_event.dart'
+    as _i17;
+import 'package:audiflow_domain/src/features/subscription/models/subscriptions.dart'
+    as _i2;
+import 'package:audiflow_domain/src/features/subscription/repositories/subscription_repository.dart'
+    as _i16;
+import 'package:audiflow_podcast/audiflow_podcast.dart' as _i12;
 import 'package:mockito/mockito.dart' as _i1;
-import 'package:mockito/src/dummies.dart' as _i8;
+import 'package:mockito/src/dummies.dart' as _i9;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -43,17 +49,22 @@ import 'package:mockito/src/dummies.dart' as _i8;
 // ignore_for_file: subtype_of_sealed_class
 // ignore_for_file: invalid_use_of_internal_member
 
+class _FakeSubscription_0 extends _i1.SmartFake implements _i2.Subscription {
+  _FakeSubscription_0(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
+}
+
 /// A class which mocks [DownloadRepository].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockDownloadRepository extends _i1.Mock
-    implements _i2.DownloadRepository {
+    implements _i3.DownloadRepository {
   MockDownloadRepository() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i3.Future<_i4.DownloadTask?> createDownload({
+  _i4.Future<_i5.DownloadTask?> createDownload({
     required int? episodeId,
     required String? audioUrl,
     required bool? wifiOnly,
@@ -64,90 +75,90 @@ class MockDownloadRepository extends _i1.Mock
               #audioUrl: audioUrl,
               #wifiOnly: wifiOnly,
             }),
-            returnValue: _i3.Future<_i4.DownloadTask?>.value(),
+            returnValue: _i4.Future<_i5.DownloadTask?>.value(),
           )
-          as _i3.Future<_i4.DownloadTask?>);
+          as _i4.Future<_i5.DownloadTask?>);
 
   @override
-  _i3.Future<_i4.DownloadTask?> getById(int? id) =>
+  _i4.Future<_i5.DownloadTask?> getById(int? id) =>
       (super.noSuchMethod(
             Invocation.method(#getById, [id]),
-            returnValue: _i3.Future<_i4.DownloadTask?>.value(),
+            returnValue: _i4.Future<_i5.DownloadTask?>.value(),
           )
-          as _i3.Future<_i4.DownloadTask?>);
+          as _i4.Future<_i5.DownloadTask?>);
 
   @override
-  _i3.Future<_i4.DownloadTask?> getByEpisodeId(int? episodeId) =>
+  _i4.Future<_i5.DownloadTask?> getByEpisodeId(int? episodeId) =>
       (super.noSuchMethod(
             Invocation.method(#getByEpisodeId, [episodeId]),
-            returnValue: _i3.Future<_i4.DownloadTask?>.value(),
+            returnValue: _i4.Future<_i5.DownloadTask?>.value(),
           )
-          as _i3.Future<_i4.DownloadTask?>);
+          as _i4.Future<_i5.DownloadTask?>);
 
   @override
-  _i3.Stream<_i4.DownloadTask?> watchByEpisodeId(int? episodeId) =>
+  _i4.Stream<_i5.DownloadTask?> watchByEpisodeId(int? episodeId) =>
       (super.noSuchMethod(
             Invocation.method(#watchByEpisodeId, [episodeId]),
-            returnValue: _i3.Stream<_i4.DownloadTask?>.empty(),
+            returnValue: _i4.Stream<_i5.DownloadTask?>.empty(),
           )
-          as _i3.Stream<_i4.DownloadTask?>);
+          as _i4.Stream<_i5.DownloadTask?>);
 
   @override
-  _i3.Future<List<_i4.DownloadTask>> getAll() =>
+  _i4.Future<List<_i5.DownloadTask>> getAll() =>
       (super.noSuchMethod(
             Invocation.method(#getAll, []),
-            returnValue: _i3.Future<List<_i4.DownloadTask>>.value(
-              <_i4.DownloadTask>[],
+            returnValue: _i4.Future<List<_i5.DownloadTask>>.value(
+              <_i5.DownloadTask>[],
             ),
           )
-          as _i3.Future<List<_i4.DownloadTask>>);
+          as _i4.Future<List<_i5.DownloadTask>>);
 
   @override
-  _i3.Stream<List<_i4.DownloadTask>> watchAll() =>
+  _i4.Stream<List<_i5.DownloadTask>> watchAll() =>
       (super.noSuchMethod(
             Invocation.method(#watchAll, []),
-            returnValue: _i3.Stream<List<_i4.DownloadTask>>.empty(),
+            returnValue: _i4.Stream<List<_i5.DownloadTask>>.empty(),
           )
-          as _i3.Stream<List<_i4.DownloadTask>>);
+          as _i4.Stream<List<_i5.DownloadTask>>);
 
   @override
-  _i3.Future<List<_i4.DownloadTask>> getByStatus(_i5.DownloadStatus? status) =>
+  _i4.Future<List<_i5.DownloadTask>> getByStatus(_i6.DownloadStatus? status) =>
       (super.noSuchMethod(
             Invocation.method(#getByStatus, [status]),
-            returnValue: _i3.Future<List<_i4.DownloadTask>>.value(
-              <_i4.DownloadTask>[],
+            returnValue: _i4.Future<List<_i5.DownloadTask>>.value(
+              <_i5.DownloadTask>[],
             ),
           )
-          as _i3.Future<List<_i4.DownloadTask>>);
+          as _i4.Future<List<_i5.DownloadTask>>);
 
   @override
-  _i3.Stream<List<_i4.DownloadTask>> watchByStatus(
-    _i5.DownloadStatus? status,
+  _i4.Stream<List<_i5.DownloadTask>> watchByStatus(
+    _i6.DownloadStatus? status,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#watchByStatus, [status]),
-            returnValue: _i3.Stream<List<_i4.DownloadTask>>.empty(),
+            returnValue: _i4.Stream<List<_i5.DownloadTask>>.empty(),
           )
-          as _i3.Stream<List<_i4.DownloadTask>>);
+          as _i4.Stream<List<_i5.DownloadTask>>);
 
   @override
-  _i3.Future<_i4.DownloadTask?> getCompletedForEpisode(int? episodeId) =>
+  _i4.Future<_i5.DownloadTask?> getCompletedForEpisode(int? episodeId) =>
       (super.noSuchMethod(
             Invocation.method(#getCompletedForEpisode, [episodeId]),
-            returnValue: _i3.Future<_i4.DownloadTask?>.value(),
+            returnValue: _i4.Future<_i5.DownloadTask?>.value(),
           )
-          as _i3.Future<_i4.DownloadTask?>);
+          as _i4.Future<_i5.DownloadTask?>);
 
   @override
-  _i3.Future<_i4.DownloadTask?> getNextPending({required bool? isOnWifi}) =>
+  _i4.Future<_i5.DownloadTask?> getNextPending({required bool? isOnWifi}) =>
       (super.noSuchMethod(
             Invocation.method(#getNextPending, [], {#isOnWifi: isOnWifi}),
-            returnValue: _i3.Future<_i4.DownloadTask?>.value(),
+            returnValue: _i4.Future<_i5.DownloadTask?>.value(),
           )
-          as _i3.Future<_i4.DownloadTask?>);
+          as _i4.Future<_i5.DownloadTask?>);
 
   @override
-  _i3.Future<void> updateProgress({
+  _i4.Future<void> updateProgress({
     required int? id,
     required int? downloadedBytes,
     int? totalBytes,
@@ -158,15 +169,15 @@ class MockDownloadRepository extends _i1.Mock
               #downloadedBytes: downloadedBytes,
               #totalBytes: totalBytes,
             }),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
           )
-          as _i3.Future<void>);
+          as _i4.Future<void>);
 
   @override
-  _i3.Future<void> updateStatus({
+  _i4.Future<void> updateStatus({
     required int? id,
-    required _i5.DownloadStatus? status,
+    required _i6.DownloadStatus? status,
     String? localPath,
     String? lastError,
   }) =>
@@ -177,115 +188,115 @@ class MockDownloadRepository extends _i1.Mock
               #localPath: localPath,
               #lastError: lastError,
             }),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
           )
-          as _i3.Future<void>);
+          as _i4.Future<void>);
 
   @override
-  _i3.Future<void> incrementRetryCount(int? id) =>
+  _i4.Future<void> incrementRetryCount(int? id) =>
       (super.noSuchMethod(
             Invocation.method(#incrementRetryCount, [id]),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
           )
-          as _i3.Future<void>);
+          as _i4.Future<void>);
 
   @override
-  _i3.Future<void> delete(int? id) =>
+  _i4.Future<void> delete(int? id) =>
       (super.noSuchMethod(
             Invocation.method(#delete, [id]),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
           )
-          as _i3.Future<void>);
+          as _i4.Future<void>);
 
   @override
-  _i3.Future<int> getActiveCount() =>
+  _i4.Future<int> getActiveCount() =>
       (super.noSuchMethod(
             Invocation.method(#getActiveCount, []),
-            returnValue: _i3.Future<int>.value(0),
+            returnValue: _i4.Future<int>.value(0),
           )
-          as _i3.Future<int>);
+          as _i4.Future<int>);
 
   @override
-  _i3.Future<int> getTotalStorageUsed() =>
+  _i4.Future<int> getTotalStorageUsed() =>
       (super.noSuchMethod(
             Invocation.method(#getTotalStorageUsed, []),
-            returnValue: _i3.Future<int>.value(0),
+            returnValue: _i4.Future<int>.value(0),
           )
-          as _i3.Future<int>);
+          as _i4.Future<int>);
 
   @override
-  _i3.Future<int> deleteAllCompleted() =>
+  _i4.Future<int> deleteAllCompleted() =>
       (super.noSuchMethod(
             Invocation.method(#deleteAllCompleted, []),
-            returnValue: _i3.Future<int>.value(0),
+            returnValue: _i4.Future<int>.value(0),
           )
-          as _i3.Future<int>);
+          as _i4.Future<int>);
 }
 
 /// A class which mocks [DownloadQueueService].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockDownloadQueueService extends _i1.Mock
-    implements _i6.DownloadQueueService {
+    implements _i7.DownloadQueueService {
   MockDownloadQueueService() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i3.Stream<_i4.DownloadTask?> get activeDownloadStream =>
+  _i4.Stream<_i5.DownloadTask?> get activeDownloadStream =>
       (super.noSuchMethod(
             Invocation.getter(#activeDownloadStream),
-            returnValue: _i3.Stream<_i4.DownloadTask?>.empty(),
+            returnValue: _i4.Stream<_i5.DownloadTask?>.empty(),
           )
-          as _i3.Stream<_i4.DownloadTask?>);
+          as _i4.Stream<_i5.DownloadTask?>);
 
   @override
-  _i3.Future<void> startQueue() =>
+  _i4.Future<void> startQueue() =>
       (super.noSuchMethod(
             Invocation.method(#startQueue, []),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
           )
-          as _i3.Future<void>);
+          as _i4.Future<void>);
 
   @override
-  _i3.Future<void> pauseDownload(int? taskId) =>
+  _i4.Future<void> pauseDownload(int? taskId) =>
       (super.noSuchMethod(
             Invocation.method(#pauseDownload, [taskId]),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
           )
-          as _i3.Future<void>);
+          as _i4.Future<void>);
 
   @override
-  _i3.Future<void> resumeDownload(int? taskId) =>
+  _i4.Future<void> resumeDownload(int? taskId) =>
       (super.noSuchMethod(
             Invocation.method(#resumeDownload, [taskId]),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
           )
-          as _i3.Future<void>);
+          as _i4.Future<void>);
 
   @override
-  _i3.Future<void> cancelDownload(int? taskId) =>
+  _i4.Future<void> cancelDownload(int? taskId) =>
       (super.noSuchMethod(
             Invocation.method(#cancelDownload, [taskId]),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
           )
-          as _i3.Future<void>);
+          as _i4.Future<void>);
 
   @override
-  _i3.Future<void> retryDownload(int? taskId) =>
+  _i4.Future<void> retryDownload(int? taskId) =>
       (super.noSuchMethod(
             Invocation.method(#retryDownload, [taskId]),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
           )
-          as _i3.Future<void>);
+          as _i4.Future<void>);
 
   @override
   void dispose() => super.noSuchMethod(
@@ -298,18 +309,18 @@ class MockDownloadQueueService extends _i1.Mock
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockDownloadFileService extends _i1.Mock
-    implements _i7.DownloadFileService {
+    implements _i8.DownloadFileService {
   MockDownloadFileService() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i3.Future<String> downloadFile({
+  _i4.Future<String> downloadFile({
     required int? taskId,
     required String? url,
     required int? episodeId,
     required String? episodeTitle,
-    required _i7.DownloadProgressCallback? onProgress,
+    required _i8.DownloadProgressCallback? onProgress,
     int? resumeFromBytes = 0,
   }) =>
       (super.noSuchMethod(
@@ -321,8 +332,8 @@ class MockDownloadFileService extends _i1.Mock
               #onProgress: onProgress,
               #resumeFromBytes: resumeFromBytes,
             }),
-            returnValue: _i3.Future<String>.value(
-              _i8.dummyValue<String>(
+            returnValue: _i4.Future<String>.value(
+              _i9.dummyValue<String>(
                 this,
                 Invocation.method(#downloadFile, [], {
                   #taskId: taskId,
@@ -335,7 +346,7 @@ class MockDownloadFileService extends _i1.Mock
               ),
             ),
           )
-          as _i3.Future<String>);
+          as _i4.Future<String>);
 
   @override
   void cancelDownload(int? taskId) => super.noSuchMethod(
@@ -344,109 +355,109 @@ class MockDownloadFileService extends _i1.Mock
   );
 
   @override
-  _i3.Future<void> deleteFile(String? localPath) =>
+  _i4.Future<void> deleteFile(String? localPath) =>
       (super.noSuchMethod(
             Invocation.method(#deleteFile, [localPath]),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
           )
-          as _i3.Future<void>);
+          as _i4.Future<void>);
 
   @override
-  _i3.Future<int> getFileSize(String? localPath) =>
+  _i4.Future<int> getFileSize(String? localPath) =>
       (super.noSuchMethod(
             Invocation.method(#getFileSize, [localPath]),
-            returnValue: _i3.Future<int>.value(0),
+            returnValue: _i4.Future<int>.value(0),
           )
-          as _i3.Future<int>);
+          as _i4.Future<int>);
 
   @override
-  _i3.Future<bool> fileExists(String? localPath) =>
+  _i4.Future<bool> fileExists(String? localPath) =>
       (super.noSuchMethod(
             Invocation.method(#fileExists, [localPath]),
-            returnValue: _i3.Future<bool>.value(false),
+            returnValue: _i4.Future<bool>.value(false),
           )
-          as _i3.Future<bool>);
+          as _i4.Future<bool>);
 
   @override
-  _i3.Future<String> getDownloadsDirectory() =>
+  _i4.Future<String> getDownloadsDirectory() =>
       (super.noSuchMethod(
             Invocation.method(#getDownloadsDirectory, []),
-            returnValue: _i3.Future<String>.value(
-              _i8.dummyValue<String>(
+            returnValue: _i4.Future<String>.value(
+              _i9.dummyValue<String>(
                 this,
                 Invocation.method(#getDownloadsDirectory, []),
               ),
             ),
           )
-          as _i3.Future<String>);
+          as _i4.Future<String>);
 }
 
 /// A class which mocks [EpisodeRepository].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockEpisodeRepository extends _i1.Mock implements _i9.EpisodeRepository {
+class MockEpisodeRepository extends _i1.Mock implements _i10.EpisodeRepository {
   MockEpisodeRepository() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i3.Future<List<_i10.Episode>> getByPodcastId(int? podcastId) =>
+  _i4.Future<List<_i11.Episode>> getByPodcastId(int? podcastId) =>
       (super.noSuchMethod(
             Invocation.method(#getByPodcastId, [podcastId]),
-            returnValue: _i3.Future<List<_i10.Episode>>.value(<_i10.Episode>[]),
+            returnValue: _i4.Future<List<_i11.Episode>>.value(<_i11.Episode>[]),
           )
-          as _i3.Future<List<_i10.Episode>>);
+          as _i4.Future<List<_i11.Episode>>);
 
   @override
-  _i3.Stream<List<_i10.Episode>> watchByPodcastId(int? podcastId) =>
+  _i4.Stream<List<_i11.Episode>> watchByPodcastId(int? podcastId) =>
       (super.noSuchMethod(
             Invocation.method(#watchByPodcastId, [podcastId]),
-            returnValue: _i3.Stream<List<_i10.Episode>>.empty(),
+            returnValue: _i4.Stream<List<_i11.Episode>>.empty(),
           )
-          as _i3.Stream<List<_i10.Episode>>);
+          as _i4.Stream<List<_i11.Episode>>);
 
   @override
-  _i3.Future<_i10.Episode?> getById(int? id) =>
+  _i4.Future<_i11.Episode?> getById(int? id) =>
       (super.noSuchMethod(
             Invocation.method(#getById, [id]),
-            returnValue: _i3.Future<_i10.Episode?>.value(),
+            returnValue: _i4.Future<_i11.Episode?>.value(),
           )
-          as _i3.Future<_i10.Episode?>);
+          as _i4.Future<_i11.Episode?>);
 
   @override
-  _i3.Future<_i10.Episode?> getByAudioUrl(String? audioUrl) =>
+  _i4.Future<_i11.Episode?> getByAudioUrl(String? audioUrl) =>
       (super.noSuchMethod(
             Invocation.method(#getByAudioUrl, [audioUrl]),
-            returnValue: _i3.Future<_i10.Episode?>.value(),
+            returnValue: _i4.Future<_i11.Episode?>.value(),
           )
-          as _i3.Future<_i10.Episode?>);
+          as _i4.Future<_i11.Episode?>);
 
   @override
-  _i3.Future<_i10.Episode?> getByPodcastIdAndGuid(
+  _i4.Future<_i11.Episode?> getByPodcastIdAndGuid(
     int? podcastId,
     String? guid,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#getByPodcastIdAndGuid, [podcastId, guid]),
-            returnValue: _i3.Future<_i10.Episode?>.value(),
+            returnValue: _i4.Future<_i11.Episode?>.value(),
           )
-          as _i3.Future<_i10.Episode?>);
+          as _i4.Future<_i11.Episode?>);
 
   @override
-  _i3.Future<void> upsertEpisodes(List<_i10.Episode>? episodes) =>
+  _i4.Future<void> upsertEpisodes(List<_i11.Episode>? episodes) =>
       (super.noSuchMethod(
             Invocation.method(#upsertEpisodes, [episodes]),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
           )
-          as _i3.Future<void>);
+          as _i4.Future<void>);
 
   @override
-  _i3.Future<void> upsertFromFeedItems(
+  _i4.Future<void> upsertFromFeedItems(
     int? podcastId,
-    List<_i11.PodcastItem>? items, {
-    _i12.NumberingExtractor? extractor,
+    List<_i12.PodcastItem>? items, {
+    _i13.NumberingExtractor? extractor,
   }) =>
       (super.noSuchMethod(
             Invocation.method(
@@ -454,16 +465,16 @@ class MockEpisodeRepository extends _i1.Mock implements _i9.EpisodeRepository {
               [podcastId, items],
               {#extractor: extractor},
             ),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
           )
-          as _i3.Future<void>);
+          as _i4.Future<void>);
 
   @override
-  _i3.Future<void> upsertFromFeedItemsWithConfig(
+  _i4.Future<void> upsertFromFeedItemsWithConfig(
     int? podcastId,
-    List<_i11.PodcastItem>? items, {
-    required _i13.SmartPlaylistPatternConfig? config,
+    List<_i12.PodcastItem>? items, {
+    required _i14.SmartPlaylistPatternConfig? config,
   }) =>
       (super.noSuchMethod(
             Invocation.method(
@@ -471,82 +482,82 @@ class MockEpisodeRepository extends _i1.Mock implements _i9.EpisodeRepository {
               [podcastId, items],
               {#config: config},
             ),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
           )
-          as _i3.Future<void>);
+          as _i4.Future<void>);
 
   @override
-  _i3.Future<List<_i10.Episode>> getByIds(List<int>? ids) =>
+  _i4.Future<List<_i11.Episode>> getByIds(List<int>? ids) =>
       (super.noSuchMethod(
             Invocation.method(#getByIds, [ids]),
-            returnValue: _i3.Future<List<_i10.Episode>>.value(<_i10.Episode>[]),
+            returnValue: _i4.Future<List<_i11.Episode>>.value(<_i11.Episode>[]),
           )
-          as _i3.Future<List<_i10.Episode>>);
+          as _i4.Future<List<_i11.Episode>>);
 
   @override
-  _i3.Future<Set<String>> getGuidsByPodcastId(int? podcastId) =>
+  _i4.Future<Set<String>> getGuidsByPodcastId(int? podcastId) =>
       (super.noSuchMethod(
             Invocation.method(#getGuidsByPodcastId, [podcastId]),
-            returnValue: _i3.Future<Set<String>>.value(<String>{}),
+            returnValue: _i4.Future<Set<String>>.value(<String>{}),
           )
-          as _i3.Future<Set<String>>);
+          as _i4.Future<Set<String>>);
 
   @override
-  _i3.Future<_i10.Episode?> getNewestByPodcastId(int? podcastId) =>
+  _i4.Future<_i11.Episode?> getNewestByPodcastId(int? podcastId) =>
       (super.noSuchMethod(
             Invocation.method(#getNewestByPodcastId, [podcastId]),
-            returnValue: _i3.Future<_i10.Episode?>.value(),
+            returnValue: _i4.Future<_i11.Episode?>.value(),
           )
-          as _i3.Future<_i10.Episode?>);
+          as _i4.Future<_i11.Episode?>);
 
   @override
-  _i3.Future<void> storeTranscriptAndChapterDataFromParsed(
+  _i4.Future<void> storeTranscriptAndChapterDataFromParsed(
     int? podcastId,
-    List<_i14.ParsedEpisodeMediaMeta>? mediaMetas,
+    List<_i15.ParsedEpisodeMediaMeta>? mediaMetas,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#storeTranscriptAndChapterDataFromParsed, [
               podcastId,
               mediaMetas,
             ]),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
           )
-          as _i3.Future<void>);
+          as _i4.Future<void>);
 
   @override
-  _i3.Future<int> deleteByPodcastIdAndGuids(
+  _i4.Future<int> deleteByPodcastIdAndGuids(
     int? podcastId,
     Set<String>? guids,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#deleteByPodcastIdAndGuids, [podcastId, guids]),
-            returnValue: _i3.Future<int>.value(0),
+            returnValue: _i4.Future<int>.value(0),
           )
-          as _i3.Future<int>);
+          as _i4.Future<int>);
 
   @override
-  _i3.Future<List<_i10.Episode>> getPendingAutoDownloadByPodcastId(
+  _i4.Future<List<_i11.Episode>> getPendingAutoDownloadByPodcastId(
     int? podcastId,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#getPendingAutoDownloadByPodcastId, [podcastId]),
-            returnValue: _i3.Future<List<_i10.Episode>>.value(<_i10.Episode>[]),
+            returnValue: _i4.Future<List<_i11.Episode>>.value(<_i11.Episode>[]),
           )
-          as _i3.Future<List<_i10.Episode>>);
+          as _i4.Future<List<_i11.Episode>>);
 
   @override
-  _i3.Future<void> markAutoDownloadEnqueued(Iterable<int>? ids) =>
+  _i4.Future<void> markAutoDownloadEnqueued(Iterable<int>? ids) =>
       (super.noSuchMethod(
             Invocation.method(#markAutoDownloadEnqueued, [ids]),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
           )
-          as _i3.Future<void>);
+          as _i4.Future<void>);
 
   @override
-  _i3.Future<List<_i10.Episode>> getSubsequentEpisodes({
+  _i4.Future<List<_i11.Episode>> getSubsequentEpisodes({
     required int? podcastId,
     required int? afterEpisodeNumber,
     required int? limit,
@@ -557,7 +568,259 @@ class MockEpisodeRepository extends _i1.Mock implements _i9.EpisodeRepository {
               #afterEpisodeNumber: afterEpisodeNumber,
               #limit: limit,
             }),
-            returnValue: _i3.Future<List<_i10.Episode>>.value(<_i10.Episode>[]),
+            returnValue: _i4.Future<List<_i11.Episode>>.value(<_i11.Episode>[]),
           )
-          as _i3.Future<List<_i10.Episode>>);
+          as _i4.Future<List<_i11.Episode>>);
+}
+
+/// A class which mocks [SubscriptionRepository].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockSubscriptionRepository extends _i1.Mock
+    implements _i16.SubscriptionRepository {
+  MockSubscriptionRepository() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i4.Future<_i2.Subscription> subscribe({
+    required String? itunesId,
+    required String? feedUrl,
+    required String? title,
+    required String? artistName,
+    String? artworkUrl,
+    String? description,
+    List<String>? genres,
+    bool? explicit,
+    _i17.SubscribeSource? source,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#subscribe, [], {
+              #itunesId: itunesId,
+              #feedUrl: feedUrl,
+              #title: title,
+              #artistName: artistName,
+              #artworkUrl: artworkUrl,
+              #description: description,
+              #genres: genres,
+              #explicit: explicit,
+              #source: source,
+            }),
+            returnValue: _i4.Future<_i2.Subscription>.value(
+              _FakeSubscription_0(
+                this,
+                Invocation.method(#subscribe, [], {
+                  #itunesId: itunesId,
+                  #feedUrl: feedUrl,
+                  #title: title,
+                  #artistName: artistName,
+                  #artworkUrl: artworkUrl,
+                  #description: description,
+                  #genres: genres,
+                  #explicit: explicit,
+                  #source: source,
+                }),
+              ),
+            ),
+          )
+          as _i4.Future<_i2.Subscription>);
+
+  @override
+  _i4.Future<void> unsubscribe(String? itunesId) =>
+      (super.noSuchMethod(
+            Invocation.method(#unsubscribe, [itunesId]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
+  _i4.Future<bool> isSubscribed(String? itunesId) =>
+      (super.noSuchMethod(
+            Invocation.method(#isSubscribed, [itunesId]),
+            returnValue: _i4.Future<bool>.value(false),
+          )
+          as _i4.Future<bool>);
+
+  @override
+  _i4.Future<bool> isSubscribedByFeedUrl(String? feedUrl) =>
+      (super.noSuchMethod(
+            Invocation.method(#isSubscribedByFeedUrl, [feedUrl]),
+            returnValue: _i4.Future<bool>.value(false),
+          )
+          as _i4.Future<bool>);
+
+  @override
+  _i4.Future<List<_i2.Subscription>> getSubscriptions() =>
+      (super.noSuchMethod(
+            Invocation.method(#getSubscriptions, []),
+            returnValue: _i4.Future<List<_i2.Subscription>>.value(
+              <_i2.Subscription>[],
+            ),
+          )
+          as _i4.Future<List<_i2.Subscription>>);
+
+  @override
+  _i4.Stream<List<_i2.Subscription>> watchSubscriptions() =>
+      (super.noSuchMethod(
+            Invocation.method(#watchSubscriptions, []),
+            returnValue: _i4.Stream<List<_i2.Subscription>>.empty(),
+          )
+          as _i4.Stream<List<_i2.Subscription>>);
+
+  @override
+  _i4.Future<_i2.Subscription?> getSubscription(String? itunesId) =>
+      (super.noSuchMethod(
+            Invocation.method(#getSubscription, [itunesId]),
+            returnValue: _i4.Future<_i2.Subscription?>.value(),
+          )
+          as _i4.Future<_i2.Subscription?>);
+
+  @override
+  _i4.Future<_i2.Subscription?> getByFeedUrl(String? feedUrl) =>
+      (super.noSuchMethod(
+            Invocation.method(#getByFeedUrl, [feedUrl]),
+            returnValue: _i4.Future<_i2.Subscription?>.value(),
+          )
+          as _i4.Future<_i2.Subscription?>);
+
+  @override
+  _i4.Future<_i2.Subscription?> getById(int? id) =>
+      (super.noSuchMethod(
+            Invocation.method(#getById, [id]),
+            returnValue: _i4.Future<_i2.Subscription?>.value(),
+          )
+          as _i4.Future<_i2.Subscription?>);
+
+  @override
+  _i4.Future<void> updateLastRefreshed(String? itunesId, DateTime? timestamp) =>
+      (super.noSuchMethod(
+            Invocation.method(#updateLastRefreshed, [itunesId, timestamp]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
+  _i4.Future<_i2.Subscription> getOrCreateCached({
+    required String? itunesId,
+    required String? feedUrl,
+    required String? title,
+    required String? artistName,
+    String? artworkUrl,
+    String? description,
+    List<String>? genres,
+    bool? explicit,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#getOrCreateCached, [], {
+              #itunesId: itunesId,
+              #feedUrl: feedUrl,
+              #title: title,
+              #artistName: artistName,
+              #artworkUrl: artworkUrl,
+              #description: description,
+              #genres: genres,
+              #explicit: explicit,
+            }),
+            returnValue: _i4.Future<_i2.Subscription>.value(
+              _FakeSubscription_0(
+                this,
+                Invocation.method(#getOrCreateCached, [], {
+                  #itunesId: itunesId,
+                  #feedUrl: feedUrl,
+                  #title: title,
+                  #artistName: artistName,
+                  #artworkUrl: artworkUrl,
+                  #description: description,
+                  #genres: genres,
+                  #explicit: explicit,
+                }),
+              ),
+            ),
+          )
+          as _i4.Future<_i2.Subscription>);
+
+  @override
+  _i4.Future<_i2.Subscription?> promoteToSubscribed(String? itunesId) =>
+      (super.noSuchMethod(
+            Invocation.method(#promoteToSubscribed, [itunesId]),
+            returnValue: _i4.Future<_i2.Subscription?>.value(),
+          )
+          as _i4.Future<_i2.Subscription?>);
+
+  @override
+  _i4.Future<void> updateLastAccessed(int? id) =>
+      (super.noSuchMethod(
+            Invocation.method(#updateLastAccessed, [id]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
+  _i4.Future<List<_i2.Subscription>> getCachedSubscriptions() =>
+      (super.noSuchMethod(
+            Invocation.method(#getCachedSubscriptions, []),
+            returnValue: _i4.Future<List<_i2.Subscription>>.value(
+              <_i2.Subscription>[],
+            ),
+          )
+          as _i4.Future<List<_i2.Subscription>>);
+
+  @override
+  _i4.Future<bool> deleteById(int? id) =>
+      (super.noSuchMethod(
+            Invocation.method(#deleteById, [id]),
+            returnValue: _i4.Future<bool>.value(false),
+          )
+          as _i4.Future<bool>);
+
+  @override
+  _i4.Future<void> updateAutoDownload(int? id, {required bool? autoDownload}) =>
+      (super.noSuchMethod(
+            Invocation.method(
+              #updateAutoDownload,
+              [id],
+              {#autoDownload: autoDownload},
+            ),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
+  _i4.Future<void> updateDescription(int? id, String? description) =>
+      (super.noSuchMethod(
+            Invocation.method(#updateDescription, [id, description]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
+  _i4.Future<void> updateHttpCacheHeaders(
+    int? id, {
+    String? etag,
+    String? lastModified,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(
+              #updateHttpCacheHeaders,
+              [id],
+              {#etag: etag, #lastModified: lastModified},
+            ),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
+  _i4.Future<void> clearAllHttpCacheHeaders() =>
+      (super.noSuchMethod(
+            Invocation.method(#clearAllHttpCacheHeaders, []),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
 }

@@ -9,8 +9,11 @@ import '../../../common/providers/logger_provider.dart';
 import '../models/download_task.dart';
 import '../../feed/repositories/episode_repository.dart';
 import '../../feed/repositories/episode_repository_impl.dart';
+import '../../monitoring/models/analytics_event.dart';
+import '../../monitoring/providers/analytics_providers.dart';
 import '../models/download_status.dart';
 import '../../station/services/station_reconciler_service.dart';
+import '../../subscription/repositories/subscription_repository_impl.dart';
 import '../repositories/download_repository.dart';
 import '../repositories/download_repository_impl.dart';
 import 'download_file_service.dart';
@@ -41,11 +44,38 @@ DownloadQueueService downloadQueueService(Ref ref) {
     episodeRepository: episodeRepo,
     logger: logger,
     onDownloadCompleted: reconcilerService.onEpisodeChanged,
+    onDownloadCompletedWithBytes: (episodeId, bytes) =>
+        _emitDownloadCompleted(ref, episodeId, bytes),
   );
 
   ref.onDispose(() => service.dispose());
 
   return service;
+}
+
+/// Resolves stable IDs and emits [EpisodeDownloadCompleted] using the
+/// queue provider's [Ref]. Lives at the provider seam so the service
+/// stays decoupled from analytics wiring.
+Future<void> _emitDownloadCompleted(Ref ref, int episodeId, int bytes) async {
+  final episodeRepo = ref.read(episodeRepositoryProvider);
+  final episode = await episodeRepo.getById(episodeId);
+  if (episode == null) return;
+  final guid = episode.guid;
+  if (guid.isEmpty) return;
+  final subscriptionRepo = ref.read(subscriptionRepositoryProvider);
+  final sub = await subscriptionRepo.getById(episode.podcastId);
+  final feedUrl = sub?.feedUrl;
+  if (feedUrl == null || feedUrl.isEmpty) return;
+  final analytics = ref.read(analyticsServiceProvider);
+  unawaited(
+    analytics.log(
+      EpisodeDownloadCompleted(
+        podcastId: stableId(feedUrl),
+        episodeId: stableId(guid),
+        bytes: bytes,
+      ),
+    ),
+  );
 }
 
 class DownloadQueueService {
@@ -55,11 +85,14 @@ class DownloadQueueService {
     required EpisodeRepository episodeRepository,
     required Logger logger,
     Future<void> Function(int episodeId)? onDownloadCompleted,
+    Future<void> Function(int episodeId, int bytes)?
+    onDownloadCompletedWithBytes,
   }) : _repository = repository,
        _fileService = fileService,
        _episodeRepo = episodeRepository,
        _logger = logger,
-       _onDownloadCompleted = onDownloadCompleted {
+       _onDownloadCompleted = onDownloadCompleted,
+       _onDownloadCompletedWithBytes = onDownloadCompletedWithBytes {
     _init();
   }
 
@@ -67,6 +100,8 @@ class DownloadQueueService {
   final DownloadFileService _fileService;
   final EpisodeRepository _episodeRepo;
   final Future<void> Function(int episodeId)? _onDownloadCompleted;
+  final Future<void> Function(int episodeId, int bytes)?
+  _onDownloadCompletedWithBytes;
   final Logger _logger;
 
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
@@ -199,6 +234,11 @@ class DownloadQueueService {
 
       _logger.i('Download completed: episodeId=${task.episodeId}');
       await _onDownloadCompleted?.call(task.episodeId);
+      // Read the persisted task to obtain the final byte count - the
+      // throttled progress updates may not have flushed the last delta.
+      final completedTask = await _repository.getById(task.id);
+      final bytes = completedTask?.downloadedBytes ?? 0;
+      await _onDownloadCompletedWithBytes?.call(task.episodeId, bytes);
     } on DownloadException catch (e) {
       await _handleDownloadError(task, e);
     } catch (e) {
