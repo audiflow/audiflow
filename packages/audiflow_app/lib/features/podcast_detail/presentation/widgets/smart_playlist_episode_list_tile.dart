@@ -34,6 +34,7 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
     this.effectiveOrder,
     this.displayTitle,
     this.playlistId,
+    this.stationName,
   });
 
   final Episode episode;
@@ -73,6 +74,11 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
 
   /// Smart playlist id (e.g. `regular`, `short`) used for analytics.
   final String? playlistId;
+
+  /// When set, the tile is rendered in a station context.
+  /// Overrides play source to [PlaySource.station] and emits [StationPlayed]
+  /// instead of [SmartPlaylistPlayed].
+  final String? stationName;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -518,8 +524,11 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
       effectiveOrder: effectiveOrder,
     );
 
+    final isStation = stationName != null;
+    final source = isStation ? PlaySource.station : PlaySource.playlist;
+
     controller
-      ..markPlaySource(PlaySource.playlist)
+      ..markPlaySource(source)
       ..play(
         url,
         metadata: NowPlayingInfo(
@@ -536,11 +545,20 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
         ),
       );
 
-    if (playlistId != null) {
+    final analytics = ref.read(analyticsServiceProvider);
+    if (isStation) {
+      unawaited(() async {
+        final installId = await ref
+            .read(installIdRepositoryProvider)
+            .getOrCreate();
+        await analytics.log(
+          StationPlayed(stationId: stableId('$installId:${stationName!}')),
+        );
+      }());
+    } else if (playlistId != null) {
       final patternId = feedUrl != null
           ? ref.read(smartPlaylistPatternByFeedUrlProvider(feedUrl!)).value?.id
           : null;
-      final analytics = ref.read(analyticsServiceProvider);
       unawaited(
         analytics.log(
           SmartPlaylistPlayed(
