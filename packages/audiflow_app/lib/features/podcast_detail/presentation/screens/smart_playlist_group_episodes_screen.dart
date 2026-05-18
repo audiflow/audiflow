@@ -532,6 +532,7 @@ class _SmartPlaylistGroupEpisodesScreenState
                   playlist: playlistDef,
                   episode: data.episode,
                 ),
+                playlistId: widget.parentPlaylist.id,
               );
             },
           ),
@@ -607,6 +608,7 @@ class _SmartPlaylistGroupEpisodesScreenState
           playlist: playlistDef,
           episode: data.episode,
         ),
+        playlistId: widget.parentPlaylist.id,
       ),
       scrollController: _scrollController,
       yearGroupingEnabled: true,

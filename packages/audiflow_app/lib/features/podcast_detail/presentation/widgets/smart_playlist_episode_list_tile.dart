@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
@@ -31,6 +33,7 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
     this.feedUrl,
     this.effectiveOrder,
     this.displayTitle,
+    this.playlistId,
   });
 
   final Episode episode;
@@ -67,6 +70,9 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
 
   /// Feed URL for invalidating the batch progress provider after changes.
   final String? feedUrl;
+
+  /// Smart playlist id (e.g. `regular`, `short`) used for analytics.
+  final String? playlistId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -529,6 +535,21 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
           feedUrl: feedUrl,
         ),
       );
+
+    if (playlistId != null) {
+      final patternId = feedUrl != null
+          ? ref.read(smartPlaylistPatternByFeedUrlProvider(feedUrl!)).value?.id
+          : null;
+      final analytics = ref.read(analyticsServiceProvider);
+      unawaited(
+        analytics.log(
+          SmartPlaylistPlayed(
+            patternId: patternId ?? stableId(feedUrl ?? ''),
+            playlistId: playlistId!,
+          ),
+        ),
+      );
+    }
   }
 
   Future<bool> _showReplaceQueueDialog(BuildContext context) async {
