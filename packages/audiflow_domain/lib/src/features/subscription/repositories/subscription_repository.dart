@@ -1,3 +1,4 @@
+import '../../monitoring/models/analytics_event.dart';
 import '../models/subscriptions.dart';
 
 /// Repository interface for podcast subscription operations.
@@ -17,6 +18,7 @@ abstract class SubscriptionRepository {
     String? description,
     List<String> genres,
     bool explicit,
+    SubscribeSource source,
   });
 
   /// Unsubscribes from a podcast by its iTunes ID.

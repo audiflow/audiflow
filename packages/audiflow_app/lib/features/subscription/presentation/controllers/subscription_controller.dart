@@ -52,6 +52,7 @@ class SubscriptionController extends _$SubscriptionController {
           description: podcast.description,
           genres: podcast.genres,
           explicit: podcast.explicit,
+          source: SubscribeSource.discovery,
         );
 
         // Invalidate feed provider to trigger episode persistence

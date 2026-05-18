@@ -1,3 +1,4 @@
+import '../../monitoring/models/analytics_event.dart';
 import '../models/opml_entry.dart';
 import '../models/opml_import_result.dart';
 import '../repositories/subscription_repository.dart';
@@ -35,6 +36,7 @@ class OpmlImportService {
           feedUrl: entry.feedUrl,
           title: entry.title,
           artistName: '',
+          source: SubscribeSource.opml,
         );
         succeeded.add(entry);
       } on Exception {

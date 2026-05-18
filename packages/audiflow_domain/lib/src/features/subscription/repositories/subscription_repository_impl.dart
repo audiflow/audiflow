@@ -1,6 +1,10 @@
+import 'package:audiflow_core/audiflow_core.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/providers/database_provider.dart';
+import '../../monitoring/models/analytics_event.dart';
+import '../../monitoring/providers/analytics_providers.dart';
+import '../../monitoring/services/analytics_service.dart';
 import '../../station/services/station_reconciler_service.dart';
 import '../../subscription/models/subscriptions.dart';
 import '../datasources/local/subscription_local_datasource.dart';
@@ -14,9 +18,11 @@ SubscriptionRepository subscriptionRepository(Ref ref) {
   final isar = ref.watch(isarProvider);
   final datasource = SubscriptionLocalDatasource(isar);
   final reconcilerService = ref.watch(stationReconcilerServiceProvider);
+  final analytics = ref.watch(analyticsServiceProvider);
   return SubscriptionRepositoryImpl(
     datasource: datasource,
     reconcilerService: reconcilerService,
+    analytics: analytics,
   );
 }
 
@@ -25,11 +31,14 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
   SubscriptionRepositoryImpl({
     required SubscriptionLocalDatasource datasource,
     StationReconcilerService? reconcilerService,
+    AnalyticsService? analytics,
   }) : _datasource = datasource,
-       _reconcilerService = reconcilerService;
+       _reconcilerService = reconcilerService,
+       _analytics = analytics;
 
   final SubscriptionLocalDatasource _datasource;
   final StationReconcilerService? _reconcilerService;
+  final AnalyticsService? _analytics;
 
   @override
   Future<Subscription> subscribe({
@@ -41,12 +50,18 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
     String? description,
     List<String> genres = const <String>[],
     bool explicit = false,
+    SubscribeSource source = SubscribeSource.unknown,
   }) async {
     // Check for existing cached entry and promote it
     final existing = await _datasource.getByItunesId(itunesId);
     if (existing != null && existing.isCached) {
       final promoted = await _datasource.promoteToSubscribed(itunesId);
-      if (promoted != null) return promoted;
+      if (promoted != null) {
+        await _analytics?.log(
+          PodcastSubscribed(podcastId: stableId(feedUrl), source: source),
+        );
+        return promoted;
+      }
       // Concurrent delete -- fall through to create fresh
     }
 
@@ -61,14 +76,23 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
       ..explicit = explicit
       ..subscribedAt = DateTime.now();
 
-    return _datasource.insert(subscription);
+    final inserted = await _datasource.insert(subscription);
+    await _analytics?.log(
+      PodcastSubscribed(podcastId: stableId(feedUrl), source: source),
+    );
+    return inserted;
   }
 
   @override
   Future<void> unsubscribe(String itunesId) async {
+    final existing = await _datasource.getByItunesId(itunesId);
+    final feedUrl = existing?.feedUrl;
     final rowsDeleted = await _datasource.deleteByItunesId(itunesId);
     if (rowsDeleted == 0) {
       throw SubscriptionNotFoundException(itunesId);
+    }
+    if (feedUrl != null) {
+      await _analytics?.log(PodcastUnsubscribed(podcastId: stableId(feedUrl)));
     }
   }
 
