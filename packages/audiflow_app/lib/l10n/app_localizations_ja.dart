@@ -1204,6 +1204,19 @@ class AppLocalizationsJa extends AppLocalizations {
   String get commonCopiedToClipboard => 'クリップボードにコピーしました';
 
   @override
+  String get settingsPrivacyTitle => 'プライバシー';
+
+  @override
+  String get settingsPrivacySubtitle => 'audiflow が収集するデータを管理します';
+
+  @override
+  String get settingsAnalyticsTitle => '利用状況の共有';
+
+  @override
+  String get settingsAnalyticsSubtitle =>
+      '匿名の利用イベントが audiflow の改善に役立ちます。広告や個人情報は収集しません。';
+
+  @override
   String get settingsDeveloperTitle => '開発';
 
   @override

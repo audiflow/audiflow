@@ -14,7 +14,7 @@ void main() {
       );
     }
 
-    /// Sets a surface size tall enough to render all 7
+    /// Sets a surface size tall enough to render all 9
     /// cards without scrolling, then restores it.
     Future<void> withTallSurface(
       WidgetTester tester,
@@ -45,7 +45,7 @@ void main() {
       await withTallSurface(tester, () async {
         await tester.pumpWidget(buildTestWidget());
 
-        expect(find.byType(SettingsCategoryCard), findsNWidgets(8));
+        expect(find.byType(SettingsCategoryCard), findsNWidgets(9));
       });
     });
 
@@ -60,6 +60,7 @@ void main() {
         expect(find.text('Storage & Data'), findsOneWidget);
         expect(find.text('About'), findsOneWidget);
         expect(find.text('Getting Started'), findsOneWidget);
+        expect(find.text('Privacy'), findsOneWidget);
         expect(find.text('Developer'), findsOneWidget);
       });
     });
@@ -80,6 +81,10 @@ void main() {
         expect(find.text('Refresh interval, background sync'), findsOneWidget);
         expect(find.text('Cache, OPML, data management'), findsOneWidget);
         expect(find.text('Version, licenses, support'), findsOneWidget);
+        expect(
+          find.text('Control what data audiflow collects'),
+          findsOneWidget,
+        );
         expect(
           find.text('Smart playlist patterns and debug info'),
           findsOneWidget,

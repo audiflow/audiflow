@@ -2294,6 +2294,30 @@ abstract class AppLocalizations {
   /// **'Copied to clipboard'**
   String get commonCopiedToClipboard;
 
+  /// No description provided for @settingsPrivacyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy'**
+  String get settingsPrivacyTitle;
+
+  /// No description provided for @settingsPrivacySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Control what data audiflow collects'**
+  String get settingsPrivacySubtitle;
+
+  /// No description provided for @settingsAnalyticsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share usage data'**
+  String get settingsAnalyticsTitle;
+
+  /// No description provided for @settingsAnalyticsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Anonymous usage events help us improve audiflow. No ads, no personal data.'**
+  String get settingsAnalyticsSubtitle;
+
   /// Settings grid card title for developer preferences
   ///
   /// In en, this message translates to:

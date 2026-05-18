@@ -21,6 +21,7 @@ import '../features/podcast_detail/presentation/screens/smart_playlist_group_epi
 import '../features/queue/presentation/screens/queue_screen.dart';
 import '../features/search/presentation/screens/search_screen.dart';
 import '../features/settings/presentation/screens/about_screen.dart';
+import '../features/settings/presentation/screens/privacy_settings_screen.dart';
 import '../features/settings/presentation/screens/appearance_settings_screen.dart';
 import '../features/download/presentation/screens/download_management_screen.dart';
 import '../features/player/presentation/screens/transcript_screen.dart';
@@ -66,6 +67,7 @@ class AppRoutes {
       '/settings/downloads/management';
   static const String settingsGettingStarted = '/settings/getting-started';
   static const String migrationGuide = '/settings/getting-started/migration';
+  static const String settingsPrivacy = '/settings/privacy';
   static const String onboarding = '/onboarding';
   static const String transcript = '/transcript';
   static const String deepLinkPodcast = '/p/:itunesId';
@@ -279,6 +281,10 @@ GoRouter createAppRouter({
                   GoRoute(
                     path: 'about',
                     builder: (context, state) => const AboutScreen(),
+                  ),
+                  GoRoute(
+                    path: 'privacy',
+                    builder: (context, state) => const PrivacySettingsScreen(),
                   ),
                   GoRoute(
                     path: 'developer',
