@@ -38,6 +38,13 @@ import 'features/settings/presentation/widgets/opml_file_receiver.dart';
 import 'l10n/app_localizations.dart';
 import 'routing/app_router.dart';
 
+/// Optional analytics observer attached to the router for screen_view tracking.
+///
+/// Overridden in `_startApp` when Firebase is available; null otherwise.
+final firebaseAnalyticsObserverProvider = Provider<FirebaseAnalyticsObserver?>(
+  (ref) => null,
+);
+
 Future<void> appMain({
   required Flavor flavor,
   String smartPlaylistConfigBaseUrl =
@@ -261,6 +268,11 @@ Future<void> _startApp(
                 FirebaseAnalyticsService(firebaseAnalytics),
               ),
       ),
+      firebaseAnalyticsObserverProvider.overrideWithValue(
+        firebaseAnalytics == null
+            ? null
+            : FirebaseAnalyticsObserver(analytics: firebaseAnalytics),
+      ),
       smartPlaylistConfigBaseUrlProvider.overrideWithValue(
         smartPlaylistConfigBaseUrl,
       ),
@@ -434,9 +446,11 @@ class _MyAppState extends ConsumerState<MyApp> {
   @override
   void initState() {
     super.initState();
+    final faObserver = ref.read(firebaseAnalyticsObserverProvider);
     _router = createAppRouter(
       prefs: ref.read(sharedPreferencesProvider),
       lastTabIndex: ref.read(lastTabControllerProvider),
+      observers: [?faObserver],
     );
     unawaited(_initNotificationTapHandler());
   }

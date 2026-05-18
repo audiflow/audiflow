@@ -106,6 +106,7 @@ final _settingsNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'settings');
 GoRouter createAppRouter({
   required SharedPreferences prefs,
   int lastTabIndex = 0,
+  List<NavigatorObserver> observers = const [],
 }) {
   final initialLocation = switch (lastTabIndex) {
     1 => AppRoutes.library,
@@ -116,6 +117,7 @@ GoRouter createAppRouter({
   return GoRouter(
     navigatorKey: rootNavigatorKey,
     initialLocation: initialLocation,
+    observers: observers,
     // File URIs from the share sheet (e.g. file:///...opml)
     // are handled by OpmlFileReceiverController via app_links,
     // not by the router. Redirect to home on unknown routes.
