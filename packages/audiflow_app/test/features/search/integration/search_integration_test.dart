@@ -31,6 +31,7 @@ void main() {
           overrides: [
             podcastSearchServiceProvider.overrideWithValue(mockService),
             appSettingsRepositoryProvider.overrideWithValue(fakeSettings),
+            analyticsServiceProvider.overrideWithValue(FakeAnalyticsService()),
           ],
         );
         addTearDown(container.dispose);
@@ -98,6 +99,7 @@ void main() {
           overrides: [
             podcastSearchServiceProvider.overrideWithValue(mockService),
             appSettingsRepositoryProvider.overrideWithValue(fakeSettings),
+            analyticsServiceProvider.overrideWithValue(FakeAnalyticsService()),
           ],
         );
         addTearDown(container.dispose);
@@ -152,6 +154,7 @@ void main() {
           overrides: [
             podcastSearchServiceProvider.overrideWithValue(slowMock),
             appSettingsRepositoryProvider.overrideWithValue(fakeSettings),
+            analyticsServiceProvider.overrideWithValue(FakeAnalyticsService()),
           ],
         );
         addTearDown(container.dispose);
@@ -193,6 +196,7 @@ void main() {
           overrides: [
             podcastSearchServiceProvider.overrideWithValue(mockService),
             appSettingsRepositoryProvider.overrideWithValue(fakeSettings),
+            analyticsServiceProvider.overrideWithValue(FakeAnalyticsService()),
           ],
         );
         addTearDown(container.dispose);
@@ -243,6 +247,9 @@ void main() {
             overrides: [
               podcastSearchServiceProvider.overrideWithValue(mockService),
               appSettingsRepositoryProvider.overrideWithValue(fakeSettings),
+              analyticsServiceProvider.overrideWithValue(
+                FakeAnalyticsService(),
+              ),
             ],
           );
           addTearDown(container.dispose);
@@ -314,6 +321,9 @@ void main() {
             overrides: [
               podcastSearchServiceProvider.overrideWithValue(retryMock),
               appSettingsRepositoryProvider.overrideWithValue(fakeSettings),
+              analyticsServiceProvider.overrideWithValue(
+                FakeAnalyticsService(),
+              ),
             ],
           );
           addTearDown(container.dispose);
@@ -359,6 +369,9 @@ void main() {
             overrides: [
               podcastSearchServiceProvider.overrideWithValue(mockService),
               appSettingsRepositoryProvider.overrideWithValue(fakeSettings),
+              analyticsServiceProvider.overrideWithValue(
+                FakeAnalyticsService(),
+              ),
             ],
           );
           addTearDown(container.dispose);
@@ -402,6 +415,7 @@ void main() {
           overrides: [
             podcastSearchServiceProvider.overrideWithValue(mockService),
             appSettingsRepositoryProvider.overrideWithValue(fakeSettings),
+            analyticsServiceProvider.overrideWithValue(FakeAnalyticsService()),
           ],
         );
         addTearDown(container.dispose);
@@ -445,6 +459,7 @@ void main() {
           overrides: [
             podcastSearchServiceProvider.overrideWithValue(slowMock),
             appSettingsRepositoryProvider.overrideWithValue(fakeSettings),
+            analyticsServiceProvider.overrideWithValue(FakeAnalyticsService()),
           ],
         );
         addTearDown(container.dispose);

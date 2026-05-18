@@ -55,4 +55,4 @@ final class InstallIdRepositoryProvider
 }
 
 String _$installIdRepositoryHash() =>
-    r'63bc706d1d892cd97081fdbc75c9833714fa1d7a';
+    r'2484aadaa7d7f73a53654785c7a3cf292c3cbe3b';
