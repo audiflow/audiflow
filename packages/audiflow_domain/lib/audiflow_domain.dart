@@ -243,3 +243,6 @@ export 'src/features/review_prompt/services/review_prompt_trigger.dart';
 export 'src/features/install_id/repositories/install_id_repository.dart';
 export 'src/features/install_id/repositories/install_id_repository_impl.dart';
 export 'src/features/install_id/providers/install_id_providers.dart';
+
+// Monitoring feature
+export 'src/features/monitoring/models/analytics_event.dart';
