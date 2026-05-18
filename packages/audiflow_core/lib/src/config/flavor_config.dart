@@ -40,7 +40,7 @@ class FlavorConfig {
     apiBaseUrl: 'https://api-dev.audiflow.example.com',
     smartPlaylistConfigBaseUrl:
         'https://audiflow.github.io/audiflow-smartplaylist/assets-dev/v6',
-    enableAnalytics: false,
+    enableAnalytics: true,
     enableCrashReporting: true,
     enableHttpTracing: true,
   );
