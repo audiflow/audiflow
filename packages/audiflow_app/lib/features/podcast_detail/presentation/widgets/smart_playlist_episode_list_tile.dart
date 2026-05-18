@@ -512,21 +512,23 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
       effectiveOrder: effectiveOrder,
     );
 
-    controller.play(
-      url,
-      metadata: NowPlayingInfo(
-        episodeUrl: url,
-        episodeTitle: episode.title,
-        podcastTitle: podcastTitle,
-        artworkUrl: artworkUrl ?? episode.imageUrl,
-        totalDuration: episode.durationMs != null
-            ? Duration(milliseconds: episode.durationMs!)
-            : null,
-        itunesId: itunesId,
-        episodeGuid: episode.guid,
-        feedUrl: feedUrl,
-      ),
-    );
+    controller
+      ..markPlaySource(PlaySource.playlist)
+      ..play(
+        url,
+        metadata: NowPlayingInfo(
+          episodeUrl: url,
+          episodeTitle: episode.title,
+          podcastTitle: podcastTitle,
+          artworkUrl: artworkUrl ?? episode.imageUrl,
+          totalDuration: episode.durationMs != null
+              ? Duration(milliseconds: episode.durationMs!)
+              : null,
+          itunesId: itunesId,
+          episodeGuid: episode.guid,
+          feedUrl: feedUrl,
+        ),
+      );
   }
 
   Future<bool> _showReplaceQueueDialog(BuildContext context) async {

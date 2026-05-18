@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:audiflow_core/audiflow_core.dart'
     show AutoPlayOrder, DuckInterruptionBehavior;
 import 'package:audiflow_domain/audiflow_domain.dart';
@@ -72,13 +70,10 @@ class PlaybackSettingsScreen extends ConsumerWidget {
     AppSettingsRepository repo,
     double speed,
   ) async {
-    // Use controller's setSpeed to apply to player and persist in one call
+    // Use controller's setSpeed to apply to player and persist in one
+    // call. The controller emits `playback_speed_change` itself, so the
+    // UI must not double-emit here.
     await ref.read(audioPlayerControllerProvider.notifier).setSpeed(speed);
-    unawaited(
-      ref
-          .read(analyticsServiceProvider)
-          .log(PlaybackSpeedChanged(speed: speed)),
-    );
     ref.invalidate(appSettingsRepositoryProvider);
   }
 

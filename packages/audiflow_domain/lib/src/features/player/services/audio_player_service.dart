@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:audiflow_core/audiflow_core.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:riverpod/riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -10,6 +11,8 @@ import 'package:logger/logger.dart';
 import '../../../common/providers/logger_provider.dart';
 import '../../download/services/download_service.dart';
 import '../../feed/repositories/episode_repository_impl.dart';
+import '../../monitoring/models/analytics_event.dart';
+import '../../monitoring/providers/analytics_providers.dart';
 import '../../queue/services/queue_service.dart';
 import '../../settings/providers/settings_providers.dart';
 import '../../subscription/repositories/subscription_repository_impl.dart';
@@ -102,8 +105,29 @@ class AudioPlayerController extends _$AudioPlayerController
   double? _preFadeVolume;
   Completer<void>? _fadeCompleter;
   bool _suppressNextAutoAdvance = false;
+  PlaySource? _nextPlaySource;
   final StreamController<PlayerLifecycleEvent> _lifecycleEvents =
       StreamController<PlayerLifecycleEvent>.broadcast();
+
+  /// Records the surface that initiated the next [play] call so the
+  /// `episode_play_start` analytics emit can report the correct
+  /// [PlaySource]. Consumed exactly once on the next emit; if a caller
+  /// forgets to set it, the emit defaults to [PlaySource.unknown].
+  void markPlaySource(PlaySource source) {
+    _nextPlaySource = source;
+  }
+
+  /// Resolves the current podcast/episode IDs for analytics emits, using
+  /// the latest [NowPlayingInfo]. Returns null when the feed URL or GUID
+  /// is missing so emitters can no-op cleanly.
+  ({String podcastId, String episodeId})? _currentAnalyticsIds() {
+    final info = ref.read(nowPlayingControllerProvider);
+    final feedUrl = info?.feedUrl;
+    final guid = info?.episodeGuid;
+    if (feedUrl == null || feedUrl.isEmpty) return null;
+    if (guid == null || guid.isEmpty) return null;
+    return (podcastId: stableId(feedUrl), episodeId: stableId(guid));
+  }
 
   /// Broadcast stream of lifecycle events. Exposed via
   /// [playerLifecycleEventsProvider].
@@ -411,6 +435,32 @@ class AudioPlayerController extends _$AudioPlayerController
       _log.d('[Play] Calling _player.play()...');
       await _player.play();
       _log.i('[Play] _player.play() returned');
+
+      // Emit `episode_play_start` once per initial play(url, ...) call.
+      // Resume after pause goes through resume() and does NOT re-emit —
+      // the spec defines this event as the start of an episode, not the
+      // restart of playback. Prefer the explicit metadata when supplied;
+      // fall back to the resolved Isar episode for the GUID.
+      final feedUrlForEmit = metadata?.feedUrl;
+      final guidForEmit = metadata?.episodeGuid ?? episode?.guid;
+      if (feedUrlForEmit != null &&
+          feedUrlForEmit.isNotEmpty &&
+          guidForEmit != null &&
+          guidForEmit.isNotEmpty) {
+        final source = _nextPlaySource ?? PlaySource.unknown;
+        _nextPlaySource = null;
+        unawaited(
+          ref
+              .read(analyticsServiceProvider)
+              .log(
+                EpisodePlayStarted(
+                  podcastId: stableId(feedUrlForEmit),
+                  episodeId: stableId(guidForEmit),
+                  source: source,
+                ),
+              ),
+        );
+      }
     } catch (e, stack) {
       _log.e('[Play] ERROR', error: e, stackTrace: stack);
       state = PlaybackState.error(message: 'Failed to play audio: $e');
@@ -528,7 +578,25 @@ class AudioPlayerController extends _$AudioPlayerController
         );
       }
     }
+    // Capture position before delegating so a racing seek cannot move
+    // the reported position out from under the analytics emit.
+    final positionSec = _player.position.inSeconds;
     await _player.pause();
+
+    final ids = _currentAnalyticsIds();
+    if (ids != null) {
+      unawaited(
+        ref
+            .read(analyticsServiceProvider)
+            .log(
+              EpisodePaused(
+                podcastId: ids.podcastId,
+                episodeId: ids.episodeId,
+                positionSec: positionSec,
+              ),
+            ),
+      );
+    }
   }
 
   /// Resumes playback if paused.
@@ -630,9 +698,27 @@ class AudioPlayerController extends _$AudioPlayerController
     final duration = _player.duration ?? await _awaitDuration();
     if (duration == null) return;
 
+    // Capture the from-position before the just_audio call moves it.
+    final fromSec = _player.position.inSeconds;
     final clampedMs = position.inMilliseconds.clamp(0, duration.inMilliseconds);
     await _player.seek(Duration(milliseconds: clampedMs));
     _lifecycleEvents.add(SeekLifecycle(Duration(milliseconds: clampedMs)));
+
+    final ids = _currentAnalyticsIds();
+    if (ids != null) {
+      unawaited(
+        ref
+            .read(analyticsServiceProvider)
+            .log(
+              EpisodeSeeked(
+                podcastId: ids.podcastId,
+                episodeId: ids.episodeId,
+                fromSec: fromSec,
+                toSec: Duration(milliseconds: clampedMs).inSeconds,
+              ),
+            ),
+      );
+    }
   }
 
   /// Skips forward by the user-configured duration.
@@ -663,6 +749,11 @@ class AudioPlayerController extends _$AudioPlayerController
     await _player.setSpeed(speed);
     final settingsRepo = ref.read(appSettingsRepositoryProvider);
     await settingsRepo.setPlaybackSpeed(speed);
+    unawaited(
+      ref
+          .read(analyticsServiceProvider)
+          .log(PlaybackSpeedChanged(speed: speed)),
+    );
   }
 }
 

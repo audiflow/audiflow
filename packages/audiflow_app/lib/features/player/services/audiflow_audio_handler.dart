@@ -49,35 +49,13 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
   AppSettingsRepository get _settings =>
       _ref.read(appSettingsRepositoryProvider);
 
-  /// Latest now-playing metadata, mirrored from [syncNowPlaying]. Held so the
-  /// playback event emitters can resolve stable podcast/episode IDs without
-  /// reaching back into a controller.
-  NowPlayingInfo? _currentInfo;
-
-  /// Episode id (stable) for which `episode_play_start` has already been
-  /// emitted in this play session. Reset when the episode changes so a
-  /// genuine new episode play emits again, but a pause-then-resume on the
-  /// same episode does not.
-  String? _lastPlayStartEpisodeId;
-
-  /// Surface that initiated the next [play]. Caller surfaces (queue,
-  /// library, playlist, station, search, deeplink) set this immediately
-  /// before invoking [play]; it is consumed and reset on the first
-  /// `episode_play_start` emission.
-  PlaySource _nextPlaySource = PlaySource.unknown;
-
-  /// Marks the source of the next playback start. Defaults back to
-  /// [PlaySource.unknown] once consumed.
-  void markPlaySource(PlaySource source) {
-    _nextPlaySource = source;
-  }
-
-  /// Resolves the current podcast/episode IDs from [_currentInfo].
+  /// Resolves the current podcast/episode IDs from the now-playing
+  /// controller for the `episode_complete` analytics emit.
   ///
   /// Returns null when the info is missing the feed URL or episode GUID,
-  /// so analytics emitters can no-op cleanly.
+  /// so the emitter can no-op cleanly.
   ({String podcastId, String episodeId})? _currentIds() {
-    final info = _currentInfo;
+    final info = _ref.read(nowPlayingControllerProvider);
     final feedUrl = info?.feedUrl;
     final guid = info?.episodeGuid;
     if (feedUrl == null || feedUrl.isEmpty) return null;
@@ -387,13 +365,6 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
 
   /// Updates the platform media item (lock screen / notification metadata).
   void syncNowPlaying(NowPlayingInfo? info) {
-    // Reset the play-start dedupe key when the episode actually changes
-    // so the next play on a different episode emits, but pause/resume on
-    // the same episode does not.
-    if (info?.episodeGuid != _currentInfo?.episodeGuid) {
-      _lastPlayStartEpisodeId = null;
-    }
-    _currentInfo = info;
     if (info == null) {
       _log.d('[AudioHandler] NowPlaying cleared');
       mediaItem.add(null);
@@ -436,22 +407,6 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
     // from being clobbered by an in-flight restore.
     await _interruptionHandler.markUserOverride();
     await _controller.resume();
-    final ids = _currentIds();
-    if (ids != null && ids.episodeId != _lastPlayStartEpisodeId) {
-      _lastPlayStartEpisodeId = ids.episodeId;
-      unawaited(
-        _ref
-            .read(analyticsServiceProvider)
-            .log(
-              EpisodePlayStarted(
-                podcastId: ids.podcastId,
-                episodeId: ids.episodeId,
-                source: _nextPlaySource,
-              ),
-            ),
-      );
-      _nextPlaySource = PlaySource.unknown;
-    }
   }
 
   @override
@@ -460,20 +415,6 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
     // action and serialize the volume restore.
     await _interruptionHandler.markUserOverride();
     await _controller.pause();
-    final ids = _currentIds();
-    if (ids != null) {
-      unawaited(
-        _ref
-            .read(analyticsServiceProvider)
-            .log(
-              EpisodePaused(
-                podcastId: ids.podcastId,
-                episodeId: ids.episodeId,
-                positionSec: _player.position.inSeconds,
-              ),
-            ),
-      );
-    }
   }
 
   @override
@@ -485,25 +426,7 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
 
   @override
   Future<void> seek(Duration position) async {
-    // Capture the from-position before delegating so the controller's
-    // own seek does not move it under us.
-    final fromSec = _player.position.inSeconds;
     await _controller.seek(position);
-    final ids = _currentIds();
-    if (ids != null) {
-      unawaited(
-        _ref
-            .read(analyticsServiceProvider)
-            .log(
-              EpisodeSeeked(
-                podcastId: ids.podcastId,
-                episodeId: ids.episodeId,
-                fromSec: fromSec,
-                toSec: position.inSeconds,
-              ),
-            ),
-      );
-    }
   }
 
   @override

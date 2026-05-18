@@ -559,18 +559,20 @@ class EpisodeListTile extends ConsumerWidget {
       );
     }
 
-    controller.play(
-      url,
-      metadata: NowPlayingInfo(
-        episodeUrl: url,
-        episodeTitle: episode.title,
-        podcastTitle: podcastTitle,
-        artworkUrl: artworkUrl ?? episode.primaryImage?.url,
-        totalDuration: episode.duration,
-        itunesId: itunesId,
-        episodeGuid: episode.guid,
-        feedUrl: episode.sourceUrl,
-      ),
-    );
+    controller
+      ..markPlaySource(PlaySource.library)
+      ..play(
+        url,
+        metadata: NowPlayingInfo(
+          episodeUrl: url,
+          episodeTitle: episode.title,
+          podcastTitle: podcastTitle,
+          artworkUrl: artworkUrl ?? episode.primaryImage?.url,
+          totalDuration: episode.duration,
+          itunesId: itunesId,
+          episodeGuid: episode.guid,
+          feedUrl: episode.sourceUrl,
+        ),
+      );
   }
 }
