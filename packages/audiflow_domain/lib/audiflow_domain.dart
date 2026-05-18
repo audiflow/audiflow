@@ -238,3 +238,8 @@ export 'src/features/review_prompt/repositories/review_prompt_repository.dart';
 export 'src/features/review_prompt/repositories/review_prompt_repository_impl.dart';
 export 'src/features/review_prompt/services/review_prompt_evaluator.dart';
 export 'src/features/review_prompt/services/review_prompt_trigger.dart';
+
+// Install ID feature
+export 'src/features/install_id/repositories/install_id_repository.dart';
+export 'src/features/install_id/repositories/install_id_repository_impl.dart';
+export 'src/features/install_id/providers/install_id_providers.dart';
