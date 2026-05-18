@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:audiflow_core/audiflow_core.dart';
@@ -778,6 +779,11 @@ class _PlaybackSpeedButton extends ConsumerWidget {
         onPressed: () {
           final nextSpeed = _nextSpeed(speed);
           ref.read(audioPlayerControllerProvider.notifier).setSpeed(nextSpeed);
+          unawaited(
+            ref
+                .read(analyticsServiceProvider)
+                .log(PlaybackSpeedChanged(speed: nextSpeed)),
+          );
         },
         child: Text('${speed}x', style: Theme.of(context).textTheme.labelLarge),
       ),
