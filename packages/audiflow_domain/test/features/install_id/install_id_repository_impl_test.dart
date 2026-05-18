@@ -11,7 +11,7 @@ void main() {
   group('InstallIdRepositoryImpl', () {
     test('getOrCreate generates and persists a UUID on first call', () async {
       final prefs = await SharedPreferences.getInstance();
-      final repo = InstallIdRepositoryImpl(prefs);
+      final repo = InstallIdRepositoryImpl(SharedPreferencesDataSource(prefs));
 
       final id = await repo.getOrCreate();
 
@@ -21,7 +21,7 @@ void main() {
 
     test('returns the same UUID on subsequent calls', () async {
       final prefs = await SharedPreferences.getInstance();
-      final repo = InstallIdRepositoryImpl(prefs);
+      final repo = InstallIdRepositoryImpl(SharedPreferencesDataSource(prefs));
 
       final first = await repo.getOrCreate();
       final second = await repo.getOrCreate();
@@ -34,7 +34,7 @@ void main() {
         'analytics.install_id': 'existing-uuid',
       });
       final prefs = await SharedPreferences.getInstance();
-      final repo = InstallIdRepositoryImpl(prefs);
+      final repo = InstallIdRepositoryImpl(SharedPreferencesDataSource(prefs));
 
       check(await repo.getOrCreate()).equals('existing-uuid');
     });

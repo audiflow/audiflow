@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../common/datasources/shared_preferences_datasource.dart';
 import '../../../common/providers/platform_providers.dart';
 import '../repositories/install_id_repository.dart';
 import '../repositories/install_id_repository_impl.dart';
@@ -7,5 +8,6 @@ import '../repositories/install_id_repository_impl.dart';
 part 'install_id_providers.g.dart';
 
 @Riverpod(keepAlive: true)
-InstallIdRepository installIdRepository(Ref ref) =>
-    InstallIdRepositoryImpl(ref.watch(sharedPreferencesProvider));
+InstallIdRepository installIdRepository(Ref ref) => InstallIdRepositoryImpl(
+  SharedPreferencesDataSource(ref.watch(sharedPreferencesProvider)),
+);
