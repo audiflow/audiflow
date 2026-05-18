@@ -25,6 +25,7 @@ export 'src/extensions/duration_extensions.dart';
 // Utilities
 export 'src/utils/device_utils.dart';
 export 'src/utils/formatters.dart';
+export 'src/utils/stable_id.dart';
 export 'src/utils/validators.dart';
 
 // Models
