@@ -8,6 +8,8 @@
 	<false/>
 	<key>GOOGLE_ANALYTICS_IDFA_COLLECTION_ENABLED</key>
 	<false/>
+	<key>FIREBASE_ANALYTICS_COLLECTION_ENABLED</key>
+	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
