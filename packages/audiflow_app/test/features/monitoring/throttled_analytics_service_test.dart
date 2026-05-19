@@ -11,10 +11,18 @@ void main() {
       final svc = ThrottledAnalyticsService(inner, now: clock.now);
 
       await svc.log(
-        PodcastSubscribed(podcastId: 'p', source: SubscribeSource.search),
+        PodcastSubscribed(
+          podcastId: 'p',
+          podcastTitle: 'Pod',
+          source: SubscribeSource.search,
+        ),
       );
       await svc.log(
-        PodcastSubscribed(podcastId: 'p', source: SubscribeSource.search),
+        PodcastSubscribed(
+          podcastId: 'p',
+          podcastTitle: 'Pod',
+          source: SubscribeSource.search,
+        ),
       );
 
       check(inner.events).length.equals(2);
@@ -26,11 +34,23 @@ void main() {
       final svc = ThrottledAnalyticsService(inner, now: clock.now);
 
       await svc.log(
-        EpisodePaused(podcastId: 'p', episodeId: 'e1', positionSec: 1),
+        EpisodePaused(
+          podcastId: 'p',
+          episodeId: 'e1',
+          podcastTitle: 'Pod',
+          episodeTitle: 'Ep1',
+          positionSec: 1,
+        ),
       );
       clock.advance(const Duration(seconds: 2));
       await svc.log(
-        EpisodePaused(podcastId: 'p', episodeId: 'e1', positionSec: 3),
+        EpisodePaused(
+          podcastId: 'p',
+          episodeId: 'e1',
+          podcastTitle: 'Pod',
+          episodeTitle: 'Ep1',
+          positionSec: 3,
+        ),
       );
 
       check(inner.events).length.equals(1);
@@ -42,11 +62,23 @@ void main() {
       final svc = ThrottledAnalyticsService(inner, now: clock.now);
 
       await svc.log(
-        EpisodePaused(podcastId: 'p', episodeId: 'e1', positionSec: 1),
+        EpisodePaused(
+          podcastId: 'p',
+          episodeId: 'e1',
+          podcastTitle: 'Pod',
+          episodeTitle: 'Ep1',
+          positionSec: 1,
+        ),
       );
       clock.advance(const Duration(seconds: 6));
       await svc.log(
-        EpisodePaused(podcastId: 'p', episodeId: 'e1', positionSec: 7),
+        EpisodePaused(
+          podcastId: 'p',
+          episodeId: 'e1',
+          podcastTitle: 'Pod',
+          episodeTitle: 'Ep1',
+          positionSec: 7,
+        ),
       );
 
       check(inner.events).length.equals(2);
@@ -60,10 +92,22 @@ void main() {
         final svc = ThrottledAnalyticsService(inner, now: clock.now);
 
         await svc.log(
-          EpisodePaused(podcastId: 'p', episodeId: 'e1', positionSec: 1),
+          EpisodePaused(
+            podcastId: 'p',
+            episodeId: 'e1',
+            podcastTitle: 'Pod',
+            episodeTitle: 'Ep1',
+            positionSec: 1,
+          ),
         );
         await svc.log(
-          EpisodePaused(podcastId: 'p', episodeId: 'e2', positionSec: 1),
+          EpisodePaused(
+            podcastId: 'p',
+            episodeId: 'e2',
+            podcastTitle: 'Pod',
+            episodeTitle: 'Ep2',
+            positionSec: 1,
+          ),
         );
 
         check(inner.events).length.equals(2);

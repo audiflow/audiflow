@@ -120,20 +120,37 @@ class DownloadService {
   final StationReconcilerService? _reconcilerService;
   final AnalyticsService? _analytics;
 
-  /// Resolves the analytics stable IDs for [episodeId]. Returns null when
-  /// the episode, its feed URL, or its GUID is missing so emitters can
-  /// no-op cleanly.
-  Future<({String podcastId, String episodeId})?> _analyticsIds(
-    int episodeId,
-  ) async {
+  /// Resolves the analytics IDs and titles for [episodeId]. Returns null
+  /// when the episode, its feed URL, or its GUID is missing so emitters
+  /// can no-op cleanly.
+  ///
+  /// `podcastId` is the raw iTunes ID when available (non-OPML import),
+  /// else the feed URL. `episodeId` is the raw RSS guid. Truncation to
+  /// GA's 100-char param limit happens at the event boundary.
+  Future<
+    ({
+      String podcastId,
+      String episodeId,
+      String podcastTitle,
+      String episodeTitle,
+    })?
+  >
+  _analyticsIds(int episodeId) async {
     final episode = await _episodeRepo.getById(episodeId);
     if (episode == null) return null;
     final guid = episode.guid;
     if (guid.isEmpty) return null;
     final sub = await _subscriptionRepo.getById(episode.podcastId);
-    final feedUrl = sub?.feedUrl;
-    if (feedUrl == null || feedUrl.isEmpty) return null;
-    return (podcastId: stableId(feedUrl), episodeId: stableId(guid));
+    if (sub == null) return null;
+    final feedUrl = sub.feedUrl;
+    if (feedUrl.isEmpty) return null;
+    final podcastId = sub.itunesId.startsWith('opml:') ? feedUrl : sub.itunesId;
+    return (
+      podcastId: podcastId,
+      episodeId: guid,
+      podcastTitle: sub.title,
+      episodeTitle: episode.title,
+    );
   }
 
   /// Downloads a single episode.
@@ -223,6 +240,8 @@ class DownloadService {
                 EpisodeDownloadStarted(
                   podcastId: ids.podcastId,
                   episodeId: ids.episodeId,
+                  podcastTitle: ids.podcastTitle,
+                  episodeTitle: ids.episodeTitle,
                 ),
               ) ??
               Future<void>.value(),

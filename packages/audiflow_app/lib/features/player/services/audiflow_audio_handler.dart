@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:audio_service/audio_service.dart' as audio_service;
 import 'package:audio_session/audio_session.dart';
-import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
@@ -49,18 +48,37 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
   AppSettingsRepository get _settings =>
       _ref.read(appSettingsRepositoryProvider);
 
-  /// Resolves the current podcast/episode IDs from the now-playing
-  /// controller for the `episode_complete` analytics emit.
+  /// Resolves the current podcast/episode IDs and titles from the
+  /// now-playing controller for the `episode_complete` analytics emit.
   ///
   /// Returns null when the info is missing the feed URL or episode GUID,
   /// so the emitter can no-op cleanly.
-  ({String podcastId, String episodeId})? _currentIds() {
+  ({
+    String podcastId,
+    String episodeId,
+    String podcastTitle,
+    String episodeTitle,
+  })?
+  _currentIds() {
     final info = _ref.read(nowPlayingControllerProvider);
-    final feedUrl = info?.feedUrl;
-    final guid = info?.episodeGuid;
+    if (info == null) return null;
+    final feedUrl = info.feedUrl;
+    final guid = info.episodeGuid;
     if (feedUrl == null || feedUrl.isEmpty) return null;
     if (guid == null || guid.isEmpty) return null;
-    return (podcastId: stableId(feedUrl), episodeId: stableId(guid));
+    final itunesId = info.itunesId;
+    final podcastId =
+        (itunesId != null &&
+            itunesId.isNotEmpty &&
+            !itunesId.startsWith('opml:'))
+        ? itunesId
+        : feedUrl;
+    return (
+      podcastId: podcastId,
+      episodeId: guid,
+      podcastTitle: info.podcastTitle,
+      episodeTitle: info.episodeTitle,
+    );
   }
 
   /// Handles interruption begin/end decisions. Lazily built so tests may
@@ -146,6 +164,8 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
                   EpisodeCompleted(
                     podcastId: ids.podcastId,
                     episodeId: ids.episodeId,
+                    podcastTitle: ids.podcastTitle,
+                    episodeTitle: ids.episodeTitle,
                     durationSec: durationSec,
                   ),
                 ),

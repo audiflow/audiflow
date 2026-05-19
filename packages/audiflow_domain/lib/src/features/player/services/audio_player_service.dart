@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:audiflow_core/audiflow_core.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:riverpod/riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -117,16 +116,40 @@ class AudioPlayerController extends _$AudioPlayerController
     _nextPlaySource = source;
   }
 
-  /// Resolves the current podcast/episode IDs for analytics emits, using
-  /// the latest [NowPlayingInfo]. Returns null when the feed URL or GUID
-  /// is missing so emitters can no-op cleanly.
-  ({String podcastId, String episodeId})? _currentAnalyticsIds() {
+  /// Resolves the current podcast/episode IDs and titles for analytics
+  /// emits, using the latest [NowPlayingInfo]. Returns null when the
+  /// feed URL or GUID is missing so emitters can no-op cleanly.
+  ///
+  /// `podcastId` resolves to the raw iTunes ID when available
+  /// (non-OPML import), else the feed URL. `episodeId` is the raw RSS
+  /// guid. Titles come straight from `NowPlayingInfo`; truncation to
+  /// GA's 100-char param limit happens at the event boundary.
+  ({
+    String podcastId,
+    String episodeId,
+    String podcastTitle,
+    String episodeTitle,
+  })?
+  _currentAnalyticsIds() {
     final info = ref.read(nowPlayingControllerProvider);
-    final feedUrl = info?.feedUrl;
-    final guid = info?.episodeGuid;
+    if (info == null) return null;
+    final feedUrl = info.feedUrl;
+    final guid = info.episodeGuid;
     if (feedUrl == null || feedUrl.isEmpty) return null;
     if (guid == null || guid.isEmpty) return null;
-    return (podcastId: stableId(feedUrl), episodeId: stableId(guid));
+    final itunesId = info.itunesId;
+    final podcastId =
+        (itunesId != null &&
+            itunesId.isNotEmpty &&
+            !itunesId.startsWith('opml:'))
+        ? itunesId
+        : feedUrl;
+    return (
+      podcastId: podcastId,
+      episodeId: guid,
+      podcastTitle: info.podcastTitle,
+      episodeTitle: info.episodeTitle,
+    );
   }
 
   /// Broadcast stream of lifecycle events. Exposed via
@@ -449,13 +472,25 @@ class AudioPlayerController extends _$AudioPlayerController
           guidForEmit.isNotEmpty) {
         final source = _nextPlaySource ?? PlaySource.unknown;
         _nextPlaySource = null;
+        final itunesIdForEmit = metadata?.itunesId;
+        final podcastIdForEmit =
+            (itunesIdForEmit != null &&
+                itunesIdForEmit.isNotEmpty &&
+                !itunesIdForEmit.startsWith('opml:'))
+            ? itunesIdForEmit
+            : feedUrlForEmit;
+        final podcastTitleForEmit = metadata?.podcastTitle ?? '';
+        final episodeTitleForEmit =
+            metadata?.episodeTitle ?? episode?.title ?? '';
         unawaited(
           ref
               .read(analyticsServiceProvider)
               .log(
                 EpisodePlayStarted(
-                  podcastId: stableId(feedUrlForEmit),
-                  episodeId: stableId(guidForEmit),
+                  podcastId: podcastIdForEmit,
+                  episodeId: guidForEmit,
+                  podcastTitle: podcastTitleForEmit,
+                  episodeTitle: episodeTitleForEmit,
                   source: source,
                 ),
               ),
@@ -592,6 +627,8 @@ class AudioPlayerController extends _$AudioPlayerController
               EpisodePaused(
                 podcastId: ids.podcastId,
                 episodeId: ids.episodeId,
+                podcastTitle: ids.podcastTitle,
+                episodeTitle: ids.episodeTitle,
                 positionSec: positionSec,
               ),
             ),
@@ -713,6 +750,8 @@ class AudioPlayerController extends _$AudioPlayerController
               EpisodeSeeked(
                 podcastId: ids.podcastId,
                 episodeId: ids.episodeId,
+                podcastTitle: ids.podcastTitle,
+                episodeTitle: ids.episodeTitle,
                 fromSec: fromSec,
                 toSec: Duration(milliseconds: clampedMs).inSeconds,
               ),

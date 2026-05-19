@@ -26,43 +26,66 @@ String _toSnake(String s) {
   return buf.toString();
 }
 
+// GA4 caps event param values at 100 chars. Truncate at the boundary so
+// raw RSS guids / feedUrls / titles never exceed the limit silently.
+String _trim(String s) => s.length <= 100 ? s : s.substring(0, 100);
+
 class PodcastSubscribed extends AnalyticsEvent {
-  const PodcastSubscribed({required this.podcastId, required this.source});
+  const PodcastSubscribed({
+    required this.podcastId,
+    required this.podcastTitle,
+    required this.source,
+  });
   final String podcastId;
+  final String podcastTitle;
   final SubscribeSource source;
   @override
   String get name => 'podcast_subscribe';
   @override
   Map<String, Object> get params => {
-    'podcast_id': podcastId,
+    'podcast_id': _trim(podcastId),
+    'podcast_title': _trim(podcastTitle),
     'source': source.name,
   };
 }
 
 class PodcastUnsubscribed extends AnalyticsEvent {
-  const PodcastUnsubscribed({required this.podcastId});
+  const PodcastUnsubscribed({
+    required this.podcastId,
+    required this.podcastTitle,
+  });
   final String podcastId;
+  final String podcastTitle;
   @override
   String get name => 'podcast_unsubscribe';
   @override
-  Map<String, Object> get params => {'podcast_id': podcastId};
+  Map<String, Object> get params => {
+    'podcast_id': _trim(podcastId),
+    'podcast_title': _trim(podcastTitle),
+  };
 }
 
 class EpisodePlayStarted extends AnalyticsEvent {
   const EpisodePlayStarted({
     required this.podcastId,
     required this.episodeId,
+    required this.podcastTitle,
+    required this.episodeTitle,
     required this.source,
   });
   final String podcastId;
   final String episodeId;
+  final String podcastTitle;
+  final String episodeTitle;
   final PlaySource source;
   @override
   String get name => 'episode_play_start';
   @override
   Map<String, Object> get params => {
-    'podcast_id': podcastId,
-    'episode_id': episodeId,
+    'podcast_id': _trim(podcastId),
+    'episode_id': _trim(episodeId),
+    'podcast_title': _trim(podcastTitle),
+    'episode_title': _trim(episodeTitle),
     'source': source.name,
   };
 }
@@ -71,17 +94,23 @@ class EpisodePaused extends AnalyticsEvent {
   const EpisodePaused({
     required this.podcastId,
     required this.episodeId,
+    required this.podcastTitle,
+    required this.episodeTitle,
     required this.positionSec,
   });
   final String podcastId;
   final String episodeId;
+  final String podcastTitle;
+  final String episodeTitle;
   final int positionSec;
   @override
   String get name => 'episode_pause';
   @override
   Map<String, Object> get params => {
-    'podcast_id': podcastId,
-    'episode_id': episodeId,
+    'podcast_id': _trim(podcastId),
+    'episode_id': _trim(episodeId),
+    'podcast_title': _trim(podcastTitle),
+    'episode_title': _trim(episodeTitle),
     'position_sec': positionSec,
   };
 }
@@ -90,17 +119,23 @@ class EpisodeCompleted extends AnalyticsEvent {
   const EpisodeCompleted({
     required this.podcastId,
     required this.episodeId,
+    required this.podcastTitle,
+    required this.episodeTitle,
     required this.durationSec,
   });
   final String podcastId;
   final String episodeId;
+  final String podcastTitle;
+  final String episodeTitle;
   final int durationSec;
   @override
   String get name => 'episode_complete';
   @override
   Map<String, Object> get params => {
-    'podcast_id': podcastId,
-    'episode_id': episodeId,
+    'podcast_id': _trim(podcastId),
+    'episode_id': _trim(episodeId),
+    'podcast_title': _trim(podcastTitle),
+    'episode_title': _trim(episodeTitle),
     'duration_sec': durationSec,
   };
 }
@@ -109,19 +144,25 @@ class EpisodeSeeked extends AnalyticsEvent {
   const EpisodeSeeked({
     required this.podcastId,
     required this.episodeId,
+    required this.podcastTitle,
+    required this.episodeTitle,
     required this.fromSec,
     required this.toSec,
   });
   final String podcastId;
   final String episodeId;
+  final String podcastTitle;
+  final String episodeTitle;
   final int fromSec;
   final int toSec;
   @override
   String get name => 'episode_seek';
   @override
   Map<String, Object> get params => {
-    'podcast_id': podcastId,
-    'episode_id': episodeId,
+    'podcast_id': _trim(podcastId),
+    'episode_id': _trim(episodeId),
+    'podcast_title': _trim(podcastTitle),
+    'episode_title': _trim(episodeTitle),
     'from_sec': fromSec,
     'to_sec': toSec,
   };
@@ -149,15 +190,21 @@ class EpisodeDownloadStarted extends AnalyticsEvent {
   const EpisodeDownloadStarted({
     required this.podcastId,
     required this.episodeId,
+    required this.podcastTitle,
+    required this.episodeTitle,
   });
   final String podcastId;
   final String episodeId;
+  final String podcastTitle;
+  final String episodeTitle;
   @override
   String get name => 'episode_download_start';
   @override
   Map<String, Object> get params => {
-    'podcast_id': podcastId,
-    'episode_id': episodeId,
+    'podcast_id': _trim(podcastId),
+    'episode_id': _trim(episodeId),
+    'podcast_title': _trim(podcastTitle),
+    'episode_title': _trim(episodeTitle),
   };
 }
 
@@ -165,17 +212,23 @@ class EpisodeDownloadCompleted extends AnalyticsEvent {
   const EpisodeDownloadCompleted({
     required this.podcastId,
     required this.episodeId,
+    required this.podcastTitle,
+    required this.episodeTitle,
     required this.bytes,
   });
   final String podcastId;
   final String episodeId;
+  final String podcastTitle;
+  final String episodeTitle;
   final int bytes;
   @override
   String get name => 'episode_download_complete';
   @override
   Map<String, Object> get params => {
-    'podcast_id': podcastId,
-    'episode_id': episodeId,
+    'podcast_id': _trim(podcastId),
+    'episode_id': _trim(episodeId),
+    'podcast_title': _trim(podcastTitle),
+    'episode_title': _trim(episodeTitle),
     'bytes': bytes,
   };
 }

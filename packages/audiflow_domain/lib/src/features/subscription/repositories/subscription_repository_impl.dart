@@ -1,4 +1,3 @@
-import 'package:audiflow_core/audiflow_core.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/providers/database_provider.dart';
@@ -52,13 +51,22 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
     bool explicit = false,
     SubscribeSource source = SubscribeSource.unknown,
   }) async {
+    // Raw podcast_id: iTunes ID when not OPML-imported, else feedUrl.
+    // GA reports read directly without external joins; truncation lives
+    // at the event boundary in AnalyticsEvent.params.
+    final podcastId = itunesId.startsWith('opml:') ? feedUrl : itunesId;
+
     // Check for existing cached entry and promote it
     final existing = await _datasource.getByItunesId(itunesId);
     if (existing != null && existing.isCached) {
       final promoted = await _datasource.promoteToSubscribed(itunesId);
       if (promoted != null) {
         await _analytics?.log(
-          PodcastSubscribed(podcastId: stableId(feedUrl), source: source),
+          PodcastSubscribed(
+            podcastId: podcastId,
+            podcastTitle: title,
+            source: source,
+          ),
         );
         return promoted;
       }
@@ -78,7 +86,11 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
 
     final inserted = await _datasource.insert(subscription);
     await _analytics?.log(
-      PodcastSubscribed(podcastId: stableId(feedUrl), source: source),
+      PodcastSubscribed(
+        podcastId: podcastId,
+        podcastTitle: title,
+        source: source,
+      ),
     );
     return inserted;
   }
@@ -86,13 +98,17 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
   @override
   Future<void> unsubscribe(String itunesId) async {
     final existing = await _datasource.getByItunesId(itunesId);
-    final feedUrl = existing?.feedUrl;
     final rowsDeleted = await _datasource.deleteByItunesId(itunesId);
     if (rowsDeleted == 0) {
       throw SubscriptionNotFoundException(itunesId);
     }
-    if (feedUrl != null) {
-      await _analytics?.log(PodcastUnsubscribed(podcastId: stableId(feedUrl)));
+    if (existing != null) {
+      final podcastId = existing.itunesId.startsWith('opml:')
+          ? existing.feedUrl
+          : existing.itunesId;
+      await _analytics?.log(
+        PodcastUnsubscribed(podcastId: podcastId, podcastTitle: existing.title),
+      );
     }
   }
 

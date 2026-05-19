@@ -1,4 +1,3 @@
-import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -217,11 +216,11 @@ void main() {
 
   group('analytics', () {
     test(
-      'emits EpisodeDownloadStarted with stable IDs on successful create',
+      'emits EpisodeDownloadStarted with raw iTunes id, guid, and titles',
       () async {
         // Arrange
         const feedUrl = 'https://example.com/feed.rss';
-        final episode = _episode(id: 1, podcastId: 42);
+        final episode = _episode(id: 1, podcastId: 42, title: 'Ep One');
         final sub = Subscription()
           ..itunesId = 'it-42'
           ..feedUrl = feedUrl
@@ -251,10 +250,49 @@ void main() {
             .whereType<EpisodeDownloadStarted>()
             .toList();
         check(events).length.equals(1);
-        check(events.single.podcastId).equals(stableId(feedUrl));
-        check(events.single.episodeId).equals(stableId('guid-1'));
+        check(events.single.podcastId).equals('it-42');
+        check(events.single.episodeId).equals('guid-1');
+        check(events.single.podcastTitle).equals('Pod');
+        check(events.single.episodeTitle).equals('Ep One');
       },
     );
+
+    test('emits EpisodeDownloadStarted with feedUrl '
+        'when subscription is OPML-imported', () async {
+      // Arrange
+      const feedUrl = 'https://example.com/feed.rss';
+      final episode = _episode(id: 1, podcastId: 42, title: 'Ep One');
+      final sub = Subscription()
+        ..itunesId = 'opml:abc123'
+        ..feedUrl = feedUrl
+        ..title = 'Imported'
+        ..artistName = 'Author'
+        ..subscribedAt = DateTime.now();
+      final task = _task(id: 10, episodeId: 1);
+
+      when(mockEpisodeRepo.getById(1)).thenAnswer((_) async => episode);
+      when(mockSubscriptionRepo.getById(42)).thenAnswer((_) async => sub);
+      when(
+        mockRepository.createDownload(
+          episodeId: 1,
+          audioUrl: episode.audioUrl,
+          wifiOnly: false,
+        ),
+      ).thenAnswer((_) async => task);
+      when(mockQueueService.startQueue()).thenAnswer((_) async {});
+
+      // Act
+      await service.downloadEpisode(1);
+      await Future<void>.delayed(Duration.zero);
+
+      // Assert
+      final events = fakeAnalytics.events
+          .whereType<EpisodeDownloadStarted>()
+          .toList();
+      check(events).length.equals(1);
+      check(events.single.podcastId).equals(feedUrl);
+      check(events.single.podcastTitle).equals('Imported');
+    });
 
     test(
       'does not emit EpisodeDownloadStarted when download already exists',

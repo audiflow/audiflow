@@ -7,40 +7,57 @@ void main() {
     test('PodcastSubscribed', () {
       final e = PodcastSubscribed(
         podcastId: 'p1',
+        podcastTitle: 'Pod 1',
         source: SubscribeSource.search,
       );
       check(e.name).equals('podcast_subscribe');
-      check(e.params).deepEquals({'podcast_id': 'p1', 'source': 'search'});
+      check(e.params).deepEquals({
+        'podcast_id': 'p1',
+        'podcast_title': 'Pod 1',
+        'source': 'search',
+      });
     });
 
     test('PodcastUnsubscribed', () {
-      final e = PodcastUnsubscribed(podcastId: 'p1');
+      final e = PodcastUnsubscribed(podcastId: 'p1', podcastTitle: 'Pod 1');
       check(e.name).equals('podcast_unsubscribe');
-      check(e.params).deepEquals({'podcast_id': 'p1'});
+      check(
+        e.params,
+      ).deepEquals({'podcast_id': 'p1', 'podcast_title': 'Pod 1'});
     });
 
     test('EpisodePlayStarted', () {
       final e = EpisodePlayStarted(
         podcastId: 'p1',
         episodeId: 'e1',
+        podcastTitle: 'Pod 1',
+        episodeTitle: 'Ep 1',
         source: PlaySource.queue,
       );
       check(e.name).equals('episode_play_start');
-      check(
-        e.params,
-      ).deepEquals({'podcast_id': 'p1', 'episode_id': 'e1', 'source': 'queue'});
+      check(e.params).deepEquals({
+        'podcast_id': 'p1',
+        'episode_id': 'e1',
+        'podcast_title': 'Pod 1',
+        'episode_title': 'Ep 1',
+        'source': 'queue',
+      });
     });
 
     test('EpisodePaused', () {
       final e = EpisodePaused(
         podcastId: 'p1',
         episodeId: 'e1',
+        podcastTitle: 'Pod 1',
+        episodeTitle: 'Ep 1',
         positionSec: 120,
       );
       check(e.name).equals('episode_pause');
       check(e.params).deepEquals({
         'podcast_id': 'p1',
         'episode_id': 'e1',
+        'podcast_title': 'Pod 1',
+        'episode_title': 'Ep 1',
         'position_sec': 120,
       });
     });
@@ -49,12 +66,16 @@ void main() {
       final e = EpisodeCompleted(
         podcastId: 'p1',
         episodeId: 'e1',
+        podcastTitle: 'Pod 1',
+        episodeTitle: 'Ep 1',
         durationSec: 1800,
       );
       check(e.name).equals('episode_complete');
       check(e.params).deepEquals({
         'podcast_id': 'p1',
         'episode_id': 'e1',
+        'podcast_title': 'Pod 1',
+        'episode_title': 'Ep 1',
         'duration_sec': 1800,
       });
     });
@@ -63,6 +84,8 @@ void main() {
       final e = EpisodeSeeked(
         podcastId: 'p1',
         episodeId: 'e1',
+        podcastTitle: 'Pod 1',
+        episodeTitle: 'Ep 1',
         fromSec: 100,
         toSec: 200,
       );
@@ -70,6 +93,8 @@ void main() {
       check(e.params).deepEquals({
         'podcast_id': 'p1',
         'episode_id': 'e1',
+        'podcast_title': 'Pod 1',
+        'episode_title': 'Ep 1',
         'from_sec': 100,
         'to_sec': 200,
       });
@@ -88,21 +113,37 @@ void main() {
     });
 
     test('EpisodeDownloadStarted', () {
-      final e = EpisodeDownloadStarted(podcastId: 'p1', episodeId: 'e1');
+      final e = EpisodeDownloadStarted(
+        podcastId: 'p1',
+        episodeId: 'e1',
+        podcastTitle: 'Pod 1',
+        episodeTitle: 'Ep 1',
+      );
       check(e.name).equals('episode_download_start');
-      check(e.params).deepEquals({'podcast_id': 'p1', 'episode_id': 'e1'});
+      check(e.params).deepEquals({
+        'podcast_id': 'p1',
+        'episode_id': 'e1',
+        'podcast_title': 'Pod 1',
+        'episode_title': 'Ep 1',
+      });
     });
 
     test('EpisodeDownloadCompleted', () {
       final e = EpisodeDownloadCompleted(
         podcastId: 'p1',
         episodeId: 'e1',
+        podcastTitle: 'Pod 1',
+        episodeTitle: 'Ep 1',
         bytes: 1024,
       );
       check(e.name).equals('episode_download_complete');
-      check(
-        e.params,
-      ).deepEquals({'podcast_id': 'p1', 'episode_id': 'e1', 'bytes': 1024});
+      check(e.params).deepEquals({
+        'podcast_id': 'p1',
+        'episode_id': 'e1',
+        'podcast_title': 'Pod 1',
+        'episode_title': 'Ep 1',
+        'bytes': 1024,
+      });
     });
 
     test('SmartPlaylistPlayed', () {
@@ -144,6 +185,21 @@ void main() {
       final e = SleepTimerSet(mode: SleepTimerMode.endOfChapter);
       check(e.name).equals('sleep_timer_set');
       check(e.params).deepEquals({'mode': 'end_of_chapter'});
+    });
+
+    test('truncates string params to 100 chars', () {
+      final long = 'a' * 250;
+      final e = EpisodePlayStarted(
+        podcastId: long,
+        episodeId: long,
+        podcastTitle: long,
+        episodeTitle: long,
+        source: PlaySource.queue,
+      );
+      check(e.params['podcast_id'] as String).length.equals(100);
+      check(e.params['episode_id'] as String).length.equals(100);
+      check(e.params['podcast_title'] as String).length.equals(100);
+      check(e.params['episode_title'] as String).length.equals(100);
     });
   });
 }

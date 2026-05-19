@@ -43,8 +43,10 @@ PROPERTIES: dict[str, str] = {
 # install UUID, which is already set via FirebaseAnalytics.setUserId and does
 # not need a custom dimension).
 DIMENSIONS: list[dict[str, str]] = [
-    {"parameter_name": "podcast_id",    "display_name": "Podcast ID",        "description": "sha256(feedUrl) truncated to 16 hex chars."},
-    {"parameter_name": "episode_id",    "display_name": "Episode ID",        "description": "sha256(rss guid) truncated to 16 hex chars."},
+    {"parameter_name": "podcast_id",    "display_name": "Podcast ID",        "description": "iTunes ID if available, else feedUrl (raw, truncated to 100 chars). Joins with podcast_title for direct readability."},
+    {"parameter_name": "episode_id",    "display_name": "Episode ID",        "description": "RSS guid (raw, truncated to 100 chars). Joins with episode_title for direct readability."},
+    {"parameter_name": "podcast_title", "display_name": "Podcast title",     "description": "Podcast (channel) title from the RSS feed (truncated to 100 chars)."},
+    {"parameter_name": "episode_title", "display_name": "Episode title",     "description": "Episode title from the RSS feed (truncated to 100 chars)."},
     {"parameter_name": "source",        "display_name": "Source",            "description": "Origin surface: search, library, queue, playlist, station, deeplink, discovery, opml, unknown."},
     {"parameter_name": "pattern_id",    "display_name": "Pattern ID",        "description": "Smart playlist pattern slug or hashed feedUrl fallback."},
     {"parameter_name": "playlist_id",   "display_name": "Playlist ID",       "description": "Smart playlist id within a pattern (regular/short/extras/...)."},

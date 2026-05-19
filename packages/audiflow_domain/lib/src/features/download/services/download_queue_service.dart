@@ -53,9 +53,12 @@ DownloadQueueService downloadQueueService(Ref ref) {
   return service;
 }
 
-/// Resolves stable IDs and emits [EpisodeDownloadCompleted] using the
-/// queue provider's [Ref]. Lives at the provider seam so the service
-/// stays decoupled from analytics wiring.
+/// Resolves analytics IDs/titles and emits [EpisodeDownloadCompleted]
+/// using the queue provider's [Ref]. Lives at the provider seam so the
+/// service stays decoupled from analytics wiring.
+///
+/// `podcastId` is the raw iTunes ID when available (non-OPML import),
+/// else the feed URL. `episodeId` is the raw RSS guid.
 Future<void> _emitDownloadCompleted(Ref ref, int episodeId, int bytes) async {
   final episodeRepo = ref.read(episodeRepositoryProvider);
   final episode = await episodeRepo.getById(episodeId);
@@ -64,14 +67,18 @@ Future<void> _emitDownloadCompleted(Ref ref, int episodeId, int bytes) async {
   if (guid.isEmpty) return;
   final subscriptionRepo = ref.read(subscriptionRepositoryProvider);
   final sub = await subscriptionRepo.getById(episode.podcastId);
-  final feedUrl = sub?.feedUrl;
-  if (feedUrl == null || feedUrl.isEmpty) return;
+  if (sub == null) return;
+  final feedUrl = sub.feedUrl;
+  if (feedUrl.isEmpty) return;
+  final podcastId = sub.itunesId.startsWith('opml:') ? feedUrl : sub.itunesId;
   final analytics = ref.read(analyticsServiceProvider);
   unawaited(
     analytics.log(
       EpisodeDownloadCompleted(
-        podcastId: stableId(feedUrl),
-        episodeId: stableId(guid),
+        podcastId: podcastId,
+        episodeId: guid,
+        podcastTitle: sub.title,
+        episodeTitle: episode.title,
         bytes: bytes,
       ),
     ),

@@ -76,39 +76,45 @@ Rationale: only `audiflow_app` depends on Firebase SDK. `audiflow_domain` depend
 
 ## 6. Stable cross-user identifiers
 
-Isar `Id` is per-install autoincrement and useless across users. Use deterministic hashes:
+Isar `Id` is per-install autoincrement and useless across users. Use raw RSS-derived identifiers so reports in the GA console read directly without external joins. feedUrl, RSS guid, and titles are all public from the RSS feed -- there is no PII to protect by hashing.
 
-- `podcastId = sha256(feedUrl).hex.substring(0, 16)` — stable for any user subscribed to that feed.
-- `episodeId = sha256(guid).hex.substring(0, 16)` — RSS GUIDs are globally unique per feed; truncated hash stays under GA's 100-char param limit and avoids leaking the raw URL/guid into GA.
-- `stationId = sha256("$installId:$stationName").hex.substring(0, 16)` — stations are per-user; hash with installId so the same name across users does not collide on the GA side as "same station".
+- `podcast_id`: iTunes ID when available (non-OPML import), else the raw feedUrl. Truncated to GA4's 100-char param limit at the event boundary.
+- `episode_id`: raw RSS guid. Truncated to 100 chars.
+- `podcast_title`: subscription / now-playing podcast title. Event-scoped dimension, truncated to 100 chars. Joins with `podcast_id` so reports read like "<channel>".
+- `episode_title`: episode title. Event-scoped dimension, truncated to 100 chars. Joins with `episode_id` so reports read like "<channel> / <episode>".
+- `stationId = sha256("$installId:$stationName").hex.substring(0, 16)` — stations are per-user; hash with installId so the same name across users does not collide on the GA side as "same station". Stays hashed: per-user station names are not RSS-public.
 - `pattern_id`, `playlist_id` — already SSoT-stable identifiers from smart playlist config, pass raw.
 
-Helper: `audiflow_core/lib/src/utils/stable_id.dart`
+Helper: `audiflow_core/lib/src/utils/stable_id.dart` (still used by `station_id` only).
 
 ```dart
 String stableId(String input) =>
     sha256.convert(utf8.encode(input)).toString().substring(0, 16);
 ```
 
-Unit-tested for determinism and length.
+Truncation helper lives at the event boundary in `AnalyticsEvent.params`:
+
+```dart
+String _trim(String s) => s.length <= 100 ? s : s.substring(0, 100);
+```
 
 ## 7. Event catalog
 
-All events use lower_snake_case names per GA convention. Param names are also lower_snake_case.
+All events use lower_snake_case names per GA convention. Param names are also lower_snake_case. All string params are truncated to GA4's 100-char limit at the event boundary.
 
 | Event | Params | Trigger site |
 |---|---|---|
 | `screen_view` (auto) | `screen_name`, `screen_class` | `FirebaseAnalyticsObserver` attached to GoRouter |
-| `podcast_subscribe` | `podcast_id`, `source` ∈ {`search`, `discovery`, `opml`, `deeplink`, `unknown`} | `SubscriptionRepositoryImpl.subscribe` |
-| `podcast_unsubscribe` | `podcast_id` | `SubscriptionRepositoryImpl.unsubscribe` |
-| `episode_play_start` | `podcast_id`, `episode_id`, `source` ∈ {`queue`, `library`, `playlist`, `station`, `search`, `deeplink`} | `AudioPlayerService` start |
-| `episode_pause` | `podcast_id`, `episode_id`, `position_sec` | pause |
-| `episode_complete` | `podcast_id`, `episode_id`, `duration_sec` | completion event |
-| `episode_seek` | `podcast_id`, `episode_id`, `from_sec`, `to_sec` | seek |
+| `podcast_subscribe` | `podcast_id`, `podcast_title`, `source` ∈ {`search`, `discovery`, `opml`, `deeplink`, `unknown`} | `SubscriptionRepositoryImpl.subscribe` |
+| `podcast_unsubscribe` | `podcast_id`, `podcast_title` | `SubscriptionRepositoryImpl.unsubscribe` |
+| `episode_play_start` | `podcast_id`, `episode_id`, `podcast_title`, `episode_title`, `source` ∈ {`queue`, `library`, `playlist`, `station`, `search`, `deeplink`} | `AudioPlayerService` start |
+| `episode_pause` | `podcast_id`, `episode_id`, `podcast_title`, `episode_title`, `position_sec` | pause |
+| `episode_complete` | `podcast_id`, `episode_id`, `podcast_title`, `episode_title`, `duration_sec` | completion event |
+| `episode_seek` | `podcast_id`, `episode_id`, `podcast_title`, `episode_title`, `from_sec`, `to_sec` | seek |
 | `playback_speed_change` | `speed` (e.g., 1.5) | speed setter |
 | `search_query` | `query_len` (int) | `SearchController` (raw query never sent) |
-| `episode_download_start` | `podcast_id`, `episode_id` | `DownloadService.start` |
-| `episode_download_complete` | `podcast_id`, `episode_id`, `bytes` | `DownloadService.complete` |
+| `episode_download_start` | `podcast_id`, `episode_id`, `podcast_title`, `episode_title` | `DownloadService.start` |
+| `episode_download_complete` | `podcast_id`, `episode_id`, `podcast_title`, `episode_title`, `bytes` | `DownloadService.complete` |
 | `smart_playlist_play` | `pattern_id`, `playlist_id` | playlist start |
 | `station_play` | `station_id` | station start |
 | `sleep_timer_set` | `mode` ∈ {`duration`, `episodes`, `end_of_episode`, `end_of_chapter`}, `value` (int, omitted for end_of_* modes) | timer set |
