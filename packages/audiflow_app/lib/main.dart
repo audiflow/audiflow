@@ -78,12 +78,19 @@ Future<void> appMain({
       await firebaseAnalytics.setUserId(id: installId);
       final optIn = prefs.getBool('analytics.opt_in') ?? true;
       await firebaseAnalytics.setAnalyticsCollectionEnabled(optIn);
+      if (kDebugMode) {
+        debugPrint('[FIREBASE] init OK installId=$installId optIn=$optIn');
+      }
     } on Object catch (e, stack) {
       if (kDebugMode) {
         debugPrint('[FIREBASE] init failed: $e\n$stack');
       }
       firebaseAnalytics = null;
     }
+  } else if (kDebugMode) {
+    debugPrint(
+      '[FIREBASE] SKIPPED — enableAnalytics=false for flavor ${flavor.name}',
+    );
   }
 
   const sentryDsn = String.fromEnvironment('SENTRY_DSN');

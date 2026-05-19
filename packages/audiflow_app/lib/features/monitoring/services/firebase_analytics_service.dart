@@ -1,5 +1,6 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:flutter/foundation.dart';
 
 class FirebaseAnalyticsService implements AnalyticsService {
   FirebaseAnalyticsService(this._fa);
@@ -8,12 +9,32 @@ class FirebaseAnalyticsService implements AnalyticsService {
 
   @override
   Future<void> log(AnalyticsEvent event) async {
-    await _fa.logEvent(name: event.name, parameters: event.params);
+    if (kDebugMode) {
+      debugPrint('[ANALYTICS] emit ${event.name} ${event.params}');
+    }
+    try {
+      await _fa.logEvent(name: event.name, parameters: event.params);
+    } catch (e, stack) {
+      if (kDebugMode) {
+        debugPrint('[ANALYTICS] emit FAILED ${event.name}: $e\n$stack');
+      }
+      rethrow;
+    }
   }
 
   @override
-  Future<void> setUserId(String? id) => _fa.setUserId(id: id);
+  Future<void> setUserId(String? id) {
+    if (kDebugMode) {
+      debugPrint('[ANALYTICS] setUserId $id');
+    }
+    return _fa.setUserId(id: id);
+  }
 
   @override
-  Future<void> setOptIn(bool optIn) => _fa.setAnalyticsCollectionEnabled(optIn);
+  Future<void> setOptIn(bool optIn) {
+    if (kDebugMode) {
+      debugPrint('[ANALYTICS] setOptIn $optIn');
+    }
+    return _fa.setAnalyticsCollectionEnabled(optIn);
+  }
 }

@@ -64,9 +64,15 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
   })?
   _currentIds() {
     final info = _ref.read(nowPlayingControllerProvider);
-    if (info == null) return null;
+    if (info == null) {
+      _log.w('[Analytics] handler ids: NowPlayingInfo null');
+      return null;
+    }
     final guid = info.episodeGuid;
-    if (guid == null || guid.isEmpty) return null;
+    if (guid == null || guid.isEmpty) {
+      _log.w('[Analytics] handler ids: missing guid');
+      return null;
+    }
     final itunesId = info.itunesId;
     final feedUrl = info.feedUrl;
     final hasValidItunesId =
@@ -74,7 +80,13 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
         itunesId.isNotEmpty &&
         !itunesId.startsWith('opml:');
     final hasFeedUrl = feedUrl != null && feedUrl.isNotEmpty;
-    if (!hasValidItunesId && !hasFeedUrl) return null;
+    if (!hasValidItunesId && !hasFeedUrl) {
+      _log.w(
+        '[Analytics] handler ids: no podcastId source — '
+        'itunesId=$itunesId feedUrl=$feedUrl',
+      );
+      return null;
+    }
     final podcastId = hasValidItunesId ? itunesId : feedUrl!;
     return (
       podcastId: podcastId,

@@ -132,9 +132,15 @@ class AudioPlayerController extends _$AudioPlayerController
   })?
   _currentAnalyticsIds() {
     final info = ref.read(nowPlayingControllerProvider);
-    if (info == null) return null;
+    if (info == null) {
+      _log.w('[Analytics] ids: NowPlayingInfo null');
+      return null;
+    }
     final guid = info.episodeGuid;
-    if (guid == null || guid.isEmpty) return null;
+    if (guid == null || guid.isEmpty) {
+      _log.w('[Analytics] ids: missing guid');
+      return null;
+    }
     final itunesId = info.itunesId;
     final feedUrl = info.feedUrl;
     final hasValidItunesId =
@@ -142,7 +148,13 @@ class AudioPlayerController extends _$AudioPlayerController
         itunesId.isNotEmpty &&
         !itunesId.startsWith('opml:');
     final hasFeedUrl = feedUrl != null && feedUrl.isNotEmpty;
-    if (!hasValidItunesId && !hasFeedUrl) return null;
+    if (!hasValidItunesId && !hasFeedUrl) {
+      _log.w(
+        '[Analytics] ids: no podcastId source — '
+        'itunesId=$itunesId feedUrl=$feedUrl',
+      );
+      return null;
+    }
     final podcastId = hasValidItunesId ? itunesId : feedUrl!;
     return (
       podcastId: podcastId,
@@ -490,6 +502,12 @@ class AudioPlayerController extends _$AudioPlayerController
               !itunesIdForEmit.startsWith('opml:')) ||
           (feedUrlForEmit != null && feedUrlForEmit.isNotEmpty);
 
+      if (!hasPodcastId || guidForEmit == null || guidForEmit.isEmpty) {
+        _log.w(
+          '[Analytics] episode_play_start SKIP — '
+          'itunesId=$itunesIdForEmit feedUrl=$feedUrlForEmit guid=$guidForEmit',
+        );
+      }
       if (hasPodcastId && guidForEmit != null && guidForEmit.isNotEmpty) {
         final source = _nextPlaySource ?? PlaySource.unknown;
         _nextPlaySource = null;

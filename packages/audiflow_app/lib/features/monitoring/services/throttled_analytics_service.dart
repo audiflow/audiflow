@@ -1,4 +1,5 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:flutter/foundation.dart';
 
 class ThrottledAnalyticsService implements AnalyticsService {
   ThrottledAnalyticsService(
@@ -21,7 +22,15 @@ class ThrottledAnalyticsService implements AnalyticsService {
       final key = _keyFor(event);
       final now = _now();
       final last = _lastEmittedAt[key];
-      if (last != null && now.difference(last) < _window) return;
+      if (last != null && now.difference(last) < _window) {
+        if (kDebugMode) {
+          debugPrint(
+            '[ANALYTICS] throttled ${event.name} key=$key '
+            'sinceLast=${now.difference(last).inMilliseconds}ms',
+          );
+        }
+        return;
+      }
       _lastEmittedAt[key] = now;
     }
     await _inner.log(event);
