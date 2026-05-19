@@ -48,54 +48,6 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
   AppSettingsRepository get _settings =>
       _ref.read(appSettingsRepositoryProvider);
 
-  /// Resolves the current podcast/episode IDs and titles from the
-  /// now-playing controller for the `episode_complete` analytics emit.
-  ///
-  /// Mirrors `AudioPlayerService._currentAnalyticsIds`: accepts an
-  /// iTunes-ID-only podcast (no feedUrl) so `episode_complete` fires for
-  /// the same set of episodes that `episode_play_start` does. Returns
-  /// null when the GUID is missing or when neither a valid iTunes ID
-  /// (non-OPML) nor a feed URL is available.
-  ({
-    String podcastId,
-    String episodeId,
-    String podcastTitle,
-    String episodeTitle,
-  })?
-  _currentIds() {
-    final info = _ref.read(nowPlayingControllerProvider);
-    if (info == null) {
-      _log.w('[Analytics] handler ids: NowPlayingInfo null');
-      return null;
-    }
-    final guid = info.episodeGuid;
-    if (guid == null || guid.isEmpty) {
-      _log.w('[Analytics] handler ids: missing guid');
-      return null;
-    }
-    final itunesId = info.itunesId;
-    final feedUrl = info.feedUrl;
-    final hasValidItunesId =
-        itunesId != null &&
-        itunesId.isNotEmpty &&
-        !itunesId.startsWith('opml:');
-    final hasFeedUrl = feedUrl != null && feedUrl.isNotEmpty;
-    if (!hasValidItunesId && !hasFeedUrl) {
-      _log.w(
-        '[Analytics] handler ids: no podcastId source — '
-        'itunesId=$itunesId feedUrl=$feedUrl',
-      );
-      return null;
-    }
-    final podcastId = hasValidItunesId ? itunesId : feedUrl!;
-    return (
-      podcastId: podcastId,
-      episodeId: guid,
-      podcastTitle: info.podcastTitle,
-      episodeTitle: info.episodeTitle,
-    );
-  }
-
   /// Handles interruption begin/end decisions. Lazily built so tests may
   /// override the internal callbacks; see [AudioInterruptionHandler].
   late final AudioInterruptionHandler _interruptionHandler =
@@ -164,30 +116,12 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
   /// produced.
   void _pipePlaybackState() {
     _player.playbackEventStream.map(_transformEvent).listen(playbackState.add);
-    // Emit `episode_complete` exactly once when just_audio reports the
-    // source finished. Subscribed alongside the playbackEventStream pipe
-    // so the lifecycles stay together.
-    _player.processingStateStream.listen((state) {
-      if (state == ProcessingState.completed) {
-        final ids = _currentIds();
-        if (ids != null) {
-          final durationSec = mediaItem.value?.duration?.inSeconds ?? 0;
-          unawaited(
-            _ref
-                .read(analyticsServiceProvider)
-                .log(
-                  EpisodeCompleted(
-                    podcastId: ids.podcastId,
-                    episodeId: ids.episodeId,
-                    podcastTitle: ids.podcastTitle,
-                    episodeTitle: ids.episodeTitle,
-                    durationSec: durationSec,
-                  ),
-                ),
-          );
-        }
-      }
-    });
+    // `episode_complete` analytics emit lives in
+    // `AudioPlayerController._playerStateListener`'s
+    // `ProcessingState.completed` branch — owned by the controller so
+    // emit + state cleanup are sequenced (no race with nowPlaying
+    // clear) and dedup'd against transient just_audio
+    // ProcessingState.completed transitions during near-end seeks.
   }
 
   /// Publishes a `paused` platform playback state that mirrors what

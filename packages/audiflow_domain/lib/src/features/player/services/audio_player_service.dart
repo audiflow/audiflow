@@ -105,6 +105,13 @@ class AudioPlayerController extends _$AudioPlayerController
   Completer<void>? _fadeCompleter;
   bool _suppressNextAutoAdvance = false;
   PlaySource? _nextPlaySource;
+
+  /// Episode id for which `episode_complete` has already been emitted in
+  /// the current load. Prevents duplicate emits when just_audio briefly
+  /// transitions to `ProcessingState.completed` during seeks near the
+  /// end of an episode and then returns to `ready`. Cleared in [play]
+  /// when a new episode is loaded.
+  int? _lastCompletedAnalyticsEpisodeId;
   final StreamController<PlayerLifecycleEvent> _lifecycleEvents =
       StreamController<PlayerLifecycleEvent>.broadcast();
 
@@ -221,6 +228,34 @@ class AudioPlayerController extends _$AudioPlayerController
 
         if (processingState == ProcessingState.completed) {
           _log.i('[StateStream] COMPLETED detected, advancing queue...');
+
+          // Emit `episode_complete` exactly once per episode load.
+          // just_audio can transiently report `completed` during seeks
+          // near the end of a track and then return to `ready`; dedup
+          // by `_currentEpisodeId` so those false transitions do not
+          // double-fire the analytics event.
+          if (_currentEpisodeId != null &&
+              _currentEpisodeId != _lastCompletedAnalyticsEpisodeId) {
+            _lastCompletedAnalyticsEpisodeId = _currentEpisodeId;
+            final ids = _currentAnalyticsIds();
+            if (ids != null) {
+              final durationSec = _player.duration?.inSeconds ?? 0;
+              unawaited(
+                ref
+                    .read(analyticsServiceProvider)
+                    .log(
+                      EpisodeCompleted(
+                        podcastId: ids.podcastId,
+                        episodeId: ids.episodeId,
+                        podcastTitle: ids.podcastTitle,
+                        episodeTitle: ids.episodeTitle,
+                        durationSec: durationSec,
+                      ),
+                    ),
+              );
+            }
+          }
+
           _lifecycleEvents.add(const EpisodeCompletedLifecycle());
           // Save final progress before clearing.
           // Yielding here drains microtasks, letting the sleep timer
@@ -390,6 +425,12 @@ class AudioPlayerController extends _$AudioPlayerController
       try {
         _currentUrl = url;
         _currentEpisodeId = episode?.id;
+        // Reset the `episode_complete` dedup so the new episode can emit
+        // its own completion. Without this, a re-play of the same
+        // episode id within one app session would never re-emit.
+        if (_lastCompletedAnalyticsEpisodeId != episode?.id) {
+          _lastCompletedAnalyticsEpisodeId = null;
+        }
         state = PlaybackState.loading(episodeUrl: url);
 
         // Update now playing controller if metadata is provided
