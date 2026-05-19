@@ -62,6 +62,24 @@ void main() {
       });
     });
 
+    test('EpisodeResumed', () {
+      final e = EpisodeResumed(
+        podcastId: 'p1',
+        episodeId: 'e1',
+        podcastTitle: 'Pod 1',
+        episodeTitle: 'Ep 1',
+        positionSec: 200,
+      );
+      check(e.name).equals('episode_resume');
+      check(e.params).deepEquals({
+        'podcast_id': 'p1',
+        'episode_id': 'e1',
+        'podcast_title': 'Pod 1',
+        'episode_title': 'Ep 1',
+        'position_sec': 200,
+      });
+    });
+
     test('EpisodeCompleted', () {
       final e = EpisodeCompleted(
         podcastId: 'p1',

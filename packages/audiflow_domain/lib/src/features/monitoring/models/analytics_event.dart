@@ -115,6 +115,31 @@ class EpisodePaused extends AnalyticsEvent {
   };
 }
 
+class EpisodeResumed extends AnalyticsEvent {
+  const EpisodeResumed({
+    required this.podcastId,
+    required this.episodeId,
+    required this.podcastTitle,
+    required this.episodeTitle,
+    required this.positionSec,
+  });
+  final String podcastId;
+  final String episodeId;
+  final String podcastTitle;
+  final String episodeTitle;
+  final int positionSec;
+  @override
+  String get name => 'episode_resume';
+  @override
+  Map<String, Object> get params => {
+    'podcast_id': _trim(podcastId),
+    'episode_id': _trim(episodeId),
+    'podcast_title': _trim(podcastTitle),
+    'episode_title': _trim(episodeTitle),
+    'position_sec': positionSec,
+  };
+}
+
 class EpisodeCompleted extends AnalyticsEvent {
   const EpisodeCompleted({
     required this.podcastId,

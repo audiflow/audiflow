@@ -109,6 +109,7 @@ All events use lower_snake_case names per GA convention. Param names are also lo
 | `podcast_unsubscribe` | `podcast_id`, `podcast_title` | `SubscriptionRepositoryImpl.unsubscribe` |
 | `episode_play_start` | `podcast_id`, `episode_id`, `podcast_title`, `episode_title`, `source` ∈ {`queue`, `library`, `playlist`, `station`, `search`, `deeplink`} | `AudioPlayerService` start |
 | `episode_pause` | `podcast_id`, `episode_id`, `podcast_title`, `episode_title`, `position_sec` | pause |
+| `episode_resume` | `podcast_id`, `episode_id`, `podcast_title`, `episode_title`, `position_sec` | `AudioPlayerController.resume()` after pause |
 | `episode_complete` | `podcast_id`, `episode_id`, `podcast_title`, `episode_title`, `duration_sec` | completion event |
 | `episode_seek` | `podcast_id`, `episode_id`, `podcast_title`, `episode_title`, `from_sec`, `to_sec` | seek |
 | `playback_speed_change` | `speed` (e.g., 1.5) | speed setter |

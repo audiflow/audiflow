@@ -664,6 +664,22 @@ class AudioPlayerController extends _$AudioPlayerController
     if (_currentUrl == null) return;
     ref.read(playbackHistoryServiceProvider).onPlaybackResumed();
     await _player.play();
+    final ids = _currentAnalyticsIds();
+    if (ids != null) {
+      unawaited(
+        ref
+            .read(analyticsServiceProvider)
+            .log(
+              EpisodeResumed(
+                podcastId: ids.podcastId,
+                episodeId: ids.episodeId,
+                podcastTitle: ids.podcastTitle,
+                episodeTitle: ids.episodeTitle,
+                positionSec: _player.position.inSeconds,
+              ),
+            ),
+      );
+    }
   }
 
   /// Toggles between play and pause states.
