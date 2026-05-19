@@ -63,7 +63,16 @@ class _DeepLinkScreenState extends ConsumerState<DeepLinkScreen> {
             feedUrl: feedUrl,
             artworkUrl: artworkUrl,
           );
-          context.go('${AppRoutes.search}/podcast/$itunesId', extra: podcast);
+          // Pass `subscribeSource` via the extra map so the subscribe
+          // button on the detail screen reports `deeplink` despite the
+          // route prefix being `/search/...`.
+          context.go(
+            '${AppRoutes.search}/podcast/$itunesId',
+            extra: <String, dynamic>{
+              'podcast': podcast,
+              'subscribeSource': SubscribeSource.deeplink,
+            },
+          );
           return;
 
         case EpisodeDeepLinkTarget(

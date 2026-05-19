@@ -141,7 +141,6 @@ GoRouter createAppRouter({
         branches: [
           StatefulShellBranch(
             navigatorKey: _searchNavigatorKey,
-            observers: observers,
             routes: [
               GoRoute(
                 path: AppRoutes.search,
@@ -182,7 +181,6 @@ GoRouter createAppRouter({
           ),
           StatefulShellBranch(
             navigatorKey: _libraryNavigatorKey,
-            observers: observers,
             routes: [
               GoRoute(
                 path: AppRoutes.library,
@@ -239,7 +237,6 @@ GoRouter createAppRouter({
           ),
           StatefulShellBranch(
             navigatorKey: _queueNavigatorKey,
-            observers: observers,
             routes: [
               GoRoute(
                 path: AppRoutes.queue,
@@ -249,7 +246,6 @@ GoRouter createAppRouter({
           ),
           StatefulShellBranch(
             navigatorKey: _settingsNavigatorKey,
-            observers: observers,
             routes: [
               GoRoute(
                 path: AppRoutes.settings,
@@ -364,8 +360,12 @@ Widget _buildPodcastDetailScreen(GoRouterState state) {
       : extra is Map<String, dynamic>
       ? extra['podcast'] as Podcast?
       : null;
+  final extraMap = extra is Map<String, dynamic> ? extra : null;
+  final source =
+      extraMap?['subscribeSource'] as SubscribeSource? ??
+      _resolveSubscribeSource(state);
   if (podcast != null) {
-    return PodcastDetailScreen(podcast: podcast);
+    return PodcastDetailScreen(podcast: podcast, subscribeSource: source);
   }
 
   // Fallback: resolve from iTunes ID in path parameter.
@@ -373,7 +373,23 @@ Widget _buildPodcastDetailScreen(GoRouterState state) {
   if (itunesId.isEmpty) {
     return const _PodcastNotFoundScreen();
   }
-  return _PodcastDetailFromSubscription(itunesId: itunesId);
+  return _PodcastDetailFromSubscription(
+    itunesId: itunesId,
+    subscribeSource: source,
+  );
+}
+
+/// Infers the [SubscribeSource] for a podcast-detail navigation based on
+/// the matched location prefix. Used so the subscribe-button on the
+/// detail screen can tag analytics emits with the correct entry surface
+/// without each caller threading the source explicitly. Deeplinked
+/// navigations should pass `subscribeSource` via the route `extra` map
+/// because the deeplink target redirects through the search tab and
+/// loses its original path prefix.
+SubscribeSource _resolveSubscribeSource(GoRouterState state) {
+  final location = state.matchedLocation;
+  if (location.startsWith('/search/')) return SubscribeSource.search;
+  return SubscribeSource.discovery;
 }
 
 /// Builds the smart playlist episodes screen from
@@ -636,9 +652,13 @@ class _EpisodeNotFoundScreen extends StatelessWidget {
 ///
 /// Used when navigating without [extra] data (notification taps, deep links).
 class _PodcastDetailFromSubscription extends ConsumerWidget {
-  const _PodcastDetailFromSubscription({required this.itunesId});
+  const _PodcastDetailFromSubscription({
+    required this.itunesId,
+    this.subscribeSource = SubscribeSource.discovery,
+  });
 
   final String itunesId;
+  final SubscribeSource subscribeSource;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -647,7 +667,10 @@ class _PodcastDetailFromSubscription extends ConsumerWidget {
     return asyncSub.when(
       data: (subscription) {
         if (subscription == null) return const _PodcastNotFoundScreen();
-        return PodcastDetailScreen(podcast: subscription.toPodcast());
+        return PodcastDetailScreen(
+          podcast: subscription.toPodcast(),
+          subscribeSource: subscribeSource,
+        );
       },
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),

@@ -1,3 +1,4 @@
+import 'package:audiflow_domain/audiflow_domain.dart' show SubscribeSource;
 import 'package:audiflow_search/audiflow_search.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
@@ -9,9 +10,17 @@ import '../../../subscription/presentation/controllers/subscription_controller.d
 
 /// Displays podcast artwork, metadata, and subscribe button.
 class PodcastDetailHeader extends ConsumerWidget {
-  const PodcastDetailHeader({super.key, required this.podcast});
+  const PodcastDetailHeader({
+    super.key,
+    required this.podcast,
+    this.subscribeSource = SubscribeSource.discovery,
+  });
 
   final Podcast podcast;
+
+  /// Surface that led the user to this header. Forwarded to the
+  /// `subscribe` analytics emit when the user taps the subscribe button.
+  final SubscribeSource subscribeSource;
 
   void _showArtworkOverlay(BuildContext context, String artworkUrl) {
     Navigator.of(context).push(
@@ -67,7 +76,10 @@ class PodcastDetailHeader extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: Spacing.md),
-          _SubscribeButtonRow(podcast: podcast),
+          _SubscribeButtonRow(
+            podcast: podcast,
+            subscribeSource: subscribeSource,
+          ),
         ],
       ),
     );
@@ -175,9 +187,13 @@ class _PodcastArtwork extends StatelessWidget {
 }
 
 class _SubscribeButtonRow extends ConsumerWidget {
-  const _SubscribeButtonRow({required this.podcast});
+  const _SubscribeButtonRow({
+    required this.podcast,
+    required this.subscribeSource,
+  });
 
   final Podcast podcast;
+  final SubscribeSource subscribeSource;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -246,6 +262,6 @@ class _SubscribeButtonRow extends ConsumerWidget {
   void _toggleSubscription(WidgetRef ref) {
     ref
         .read(subscriptionControllerProvider(podcast.id).notifier)
-        .toggleSubscription(podcast);
+        .toggleSubscription(podcast, source: subscribeSource);
   }
 }

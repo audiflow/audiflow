@@ -556,17 +556,28 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
         );
       }());
     } else if (playlistId != null) {
-      final patternId = feedUrl != null
+      final resolvedPatternId = feedUrl != null
           ? ref.read(smartPlaylistPatternByFeedUrlProvider(feedUrl!)).value?.id
           : null;
-      unawaited(
-        analytics.log(
-          SmartPlaylistPlayed(
-            patternId: patternId ?? stableId(feedUrl ?? ''),
-            playlistId: playlistId!,
+      // Use the resolved pattern slug when available. While the pattern
+      // provider is still loading, fall back to the raw feedUrl so the
+      // analyst can still group plays per podcast. The 100-char param
+      // limit is enforced at the analytics_event boundary. When neither
+      // is available, skip the emit rather than send a constant-collision
+      // hash of an empty string.
+      String? patternId;
+      if (resolvedPatternId != null && resolvedPatternId.isNotEmpty) {
+        patternId = resolvedPatternId;
+      } else if (feedUrl != null && feedUrl!.isNotEmpty) {
+        patternId = feedUrl;
+      }
+      if (patternId != null) {
+        unawaited(
+          analytics.log(
+            SmartPlaylistPlayed(patternId: patternId, playlistId: playlistId!),
           ),
-        ),
-      );
+        );
+      }
     }
   }
 

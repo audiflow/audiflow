@@ -285,7 +285,10 @@ class AudioPlayerController extends _$AudioPlayerController
         final podcastTitle = subscription?.title ?? '';
         _log.d('[Complete] Podcast title: "$podcastTitle"');
 
-        // Auto-play next episode
+        // Auto-play next episode. Tag the surface as queue so the
+        // `episode_play_start` emit reports PlaySource.queue rather
+        // than unknown.
+        markPlaySource(PlaySource.queue);
         _log.i('[Complete] Calling play() for next episode...');
         await play(
           nextEpisode.audioUrl,

@@ -51,8 +51,11 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
   /// Resolves the current podcast/episode IDs and titles from the
   /// now-playing controller for the `episode_complete` analytics emit.
   ///
-  /// Returns null when the info is missing the feed URL or episode GUID,
-  /// so the emitter can no-op cleanly.
+  /// Mirrors `AudioPlayerService._currentAnalyticsIds`: accepts an
+  /// iTunes-ID-only podcast (no feedUrl) so `episode_complete` fires for
+  /// the same set of episodes that `episode_play_start` does. Returns
+  /// null when the GUID is missing or when neither a valid iTunes ID
+  /// (non-OPML) nor a feed URL is available.
   ({
     String podcastId,
     String episodeId,
@@ -62,17 +65,17 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
   _currentIds() {
     final info = _ref.read(nowPlayingControllerProvider);
     if (info == null) return null;
-    final feedUrl = info.feedUrl;
     final guid = info.episodeGuid;
-    if (feedUrl == null || feedUrl.isEmpty) return null;
     if (guid == null || guid.isEmpty) return null;
     final itunesId = info.itunesId;
-    final podcastId =
-        (itunesId != null &&
-            itunesId.isNotEmpty &&
-            !itunesId.startsWith('opml:'))
-        ? itunesId
-        : feedUrl;
+    final feedUrl = info.feedUrl;
+    final hasValidItunesId =
+        itunesId != null &&
+        itunesId.isNotEmpty &&
+        !itunesId.startsWith('opml:');
+    final hasFeedUrl = feedUrl != null && feedUrl.isNotEmpty;
+    if (!hasValidItunesId && !hasFeedUrl) return null;
+    final podcastId = hasValidItunesId ? itunesId : feedUrl!;
     return (
       podcastId: podcastId,
       episodeId: guid,
