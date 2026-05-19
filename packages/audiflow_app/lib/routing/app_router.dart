@@ -141,6 +141,7 @@ GoRouter createAppRouter({
         branches: [
           StatefulShellBranch(
             navigatorKey: _searchNavigatorKey,
+            observers: observers,
             routes: [
               GoRoute(
                 path: AppRoutes.search,
@@ -181,6 +182,7 @@ GoRouter createAppRouter({
           ),
           StatefulShellBranch(
             navigatorKey: _libraryNavigatorKey,
+            observers: observers,
             routes: [
               GoRoute(
                 path: AppRoutes.library,
@@ -237,6 +239,7 @@ GoRouter createAppRouter({
           ),
           StatefulShellBranch(
             navigatorKey: _queueNavigatorKey,
+            observers: observers,
             routes: [
               GoRoute(
                 path: AppRoutes.queue,
@@ -246,6 +249,7 @@ GoRouter createAppRouter({
           ),
           StatefulShellBranch(
             navigatorKey: _settingsNavigatorKey,
+            observers: observers,
             routes: [
               GoRoute(
                 path: AppRoutes.settings,

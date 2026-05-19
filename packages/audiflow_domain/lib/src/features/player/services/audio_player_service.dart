@@ -133,17 +133,17 @@ class AudioPlayerController extends _$AudioPlayerController
   _currentAnalyticsIds() {
     final info = ref.read(nowPlayingControllerProvider);
     if (info == null) return null;
-    final feedUrl = info.feedUrl;
     final guid = info.episodeGuid;
-    if (feedUrl == null || feedUrl.isEmpty) return null;
     if (guid == null || guid.isEmpty) return null;
     final itunesId = info.itunesId;
-    final podcastId =
-        (itunesId != null &&
-            itunesId.isNotEmpty &&
-            !itunesId.startsWith('opml:'))
-        ? itunesId
-        : feedUrl;
+    final feedUrl = info.feedUrl;
+    final hasValidItunesId =
+        itunesId != null &&
+        itunesId.isNotEmpty &&
+        !itunesId.startsWith('opml:');
+    final hasFeedUrl = feedUrl != null && feedUrl.isNotEmpty;
+    if (!hasValidItunesId && !hasFeedUrl) return null;
+    final podcastId = hasValidItunesId ? itunesId : feedUrl!;
     return (
       podcastId: podcastId,
       episodeId: guid,
@@ -464,22 +464,38 @@ class AudioPlayerController extends _$AudioPlayerController
       // the spec defines this event as the start of an episode, not the
       // restart of playback. Prefer the explicit metadata when supplied;
       // fall back to the resolved Isar episode for the GUID.
-      final feedUrlForEmit = metadata?.feedUrl;
+      String? feedUrlForEmit = metadata?.feedUrl;
       final guidForEmit = metadata?.episodeGuid ?? episode?.guid;
-      if (feedUrlForEmit != null &&
-          feedUrlForEmit.isNotEmpty &&
-          guidForEmit != null &&
-          guidForEmit.isNotEmpty) {
+      final itunesIdForEmit = metadata?.itunesId;
+      String? podcastTitleForEmit = metadata?.podcastTitle;
+
+      // Fall back to the subscription record when the caller did not pass
+      // full metadata. Older episodes / non-detail entry points may omit
+      // feedUrl + iTunes ID, but the subscription always has both.
+      if ((feedUrlForEmit == null || feedUrlForEmit.isEmpty) &&
+          episode != null) {
+        final sub = await ref
+            .read(subscriptionRepositoryProvider)
+            .getById(episode.podcastId);
+        feedUrlForEmit ??= sub?.feedUrl;
+        podcastTitleForEmit ??= sub?.title;
+      }
+
+      final hasPodcastId =
+          (itunesIdForEmit != null &&
+              itunesIdForEmit.isNotEmpty &&
+              !itunesIdForEmit.startsWith('opml:')) ||
+          (feedUrlForEmit != null && feedUrlForEmit.isNotEmpty);
+
+      if (hasPodcastId && guidForEmit != null && guidForEmit.isNotEmpty) {
         final source = _nextPlaySource ?? PlaySource.unknown;
         _nextPlaySource = null;
-        final itunesIdForEmit = metadata?.itunesId;
         final podcastIdForEmit =
             (itunesIdForEmit != null &&
                 itunesIdForEmit.isNotEmpty &&
                 !itunesIdForEmit.startsWith('opml:'))
             ? itunesIdForEmit
-            : feedUrlForEmit;
-        final podcastTitleForEmit = metadata?.podcastTitle ?? '';
+            : feedUrlForEmit!;
         final episodeTitleForEmit =
             metadata?.episodeTitle ?? episode?.title ?? '';
         unawaited(
@@ -489,7 +505,7 @@ class AudioPlayerController extends _$AudioPlayerController
                 EpisodePlayStarted(
                   podcastId: podcastIdForEmit,
                   episodeId: guidForEmit,
-                  podcastTitle: podcastTitleForEmit,
+                  podcastTitle: podcastTitleForEmit ?? '',
                   episodeTitle: episodeTitleForEmit,
                   source: source,
                 ),
