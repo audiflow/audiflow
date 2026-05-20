@@ -511,15 +511,17 @@ class AudioPlayerController extends _$AudioPlayerController
         );
       }
 
-      _log.d('[Play] Calling _player.play()...');
-      await _player.play();
-      _log.i('[Play] _player.play() returned');
-
       // Emit `episode_play_start` once per initial play(url, ...) call.
       // Resume after pause goes through resume() and does NOT re-emit —
       // the spec defines this event as the start of an episode, not the
       // restart of playback. Prefer the explicit metadata when supplied;
       // fall back to the resolved Isar episode for the GUID.
+      //
+      // IMPORTANT: emit BEFORE awaiting `_player.play()`. just_audio's
+      // `play()` future does not complete until playback stops/pauses,
+      // so any analytics emit placed after the await would be deferred
+      // until the user pauses (and would also race the `episode_pause`
+      // emit at that boundary).
       String? feedUrlForEmit = metadata?.feedUrl;
       final guidForEmit = metadata?.episodeGuid ?? episode?.guid;
       final itunesIdForEmit = metadata?.itunesId;
@@ -574,6 +576,13 @@ class AudioPlayerController extends _$AudioPlayerController
               ),
         );
       }
+
+      _log.d('[Play] Calling _player.play()...');
+      // Fire-and-forget: just_audio's `play()` future completes when
+      // playback stops/pauses, not when it starts. Awaiting it would
+      // pin this method until the next pause and defer any work below.
+      unawaited(_player.play());
+      _log.i('[Play] _player.play() dispatched');
     } catch (e, stack) {
       _log.e('[Play] ERROR', error: e, stackTrace: stack);
       state = PlaybackState.error(message: 'Failed to play audio: $e');
@@ -722,7 +731,10 @@ class AudioPlayerController extends _$AudioPlayerController
   Future<void> resume() async {
     if (_currentUrl == null) return;
     ref.read(playbackHistoryServiceProvider).onPlaybackResumed();
-    await _player.play();
+    // Emit BEFORE dispatching `_player.play()`. just_audio's `play()`
+    // future does not complete until playback stops/pauses, so awaiting
+    // it would defer the `episode_resume` emit until the next pause and
+    // race it against `episode_pause`.
     final ids = _currentAnalyticsIds();
     if (ids != null) {
       unawaited(
@@ -739,6 +751,7 @@ class AudioPlayerController extends _$AudioPlayerController
             ),
       );
     }
+    unawaited(_player.play());
   }
 
   /// Toggles between play and pause states.
