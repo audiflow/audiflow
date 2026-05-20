@@ -266,6 +266,7 @@
 				3B06AD1E1E4923F5004D2608 /* Thin Binary */,
 				C2763EF003027989F7EF3F8E /* [CP] Copy Pods Resources */,
 				83A4C90D453485D551EAA465 /* [CP] Embed Pods Frameworks */,
+				AF1A8FCE2025AF0100000001 /* Copy GoogleService-Info.plist */,
 			);
 			buildRules = (
 			);
@@ -415,6 +416,26 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "/bin/sh \"$FLUTTER_ROOT/packages/flutter_tools/bin/xcode_backend.sh\" build";
+		};
+		AF1A8FCE2025AF0100000001 /* Copy GoogleService-Info.plist */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/config/dev/GoogleService-Info.plist",
+				"$(SRCROOT)/config/stg/GoogleService-Info.plist",
+				"$(SRCROOT)/config/prod/GoogleService-Info.plist",
+			);
+			name = "Copy GoogleService-Info.plist";
+			outputPaths = (
+				"$(BUILT_PRODUCTS_DIR)/$(PRODUCT_NAME).app/GoogleService-Info.plist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -euo pipefail\nFLAVOR=\"${CONFIGURATION##*-}\"\nSRC=\"${SRCROOT}/config/${FLAVOR}/GoogleService-Info.plist\"\nDST=\"${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.app/GoogleService-Info.plist\"\nif [ ! -f \"$SRC\" ]; then\n  echo \"warning: missing $SRC — Firebase will not initialize for this flavor.\"\n  exit 0\nfi\nmkdir -p \"$(dirname \"$DST\")\"\ncp -f \"$SRC\" \"$DST\"\necho \"Copied $SRC -> $DST\"\n";
+			showEnvVarsInLog = 0;
 		};
 		991D3B8918FCD4D091CBB772 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;

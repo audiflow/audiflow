@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
@@ -31,6 +33,8 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
     this.feedUrl,
     this.effectiveOrder,
     this.displayTitle,
+    this.playlistId,
+    this.stationName,
   });
 
   final Episode episode;
@@ -67,6 +71,14 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
 
   /// Feed URL for invalidating the batch progress provider after changes.
   final String? feedUrl;
+
+  /// Smart playlist id (e.g. `regular`, `short`) used for analytics.
+  final String? playlistId;
+
+  /// When set, the tile is rendered in a station context.
+  /// Overrides play source to [PlaySource.station] and emits [StationPlayed]
+  /// instead of [SmartPlaylistPlayed].
+  final String? stationName;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -512,21 +524,61 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
       effectiveOrder: effectiveOrder,
     );
 
-    controller.play(
-      url,
-      metadata: NowPlayingInfo(
-        episodeUrl: url,
-        episodeTitle: episode.title,
-        podcastTitle: podcastTitle,
-        artworkUrl: artworkUrl ?? episode.imageUrl,
-        totalDuration: episode.durationMs != null
-            ? Duration(milliseconds: episode.durationMs!)
-            : null,
-        itunesId: itunesId,
-        episodeGuid: episode.guid,
-        feedUrl: feedUrl,
-      ),
-    );
+    final isStation = stationName != null;
+    final source = isStation ? PlaySource.station : PlaySource.playlist;
+
+    controller
+      ..markPlaySource(source)
+      ..play(
+        url,
+        metadata: NowPlayingInfo(
+          episodeUrl: url,
+          episodeTitle: episode.title,
+          podcastTitle: podcastTitle,
+          artworkUrl: artworkUrl ?? episode.imageUrl,
+          totalDuration: episode.durationMs != null
+              ? Duration(milliseconds: episode.durationMs!)
+              : null,
+          itunesId: itunesId,
+          episodeGuid: episode.guid,
+          feedUrl: feedUrl,
+        ),
+      );
+
+    final analytics = ref.read(analyticsServiceProvider);
+    if (isStation) {
+      unawaited(() async {
+        final installId = await ref
+            .read(installIdRepositoryProvider)
+            .getOrCreate();
+        await analytics.log(
+          StationPlayed(stationId: stableId('$installId:${stationName!}')),
+        );
+      }());
+    } else if (playlistId != null) {
+      final resolvedPatternId = feedUrl != null
+          ? ref.read(smartPlaylistPatternByFeedUrlProvider(feedUrl!)).value?.id
+          : null;
+      // Use the resolved pattern slug when available. While the pattern
+      // provider is still loading, fall back to the raw feedUrl so the
+      // analyst can still group plays per podcast. The 100-char param
+      // limit is enforced at the analytics_event boundary. When neither
+      // is available, skip the emit rather than send a constant-collision
+      // hash of an empty string.
+      String? patternId;
+      if (resolvedPatternId != null && resolvedPatternId.isNotEmpty) {
+        patternId = resolvedPatternId;
+      } else if (feedUrl != null && feedUrl!.isNotEmpty) {
+        patternId = feedUrl;
+      }
+      if (patternId != null) {
+        unawaited(
+          analytics.log(
+            SmartPlaylistPlayed(patternId: patternId, playlistId: playlistId!),
+          ),
+        );
+      }
+    }
   }
 
   Future<bool> _showReplaceQueueDialog(BuildContext context) async {

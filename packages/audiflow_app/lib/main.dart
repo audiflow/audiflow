@@ -4,6 +4,8 @@ import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:dio/dio.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -26,6 +28,8 @@ import 'app/notification/notification_tap_handler.dart';
 import 'app/background/background_callback.dart';
 import 'app/background/background_task_registrar.dart';
 import 'features/force_update/force_update.dart';
+import 'features/monitoring/services/firebase_analytics_service.dart';
+import 'features/monitoring/services/throttled_analytics_service.dart';
 import 'features/player/services/audio_handler_provider.dart';
 import 'features/review_prompt/presentation/review_prompt_gate.dart';
 import 'features/settings/presentation/controllers/last_tab_controller.dart';
@@ -33,6 +37,13 @@ import 'features/settings/presentation/controllers/theme_controller.dart';
 import 'features/settings/presentation/widgets/opml_file_receiver.dart';
 import 'l10n/app_localizations.dart';
 import 'routing/app_router.dart';
+
+/// Optional analytics observer attached to the router for screen_view tracking.
+///
+/// Overridden in `_startApp` when Firebase is available; null otherwise.
+final firebaseAnalyticsObserverProvider = Provider<FirebaseAnalyticsObserver?>(
+  (ref) => null,
+);
 
 Future<void> appMain({
   required Flavor flavor,
@@ -47,6 +58,40 @@ Future<void> appMain({
     Flavor.prod => FlavorConfig.prod,
   };
   FlavorConfig.initialize(flavorConfig);
+
+  final prefs = await SharedPreferences.getInstance();
+  final installId = await InstallIdRepositoryImpl(
+    SharedPreferencesDataSource(prefs),
+  ).getOrCreate();
+
+  FirebaseAnalytics? firebaseAnalytics;
+  if (flavorConfig.enableAnalytics) {
+    try {
+      await Firebase.initializeApp();
+      firebaseAnalytics = FirebaseAnalytics.instance;
+      await firebaseAnalytics.setConsent(
+        adStorageConsentGranted: false,
+        adUserDataConsentGranted: false,
+        adPersonalizationSignalsConsentGranted: false,
+        analyticsStorageConsentGranted: true,
+      );
+      await firebaseAnalytics.setUserId(id: installId);
+      final optIn = prefs.getBool('analytics.opt_in') ?? true;
+      await firebaseAnalytics.setAnalyticsCollectionEnabled(optIn);
+      if (kDebugMode) {
+        debugPrint('[FIREBASE] init OK installId=$installId optIn=$optIn');
+      }
+    } on Object catch (e, stack) {
+      if (kDebugMode) {
+        debugPrint('[FIREBASE] init failed: $e\n$stack');
+      }
+      firebaseAnalytics = null;
+    }
+  } else if (kDebugMode) {
+    debugPrint(
+      '[FIREBASE] SKIPPED — enableAnalytics=false for flavor ${flavor.name}',
+    );
+  }
 
   const sentryDsn = String.fromEnvironment('SENTRY_DSN');
 
@@ -63,6 +108,10 @@ Future<void> appMain({
         options.debug = kDebugMode;
       },
       appRunner: () async {
+        Sentry.configureScope((scope) {
+          scope.setUser(SentryUser(id: installId));
+          scope.setTag('install_id', installId);
+        });
         // Diagnostic: verify foreground Sentry pipeline on boot.
         // Remove once investigation is resolved.
         unawaited(
@@ -85,7 +134,11 @@ Future<void> appMain({
                 }
               }),
         );
-        await _startApp(smartPlaylistConfigBaseUrl);
+        await _startApp(
+          smartPlaylistConfigBaseUrl,
+          prefs: prefs,
+          firebaseAnalytics: firebaseAnalytics,
+        );
       },
     );
   } else {
@@ -96,7 +149,11 @@ Future<void> appMain({
         'dsnEmpty=${sentryDsn.isEmpty}',
       );
     }
-    await _startApp(smartPlaylistConfigBaseUrl);
+    await _startApp(
+      smartPlaylistConfigBaseUrl,
+      prefs: prefs,
+      firebaseAnalytics: firebaseAnalytics,
+    );
   }
 }
 
@@ -113,7 +170,11 @@ Future<void> _configureOrientation() async {
   );
 }
 
-Future<void> _startApp(String smartPlaylistConfigBaseUrl) async {
+Future<void> _startApp(
+  String smartPlaylistConfigBaseUrl, {
+  required SharedPreferences prefs,
+  required FirebaseAnalytics? firebaseAnalytics,
+}) async {
   await _configureOrientation();
 
   final dir = await getApplicationDocumentsDirectory();
@@ -177,7 +238,6 @@ Future<void> _startApp(String smartPlaylistConfigBaseUrl) async {
   }
 
   final cacheDir = await getApplicationCacheDirectory();
-  final prefs = await SharedPreferences.getInstance();
   final packageInfo = await PackageInfo.fromPlatform();
 
   // Diagnostic: bridge foreground feed-sync structured events into Sentry
@@ -208,6 +268,18 @@ Future<void> _startApp(String smartPlaylistConfigBaseUrl) async {
       cacheDirProvider.overrideWithValue(cacheDir.path),
       sharedPreferencesProvider.overrideWithValue(prefs),
       packageInfoProvider.overrideWithValue(packageInfo),
+      analyticsServiceProvider.overrideWithValue(
+        firebaseAnalytics == null
+            ? FakeAnalyticsService()
+            : ThrottledAnalyticsService(
+                FirebaseAnalyticsService(firebaseAnalytics),
+              ),
+      ),
+      firebaseAnalyticsObserverProvider.overrideWithValue(
+        firebaseAnalytics == null
+            ? null
+            : FirebaseAnalyticsObserver(analytics: firebaseAnalytics),
+      ),
       smartPlaylistConfigBaseUrlProvider.overrideWithValue(
         smartPlaylistConfigBaseUrl,
       ),
@@ -381,9 +453,11 @@ class _MyAppState extends ConsumerState<MyApp> {
   @override
   void initState() {
     super.initState();
+    final faObserver = ref.read(firebaseAnalyticsObserverProvider);
     _router = createAppRouter(
       prefs: ref.read(sharedPreferencesProvider),
       lastTabIndex: ref.read(lastTabControllerProvider),
+      observers: [?faObserver],
     );
     unawaited(_initNotificationTapHandler());
   }

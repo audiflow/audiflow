@@ -2,6 +2,7 @@ import 'package:audiflow_app/features/search/presentation/controllers/search_con
 import 'package:audiflow_app/features/search/presentation/controllers/search_state.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_search/audiflow_search.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -133,6 +134,7 @@ void main() {
           appSettingsRepositoryProvider.overrideWithValue(
             FakeAppSettingsRepository(),
           ),
+          analyticsServiceProvider.overrideWithValue(FakeAnalyticsService()),
         ],
       );
     });
@@ -145,6 +147,39 @@ void main() {
       final state = container.read(podcastSearchControllerProvider);
 
       expect(state, isA<SearchInitial>());
+    });
+
+    test('emits SearchQueryEntered with query length on search', () async {
+      final analytics = FakeAnalyticsService();
+      final c = ProviderContainer(
+        overrides: [
+          appSettingsRepositoryProvider.overrideWithValue(
+            FakeAppSettingsRepository(),
+          ),
+          analyticsServiceProvider.overrideWithValue(analytics),
+          podcastSearchServiceProvider.overrideWithValue(
+            MockPodcastSearchService(
+              searchResult: SearchResult(
+                totalCount: 0,
+                podcasts: const [],
+                provider: 'test',
+                timestamp: DateTime.now(),
+              ),
+            ),
+          ),
+        ],
+      );
+      addTearDown(c.dispose);
+
+      await c
+          .read(podcastSearchControllerProvider.notifier)
+          .searchImmediate('hello world');
+
+      await Future<void>.delayed(Duration.zero);
+
+      check(analytics.events).length.equals(1);
+      final e = analytics.events.single as SearchQueryEntered;
+      check(e.queryLen).equals('hello world'.length);
     });
   });
 
@@ -169,6 +204,7 @@ void main() {
           appSettingsRepositoryProvider.overrideWithValue(
             FakeAppSettingsRepository(),
           ),
+          analyticsServiceProvider.overrideWithValue(FakeAnalyticsService()),
         ],
       );
       addTearDown(container.dispose);
@@ -210,6 +246,7 @@ void main() {
             appSettingsRepositoryProvider.overrideWithValue(
               FakeAppSettingsRepository(),
             ),
+            analyticsServiceProvider.overrideWithValue(FakeAnalyticsService()),
           ],
         );
         addTearDown(container.dispose);
@@ -252,6 +289,7 @@ void main() {
           appSettingsRepositoryProvider.overrideWithValue(
             FakeAppSettingsRepository(),
           ),
+          analyticsServiceProvider.overrideWithValue(FakeAnalyticsService()),
         ],
       );
       addTearDown(container.dispose);
@@ -273,6 +311,7 @@ void main() {
           appSettingsRepositoryProvider.overrideWithValue(
             FakeAppSettingsRepository(),
           ),
+          analyticsServiceProvider.overrideWithValue(FakeAnalyticsService()),
         ],
       );
       addTearDown(container.dispose);
@@ -296,6 +335,7 @@ void main() {
           appSettingsRepositoryProvider.overrideWithValue(
             FakeAppSettingsRepository(),
           ),
+          analyticsServiceProvider.overrideWithValue(FakeAnalyticsService()),
         ],
       );
       addTearDown(container.dispose);
@@ -349,6 +389,7 @@ void main() {
           appSettingsRepositoryProvider.overrideWithValue(
             FakeAppSettingsRepository(),
           ),
+          analyticsServiceProvider.overrideWithValue(FakeAnalyticsService()),
         ],
       );
       addTearDown(container.dispose);
@@ -373,6 +414,7 @@ void main() {
           appSettingsRepositoryProvider.overrideWithValue(
             FakeAppSettingsRepository(),
           ),
+          analyticsServiceProvider.overrideWithValue(FakeAnalyticsService()),
         ],
       );
       addTearDown(container.dispose);
@@ -396,6 +438,7 @@ void main() {
           appSettingsRepositoryProvider.overrideWithValue(
             FakeAppSettingsRepository(),
           ),
+          analyticsServiceProvider.overrideWithValue(FakeAnalyticsService()),
         ],
       );
       addTearDown(container.dispose);
@@ -429,6 +472,7 @@ void main() {
           appSettingsRepositoryProvider.overrideWithValue(
             FakeAppSettingsRepository(),
           ),
+          analyticsServiceProvider.overrideWithValue(FakeAnalyticsService()),
         ],
       );
       addTearDown(container.dispose);
@@ -457,6 +501,7 @@ void main() {
           appSettingsRepositoryProvider.overrideWithValue(
             FakeAppSettingsRepository(),
           ),
+          analyticsServiceProvider.overrideWithValue(FakeAnalyticsService()),
         ],
       );
       addTearDown(container.dispose);
@@ -494,6 +539,7 @@ void main() {
           appSettingsRepositoryProvider.overrideWithValue(
             FakeAppSettingsRepository(),
           ),
+          analyticsServiceProvider.overrideWithValue(FakeAnalyticsService()),
         ],
       );
       addTearDown(container.dispose);
@@ -522,6 +568,7 @@ void main() {
           appSettingsRepositoryProvider.overrideWithValue(
             FakeAppSettingsRepository(),
           ),
+          analyticsServiceProvider.overrideWithValue(FakeAnalyticsService()),
         ],
       );
       addTearDown(retryContainer.dispose);
@@ -553,6 +600,7 @@ void main() {
             appSettingsRepositoryProvider.overrideWithValue(
               FakeAppSettingsRepository(),
             ),
+            analyticsServiceProvider.overrideWithValue(FakeAnalyticsService()),
           ],
         );
         addTearDown(container.dispose);
@@ -595,6 +643,7 @@ void main() {
           appSettingsRepositoryProvider.overrideWithValue(
             FakeAppSettingsRepository(),
           ),
+          analyticsServiceProvider.overrideWithValue(FakeAnalyticsService()),
         ],
       );
       addTearDown(container.dispose);
@@ -624,6 +673,7 @@ void main() {
           appSettingsRepositoryProvider.overrideWithValue(
             FakeAppSettingsRepository(),
           ),
+          analyticsServiceProvider.overrideWithValue(FakeAnalyticsService()),
         ],
       );
       addTearDown(container.dispose);
@@ -667,6 +717,7 @@ void main() {
           appSettingsRepositoryProvider.overrideWithValue(
             FakeAppSettingsRepository(),
           ),
+          analyticsServiceProvider.overrideWithValue(FakeAnalyticsService()),
         ],
       );
       addTearDown(container.dispose);
@@ -690,6 +741,7 @@ void main() {
           appSettingsRepositoryProvider.overrideWithValue(
             FakeAppSettingsRepository(),
           ),
+          analyticsServiceProvider.overrideWithValue(FakeAnalyticsService()),
         ],
       );
       addTearDown(container.dispose);
@@ -720,6 +772,7 @@ void main() {
           appSettingsRepositoryProvider.overrideWithValue(
             FakeAppSettingsRepository(),
           ),
+          analyticsServiceProvider.overrideWithValue(FakeAnalyticsService()),
         ],
       );
       addTearDown(container.dispose);
@@ -753,6 +806,7 @@ void main() {
           appSettingsRepositoryProvider.overrideWithValue(
             FakeAppSettingsRepository(),
           ),
+          analyticsServiceProvider.overrideWithValue(FakeAnalyticsService()),
         ],
       );
       addTearDown(container.dispose);
@@ -794,6 +848,7 @@ void main() {
           appSettingsRepositoryProvider.overrideWithValue(
             FakeAppSettingsRepository(),
           ),
+          analyticsServiceProvider.overrideWithValue(FakeAnalyticsService()),
         ],
       );
       addTearDown(container.dispose);
@@ -820,6 +875,7 @@ void main() {
           appSettingsRepositoryProvider.overrideWithValue(
             FakeAppSettingsRepository(),
           ),
+          analyticsServiceProvider.overrideWithValue(FakeAnalyticsService()),
         ],
       );
       addTearDown(container.dispose);
@@ -894,6 +950,7 @@ void main() {
             appSettingsRepositoryProvider.overrideWithValue(
               FakeAppSettingsRepository(),
             ),
+            analyticsServiceProvider.overrideWithValue(FakeAnalyticsService()),
           ],
         );
         addTearDown(container.dispose);
@@ -953,6 +1010,7 @@ void main() {
           appSettingsRepositoryProvider.overrideWithValue(
             FakeAppSettingsRepository(),
           ),
+          analyticsServiceProvider.overrideWithValue(FakeAnalyticsService()),
         ],
       );
       addTearDown(container.dispose);
@@ -1013,6 +1071,7 @@ void main() {
             appSettingsRepositoryProvider.overrideWithValue(
               FakeAppSettingsRepository(),
             ),
+            analyticsServiceProvider.overrideWithValue(FakeAnalyticsService()),
           ],
         );
         addTearDown(container.dispose);
@@ -1051,6 +1110,7 @@ void main() {
           appSettingsRepositoryProvider.overrideWithValue(
             FakeAppSettingsRepository(),
           ),
+          analyticsServiceProvider.overrideWithValue(FakeAnalyticsService()),
         ],
       );
       addTearDown(container.dispose);
@@ -1084,6 +1144,7 @@ void main() {
           appSettingsRepositoryProvider.overrideWithValue(
             FakeAppSettingsRepository(),
           ),
+          analyticsServiceProvider.overrideWithValue(FakeAnalyticsService()),
         ],
       );
 
@@ -1123,6 +1184,7 @@ void main() {
             appSettingsRepositoryProvider.overrideWithValue(
               FakeAppSettingsRepository(),
             ),
+            analyticsServiceProvider.overrideWithValue(FakeAnalyticsService()),
           ],
         );
         addTearDown(container.dispose);
@@ -1158,6 +1220,7 @@ void main() {
           appSettingsRepositoryProvider.overrideWithValue(
             FakeAppSettingsRepository(),
           ),
+          analyticsServiceProvider.overrideWithValue(FakeAnalyticsService()),
         ],
       );
       addTearDown(container.dispose);

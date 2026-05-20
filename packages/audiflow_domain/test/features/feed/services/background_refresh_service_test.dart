@@ -144,6 +144,7 @@ class FakeSubscriptionRepository implements SubscriptionRepository {
     String? description,
     List<String> genres = const [],
     bool explicit = false,
+    SubscribeSource source = SubscribeSource.unknown,
   }) async => throw UnimplementedError();
 
   @override

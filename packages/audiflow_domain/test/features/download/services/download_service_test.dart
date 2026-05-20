@@ -10,6 +10,7 @@ import 'package:mockito/mockito.dart';
   DownloadQueueService,
   DownloadFileService,
   EpisodeRepository,
+  SubscriptionRepository,
 ])
 import 'download_service_test.mocks.dart';
 
@@ -55,6 +56,8 @@ void main() {
   late MockDownloadQueueService mockQueueService;
   late MockDownloadFileService mockFileService;
   late MockEpisodeRepository mockEpisodeRepo;
+  late MockSubscriptionRepository mockSubscriptionRepo;
+  late FakeAnalyticsService fakeAnalytics;
   late DownloadService service;
   late bool wifiOnly;
   late bool autoDeletePlayed;
@@ -65,6 +68,8 @@ void main() {
     mockQueueService = MockDownloadQueueService();
     mockFileService = MockDownloadFileService();
     mockEpisodeRepo = MockEpisodeRepository();
+    mockSubscriptionRepo = MockSubscriptionRepository();
+    fakeAnalytics = FakeAnalyticsService();
     wifiOnly = false;
     autoDeletePlayed = false;
     batchDownloadLimit = 25;
@@ -73,16 +78,20 @@ void main() {
     when(
       mockFileService.getDownloadsDirectory(),
     ).thenAnswer((_) async => '/downloads');
+    // Default: no subscription resolved -> analytics emits no-op.
+    when(mockSubscriptionRepo.getById(any)).thenAnswer((_) async => null);
 
     service = DownloadService(
       repository: mockRepository,
       queueService: mockQueueService,
       fileService: mockFileService,
       episodeRepository: mockEpisodeRepo,
+      subscriptionRepository: mockSubscriptionRepo,
       logger: Logger(level: Level.off),
       getWifiOnly: () => wifiOnly,
       getAutoDeletePlayed: () => autoDeletePlayed,
       getBatchDownloadLimit: () => batchDownloadLimit,
+      analytics: fakeAnalytics,
     );
   });
 
@@ -203,6 +212,140 @@ void main() {
         ),
       ).called(1);
     });
+  });
+
+  group('analytics', () {
+    test(
+      'emits EpisodeDownloadStarted with raw iTunes id, guid, and titles',
+      () async {
+        // Arrange
+        const feedUrl = 'https://example.com/feed.rss';
+        final episode = _episode(id: 1, podcastId: 42, title: 'Ep One');
+        final sub = Subscription()
+          ..itunesId = 'it-42'
+          ..feedUrl = feedUrl
+          ..title = 'Pod'
+          ..artistName = 'Author'
+          ..subscribedAt = DateTime.now();
+        final task = _task(id: 10, episodeId: 1);
+
+        when(mockEpisodeRepo.getById(1)).thenAnswer((_) async => episode);
+        when(mockSubscriptionRepo.getById(42)).thenAnswer((_) async => sub);
+        when(
+          mockRepository.createDownload(
+            episodeId: 1,
+            audioUrl: episode.audioUrl,
+            wifiOnly: false,
+          ),
+        ).thenAnswer((_) async => task);
+        when(mockQueueService.startQueue()).thenAnswer((_) async {});
+
+        // Act
+        await service.downloadEpisode(1);
+        // Allow the fire-and-forget analytics emit to settle.
+        await Future<void>.delayed(Duration.zero);
+
+        // Assert
+        final events = fakeAnalytics.events
+            .whereType<EpisodeDownloadStarted>()
+            .toList();
+        check(events).length.equals(1);
+        check(events.single.podcastId).equals('it-42');
+        check(events.single.episodeId).equals('guid-1');
+        check(events.single.podcastTitle).equals('Pod');
+        check(events.single.episodeTitle).equals('Ep One');
+      },
+    );
+
+    test('emits EpisodeDownloadStarted with feedUrl '
+        'when subscription is OPML-imported', () async {
+      // Arrange
+      const feedUrl = 'https://example.com/feed.rss';
+      final episode = _episode(id: 1, podcastId: 42, title: 'Ep One');
+      final sub = Subscription()
+        ..itunesId = 'opml:abc123'
+        ..feedUrl = feedUrl
+        ..title = 'Imported'
+        ..artistName = 'Author'
+        ..subscribedAt = DateTime.now();
+      final task = _task(id: 10, episodeId: 1);
+
+      when(mockEpisodeRepo.getById(1)).thenAnswer((_) async => episode);
+      when(mockSubscriptionRepo.getById(42)).thenAnswer((_) async => sub);
+      when(
+        mockRepository.createDownload(
+          episodeId: 1,
+          audioUrl: episode.audioUrl,
+          wifiOnly: false,
+        ),
+      ).thenAnswer((_) async => task);
+      when(mockQueueService.startQueue()).thenAnswer((_) async {});
+
+      // Act
+      await service.downloadEpisode(1);
+      await Future<void>.delayed(Duration.zero);
+
+      // Assert
+      final events = fakeAnalytics.events
+          .whereType<EpisodeDownloadStarted>()
+          .toList();
+      check(events).length.equals(1);
+      check(events.single.podcastId).equals(feedUrl);
+      check(events.single.podcastTitle).equals('Imported');
+    });
+
+    test(
+      'does not emit EpisodeDownloadStarted when download already exists',
+      () async {
+        // Arrange
+        final episode = _episode(id: 1);
+        when(mockEpisodeRepo.getById(1)).thenAnswer((_) async => episode);
+        when(
+          mockRepository.createDownload(
+            episodeId: 1,
+            audioUrl: episode.audioUrl,
+            wifiOnly: false,
+          ),
+        ).thenAnswer((_) async => null);
+
+        // Act
+        await service.downloadEpisode(1);
+        await Future<void>.delayed(Duration.zero);
+
+        // Assert
+        check(
+          fakeAnalytics.events.whereType<EpisodeDownloadStarted>().toList(),
+        ).isEmpty();
+      },
+    );
+
+    test(
+      'does not emit EpisodeDownloadStarted when feedUrl cannot be resolved',
+      () async {
+        // Arrange: subscription lookup returns null -> no emit.
+        final episode = _episode(id: 1, podcastId: 42);
+        final task = _task(id: 10, episodeId: 1);
+        when(mockEpisodeRepo.getById(1)).thenAnswer((_) async => episode);
+        when(mockSubscriptionRepo.getById(42)).thenAnswer((_) async => null);
+        when(
+          mockRepository.createDownload(
+            episodeId: 1,
+            audioUrl: episode.audioUrl,
+            wifiOnly: false,
+          ),
+        ).thenAnswer((_) async => task);
+        when(mockQueueService.startQueue()).thenAnswer((_) async {});
+
+        // Act
+        await service.downloadEpisode(1);
+        await Future<void>.delayed(Duration.zero);
+
+        // Assert
+        check(
+          fakeAnalytics.events.whereType<EpisodeDownloadStarted>().toList(),
+        ).isEmpty();
+      },
+    );
   });
 
   group('downloadSeason', () {

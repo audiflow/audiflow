@@ -116,6 +116,12 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
   /// produced.
   void _pipePlaybackState() {
     _player.playbackEventStream.map(_transformEvent).listen(playbackState.add);
+    // `episode_complete` analytics emit lives in
+    // `AudioPlayerController._playerStateListener`'s
+    // `ProcessingState.completed` branch — owned by the controller so
+    // emit + state cleanup are sequenced (no race with nowPlaying
+    // clear) and dedup'd against transient just_audio
+    // ProcessingState.completed transitions during near-end seeks.
   }
 
   /// Publishes a `paused` platform playback state that mirrors what
@@ -388,7 +394,9 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
   }
 
   @override
-  Future<void> seek(Duration position) async => _controller.seek(position);
+  Future<void> seek(Duration position) async {
+    await _controller.seek(position);
+  }
 
   @override
   Future<void> skipToNext() async => _controller.skipForward();

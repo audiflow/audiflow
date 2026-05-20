@@ -10,6 +10,7 @@ import 'package:audiflow_domain/audiflow_domain.dart'
         SmartPlaylistEpisodeData,
         SmartPlaylistGroup,
         SortOrder,
+        SubscribeSource,
         appSettingsRepositoryProvider,
         namedLoggerProvider,
         playOrderPreferenceRepositoryProvider,
@@ -39,9 +40,18 @@ import '../widgets/smart_playlist_view_toggle.dart';
 /// Displays podcast details and episode list with
 /// playback controls.
 class PodcastDetailScreen extends ConsumerStatefulWidget {
-  const PodcastDetailScreen({super.key, required this.podcast});
+  const PodcastDetailScreen({
+    super.key,
+    required this.podcast,
+    this.subscribeSource = SubscribeSource.discovery,
+  });
 
   final Podcast podcast;
+
+  /// Surface that led the user to this screen. Forwarded to the
+  /// subscribe button so the `subscribe` analytics emit can report
+  /// the correct origin (search, deeplink, etc.).
+  final SubscribeSource subscribeSource;
 
   @override
   ConsumerState<PodcastDetailScreen> createState() =>
@@ -499,7 +509,12 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
               ),
             ),
           ),
-          SliverToBoxAdapter(child: PodcastDetailHeader(podcast: podcast)),
+          SliverToBoxAdapter(
+            child: PodcastDetailHeader(
+              podcast: podcast,
+              subscribeSource: widget.subscribeSource,
+            ),
+          ),
           if (showPlaylistToggle)
             SliverToBoxAdapter(
               child: Padding(

@@ -21,6 +21,7 @@ import '../features/podcast_detail/presentation/screens/smart_playlist_group_epi
 import '../features/queue/presentation/screens/queue_screen.dart';
 import '../features/search/presentation/screens/search_screen.dart';
 import '../features/settings/presentation/screens/about_screen.dart';
+import '../features/settings/presentation/screens/privacy_settings_screen.dart';
 import '../features/settings/presentation/screens/appearance_settings_screen.dart';
 import '../features/download/presentation/screens/download_management_screen.dart';
 import '../features/player/presentation/screens/transcript_screen.dart';
@@ -66,6 +67,7 @@ class AppRoutes {
       '/settings/downloads/management';
   static const String settingsGettingStarted = '/settings/getting-started';
   static const String migrationGuide = '/settings/getting-started/migration';
+  static const String settingsPrivacy = '/settings/privacy';
   static const String onboarding = '/onboarding';
   static const String transcript = '/transcript';
   static const String deepLinkPodcast = '/p/:itunesId';
@@ -104,6 +106,7 @@ final _settingsNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'settings');
 GoRouter createAppRouter({
   required SharedPreferences prefs,
   int lastTabIndex = 0,
+  List<NavigatorObserver> observers = const [],
 }) {
   final initialLocation = switch (lastTabIndex) {
     1 => AppRoutes.library,
@@ -114,6 +117,7 @@ GoRouter createAppRouter({
   return GoRouter(
     navigatorKey: rootNavigatorKey,
     initialLocation: initialLocation,
+    observers: observers,
     // File URIs from the share sheet (e.g. file:///...opml)
     // are handled by OpmlFileReceiverController via app_links,
     // not by the router. Redirect to home on unknown routes.
@@ -281,6 +285,10 @@ GoRouter createAppRouter({
                     builder: (context, state) => const AboutScreen(),
                   ),
                   GoRoute(
+                    path: 'privacy',
+                    builder: (context, state) => const PrivacySettingsScreen(),
+                  ),
+                  GoRoute(
                     path: 'developer',
                     builder: (context, state) =>
                         const DeveloperSettingsScreen(),
@@ -352,8 +360,12 @@ Widget _buildPodcastDetailScreen(GoRouterState state) {
       : extra is Map<String, dynamic>
       ? extra['podcast'] as Podcast?
       : null;
+  final extraMap = extra is Map<String, dynamic> ? extra : null;
+  final source =
+      extraMap?['subscribeSource'] as SubscribeSource? ??
+      _resolveSubscribeSource(state);
   if (podcast != null) {
-    return PodcastDetailScreen(podcast: podcast);
+    return PodcastDetailScreen(podcast: podcast, subscribeSource: source);
   }
 
   // Fallback: resolve from iTunes ID in path parameter.
@@ -361,7 +373,23 @@ Widget _buildPodcastDetailScreen(GoRouterState state) {
   if (itunesId.isEmpty) {
     return const _PodcastNotFoundScreen();
   }
-  return _PodcastDetailFromSubscription(itunesId: itunesId);
+  return _PodcastDetailFromSubscription(
+    itunesId: itunesId,
+    subscribeSource: source,
+  );
+}
+
+/// Infers the [SubscribeSource] for a podcast-detail navigation based on
+/// the matched location prefix. Used so the subscribe-button on the
+/// detail screen can tag analytics emits with the correct entry surface
+/// without each caller threading the source explicitly. Deeplinked
+/// navigations should pass `subscribeSource` via the route `extra` map
+/// because the deeplink target redirects through the search tab and
+/// loses its original path prefix.
+SubscribeSource _resolveSubscribeSource(GoRouterState state) {
+  final location = state.matchedLocation;
+  if (location.startsWith('/search/')) return SubscribeSource.search;
+  return SubscribeSource.discovery;
 }
 
 /// Builds the smart playlist episodes screen from
@@ -624,9 +652,13 @@ class _EpisodeNotFoundScreen extends StatelessWidget {
 ///
 /// Used when navigating without [extra] data (notification taps, deep links).
 class _PodcastDetailFromSubscription extends ConsumerWidget {
-  const _PodcastDetailFromSubscription({required this.itunesId});
+  const _PodcastDetailFromSubscription({
+    required this.itunesId,
+    this.subscribeSource = SubscribeSource.discovery,
+  });
 
   final String itunesId;
+  final SubscribeSource subscribeSource;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -635,7 +667,10 @@ class _PodcastDetailFromSubscription extends ConsumerWidget {
     return asyncSub.when(
       data: (subscription) {
         if (subscription == null) return const _PodcastNotFoundScreen();
-        return PodcastDetailScreen(podcast: subscription.toPodcast());
+        return PodcastDetailScreen(
+          podcast: subscription.toPodcast(),
+          subscribeSource: subscribeSource,
+        );
       },
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),

@@ -10,7 +10,10 @@ Future<ProviderContainer> container() async {
   SharedPreferences.setMockInitialValues({});
   final prefs = await SharedPreferences.getInstance();
   return ProviderContainer(
-    overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+    overrides: [
+      sharedPreferencesProvider.overrideWithValue(prefs),
+      analyticsServiceProvider.overrideWithValue(FakeAnalyticsService()),
+    ],
   );
 }
 

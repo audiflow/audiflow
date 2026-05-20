@@ -1227,6 +1227,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonCopiedToClipboard => 'Copied to clipboard';
 
   @override
+  String get settingsPrivacyTitle => 'Privacy';
+
+  @override
+  String get settingsPrivacySubtitle => 'Control what data audiflow collects';
+
+  @override
+  String get settingsAnalyticsTitle => 'Share usage data';
+
+  @override
+  String get settingsAnalyticsSubtitle =>
+      'Anonymous usage events help us improve audiflow. No ads, no personal data.';
+
+  @override
   String get settingsDeveloperTitle => 'Developer';
 
   @override

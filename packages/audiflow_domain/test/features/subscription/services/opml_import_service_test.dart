@@ -52,6 +52,7 @@ void main() {
           feedUrl: anyNamed('feedUrl'),
           title: anyNamed('title'),
           artistName: anyNamed('artistName'),
+          source: anyNamed('source'),
         ),
       ).thenAnswer(
         (invocation) async => _subscription(
@@ -75,6 +76,7 @@ void main() {
           feedUrl: captureAnyNamed('feedUrl'),
           title: captureAnyNamed('title'),
           artistName: captureAnyNamed('artistName'),
+          source: anyNamed('source'),
         ),
       ).captured;
 
@@ -108,6 +110,7 @@ void main() {
           feedUrl: anyNamed('feedUrl'),
           title: anyNamed('title'),
           artistName: anyNamed('artistName'),
+          source: anyNamed('source'),
         ),
       );
     });
@@ -135,6 +138,7 @@ void main() {
           feedUrl: argThat(equals(successEntry.feedUrl), named: 'feedUrl'),
           title: anyNamed('title'),
           artistName: anyNamed('artistName'),
+          source: anyNamed('source'),
         ),
       ).thenAnswer(
         (_) async => _subscription(
@@ -151,6 +155,7 @@ void main() {
           feedUrl: argThat(equals(failEntry.feedUrl), named: 'feedUrl'),
           title: anyNamed('title'),
           artistName: anyNamed('artistName'),
+          source: anyNamed('source'),
         ),
       ).thenThrow(Exception('DB error'));
 
@@ -193,6 +198,7 @@ void main() {
           feedUrl: argThat(equals(newEntry.feedUrl), named: 'feedUrl'),
           title: anyNamed('title'),
           artistName: anyNamed('artistName'),
+          source: anyNamed('source'),
         ),
       ).thenAnswer(
         (_) async => _subscription(
@@ -209,6 +215,7 @@ void main() {
           feedUrl: argThat(equals(failingEntry.feedUrl), named: 'feedUrl'),
           title: anyNamed('title'),
           artistName: anyNamed('artistName'),
+          source: anyNamed('source'),
         ),
       ).thenThrow(Exception('DB error'));
 

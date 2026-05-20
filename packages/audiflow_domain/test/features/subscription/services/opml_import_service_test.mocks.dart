@@ -5,6 +5,8 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i4;
 
+import 'package:audiflow_domain/src/features/monitoring/models/analytics_event.dart'
+    as _i5;
 import 'package:audiflow_domain/src/features/subscription/models/subscriptions.dart'
     as _i2;
 import 'package:audiflow_domain/src/features/subscription/repositories/subscription_repository.dart'
@@ -50,6 +52,7 @@ class MockSubscriptionRepository extends _i1.Mock
     String? description,
     List<String>? genres,
     bool? explicit,
+    _i5.SubscribeSource? source,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#subscribe, [], {
@@ -61,6 +64,7 @@ class MockSubscriptionRepository extends _i1.Mock
               #description: description,
               #genres: genres,
               #explicit: explicit,
+              #source: source,
             }),
             returnValue: _i4.Future<_i2.Subscription>.value(
               _FakeSubscription_0(
@@ -74,6 +78,7 @@ class MockSubscriptionRepository extends _i1.Mock
                   #description: description,
                   #genres: genres,
                   #explicit: explicit,
+                  #source: source,
                 }),
               ),
             ),

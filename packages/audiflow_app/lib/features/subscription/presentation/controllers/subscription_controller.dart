@@ -20,7 +20,15 @@ class SubscriptionController extends _$SubscriptionController {
   ///
   /// If subscribed, unsubscribes; if not subscribed, subscribes.
   /// Updates the state to reflect the new subscription status.
-  Future<void> toggleSubscription(Podcast podcast) async {
+  ///
+  /// [source] identifies the entry surface for the `subscribe` analytics
+  /// emit (defaults to discovery). Callers from search/deeplink should
+  /// pass the corresponding [SubscribeSource] so the audit reflects how
+  /// users arrived at the subscribe action.
+  Future<void> toggleSubscription(
+    Podcast podcast, {
+    SubscribeSource source = SubscribeSource.discovery,
+  }) async {
     final repository = ref.read(subscriptionRepositoryProvider);
     final isCurrentlySubscribed = state.value ?? false;
 
@@ -52,6 +60,7 @@ class SubscriptionController extends _$SubscriptionController {
           description: podcast.description,
           genres: podcast.genres,
           explicit: podcast.explicit,
+          source: source,
         );
 
         // Invalidate feed provider to trigger episode persistence

@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../monitoring/models/analytics_event.dart';
+import '../../monitoring/providers/analytics_providers.dart';
 import '../../transcript/repositories/chapter_repository_impl.dart';
 import '../models/sleep_timer_config.dart';
 import '../models/sleep_timer_event.dart';
@@ -79,12 +81,14 @@ class SleepTimerController extends _$SleepTimerController {
     _tick?.cancel();
     _tick = null;
     state = state.copyWith(config: const SleepTimerConfig.endOfEpisode());
+    _logSleepTimerSet(SleepTimerMode.endOfEpisode);
   }
 
   void setEndOfChapter() {
     _tick?.cancel();
     _tick = null;
     state = state.copyWith(config: const SleepTimerConfig.endOfChapter());
+    _logSleepTimerSet(SleepTimerMode.endOfChapter);
   }
 
   Future<void> setDuration(Duration total) async {
@@ -101,6 +105,7 @@ class SleepTimerController extends _$SleepTimerController {
       config: SleepTimerConfig.duration(total: clamped, deadline: deadline),
       lastMinutes: minutes,
     );
+    _logSleepTimerSet(SleepTimerMode.duration, value: minutes);
   }
 
   Future<void> setEpisodes(int total) async {
@@ -114,6 +119,15 @@ class SleepTimerController extends _$SleepTimerController {
     state = state.copyWith(
       config: SleepTimerConfig.episodes(total: clamped, remaining: clamped),
       lastEpisodes: clamped,
+    );
+    _logSleepTimerSet(SleepTimerMode.episodes, value: clamped);
+  }
+
+  void _logSleepTimerSet(SleepTimerMode mode, {int? value}) {
+    unawaited(
+      ref
+          .read(analyticsServiceProvider)
+          .log(SleepTimerSet(mode: mode, value: value)),
     );
   }
 

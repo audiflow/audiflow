@@ -359,6 +359,7 @@ class _StationEpisodeTile extends ConsumerWidget {
           lastRefreshedAt: subscription?.lastRefreshedAt,
           itunesId: subscription?.itunesId,
           feedUrl: subscription?.feedUrl,
+          stationName: stationName,
         );
       },
       loading: () => const SizedBox(height: episodeCardExtent),

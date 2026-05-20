@@ -48,6 +48,7 @@ class QueueController extends _$QueueController {
     final podcastTitle = subscription?.title ?? '';
 
     final controller = ref.read(audioPlayerControllerProvider.notifier);
+    controller.markPlaySource(PlaySource.queue);
     controller.play(
       episode.audioUrl,
       metadata: NowPlayingInfo(

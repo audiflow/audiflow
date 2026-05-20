@@ -76,8 +76,8 @@ void main() {
         );
       });
 
-      test('has analytics disabled', () {
-        expect(config.enableAnalytics, isFalse);
+      test('has analytics enabled', () {
+        expect(config.enableAnalytics, isTrue);
       });
 
       test('has crash reporting enabled', () {

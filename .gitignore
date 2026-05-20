@@ -49,6 +49,16 @@ app.*.map.json
 .env.*
 *.local.*
 
+# Firebase per-flavor configs. Contributors register their own Firebase
+# project and place files at the paths below; templates are committed as
+# *.example so the layout is discoverable.
+packages/audiflow_app/android/app/src/dev/google-services.json
+packages/audiflow_app/android/app/src/stg/google-services.json
+packages/audiflow_app/android/app/src/prod/google-services.json
+packages/audiflow_app/ios/config/dev/GoogleService-Info.plist
+packages/audiflow_app/ios/config/stg/GoogleService-Info.plist
+packages/audiflow_app/ios/config/prod/GoogleService-Info.plist
+
 # FVM Version Cache
 .fvm/
 

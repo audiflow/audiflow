@@ -435,6 +435,11 @@
   "statsSection": "統計",
   "commonCopiedToClipboard": "クリップボードにコピーしました",
 
+  "settingsPrivacyTitle": "プライバシー",
+  "settingsPrivacySubtitle": "audiflow が収集するデータを管理します",
+  "settingsAnalyticsTitle": "利用状況の共有",
+  "settingsAnalyticsSubtitle": "匿名の利用イベントが audiflow の改善に役立ちます。広告や個人情報は収集しません。",
+
   "settingsDeveloperTitle": "開発",
   "settingsDeveloperSubtitle": "スマートプレイリストパターンとデバッグ情報",
   "developerContributeLabel": "スマートプレイリストパターンを貢献",

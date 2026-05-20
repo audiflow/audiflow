@@ -9,9 +9,14 @@ import '../../../common/providers/logger_provider.dart';
 import '../models/download_task.dart';
 import '../../feed/repositories/episode_repository.dart';
 import '../../feed/repositories/episode_repository_impl.dart';
+import '../../monitoring/models/analytics_event.dart';
+import '../../monitoring/providers/analytics_providers.dart';
+import '../../monitoring/services/analytics_service.dart';
 import '../models/download_status.dart';
 import '../../settings/providers/settings_providers.dart';
 import '../../station/services/station_reconciler_service.dart';
+import '../../subscription/repositories/subscription_repository.dart';
+import '../../subscription/repositories/subscription_repository_impl.dart';
 import '../repositories/download_repository.dart';
 import '../repositories/download_repository_impl.dart';
 import 'download_file_service.dart';
@@ -54,19 +59,23 @@ DownloadService downloadService(Ref ref) {
   final queueService = ref.watch(downloadQueueServiceProvider);
   final fileService = ref.watch(downloadFileServiceProvider);
   final episodeRepo = ref.watch(episodeRepositoryProvider);
+  final subscriptionRepo = ref.watch(subscriptionRepositoryProvider);
   final logger = ref.watch(namedLoggerProvider('Download'));
   final reconcilerService = ref.watch(stationReconcilerServiceProvider);
+  final analytics = ref.watch(analyticsServiceProvider);
 
   final service = DownloadService(
     repository: repository,
     queueService: queueService,
     fileService: fileService,
     episodeRepository: episodeRepo,
+    subscriptionRepository: subscriptionRepo,
     logger: logger,
     getWifiOnly: () => ref.read(downloadWifiOnlyProvider),
     getAutoDeletePlayed: () => ref.read(downloadAutoDeletePlayedProvider),
     getBatchDownloadLimit: () => ref.read(batchDownloadLimitProvider),
     reconcilerService: reconcilerService,
+    analytics: analytics,
   );
 
   ref.onDispose(() => service.dispose());
@@ -80,30 +89,69 @@ class DownloadService {
     required DownloadQueueService queueService,
     required DownloadFileService fileService,
     required EpisodeRepository episodeRepository,
+    required SubscriptionRepository subscriptionRepository,
     required Logger logger,
     required bool Function() getWifiOnly,
     required bool Function() getAutoDeletePlayed,
     required int Function() getBatchDownloadLimit,
     StationReconcilerService? reconcilerService,
+    AnalyticsService? analytics,
   }) : _repository = repository,
        _queueService = queueService,
        _fileService = fileService,
        _episodeRepo = episodeRepository,
+       _subscriptionRepo = subscriptionRepository,
        _logger = logger,
        _getWifiOnly = getWifiOnly,
        _getAutoDeletePlayed = getAutoDeletePlayed,
        _getBatchDownloadLimit = getBatchDownloadLimit,
-       _reconcilerService = reconcilerService;
+       _reconcilerService = reconcilerService,
+       _analytics = analytics;
 
   final DownloadRepository _repository;
   final DownloadQueueService _queueService;
   final DownloadFileService _fileService;
   final EpisodeRepository _episodeRepo;
+  final SubscriptionRepository _subscriptionRepo;
   final Logger _logger;
   final bool Function() _getWifiOnly;
   final bool Function() _getAutoDeletePlayed;
   final int Function() _getBatchDownloadLimit;
   final StationReconcilerService? _reconcilerService;
+  final AnalyticsService? _analytics;
+
+  /// Resolves the analytics IDs and titles for [episodeId]. Returns null
+  /// when the episode, its feed URL, or its GUID is missing so emitters
+  /// can no-op cleanly.
+  ///
+  /// `podcastId` is the raw iTunes ID when available (non-OPML import),
+  /// else the feed URL. `episodeId` is the raw RSS guid. Truncation to
+  /// GA's 100-char param limit happens at the event boundary.
+  Future<
+    ({
+      String podcastId,
+      String episodeId,
+      String podcastTitle,
+      String episodeTitle,
+    })?
+  >
+  _analyticsIds(int episodeId) async {
+    final episode = await _episodeRepo.getById(episodeId);
+    if (episode == null) return null;
+    final guid = episode.guid;
+    if (guid.isEmpty) return null;
+    final sub = await _subscriptionRepo.getById(episode.podcastId);
+    if (sub == null) return null;
+    final feedUrl = sub.feedUrl;
+    if (feedUrl.isEmpty) return null;
+    final podcastId = sub.itunesId.startsWith('opml:') ? feedUrl : sub.itunesId;
+    return (
+      podcastId: podcastId,
+      episodeId: guid,
+      podcastTitle: sub.title,
+      episodeTitle: episode.title,
+    );
+  }
 
   /// Downloads a single episode.
   ///
@@ -185,6 +233,20 @@ class DownloadService {
     );
 
     if (task != null) {
+      final ids = await _analyticsIds(episodeId);
+      if (ids != null) {
+        unawaited(
+          _analytics?.log(
+                EpisodeDownloadStarted(
+                  podcastId: ids.podcastId,
+                  episodeId: ids.episodeId,
+                  podcastTitle: ids.podcastTitle,
+                  episodeTitle: ids.episodeTitle,
+                ),
+              ) ??
+              Future<void>.value(),
+        );
+      }
       _logger.i('Created download task for episode: $episodeId');
     } else {
       _logger.i('Episode already has an existing download task: $episodeId');

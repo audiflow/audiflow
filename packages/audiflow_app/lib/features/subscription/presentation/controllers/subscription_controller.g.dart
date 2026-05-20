@@ -64,7 +64,7 @@ final class SubscriptionControllerProvider
 }
 
 String _$subscriptionControllerHash() =>
-    r'84dda1ce96b82ea577003d87a7f7b9db7a63d7b0';
+    r'6f952b40f4b15e7cc2b94d56c98cc49400a1f7aa';
 
 /// Controller for managing subscription state for a specific podcast.
 ///

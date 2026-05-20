@@ -135,6 +135,12 @@ class PodcastSearchController extends _$PodcastSearchController {
     _lastAttemptedQuery = query;
     _pending = key;
 
+    unawaited(
+      ref
+          .read(analyticsServiceProvider)
+          .log(SearchQueryEntered(queryLen: query.length)),
+    );
+
     final previousResult = switch (state) {
       SearchSuccess(:final result) => result,
       SearchRefreshing(:final previousResult) => previousResult,

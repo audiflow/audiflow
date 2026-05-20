@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:audiflow_core/audiflow_core.dart';
@@ -751,7 +752,10 @@ class _PlayerPlayPauseButton extends ConsumerWidget {
             // After restore: no audio loaded yet, start full playback.
             final nowPlaying = ref.read(nowPlayingControllerProvider);
             if (nowPlaying != null) {
-              controller.play(nowPlaying.episodeUrl, metadata: nowPlaying);
+              // Restore-after-restart tap; treat as deeplink for source.
+              controller
+                ..markPlaySource(PlaySource.deeplink)
+                ..play(nowPlaying.episodeUrl, metadata: nowPlaying);
             }
           }
         },
@@ -777,6 +781,8 @@ class _PlaybackSpeedButton extends ConsumerWidget {
       child: TextButton(
         onPressed: () {
           final nextSpeed = _nextSpeed(speed);
+          // Controller emits `playback_speed_change` itself, so the UI
+          // tap must not double-emit here.
           ref.read(audioPlayerControllerProvider.notifier).setSpeed(nextSpeed);
         },
         child: Text('${speed}x', style: Theme.of(context).textTheme.labelLarge),

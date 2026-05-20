@@ -277,6 +277,7 @@ List<Widget> _buildPlaylistData({
             playlist: playlistDef,
             episode: data.episode,
           ),
+          playlistId: playlist.id,
         );
       },
     ),
@@ -531,6 +532,7 @@ List<Widget> _buildYearGroupedPlaylistSlivers({
         playlist: playlistDef,
         episode: data.episode,
       ),
+      playlistId: playlist.id,
     ),
     scrollController: scrollController,
     yearGroupingEnabled: true,

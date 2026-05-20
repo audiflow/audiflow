@@ -700,6 +700,10 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
     );
 
     try {
+      // Source: a tap on the episode-detail screen is reached from search
+      // results or in-app deep links. Pick `search` for the conservative
+      // default; the deep-link path sets its own source elsewhere.
+      controller.markPlaySource(PlaySource.search);
       unawaited(
         controller.play(
           url,

@@ -68,4 +68,4 @@ final class DownloadQueueServiceProvider
 }
 
 String _$downloadQueueServiceHash() =>
-    r'09ee5935407f38131b9553b426f4eb74e285fab8';
+    r'9844a01efd93e09dee6037280818dbcfc00de862';

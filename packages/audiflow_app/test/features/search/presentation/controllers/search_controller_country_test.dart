@@ -19,6 +19,7 @@ void main() {
         overrides: [
           podcastSearchServiceProvider.overrideWithValue(mockService),
           appSettingsRepositoryProvider.overrideWithValue(fakeSettings),
+          analyticsServiceProvider.overrideWithValue(FakeAnalyticsService()),
         ],
       );
     });
