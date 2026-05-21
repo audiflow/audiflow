@@ -1247,10 +1247,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Smart playlist patterns and debug info';
 
   @override
-  String get developerContributeLabel => 'Contribute smart playlist patterns';
+  String get developerContributeLabel => 'Contribute presets';
 
   @override
-  String get developerContributeRepo => 'audiflow/audiflow-smartplaylist';
+  String get developerContributeRepo => 'audiflow/audiflow-preset';
 
   @override
   String get developerShowInfoTitle => 'Show developer info';

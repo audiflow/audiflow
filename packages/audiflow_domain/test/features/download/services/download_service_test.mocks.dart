@@ -20,7 +20,7 @@ import 'package:audiflow_domain/src/features/feed/models/feed_parse_progress.dar
     as _i15;
 import 'package:audiflow_domain/src/features/feed/models/numbering_extractor.dart'
     as _i13;
-import 'package:audiflow_domain/src/features/feed/models/smart_playlist_pattern_config.dart'
+import 'package:audiflow_domain/src/features/feed/models/preset_config.dart'
     as _i14;
 import 'package:audiflow_domain/src/features/feed/repositories/episode_repository.dart'
     as _i10;
@@ -474,7 +474,7 @@ class MockEpisodeRepository extends _i1.Mock implements _i10.EpisodeRepository {
   _i4.Future<void> upsertFromFeedItemsWithConfig(
     int? podcastId,
     List<_i12.PodcastItem>? items, {
-    required _i14.SmartPlaylistPatternConfig? config,
+    required _i14.PresetConfig? config,
   }) =>
       (super.noSuchMethod(
             Invocation.method(

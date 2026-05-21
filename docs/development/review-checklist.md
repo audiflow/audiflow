@@ -30,7 +30,7 @@
 
 ## Smart playlist / cross-repo
 
-- Do JSON keys match `sp_core` models in the editor repo?
+- Do JSON keys match `preset_core` models in the editor repo?
 - Do enum values match schema definitions?
 - Were schema conformance tests run?
 - Is vendored schema up to date?
@@ -48,7 +48,7 @@
 
 - Are relevant docs updated for behavior/architecture changes?
 - If a new package was added: `CLAUDE.md`, `docs/overview.md`, `docs/architecture/module-boundaries.md` updated?
-- If schema/contract changed: `docs/integration/smartplaylist.md` updated?
+- If schema/contract changed: `docs/integration/preset.md` updated?
 
 ## When to update
 

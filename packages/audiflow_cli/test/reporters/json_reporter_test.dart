@@ -15,7 +15,7 @@ void main() {
     });
 
     test('outputs valid JSON with all fields', () {
-      reporter.start(feedUrl: 'https://example.com/feed', patternId: 'test');
+      reporter.start(feedUrl: 'https://example.com/feed', presetId: 'test');
 
       reporter.addResult(
         ExtractionResult(
@@ -32,7 +32,7 @@ void main() {
       final json = jsonDecode(output.toString()) as Map<String, dynamic>;
 
       expect(json['feed_url'], 'https://example.com/feed');
-      expect(json['pattern_id'], 'test');
+      expect(json['preset_id'], 'test');
       expect(json['results'], hasLength(1));
       expect(json['results'][0]['status'], 'pass');
       expect(json['summary']['total'], 1);
@@ -40,7 +40,7 @@ void main() {
     });
 
     test('includes diagnostics for failed results', () {
-      reporter.start(feedUrl: 'https://example.com/feed', patternId: null);
+      reporter.start(feedUrl: 'https://example.com/feed', presetId: null);
 
       reporter.addResult(
         ExtractionResult(

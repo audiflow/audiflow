@@ -3,7 +3,7 @@
 ## Context
 
 The smart playlist JSON schema has been updated from v1 to v2 in the
-`audiflow-smartplaylist-schema` repo. This is a clean cut -- no backward
+`audiflow-preset-schema` repo. This is a clean cut -- no backward
 compatibility with v1. All data repos will be migrated to v2 simultaneously.
 
 ## Schema Changes Summary

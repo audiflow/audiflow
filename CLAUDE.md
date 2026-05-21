@@ -4,7 +4,7 @@ Flutter podcast player app (iOS/Android). Monorepo with 8 packages managed by Me
 
 ## Ecosystem context
 
-Part of the audiflow ecosystem. Consumes smart playlist config JSON from `audiflow-smartplaylist` (all environments via GitHub Pages). Config schema SSoT lives in `audiflow-smartplaylist-editor/crates/sp_core/assets/`. Model serialization (JSON keys, field structure) must stay aligned with `sp_core` models.
+Part of the audiflow ecosystem. Consumes smart playlist config JSON from `audiflow-preset` (all environments via GitHub Pages). Config schema SSoT lives in `audiflow-preset-editor/crates/preset_core/assets/`. Model serialization (JSON keys, field structure) must stay aligned with `preset_core` models.
 
 ## Packages
 
@@ -35,9 +35,9 @@ Part of the audiflow ecosystem. Consumes smart playlist config JSON from `audifl
 
 ## Non-responsibilities
 
-- Schema definition (owned by `audiflow-smartplaylist-editor`)
+- Schema definition (owned by `audiflow-preset-editor`)
 - Config authoring/editing (owned by editor)
-- Production config data hosting (owned by `audiflow-smartplaylist`)
+- Production config data hosting (owned by `audiflow-preset`)
 
 ## Validation
 
@@ -52,10 +52,10 @@ melos run codegen      # Code generation
 - `.claude/rules/project/` -- architecture, tech stack, branching (loaded automatically)
 - `docs/overview.md` -- detailed purpose and concepts
 - `docs/architecture/` -- system overview, module boundaries, state flow, playback pipeline
-- `docs/integration/smartplaylist.md` -- smart playlist config consumption contract
+- `docs/integration/preset.md` -- smart playlist config consumption contract
 
 ## When changing this repository
 
-- Schema/model changes: coordinate with `audiflow-smartplaylist-editor` (sp_core)
+- Schema/model changes: coordinate with `audiflow-preset-editor` (preset_core)
 - Run schema conformance tests: `flutter test packages/audiflow_domain/test/features/feed/models/schema_conformance_test.dart`
-- Update vendored schema if upstream changed: copy from `audiflow-smartplaylist-editor/crates/sp_core/assets/` (SSoT). Never edit vendored copies directly.
+- Update vendored schema if upstream changed: copy from `audiflow-preset-editor/crates/preset_core/assets/` (SSoT). Never edit vendored copies directly.

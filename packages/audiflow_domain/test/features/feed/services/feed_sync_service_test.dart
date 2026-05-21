@@ -10,7 +10,7 @@ import 'package:riverpod/riverpod.dart';
   EpisodeRepository,
   AppSettingsRepository,
   FeedParserService,
-  SmartPlaylistConfigRepository,
+  PresetConfigRepository,
   StationPodcastRepository,
   Dio,
 ])
@@ -54,7 +54,7 @@ void main() {
   late MockEpisodeRepository mockEpisodeRepo;
   late MockAppSettingsRepository mockSettingsRepo;
   late MockFeedParserService mockFeedParser;
-  late MockSmartPlaylistConfigRepository mockConfigRepo;
+  late MockPresetConfigRepository mockConfigRepo;
   late MockStationPodcastRepository mockStationPodcastRepo;
   late MockDio mockDio;
   late ProviderContainer container;
@@ -65,7 +65,7 @@ void main() {
     mockEpisodeRepo = MockEpisodeRepository();
     mockSettingsRepo = MockAppSettingsRepository();
     mockFeedParser = MockFeedParserService();
-    mockConfigRepo = MockSmartPlaylistConfigRepository();
+    mockConfigRepo = MockPresetConfigRepository();
     mockStationPodcastRepo = MockStationPodcastRepository();
     mockDio = MockDio();
 
@@ -75,7 +75,7 @@ void main() {
     when(mockSettingsRepo.getWifiOnlyDownload()).thenReturn(false);
 
     // Smart playlist config: no pattern matches by default
-    when(mockConfigRepo.findMatchingPattern(any, any)).thenReturn(null);
+    when(mockConfigRepo.findMatchingPreset(any, any)).thenReturn(null);
 
     container = ProviderContainer(
       overrides: [
@@ -83,7 +83,7 @@ void main() {
         episodeRepositoryProvider.overrideWithValue(mockEpisodeRepo),
         appSettingsRepositoryProvider.overrideWithValue(mockSettingsRepo),
         feedParserServiceProvider.overrideWithValue(mockFeedParser),
-        smartPlaylistConfigRepositoryProvider.overrideWithValue(mockConfigRepo),
+        presetConfigRepositoryProvider.overrideWithValue(mockConfigRepo),
         stationPodcastRepositoryProvider.overrideWithValue(
           mockStationPodcastRepo,
         ),

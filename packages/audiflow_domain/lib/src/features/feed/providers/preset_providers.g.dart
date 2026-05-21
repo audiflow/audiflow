@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'smart_playlist_providers.dart';
+part of 'preset_providers.dart';
 
 // **************************************************************************
 // RiverpodGenerator
@@ -14,49 +14,49 @@ part of 'smart_playlist_providers.dart';
 /// Initially empty; populated on startup after fetching
 /// root meta.
 
-@ProviderFor(PatternSummaries)
-final patternSummariesProvider = PatternSummariesProvider._();
+@ProviderFor(PresetSummaries)
+final presetSummariesProvider = PresetSummariesProvider._();
 
 /// Provides the pattern summaries loaded from remote
 /// root meta.json.
 ///
 /// Initially empty; populated on startup after fetching
 /// root meta.
-final class PatternSummariesProvider
-    extends $NotifierProvider<PatternSummaries, List<PatternSummary>> {
+final class PresetSummariesProvider
+    extends $NotifierProvider<PresetSummaries, List<PresetSummary>> {
   /// Provides the pattern summaries loaded from remote
   /// root meta.json.
   ///
   /// Initially empty; populated on startup after fetching
   /// root meta.
-  PatternSummariesProvider._()
+  PresetSummariesProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'patternSummariesProvider',
+        name: r'presetSummariesProvider',
         isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$patternSummariesHash();
+  String debugGetCreateSourceHash() => _$presetSummariesHash();
 
   @$internal
   @override
-  PatternSummaries create() => PatternSummaries();
+  PresetSummaries create() => PresetSummaries();
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(List<PatternSummary> value) {
+  Override overrideWithValue(List<PresetSummary> value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<List<PatternSummary>>(value),
+      providerOverride: $SyncValueProvider<List<PresetSummary>>(value),
     );
   }
 }
 
-String _$patternSummariesHash() => r'ba07a69cefa7eefbb2ba617eb8ba402b8a45f4d0';
+String _$presetSummariesHash() => r'a9b4890f4672a72c9e9ad07d1a0f867ed93d03b5';
 
 /// Provides the pattern summaries loaded from remote
 /// root meta.json.
@@ -64,17 +64,17 @@ String _$patternSummariesHash() => r'ba07a69cefa7eefbb2ba617eb8ba402b8a45f4d0';
 /// Initially empty; populated on startup after fetching
 /// root meta.
 
-abstract class _$PatternSummaries extends $Notifier<List<PatternSummary>> {
-  List<PatternSummary> build();
+abstract class _$PresetSummaries extends $Notifier<List<PresetSummary>> {
+  List<PresetSummary> build();
   @$mustCallSuper
   @override
   void runBuild() {
-    final ref = this.ref as $Ref<List<PatternSummary>, List<PatternSummary>>;
+    final ref = this.ref as $Ref<List<PresetSummary>, List<PresetSummary>>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<List<PatternSummary>, List<PatternSummary>>,
-              List<PatternSummary>,
+              AnyNotifier<List<PresetSummary>, List<PresetSummary>>,
+              List<PresetSummary>,
               Object?,
               Object?
             >;
@@ -84,43 +84,42 @@ abstract class _$PatternSummaries extends $Notifier<List<PatternSummary>> {
 
 /// Holds the schema version from the most recent root meta.
 ///
-/// Set alongside [PatternSummaries] on startup and
+/// Set alongside [PresetSummaries] on startup and
 /// pull-to-refresh. Used to construct GitHub branch URLs
 /// (e.g. `dev/v5`).
 
-@ProviderFor(SmartPlaylistSchemaVersion)
-final smartPlaylistSchemaVersionProvider =
-    SmartPlaylistSchemaVersionProvider._();
+@ProviderFor(PresetSchemaVersion)
+final presetSchemaVersionProvider = PresetSchemaVersionProvider._();
 
 /// Holds the schema version from the most recent root meta.
 ///
-/// Set alongside [PatternSummaries] on startup and
+/// Set alongside [PresetSummaries] on startup and
 /// pull-to-refresh. Used to construct GitHub branch URLs
 /// (e.g. `dev/v5`).
-final class SmartPlaylistSchemaVersionProvider
-    extends $NotifierProvider<SmartPlaylistSchemaVersion, int> {
+final class PresetSchemaVersionProvider
+    extends $NotifierProvider<PresetSchemaVersion, int> {
   /// Holds the schema version from the most recent root meta.
   ///
-  /// Set alongside [PatternSummaries] on startup and
+  /// Set alongside [PresetSummaries] on startup and
   /// pull-to-refresh. Used to construct GitHub branch URLs
   /// (e.g. `dev/v5`).
-  SmartPlaylistSchemaVersionProvider._()
+  PresetSchemaVersionProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'smartPlaylistSchemaVersionProvider',
+        name: r'presetSchemaVersionProvider',
         isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$smartPlaylistSchemaVersionHash();
+  String debugGetCreateSourceHash() => _$presetSchemaVersionHash();
 
   @$internal
   @override
-  SmartPlaylistSchemaVersion create() => SmartPlaylistSchemaVersion();
+  PresetSchemaVersion create() => PresetSchemaVersion();
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(int value) {
@@ -131,16 +130,16 @@ final class SmartPlaylistSchemaVersionProvider
   }
 }
 
-String _$smartPlaylistSchemaVersionHash() =>
-    r'b24e483c03c0fe36bb03c5038d9865b69d68f515';
+String _$presetSchemaVersionHash() =>
+    r'8b5d741dd3995e5253dc7eb0f887f715f8d14b87';
 
 /// Holds the schema version from the most recent root meta.
 ///
-/// Set alongside [PatternSummaries] on startup and
+/// Set alongside [PresetSummaries] on startup and
 /// pull-to-refresh. Used to construct GitHub branch URLs
 /// (e.g. `dev/v5`).
 
-abstract class _$SmartPlaylistSchemaVersion extends $Notifier<int> {
+abstract class _$PresetSchemaVersion extends $Notifier<int> {
   int build();
   @$mustCallSuper
   @override
@@ -158,67 +157,64 @@ abstract class _$SmartPlaylistSchemaVersion extends $Notifier<int> {
   }
 }
 
-/// Provides the smart playlist config repository.
+/// Provides the preset config repository.
 ///
 /// Uses Dio for HTTP and path_provider for cache directory.
 
-@ProviderFor(smartPlaylistConfigRepository)
-final smartPlaylistConfigRepositoryProvider =
-    SmartPlaylistConfigRepositoryProvider._();
+@ProviderFor(presetConfigRepository)
+final presetConfigRepositoryProvider = PresetConfigRepositoryProvider._();
 
-/// Provides the smart playlist config repository.
+/// Provides the preset config repository.
 ///
 /// Uses Dio for HTTP and path_provider for cache directory.
 
-final class SmartPlaylistConfigRepositoryProvider
+final class PresetConfigRepositoryProvider
     extends
         $FunctionalProvider<
-          SmartPlaylistConfigRepository,
-          SmartPlaylistConfigRepository,
-          SmartPlaylistConfigRepository
+          PresetConfigRepository,
+          PresetConfigRepository,
+          PresetConfigRepository
         >
-    with $Provider<SmartPlaylistConfigRepository> {
-  /// Provides the smart playlist config repository.
+    with $Provider<PresetConfigRepository> {
+  /// Provides the preset config repository.
   ///
   /// Uses Dio for HTTP and path_provider for cache directory.
-  SmartPlaylistConfigRepositoryProvider._()
+  PresetConfigRepositoryProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'smartPlaylistConfigRepositoryProvider',
+        name: r'presetConfigRepositoryProvider',
         isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$smartPlaylistConfigRepositoryHash();
+  String debugGetCreateSourceHash() => _$presetConfigRepositoryHash();
 
   @$internal
   @override
-  $ProviderElement<SmartPlaylistConfigRepository> $createElement(
+  $ProviderElement<PresetConfigRepository> $createElement(
     $ProviderPointer pointer,
   ) => $ProviderElement(pointer);
 
   @override
-  SmartPlaylistConfigRepository create(Ref ref) {
-    return smartPlaylistConfigRepository(ref);
+  PresetConfigRepository create(Ref ref) {
+    return presetConfigRepository(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(SmartPlaylistConfigRepository value) {
+  Override overrideWithValue(PresetConfigRepository value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<SmartPlaylistConfigRepository>(
-        value,
-      ),
+      providerOverride: $SyncValueProvider<PresetConfigRepository>(value),
     );
   }
 }
 
-String _$smartPlaylistConfigRepositoryHash() =>
-    r'34b637cd66b645a0d30994bfc7322fb621dc60e6';
+String _$presetConfigRepositoryHash() =>
+    r'2c2d86073ad537a81f46a625287403cdbf682d36';
 
 /// Provides the smart playlist local datasource for database
 /// operations.
@@ -341,73 +337,69 @@ final class SmartPlaylistResolverServiceProvider
 }
 
 String _$smartPlaylistResolverServiceHash() =>
-    r'e6debfb575e9cf14eb9bd3dab8d1d8556964e285';
+    r'cbf08e2248d845d6e27cdbd47b1b268d36f5dbec';
 
 /// Finds and loads the smart playlist config for a feed URL.
 ///
 /// Returns null if no pattern matches. Lazily fetches the
 /// full config from remote/cache when a match is found.
 
-@ProviderFor(smartPlaylistPatternByFeedUrl)
-final smartPlaylistPatternByFeedUrlProvider =
-    SmartPlaylistPatternByFeedUrlFamily._();
+@ProviderFor(presetByFeedUrl)
+final presetByFeedUrlProvider = PresetByFeedUrlFamily._();
 
 /// Finds and loads the smart playlist config for a feed URL.
 ///
 /// Returns null if no pattern matches. Lazily fetches the
 /// full config from remote/cache when a match is found.
 
-final class SmartPlaylistPatternByFeedUrlProvider
+final class PresetByFeedUrlProvider
     extends
         $FunctionalProvider<
-          AsyncValue<SmartPlaylistPatternConfig?>,
-          SmartPlaylistPatternConfig?,
-          FutureOr<SmartPlaylistPatternConfig?>
+          AsyncValue<PresetConfig?>,
+          PresetConfig?,
+          FutureOr<PresetConfig?>
         >
-    with
-        $FutureModifier<SmartPlaylistPatternConfig?>,
-        $FutureProvider<SmartPlaylistPatternConfig?> {
+    with $FutureModifier<PresetConfig?>, $FutureProvider<PresetConfig?> {
   /// Finds and loads the smart playlist config for a feed URL.
   ///
   /// Returns null if no pattern matches. Lazily fetches the
   /// full config from remote/cache when a match is found.
-  SmartPlaylistPatternByFeedUrlProvider._({
-    required SmartPlaylistPatternByFeedUrlFamily super.from,
+  PresetByFeedUrlProvider._({
+    required PresetByFeedUrlFamily super.from,
     required String super.argument,
   }) : super(
          retry: null,
-         name: r'smartPlaylistPatternByFeedUrlProvider',
+         name: r'presetByFeedUrlProvider',
          isAutoDispose: true,
          dependencies: null,
          $allTransitiveDependencies: null,
        );
 
   @override
-  String debugGetCreateSourceHash() => _$smartPlaylistPatternByFeedUrlHash();
+  String debugGetCreateSourceHash() => _$presetByFeedUrlHash();
 
   @override
   String toString() {
-    return r'smartPlaylistPatternByFeedUrlProvider'
+    return r'presetByFeedUrlProvider'
         ''
         '($argument)';
   }
 
   @$internal
   @override
-  $FutureProviderElement<SmartPlaylistPatternConfig?> $createElement(
+  $FutureProviderElement<PresetConfig?> $createElement(
     $ProviderPointer pointer,
   ) => $FutureProviderElement(pointer);
 
   @override
-  FutureOr<SmartPlaylistPatternConfig?> create(Ref ref) {
+  FutureOr<PresetConfig?> create(Ref ref) {
     final argument = this.argument as String;
-    return smartPlaylistPatternByFeedUrl(ref, argument);
+    return presetByFeedUrl(ref, argument);
   }
 
   @override
   bool operator ==(Object other) {
-    return other is SmartPlaylistPatternByFeedUrlProvider &&
-        other.argument == argument;
+    return other is PresetByFeedUrlProvider && other.argument == argument;
   }
 
   @override
@@ -416,24 +408,19 @@ final class SmartPlaylistPatternByFeedUrlProvider
   }
 }
 
-String _$smartPlaylistPatternByFeedUrlHash() =>
-    r'dc6c5c4e5a0f69e875de3d3c83e5c4956e6141d7';
+String _$presetByFeedUrlHash() => r'eaf843062f8d40ad599e49ef98f54777b100a4c1';
 
 /// Finds and loads the smart playlist config for a feed URL.
 ///
 /// Returns null if no pattern matches. Lazily fetches the
 /// full config from remote/cache when a match is found.
 
-final class SmartPlaylistPatternByFeedUrlFamily extends $Family
-    with
-        $FunctionalFamilyOverride<
-          FutureOr<SmartPlaylistPatternConfig?>,
-          String
-        > {
-  SmartPlaylistPatternByFeedUrlFamily._()
+final class PresetByFeedUrlFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<PresetConfig?>, String> {
+  PresetByFeedUrlFamily._()
     : super(
         retry: null,
-        name: r'smartPlaylistPatternByFeedUrlProvider',
+        name: r'presetByFeedUrlProvider',
         dependencies: null,
         $allTransitiveDependencies: null,
         isAutoDispose: true,
@@ -444,11 +431,11 @@ final class SmartPlaylistPatternByFeedUrlFamily extends $Family
   /// Returns null if no pattern matches. Lazily fetches the
   /// full config from remote/cache when a match is found.
 
-  SmartPlaylistPatternByFeedUrlProvider call(String feedUrl) =>
-      SmartPlaylistPatternByFeedUrlProvider._(argument: feedUrl, from: this);
+  PresetByFeedUrlProvider call(String feedUrl) =>
+      PresetByFeedUrlProvider._(argument: feedUrl, from: this);
 
   @override
-  String toString() => r'smartPlaylistPatternByFeedUrlProvider';
+  String toString() => r'presetByFeedUrlProvider';
 }
 
 /// Resolves smart playlists for a podcast by its ID.
@@ -526,7 +513,7 @@ final class PodcastSmartPlaylistsProvider
 }
 
 String _$podcastSmartPlaylistsHash() =>
-    r'1b745f05b3cfeac44315282e1961a0395835f5c3';
+    r'090e46d4b07db3dafe91c557165a2ce714123933';
 
 /// Resolves smart playlists for a podcast by its ID.
 ///

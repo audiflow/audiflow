@@ -14,7 +14,7 @@ import '../models/episode.dart';
 import '../models/feed_parse_progress.dart';
 import '../models/feed_sync_result.dart';
 import '../../settings/providers/settings_providers.dart';
-import '../providers/smart_playlist_providers.dart';
+import '../providers/preset_providers.dart';
 import '../repositories/episode_repository_impl.dart';
 import 'episode_extractor_resolver.dart';
 import 'feed_parser_service.dart';
@@ -274,13 +274,11 @@ class FeedSyncService {
       // Get known GUIDs for early termination
       final knownGuids = await episodeRepo.getGuidsByPodcastId(sub.id);
 
-      // Look up smart playlist pattern config for per-group extraction
-      final patternConfig = await _ref.read(
-        smartPlaylistPatternByFeedUrlProvider(sub.feedUrl).future,
+      // Look up preset config for per-group extraction
+      final presetConfig = await _ref.read(
+        presetByFeedUrlProvider(sub.feedUrl).future,
       );
-      final resolver = patternConfig != null
-          ? EpisodeExtractorResolver()
-          : null;
+      final resolver = presetConfig != null ? EpisodeExtractorResolver() : null;
 
       // Parse with progress and batch storage
       var newEpisodeCount = 0;
@@ -299,7 +297,7 @@ class FeedSyncService {
               final extractor = resolver.resolve(
                 episode.title,
                 episode.description,
-                patternConfig!,
+                presetConfig!,
               );
               if (extractor == null) continue;
 

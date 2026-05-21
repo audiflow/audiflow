@@ -1,10 +1,10 @@
 import 'dart:convert';
 
-/// Pattern-level meta.json from the split config repository.
+/// Preset-level meta.json from the split config repository.
 ///
 /// Contains feed matching rules and ordered playlist IDs.
-final class PatternMeta {
-  const PatternMeta({
+final class PresetMeta {
+  const PresetMeta({
     required this.dataVersion,
     required this.id,
     this.podcastGuid,
@@ -14,8 +14,8 @@ final class PatternMeta {
     required this.playlists,
   });
 
-  factory PatternMeta.fromJson(Map<String, dynamic> json) {
-    return PatternMeta(
+  factory PresetMeta.fromJson(Map<String, dynamic> json) {
+    return PresetMeta(
       dataVersion: (json['dataVersion'] as int?) ?? 1,
       id: json['id'] as String,
       podcastGuid: json['podcastGuid'] as String?,
@@ -26,16 +26,16 @@ final class PatternMeta {
     );
   }
 
-  /// Parses a JSON string into a [PatternMeta].
-  static PatternMeta parseJson(String jsonString) {
+  /// Parses a JSON string into a [PresetMeta].
+  static PresetMeta parseJson(String jsonString) {
     final data = jsonDecode(jsonString) as Map<String, dynamic>;
-    return PatternMeta.fromJson(data);
+    return PresetMeta.fromJson(data);
   }
 
-  /// Data format version for this pattern.
+  /// Data format version for this preset.
   final int dataVersion;
 
-  /// Unique identifier for this pattern.
+  /// Unique identifier for this preset.
   final String id;
 
   /// Optional podcast GUID for direct matching.
@@ -52,7 +52,7 @@ final class PatternMeta {
   final bool? showEpisodeThumbnail;
 
   /// Ordered list of playlist IDs. Each corresponds to
-  /// `playlists/{id}.json` in the pattern directory.
+  /// `playlists/{id}.json` in the preset directory.
   final List<String> playlists;
 
   /// Converts to JSON representation.

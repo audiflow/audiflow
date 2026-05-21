@@ -951,7 +951,7 @@ git commit -m "refactor: fix remaining v3 references across codebase"
 ### Task 19: Update documentation
 
 **Files:**
-- Modify: `docs/integration/smartplaylist.md` — update schema version refs and field names
+- Modify: `docs/integration/preset.md` — update schema version refs and field names
 - Modify: `.claude/rules/project/architecture.md` — update resolver type references
 - Modify: `CLAUDE.md` — if it references v3 specifically
 

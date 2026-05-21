@@ -4,26 +4,26 @@ import '../models/episode.dart';
 import '../models/smart_playlist.dart';
 import '../models/smart_playlist_definition.dart';
 import '../models/smart_playlist_group_def.dart';
-import '../models/smart_playlist_pattern_config.dart';
+import '../models/preset_config.dart';
 import '../resolvers/smart_playlist_resolver.dart';
 
 /// Service that orchestrates the smart playlist resolver chain.
 ///
-/// When a [SmartPlaylistPatternConfig] matches the podcast, its
+/// When a [PresetConfig] matches the podcast, its
 /// playlist definitions are used to route episodes through the
 /// appropriate resolvers. Otherwise, resolvers are tried in order
 /// with no definition (auto-detect mode).
 class SmartPlaylistResolverService {
   SmartPlaylistResolverService({
     required List<SmartPlaylistResolver> resolvers,
-    required List<SmartPlaylistPatternConfig> patterns,
+    required List<PresetConfig> presets,
     Logger? logger,
   }) : _resolvers = resolvers,
-       _patterns = patterns,
+       _presets = presets,
        _logger = logger;
 
   final List<SmartPlaylistResolver> _resolvers;
-  final List<SmartPlaylistPatternConfig> _patterns;
+  final List<PresetConfig> _presets;
   final Logger? _logger;
 
   /// Attempts to group episodes into smart playlists.
@@ -52,7 +52,7 @@ class SmartPlaylistResolverService {
 
   /// Resolves playlists using a matched pattern config.
   SmartPlaylistGrouping? _resolveWithConfig(
-    SmartPlaylistPatternConfig config,
+    PresetConfig config,
     List<Episode> episodes,
   ) {
     final allPlaylists = <SmartPlaylist>[];
@@ -279,11 +279,8 @@ class SmartPlaylistResolverService {
     return true;
   }
 
-  SmartPlaylistPatternConfig? _findMatchingConfig(
-    String? guid,
-    String feedUrl,
-  ) {
-    for (final config in _patterns) {
+  PresetConfig? _findMatchingConfig(String? guid, String feedUrl) {
+    for (final config in _presets) {
       if (config.matchesPodcast(guid, feedUrl)) {
         return config;
       }

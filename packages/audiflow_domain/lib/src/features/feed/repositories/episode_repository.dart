@@ -3,7 +3,7 @@ import 'package:audiflow_podcast/audiflow_podcast.dart';
 import '../models/episode.dart';
 import '../models/feed_parse_progress.dart';
 import '../models/numbering_extractor.dart';
-import '../models/smart_playlist_pattern_config.dart';
+import '../models/preset_config.dart';
 
 /// Repository interface for episode operations.
 ///
@@ -51,7 +51,7 @@ abstract class EpisodeRepository {
   Future<void> upsertFromFeedItemsWithConfig(
     int podcastId,
     List<PodcastItem> items, {
-    required SmartPlaylistPatternConfig config,
+    required PresetConfig config,
   });
 
   /// Returns episodes by their IDs.

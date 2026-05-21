@@ -1,4 +1,4 @@
-import 'package:audiflow_domain/patterns.dart';
+import 'package:audiflow_domain/presets.dart';
 
 import '../diagnostics/title_extractor_diagnostics.dart';
 

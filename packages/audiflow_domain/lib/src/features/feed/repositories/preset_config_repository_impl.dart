@@ -1,32 +1,30 @@
 import 'package:logger/logger.dart';
 
-import '../datasources/local/smart_playlist_cache_datasource.dart';
-import '../datasources/remote/smart_playlist_remote_datasource.dart';
-import '../models/pattern_summary.dart';
+import '../datasources/local/preset_cache_datasource.dart';
+import '../datasources/remote/preset_remote_datasource.dart';
+import '../models/preset_config.dart';
+import '../models/preset_summary.dart';
 import '../models/root_meta.dart';
 import '../models/smart_playlist_definition.dart';
-import '../models/smart_playlist_pattern_config.dart';
 import '../services/config_assembler.dart';
-import 'smart_playlist_config_repository.dart';
+import 'preset_config_repository.dart';
 
-/// Implementation of [SmartPlaylistConfigRepository] with
-/// disk caching, version-based invalidation, and concurrent
-/// request deduplication.
-class SmartPlaylistConfigRepositoryImpl
-    implements SmartPlaylistConfigRepository {
-  SmartPlaylistConfigRepositoryImpl({
-    required SmartPlaylistRemoteDatasource remote,
-    required SmartPlaylistCacheDatasource cache,
+/// Implementation of [PresetConfigRepository] with disk caching,
+/// version-based invalidation, and concurrent request deduplication.
+class PresetConfigRepositoryImpl implements PresetConfigRepository {
+  PresetConfigRepositoryImpl({
+    required PresetRemoteDatasource remote,
+    required PresetCacheDatasource cache,
     Logger? logger,
   }) : _remote = remote,
        _cache = cache,
        _logger = logger;
 
-  final SmartPlaylistRemoteDatasource _remote;
-  final SmartPlaylistCacheDatasource _cache;
+  final PresetRemoteDatasource _remote;
+  final PresetCacheDatasource _cache;
   final Logger? _logger;
-  final Map<String, Future<SmartPlaylistPatternConfig>> _inFlight = {};
-  List<PatternSummary> _summaries = [];
+  final Map<String, Future<PresetConfig>> _inFlight = {};
+  List<PresetSummary> _summaries = [];
 
   @override
   Future<RootMeta> fetchRootMeta() async {
@@ -37,12 +35,12 @@ class SmartPlaylistConfigRepositoryImpl
     } on Object {
       final cached = await _cache.readRootMeta();
       if (cached != null) return cached;
-      return const RootMeta(dataVersion: 1, schemaVersion: 1, patterns: []);
+      return const RootMeta(dataVersion: 1, schemaVersion: 1, presets: []);
     }
   }
 
   @override
-  Future<SmartPlaylistPatternConfig> getConfig(PatternSummary summary) async {
+  Future<PresetConfig> getConfig(PresetSummary summary) async {
     final existing = _inFlight[summary.id];
     if (existing != null) return existing;
 
@@ -55,15 +53,13 @@ class SmartPlaylistConfigRepositoryImpl
     }
   }
 
-  Future<SmartPlaylistPatternConfig> _getConfigInternal(
-    PatternSummary summary,
-  ) async {
+  Future<PresetConfig> _getConfigInternal(PresetSummary summary) async {
     final versions = await _cache.readVersions();
     final cachedVersion = versions[summary.id];
 
     if (cachedVersion == summary.dataVersion) {
       _logger?.d(
-        'cache hit for pattern="${summary.id}" '
+        'cache hit for preset="${summary.id}" '
         '(displayName="${summary.displayName}", '
         'dataVersion=${summary.dataVersion}); skipping remote fetch',
       );
@@ -71,7 +67,7 @@ class SmartPlaylistConfigRepositoryImpl
       if (config != null) return config;
     } else {
       _logger?.d(
-        'cache miss for pattern="${summary.id}" '
+        'cache miss for preset="${summary.id}" '
         '(cached=$cachedVersion, latest=${summary.dataVersion}); '
         'will re-fetch',
       );
@@ -80,16 +76,14 @@ class SmartPlaylistConfigRepositoryImpl
     return _fetchAndCache(summary, versions);
   }
 
-  Future<SmartPlaylistPatternConfig?> _tryLoadFromCache(
-    String patternId,
-  ) async {
+  Future<PresetConfig?> _tryLoadFromCache(String presetId) async {
     try {
-      final meta = await _cache.readPatternMeta(patternId);
+      final meta = await _cache.readPresetMeta(presetId);
       if (meta == null) return null;
 
       final playlists = <SmartPlaylistDefinition>[];
       for (final playlistId in meta.playlists) {
-        final playlist = await _cache.readPlaylist(patternId, playlistId);
+        final playlist = await _cache.readPlaylist(presetId, playlistId);
         if (playlist == null) return null;
         playlists.add(playlist);
       }
@@ -101,17 +95,17 @@ class SmartPlaylistConfigRepositoryImpl
     } on Object {
       // Stale or corrupted cache; evict and fall through to
       // re-fetch from remote.
-      await _cache.evictPattern(patternId);
+      await _cache.evictPreset(presetId);
       return null;
     }
   }
 
-  Future<SmartPlaylistPatternConfig> _fetchAndCache(
-    PatternSummary summary,
+  Future<PresetConfig> _fetchAndCache(
+    PresetSummary summary,
     Map<String, int> versions,
   ) async {
-    final meta = await _remote.fetchPatternMeta(summary.id);
-    await _cache.writePatternMeta(summary.id, meta);
+    final meta = await _remote.fetchPresetMeta(summary.id);
+    await _cache.writePresetMeta(summary.id, meta);
 
     final playlists = <SmartPlaylistDefinition>[];
     for (final playlistId in meta.playlists) {
@@ -127,7 +121,7 @@ class SmartPlaylistConfigRepositoryImpl
   }
 
   @override
-  PatternSummary? findMatchingPattern(String? podcastGuid, String feedUrl) {
+  PresetSummary? findMatchingPreset(String? podcastGuid, String feedUrl) {
     for (final summary in _summaries) {
       if (feedUrl.contains(summary.feedUrlHint)) {
         return summary;
@@ -137,26 +131,26 @@ class SmartPlaylistConfigRepositoryImpl
   }
 
   @override
-  Future<void> reconcileCache(List<PatternSummary> latest) async {
+  Future<void> reconcileCache(List<PresetSummary> latest) async {
     final versions = await _cache.readVersions();
     final latestMap = {for (final s in latest) s.id: s.dataVersion};
 
     for (final cachedId in versions.keys.toList()) {
       if (!latestMap.containsKey(cachedId)) {
-        await _cache.evictPattern(cachedId);
+        await _cache.evictPreset(cachedId);
       }
     }
 
     for (final summary in latest) {
       final cachedVersion = versions[summary.id];
       if (cachedVersion != null && cachedVersion != summary.dataVersion) {
-        await _cache.evictPattern(summary.id);
+        await _cache.evictPreset(summary.id);
       }
     }
   }
 
   @override
-  void setPatternSummaries(List<PatternSummary> summaries) {
+  void setPresetSummaries(List<PresetSummary> summaries) {
     _summaries = summaries;
   }
 

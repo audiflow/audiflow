@@ -196,7 +196,7 @@ final class PodcastDetailProvider
   }
 }
 
-String _$podcastDetailHash() => r'00a4f2c9b45a6539a1ab79efd63eebce114a6597';
+String _$podcastDetailHash() => r'c448f918a58a75814e99fcf3e3152585d421dbad';
 
 /// Fetches and provides parsed podcast feed data for a given feed URL.
 ///
@@ -842,7 +842,7 @@ final class HasSmartPlaylistViewAfterLoadProvider
 }
 
 String _$hasSmartPlaylistViewAfterLoadHash() =>
-    r'43c49eec275af10c98d409ad394ba06978f23034';
+    r'413264eaff7c637c1baf56e1f38192f3b267e3dc';
 
 /// Whether smart playlist view is available for a podcast.
 ///
@@ -946,7 +946,7 @@ final class SortedPodcastSmartPlaylistsProvider
 }
 
 String _$sortedPodcastSmartPlaylistsHash() =>
-    r'0c3a7b3abfec6d89ff2861770e079779d0e65938';
+    r'5640264fdcddb413a133531ca534df49a4fee544';
 
 /// Provides sorted smart playlists for a podcast.
 ///

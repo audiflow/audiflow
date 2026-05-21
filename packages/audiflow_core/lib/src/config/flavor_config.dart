@@ -7,7 +7,7 @@ class FlavorConfig {
     required this.flavor,
     required this.name,
     required this.apiBaseUrl,
-    required this.smartPlaylistConfigBaseUrl,
+    required this.presetConfigBaseUrl,
     required this.enableAnalytics,
     required this.enableCrashReporting,
     required this.enableHttpTracing,
@@ -16,7 +16,7 @@ class FlavorConfig {
   final Flavor flavor;
   final String name;
   final String apiBaseUrl;
-  final String smartPlaylistConfigBaseUrl;
+  final String presetConfigBaseUrl;
   final bool enableAnalytics;
   final bool enableCrashReporting;
   final bool enableHttpTracing;
@@ -38,8 +38,8 @@ class FlavorConfig {
     flavor: Flavor.dev,
     name: 'Development',
     apiBaseUrl: 'https://api-dev.audiflow.example.com',
-    smartPlaylistConfigBaseUrl:
-        'https://audiflow.github.io/audiflow-smartplaylist/assets-dev/v6',
+    presetConfigBaseUrl:
+        'https://audiflow.github.io/audiflow-preset/assets-dev/v7',
     enableAnalytics: true,
     enableCrashReporting: true,
     enableHttpTracing: true,
@@ -50,8 +50,8 @@ class FlavorConfig {
     flavor: Flavor.stg,
     name: 'Staging',
     apiBaseUrl: 'https://api-stg.audiflow.example.com',
-    smartPlaylistConfigBaseUrl:
-        'https://audiflow.github.io/audiflow-smartplaylist/assets-stg/v6',
+    presetConfigBaseUrl:
+        'https://audiflow.github.io/audiflow-preset/assets-stg/v7',
     enableAnalytics: true,
     enableCrashReporting: true,
     enableHttpTracing: true,
@@ -62,8 +62,7 @@ class FlavorConfig {
     flavor: Flavor.prod,
     name: 'Production',
     apiBaseUrl: 'https://api.audiflow.example.com',
-    smartPlaylistConfigBaseUrl:
-        'https://audiflow.github.io/audiflow-smartplaylist/assets/v6',
+    presetConfigBaseUrl: 'https://audiflow.github.io/audiflow-preset/assets/v7',
     enableAnalytics: true,
     enableCrashReporting: true,
     enableHttpTracing: false,

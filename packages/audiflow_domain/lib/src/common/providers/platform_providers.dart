@@ -28,12 +28,12 @@ final cacheDirProvider = Provider<String>((ref) {
   throw UnimplementedError('cacheDirProvider must be overridden at startup');
 });
 
-/// Provider for the SmartPlaylist config base URL.
+/// Provider for the preset config base URL.
 ///
 /// Must be overridden at startup with the flavor-specific URL.
-final smartPlaylistConfigBaseUrlProvider = Provider<String>((ref) {
+final presetConfigBaseUrlProvider = Provider<String>((ref) {
   throw UnimplementedError(
-    'smartPlaylistConfigBaseUrlProvider must be '
+    'presetConfigBaseUrlProvider must be '
     'overridden at startup',
   );
 });

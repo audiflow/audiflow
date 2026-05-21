@@ -443,7 +443,7 @@
   "settingsDeveloperTitle": "開発",
   "settingsDeveloperSubtitle": "スマートプレイリストパターンとデバッグ情報",
   "developerContributeLabel": "スマートプレイリストパターンを貢献",
-  "developerContributeRepo": "audiflow/audiflow-smartplaylist",
+  "developerContributeRepo": "audiflow/audiflow-preset",
   "developerShowInfoTitle": "開発者情報を表示",
   "developerShowInfoSubtitle": "エピソード詳細にRSSフィードURLとパターンリンクを表示",
   "developerPatternsHeader": "スマートプレイリストパターン",

@@ -6,16 +6,16 @@ class TableReporter {
 
   final StringSink _sink;
 
-  /// Writes the header with feed URL and pattern info.
+  /// Writes the header with feed URL and preset info.
   void writeHeader({
     required String feedUrl,
-    required String? patternId,
+    required String? presetId,
     required int episodeCount,
   }) {
     _sink.writeln('Fetching: $feedUrl');
     _sink.writeln(
-      'Pattern:  ${patternId ?? "(none)"}'
-      '${patternId != null ? " (auto-detected)" : ""}',
+      'Preset:   ${presetId ?? "(none)"}'
+      '${presetId != null ? " (auto-detected)" : ""}',
     );
     _sink.writeln('Episodes: $episodeCount');
     _sink.writeln();

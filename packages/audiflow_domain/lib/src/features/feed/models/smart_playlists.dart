@@ -50,15 +50,15 @@ class SmartPlaylistEntity {
 
   /// Config version for cache invalidation.
   ///
-  /// Matches [PatternSummary.dataVersion] when resolved from a
-  /// config pattern. Null for generic season-based resolution.
+  /// Matches [PresetSummary.dataVersion] when resolved from a
+  /// preset config. Null for generic season-based resolution.
   /// When the upstream config version changes, the cache is
   /// invalidated and re-resolved.
   int? configVersion;
 
   /// Auto-detect heuristic version for cache invalidation.
   ///
-  /// Set when resolved without an explicit config pattern.
+  /// Set when resolved without an explicit preset config.
   /// When the app's heuristic version advances past this value,
   /// the cached grouping is discarded and re-resolved.
   ///

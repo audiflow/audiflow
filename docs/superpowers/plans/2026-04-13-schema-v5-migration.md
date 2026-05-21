@@ -51,13 +51,13 @@
 - [ ] **Step 1: Copy v5 schemas from the editor repo**
 
 ```bash
-cp /Users/tohru/Documents/src/ghq/github.com/audiflow/audiflow-smartplaylist-editor/crates/sp_core/assets/playlist-definition.schema.json \
+cp /Users/tohru/Documents/src/ghq/github.com/audiflow/audiflow-preset-editor/crates/preset_core/assets/playlist-definition.schema.json \
    packages/audiflow_domain/test/fixtures/playlist-definition.schema.json
 
-cp /Users/tohru/Documents/src/ghq/github.com/audiflow/audiflow-smartplaylist-editor/crates/sp_core/assets/pattern-index.schema.json \
+cp /Users/tohru/Documents/src/ghq/github.com/audiflow/audiflow-preset-editor/crates/preset_core/assets/pattern-index.schema.json \
    packages/audiflow_domain/test/fixtures/pattern-index.schema.json
 
-cp /Users/tohru/Documents/src/ghq/github.com/audiflow/audiflow-smartplaylist-editor/crates/sp_core/assets/pattern-meta.schema.json \
+cp /Users/tohru/Documents/src/ghq/github.com/audiflow/audiflow-preset-editor/crates/preset_core/assets/pattern-meta.schema.json \
    packages/audiflow_domain/test/fixtures/pattern-meta.schema.json
 ```
 
@@ -912,7 +912,7 @@ git commit -m "test: update all tests for v5 schema migration"
 ### Task 13: Update documentation and verify
 
 **Files:**
-- Modify: `docs/integration/smartplaylist.md`
+- Modify: `docs/integration/preset.md`
 - Modify: `.claude/rules/project/architecture.md`
 
 - [ ] **Step 1: Update docs with v5 field names and structure**

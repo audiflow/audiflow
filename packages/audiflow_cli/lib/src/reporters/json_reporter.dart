@@ -9,12 +9,12 @@ class JsonReporter {
   final StringSink _sink;
   final List<Map<String, dynamic>> _results = [];
   String? _feedUrl;
-  String? _patternId;
+  String? _presetId;
 
   /// Starts the report with metadata.
-  void start({required String feedUrl, required String? patternId}) {
+  void start({required String feedUrl, required String? presetId}) {
     _feedUrl = feedUrl;
-    _patternId = patternId;
+    _presetId = presetId;
     _results.clear();
   }
 
@@ -27,7 +27,7 @@ class JsonReporter {
   void finish({required int total, required int passed, required int failed}) {
     final output = {
       'feed_url': _feedUrl,
-      'pattern_id': _patternId,
+      'preset_id': _presetId,
       'results': _results,
       'summary': {'total': total, 'pass': passed, 'fail': failed},
     };

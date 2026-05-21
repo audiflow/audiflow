@@ -13,7 +13,7 @@ import 'package:audiflow_domain/audiflow_domain.dart'
         YearBinding,
         sortEpisodeData,
         smartPlaylistEpisodesProvider,
-        smartPlaylistPatternByFeedUrlProvider;
+        presetByFeedUrlProvider;
 
 import '../utils/smart_playlist_def_resolver.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
@@ -149,9 +149,7 @@ bool _resolveEpisodeRowThumbnail({
   required String playlistId,
 }) {
   if (feedUrl == null) return true;
-  final config = ref
-      .watch(smartPlaylistPatternByFeedUrlProvider(feedUrl))
-      .value;
+  final config = ref.watch(presetByFeedUrlProvider(feedUrl)).value;
   if (config == null) return true;
   final playlistDef = config.findPlaylist(playlistId);
   if (playlistDef == null) return true;

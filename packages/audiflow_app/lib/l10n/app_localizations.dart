@@ -2330,16 +2330,16 @@ abstract class AppLocalizations {
   /// **'Smart playlist patterns and debug info'**
   String get settingsDeveloperSubtitle;
 
-  /// Tappable row label linking to the smartplaylist repo
+  /// Tappable row label linking to the preset repo
   ///
   /// In en, this message translates to:
-  /// **'Contribute smart playlist patterns'**
+  /// **'Contribute presets'**
   String get developerContributeLabel;
 
   /// Short repo name shown below the contribute link
   ///
   /// In en, this message translates to:
-  /// **'audiflow/audiflow-smartplaylist'**
+  /// **'audiflow/audiflow-preset'**
   String get developerContributeRepo;
 
   /// Toggle title for developer info in episode detail

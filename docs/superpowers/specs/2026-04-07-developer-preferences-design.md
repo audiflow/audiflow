@@ -8,7 +8,7 @@ A new settings sub-screen at `/settings/developer` that surfaces smart playlist 
 
 ### 1. Contribute Link
 
-A simple tappable text row at the top of the screen. Opens `https://github.com/audiflow/audiflow-smartplaylist` in the system browser via `url_launcher`. Displays repo short name (`audiflow/audiflow-smartplaylist`) as secondary text.
+A simple tappable text row at the top of the screen. Opens `https://github.com/audiflow/audiflow-preset` in the system browser via `url_launcher`. Displays repo short name (`audiflow/audiflow-preset`) as secondary text.
 
 ### 2. Developer Info Toggle
 
@@ -16,7 +16,7 @@ A `SwitchListTile` labeled "Show developer info" with subtitle "Display RSS feed
 
 ### 3. Smart Playlist Pattern List
 
-A compact list of all patterns from the smart playlist config repo. Each row shows only the `displayName` from `PatternSummary`, with a chevron indicating it is tappable. Tapping opens the pattern's GitHub repo directory (`https://github.com/audiflow/audiflow-smartplaylist/tree/dev/v{schemaVersion}/patterns/{patternId}`). Links are disabled when `schemaVersion` has not been seeded yet (equals 0).
+A compact list of all patterns from the smart playlist config repo. Each row shows only the `displayName` from `PatternSummary`, with a chevron indicating it is tappable. Tapping opens the pattern's GitHub repo directory (`https://github.com/audiflow/audiflow-preset/tree/dev/v{schemaVersion}/patterns/{patternId}`). Links are disabled when `schemaVersion` has not been seeded yet (equals 0).
 
 Data source: cache-first via `SmartPlaylistConfigRepository.fetchRootMeta()`. Pull-to-refresh triggers a fresh remote fetch. The list shows all patterns globally, regardless of the user's subscriptions.
 
@@ -27,7 +27,7 @@ A conditional widget rendered at the bottom of the episode detail screen, separa
 Contains two items:
 
 - **RSS Feed URL**: Displayed in monospace, with a "Copy" button that copies the URL to the clipboard via `Clipboard.setData`.
-- **Smart Playlist Pattern**: If a matching pattern exists (determined via `SmartPlaylistConfigRepository.findMatchingPattern(null, feedUrl)` through the repository provider), shows the pattern's `displayName` linking to its versioned repo directory. When `schemaVersion` is 0 (not yet seeded) or no pattern matches, the link falls back to the repo root. If no pattern exists, shows "Not defined — add one?" linking to the repo root (`https://github.com/audiflow/audiflow-smartplaylist`).
+- **Smart Playlist Pattern**: If a matching pattern exists (determined via `SmartPlaylistConfigRepository.findMatchingPattern(null, feedUrl)` through the repository provider), shows the pattern's `displayName` linking to its versioned repo directory. When `schemaVersion` is 0 (not yet seeded) or no pattern matches, the link falls back to the repo root. If no pattern exists, shows "Not defined — add one?" linking to the repo root (`https://github.com/audiflow/audiflow-preset`).
 
 ## Architecture
 
@@ -81,7 +81,7 @@ No new models or repositories are needed.
 GitHub repo URLs defined as constants (not hardcoded in widgets):
 
 ```
-SmartPlaylistUrls.repo = 'https://github.com/audiflow/audiflow-smartplaylist'
+SmartPlaylistUrls.repo = 'https://github.com/audiflow/audiflow-preset'
 SmartPlaylistUrls.patternDir(patternId, schemaVersion: n) => '$repo/tree/dev/v$n/patterns/$patternId'
 SmartPlaylistUrls.repoBranch(schemaVersion: n) => '$repo/tree/dev/v$n'
 ```

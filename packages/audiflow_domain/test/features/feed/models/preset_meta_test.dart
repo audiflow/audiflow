@@ -4,7 +4,7 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  group('PatternMeta', () {
+  group('PresetMeta', () {
     test('deserializes from JSON', () {
       final json = {
         'dataVersion': 1,
@@ -13,7 +13,7 @@ void main() {
         'yearGroupedEpisodes': true,
         'playlists': ['regular', 'short', 'extras'],
       };
-      final meta = PatternMeta.fromJson(json);
+      final meta = PresetMeta.fromJson(json);
       expect(meta.dataVersion, 1);
       expect(meta.id, 'coten_radio');
       expect(meta.feedUrls, hasLength(1));
@@ -28,7 +28,7 @@ void main() {
         'feedUrls': <String>[],
         'playlists': ['main'],
       };
-      final meta = PatternMeta.fromJson(json);
+      final meta = PresetMeta.fromJson(json);
       expect(meta.yearGroupedEpisodes, isFalse);
     });
 
@@ -40,12 +40,12 @@ void main() {
         'feedUrls': <String>[],
         'playlists': ['main'],
       };
-      final meta = PatternMeta.fromJson(json);
+      final meta = PresetMeta.fromJson(json);
       expect(meta.podcastGuid, 'abc-123');
     });
 
     test('serializes to JSON', () {
-      final meta = PatternMeta(
+      final meta = PresetMeta(
         dataVersion: 1,
         id: 'test',
         feedUrls: ['pattern1'],
@@ -66,12 +66,12 @@ void main() {
         'feedUrls': ['pattern'],
         'playlists': ['main'],
       });
-      final meta = PatternMeta.parseJson(jsonString);
+      final meta = PresetMeta.parseJson(jsonString);
       expect(meta.id, 'test');
     });
 
     test('roundtrips through JSON', () {
-      final original = PatternMeta(
+      final original = PresetMeta(
         dataVersion: 2,
         id: 'test',
         podcastGuid: 'guid-1',
@@ -79,7 +79,7 @@ void main() {
         yearGroupedEpisodes: true,
         playlists: ['a', 'b'],
       );
-      final restored = PatternMeta.fromJson(original.toJson());
+      final restored = PresetMeta.fromJson(original.toJson());
       expect(restored.dataVersion, original.dataVersion);
       expect(restored.id, original.id);
       expect(restored.podcastGuid, original.podcastGuid);

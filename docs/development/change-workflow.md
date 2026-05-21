@@ -4,7 +4,7 @@
 
 - Read `docs/overview.md` for repository purpose and boundaries
 - Read relevant architecture doc (`docs/architecture/`) for the area you are changing
-- Check `docs/integration/smartplaylist.md` if touching feed or smart playlist code
+- Check `docs/integration/preset.md` if touching feed or smart playlist code
 - Check `.claude/rules/project/architecture.md` for the decision tree on where to add code
 - Identify whether the change affects schema, cross-repo contracts, or module boundaries
 
@@ -60,7 +60,7 @@ flutter test packages/audiflow_domain/test/features/feed/models/schema_conforman
 Update documentation when:
 - A new package is added to the monorepo -> update `CLAUDE.md`, `docs/overview.md`, `docs/architecture/module-boundaries.md`
 - Behavior changes in a feature -> update relevant `docs/specs/` file
-- Smart playlist model or fetch logic changes -> update `docs/integration/smartplaylist.md`
+- Smart playlist model or fetch logic changes -> update `docs/integration/preset.md`
 - State management pattern changes -> update `docs/architecture/state-flow.md`
 - Playback pipeline changes -> update `docs/architecture/playback-pipeline.md`
 - Module dependency direction changes -> update `docs/architecture/module-boundaries.md`
@@ -68,7 +68,7 @@ Update documentation when:
 ## Cross-repo coordination
 
 If changes touch smart playlist models or JSON serialization:
-1. Verify alignment with `sp_core` models in `audiflow-smartplaylist-editor`
+1. Verify alignment with `preset_core` models in `audiflow-preset-editor`
 2. Update vendored schema if upstream changed
 3. Run schema conformance tests
 4. Coordinate with data repo maintainers if config format changes

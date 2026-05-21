@@ -47,21 +47,21 @@ void main() {
   late Map<String, dynamic> schema;
   late Map<String, dynamic> defs;
   late JsonSchema jsonSchema;
-  late Map<String, dynamic> patternIndexSchema;
-  late JsonSchema patternIndexJsonSchema;
-  late Map<String, dynamic> patternMetaSchema;
-  late JsonSchema patternMetaJsonSchema;
+  late Map<String, dynamic> presetIndexSchema;
+  late JsonSchema presetIndexJsonSchema;
+  late Map<String, dynamic> presetMetaSchema;
+  late JsonSchema presetMetaJsonSchema;
 
   setUpAll(() {
     schema = _loadSchema('playlist-definition.schema.json');
     defs = schema[r'$defs'] as Map<String, dynamic>;
     jsonSchema = JsonSchema.create(jsonEncode(schema));
 
-    patternIndexSchema = _loadSchema('pattern-index.schema.json');
-    patternIndexJsonSchema = JsonSchema.create(jsonEncode(patternIndexSchema));
+    presetIndexSchema = _loadSchema('preset-index.schema.json');
+    presetIndexJsonSchema = JsonSchema.create(jsonEncode(presetIndexSchema));
 
-    patternMetaSchema = _loadSchema('pattern-meta.schema.json');
-    patternMetaJsonSchema = JsonSchema.create(jsonEncode(patternMetaSchema));
+    presetMetaSchema = _loadSchema('preset-meta.schema.json');
+    presetMetaJsonSchema = JsonSchema.create(jsonEncode(presetMetaSchema));
   });
 
   /// Validates a parsed JSON object against the schema.
@@ -142,7 +142,6 @@ void main() {
 
   group('enum values match vendored playlist-definition schema', () {
     test('groupingBy values match schema oneOf', () {
-      // The v5 schema uses grouping.by instead of top-level resolverType.
       final groupingConfig = defs['GroupingConfig'] as Map<String, dynamic>;
       final props = groupingConfig['properties'] as Map<String, dynamic>;
       final by = props['by'] as Map<String, dynamic>;
@@ -219,46 +218,46 @@ void main() {
       expect(schemaValues, containsAll(['title', 'description']));
     });
 
-    test(r'playlist-definition schema has v6 $id', () {
+    test(r'playlist-definition schema has v7 $id', () {
       expect(
         schema[r'$id'],
-        equals('https://audiflow.app/schema/v6/playlist-definition.json'),
+        equals('https://audiflow.app/schema/v7/playlist-definition.json'),
       );
     });
 
-    test(r'pattern-index schema has v6 $id', () {
+    test(r'preset-index schema has v7 $id', () {
       expect(
-        patternIndexSchema[r'$id'],
-        equals('https://audiflow.app/schema/v6/pattern-index.json'),
+        presetIndexSchema[r'$id'],
+        equals('https://audiflow.app/schema/v7/preset-index.json'),
       );
     });
 
-    test(r'pattern-meta schema has v6 $id', () {
+    test(r'preset-meta schema has v7 $id', () {
       expect(
-        patternMetaSchema[r'$id'],
-        equals('https://audiflow.app/schema/v6/pattern-meta.json'),
+        presetMetaSchema[r'$id'],
+        equals('https://audiflow.app/schema/v7/preset-meta.json'),
       );
     });
   });
 
-  group('RootMeta toJson validates against pattern-index schema', () {
-    List<String> validatePatternIndex(Object? parsed) {
-      final result = patternIndexJsonSchema.validate(parsed);
+  group('RootMeta toJson validates against preset-index schema', () {
+    List<String> validatePresetIndex(Object? parsed) {
+      final result = presetIndexJsonSchema.validate(parsed);
       if (result.isValid) return const [];
       return result.errors.map((e) => e.message).toList();
     }
 
     test('minimal RootMeta round-trips', () {
-      final meta = RootMeta(dataVersion: 1, schemaVersion: 4, patterns: []);
-      expect(validatePatternIndex(meta.toJson()), isEmpty);
+      final meta = RootMeta(dataVersion: 1, schemaVersion: 7, presets: []);
+      expect(validatePresetIndex(meta.toJson()), isEmpty);
     });
 
-    test('full RootMeta with patterns round-trips', () {
+    test('full RootMeta with presets round-trips', () {
       final meta = RootMeta(
         dataVersion: 5,
-        schemaVersion: 4,
-        patterns: [
-          PatternSummary(
+        schemaVersion: 7,
+        presets: [
+          PresetSummary(
             id: 'coten_radio',
             dataVersion: 2,
             displayName: 'Coten Radio',
@@ -267,29 +266,29 @@ void main() {
           ),
         ],
       );
-      expect(validatePatternIndex(meta.toJson()), isEmpty);
+      expect(validatePresetIndex(meta.toJson()), isEmpty);
     });
   });
 
-  group('PatternMeta toJson validates against pattern-meta schema', () {
-    List<String> validatePatternMeta(Object? parsed) {
-      final result = patternMetaJsonSchema.validate(parsed);
+  group('PresetMeta toJson validates against preset-meta schema', () {
+    List<String> validatePresetMeta(Object? parsed) {
+      final result = presetMetaJsonSchema.validate(parsed);
       if (result.isValid) return const [];
       return result.errors.map((e) => e.message).toList();
     }
 
-    test('minimal PatternMeta round-trips', () {
-      final meta = PatternMeta(
+    test('minimal PresetMeta round-trips', () {
+      final meta = PresetMeta(
         dataVersion: 1,
-        id: 'test_pattern',
+        id: 'test_preset',
         feedUrls: ['https://example.com/feed.xml'],
         playlists: ['main'],
       );
-      expect(validatePatternMeta(meta.toJson()), isEmpty);
+      expect(validatePresetMeta(meta.toJson()), isEmpty);
     });
 
-    test('full PatternMeta round-trips', () {
-      final meta = PatternMeta(
+    test('full PresetMeta round-trips', () {
+      final meta = PresetMeta(
         dataVersion: 3,
         id: 'coten_radio',
         podcastGuid: 'abc-123-def',
@@ -303,7 +302,7 @@ void main() {
       );
       final json = meta.toJson();
       expect(json['showEpisodeThumbnail'], isFalse);
-      expect(validatePatternMeta(json), isEmpty);
+      expect(validatePresetMeta(json), isEmpty);
     });
   });
 }

@@ -40,22 +40,21 @@ class _FakeEpisodeRepository implements EpisodeRepository {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-class _FakeConfigRepository implements SmartPlaylistConfigRepository {
+class _FakeConfigRepository implements PresetConfigRepository {
   _FakeConfigRepository({this.summary, this.config});
 
-  final PatternSummary? summary;
-  final SmartPlaylistPatternConfig? config;
+  final PresetSummary? summary;
+  final PresetConfig? config;
 
   @override
-  PatternSummary? findMatchingPattern(String? podcastGuid, String feedUrl) =>
+  PresetSummary? findMatchingPreset(String? podcastGuid, String feedUrl) =>
       summary;
 
   @override
-  Future<SmartPlaylistPatternConfig> getConfig(PatternSummary summary) async =>
-      config!;
+  Future<PresetConfig> getConfig(PresetSummary summary) async => config!;
 
   @override
-  void setPatternSummaries(List<PatternSummary> summaries) {}
+  void setPresetSummaries(List<PresetSummary> summaries) {}
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -175,7 +174,7 @@ void main() {
           _FakeEpisodeRepository(episodes),
         ),
         smartPlaylistLocalDatasourceProvider.overrideWithValue(datasource),
-        smartPlaylistConfigRepositoryProvider.overrideWithValue(
+        presetConfigRepositoryProvider.overrideWithValue(
           configRepo ?? _FakeConfigRepository(),
         ),
       ],
@@ -210,7 +209,7 @@ void main() {
     test(
       'persists combined presentation when config specifies combined',
       () async {
-        final summary = PatternSummary(
+        final summary = PresetSummary(
           id: 'test-pattern',
           dataVersion: 1,
           displayName: 'Test Pattern',
@@ -218,7 +217,7 @@ void main() {
           playlistCount: 1,
         );
 
-        final config = SmartPlaylistPatternConfig(
+        final config = PresetConfig(
           id: 'test-pattern',
           feedUrls: ['https://example.com/feed.xml'],
           playlists: [
@@ -256,7 +255,7 @@ void main() {
     );
 
     test('cache round-trip preserves combined presentation', () async {
-      final summary = PatternSummary(
+      final summary = PresetSummary(
         id: 'test-pattern',
         dataVersion: 1,
         displayName: 'Test Pattern',
@@ -264,7 +263,7 @@ void main() {
         playlistCount: 1,
       );
 
-      final config = SmartPlaylistPatternConfig(
+      final config = PresetConfig(
         id: 'test-pattern',
         feedUrls: ['https://example.com/feed.xml'],
         playlists: [
@@ -310,7 +309,7 @@ void main() {
       final subscription = makeSubscription();
       final episodes = makeSeasonedEpisodes();
 
-      final summary = PatternSummary(
+      final summary = PresetSummary(
         id: 'test-pattern',
         dataVersion: 1,
         displayName: 'Test Pattern',
@@ -373,7 +372,7 @@ void main() {
       final subscription = makeSubscription();
       final episodes = makeSeasonedEpisodes();
 
-      final summary = PatternSummary(
+      final summary = PresetSummary(
         id: 'test-pattern',
         dataVersion: 1,
         displayName: 'Test Pattern',
@@ -441,7 +440,7 @@ void main() {
           ),
         ];
 
-        final summary = PatternSummary(
+        final summary = PresetSummary(
           id: 'year-pattern',
           dataVersion: 1,
           displayName: 'Year Pattern',
@@ -451,7 +450,7 @@ void main() {
 
         // A single year definition; the resolver creates one playlist
         // per unique publication year found in episodes.
-        final config = SmartPlaylistPatternConfig(
+        final config = PresetConfig(
           id: 'year-pattern',
           feedUrls: ['https://example.com/feed.xml'],
           playlists: [

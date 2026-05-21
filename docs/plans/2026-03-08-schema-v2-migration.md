@@ -23,7 +23,7 @@ git checkout -b refactor/schema-v2-migration
 
 **Step 2: Copy the v2 schema**
 
-Copy `~/Documents/src/projects/audiflow/audiflow-smartplaylist-dev/schema/playlist-definition.schema.json` to `packages/audiflow_domain/test/fixtures/schema.json`.
+Copy `~/Documents/src/projects/audiflow/audiflow-preset-dev/schema/playlist-definition.schema.json` to `packages/audiflow_domain/test/fixtures/schema.json`.
 
 Note: The vendored schema is the playlist-definition schema only (not the top-level config envelope). The conformance test wraps definitions in a config envelope for validation. The test's `_wrapInConfig` helper and `_loadSchema`/`jsonSchema` must be updated to validate against the playlist-definition schema directly (not the config envelope).
 

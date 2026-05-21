@@ -1,19 +1,19 @@
 import 'dart:io';
 
-import 'package:audiflow_cli/src/patterns/pattern_registry.dart';
+import 'package:audiflow_cli/src/presets/preset_registry.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  late PatternRegistry registry;
+  late PresetRegistry registry;
 
   setUp(() {
-    final jsonFile = File('test/fixtures/smart_playlist_patterns.json');
-    registry = PatternRegistry.fromJson(jsonFile.readAsStringSync());
+    final jsonFile = File('test/fixtures/smart_playlist_presets.json');
+    registry = PresetRegistry.fromJson(jsonFile.readAsStringSync());
   });
 
-  group('PatternRegistry', () {
+  group('PresetRegistry', () {
     test('contains coten_radio pattern', () {
-      expect(registry.patterns, isNotEmpty);
+      expect(registry.presets, isNotEmpty);
       expect(registry.findById('coten_radio'), isNotNull);
     });
 
@@ -33,7 +33,7 @@ void main() {
     });
 
     test('lists all patterns with metadata', () {
-      final list = registry.listPatterns();
+      final list = registry.listPresets();
 
       expect(list, isNotEmpty);
       expect(list.first.id, isNotEmpty);

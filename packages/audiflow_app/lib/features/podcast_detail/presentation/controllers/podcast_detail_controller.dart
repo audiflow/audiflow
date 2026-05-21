@@ -258,9 +258,7 @@ Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
       final episodeRepo = ref.read(episodeRepositoryProvider);
 
       // Look up smart playlist pattern for per-group extraction
-      final pattern = await ref.read(
-        smartPlaylistPatternByFeedUrlProvider(feedUrl).future,
-      );
+      final pattern = await ref.read(presetByFeedUrlProvider(feedUrl).future);
       logger.d(
         'Smart playlist pattern lookup: '
         'feedUrl=$feedUrl, '
@@ -476,9 +474,7 @@ Future<List<PodcastItem>> filteredSortedEpisodes(
 @riverpod
 Future<bool> hasSmartPlaylistViewAfterLoad(Ref ref, String feedUrl) async {
   // Check for a registered pattern first (e.g., category-based)
-  final pattern = await ref.watch(
-    smartPlaylistPatternByFeedUrlProvider(feedUrl).future,
-  );
+  final pattern = await ref.watch(presetByFeedUrlProvider(feedUrl).future);
   if (pattern != null) return true;
 
   final feed = await ref.watch(podcastDetailProvider(feedUrl).future);
@@ -519,9 +515,7 @@ Future<SmartPlaylistGrouping?> sortedPodcastSmartPlaylists(
     sortField = SmartPlaylistSortField.playlistNumber;
     sortOrder = SortOrder.descending;
   }
-  final pattern = await ref.watch(
-    smartPlaylistPatternByFeedUrlProvider(feedUrl).future,
-  );
+  final pattern = await ref.watch(presetByFeedUrlProvider(feedUrl).future);
   final episodeRepo = ref.watch(episodeRepositoryProvider);
 
   // Sort smart playlists based on config

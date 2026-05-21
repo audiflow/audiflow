@@ -1,4 +1,4 @@
-import 'package:audiflow_domain/patterns.dart';
+import 'package:audiflow_domain/presets.dart';
 import 'package:audiflow_podcast/parser.dart';
 
 /// Converts a [PodcastItem] from RSS parsing to [EpisodeData] for extractors.

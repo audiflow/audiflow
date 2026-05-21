@@ -116,9 +116,7 @@ class _PodcastCacheTile extends StatelessWidget {
             onPressed: () async {
               Navigator.pop(dialogContext);
               final ds = ref.read(smartPlaylistLocalDatasourceProvider);
-              final configRepo = ref.read(
-                smartPlaylistConfigRepositoryProvider,
-              );
+              final configRepo = ref.read(presetConfigRepositoryProvider);
               final subRepo = ref.read(subscriptionRepositoryProvider);
               await ds.clearAll();
               await configRepo.clearDiskCache();

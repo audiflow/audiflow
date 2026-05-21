@@ -8,15 +8,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Fake repository that returns a pre-configured matching
-/// pattern. Only [findMatchingPattern] is used by the widget.
-class _FakeSmartPlaylistConfigRepository
-    implements SmartPlaylistConfigRepository {
+/// pattern. Only [findMatchingPreset] is used by the widget.
+class _FakeSmartPlaylistConfigRepository implements PresetConfigRepository {
   _FakeSmartPlaylistConfigRepository({this.summaries = const []});
 
-  final List<PatternSummary> summaries;
+  final List<PresetSummary> summaries;
 
   @override
-  PatternSummary? findMatchingPattern(String? podcastGuid, String feedUrl) {
+  PresetSummary? findMatchingPreset(String? podcastGuid, String feedUrl) {
     for (final s in summaries) {
       if (feedUrl.contains(s.feedUrlHint)) return s;
     }
@@ -25,17 +24,17 @@ class _FakeSmartPlaylistConfigRepository
 
   @override
   Future<RootMeta> fetchRootMeta() async =>
-      const RootMeta(dataVersion: 1, schemaVersion: 1, patterns: []);
+      const RootMeta(dataVersion: 1, schemaVersion: 1, presets: []);
 
   @override
-  Future<SmartPlaylistPatternConfig> getConfig(PatternSummary summary) =>
+  Future<PresetConfig> getConfig(PresetSummary summary) =>
       throw UnimplementedError();
 
   @override
-  Future<void> reconcileCache(List<PatternSummary> latest) async {}
+  Future<void> reconcileCache(List<PresetSummary> latest) async {}
 
   @override
-  void setPatternSummaries(List<PatternSummary> summaries) {}
+  void setPresetSummaries(List<PresetSummary> summaries) {}
 
   @override
   Future<void> clearDiskCache() async {}
@@ -80,7 +79,7 @@ void main() {
         ProviderScope(
           overrides: [
             sharedPreferencesProvider.overrideWithValue(prefs),
-            smartPlaylistConfigRepositoryProvider.overrideWithValue(
+            presetConfigRepositoryProvider.overrideWithValue(
               _FakeSmartPlaylistConfigRepository(),
             ),
           ],
@@ -102,7 +101,7 @@ void main() {
         ProviderScope(
           overrides: [
             sharedPreferencesProvider.overrideWithValue(prefs),
-            smartPlaylistConfigRepositoryProvider.overrideWithValue(
+            presetConfigRepositoryProvider.overrideWithValue(
               _FakeSmartPlaylistConfigRepository(),
             ),
           ],
@@ -120,7 +119,7 @@ void main() {
     testWidgets('shows pattern name when matched', (tester) async {
       await prefs.setBool('dev_show_developer_info', true);
       final summaries = [
-        const PatternSummary(
+        const PresetSummary(
           id: 'coten_radio',
           dataVersion: 1,
           displayName: 'Coten Radio',
@@ -133,7 +132,7 @@ void main() {
         ProviderScope(
           overrides: [
             sharedPreferencesProvider.overrideWithValue(prefs),
-            smartPlaylistConfigRepositoryProvider.overrideWithValue(
+            presetConfigRepositoryProvider.overrideWithValue(
               _FakeSmartPlaylistConfigRepository(summaries: summaries),
             ),
           ],

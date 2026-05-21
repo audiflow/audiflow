@@ -1,23 +1,23 @@
 import 'dart:io';
 
 import 'package:audiflow_domain/audiflow_domain.dart';
-import 'package:audiflow_domain/src/features/feed/datasources/local/smart_playlist_cache_datasource.dart';
+import 'package:audiflow_domain/src/features/feed/datasources/local/preset_cache_datasource.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   late Directory tempDir;
-  late SmartPlaylistCacheDatasource datasource;
+  late PresetCacheDatasource datasource;
 
   setUp(() {
     tempDir = Directory.systemTemp.createTempSync('sp_cache_test_');
-    datasource = SmartPlaylistCacheDatasource(cacheDir: tempDir.path);
+    datasource = PresetCacheDatasource(cacheDir: tempDir.path);
   });
 
   tearDown(() {
     tempDir.deleteSync(recursive: true);
   });
 
-  group('SmartPlaylistCacheDatasource', () {
+  group('PresetCacheDatasource', () {
     group('versions', () {
       test('returns empty map when no versions cached', () async {
         final versions = await datasource.readVersions();
@@ -42,8 +42,8 @@ void main() {
         final meta = RootMeta(
           dataVersion: 1,
           schemaVersion: 1,
-          patterns: [
-            PatternSummary(
+          presets: [
+            PresetSummary(
               id: 'test',
               dataVersion: 1,
               displayName: 'Test',
@@ -55,26 +55,26 @@ void main() {
         await datasource.writeRootMeta(meta);
         final restored = await datasource.readRootMeta();
         expect(restored, isNotNull);
-        expect(restored!.patterns, hasLength(1));
-        expect(restored.patterns[0].id, 'test');
+        expect(restored!.presets, hasLength(1));
+        expect(restored.presets[0].id, 'test');
       });
     });
 
     group('pattern meta', () {
       test('returns null when not cached', () async {
-        final meta = await datasource.readPatternMeta('missing');
+        final meta = await datasource.readPresetMeta('missing');
         expect(meta, isNull);
       });
 
       test('writes and reads pattern meta', () async {
-        final meta = PatternMeta(
+        final meta = PresetMeta(
           dataVersion: 1,
           id: 'coten_radio',
           feedUrls: ['anchor.fm'],
           playlists: ['regular'],
         );
-        await datasource.writePatternMeta('coten_radio', meta);
-        final restored = await datasource.readPatternMeta('coten_radio');
+        await datasource.writePresetMeta('coten_radio', meta);
+        final restored = await datasource.readPresetMeta('coten_radio');
         expect(restored, isNotNull);
         expect(restored!.id, 'coten_radio');
       });
@@ -104,20 +104,20 @@ void main() {
       });
     });
 
-    group('evictPattern', () {
+    group('evictPreset', () {
       test('removes pattern directory and version entry', () async {
-        final meta = PatternMeta(
+        final meta = PresetMeta(
           dataVersion: 1,
           id: 'old',
           feedUrls: [],
           playlists: ['main'],
         );
-        await datasource.writePatternMeta('old', meta);
+        await datasource.writePresetMeta('old', meta);
         await datasource.writeVersions({'old': 1, 'keep': 2});
 
-        await datasource.evictPattern('old');
+        await datasource.evictPreset('old');
 
-        final restored = await datasource.readPatternMeta('old');
+        final restored = await datasource.readPresetMeta('old');
         expect(restored, isNull);
 
         final versions = await datasource.readVersions();

@@ -27,10 +27,10 @@ class EpisodeDevInfoWidget extends ConsumerWidget {
 
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final repo = ref.watch(smartPlaylistConfigRepositoryProvider);
-    final schemaVersion = ref.watch(smartPlaylistSchemaVersionProvider);
+    final repo = ref.watch(presetConfigRepositoryProvider);
+    final schemaVersion = ref.watch(presetSchemaVersionProvider);
 
-    final match = repo.findMatchingPattern(null, feedUrl);
+    final match = repo.findMatchingPreset(null, feedUrl);
 
     final labelStyle = theme.textTheme.bodySmall?.copyWith(
       color: theme.colorScheme.onSurfaceVariant,
@@ -88,11 +88,8 @@ class EpisodeDevInfoWidget extends ConsumerWidget {
         InkWell(
           onTap: () async {
             final url = 0 < schemaVersion && match != null
-                ? SmartPlaylistUrls.patternDir(
-                    match.id,
-                    schemaVersion: schemaVersion,
-                  )
-                : SmartPlaylistUrls.repo;
+                ? PresetUrls.presetDir(match.id, schemaVersion: schemaVersion)
+                : PresetUrls.repo;
             try {
               final ok = await launchUrl(
                 Uri.parse(url),

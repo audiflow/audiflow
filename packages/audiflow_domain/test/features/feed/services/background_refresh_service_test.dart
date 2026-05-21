@@ -241,7 +241,7 @@ class FakeEpisodeRepository implements EpisodeRepository {
   Future<void> upsertFromFeedItemsWithConfig(
     int podcastId,
     List<PodcastItem> items, {
-    required SmartPlaylistPatternConfig config,
+    required PresetConfig config,
   }) async {}
   @override
   Future<List<Episode>> getByIds(List<int> ids) async => [];
