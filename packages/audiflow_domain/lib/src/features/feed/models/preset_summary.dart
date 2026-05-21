@@ -1,9 +1,9 @@
-/// Summary of a pattern from root meta.json.
+/// Summary of a preset from root meta.json.
 ///
 /// Used for browse lists, feed URL pre-filtering, and
 /// version-based cache invalidation.
-final class PatternSummary {
-  const PatternSummary({
+final class PresetSummary {
+  const PresetSummary({
     required this.id,
     required this.dataVersion,
     required this.displayName,
@@ -11,8 +11,8 @@ final class PatternSummary {
     required this.playlistCount,
   });
 
-  factory PatternSummary.fromJson(Map<String, dynamic> json) {
-    return PatternSummary(
+  factory PresetSummary.fromJson(Map<String, dynamic> json) {
+    return PresetSummary(
       id: json['id'] as String,
       dataVersion: (json['dataVersion'] as int?) ?? 1,
       displayName: json['displayName'] as String,
@@ -21,7 +21,7 @@ final class PatternSummary {
     );
   }
 
-  /// Unique identifier for this pattern.
+  /// Unique identifier for this preset.
   final String id;
 
   /// Data version for cache invalidation.
@@ -33,7 +33,7 @@ final class PatternSummary {
   /// Partial feed URL for pre-filtering.
   final String feedUrlHint;
 
-  /// Number of playlists in this pattern.
+  /// Number of playlists in this preset.
   final int playlistCount;
 
   /// Converts to JSON representation.

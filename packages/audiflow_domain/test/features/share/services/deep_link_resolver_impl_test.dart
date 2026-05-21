@@ -75,7 +75,7 @@ class FakeEpisodeRepository implements EpisodeRepository {
   Future<void> upsertFromFeedItemsWithConfig(
     int podcastId,
     List<PodcastItem> items, {
-    required SmartPlaylistPatternConfig config,
+    required PresetConfig config,
   }) => throw UnimplementedError();
 
   @override

@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   group('ConfigAssembler', () {
     test('assembles config from pattern meta and playlists', () {
-      final meta = PatternMeta(
+      final meta = PresetMeta(
         dataVersion: 1,
         id: 'coten_radio',
         feedUrls: ['https://anchor.fm/s/8c2088c/podcast/rss'],
@@ -37,7 +37,7 @@ void main() {
     });
 
     test('preserves podcastGuid when present', () {
-      final meta = PatternMeta(
+      final meta = PresetMeta(
         dataVersion: 1,
         id: 'test',
         podcastGuid: 'guid-abc',
@@ -58,7 +58,7 @@ void main() {
     });
 
     test('orders playlists by meta playlist list order', () {
-      final meta = PatternMeta(
+      final meta = PresetMeta(
         dataVersion: 1,
         id: 'test',
         feedUrls: [],
@@ -86,7 +86,7 @@ void main() {
     });
 
     test('appends unlisted playlists after ordered ones', () {
-      final meta = PatternMeta(
+      final meta = PresetMeta(
         dataVersion: 1,
         id: 'test',
         feedUrls: [],
@@ -115,7 +115,7 @@ void main() {
 
     test('skips meta playlist IDs with no matching '
         'definition', () {
-      final meta = PatternMeta(
+      final meta = PresetMeta(
         dataVersion: 1,
         id: 'test',
         feedUrls: [],

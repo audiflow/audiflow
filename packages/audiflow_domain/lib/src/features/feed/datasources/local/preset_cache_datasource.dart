@@ -1,32 +1,31 @@
 import 'dart:convert';
 import 'dart:io';
 
-import '../../models/pattern_meta.dart';
+import '../../models/preset_meta.dart';
 import '../../models/root_meta.dart';
 import '../../models/smart_playlist_definition.dart';
 
-/// Manages disk-based caching of split SmartPlaylist config
-/// files.
+/// Manages disk-based caching of split preset config files.
 ///
 /// Cache structure mirrors the remote file layout:
 /// ```
-/// {cacheDir}/smartplaylist/
+/// {cacheDir}/preset/
 ///   versions.json
 ///   meta.json
-///   {patternId}/
+///   {presetId}/
 ///     meta.json
 ///     playlists/
 ///       {playlistId}.json
 /// ```
-class SmartPlaylistCacheDatasource {
-  SmartPlaylistCacheDatasource({required String cacheDir})
-    : _baseDir = '$cacheDir/smartplaylist';
+class PresetCacheDatasource {
+  PresetCacheDatasource({required String cacheDir})
+    : _baseDir = '$cacheDir/preset';
 
   final String _baseDir;
 
   // -- versions.json --
 
-  /// Reads cached version map ({patternId: version}).
+  /// Reads cached version map ({presetId: version}).
   Future<Map<String, int>> readVersions() async {
     final file = File('$_baseDir/versions.json');
     if (!file.existsSync()) return {};
@@ -59,19 +58,19 @@ class SmartPlaylistCacheDatasource {
     await file.writeAsString(jsonEncode(meta.toJson()));
   }
 
-  // -- pattern meta --
+  // -- preset meta --
 
-  /// Reads cached pattern meta, or null if not cached.
-  Future<PatternMeta?> readPatternMeta(String patternId) async {
-    final file = File('$_baseDir/$patternId/meta.json');
+  /// Reads cached preset meta, or null if not cached.
+  Future<PresetMeta?> readPresetMeta(String presetId) async {
+    final file = File('$_baseDir/$presetId/meta.json');
     if (!file.existsSync()) return null;
     final raw = await file.readAsString();
-    return PatternMeta.parseJson(raw);
+    return PresetMeta.parseJson(raw);
   }
 
-  /// Writes pattern meta to disk.
-  Future<void> writePatternMeta(String patternId, PatternMeta meta) async {
-    final file = File('$_baseDir/$patternId/meta.json');
+  /// Writes preset meta to disk.
+  Future<void> writePresetMeta(String presetId, PresetMeta meta) async {
+    final file = File('$_baseDir/$presetId/meta.json');
     await file.parent.create(recursive: true);
     await file.writeAsString(jsonEncode(meta.toJson()));
   }
@@ -81,10 +80,10 @@ class SmartPlaylistCacheDatasource {
   /// Reads a cached playlist definition, or null if not
   /// cached.
   Future<SmartPlaylistDefinition?> readPlaylist(
-    String patternId,
+    String presetId,
     String playlistId,
   ) async {
-    final file = File('$_baseDir/$patternId/playlists/$playlistId.json');
+    final file = File('$_baseDir/$presetId/playlists/$playlistId.json');
     if (!file.existsSync()) return null;
     final raw = await file.readAsString();
     final json = jsonDecode(raw) as Map<String, dynamic>;
@@ -93,16 +92,16 @@ class SmartPlaylistCacheDatasource {
 
   /// Writes a playlist definition to disk.
   Future<void> writePlaylist(
-    String patternId,
+    String presetId,
     String playlistId,
     SmartPlaylistDefinition definition,
   ) async {
-    final file = File('$_baseDir/$patternId/playlists/$playlistId.json');
+    final file = File('$_baseDir/$presetId/playlists/$playlistId.json');
     await file.parent.create(recursive: true);
     await file.writeAsString(jsonEncode(definition.toJson()));
   }
 
-  /// Deletes the entire smart playlist cache directory.
+  /// Deletes the entire preset cache directory.
   Future<void> clearAll() async {
     final dir = Directory(_baseDir);
     if (dir.existsSync()) {
@@ -112,16 +111,16 @@ class SmartPlaylistCacheDatasource {
 
   // -- eviction --
 
-  /// Removes a pattern's entire cache directory and its
+  /// Removes a preset's entire cache directory and its
   /// version entry.
-  Future<void> evictPattern(String patternId) async {
-    final dir = Directory('$_baseDir/$patternId');
+  Future<void> evictPreset(String presetId) async {
+    final dir = Directory('$_baseDir/$presetId');
     if (dir.existsSync()) {
       await dir.delete(recursive: true);
     }
 
     final versions = await readVersions();
-    versions.remove(patternId);
+    versions.remove(presetId);
     await writeVersions(versions);
   }
 }

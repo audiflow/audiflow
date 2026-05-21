@@ -2,7 +2,7 @@ import 'package:audiflow_podcast/audiflow_podcast.dart';
 import 'package:audiflow_domain/src/features/feed/models/episode.dart';
 import 'package:audiflow_domain/src/features/feed/models/feed_parse_progress.dart';
 import 'package:audiflow_domain/src/features/feed/models/numbering_extractor.dart';
-import 'package:audiflow_domain/src/features/feed/models/smart_playlist_pattern_config.dart';
+import 'package:audiflow_domain/src/features/feed/models/preset_config.dart';
 import 'package:audiflow_domain/src/features/feed/repositories/episode_repository.dart';
 import 'package:audiflow_domain/src/features/queue/models/playback_queue.dart';
 import 'package:audiflow_domain/src/features/queue/models/queue_item.dart';
@@ -111,7 +111,7 @@ class _NoOpEpisodeRepository implements EpisodeRepository {
   Future<void> upsertFromFeedItemsWithConfig(
     int podcastId,
     List<PodcastItem> items, {
-    required SmartPlaylistPatternConfig config,
+    required PresetConfig config,
   }) async {}
 
   @override

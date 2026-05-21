@@ -137,7 +137,7 @@ Route data is passed via `GoRouterState.extra` as typed objects or `Map<String, 
 
 - Parent repo `docs/architecture/system-overview.md` -- full system architecture
 - Parent repo `docs/architecture/module-boundaries.md` -- package dependency rules
-- Parent repo `docs/integration/smartplaylist.md` -- smart playlist config consumption
+- Parent repo `docs/integration/preset.md` -- smart playlist config consumption
 
 ## When to update
 

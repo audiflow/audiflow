@@ -16,7 +16,7 @@ import 'package:audiflow_domain/audiflow_domain.dart'
         playOrderPreferenceRepositoryProvider,
         podcastViewPreferenceControllerProvider,
         smartPlaylistEpisodesProvider,
-        smartPlaylistPatternByFeedUrlProvider,
+        presetByFeedUrlProvider,
         subscriptionByFeedUrlProvider;
 import 'package:audiflow_search/audiflow_search.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
@@ -292,14 +292,12 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
     // Pattern presence decides whether the toggle can hide for a
     // single-bucket grouping, so gate on it too to avoid a flicker
     // from pattern-driven configs loading after the first frame.
-    final patternAsync = ref.watch(
-      smartPlaylistPatternByFeedUrlProvider(feedUrl),
-    );
+    final patternAsync = ref.watch(presetByFeedUrlProvider(feedUrl));
 
     // Surface transient pattern-load errors — we deliberately fall
     // back to "assume a pattern might exist" for UX, but the failure
     // itself should still be observable.
-    ref.listen(smartPlaylistPatternByFeedUrlProvider(feedUrl), (prev, next) {
+    ref.listen(presetByFeedUrlProvider(feedUrl), (prev, next) {
       if (next.hasError && (prev == null || !prev.hasError)) {
         ref
             .read(namedLoggerProvider('PodcastDetailScreen'))

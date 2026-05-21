@@ -1,22 +1,21 @@
-import '../models/pattern_meta.dart';
+import '../models/preset_config.dart';
+import '../models/preset_meta.dart';
 import '../models/smart_playlist_definition.dart';
-import '../models/smart_playlist_pattern_config.dart';
 
-/// Assembles a [SmartPlaylistPatternConfig] from split config
-/// files.
+/// Assembles a [PresetConfig] from split config files.
 ///
-/// Combines a [PatternMeta] with its playlist definitions into
+/// Combines a [PresetMeta] with its playlist definitions into
 /// the unified config that resolvers expect.
 final class ConfigAssembler {
   ConfigAssembler._();
 
-  /// Assembles a full config from pattern metadata and playlist
+  /// Assembles a full config from preset metadata and playlist
   /// definitions.
   ///
   /// Playlists are ordered according to [meta.playlists]. Any
   /// playlists not listed in meta are appended at the end.
-  static SmartPlaylistPatternConfig assemble(
-    PatternMeta meta,
+  static PresetConfig assemble(
+    PresetMeta meta,
     List<SmartPlaylistDefinition> playlists,
   ) {
     final playlistMap = {for (final p in playlists) p.id: p};
@@ -30,7 +29,7 @@ final class ConfigAssembler {
     }
     ordered.addAll(playlistMap.values);
 
-    return SmartPlaylistPatternConfig(
+    return PresetConfig(
       id: meta.id,
       podcastGuid: meta.podcastGuid,
       feedUrls: meta.feedUrls,

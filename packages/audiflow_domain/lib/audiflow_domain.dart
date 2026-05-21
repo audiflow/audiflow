@@ -40,8 +40,8 @@ export 'src/common/datasources/shared_preferences_datasource.dart';
 export 'src/features/feed/builders/podcast_builder.dart';
 export 'src/features/feed/models/episode_filter.dart';
 export 'src/features/feed/models/feed_parse_progress.dart';
-export 'src/features/feed/models/pattern_meta.dart';
-export 'src/features/feed/models/pattern_summary.dart';
+export 'src/features/feed/models/preset_meta.dart';
+export 'src/features/feed/models/preset_summary.dart';
 export 'src/features/feed/models/root_meta.dart';
 export 'src/features/feed/models/podcast_view_mode.dart';
 export 'src/features/feed/models/podcast_sort_order.dart';
@@ -58,20 +58,19 @@ export 'src/features/feed/models/selector_config.dart';
 export 'src/features/feed/models/smart_playlist_definition.dart';
 export 'src/features/feed/models/matcher.dart';
 export 'src/features/feed/models/smart_playlist_group_def.dart';
-export 'src/features/feed/models/smart_playlist_pattern.dart';
-export 'src/features/feed/models/smart_playlist_pattern_config.dart';
+export 'src/features/feed/models/preset_config.dart';
 export 'src/features/feed/models/smart_playlist_sort.dart';
 export 'src/features/feed/models/smart_playlist_title_extractor.dart';
 export 'src/features/feed/models/smart_playlists.dart';
 export 'src/features/feed/models/numbering_extractor.dart';
-export 'src/features/feed/services/smart_playlist_pattern_loader.dart';
+export 'src/features/feed/services/preset_loader.dart';
 export 'src/features/feed/resolvers/season_number_resolver.dart';
 export 'src/features/feed/resolvers/smart_playlist_resolver.dart';
 export 'src/features/feed/resolvers/title_classifier_resolver.dart';
 export 'src/features/feed/resolvers/title_discovery_resolver.dart';
 export 'src/features/feed/resolvers/year_resolver.dart';
-export 'src/features/feed/repositories/smart_playlist_config_repository.dart';
-export 'src/features/feed/repositories/smart_playlist_config_repository_impl.dart';
+export 'src/features/feed/repositories/preset_config_repository.dart';
+export 'src/features/feed/repositories/preset_config_repository_impl.dart';
 export 'src/features/feed/services/config_assembler.dart';
 export 'src/features/feed/services/feed_parser_service.dart';
 export 'src/features/feed/services/background_notification_service.dart';
@@ -96,8 +95,8 @@ export 'src/features/feed/repositories/podcast_view_preference_repository.dart';
 export 'src/features/feed/datasources/local/play_order_preference_local_datasource.dart';
 export 'src/features/feed/repositories/play_order_preference_repository.dart';
 
-// Feed feature - Smart Playlist Providers
-export 'src/features/feed/providers/smart_playlist_providers.dart';
+// Feed feature - Preset & Smart Playlist Providers
+export 'src/features/feed/providers/preset_providers.dart';
 
 // Feed feature - Smart Playlists
 export 'src/features/feed/datasources/local/smart_playlist_local_datasource.dart';

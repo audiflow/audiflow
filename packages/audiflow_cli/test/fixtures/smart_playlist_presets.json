@@ -1,6 +1,6 @@
 {
-  "version": 5,
-  "patterns": [
+  "version": 7,
+  "presets": [
     {
       "id": "coten_radio",
       "feedUrls": [

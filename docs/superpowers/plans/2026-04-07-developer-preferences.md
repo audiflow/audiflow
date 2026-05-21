@@ -42,13 +42,13 @@
 ```dart
 // packages/audiflow_core/lib/src/constants/smart_playlist_urls.dart
 
-/// URL constants for the audiflow-smartplaylist GitHub repository.
+/// URL constants for the audiflow-preset GitHub repository.
 class SmartPlaylistUrls {
   SmartPlaylistUrls._();
 
   /// Base repository URL.
   static const String repo =
-      'https://github.com/audiflow/audiflow-smartplaylist';
+      'https://github.com/audiflow/audiflow-preset';
 
   /// Returns the URL to a specific pattern's directory in the repo.
   static String patternDir(String patternId) =>
@@ -222,7 +222,7 @@ Add these entries at the end of the JSON object (before the closing `}`):
   "@settingsDeveloperSubtitle": {"description": "Settings grid card subtitle for developer preferences"},
   "developerContributeLabel": "Contribute smart playlist patterns",
   "@developerContributeLabel": {"description": "Tappable row label linking to the smartplaylist repo"},
-  "developerContributeRepo": "audiflow/audiflow-smartplaylist",
+  "developerContributeRepo": "audiflow/audiflow-preset",
   "@developerContributeRepo": {"description": "Short repo name shown below the contribute link"},
   "developerShowInfoTitle": "Show developer info",
   "@developerShowInfoTitle": {"description": "Toggle title for developer info in episode detail"},
@@ -252,7 +252,7 @@ Add these entries at the end of the JSON object (before the closing `}`):
   "settingsDeveloperTitle": "\u958b\u767a",
   "settingsDeveloperSubtitle": "\u30b9\u30de\u30fc\u30c8\u30d7\u30ec\u30a4\u30ea\u30b9\u30c8\u30d1\u30bf\u30fc\u30f3\u3068\u30c7\u30d0\u30c3\u30b0\u60c5\u5831",
   "developerContributeLabel": "\u30b9\u30de\u30fc\u30c8\u30d7\u30ec\u30a4\u30ea\u30b9\u30c8\u30d1\u30bf\u30fc\u30f3\u3092\u8ca2\u732e",
-  "developerContributeRepo": "audiflow/audiflow-smartplaylist",
+  "developerContributeRepo": "audiflow/audiflow-preset",
   "developerShowInfoTitle": "\u958b\u767a\u8005\u60c5\u5831\u3092\u8868\u793a",
   "developerShowInfoSubtitle": "\u30a8\u30d4\u30bd\u30fc\u30c9\u8a73\u7d30\u306bRSS\u30d5\u30a3\u30fc\u30c9URL\u3068\u30d1\u30bf\u30fc\u30f3\u30ea\u30f3\u30af\u3092\u8868\u793a",
   "developerPatternsHeader": "\u30b9\u30de\u30fc\u30c8\u30d7\u30ec\u30a4\u30ea\u30b9\u30c8\u30d1\u30bf\u30fc\u30f3",
@@ -336,7 +336,7 @@ void main() {
 
       check(find.text('Contribute smart playlist patterns').evaluate())
           .isNotEmpty();
-      check(find.text('audiflow/audiflow-smartplaylist').evaluate())
+      check(find.text('audiflow/audiflow-preset').evaluate())
           .isNotEmpty();
     });
 

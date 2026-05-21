@@ -1,15 +1,15 @@
 import 'dart:convert';
 
-import 'package:audiflow_domain/src/features/feed/services/smart_playlist_pattern_loader.dart';
+import 'package:audiflow_domain/src/features/feed/services/preset_loader.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  group('SmartPlaylistPatternLoader', () {
+  group('PresetLoader', () {
     test('parses valid JSON with version 2', () {
       final json = jsonEncode({
         'dataVersion': 1,
         'schemaVersion': 1,
-        'patterns': [
+        'presets': [
           {
             'id': 'test',
             'feedUrls': ['https://example.com/feed'],
@@ -24,7 +24,7 @@ void main() {
           },
         ],
       });
-      final result = SmartPlaylistPatternLoader.parse(json);
+      final result = PresetLoader.parse(json);
       expect(result, hasLength(1));
       expect(result[0].id, 'test');
       expect(result[0].playlists, hasLength(1));
@@ -34,9 +34,9 @@ void main() {
       final json = jsonEncode({
         'dataVersion': 1,
         'schemaVersion': 1,
-        'patterns': [],
+        'presets': [],
       });
-      final result = SmartPlaylistPatternLoader.parse(json);
+      final result = PresetLoader.parse(json);
       expect(result, isEmpty);
     });
   });

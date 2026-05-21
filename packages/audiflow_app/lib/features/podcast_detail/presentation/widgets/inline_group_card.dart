@@ -1,8 +1,5 @@
 import 'package:audiflow_domain/audiflow_domain.dart'
-    show
-        EffectiveThumbnails,
-        SmartPlaylistGroup,
-        smartPlaylistPatternByFeedUrlProvider;
+    show EffectiveThumbnails, SmartPlaylistGroup, presetByFeedUrlProvider;
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
@@ -215,7 +212,7 @@ class InlineGroupCard extends ConsumerWidget {
     final id = playlistId;
     if (url == null || id == null) return true;
 
-    final config = ref.watch(smartPlaylistPatternByFeedUrlProvider(url)).value;
+    final config = ref.watch(presetByFeedUrlProvider(url)).value;
     if (config == null) return true;
 
     final playlistDef = config.findPlaylist(id);

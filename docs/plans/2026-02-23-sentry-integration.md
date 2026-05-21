@@ -93,7 +93,7 @@ class FlavorConfig {
     name: 'Production',
     apiBaseUrl: 'https://api.audiflow.example.com',
     smartPlaylistConfigBaseUrl:
-        'https://audiflow.github.io/audiflow-smartplaylist',
+        'https://audiflow.github.io/audiflow-preset',
     enableAnalytics: true,
     enableCrashReporting: true,
     enableHttpTracing: false,      // NEW - prod is crash-only
@@ -279,7 +279,7 @@ import 'main.dart' as app;
 Future<void> main() => app.main(
   flavor: Flavor.prod,
   smartPlaylistConfigBaseUrl:
-      'https://audiflow.github.io/audiflow-smartplaylist',
+      'https://audiflow.github.io/audiflow-preset',
 );
 ```
 

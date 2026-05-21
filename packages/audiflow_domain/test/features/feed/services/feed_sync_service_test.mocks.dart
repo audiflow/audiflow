@@ -13,15 +13,15 @@ import 'package:audiflow_domain/src/features/feed/models/feed_parse_progress.dar
     as _i18;
 import 'package:audiflow_domain/src/features/feed/models/numbering_extractor.dart'
     as _i16;
-import 'package:audiflow_domain/src/features/feed/models/pattern_summary.dart'
+import 'package:audiflow_domain/src/features/feed/models/preset_config.dart'
+    as _i17;
+import 'package:audiflow_domain/src/features/feed/models/preset_summary.dart'
     as _i26;
 import 'package:audiflow_domain/src/features/feed/models/root_meta.dart'
     as _i24;
-import 'package:audiflow_domain/src/features/feed/models/smart_playlist_pattern_config.dart'
-    as _i17;
 import 'package:audiflow_domain/src/features/feed/repositories/episode_repository.dart'
     as _i13;
-import 'package:audiflow_domain/src/features/feed/repositories/smart_playlist_config_repository.dart'
+import 'package:audiflow_domain/src/features/feed/repositories/preset_config_repository.dart'
     as _i23;
 import 'package:audiflow_domain/src/features/feed/services/feed_parser_service.dart'
     as _i22;
@@ -446,7 +446,7 @@ class MockEpisodeRepository extends _i1.Mock implements _i13.EpisodeRepository {
   _i11.Future<void> upsertFromFeedItemsWithConfig(
     int? podcastId,
     List<_i15.PodcastItem>? items, {
-    required _i17.SmartPlaylistPatternConfig? config,
+    required _i17.PresetConfig? config,
   }) =>
       (super.noSuchMethod(
             Invocation.method(
@@ -990,12 +990,12 @@ class MockFeedParserService extends _i1.Mock implements _i22.FeedParserService {
   );
 }
 
-/// A class which mocks [SmartPlaylistConfigRepository].
+/// A class which mocks [PresetConfigRepository].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockSmartPlaylistConfigRepository extends _i1.Mock
-    implements _i23.SmartPlaylistConfigRepository {
-  MockSmartPlaylistConfigRepository() {
+class MockPresetConfigRepository extends _i1.Mock
+    implements _i23.PresetConfigRepository {
+  MockPresetConfigRepository() {
     _i1.throwOnMissingStub(this);
   }
 
@@ -1013,32 +1013,30 @@ class MockSmartPlaylistConfigRepository extends _i1.Mock
           as _i11.Future<_i24.RootMeta>);
 
   @override
-  _i11.Future<_i17.SmartPlaylistPatternConfig> getConfig(
-    _i26.PatternSummary? summary,
-  ) =>
+  _i11.Future<_i17.PresetConfig> getConfig(_i26.PresetSummary? summary) =>
       (super.noSuchMethod(
             Invocation.method(#getConfig, [summary]),
-            returnValue: _i11.Future<_i17.SmartPlaylistPatternConfig>.value(
-              _i25.dummyValue<_i17.SmartPlaylistPatternConfig>(
+            returnValue: _i11.Future<_i17.PresetConfig>.value(
+              _i25.dummyValue<_i17.PresetConfig>(
                 this,
                 Invocation.method(#getConfig, [summary]),
               ),
             ),
           )
-          as _i11.Future<_i17.SmartPlaylistPatternConfig>);
+          as _i11.Future<_i17.PresetConfig>);
 
   @override
-  _i26.PatternSummary? findMatchingPattern(
+  _i26.PresetSummary? findMatchingPreset(
     String? podcastGuid,
     String? feedUrl,
   ) =>
       (super.noSuchMethod(
-            Invocation.method(#findMatchingPattern, [podcastGuid, feedUrl]),
+            Invocation.method(#findMatchingPreset, [podcastGuid, feedUrl]),
           )
-          as _i26.PatternSummary?);
+          as _i26.PresetSummary?);
 
   @override
-  _i11.Future<void> reconcileCache(List<_i26.PatternSummary>? latest) =>
+  _i11.Future<void> reconcileCache(List<_i26.PresetSummary>? latest) =>
       (super.noSuchMethod(
             Invocation.method(#reconcileCache, [latest]),
             returnValue: _i11.Future<void>.value(),
@@ -1047,9 +1045,9 @@ class MockSmartPlaylistConfigRepository extends _i1.Mock
           as _i11.Future<void>);
 
   @override
-  void setPatternSummaries(List<_i26.PatternSummary>? summaries) =>
+  void setPresetSummaries(List<_i26.PresetSummary>? summaries) =>
       super.noSuchMethod(
-        Invocation.method(#setPatternSummaries, [summaries]),
+        Invocation.method(#setPresetSummaries, [summaries]),
         returnValueForMissingStub: null,
       );
 

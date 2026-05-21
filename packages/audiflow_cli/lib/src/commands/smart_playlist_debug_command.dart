@@ -1,4 +1,4 @@
-import 'package:audiflow_domain/patterns.dart';
+import 'package:audiflow_domain/presets.dart';
 import 'package:audiflow_podcast/parser.dart';
 import 'package:http/http.dart' as http;
 
@@ -6,24 +6,24 @@ import '../adapters/episode_adapter.dart';
 import '../diagnostics/numbering_extractor_diagnostics.dart';
 import '../diagnostics/title_extractor_diagnostics.dart';
 import '../models/extraction_result.dart';
-import '../patterns/pattern_registry.dart';
+import '../presets/preset_registry.dart';
 import '../reporters/json_reporter.dart';
 import '../reporters/table_reporter.dart';
 
 /// Command to debug smart playlist extraction against
 /// a live RSS feed.
 class SmartPlaylistDebugCommand {
-  SmartPlaylistDebugCommand({StringSink? sink, PatternRegistry? registry})
+  SmartPlaylistDebugCommand({StringSink? sink, PresetRegistry? registry})
     : _sink = sink ?? StringBuffer(),
-      _registry = registry ?? PatternRegistry();
+      _registry = registry ?? PresetRegistry();
 
   final StringSink _sink;
-  final PatternRegistry _registry;
+  final PresetRegistry _registry;
 
   /// Runs the command by fetching and parsing the feed.
   Future<int> run({
     required String feedUrl,
-    String? patternId,
+    String? presetId,
     bool json = false,
   }) async {
     // Fetch feed
@@ -51,7 +51,7 @@ class SmartPlaylistDebugCommand {
     return runWithItems(
       feedUrl: feedUrl,
       items: items,
-      patternId: patternId,
+      presetId: presetId,
       json: json,
     );
   }
@@ -60,23 +60,23 @@ class SmartPlaylistDebugCommand {
   Future<int> runWithItems({
     required String feedUrl,
     required List<PodcastItem> items,
-    String? patternId,
+    String? presetId,
     bool json = false,
   }) async {
-    // Find pattern config
-    final config = patternId != null
-        ? _registry.findById(patternId)
+    // Find preset config
+    final config = presetId != null
+        ? _registry.findById(presetId)
         : _registry.detectFromUrl(feedUrl);
 
     if (config == null) {
-      _sink.writeln('Error: No pattern found for feed');
+      _sink.writeln('Error: No preset found for feed');
       return 2;
     }
 
     // Use the first playlist definition for extraction.
     final definition = config.playlists.firstOrNull;
     if (definition == null) {
-      _sink.writeln('Error: Pattern has no playlist definitions');
+      _sink.writeln('Error: Preset has no playlist definitions');
       return 2;
     }
 
@@ -100,7 +100,7 @@ class SmartPlaylistDebugCommand {
     // Report
     if (json) {
       final reporter = JsonReporter(_sink);
-      reporter.start(feedUrl: feedUrl, patternId: config.id);
+      reporter.start(feedUrl: feedUrl, presetId: config.id);
       for (final result in results) {
         reporter.addResult(result);
       }
@@ -109,7 +109,7 @@ class SmartPlaylistDebugCommand {
       final reporter = TableReporter(_sink);
       reporter.writeHeader(
         feedUrl: feedUrl,
-        patternId: config.id,
+        presetId: config.id,
         episodeCount: items.length,
       );
       for (final result in results) {

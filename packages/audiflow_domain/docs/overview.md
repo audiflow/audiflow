@@ -20,7 +20,7 @@
 - Podcast search API (owned by `audiflow_search`; re-exported types only)
 - AI inference (owned by `audiflow_ai`; re-exported types only)
 - UI rendering, routing, theming (owned by `audiflow_app` and `audiflow_ui`)
-- Schema definitions for smart playlists (owned by `audiflow-smartplaylist-editor`)
+- Schema definitions for smart playlists (owned by `audiflow-preset-editor`)
 
 ## Main concepts
 
@@ -89,7 +89,7 @@ Each feature follows the directory structure: `models/`, `datasources/local/`, `
 
 - `../CLAUDE.md` -- package entry point, validation commands
 - Parent repo `docs/architecture/module-boundaries.md` -- full package dependency graph
-- Parent repo `docs/integration/smartplaylist.md` -- smart playlist consumption contract
+- Parent repo `docs/integration/preset.md` -- smart playlist consumption contract
 - `test/fixtures/schema.json` -- vendored schema for conformance testing
 
 ## When to update

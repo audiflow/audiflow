@@ -24,7 +24,7 @@ void main() {
     setUp(() {
       service = SmartPlaylistResolverService(
         resolvers: [SeasonNumberResolver(), YearResolver()],
-        patterns: [],
+        presets: [],
       );
     });
 
@@ -116,8 +116,8 @@ void main() {
     test('uses custom pattern config when podcast matches', () {
       final serviceWithPattern = SmartPlaylistResolverService(
         resolvers: [SeasonNumberResolver(), YearResolver()],
-        patterns: [
-          SmartPlaylistPatternConfig(
+        presets: [
+          PresetConfig(
             id: 'test_pattern',
             feedUrls: ['https://example.com/feed.rss'],
             playlists: [
@@ -165,8 +165,8 @@ void main() {
     test('wraps resolver playlists as groups when not isSeparate', () {
       final serviceWithGroups = SmartPlaylistResolverService(
         resolvers: [SeasonNumberResolver()],
-        patterns: [
-          SmartPlaylistPatternConfig(
+        presets: [
+          PresetConfig(
             id: 'test',
             feedUrls: ['https://example.com/feed'],
             playlists: [
@@ -219,8 +219,8 @@ void main() {
     test('groupItem.pinToYear sets yearOverride on group', () {
       final serviceWithPinToYear = SmartPlaylistResolverService(
         resolvers: [SeasonNumberResolver()],
-        patterns: [
-          SmartPlaylistPatternConfig(
+        presets: [
+          PresetConfig(
             id: 'test',
             feedUrls: ['https://example.com/feed'],
             playlists: [
@@ -275,8 +275,8 @@ void main() {
     test('playlist-level groupItem.pinToYear applies to all groups', () {
       final serviceWithPlaylistPinToYear = SmartPlaylistResolverService(
         resolvers: [SeasonNumberResolver()],
-        patterns: [
-          SmartPlaylistPatternConfig(
+        presets: [
+          PresetConfig(
             id: 'test',
             feedUrls: ['https://example.com/feed'],
             playlists: [
@@ -320,8 +320,8 @@ void main() {
     test('deprecated resolver aliases resolve correctly', () {
       final serviceWithAliases = SmartPlaylistResolverService(
         resolvers: [SeasonNumberResolver()],
-        patterns: [
-          SmartPlaylistPatternConfig(
+        presets: [
+          PresetConfig(
             id: 'test',
             feedUrls: ['https://example.com/feed'],
             playlists: [
@@ -360,8 +360,8 @@ void main() {
     test('multiple definitions produce separate parent playlists', () {
       final serviceWithMultiple = SmartPlaylistResolverService(
         resolvers: [SeasonNumberResolver()],
-        patterns: [
-          SmartPlaylistPatternConfig(
+        presets: [
+          PresetConfig(
             id: 'test',
             feedUrls: ['https://example.com/feed'],
             playlists: [
@@ -408,8 +408,8 @@ void main() {
     test('isSeparate keeps resolver playlists as top-level', () {
       final serviceWithEpisodes = SmartPlaylistResolverService(
         resolvers: [SeasonNumberResolver()],
-        patterns: [
-          SmartPlaylistPatternConfig(
+        presets: [
+          PresetConfig(
             id: 'test',
             feedUrls: ['https://example.com/feed'],
             playlists: [
@@ -445,8 +445,8 @@ void main() {
     test('routes episodes by episodeFilters', () {
       final serviceWithFilters = SmartPlaylistResolverService(
         resolvers: [SeasonNumberResolver(), YearResolver()],
-        patterns: [
-          SmartPlaylistPatternConfig(
+        presets: [
+          PresetConfig(
             id: 'filter_test',
             feedUrls: ['https://example.com/feed'],
             playlists: [
@@ -524,8 +524,8 @@ void main() {
     test('require filters use OR across entries', () {
       final service = SmartPlaylistResolverService(
         resolvers: [YearResolver()],
-        patterns: [
-          SmartPlaylistPatternConfig(
+        presets: [
+          PresetConfig(
             id: 'or_test',
             feedUrls: ['https://example.com/feed'],
             playlists: [

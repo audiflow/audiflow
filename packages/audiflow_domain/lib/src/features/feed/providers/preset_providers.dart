@@ -10,28 +10,28 @@ import '../../../features/subscription/repositories/subscription_repository_impl
 import '../../player/models/episode_with_progress.dart';
 import '../../player/models/playback_history.dart';
 import '../../player/repositories/playback_history_repository_impl.dart';
-import '../datasources/local/smart_playlist_cache_datasource.dart';
+import '../datasources/local/preset_cache_datasource.dart';
 import '../datasources/local/smart_playlist_local_datasource.dart';
-import '../datasources/remote/smart_playlist_remote_datasource.dart';
+import '../datasources/remote/preset_remote_datasource.dart';
 import '../models/episode.dart';
 import '../models/episode_sort_rule.dart';
-import '../models/smart_playlist_groups.dart';
-import '../models/smart_playlists.dart';
-import '../models/pattern_summary.dart';
+import '../models/preset_config.dart';
+import '../models/preset_summary.dart';
 import '../models/smart_playlist.dart';
-import '../models/smart_playlist_pattern_config.dart';
+import '../models/smart_playlist_groups.dart';
 import '../models/smart_playlist_sort.dart';
+import '../models/smart_playlists.dart';
 import '../repositories/episode_repository.dart';
 import '../repositories/episode_repository_impl.dart';
-import '../repositories/smart_playlist_config_repository.dart';
-import '../repositories/smart_playlist_config_repository_impl.dart';
+import '../repositories/preset_config_repository.dart';
+import '../repositories/preset_config_repository_impl.dart';
 import '../resolvers/season_number_resolver.dart';
 import '../resolvers/title_classifier_resolver.dart';
 import '../resolvers/title_discovery_resolver.dart';
 import '../resolvers/year_resolver.dart';
 import '../services/smart_playlist_resolver_service.dart';
 
-part 'smart_playlist_providers.g.dart';
+part 'preset_providers.g.dart';
 
 /// Combined heuristic version derived from all auto-detect
 /// resolvers. Changing any resolver's [heuristicVersion]
@@ -59,23 +59,23 @@ final int _autoDetectHeuristicVersion = () {
 /// Initially empty; populated on startup after fetching
 /// root meta.
 @Riverpod(keepAlive: true)
-class PatternSummaries extends _$PatternSummaries {
+class PresetSummaries extends _$PresetSummaries {
   @override
-  List<PatternSummary> build() => [];
+  List<PresetSummary> build() => [];
 
   /// Replaces the current summaries.
-  void setSummaries(List<PatternSummary> summaries) {
+  void setSummaries(List<PresetSummary> summaries) {
     state = summaries;
   }
 }
 
 /// Holds the schema version from the most recent root meta.
 ///
-/// Set alongside [PatternSummaries] on startup and
+/// Set alongside [PresetSummaries] on startup and
 /// pull-to-refresh. Used to construct GitHub branch URLs
 /// (e.g. `dev/v5`).
 @Riverpod(keepAlive: true)
-class SmartPlaylistSchemaVersion extends _$SmartPlaylistSchemaVersion {
+class PresetSchemaVersion extends _$PresetSchemaVersion {
   @override
   int build() => 0;
 
@@ -85,33 +85,33 @@ class SmartPlaylistSchemaVersion extends _$SmartPlaylistSchemaVersion {
   }
 }
 
-/// Provides the smart playlist config repository.
+/// Provides the preset config repository.
 ///
 /// Uses Dio for HTTP and path_provider for cache directory.
 @Riverpod(keepAlive: true)
-SmartPlaylistConfigRepository smartPlaylistConfigRepository(Ref ref) {
+PresetConfigRepository presetConfigRepository(Ref ref) {
   final dio = ref.watch(dioProvider);
-  final baseUrl = ref.watch(smartPlaylistConfigBaseUrlProvider);
+  final baseUrl = ref.watch(presetConfigBaseUrlProvider);
   final cacheDir = ref.watch(cacheDirProvider);
 
-  final remote = SmartPlaylistRemoteDatasource(
+  final remote = PresetRemoteDatasource(
     baseUrl: baseUrl,
     httpGet: (Uri url) async {
       final response = await dio.getUri<String>(url);
       return response.data!;
     },
   );
-  final cache = SmartPlaylistCacheDatasource(cacheDir: cacheDir);
+  final cache = PresetCacheDatasource(cacheDir: cacheDir);
 
-  final repo = SmartPlaylistConfigRepositoryImpl(
+  final repo = PresetConfigRepositoryImpl(
     remote: remote,
     cache: cache,
-    logger: ref.watch(namedLoggerProvider('SmartPlaylistConfigRepository')),
+    logger: ref.watch(namedLoggerProvider('PresetConfigRepository')),
   );
 
-  // Seed with current summaries so findMatchingPattern works.
-  final summaries = ref.watch(patternSummariesProvider);
-  repo.setPatternSummaries(summaries);
+  // Seed with current summaries so findMatchingPreset works.
+  final summaries = ref.watch(presetSummariesProvider);
+  repo.setPresetSummaries(summaries);
 
   return repo;
 }
@@ -139,7 +139,7 @@ SmartPlaylistResolverService smartPlaylistResolverService(Ref ref) {
       TitleDiscoveryResolver(),
       YearResolver(),
     ],
-    patterns: [],
+    presets: [],
     logger: logger,
   );
 }
@@ -149,12 +149,9 @@ SmartPlaylistResolverService smartPlaylistResolverService(Ref ref) {
 /// Returns null if no pattern matches. Lazily fetches the
 /// full config from remote/cache when a match is found.
 @riverpod
-Future<SmartPlaylistPatternConfig?> smartPlaylistPatternByFeedUrl(
-  Ref ref,
-  String feedUrl,
-) async {
-  final repo = ref.watch(smartPlaylistConfigRepositoryProvider);
-  final summary = repo.findMatchingPattern(null, feedUrl);
+Future<PresetConfig?> presetByFeedUrl(Ref ref, String feedUrl) async {
+  final repo = ref.watch(presetConfigRepositoryProvider);
+  final summary = repo.findMatchingPreset(null, feedUrl);
   if (summary == null) return null;
   return repo.getConfig(summary);
 }
@@ -181,8 +178,8 @@ Future<SmartPlaylistGrouping?> podcastSmartPlaylists(
   }
 
   // Log matched pattern for this podcast
-  final configRepo = ref.watch(smartPlaylistConfigRepositoryProvider);
-  final matchedSummary = configRepo.findMatchingPattern(
+  final configRepo = ref.watch(presetConfigRepositoryProvider);
+  final matchedSummary = configRepo.findMatchingPreset(
     null,
     subscription.feedUrl,
   );
@@ -254,8 +251,8 @@ Future<SmartPlaylistGrouping?> _buildGroupingFromCache(
   final playlistDatasource = ref.watch(smartPlaylistLocalDatasourceProvider);
 
   // Check if config version has changed
-  final configRepo = ref.watch(smartPlaylistConfigRepositoryProvider);
-  final summary = configRepo.findMatchingPattern(null, feedUrl);
+  final configRepo = ref.watch(presetConfigRepositoryProvider);
+  final summary = configRepo.findMatchingPreset(null, feedUrl);
   if (summary != null) {
     final cachedVersion = cachedPlaylists.first.configVersion;
     if (cachedVersion == null || cachedVersion != summary.dataVersion) {
@@ -413,9 +410,9 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
   final playlistDatasource = ref.watch(smartPlaylistLocalDatasourceProvider);
 
   // Load matching config from repository
-  final repo = ref.watch(smartPlaylistConfigRepositoryProvider);
-  final summary = repo.findMatchingPattern(null, feedUrl);
-  SmartPlaylistPatternConfig? config;
+  final repo = ref.watch(presetConfigRepositoryProvider);
+  final summary = repo.findMatchingPreset(null, feedUrl);
+  PresetConfig? config;
   if (summary != null) {
     logger.d(
       'Matched smart playlist pattern: '
@@ -435,7 +432,7 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
       TitleDiscoveryResolver(),
       YearResolver(),
     ],
-    patterns: config != null ? [config] : [],
+    presets: config != null ? [config] : [],
     logger: logger,
   );
 
@@ -834,9 +831,9 @@ Future<SmartPlaylistGrouping?> _reResolveFromEpisodes(
   final episodeRepo = ref.watch(episodeRepositoryProvider);
 
   // Load matching config from repository
-  final repo = ref.watch(smartPlaylistConfigRepositoryProvider);
-  final summary = repo.findMatchingPattern(null, feedUrl);
-  SmartPlaylistPatternConfig? config;
+  final repo = ref.watch(presetConfigRepositoryProvider);
+  final summary = repo.findMatchingPreset(null, feedUrl);
+  PresetConfig? config;
   if (summary != null) {
     try {
       config = await repo.getConfig(summary);
@@ -852,7 +849,7 @@ Future<SmartPlaylistGrouping?> _reResolveFromEpisodes(
       TitleDiscoveryResolver(),
       YearResolver(),
     ],
-    patterns: config != null ? [config] : [],
+    presets: config != null ? [config] : [],
     logger: logger,
   );
 

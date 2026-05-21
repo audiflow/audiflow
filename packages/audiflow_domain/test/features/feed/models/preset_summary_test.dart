@@ -2,9 +2,9 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  group('PatternSummary', () {
+  group('PresetSummary', () {
     test('constructs with required fields', () {
-      final summary = PatternSummary(
+      final summary = PresetSummary(
         id: 'coten_radio',
         dataVersion: 1,
         displayName: 'Coten Radio',
@@ -26,13 +26,13 @@ void main() {
         'feedUrlHint': 'anchor.fm/s/8c2088c',
         'playlistCount': 3,
       };
-      final summary = PatternSummary.fromJson(json);
+      final summary = PresetSummary.fromJson(json);
       expect(summary.id, 'coten_radio');
       expect(summary.dataVersion, 2);
     });
 
     test('serializes to JSON', () {
-      final summary = PatternSummary(
+      final summary = PresetSummary(
         id: 'news',
         dataVersion: 1,
         displayName: 'News',
@@ -48,14 +48,14 @@ void main() {
     });
 
     test('roundtrips through JSON', () {
-      final original = PatternSummary(
+      final original = PresetSummary(
         id: 'test',
         dataVersion: 5,
         displayName: 'Test Pattern',
         feedUrlHint: 'test.com/feed',
         playlistCount: 1,
       );
-      final restored = PatternSummary.fromJson(original.toJson());
+      final restored = PresetSummary.fromJson(original.toJson());
       expect(restored.id, original.id);
       expect(restored.dataVersion, original.dataVersion);
       expect(restored.displayName, original.displayName);

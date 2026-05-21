@@ -166,13 +166,13 @@ void main() {
 
     test('SmartPlaylistPlayed', () {
       final e = SmartPlaylistPlayed(
-        patternId: 'coten_radio',
+        presetId: 'coten_radio',
         playlistId: 'regular',
       );
       check(e.name).equals('smart_playlist_play');
       check(
         e.params,
-      ).deepEquals({'pattern_id': 'coten_radio', 'playlist_id': 'regular'});
+      ).deepEquals({'preset_id': 'coten_radio', 'playlist_id': 'regular'});
     });
 
     test('StationPlayed', () {

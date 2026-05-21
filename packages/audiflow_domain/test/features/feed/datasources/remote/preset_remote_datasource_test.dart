@@ -1,18 +1,18 @@
 import 'dart:convert';
 
-import 'package:audiflow_domain/src/features/feed/datasources/remote/smart_playlist_remote_datasource.dart';
+import 'package:audiflow_domain/src/features/feed/datasources/remote/preset_remote_datasource.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   const baseUrl = 'https://storage.example.com/config';
 
-  group('SmartPlaylistRemoteDatasource', () {
+  group('PresetRemoteDatasource', () {
     late Map<String, String> fakeResponses;
-    late SmartPlaylistRemoteDatasource datasource;
+    late PresetRemoteDatasource datasource;
 
     setUp(() {
       fakeResponses = {};
-      datasource = SmartPlaylistRemoteDatasource(
+      datasource = PresetRemoteDatasource(
         baseUrl: baseUrl,
         httpGet: (Uri url) async {
           final body = fakeResponses[url.toString()];
@@ -28,7 +28,7 @@ void main() {
       fakeResponses['$baseUrl/meta.json'] = jsonEncode({
         'dataVersion': 1,
         'schemaVersion': 1,
-        'patterns': [
+        'presets': [
           {
             'id': 'test',
             'dataVersion': 1,
@@ -40,11 +40,11 @@ void main() {
       });
 
       final meta = await datasource.fetchRootMeta();
-      expect(meta.patterns, hasLength(1));
-      expect(meta.patterns[0].id, 'test');
+      expect(meta.presets, hasLength(1));
+      expect(meta.presets[0].id, 'test');
     });
 
-    test('fetchPatternMeta returns parsed pattern meta', () async {
+    test('fetchPresetMeta returns parsed pattern meta', () async {
       fakeResponses['$baseUrl/coten_radio/meta.json'] = jsonEncode({
         'dataVersion': 1,
         'id': 'coten_radio',
@@ -52,7 +52,7 @@ void main() {
         'playlists': ['regular'],
       });
 
-      final meta = await datasource.fetchPatternMeta('coten_radio');
+      final meta = await datasource.fetchPresetMeta('coten_radio');
       expect(meta.id, 'coten_radio');
     });
 

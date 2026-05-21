@@ -259,17 +259,14 @@ class EpisodeDownloadCompleted extends AnalyticsEvent {
 }
 
 class SmartPlaylistPlayed extends AnalyticsEvent {
-  const SmartPlaylistPlayed({
-    required this.patternId,
-    required this.playlistId,
-  });
-  final String patternId;
+  const SmartPlaylistPlayed({required this.presetId, required this.playlistId});
+  final String presetId;
   final String playlistId;
   @override
   String get name => 'smart_playlist_play';
   @override
   Map<String, Object> get params => {
-    'pattern_id': patternId,
+    'preset_id': presetId,
     'playlist_id': playlistId,
   };
 }

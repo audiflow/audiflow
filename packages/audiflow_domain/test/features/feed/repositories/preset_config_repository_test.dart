@@ -2,24 +2,24 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:audiflow_domain/audiflow_domain.dart';
-import 'package:audiflow_domain/src/features/feed/datasources/local/smart_playlist_cache_datasource.dart';
-import 'package:audiflow_domain/src/features/feed/datasources/remote/smart_playlist_remote_datasource.dart';
+import 'package:audiflow_domain/src/features/feed/datasources/local/preset_cache_datasource.dart';
+import 'package:audiflow_domain/src/features/feed/datasources/remote/preset_remote_datasource.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   late Directory tempDir;
   late Map<String, String> fakeResponses;
-  late SmartPlaylistCacheDatasource cache;
-  late SmartPlaylistRemoteDatasource remote;
-  late SmartPlaylistConfigRepositoryImpl repo;
+  late PresetCacheDatasource cache;
+  late PresetRemoteDatasource remote;
+  late PresetConfigRepositoryImpl repo;
 
   const baseUrl = 'https://storage.example.com/config';
 
   setUp(() {
     tempDir = Directory.systemTemp.createTempSync('sp_repo_');
     fakeResponses = {};
-    cache = SmartPlaylistCacheDatasource(cacheDir: tempDir.path);
-    remote = SmartPlaylistRemoteDatasource(
+    cache = PresetCacheDatasource(cacheDir: tempDir.path);
+    remote = PresetRemoteDatasource(
       baseUrl: baseUrl,
       httpGet: (Uri url) async {
         final body = fakeResponses[url.toString()];
@@ -29,19 +29,19 @@ void main() {
         return body;
       },
     );
-    repo = SmartPlaylistConfigRepositoryImpl(remote: remote, cache: cache);
+    repo = PresetConfigRepositoryImpl(remote: remote, cache: cache);
   });
 
   tearDown(() {
     tempDir.deleteSync(recursive: true);
   });
 
-  group('SmartPlaylistConfigRepository', () {
+  group('PresetConfigRepository', () {
     test('fetchRootMeta returns root meta and caches it', () async {
       fakeResponses['$baseUrl/meta.json'] = jsonEncode({
         'dataVersion': 1,
         'schemaVersion': 1,
-        'patterns': [
+        'presets': [
           {
             'id': 'test',
             'dataVersion': 1,
@@ -53,7 +53,7 @@ void main() {
       });
 
       final meta = await repo.fetchRootMeta();
-      expect(meta.patterns, hasLength(1));
+      expect(meta.presets, hasLength(1));
 
       final cached = await cache.readRootMeta();
       expect(cached, isNotNull);
@@ -64,8 +64,8 @@ void main() {
         RootMeta(
           dataVersion: 1,
           schemaVersion: 1,
-          patterns: [
-            PatternSummary(
+          presets: [
+            PresetSummary(
               id: 'cached',
               dataVersion: 1,
               displayName: 'Cached',
@@ -77,21 +77,21 @@ void main() {
       );
 
       final meta = await repo.fetchRootMeta();
-      expect(meta.patterns[0].id, 'cached');
+      expect(meta.presets[0].id, 'cached');
     });
 
     test('fetchRootMeta returns empty when no cache and '
         'network fails', () async {
       final meta = await repo.fetchRootMeta();
       expect(meta.dataVersion, 1);
-      expect(meta.patterns, isEmpty);
+      expect(meta.presets, isEmpty);
     });
 
     test('reconcileCache evicts stale patterns', () async {
       await cache.writeVersions({'old_pattern': 1, 'current': 2});
-      await cache.writePatternMeta(
+      await cache.writePresetMeta(
         'old_pattern',
-        PatternMeta(
+        PresetMeta(
           dataVersion: 1,
           id: 'old_pattern',
           feedUrls: [],
@@ -100,7 +100,7 @@ void main() {
       );
 
       await repo.reconcileCache([
-        PatternSummary(
+        PresetSummary(
           id: 'current',
           dataVersion: 2,
           displayName: 'Current',
@@ -109,15 +109,15 @@ void main() {
         ),
       ]);
 
-      final meta = await cache.readPatternMeta('old_pattern');
+      final meta = await cache.readPresetMeta('old_pattern');
       expect(meta, isNull);
     });
 
     test('reconcileCache evicts version-bumped patterns', () async {
       await cache.writeVersions({'test': 1});
-      await cache.writePatternMeta(
+      await cache.writePresetMeta(
         'test',
-        PatternMeta(
+        PresetMeta(
           dataVersion: 1,
           id: 'test',
           feedUrls: [],
@@ -126,7 +126,7 @@ void main() {
       );
 
       await repo.reconcileCache([
-        PatternSummary(
+        PresetSummary(
           id: 'test',
           dataVersion: 2,
           displayName: 'Test',
@@ -135,7 +135,7 @@ void main() {
         ),
       ]);
 
-      final meta = await cache.readPatternMeta('test');
+      final meta = await cache.readPresetMeta('test');
       expect(meta, isNull);
     });
 
@@ -153,7 +153,7 @@ void main() {
         'priority': 0,
       });
 
-      final summary = PatternSummary(
+      final summary = PresetSummary(
         id: 'test',
         dataVersion: 1,
         displayName: 'Test',
@@ -166,7 +166,7 @@ void main() {
       expect(config.playlists, hasLength(1));
       expect(config.playlists[0].id, 'main');
 
-      final cachedMeta = await cache.readPatternMeta('test');
+      final cachedMeta = await cache.readPresetMeta('test');
       expect(cachedMeta, isNotNull);
       final cachedPlaylist = await cache.readPlaylist('test', 'main');
       expect(cachedPlaylist, isNotNull);
@@ -174,9 +174,9 @@ void main() {
 
     test('getConfig uses cache when version matches', () async {
       await cache.writeVersions({'test': 1});
-      await cache.writePatternMeta(
+      await cache.writePresetMeta(
         'test',
-        PatternMeta(
+        PresetMeta(
           dataVersion: 1,
           id: 'test',
           feedUrls: ['test.com'],
@@ -194,7 +194,7 @@ void main() {
         ),
       );
 
-      final summary = PatternSummary(
+      final summary = PresetSummary(
         id: 'test',
         dataVersion: 1,
         displayName: 'Test',
@@ -222,7 +222,7 @@ void main() {
       });
 
       // Override remote with counting wrapper
-      final countingRemote = SmartPlaylistRemoteDatasource(
+      final countingRemote = PresetRemoteDatasource(
         baseUrl: baseUrl,
         httpGet: (Uri url) async {
           fetchCount++;
@@ -233,12 +233,12 @@ void main() {
           return body;
         },
       );
-      final countingRepo = SmartPlaylistConfigRepositoryImpl(
+      final countingRepo = PresetConfigRepositoryImpl(
         remote: countingRemote,
         cache: cache,
       );
 
-      final summary = PatternSummary(
+      final summary = PresetSummary(
         id: 'test',
         dataVersion: 1,
         displayName: 'Test',
@@ -259,16 +259,16 @@ void main() {
       expect(fetchCount, 2);
     });
 
-    test('findMatchingPattern returns matching summary', () {
-      repo.setPatternSummaries([
-        PatternSummary(
+    test('findMatchingPreset returns matching summary', () {
+      repo.setPresetSummaries([
+        PresetSummary(
           id: 'coten',
           dataVersion: 1,
           displayName: 'Coten',
           feedUrlHint: 'anchor.fm/s/8c2088c',
           playlistCount: 3,
         ),
-        PatternSummary(
+        PresetSummary(
           id: 'other',
           dataVersion: 1,
           displayName: 'Other',
@@ -277,7 +277,7 @@ void main() {
         ),
       ]);
 
-      final match = repo.findMatchingPattern(
+      final match = repo.findMatchingPreset(
         null,
         'https://anchor.fm/s/8c2088c/podcast/rss',
       );
@@ -285,9 +285,9 @@ void main() {
       expect(match!.id, 'coten');
     });
 
-    test('findMatchingPattern returns null when no match', () {
-      repo.setPatternSummaries([
-        PatternSummary(
+    test('findMatchingPreset returns null when no match', () {
+      repo.setPresetSummaries([
+        PresetSummary(
           id: 'test',
           dataVersion: 1,
           displayName: 'Test',
@@ -296,7 +296,7 @@ void main() {
         ),
       ]);
 
-      final match = repo.findMatchingPattern(
+      final match = repo.findMatchingPreset(
         null,
         'https://unrelated.example.com/feed',
       );

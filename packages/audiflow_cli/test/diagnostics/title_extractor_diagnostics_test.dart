@@ -1,5 +1,5 @@
 import 'package:audiflow_cli/src/diagnostics/title_extractor_diagnostics.dart';
-import 'package:audiflow_domain/patterns.dart';
+import 'package:audiflow_domain/presets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 SimpleEpisodeData _makeEpisode({

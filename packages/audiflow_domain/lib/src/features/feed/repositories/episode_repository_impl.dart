@@ -11,7 +11,7 @@ import '../datasources/local/episode_local_datasource.dart';
 import '../models/episode.dart';
 import '../models/feed_parse_progress.dart';
 import '../models/numbering_extractor.dart';
-import '../models/smart_playlist_pattern_config.dart';
+import '../models/preset_config.dart';
 import '../services/episode_extractor_resolver.dart';
 import 'episode_repository.dart';
 
@@ -121,7 +121,7 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
   Future<void> upsertFromFeedItemsWithConfig(
     int podcastId,
     List<PodcastItem> items, {
-    required SmartPlaylistPatternConfig config,
+    required PresetConfig config,
   }) async {
     final resolver = EpisodeExtractorResolver();
     final validItems = items

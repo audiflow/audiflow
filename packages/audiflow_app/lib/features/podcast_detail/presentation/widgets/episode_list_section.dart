@@ -1,10 +1,6 @@
 import 'package:audiflow_core/audiflow_core.dart' show AutoPlayOrder;
 import 'package:audiflow_domain/audiflow_domain.dart'
-    show
-        EffectiveThumbnails,
-        PodcastItem,
-        SortOrder,
-        smartPlaylistPatternByFeedUrlProvider;
+    show EffectiveThumbnails, PodcastItem, SortOrder, presetByFeedUrlProvider;
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -102,9 +98,7 @@ List<Widget> buildEpisodeListSlivers({
   AutoPlayOrder? effectiveOrder,
   List<PodcastItem>? fallbackEpisodes,
 }) {
-  final patternAsync = ref.watch(
-    smartPlaylistPatternByFeedUrlProvider(feedUrl),
-  );
+  final patternAsync = ref.watch(presetByFeedUrlProvider(feedUrl));
   final yearGrouped = patternAsync.value?.yearGroupedEpisodes ?? false;
   final showEpisodeThumbnail = EffectiveThumbnails.podcastEpisodeList(
     showEpisodeThumbnail: patternAsync.value?.showEpisodeThumbnail,

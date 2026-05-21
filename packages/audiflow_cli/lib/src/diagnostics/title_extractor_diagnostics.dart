@@ -1,4 +1,4 @@
-import 'package:audiflow_domain/patterns.dart';
+import 'package:audiflow_domain/presets.dart';
 
 /// Diagnostic result from running title extraction.
 class TitleDiagnosticResult {

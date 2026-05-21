@@ -1226,7 +1226,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get developerContributeLabel => 'スマートプレイリストパターンを貢献';
 
   @override
-  String get developerContributeRepo => 'audiflow/audiflow-smartplaylist';
+  String get developerContributeRepo => 'audiflow/audiflow-preset';
 
   @override
   String get developerShowInfoTitle => '開発者情報を表示';

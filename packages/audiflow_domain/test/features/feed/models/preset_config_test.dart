@@ -3,13 +3,13 @@ import 'dart:convert';
 import 'package:audiflow_domain/src/features/feed/models/grouping_config.dart';
 import 'package:audiflow_domain/src/features/feed/models/smart_playlist_definition.dart';
 import 'package:audiflow_domain/src/features/feed/models/smart_playlist_group_def.dart';
-import 'package:audiflow_domain/src/features/feed/models/smart_playlist_pattern_config.dart';
+import 'package:audiflow_domain/src/features/feed/models/preset_config.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  group('SmartPlaylistPatternConfig', () {
+  group('PresetConfig', () {
     test('round-trip with feedUrls and playlists', () {
-      final config = SmartPlaylistPatternConfig(
+      final config = PresetConfig(
         id: 'test-podcast',
         feedUrls: ['https://example.com/feed/rss'],
         playlists: const [
@@ -23,7 +23,7 @@ void main() {
       );
 
       final jsonString = jsonEncode(config.toJson());
-      final decoded = SmartPlaylistPatternConfig.fromJson(
+      final decoded = PresetConfig.fromJson(
         jsonDecode(jsonString) as Map<String, dynamic>,
       );
 
@@ -35,7 +35,7 @@ void main() {
     });
 
     test('matchesPodcast by feed URL - match', () {
-      final config = SmartPlaylistPatternConfig(
+      final config = PresetConfig(
         id: 'test',
         feedUrls: ['https://example.com/feed/rss'],
         playlists: const [
@@ -55,7 +55,7 @@ void main() {
     });
 
     test('matchesPodcast by feed URL - no match', () {
-      final config = SmartPlaylistPatternConfig(
+      final config = PresetConfig(
         id: 'test',
         feedUrls: ['https://example.com/feed/rss'],
         playlists: const [
@@ -72,7 +72,7 @@ void main() {
     });
 
     test('matchesPodcast by GUID - match', () {
-      final config = SmartPlaylistPatternConfig(
+      final config = PresetConfig(
         id: 'test',
         podcastGuid: 'abc-123',
         playlists: const [
@@ -89,7 +89,7 @@ void main() {
     });
 
     test('matchesPodcast by GUID - no match', () {
-      final config = SmartPlaylistPatternConfig(
+      final config = PresetConfig(
         id: 'test',
         podcastGuid: 'abc-123',
         playlists: const [
@@ -114,14 +114,14 @@ void main() {
       );
 
       test('explicit false survives encode/decode', () {
-        final config = SmartPlaylistPatternConfig(
+        final config = PresetConfig(
           id: 'test',
           feedUrls: const ['https://example.com/feed'],
           showEpisodeThumbnail: false,
           playlists: [makePlaylist()],
         );
 
-        final decoded = SmartPlaylistPatternConfig.fromJson(
+        final decoded = PresetConfig.fromJson(
           jsonDecode(jsonEncode(config.toJson())) as Map<String, dynamic>,
         );
 
@@ -129,14 +129,14 @@ void main() {
       });
 
       test('explicit true survives encode/decode', () {
-        final config = SmartPlaylistPatternConfig(
+        final config = PresetConfig(
           id: 'test',
           feedUrls: const ['https://example.com/feed'],
           showEpisodeThumbnail: true,
           playlists: [makePlaylist()],
         );
 
-        final decoded = SmartPlaylistPatternConfig.fromJson(
+        final decoded = PresetConfig.fromJson(
           jsonDecode(jsonEncode(config.toJson())) as Map<String, dynamic>,
         );
 
@@ -144,7 +144,7 @@ void main() {
       });
 
       test('unset stays null and is omitted from toJson()', () {
-        final config = SmartPlaylistPatternConfig(
+        final config = PresetConfig(
           id: 'test',
           feedUrls: const ['https://example.com/feed'],
           playlists: [makePlaylist()],
@@ -153,7 +153,7 @@ void main() {
         expect(config.showEpisodeThumbnail, isNull);
         expect(config.toJson().containsKey('showEpisodeThumbnail'), isFalse);
 
-        final decoded = SmartPlaylistPatternConfig.fromJson(
+        final decoded = PresetConfig.fromJson(
           jsonDecode(jsonEncode(config.toJson())) as Map<String, dynamic>,
         );
         expect(decoded.showEpisodeThumbnail, isNull);
@@ -161,20 +161,19 @@ void main() {
     });
 
     group('findPlaylist', () {
-      SmartPlaylistPatternConfig makeConfig(List<String> ids) =>
-          SmartPlaylistPatternConfig(
-            id: 'test',
-            feedUrls: const ['https://example.com/feed'],
-            playlists: [
-              for (final id in ids)
-                SmartPlaylistDefinition(
-                  id: id,
-                  displayName: id,
-                  grouping: const GroupingConfig(by: 'seasonNumber'),
-                  priority: 0,
-                ),
-            ],
-          );
+      PresetConfig makeConfig(List<String> ids) => PresetConfig(
+        id: 'test',
+        feedUrls: const ['https://example.com/feed'],
+        playlists: [
+          for (final id in ids)
+            SmartPlaylistDefinition(
+              id: id,
+              displayName: id,
+              grouping: const GroupingConfig(by: 'seasonNumber'),
+              priority: 0,
+            ),
+        ],
+      );
 
       test('returns the playlist with matching id', () {
         final config = makeConfig(['regular', 'short', 'extras']);

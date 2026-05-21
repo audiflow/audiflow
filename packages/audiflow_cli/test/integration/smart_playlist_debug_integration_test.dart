@@ -4,15 +4,15 @@ library;
 import 'dart:io';
 
 import 'package:audiflow_cli/src/commands/smart_playlist_debug_command.dart';
-import 'package:audiflow_cli/src/patterns/pattern_registry.dart';
+import 'package:audiflow_cli/src/presets/preset_registry.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  late PatternRegistry registry;
+  late PresetRegistry registry;
 
   setUp(() {
-    final jsonFile = File('test/fixtures/smart_playlist_patterns.json');
-    registry = PatternRegistry.fromJson(jsonFile.readAsStringSync());
+    final jsonFile = File('test/fixtures/smart_playlist_presets.json');
+    registry = PresetRegistry.fromJson(jsonFile.readAsStringSync());
   });
 
   group('SmartPlaylistDebugCommand integration', () {

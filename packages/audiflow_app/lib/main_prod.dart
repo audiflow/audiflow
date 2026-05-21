@@ -4,6 +4,5 @@ import 'main.dart' as app;
 
 Future<void> main() => app.appMain(
   flavor: Flavor.prod,
-  smartPlaylistConfigBaseUrl:
-      'https://audiflow.github.io/audiflow-smartplaylist/assets/v6',
+  presetConfigBaseUrl: 'https://audiflow.github.io/audiflow-preset/assets/v7',
 );

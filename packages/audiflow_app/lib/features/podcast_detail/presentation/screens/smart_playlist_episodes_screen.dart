@@ -885,9 +885,7 @@ class _SmartPlaylistEpisodesScreenState
   bool _resolveEpisodeRowThumbnail() {
     final feedUrl = widget.podcast.feedUrl;
     if (feedUrl == null) return true;
-    final config = ref
-        .watch(smartPlaylistPatternByFeedUrlProvider(feedUrl))
-        .value;
+    final config = ref.watch(presetByFeedUrlProvider(feedUrl)).value;
     if (config == null) return true;
 
     final playlistDef = config.findPlaylist(widget.smartPlaylist.id);

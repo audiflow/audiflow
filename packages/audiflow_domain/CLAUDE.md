@@ -4,7 +4,7 @@ Business logic and data layer for Audiflow. All repositories, services, data sou
 
 ## Ecosystem context
 
-Sub-package of the `audiflow` Flutter monorepo. Depends on `audiflow_core`, `audiflow_podcast`, `audiflow_search`, `audiflow_ai`. Consumed by `audiflow_app`, `audiflow_ui`, `audiflow_cli`. Smart playlist models MUST stay aligned with `sp_core`/`sp_shared` in the editor repo.
+Sub-package of the `audiflow` Flutter monorepo. Depends on `audiflow_core`, `audiflow_podcast`, `audiflow_search`, `audiflow_ai`. Consumed by `audiflow_app`, `audiflow_ui`, `audiflow_cli`. Smart playlist models MUST stay aligned with `preset_core`/`preset_shared` in the editor repo.
 
 ## Responsibilities
 
@@ -27,7 +27,7 @@ Sub-package of the `audiflow` Flutter monorepo. Depends on `audiflow_core`, `aud
 
 - UI, routing, theming (`audiflow_app`, `audiflow_ui`)
 - RSS parsing (`audiflow_podcast`), search API (`audiflow_search`), AI inference (`audiflow_ai`)
-- Schema definition (`audiflow-smartplaylist-editor`)
+- Schema definition (`audiflow-preset-editor`)
 
 ## Validation
 
@@ -40,10 +40,10 @@ dart run build_runner build --delete-conflicting-outputs
 
 - `docs/overview.md` -- feature modules, patterns, public API surface, entry points
 - `lib/audiflow_domain.dart` -- barrel file (primary public API)
-- `lib/patterns.dart` -- pure-Dart exports for CLI (no Flutter deps)
+- `lib/presets.dart` -- pure-Dart exports for CLI (no Flutter deps)
 
 ## When changing this package
 
 - New Isar collection: register in `database_provider.dart`, run codegen
-- Smart playlist model changes: coordinate with `sp_core`/`sp_shared`, update vendored schema, run conformance tests
+- Smart playlist model changes: coordinate with `preset_core`/`preset_shared`, update vendored schema, run conformance tests
 - New feature module: add exports to `audiflow_domain.dart`, mirror existing directory structure

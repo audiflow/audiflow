@@ -47,8 +47,8 @@ final firebaseAnalyticsObserverProvider = Provider<FirebaseAnalyticsObserver?>(
 
 Future<void> appMain({
   required Flavor flavor,
-  String smartPlaylistConfigBaseUrl =
-      'https://audiflow.github.io/audiflow-smartplaylist/assets-dev/v6',
+  String presetConfigBaseUrl =
+      'https://audiflow.github.io/audiflow-preset/assets-dev/v7',
 }) async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -135,7 +135,7 @@ Future<void> appMain({
               }),
         );
         await _startApp(
-          smartPlaylistConfigBaseUrl,
+          presetConfigBaseUrl,
           prefs: prefs,
           firebaseAnalytics: firebaseAnalytics,
         );
@@ -150,7 +150,7 @@ Future<void> appMain({
       );
     }
     await _startApp(
-      smartPlaylistConfigBaseUrl,
+      presetConfigBaseUrl,
       prefs: prefs,
       firebaseAnalytics: firebaseAnalytics,
     );
@@ -171,7 +171,7 @@ Future<void> _configureOrientation() async {
 }
 
 Future<void> _startApp(
-  String smartPlaylistConfigBaseUrl, {
+  String presetConfigBaseUrl, {
   required SharedPreferences prefs,
   required FirebaseAnalytics? firebaseAnalytics,
 }) async {
@@ -280,9 +280,7 @@ Future<void> _startApp(
             ? null
             : FirebaseAnalyticsObserver(analytics: firebaseAnalytics),
       ),
-      smartPlaylistConfigBaseUrlProvider.overrideWithValue(
-        smartPlaylistConfigBaseUrl,
-      ),
+      presetConfigBaseUrlProvider.overrideWithValue(presetConfigBaseUrl),
       feedSyncDiagnosticSinkProvider.overrideWithValue(feedSyncDiagnostic),
       forceUpdateConfigUrlProvider.overrideWithValue(forceUpdateConfigUrl),
       // Wire repository warnings through logger + reporter without
@@ -314,26 +312,26 @@ Future<void> _startApp(
   // Restore last played episode for mini player
   await _restoreLastPlayed(container);
 
-  // Fetch smart playlist pattern summaries from remote
-  final spLogger = container.read(namedLoggerProvider('SmartPlaylist'));
+  // Fetch preset summaries from remote
+  final spLogger = container.read(namedLoggerProvider('Preset'));
   spLogger.d(
-    'Fetching smart playlist config from: '
-    '$smartPlaylistConfigBaseUrl',
+    'Fetching preset config from: '
+    '$presetConfigBaseUrl',
   );
-  final configRepo = container.read(smartPlaylistConfigRepositoryProvider);
+  final configRepo = container.read(presetConfigRepositoryProvider);
   final rootMeta = await configRepo.fetchRootMeta();
   spLogger.d(
-    'Smart playlist config dataVersion=${rootMeta.dataVersion}, '
+    'Preset config dataVersion=${rootMeta.dataVersion}, '
     'schemaVersion=${rootMeta.schemaVersion}, '
-    'patterns=${rootMeta.patterns.length}',
+    'presets=${rootMeta.presets.length}',
   );
-  await configRepo.reconcileCache(rootMeta.patterns);
-  configRepo.setPatternSummaries(rootMeta.patterns);
+  await configRepo.reconcileCache(rootMeta.presets);
+  configRepo.setPresetSummaries(rootMeta.presets);
   container
-      .read(patternSummariesProvider.notifier)
-      .setSummaries(rootMeta.patterns);
+      .read(presetSummariesProvider.notifier)
+      .setSummaries(rootMeta.presets);
   container
-      .read(smartPlaylistSchemaVersionProvider.notifier)
+      .read(presetSchemaVersionProvider.notifier)
       .setSchemaVersion(rootMeta.schemaVersion);
 
   // Run cache eviction non-blocking after startup

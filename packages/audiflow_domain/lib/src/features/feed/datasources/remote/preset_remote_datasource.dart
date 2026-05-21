@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import '../../models/pattern_meta.dart';
+import '../../models/preset_meta.dart';
 import '../../models/root_meta.dart';
 import '../../models/smart_playlist_definition.dart';
 
@@ -8,16 +8,13 @@ import '../../models/smart_playlist_definition.dart';
 /// body.
 typedef HttpGetFn = Future<String> Function(Uri url);
 
-/// Fetches split SmartPlaylist config files from a remote
-/// URL.
-class SmartPlaylistRemoteDatasource {
-  SmartPlaylistRemoteDatasource({
-    required String baseUrl,
-    required HttpGetFn httpGet,
-  }) : _baseUrl = baseUrl.endsWith('/')
-           ? baseUrl.substring(0, baseUrl.length - 1)
-           : baseUrl,
-       _httpGet = httpGet;
+/// Fetches split preset config files from a remote URL.
+class PresetRemoteDatasource {
+  PresetRemoteDatasource({required String baseUrl, required HttpGetFn httpGet})
+    : _baseUrl = baseUrl.endsWith('/')
+          ? baseUrl.substring(0, baseUrl.length - 1)
+          : baseUrl,
+      _httpGet = httpGet;
 
   final String _baseUrl;
   final HttpGetFn _httpGet;
@@ -28,19 +25,19 @@ class SmartPlaylistRemoteDatasource {
     return RootMeta.parseJson(body);
   }
 
-  /// Fetches and parses pattern meta.json.
-  Future<PatternMeta> fetchPatternMeta(String patternId) async {
-    final body = await _httpGet(Uri.parse('$_baseUrl/$patternId/meta.json'));
-    return PatternMeta.parseJson(body);
+  /// Fetches and parses preset meta.json.
+  Future<PresetMeta> fetchPresetMeta(String presetId) async {
+    final body = await _httpGet(Uri.parse('$_baseUrl/$presetId/meta.json'));
+    return PresetMeta.parseJson(body);
   }
 
   /// Fetches and parses a single playlist definition.
   Future<SmartPlaylistDefinition> fetchPlaylist(
-    String patternId,
+    String presetId,
     String playlistId,
   ) async {
     final body = await _httpGet(
-      Uri.parse('$_baseUrl/$patternId/playlists/$playlistId.json'),
+      Uri.parse('$_baseUrl/$presetId/playlists/$playlistId.json'),
     );
     final json = jsonDecode(body) as Map<String, dynamic>;
     return SmartPlaylistDefinition.fromJson(json);

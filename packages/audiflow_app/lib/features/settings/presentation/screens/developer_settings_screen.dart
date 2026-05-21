@@ -11,9 +11,9 @@ import '../../../../l10n/app_localizations.dart';
 
 /// Settings screen for developer-oriented preferences.
 ///
-/// Shows a contribute link to the smartplaylist repo, a toggle
-/// for developer info in episode detail, and a browsable list
-/// of all smart playlist patterns.
+/// Shows a contribute link to the preset repo, a toggle for
+/// developer info in episode detail, and a browsable list of
+/// all presets.
 class DeveloperSettingsScreen extends ConsumerWidget {
   const DeveloperSettingsScreen({super.key});
 
@@ -22,22 +22,22 @@ class DeveloperSettingsScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final devInfoEnabled = ref.watch(devShowDeveloperInfoProvider);
-    final summaries = ref.watch(patternSummariesProvider);
-    final schemaVersion = ref.watch(smartPlaylistSchemaVersionProvider);
+    final summaries = ref.watch(presetSummariesProvider);
+    final schemaVersion = ref.watch(presetSchemaVersionProvider);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settingsDeveloperTitle)),
       body: RefreshIndicator(
         onRefresh: () async {
-          final repo = ref.read(smartPlaylistConfigRepositoryProvider);
+          final repo = ref.read(presetConfigRepositoryProvider);
           final rootMeta = await repo.fetchRootMeta();
-          await repo.reconcileCache(rootMeta.patterns);
-          repo.setPatternSummaries(rootMeta.patterns);
+          await repo.reconcileCache(rootMeta.presets);
+          repo.setPresetSummaries(rootMeta.presets);
           ref
-              .read(patternSummariesProvider.notifier)
-              .setSummaries(rootMeta.patterns);
+              .read(presetSummariesProvider.notifier)
+              .setSummaries(rootMeta.presets);
           ref
-              .read(smartPlaylistSchemaVersionProvider.notifier)
+              .read(presetSchemaVersionProvider.notifier)
               .setSchemaVersion(rootMeta.schemaVersion);
         },
         child: ListView(
@@ -60,7 +60,7 @@ class DeveloperSettingsScreen extends ConsumerWidget {
               onTap: () async {
                 try {
                   final ok = await launchUrl(
-                    Uri.parse(SmartPlaylistUrls.repo),
+                    Uri.parse(PresetUrls.repo),
                     mode: LaunchMode.externalApplication,
                   );
                   if (!ok) debugPrint('launchUrl returned false for repo URL');
@@ -112,7 +112,7 @@ class DeveloperSettingsScreen extends ConsumerWidget {
                         try {
                           final ok = await launchUrl(
                             Uri.parse(
-                              SmartPlaylistUrls.patternDir(
+                              PresetUrls.presetDir(
                                 summary.id,
                                 schemaVersion: schemaVersion,
                               ),
@@ -121,11 +121,11 @@ class DeveloperSettingsScreen extends ConsumerWidget {
                           );
                           if (!ok) {
                             debugPrint(
-                              'launchUrl returned false for pattern URL',
+                              'launchUrl returned false for preset URL',
                             );
                           }
                         } on Exception catch (e) {
-                          debugPrint('Failed to launch pattern URL: $e');
+                          debugPrint('Failed to launch preset URL: $e');
                         }
                       }
                     : null,

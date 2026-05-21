@@ -1,24 +1,24 @@
 import 'dart:convert';
 
-import 'pattern_summary.dart';
+import 'preset_summary.dart';
 
 /// Root meta.json from the split config repository.
 ///
-/// Contains data version, schema version, and pattern summaries
+/// Contains data version, schema version, and preset summaries
 /// for discovery.
 final class RootMeta {
   const RootMeta({
     required this.dataVersion,
     required this.schemaVersion,
-    required this.patterns,
+    required this.presets,
   });
 
   factory RootMeta.fromJson(Map<String, dynamic> json) {
     return RootMeta(
       dataVersion: json['dataVersion'] as int,
       schemaVersion: json['schemaVersion'] as int,
-      patterns: (json['patterns'] as List<dynamic>)
-          .map((p) => PatternSummary.fromJson(p as Map<String, dynamic>))
+      presets: (json['presets'] as List<dynamic>)
+          .map((p) => PresetSummary.fromJson(p as Map<String, dynamic>))
           .toList(),
     );
   }
@@ -43,15 +43,15 @@ final class RootMeta {
   /// Schema definition version.
   final int schemaVersion;
 
-  /// Available pattern summaries for discovery.
-  final List<PatternSummary> patterns;
+  /// Available preset summaries for discovery.
+  final List<PresetSummary> presets;
 
   /// Converts to JSON representation.
   Map<String, dynamic> toJson() {
     return {
       'dataVersion': dataVersion,
       'schemaVersion': schemaVersion,
-      'patterns': patterns.map((p) => p.toJson()).toList(),
+      'presets': presets.map((p) => p.toJson()).toList(),
     };
   }
 }

@@ -36,7 +36,7 @@
 - [ ] **Step 1: Copy from upstream**
 
 ```bash
-cp /Users/tohru/Documents/src/ghq/github.com/audiflow/audiflow-smartplaylist/schema/playlist-definition.schema.json \
+cp /Users/tohru/Documents/src/ghq/github.com/audiflow/audiflow-preset/schema/playlist-definition.schema.json \
    packages/audiflow_domain/test/fixtures/playlist-definition.schema.json
 ```
 

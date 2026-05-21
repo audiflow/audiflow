@@ -24,9 +24,9 @@ Audiflow is a mobile podcast player for iOS and Android, built with Flutter. It 
 
 ## Non-responsibilities
 
-- JSON Schema definition (owned by `audiflow-smartplaylist-editor`)
+- JSON Schema definition (owned by `audiflow-preset-editor`)
 - Smart playlist config authoring or editing (owned by editor)
-- Config data hosting (owned by `audiflow-smartplaylist` via GitHub Pages, all environments)
+- Config data hosting (owned by `audiflow-preset` via GitHub Pages, all environments)
 
 ## Main concepts
 
@@ -68,7 +68,7 @@ Audiflow is a mobile podcast player for iOS and Android, built with Flutter. It 
 - docs/architecture/module-boundaries.md
 - docs/architecture/state-flow.md
 - docs/architecture/playback-pipeline.md
-- docs/integration/smartplaylist.md
+- docs/integration/preset.md
 - docs/development/change-workflow.md
 
 ## When to update

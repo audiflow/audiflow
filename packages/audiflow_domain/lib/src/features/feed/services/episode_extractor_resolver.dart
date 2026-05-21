@@ -2,7 +2,7 @@ import '../models/episode_filter_entry.dart';
 import '../models/smart_playlist_definition.dart';
 import '../models/numbering_extractor.dart';
 import '../models/smart_playlist_group_def.dart';
-import '../models/smart_playlist_pattern_config.dart';
+import '../models/preset_config.dart';
 
 /// Resolves the appropriate [NumberingExtractor] for an episode
 /// by matching it against group patterns within the pattern config.
@@ -19,7 +19,7 @@ class EpisodeExtractorResolver {
   NumberingExtractor? resolve(
     String title,
     String? description,
-    SmartPlaylistPatternConfig config,
+    PresetConfig config,
   ) {
     for (final definition in config.playlists) {
       final groups = definition.grouping.staticClassifiers;

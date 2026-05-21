@@ -1,9 +1,9 @@
 import 'smart_playlist_definition.dart';
 
-/// Top-level pattern configuration that matches a podcast and
+/// Top-level preset configuration that matches a podcast and
 /// provides its playlist definitions.
-final class SmartPlaylistPatternConfig {
-  const SmartPlaylistPatternConfig({
+final class PresetConfig {
+  const PresetConfig({
     required this.id,
     this.podcastGuid,
     this.feedUrls,
@@ -13,8 +13,8 @@ final class SmartPlaylistPatternConfig {
   });
 
   /// Creates a config from JSON.
-  factory SmartPlaylistPatternConfig.fromJson(Map<String, dynamic> json) {
-    return SmartPlaylistPatternConfig(
+  factory PresetConfig.fromJson(Map<String, dynamic> json) {
+    return PresetConfig(
       id: json['id'] as String,
       podcastGuid: json['podcastGuid'] as String?,
       feedUrls: (json['feedUrls'] as List<dynamic>?)?.cast<String>(),
@@ -28,7 +28,7 @@ final class SmartPlaylistPatternConfig {
     );
   }
 
-  /// Unique identifier for this pattern config.
+  /// Unique identifier for this preset config.
   final String id;
 
   /// Podcast GUID for exact matching.

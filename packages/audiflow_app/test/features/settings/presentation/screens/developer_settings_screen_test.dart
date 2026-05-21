@@ -34,12 +34,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      check(
-        find.text('Contribute smart playlist patterns').evaluate(),
-      ).isNotEmpty();
-      check(
-        find.text('audiflow/audiflow-smartplaylist').evaluate(),
-      ).isNotEmpty();
+      check(find.text('Contribute presets').evaluate()).isNotEmpty();
+      check(find.text('audiflow/audiflow-preset').evaluate()).isNotEmpty();
     });
 
     testWidgets('renders toggle defaulting to off', (tester) async {
@@ -70,14 +66,14 @@ void main() {
       tester,
     ) async {
       final summaries = [
-        const PatternSummary(
+        const PresetSummary(
           id: 'coten_radio',
           dataVersion: 1,
           displayName: 'Coten Radio',
           feedUrlHint: 'anchor.fm/s/8c2088c',
           playlistCount: 3,
         ),
-        const PatternSummary(
+        const PresetSummary(
           id: 'news_connect',
           dataVersion: 1,
           displayName: 'News Connect',
@@ -89,8 +85,8 @@ void main() {
       await tester.pumpWidget(
         _buildApp([
           sharedPreferencesProvider.overrideWithValue(prefs),
-          patternSummariesProvider.overrideWith(
-            () => _FakePatternSummaries(summaries),
+          presetSummariesProvider.overrideWith(
+            () => _FakePresetSummaries(summaries),
           ),
         ]),
       );
@@ -102,10 +98,10 @@ void main() {
   });
 }
 
-class _FakePatternSummaries extends PatternSummaries {
-  _FakePatternSummaries(this._initial);
-  final List<PatternSummary> _initial;
+class _FakePresetSummaries extends PresetSummaries {
+  _FakePresetSummaries(this._initial);
+  final List<PresetSummary> _initial;
 
   @override
-  List<PatternSummary> build() => _initial;
+  List<PresetSummary> build() => _initial;
 }

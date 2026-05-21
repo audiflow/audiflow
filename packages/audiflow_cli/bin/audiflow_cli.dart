@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:args/args.dart';
-import 'package:audiflow_cli/src/commands/pattern_list_command.dart';
 import 'package:audiflow_cli/src/commands/pattern_test_command.dart';
+import 'package:audiflow_cli/src/commands/preset_list_command.dart';
 import 'package:audiflow_cli/src/commands/smart_playlist_debug_command.dart';
 
 void main(List<String> args) async {
@@ -13,7 +13,7 @@ void main(List<String> args) async {
   // Add subcommands
   parser.addCommand('playlist-debug')
     ..addFlag('json', help: 'Output as JSON')
-    ..addOption('pattern', abbr: 'p', help: 'Pattern ID to use');
+    ..addOption('preset', abbr: 'p', help: 'Preset ID to use');
 
   parser.addCommand('pattern-test')
     ..addOption('title', abbr: 't', help: 'Episode title to test')
@@ -27,7 +27,7 @@ void main(List<String> args) async {
       help: 'Episode number (int or null)',
     );
 
-  parser.addCommand('pattern-list');
+  parser.addCommand('preset-list');
 
   try {
     final results = parser.parse(args);
@@ -53,8 +53,8 @@ void main(List<String> args) async {
         await _runPlaylistDebug(command);
       case 'pattern-test':
         _runPatternTest(command);
-      case 'pattern-list':
-        _runPatternList();
+      case 'preset-list':
+        _runPresetList();
       default:
         stdout.writeln('Unknown command: ${command.name}');
         exit(1);
@@ -72,7 +72,7 @@ void _printUsage(ArgParser parser) {
   stdout.writeln('Commands:');
   stdout.writeln('  playlist-debug <url>   Test extractors against RSS feed');
   stdout.writeln('  pattern-test         Test patterns against a single title');
-  stdout.writeln('  pattern-list         List available patterns');
+  stdout.writeln('  preset-list          List available presets');
   stdout.writeln('');
   stdout.writeln('Options:');
   stdout.writeln(parser.usage);
@@ -86,12 +86,12 @@ Future<void> _runPlaylistDebug(ArgResults command) async {
 
   final feedUrl = command.rest.first;
   final json = command['json'] as bool;
-  final patternId = command['pattern'] as String?;
+  final presetId = command['preset'] as String?;
 
   final cmd = SmartPlaylistDebugCommand(sink: stdout);
   final exitCode = await cmd.run(
     feedUrl: feedUrl,
-    patternId: patternId,
+    presetId: presetId,
     json: json,
   );
   exit(exitCode);
@@ -130,8 +130,8 @@ void _runPatternTest(ArgResults command) {
   exit(exitCode);
 }
 
-void _runPatternList() {
-  final cmd = PatternListCommand(sink: stdout);
+void _runPresetList() {
+  final cmd = PresetListCommand(sink: stdout);
   final exitCode = cmd.run();
   exit(exitCode);
 }
