@@ -64,7 +64,7 @@ class ScaffoldWithNavBar extends ConsumerWidget {
   void _onMiniPlayerTap(BuildContext context) {
     showCupertinoSheet<void>(
       context: context,
-      builder: (context) => const PlayerScreen(),
+      scrollableBuilder: (context, controller) => const PlayerScreen(),
     );
   }
 

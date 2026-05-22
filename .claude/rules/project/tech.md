@@ -5,7 +5,7 @@ paths: packages/**/*.dart, pubspec.yaml, "*.env*"
 # Audiflow v2 - Tech Stack
 
 ## Core Stack
-- **Flutter 3.41.4** / **Dart 3.11.1**
+- **Flutter 3.44.0** / **Dart 3.12.0**
 - **iOS 14.0+** / **Android 8.0+ (API 26+)**
 - **Analyzer**: 10.x (overridden in root pubspec.yaml for Riverpod 4.x compatibility)
 
