@@ -43,7 +43,7 @@ The queue exists for the complementary reason: once a listener finishes an episo
 - Presents a download management screen grouping tasks by status (downloading, pending, paused, completed, failed, cancelled) and reports total storage used.
 - Optionally auto-deletes a downloaded file when its episode is marked played.
 - Maintains a playback queue with two tiers: manually added items (Play Next / Play Later) take priority over adhoc items generated from an episode list; the next item is always drawn from manual items first.
-- Builds an adhoc queue from the episodes following a starting episode, respecting the effective play order (chronological or as-displayed) and excluding the starting episode itself.
+- Builds an adhoc queue from the episodes following a starting episode, respecting the effective play order (chronological or as-displayed) and excluding the starting episode itself; the adhoc tier is capped at 100 episodes, and creating a new adhoc queue replaces the previous one (prompting for confirmation only when manual items would be discarded).
 - Lets the listener reorder, remove, skip-to, and clear queue items, and pops the next episode for playback when the current one ends.
 
 ## Boundaries
