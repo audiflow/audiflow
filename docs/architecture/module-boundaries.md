@@ -1,3 +1,13 @@
+---
+refs:
+  id: arch:module-boundaries
+  kind: architecture
+  title: "Module boundaries"
+  related:
+    - arch:system-overview
+  modules:
+    - packages/
+---
 # Module Boundaries
 
 ## Dependency graph

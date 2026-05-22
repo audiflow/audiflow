@@ -1,3 +1,14 @@
+---
+refs:
+  id: arch:state-flow
+  kind: architecture
+  title: "State flow"
+  related:
+    - arch:system-overview
+  modules:
+    - packages/audiflow_app/lib/features/
+    - packages/audiflow_domain/lib/src/features/
+---
 # State Flow
 
 ## Definitions

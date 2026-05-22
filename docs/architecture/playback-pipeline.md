@@ -1,3 +1,12 @@
+---
+refs:
+  id: arch:playback-pipeline
+  kind: architecture
+  title: "Playback pipeline"
+  modules:
+    - packages/audiflow_app/lib/features/player/
+    - packages/audiflow_domain/lib/src/features/player/
+---
 # Playback Pipeline
 
 ## Definitions
