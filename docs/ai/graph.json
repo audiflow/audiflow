@@ -1,0 +1,870 @@
+{
+  "schema_version": 1,
+  "docs": [
+    {
+      "id": "arch:module-boundaries",
+      "kind": "architecture",
+      "path": "docs/architecture/module-boundaries.md",
+      "title": "Module boundaries",
+      "provides": [],
+      "implements": [],
+      "depends_on": [],
+      "related": [
+        "arch:system-overview"
+      ],
+      "modules": [
+        "packages/"
+      ]
+    },
+    {
+      "id": "arch:playback-pipeline",
+      "kind": "architecture",
+      "path": "docs/architecture/playback-pipeline.md",
+      "title": "Playback pipeline",
+      "provides": [],
+      "implements": [],
+      "depends_on": [],
+      "related": [],
+      "modules": [
+        "packages/audiflow_app/lib/features/player/",
+        "packages/audiflow_domain/lib/src/features/player/"
+      ]
+    },
+    {
+      "id": "arch:smart-playlist-cache",
+      "kind": "architecture",
+      "path": "docs/architecture/smart-playlist-cache.md",
+      "title": "Preset (smart playlist) cache",
+      "provides": [],
+      "implements": [],
+      "depends_on": [],
+      "related": [
+        "integration:preset"
+      ],
+      "modules": [
+        "packages/audiflow_domain/lib/src/features/feed/resolvers/",
+        "packages/audiflow_domain/lib/src/features/feed/providers/",
+        "packages/audiflow_domain/lib/src/features/feed/models/"
+      ]
+    },
+    {
+      "id": "arch:state-flow",
+      "kind": "architecture",
+      "path": "docs/architecture/state-flow.md",
+      "title": "State flow",
+      "provides": [],
+      "implements": [],
+      "depends_on": [],
+      "related": [
+        "arch:system-overview"
+      ],
+      "modules": [
+        "packages/audiflow_app/lib/features/",
+        "packages/audiflow_domain/lib/src/features/"
+      ]
+    },
+    {
+      "id": "arch:system-overview",
+      "kind": "architecture",
+      "path": "docs/architecture/system-overview.md",
+      "title": "System overview",
+      "provides": [],
+      "implements": [],
+      "depends_on": [],
+      "related": [
+        "arch:module-boundaries",
+        "arch:state-flow"
+      ],
+      "modules": [
+        "packages/"
+      ]
+    },
+    {
+      "id": "fr:01-app-foundation",
+      "kind": "fr",
+      "path": "docs/fr/01-app-foundation.md",
+      "title": "App foundation",
+      "provides": [],
+      "implements": [],
+      "depends_on": [],
+      "related": [
+        "arch:system-overview"
+      ],
+      "modules": [
+        "packages/audiflow_app/lib/app/",
+        "packages/audiflow_app/lib/routing/",
+        "packages/audiflow_app/lib/main.dart",
+        "packages/audiflow_app/lib/features/onboarding/"
+      ]
+    },
+    {
+      "id": "fr:02-podcast-discovery",
+      "kind": "fr",
+      "path": "docs/fr/02-podcast-discovery.md",
+      "title": "Podcast discovery and search",
+      "provides": [],
+      "implements": [],
+      "depends_on": [],
+      "related": [
+        "fr:03-subscription-feeds",
+        "pkg:audiflow_search"
+      ],
+      "modules": [
+        "packages/audiflow_app/lib/features/search/",
+        "packages/audiflow_search/lib/"
+      ]
+    },
+    {
+      "id": "fr:03-subscription-feeds",
+      "kind": "fr",
+      "path": "docs/fr/03-subscription-feeds.md",
+      "title": "Subscription and feed management",
+      "provides": [],
+      "implements": [],
+      "depends_on": [],
+      "related": [
+        "fr:02-podcast-discovery",
+        "fr:12-background-refresh"
+      ],
+      "modules": [
+        "packages/audiflow_app/lib/features/subscription/",
+        "packages/audiflow_domain/lib/src/features/subscription/",
+        "packages/audiflow_domain/lib/src/features/feed/"
+      ]
+    },
+    {
+      "id": "fr:04-audio-playback",
+      "kind": "fr",
+      "path": "docs/fr/04-audio-playback.md",
+      "title": "Audio playback",
+      "provides": [],
+      "implements": [],
+      "depends_on": [],
+      "related": [
+        "arch:playback-pipeline",
+        "fr:05-download-and-queue",
+        "fr:09-sleep-timer"
+      ],
+      "modules": [
+        "packages/audiflow_app/lib/features/player/",
+        "packages/audiflow_domain/lib/src/features/player/"
+      ]
+    },
+    {
+      "id": "fr:05-download-and-queue",
+      "kind": "fr",
+      "path": "docs/fr/05-download-and-queue.md",
+      "title": "Episode download and queue",
+      "provides": [],
+      "implements": [],
+      "depends_on": [],
+      "related": [
+        "fr:04-audio-playback"
+      ],
+      "modules": [
+        "packages/audiflow_app/lib/features/download/",
+        "packages/audiflow_app/lib/features/queue/",
+        "packages/audiflow_domain/lib/src/features/download/",
+        "packages/audiflow_domain/lib/src/features/queue/"
+      ]
+    },
+    {
+      "id": "fr:06-preset",
+      "kind": "fr",
+      "path": "docs/fr/06-preset.md",
+      "title": "Preset (smart playlist) consumption",
+      "provides": [],
+      "implements": [],
+      "depends_on": [],
+      "related": [
+        "integration:preset",
+        "arch:smart-playlist-cache"
+      ],
+      "modules": [
+        "packages/audiflow_domain/lib/presets.dart",
+        "packages/audiflow_domain/lib/src/features/feed/models/",
+        "packages/audiflow_domain/lib/src/features/feed/resolvers/",
+        "packages/audiflow_domain/lib/src/features/feed/services/preset_loader.dart",
+        "packages/audiflow_domain/lib/src/features/feed/services/config_assembler.dart",
+        "packages/audiflow_domain/lib/src/features/feed/services/smart_playlist_resolver_service.dart",
+        "packages/audiflow_domain/lib/src/features/feed/services/episode_extractor_resolver.dart",
+        "packages/audiflow_domain/lib/src/features/feed/repositories/preset_config_repository.dart",
+        "packages/audiflow_domain/lib/src/features/feed/repositories/preset_config_repository_impl.dart",
+        "packages/audiflow_domain/lib/src/features/feed/datasources/remote/preset_remote_datasource.dart",
+        "packages/audiflow_domain/lib/src/features/feed/datasources/local/preset_cache_datasource.dart",
+        "packages/audiflow_domain/lib/src/features/feed/datasources/local/smart_playlist_local_datasource.dart",
+        "packages/audiflow_domain/lib/src/features/feed/providers/preset_providers.dart"
+      ]
+    },
+    {
+      "id": "fr:07-stations",
+      "kind": "fr",
+      "path": "docs/fr/07-stations.md",
+      "title": "Stations",
+      "provides": [],
+      "implements": [],
+      "depends_on": [],
+      "related": [
+        "fr:06-preset",
+        "fr:11-play-order"
+      ],
+      "modules": [
+        "packages/audiflow_app/lib/features/station/",
+        "packages/audiflow_domain/lib/src/features/station/"
+      ]
+    },
+    {
+      "id": "fr:08-transcript-chapters",
+      "kind": "fr",
+      "path": "docs/fr/08-transcript-chapters.md",
+      "title": "Transcript and chapters",
+      "provides": [],
+      "implements": [],
+      "depends_on": [],
+      "related": [
+        "fr:04-audio-playback"
+      ],
+      "modules": [
+        "packages/audiflow_app/lib/features/player/",
+        "packages/audiflow_domain/lib/src/features/transcript/"
+      ]
+    },
+    {
+      "id": "fr:09-sleep-timer",
+      "kind": "fr",
+      "path": "docs/fr/09-sleep-timer.md",
+      "title": "Sleep timer",
+      "provides": [],
+      "implements": [],
+      "depends_on": [],
+      "related": [
+        "fr:04-audio-playback"
+      ],
+      "modules": [
+        "packages/audiflow_domain/lib/src/features/player/models/sleep_timer_config.dart",
+        "packages/audiflow_domain/lib/src/features/player/models/sleep_timer_state.dart",
+        "packages/audiflow_domain/lib/src/features/player/models/sleep_timer_event.dart",
+        "packages/audiflow_domain/lib/src/features/player/services/sleep_timer_service.dart",
+        "packages/audiflow_domain/lib/src/features/player/datasources/local/sleep_timer_preferences_datasource.dart",
+        "packages/audiflow_domain/lib/src/features/player/controllers/sleep_timer_controller.dart",
+        "packages/audiflow_domain/lib/src/features/player/providers/sleep_timer_providers.dart",
+        "packages/audiflow_app/lib/features/player/presentation/controllers/sleep_timer_ui_controller.dart",
+        "packages/audiflow_app/lib/features/player/presentation/widgets/sleep_timer_sheet.dart",
+        "packages/audiflow_app/lib/features/player/presentation/widgets/sleep_timer_numeric_panel.dart",
+        "packages/audiflow_app/lib/features/player/presentation/widgets/sleep_timer_chip.dart",
+        "packages/audiflow_app/lib/features/player/presentation/widgets/sleep_timer_icon_button.dart",
+        "packages/audiflow_app/lib/features/player/presentation/widgets/sleep_timer_status_label.dart",
+        "packages/audiflow_app/lib/features/player/presentation/widgets/sleep_timer_label_format.dart"
+      ]
+    },
+    {
+      "id": "fr:10-voice-commands",
+      "kind": "fr",
+      "path": "docs/fr/10-voice-commands.md",
+      "title": "Voice commands",
+      "provides": [],
+      "implements": [],
+      "depends_on": [],
+      "related": [
+        "pkg:audiflow_ai",
+        "fr:14-settings"
+      ],
+      "modules": [
+        "packages/audiflow_ai/"
+      ]
+    },
+    {
+      "id": "fr:11-play-order",
+      "kind": "fr",
+      "path": "docs/fr/11-play-order.md",
+      "title": "Play order",
+      "provides": [],
+      "implements": [],
+      "depends_on": [],
+      "related": [
+        "fr:04-audio-playback",
+        "fr:05-download-and-queue"
+      ],
+      "modules": [
+        "packages/audiflow_core/lib/src/models/auto_play_order.dart",
+        "packages/audiflow_domain/lib/src/features/feed/models/podcast_sort_order.dart",
+        "packages/audiflow_domain/lib/src/features/feed/models/podcast_view_preference.dart",
+        "packages/audiflow_domain/lib/src/features/feed/models/smart_playlist_user_preference.dart",
+        "packages/audiflow_domain/lib/src/features/feed/models/smart_playlist_group_user_preference.dart",
+        "packages/audiflow_domain/lib/src/features/feed/repositories/play_order_preference_repository.dart",
+        "packages/audiflow_domain/lib/src/features/feed/datasources/local/play_order_preference_local_datasource.dart",
+        "packages/audiflow_domain/lib/src/features/queue/services/queue_service.dart",
+        "packages/audiflow_app/lib/features/podcast_detail/presentation/widgets/play_order_bottom_sheet.dart",
+        "packages/audiflow_app/lib/features/library/presentation/controllers/library_controller.dart",
+        "packages/audiflow_app/lib/features/settings/presentation/screens/playback_settings_screen.dart"
+      ]
+    },
+    {
+      "id": "fr:12-background-refresh",
+      "kind": "fr",
+      "path": "docs/fr/12-background-refresh.md",
+      "title": "Background refresh and notifications",
+      "provides": [],
+      "implements": [],
+      "depends_on": [],
+      "related": [
+        "fr:03-subscription-feeds"
+      ],
+      "modules": [
+        "packages/audiflow_app/lib/app/background/",
+        "packages/audiflow_app/lib/app/notification/",
+        "packages/audiflow_domain/lib/src/features/feed/services/background_refresh_service.dart",
+        "packages/audiflow_domain/lib/src/features/feed/services/background_notification_service.dart",
+        "packages/audiflow_domain/lib/src/features/feed/services/feed_sync_executor.dart",
+        "packages/audiflow_domain/lib/src/features/feed/models/new_episode_notification.dart",
+        "packages/audiflow_domain/lib/src/features/download/services/auto_download_enqueuer.dart"
+      ]
+    },
+    {
+      "id": "fr:13-library",
+      "kind": "fr",
+      "path": "docs/fr/13-library.md",
+      "title": "Library",
+      "provides": [],
+      "implements": [],
+      "depends_on": [],
+      "related": [
+        "fr:03-subscription-feeds",
+        "fr:11-play-order"
+      ],
+      "modules": [
+        "packages/audiflow_app/lib/features/library/"
+      ]
+    },
+    {
+      "id": "fr:14-settings",
+      "kind": "fr",
+      "path": "docs/fr/14-settings.md",
+      "title": "Settings and developer preferences",
+      "provides": [],
+      "implements": [],
+      "depends_on": [],
+      "related": [
+        "fr:10-voice-commands"
+      ],
+      "modules": [
+        "packages/audiflow_app/lib/features/settings/",
+        "packages/audiflow_domain/lib/src/features/settings/"
+      ]
+    },
+    {
+      "id": "fr:15-links-and-sharing",
+      "kind": "fr",
+      "path": "docs/fr/15-links-and-sharing.md",
+      "title": "Universal links and sharing",
+      "provides": [],
+      "implements": [],
+      "depends_on": [],
+      "related": [
+        "fr:01-app-foundation",
+        "fr:04-audio-playback"
+      ],
+      "modules": [
+        "packages/audiflow_app/lib/features/share/",
+        "packages/audiflow_domain/lib/src/features/share/",
+        "packages/audiflow_app/lib/routing/"
+      ]
+    },
+    {
+      "id": "fr:16-app-lifecycle",
+      "kind": "fr",
+      "path": "docs/fr/16-app-lifecycle.md",
+      "title": "App lifecycle, updates and observability",
+      "provides": [],
+      "implements": [],
+      "depends_on": [],
+      "related": [
+        "fr:01-app-foundation"
+      ],
+      "modules": [
+        "packages/audiflow_app/lib/features/force_update/",
+        "packages/audiflow_app/lib/features/monitoring/",
+        "packages/audiflow_app/lib/features/review_prompt/",
+        "packages/audiflow_domain/lib/src/features/force_update/",
+        "packages/audiflow_domain/lib/src/features/monitoring/",
+        "packages/audiflow_domain/lib/src/features/review_prompt/"
+      ]
+    },
+    {
+      "id": "fr:17-podcast-detail",
+      "kind": "fr",
+      "path": "docs/fr/17-podcast-detail.md",
+      "title": "Podcast detail",
+      "provides": [],
+      "implements": [],
+      "depends_on": [],
+      "related": [
+        "fr:03-subscription-feeds",
+        "fr:04-audio-playback",
+        "fr:08-transcript-chapters",
+        "fr:11-play-order"
+      ],
+      "modules": [
+        "packages/audiflow_app/lib/features/podcast_detail/",
+        "packages/audiflow_domain/lib/src/features/feed/models/podcast_view_preference.dart",
+        "packages/audiflow_domain/lib/src/features/feed/repositories/podcast_view_preference_repository.dart",
+        "packages/audiflow_domain/lib/src/features/feed/datasources/local/podcast_view_preference_local_datasource.dart",
+        "packages/audiflow_domain/lib/src/features/feed/providers/podcast_view_preference_providers.dart"
+      ]
+    },
+    {
+      "id": "index:architecture",
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "title": "architecture Index",
+      "generated": true,
+      "indexes_kind": "architecture",
+      "provides": [],
+      "implements": [],
+      "depends_on": [],
+      "related": [],
+      "modules": []
+    },
+    {
+      "id": "index:fr",
+      "kind": "index",
+      "path": "docs/fr/index.md",
+      "title": "fr Index",
+      "generated": true,
+      "indexes_kind": "fr",
+      "provides": [],
+      "implements": [],
+      "depends_on": [],
+      "related": [],
+      "modules": []
+    },
+    {
+      "id": "index:package",
+      "kind": "index",
+      "path": "packages/index.md",
+      "title": "package Index",
+      "generated": true,
+      "indexes_kind": "package",
+      "provides": [],
+      "implements": [],
+      "depends_on": [],
+      "related": [],
+      "modules": []
+    },
+    {
+      "id": "integration:preset",
+      "kind": "integration",
+      "path": "docs/integration/preset.md",
+      "title": "Preset config consumption contract",
+      "provides": [],
+      "implements": [],
+      "depends_on": [],
+      "related": [
+        "arch:smart-playlist-cache"
+      ],
+      "modules": [
+        "packages/audiflow_domain/lib/src/features/feed/datasources/remote/preset_remote_datasource.dart",
+        "packages/audiflow_domain/lib/src/features/feed/datasources/local/preset_cache_datasource.dart",
+        "packages/audiflow_domain/lib/src/features/feed/datasources/local/smart_playlist_local_datasource.dart",
+        "packages/audiflow_domain/lib/src/features/feed/repositories/preset_config_repository.dart",
+        "packages/audiflow_domain/lib/src/features/feed/repositories/preset_config_repository_impl.dart",
+        "packages/audiflow_domain/lib/src/features/feed/services/smart_playlist_resolver_service.dart",
+        "packages/audiflow_domain/lib/src/features/feed/providers/preset_providers.dart",
+        "packages/audiflow_domain/lib/src/features/feed/resolvers/"
+      ]
+    },
+    {
+      "id": "pkg:audiflow_ai",
+      "kind": "package",
+      "path": "packages/audiflow_ai/CLAUDE.md",
+      "title": "audiflow_ai",
+      "provides": [],
+      "implements": [],
+      "depends_on": [],
+      "related": [],
+      "modules": [
+        "packages/audiflow_ai/"
+      ]
+    },
+    {
+      "id": "pkg:audiflow_app",
+      "kind": "package",
+      "path": "packages/audiflow_app/CLAUDE.md",
+      "title": "audiflow_app",
+      "provides": [],
+      "implements": [],
+      "depends_on": [],
+      "related": [],
+      "modules": [
+        "packages/audiflow_app/"
+      ]
+    },
+    {
+      "id": "pkg:audiflow_cli",
+      "kind": "package",
+      "path": "packages/audiflow_cli/CLAUDE.md",
+      "title": "audiflow_cli",
+      "provides": [],
+      "implements": [],
+      "depends_on": [],
+      "related": [],
+      "modules": [
+        "packages/audiflow_cli/"
+      ]
+    },
+    {
+      "id": "pkg:audiflow_core",
+      "kind": "package",
+      "path": "packages/audiflow_core/CLAUDE.md",
+      "title": "audiflow_core",
+      "provides": [],
+      "implements": [],
+      "depends_on": [],
+      "related": [],
+      "modules": [
+        "packages/audiflow_core/"
+      ]
+    },
+    {
+      "id": "pkg:audiflow_domain",
+      "kind": "package",
+      "path": "packages/audiflow_domain/CLAUDE.md",
+      "title": "audiflow_domain",
+      "provides": [],
+      "implements": [],
+      "depends_on": [],
+      "related": [],
+      "modules": [
+        "packages/audiflow_domain/"
+      ]
+    },
+    {
+      "id": "pkg:audiflow_podcast",
+      "kind": "package",
+      "path": "packages/audiflow_podcast/CLAUDE.md",
+      "title": "audiflow_podcast",
+      "provides": [],
+      "implements": [],
+      "depends_on": [],
+      "related": [],
+      "modules": [
+        "packages/audiflow_podcast/"
+      ]
+    },
+    {
+      "id": "pkg:audiflow_search",
+      "kind": "package",
+      "path": "packages/audiflow_search/CLAUDE.md",
+      "title": "audiflow_search",
+      "provides": [],
+      "implements": [],
+      "depends_on": [],
+      "related": [],
+      "modules": [
+        "packages/audiflow_search/"
+      ]
+    },
+    {
+      "id": "pkg:audiflow_ui",
+      "kind": "package",
+      "path": "packages/audiflow_ui/CLAUDE.md",
+      "title": "audiflow_ui",
+      "provides": [],
+      "implements": [],
+      "depends_on": [],
+      "related": [],
+      "modules": [
+        "packages/audiflow_ui/"
+      ]
+    }
+  ],
+  "modules": {
+    "packages/": [
+      "arch:module-boundaries",
+      "arch:system-overview"
+    ],
+    "packages/audiflow_ai/": [
+      "fr:10-voice-commands",
+      "pkg:audiflow_ai"
+    ],
+    "packages/audiflow_app/": [
+      "pkg:audiflow_app"
+    ],
+    "packages/audiflow_app/lib/app/": [
+      "fr:01-app-foundation"
+    ],
+    "packages/audiflow_app/lib/app/background/": [
+      "fr:12-background-refresh"
+    ],
+    "packages/audiflow_app/lib/app/notification/": [
+      "fr:12-background-refresh"
+    ],
+    "packages/audiflow_app/lib/features/": [
+      "arch:state-flow"
+    ],
+    "packages/audiflow_app/lib/features/download/": [
+      "fr:05-download-and-queue"
+    ],
+    "packages/audiflow_app/lib/features/force_update/": [
+      "fr:16-app-lifecycle"
+    ],
+    "packages/audiflow_app/lib/features/library/": [
+      "fr:13-library"
+    ],
+    "packages/audiflow_app/lib/features/library/presentation/controllers/library_controller.dart": [
+      "fr:11-play-order"
+    ],
+    "packages/audiflow_app/lib/features/monitoring/": [
+      "fr:16-app-lifecycle"
+    ],
+    "packages/audiflow_app/lib/features/onboarding/": [
+      "fr:01-app-foundation"
+    ],
+    "packages/audiflow_app/lib/features/player/": [
+      "arch:playback-pipeline",
+      "fr:04-audio-playback",
+      "fr:08-transcript-chapters"
+    ],
+    "packages/audiflow_app/lib/features/player/presentation/controllers/sleep_timer_ui_controller.dart": [
+      "fr:09-sleep-timer"
+    ],
+    "packages/audiflow_app/lib/features/player/presentation/widgets/sleep_timer_chip.dart": [
+      "fr:09-sleep-timer"
+    ],
+    "packages/audiflow_app/lib/features/player/presentation/widgets/sleep_timer_icon_button.dart": [
+      "fr:09-sleep-timer"
+    ],
+    "packages/audiflow_app/lib/features/player/presentation/widgets/sleep_timer_label_format.dart": [
+      "fr:09-sleep-timer"
+    ],
+    "packages/audiflow_app/lib/features/player/presentation/widgets/sleep_timer_numeric_panel.dart": [
+      "fr:09-sleep-timer"
+    ],
+    "packages/audiflow_app/lib/features/player/presentation/widgets/sleep_timer_sheet.dart": [
+      "fr:09-sleep-timer"
+    ],
+    "packages/audiflow_app/lib/features/player/presentation/widgets/sleep_timer_status_label.dart": [
+      "fr:09-sleep-timer"
+    ],
+    "packages/audiflow_app/lib/features/podcast_detail/": [
+      "fr:17-podcast-detail"
+    ],
+    "packages/audiflow_app/lib/features/podcast_detail/presentation/widgets/play_order_bottom_sheet.dart": [
+      "fr:11-play-order"
+    ],
+    "packages/audiflow_app/lib/features/queue/": [
+      "fr:05-download-and-queue"
+    ],
+    "packages/audiflow_app/lib/features/review_prompt/": [
+      "fr:16-app-lifecycle"
+    ],
+    "packages/audiflow_app/lib/features/search/": [
+      "fr:02-podcast-discovery"
+    ],
+    "packages/audiflow_app/lib/features/settings/": [
+      "fr:14-settings"
+    ],
+    "packages/audiflow_app/lib/features/settings/presentation/screens/playback_settings_screen.dart": [
+      "fr:11-play-order"
+    ],
+    "packages/audiflow_app/lib/features/share/": [
+      "fr:15-links-and-sharing"
+    ],
+    "packages/audiflow_app/lib/features/station/": [
+      "fr:07-stations"
+    ],
+    "packages/audiflow_app/lib/features/subscription/": [
+      "fr:03-subscription-feeds"
+    ],
+    "packages/audiflow_app/lib/main.dart": [
+      "fr:01-app-foundation"
+    ],
+    "packages/audiflow_app/lib/routing/": [
+      "fr:01-app-foundation",
+      "fr:15-links-and-sharing"
+    ],
+    "packages/audiflow_cli/": [
+      "pkg:audiflow_cli"
+    ],
+    "packages/audiflow_core/": [
+      "pkg:audiflow_core"
+    ],
+    "packages/audiflow_core/lib/src/models/auto_play_order.dart": [
+      "fr:11-play-order"
+    ],
+    "packages/audiflow_domain/": [
+      "pkg:audiflow_domain"
+    ],
+    "packages/audiflow_domain/lib/presets.dart": [
+      "fr:06-preset"
+    ],
+    "packages/audiflow_domain/lib/src/features/": [
+      "arch:state-flow"
+    ],
+    "packages/audiflow_domain/lib/src/features/download/": [
+      "fr:05-download-and-queue"
+    ],
+    "packages/audiflow_domain/lib/src/features/download/services/auto_download_enqueuer.dart": [
+      "fr:12-background-refresh"
+    ],
+    "packages/audiflow_domain/lib/src/features/feed/": [
+      "fr:03-subscription-feeds"
+    ],
+    "packages/audiflow_domain/lib/src/features/feed/datasources/local/play_order_preference_local_datasource.dart": [
+      "fr:11-play-order"
+    ],
+    "packages/audiflow_domain/lib/src/features/feed/datasources/local/podcast_view_preference_local_datasource.dart": [
+      "fr:17-podcast-detail"
+    ],
+    "packages/audiflow_domain/lib/src/features/feed/datasources/local/preset_cache_datasource.dart": [
+      "fr:06-preset",
+      "integration:preset"
+    ],
+    "packages/audiflow_domain/lib/src/features/feed/datasources/local/smart_playlist_local_datasource.dart": [
+      "fr:06-preset",
+      "integration:preset"
+    ],
+    "packages/audiflow_domain/lib/src/features/feed/datasources/remote/preset_remote_datasource.dart": [
+      "fr:06-preset",
+      "integration:preset"
+    ],
+    "packages/audiflow_domain/lib/src/features/feed/models/": [
+      "arch:smart-playlist-cache",
+      "fr:06-preset"
+    ],
+    "packages/audiflow_domain/lib/src/features/feed/models/new_episode_notification.dart": [
+      "fr:12-background-refresh"
+    ],
+    "packages/audiflow_domain/lib/src/features/feed/models/podcast_sort_order.dart": [
+      "fr:11-play-order"
+    ],
+    "packages/audiflow_domain/lib/src/features/feed/models/podcast_view_preference.dart": [
+      "fr:11-play-order",
+      "fr:17-podcast-detail"
+    ],
+    "packages/audiflow_domain/lib/src/features/feed/models/smart_playlist_group_user_preference.dart": [
+      "fr:11-play-order"
+    ],
+    "packages/audiflow_domain/lib/src/features/feed/models/smart_playlist_user_preference.dart": [
+      "fr:11-play-order"
+    ],
+    "packages/audiflow_domain/lib/src/features/feed/providers/": [
+      "arch:smart-playlist-cache"
+    ],
+    "packages/audiflow_domain/lib/src/features/feed/providers/podcast_view_preference_providers.dart": [
+      "fr:17-podcast-detail"
+    ],
+    "packages/audiflow_domain/lib/src/features/feed/providers/preset_providers.dart": [
+      "fr:06-preset",
+      "integration:preset"
+    ],
+    "packages/audiflow_domain/lib/src/features/feed/repositories/play_order_preference_repository.dart": [
+      "fr:11-play-order"
+    ],
+    "packages/audiflow_domain/lib/src/features/feed/repositories/podcast_view_preference_repository.dart": [
+      "fr:17-podcast-detail"
+    ],
+    "packages/audiflow_domain/lib/src/features/feed/repositories/preset_config_repository.dart": [
+      "fr:06-preset",
+      "integration:preset"
+    ],
+    "packages/audiflow_domain/lib/src/features/feed/repositories/preset_config_repository_impl.dart": [
+      "fr:06-preset",
+      "integration:preset"
+    ],
+    "packages/audiflow_domain/lib/src/features/feed/resolvers/": [
+      "arch:smart-playlist-cache",
+      "fr:06-preset",
+      "integration:preset"
+    ],
+    "packages/audiflow_domain/lib/src/features/feed/services/background_notification_service.dart": [
+      "fr:12-background-refresh"
+    ],
+    "packages/audiflow_domain/lib/src/features/feed/services/background_refresh_service.dart": [
+      "fr:12-background-refresh"
+    ],
+    "packages/audiflow_domain/lib/src/features/feed/services/config_assembler.dart": [
+      "fr:06-preset"
+    ],
+    "packages/audiflow_domain/lib/src/features/feed/services/episode_extractor_resolver.dart": [
+      "fr:06-preset"
+    ],
+    "packages/audiflow_domain/lib/src/features/feed/services/feed_sync_executor.dart": [
+      "fr:12-background-refresh"
+    ],
+    "packages/audiflow_domain/lib/src/features/feed/services/preset_loader.dart": [
+      "fr:06-preset"
+    ],
+    "packages/audiflow_domain/lib/src/features/feed/services/smart_playlist_resolver_service.dart": [
+      "fr:06-preset",
+      "integration:preset"
+    ],
+    "packages/audiflow_domain/lib/src/features/force_update/": [
+      "fr:16-app-lifecycle"
+    ],
+    "packages/audiflow_domain/lib/src/features/monitoring/": [
+      "fr:16-app-lifecycle"
+    ],
+    "packages/audiflow_domain/lib/src/features/player/": [
+      "arch:playback-pipeline",
+      "fr:04-audio-playback"
+    ],
+    "packages/audiflow_domain/lib/src/features/player/controllers/sleep_timer_controller.dart": [
+      "fr:09-sleep-timer"
+    ],
+    "packages/audiflow_domain/lib/src/features/player/datasources/local/sleep_timer_preferences_datasource.dart": [
+      "fr:09-sleep-timer"
+    ],
+    "packages/audiflow_domain/lib/src/features/player/models/sleep_timer_config.dart": [
+      "fr:09-sleep-timer"
+    ],
+    "packages/audiflow_domain/lib/src/features/player/models/sleep_timer_event.dart": [
+      "fr:09-sleep-timer"
+    ],
+    "packages/audiflow_domain/lib/src/features/player/models/sleep_timer_state.dart": [
+      "fr:09-sleep-timer"
+    ],
+    "packages/audiflow_domain/lib/src/features/player/providers/sleep_timer_providers.dart": [
+      "fr:09-sleep-timer"
+    ],
+    "packages/audiflow_domain/lib/src/features/player/services/sleep_timer_service.dart": [
+      "fr:09-sleep-timer"
+    ],
+    "packages/audiflow_domain/lib/src/features/queue/": [
+      "fr:05-download-and-queue"
+    ],
+    "packages/audiflow_domain/lib/src/features/queue/services/queue_service.dart": [
+      "fr:11-play-order"
+    ],
+    "packages/audiflow_domain/lib/src/features/review_prompt/": [
+      "fr:16-app-lifecycle"
+    ],
+    "packages/audiflow_domain/lib/src/features/settings/": [
+      "fr:14-settings"
+    ],
+    "packages/audiflow_domain/lib/src/features/share/": [
+      "fr:15-links-and-sharing"
+    ],
+    "packages/audiflow_domain/lib/src/features/station/": [
+      "fr:07-stations"
+    ],
+    "packages/audiflow_domain/lib/src/features/subscription/": [
+      "fr:03-subscription-feeds"
+    ],
+    "packages/audiflow_domain/lib/src/features/transcript/": [
+      "fr:08-transcript-chapters"
+    ],
+    "packages/audiflow_podcast/": [
+      "pkg:audiflow_podcast"
+    ],
+    "packages/audiflow_search/": [
+      "pkg:audiflow_search"
+    ],
+    "packages/audiflow_search/lib/": [
+      "fr:02-podcast-discovery"
+    ],
+    "packages/audiflow_ui/": [
+      "pkg:audiflow_ui"
+    ]
+  }
+}
