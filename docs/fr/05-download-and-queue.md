@@ -57,7 +57,6 @@ The queue exists for the complementary reason: once a listener finishes an episo
 ## Traceability
 
 - **Source docs**:
-  - `docs/specs/episode-management.md`
   - `docs/superpowers/plans/2026-04-07-download-all-episodes-plan.md`
   - `docs/superpowers/specs/2026-04-07-download-all-episodes-design.md`
 - **Source code**:

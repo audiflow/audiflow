@@ -52,5 +52,5 @@ The foundation exists so feature code never has to worry about how the app boots
 
 ## Traceability
 
-- **Source docs**: `docs/specs/foundation.md`, `docs/architecture/system-overview.md`, `docs/plans/2026-03-01-tablet-support-plan.md`, `docs/plans/2026-03-01-tablet-support-design.md`, `packages/audiflow_app/CLAUDE.md`, `packages/audiflow_app/lib/main.dart`, `packages/audiflow_app/lib/routing/app_router.dart`
+- **Source docs**: `docs/architecture/system-overview.md`, `docs/plans/2026-03-01-tablet-support-plan.md`, `docs/plans/2026-03-01-tablet-support-design.md`, `packages/audiflow_app/CLAUDE.md`, `packages/audiflow_app/lib/main.dart`, `packages/audiflow_app/lib/routing/app_router.dart`
 - **Related FR**: none yet (other FRs cover the individual features reached through this foundation)

@@ -129,7 +129,6 @@ state and resume position stay coherent no matter where the listener touches it.
 ## Traceability
 
 - **Source docs**:
-  - `docs/specs/playback-system.md`
   - `docs/architecture/playback-pipeline.md` (`arch:playback-pipeline`)
   - `docs/superpowers/specs/2026-05-08-play-button-content-design.md`
   - `docs/superpowers/plans/2026-05-09-episode-play-pill-redesign.md`

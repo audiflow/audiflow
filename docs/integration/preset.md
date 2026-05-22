@@ -118,7 +118,7 @@ Valid resolver types: `seasonNumber`, `titleClassifier`, `year`, `titleDiscovery
 
 - docs/overview.md -- app-level context
 - docs/architecture/system-overview.md -- where smart playlist fits in data flow
-- docs/specs/smart-playlist.md -- detailed resolver specification
+- docs/fr/06-preset.md -- preset consumption Functional Requirements (matcher and resolver chain)
 
 ## When to update
 

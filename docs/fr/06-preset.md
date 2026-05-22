@@ -60,5 +60,5 @@ This FR covers the *consumption* side: how the audiflow app fetches the preset c
 
 ## Traceability
 
-- **Source docs**: `docs/specs/smart-playlist.md`, `docs/architecture/smart-playlist-cache.md`, `docs/integration/preset.md`, `docs/plans/2026-03-08-schema-v2-migration-design.md`, `docs/plans/2026-03-08-schema-v2-migration.md`, `docs/superpowers/plans/2026-04-11-schema-v4-migration.md`, `docs/superpowers/plans/2026-04-13-schema-v5-migration.md`, `docs/superpowers/plans/2026-04-14-schema-matcher-update.md`
+- **Source docs**: `docs/architecture/smart-playlist-cache.md`, `docs/integration/preset.md`, `docs/plans/2026-03-08-schema-v2-migration-design.md`, `docs/plans/2026-03-08-schema-v2-migration.md`, `docs/superpowers/plans/2026-04-11-schema-v4-migration.md`, `docs/superpowers/plans/2026-04-13-schema-v5-migration.md`, `docs/superpowers/plans/2026-04-14-schema-matcher-update.md`
 - **Related**: `integration:preset` (cross-repo config consumption contract), `arch:smart-playlist-cache` (cache invalidation design)
