@@ -1,3 +1,11 @@
+---
+refs:
+  id: pkg:audiflow_ui
+  kind: package
+  title: "audiflow_ui"
+  modules:
+    - packages/audiflow_ui/
+---
 # audiflow_ui
 
 Shared UI components, theme system, and design tokens for the Audiflow podcast player. Provides reusable widgets consumed by `audiflow_app` and the Material 3 theme (light/dark) used app-wide.

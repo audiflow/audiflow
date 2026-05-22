@@ -1,3 +1,11 @@
+---
+refs:
+  id: pkg:audiflow_cli
+  kind: package
+  title: "audiflow_cli"
+  modules:
+    - packages/audiflow_cli/
+---
 # audiflow_cli
 
 CLI tools for debugging audiflow domain and podcast features. Developer-only package, not shipped in the app.

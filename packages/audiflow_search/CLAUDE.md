@@ -1,3 +1,11 @@
+---
+refs:
+  id: pkg:audiflow_search
+  kind: package
+  title: "audiflow_search"
+  modules:
+    - packages/audiflow_search/
+---
 # audiflow_search
 
 Podcast search and discovery API client for the audiflow app. Provides search and chart retrieval via the iTunes Search API, with a provider-based architecture for future backend extensibility.

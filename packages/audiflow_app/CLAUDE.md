@@ -1,3 +1,11 @@
+---
+refs:
+  id: pkg:audiflow_app
+  kind: package
+  title: "audiflow_app"
+  modules:
+    - packages/audiflow_app/
+---
 # audiflow_app
 
 Presentation layer for the Audiflow podcast player. Contains all screens, Riverpod controllers, GoRouter routing, localization (en/ja), and app bootstrap. No business logic lives here.
