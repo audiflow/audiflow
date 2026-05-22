@@ -77,7 +77,10 @@ state and resume position stay coherent no matter where the listener touches it.
   position is at the very end, and honors an explicit start position from timestamped share
   links over the saved position.
 - Periodically saves playback progress so episodes can be resumed across app restarts, and
-  records completed episodes to playback history.
+  records completed episodes to playback history. An episode is auto-marked completed once
+  playback passes 95% of its duration (to tolerate trailing credits or silence), and the
+  listener can manually toggle an episode played or unplayed, which overrides the auto-detected
+  state.
 - Auto-advances to the next queued episode on completion, deferring to the queue feature for
   what plays next.
 - Handles audio-focus interruptions through a dedicated, configurable handler: transient
