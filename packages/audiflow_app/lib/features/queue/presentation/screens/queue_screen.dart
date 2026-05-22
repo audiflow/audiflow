@@ -97,11 +97,7 @@ class QueueScreen extends ConsumerWidget {
         if (upNextItems.isNotEmpty)
           SliverReorderableList(
             itemCount: upNextItems.length,
-            onReorder: (oldIndex, newIndex) {
-              // Adjust newIndex for removal
-              if (oldIndex < newIndex) {
-                newIndex -= 1;
-              }
+            onReorderItem: (oldIndex, newIndex) {
               final item = upNextItems[oldIndex];
               ref
                   .read(queueControllerProvider.notifier)

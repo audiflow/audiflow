@@ -645,11 +645,8 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
         ReorderableListView(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          onReorder: (oldIndex, newIndex) {
+          onReorderItem: (oldIndex, newIndex) {
             final updated = List<int>.from(orderedIds);
-            if (newIndex > oldIndex) {
-              newIndex -= 1;
-            }
             final item = updated.removeAt(oldIndex);
             updated.insert(newIndex, item);
             // Rebuild full sort order with remaining non-selected ids preserved.

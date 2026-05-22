@@ -58,8 +58,7 @@ enum ItunesGenre {
   technology(1318, 'Technology'),
 
   /// True Crime genre (ID: 1488)
-  trueCrime(1488, 'True Crime')
-  ;
+  trueCrime(1488, 'True Crime');
 
   /// Creates an iTunes genre with the specified [genreId] and [genreName].
   const ItunesGenre(this.genreId, this.genreName);

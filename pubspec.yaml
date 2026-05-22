@@ -37,6 +37,9 @@ dependency_overrides:
       url: https://github.com/isar-community/isar-community.git
       path: packages/isar_community_generator
       ref: 3.3.2
+  # file_picker's transitive dbus (Linux-only) pins xml ^6; force xml 7 to match
+  # audiflow_domain/audiflow_podcast. dbus never runs on iOS/Android.
+  xml: ^7.0.1
 
 flutter:
   uses-material-design: true

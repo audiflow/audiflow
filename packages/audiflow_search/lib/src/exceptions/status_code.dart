@@ -76,8 +76,7 @@ enum StatusCode {
 
   /// The request does not have valid authentication credentials for the
   /// operation.
-  unauthenticated(16)
-  ;
+  unauthenticated(16);
 
   /// The numeric value of the status code.
   final int value;
