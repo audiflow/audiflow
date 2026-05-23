@@ -1,3 +1,14 @@
+---
+refs:
+  id: arch:system-overview
+  kind: architecture
+  title: "System overview"
+  related:
+    - arch:module-boundaries
+    - arch:state-flow
+  modules:
+    - packages/
+---
 # System Overview
 
 ## Goal

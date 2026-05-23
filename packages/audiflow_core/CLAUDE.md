@@ -1,3 +1,11 @@
+---
+refs:
+  id: pkg:audiflow_core
+  kind: package
+  title: "audiflow_core"
+  modules:
+    - packages/audiflow_core/
+---
 # audiflow_core
 
 Foundation package for the audiflow Flutter app. Provides shared constants, configuration, error types, extensions, and utilities used by every other package in the monorepo.

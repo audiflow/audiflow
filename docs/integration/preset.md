@@ -1,3 +1,21 @@
+---
+refs:
+  id: integration:preset
+  kind: integration
+  title: "Preset config consumption contract"
+  related:
+    - arch:smart-playlist-cache
+  modules:
+    - packages/audiflow_domain/lib/src/features/feed/datasources/remote/preset_remote_datasource.dart
+    - packages/audiflow_domain/lib/src/features/feed/datasources/local/preset_cache_datasource.dart
+    - packages/audiflow_domain/lib/src/features/feed/datasources/local/smart_playlist_local_datasource.dart
+    - packages/audiflow_domain/lib/src/features/feed/repositories/preset_config_repository.dart
+    - packages/audiflow_domain/lib/src/features/feed/repositories/preset_config_repository_impl.dart
+    - packages/audiflow_domain/lib/src/features/feed/services/smart_playlist_resolver_service.dart
+    - packages/audiflow_domain/lib/src/features/feed/providers/preset_providers.dart
+    - packages/audiflow_domain/lib/src/features/feed/resolvers/
+---
+
 # Preset Integration
 
 ## Purpose
@@ -100,7 +118,7 @@ Valid resolver types: `seasonNumber`, `titleClassifier`, `year`, `titleDiscovery
 
 - docs/overview.md -- app-level context
 - docs/architecture/system-overview.md -- where smart playlist fits in data flow
-- docs/specs/smart-playlist.md -- detailed resolver specification
+- docs/fr/06-preset.md -- preset consumption Functional Requirements (matcher and resolver chain)
 
 ## When to update
 

@@ -1,3 +1,11 @@
+---
+refs:
+  id: pkg:audiflow_podcast
+  kind: package
+  title: "audiflow_podcast"
+  modules:
+    - packages/audiflow_podcast/
+---
 # audiflow_podcast
 
 Streaming podcast RSS feed parser for Dart and Flutter. Parses RSS 2.0 feeds with iTunes namespace support, podcast:transcript, and podcast:chapters extraction using a memory-efficient streaming architecture.

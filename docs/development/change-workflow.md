@@ -59,7 +59,7 @@ flutter test packages/audiflow_domain/test/features/feed/models/schema_conforman
 
 Update documentation when:
 - A new package is added to the monorepo -> update `CLAUDE.md`, `docs/overview.md`, `docs/architecture/module-boundaries.md`
-- Behavior changes in a feature -> update relevant `docs/specs/` file
+- Behavior changes in a feature -> update the relevant per-feature Functional Requirements doc in `docs/fr/`
 - Smart playlist model or fetch logic changes -> update `docs/integration/preset.md`
 - State management pattern changes -> update `docs/architecture/state-flow.md`
 - Playback pipeline changes -> update `docs/architecture/playback-pipeline.md`

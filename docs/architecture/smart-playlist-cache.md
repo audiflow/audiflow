@@ -1,3 +1,15 @@
+---
+refs:
+  id: arch:smart-playlist-cache
+  kind: architecture
+  title: "Preset (smart playlist) cache"
+  related:
+    - integration:preset
+  modules:
+    - packages/audiflow_domain/lib/src/features/feed/resolvers/
+    - packages/audiflow_domain/lib/src/features/feed/providers/
+    - packages/audiflow_domain/lib/src/features/feed/models/
+---
 # Smart Playlist Cache Invalidation
 
 ## Problem

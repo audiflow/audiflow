@@ -90,7 +90,7 @@ See `make help` for the full list of targets.
 - **Navigation**: go_router with type-safe routes
 - **Patterns**: Repository pattern, feature-based module organization
 
-See [`docs/architecture/`](docs/architecture/) for detailed system design documentation.
+See [`docs/fr/`](docs/fr/) for per-feature Functional Requirements and [`docs/architecture/`](docs/architecture/) for system design documentation.
 
 ## Contributing
 

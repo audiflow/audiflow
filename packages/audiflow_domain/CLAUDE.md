@@ -1,3 +1,11 @@
+---
+refs:
+  id: pkg:audiflow_domain
+  kind: package
+  title: "audiflow_domain"
+  modules:
+    - packages/audiflow_domain/
+---
 # audiflow_domain
 
 Business logic and data layer for Audiflow. All repositories, services, data sources, and Isar collections. Isar models serve as both domain entities and database models (no separate DTOs).
