@@ -49,10 +49,12 @@ melos run codegen      # Code generation
 
 ## Key references
 
-- `.claude/rules/project/` -- architecture, tech stack, branching (loaded automatically)
+- `.claude/rules/project/` -- architecture, tech stack, branching, doc cross-reference rule (loaded automatically)
+- `docs/fr/` -- per-feature Functional Requirements (what each feature does, why, how it behaves)
 - `docs/overview.md` -- detailed purpose and concepts
 - `docs/architecture/` -- system overview, module boundaries, state flow, playback pipeline
-- `docs/integration/preset.md` -- smart playlist config consumption contract
+- `docs/integration/preset.md` -- preset (smart playlist) config consumption contract
+- `docs/kinds.md` -- kusara doc-graph kinds manifest; `kusara validate` / `touched` run via post-edit hook
 
 ## When changing this repository
 

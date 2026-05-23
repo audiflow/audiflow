@@ -39,6 +39,7 @@ dart run build_runner build --delete-conflicting-outputs
 
 ## Key references
 
+- Parent `docs/fr/` -- per-feature Functional Requirements (FR 01 app foundation is this package's primary entry)
 - `docs/overview.md` -- screen map, routing, localization, bootstrap sequence
 - Parent `docs/architecture/` -- system overview, module boundaries
 
