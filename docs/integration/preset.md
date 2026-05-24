@@ -54,10 +54,10 @@ This document does not cover:
 | Environment | Base URL | Source repo |
 |-------------|----------|-------------|
 | Production | `https://audiflow.github.io/audiflow-preset/assets/v7/` | `audiflow-preset` |
-| Staging | `https://audiflow.github.io/audiflow-preset/assets-stg/v7/` | `audiflow-preset` |
+| Staging | `https://audiflow.github.io/audiflow-preset/assets-dev/v7/` | `audiflow-preset` |
 | Development | `https://audiflow.github.io/audiflow-preset/assets-dev/v7/` | `audiflow-preset` |
 
-All environments use the same GitHub Pages host with different asset paths. The base URL is injected via `presetConfigBaseUrlProvider`.
+All environments use the same GitHub Pages host with different asset paths. The base URL is injected via `presetConfigBaseUrlProvider`. Staging shares the dev asset path because `audiflow-preset` no longer publishes an `assets-stg` channel.
 
 ## Key files in audiflow_domain
 

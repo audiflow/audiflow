@@ -46,12 +46,15 @@ class FlavorConfig {
   );
 
   /// Staging flavor
+  ///
+  /// Note: audiflow-preset dropped the `assets-stg` channel; staging now
+  /// consumes the dev preset assets.
   static FlavorConfig get stg => FlavorConfig._(
     flavor: Flavor.stg,
     name: 'Staging',
     apiBaseUrl: 'https://api-stg.audiflow.example.com',
     presetConfigBaseUrl:
-        'https://audiflow.github.io/audiflow-preset/assets-stg/v7',
+        'https://audiflow.github.io/audiflow-preset/assets-dev/v7',
     enableAnalytics: true,
     enableCrashReporting: true,
     enableHttpTracing: true,
