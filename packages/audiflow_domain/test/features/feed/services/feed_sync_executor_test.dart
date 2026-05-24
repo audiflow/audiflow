@@ -330,6 +330,13 @@ class _FakeAppSettingsRepository implements AppSettingsRepository {
   Future<void> setLastTabIndex(int index) => throw UnimplementedError();
 
   @override
+  bool getPrivacyConsentAccepted() => throw UnimplementedError();
+
+  @override
+  Future<void> setPrivacyConsentAccepted(bool accepted) =>
+      throw UnimplementedError();
+
+  @override
   Future<void> clearAll() => throw UnimplementedError();
 }
 

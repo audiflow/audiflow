@@ -143,6 +143,17 @@ abstract class AppSettingsRepository {
   /// Only indices 0-2 are accepted; others are ignored.
   Future<void> setLastTabIndex(int index);
 
+  // -- Privacy --
+
+  /// Whether the user has accepted the privacy policy.
+  ///
+  /// Returns false on first launch (no value stored). Routers and gates
+  /// should block app entry until this returns true.
+  bool getPrivacyConsentAccepted();
+
+  /// Persists the privacy-policy acceptance flag.
+  Future<void> setPrivacyConsentAccepted(bool accepted);
+
   // -- Data management --
 
   /// Removes all persisted settings, restoring defaults.

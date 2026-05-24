@@ -89,6 +89,9 @@ class BackgroundSettingsRepository implements AppSettingsRepository {
   @override
   int getLastTabIndex() => SettingsDefaults.lastTabIndex;
 
+  @override
+  bool getPrivacyConsentAccepted() => true;
+
   // -- All setters are unsupported in background --
 
   Never _unsupported() =>
@@ -154,6 +157,9 @@ class BackgroundSettingsRepository implements AppSettingsRepository {
 
   @override
   Future<void> setLastTabIndex(int index) => _unsupported();
+
+  @override
+  Future<void> setPrivacyConsentAccepted(bool accepted) => _unsupported();
 
   @override
   Future<void> clearAll() => _unsupported();

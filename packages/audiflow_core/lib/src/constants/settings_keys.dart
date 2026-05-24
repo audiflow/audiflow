@@ -82,6 +82,13 @@ class SettingsKeys {
 
   /// Last selected tab index (0=search, 1=library, 2=queue).
   static const String lastTabIndex = 'settings_last_tab_index';
+
+  // -- Privacy --
+
+  /// Whether the user has accepted the privacy policy. Gates first-launch
+  /// navigation; until true the consent screen is shown.
+  static const String privacyConsentAccepted =
+      'settings_privacy_consent_accepted';
 }
 
 /// Default values for app settings when no preference has been saved.
