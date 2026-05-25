@@ -117,6 +117,10 @@ class FakeAppSettingsRepository implements AppSettingsRepository {
   @override
   Future<void> setLastTabIndex(int index) async {}
   @override
+  bool getPrivacyConsentAccepted() => true;
+  @override
+  Future<void> setPrivacyConsentAccepted(bool accepted) async {}
+  @override
   Future<void> clearAll() async {}
 }
 

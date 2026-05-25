@@ -652,5 +652,18 @@
   "forceUpdateActionUpdateNow": "今すぐアップデート",
   "forceUpdateActionLater": "あとで",
   "forceUpdateActionRetry": "再試行",
-  "forceUpdateActionQuit": "終了"
+  "forceUpdateActionQuit": "終了",
+
+  "consentTitle": "audiflow へようこそ",
+  "consentIntro": "ご利用前に、audiflow がどのようにデータを扱うかをご確認ください。",
+  "consentSummaryUsage": "アプリ改善のため、匿名の利用状況および再生情報を収集します。",
+  "consentSummaryCrash": "不具合修正のため、クラッシュおよびエラー情報を送信します。",
+  "consentSummaryNoPii": "氏名、メールアドレス、電話番号は収集しません。",
+  "consentSummaryOptOut": "分析データの送信は設定からいつでも停止できます。",
+  "consentReadFullLink": "プライバシーポリシー全文を読む",
+  "consentAgreeCheckbox": "プライバシーポリシーを読み、同意します",
+  "consentContinueButton": "同意して続ける",
+
+  "settingsPrivacyPolicyLinkTitle": "プライバシーポリシー",
+  "settingsPrivacyPolicyLinkSubtitle": "全文を読む"
 }

@@ -5,6 +5,7 @@ import 'package:audiflow_app/features/settings/presentation/screens/settings_scr
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_app/routing/app_router.dart';
 import 'package:audiflow_app/routing/scaffold_with_nav_bar.dart';
+import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,9 +21,11 @@ void main() {
     late SharedPreferences prefs;
 
     setUp(() async {
-      // Treat onboarding as already completed so these tests assert the
-      // post-onboarding routing behaviour rather than the carousel redirect.
+      // Treat consent and onboarding as already completed so these tests
+      // assert post-bootstrap routing rather than the consent / carousel
+      // redirects.
       SharedPreferences.setMockInitialValues({
+        SettingsKeys.privacyConsentAccepted: true,
         'onboarding.carousel_completed_v1': true,
       });
       prefs = await SharedPreferences.getInstance();

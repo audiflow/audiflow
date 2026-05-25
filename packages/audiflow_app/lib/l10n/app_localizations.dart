@@ -2959,6 +2959,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Quit'**
   String get forceUpdateActionQuit;
+
+  /// First-launch privacy consent screen title
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to audiflow'**
+  String get consentTitle;
+
+  /// Short intro shown above the summary bullets
+  ///
+  /// In en, this message translates to:
+  /// **'Before you get started, here is how audiflow handles your data.'**
+  String get consentIntro;
+
+  /// Summary bullet about usage analytics
+  ///
+  /// In en, this message translates to:
+  /// **'We collect anonymous usage and playback information to improve the app.'**
+  String get consentSummaryUsage;
+
+  /// Summary bullet about crash reporting
+  ///
+  /// In en, this message translates to:
+  /// **'Crash and error reports are sent to help us fix bugs.'**
+  String get consentSummaryCrash;
+
+  /// Summary bullet stating no direct PII collected
+  ///
+  /// In en, this message translates to:
+  /// **'We do not collect your name, email, or phone number.'**
+  String get consentSummaryNoPii;
+
+  /// Summary bullet about opt-out availability
+  ///
+  /// In en, this message translates to:
+  /// **'You can turn off analytics any time in Settings.'**
+  String get consentSummaryOptOut;
+
+  /// Button/link that opens the full policy in an in-app browser
+  ///
+  /// In en, this message translates to:
+  /// **'Read full Privacy Policy'**
+  String get consentReadFullLink;
+
+  /// Checkbox label gating the Continue button
+  ///
+  /// In en, this message translates to:
+  /// **'I have read and agree to the Privacy Policy'**
+  String get consentAgreeCheckbox;
+
+  /// Primary button to accept and proceed past consent
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get consentContinueButton;
+
+  /// Privacy settings tile that opens the full privacy policy in an in-app browser
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get settingsPrivacyPolicyLinkTitle;
+
+  /// Privacy policy tile subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Read the full policy'**
+  String get settingsPrivacyPolicyLinkSubtitle;
 }
 
 class _AppLocalizationsDelegate

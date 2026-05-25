@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,6 +9,7 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../l10n/app_localizations.dart';
+import '../features/consent/presentation/screens/consent_screen.dart';
 import '../features/library/presentation/screens/library_screen.dart';
 import '../features/onboarding/presentation/screens/getting_started_hub_screen.dart';
 import '../features/onboarding/presentation/screens/migration_guide_screen.dart';
@@ -68,6 +70,7 @@ class AppRoutes {
   static const String settingsGettingStarted = '/settings/getting-started';
   static const String migrationGuide = '/settings/getting-started/migration';
   static const String settingsPrivacy = '/settings/privacy';
+  static const String consent = '/consent';
   static const String onboarding = '/onboarding';
   static const String transcript = '/transcript';
   static const String deepLinkPodcast = '/p/:itunesId';
@@ -123,12 +126,24 @@ GoRouter createAppRouter({
     // not by the router. Redirect to home on unknown routes.
     onException: (_, _, router) => router.go(AppRoutes.search),
     redirect: (context, state) {
+      final consented =
+          prefs.getBool(SettingsKeys.privacyConsentAccepted) ?? false;
       final completed = prefs.getBool(_kOnboardingCompletedKey) ?? false;
+      final atConsent = state.matchedLocation == AppRoutes.consent;
       final atOnboarding = state.matchedLocation == AppRoutes.onboarding;
-      if (!completed && !atOnboarding) {
+
+      // Consent gate runs first: pre-consent users are blocked from
+      // every other route, including onboarding.
+      if (!consented && !atConsent) {
+        return AppRoutes.consent;
+      }
+      if (consented && atConsent) {
+        return completed ? AppRoutes.search : AppRoutes.onboarding;
+      }
+      if (consented && !completed && !atOnboarding) {
         return AppRoutes.onboarding;
       }
-      if (completed && atOnboarding) {
+      if (consented && completed && atOnboarding) {
         return AppRoutes.search;
       }
       return null;
@@ -310,6 +325,11 @@ GoRouter createAppRouter({
             ],
           ),
         ],
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: AppRoutes.consent,
+        builder: (context, state) => const ConsentScreen(),
       ),
       GoRoute(
         parentNavigatorKey: rootNavigatorKey,

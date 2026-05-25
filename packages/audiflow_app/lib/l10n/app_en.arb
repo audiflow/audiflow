@@ -1046,5 +1046,29 @@
   "forceUpdateActionRetry": "Retry",
   "@forceUpdateActionRetry": { "description": "Retry maintenance check" },
   "forceUpdateActionQuit": "Quit",
-  "@forceUpdateActionQuit": { "description": "Quit app (Android only)" }
+  "@forceUpdateActionQuit": { "description": "Quit app (Android only)" },
+
+  "consentTitle": "Welcome to audiflow",
+  "@consentTitle": { "description": "First-launch privacy consent screen title" },
+  "consentIntro": "Before you get started, here is how audiflow handles your data.",
+  "@consentIntro": { "description": "Short intro shown above the summary bullets" },
+  "consentSummaryUsage": "We collect anonymous usage and playback information to improve the app.",
+  "@consentSummaryUsage": { "description": "Summary bullet about usage analytics" },
+  "consentSummaryCrash": "Crash and error reports are sent to help us fix bugs.",
+  "@consentSummaryCrash": { "description": "Summary bullet about crash reporting" },
+  "consentSummaryNoPii": "We do not collect your name, email, or phone number.",
+  "@consentSummaryNoPii": { "description": "Summary bullet stating no direct PII collected" },
+  "consentSummaryOptOut": "You can turn off analytics any time in Settings.",
+  "@consentSummaryOptOut": { "description": "Summary bullet about opt-out availability" },
+  "consentReadFullLink": "Read full Privacy Policy",
+  "@consentReadFullLink": { "description": "Button/link that opens the full policy in an in-app browser" },
+  "consentAgreeCheckbox": "I have read and agree to the Privacy Policy",
+  "@consentAgreeCheckbox": { "description": "Checkbox label gating the Continue button" },
+  "consentContinueButton": "Continue",
+  "@consentContinueButton": { "description": "Primary button to accept and proceed past consent" },
+
+  "settingsPrivacyPolicyLinkTitle": "Privacy Policy",
+  "@settingsPrivacyPolicyLinkTitle": { "description": "Privacy settings tile that opens the full privacy policy in an in-app browser" },
+  "settingsPrivacyPolicyLinkSubtitle": "Read the full policy",
+  "@settingsPrivacyPolicyLinkSubtitle": { "description": "Privacy policy tile subtitle" }
 }

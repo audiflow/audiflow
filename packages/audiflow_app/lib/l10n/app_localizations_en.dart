@@ -1617,4 +1617,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get forceUpdateActionQuit => 'Quit';
+
+  @override
+  String get consentTitle => 'Welcome to audiflow';
+
+  @override
+  String get consentIntro =>
+      'Before you get started, here is how audiflow handles your data.';
+
+  @override
+  String get consentSummaryUsage =>
+      'We collect anonymous usage and playback information to improve the app.';
+
+  @override
+  String get consentSummaryCrash =>
+      'Crash and error reports are sent to help us fix bugs.';
+
+  @override
+  String get consentSummaryNoPii =>
+      'We do not collect your name, email, or phone number.';
+
+  @override
+  String get consentSummaryOptOut =>
+      'You can turn off analytics any time in Settings.';
+
+  @override
+  String get consentReadFullLink => 'Read full Privacy Policy';
+
+  @override
+  String get consentAgreeCheckbox =>
+      'I have read and agree to the Privacy Policy';
+
+  @override
+  String get consentContinueButton => 'Continue';
+
+  @override
+  String get settingsPrivacyPolicyLinkTitle => 'Privacy Policy';
+
+  @override
+  String get settingsPrivacyPolicyLinkSubtitle => 'Read the full policy';
 }

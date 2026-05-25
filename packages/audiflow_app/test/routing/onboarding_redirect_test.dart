@@ -1,5 +1,6 @@
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_app/routing/app_router.dart';
+import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,10 +13,15 @@ import '../helpers/search_mocks.dart';
 void main() {
   group('AppRouter onboarding redirect', () {
     Future<(GoRouter, Widget)> buildRouterApp({required bool completed}) async {
+      // Consent is accepted here so these tests exercise the onboarding
+      // redirect in isolation; the consent gate is covered separately.
       SharedPreferences.setMockInitialValues(
         completed
-            ? <String, Object>{'onboarding.carousel_completed_v1': true}
-            : <String, Object>{},
+            ? <String, Object>{
+                SettingsKeys.privacyConsentAccepted: true,
+                'onboarding.carousel_completed_v1': true,
+              }
+            : <String, Object>{SettingsKeys.privacyConsentAccepted: true},
       );
       final prefs = await SharedPreferences.getInstance();
       final router = createAppRouter(prefs: prefs);

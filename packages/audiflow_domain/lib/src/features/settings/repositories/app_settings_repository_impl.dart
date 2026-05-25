@@ -250,6 +250,17 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
     }
   }
 
+  // -- Privacy --
+
+  @override
+  bool getPrivacyConsentAccepted() =>
+      _ds.getBool(SettingsKeys.privacyConsentAccepted) ?? false;
+
+  @override
+  Future<void> setPrivacyConsentAccepted(bool accepted) async {
+    await _ds.setBool(SettingsKeys.privacyConsentAccepted, accepted);
+  }
+
   // -- Data management --
 
   @override
@@ -275,6 +286,7 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
       _ds.remove(SettingsKeys.notifyNewEpisodes),
       _ds.remove(SettingsKeys.searchCountry),
       _ds.remove(SettingsKeys.lastTabIndex),
+      _ds.remove(SettingsKeys.privacyConsentAccepted),
     ]);
   }
 
