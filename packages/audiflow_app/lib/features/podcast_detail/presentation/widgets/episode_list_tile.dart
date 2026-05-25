@@ -188,7 +188,8 @@ class EpisodeListTile extends ConsumerWidget {
   ) {
     if (isCompleted) return l10n.episodePillCompleted;
 
-    final inProgress = isPlaying || (p?.isInProgress ?? false);
+    final inProgress =
+        isPlaying || (p?.isInProgress ?? false) || liveRemaining != null;
     if (inProgress) {
       final remaining =
           liveRemaining ?? p?.remainingDuration ?? episode.duration;
