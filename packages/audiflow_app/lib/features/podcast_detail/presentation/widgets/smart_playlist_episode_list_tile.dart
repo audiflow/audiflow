@@ -182,7 +182,8 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
   ) {
     if (isCompleted) return l10n.episodePillCompleted;
 
-    final inProgress = isPlaying || (p?.isInProgress ?? false);
+    final inProgress =
+        isPlaying || (p?.isInProgress ?? false) || liveRemaining != null;
     if (inProgress) {
       if (liveRemaining != null) {
         return l10n.episodePillRemaining(
