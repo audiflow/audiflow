@@ -9,7 +9,7 @@ A podcast player for Android and iOS built with Flutter.
 - Background audio playback with system media controls
 - Episode downloads with WiFi-only option and queue management
 - Playback speed control and sleep timer
-- Smart playlist consumption (curated episode groupings)
+- Preset playlist consumption (curated episode groupings)
 - Station management (custom multi-podcast playlists)
 - Podcast transcript and chapter display
 - On-device voice commands
