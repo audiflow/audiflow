@@ -70,18 +70,6 @@ class SettingsScreen extends StatelessWidget {
                     onTap: () => context.go(AppRoutes.settingsStorage),
                   ),
                   SettingsCategoryCard(
-                    icon: Symbols.info,
-                    title: l10n.settingsAboutTitle,
-                    subtitle: l10n.settingsAboutSubtitle,
-                    onTap: () => context.go(AppRoutes.settingsAbout),
-                  ),
-                  SettingsCategoryCard(
-                    icon: Symbols.school,
-                    title: l10n.settingsGettingStartedTitle,
-                    subtitle: l10n.settingsGettingStartedSubtitle,
-                    onTap: () => context.go(AppRoutes.settingsGettingStarted),
-                  ),
-                  SettingsCategoryCard(
                     icon: Symbols.shield,
                     title: l10n.settingsPrivacyTitle,
                     subtitle: l10n.settingsPrivacySubtitle,
@@ -92,6 +80,18 @@ class SettingsScreen extends StatelessWidget {
                     title: l10n.settingsDeveloperTitle,
                     subtitle: l10n.settingsDeveloperSubtitle,
                     onTap: () => context.go(AppRoutes.settingsDeveloper),
+                  ),
+                  SettingsCategoryCard(
+                    icon: Symbols.school,
+                    title: l10n.settingsGettingStartedTitle,
+                    subtitle: l10n.settingsGettingStartedSubtitle,
+                    onTap: () => context.go(AppRoutes.settingsGettingStarted),
+                  ),
+                  SettingsCategoryCard(
+                    icon: Symbols.info,
+                    title: l10n.settingsAboutTitle,
+                    subtitle: l10n.settingsAboutSubtitle,
+                    onTap: () => context.go(AppRoutes.settingsAbout),
                   ),
                 ],
               ),
