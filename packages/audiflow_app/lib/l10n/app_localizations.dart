@@ -3013,6 +3013,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Continue'**
   String get consentContinueButton;
+
+  /// Privacy settings tile that opens the full privacy policy in an in-app browser
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get settingsPrivacyPolicyLinkTitle;
+
+  /// Privacy policy tile subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Read the full policy'**
+  String get settingsPrivacyPolicyLinkSubtitle;
 }
 
 class _AppLocalizationsDelegate

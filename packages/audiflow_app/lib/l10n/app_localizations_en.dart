@@ -1650,4 +1650,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get consentContinueButton => 'Continue';
+
+  @override
+  String get settingsPrivacyPolicyLinkTitle => 'Privacy Policy';
+
+  @override
+  String get settingsPrivacyPolicyLinkSubtitle => 'Read the full policy';
 }

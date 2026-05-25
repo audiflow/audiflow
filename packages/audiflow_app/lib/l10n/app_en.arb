@@ -1065,5 +1065,10 @@
   "consentAgreeCheckbox": "I have read and agree to the Privacy Policy",
   "@consentAgreeCheckbox": { "description": "Checkbox label gating the Continue button" },
   "consentContinueButton": "Continue",
-  "@consentContinueButton": { "description": "Primary button to accept and proceed past consent" }
+  "@consentContinueButton": { "description": "Primary button to accept and proceed past consent" },
+
+  "settingsPrivacyPolicyLinkTitle": "Privacy Policy",
+  "@settingsPrivacyPolicyLinkTitle": { "description": "Privacy settings tile that opens the full privacy policy in an in-app browser" },
+  "settingsPrivacyPolicyLinkSubtitle": "Read the full policy",
+  "@settingsPrivacyPolicyLinkSubtitle": { "description": "Privacy policy tile subtitle" }
 }

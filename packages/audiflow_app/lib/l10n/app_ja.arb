@@ -662,5 +662,8 @@
   "consentSummaryOptOut": "分析データの送信は設定からいつでも停止できます。",
   "consentReadFullLink": "プライバシーポリシー全文を読む",
   "consentAgreeCheckbox": "プライバシーポリシーを読み、同意します",
-  "consentContinueButton": "同意して続ける"
+  "consentContinueButton": "同意して続ける",
+
+  "settingsPrivacyPolicyLinkTitle": "プライバシーポリシー",
+  "settingsPrivacyPolicyLinkSubtitle": "全文を読む"
 }

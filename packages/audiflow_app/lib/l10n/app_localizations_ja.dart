@@ -1592,4 +1592,10 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get consentContinueButton => '同意して続ける';
+
+  @override
+  String get settingsPrivacyPolicyLinkTitle => 'プライバシーポリシー';
+
+  @override
+  String get settingsPrivacyPolicyLinkSubtitle => '全文を読む';
 }
