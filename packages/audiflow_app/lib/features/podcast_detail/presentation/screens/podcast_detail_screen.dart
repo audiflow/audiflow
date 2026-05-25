@@ -580,13 +580,17 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
               activePlaylist: activePlaylist,
               sortOrder: sortOrder,
             ),
-          // Transparent trailing spacer so the CustomScrollView's scroll
-          // extent is always large enough to keep the search bar hidden
-          // by the initial jumpTo offset, even when the episode list is
-          // empty or shorter than the viewport.
-          SliverToBoxAdapter(
-            child: SizedBox(height: MediaQuery.sizeOf(context).height),
+          // Trailing slack so the scroll extent is large enough to keep
+          // the search bar hidden by the initial jumpTo offset, even when
+          // the list is empty or shorter than the viewport.
+          // SliverFillRemaining pads only the gap between content and
+          // viewport (zero when content already exceeds viewport); the
+          // fixed tail adds just enough room to scroll the search bar off.
+          const SliverFillRemaining(
+            hasScrollBody: false,
+            child: SizedBox.shrink(),
           ),
+          const SliverToBoxAdapter(child: SizedBox(height: _kSearchBarHeight)),
         ],
       ),
     );
