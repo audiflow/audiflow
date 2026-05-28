@@ -683,9 +683,17 @@
   "parentalControlPinEntryReasonParentalSettings": "ペアレンタル コントロールを変更",
   "parentalControlPinEntryReasonDeveloperSettings": "デベロッパー設定を開く",
   "parentalControlPinIncorrect": "PINが正しくありません。残り{remaining}回。",
-  "@parentalControlPinIncorrect": { "placeholders": { "remaining": { "type": "int" } } },
+  "@parentalControlPinIncorrect": {
+    "description": "Wrong-PIN error shown with remaining attempt count before lockout.",
+    "placeholders": { "remaining": { "type": "int" } }
+  },
   "parentalControlLockoutCountdown": "試行回数が上限に達しました。{seconds}秒後に再試行できます。",
-  "@parentalControlLockoutCountdown": { "placeholders": { "seconds": { "type": "int" } } },
+  "@parentalControlLockoutCountdown": {
+    "description": "Lockout error shown with seconds remaining until PIN entry is re-enabled.",
+    "placeholders": { "seconds": { "type": "int" } }
+  },
+  "parentalControlPinSheetError": "PINを確認できませんでした。もう一度お試しください。",
+  "@parentalControlPinSheetError": { "description": "Generic error when PIN verification fails due to storage error (not wrong PIN)." },
   "parentalControlForgotPinBanner": "PINを忘れた場合は、ストレージ設定からすべてのデータをリセットしてください。",
   "parentalControlHideExplicitToggle": "アダルト指定エピソードを非表示",
   "parentalControlBiometricToggle": "生体認証によるロック解除を許可",

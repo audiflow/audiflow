@@ -3116,17 +3116,23 @@ abstract class AppLocalizations {
   /// **'Open Developer settings'**
   String get parentalControlPinEntryReasonDeveloperSettings;
 
-  /// No description provided for @parentalControlPinIncorrect.
+  /// Wrong-PIN error shown with remaining attempt count before lockout.
   ///
   /// In en, this message translates to:
   /// **'Incorrect PIN. {remaining} attempts remaining.'**
   String parentalControlPinIncorrect(int remaining);
 
-  /// No description provided for @parentalControlLockoutCountdown.
+  /// Lockout error shown with seconds remaining until PIN entry is re-enabled.
   ///
   /// In en, this message translates to:
   /// **'Too many attempts. Try again in {seconds}s.'**
   String parentalControlLockoutCountdown(int seconds);
+
+  /// Generic error when PIN verification fails due to storage error (not wrong PIN).
+  ///
+  /// In en, this message translates to:
+  /// **'Could not verify PIN. Please try again.'**
+  String get parentalControlPinSheetError;
 
   /// Forgot PIN help text
   ///

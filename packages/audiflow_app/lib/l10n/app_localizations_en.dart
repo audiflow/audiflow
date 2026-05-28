@@ -1718,6 +1718,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get parentalControlPinSheetError =>
+      'Could not verify PIN. Please try again.';
+
+  @override
   String get parentalControlForgotPinBanner =>
       'Forgot PIN? Reset all app data from Storage settings.';
 

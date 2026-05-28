@@ -1103,9 +1103,17 @@
   "parentalControlPinEntryReasonDeveloperSettings": "Open Developer settings",
   "@parentalControlPinEntryReasonDeveloperSettings": { "description": "PIN sheet headline for developer settings" },
   "parentalControlPinIncorrect": "Incorrect PIN. {remaining} attempts remaining.",
-  "@parentalControlPinIncorrect": { "placeholders": { "remaining": { "type": "int" } } },
+  "@parentalControlPinIncorrect": {
+    "description": "Wrong-PIN error shown with remaining attempt count before lockout.",
+    "placeholders": { "remaining": { "type": "int" } }
+  },
   "parentalControlLockoutCountdown": "Too many attempts. Try again in {seconds}s.",
-  "@parentalControlLockoutCountdown": { "placeholders": { "seconds": { "type": "int" } } },
+  "@parentalControlLockoutCountdown": {
+    "description": "Lockout error shown with seconds remaining until PIN entry is re-enabled.",
+    "placeholders": { "seconds": { "type": "int" } }
+  },
+  "parentalControlPinSheetError": "Could not verify PIN. Please try again.",
+  "@parentalControlPinSheetError": { "description": "Generic error when PIN verification fails due to storage error (not wrong PIN)." },
   "parentalControlForgotPinBanner": "Forgot PIN? Reset all app data from Storage settings.",
   "@parentalControlForgotPinBanner": { "description": "Forgot PIN help text" },
   "parentalControlHideExplicitToggle": "Hide explicit episodes",
