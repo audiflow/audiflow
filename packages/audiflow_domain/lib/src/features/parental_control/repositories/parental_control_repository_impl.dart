@@ -59,7 +59,17 @@ class ParentalControlRepositoryImpl implements ParentalControlRepository {
     }
     final ok = _hasher.verify(pin: pin, settings: s);
     if (ok) {
-      await clearFailedAttempts();
+      // Isolate counter reset so a storage glitch here does not flip a
+      // successful verify into an apparent failure at the call-site.
+      try {
+        await clearFailedAttempts();
+      } catch (e, st) {
+        _logger.w(
+          'clearFailedAttempts after successful verify failed; counter may be stale',
+          error: e,
+          stackTrace: st,
+        );
+      }
     }
     return ok;
   });
