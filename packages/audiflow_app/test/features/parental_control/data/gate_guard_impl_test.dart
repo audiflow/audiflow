@@ -88,6 +88,79 @@ void main() {
         check(result).isFalse();
       },
     );
+
+    testWidgets(
+      'returns true and calls extendIdle when restricted and already Unlocked',
+      (tester) async {
+        late bool result;
+        final stubGate = _StubGateUnlocked();
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              isRestrictedModeOnProvider.overrideWith((ref) => true),
+              parentalControlGateProvider.overrideWith(() => stubGate),
+            ],
+            child: _app(
+              Builder(
+                builder: (context) => ElevatedButton(
+                  onPressed: () async {
+                    final guard = GateGuardImpl(
+                      container: ProviderScope.containerOf(context),
+                    );
+                    result = await guard.requireUnlock(
+                      context,
+                      reason: GateReason.subscribe,
+                    );
+                  },
+                  child: const Text('Go'),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.tap(find.text('Go'));
+        await tester.pump();
+
+        check(result).isTrue();
+        // No PIN sheet was shown.
+        check(find.byType(BottomSheet).evaluate()).isEmpty();
+        check(stubGate.extendIdleCallCount).equals(1);
+      },
+    );
+
+    testWidgets('fails closed when isRestrictedModeOn read throws', (
+      tester,
+    ) async {
+      late bool result;
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            isRestrictedModeOnProvider.overrideWith(
+              (ref) => throw StateError('storage unavailable'),
+            ),
+          ],
+          child: _app(
+            Builder(
+              builder: (context) => ElevatedButton(
+                onPressed: () async {
+                  final guard = GateGuardImpl(
+                    container: ProviderScope.containerOf(context),
+                  );
+                  result = await guard.requireUnlock(
+                    context,
+                    reason: GateReason.subscribe,
+                  );
+                },
+                child: const Text('Go'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Go'));
+      await tester.pump();
+      check(result).isFalse();
+    });
   });
 }
 
@@ -103,4 +176,21 @@ class _StubGate extends ParentalControlGate {
   @override
   Future<bool> tryUnlock(String pin, {UnlockReason? reason}) async =>
       unlockResult;
+}
+
+/// Stub gate that starts in [Unlocked] state and records [extendIdle] calls.
+class _StubGateUnlocked extends ParentalControlGate {
+  int extendIdleCallCount = 0;
+
+  @override
+  UnlockState build() =>
+      Unlocked(expiresAt: DateTime.now().add(const Duration(minutes: 5)));
+
+  @override
+  Future<bool> tryUnlock(String pin, {UnlockReason? reason}) async => false;
+
+  @override
+  void extendIdle() {
+    extendIdleCallCount++;
+  }
 }
