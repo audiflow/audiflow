@@ -181,16 +181,17 @@ class _CustomNavBar extends StatelessWidget {
           child: Row(
             children: [
               for (var i = 0; i < ScaffoldWithNavBar._destinations.length; i++)
-                Expanded(
-                  child: _NavItem(
-                    destination: ScaffoldWithNavBar._destinations[i],
-                    isSelected: currentIndex == i,
-                    // Disable Search tab when restricted and locked.
-                    onTap: (hideSearch && i == 0)
-                        ? null
-                        : () => onDestinationSelected(i),
+                // Hide Search tab entirely when restricted and locked. Branch
+                // indices in the StatefulShellRoute stay stable; only the
+                // visible nav item is dropped.
+                if (!(hideSearch && i == 0))
+                  Expanded(
+                    child: _NavItem(
+                      destination: ScaffoldWithNavBar._destinations[i],
+                      isSelected: currentIndex == i,
+                      onTap: () => onDestinationSelected(i),
+                    ),
                   ),
-                ),
             ],
           ),
         ),
@@ -285,15 +286,15 @@ class _TabletPortraitShell extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             for (var i = 0; i < ScaffoldWithNavBar._destinations.length; i++)
-              _TopTabButton(
-                destination: ScaffoldWithNavBar._destinations[i],
-                isSelected: currentIndex == i,
-                // Disable Search tab when restricted and locked.
-                onTap: (hideSearch && i == 0)
-                    ? null
-                    : () => onDestinationSelected(i),
-                colorScheme: colorScheme,
-              ),
+              // Hide Search tab entirely when restricted and locked. Branch
+              // indices stay stable; only the visible tab is dropped.
+              if (!(hideSearch && i == 0))
+                _TopTabButton(
+                  destination: ScaffoldWithNavBar._destinations[i],
+                  isSelected: currentIndex == i,
+                  onTap: () => onDestinationSelected(i),
+                  colorScheme: colorScheme,
+                ),
           ],
         ),
         centerTitle: true,
@@ -337,29 +338,45 @@ class _TabletLandscapeShell extends StatelessWidget {
       body: SafeArea(
         child: Row(
           children: [
-            NavigationRail(
-              selectedIndex: currentIndex,
-              onDestinationSelected: onDestinationSelected,
-              labelType: NavigationRailLabelType.all,
-              destinations: [
-                for (
-                  var i = 0;
-                  i < ScaffoldWithNavBar._destinations.length;
-                  i++
-                )
-                  NavigationRailDestination(
-                    // Disable Search destination when restricted and locked.
-                    disabled: hideSearch && i == 0,
-                    icon: Icon(ScaffoldWithNavBar._destinations[i].icon),
-                    selectedIcon: Icon(
-                      ScaffoldWithNavBar._destinations[i].selectedIcon,
-                      fill: 1,
-                    ),
-                    label: Text(
-                      ScaffoldWithNavBar._destinations[i].resolveLabel(l10n),
-                    ),
-                  ),
-              ],
+            Builder(
+              builder: (context) {
+                // Hide Search rail destination when restricted and locked.
+                // Map rail UI indices to branch indices: when hidden, rail i
+                // refers to branch i + 1 (library/queue/settings).
+                final visibleBranchIndices = <int>[
+                  for (
+                    var i = 0;
+                    i < ScaffoldWithNavBar._destinations.length;
+                    i++
+                  )
+                    if (!(hideSearch && i == 0)) i,
+                ];
+                final railSelected = visibleBranchIndices.indexOf(currentIndex);
+                return NavigationRail(
+                  selectedIndex: railSelected < 0 ? 0 : railSelected,
+                  onDestinationSelected: (railIndex) =>
+                      onDestinationSelected(visibleBranchIndices[railIndex]),
+                  labelType: NavigationRailLabelType.all,
+                  destinations: [
+                    for (final branchIndex in visibleBranchIndices)
+                      NavigationRailDestination(
+                        icon: Icon(
+                          ScaffoldWithNavBar._destinations[branchIndex].icon,
+                        ),
+                        selectedIcon: Icon(
+                          ScaffoldWithNavBar
+                              ._destinations[branchIndex]
+                              .selectedIcon,
+                          fill: 1,
+                        ),
+                        label: Text(
+                          ScaffoldWithNavBar._destinations[branchIndex]
+                              .resolveLabel(l10n),
+                        ),
+                      ),
+                  ],
+                );
+              },
             ),
             const VerticalDivider(width: 1, thickness: 1),
             Expanded(
