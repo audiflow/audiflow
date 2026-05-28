@@ -95,6 +95,7 @@ class _PinEntrySheetState extends ConsumerState<PinEntrySheet> {
         l10n.parentalControlPinEntryReasonParentalSettings,
       GateReason.developerSettings =>
         l10n.parentalControlPinEntryReasonDeveloperSettings,
+      GateReason.resetData => l10n.parentalControlPinEntryReasonResetData,
     };
   }
 
@@ -172,6 +173,11 @@ class _PinEntrySheetState extends ConsumerState<PinEntrySheet> {
             _reasonHeadline(l10n),
             style: Theme.of(context).textTheme.titleMedium,
           ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.parentalControlPinEntryPrompt,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
           const SizedBox(height: 16),
           TextField(
             controller: _controller,
@@ -182,6 +188,7 @@ class _PinEntrySheetState extends ConsumerState<PinEntrySheet> {
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             decoration: InputDecoration(
               border: const OutlineInputBorder(),
+              hintText: l10n.parentalControlPinEntryHint,
               errorText: _errorMessage,
             ),
             onChanged: (_) => setState(() {

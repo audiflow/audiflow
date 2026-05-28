@@ -1715,6 +1715,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'Open Developer settings';
 
   @override
+  String get parentalControlPinEntryReasonResetData => 'Reset all app data';
+
+  @override
+  String get parentalControlPinEntryHint => '4–8 digits';
+
+  @override
+  String get parentalControlPinEntryPrompt =>
+      'Enter your Parental Control PIN to continue.';
+
+  @override
   String parentalControlPinIncorrect(int remaining) {
     return 'Incorrect PIN. $remaining attempts remaining.';
   }
@@ -1730,7 +1740,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get parentalControlForgotPinBanner =>
-      'Forgot PIN? Reset all app data from Storage settings.';
+      'Forgot your PIN? There is no in-app recovery. Uninstall and reinstall the app to clear the PIN — this also clears subscriptions, downloads, and history. Export your subscriptions to an OPML file first from Storage & Data, then re-import after reinstalling to restore them.';
 
   @override
   String get parentalControlHideExplicitToggle => 'Hide explicit episodes';

@@ -3128,6 +3128,24 @@ abstract class AppLocalizations {
   /// **'Open Developer settings'**
   String get parentalControlPinEntryReasonDeveloperSettings;
 
+  /// PIN sheet headline when resetting all app data
+  ///
+  /// In en, this message translates to:
+  /// **'Reset all app data'**
+  String get parentalControlPinEntryReasonResetData;
+
+  /// Placeholder text in the PIN entry field — terse, since the prompt above already names which PIN.
+  ///
+  /// In en, this message translates to:
+  /// **'4–8 digits'**
+  String get parentalControlPinEntryHint;
+
+  /// Subtitle on the PIN entry sheet explaining which PIN is being requested.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your Parental Control PIN to continue.'**
+  String get parentalControlPinEntryPrompt;
+
   /// Wrong-PIN error shown with remaining attempt count before lockout.
   ///
   /// In en, this message translates to:
@@ -3146,10 +3164,10 @@ abstract class AppLocalizations {
   /// **'Could not verify PIN. Please try again.'**
   String get parentalControlPinSheetError;
 
-  /// Forgot PIN help text
+  /// Forgot PIN help text. Reset-all-data is itself PIN-gated under Restricted Mode, so the honest recovery is OS-level uninstall; OPML export preserves the subscription list across the reinstall.
   ///
   /// In en, this message translates to:
-  /// **'Forgot PIN? Reset all app data from Storage settings.'**
+  /// **'Forgot your PIN? There is no in-app recovery. Uninstall and reinstall the app to clear the PIN — this also clears subscriptions, downloads, and history. Export your subscriptions to an OPML file first from Storage & Data, then re-import after reinstalling to restore them.'**
   String get parentalControlForgotPinBanner;
 
   /// Toggle to hide explicit episodes

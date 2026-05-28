@@ -684,6 +684,9 @@
   "parentalControlPinEntryReasonDeepLink": "このリンクを開く",
   "parentalControlPinEntryReasonParentalSettings": "ペアレンタル コントロールを変更",
   "parentalControlPinEntryReasonDeveloperSettings": "デベロッパー設定を開く",
+  "parentalControlPinEntryReasonResetData": "アプリのデータをリセット",
+  "parentalControlPinEntryHint": "4〜8桁",
+  "parentalControlPinEntryPrompt": "ペアレンタル コントロールのPINを入力してください。",
   "parentalControlPinIncorrect": "PINが正しくありません。残り{remaining}回。",
   "@parentalControlPinIncorrect": {
     "description": "Wrong-PIN error shown with remaining attempt count before lockout.",
@@ -696,7 +699,7 @@
   },
   "parentalControlPinSheetError": "PINを確認できませんでした。もう一度お試しください。",
   "@parentalControlPinSheetError": { "description": "Generic error when PIN verification fails due to storage error (not wrong PIN)." },
-  "parentalControlForgotPinBanner": "PINを忘れた場合は、ストレージ設定からすべてのデータをリセットしてください。",
+  "parentalControlForgotPinBanner": "PINを忘れた場合、アプリ内での復旧手段はありません。PINを解除するにはアプリをアンインストールして再インストールしてください。購読、ダウンロード、再生履歴も併せて削除されます。先に「ストレージとデータ」から購読をOPMLファイルとして書き出しておけば、再インストール後にOPMLを取り込んで購読を復元できます。",
   "parentalControlHideExplicitToggle": "アダルト指定エピソードを非表示",
   "parentalControlBiometricToggle": "生体認証によるロック解除を許可",
   "parentalControlBiometricPrompt": "保護者制限を解除",

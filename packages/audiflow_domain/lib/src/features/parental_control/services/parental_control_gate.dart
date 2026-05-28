@@ -19,6 +19,7 @@ enum UnlockReason {
   deepLink,
   parentalSettings,
   developerSettings,
+  resetData,
   unspecified,
 }
 

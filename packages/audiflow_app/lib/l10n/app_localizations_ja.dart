@@ -1652,6 +1652,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get parentalControlPinEntryReasonDeveloperSettings => 'デベロッパー設定を開く';
 
   @override
+  String get parentalControlPinEntryReasonResetData => 'アプリのデータをリセット';
+
+  @override
+  String get parentalControlPinEntryHint => '4〜8桁';
+
+  @override
+  String get parentalControlPinEntryPrompt => 'ペアレンタル コントロールのPINを入力してください。';
+
+  @override
   String parentalControlPinIncorrect(int remaining) {
     return 'PINが正しくありません。残り$remaining回。';
   }
@@ -1666,7 +1675,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get parentalControlForgotPinBanner =>
-      'PINを忘れた場合は、ストレージ設定からすべてのデータをリセットしてください。';
+      'PINを忘れた場合、アプリ内での復旧手段はありません。PINを解除するにはアプリをアンインストールして再インストールしてください。購読、ダウンロード、再生履歴も併せて削除されます。先に「ストレージとデータ」から購読をOPMLファイルとして書き出しておけば、再インストール後にOPMLを取り込んで購読を復元できます。';
 
   @override
   String get parentalControlHideExplicitToggle => 'アダルト指定エピソードを非表示';
