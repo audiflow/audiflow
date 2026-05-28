@@ -1656,4 +1656,91 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsPrivacyPolicyLinkSubtitle => 'Read the full policy';
+
+  @override
+  String get parentalControlTitle => 'Parental Control';
+
+  @override
+  String get parentalControlEnable => 'Restricted Mode';
+
+  @override
+  String get parentalControlEnableSubtitle =>
+      'Hide discovery and lock subscription changes';
+
+  @override
+  String get parentalControlPinSetupTitle => 'Set a PIN';
+
+  @override
+  String get parentalControlPinSetupSubtitle => 'Enter a 4-8 digit PIN';
+
+  @override
+  String get parentalControlPinConfirm => 'Confirm PIN';
+
+  @override
+  String get parentalControlPinChange => 'Change PIN';
+
+  @override
+  String get parentalControlPinCurrent => 'Current PIN';
+
+  @override
+  String get parentalControlPinNew => 'New PIN';
+
+  @override
+  String get parentalControlPinEntryReasonSubscribe =>
+      'Subscribe to this podcast';
+
+  @override
+  String get parentalControlPinEntryReasonUnsubscribe =>
+      'Unsubscribe from this podcast';
+
+  @override
+  String get parentalControlPinEntryReasonOpmlImport => 'Import OPML';
+
+  @override
+  String get parentalControlPinEntryReasonDeepLink => 'Open this link';
+
+  @override
+  String get parentalControlPinEntryReasonParentalSettings =>
+      'Change Parental Control';
+
+  @override
+  String get parentalControlPinEntryReasonDeveloperSettings =>
+      'Open Developer settings';
+
+  @override
+  String parentalControlPinIncorrect(int remaining) {
+    return 'Incorrect PIN. $remaining attempts remaining.';
+  }
+
+  @override
+  String parentalControlLockoutCountdown(int seconds) {
+    return 'Too many attempts. Try again in ${seconds}s.';
+  }
+
+  @override
+  String get parentalControlForgotPinBanner =>
+      'Forgot PIN? Reset all app data from Storage settings.';
+
+  @override
+  String get parentalControlHideExplicitToggle => 'Hide explicit episodes';
+
+  @override
+  String get parentalControlBiometricToggle => 'Allow biometric unlock';
+
+  @override
+  String get parentalControlUnlockTimeoutLabel => 'Auto re-lock after';
+
+  @override
+  String get parentalControlSubmit => 'Submit';
+
+  @override
+  String get parentalControlCancel => 'Cancel';
+
+  @override
+  String get parentalControlSettingsUnavailable =>
+      'Settings unavailable — restart the app.';
+
+  @override
+  String get parentalControlRestrictedRedirect =>
+      'Restricted Mode is on. Open the gate from Settings.';
 }

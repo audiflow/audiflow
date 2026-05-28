@@ -1598,4 +1598,85 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get settingsPrivacyPolicyLinkSubtitle => '全文を読む';
+
+  @override
+  String get parentalControlTitle => 'ペアレンタル コントロール';
+
+  @override
+  String get parentalControlEnable => '制限モード';
+
+  @override
+  String get parentalControlEnableSubtitle => '検索を隠し、購読変更をロックします';
+
+  @override
+  String get parentalControlPinSetupTitle => 'PINを設定';
+
+  @override
+  String get parentalControlPinSetupSubtitle => '4〜8桁のPINを入力';
+
+  @override
+  String get parentalControlPinConfirm => 'PIN確認';
+
+  @override
+  String get parentalControlPinChange => 'PINを変更';
+
+  @override
+  String get parentalControlPinCurrent => '現在のPIN';
+
+  @override
+  String get parentalControlPinNew => '新しいPIN';
+
+  @override
+  String get parentalControlPinEntryReasonSubscribe => 'このポッドキャストを購読';
+
+  @override
+  String get parentalControlPinEntryReasonUnsubscribe => 'このポッドキャストの購読を解除';
+
+  @override
+  String get parentalControlPinEntryReasonOpmlImport => 'OPMLをインポート';
+
+  @override
+  String get parentalControlPinEntryReasonDeepLink => 'このリンクを開く';
+
+  @override
+  String get parentalControlPinEntryReasonParentalSettings =>
+      'ペアレンタル コントロールを変更';
+
+  @override
+  String get parentalControlPinEntryReasonDeveloperSettings => 'デベロッパー設定を開く';
+
+  @override
+  String parentalControlPinIncorrect(int remaining) {
+    return 'PINが正しくありません。残り$remaining回。';
+  }
+
+  @override
+  String parentalControlLockoutCountdown(int seconds) {
+    return '試行回数が上限に達しました。$seconds秒後に再試行できます。';
+  }
+
+  @override
+  String get parentalControlForgotPinBanner =>
+      'PINを忘れた場合は、ストレージ設定からすべてのデータをリセットしてください。';
+
+  @override
+  String get parentalControlHideExplicitToggle => 'アダルト指定エピソードを非表示';
+
+  @override
+  String get parentalControlBiometricToggle => '生体認証によるロック解除を許可';
+
+  @override
+  String get parentalControlUnlockTimeoutLabel => '自動再ロックまでの時間';
+
+  @override
+  String get parentalControlSubmit => '送信';
+
+  @override
+  String get parentalControlCancel => 'キャンセル';
+
+  @override
+  String get parentalControlSettingsUnavailable => '設定を利用できません。アプリを再起動してください。';
+
+  @override
+  String get parentalControlRestrictedRedirect => '制限モードが有効です。設定からゲートを開いてください。';
 }

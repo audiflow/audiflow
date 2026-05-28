@@ -3025,6 +3025,156 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Read the full policy'**
   String get settingsPrivacyPolicyLinkSubtitle;
+
+  /// Parental control settings screen title
+  ///
+  /// In en, this message translates to:
+  /// **'Parental Control'**
+  String get parentalControlTitle;
+
+  /// Restricted mode toggle label
+  ///
+  /// In en, this message translates to:
+  /// **'Restricted Mode'**
+  String get parentalControlEnable;
+
+  /// Restricted mode toggle subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Hide discovery and lock subscription changes'**
+  String get parentalControlEnableSubtitle;
+
+  /// PIN setup screen title
+  ///
+  /// In en, this message translates to:
+  /// **'Set a PIN'**
+  String get parentalControlPinSetupTitle;
+
+  /// PIN setup screen subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a 4-8 digit PIN'**
+  String get parentalControlPinSetupSubtitle;
+
+  /// Confirm PIN field label
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm PIN'**
+  String get parentalControlPinConfirm;
+
+  /// Change PIN list tile label
+  ///
+  /// In en, this message translates to:
+  /// **'Change PIN'**
+  String get parentalControlPinChange;
+
+  /// Current PIN field label
+  ///
+  /// In en, this message translates to:
+  /// **'Current PIN'**
+  String get parentalControlPinCurrent;
+
+  /// New PIN field label
+  ///
+  /// In en, this message translates to:
+  /// **'New PIN'**
+  String get parentalControlPinNew;
+
+  /// PIN sheet headline when subscribing
+  ///
+  /// In en, this message translates to:
+  /// **'Subscribe to this podcast'**
+  String get parentalControlPinEntryReasonSubscribe;
+
+  /// PIN sheet headline when unsubscribing
+  ///
+  /// In en, this message translates to:
+  /// **'Unsubscribe from this podcast'**
+  String get parentalControlPinEntryReasonUnsubscribe;
+
+  /// PIN sheet headline when importing OPML
+  ///
+  /// In en, this message translates to:
+  /// **'Import OPML'**
+  String get parentalControlPinEntryReasonOpmlImport;
+
+  /// PIN sheet headline for deep link
+  ///
+  /// In en, this message translates to:
+  /// **'Open this link'**
+  String get parentalControlPinEntryReasonDeepLink;
+
+  /// PIN sheet headline for parental settings
+  ///
+  /// In en, this message translates to:
+  /// **'Change Parental Control'**
+  String get parentalControlPinEntryReasonParentalSettings;
+
+  /// PIN sheet headline for developer settings
+  ///
+  /// In en, this message translates to:
+  /// **'Open Developer settings'**
+  String get parentalControlPinEntryReasonDeveloperSettings;
+
+  /// No description provided for @parentalControlPinIncorrect.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect PIN. {remaining} attempts remaining.'**
+  String parentalControlPinIncorrect(int remaining);
+
+  /// No description provided for @parentalControlLockoutCountdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Try again in {seconds}s.'**
+  String parentalControlLockoutCountdown(int seconds);
+
+  /// Forgot PIN help text
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot PIN? Reset all app data from Storage settings.'**
+  String get parentalControlForgotPinBanner;
+
+  /// Toggle to hide explicit episodes
+  ///
+  /// In en, this message translates to:
+  /// **'Hide explicit episodes'**
+  String get parentalControlHideExplicitToggle;
+
+  /// Toggle for biometric unlock
+  ///
+  /// In en, this message translates to:
+  /// **'Allow biometric unlock'**
+  String get parentalControlBiometricToggle;
+
+  /// Unlock timeout dropdown label
+  ///
+  /// In en, this message translates to:
+  /// **'Auto re-lock after'**
+  String get parentalControlUnlockTimeoutLabel;
+
+  /// Submit button label on PIN entry sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Submit'**
+  String get parentalControlSubmit;
+
+  /// Cancel button label on PIN entry sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get parentalControlCancel;
+
+  /// Error text when parental control settings cannot be loaded
+  ///
+  /// In en, this message translates to:
+  /// **'Settings unavailable — restart the app.'**
+  String get parentalControlSettingsUnavailable;
+
+  /// Message shown when redirected due to restricted mode
+  ///
+  /// In en, this message translates to:
+  /// **'Restricted Mode is on. Open the gate from Settings.'**
+  String get parentalControlRestrictedRedirect;
 }
 
 class _AppLocalizationsDelegate
