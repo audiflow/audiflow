@@ -1,3 +1,6 @@
+import 'package:audiflow_domain/src/features/monitoring/models/analytics_event.dart';
+import 'package:audiflow_domain/src/features/monitoring/providers/analytics_providers.dart';
+import 'package:audiflow_domain/src/features/monitoring/testing/fake_analytics_service.dart';
 import 'package:audiflow_domain/src/features/parental_control/datasources/local/parental_control_local_datasource.dart';
 import 'package:audiflow_domain/src/features/parental_control/models/parental_control_settings.dart';
 import 'package:audiflow_domain/src/features/parental_control/models/podcast_parental_flags.dart';
@@ -19,14 +22,17 @@ import '../../../helpers/isar_test_helper.dart';
 final _silentLogger = Logger(level: Level.off);
 
 ProviderContainer makeContainer(Isar isar) {
+  final analytics = FakeAnalyticsService();
   return ProviderContainer(
     overrides: [
       isarProvider.overrideWithValue(isar),
+      analyticsServiceProvider.overrideWithValue(analytics),
       parentalControlRepositoryProvider.overrideWithValue(
         ParentalControlRepositoryImpl(
           datasource: ParentalControlLocalDataSource(isar: isar),
           hasher: PinHasher(),
           logger: _silentLogger,
+          analytics: analytics,
         ),
       ),
     ],
@@ -326,6 +332,37 @@ void main() {
       // State must be unchanged.
       check(container.read(parentalControlGateProvider)).equals(lockedOut);
     });
+  });
+
+  group('ParentalControlGate analytics', () {
+    test('successful tryUnlock emits ParentalControlUnlockSuccess', () async {
+      final analytics =
+          container.read(analyticsServiceProvider) as FakeAnalyticsService;
+      analytics.reset();
+      await container
+          .read(parentalControlGateProvider.notifier)
+          .tryUnlock('1234', reason: UnlockReason.parentalSettings);
+      final successes = analytics.events
+          .whereType<ParentalControlUnlockSuccess>()
+          .toList();
+      check(successes).has((e) => e.length, 'length').equals(1);
+      check(successes.first.reason).equals('parentalSettings');
+    });
+
+    test(
+      'failed tryUnlock does not emit ParentalControlUnlockSuccess',
+      () async {
+        final analytics =
+            container.read(analyticsServiceProvider) as FakeAnalyticsService;
+        analytics.reset();
+        await container
+            .read(parentalControlGateProvider.notifier)
+            .tryUnlock('0000');
+        check(
+          analytics.events.whereType<ParentalControlUnlockSuccess>().length,
+        ).equals(0);
+      },
+    );
   });
 }
 

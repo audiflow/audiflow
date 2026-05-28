@@ -293,3 +293,53 @@ class SleepTimerSet extends AnalyticsEvent {
     return v == null ? {'mode': modeName} : {'mode': modeName, 'value': v};
   }
 }
+
+class ParentalControlEnabled extends AnalyticsEvent {
+  const ParentalControlEnabled();
+  @override
+  String get name => 'parental_control_enabled';
+  @override
+  Map<String, Object> get params => const {};
+}
+
+class ParentalControlDisabled extends AnalyticsEvent {
+  const ParentalControlDisabled();
+  @override
+  String get name => 'parental_control_disabled';
+  @override
+  Map<String, Object> get params => const {};
+}
+
+class ParentalControlUnlockSuccess extends AnalyticsEvent {
+  const ParentalControlUnlockSuccess({required this.reason});
+  final String reason;
+  @override
+  String get name => 'parental_control_unlock_success';
+  @override
+  Map<String, Object> get params => {'reason': reason};
+}
+
+class ParentalControlUnlockFailed extends AnalyticsEvent {
+  const ParentalControlUnlockFailed({required this.attempts});
+  final int attempts;
+  @override
+  String get name => 'parental_control_unlock_failed';
+  @override
+  Map<String, Object> get params => {'attempts': attempts};
+}
+
+class ParentalControlLockout extends AnalyticsEvent {
+  const ParentalControlLockout({
+    required this.attempts,
+    required this.durationSeconds,
+  });
+  final int attempts;
+  final int durationSeconds;
+  @override
+  String get name => 'parental_control_lockout';
+  @override
+  Map<String, Object> get params => {
+    'attempts': attempts,
+    'duration_seconds': durationSeconds,
+  };
+}

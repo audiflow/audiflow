@@ -1,3 +1,5 @@
+import 'package:audiflow_domain/src/features/monitoring/models/analytics_event.dart';
+import 'package:audiflow_domain/src/features/monitoring/testing/fake_analytics_service.dart';
 import 'package:audiflow_domain/src/features/parental_control/datasources/local/parental_control_local_datasource.dart';
 import 'package:audiflow_domain/src/features/parental_control/models/parental_control_settings.dart';
 import 'package:audiflow_domain/src/features/parental_control/models/podcast_parental_flags.dart';
@@ -29,12 +31,14 @@ final _silentLogger = Logger(level: Level.off);
 ParentalControlRepositoryImpl _buildRepo(
   Isar isar, {
   PinHasher? hasher,
+  FakeAnalyticsService? analytics,
   DateTime Function()? clock,
 }) {
   return ParentalControlRepositoryImpl(
     datasource: ParentalControlLocalDataSource(isar: isar),
     hasher: hasher ?? PinHasher(),
     logger: _silentLogger,
+    analytics: analytics ?? FakeAnalyticsService(),
     clock: clock,
   );
 }
@@ -216,6 +220,74 @@ void main() {
       },
     );
 
+    group('analytics events', () {
+      test('setRestrictedMode(true) emits ParentalControlEnabled', () async {
+        final analytics = FakeAnalyticsService();
+        final r = _buildRepo(isar, analytics: analytics);
+        await r.setRestrictedMode(true);
+        check(analytics.events).has((e) => e.length, 'length').equals(1);
+        check(analytics.events.first).isA<ParentalControlEnabled>();
+      });
+
+      test('setRestrictedMode(false) emits ParentalControlDisabled', () async {
+        final analytics = FakeAnalyticsService();
+        final r = _buildRepo(isar, analytics: analytics);
+        await r.setRestrictedMode(false);
+        check(analytics.events).has((e) => e.length, 'length').equals(1);
+        check(analytics.events.first).isA<ParentalControlDisabled>();
+      });
+
+      test(
+        'registerFailedAttempt emits ParentalControlUnlockFailed each call',
+        () async {
+          final analytics = FakeAnalyticsService();
+          final r = _buildRepo(isar, analytics: analytics);
+          await r.registerFailedAttempt();
+          await r.registerFailedAttempt();
+          check(
+            analytics.events.whereType<ParentalControlUnlockFailed>().length,
+          ).equals(2);
+          final second = analytics.events
+              .whereType<ParentalControlUnlockFailed>()
+              .last;
+          check(second.attempts).equals(2);
+        },
+      );
+
+      test(
+        'registerFailedAttempt emits ParentalControlLockout on 5th failure',
+        () async {
+          final analytics = FakeAnalyticsService();
+          final r = _buildRepo(isar, analytics: analytics);
+          for (var i = 0; i < 5; i++) {
+            await r.registerFailedAttempt();
+          }
+          final lockouts = analytics.events
+              .whereType<ParentalControlLockout>()
+              .toList();
+          check(lockouts).has((e) => e.length, 'length').equals(1);
+          check(lockouts.first.attempts).equals(5);
+          check(lockouts.first.durationSeconds).equals(30);
+        },
+      );
+
+      test('error sink is called when datasource throws', () async {
+        // Use a ThrowingDataSource to verify _guarded forwards to the sink.
+        final captured = <(String, Object?)>[];
+        final r = ParentalControlRepositoryImpl(
+          datasource: _ThrowingDataSource(),
+          hasher: PinHasher(),
+          logger: _silentLogger,
+          analytics: FakeAnalyticsService(),
+          onError: (msg, {error, stackTrace}) => captured.add((msg, error)),
+        );
+        // _guarded rethrows after calling the sink.
+        await check(r.getSettings()).throws<Object>();
+        check(captured).has((e) => e.length, 'length').equals(1);
+        check(captured.first.$1).contains('getSettings');
+      });
+    });
+
     test(
       'failedAttempts and lockoutUntil survive a close/reopen cycle',
       () async {
@@ -250,4 +322,11 @@ void main() {
       },
     );
   });
+}
+
+/// Fake datasource that always throws to exercise the [_guarded] error path.
+class _ThrowingDataSource implements ParentalControlLocalDataSource {
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      Future<Never>.error(StateError('datasource unavailable'));
 }

@@ -4,6 +4,8 @@ import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/providers/logger_provider.dart';
+import '../../monitoring/models/analytics_event.dart';
+import '../../monitoring/providers/analytics_providers.dart';
 import '../models/unlock_state.dart';
 import '../providers/parental_control_providers.dart';
 import '../services/parental_control_policy.dart';
@@ -36,6 +38,9 @@ class ParentalControlGate extends _$ParentalControlGate {
   final DateTime Function() _now = DateTime.now;
 
   Logger get _logger => ref.read(namedLoggerProvider('ParentalControl'));
+
+  ParentalControlErrorSink get _errorSink =>
+      ref.read(parentalControlErrorSinkProvider);
 
   @override
   UnlockState build() {
@@ -73,6 +78,8 @@ class ParentalControlGate extends _$ParentalControlGate {
         error: e,
         stackTrace: st,
       );
+      // Forward storage failure to sink (e.g. Sentry). No PIN/hash passed.
+      _errorSink('verifyPin failed', error: e, stackTrace: st);
       return false;
     }
 
@@ -103,6 +110,8 @@ class ParentalControlGate extends _$ParentalControlGate {
           error: e,
           stackTrace: st,
         );
+        // Forward storage failure to sink (e.g. Sentry). No PIN/hash passed.
+        _errorSink('registerFailedAttempt failed', error: e, stackTrace: st);
         state = const Locked();
       }
       return false;
@@ -125,10 +134,34 @@ class ParentalControlGate extends _$ParentalControlGate {
       // calling lock() cannot race a not-yet-armed timer.
       _startIdleTimer(_sessionTimeout);
       state = Unlocked(expiresAt: _now().add(_sessionTimeout));
+      // Analytics is best-effort; an unavailable analytics service (e.g. in
+      // unit tests without the override) must not flip a successful unlock
+      // to failure.
+      try {
+        await ref
+            .read(analyticsServiceProvider)
+            .log(
+              ParentalControlUnlockSuccess(
+                reason: (reason ?? UnlockReason.unspecified).name,
+              ),
+            );
+      } catch (e, st) {
+        _logger.t(
+          'parental control unlock_success analytics emit failed',
+          error: e,
+          stackTrace: st,
+        );
+      }
       return true;
     } catch (e, st) {
       _logger.e(
         'getSettings after successful verifyPin failed; refusing to unlock',
+        error: e,
+        stackTrace: st,
+      );
+      // Forward storage failure to sink (e.g. Sentry). No PIN/hash passed.
+      _errorSink(
+        'getSettings after verifyPin failed',
         error: e,
         stackTrace: st,
       );

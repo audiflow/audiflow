@@ -2,8 +2,11 @@ import 'dart:convert' show base64Encode;
 
 import 'package:logger/logger.dart';
 
+import '../../monitoring/models/analytics_event.dart';
+import '../../monitoring/services/analytics_service.dart';
 import '../datasources/local/parental_control_local_datasource.dart';
 import '../models/parental_control_settings.dart';
+import '../providers/parental_control_providers.dart';
 import '../services/parental_control_policy.dart';
 import '../services/pin_hasher.dart';
 import 'parental_control_repository.dart';
@@ -13,15 +16,27 @@ class ParentalControlRepositoryImpl implements ParentalControlRepository {
     required ParentalControlLocalDataSource datasource,
     required PinHasher hasher,
     required Logger logger,
+    required AnalyticsService analytics,
+    ParentalControlErrorSink? onError,
     DateTime Function()? clock,
   }) : _ds = datasource,
        _hasher = hasher,
        _logger = logger,
+       _analytics = analytics,
+       _onError = onError ?? _noOpSink,
        _now = clock ?? DateTime.now;
+
+  static void _noOpSink(
+    String message, {
+    Object? error,
+    StackTrace? stackTrace,
+  }) {}
 
   final ParentalControlLocalDataSource _ds;
   final PinHasher _hasher;
   final Logger _logger;
+  final AnalyticsService _analytics;
+  final ParentalControlErrorSink _onError;
   final DateTime Function() _now;
 
   @override
@@ -92,6 +107,11 @@ class ParentalControlRepositoryImpl implements ParentalControlRepository {
           s.restrictedModeEnabled = enabled;
           return s;
         });
+        await _safeAnalytics(
+          enabled
+              ? const ParentalControlEnabled()
+              : const ParentalControlDisabled(),
+        );
       });
 
   @override
@@ -117,8 +137,10 @@ class ParentalControlRepositoryImpl implements ParentalControlRepository {
     'registerFailedAttempt',
     () async {
       Duration? lockout;
+      int updatedAttempts = 0;
       await _ds.updateSettings((s) {
         s.failedAttempts = s.failedAttempts + 1;
+        updatedAttempts = s.failedAttempts;
         // First four failures are free; backoff starts on the 5th and
         // saturates at the final entry.
         if (ParentalControlPolicy.lockoutThresholdAttempts <=
@@ -135,6 +157,18 @@ class ParentalControlRepositoryImpl implements ParentalControlRepository {
         }
         return s;
       });
+      await _safeAnalytics(
+        ParentalControlUnlockFailed(attempts: updatedAttempts),
+      );
+      final lo = lockout;
+      if (lo != null) {
+        await _safeAnalytics(
+          ParentalControlLockout(
+            attempts: updatedAttempts,
+            durationSeconds: lo.inSeconds,
+          ),
+        );
+      }
       return lockout;
     },
   );
@@ -174,7 +208,25 @@ class ParentalControlRepositoryImpl implements ParentalControlRepository {
       return await body();
     } catch (e, st) {
       _logger.e('parentalControl.$op failed', error: e, stackTrace: st);
+      // Forward to the error sink (e.g. Sentry in production).
+      // NEVER pass PIN, salt, or hash — only the exception and stack.
+      _onError('parentalControl.$op failed', error: e, stackTrace: st);
       rethrow;
+    }
+  }
+
+  /// Best-effort analytics emit: an unavailable analytics service (e.g. in
+  /// unit tests without the override) must not flip the underlying repository
+  /// op into a failure.
+  Future<void> _safeAnalytics(AnalyticsEvent event) async {
+    try {
+      await _analytics.log(event);
+    } catch (e, st) {
+      _logger.t(
+        'parentalControl analytics emit failed (${event.runtimeType})',
+        error: e,
+        stackTrace: st,
+      );
     }
   }
 }

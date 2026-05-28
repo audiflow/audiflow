@@ -2,6 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/providers/database_provider.dart';
 import '../../../common/providers/logger_provider.dart';
+import '../../monitoring/providers/analytics_providers.dart';
 import '../datasources/local/parental_control_local_datasource.dart';
 import '../models/parental_control_settings.dart';
 import '../models/unlock_state.dart';
@@ -11,6 +12,26 @@ import '../services/parental_control_gate.dart';
 import '../services/pin_hasher.dart';
 
 part 'parental_control_providers.g.dart';
+
+/// Sink for storage errors raised by the parental-control repository.
+///
+/// Signature matches [ForceUpdateWarningSink] for consistency. The default
+/// no-op keeps [audiflow_domain] free of monitoring dependencies. Override at
+/// the composition root (audiflow_app) with a sink that forwards to Sentry.
+///
+/// NEVER pass plaintext PIN, salt, or hash through this sink — only the
+/// exception object and its stack trace.
+typedef ParentalControlErrorSink =
+    void Function(String message, {Object? error, StackTrace? stackTrace});
+
+/// Provides the [ParentalControlErrorSink] used by the repository for
+/// non-fatal storage failure reporting (e.g. Sentry in production).
+///
+/// Default is a no-op so tests and plain domain unit-tests need no override.
+@Riverpod(keepAlive: true)
+ParentalControlErrorSink parentalControlErrorSink(Ref ref) {
+  return (String _, {Object? error, StackTrace? stackTrace}) {};
+}
 
 /// Provides the [PinHasher] singleton used for all PIN hash and verify calls.
 @Riverpod(keepAlive: true)
@@ -30,6 +51,8 @@ ParentalControlRepository parentalControlRepository(Ref ref) {
     datasource: ref.watch(parentalControlLocalDataSourceProvider),
     hasher: ref.watch(pinHasherProvider),
     logger: ref.watch(namedLoggerProvider('ParentalControl')),
+    analytics: ref.watch(analyticsServiceProvider),
+    onError: ref.watch(parentalControlErrorSinkProvider),
   );
 }
 

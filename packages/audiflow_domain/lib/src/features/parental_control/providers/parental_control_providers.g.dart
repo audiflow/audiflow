@@ -8,6 +8,68 @@ part of 'parental_control_providers.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Provides the [ParentalControlErrorSink] used by the repository for
+/// non-fatal storage failure reporting (e.g. Sentry in production).
+///
+/// Default is a no-op so tests and plain domain unit-tests need no override.
+
+@ProviderFor(parentalControlErrorSink)
+final parentalControlErrorSinkProvider = ParentalControlErrorSinkProvider._();
+
+/// Provides the [ParentalControlErrorSink] used by the repository for
+/// non-fatal storage failure reporting (e.g. Sentry in production).
+///
+/// Default is a no-op so tests and plain domain unit-tests need no override.
+
+final class ParentalControlErrorSinkProvider
+    extends
+        $FunctionalProvider<
+          ParentalControlErrorSink,
+          ParentalControlErrorSink,
+          ParentalControlErrorSink
+        >
+    with $Provider<ParentalControlErrorSink> {
+  /// Provides the [ParentalControlErrorSink] used by the repository for
+  /// non-fatal storage failure reporting (e.g. Sentry in production).
+  ///
+  /// Default is a no-op so tests and plain domain unit-tests need no override.
+  ParentalControlErrorSinkProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'parentalControlErrorSinkProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$parentalControlErrorSinkHash();
+
+  @$internal
+  @override
+  $ProviderElement<ParentalControlErrorSink> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  ParentalControlErrorSink create(Ref ref) {
+    return parentalControlErrorSink(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(ParentalControlErrorSink value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<ParentalControlErrorSink>(value),
+    );
+  }
+}
+
+String _$parentalControlErrorSinkHash() =>
+    r'7a001bb9700cf6704d291ff48cc484067ebf838d';
+
 /// Provides the [PinHasher] singleton used for all PIN hash and verify calls.
 
 @ProviderFor(pinHasher)
@@ -161,7 +223,7 @@ final class ParentalControlRepositoryProvider
 }
 
 String _$parentalControlRepositoryHash() =>
-    r'038acf6e70b5b42fba2894b2e905f0e723d9e241';
+    r'1ce02a3e6c544a558c8d93bce3b08b377658643c';
 
 /// Streams the full [ParentalControlSettings] singleton from Isar.
 
@@ -265,7 +327,7 @@ final class IsRestrictedModeOnProvider
 }
 
 String _$isRestrictedModeOnHash() =>
-    r'4b75f4a9906d5748425a60850fc9f1fe2a461529';
+    r'2cd69fc7ec1f4a8069aae6dd8a79beaf0412aec9';
 
 /// Streams whether explicit episodes should be hidden for the given podcast.
 
