@@ -254,8 +254,9 @@ class _ImportTile extends ConsumerWidget {
       title: Text(l10n.storageImportTitle),
       subtitle: Text(l10n.storageImportSubtitle),
       trailing: OutlinedButton(
-        onPressed: () =>
-            ref.read(opmlImportControllerProvider.notifier).pickAndParse(),
+        onPressed: () => ref
+            .read(opmlImportControllerProvider.notifier)
+            .pickAndParse(context),
         child: Text(l10n.storageImport),
       ),
     );
