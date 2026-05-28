@@ -19,4 +19,10 @@ abstract final class ParentalControlPolicy {
   ///
   /// Doubling backoff capped at 5 minutes per product decision.
   static const List<int> backoffSeconds = [30, 60, 120, 240, 300];
+
+  /// Default unlock session timeout in milliseconds (5 minutes).
+  ///
+  /// Used as a fallback when the persisted [ParentalControlSettings.unlockTimeoutMs]
+  /// is zero or negative, which would auto-relock the gate instantly.
+  static const int defaultUnlockTimeoutMs = 300000;
 }
