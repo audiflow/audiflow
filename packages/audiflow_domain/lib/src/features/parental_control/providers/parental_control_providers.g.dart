@@ -8,13 +8,17 @@ part of 'parental_control_providers.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Provides the [PinHasher] singleton used for all PIN hash and verify calls.
 
 @ProviderFor(pinHasher)
 final pinHasherProvider = PinHasherProvider._();
 
+/// Provides the [PinHasher] singleton used for all PIN hash and verify calls.
+
 final class PinHasherProvider
     extends $FunctionalProvider<PinHasher, PinHasher, PinHasher>
     with $Provider<PinHasher> {
+  /// Provides the [PinHasher] singleton used for all PIN hash and verify calls.
   PinHasherProvider._()
     : super(
         from: null,
@@ -50,9 +54,13 @@ final class PinHasherProvider
 
 String _$pinHasherHash() => r'9c7e1e693faf28e145da2e1c378651424c432b3c';
 
+/// Provides the local data source backed by Isar for parental-control storage.
+
 @ProviderFor(parentalControlLocalDataSource)
 final parentalControlLocalDataSourceProvider =
     ParentalControlLocalDataSourceProvider._();
+
+/// Provides the local data source backed by Isar for parental-control storage.
 
 final class ParentalControlLocalDataSourceProvider
     extends
@@ -62,6 +70,7 @@ final class ParentalControlLocalDataSourceProvider
           ParentalControlLocalDataSource
         >
     with $Provider<ParentalControlLocalDataSource> {
+  /// Provides the local data source backed by Isar for parental-control storage.
   ParentalControlLocalDataSourceProvider._()
     : super(
         from: null,
@@ -101,8 +110,12 @@ final class ParentalControlLocalDataSourceProvider
 String _$parentalControlLocalDataSourceHash() =>
     r'31242eb044f6d0c455bef9a9da92a78c773dd162';
 
+/// Provides the [ParentalControlRepository] implementation.
+
 @ProviderFor(parentalControlRepository)
 final parentalControlRepositoryProvider = ParentalControlRepositoryProvider._();
+
+/// Provides the [ParentalControlRepository] implementation.
 
 final class ParentalControlRepositoryProvider
     extends
@@ -112,6 +125,7 @@ final class ParentalControlRepositoryProvider
           ParentalControlRepository
         >
     with $Provider<ParentalControlRepository> {
+  /// Provides the [ParentalControlRepository] implementation.
   ParentalControlRepositoryProvider._()
     : super(
         from: null,
@@ -147,11 +161,15 @@ final class ParentalControlRepositoryProvider
 }
 
 String _$parentalControlRepositoryHash() =>
-    r'636413e790cc7a4b6bb7062e6b73097e240b0d17';
+    r'038acf6e70b5b42fba2894b2e905f0e723d9e241';
+
+/// Streams the full [ParentalControlSettings] singleton from Isar.
 
 @ProviderFor(parentalControlSettingsStream)
 final parentalControlSettingsStreamProvider =
     ParentalControlSettingsStreamProvider._();
+
+/// Streams the full [ParentalControlSettings] singleton from Isar.
 
 final class ParentalControlSettingsStreamProvider
     extends
@@ -163,6 +181,7 @@ final class ParentalControlSettingsStreamProvider
     with
         $FutureModifier<ParentalControlSettings>,
         $StreamProvider<ParentalControlSettings> {
+  /// Streams the full [ParentalControlSettings] singleton from Isar.
   ParentalControlSettingsStreamProvider._()
     : super(
         from: null,
@@ -192,12 +211,26 @@ final class ParentalControlSettingsStreamProvider
 String _$parentalControlSettingsStreamHash() =>
     r'83d816a98c8bf40d0305a746153372806e4679e0';
 
+/// Returns whether Restricted Mode is currently active.
+///
+/// Fails closed (returns `true`) during initial stream loading and on storage
+/// errors so that content is never accidentally exposed while state is unknown.
+
 @ProviderFor(isRestrictedModeOn)
 final isRestrictedModeOnProvider = IsRestrictedModeOnProvider._();
+
+/// Returns whether Restricted Mode is currently active.
+///
+/// Fails closed (returns `true`) during initial stream loading and on storage
+/// errors so that content is never accidentally exposed while state is unknown.
 
 final class IsRestrictedModeOnProvider
     extends $FunctionalProvider<bool, bool, bool>
     with $Provider<bool> {
+  /// Returns whether Restricted Mode is currently active.
+  ///
+  /// Fails closed (returns `true`) during initial stream loading and on storage
+  /// errors so that content is never accidentally exposed while state is unknown.
   IsRestrictedModeOnProvider._()
     : super(
         from: null,
@@ -232,14 +265,19 @@ final class IsRestrictedModeOnProvider
 }
 
 String _$isRestrictedModeOnHash() =>
-    r'5bd985a20e1a88e3b6ef8a60a82d44acadf85024';
+    r'376cd358b61d8dc33c8e2ff43dc51257db1c0fa7';
+
+/// Streams whether explicit episodes should be hidden for the given podcast.
 
 @ProviderFor(hideExplicitForPodcast)
 final hideExplicitForPodcastProvider = HideExplicitForPodcastFamily._();
 
+/// Streams whether explicit episodes should be hidden for the given podcast.
+
 final class HideExplicitForPodcastProvider
     extends $FunctionalProvider<AsyncValue<bool>, bool, Stream<bool>>
     with $FutureModifier<bool>, $StreamProvider<bool> {
+  /// Streams whether explicit episodes should be hidden for the given podcast.
   HideExplicitForPodcastProvider._({
     required HideExplicitForPodcastFamily super.from,
     required int super.argument,
@@ -287,6 +325,8 @@ final class HideExplicitForPodcastProvider
 String _$hideExplicitForPodcastHash() =>
     r'eda86420bf5a51fb28d5815cceb857cd72398fae';
 
+/// Streams whether explicit episodes should be hidden for the given podcast.
+
 final class HideExplicitForPodcastFamily extends $Family
     with $FunctionalFamilyOverride<Stream<bool>, int> {
   HideExplicitForPodcastFamily._()
@@ -297,6 +337,8 @@ final class HideExplicitForPodcastFamily extends $Family
         $allTransitiveDependencies: null,
         isAutoDispose: true,
       );
+
+  /// Streams whether explicit episodes should be hidden for the given podcast.
 
   HideExplicitForPodcastProvider call(int itunesId) =>
       HideExplicitForPodcastProvider._(argument: itunesId, from: this);
