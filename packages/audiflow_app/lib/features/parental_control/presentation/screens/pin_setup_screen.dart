@@ -1,3 +1,4 @@
+import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,6 +19,7 @@ class _PinSetupScreenState extends ConsumerState<PinSetupScreen> {
   final _pin1 = TextEditingController();
   final _pin2 = TextEditingController();
   String? _err;
+  bool _saving = false;
 
   bool get _valid {
     final n = _pin1.text.length;
@@ -32,11 +34,25 @@ class _PinSetupScreenState extends ConsumerState<PinSetupScreen> {
   }
 
   Future<void> _save() async {
-    await ref
-        .read(parentalControlControllerProvider.notifier)
-        .setPin(_pin1.text);
-    if (!mounted) return;
-    context.pop();
+    if (_saving) return;
+    final l10n = AppLocalizations.of(context);
+    setState(() => _saving = true);
+    try {
+      await ref
+          .read(parentalControlControllerProvider.notifier)
+          .setPin(_pin1.text);
+      if (!mounted) return;
+      context.pop();
+    } catch (e, st) {
+      if (!mounted) return;
+      ref
+          .read(namedLoggerProvider('ParentalControl'))
+          .e('setPin failed', error: e, stackTrace: st);
+      setState(() => _saving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.parentalControlSettingsSaveError)),
+      );
+    }
   }
 
   @override
@@ -76,7 +92,7 @@ class _PinSetupScreenState extends ConsumerState<PinSetupScreen> {
             ),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: _valid ? _save : null,
+              onPressed: (_valid && !_saving) ? _save : null,
               child: Text(l10n.parentalControlSubmit),
             ),
           ],
