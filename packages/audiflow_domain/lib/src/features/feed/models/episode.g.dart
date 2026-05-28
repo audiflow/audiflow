@@ -63,24 +63,29 @@ const EpisodeSchema = CollectionSchema(
       name: r'isFavorited',
       type: IsarType.bool,
     ),
-    r'link': PropertySchema(id: 10, name: r'link', type: IsarType.string),
+    r'itunesExplicit': PropertySchema(
+      id: 10,
+      name: r'itunesExplicit',
+      type: IsarType.bool,
+    ),
+    r'link': PropertySchema(id: 11, name: r'link', type: IsarType.string),
     r'podcastId': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'podcastId',
       type: IsarType.long,
     ),
     r'publishedAt': PropertySchema(
-      id: 12,
+      id: 13,
       name: r'publishedAt',
       type: IsarType.dateTime,
     ),
     r'seasonNumber': PropertySchema(
-      id: 13,
+      id: 14,
       name: r'seasonNumber',
       type: IsarType.long,
     ),
-    r'summary': PropertySchema(id: 14, name: r'summary', type: IsarType.string),
-    r'title': PropertySchema(id: 15, name: r'title', type: IsarType.string),
+    r'summary': PropertySchema(id: 15, name: r'summary', type: IsarType.string),
+    r'title': PropertySchema(id: 16, name: r'title', type: IsarType.string),
   },
 
   estimateSize: _episodeEstimateSize,
@@ -188,12 +193,13 @@ void _episodeSerialize(
   writer.writeString(offsets[7], object.guid);
   writer.writeString(offsets[8], object.imageUrl);
   writer.writeBool(offsets[9], object.isFavorited);
-  writer.writeString(offsets[10], object.link);
-  writer.writeLong(offsets[11], object.podcastId);
-  writer.writeDateTime(offsets[12], object.publishedAt);
-  writer.writeLong(offsets[13], object.seasonNumber);
-  writer.writeString(offsets[14], object.summary);
-  writer.writeString(offsets[15], object.title);
+  writer.writeBool(offsets[10], object.itunesExplicit);
+  writer.writeString(offsets[11], object.link);
+  writer.writeLong(offsets[12], object.podcastId);
+  writer.writeDateTime(offsets[13], object.publishedAt);
+  writer.writeLong(offsets[14], object.seasonNumber);
+  writer.writeString(offsets[15], object.summary);
+  writer.writeString(offsets[16], object.title);
 }
 
 Episode _episodeDeserialize(
@@ -214,12 +220,13 @@ Episode _episodeDeserialize(
   object.id = id;
   object.imageUrl = reader.readStringOrNull(offsets[8]);
   object.isFavorited = reader.readBool(offsets[9]);
-  object.link = reader.readStringOrNull(offsets[10]);
-  object.podcastId = reader.readLong(offsets[11]);
-  object.publishedAt = reader.readDateTimeOrNull(offsets[12]);
-  object.seasonNumber = reader.readLongOrNull(offsets[13]);
-  object.summary = reader.readStringOrNull(offsets[14]);
-  object.title = reader.readString(offsets[15]);
+  object.itunesExplicit = reader.readBool(offsets[10]);
+  object.link = reader.readStringOrNull(offsets[11]);
+  object.podcastId = reader.readLong(offsets[12]);
+  object.publishedAt = reader.readDateTimeOrNull(offsets[13]);
+  object.seasonNumber = reader.readLongOrNull(offsets[14]);
+  object.summary = reader.readStringOrNull(offsets[15]);
+  object.title = reader.readString(offsets[16]);
   return object;
 }
 
@@ -251,16 +258,18 @@ P _episodeDeserializeProp<P>(
     case 9:
       return (reader.readBool(offset)) as P;
     case 10:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 11:
-      return (reader.readLong(offset)) as P;
-    case 12:
-      return (reader.readDateTimeOrNull(offset)) as P;
-    case 13:
-      return (reader.readLongOrNull(offset)) as P;
-    case 14:
       return (reader.readStringOrNull(offset)) as P;
+    case 12:
+      return (reader.readLong(offset)) as P;
+    case 13:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 14:
+      return (reader.readLongOrNull(offset)) as P;
     case 15:
+      return (reader.readStringOrNull(offset)) as P;
+    case 16:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1777,6 +1786,16 @@ extension EpisodeQueryFilter
     });
   }
 
+  QueryBuilder<Episode, Episode, QAfterFilterCondition> itunesExplicitEqualTo(
+    bool value,
+  ) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'itunesExplicit', value: value),
+      );
+    });
+  }
+
   QueryBuilder<Episode, Episode, QAfterFilterCondition> linkIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -2586,6 +2605,18 @@ extension EpisodeQuerySortBy on QueryBuilder<Episode, Episode, QSortBy> {
     });
   }
 
+  QueryBuilder<Episode, Episode, QAfterSortBy> sortByItunesExplicit() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'itunesExplicit', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterSortBy> sortByItunesExplicitDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'itunesExplicit', Sort.desc);
+    });
+  }
+
   QueryBuilder<Episode, Episode, QAfterSortBy> sortByLink() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'link', Sort.asc);
@@ -2794,6 +2825,18 @@ extension EpisodeQuerySortThenBy
     });
   }
 
+  QueryBuilder<Episode, Episode, QAfterSortBy> thenByItunesExplicit() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'itunesExplicit', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterSortBy> thenByItunesExplicitDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'itunesExplicit', Sort.desc);
+    });
+  }
+
   QueryBuilder<Episode, Episode, QAfterSortBy> thenByLink() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'link', Sort.asc);
@@ -2942,6 +2985,12 @@ extension EpisodeQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Episode, Episode, QDistinct> distinctByItunesExplicit() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'itunesExplicit');
+    });
+  }
+
   QueryBuilder<Episode, Episode, QDistinct> distinctByLink({
     bool caseSensitive = true,
   }) {
@@ -3050,6 +3099,12 @@ extension EpisodeQueryProperty
   QueryBuilder<Episode, bool, QQueryOperations> isFavoritedProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'isFavorited');
+    });
+  }
+
+  QueryBuilder<Episode, bool, QQueryOperations> itunesExplicitProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'itunesExplicit');
     });
   }
 

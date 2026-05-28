@@ -54,7 +54,7 @@ final class ParentalControlGateProvider
 }
 
 String _$parentalControlGateHash() =>
-    r'5b14b7d3719d303adca58fbb76f6f941db3a49ba';
+    r'30705f854b5b67d715b46eaa31ecc247de9b1489';
 
 /// Manages the parental-control session state machine.
 ///
