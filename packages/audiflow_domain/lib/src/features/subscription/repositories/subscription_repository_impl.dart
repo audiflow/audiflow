@@ -1,6 +1,8 @@
+import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/providers/database_provider.dart';
+import '../../../common/providers/logger_provider.dart';
 import '../../monitoring/models/analytics_event.dart';
 import '../../monitoring/providers/analytics_providers.dart';
 import '../../monitoring/services/analytics_service.dart';
@@ -21,11 +23,13 @@ SubscriptionRepository subscriptionRepository(Ref ref) {
   final reconcilerService = ref.watch(stationReconcilerServiceProvider);
   final analytics = ref.watch(analyticsServiceProvider);
   final parentalControl = ref.watch(parentalControlRepositoryProvider);
+  final logger = ref.watch(namedLoggerProvider('Subscription'));
   return SubscriptionRepositoryImpl(
     datasource: datasource,
     reconcilerService: reconcilerService,
     analytics: analytics,
     parentalControlRepository: parentalControl,
+    logger: logger,
   );
 }
 
@@ -36,15 +40,18 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
     StationReconcilerService? reconcilerService,
     AnalyticsService? analytics,
     ParentalControlRepository? parentalControlRepository,
+    Logger? logger,
   }) : _datasource = datasource,
        _reconcilerService = reconcilerService,
        _analytics = analytics,
-       _parentalControlRepository = parentalControlRepository;
+       _parentalControlRepository = parentalControlRepository,
+       _logger = logger;
 
   final SubscriptionLocalDatasource _datasource;
   final StationReconcilerService? _reconcilerService;
   final AnalyticsService? _analytics;
   final ParentalControlRepository? _parentalControlRepository;
+  final Logger? _logger;
 
   @override
   Future<Subscription> subscribe({
@@ -117,10 +124,17 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
         PodcastUnsubscribed(podcastId: podcastId, podcastTitle: existing.title),
       );
       // Best-effort: remove per-podcast parental control flags.
+      // Use catch (e, st) instead of on Exception because Isar can throw
+      // Error subclasses (not Exception) on database failures.
       try {
         await _parentalControlRepository?.pruneFlagsFor(existing.id);
-      } on Exception {
-        // Pruning is best-effort; do not break the unsubscribe flow.
+      } catch (e, st) {
+        _logger?.w(
+          'parentalControl.pruneFlagsFor failed for id=${existing.id}; '
+          'unsubscribe continues',
+          error: e,
+          stackTrace: st,
+        );
       }
     }
   }
