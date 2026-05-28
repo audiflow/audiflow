@@ -25,8 +25,12 @@ class ParentalControlSettingsScreen extends ConsumerWidget {
       appBar: AppBar(title: Text(l10n.parentalControlTitle)),
       body: asyncSettings.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, _) =>
-            Center(child: Text(l10n.parentalControlSettingsUnavailable)),
+        error: (err, st) {
+          ref
+              .read(namedLoggerProvider('ParentalControl'))
+              .e('Settings stream error', error: err, stackTrace: st);
+          return Center(child: Text(l10n.parentalControlSettingsUnavailable));
+        },
         data: (s) => _SettingsBody(settings: s),
       ),
     );
@@ -67,19 +71,38 @@ class _SettingsBody extends ConsumerWidget {
               reason: GateReason.parentalSettings,
             );
             if (!ok) return;
-            await ref
-                .read(parentalControlControllerProvider.notifier)
-                .setRestrictedMode(v);
+            try {
+              await ref
+                  .read(parentalControlControllerProvider.notifier)
+                  .setRestrictedMode(v);
+            } catch (e, st) {
+              ref
+                  .read(namedLoggerProvider('ParentalControl'))
+                  .e('setRestrictedMode failed', error: e, stackTrace: st);
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(l10n.parentalControlSettingsSaveError)),
+              );
+            }
           },
         ),
         ListTile(
           title: Text(l10n.parentalControlUnlockTimeoutLabel),
           trailing: DropdownButton<int>(
             value: settings.unlockTimeoutMs,
-            items: const [
-              DropdownMenuItem(value: 60000, child: Text('1 min')),
-              DropdownMenuItem(value: 300000, child: Text('5 min')),
-              DropdownMenuItem(value: 900000, child: Text('15 min')),
+            items: [
+              DropdownMenuItem(
+                value: 60000,
+                child: Text(l10n.parentalControlUnlockTimeout1Min),
+              ),
+              DropdownMenuItem(
+                value: 300000,
+                child: Text(l10n.parentalControlUnlockTimeout5Min),
+              ),
+              DropdownMenuItem(
+                value: 900000,
+                child: Text(l10n.parentalControlUnlockTimeout15Min),
+              ),
             ],
             onChanged: (v) async {
               if (v == null) return;
@@ -89,9 +112,21 @@ class _SettingsBody extends ConsumerWidget {
                 reason: GateReason.parentalSettings,
               );
               if (!ok) return;
-              await ref
-                  .read(parentalControlControllerProvider.notifier)
-                  .setUnlockTimeout(Duration(milliseconds: v));
+              try {
+                await ref
+                    .read(parentalControlControllerProvider.notifier)
+                    .setUnlockTimeout(Duration(milliseconds: v));
+              } catch (e, st) {
+                ref
+                    .read(namedLoggerProvider('ParentalControl'))
+                    .e('setUnlockTimeout failed', error: e, stackTrace: st);
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(l10n.parentalControlSettingsSaveError),
+                  ),
+                );
+              }
             },
           ),
         ),
