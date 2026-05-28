@@ -31,8 +31,9 @@ class Episode {
   /// Whether the feed marks this episode as explicit content.
   ///
   /// Sourced from the iTunes `<itunes:explicit>` element. Values `true`, `yes`,
-  /// and `explicit` are treated as explicit; all other values (including absent)
-  /// default to `false`.
+  /// `1`, and `explicit` (Apple-spec literal) are treated as truthy
+  /// (case-insensitive, whitespace-trimmed). All other values — including an
+  /// absent tag (null `PodcastItem.isExplicit`) — map to `false`.
   bool itunesExplicit = false;
 
   bool isFavorited = false;

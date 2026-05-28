@@ -26,12 +26,15 @@ class Locked extends UnlockState {
 }
 
 /// User authenticated successfully; the session expires at [expiresAt].
-///
-/// [expiresAt] is an absolute UTC instant.
 class Unlocked extends UnlockState {
   const Unlocked({required this.expiresAt});
 
-  /// Absolute UTC instant at which this unlock session expires.
+  /// Wall-clock instant at which this unlock session expires.
+  ///
+  /// Populated via [DateTime.now] (local time). Comparisons must use
+  /// [DateTime.isBefore], [DateTime.isAfter], or [DateTime.compareTo] — never
+  /// raw field subtraction — so that local/UTC differences are handled
+  /// correctly regardless of the clock source.
   final DateTime expiresAt;
 
   @override
@@ -43,12 +46,15 @@ class Unlocked extends UnlockState {
 }
 
 /// PIN entry is temporarily blocked after too many failed attempts.
-///
-/// [retryAt] is an absolute UTC instant after which entry is permitted again.
 class LockedOut extends UnlockState {
   const LockedOut({required this.retryAt, required this.attemptCount});
 
-  /// Absolute UTC instant after which PIN entry is permitted again.
+  /// Wall-clock instant after which PIN entry is permitted again.
+  ///
+  /// Populated via [DateTime.now] (local time). Comparisons must use
+  /// [DateTime.isBefore], [DateTime.isAfter], or [DateTime.compareTo] — never
+  /// raw field subtraction — so that local/UTC differences are handled
+  /// correctly regardless of the clock source.
   final DateTime retryAt;
 
   /// Total number of consecutive failed attempts that triggered this lockout.

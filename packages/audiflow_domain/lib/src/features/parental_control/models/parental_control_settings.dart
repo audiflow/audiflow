@@ -28,8 +28,8 @@ class ParentalControlSettings {
   /// Whether Restricted Mode is active; gates content behind PIN entry.
   bool restrictedModeEnabled = false;
 
-  /// How long (in seconds) an unlock session stays valid before re-prompting.
-  int unlockTimeoutMs = 300000;
+  /// How long (in milliseconds) an unlock session stays valid before re-prompting.
+  int unlockTimeoutMs = ParentalControlPolicy.defaultUnlockTimeoutMs;
 
   /// Whether biometric authentication is accepted as an alternative to the PIN.
   bool biometricUnlockEnabled = false;
