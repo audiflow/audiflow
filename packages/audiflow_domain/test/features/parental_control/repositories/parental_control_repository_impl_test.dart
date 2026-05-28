@@ -135,7 +135,7 @@ void main() {
       await repo.setUnlockTimeout(const Duration(minutes: 10));
       final s = await repo.getSettings();
       check(s.restrictedModeEnabled).isTrue();
-      check(s.unlockTimeoutSeconds).equals(600);
+      check(s.unlockTimeoutMs).equals(600000);
     });
 
     test('setHideExplicit and getHideExplicit round-trip', () async {

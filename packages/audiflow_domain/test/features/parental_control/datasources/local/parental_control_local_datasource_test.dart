@@ -39,12 +39,12 @@ void main() {
     test('saveSettings persists and getSettings returns it', () async {
       final s = await ds.getSettings();
       s.restrictedModeEnabled = true;
-      s.unlockTimeoutSeconds = 600;
+      s.unlockTimeoutMs = 600000;
       await ds.saveSettings(s);
 
       final read = await ds.getSettings();
       check(read.restrictedModeEnabled).isTrue();
-      check(read.unlockTimeoutSeconds).equals(600);
+      check(read.unlockTimeoutMs).equals(600000);
     });
 
     test('watchSettings emits on save', () async {

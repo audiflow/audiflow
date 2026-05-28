@@ -53,9 +53,9 @@ const ParentalControlSettingsSchema = CollectionSchema(
       name: r'restrictedModeEnabled',
       type: IsarType.bool,
     ),
-    r'unlockTimeoutSeconds': PropertySchema(
+    r'unlockTimeoutMs': PropertySchema(
       id: 7,
-      name: r'unlockTimeoutSeconds',
+      name: r'unlockTimeoutMs',
       type: IsarType.long,
     ),
   },
@@ -109,7 +109,7 @@ void _parentalControlSettingsSerialize(
   writer.writeLong(offsets[4], object.pinIterations);
   writer.writeString(offsets[5], object.pinSaltBase64);
   writer.writeBool(offsets[6], object.restrictedModeEnabled);
-  writer.writeLong(offsets[7], object.unlockTimeoutSeconds);
+  writer.writeLong(offsets[7], object.unlockTimeoutMs);
 }
 
 ParentalControlSettings _parentalControlSettingsDeserialize(
@@ -127,7 +127,7 @@ ParentalControlSettings _parentalControlSettingsDeserialize(
   object.pinIterations = reader.readLong(offsets[4]);
   object.pinSaltBase64 = reader.readStringOrNull(offsets[5]);
   object.restrictedModeEnabled = reader.readBool(offsets[6]);
-  object.unlockTimeoutSeconds = reader.readLong(offsets[7]);
+  object.unlockTimeoutMs = reader.readLong(offsets[7]);
   return object;
 }
 
@@ -1050,13 +1050,10 @@ extension ParentalControlSettingsQueryFilter
     ParentalControlSettings,
     QAfterFilterCondition
   >
-  unlockTimeoutSecondsEqualTo(int value) {
+  unlockTimeoutMsEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'unlockTimeoutSeconds',
-          value: value,
-        ),
+        FilterCondition.equalTo(property: r'unlockTimeoutMs', value: value),
       );
     });
   }
@@ -1066,12 +1063,12 @@ extension ParentalControlSettingsQueryFilter
     ParentalControlSettings,
     QAfterFilterCondition
   >
-  unlockTimeoutSecondsGreaterThan(int value, {bool include = false}) {
+  unlockTimeoutMsGreaterThan(int value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         FilterCondition.greaterThan(
           include: include,
-          property: r'unlockTimeoutSeconds',
+          property: r'unlockTimeoutMs',
           value: value,
         ),
       );
@@ -1083,12 +1080,12 @@ extension ParentalControlSettingsQueryFilter
     ParentalControlSettings,
     QAfterFilterCondition
   >
-  unlockTimeoutSecondsLessThan(int value, {bool include = false}) {
+  unlockTimeoutMsLessThan(int value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         FilterCondition.lessThan(
           include: include,
-          property: r'unlockTimeoutSeconds',
+          property: r'unlockTimeoutMs',
           value: value,
         ),
       );
@@ -1100,7 +1097,7 @@ extension ParentalControlSettingsQueryFilter
     ParentalControlSettings,
     QAfterFilterCondition
   >
-  unlockTimeoutSecondsBetween(
+  unlockTimeoutMsBetween(
     int lower,
     int upper, {
     bool includeLower = true,
@@ -1109,7 +1106,7 @@ extension ParentalControlSettingsQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         FilterCondition.between(
-          property: r'unlockTimeoutSeconds',
+          property: r'unlockTimeoutMs',
           lower: lower,
           includeLower: includeLower,
           upper: upper,
@@ -1237,16 +1234,16 @@ extension ParentalControlSettingsQuerySortBy
   }
 
   QueryBuilder<ParentalControlSettings, ParentalControlSettings, QAfterSortBy>
-  sortByUnlockTimeoutSeconds() {
+  sortByUnlockTimeoutMs() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'unlockTimeoutSeconds', Sort.asc);
+      return query.addSortBy(r'unlockTimeoutMs', Sort.asc);
     });
   }
 
   QueryBuilder<ParentalControlSettings, ParentalControlSettings, QAfterSortBy>
-  sortByUnlockTimeoutSecondsDesc() {
+  sortByUnlockTimeoutMsDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'unlockTimeoutSeconds', Sort.desc);
+      return query.addSortBy(r'unlockTimeoutMs', Sort.desc);
     });
   }
 }
@@ -1371,16 +1368,16 @@ extension ParentalControlSettingsQuerySortThenBy
   }
 
   QueryBuilder<ParentalControlSettings, ParentalControlSettings, QAfterSortBy>
-  thenByUnlockTimeoutSeconds() {
+  thenByUnlockTimeoutMs() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'unlockTimeoutSeconds', Sort.asc);
+      return query.addSortBy(r'unlockTimeoutMs', Sort.asc);
     });
   }
 
   QueryBuilder<ParentalControlSettings, ParentalControlSettings, QAfterSortBy>
-  thenByUnlockTimeoutSecondsDesc() {
+  thenByUnlockTimeoutMsDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'unlockTimeoutSeconds', Sort.desc);
+      return query.addSortBy(r'unlockTimeoutMs', Sort.desc);
     });
   }
 }
@@ -1448,9 +1445,9 @@ extension ParentalControlSettingsQueryWhereDistinct
   }
 
   QueryBuilder<ParentalControlSettings, ParentalControlSettings, QDistinct>
-  distinctByUnlockTimeoutSeconds() {
+  distinctByUnlockTimeoutMs() {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'unlockTimeoutSeconds');
+      return query.addDistinctBy(r'unlockTimeoutMs');
     });
   }
 }
@@ -1518,9 +1515,9 @@ extension ParentalControlSettingsQueryProperty
   }
 
   QueryBuilder<ParentalControlSettings, int, QQueryOperations>
-  unlockTimeoutSecondsProperty() {
+  unlockTimeoutMsProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'unlockTimeoutSeconds');
+      return query.addPropertyName(r'unlockTimeoutMs');
     });
   }
 }

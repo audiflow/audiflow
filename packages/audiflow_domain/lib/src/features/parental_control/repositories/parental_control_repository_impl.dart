@@ -88,7 +88,7 @@ class ParentalControlRepositoryImpl implements ParentalControlRepository {
   Future<void> setUnlockTimeout(Duration timeout) =>
       _guarded('setUnlockTimeout', () async {
         await _ds.updateSettings((s) {
-          s.unlockTimeoutSeconds = timeout.inSeconds;
+          s.unlockTimeoutMs = timeout.inMilliseconds;
           return s;
         });
       });
