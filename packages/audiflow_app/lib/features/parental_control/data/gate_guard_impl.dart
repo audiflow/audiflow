@@ -20,20 +20,46 @@ class GateGuardImpl implements GateGuard {
     BuildContext context, {
     required GateReason reason,
   }) async {
-    final restricted = container.read(isRestrictedModeOnProvider);
-    if (!restricted) {
+    final bool restricted;
+    try {
+      restricted = container.read(isRestrictedModeOnProvider);
+    } catch (e, st) {
+      container
+          .read(namedLoggerProvider('ParentalControl'))
+          .e(
+            'requireUnlock: isRestrictedModeOn read failed; failing closed',
+            error: e,
+            stackTrace: st,
+          );
+      return false; // fail closed
+    }
+    if (!restricted) return true;
+
+    final state = container.read(parentalControlGateProvider);
+    if (state is Unlocked) {
+      container.read(parentalControlGateProvider.notifier).extendIdle();
       return true;
     }
 
-    // Gate is active — show the PIN entry sheet.
     if (!context.mounted) return false;
 
-    final result = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => PinEntrySheet(reason: reason),
-    );
-
-    return result == true;
+    try {
+      final result = await showModalBottomSheet<bool>(
+        context: context,
+        isScrollControlled: true,
+        isDismissible: true,
+        builder: (_) => PinEntrySheet(reason: reason),
+      );
+      return result == true;
+    } catch (e, st) {
+      container
+          .read(namedLoggerProvider('ParentalControl'))
+          .e(
+            'requireUnlock: PIN entry sheet failed to present',
+            error: e,
+            stackTrace: st,
+          );
+      return false; // fail closed on sheet failure
+    }
   }
 }
