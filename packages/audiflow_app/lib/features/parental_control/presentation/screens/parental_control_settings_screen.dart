@@ -75,6 +75,9 @@ class _SettingsBody extends ConsumerWidget {
               await ref
                   .read(parentalControlControllerProvider.notifier)
                   .setRestrictedMode(v);
+              if (v) {
+                ref.read(parentalControlGateProvider.notifier).lock();
+              }
             } catch (e, st) {
               ref
                   .read(namedLoggerProvider('ParentalControl'))
