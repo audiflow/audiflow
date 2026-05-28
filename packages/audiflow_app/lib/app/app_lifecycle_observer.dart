@@ -52,7 +52,10 @@ class _AppLifecycleObserverState extends ConsumerState<AppLifecycleObserver> {
 
   /// Schedules a background download task when the app moves to background
   /// so iOS can continue processing pending downloads via BGProcessingTask.
+  /// Also re-locks the parental control gate so restricted content is
+  /// protected the next time the user opens the app.
   void _onHide() {
+    ref.read(parentalControlGateProvider.notifier).lock();
     unawaited(
       _scheduleBackgroundDownloads().catchError((
         Object error,
