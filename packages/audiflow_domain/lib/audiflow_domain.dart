@@ -254,5 +254,6 @@ export 'src/features/parental_control/models/parental_control_settings.dart';
 export 'src/features/parental_control/models/podcast_parental_flags.dart';
 export 'src/features/parental_control/models/unlock_state.dart';
 export 'src/features/parental_control/repositories/parental_control_repository.dart';
+export 'src/features/parental_control/services/parental_control_policy.dart';
 export 'src/features/parental_control/services/pin_hasher.dart';
 export 'src/features/parental_control/providers/parental_control_providers.dart';
