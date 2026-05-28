@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../domain/gate_guard.dart';
 import '../controllers/parental_control_controller.dart';
 
 /// Screen for changing the parental control PIN.
@@ -25,6 +26,7 @@ class _PinChangeScreenState extends ConsumerState<PinChangeScreen> {
   bool _verified = false;
   String? _currentErr;
   bool _verifying = false;
+  bool _saving = false;
 
   bool get _newValid {
     final n = _new1.text.length;
@@ -40,33 +42,79 @@ class _PinChangeScreenState extends ConsumerState<PinChangeScreen> {
   }
 
   Future<void> _verifyCurrent() async {
+    if (_verifying) return;
+    final l10n = AppLocalizations.of(context);
     setState(() {
       _verifying = true;
       _currentErr = null;
     });
-    final ok = await ref
-        .read(parentalControlRepositoryProvider)
-        .verifyPin(_current.text);
-    if (!mounted) return;
-    if (ok) {
+    try {
+      final notifier = ref.read(parentalControlGateProvider.notifier);
+      final ok = await notifier.tryUnlock(
+        _current.text,
+        reason: gateReasonToUnlock(GateReason.parentalSettings),
+      );
+      if (!mounted) return;
+      if (ok) {
+        setState(() {
+          _verified = true;
+          _verifying = false;
+        });
+        return;
+      }
+      final gateState = ref.read(parentalControlGateProvider);
+      final String errorMessage;
+      if (gateState is LockedOut) {
+        final seconds = gateState.retryAt.difference(DateTime.now()).inSeconds;
+        final safe = seconds < 1 ? 1 : seconds;
+        errorMessage = l10n.parentalControlLockoutCountdown(safe);
+      } else {
+        final settings = await ref
+            .read(parentalControlRepositoryProvider)
+            .getSettings();
+        if (!mounted) return;
+        final remaining =
+            ParentalControlPolicy.lockoutThresholdAttempts -
+            settings.failedAttempts;
+        final safeRemaining = remaining < 0 ? 0 : remaining;
+        errorMessage = l10n.parentalControlPinIncorrect(safeRemaining);
+      }
       setState(() {
-        _verified = true;
+        _currentErr = errorMessage;
         _verifying = false;
       });
-    } else {
+    } catch (e, st) {
+      if (!mounted) return;
+      ref
+          .read(namedLoggerProvider('ParentalControl'))
+          .e('PIN verify failed', error: e, stackTrace: st);
       setState(() {
-        _currentErr = 'Incorrect PIN';
+        _currentErr = l10n.parentalControlPinSheetError;
         _verifying = false;
       });
     }
   }
 
   Future<void> _save() async {
-    await ref
-        .read(parentalControlControllerProvider.notifier)
-        .setPin(_new1.text);
-    if (!mounted) return;
-    context.pop();
+    if (_saving) return;
+    final l10n = AppLocalizations.of(context);
+    setState(() => _saving = true);
+    try {
+      await ref
+          .read(parentalControlControllerProvider.notifier)
+          .setPin(_new1.text);
+      if (!mounted) return;
+      context.pop();
+    } catch (e, st) {
+      if (!mounted) return;
+      ref
+          .read(namedLoggerProvider('ParentalControl'))
+          .e('setPin failed', error: e, stackTrace: st);
+      setState(() => _saving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.parentalControlSettingsSaveError)),
+      );
+    }
   }
 
   @override
@@ -105,7 +153,7 @@ class _PinChangeScreenState extends ConsumerState<PinChangeScreen> {
                       height: 16,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('Verify'),
+                  : Text(l10n.parentalControlVerify),
             ),
             if (_verified) ...[
               const SizedBox(height: 16),
@@ -136,7 +184,7 @@ class _PinChangeScreenState extends ConsumerState<PinChangeScreen> {
               ),
               const SizedBox(height: 16),
               ElevatedButton(
-                onPressed: _newValid ? _save : null,
+                onPressed: (_newValid && !_saving) ? _save : null,
                 child: Text(l10n.parentalControlSubmit),
               ),
             ],
