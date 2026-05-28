@@ -1,16 +1,25 @@
 import 'package:audiflow_app/features/settings/presentation/screens/settings_screen.dart';
 import 'package:audiflow_app/features/settings/presentation/widgets/settings_category_card.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
+import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('SettingsScreen', () {
     Widget buildTestWidget() {
-      return MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: const SettingsScreen(),
+      return ProviderScope(
+        overrides: [
+          // Restricted mode off: all cards including Developer are visible.
+          isRestrictedModeOnProvider.overrideWith((ref) => false),
+          isUnlockedProvider.overrideWith((ref) => true),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const SettingsScreen(),
+        ),
       );
     }
 
@@ -41,11 +50,11 @@ void main() {
       expect(titleWidget.data, equals('Settings'));
     });
 
-    testWidgets('renders 8 category cards', (tester) async {
+    testWidgets('renders 10 category cards', (tester) async {
       await withTallSurface(tester, () async {
         await tester.pumpWidget(buildTestWidget());
 
-        expect(find.byType(SettingsCategoryCard), findsNWidgets(9));
+        expect(find.byType(SettingsCategoryCard), findsNWidgets(10));
       });
     });
 
@@ -61,6 +70,7 @@ void main() {
         expect(find.text('About'), findsOneWidget);
         expect(find.text('Getting Started'), findsOneWidget);
         expect(find.text('Privacy'), findsOneWidget);
+        expect(find.text('Parental Control'), findsOneWidget);
         expect(find.text('Developer'), findsOneWidget);
       });
     });
@@ -83,6 +93,10 @@ void main() {
         expect(find.text('Version, licenses, support'), findsOneWidget);
         expect(
           find.text('Control what data audiflow collects'),
+          findsOneWidget,
+        );
+        expect(
+          find.text('PIN, restricted mode, re-lock timer'),
           findsOneWidget,
         );
         expect(
