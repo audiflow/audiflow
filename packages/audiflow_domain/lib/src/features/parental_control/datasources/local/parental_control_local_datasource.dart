@@ -8,19 +8,42 @@ class ParentalControlLocalDataSource {
 
   final Isar _isar;
 
+  /// Returns the singleton settings row, creating it atomically if absent.
   Future<ParentalControlSettings> getSettings() async {
-    final existing = await _isar.parentalControlSettings.get(0);
-    if (existing != null) return existing;
-
-    final fresh = ParentalControlSettings();
-    await _isar.writeTxn(() async {
+    return _isar.writeTxn(() async {
+      final existing = await _isar.parentalControlSettings.get(0);
+      if (existing != null) return existing;
+      final fresh = ParentalControlSettings()..id = 0;
       await _isar.parentalControlSettings.put(fresh);
+      return fresh;
     });
-    return fresh;
   }
 
+  /// Applies [mutate] to the current settings inside a single transaction.
+  ///
+  /// Prefer this over the read-modify-write pattern via [saveSettings] for
+  /// any operation that reads and then writes settings.
+  Future<ParentalControlSettings> updateSettings(
+    ParentalControlSettings Function(ParentalControlSettings) mutate,
+  ) async {
+    return _isar.writeTxn(() async {
+      final current =
+          await _isar.parentalControlSettings.get(0) ??
+          (ParentalControlSettings()..id = 0);
+      final next = mutate(current);
+      next.id = 0;
+      await _isar.parentalControlSettings.put(next);
+      return next;
+    });
+  }
+
+  /// Persists [settings] directly.
+  ///
+  /// Prefer [updateSettings] for read-modify-write operations; this method
+  /// is provided for callers that already hold the full settings object.
   Future<void> saveSettings(ParentalControlSettings settings) async {
     await _isar.writeTxn(() async {
+      settings.id = 0;
       await _isar.parentalControlSettings.put(settings);
     });
   }
