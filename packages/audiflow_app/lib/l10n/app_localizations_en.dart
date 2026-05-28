@@ -72,6 +72,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsAboutSubtitle => 'Version, licenses, support';
 
   @override
+  String get settingsParentalControlTitle => 'Parental Control';
+
+  @override
+  String get settingsParentalControlSubtitle =>
+      'PIN, restricted mode, re-lock timer';
+
+  @override
   String get appearanceThemeMode => 'Theme Mode';
 
   @override

@@ -224,6 +224,18 @@ abstract class AppLocalizations {
   /// **'Version, licenses, support'**
   String get settingsAboutSubtitle;
 
+  /// Parental control settings grid card title
+  ///
+  /// In en, this message translates to:
+  /// **'Parental Control'**
+  String get settingsParentalControlTitle;
+
+  /// Parental control settings grid card subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'PIN, restricted mode, re-lock timer'**
+  String get settingsParentalControlSubtitle;
+
   /// Theme mode section label
   ///
   /// In en, this message translates to:

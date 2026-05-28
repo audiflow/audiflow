@@ -31,6 +31,9 @@ import '../features/share/presentation/screens/deep_link_screen.dart';
 import '../features/settings/presentation/screens/downloads_settings_screen.dart';
 import '../features/settings/presentation/screens/feed_sync_settings_screen.dart';
 import '../features/settings/presentation/screens/playback_settings_screen.dart';
+import '../features/parental_control/presentation/screens/parental_control_settings_screen.dart';
+import '../features/parental_control/presentation/screens/pin_change_screen.dart';
+import '../features/parental_control/presentation/screens/pin_setup_screen.dart';
 import '../features/settings/presentation/screens/settings_screen.dart';
 import '../features/settings/presentation/screens/storage_settings_screen.dart';
 import '../features/settings/presentation/screens/developer_settings_screen.dart';
@@ -70,6 +73,11 @@ class AppRoutes {
   static const String settingsGettingStarted = '/settings/getting-started';
   static const String migrationGuide = '/settings/getting-started/migration';
   static const String settingsPrivacy = '/settings/privacy';
+  static const String settingsParentalControl = '/settings/parental-control';
+  static const String parentalControlPinSetup =
+      '/settings/parental-control/pin-setup';
+  static const String parentalControlPinChange =
+      '/settings/parental-control/pin-change';
   static const String consent = '/consent';
   static const String onboarding = '/onboarding';
   static const String transcript = '/transcript';
@@ -317,6 +325,21 @@ GoRouter createAppRouter({
                         path: 'migration',
                         builder: (context, state) =>
                             const MigrationGuideScreen(),
+                      ),
+                    ],
+                  ),
+                  GoRoute(
+                    path: 'parental-control',
+                    builder: (context, state) =>
+                        const ParentalControlSettingsScreen(),
+                    routes: [
+                      GoRoute(
+                        path: 'pin-setup',
+                        builder: (context, state) => const PinSetupScreen(),
+                      ),
+                      GoRoute(
+                        path: 'pin-change',
+                        builder: (context, state) => const PinChangeScreen(),
                       ),
                     ],
                   ),

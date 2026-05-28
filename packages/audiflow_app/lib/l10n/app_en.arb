@@ -44,6 +44,10 @@
   "@settingsAboutTitle": { "description": "About category title" },
   "settingsAboutSubtitle": "Version, licenses, support",
   "@settingsAboutSubtitle": { "description": "About category subtitle" },
+  "settingsParentalControlTitle": "Parental Control",
+  "@settingsParentalControlTitle": { "description": "Parental control settings grid card title" },
+  "settingsParentalControlSubtitle": "PIN, restricted mode, re-lock timer",
+  "@settingsParentalControlSubtitle": { "description": "Parental control settings grid card subtitle" },
 
   "appearanceThemeMode": "Theme Mode",
   "@appearanceThemeMode": { "description": "Theme mode section label" },

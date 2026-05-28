@@ -72,6 +72,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsAboutSubtitle => 'バージョン、ライセンス、サポート';
 
   @override
+  String get settingsParentalControlTitle => 'ペアレンタルコントロール';
+
+  @override
+  String get settingsParentalControlSubtitle => 'PIN、制限モード、再ロックタイマー';
+
+  @override
   String get appearanceThemeMode => 'テーマモード';
 
   @override

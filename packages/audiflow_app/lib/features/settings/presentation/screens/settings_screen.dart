@@ -76,6 +76,12 @@ class SettingsScreen extends StatelessWidget {
                     onTap: () => context.go(AppRoutes.settingsPrivacy),
                   ),
                   SettingsCategoryCard(
+                    icon: Symbols.lock,
+                    title: l10n.settingsParentalControlTitle,
+                    subtitle: l10n.settingsParentalControlSubtitle,
+                    onTap: () => context.go(AppRoutes.settingsParentalControl),
+                  ),
+                  SettingsCategoryCard(
                     icon: Symbols.code,
                     title: l10n.settingsDeveloperTitle,
                     subtitle: l10n.settingsDeveloperSubtitle,

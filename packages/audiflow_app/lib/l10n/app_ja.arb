@@ -23,6 +23,8 @@
   "settingsStorageSubtitle": "キャッシュ、OPML、データ管理",
   "settingsAboutTitle": "アプリについて",
   "settingsAboutSubtitle": "バージョン、ライセンス、サポート",
+  "settingsParentalControlTitle": "ペアレンタルコントロール",
+  "settingsParentalControlSubtitle": "PIN、制限モード、再ロックタイマー",
 
   "appearanceThemeMode": "テーマモード",
   "appearanceThemeLight": "ライト",
