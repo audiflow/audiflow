@@ -49,7 +49,16 @@ bool isRestrictedModeOn(Ref ref) {
   return s.when(
     data: (v) => v.restrictedModeEnabled,
     loading: () => true, // fail-closed during initial load
-    error: (_, _) => true, // fail-closed on storage error
+    error: (e, st) {
+      ref
+          .read(namedLoggerProvider('ParentalControl'))
+          .e(
+            'parentalControlSettingsStream errored; failing closed',
+            error: e,
+            stackTrace: st,
+          );
+      return true;
+    },
   );
 }
 
