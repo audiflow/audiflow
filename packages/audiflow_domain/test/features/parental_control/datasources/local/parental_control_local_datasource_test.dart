@@ -89,6 +89,26 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 100));
       check(emissions.last).isTrue();
     });
+
+    test(
+      'watchHideExplicit emits false initially when no row exists',
+      () async {
+        final emissions = <bool>[];
+        final sub = ds.watchHideExplicit(999).listen(emissions.add);
+        addTearDown(sub.cancel);
+
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+        check(emissions).isNotEmpty();
+        check(emissions.first).isFalse();
+      },
+    );
+
+    test('pruneFlagsFor is a no-op when no row exists', () async {
+      // Should not throw and leave the collection empty.
+      await ds.pruneFlagsFor(12345);
+      final count = await isar.podcastParentalFlags.count();
+      check(count).equals(0);
+    });
   });
 }
 

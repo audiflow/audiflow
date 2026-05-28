@@ -59,5 +59,45 @@ void main() {
       final settings = ParentalControlSettings();
       check(hasher.verify(pin: '1234', settings: settings)).isFalse();
     });
+
+    test('verify returns false when stored hash is malformed base64', () {
+      final salt = hasher.generateSalt();
+      final settings = ParentalControlSettings()
+        ..pinHashBase64 = '!!!not-valid-base64!!!'
+        ..pinSaltBase64 = base64.encode(salt)
+        ..pinIterations = 1000;
+      check(hasher.verify(pin: '1234', settings: settings)).isFalse();
+    });
+
+    test('verify returns false when stored salt is malformed base64', () {
+      final salt = hasher.generateSalt();
+      final settings = ParentalControlSettings()
+        ..pinHashBase64 = base64.encode(
+          hasher.hash(pin: '1234', salt: salt, iterations: 1000),
+        )
+        ..pinSaltBase64 = '!!!not-valid-base64!!!'
+        ..pinIterations = 1000;
+      check(hasher.verify(pin: '1234', settings: settings)).isFalse();
+    });
+
+    group('constant-time equals', () {
+      test('matching equal-length lists returns true', () {
+        final a = [1, 2, 3, 4];
+        final b = [1, 2, 3, 4];
+        check(hasher.constantTimeEqualsForTest(a, b)).isTrue();
+      });
+
+      test('differing-length lists returns false', () {
+        final a = [1, 2, 3];
+        final b = [1, 2, 3, 4];
+        check(hasher.constantTimeEqualsForTest(a, b)).isFalse();
+      });
+
+      test('equal-length lists differing in last byte returns false', () {
+        final a = [1, 2, 3, 4];
+        final b = [1, 2, 3, 5];
+        check(hasher.constantTimeEqualsForTest(a, b)).isFalse();
+      });
+    });
   });
 }
