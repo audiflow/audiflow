@@ -116,9 +116,11 @@ const _kRestrictedPaths = <String>[
 /// trigger redirect re-evaluation whenever the lock/restriction state changes.
 class _ParentalControlRefreshNotifier extends ChangeNotifier {
   _ParentalControlRefreshNotifier(ProviderContainer container) {
-    // Listen to both the gate lock state and the restricted-mode toggle so
-    // any change (unlock, lock, enable/disable restricted mode) re-evaluates
-    // redirects immediately.
+    // Listen to gate state, the restricted-mode flag, and the raw settings
+    // stream. The redirect callback reads the raw stream directly to avoid
+    // failing closed during cold-launch load, so we must refresh when the
+    // stream transitions from loading -> data even if isRestrictedModeOn
+    // (which is overridden in tests) does not change.
     _sub1 = container.listen<Object?>(
       parentalControlGateProvider,
       (_, _) => notifyListeners(),
@@ -127,15 +129,21 @@ class _ParentalControlRefreshNotifier extends ChangeNotifier {
       isRestrictedModeOnProvider,
       (_, _) => notifyListeners(),
     );
+    _sub3 = container.listen<AsyncValue<ParentalControlSettings>>(
+      parentalControlSettingsStreamProvider,
+      (_, _) => notifyListeners(),
+    );
   }
 
   late final ProviderSubscription<Object?> _sub1;
   late final ProviderSubscription<bool> _sub2;
+  late final ProviderSubscription<AsyncValue<ParentalControlSettings>> _sub3;
 
   @override
   void dispose() {
     _sub1.close();
     _sub2.close();
+    _sub3.close();
     super.dispose();
   }
 }
@@ -154,19 +162,17 @@ class _ParentalControlRefreshNotifier extends ChangeNotifier {
 /// - `/settings`
 GoRouter createAppRouter({
   required SharedPreferences prefs,
-  ProviderContainer? container,
+  required ProviderContainer container,
   int lastTabIndex = 0,
   List<NavigatorObserver> observers = const [],
 }) {
-  final effectiveContainer = container ?? ProviderContainer();
-
   final initialLocation = switch (lastTabIndex) {
     1 => AppRoutes.library,
     2 => AppRoutes.queue,
     _ => AppRoutes.search,
   };
 
-  final refreshNotifier = _ParentalControlRefreshNotifier(effectiveContainer);
+  final refreshNotifier = _ParentalControlRefreshNotifier(container);
 
   return GoRouter(
     navigatorKey: rootNavigatorKey,
@@ -202,9 +208,21 @@ GoRouter createAppRouter({
       // Parental control gate: redirect restricted+locked paths to Library.
       // Consent/onboarding routes are already handled above and never
       // reach this check.
-      final restricted = effectiveContainer.read(isRestrictedModeOnProvider);
+      //
+      // Read the raw settings stream directly (not isRestrictedModeOnProvider)
+      // so that the router fails *open* during the initial Isar stream load.
+      // isRestrictedModeOnProvider intentionally fails-closed for gate
+      // enforcement, but using it here would redirect every cold launch to
+      // /library before the stream resolves.
+      final settingsAsync = container.read(
+        parentalControlSettingsStreamProvider,
+      );
+      final restricted = settingsAsync.maybeWhen(
+        data: (v) => v.restrictedModeEnabled,
+        orElse: () => false,
+      );
       if (restricted) {
-        final unlocked = effectiveContainer.read(isUnlockedProvider);
+        final unlocked = container.read(isUnlockedProvider);
         if (!unlocked) {
           final location = state.matchedLocation;
           final isRestricted = _kRestrictedPaths.any(
