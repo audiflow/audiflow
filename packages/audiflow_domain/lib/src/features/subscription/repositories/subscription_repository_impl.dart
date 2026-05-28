@@ -4,6 +4,8 @@ import '../../../common/providers/database_provider.dart';
 import '../../monitoring/models/analytics_event.dart';
 import '../../monitoring/providers/analytics_providers.dart';
 import '../../monitoring/services/analytics_service.dart';
+import '../../parental_control/providers/parental_control_providers.dart';
+import '../../parental_control/repositories/parental_control_repository.dart';
 import '../../station/services/station_reconciler_service.dart';
 import '../../subscription/models/subscriptions.dart';
 import '../datasources/local/subscription_local_datasource.dart';
@@ -18,10 +20,12 @@ SubscriptionRepository subscriptionRepository(Ref ref) {
   final datasource = SubscriptionLocalDatasource(isar);
   final reconcilerService = ref.watch(stationReconcilerServiceProvider);
   final analytics = ref.watch(analyticsServiceProvider);
+  final parentalControl = ref.watch(parentalControlRepositoryProvider);
   return SubscriptionRepositoryImpl(
     datasource: datasource,
     reconcilerService: reconcilerService,
     analytics: analytics,
+    parentalControlRepository: parentalControl,
   );
 }
 
@@ -31,13 +35,16 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
     required SubscriptionLocalDatasource datasource,
     StationReconcilerService? reconcilerService,
     AnalyticsService? analytics,
+    ParentalControlRepository? parentalControlRepository,
   }) : _datasource = datasource,
        _reconcilerService = reconcilerService,
-       _analytics = analytics;
+       _analytics = analytics,
+       _parentalControlRepository = parentalControlRepository;
 
   final SubscriptionLocalDatasource _datasource;
   final StationReconcilerService? _reconcilerService;
   final AnalyticsService? _analytics;
+  final ParentalControlRepository? _parentalControlRepository;
 
   @override
   Future<Subscription> subscribe({
@@ -109,6 +116,12 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
       await _analytics?.log(
         PodcastUnsubscribed(podcastId: podcastId, podcastTitle: existing.title),
       );
+      // Best-effort: remove per-podcast parental control flags.
+      try {
+        await _parentalControlRepository?.pruneFlagsFor(existing.id);
+      } on Exception {
+        // Pruning is best-effort; do not break the unsubscribe flow.
+      }
     }
   }
 
