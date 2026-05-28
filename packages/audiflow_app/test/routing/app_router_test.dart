@@ -15,6 +15,19 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../helpers/search_mocks.dart';
 
+/// Builds a [ProviderContainer] suitable for router tests.
+///
+/// Overrides [isRestrictedModeOnProvider] and [isUnlockedProvider] so the
+/// parental-control redirect does not attempt to access Isar.
+ProviderContainer _buildRouterContainer() {
+  return ProviderContainer(
+    overrides: [
+      isRestrictedModeOnProvider.overrideWithValue(false),
+      isUnlockedProvider.overrideWithValue(true),
+    ],
+  );
+}
+
 void main() {
   group('AppRouter', () {
     late GoRouter router;
@@ -29,7 +42,10 @@ void main() {
         'onboarding.carousel_completed_v1': true,
       });
       prefs = await SharedPreferences.getInstance();
-      router = createAppRouter(prefs: prefs);
+      router = createAppRouter(
+        prefs: prefs,
+        container: _buildRouterContainer(),
+      );
     });
 
     tearDown(() {
@@ -43,6 +59,8 @@ void main() {
           appSettingsRepositoryProvider.overrideWithValue(
             FakeAppSettingsRepository(),
           ),
+          isRestrictedModeOnProvider.overrideWithValue(false),
+          isUnlockedProvider.overrideWithValue(true),
         ],
         child: MaterialApp.router(
           localizationsDelegates: AppLocalizations.localizationsDelegates,

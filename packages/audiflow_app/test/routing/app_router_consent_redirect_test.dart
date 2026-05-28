@@ -15,6 +15,18 @@ import '../helpers/search_mocks.dart';
 
 const _onboardingKey = 'onboarding.carousel_completed_v1';
 
+/// Builds a [ProviderContainer] suitable for router tests.
+///
+/// Overrides parental-control providers so the redirect does not access Isar.
+ProviderContainer _buildRouterContainer() {
+  return ProviderContainer(
+    overrides: [
+      isRestrictedModeOnProvider.overrideWithValue(false),
+      isUnlockedProvider.overrideWithValue(true),
+    ],
+  );
+}
+
 Widget _buildApp(GoRouter router, SharedPreferences prefs) {
   return ProviderScope(
     overrides: [
@@ -38,7 +50,10 @@ void main() {
     ) async {
       SharedPreferences.setMockInitialValues({});
       final prefs = await SharedPreferences.getInstance();
-      final router = createAppRouter(prefs: prefs);
+      final router = createAppRouter(
+        prefs: prefs,
+        container: _buildRouterContainer(),
+      );
       addTearDown(router.dispose);
 
       await tester.pumpWidget(_buildApp(router, prefs));
@@ -56,7 +71,10 @@ void main() {
         SettingsKeys.privacyConsentAccepted: true,
       });
       final prefs = await SharedPreferences.getInstance();
-      final router = createAppRouter(prefs: prefs);
+      final router = createAppRouter(
+        prefs: prefs,
+        container: _buildRouterContainer(),
+      );
       addTearDown(router.dispose);
 
       await tester.pumpWidget(_buildApp(router, prefs));
@@ -74,7 +92,10 @@ void main() {
         _onboardingKey: true,
       });
       final prefs = await SharedPreferences.getInstance();
-      final router = createAppRouter(prefs: prefs);
+      final router = createAppRouter(
+        prefs: prefs,
+        container: _buildRouterContainer(),
+      );
       addTearDown(router.dispose);
 
       await tester.pumpWidget(_buildApp(router, prefs));
@@ -90,7 +111,10 @@ void main() {
       (tester) async {
         SharedPreferences.setMockInitialValues({});
         final prefs = await SharedPreferences.getInstance();
-        final router = createAppRouter(prefs: prefs);
+        final router = createAppRouter(
+          prefs: prefs,
+          container: _buildRouterContainer(),
+        );
         addTearDown(router.dispose);
 
         await tester.pumpWidget(_buildApp(router, prefs));
@@ -108,7 +132,10 @@ void main() {
           SettingsKeys.privacyConsentAccepted: true,
         });
         final prefs = await SharedPreferences.getInstance();
-        final router = createAppRouter(prefs: prefs);
+        final router = createAppRouter(
+          prefs: prefs,
+          container: _buildRouterContainer(),
+        );
         addTearDown(router.dispose);
 
         await tester.pumpWidget(_buildApp(router, prefs));

@@ -102,6 +102,44 @@ final _libraryNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'library');
 final _queueNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'queue');
 final _settingsNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'settings');
 
+/// Paths blocked while Restricted Mode is on and the gate is locked.
+///
+/// Ordered from most-specific to least-specific so prefix checks work
+/// correctly when the list is iterated.
+const _kRestrictedPaths = <String>[
+  AppRoutes.settingsDeveloper,
+  AppRoutes.search,
+];
+
+/// Bridge that converts Riverpod parental-control state changes into
+/// [ChangeNotifier] notifications so [GoRouter.refreshListenable] can
+/// trigger redirect re-evaluation whenever the lock/restriction state changes.
+class _ParentalControlRefreshNotifier extends ChangeNotifier {
+  _ParentalControlRefreshNotifier(ProviderContainer container) {
+    // Listen to both the gate lock state and the restricted-mode toggle so
+    // any change (unlock, lock, enable/disable restricted mode) re-evaluates
+    // redirects immediately.
+    _sub1 = container.listen<Object?>(
+      parentalControlGateProvider,
+      (_, _) => notifyListeners(),
+    );
+    _sub2 = container.listen<bool>(
+      isRestrictedModeOnProvider,
+      (_, _) => notifyListeners(),
+    );
+  }
+
+  late final ProviderSubscription<Object?> _sub1;
+  late final ProviderSubscription<bool> _sub2;
+
+  @override
+  void dispose() {
+    _sub1.close();
+    _sub2.close();
+    super.dispose();
+  }
+}
+
 /// Creates the application router configuration.
 ///
 /// This function returns a configured [GoRouter] instance
@@ -116,19 +154,25 @@ final _settingsNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'settings');
 /// - `/settings`
 GoRouter createAppRouter({
   required SharedPreferences prefs,
+  ProviderContainer? container,
   int lastTabIndex = 0,
   List<NavigatorObserver> observers = const [],
 }) {
+  final effectiveContainer = container ?? ProviderContainer();
+
   final initialLocation = switch (lastTabIndex) {
     1 => AppRoutes.library,
     2 => AppRoutes.queue,
     _ => AppRoutes.search,
   };
 
+  final refreshNotifier = _ParentalControlRefreshNotifier(effectiveContainer);
+
   return GoRouter(
     navigatorKey: rootNavigatorKey,
     initialLocation: initialLocation,
     observers: observers,
+    refreshListenable: refreshNotifier,
     // File URIs from the share sheet (e.g. file:///...opml)
     // are handled by OpmlFileReceiverController via app_links,
     // not by the router. Redirect to home on unknown routes.
@@ -154,6 +198,22 @@ GoRouter createAppRouter({
       if (consented && completed && atOnboarding) {
         return AppRoutes.search;
       }
+
+      // Parental control gate: redirect restricted+locked paths to Library.
+      // Consent/onboarding routes are already handled above and never
+      // reach this check.
+      final restricted = effectiveContainer.read(isRestrictedModeOnProvider);
+      if (restricted) {
+        final unlocked = effectiveContainer.read(isUnlockedProvider);
+        if (!unlocked) {
+          final location = state.matchedLocation;
+          final isRestricted = _kRestrictedPaths.any(
+            (p) => location == p || location.startsWith('$p/'),
+          );
+          if (isRestricted) return AppRoutes.library;
+        }
+      }
+
       return null;
     },
     routes: [
