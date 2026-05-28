@@ -3,15 +3,21 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
+import 'package:meta/meta.dart';
 
 import '../models/parental_control_settings.dart';
+import 'parental_control_policy.dart';
 
+/// Hashes and verifies PINs using PBKDF2-HMAC-SHA256.
+///
+/// Verification uses a constant-time comparison to prevent timing attacks that
+/// could leak the matching prefix length of the stored hash.
 class PinHasher {
   PinHasher({Random? secureRandom}) : _random = secureRandom ?? Random.secure();
 
   final Random _random;
 
-  Uint8List generateSalt({int length = 16}) {
+  Uint8List generateSalt({int length = ParentalControlPolicy.saltLengthBytes}) {
     final bytes = Uint8List(length);
     for (var i = 0; i < length; i++) {
       bytes[i] = _random.nextInt(256);
@@ -68,6 +74,11 @@ class PinHasher {
     return result;
   }
 
+  /// Returns true when [pin] matches the stored hash in [settings].
+  ///
+  /// Returns false — without throwing — when the stored hash or salt is absent
+  /// or contains malformed base64. This prevents an attacker from probing
+  /// storage corruption to infer information.
   bool verify({
     required String pin,
     required ParentalControlSettings settings,
@@ -75,16 +86,25 @@ class PinHasher {
     final hashB64 = settings.pinHashBase64;
     final saltB64 = settings.pinSaltBase64;
     if (hashB64 == null || saltB64 == null) return false;
-
-    final salt = base64.decode(saltB64);
-    final computed = hash(
-      pin: pin,
-      salt: Uint8List.fromList(salt),
-      iterations: settings.pinIterations,
-    );
-    final stored = base64.decode(hashB64);
-    return _constantTimeEquals(computed, stored);
+    try {
+      final salt = base64.decode(saltB64);
+      final computed = hash(
+        pin: pin,
+        salt: Uint8List.fromList(salt),
+        iterations: settings.pinIterations,
+      );
+      final stored = base64.decode(hashB64);
+      return _constantTimeEquals(computed, stored);
+    } on FormatException {
+      return false;
+    }
   }
+
+  /// Compares [a] and [b] in time independent of where they first differ.
+  /// Avoids leaking the matching prefix length via timing on PIN verification.
+  @visibleForTesting
+  bool constantTimeEqualsForTest(List<int> a, List<int> b) =>
+      _constantTimeEquals(a, b);
 
   bool _constantTimeEquals(List<int> a, List<int> b) {
     if (a.length != b.length) return false;
