@@ -1,6 +1,9 @@
 import 'package:audiflow_domain/audiflow_domain.dart'
     show
         hideExplicitForPodcastProvider,
+        isRestrictedModeOnProvider,
+        isUnlockedProvider,
+        namedLoggerProvider,
         parentalControlRepositoryProvider,
         subscriptionByFeedUrlProvider,
         subscriptionRepositoryProvider;
@@ -111,6 +114,11 @@ class _HideExplicitTile extends ConsumerWidget {
       return const SizedBox.shrink();
     }
 
+    // Hide when restricted+locked: the toggle is only operable while unlocked.
+    final restricted = ref.watch(isRestrictedModeOnProvider);
+    final unlocked = ref.watch(isUnlockedProvider);
+    if (restricted && !unlocked) return const SizedBox.shrink();
+
     final hideAsync = ref.watch(
       hideExplicitForPodcastProvider(subscription.id),
     );
@@ -122,9 +130,20 @@ class _HideExplicitTile extends ConsumerWidget {
       title: Text(l10n.parentalControlHideExplicitToggle),
       value: hideExplicit,
       onChanged: (value) async {
-        await ref
-            .read(parentalControlRepositoryProvider)
-            .setHideExplicit(subscription.id, value);
+        try {
+          await ref
+              .read(parentalControlRepositoryProvider)
+              .setHideExplicit(subscription.id, value);
+        } catch (e, st) {
+          ref
+              .read(namedLoggerProvider('ParentalControl'))
+              .e('setHideExplicit failed', error: e, stackTrace: st);
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(l10n.parentalControlToggleFailed)),
+            );
+          }
+        }
       },
     );
   }
