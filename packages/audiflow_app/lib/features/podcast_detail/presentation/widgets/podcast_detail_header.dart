@@ -209,7 +209,7 @@ class _SubscribeButtonRow extends ConsumerWidget {
           return Row(
             children: [
               OutlinedButton.icon(
-                onPressed: () => _toggleSubscription(ref),
+                onPressed: () => _toggleSubscription(context, ref),
                 icon: const Icon(Icons.check),
                 label: Text(l10n.podcastDetailSubscribed),
                 style: OutlinedButton.styleFrom(
@@ -235,7 +235,7 @@ class _SubscribeButtonRow extends ConsumerWidget {
 
         return FilledButton.icon(
           onPressed: podcast.feedUrl != null
-              ? () => _toggleSubscription(ref)
+              ? () => _toggleSubscription(context, ref)
               : null,
           icon: const Icon(Icons.add),
           label: Text(l10n.podcastDetailSubscribe),
@@ -259,9 +259,9 @@ class _SubscribeButtonRow extends ConsumerWidget {
     );
   }
 
-  void _toggleSubscription(WidgetRef ref) {
+  void _toggleSubscription(BuildContext context, WidgetRef ref) {
     ref
         .read(subscriptionControllerProvider(podcast.id).notifier)
-        .toggleSubscription(podcast, source: subscribeSource);
+        .toggleSubscription(context, podcast, source: subscribeSource);
   }
 }
