@@ -454,7 +454,7 @@ class _MyAppState extends ConsumerState<MyApp> {
     final faObserver = ref.read(firebaseAnalyticsObserverProvider);
     _router = createAppRouter(
       prefs: ref.read(sharedPreferencesProvider),
-      container: ProviderScope.containerOf(context),
+      container: ProviderScope.containerOf(context, listen: false),
       lastTabIndex: ref.read(lastTabControllerProvider),
       observers: [?faObserver],
     );
