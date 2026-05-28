@@ -1739,6 +1739,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentalControlBiometricToggle => 'Allow biometric unlock';
 
   @override
+  String get parentalControlBiometricPrompt => 'Unlock Parental Control';
+
+  @override
+  String get parentalControlUseBiometric => 'Use biometric';
+
+  @override
   String get parentalControlUnlockTimeoutLabel => 'Auto re-lock after';
 
   @override

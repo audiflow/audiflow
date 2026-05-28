@@ -8,6 +8,7 @@ import '../models/parental_control_settings.dart';
 import '../models/unlock_state.dart';
 import '../repositories/parental_control_repository.dart';
 import '../repositories/parental_control_repository_impl.dart';
+import '../services/biometric_authenticator.dart';
 import '../services/parental_control_gate.dart';
 import '../services/pin_hasher.dart';
 
@@ -36,6 +37,19 @@ ParentalControlErrorSink parentalControlErrorSink(Ref ref) {
 /// Provides the [PinHasher] singleton used for all PIN hash and verify calls.
 @Riverpod(keepAlive: true)
 PinHasher pinHasher(Ref ref) => PinHasher();
+
+/// Provides the platform [BiometricAuthenticator] implementation.
+///
+/// Default throws so any caller in a pure-domain test must install an explicit
+/// fake. The host app overrides this at the root `ProviderContainer` with a
+/// `local_auth`-backed implementation; the same override is used in widget
+/// tests via a fake.
+@Riverpod(keepAlive: true)
+BiometricAuthenticator biometricAuthenticator(Ref ref) {
+  throw UnimplementedError(
+    'biometricAuthenticatorProvider must be overridden at the composition root',
+  );
+}
 
 /// Provides the local data source backed by Isar for parental-control storage.
 @Riverpod(keepAlive: true)

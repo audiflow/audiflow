@@ -8,6 +8,7 @@ import 'package:audiflow_domain/src/features/parental_control/models/unlock_stat
 import 'package:audiflow_domain/src/features/parental_control/providers/parental_control_providers.dart';
 import 'package:audiflow_domain/src/features/parental_control/repositories/parental_control_repository.dart';
 import 'package:audiflow_domain/src/features/parental_control/repositories/parental_control_repository_impl.dart';
+import 'package:audiflow_domain/src/features/parental_control/services/biometric_authenticator.dart';
 import 'package:audiflow_domain/src/features/parental_control/services/parental_control_gate.dart';
 import 'package:audiflow_domain/src/features/parental_control/services/pin_hasher.dart';
 import 'package:audiflow_domain/src/common/providers/database_provider.dart';
@@ -364,6 +365,178 @@ void main() {
       },
     );
   });
+
+  group('ParentalControlGate biometric unlock', () {
+    Future<void> enableBiometric() async {
+      await container
+          .read(parentalControlRepositoryProvider)
+          .setBiometricUnlockEnabled(true);
+    }
+
+    ProviderContainer makeBiometricContainer({
+      required bool available,
+      required bool authenticateResult,
+    }) {
+      final analytics = FakeAnalyticsService();
+      return ProviderContainer(
+        overrides: [
+          isarProvider.overrideWithValue(isar),
+          analyticsServiceProvider.overrideWithValue(analytics),
+          parentalControlRepositoryProvider.overrideWithValue(
+            ParentalControlRepositoryImpl(
+              datasource: ParentalControlLocalDataSource(isar: isar),
+              hasher: PinHasher(),
+              logger: _silentLogger,
+              analytics: analytics,
+            ),
+          ),
+          biometricAuthenticatorProvider.overrideWithValue(
+            _FakeBiometricAuthenticator(
+              available: available,
+              result: authenticateResult,
+            ),
+          ),
+        ],
+      );
+    }
+
+    test('refused when biometricUnlockEnabled is false', () async {
+      // Default repo has biometric disabled; override authenticator anyway.
+      final c = makeBiometricContainer(
+        available: true,
+        authenticateResult: true,
+      );
+      addTearDown(c.dispose);
+      final ok = await c
+          .read(parentalControlGateProvider.notifier)
+          .tryUnlockBiometric(localizedReason: 'unlock');
+      check(ok).isFalse();
+      check(c.read(parentalControlGateProvider)).equals(const Locked());
+    });
+
+    test('refused when authenticator reports not available', () async {
+      await enableBiometric();
+      final c = makeBiometricContainer(
+        available: false,
+        authenticateResult: true,
+      );
+      addTearDown(c.dispose);
+      final ok = await c
+          .read(parentalControlGateProvider.notifier)
+          .tryUnlockBiometric(localizedReason: 'unlock');
+      check(ok).isFalse();
+      check(c.read(parentalControlGateProvider)).equals(const Locked());
+    });
+
+    test('refused on authenticate=false; state stays Locked', () async {
+      await enableBiometric();
+      final c = makeBiometricContainer(
+        available: true,
+        authenticateResult: false,
+      );
+      addTearDown(c.dispose);
+      final ok = await c
+          .read(parentalControlGateProvider.notifier)
+          .tryUnlockBiometric(localizedReason: 'unlock');
+      check(ok).isFalse();
+      check(c.read(parentalControlGateProvider)).equals(const Locked());
+    });
+
+    test('successful biometric transitions to Unlocked', () async {
+      await enableBiometric();
+      final c = makeBiometricContainer(
+        available: true,
+        authenticateResult: true,
+      );
+      addTearDown(c.dispose);
+      final ok = await c
+          .read(parentalControlGateProvider.notifier)
+          .tryUnlockBiometric(
+            localizedReason: 'unlock',
+            reason: UnlockReason.parentalSettings,
+          );
+      check(ok).isTrue();
+      check(c.read(parentalControlGateProvider)).isA<Unlocked>();
+    });
+
+    test(
+      'biometric refused during active LockedOut window without prompting',
+      () async {
+        await enableBiometric();
+        final probe = _FakeBiometricAuthenticator(
+          available: true,
+          result: true,
+        );
+        final analytics = FakeAnalyticsService();
+        final c = ProviderContainer(
+          overrides: [
+            isarProvider.overrideWithValue(isar),
+            analyticsServiceProvider.overrideWithValue(analytics),
+            parentalControlRepositoryProvider.overrideWithValue(
+              ParentalControlRepositoryImpl(
+                datasource: ParentalControlLocalDataSource(isar: isar),
+                hasher: PinHasher(),
+                logger: _silentLogger,
+                analytics: analytics,
+              ),
+            ),
+            biometricAuthenticatorProvider.overrideWithValue(probe),
+          ],
+        );
+        addTearDown(c.dispose);
+        // Burn through PIN attempts to enter LockedOut.
+        final notifier = c.read(parentalControlGateProvider.notifier);
+        for (var i = 0; i < 5; i++) {
+          await notifier.tryUnlock('0000');
+        }
+        check(c.read(parentalControlGateProvider)).isA<LockedOut>();
+
+        final ok = await notifier.tryUnlockBiometric(localizedReason: 'unlock');
+        check(ok).isFalse();
+        check(probe.authenticateCalls).equals(0);
+      },
+    );
+
+    test('successful biometric emits ParentalControlUnlockSuccess', () async {
+      await enableBiometric();
+      final c = makeBiometricContainer(
+        available: true,
+        authenticateResult: true,
+      );
+      addTearDown(c.dispose);
+      final analytics =
+          c.read(analyticsServiceProvider) as FakeAnalyticsService;
+      analytics.reset();
+      await c
+          .read(parentalControlGateProvider.notifier)
+          .tryUnlockBiometric(
+            localizedReason: 'unlock',
+            reason: UnlockReason.deepLink,
+          );
+      final successes = analytics.events
+          .whereType<ParentalControlUnlockSuccess>()
+          .toList();
+      check(successes).has((e) => e.length, 'length').equals(1);
+      check(successes.first.reason).equals('deepLink');
+    });
+  });
+}
+
+class _FakeBiometricAuthenticator implements BiometricAuthenticator {
+  _FakeBiometricAuthenticator({required this.available, required this.result});
+
+  final bool available;
+  final bool result;
+  int authenticateCalls = 0;
+
+  @override
+  Future<bool> isAvailable() async => available;
+
+  @override
+  Future<bool> authenticate({required String localizedReason}) async {
+    authenticateCalls++;
+    return result;
+  }
 }
 
 /// Fake [ParentalControlRepository] whose [verifyPin] always throws.

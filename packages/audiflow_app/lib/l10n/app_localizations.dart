@@ -3164,6 +3164,18 @@ abstract class AppLocalizations {
   /// **'Allow biometric unlock'**
   String get parentalControlBiometricToggle;
 
+  /// Reason shown in the OS biometric prompt when unlocking parental control.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock Parental Control'**
+  String get parentalControlBiometricPrompt;
+
+  /// Label on the biometric button in the PIN entry sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Use biometric'**
+  String get parentalControlUseBiometric;
+
   /// Unlock timeout dropdown label
   ///
   /// In en, this message translates to:

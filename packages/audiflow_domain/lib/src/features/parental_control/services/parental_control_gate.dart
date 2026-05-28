@@ -170,6 +170,114 @@ class ParentalControlGate extends _$ParentalControlGate {
     }
   }
 
+  /// Attempts to unlock via biometric authentication.
+  ///
+  /// Refuses (returns `false` without prompting) when:
+  /// - biometric unlock is disabled in settings,
+  /// - the device reports no enrolled biometric, or
+  /// - the gate is currently inside an active [LockedOut] window.
+  ///
+  /// On a successful scan, transitions to [Unlocked] with the configured idle
+  /// timeout — same code path as a correct PIN. A failed scan does NOT count
+  /// against the PIN attempt counter: biometric failure is a platform-level
+  /// "no" (user-cancelled, sensor noise) and should not contribute to PIN
+  /// lockout, which is reserved for guessed-PIN abuse.
+  Future<bool> tryUnlockBiometric({
+    required String localizedReason,
+    UnlockReason? reason,
+  }) async {
+    final current = state;
+    if (current is LockedOut && _now().isBefore(current.retryAt)) {
+      _logger.w(
+        'tryUnlockBiometric during active lockout window'
+        ' (reason=${reason ?? UnlockReason.unspecified},'
+        ' retryAt=${current.retryAt.toIso8601String()},'
+        ' attempts=${current.attemptCount})',
+      );
+      return false;
+    }
+
+    final repo = ref.read(parentalControlRepositoryProvider);
+    final bool biometricEnabled;
+    final int storedTimeoutMs;
+    try {
+      final s = await repo.getSettings();
+      biometricEnabled = s.biometricUnlockEnabled;
+      storedTimeoutMs = s.unlockTimeoutMs;
+    } catch (e, st) {
+      _logger.e(
+        'getSettings before biometric prompt failed; refusing to unlock',
+        error: e,
+        stackTrace: st,
+      );
+      _errorSink(
+        'getSettings before biometric prompt failed',
+        error: e,
+        stackTrace: st,
+      );
+      return false;
+    }
+
+    if (!biometricEnabled) {
+      _logger.t('tryUnlockBiometric refused: biometric unlock disabled');
+      return false;
+    }
+
+    final authenticator = ref.read(biometricAuthenticatorProvider);
+    final bool ok;
+    try {
+      if (!await authenticator.isAvailable()) {
+        _logger.t('tryUnlockBiometric refused: not available');
+        return false;
+      }
+      ok = await authenticator.authenticate(localizedReason: localizedReason);
+    } catch (e, st) {
+      _logger.e(
+        'biometric authenticate threw; treating as failure',
+        error: e,
+        stackTrace: st,
+      );
+      return false;
+    }
+
+    if (!ok) {
+      _logger.t(
+        'biometric unlock refused (reason: ${reason ?? UnlockReason.unspecified})',
+      );
+      return false;
+    }
+
+    final safeMs = storedTimeoutMs < 1
+        ? ParentalControlPolicy.defaultUnlockTimeoutMs
+        : storedTimeoutMs;
+    if (safeMs != storedTimeoutMs) {
+      _logger.w(
+        'invalid unlockTimeoutMs=$storedTimeoutMs;'
+        ' falling back to default $safeMs',
+      );
+    }
+    _sessionTimeout = Duration(milliseconds: safeMs);
+    _startIdleTimer(_sessionTimeout);
+    state = Unlocked(expiresAt: _now().add(_sessionTimeout));
+
+    try {
+      await ref
+          .read(analyticsServiceProvider)
+          .log(
+            ParentalControlUnlockSuccess(
+              reason: (reason ?? UnlockReason.unspecified).name,
+            ),
+          );
+    } catch (e, st) {
+      _logger.t(
+        'parental control unlock_success analytics emit failed',
+        error: e,
+        stackTrace: st,
+      );
+    }
+    return true;
+  }
+
   /// Resets the idle timer without requiring re-authentication.
   ///
   /// Reschedules using [_sessionTimeout] set at unlock time, so no async

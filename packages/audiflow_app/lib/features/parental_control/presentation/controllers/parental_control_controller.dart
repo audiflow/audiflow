@@ -19,4 +19,8 @@ class ParentalControlController extends _$ParentalControlController {
 
   Future<void> setUnlockTimeout(Duration timeout) =>
       ref.read(parentalControlRepositoryProvider).setUnlockTimeout(timeout);
+
+  Future<void> setBiometricUnlockEnabled(bool enabled) => ref
+      .read(parentalControlRepositoryProvider)
+      .setBiometricUnlockEnabled(enabled);
 }

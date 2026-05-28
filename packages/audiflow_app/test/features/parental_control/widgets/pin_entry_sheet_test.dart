@@ -42,12 +42,19 @@ Future<void> _tapSubmit(WidgetTester tester) async {
 
 /// Fake [ParentalControlGate] whose [tryUnlock] returns a fixed value.
 class _FakeGate extends ParentalControlGate {
-  _FakeGate({required this.unlockResult, this.nextState});
+  _FakeGate({
+    required this.unlockResult,
+    this.nextState,
+    this.biometricResult = true,
+  });
 
   final bool unlockResult;
+  final bool biometricResult;
 
   /// State to transition to after [tryUnlock] is called (if non-null).
   final UnlockState? nextState;
+
+  int biometricCalls = 0;
 
   @override
   UnlockState build() => const Locked();
@@ -57,6 +64,27 @@ class _FakeGate extends ParentalControlGate {
     if (nextState != null) state = nextState!;
     return unlockResult;
   }
+
+  @override
+  Future<bool> tryUnlockBiometric({
+    required String localizedReason,
+    UnlockReason? reason,
+  }) async {
+    biometricCalls++;
+    return biometricResult;
+  }
+}
+
+class _FakeBiometricAuthenticator implements BiometricAuthenticator {
+  _FakeBiometricAuthenticator({required this.available});
+
+  final bool available;
+
+  @override
+  Future<bool> isAvailable() async => available;
+
+  @override
+  Future<bool> authenticate({required String localizedReason}) async => true;
 }
 
 /// Fake gate whose [tryUnlock] never completes until [complete] is called.
@@ -75,17 +103,24 @@ class _SlowGate extends ParentalControlGate {
 
 /// Fake [ParentalControlRepository] with a configurable [getSettings] result.
 class _FakeRepo implements ParentalControlRepository {
-  _FakeRepo({int failedAttempts = 2, bool throwOnGetSettings = false})
-    : _failedAttempts = failedAttempts,
-      _throwOnGetSettings = throwOnGetSettings;
+  _FakeRepo({
+    int failedAttempts = 2,
+    bool throwOnGetSettings = false,
+    bool biometricUnlockEnabled = false,
+  }) : _failedAttempts = failedAttempts,
+       _throwOnGetSettings = throwOnGetSettings,
+       _biometricUnlockEnabled = biometricUnlockEnabled;
 
   final int _failedAttempts;
   final bool _throwOnGetSettings;
+  final bool _biometricUnlockEnabled;
 
   @override
   Future<ParentalControlSettings> getSettings() async {
     if (_throwOnGetSettings) throw StateError('storage unavailable');
-    return ParentalControlSettings()..failedAttempts = _failedAttempts;
+    return ParentalControlSettings()
+      ..failedAttempts = _failedAttempts
+      ..biometricUnlockEnabled = _biometricUnlockEnabled;
   }
 
   // Unused interface methods — not expected to be called by these tests.
@@ -285,4 +320,96 @@ void main() {
       ).isNotNull();
     },
   );
+
+  testWidgets('biometric button hidden when setting is off', (tester) async {
+    await tester.pumpWidget(
+      _wrap(
+        const PinEntrySheet(reason: GateReason.subscribe),
+        overrides: [
+          parentalControlGateProvider.overrideWith(
+            () => _FakeGate(unlockResult: false),
+          ),
+          parentalControlRepositoryProvider.overrideWithValue(
+            _FakeRepo(biometricUnlockEnabled: false),
+          ),
+          biometricAuthenticatorProvider.overrideWithValue(
+            _FakeBiometricAuthenticator(available: true),
+          ),
+        ],
+      ),
+    );
+    await tester.pumpAndSettle();
+    check(find.byIcon(Icons.fingerprint).evaluate()).isEmpty();
+  });
+
+  testWidgets(
+    'biometric button hidden when authenticator reports unavailable',
+    (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          const PinEntrySheet(reason: GateReason.subscribe),
+          overrides: [
+            parentalControlGateProvider.overrideWith(
+              () => _FakeGate(unlockResult: false),
+            ),
+            parentalControlRepositoryProvider.overrideWithValue(
+              _FakeRepo(biometricUnlockEnabled: true),
+            ),
+            biometricAuthenticatorProvider.overrideWithValue(
+              _FakeBiometricAuthenticator(available: false),
+            ),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+      check(find.byIcon(Icons.fingerprint).evaluate()).isEmpty();
+    },
+  );
+
+  testWidgets('biometric button shown when enabled+available', (tester) async {
+    await tester.pumpWidget(
+      _wrap(
+        const PinEntrySheet(reason: GateReason.subscribe),
+        overrides: [
+          parentalControlGateProvider.overrideWith(
+            () => _FakeGate(unlockResult: false),
+          ),
+          parentalControlRepositoryProvider.overrideWithValue(
+            _FakeRepo(biometricUnlockEnabled: true),
+          ),
+          biometricAuthenticatorProvider.overrideWithValue(
+            _FakeBiometricAuthenticator(available: true),
+          ),
+        ],
+      ),
+    );
+    await tester.pumpAndSettle();
+    check(find.byIcon(Icons.fingerprint).evaluate()).isNotEmpty();
+  });
+
+  testWidgets('tapping biometric button calls gate.tryUnlockBiometric', (
+    tester,
+  ) async {
+    final fakeGate = _FakeGate(unlockResult: false, biometricResult: true);
+    await tester.pumpWidget(
+      _wrap(
+        const PinEntrySheet(reason: GateReason.subscribe),
+        overrides: [
+          parentalControlGateProvider.overrideWith(() => fakeGate),
+          parentalControlRepositoryProvider.overrideWithValue(
+            _FakeRepo(biometricUnlockEnabled: true),
+          ),
+          biometricAuthenticatorProvider.overrideWithValue(
+            _FakeBiometricAuthenticator(available: true),
+          ),
+        ],
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.fingerprint));
+    await tester.pumpAndSettle();
+
+    check(fakeGate.biometricCalls).equals(1);
+  });
 }

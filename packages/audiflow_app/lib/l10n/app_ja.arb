@@ -699,6 +699,8 @@
   "parentalControlForgotPinBanner": "PINを忘れた場合は、ストレージ設定からすべてのデータをリセットしてください。",
   "parentalControlHideExplicitToggle": "アダルト指定エピソードを非表示",
   "parentalControlBiometricToggle": "生体認証によるロック解除を許可",
+  "parentalControlBiometricPrompt": "保護者制限を解除",
+  "parentalControlUseBiometric": "生体認証を使う",
   "parentalControlUnlockTimeoutLabel": "自動再ロックまでの時間",
   "parentalControlSubmit": "送信",
   "parentalControlCancel": "キャンセル",
