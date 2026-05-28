@@ -70,6 +70,9 @@ class _DeepLinkScreenState extends ConsumerState<DeepLinkScreen> {
                 .requireUnlock(context, reason: GateReason.deepLink);
             if (!mounted) return;
             if (!allowed) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(l10n.parentalControlAccessDenied)),
+              );
               context.go(AppRoutes.library);
               return;
             }
@@ -112,6 +115,9 @@ class _DeepLinkScreenState extends ConsumerState<DeepLinkScreen> {
                 .requireUnlock(context, reason: GateReason.deepLink);
             if (!mounted) return;
             if (!allowed) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(l10n.parentalControlAccessDenied)),
+              );
               context.go(AppRoutes.library);
               return;
             }

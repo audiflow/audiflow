@@ -1143,5 +1143,9 @@
   "parentalControlUnlockTimeout15Min": "15 min",
   "@parentalControlUnlockTimeout15Min": { "description": "Unlock timeout dropdown option (15 minutes)." },
   "parentalControlSettingsSaveError": "Could not save the change. Please try again.",
-  "@parentalControlSettingsSaveError": { "description": "Snackbar shown when a parental control setting fails to persist." }
+  "@parentalControlSettingsSaveError": { "description": "Snackbar shown when a parental control setting fails to persist." },
+  "parentalControlToggleFailed": "Could not change the setting. Please try again.",
+  "@parentalControlToggleFailed": { "description": "Snackbar shown when toggling hide-explicit fails." },
+  "parentalControlAccessDenied": "Restricted Mode is on. Unlock from Settings to continue.",
+  "@parentalControlAccessDenied": { "description": "Snackbar shown when a gated action is denied (gate not unlocked)." }
 }

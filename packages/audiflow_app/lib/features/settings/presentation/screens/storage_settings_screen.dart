@@ -254,9 +254,16 @@ class _ImportTile extends ConsumerWidget {
       title: Text(l10n.storageImportTitle),
       subtitle: Text(l10n.storageImportSubtitle),
       trailing: OutlinedButton(
-        onPressed: () => ref
-            .read(opmlImportControllerProvider.notifier)
-            .pickAndParse(context),
+        onPressed: () async {
+          final allowed = await ref
+              .read(opmlImportControllerProvider.notifier)
+              .pickAndParse(context);
+          if (!allowed && context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(l10n.parentalControlAccessDenied)),
+            );
+          }
+        },
         child: Text(l10n.storageImport),
       ),
     );

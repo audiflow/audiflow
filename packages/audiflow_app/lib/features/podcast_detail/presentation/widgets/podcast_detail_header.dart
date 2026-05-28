@@ -259,9 +259,18 @@ class _SubscribeButtonRow extends ConsumerWidget {
     );
   }
 
-  void _toggleSubscription(BuildContext context, WidgetRef ref) {
-    ref
+  Future<void> _toggleSubscription(BuildContext context, WidgetRef ref) async {
+    final allowed = await ref
         .read(subscriptionControllerProvider(podcast.id).notifier)
         .toggleSubscription(context, podcast, source: subscribeSource);
+    if (!allowed && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).parentalControlAccessDenied,
+          ),
+        ),
+      );
+    }
   }
 }

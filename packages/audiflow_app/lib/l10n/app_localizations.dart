@@ -3223,6 +3223,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not save the change. Please try again.'**
   String get parentalControlSettingsSaveError;
+
+  /// Snackbar shown when toggling hide-explicit fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not change the setting. Please try again.'**
+  String get parentalControlToggleFailed;
+
+  /// Snackbar shown when a gated action is denied (gate not unlocked).
+  ///
+  /// In en, this message translates to:
+  /// **'Restricted Mode is on. Unlock from Settings to continue.'**
+  String get parentalControlAccessDenied;
 }
 
 class _AppLocalizationsDelegate

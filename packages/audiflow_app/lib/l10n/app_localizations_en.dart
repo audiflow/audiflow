@@ -1770,4 +1770,12 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get parentalControlSettingsSaveError =>
       'Could not save the change. Please try again.';
+
+  @override
+  String get parentalControlToggleFailed =>
+      'Could not change the setting. Please try again.';
+
+  @override
+  String get parentalControlAccessDenied =>
+      'Restricted Mode is on. Unlock from Settings to continue.';
 }

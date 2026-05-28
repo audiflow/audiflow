@@ -1703,4 +1703,10 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get parentalControlSettingsSaveError => '設定を保存できませんでした。もう一度お試しください。';
+
+  @override
+  String get parentalControlToggleFailed => '設定を変更できませんでした。もう一度お試しください。';
+
+  @override
+  String get parentalControlAccessDenied => '制限モードが有効です。設定からロックを解除してください。';
 }

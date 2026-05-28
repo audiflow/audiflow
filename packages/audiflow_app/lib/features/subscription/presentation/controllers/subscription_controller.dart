@@ -31,7 +31,7 @@ class SubscriptionController extends _$SubscriptionController {
   /// emit (defaults to discovery). Callers from search/deeplink should
   /// pass the corresponding [SubscribeSource] so the audit reflects how
   /// users arrived at the subscribe action.
-  Future<void> toggleSubscription(
+  Future<bool> toggleSubscription(
     BuildContext context,
     Podcast podcast, {
     SubscribeSource source = SubscribeSource.discovery,
@@ -43,7 +43,7 @@ class SubscriptionController extends _$SubscriptionController {
     final allowed = await ref
         .read(gateGuardProvider)
         .requireUnlock(context, reason: reason);
-    if (!allowed) return;
+    if (!allowed) return false;
 
     final repository = ref.read(subscriptionRepositoryProvider);
 
@@ -87,5 +87,6 @@ class SubscriptionController extends _$SubscriptionController {
         return true;
       }
     });
+    return true;
   }
 }

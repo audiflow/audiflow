@@ -53,11 +53,11 @@ class OpmlImportController extends _$OpmlImportController {
   ///
   /// [context] is required to present the PIN entry sheet when
   /// Restricted Mode is active and the gate is locked.
-  Future<void> pickAndParse(BuildContext context) async {
+  Future<bool> pickAndParse(BuildContext context) async {
     final allowed = await ref
         .read(gateGuardProvider)
         .requireUnlock(context, reason: GateReason.opmlImport);
-    if (!allowed) return;
+    if (!allowed) return false;
 
     state = OpmlPickLoading();
 
@@ -66,14 +66,14 @@ class OpmlImportController extends _$OpmlImportController {
 
       if (result == null || result.files.isEmpty) {
         state = OpmlPickCancelled();
-        return;
+        return true;
       }
 
       final file = result.files.first;
       final path = file.path;
       if (path == null) {
         state = OpmlPickError('Could not read file');
-        return;
+        return true;
       }
 
       final content = await File(path).readAsString();
@@ -82,7 +82,7 @@ class OpmlImportController extends _$OpmlImportController {
 
       if (entries.isEmpty) {
         state = OpmlPickError('No podcast feeds found in the file');
-        return;
+        return true;
       }
 
       // Check which feeds are already subscribed
@@ -104,5 +104,6 @@ class OpmlImportController extends _$OpmlImportController {
     } on Exception catch (e) {
       state = OpmlPickError(e.toString());
     }
+    return true;
   }
 }
