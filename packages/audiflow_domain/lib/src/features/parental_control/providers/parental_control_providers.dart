@@ -4,8 +4,10 @@ import '../../../common/providers/database_provider.dart';
 import '../../../common/providers/logger_provider.dart';
 import '../datasources/local/parental_control_local_datasource.dart';
 import '../models/parental_control_settings.dart';
+import '../models/unlock_state.dart';
 import '../repositories/parental_control_repository.dart';
 import '../repositories/parental_control_repository_impl.dart';
+import '../services/parental_control_gate.dart';
 import '../services/pin_hasher.dart';
 
 part 'parental_control_providers.g.dart';
@@ -57,4 +59,13 @@ Stream<bool> hideExplicitForPodcast(Ref ref, int itunesId) {
   return ref
       .watch(parentalControlRepositoryProvider)
       .watchHideExplicit(itunesId);
+}
+
+/// Returns `true` when the parental-control gate is in the [Unlocked] state.
+///
+/// Useful for conditionally enabling gated actions without pattern-matching on
+/// the full [UnlockState] sealed type.
+@riverpod
+bool isUnlocked(Ref ref) {
+  return ref.watch(parentalControlGateProvider) is Unlocked;
 }

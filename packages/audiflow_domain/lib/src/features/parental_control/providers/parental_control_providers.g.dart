@@ -346,3 +346,57 @@ final class HideExplicitForPodcastFamily extends $Family
   @override
   String toString() => r'hideExplicitForPodcastProvider';
 }
+
+/// Returns `true` when the parental-control gate is in the [Unlocked] state.
+///
+/// Useful for conditionally enabling gated actions without pattern-matching on
+/// the full [UnlockState] sealed type.
+
+@ProviderFor(isUnlocked)
+final isUnlockedProvider = IsUnlockedProvider._();
+
+/// Returns `true` when the parental-control gate is in the [Unlocked] state.
+///
+/// Useful for conditionally enabling gated actions without pattern-matching on
+/// the full [UnlockState] sealed type.
+
+final class IsUnlockedProvider extends $FunctionalProvider<bool, bool, bool>
+    with $Provider<bool> {
+  /// Returns `true` when the parental-control gate is in the [Unlocked] state.
+  ///
+  /// Useful for conditionally enabling gated actions without pattern-matching on
+  /// the full [UnlockState] sealed type.
+  IsUnlockedProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'isUnlockedProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$isUnlockedHash();
+
+  @$internal
+  @override
+  $ProviderElement<bool> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  bool create(Ref ref) {
+    return isUnlocked(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(bool value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<bool>(value),
+    );
+  }
+}
+
+String _$isUnlockedHash() => r'dc2d5f22374612d9f2d080e8dd1338cb6eb1eac2';
