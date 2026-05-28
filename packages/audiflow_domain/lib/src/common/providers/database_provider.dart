@@ -18,6 +18,8 @@ import '../../features/station/models/station.dart';
 import '../../features/station/models/station_episode.dart';
 import '../../features/station/models/station_podcast.dart';
 import '../../features/subscription/models/subscriptions.dart';
+import '../../features/parental_control/models/parental_control_settings.dart';
+import '../../features/parental_control/models/podcast_parental_flags.dart';
 import '../../features/transcript/models/episode_chapter.dart';
 import '../../features/transcript/models/episode_transcript.dart';
 import '../../features/transcript/models/transcript_segment_table.dart';
@@ -43,6 +45,8 @@ const List<CollectionSchema<dynamic>> isarSchemas = [
   StationSchema,
   StationPodcastSchema,
   StationEpisodeSchema,
+  ParentalControlSettingsSchema,
+  PodcastParentalFlagsSchema,
 ];
 
 /// Opens Isar with automatic recovery on schema-mismatch [IsarError]s.
