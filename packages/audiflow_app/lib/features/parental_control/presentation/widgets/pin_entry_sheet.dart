@@ -43,46 +43,54 @@ class _PinEntrySheetState extends ConsumerState<PinEntrySheet> {
     setState(() => _submitting = true);
     final pin = _controller.text;
     final notifier = ref.read(parentalControlGateProvider.notifier);
-    final ok = await notifier.tryUnlock(
-      pin,
-      reason: gateReasonToUnlock(widget.reason),
-    );
-    if (!mounted) return;
-
-    if (ok) {
-      Navigator.of(context).pop(true);
-      return;
-    }
-
-    final gateState = ref.read(parentalControlGateProvider);
     final l10n = AppLocalizations.of(context);
 
-    if (gateState is LockedOut) {
-      final seconds = gateState.retryAt.difference(DateTime.now()).inSeconds;
-      // Guard against sub-second boundary producing zero or negative seconds.
-      final safe = seconds < 1 ? 1 : seconds;
-      setState(() {
-        _submitting = false;
-        _controller.clear();
-        _errorMessage = l10n.parentalControlLockoutCountdown(safe);
-      });
-    } else {
-      // Compute remaining attempts from repository for accurate display.
-      // One extra async repo read on wrong-PIN is acceptable for security UX.
-      final settings = await ref
-          .read(parentalControlRepositoryProvider)
-          .getSettings();
+    try {
+      final ok = await notifier.tryUnlock(
+        pin,
+        reason: gateReasonToUnlock(widget.reason),
+      );
       if (!mounted) return;
-      final remaining =
-          ParentalControlPolicy.lockoutThresholdAttempts -
-          settings.failedAttempts;
-      // TODO: remaining-attempts counter. ParentalControlPolicy.lockoutThresholdAttempts - failedAttempts.
-      // Phase 6 will expose a dedicated provider for this; repo read is the interim solution.
-      final safeRemaining = remaining < 0 ? 0 : remaining;
+
+      if (ok) {
+        Navigator.of(context).pop(true);
+        return;
+      }
+
+      final gateState = ref.read(parentalControlGateProvider);
+      String errorMessage;
+      if (gateState is LockedOut) {
+        final seconds = gateState.retryAt.difference(DateTime.now()).inSeconds;
+        // Guard against sub-second boundary producing zero or negative seconds.
+        final safe = seconds < 1 ? 1 : seconds;
+        errorMessage = l10n.parentalControlLockoutCountdown(safe);
+      } else {
+        // Compute remaining attempts from repository for accurate display.
+        // One extra async repo read on wrong-PIN is acceptable for security UX.
+        final settings = await ref
+            .read(parentalControlRepositoryProvider)
+            .getSettings();
+        if (!mounted) return;
+        final remaining =
+            ParentalControlPolicy.lockoutThresholdAttempts -
+            settings.failedAttempts;
+        final safeRemaining = remaining < 0 ? 0 : remaining;
+        errorMessage = l10n.parentalControlPinIncorrect(safeRemaining);
+      }
       setState(() {
         _submitting = false;
         _controller.clear();
-        _errorMessage = l10n.parentalControlPinIncorrect(safeRemaining);
+        _errorMessage = errorMessage;
+      });
+    } catch (e, st) {
+      ref
+          .read(namedLoggerProvider('ParentalControl'))
+          .e('PinEntrySheet submit failed', error: e, stackTrace: st);
+      if (!mounted) return;
+      setState(() {
+        _submitting = false;
+        _controller.clear();
+        _errorMessage = l10n.parentalControlPinSheetError;
       });
     }
   }
@@ -117,16 +125,17 @@ class _PinEntrySheetState extends ConsumerState<PinEntrySheet> {
               border: const OutlineInputBorder(),
               errorText: _errorMessage,
             ),
-            onChanged: (_) => setState(() {}),
+            onChanged: (_) => setState(() {
+              _errorMessage = null;
+            }),
           ),
           const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               TextButton(
-                onPressed: _submitting
-                    ? null
-                    : () => Navigator.of(context).pop(false),
+                // Cancel always enabled so users are never trapped.
+                onPressed: () => Navigator.of(context).pop(false),
                 child: Text(l10n.parentalControlCancel),
               ),
               const SizedBox(width: 8),
