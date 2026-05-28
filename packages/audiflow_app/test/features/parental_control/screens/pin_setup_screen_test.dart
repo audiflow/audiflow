@@ -21,8 +21,8 @@ Widget _wrap(Widget child, {List<dynamic> overrides = const []}) {
     routes: [
       GoRoute(
         path: '/',
-        builder: (_, __) => const Scaffold(body: Text('home')),
-        routes: [GoRoute(path: 'pin-setup', builder: (_, __) => child)],
+        builder: (_, _) => const Scaffold(body: Text('home')),
+        routes: [GoRoute(path: 'pin-setup', builder: (_, _) => child)],
       ),
     ],
   );
