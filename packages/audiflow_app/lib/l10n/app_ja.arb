@@ -703,5 +703,10 @@
   "parentalControlSubmit": "送信",
   "parentalControlCancel": "キャンセル",
   "parentalControlSettingsUnavailable": "設定を利用できません。アプリを再起動してください。",
-  "parentalControlRestrictedRedirect": "制限モードが有効です。設定からゲートを開いてください。"
+  "parentalControlRestrictedRedirect": "制限モードが有効です。設定からゲートを開いてください。",
+  "parentalControlVerify": "確認",
+  "parentalControlUnlockTimeout1Min": "1分",
+  "parentalControlUnlockTimeout5Min": "5分",
+  "parentalControlUnlockTimeout15Min": "15分",
+  "parentalControlSettingsSaveError": "設定を保存できませんでした。もう一度お試しください。"
 }

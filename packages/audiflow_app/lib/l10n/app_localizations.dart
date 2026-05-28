@@ -3193,6 +3193,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Restricted Mode is on. Open the gate from Settings.'**
   String get parentalControlRestrictedRedirect;
+
+  /// Verify current PIN button label on PIN-change screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify'**
+  String get parentalControlVerify;
+
+  /// Unlock timeout dropdown option (1 minute).
+  ///
+  /// In en, this message translates to:
+  /// **'1 min'**
+  String get parentalControlUnlockTimeout1Min;
+
+  /// Unlock timeout dropdown option (5 minutes).
+  ///
+  /// In en, this message translates to:
+  /// **'5 min'**
+  String get parentalControlUnlockTimeout5Min;
+
+  /// Unlock timeout dropdown option (15 minutes).
+  ///
+  /// In en, this message translates to:
+  /// **'15 min'**
+  String get parentalControlUnlockTimeout15Min;
+
+  /// Snackbar shown when a parental control setting fails to persist.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the change. Please try again.'**
+  String get parentalControlSettingsSaveError;
 }
 
 class _AppLocalizationsDelegate

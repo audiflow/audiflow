@@ -1133,5 +1133,15 @@
   "parentalControlSettingsUnavailable": "Settings unavailable — restart the app.",
   "@parentalControlSettingsUnavailable": { "description": "Error text when parental control settings cannot be loaded" },
   "parentalControlRestrictedRedirect": "Restricted Mode is on. Open the gate from Settings.",
-  "@parentalControlRestrictedRedirect": { "description": "Message shown when redirected due to restricted mode" }
+  "@parentalControlRestrictedRedirect": { "description": "Message shown when redirected due to restricted mode" },
+  "parentalControlVerify": "Verify",
+  "@parentalControlVerify": { "description": "Verify current PIN button label on PIN-change screen." },
+  "parentalControlUnlockTimeout1Min": "1 min",
+  "@parentalControlUnlockTimeout1Min": { "description": "Unlock timeout dropdown option (1 minute)." },
+  "parentalControlUnlockTimeout5Min": "5 min",
+  "@parentalControlUnlockTimeout5Min": { "description": "Unlock timeout dropdown option (5 minutes)." },
+  "parentalControlUnlockTimeout15Min": "15 min",
+  "@parentalControlUnlockTimeout15Min": { "description": "Unlock timeout dropdown option (15 minutes)." },
+  "parentalControlSettingsSaveError": "Could not save the change. Please try again.",
+  "@parentalControlSettingsSaveError": { "description": "Snackbar shown when a parental control setting fails to persist." }
 }

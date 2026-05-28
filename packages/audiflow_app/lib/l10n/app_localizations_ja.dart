@@ -1688,4 +1688,19 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get parentalControlRestrictedRedirect => '制限モードが有効です。設定からゲートを開いてください。';
+
+  @override
+  String get parentalControlVerify => '確認';
+
+  @override
+  String get parentalControlUnlockTimeout1Min => '1分';
+
+  @override
+  String get parentalControlUnlockTimeout5Min => '5分';
+
+  @override
+  String get parentalControlUnlockTimeout15Min => '15分';
+
+  @override
+  String get parentalControlSettingsSaveError => '設定を保存できませんでした。もう一度お試しください。';
 }

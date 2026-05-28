@@ -1754,4 +1754,20 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get parentalControlRestrictedRedirect =>
       'Restricted Mode is on. Open the gate from Settings.';
+
+  @override
+  String get parentalControlVerify => 'Verify';
+
+  @override
+  String get parentalControlUnlockTimeout1Min => '1 min';
+
+  @override
+  String get parentalControlUnlockTimeout5Min => '5 min';
+
+  @override
+  String get parentalControlUnlockTimeout15Min => '15 min';
+
+  @override
+  String get parentalControlSettingsSaveError =>
+      'Could not save the change. Please try again.';
 }
