@@ -12,6 +12,7 @@ import 'package:audiflow_domain/audiflow_domain.dart'
         SortOrder,
         SubscribeSource,
         appSettingsRepositoryProvider,
+        hideExplicitForPodcastProvider,
         namedLoggerProvider,
         playOrderPreferenceRepositoryProvider,
         podcastViewPreferenceControllerProvider,
@@ -381,9 +382,21 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
         setState(() => _lastFilteredEpisodes = data);
       });
     });
-    final filteredAsync = ref.watch(
+    var filteredAsync = ref.watch(
       filteredSortedEpisodesProvider(feedUrl, filter, sortOrder),
     );
+
+    // Post-filter explicit episodes when the per-podcast flag is on.
+    if (subscription != null) {
+      final hideExplicit =
+          ref.watch(hideExplicitForPodcastProvider(subscription.id)).value ??
+          false;
+      if (hideExplicit) {
+        filteredAsync = filteredAsync.whenData(
+          (episodes) => episodes.where((e) => e.isExplicit != true).toList(),
+        );
+      }
+    }
 
     if (_previouslyLoggedEpisodes?.runtimeType != filteredAsync.runtimeType ||
         _previouslyLoggedEpisodes?.value?.length !=

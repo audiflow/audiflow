@@ -1,5 +1,9 @@
 import 'package:audiflow_domain/audiflow_domain.dart'
-    show subscriptionByFeedUrlProvider, subscriptionRepositoryProvider;
+    show
+        hideExplicitForPodcastProvider,
+        parentalControlRepositoryProvider,
+        subscriptionByFeedUrlProvider,
+        subscriptionRepositoryProvider;
 import 'package:audiflow_search/audiflow_search.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
@@ -54,6 +58,7 @@ class _PodcastSettingsSheet extends ConsumerWidget {
             ),
             children: [
               if (feedUrl != null) _AutoDownloadTile(feedUrl: feedUrl),
+              if (feedUrl != null) _HideExplicitTile(feedUrl: feedUrl),
             ],
           ),
         ),
@@ -87,6 +92,39 @@ class _AutoDownloadTile extends ConsumerWidget {
             .read(subscriptionRepositoryProvider)
             .updateAutoDownload(subscription.id, autoDownload: value);
         ref.invalidate(subscriptionByFeedUrlProvider(feedUrl));
+      },
+    );
+  }
+}
+
+class _HideExplicitTile extends ConsumerWidget {
+  const _HideExplicitTile({required this.feedUrl});
+
+  final String feedUrl;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final subscriptionAsync = ref.watch(subscriptionByFeedUrlProvider(feedUrl));
+    final subscription = subscriptionAsync.value;
+
+    if (subscription == null || subscription.isCached) {
+      return const SizedBox.shrink();
+    }
+
+    final hideAsync = ref.watch(
+      hideExplicitForPodcastProvider(subscription.id),
+    );
+    final hideExplicit = hideAsync.value ?? false;
+
+    final l10n = AppLocalizations.of(context);
+    return SwitchListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(l10n.parentalControlHideExplicitToggle),
+      value: hideExplicit,
+      onChanged: (value) async {
+        await ref
+            .read(parentalControlRepositoryProvider)
+            .setHideExplicit(subscription.id, value);
       },
     );
   }
