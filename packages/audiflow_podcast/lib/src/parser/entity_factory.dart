@@ -471,6 +471,10 @@ class EntityFactory {
   }
 
   /// Parses a boolean value from various formats.
+  ///
+  /// Recognizes `true`, `yes`, `1`, and `explicit` (Apple-spec value) as
+  /// truthy, case-insensitive and whitespace-trimmed. All other values,
+  /// including null or an absent tag, map to `false`.
   bool _parseBoolean(dynamic value) {
     if (value == null) return false;
 
@@ -478,7 +482,10 @@ class EntityFactory {
 
     if (value is String) {
       final lower = value.toLowerCase().trim();
-      return lower == 'true' || lower == 'yes' || lower == '1';
+      return lower == 'true' ||
+          lower == 'yes' ||
+          lower == '1' ||
+          lower == 'explicit';
     }
 
     return false;
