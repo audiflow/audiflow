@@ -684,6 +684,23 @@ class MockAppSettingsRepository extends _i1.Mock
           as _i4.Future<void>);
 
   @override
+  bool getPrivacyConsentAccepted() =>
+      (super.noSuchMethod(
+            Invocation.method(#getPrivacyConsentAccepted, []),
+            returnValue: false,
+          )
+          as bool);
+
+  @override
+  _i4.Future<void> setPrivacyConsentAccepted(bool? accepted) =>
+      (super.noSuchMethod(
+            Invocation.method(#setPrivacyConsentAccepted, [accepted]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
   _i4.Future<void> clearAll() =>
       (super.noSuchMethod(
             Invocation.method(#clearAll, []),

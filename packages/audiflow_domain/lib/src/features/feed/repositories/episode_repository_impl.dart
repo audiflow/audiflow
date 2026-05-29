@@ -110,7 +110,8 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
         ..seasonNumber = seasonNumber
         ..contentEncoded = item.contentEncoded
         ..summary = item.summary
-        ..link = item.link;
+        ..link = item.link
+        ..itunesExplicit = item.isExplicit ?? false;
     }).toList();
 
     await _datasource.upsertAll(episodes);
@@ -155,7 +156,8 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
         ..seasonNumber = seasonNumber
         ..contentEncoded = item.contentEncoded
         ..summary = item.summary
-        ..link = item.link;
+        ..link = item.link
+        ..itunesExplicit = item.isExplicit ?? false;
     }).toList();
 
     await _datasource.upsertAll(episodes);

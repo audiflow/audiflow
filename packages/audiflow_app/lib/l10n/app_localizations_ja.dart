@@ -72,6 +72,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsAboutSubtitle => 'バージョン、ライセンス、サポート';
 
   @override
+  String get settingsParentalControlTitle => 'ペアレンタルコントロール';
+
+  @override
+  String get settingsParentalControlSubtitle => 'PIN、制限モード、再ロックタイマー';
+
+  @override
   String get appearanceThemeMode => 'テーマモード';
 
   @override
@@ -1598,4 +1604,124 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get settingsPrivacyPolicyLinkSubtitle => '全文を読む';
+
+  @override
+  String get parentalControlTitle => 'ペアレンタル コントロール';
+
+  @override
+  String get parentalControlEnable => '制限モード';
+
+  @override
+  String get parentalControlEnableSubtitle => '検索を隠し、購読変更をロックします';
+
+  @override
+  String get parentalControlPinSetupTitle => 'PINを設定';
+
+  @override
+  String get parentalControlPinSetupSubtitle => '4〜8桁のPINを入力';
+
+  @override
+  String get parentalControlPinConfirm => 'PIN確認';
+
+  @override
+  String get parentalControlPinChange => 'PINを変更';
+
+  @override
+  String get parentalControlPinCurrent => '現在のPIN';
+
+  @override
+  String get parentalControlPinNew => '新しいPIN';
+
+  @override
+  String get parentalControlPinEntryReasonSubscribe => 'このポッドキャストを購読';
+
+  @override
+  String get parentalControlPinEntryReasonUnsubscribe => 'このポッドキャストの購読を解除';
+
+  @override
+  String get parentalControlPinEntryReasonOpmlImport => 'OPMLをインポート';
+
+  @override
+  String get parentalControlPinEntryReasonDeepLink => 'このリンクを開く';
+
+  @override
+  String get parentalControlPinEntryReasonParentalSettings =>
+      'ペアレンタル コントロールを変更';
+
+  @override
+  String get parentalControlPinEntryReasonDeveloperSettings => 'デベロッパー設定を開く';
+
+  @override
+  String get parentalControlPinEntryReasonResetData => 'アプリのデータをリセット';
+
+  @override
+  String get parentalControlPinEntryHint => '4〜8桁';
+
+  @override
+  String get parentalControlPinEntryPrompt => 'ペアレンタル コントロールのPINを入力してください。';
+
+  @override
+  String parentalControlPinIncorrect(int remaining) {
+    return 'PINが正しくありません。残り$remaining回。';
+  }
+
+  @override
+  String parentalControlLockoutCountdown(int seconds) {
+    return '試行回数が上限に達しました。$seconds秒後に再試行できます。';
+  }
+
+  @override
+  String get parentalControlPinSheetError => 'PINを確認できませんでした。もう一度お試しください。';
+
+  @override
+  String get parentalControlForgotPinBanner =>
+      'PINを忘れた場合、アプリ内での復旧手段はありません。PINを解除するにはアプリをアンインストールして再インストールしてください。購読、ダウンロード、再生履歴も併せて削除されます。先に「ストレージとデータ」から購読をOPMLファイルとして書き出しておけば、再インストール後にOPMLを取り込んで購読を復元できます。';
+
+  @override
+  String get parentalControlHideExplicitToggle => 'アダルト指定エピソードを非表示';
+
+  @override
+  String get parentalControlBiometricToggle => '生体認証によるロック解除を許可';
+
+  @override
+  String get parentalControlBiometricPrompt => '保護者制限を解除';
+
+  @override
+  String get parentalControlUseBiometric => '生体認証を使う';
+
+  @override
+  String get parentalControlUnlockTimeoutLabel => '自動再ロックまでの時間';
+
+  @override
+  String get parentalControlSubmit => '送信';
+
+  @override
+  String get parentalControlCancel => 'キャンセル';
+
+  @override
+  String get parentalControlSettingsUnavailable => '設定を利用できません。アプリを再起動してください。';
+
+  @override
+  String get parentalControlRestrictedRedirect => '制限モードが有効です。設定からゲートを開いてください。';
+
+  @override
+  String get parentalControlVerify => '確認';
+
+  @override
+  String get parentalControlUnlockTimeout1Min => '1分';
+
+  @override
+  String get parentalControlUnlockTimeout5Min => '5分';
+
+  @override
+  String get parentalControlUnlockTimeout15Min => '15分';
+
+  @override
+  String get parentalControlSettingsSaveError => '設定を保存できませんでした。もう一度お試しください。';
+
+  @override
+  String get parentalControlToggleFailed => '設定を変更できませんでした。もう一度お試しください。';
+
+  @override
+  String get parentalControlAccessDenied => '制限モードが有効です。設定からロックを解除してください。';
 }

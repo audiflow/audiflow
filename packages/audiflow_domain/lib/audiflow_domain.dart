@@ -248,3 +248,14 @@ export 'src/features/monitoring/models/analytics_event.dart';
 export 'src/features/monitoring/providers/analytics_providers.dart';
 export 'src/features/monitoring/services/analytics_service.dart';
 export 'src/features/monitoring/testing/fake_analytics_service.dart';
+
+// Parental control feature
+export 'src/features/parental_control/models/parental_control_settings.dart';
+export 'src/features/parental_control/models/podcast_parental_flags.dart';
+export 'src/features/parental_control/models/unlock_state.dart';
+export 'src/features/parental_control/repositories/parental_control_repository.dart';
+export 'src/features/parental_control/services/biometric_authenticator.dart';
+export 'src/features/parental_control/services/parental_control_gate.dart';
+export 'src/features/parental_control/services/parental_control_policy.dart';
+export 'src/features/parental_control/services/pin_hasher.dart';
+export 'src/features/parental_control/providers/parental_control_providers.dart';

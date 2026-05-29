@@ -1,9 +1,13 @@
+import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/providers/database_provider.dart';
+import '../../../common/providers/logger_provider.dart';
 import '../../monitoring/models/analytics_event.dart';
 import '../../monitoring/providers/analytics_providers.dart';
 import '../../monitoring/services/analytics_service.dart';
+import '../../parental_control/providers/parental_control_providers.dart';
+import '../../parental_control/repositories/parental_control_repository.dart';
 import '../../station/services/station_reconciler_service.dart';
 import '../../subscription/models/subscriptions.dart';
 import '../datasources/local/subscription_local_datasource.dart';
@@ -18,10 +22,14 @@ SubscriptionRepository subscriptionRepository(Ref ref) {
   final datasource = SubscriptionLocalDatasource(isar);
   final reconcilerService = ref.watch(stationReconcilerServiceProvider);
   final analytics = ref.watch(analyticsServiceProvider);
+  final parentalControl = ref.watch(parentalControlRepositoryProvider);
+  final logger = ref.watch(namedLoggerProvider('Subscription'));
   return SubscriptionRepositoryImpl(
     datasource: datasource,
     reconcilerService: reconcilerService,
     analytics: analytics,
+    parentalControlRepository: parentalControl,
+    logger: logger,
   );
 }
 
@@ -31,13 +39,19 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
     required SubscriptionLocalDatasource datasource,
     StationReconcilerService? reconcilerService,
     AnalyticsService? analytics,
+    ParentalControlRepository? parentalControlRepository,
+    Logger? logger,
   }) : _datasource = datasource,
        _reconcilerService = reconcilerService,
-       _analytics = analytics;
+       _analytics = analytics,
+       _parentalControlRepository = parentalControlRepository,
+       _logger = logger;
 
   final SubscriptionLocalDatasource _datasource;
   final StationReconcilerService? _reconcilerService;
   final AnalyticsService? _analytics;
+  final ParentalControlRepository? _parentalControlRepository;
+  final Logger? _logger;
 
   @override
   Future<Subscription> subscribe({
@@ -109,6 +123,19 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
       await _analytics?.log(
         PodcastUnsubscribed(podcastId: podcastId, podcastTitle: existing.title),
       );
+      // Best-effort: remove per-podcast parental control flags.
+      // Use catch (e, st) instead of on Exception because Isar can throw
+      // Error subclasses (not Exception) on database failures.
+      try {
+        await _parentalControlRepository?.pruneFlagsFor(existing.id);
+      } catch (e, st) {
+        _logger?.w(
+          'parentalControl.pruneFlagsFor failed for id=${existing.id}; '
+          'unsubscribe continues',
+          error: e,
+          stackTrace: st,
+        );
+      }
     }
   }
 

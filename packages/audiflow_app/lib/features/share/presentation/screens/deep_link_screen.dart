@@ -6,6 +6,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
+import '../../../parental_control/domain/gate_guard.dart';
+import '../../../parental_control/providers/gate_guard_provider.dart';
 
 class DeepLinkScreen extends ConsumerStatefulWidget {
   const DeepLinkScreen({super.key, required this.uri});
@@ -56,6 +58,25 @@ class _DeepLinkScreenState extends ConsumerState<DeepLinkScreen> {
           :final title,
           :final artworkUrl,
         ):
+          // Gate deep-link navigation to non-subscribed podcasts when
+          // Restricted Mode is on and the gate is locked.
+          final isSubscribed = await ref
+              .read(subscriptionRepositoryProvider)
+              .isSubscribed(itunesId);
+          if (!mounted) return;
+          if (!isSubscribed) {
+            final allowed = await ref
+                .read(gateGuardProvider)
+                .requireUnlock(context, reason: GateReason.deepLink);
+            if (!mounted) return;
+            if (!allowed) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(l10n.parentalControlAccessDenied)),
+              );
+              context.go(AppRoutes.library);
+              return;
+            }
+          }
           final podcast = Podcast(
             id: itunesId,
             name: title,
@@ -83,6 +104,24 @@ class _DeepLinkScreenState extends ConsumerState<DeepLinkScreen> {
           :final progress,
           :final startAt,
         ):
+          // Gate deep-link navigation to non-subscribed podcasts.
+          final isSubscribed = await ref
+              .read(subscriptionRepositoryProvider)
+              .isSubscribed(target.itunesId);
+          if (!mounted) return;
+          if (!isSubscribed) {
+            final allowed = await ref
+                .read(gateGuardProvider)
+                .requireUnlock(context, reason: GateReason.deepLink);
+            if (!mounted) return;
+            if (!allowed) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(l10n.parentalControlAccessDenied)),
+              );
+              context.go(AppRoutes.library);
+              return;
+            }
+          }
           final router = GoRouter.of(context);
           final podcast = Podcast(
             id: target.itunesId,

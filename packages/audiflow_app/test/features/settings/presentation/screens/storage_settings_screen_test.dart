@@ -1,3 +1,5 @@
+import 'package:audiflow_app/features/parental_control/domain/gate_guard.dart';
+import 'package:audiflow_app/features/parental_control/providers/gate_guard_provider.dart';
 import 'package:audiflow_app/features/settings/presentation/screens/storage_settings_screen.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
@@ -5,6 +7,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+class _FakeGateGuard implements GateGuard {
+  _FakeGateGuard({required this.allows});
+
+  final bool allows;
+  int unlockCalls = 0;
+  GateReason? lastReason;
+
+  @override
+  Future<bool> requireUnlock(
+    BuildContext context, {
+    required GateReason reason,
+  }) async {
+    unlockCalls++;
+    lastReason = reason;
+    return allows;
+  }
+}
 
 void main() {
   late SharedPreferences prefs;
@@ -14,9 +34,14 @@ void main() {
     prefs = await SharedPreferences.getInstance();
   });
 
-  Widget buildTestWidget() {
+  Widget buildTestWidget({_FakeGateGuard? guard}) {
     return ProviderScope(
-      overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(prefs),
+        gateGuardProvider.overrideWithValue(
+          guard ?? _FakeGateGuard(allows: true),
+        ),
+      ],
       child: MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
@@ -148,6 +173,33 @@ void main() {
         find.widgetWithText(FilledButton, 'Reset'),
       );
       expect(enabledButton.onPressed, isNotNull);
+    });
+
+    testWidgets(
+      'tapping Reset All Data consults the parental control gate with resetData reason',
+      (tester) async {
+        final guard = _FakeGateGuard(allows: true);
+        await tester.pumpWidget(buildTestWidget(guard: guard));
+
+        await tester.tap(find.text('Reset All Data'));
+        await tester.pumpAndSettle();
+
+        expect(guard.unlockCalls, 1);
+        expect(guard.lastReason, GateReason.resetData);
+      },
+    );
+
+    testWidgets('reset confirmation dialog does not appear when gate denies', (
+      tester,
+    ) async {
+      final guard = _FakeGateGuard(allows: false);
+      await tester.pumpWidget(buildTestWidget(guard: guard));
+
+      await tester.tap(find.text('Reset All Data'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Reset All Data?'), findsNothing);
+      expect(find.text('Type RESET to confirm:'), findsNothing);
     });
   });
 }

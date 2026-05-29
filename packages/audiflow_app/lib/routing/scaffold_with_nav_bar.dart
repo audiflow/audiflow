@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:audiflow_core/audiflow_core.dart';
+import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -74,6 +75,11 @@ class ScaffoldWithNavBar extends ConsumerWidget {
     final isTablet = DeviceUtils.isTablet(size.shortestSide);
     final isLandscape = size.height < size.width;
 
+    // Hide the Search tab while Restricted Mode is on and the gate is locked.
+    final restricted = ref.watch(isRestrictedModeOnProvider);
+    final unlocked = ref.watch(isUnlockedProvider);
+    final hideSearch = restricted && !unlocked;
+
     void onDestinationSelected(int index) => _onDestinationSelected(ref, index);
 
     if (isTablet && isLandscape) {
@@ -82,6 +88,7 @@ class ScaffoldWithNavBar extends ConsumerWidget {
         currentIndex: navigationShell.currentIndex,
         onDestinationSelected: onDestinationSelected,
         onMiniPlayerTap: () => _onMiniPlayerTap(context),
+        hideSearch: hideSearch,
       );
     }
     if (isTablet) {
@@ -90,6 +97,7 @@ class ScaffoldWithNavBar extends ConsumerWidget {
         currentIndex: navigationShell.currentIndex,
         onDestinationSelected: onDestinationSelected,
         onMiniPlayerTap: () => _onMiniPlayerTap(context),
+        hideSearch: hideSearch,
       );
     }
     return _PhoneShell(
@@ -97,6 +105,7 @@ class ScaffoldWithNavBar extends ConsumerWidget {
       currentIndex: navigationShell.currentIndex,
       onDestinationSelected: onDestinationSelected,
       onMiniPlayerTap: () => _onMiniPlayerTap(context),
+      hideSearch: hideSearch,
     );
   }
 }
@@ -108,12 +117,14 @@ class _PhoneShell extends StatelessWidget {
     required this.currentIndex,
     required this.onDestinationSelected,
     required this.onMiniPlayerTap,
+    required this.hideSearch,
   });
 
   final Widget navigationShell;
   final int currentIndex;
   final ValueChanged<int> onDestinationSelected;
   final VoidCallback onMiniPlayerTap;
+  final bool hideSearch;
 
   @override
   Widget build(BuildContext context) {
@@ -127,6 +138,7 @@ class _PhoneShell extends StatelessWidget {
           _CustomNavBar(
             currentIndex: currentIndex,
             onDestinationSelected: onDestinationSelected,
+            hideSearch: hideSearch,
           ),
         ],
       ),
@@ -139,10 +151,15 @@ class _CustomNavBar extends StatelessWidget {
   const _CustomNavBar({
     required this.currentIndex,
     required this.onDestinationSelected,
+    required this.hideSearch,
   });
 
   final int currentIndex;
   final ValueChanged<int> onDestinationSelected;
+
+  /// When true the Search tab (index 0) is rendered disabled.
+  /// Indices are kept stable so [StatefulShellRoute.indexedStack] is unaffected.
+  final bool hideSearch;
 
   @override
   Widget build(BuildContext context) {
@@ -164,13 +181,17 @@ class _CustomNavBar extends StatelessWidget {
           child: Row(
             children: [
               for (var i = 0; i < ScaffoldWithNavBar._destinations.length; i++)
-                Expanded(
-                  child: _NavItem(
-                    destination: ScaffoldWithNavBar._destinations[i],
-                    isSelected: currentIndex == i,
-                    onTap: () => onDestinationSelected(i),
+                // Hide Search tab entirely when restricted and locked. Branch
+                // indices in the StatefulShellRoute stay stable; only the
+                // visible nav item is dropped.
+                if (!(hideSearch && i == 0))
+                  Expanded(
+                    child: _NavItem(
+                      destination: ScaffoldWithNavBar._destinations[i],
+                      isSelected: currentIndex == i,
+                      onTap: () => onDestinationSelected(i),
+                    ),
                   ),
-                ),
             ],
           ),
         ),
@@ -180,6 +201,8 @@ class _CustomNavBar extends StatelessWidget {
 }
 
 /// A single nav item: icon + label, both colored by selected state.
+///
+/// When [onTap] is null the item is rendered disabled (restricted mode).
 class _NavItem extends StatelessWidget {
   const _NavItem({
     required this.destination,
@@ -189,20 +212,24 @@ class _NavItem extends StatelessWidget {
 
   final _NavDestination destination;
   final bool isSelected;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context);
     final label = destination.resolveLabel(l10n);
-    final foreground = isSelected
+    final disabled = onTap == null;
+    final foreground = disabled
+        ? colorScheme.onSurface.withValues(alpha: 0.38)
+        : isSelected
         ? colorScheme.primary
         : colorScheme.onSurfaceVariant;
 
     return Semantics(
       button: true,
       selected: isSelected,
+      enabled: !disabled,
       label: label,
       child: InkWell(
         onTap: onTap,
@@ -240,12 +267,14 @@ class _TabletPortraitShell extends StatelessWidget {
     required this.currentIndex,
     required this.onDestinationSelected,
     required this.onMiniPlayerTap,
+    required this.hideSearch,
   });
 
   final Widget navigationShell;
   final int currentIndex;
   final ValueChanged<int> onDestinationSelected;
   final VoidCallback onMiniPlayerTap;
+  final bool hideSearch;
 
   @override
   Widget build(BuildContext context) {
@@ -257,12 +286,15 @@ class _TabletPortraitShell extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             for (var i = 0; i < ScaffoldWithNavBar._destinations.length; i++)
-              _TopTabButton(
-                destination: ScaffoldWithNavBar._destinations[i],
-                isSelected: currentIndex == i,
-                onTap: () => onDestinationSelected(i),
-                colorScheme: colorScheme,
-              ),
+              // Hide Search tab entirely when restricted and locked. Branch
+              // indices stay stable; only the visible tab is dropped.
+              if (!(hideSearch && i == 0))
+                _TopTabButton(
+                  destination: ScaffoldWithNavBar._destinations[i],
+                  isSelected: currentIndex == i,
+                  onTap: () => onDestinationSelected(i),
+                  colorScheme: colorScheme,
+                ),
           ],
         ),
         centerTitle: true,
@@ -290,31 +322,61 @@ class _TabletLandscapeShell extends StatelessWidget {
     required this.currentIndex,
     required this.onDestinationSelected,
     required this.onMiniPlayerTap,
+    required this.hideSearch,
   });
 
   final Widget navigationShell;
   final int currentIndex;
   final ValueChanged<int> onDestinationSelected;
   final VoidCallback onMiniPlayerTap;
+  final bool hideSearch;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       body: SafeArea(
         child: Row(
           children: [
-            NavigationRail(
-              selectedIndex: currentIndex,
-              onDestinationSelected: onDestinationSelected,
-              labelType: NavigationRailLabelType.all,
-              destinations: [
-                for (final d in ScaffoldWithNavBar._destinations)
-                  NavigationRailDestination(
-                    icon: Icon(d.icon),
-                    selectedIcon: Icon(d.selectedIcon, fill: 1),
-                    label: Text(d.resolveLabel(AppLocalizations.of(context))),
-                  ),
-              ],
+            Builder(
+              builder: (context) {
+                // Hide Search rail destination when restricted and locked.
+                // Map rail UI indices to branch indices: when hidden, rail i
+                // refers to branch i + 1 (library/queue/settings).
+                final visibleBranchIndices = <int>[
+                  for (
+                    var i = 0;
+                    i < ScaffoldWithNavBar._destinations.length;
+                    i++
+                  )
+                    if (!(hideSearch && i == 0)) i,
+                ];
+                final railSelected = visibleBranchIndices.indexOf(currentIndex);
+                return NavigationRail(
+                  selectedIndex: railSelected < 0 ? 0 : railSelected,
+                  onDestinationSelected: (railIndex) =>
+                      onDestinationSelected(visibleBranchIndices[railIndex]),
+                  labelType: NavigationRailLabelType.all,
+                  destinations: [
+                    for (final branchIndex in visibleBranchIndices)
+                      NavigationRailDestination(
+                        icon: Icon(
+                          ScaffoldWithNavBar._destinations[branchIndex].icon,
+                        ),
+                        selectedIcon: Icon(
+                          ScaffoldWithNavBar
+                              ._destinations[branchIndex]
+                              .selectedIcon,
+                          fill: 1,
+                        ),
+                        label: Text(
+                          ScaffoldWithNavBar._destinations[branchIndex]
+                              .resolveLabel(l10n),
+                        ),
+                      ),
+                  ],
+                );
+              },
             ),
             const VerticalDivider(width: 1, thickness: 1),
             Expanded(
@@ -336,6 +398,8 @@ class _TabletLandscapeShell extends StatelessWidget {
 }
 
 /// Top tab button for tablet portrait mode.
+///
+/// When [onTap] is null the button is rendered disabled (restricted mode).
 class _TopTabButton extends StatelessWidget {
   const _TopTabButton({
     required this.destination,
@@ -346,11 +410,17 @@ class _TopTabButton extends StatelessWidget {
 
   final _NavDestination destination;
   final bool isSelected;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final ColorScheme colorScheme;
 
   @override
   Widget build(BuildContext context) {
+    final disabled = onTap == null;
+    final foreground = disabled
+        ? colorScheme.onSurface.withValues(alpha: 0.38)
+        : isSelected
+        ? colorScheme.primary
+        : colorScheme.onSurfaceVariant;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: TextButton.icon(
@@ -359,16 +429,12 @@ class _TopTabButton extends StatelessWidget {
           destination.icon,
           fill: isSelected ? 1 : 0,
           size: 20,
-          color: isSelected
-              ? colorScheme.primary
-              : colorScheme.onSurfaceVariant,
+          color: foreground,
         ),
         label: Text(
           destination.resolveLabel(AppLocalizations.of(context)),
           style: TextStyle(
-            color: isSelected
-                ? colorScheme.primary
-                : colorScheme.onSurfaceVariant,
+            color: foreground,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           ),
         ),

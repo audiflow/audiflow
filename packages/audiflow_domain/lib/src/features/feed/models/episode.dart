@@ -28,6 +28,14 @@ class Episode {
   /// Episode web page URL.
   String? link;
 
+  /// Whether the feed marks this episode as explicit content.
+  ///
+  /// Sourced from the iTunes `<itunes:explicit>` element. Values `true`, `yes`,
+  /// `1`, and `explicit` (Apple-spec literal) are treated as truthy
+  /// (case-insensitive, whitespace-trimmed). All other values — including an
+  /// absent tag (null `PodcastItem.isExplicit`) — map to `false`.
+  bool itunesExplicit = false;
+
   bool isFavorited = false;
   DateTime? favoritedAt;
 

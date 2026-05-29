@@ -803,9 +803,16 @@ class StreamingXmlParser {
   }
 
   /// Parse boolean string
+  ///
+  /// Recognizes `true`, `yes`, `1`, and `explicit` (Apple-spec value) as
+  /// truthy, case-insensitive and whitespace-trimmed. All other values,
+  /// including an absent tag, map to `false`.
   bool _parseBoolean(String value) {
-    final lower = value.toLowerCase();
-    return lower == 'true' || lower == 'yes' || lower == '1';
+    final lower = value.toLowerCase().trim();
+    return lower == 'true' ||
+        lower == 'yes' ||
+        lower == '1' ||
+        lower == 'explicit';
   }
 
   /// Parse image element

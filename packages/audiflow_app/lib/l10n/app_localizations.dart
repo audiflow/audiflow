@@ -224,6 +224,18 @@ abstract class AppLocalizations {
   /// **'Version, licenses, support'**
   String get settingsAboutSubtitle;
 
+  /// Parental control settings grid card title
+  ///
+  /// In en, this message translates to:
+  /// **'Parental Control'**
+  String get settingsParentalControlTitle;
+
+  /// Parental control settings grid card subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'PIN, restricted mode, re-lock timer'**
+  String get settingsParentalControlSubtitle;
+
   /// Theme mode section label
   ///
   /// In en, this message translates to:
@@ -3025,6 +3037,234 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Read the full policy'**
   String get settingsPrivacyPolicyLinkSubtitle;
+
+  /// Parental control settings screen title
+  ///
+  /// In en, this message translates to:
+  /// **'Parental Control'**
+  String get parentalControlTitle;
+
+  /// Restricted mode toggle label
+  ///
+  /// In en, this message translates to:
+  /// **'Restricted Mode'**
+  String get parentalControlEnable;
+
+  /// Restricted mode toggle subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Hide discovery and lock subscription changes'**
+  String get parentalControlEnableSubtitle;
+
+  /// PIN setup screen title
+  ///
+  /// In en, this message translates to:
+  /// **'Set a PIN'**
+  String get parentalControlPinSetupTitle;
+
+  /// PIN setup screen subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a 4-8 digit PIN'**
+  String get parentalControlPinSetupSubtitle;
+
+  /// Confirm PIN field label
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm PIN'**
+  String get parentalControlPinConfirm;
+
+  /// Change PIN list tile label
+  ///
+  /// In en, this message translates to:
+  /// **'Change PIN'**
+  String get parentalControlPinChange;
+
+  /// Current PIN field label
+  ///
+  /// In en, this message translates to:
+  /// **'Current PIN'**
+  String get parentalControlPinCurrent;
+
+  /// New PIN field label
+  ///
+  /// In en, this message translates to:
+  /// **'New PIN'**
+  String get parentalControlPinNew;
+
+  /// PIN sheet headline when subscribing
+  ///
+  /// In en, this message translates to:
+  /// **'Subscribe to this podcast'**
+  String get parentalControlPinEntryReasonSubscribe;
+
+  /// PIN sheet headline when unsubscribing
+  ///
+  /// In en, this message translates to:
+  /// **'Unsubscribe from this podcast'**
+  String get parentalControlPinEntryReasonUnsubscribe;
+
+  /// PIN sheet headline when importing OPML
+  ///
+  /// In en, this message translates to:
+  /// **'Import OPML'**
+  String get parentalControlPinEntryReasonOpmlImport;
+
+  /// PIN sheet headline for deep link
+  ///
+  /// In en, this message translates to:
+  /// **'Open this link'**
+  String get parentalControlPinEntryReasonDeepLink;
+
+  /// PIN sheet headline for parental settings
+  ///
+  /// In en, this message translates to:
+  /// **'Change Parental Control'**
+  String get parentalControlPinEntryReasonParentalSettings;
+
+  /// PIN sheet headline for developer settings
+  ///
+  /// In en, this message translates to:
+  /// **'Open Developer settings'**
+  String get parentalControlPinEntryReasonDeveloperSettings;
+
+  /// PIN sheet headline when resetting all app data
+  ///
+  /// In en, this message translates to:
+  /// **'Reset all app data'**
+  String get parentalControlPinEntryReasonResetData;
+
+  /// Placeholder text in the PIN entry field — terse, since the prompt above already names which PIN.
+  ///
+  /// In en, this message translates to:
+  /// **'4–8 digits'**
+  String get parentalControlPinEntryHint;
+
+  /// Subtitle on the PIN entry sheet explaining which PIN is being requested.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your Parental Control PIN to continue.'**
+  String get parentalControlPinEntryPrompt;
+
+  /// Wrong-PIN error shown with remaining attempt count before lockout.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect PIN. {remaining} attempts remaining.'**
+  String parentalControlPinIncorrect(int remaining);
+
+  /// Lockout error shown with seconds remaining until PIN entry is re-enabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Try again in {seconds}s.'**
+  String parentalControlLockoutCountdown(int seconds);
+
+  /// Generic error when PIN verification fails due to storage error (not wrong PIN).
+  ///
+  /// In en, this message translates to:
+  /// **'Could not verify PIN. Please try again.'**
+  String get parentalControlPinSheetError;
+
+  /// Forgot PIN help text. Reset-all-data is itself PIN-gated under Restricted Mode, so the honest recovery is OS-level uninstall; OPML export preserves the subscription list across the reinstall.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot your PIN? There is no in-app recovery. Uninstall and reinstall the app to clear the PIN — this also clears subscriptions, downloads, and history. Export your subscriptions to an OPML file first from Storage & Data, then re-import after reinstalling to restore them.'**
+  String get parentalControlForgotPinBanner;
+
+  /// Toggle to hide explicit episodes
+  ///
+  /// In en, this message translates to:
+  /// **'Hide explicit episodes'**
+  String get parentalControlHideExplicitToggle;
+
+  /// Toggle for biometric unlock
+  ///
+  /// In en, this message translates to:
+  /// **'Allow biometric unlock'**
+  String get parentalControlBiometricToggle;
+
+  /// Reason shown in the OS biometric prompt when unlocking parental control.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock Parental Control'**
+  String get parentalControlBiometricPrompt;
+
+  /// Label on the biometric button in the PIN entry sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Use biometric'**
+  String get parentalControlUseBiometric;
+
+  /// Unlock timeout dropdown label
+  ///
+  /// In en, this message translates to:
+  /// **'Auto re-lock after'**
+  String get parentalControlUnlockTimeoutLabel;
+
+  /// Submit button label on PIN entry sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Submit'**
+  String get parentalControlSubmit;
+
+  /// Cancel button label on PIN entry sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get parentalControlCancel;
+
+  /// Error text when parental control settings cannot be loaded
+  ///
+  /// In en, this message translates to:
+  /// **'Settings unavailable — restart the app.'**
+  String get parentalControlSettingsUnavailable;
+
+  /// Message shown when redirected due to restricted mode
+  ///
+  /// In en, this message translates to:
+  /// **'Restricted Mode is on. Open the gate from Settings.'**
+  String get parentalControlRestrictedRedirect;
+
+  /// Verify current PIN button label on PIN-change screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify'**
+  String get parentalControlVerify;
+
+  /// Unlock timeout dropdown option (1 minute).
+  ///
+  /// In en, this message translates to:
+  /// **'1 min'**
+  String get parentalControlUnlockTimeout1Min;
+
+  /// Unlock timeout dropdown option (5 minutes).
+  ///
+  /// In en, this message translates to:
+  /// **'5 min'**
+  String get parentalControlUnlockTimeout5Min;
+
+  /// Unlock timeout dropdown option (15 minutes).
+  ///
+  /// In en, this message translates to:
+  /// **'15 min'**
+  String get parentalControlUnlockTimeout15Min;
+
+  /// Snackbar shown when a parental control setting fails to persist.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the change. Please try again.'**
+  String get parentalControlSettingsSaveError;
+
+  /// Snackbar shown when toggling hide-explicit fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not change the setting. Please try again.'**
+  String get parentalControlToggleFailed;
+
+  /// Snackbar shown when a gated action is denied (gate not unlocked).
+  ///
+  /// In en, this message translates to:
+  /// **'Restricted Mode is on. Unlock from Settings to continue.'**
+  String get parentalControlAccessDenied;
 }
 
 class _AppLocalizationsDelegate

@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../parental_control/domain/gate_guard.dart';
+import '../../../parental_control/providers/gate_guard_provider.dart';
 import '../controllers/opml_export_controller.dart';
 import '../controllers/opml_import_controller.dart';
 import 'opml_import_preview_screen.dart';
@@ -254,8 +256,16 @@ class _ImportTile extends ConsumerWidget {
       title: Text(l10n.storageImportTitle),
       subtitle: Text(l10n.storageImportSubtitle),
       trailing: OutlinedButton(
-        onPressed: () =>
-            ref.read(opmlImportControllerProvider.notifier).pickAndParse(),
+        onPressed: () async {
+          final allowed = await ref
+              .read(opmlImportControllerProvider.notifier)
+              .pickAndParse(context);
+          if (!allowed && context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(l10n.parentalControlAccessDenied)),
+            );
+          }
+        },
         child: Text(l10n.storageImport),
       ),
     );
@@ -351,8 +361,19 @@ class _DangerZoneSection extends StatelessWidget {
     );
   }
 
-  void _showResetDialog(BuildContext context) {
+  Future<void> _showResetDialog(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
+
+    // Reset wipes the PIN hash along with everything else, so an unauthenticated
+    // child could otherwise bypass Restricted Mode by tapping reset. Gate this
+    // entry path the same way Subscribe/OPML/Developer are gated.
+    final guard = ref.read(gateGuardProvider);
+    final allowed = await guard.requireUnlock(
+      context,
+      reason: GateReason.resetData,
+    );
+    if (!allowed) return;
+    if (!context.mounted) return;
 
     showDialog<void>(
       context: context,

@@ -10,6 +10,18 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../helpers/search_mocks.dart';
 
+/// Builds a [ProviderContainer] suitable for router tests.
+///
+/// Overrides parental-control providers so the redirect does not access Isar.
+ProviderContainer _buildRouterContainer() {
+  return ProviderContainer(
+    overrides: [
+      isRestrictedModeOnProvider.overrideWithValue(false),
+      isUnlockedProvider.overrideWithValue(true),
+    ],
+  );
+}
+
 void main() {
   group('AppRouter onboarding redirect', () {
     Future<(GoRouter, Widget)> buildRouterApp({required bool completed}) async {
@@ -24,7 +36,10 @@ void main() {
             : <String, Object>{SettingsKeys.privacyConsentAccepted: true},
       );
       final prefs = await SharedPreferences.getInstance();
-      final router = createAppRouter(prefs: prefs);
+      final router = createAppRouter(
+        prefs: prefs,
+        container: _buildRouterContainer(),
+      );
       addTearDown(router.dispose);
       final app = ProviderScope(
         overrides: [

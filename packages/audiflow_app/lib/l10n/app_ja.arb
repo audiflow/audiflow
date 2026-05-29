@@ -23,6 +23,8 @@
   "settingsStorageSubtitle": "キャッシュ、OPML、データ管理",
   "settingsAboutTitle": "アプリについて",
   "settingsAboutSubtitle": "バージョン、ライセンス、サポート",
+  "settingsParentalControlTitle": "ペアレンタルコントロール",
+  "settingsParentalControlSubtitle": "PIN、制限モード、再ロックタイマー",
 
   "appearanceThemeMode": "テーマモード",
   "appearanceThemeLight": "ライト",
@@ -665,5 +667,53 @@
   "consentContinueButton": "同意して続ける",
 
   "settingsPrivacyPolicyLinkTitle": "プライバシーポリシー",
-  "settingsPrivacyPolicyLinkSubtitle": "全文を読む"
+  "settingsPrivacyPolicyLinkSubtitle": "全文を読む",
+
+  "parentalControlTitle": "ペアレンタル コントロール",
+  "parentalControlEnable": "制限モード",
+  "parentalControlEnableSubtitle": "検索を隠し、購読変更をロックします",
+  "parentalControlPinSetupTitle": "PINを設定",
+  "parentalControlPinSetupSubtitle": "4〜8桁のPINを入力",
+  "parentalControlPinConfirm": "PIN確認",
+  "parentalControlPinChange": "PINを変更",
+  "parentalControlPinCurrent": "現在のPIN",
+  "parentalControlPinNew": "新しいPIN",
+  "parentalControlPinEntryReasonSubscribe": "このポッドキャストを購読",
+  "parentalControlPinEntryReasonUnsubscribe": "このポッドキャストの購読を解除",
+  "parentalControlPinEntryReasonOpmlImport": "OPMLをインポート",
+  "parentalControlPinEntryReasonDeepLink": "このリンクを開く",
+  "parentalControlPinEntryReasonParentalSettings": "ペアレンタル コントロールを変更",
+  "parentalControlPinEntryReasonDeveloperSettings": "デベロッパー設定を開く",
+  "parentalControlPinEntryReasonResetData": "アプリのデータをリセット",
+  "parentalControlPinEntryHint": "4〜8桁",
+  "parentalControlPinEntryPrompt": "ペアレンタル コントロールのPINを入力してください。",
+  "parentalControlPinIncorrect": "PINが正しくありません。残り{remaining}回。",
+  "@parentalControlPinIncorrect": {
+    "description": "Wrong-PIN error shown with remaining attempt count before lockout.",
+    "placeholders": { "remaining": { "type": "int" } }
+  },
+  "parentalControlLockoutCountdown": "試行回数が上限に達しました。{seconds}秒後に再試行できます。",
+  "@parentalControlLockoutCountdown": {
+    "description": "Lockout error shown with seconds remaining until PIN entry is re-enabled.",
+    "placeholders": { "seconds": { "type": "int" } }
+  },
+  "parentalControlPinSheetError": "PINを確認できませんでした。もう一度お試しください。",
+  "@parentalControlPinSheetError": { "description": "Generic error when PIN verification fails due to storage error (not wrong PIN)." },
+  "parentalControlForgotPinBanner": "PINを忘れた場合、アプリ内での復旧手段はありません。PINを解除するにはアプリをアンインストールして再インストールしてください。購読、ダウンロード、再生履歴も併せて削除されます。先に「ストレージとデータ」から購読をOPMLファイルとして書き出しておけば、再インストール後にOPMLを取り込んで購読を復元できます。",
+  "parentalControlHideExplicitToggle": "アダルト指定エピソードを非表示",
+  "parentalControlBiometricToggle": "生体認証によるロック解除を許可",
+  "parentalControlBiometricPrompt": "保護者制限を解除",
+  "parentalControlUseBiometric": "生体認証を使う",
+  "parentalControlUnlockTimeoutLabel": "自動再ロックまでの時間",
+  "parentalControlSubmit": "送信",
+  "parentalControlCancel": "キャンセル",
+  "parentalControlSettingsUnavailable": "設定を利用できません。アプリを再起動してください。",
+  "parentalControlRestrictedRedirect": "制限モードが有効です。設定からゲートを開いてください。",
+  "parentalControlVerify": "確認",
+  "parentalControlUnlockTimeout1Min": "1分",
+  "parentalControlUnlockTimeout5Min": "5分",
+  "parentalControlUnlockTimeout15Min": "15分",
+  "parentalControlSettingsSaveError": "設定を保存できませんでした。もう一度お試しください。",
+  "parentalControlToggleFailed": "設定を変更できませんでした。もう一度お試しください。",
+  "parentalControlAccessDenied": "制限モードが有効です。設定からロックを解除してください。"
 }

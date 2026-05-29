@@ -16,12 +16,13 @@ Sub-package of the `audiflow` Flutter monorepo. Depends on `audiflow_core`, `aud
 
 ## Responsibilities
 
-- Repository interfaces and implementations for 9 feature modules
+- Repository interfaces and implementations for 10 feature modules
 - Isar collection definitions and local/remote data sources
 - Business services (feed sync, playback, download queue, voice commands, station reconciliation)
 - Smart playlist config consumption, caching, and resolver pipeline
 - Background refresh and new-episode notification orchestration
 - Composition seam for on-device Gemma 4 voice commands (`GemmaVoiceCommandRoute`)
+- Parental control: PIN-gated Restricted Mode (`ParentalControlRepository`, `PinHasher`, `UnlockState`, Riverpod providers)
 
 ## Voice command pipeline
 

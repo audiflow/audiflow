@@ -2,7 +2,11 @@ import 'dart:io';
 
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/widgets.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+import '../../../parental_control/domain/gate_guard.dart';
+import '../../../parental_control/providers/gate_guard_provider.dart';
 
 part 'opml_import_controller.g.dart';
 
@@ -46,7 +50,15 @@ class OpmlImportController extends _$OpmlImportController {
 
   /// Opens file picker, reads the OPML file, and parses
   /// entries. On success, sets state to [OpmlPickSuccess].
-  Future<void> pickAndParse() async {
+  ///
+  /// [context] is required to present the PIN entry sheet when
+  /// Restricted Mode is active and the gate is locked.
+  Future<bool> pickAndParse(BuildContext context) async {
+    final allowed = await ref
+        .read(gateGuardProvider)
+        .requireUnlock(context, reason: GateReason.opmlImport);
+    if (!allowed) return false;
+
     state = OpmlPickLoading();
 
     try {
@@ -54,14 +66,14 @@ class OpmlImportController extends _$OpmlImportController {
 
       if (result == null || result.files.isEmpty) {
         state = OpmlPickCancelled();
-        return;
+        return true;
       }
 
       final file = result.files.first;
       final path = file.path;
       if (path == null) {
         state = OpmlPickError('Could not read file');
-        return;
+        return true;
       }
 
       final content = await File(path).readAsString();
@@ -70,7 +82,7 @@ class OpmlImportController extends _$OpmlImportController {
 
       if (entries.isEmpty) {
         state = OpmlPickError('No podcast feeds found in the file');
-        return;
+        return true;
       }
 
       // Check which feeds are already subscribed
@@ -92,5 +104,6 @@ class OpmlImportController extends _$OpmlImportController {
     } on Exception catch (e) {
       state = OpmlPickError(e.toString());
     }
+    return true;
   }
 }

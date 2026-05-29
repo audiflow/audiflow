@@ -80,6 +80,7 @@ dependencies:
   flutter_local_notifications: ^21.0.0
   connectivity_plus: ^7.0.0
   permission_handler: ^12.0.1
+  local_auth: ^2.3.0
 
   # Versioning
   pub_semver: ^2.1.4
@@ -88,6 +89,8 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  integration_test:
+    sdk: flutter
   checks: ^0.3.0
   mockito: ^5.6.3
   http_mock_adapter: ^0.6.1

@@ -28,6 +28,7 @@ import 'app/notification/notification_tap_handler.dart';
 import 'app/background/background_callback.dart';
 import 'app/background/background_task_registrar.dart';
 import 'features/force_update/force_update.dart';
+import 'features/parental_control/data/local_auth_biometric_authenticator.dart';
 import 'features/monitoring/services/firebase_analytics_service.dart';
 import 'features/monitoring/services/throttled_analytics_service.dart';
 import 'features/player/services/audio_handler_provider.dart';
@@ -283,6 +284,11 @@ Future<void> _startApp(
       presetConfigBaseUrlProvider.overrideWithValue(presetConfigBaseUrl),
       feedSyncDiagnosticSinkProvider.overrideWithValue(feedSyncDiagnostic),
       forceUpdateConfigUrlProvider.overrideWithValue(forceUpdateConfigUrl),
+      biometricAuthenticatorProvider.overrideWith(
+        (ref) => LocalAuthBiometricAuthenticator(
+          logger: ref.watch(namedLoggerProvider('ParentalControl')),
+        ),
+      ),
       // Wire repository warnings through logger + reporter without
       // capturing a late container reference: the override builder reads
       // both seams from its own `ref`, so the sink closure is bound to
@@ -454,6 +460,7 @@ class _MyAppState extends ConsumerState<MyApp> {
     final faObserver = ref.read(firebaseAnalyticsObserverProvider);
     _router = createAppRouter(
       prefs: ref.read(sharedPreferencesProvider),
+      container: ProviderScope.containerOf(context, listen: false),
       lastTabIndex: ref.read(lastTabControllerProvider),
       observers: [?faObserver],
     );

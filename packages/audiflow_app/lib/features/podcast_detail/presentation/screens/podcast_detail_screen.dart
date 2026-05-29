@@ -12,6 +12,7 @@ import 'package:audiflow_domain/audiflow_domain.dart'
         SortOrder,
         SubscribeSource,
         appSettingsRepositoryProvider,
+        hideExplicitForPodcastProvider,
         namedLoggerProvider,
         playOrderPreferenceRepositoryProvider,
         podcastViewPreferenceControllerProvider,
@@ -381,9 +382,39 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
         setState(() => _lastFilteredEpisodes = data);
       });
     });
-    final filteredAsync = ref.watch(
+    var filteredAsync = ref.watch(
       filteredSortedEpisodesProvider(feedUrl, filter, sortOrder),
     );
+
+    // Post-filter explicit episodes when the per-podcast hide-explicit flag is
+    // on. Uses explicit .when() to log errors instead of silently defaulting.
+    if (subscription != null) {
+      final hideExplicit = ref
+          .watch(hideExplicitForPodcastProvider(subscription.id))
+          .when(
+            data: (v) => v,
+            loading: () => false,
+            error: (e, st) {
+              ref
+                  .read(namedLoggerProvider('ParentalControl'))
+                  .w(
+                    'hideExplicitForPodcast stream error; defaulting to false',
+                    error: e,
+                    stackTrace: st,
+                  );
+              return false;
+            },
+          );
+      if (hideExplicit) {
+        filteredAsync = filteredAsync.whenData(
+          // isExplicit != true is intentional: per RSS spec, absence of the
+          // <itunes:explicit> tag means the publisher did not mark it explicit,
+          // so it is treated as clean. Only episodes where the publisher
+          // explicitly set explicit=true are filtered out.
+          (episodes) => episodes.where((e) => e.isExplicit != true).toList(),
+        );
+      }
+    }
 
     if (_previouslyLoggedEpisodes?.runtimeType != filteredAsync.runtimeType ||
         _previouslyLoggedEpisodes?.value?.length !=

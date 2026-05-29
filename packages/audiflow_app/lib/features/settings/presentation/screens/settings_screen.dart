@@ -1,6 +1,8 @@
 import 'package:audiflow_core/audiflow_core.dart';
+import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
@@ -12,12 +14,15 @@ import '../widgets/settings_category_card.dart';
 ///
 /// Displays a grid of setting categories that navigate
 /// to their respective detail screens.
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
+    final restricted = ref.watch(isRestrictedModeOnProvider);
+    final unlocked = ref.watch(isUnlockedProvider);
+    final hideDeveloper = restricted && !unlocked;
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settingsTitle)),
@@ -76,11 +81,18 @@ class SettingsScreen extends StatelessWidget {
                     onTap: () => context.go(AppRoutes.settingsPrivacy),
                   ),
                   SettingsCategoryCard(
-                    icon: Symbols.code,
-                    title: l10n.settingsDeveloperTitle,
-                    subtitle: l10n.settingsDeveloperSubtitle,
-                    onTap: () => context.go(AppRoutes.settingsDeveloper),
+                    icon: Symbols.lock,
+                    title: l10n.settingsParentalControlTitle,
+                    subtitle: l10n.settingsParentalControlSubtitle,
+                    onTap: () => context.go(AppRoutes.settingsParentalControl),
                   ),
+                  if (!hideDeveloper)
+                    SettingsCategoryCard(
+                      icon: Symbols.code,
+                      title: l10n.settingsDeveloperTitle,
+                      subtitle: l10n.settingsDeveloperSubtitle,
+                      onTap: () => context.go(AppRoutes.settingsDeveloper),
+                    ),
                   SettingsCategoryCard(
                     icon: Symbols.school,
                     title: l10n.settingsGettingStartedTitle,

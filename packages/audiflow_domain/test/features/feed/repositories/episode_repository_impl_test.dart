@@ -677,4 +677,58 @@ void main() {
       );
     });
   });
+
+  group('itunesExplicit mapping', () {
+    PodcastItem makeExplicitItem({
+      required String guid,
+      required bool? isExplicit,
+    }) {
+      return PodcastItem.fromData(
+        parsedAt: DateTime.now(),
+        sourceUrl: '',
+        title: 'ep',
+        description: 'desc',
+        guid: guid,
+        enclosureUrl: 'https://example.com/$guid.mp3',
+        isExplicit: isExplicit,
+      );
+    }
+
+    test('isExplicit true maps to itunesExplicit true', () async {
+      await repository.upsertFromFeedItems(podcastId, [
+        makeExplicitItem(guid: 'ep-t', isExplicit: true),
+      ]);
+      final eps = await episodeDatasource.getByPodcastId(podcastId);
+      check(eps.length).equals(1);
+      check(eps.first.itunesExplicit).isTrue();
+    });
+
+    test('isExplicit false maps to itunesExplicit false', () async {
+      await repository.upsertFromFeedItems(podcastId, [
+        makeExplicitItem(guid: 'ep-f', isExplicit: false),
+      ]);
+      final eps = await episodeDatasource.getByPodcastId(podcastId);
+      check(eps.first.itunesExplicit).isFalse();
+    });
+
+    test('isExplicit null (absent) defaults to false', () async {
+      await repository.upsertFromFeedItems(podcastId, [
+        makeExplicitItem(guid: 'ep-n', isExplicit: null),
+      ]);
+      final eps = await episodeDatasource.getByPodcastId(podcastId);
+      check(eps.first.itunesExplicit).isFalse();
+    });
+
+    test(
+      'upsertFromFeedItemsWithConfig also maps itunesExplicit correctly',
+      () async {
+        await repository.upsertFromFeedItemsWithConfig(podcastId, [
+          makeExplicitItem(guid: 'ep-cfg', isExplicit: true),
+        ], config: const PresetConfig(id: 'test', playlists: []));
+        final eps = await episodeDatasource.getByPodcastId(podcastId);
+        check(eps.length).equals(1);
+        check(eps.first.itunesExplicit).isTrue();
+      },
+    );
+  });
 }

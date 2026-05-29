@@ -31,6 +31,9 @@ import '../features/share/presentation/screens/deep_link_screen.dart';
 import '../features/settings/presentation/screens/downloads_settings_screen.dart';
 import '../features/settings/presentation/screens/feed_sync_settings_screen.dart';
 import '../features/settings/presentation/screens/playback_settings_screen.dart';
+import '../features/parental_control/presentation/screens/parental_control_settings_screen.dart';
+import '../features/parental_control/presentation/screens/pin_change_screen.dart';
+import '../features/parental_control/presentation/screens/pin_setup_screen.dart';
 import '../features/settings/presentation/screens/settings_screen.dart';
 import '../features/settings/presentation/screens/storage_settings_screen.dart';
 import '../features/settings/presentation/screens/developer_settings_screen.dart';
@@ -70,6 +73,11 @@ class AppRoutes {
   static const String settingsGettingStarted = '/settings/getting-started';
   static const String migrationGuide = '/settings/getting-started/migration';
   static const String settingsPrivacy = '/settings/privacy';
+  static const String settingsParentalControl = '/settings/parental-control';
+  static const String parentalControlPinSetup =
+      '/settings/parental-control/pin-setup';
+  static const String parentalControlPinChange =
+      '/settings/parental-control/pin-change';
   static const String consent = '/consent';
   static const String onboarding = '/onboarding';
   static const String transcript = '/transcript';
@@ -94,6 +102,52 @@ final _libraryNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'library');
 final _queueNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'queue');
 final _settingsNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'settings');
 
+/// Paths blocked while Restricted Mode is on and the gate is locked.
+///
+/// Ordered from most-specific to least-specific so prefix checks work
+/// correctly when the list is iterated.
+const _kRestrictedPaths = <String>[
+  AppRoutes.settingsDeveloper,
+  AppRoutes.search,
+];
+
+/// Bridge that converts Riverpod parental-control state changes into
+/// [ChangeNotifier] notifications so [GoRouter.refreshListenable] can
+/// trigger redirect re-evaluation whenever the lock/restriction state changes.
+class _ParentalControlRefreshNotifier extends ChangeNotifier {
+  _ParentalControlRefreshNotifier(ProviderContainer container) {
+    // Listen to gate state, the restricted-mode flag, and the raw settings
+    // stream. The redirect callback reads the raw stream directly to avoid
+    // failing closed during cold-launch load, so we must refresh when the
+    // stream transitions from loading -> data even if isRestrictedModeOn
+    // (which is overridden in tests) does not change.
+    _sub1 = container.listen<Object?>(
+      parentalControlGateProvider,
+      (_, _) => notifyListeners(),
+    );
+    _sub2 = container.listen<bool>(
+      isRestrictedModeOnProvider,
+      (_, _) => notifyListeners(),
+    );
+    _sub3 = container.listen<AsyncValue<ParentalControlSettings>>(
+      parentalControlSettingsStreamProvider,
+      (_, _) => notifyListeners(),
+    );
+  }
+
+  late final ProviderSubscription<Object?> _sub1;
+  late final ProviderSubscription<bool> _sub2;
+  late final ProviderSubscription<AsyncValue<ParentalControlSettings>> _sub3;
+
+  @override
+  void dispose() {
+    _sub1.close();
+    _sub2.close();
+    _sub3.close();
+    super.dispose();
+  }
+}
+
 /// Creates the application router configuration.
 ///
 /// This function returns a configured [GoRouter] instance
@@ -108,6 +162,7 @@ final _settingsNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'settings');
 /// - `/settings`
 GoRouter createAppRouter({
   required SharedPreferences prefs,
+  required ProviderContainer container,
   int lastTabIndex = 0,
   List<NavigatorObserver> observers = const [],
 }) {
@@ -117,10 +172,13 @@ GoRouter createAppRouter({
     _ => AppRoutes.search,
   };
 
+  final refreshNotifier = _ParentalControlRefreshNotifier(container);
+
   return GoRouter(
     navigatorKey: rootNavigatorKey,
     initialLocation: initialLocation,
     observers: observers,
+    refreshListenable: refreshNotifier,
     // File URIs from the share sheet (e.g. file:///...opml)
     // are handled by OpmlFileReceiverController via app_links,
     // not by the router. Redirect to home on unknown routes.
@@ -146,6 +204,34 @@ GoRouter createAppRouter({
       if (consented && completed && atOnboarding) {
         return AppRoutes.search;
       }
+
+      // Parental control gate: redirect restricted+locked paths to Library.
+      // Consent/onboarding routes are already handled above and never
+      // reach this check.
+      //
+      // Read the raw settings stream directly (not isRestrictedModeOnProvider)
+      // so that the router fails *open* during the initial Isar stream load.
+      // isRestrictedModeOnProvider intentionally fails-closed for gate
+      // enforcement, but using it here would redirect every cold launch to
+      // /library before the stream resolves.
+      final settingsAsync = container.read(
+        parentalControlSettingsStreamProvider,
+      );
+      final restricted = settingsAsync.maybeWhen(
+        data: (v) => v.restrictedModeEnabled,
+        orElse: () => false,
+      );
+      if (restricted) {
+        final unlocked = container.read(isUnlockedProvider);
+        if (!unlocked) {
+          final location = state.matchedLocation;
+          final isRestricted = _kRestrictedPaths.any(
+            (p) => location == p || location.startsWith('$p/'),
+          );
+          if (isRestricted) return AppRoutes.library;
+        }
+      }
+
       return null;
     },
     routes: [
@@ -317,6 +403,21 @@ GoRouter createAppRouter({
                         path: 'migration',
                         builder: (context, state) =>
                             const MigrationGuideScreen(),
+                      ),
+                    ],
+                  ),
+                  GoRoute(
+                    path: 'parental-control',
+                    builder: (context, state) =>
+                        const ParentalControlSettingsScreen(),
+                    routes: [
+                      GoRoute(
+                        path: 'pin-setup',
+                        builder: (context, state) => const PinSetupScreen(),
+                      ),
+                      GoRoute(
+                        path: 'pin-change',
+                        builder: (context, state) => const PinChangeScreen(),
                       ),
                     ],
                   ),
