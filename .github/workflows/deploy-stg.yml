@@ -201,6 +201,14 @@ jobs:
             exit 1
           fi
 
+      - name: Clear SwiftPM caches
+        # Avoid Xcode SwiftPM bug where binary targets fail with
+        # "already exists in file system" when the artifact cache is
+        # partially populated across resolve passes.
+        run: |
+          rm -rf ~/Library/Caches/org.swift.swiftpm
+          rm -rf ~/Library/Developer/Xcode/DerivedData
+
       - name: Build IPA
         run: |
           cd packages/audiflow_app
