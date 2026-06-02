@@ -1758,7 +1758,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentalControlUnlockTimeoutLabel => 'Auto re-lock after';
 
   @override
-  String get parentalControlSubmit => 'Submit';
+  String get parentalControlSavePin => 'Save';
+
+  @override
+  String get parentalControlUnlock => 'Unlock';
 
   @override
   String get parentalControlCancel => 'Cancel';

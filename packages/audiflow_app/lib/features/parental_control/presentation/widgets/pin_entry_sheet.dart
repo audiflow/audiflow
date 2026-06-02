@@ -217,7 +217,7 @@ class _PinEntrySheetState extends ConsumerState<PinEntrySheet> {
                 onPressed: (_controller.text.length < 4 || _submitting)
                     ? null
                     : _submit,
-                child: Text(l10n.parentalControlSubmit),
+                child: Text(l10n.parentalControlUnlock),
               ),
             ],
           ),

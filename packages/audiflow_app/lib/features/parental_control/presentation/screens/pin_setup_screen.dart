@@ -93,7 +93,7 @@ class _PinSetupScreenState extends ConsumerState<PinSetupScreen> {
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: (_valid && !_saving) ? _save : null,
-              child: Text(l10n.parentalControlSubmit),
+              child: Text(l10n.parentalControlSavePin),
             ),
           ],
         ),
