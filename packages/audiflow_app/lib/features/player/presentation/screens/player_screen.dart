@@ -548,6 +548,10 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
             ),
             child: Slider(
               value: displayValue,
+              // iOS-26-style scrubbing: drag moves the thumb by delta from its
+              // current position instead of jumping to the touch point. Flutter's
+              // default (tapAndSlide) snaps the thumb to the finger on touch-down.
+              allowedInteraction: SliderInteraction.slideOnly,
               onChangeStart: (value) {
                 setState(() {
                   _isDragging = true;
