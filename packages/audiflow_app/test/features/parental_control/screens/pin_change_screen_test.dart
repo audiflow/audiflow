@@ -181,9 +181,7 @@ void main() {
       // Save should be disabled before entering new PINs.
       check(
         tester
-            .widget<ElevatedButton>(
-              find.widgetWithText(ElevatedButton, 'Submit'),
-            )
+            .widget<ElevatedButton>(find.widgetWithText(ElevatedButton, 'Save'))
             .onPressed,
       ).isNull();
 
@@ -195,9 +193,7 @@ void main() {
 
       check(
         tester
-            .widget<ElevatedButton>(
-              find.widgetWithText(ElevatedButton, 'Submit'),
-            )
+            .widget<ElevatedButton>(find.widgetWithText(ElevatedButton, 'Save'))
             .onPressed,
       ).isNotNull();
     });
@@ -226,7 +222,7 @@ void main() {
       await tester.enterText(fields.at(2), '8765');
       await tester.pump();
 
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Submit'));
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Save'));
       await tester.pumpAndSettle();
 
       check(fakeRepo.setPinCalls).deepEquals(['8765']);

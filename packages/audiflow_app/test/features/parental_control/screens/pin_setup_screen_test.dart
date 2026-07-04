@@ -106,7 +106,7 @@ void main() {
       await tester.enterText(fields.at(1), '123');
       await tester.pump();
 
-      final submit = find.widgetWithText(ElevatedButton, 'Submit');
+      final submit = find.widgetWithText(ElevatedButton, 'Save');
       check(tester.widget<ElevatedButton>(submit).onPressed).isNull();
     });
 
@@ -119,7 +119,7 @@ void main() {
       await tester.enterText(fields.at(1), '5678');
       await tester.pump();
 
-      final submit = find.widgetWithText(ElevatedButton, 'Submit');
+      final submit = find.widgetWithText(ElevatedButton, 'Save');
       check(tester.widget<ElevatedButton>(submit).onPressed).isNull();
     });
 
@@ -134,7 +134,7 @@ void main() {
       await tester.enterText(fields.at(1), '1234');
       await tester.pump();
 
-      final submit = find.widgetWithText(ElevatedButton, 'Submit');
+      final submit = find.widgetWithText(ElevatedButton, 'Save');
       check(tester.widget<ElevatedButton>(submit).onPressed).isNotNull();
     });
 
@@ -147,7 +147,7 @@ void main() {
       await tester.enterText(fields.at(1), '12345678');
       await tester.pump();
 
-      final submit = find.widgetWithText(ElevatedButton, 'Submit');
+      final submit = find.widgetWithText(ElevatedButton, 'Save');
       check(tester.widget<ElevatedButton>(submit).onPressed).isNotNull();
     });
 
@@ -170,7 +170,7 @@ void main() {
       await tester.enterText(fields.at(1), '4321');
       await tester.pump();
 
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Submit'));
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Save'));
       await tester.pumpAndSettle();
 
       check(fakeRepo.setPinCalls).deepEquals(['4321']);

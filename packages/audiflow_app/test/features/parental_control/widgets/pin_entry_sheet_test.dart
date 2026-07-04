@@ -32,7 +32,7 @@ Future<void> _enterPin(WidgetTester tester, String pin) async {
 
 /// Taps the Submit button and pumps until the frame settles.
 Future<void> _tapSubmit(WidgetTester tester) async {
-  await tester.tap(find.widgetWithText(ElevatedButton, 'Submit'));
+  await tester.tap(find.widgetWithText(ElevatedButton, 'Unlock'));
   await tester.pump();
 }
 
@@ -161,7 +161,7 @@ void main() {
     await tester.pumpWidget(
       _wrap(const PinEntrySheet(reason: GateReason.subscribe)),
     );
-    final submit = find.widgetWithText(ElevatedButton, 'Submit');
+    final submit = find.widgetWithText(ElevatedButton, 'Unlock');
     check(tester.widget<ElevatedButton>(submit.first).onPressed).isNull();
 
     final field = find.byType(TextField).first;
@@ -307,7 +307,7 @@ void main() {
       check(
         tester
             .widget<ElevatedButton>(
-              find.widgetWithText(ElevatedButton, 'Submit').first,
+              find.widgetWithText(ElevatedButton, 'Unlock').first,
             )
             .onPressed,
       ).isNull(); // disabled because field was cleared (length 0)
