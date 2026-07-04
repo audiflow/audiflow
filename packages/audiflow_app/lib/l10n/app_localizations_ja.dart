@@ -1678,7 +1678,7 @@ class AppLocalizationsJa extends AppLocalizations {
       'PINを忘れた場合、アプリ内での復旧手段はありません。PINを解除するにはアプリをアンインストールして再インストールしてください。購読、ダウンロード、再生履歴も併せて削除されます。先に「ストレージとデータ」から購読をOPMLファイルとして書き出しておけば、再インストール後にOPMLを取り込んで購読を復元できます。';
 
   @override
-  String get parentalControlHideExplicitToggle => 'アダルト指定エピソードを非表示';
+  String get parentalControlHideExplicitToggle => '不適切なエピソードを非表示';
 
   @override
   String get parentalControlBiometricToggle => '生体認証によるロック解除を許可';
@@ -1693,7 +1693,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get parentalControlUnlockTimeoutLabel => '自動再ロックまでの時間';
 
   @override
-  String get parentalControlSubmit => '送信';
+  String get parentalControlSavePin => '保存';
+
+  @override
+  String get parentalControlUnlock => 'ロック解除';
 
   @override
   String get parentalControlCancel => 'キャンセル';

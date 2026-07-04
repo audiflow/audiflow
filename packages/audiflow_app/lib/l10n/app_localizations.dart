@@ -3200,11 +3200,17 @@ abstract class AppLocalizations {
   /// **'Auto re-lock after'**
   String get parentalControlUnlockTimeoutLabel;
 
-  /// Submit button label on PIN entry sheet
+  /// Button label to store the PIN locally on the PIN setup and change screens. The PIN is saved on-device only, never sent anywhere.
   ///
   /// In en, this message translates to:
-  /// **'Submit'**
-  String get parentalControlSubmit;
+  /// **'Save'**
+  String get parentalControlSavePin;
+
+  /// Button label to confirm the entered PIN and unlock on the PIN entry sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock'**
+  String get parentalControlUnlock;
 
   /// Cancel button label on PIN entry sheet
   ///

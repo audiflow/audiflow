@@ -185,7 +185,7 @@ class _PinChangeScreenState extends ConsumerState<PinChangeScreen> {
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: (_newValid && !_saving) ? _save : null,
-                child: Text(l10n.parentalControlSubmit),
+                child: Text(l10n.parentalControlSavePin),
               ),
             ],
           ],
