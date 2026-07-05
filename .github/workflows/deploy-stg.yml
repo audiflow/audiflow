@@ -215,6 +215,28 @@ jobs:
           rm -rf ~/Library/Caches/org.swift.swiftpm
           rm -rf ~/Library/Developer/Xcode/DerivedData
 
+      - name: Pre-resolve SwiftPM packages
+        # flutter build runs xcodebuild -showBuildSettings with a short
+        # timeout and kills it mid-resolve, leaving partial binary-artifact
+        # downloads that make the real resolve fail with "already exists in
+        # file system". Resolve everything up front (with retries) so the
+        # build finds a fully populated cache.
+        run: |
+          cd packages/audiflow_app
+          flutter build ios --config-only --flavor stg -t lib/main_stg.dart \
+            --dart-define-from-file=../../.env.stg
+          cd ios
+          for attempt in 1 2 3; do
+            if xcodebuild -resolvePackageDependencies \
+                -workspace Runner.xcworkspace -scheme stg; then
+              exit 0
+            fi
+            echo "Resolve attempt $attempt failed; clearing artifact cache before retry"
+            rm -rf ~/Library/Caches/org.swift.swiftpm/artifacts
+          done
+          echo "::error::SwiftPM package resolution failed after 3 attempts"
+          exit 1
+
       - name: Build IPA
         run: |
           cd packages/audiflow_app
