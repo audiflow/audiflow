@@ -258,11 +258,56 @@ jobs:
         env:
           ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          STG_BUNDLE_ID: com.reedom.audiflow.stg
         run: |
+          # Xcode 26 altool resolves the target app from the bundle id
+          # ambiguously when bundle-id prefixes overlap and may fail with
+          # "Cannot determine the Apple ID from Bundle ID" (fastlane#29698,
+          # #29820). Look up the numeric Apple ID and pass it explicitly.
+          xcrun altool --list-apps --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID" \
+            --output-format json > "$RUNNER_TEMP/asc-apps.json" || true
+          APPLE_ID=$(python3 - "$RUNNER_TEMP/asc-apps.json" "$STG_BUNDLE_ID" <<'PY'
+          import json, re, sys
+
+          def find_apple_id(node, bundle_id):
+              if isinstance(node, dict):
+                  if bundle_id in [v for v in node.values() if isinstance(v, str)]:
+                      for key, value in node.items():
+                          if re.search(r"apple.?id|adam.?id", key, re.I) and str(value).isdigit():
+                              return str(value)
+                  for value in node.values():
+                      found = find_apple_id(value, bundle_id)
+                      if found:
+                          return found
+              elif isinstance(node, list):
+                  for item in node:
+                      found = find_apple_id(item, bundle_id)
+                      if found:
+                          return found
+              return None
+
+          try:
+              with open(sys.argv[1]) as f:
+                  data = json.load(f)
+          except (OSError, ValueError):
+              sys.exit(0)
+          apple_id = find_apple_id(data, sys.argv[2])
+          if apple_id:
+              print(apple_id)
+          PY
+          )
+          if [ -n "$APPLE_ID" ]; then
+            echo "Resolved Apple ID $APPLE_ID for $STG_BUNDLE_ID"
+            EXTRA_ARGS=(--apple-id "$APPLE_ID")
+          else
+            echo "::warning::Could not resolve numeric Apple ID for $STG_BUNDLE_ID; uploading without --apple-id"
+            EXTRA_ARGS=()
+          fi
           xcrun altool --upload-app --type ios \
             -f packages/audiflow_app/build/ios/ipa/*.ipa \
             --apiKey "$ASC_KEY_ID" \
-            --apiIssuer "$ASC_ISSUER_ID"
+            --apiIssuer "$ASC_ISSUER_ID" \
+            "${EXTRA_ARGS[@]}"
 
       - name: Upload iOS debug symbols to Sentry
         env:
