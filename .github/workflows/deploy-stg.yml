@@ -216,25 +216,35 @@ jobs:
           rm -rf ~/Library/Developer/Xcode/DerivedData
 
       - name: Pre-resolve SwiftPM packages
-        # flutter build runs xcodebuild -showBuildSettings with a short
-        # timeout and kills it mid-resolve, leaving partial binary-artifact
-        # downloads that make the real resolve fail with "already exists in
-        # file system". Resolve everything up front (with retries) so the
-        # build finds a fully populated cache.
+        # SwiftPM kills binary-artifact downloads still in flight after
+        # ~60s, leaving partial state that makes the next resolve fail
+        # with "already exists in file system". Resolve up front with
+        # retries, deleting only the partial artifacts between attempts
+        # so completed downloads accumulate across retries.
         run: |
+          set -o pipefail
           cd packages/audiflow_app
+          # Generates xcconfig and the SwiftPM package; its own resolve
+          # may hit the timeout, which the retry loop below recovers from.
           flutter build ios --config-only --flavor stg -t lib/main_stg.dart \
-            --dart-define-from-file=../../.env.stg
+            --dart-define-from-file=../../.env.stg \
+            || echo "config-only build failed (resolve timeout is recoverable); continuing"
           cd ios
-          for attempt in 1 2 3; do
+          RESOLVE_LOG="$RUNNER_TEMP/spm-resolve.log"
+          for attempt in 1 2 3 4 5; do
             if xcodebuild -resolvePackageDependencies \
-                -workspace Runner.xcworkspace -scheme stg; then
+                -workspace Runner.xcworkspace -scheme stg 2>&1 | tee "$RESOLVE_LOG"; then
               exit 0
             fi
-            echo "Resolve attempt $attempt failed; clearing artifact cache before retry"
-            rm -rf ~/Library/Caches/org.swift.swiftpm/artifacts
+            echo "Resolve attempt $attempt failed; removing partial artifacts before retry"
+            PARTIALS=$(sed -n 's/.*: \(\/[^ ]*\/org\.swift\.swiftpm\/artifacts\/[^ ]*\) already exists in file system.*/\1/p' "$RESOLVE_LOG" | sort -u)
+            if [ -n "$PARTIALS" ]; then
+              echo "$PARTIALS" | xargs rm -rf
+            else
+              rm -rf ~/Library/Caches/org.swift.swiftpm/artifacts
+            fi
           done
-          echo "::error::SwiftPM package resolution failed after 3 attempts"
+          echo "::error::SwiftPM package resolution failed after 5 attempts"
           exit 1
 
       - name: Build IPA
