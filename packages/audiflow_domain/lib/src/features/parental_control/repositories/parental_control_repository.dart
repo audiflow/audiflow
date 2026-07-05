@@ -13,6 +13,11 @@ abstract class ParentalControlRepository {
   /// [ParentalControlSettings.lockoutUntil].
   Future<void> setPin(String pin);
 
+  /// First-time setup: persists [pin] exactly like [setPin] AND enables
+  /// Restricted Mode in the same atomic write, so a newly set PIN can never
+  /// coexist with the mode still off.
+  Future<void> setupPin(String pin);
+
   /// Returns true when [pin] matches the stored hash.
   ///
   /// Returns false immediately — without invoking PBKDF2 — if a lockout window

@@ -129,6 +129,8 @@ class _FakeRepo implements ParentalControlRepository {
   @override
   Future<void> setPin(String pin) async {}
   @override
+  Future<void> setupPin(String pin) async {}
+  @override
   Future<bool> verifyPin(String pin) async => false;
   @override
   Future<void> clearPin() async {}

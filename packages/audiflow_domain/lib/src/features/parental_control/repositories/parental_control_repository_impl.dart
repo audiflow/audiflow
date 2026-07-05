@@ -47,7 +47,18 @@ class ParentalControlRepositoryImpl implements ParentalControlRepository {
       _guarded('getSettings', () => _ds.getSettings());
 
   @override
-  Future<void> setPin(String pin) => _guarded('setPin', () async {
+  Future<void> setPin(String pin) => _guarded('setPin', () => _persistPin(pin));
+
+  @override
+  Future<void> setupPin(String pin) => _guarded('setupPin', () async {
+    await _persistPin(pin, enableRestrictedMode: true);
+    await _safeAnalytics(const ParentalControlEnabled());
+  });
+
+  Future<void> _persistPin(
+    String pin, {
+    bool enableRestrictedMode = false,
+  }) async {
     final salt = _hasher.generateSalt();
     final hashBytes = _hasher.hash(
       pin: pin,
@@ -60,9 +71,12 @@ class ParentalControlRepositoryImpl implements ParentalControlRepository {
       s.pinIterations = ParentalControlPolicy.pbkdf2Iterations;
       s.failedAttempts = 0;
       s.lockoutUntil = null;
+      if (enableRestrictedMode) {
+        s.restrictedModeEnabled = true;
+      }
       return s;
     });
-  });
+  }
 
   @override
   Future<bool> verifyPin(String pin) => _guarded('verifyPin', () async {

@@ -3068,6 +3068,12 @@ abstract class AppLocalizations {
   /// **'Enter a 4-8 digit PIN'**
   String get parentalControlPinSetupSubtitle;
 
+  /// Snackbar shown after first-time PIN setup. Setting a PIN enables Restricted Mode automatically, so this confirms both in one message.
+  ///
+  /// In en, this message translates to:
+  /// **'PIN saved. Restricted Mode is now on.'**
+  String get parentalControlSetupCompleteNotice;
+
   /// Confirm PIN field label
   ///
   /// In en, this message translates to:
@@ -3079,12 +3085,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Change PIN'**
   String get parentalControlPinChange;
-
-  /// Current PIN field label
-  ///
-  /// In en, this message translates to:
-  /// **'Current PIN'**
-  String get parentalControlPinCurrent;
 
   /// New PIN field label
   ///
@@ -3229,12 +3229,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Restricted Mode is on. Open the gate from Settings.'**
   String get parentalControlRestrictedRedirect;
-
-  /// Verify current PIN button label on PIN-change screen.
-  ///
-  /// In en, this message translates to:
-  /// **'Verify'**
-  String get parentalControlVerify;
 
   /// Unlock timeout dropdown option (1 minute).
   ///

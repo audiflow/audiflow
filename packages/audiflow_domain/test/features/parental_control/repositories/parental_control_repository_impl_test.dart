@@ -79,6 +79,21 @@ void main() {
       check(s.lockoutUntil).isNull();
     });
 
+    test('setupPin persists the PIN and enables Restricted Mode', () async {
+      await repo.setupPin('1234');
+      final s = await repo.getSettings();
+      check(s.restrictedModeEnabled).isTrue();
+      check(await repo.verifyPin('1234')).isTrue();
+    });
+
+    test('setPin leaves restrictedModeEnabled untouched', () async {
+      await repo.setupPin('1234');
+      await repo.setRestrictedMode(false);
+      // A later PIN change must not silently re-enable the mode.
+      await repo.setPin('5678');
+      check((await repo.getSettings()).restrictedModeEnabled).isFalse();
+    });
+
     test('setPin rotates salt', () async {
       await repo.setPin('1234');
       final salt1 = (await repo.getSettings()).pinSaltBase64;
@@ -225,6 +240,14 @@ void main() {
         final analytics = FakeAnalyticsService();
         final r = _buildRepo(isar, analytics: analytics);
         await r.setRestrictedMode(true);
+        check(analytics.events).has((e) => e.length, 'length').equals(1);
+        check(analytics.events.first).isA<ParentalControlEnabled>();
+      });
+
+      test('setupPin emits ParentalControlEnabled', () async {
+        final analytics = FakeAnalyticsService();
+        final r = _buildRepo(isar, analytics: analytics);
+        await r.setupPin('1234');
         check(analytics.events).has((e) => e.length, 'length').equals(1);
         check(analytics.events.first).isA<ParentalControlEnabled>();
       });

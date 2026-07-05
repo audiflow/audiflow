@@ -1621,13 +1621,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get parentalControlPinSetupSubtitle => '4〜8桁のPINを入力';
 
   @override
+  String get parentalControlSetupCompleteNotice => 'PINを保存し、制限モードを有効にしました';
+
+  @override
   String get parentalControlPinConfirm => 'PIN確認';
 
   @override
   String get parentalControlPinChange => 'PINを変更';
-
-  @override
-  String get parentalControlPinCurrent => '現在のPIN';
 
   @override
   String get parentalControlPinNew => '新しいPIN';
@@ -1706,9 +1706,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get parentalControlRestrictedRedirect => '制限モードが有効です。設定からゲートを開いてください。';
-
-  @override
-  String get parentalControlVerify => '確認';
 
   @override
   String get parentalControlUnlockTimeout1Min => '1分';

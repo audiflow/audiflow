@@ -44,6 +44,9 @@ class _ThrowingParentalControlRepository implements ParentalControlRepository {
   Future<void> setPin(String pin) async {}
 
   @override
+  Future<void> setupPin(String pin) async {}
+
+  @override
   Future<void> clearPin() async {}
 
   @override

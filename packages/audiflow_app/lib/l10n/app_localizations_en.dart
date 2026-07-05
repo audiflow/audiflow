@@ -1681,13 +1681,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentalControlPinSetupSubtitle => 'Enter a 4-8 digit PIN';
 
   @override
+  String get parentalControlSetupCompleteNotice =>
+      'PIN saved. Restricted Mode is now on.';
+
+  @override
   String get parentalControlPinConfirm => 'Confirm PIN';
 
   @override
   String get parentalControlPinChange => 'Change PIN';
-
-  @override
-  String get parentalControlPinCurrent => 'Current PIN';
 
   @override
   String get parentalControlPinNew => 'New PIN';
@@ -1773,9 +1774,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get parentalControlRestrictedRedirect =>
       'Restricted Mode is on. Open the gate from Settings.';
-
-  @override
-  String get parentalControlVerify => 'Verify';
 
   @override
   String get parentalControlUnlockTimeout1Min => '1 min';
