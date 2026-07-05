@@ -1681,15 +1681,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get parentalControlHideExplicitToggle => '不適切なエピソードを非表示';
 
   @override
-  String get parentalControlBiometricToggle => '生体認証によるロック解除を許可';
-
-  @override
-  String get parentalControlBiometricPrompt => '保護者制限を解除';
-
-  @override
-  String get parentalControlUseBiometric => '生体認証を使う';
-
-  @override
   String get parentalControlUnlockTimeoutLabel => '自動再ロックまでの時間';
 
   @override

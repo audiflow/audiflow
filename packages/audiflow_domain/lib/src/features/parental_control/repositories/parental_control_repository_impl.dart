@@ -138,15 +138,6 @@ class ParentalControlRepositoryImpl implements ParentalControlRepository {
       });
 
   @override
-  Future<void> setBiometricUnlockEnabled(bool enabled) =>
-      _guarded('setBiometricUnlockEnabled', () async {
-        await _ds.updateSettings((s) {
-          s.biometricUnlockEnabled = enabled;
-          return s;
-        });
-      });
-
-  @override
   Future<Duration?> registerFailedAttempt() => _guarded(
     'registerFailedAttempt',
     () async {

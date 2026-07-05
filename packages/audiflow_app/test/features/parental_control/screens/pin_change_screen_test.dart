@@ -69,9 +69,6 @@ class _FakeRepo implements ParentalControlRepository {
   Future<void> setUnlockTimeout(Duration timeout) async {}
 
   @override
-  Future<void> setBiometricUnlockEnabled(bool enabled) async {}
-
-  @override
   Future<Duration?> registerFailedAttempt() async => null;
 
   @override

@@ -33,9 +33,6 @@ abstract class ParentalControlRepository {
   /// Persists how long (as a [Duration]) an unlock session stays valid.
   Future<void> setUnlockTimeout(Duration timeout);
 
-  /// Persists whether biometric authentication is accepted alongside the PIN.
-  Future<void> setBiometricUnlockEnabled(bool enabled);
-
   /// Increments the failed-attempts counter. If the lockout threshold is met
   /// by this call, persists `lockoutUntil` and returns the backoff duration
   /// just applied. Returns null while still below the threshold.
