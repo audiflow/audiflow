@@ -39,6 +39,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Select Xcode 26.4.1
+        # Xcode 26.5 (default since runner image 20260630) has a SwiftPM
+        # regression: binary targets fail to resolve with "already exists
+        # in file system". Pin the last known-good Xcode.
+        run: sudo xcode-select -s /Applications/Xcode_26.4.1.app
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
