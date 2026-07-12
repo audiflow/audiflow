@@ -14,13 +14,16 @@ class ParentalControlController extends _$ParentalControlController {
   Future<void> setPin(String pin) =>
       ref.read(parentalControlRepositoryProvider).setPin(pin);
 
+  /// First-time setup: persists the PIN, enables Restricted Mode in the same
+  /// atomic write, and locks the gate so the restriction applies immediately.
+  Future<void> setupPin(String pin) async {
+    await ref.read(parentalControlRepositoryProvider).setupPin(pin);
+    ref.read(parentalControlGateProvider.notifier).lock();
+  }
+
   Future<void> setRestrictedMode(bool enabled) =>
       ref.read(parentalControlRepositoryProvider).setRestrictedMode(enabled);
 
   Future<void> setUnlockTimeout(Duration timeout) =>
       ref.read(parentalControlRepositoryProvider).setUnlockTimeout(timeout);
-
-  Future<void> setBiometricUnlockEnabled(bool enabled) => ref
-      .read(parentalControlRepositoryProvider)
-      .setBiometricUnlockEnabled(enabled);
 }

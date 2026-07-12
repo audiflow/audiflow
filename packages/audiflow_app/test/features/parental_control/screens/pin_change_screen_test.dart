@@ -37,18 +37,20 @@ Widget _wrap(Widget child, {List<dynamic> overrides = const []}) {
 // ---------------------------------------------------------------------------
 
 class _FakeRepo implements ParentalControlRepository {
-  _FakeRepo({required this.correctPin});
-
-  final String correctPin;
   final _setPinCalls = <String>[];
 
   List<String> get setPinCalls => List.unmodifiable(_setPinCalls);
 
   @override
-  Future<bool> verifyPin(String pin) async => pin == correctPin;
+  Future<bool> verifyPin(String pin) async => false;
 
   @override
   Future<void> setPin(String pin) async => _setPinCalls.add(pin);
+
+  @override
+  Future<void> setupPin(String pin) async {
+    throw StateError('PIN change must never call setupPin');
+  }
 
   @override
   Future<void> clearPin() async {}
@@ -65,9 +67,6 @@ class _FakeRepo implements ParentalControlRepository {
 
   @override
   Future<void> setUnlockTimeout(Duration timeout) async {}
-
-  @override
-  Future<void> setBiometricUnlockEnabled(bool enabled) async {}
 
   @override
   Future<Duration?> registerFailedAttempt() async => null;
@@ -94,10 +93,10 @@ class _FakeRepo implements ParentalControlRepository {
 
 void main() {
   group('PinChangeScreen', () {
-    testWidgets('new-PIN fields hidden until current PIN verified', (
+    testWidgets('shows new-PIN fields directly, no current-PIN step', (
       tester,
     ) async {
-      final fakeRepo = _FakeRepo(correctPin: '1234');
+      final fakeRepo = _FakeRepo();
       await tester.pumpWidget(
         _wrap(
           const PinChangeScreen(),
@@ -108,14 +107,15 @@ void main() {
       );
       await tester.pump();
 
-      // Only the current-PIN field is visible; new-PIN fields are hidden.
-      check(find.byType(TextField).evaluate().length).equals(1);
+      // New + confirm fields only; no current-PIN field or Verify button.
+      check(find.byType(TextField).evaluate().length).equals(2);
+      check(find.widgetWithText(ElevatedButton, 'Verify').evaluate()).isEmpty();
     });
 
-    testWidgets('wrong current PIN shows error, new-PIN fields stay hidden', (
+    testWidgets('Save disabled until new PINs match with 4-8 digits', (
       tester,
     ) async {
-      final fakeRepo = _FakeRepo(correctPin: '1234');
+      final fakeRepo = _FakeRepo();
       await tester.pumpWidget(
         _wrap(
           const PinChangeScreen(),
@@ -126,80 +126,22 @@ void main() {
       );
       await tester.pump();
 
-      await tester.enterText(find.byType(TextField).first, '9999');
-      await tester.pump();
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Verify'));
-      await tester.pumpAndSettle();
+      final save = find.widgetWithText(ElevatedButton, 'Save');
+      check(tester.widget<ElevatedButton>(save).onPressed).isNull();
 
-      // Error visible, still only one text field.
-      check(find.byType(TextField).evaluate().length).equals(1);
-      final field = tester.widget<TextField>(find.byType(TextField).first);
-      check(field.decoration!.errorText).isNotNull();
-    });
-
-    testWidgets('correct current PIN reveals new-PIN fields', (tester) async {
-      final fakeRepo = _FakeRepo(correctPin: '1234');
-      await tester.pumpWidget(
-        _wrap(
-          const PinChangeScreen(),
-          overrides: [
-            parentalControlRepositoryProvider.overrideWithValue(fakeRepo),
-          ],
-        ),
-      );
-      await tester.pump();
-
-      await tester.enterText(find.byType(TextField).first, '1234');
-      await tester.pump();
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Verify'));
-      await tester.pumpAndSettle();
-
-      // Three fields now visible: current (disabled) + new + confirm.
-      check(find.byType(TextField).evaluate().length).equals(3);
-    });
-
-    testWidgets('matching 4-8 digit new PINs enable Save button', (
-      tester,
-    ) async {
-      final fakeRepo = _FakeRepo(correctPin: '1234');
-      await tester.pumpWidget(
-        _wrap(
-          const PinChangeScreen(),
-          overrides: [
-            parentalControlRepositoryProvider.overrideWithValue(fakeRepo),
-          ],
-        ),
-      );
-      await tester.pump();
-
-      // Verify current PIN.
-      await tester.enterText(find.byType(TextField).first, '1234');
-      await tester.pump();
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Verify'));
-      await tester.pumpAndSettle();
-
-      // Save should be disabled before entering new PINs.
-      check(
-        tester
-            .widget<ElevatedButton>(find.widgetWithText(ElevatedButton, 'Save'))
-            .onPressed,
-      ).isNull();
-
-      // Enter matching new PINs.
       final fields = find.byType(TextField);
-      await tester.enterText(fields.at(1), '5678');
-      await tester.enterText(fields.at(2), '5678');
+      await tester.enterText(fields.at(0), '5678');
+      await tester.enterText(fields.at(1), '9999');
       await tester.pump();
+      check(tester.widget<ElevatedButton>(save).onPressed).isNull();
 
-      check(
-        tester
-            .widget<ElevatedButton>(find.widgetWithText(ElevatedButton, 'Save'))
-            .onPressed,
-      ).isNotNull();
+      await tester.enterText(fields.at(1), '5678');
+      await tester.pump();
+      check(tester.widget<ElevatedButton>(save).onPressed).isNotNull();
     });
 
     testWidgets('Save calls setPin and pops', (tester) async {
-      final fakeRepo = _FakeRepo(correctPin: '1234');
+      final fakeRepo = _FakeRepo();
       await tester.pumpWidget(
         _wrap(
           const PinChangeScreen(),
@@ -210,16 +152,9 @@ void main() {
       );
       await tester.pump();
 
-      // Verify current PIN.
-      await tester.enterText(find.byType(TextField).first, '1234');
-      await tester.pump();
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Verify'));
-      await tester.pumpAndSettle();
-
-      // Enter matching new PINs.
       final fields = find.byType(TextField);
+      await tester.enterText(fields.at(0), '8765');
       await tester.enterText(fields.at(1), '8765');
-      await tester.enterText(fields.at(2), '8765');
       await tester.pump();
 
       await tester.tap(find.widgetWithText(ElevatedButton, 'Save'));

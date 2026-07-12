@@ -50,8 +50,6 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>NSFaceIDUsageDescription</key>
-	<string>Unlock parental control with Face ID</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Microphone access for voice commands</string>
 	<key>NSPhotoLibraryUsageDescription</key>

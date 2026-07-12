@@ -40,8 +40,13 @@ class _PinSetupScreenState extends ConsumerState<PinSetupScreen> {
     try {
       await ref
           .read(parentalControlControllerProvider.notifier)
-          .setPin(_pin1.text);
+          .setupPin(_pin1.text);
       if (!mounted) return;
+      // Root messenger survives the pop, so the notice stays visible on the
+      // settings screen underneath.
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.parentalControlSetupCompleteNotice)),
+      );
       context.pop();
     } catch (e, st) {
       if (!mounted) return;

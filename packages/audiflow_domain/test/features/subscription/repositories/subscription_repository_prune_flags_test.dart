@@ -44,10 +44,10 @@ class _ThrowingParentalControlRepository implements ParentalControlRepository {
   Future<void> setPin(String pin) async {}
 
   @override
-  Future<void> clearPin() async {}
+  Future<void> setupPin(String pin) async {}
 
   @override
-  Future<void> setBiometricUnlockEnabled(bool enabled) async {}
+  Future<void> clearPin() async {}
 
   @override
   Future<Duration?> registerFailedAttempt() async => null;

@@ -18,43 +18,38 @@ const ParentalControlSettingsSchema = CollectionSchema(
   name: r'ParentalControlSettings',
   id: -6262205566896115046,
   properties: {
-    r'biometricUnlockEnabled': PropertySchema(
-      id: 0,
-      name: r'biometricUnlockEnabled',
-      type: IsarType.bool,
-    ),
     r'failedAttempts': PropertySchema(
-      id: 1,
+      id: 0,
       name: r'failedAttempts',
       type: IsarType.long,
     ),
     r'lockoutUntil': PropertySchema(
-      id: 2,
+      id: 1,
       name: r'lockoutUntil',
       type: IsarType.dateTime,
     ),
     r'pinHashBase64': PropertySchema(
-      id: 3,
+      id: 2,
       name: r'pinHashBase64',
       type: IsarType.string,
     ),
     r'pinIterations': PropertySchema(
-      id: 4,
+      id: 3,
       name: r'pinIterations',
       type: IsarType.long,
     ),
     r'pinSaltBase64': PropertySchema(
-      id: 5,
+      id: 4,
       name: r'pinSaltBase64',
       type: IsarType.string,
     ),
     r'restrictedModeEnabled': PropertySchema(
-      id: 6,
+      id: 5,
       name: r'restrictedModeEnabled',
       type: IsarType.bool,
     ),
     r'unlockTimeoutMs': PropertySchema(
-      id: 7,
+      id: 6,
       name: r'unlockTimeoutMs',
       type: IsarType.long,
     ),
@@ -102,14 +97,13 @@ void _parentalControlSettingsSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeBool(offsets[0], object.biometricUnlockEnabled);
-  writer.writeLong(offsets[1], object.failedAttempts);
-  writer.writeDateTime(offsets[2], object.lockoutUntil);
-  writer.writeString(offsets[3], object.pinHashBase64);
-  writer.writeLong(offsets[4], object.pinIterations);
-  writer.writeString(offsets[5], object.pinSaltBase64);
-  writer.writeBool(offsets[6], object.restrictedModeEnabled);
-  writer.writeLong(offsets[7], object.unlockTimeoutMs);
+  writer.writeLong(offsets[0], object.failedAttempts);
+  writer.writeDateTime(offsets[1], object.lockoutUntil);
+  writer.writeString(offsets[2], object.pinHashBase64);
+  writer.writeLong(offsets[3], object.pinIterations);
+  writer.writeString(offsets[4], object.pinSaltBase64);
+  writer.writeBool(offsets[5], object.restrictedModeEnabled);
+  writer.writeLong(offsets[6], object.unlockTimeoutMs);
 }
 
 ParentalControlSettings _parentalControlSettingsDeserialize(
@@ -119,15 +113,14 @@ ParentalControlSettings _parentalControlSettingsDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = ParentalControlSettings();
-  object.biometricUnlockEnabled = reader.readBool(offsets[0]);
-  object.failedAttempts = reader.readLong(offsets[1]);
+  object.failedAttempts = reader.readLong(offsets[0]);
   object.id = id;
-  object.lockoutUntil = reader.readDateTimeOrNull(offsets[2]);
-  object.pinHashBase64 = reader.readStringOrNull(offsets[3]);
-  object.pinIterations = reader.readLong(offsets[4]);
-  object.pinSaltBase64 = reader.readStringOrNull(offsets[5]);
-  object.restrictedModeEnabled = reader.readBool(offsets[6]);
-  object.unlockTimeoutMs = reader.readLong(offsets[7]);
+  object.lockoutUntil = reader.readDateTimeOrNull(offsets[1]);
+  object.pinHashBase64 = reader.readStringOrNull(offsets[2]);
+  object.pinIterations = reader.readLong(offsets[3]);
+  object.pinSaltBase64 = reader.readStringOrNull(offsets[4]);
+  object.restrictedModeEnabled = reader.readBool(offsets[5]);
+  object.unlockTimeoutMs = reader.readLong(offsets[6]);
   return object;
 }
 
@@ -139,20 +132,18 @@ P _parentalControlSettingsDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readBool(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 1:
-      return (reader.readLong(offset)) as P;
-    case 2:
       return (reader.readDateTimeOrNull(offset)) as P;
+    case 2:
+      return (reader.readStringOrNull(offset)) as P;
     case 3:
-      return (reader.readStringOrNull(offset)) as P;
-    case 4:
       return (reader.readLong(offset)) as P;
-    case 5:
+    case 4:
       return (reader.readStringOrNull(offset)) as P;
-    case 6:
+    case 5:
       return (reader.readBool(offset)) as P;
-    case 7:
+    case 6:
       return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -289,22 +280,6 @@ extension ParentalControlSettingsQueryFilter
           ParentalControlSettings,
           QFilterCondition
         > {
-  QueryBuilder<
-    ParentalControlSettings,
-    ParentalControlSettings,
-    QAfterFilterCondition
-  >
-  biometricUnlockEnabledEqualTo(bool value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'biometricUnlockEnabled',
-          value: value,
-        ),
-      );
-    });
-  }
-
   QueryBuilder<
     ParentalControlSettings,
     ParentalControlSettings,
@@ -1136,20 +1111,6 @@ extension ParentalControlSettingsQueryLinks
 extension ParentalControlSettingsQuerySortBy
     on QueryBuilder<ParentalControlSettings, ParentalControlSettings, QSortBy> {
   QueryBuilder<ParentalControlSettings, ParentalControlSettings, QAfterSortBy>
-  sortByBiometricUnlockEnabled() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'biometricUnlockEnabled', Sort.asc);
-    });
-  }
-
-  QueryBuilder<ParentalControlSettings, ParentalControlSettings, QAfterSortBy>
-  sortByBiometricUnlockEnabledDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'biometricUnlockEnabled', Sort.desc);
-    });
-  }
-
-  QueryBuilder<ParentalControlSettings, ParentalControlSettings, QAfterSortBy>
   sortByFailedAttempts() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'failedAttempts', Sort.asc);
@@ -1255,20 +1216,6 @@ extension ParentalControlSettingsQuerySortThenBy
           ParentalControlSettings,
           QSortThenBy
         > {
-  QueryBuilder<ParentalControlSettings, ParentalControlSettings, QAfterSortBy>
-  thenByBiometricUnlockEnabled() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'biometricUnlockEnabled', Sort.asc);
-    });
-  }
-
-  QueryBuilder<ParentalControlSettings, ParentalControlSettings, QAfterSortBy>
-  thenByBiometricUnlockEnabledDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'biometricUnlockEnabled', Sort.desc);
-    });
-  }
-
   QueryBuilder<ParentalControlSettings, ParentalControlSettings, QAfterSortBy>
   thenByFailedAttempts() {
     return QueryBuilder.apply(this, (query) {
@@ -1390,13 +1337,6 @@ extension ParentalControlSettingsQueryWhereDistinct
           QDistinct
         > {
   QueryBuilder<ParentalControlSettings, ParentalControlSettings, QDistinct>
-  distinctByBiometricUnlockEnabled() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'biometricUnlockEnabled');
-    });
-  }
-
-  QueryBuilder<ParentalControlSettings, ParentalControlSettings, QDistinct>
   distinctByFailedAttempts() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'failedAttempts');
@@ -1462,13 +1402,6 @@ extension ParentalControlSettingsQueryProperty
   QueryBuilder<ParentalControlSettings, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
-    });
-  }
-
-  QueryBuilder<ParentalControlSettings, bool, QQueryOperations>
-  biometricUnlockEnabledProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'biometricUnlockEnabled');
     });
   }
 

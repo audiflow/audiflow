@@ -87,10 +87,10 @@ class _FakeRepo implements ParentalControlRepository {
   Future<void> setPin(String pin) async {}
 
   @override
-  Future<void> clearPin() async {}
+  Future<void> setupPin(String pin) async {}
 
   @override
-  Future<void> setBiometricUnlockEnabled(bool enabled) async {}
+  Future<void> clearPin() async {}
 
   @override
   Future<Duration?> registerFailedAttempt() async => null;
@@ -349,65 +349,5 @@ void main() {
         find.textContaining('unavailable', findRichText: true).evaluate(),
       ).isNotEmpty();
     });
-
-    testWidgets('biometric toggle hidden when platform unsupported', (
-      tester,
-    ) async {
-      final repo = _FakeRepo(settings: _settingsWithPin());
-      final guard = _FakeGateGuard(allows: true);
-      await tester.pumpWidget(
-        _wrap(
-          const ParentalControlSettingsScreen(),
-          overrides: [
-            ..._overrides(repo: repo, guard: guard),
-            biometricAuthenticatorProvider.overrideWithValue(
-              _FakeBiometricAuthenticator(available: false),
-            ),
-          ],
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      // Only the restricted-mode SwitchListTile renders; biometric is hidden.
-      check(
-        find.byType(SwitchListTile).evaluate(),
-      ).has((e) => e.length, 'count').equals(1);
-    });
-
-    testWidgets('biometric toggle visible when platform supports it', (
-      tester,
-    ) async {
-      final repo = _FakeRepo(settings: _settingsWithPin());
-      final guard = _FakeGateGuard(allows: true);
-      await tester.pumpWidget(
-        _wrap(
-          const ParentalControlSettingsScreen(),
-          overrides: [
-            ..._overrides(repo: repo, guard: guard),
-            biometricAuthenticatorProvider.overrideWithValue(
-              _FakeBiometricAuthenticator(available: true),
-            ),
-          ],
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      // Restricted-mode + biometric toggles both render.
-      check(
-        find.byType(SwitchListTile).evaluate(),
-      ).has((e) => e.length, 'count').equals(2);
-    });
   });
-}
-
-class _FakeBiometricAuthenticator implements BiometricAuthenticator {
-  _FakeBiometricAuthenticator({required this.available});
-
-  final bool available;
-
-  @override
-  Future<bool> isAvailable() async => available;
-
-  @override
-  Future<bool> authenticate({required String localizedReason}) async => true;
 }

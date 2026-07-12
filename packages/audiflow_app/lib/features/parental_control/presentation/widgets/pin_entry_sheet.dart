@@ -19,70 +19,11 @@ class _PinEntrySheetState extends ConsumerState<PinEntrySheet> {
   final _controller = TextEditingController();
   String? _errorMessage;
   bool _submitting = false;
-  bool _biometricAvailable = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _checkBiometricAvailability();
-  }
 
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
-  }
-
-  Future<void> _checkBiometricAvailability() async {
-    // Only probe when the setting is on — avoids a useless platform call on
-    // every PIN sheet for users who never opted in to biometric.
-    try {
-      final settings = await ref
-          .read(parentalControlRepositoryProvider)
-          .getSettings();
-      if (!settings.biometricUnlockEnabled) return;
-      final available = await ref
-          .read(biometricAuthenticatorProvider)
-          .isAvailable();
-      if (!mounted) return;
-      setState(() => _biometricAvailable = available);
-    } catch (e, st) {
-      ref
-          .read(namedLoggerProvider('ParentalControl'))
-          .w(
-            'PinEntrySheet biometric availability check failed',
-            error: e,
-            stackTrace: st,
-          );
-    }
-  }
-
-  Future<void> _submitBiometric() async {
-    if (_submitting) return;
-    setState(() => _submitting = true);
-    final l10n = AppLocalizations.of(context);
-    final notifier = ref.read(parentalControlGateProvider.notifier);
-    try {
-      final ok = await notifier.tryUnlockBiometric(
-        localizedReason: l10n.parentalControlBiometricPrompt,
-        reason: gateReasonToUnlock(widget.reason),
-      );
-      if (!mounted) return;
-      if (ok) {
-        Navigator.of(context).pop(true);
-        return;
-      }
-      setState(() => _submitting = false);
-    } catch (e, st) {
-      ref
-          .read(namedLoggerProvider('ParentalControl'))
-          .e('PinEntrySheet biometric failed', error: e, stackTrace: st);
-      if (!mounted) return;
-      setState(() {
-        _submitting = false;
-        _errorMessage = l10n.parentalControlPinSheetError;
-      });
-    }
   }
 
   String _reasonHeadline(AppLocalizations l10n) {
@@ -199,14 +140,6 @@ class _PinEntrySheetState extends ConsumerState<PinEntrySheet> {
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              if (_biometricAvailable) ...[
-                TextButton.icon(
-                  onPressed: _submitting ? null : _submitBiometric,
-                  icon: const Icon(Icons.fingerprint),
-                  label: Text(l10n.parentalControlUseBiometric),
-                ),
-                const Spacer(),
-              ],
               TextButton(
                 // Cancel always enabled so users are never trapped.
                 onPressed: () => Navigator.of(context).pop(false),

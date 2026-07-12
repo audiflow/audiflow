@@ -9,14 +9,6 @@ import '../../domain/gate_guard.dart';
 import '../../providers/gate_guard_provider.dart';
 import '../controllers/parental_control_controller.dart';
 
-/// Probes platform biometric support exactly once per Settings build.
-///
-/// `autoDispose` so leaving Settings drops the cached value; next visit
-/// re-checks in case the user enrolled biometric in the OS meanwhile.
-final _biometricAvailableProvider = FutureProvider.autoDispose<bool>((ref) {
-  return ref.read(biometricAuthenticatorProvider).isAvailable();
-});
-
 /// Settings screen for parental control configuration.
 ///
 /// Shows PIN setup if no PIN is set; otherwise shows restricted-mode toggle,
@@ -95,45 +87,6 @@ class _SettingsBody extends ConsumerWidget {
                 SnackBar(content: Text(l10n.parentalControlSettingsSaveError)),
               );
             }
-          },
-        ),
-        Consumer(
-          builder: (context, ref, _) {
-            final available = ref.watch(_biometricAvailableProvider).value;
-            // Hide while probing or when the platform reports no biometric —
-            // showing a non-functional toggle would confuse the user.
-            if (available != true) return const SizedBox.shrink();
-            return SwitchListTile(
-              title: Text(l10n.parentalControlBiometricToggle),
-              value: settings.biometricUnlockEnabled,
-              onChanged: (v) async {
-                final guard = ref.read(gateGuardProvider);
-                final ok = await guard.requireUnlock(
-                  context,
-                  reason: GateReason.parentalSettings,
-                );
-                if (!ok) return;
-                try {
-                  await ref
-                      .read(parentalControlControllerProvider.notifier)
-                      .setBiometricUnlockEnabled(v);
-                } catch (e, st) {
-                  ref
-                      .read(namedLoggerProvider('ParentalControl'))
-                      .e(
-                        'setBiometricUnlockEnabled failed',
-                        error: e,
-                        stackTrace: st,
-                      );
-                  if (!context.mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.parentalControlSettingsSaveError),
-                    ),
-                  );
-                }
-              },
-            );
           },
         ),
         ListTile(

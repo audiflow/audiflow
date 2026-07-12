@@ -42,11 +42,16 @@ Widget _wrap(Widget child, {List<dynamic> overrides = const []}) {
 
 class _FakeRepo implements ParentalControlRepository {
   final _setPinCalls = <String>[];
+  final _setupPinCalls = <String>[];
 
   List<String> get setPinCalls => List.unmodifiable(_setPinCalls);
+  List<String> get setupPinCalls => List.unmodifiable(_setupPinCalls);
 
   @override
   Future<void> setPin(String pin) async => _setPinCalls.add(pin);
+
+  @override
+  Future<void> setupPin(String pin) async => _setupPinCalls.add(pin);
 
   @override
   Future<bool> verifyPin(String pin) async => false;
@@ -66,9 +71,6 @@ class _FakeRepo implements ParentalControlRepository {
 
   @override
   Future<void> setUnlockTimeout(Duration timeout) async {}
-
-  @override
-  Future<void> setBiometricUnlockEnabled(bool enabled) async {}
 
   @override
   Future<Duration?> registerFailedAttempt() async => null;
@@ -151,29 +153,34 @@ void main() {
       check(tester.widget<ElevatedButton>(submit).onPressed).isNotNull();
     });
 
-    testWidgets('Tapping Submit calls setPin on the repository', (
-      tester,
-    ) async {
-      final fakeRepo = _FakeRepo();
-      await tester.pumpWidget(
-        _wrap(
-          const PinSetupScreen(),
-          overrides: [
-            parentalControlRepositoryProvider.overrideWithValue(fakeRepo),
-          ],
-        ),
-      );
-      await tester.pump();
+    testWidgets(
+      'Tapping Submit calls setupPin (not setPin) and shows the notice',
+      (tester) async {
+        final fakeRepo = _FakeRepo();
+        await tester.pumpWidget(
+          _wrap(
+            const PinSetupScreen(),
+            overrides: [
+              parentalControlRepositoryProvider.overrideWithValue(fakeRepo),
+            ],
+          ),
+        );
+        await tester.pump();
 
-      final fields = find.byType(TextField);
-      await tester.enterText(fields.at(0), '4321');
-      await tester.enterText(fields.at(1), '4321');
-      await tester.pump();
+        final fields = find.byType(TextField);
+        await tester.enterText(fields.at(0), '4321');
+        await tester.enterText(fields.at(1), '4321');
+        await tester.pump();
 
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Save'));
-      await tester.pumpAndSettle();
+        await tester.tap(find.widgetWithText(ElevatedButton, 'Save'));
+        await tester.pumpAndSettle();
 
-      check(fakeRepo.setPinCalls).deepEquals(['4321']);
-    });
+        check(fakeRepo.setupPinCalls).deepEquals(['4321']);
+        check(fakeRepo.setPinCalls).isEmpty();
+        check(
+          find.text('PIN saved. Restricted Mode is now on.').evaluate(),
+        ).isNotEmpty();
+      },
+    );
   });
 }
