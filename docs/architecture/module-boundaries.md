@@ -16,7 +16,6 @@ refs:
 audiflow_app -> audiflow_ui -> audiflow_domain -> audiflow_podcast -> audiflow_core
                                     |
                                     +-> audiflow_search -> audiflow_core
-                                    +-> audiflow_ai     -> audiflow_core
                                     +-> audiflow_core
 
 audiflow_cli -> audiflow_domain, audiflow_podcast
@@ -50,7 +49,7 @@ audiflow_cli -> audiflow_domain, audiflow_podcast
 ### Module: audiflow_domain
 
 #### Responsibilities
-- Feature modules: feed, player, queue, download, subscription, settings, voice, transcript, station
+- Feature modules: feed, player, queue, download, subscription, settings, transcript, station (no voice module — voice commands were removed and are not implemented)
 - Repository interfaces and implementations (co-located)
 - Datasources: local (Isar) and remote (HTTP via Dio)
 - Isar collection definitions (serve as domain entities)
@@ -70,7 +69,7 @@ audiflow_cli -> audiflow_domain, audiflow_podcast
 - Core utilities, constants, error types (delegated to audiflow_core)
 
 #### Depends on
-- audiflow_podcast, audiflow_search, audiflow_ai, audiflow_core
+- audiflow_podcast, audiflow_search, audiflow_core
 
 #### Used by
 - audiflow_app, audiflow_ui, audiflow_cli
@@ -144,19 +143,20 @@ audiflow_cli -> audiflow_domain, audiflow_podcast
 
 ---
 
-### Module: audiflow_ai
+### Module: audiflow_ai (empty placeholder)
 
 #### Responsibilities
-- On-device AI capabilities (native plugin for iOS/Android)
+- None. The on-device AI plugin was removed together with voice commands; the
+  directory holds no `pubspec.yaml` and no source, and is not a workspace member.
 
 #### Non-responsibilities
-- App UI, business logic, data access
+- Everything. Do not add dependencies on this directory or cite it as a module owner.
 
 #### Depends on
-- audiflow_core
+- Nothing
 
 #### Used by
-- audiflow_domain
+- Nothing
 
 ---
 

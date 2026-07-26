@@ -1,9 +1,9 @@
 ---
-refs:
+type: index
+title: "Doc Map (all kinds)"
+kusara:
   id: index:map
-  kind: index
   generated: true
-  title: "Doc Map (all kinds)"
 ---
 
 # Doc Map
@@ -21,7 +21,7 @@ All docs across kinds. For per-kind indexes see the per-kind INDEX files; for AI
 | `arch:state-flow` | State flow |  | [docs/architecture/state-flow.md](architecture/state-flow.md) |
 | `arch:system-overview` | System overview |  | [docs/architecture/system-overview.md](architecture/system-overview.md) |
 
-## fr (17)
+## fr (18)
 
 | ID | Title | Spec | Path |
 |---|---|---|---|
@@ -34,7 +34,7 @@ All docs across kinds. For per-kind indexes see the per-kind INDEX files; for AI
 | `fr:07-stations` | Stations |  | [docs/fr/07-stations.md](fr/07-stations.md) |
 | `fr:08-transcript-chapters` | Transcript and chapters |  | [docs/fr/08-transcript-chapters.md](fr/08-transcript-chapters.md) |
 | `fr:09-sleep-timer` | Sleep timer |  | [docs/fr/09-sleep-timer.md](fr/09-sleep-timer.md) |
-| `fr:10-voice-commands` | Voice commands |  | [docs/fr/10-voice-commands.md](fr/10-voice-commands.md) |
+| `fr:10-voice-commands` | Voice commands (NOT IMPLEMENTED — removed) |  | [docs/fr/10-voice-commands.md](fr/10-voice-commands.md) |
 | `fr:11-play-order` | Play order |  | [docs/fr/11-play-order.md](fr/11-play-order.md) |
 | `fr:12-background-refresh` | Background refresh and notifications |  | [docs/fr/12-background-refresh.md](fr/12-background-refresh.md) |
 | `fr:13-library` | Library |  | [docs/fr/13-library.md](fr/13-library.md) |
@@ -42,6 +42,7 @@ All docs across kinds. For per-kind indexes see the per-kind INDEX files; for AI
 | `fr:15-links-and-sharing` | Universal links and sharing |  | [docs/fr/15-links-and-sharing.md](fr/15-links-and-sharing.md) |
 | `fr:16-app-lifecycle` | App lifecycle, updates and observability |  | [docs/fr/16-app-lifecycle.md](fr/16-app-lifecycle.md) |
 | `fr:17-podcast-detail` | Podcast detail |  | [docs/fr/17-podcast-detail.md](fr/17-podcast-detail.md) |
+| `fr:18-parental-control` | Parental control |  | [docs/fr/18-parental-control.md](fr/18-parental-control.md) |
 
 ## integration (1)
 

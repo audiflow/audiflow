@@ -101,7 +101,7 @@ Handled by `AudioInterruptionHandler` (pure-logic, callback-based for testabilit
 
 All the places that initiate a pause, resume, or new play, grouped by the
 state the iOS audio session is in when the call arrives. Only the
-interruption paths (rows 9–10) operate while iOS has deactivated the
+interruption paths (rows 8–9) operate while iOS has deactivated the
 session, which is why fixes for the interruption bug must be scoped to
 `AudiflowAudioHandler`'s interruption wiring and must not be pushed into
 `AudioPlayerController` (that would regress the common paths).
@@ -114,10 +114,11 @@ session, which is why fixes for the interruption bug must be scoped to
 | 4 | Queue tap | `queue_controller.dart` | `controller.play` | active | No |
 | 5 | Lock screen / Control Center | `audiflow_audio_handler.dart` `audio_service` overrides | `_controller.resume` / `pause` | active | No |
 | 6 | Headphone unplug (`becomingNoisy`) | `audiflow_audio_handler.dart` | `pause()` | active | No |
-| 7 | Voice command | `voice_command_executor.dart`, `voice_command_orchestrator.dart` | `_audioController.pause` / `resume` | active | No |
-| 8 | Sleep-timer fade | `sleep_timer_controller.dart` | `player.fadeOutAndPause` → `_player.pause` (bypasses controller history-save) | active | No |
-| 9 | Interruption begin (call / notification / Siri) | `audio_interruption_handler.dart` via wired `pause:` callback | `_controller.pause` | **deactivated by iOS** | **Yes — state-desync** |
-| 10 | Interruption end | `audio_interruption_handler.dart` via wired `resume:` callback → `_reactivateAndResume` | `session.setActive(true)` + `play()` → `_controller.resume` | **reactivation + re-prime needed** | **Yes — silent-resume** |
+| 7 | Sleep-timer fade | `sleep_timer_controller.dart` | `player.fadeOutAndPause` → `_player.pause` (bypasses controller history-save) | active | No |
+| 8 | Interruption begin (call / notification / Siri) | `audio_interruption_handler.dart` via wired `pause:` callback | `_controller.pause` | **deactivated by iOS** | **Yes — state-desync** |
+| 9 | Interruption end | `audio_interruption_handler.dart` via wired `resume:` callback → `_reactivateAndResume` | `session.setActive(true)` + `play()` → `_controller.resume` | **reactivation + re-prime needed** | **Yes — silent-resume** |
+
+(A former "Voice command" trigger row was removed: voice commands are not implemented — the feature was dropped from the codebase and `voice_command_executor.dart` / `voice_command_orchestrator.dart` no longer exist.)
 
 ### Known interruption-path pitfalls (iOS)
 

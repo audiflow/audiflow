@@ -16,7 +16,7 @@ refs:
 
 ## Purpose
 
-Audiflow has many tunable behaviors — playback speed, skip durations, download policy, feed sync cadence, analytics consent, voice commands, play order — and each of these needs a stable, discoverable home. The settings feature exists to give users a single predictable place to find and change every preference, and to give the rest of the app a single persistence-backed source of truth for those preferences so that services no longer rely on hard-coded values.
+Audiflow has many tunable behaviors — playback speed, skip durations, download policy, feed sync cadence, analytics consent, play order — and each of these needs a stable, discoverable home. The settings feature exists to give users a single predictable place to find and change every preference, and to give the rest of the app a single persistence-backed source of truth for those preferences so that services no longer rely on hard-coded values.
 
 It also serves a secondary audience: audiflow contributors and podcast creators. A developer section surfaces the smart playlist (preset) ecosystem — which presets exist, where they live in the GitHub repo, and how a given podcast's RSS feed maps to a preset — so that anyone wanting to understand or contribute to that ecosystem can do so from inside the app.
 
@@ -41,7 +41,7 @@ It also serves a secondary audience: audiflow contributors and podcast creators.
 
 ## Boundaries
 
-- This FR covers the settings surface itself plus the general and developer preferences. Feature-specific preference sections are owned by their own FRs and are only cross-referenced here: voice command settings belong to FR 10 (voice commands), play-order and audio-interruption preferences belong to FR 11 (play order), download and queue policy semantics belong to FR 05, and background feed refresh behavior belongs to FR 12.
+- This FR covers the settings surface itself plus the general and developer preferences. Feature-specific preference sections are owned by their own FRs and are only cross-referenced here: play-order preferences belong to FR 11 (play order), audio-interruption preferences belong to FR 04 (audio playback), download and queue policy semantics belong to FR 05, and background feed refresh behavior belongs to FR 12.
 - Settings does not implement the behaviors it configures — it only stores and exposes the values; the consuming services apply them.
 - Settings does not define the smart playlist schema or host preset config data; the Developer screen only reads and links to that externally-owned ecosystem.
 - OPML import/export, cache clearing, and data reset delegate the actual work to the relevant domain repositories; the Storage screen is the entry point, not the implementation.
@@ -50,4 +50,4 @@ It also serves a secondary audience: audiflow contributors and podcast creators.
 
 - **Source docs**: `docs/plans/2026-02-14-settings-page.md`, `docs/plans/2026-02-14-settings-page-design.md`, `docs/superpowers/plans/2026-04-07-developer-preferences.md`, `docs/superpowers/specs/2026-04-07-developer-preferences-design.md`
 - **Source code**: `packages/audiflow_app/lib/features/settings/`, `packages/audiflow_domain/lib/src/features/settings/`
-- **Related FR**: `10-voice-commands.md` (voice command preferences hosted within this settings surface)
+- **Related FR**: `10-voice-commands.md` (historical spec only — voice commands were removed and are not implemented; no voice settings exist in this surface)

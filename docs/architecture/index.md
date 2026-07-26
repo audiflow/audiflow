@@ -1,10 +1,10 @@
 ---
-refs:
+type: index
+title: "architecture Index"
+kusara:
   id: index:architecture
-  kind: index
   indexes_kind: architecture
   generated: true
-  title: "architecture Index"
 ---
 
 # architecture Index

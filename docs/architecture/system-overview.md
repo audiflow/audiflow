@@ -13,13 +13,13 @@ refs:
 
 ## Goal
 
-Provide a reliable, offline-first podcast player for iOS and Android with smart playlist support, station management, transcript display, background feed refresh, and voice commands. The system prioritizes fast startup, low memory usage during RSS parsing, and seamless background audio playback.
+Provide a reliable, offline-first podcast player for iOS and Android with smart playlist support, station management, transcript display, and background feed refresh. (Voice commands are **not** part of the system — the feature was removed; see `docs/fr/10-voice-commands.md`.) The system prioritizes fast startup, low memory usage during RSS parsing, and seamless background audio playback.
 
 ## Context
 
 This repository is part of:
 - The audiflow ecosystem (3 repos: app, editor, config data)
-- A Flutter monorepo with 8 packages managed by Melos + Flutter workspace
+- A Flutter monorepo with 7 workspace packages managed by Melos + Flutter workspace
 - A consumer of smart playlist JSON configs hosted on GitHub Pages (all environments)
 
 ## High-level structure
@@ -29,7 +29,7 @@ This repository is part of:
 - `audiflow_core`: Foundation -- constants, extensions, error types, utilities, config, shared enums (`AutoPlayOrder`, `DuckInterruptionBehavior`)
 - `audiflow_podcast`: RSS parsing -- streaming XML parser, feed models, HTTP caching, XML entity decoding
 - `audiflow_ui`: Shared UI -- reusable widgets, themes, styles
-- `audiflow_ai`: On-device AI capabilities (Flutter plugin for iOS/Android)
+- `audiflow_ai`: Empty placeholder directory -- the on-device AI plugin was removed with voice commands; no manifest, no source, not a workspace member
 - `audiflow_search`: Podcast search API client (iTunes API via Dio)
 - `audiflow_cli`: CLI debugging tools for feed parsing and domain operations
 
