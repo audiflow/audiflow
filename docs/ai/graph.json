@@ -269,9 +269,7 @@
         "pkg:audiflow_ai",
         "fr:14-settings"
       ],
-      "modules": [
-        "packages/audiflow_ai/"
-      ]
+      "modules": []
     },
     {
       "id": "fr:11-play-order",
@@ -625,7 +623,6 @@
       "arch:system-overview"
     ],
     "packages/audiflow_ai/": [
-      "fr:10-voice-commands",
       "pkg:audiflow_ai"
     ],
     "packages/audiflow_app/": [

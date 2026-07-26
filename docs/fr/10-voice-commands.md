@@ -6,8 +6,9 @@ refs:
   related:
     - pkg:audiflow_ai
     - fr:14-settings
-  modules:
-    - packages/audiflow_ai/
+  # Intentionally empty: the feature was removed, so no source directory
+  # implements this historical spec. packages/audiflow_ai/ is an empty placeholder.
+  modules: []
 ---
 
 # FR 10: Voice commands
