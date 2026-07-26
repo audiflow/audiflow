@@ -41,7 +41,7 @@ It also serves a secondary audience: audiflow contributors and podcast creators.
 
 ## Boundaries
 
-- This FR covers the settings surface itself plus the general and developer preferences. Feature-specific preference sections are owned by their own FRs and are only cross-referenced here: play-order and audio-interruption preferences belong to FR 11 (play order), download and queue policy semantics belong to FR 05, and background feed refresh behavior belongs to FR 12.
+- This FR covers the settings surface itself plus the general and developer preferences. Feature-specific preference sections are owned by their own FRs and are only cross-referenced here: play-order preferences belong to FR 11 (play order), audio-interruption preferences belong to FR 04 (audio playback), download and queue policy semantics belong to FR 05, and background feed refresh behavior belongs to FR 12.
 - Settings does not implement the behaviors it configures — it only stores and exposes the values; the consuming services apply them.
 - Settings does not define the smart playlist schema or host preset config data; the Developer screen only reads and links to that externally-owned ecosystem.
 - OPML import/export, cache clearing, and data reset delegate the actual work to the relevant domain repositories; the Storage screen is the entry point, not the implementation.
