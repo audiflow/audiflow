@@ -15,7 +15,7 @@ Part of the audiflow ecosystem. Consumes smart playlist config JSON from `audifl
 | `audiflow_domain` | Business logic, repositories, data sources, Isar collections |
 | `audiflow_podcast` | RSS parsing with streaming support, transcript/chapter extraction |
 | `audiflow_ui` | Reusable widgets, themes, styles |
-| `audiflow_ai` | On-device AI capabilities (Flutter plugin, iOS/Android) |
+| `audiflow_ai` | Placeholder — implementation removed along with voice commands; contains no code |
 | `audiflow_search` | Podcast search and discovery API client (Dio + Freezed) |
 | `audiflow_cli` | CLI tools for debugging Audiflow features |
 
@@ -28,7 +28,6 @@ Part of the audiflow ecosystem. Consumes smart playlist config JSON from `audifl
 - Smart playlist config consumption and local caching
 - Podcast transcript and chapter display
 - Sleep timer with fade-out (duration, episode count, end-of-episode, end-of-chapter modes)
-- On-device voice commands
 - Station management (custom multi-podcast playlists)
 - Background feed refresh, dropped episode cleanup, and new episode notifications
 - Per-scope play order preferences (group -> playlist -> podcast -> global cascade)
@@ -38,6 +37,7 @@ Part of the audiflow ecosystem. Consumes smart playlist config JSON from `audifl
 - Schema definition (owned by `audiflow-preset-editor`)
 - Config authoring/editing (owned by editor)
 - Production config data hosting (owned by `audiflow-preset`)
+- Voice commands: NOT IMPLEMENTED. The feature was built and later removed (no voice source code remains; `audiflow_ai` is an empty shell). Never describe voice commands as a feature of this app; `docs/fr/10-voice-commands.md` is a historical spec only.
 
 ## Validation
 

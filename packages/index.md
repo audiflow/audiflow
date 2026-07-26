@@ -1,10 +1,10 @@
 ---
-refs:
+type: index
+title: "package Index"
+kusara:
   id: index:package
-  kind: index
   indexes_kind: package
   generated: true
-  title: "package Index"
 ---
 
 # package Index

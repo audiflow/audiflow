@@ -13,7 +13,7 @@ refs:
 
 ## Goal
 
-Provide a reliable, offline-first podcast player for iOS and Android with smart playlist support, station management, transcript display, background feed refresh, and voice commands. The system prioritizes fast startup, low memory usage during RSS parsing, and seamless background audio playback.
+Provide a reliable, offline-first podcast player for iOS and Android with smart playlist support, station management, transcript display, and background feed refresh. (Voice commands are **not** part of the system — the feature was removed; see `docs/fr/10-voice-commands.md`.) The system prioritizes fast startup, low memory usage during RSS parsing, and seamless background audio playback.
 
 ## Context
 

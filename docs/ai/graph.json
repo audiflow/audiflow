@@ -261,7 +261,7 @@
       "id": "fr:10-voice-commands",
       "kind": "fr",
       "path": "docs/fr/10-voice-commands.md",
-      "title": "Voice commands",
+      "title": "Voice commands (NOT IMPLEMENTED — removed)",
       "provides": [],
       "implements": [],
       "depends_on": [],
@@ -413,6 +413,23 @@
       ]
     },
     {
+      "id": "fr:18-parental-control",
+      "kind": "fr",
+      "path": "docs/fr/18-parental-control.md",
+      "title": "Parental control",
+      "provides": [],
+      "implements": [],
+      "depends_on": [],
+      "related": [
+        "fr:02-podcast-discovery",
+        "fr:03-subscription-feeds",
+        "fr:14-settings",
+        "fr:15-links-and-sharing",
+        "fr:17-podcast-detail"
+      ],
+      "modules": []
+    },
+    {
       "id": "index:architecture",
       "kind": "index",
       "path": "docs/architecture/index.md",
@@ -432,6 +449,30 @@
       "title": "fr Index",
       "generated": true,
       "indexes_kind": "fr",
+      "provides": [],
+      "implements": [],
+      "depends_on": [],
+      "related": [],
+      "modules": []
+    },
+    {
+      "id": "index:map",
+      "kind": "index",
+      "path": "docs/map.md",
+      "title": "Doc Map (all kinds)",
+      "generated": true,
+      "provides": [],
+      "implements": [],
+      "depends_on": [],
+      "related": [],
+      "modules": []
+    },
+    {
+      "id": "index:modules",
+      "kind": "index",
+      "path": "docs/ai/modules.md",
+      "title": "Source -> Doc Map",
+      "generated": true,
       "provides": [],
       "implements": [],
       "depends_on": [],

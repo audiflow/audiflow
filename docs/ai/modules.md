@@ -1,9 +1,9 @@
 ---
-refs:
+type: index
+title: "Source -> Doc Map"
+kusara:
   id: index:modules
-  kind: index
   generated: true
-  title: "Source -> Doc Map"
 ---
 
 # Source -> Doc Map

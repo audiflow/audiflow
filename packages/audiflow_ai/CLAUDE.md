@@ -9,23 +9,17 @@ refs:
 
 # audiflow_ai
 
-On-device AI capabilities for the audiflow podcast player, packaged as a Flutter plugin with iOS and Android platform code. Provides natural-language understanding for voice commands and episode summarization, abstracting platform-specific AI implementations behind a common Dart interface.
+**Empty placeholder — NO implementation exists.** This package previously housed on-device AI capabilities (voice command NLU, summarization) as a Flutter plugin. The voice-command feature was removed from the codebase and all package source code was deleted; only this doc remains. Do not describe voice commands or on-device AI as features of audiflow.
 
 ## Ecosystem context
 
-Depends only on audiflow_core. A utility-level package at the same dependency depth as audiflow_podcast and audiflow_search. Consumed by audiflow_domain (voice command and AI-backed features); transitively reachable from audiflow_app, which lists it as a direct dependency.
+No package manifest or Dart code exists in this directory; nothing depends on it. If on-device AI is ever revisited, `docs/fr/10-voice-commands.md` holds the historical specification.
 
 ## Responsibilities
 
-- On-device AI capability detection and configuration
-- Natural-language understanding for voice commands (`VoiceCommandParser`, regex + LLM hybrid)
-- Generic and episode-specific summarization
-- Platform abstraction over native iOS and Android AI implementations
-- Typed AI exceptions and capability/config models
+- None (implementation removed)
 
 ## Non-responsibilities
 
-- App UI and screens (owned by audiflow_app)
-- Business logic and command execution (owned by audiflow_domain)
-- Data access and persistence (owned by audiflow_domain)
-- Podcast search (owned by audiflow_search) and RSS parsing (owned by audiflow_podcast)
+- Voice commands and natural-language understanding (feature removed, not implemented anywhere)
+- Episode summarization (never shipped)

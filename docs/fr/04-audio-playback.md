@@ -26,7 +26,7 @@ system interrupts it.
 
 It exists so that no other part of the app has to think about audio. Every surface that can
 start, pause, seek, or resume an episode — episode lists, the player screen, the mini player,
-the queue, voice commands, system media controls — funnels through one controller, so playback
+the queue, system media controls — funnels through one controller, so playback
 state and resume position stay coherent no matter where the listener touches it.
 
 ## User-visible Behavior

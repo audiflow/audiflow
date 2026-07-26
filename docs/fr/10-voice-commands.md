@@ -2,7 +2,7 @@
 refs:
   id: fr:10-voice-commands
   kind: fr
-  title: "Voice commands"
+  title: "Voice commands (NOT IMPLEMENTED — removed)"
   related:
     - pkg:audiflow_ai
     - fr:14-settings
@@ -11,6 +11,8 @@ refs:
 ---
 
 # FR 10: Voice commands
+
+> **STATUS: NOT IMPLEMENTED.** The voice-command feature was built and later removed from the codebase (see commit `5df52b76` "chore(voice): drop on-device Gemma voice command path" and follow-ups). No voice source code exists today; `packages/audiflow_ai` contains no implementation. Audiflow currently ships **without** voice commands — never describe voice control as an existing or main feature. This document is retained as a historical specification only.
 
 > Hands-free control of playback and app settings through on-device speech recognition and a pluggable natural-language intent layer.
 
@@ -63,4 +65,4 @@ The feature is built around two distinct concerns. Playback commands ("play", "p
   - `docs/superpowers/specs/2026-03-30-voice-debug-overlay-design.md`
   - `docs/superpowers/plans/2026-03-30-voice-debug-overlay.md`
 - **Related FR**: 14-settings.md
-- **Note**: As of this writing the voice-command feature is specified but not yet implemented. The `audiflow_ai` package (the planned home for the on-device AI and platform-channel intent layer) currently contains only its package manifest; the planned `voice/` modules in `audiflow_domain` and `audiflow_app` do not yet exist. `modules:` therefore references only the verified-existing `audiflow_ai` package directory and should be expanded once the voice source code lands.
+- **Note**: The voice-command feature was implemented and subsequently **removed** from the codebase; no voice source code remains in any package. The `audiflow_ai` package directory exists but holds no implementation. This FR is kept solely as the historical specification in case the feature is ever revisited. Any statement that audiflow "has" or "provides" voice commands is incorrect.

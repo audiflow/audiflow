@@ -50,7 +50,7 @@ audiflow_cli -> audiflow_domain, audiflow_podcast
 ### Module: audiflow_domain
 
 #### Responsibilities
-- Feature modules: feed, player, queue, download, subscription, settings, voice, transcript, station
+- Feature modules: feed, player, queue, download, subscription, settings, transcript, station (no voice module — voice commands were removed and are not implemented)
 - Repository interfaces and implementations (co-located)
 - Datasources: local (Isar) and remote (HTTP via Dio)
 - Isar collection definitions (serve as domain entities)

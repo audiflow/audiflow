@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Audiflow is a mobile podcast player for iOS and Android, built with Flutter. It provides podcast discovery, subscription management, audio playback with background support, episode downloads, queue management, smart playlist consumption, podcast transcript display, voice commands, station (custom multi-podcast playlist) management, and background feed refresh with new episode notifications. The app follows an offline-first architecture using Isar for local storage.
+Audiflow is a mobile podcast player for iOS and Android, built with Flutter. It provides podcast discovery, subscription management, audio playback with background support, episode downloads, queue management, smart playlist consumption, podcast transcript display, station (custom multi-podcast playlist) management, and background feed refresh with new episode notifications. The app follows an offline-first architecture using Isar for local storage.
 
 ## Responsibilities
 
@@ -17,7 +17,6 @@ Audiflow is a mobile podcast player for iOS and Android, built with Flutter. It 
 - Playback speed control
 - Configurable audio interruption behavior (duck volume or pause-and-rewind)
 - Podcast transcript and chapter display
-- On-device voice command processing
 - Station management (custom multi-podcast playlists with duration filters and episode sorting)
 - Background feed refresh with prioritized sync, dropped episode cleanup, and new episode notifications
 - Per-scope play order preferences with cascade resolution (group -> playlist -> podcast -> global)
@@ -27,6 +26,7 @@ Audiflow is a mobile podcast player for iOS and Android, built with Flutter. It 
 - JSON Schema definition (owned by `audiflow-preset-editor`)
 - Smart playlist config authoring or editing (owned by editor)
 - Config data hosting (owned by `audiflow-preset` via GitHub Pages, all environments)
+- **Voice commands — NOT IMPLEMENTED.** The feature was built and later removed; no voice source code exists. Do not describe voice control as a feature of the app. `docs/fr/10-voice-commands.md` is a historical spec only.
 
 ## Main concepts
 

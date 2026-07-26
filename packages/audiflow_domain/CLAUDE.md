@@ -12,31 +12,23 @@ Business logic and data layer for Audiflow. All repositories, services, data sou
 
 ## Ecosystem context
 
-Sub-package of the `audiflow` Flutter monorepo. Depends on `audiflow_core`, `audiflow_podcast`, `audiflow_search`, `audiflow_ai`. Consumed by `audiflow_app`, `audiflow_ui`, `audiflow_cli`. Smart playlist models MUST stay aligned with `preset_core`/`preset_shared` in the editor repo.
+Sub-package of the `audiflow` Flutter monorepo. Depends on `audiflow_core`, `audiflow_podcast`, `audiflow_search`. Consumed by `audiflow_app`, `audiflow_ui`, `audiflow_cli`. Smart playlist models MUST stay aligned with `preset_core`/`preset_shared` in the editor repo.
 
 ## Responsibilities
 
-- Repository interfaces and implementations for 10 feature modules
+- Repository interfaces and implementations for the feature modules under `lib/src/features/`
 - Isar collection definitions and local/remote data sources
-- Business services (feed sync, playback, download queue, voice commands, station reconciliation)
+- Business services (feed sync, playback, download queue, station reconciliation)
 - Smart playlist config consumption, caching, and resolver pipeline
 - Background refresh and new-episode notification orchestration
-- Composition seam for on-device Gemma 4 voice commands (`GemmaVoiceCommandRoute`)
 - Parental control: PIN-gated Restricted Mode (`ParentalControlRepository`, `PinHasher`, `UnlockState`, Riverpod providers)
-
-## Voice command pipeline
-
-`VoiceCommandOrchestrator` is the single entry point: it owns mic capture (via `VoiceAudioRecorder`) and dispatches the captured audio bytes to `GemmaVoiceCommandRoute.dispatch(audioBytes)` for on-device Gemma 4 inference (audiflow_ai). The legacy text-only / 3-tier resolver path was removed in #388.
-
-`GemmaVoiceCommandRoute` builds the per-turn settings snapshot from `SettingsMetadataRegistry.toJson(repo)` and delegates to `GemmaVoiceCommandService` (in audiflow_ai). Downstream `SettingsIntentResolver` and `VoiceCommandExecutor` consume the route's output unchanged. The route accepts an optional `Logger` to surface `SettingsMetadataRegistry.toJson()` contract violations.
-
-`gemmaInferenceSessionProvider` is a stub in domain (throws `UnimplementedError`); the host app overrides it at the root `ProviderContainer` with a flutter_gemma-backed implementation, keeping the plugin dependency out of this package.
 
 ## Non-responsibilities
 
 - UI, routing, theming (`audiflow_app`, `audiflow_ui`)
-- RSS parsing (`audiflow_podcast`), search API (`audiflow_search`), AI inference (`audiflow_ai`)
+- RSS parsing (`audiflow_podcast`), search API (`audiflow_search`)
 - Schema definition (`audiflow-preset-editor`)
+- Voice commands: NOT IMPLEMENTED. The Gemma voice pipeline (`VoiceCommandOrchestrator`, `GemmaVoiceCommandRoute`, etc.) was removed from the codebase; `audiflow_ai` is no longer a dependency.
 
 ## Validation
 
