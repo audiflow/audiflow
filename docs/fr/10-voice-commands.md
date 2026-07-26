@@ -14,7 +14,7 @@ refs:
 # FR 10: Voice commands
 
 > **STATUS: NOT IMPLEMENTED.** The voice-command feature was built and later removed from the codebase (see commit `5df52b76` "chore(voice): drop on-device Gemma voice command path" and follow-ups). No voice source code exists today; `packages/audiflow_ai` contains no implementation. Audiflow currently ships **without** voice commands — never describe voice control as an existing or main feature. This document is retained as a historical specification only.
-
+>
 > Hands-free control of playback and app settings through on-device speech recognition and a pluggable natural-language intent layer.
 
 ## Purpose
