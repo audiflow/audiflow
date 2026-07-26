@@ -1,6 +1,6 @@
 # audiflow
 
-Flutter podcast player app (iOS/Android). Monorepo with 8 packages managed by Melos + Flutter workspace.
+Flutter podcast player app (iOS/Android). Monorepo with 7 workspace packages managed by Melos + Flutter workspace.
 
 ## Ecosystem context
 
@@ -15,7 +15,7 @@ Part of the audiflow ecosystem. Consumes smart playlist config JSON from `audifl
 | `audiflow_domain` | Business logic, repositories, data sources, Isar collections |
 | `audiflow_podcast` | RSS parsing with streaming support, transcript/chapter extraction |
 | `audiflow_ui` | Reusable widgets, themes, styles |
-| `audiflow_ai` | Placeholder — implementation removed along with voice commands; contains no code |
+| `audiflow_ai` | Placeholder directory, not a workspace member — implementation removed along with voice commands; contains no code |
 | `audiflow_search` | Podcast search and discovery API client (Dio + Freezed) |
 | `audiflow_cli` | CLI tools for debugging Audiflow features |
 
