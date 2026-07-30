@@ -17,8 +17,14 @@ class ParentalControlController extends _$ParentalControlController {
   /// First-time setup: persists the PIN, enables Restricted Mode in the same
   /// atomic write, and locks the gate so the restriction applies immediately.
   Future<void> setupPin(String pin) async {
-    await ref.read(parentalControlRepositoryProvider).setupPin(pin);
-    ref.read(parentalControlGateProvider.notifier).lock();
+    // Callers reach this notifier through `read`, so nothing keeps this
+    // auto-dispose provider alive across the await. Resolve both dependencies
+    // up front; touching `ref` afterwards would throw on a disposed Ref and
+    // surface as a save failure even though the PIN was persisted.
+    final repository = ref.read(parentalControlRepositoryProvider);
+    final gate = ref.read(parentalControlGateProvider.notifier);
+    await repository.setupPin(pin);
+    gate.lock();
   }
 
   Future<void> setRestrictedMode(bool enabled) =>
