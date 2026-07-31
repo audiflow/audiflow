@@ -16,7 +16,7 @@ A podcast player for Android and iOS built with Flutter.
 
 ## Requirements
 
-- Flutter 3.41.4+ / Dart 3.10.0+
+- Flutter 3.44.8+ / Dart 3.12.2+
 - iOS (configured in Xcode) / Android 8.0+ (API 26)
 - Melos 7.3+
 
