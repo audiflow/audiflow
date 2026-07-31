@@ -6,7 +6,7 @@ paths: packages/**/*.dart, pubspec.yaml, "*.env*"
 
 ## Core Stack
 - **Flutter 3.44.8** / **Dart 3.12.2**
-- **iOS 14.0+** / **Android 8.0+ (API 26+)**
+- **iOS 16.0+** / **Android 8.0+ (API 26+)**
 - **Analyzer**: 10.x (overridden in root pubspec.yaml for Riverpod 4.x compatibility)
 
 ## Critical Dependencies (Always Use These)
