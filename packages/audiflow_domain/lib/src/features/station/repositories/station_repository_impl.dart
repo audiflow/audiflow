@@ -17,8 +17,7 @@ StationRepository stationRepository(Ref ref) {
 
 /// Implementation of [StationRepository] using Isar database.
 class StationRepositoryImpl implements StationRepository {
-  StationRepositoryImpl({required StationLocalDatasource datasource})
-    : _datasource = datasource;
+  StationRepositoryImpl({required this._datasource});
 
   final StationLocalDatasource _datasource;
 

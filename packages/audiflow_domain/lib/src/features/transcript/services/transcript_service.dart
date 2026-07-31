@@ -24,12 +24,10 @@ TranscriptService transcriptService(Ref ref) {
 /// Orchestrates downloading, parsing, and storing transcript content.
 class TranscriptService {
   TranscriptService({
-    required TranscriptRepository repository,
-    required Dio dio,
-    required Logger logger,
-  }) : _repository = repository,
-       _dio = dio,
-       _logger = logger;
+    required this._repository,
+    required this._dio,
+    required this._logger,
+  });
 
   final TranscriptRepository _repository;
   final Dio _dio;

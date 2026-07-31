@@ -17,9 +17,7 @@ StationPodcastRepository stationPodcastRepository(Ref ref) {
 
 /// Implementation of [StationPodcastRepository] using Isar database.
 class StationPodcastRepositoryImpl implements StationPodcastRepository {
-  StationPodcastRepositoryImpl({
-    required StationPodcastLocalDatasource datasource,
-  }) : _datasource = datasource;
+  StationPodcastRepositoryImpl({required this._datasource});
 
   final StationPodcastLocalDatasource _datasource;
 

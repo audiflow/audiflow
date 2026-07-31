@@ -447,13 +447,9 @@ class _NotModifiedDio implements Dio {
 /// A Dio that captures request headers and returns a 200 with configurable
 /// response headers.
 class _HeaderCapturingDio implements Dio {
-  _HeaderCapturingDio({
-    String responseBody = '<rss></rss>',
-    this.responseEtag,
-    this.responseLastModified,
-  }) : _responseBody = responseBody;
+  _HeaderCapturingDio({this.responseEtag, this.responseLastModified});
 
-  final String _responseBody;
+  static const String _responseBody = '<rss></rss>';
   final String? responseEtag;
   final String? responseLastModified;
   Map<String, dynamic>? lastRequestHeaders;

@@ -17,8 +17,7 @@ TranscriptRepository transcriptRepository(Ref ref) {
 
 /// Implementation of [TranscriptRepository] delegating to local datasource.
 class TranscriptRepositoryImpl implements TranscriptRepository {
-  TranscriptRepositoryImpl({required TranscriptLocalDatasource datasource})
-    : _datasource = datasource;
+  TranscriptRepositoryImpl({required this._datasource});
 
   final TranscriptLocalDatasource _datasource;
 

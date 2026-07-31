@@ -12,12 +12,10 @@ import 'review_prompt_evaluator.dart';
 /// presentation layer decides whether to actually surface the dialog.
 class ReviewPromptTrigger {
   ReviewPromptTrigger({
-    required ReviewPromptRepository repository,
-    Logger? logger,
-    Duration delay = const Duration(seconds: 2),
-  }) : _repository = repository,
-       _logger = logger,
-       _delay = delay;
+    required this._repository,
+    this._logger,
+    this._delay = const Duration(seconds: 2),
+  });
 
   final ReviewPromptRepository _repository;
   final Logger? _logger;

@@ -19,20 +19,14 @@ import 'feed_sync_diagnostic.dart';
 /// without smart playlist resolution or transcript/chapter extraction.
 class FeedSyncExecutor {
   FeedSyncExecutor({
-    required SubscriptionRepository subscriptionRepo,
-    required EpisodeRepository episodeRepo,
-    required AppSettingsRepository settingsRepo,
-    required FeedParserService feedParser,
-    required Dio dio,
-    Logger? logger,
+    required this._subscriptionRepo,
+    required this._episodeRepo,
+    required this._settingsRepo,
+    required this._feedParser,
+    required this._dio,
+    this._logger,
     FeedSyncDiagnosticSink? onDiagnostic,
-  }) : _subscriptionRepo = subscriptionRepo,
-       _episodeRepo = episodeRepo,
-       _settingsRepo = settingsRepo,
-       _feedParser = feedParser,
-       _dio = dio,
-       _logger = logger,
-       _onDiagnostic = onDiagnostic ?? noopFeedSyncDiagnosticSink;
+  }) : _onDiagnostic = onDiagnostic ?? noopFeedSyncDiagnosticSink;
 
   final SubscriptionRepository _subscriptionRepo;
   final EpisodeRepository _episodeRepo;

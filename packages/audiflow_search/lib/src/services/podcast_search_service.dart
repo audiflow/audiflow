@@ -76,8 +76,8 @@ abstract class PodcastSearchService {
 /// Internal implementation of [PodcastSearchService].
 class _PodcastSearchServiceImpl implements PodcastSearchService {
   _PodcastSearchServiceImpl({
-    required List<PodcastProvider> providers,
-  }) : _providers = providers;
+    required this._providers,
+  });
   final List<PodcastProvider> _providers;
 
   @override

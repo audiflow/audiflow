@@ -8,14 +8,11 @@ import 'force_update_repository.dart';
 /// back to the local cache when the network or the payload is bad.
 class ForceUpdateRepositoryImpl implements ForceUpdateRepository {
   ForceUpdateRepositoryImpl({
-    required ForceUpdateRemoteDataSource remote,
-    required ForceUpdateLocalDataSource local,
-    ForceUpdateWarningSink? onWarning,
-    DateTime Function() now = _utcNow,
-  }) : _remote = remote,
-       _local = local,
-       _onWarning = onWarning,
-       _now = now;
+    required this._remote,
+    required this._local,
+    this._onWarning,
+    this._now = _utcNow,
+  });
 
   final ForceUpdateRemoteDataSource _remote;
   final ForceUpdateLocalDataSource _local;

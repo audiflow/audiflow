@@ -4,10 +4,9 @@ import 'package:flutter/foundation.dart';
 class ThrottledAnalyticsService implements AnalyticsService {
   ThrottledAnalyticsService(
     this._inner, {
-    Duration window = const Duration(seconds: 5),
+    this._window = const Duration(seconds: 5),
     DateTime Function()? now,
-  }) : _window = window,
-       _now = now ?? DateTime.now;
+  }) : _now = now ?? DateTime.now;
 
   final AnalyticsService _inner;
   final Duration _window;

@@ -14,15 +14,12 @@ import 'parental_control_repository.dart';
 class ParentalControlRepositoryImpl implements ParentalControlRepository {
   ParentalControlRepositoryImpl({
     required ParentalControlLocalDataSource datasource,
-    required PinHasher hasher,
-    required Logger logger,
-    required AnalyticsService analytics,
+    required this._hasher,
+    required this._logger,
+    required this._analytics,
     ParentalControlErrorSink? onError,
     DateTime Function()? clock,
   }) : _ds = datasource,
-       _hasher = hasher,
-       _logger = logger,
-       _analytics = analytics,
        _onError = onError ?? _noOpSink,
        _now = clock ?? DateTime.now;
 

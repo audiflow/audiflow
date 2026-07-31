@@ -36,14 +36,11 @@ class AutoDownloadEnqueueResult {
 /// next background sync saw it as "known" and never enqueued the download.
 class AutoDownloadEnqueuer {
   AutoDownloadEnqueuer({
-    required EpisodeRepository episodeRepo,
-    required DownloadRepository downloadRepo,
-    Logger? logger,
+    required this._episodeRepo,
+    required this._downloadRepo,
+    this._logger,
     FeedSyncDiagnosticSink? onDiagnostic,
-  }) : _episodeRepo = episodeRepo,
-       _downloadRepo = downloadRepo,
-       _logger = logger,
-       _onDiagnostic = onDiagnostic ?? noopFeedSyncDiagnosticSink;
+  }) : _onDiagnostic = onDiagnostic ?? noopFeedSyncDiagnosticSink;
 
   final EpisodeRepository _episodeRepo;
   final DownloadRepository _downloadRepo;

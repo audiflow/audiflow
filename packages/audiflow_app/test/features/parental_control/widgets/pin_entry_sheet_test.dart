@@ -75,9 +75,7 @@ class _SlowGate extends ParentalControlGate {
 
 /// Fake [ParentalControlRepository] with a configurable [getSettings] result.
 class _FakeRepo implements ParentalControlRepository {
-  _FakeRepo({int failedAttempts = 2, bool throwOnGetSettings = false})
-    : _failedAttempts = failedAttempts,
-      _throwOnGetSettings = throwOnGetSettings;
+  _FakeRepo({this._failedAttempts = 2, this._throwOnGetSettings = false});
 
   final int _failedAttempts;
   final bool _throwOnGetSettings;

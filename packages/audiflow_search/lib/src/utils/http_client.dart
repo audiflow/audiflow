@@ -21,13 +21,12 @@ class HttpClient {
   ///
   /// [timeout] configures both connect and receive timeouts (default: 10 seconds).
   /// [dio] optionally provides a pre-configured Dio instance for testing.
-  /// [providerId] identifies the provider for error tracking (default: 'http').
+  /// [_providerId] identifies the provider for error tracking (default: 'http').
   HttpClient({
     Duration timeout = const Duration(seconds: 10),
     Dio? dio,
-    String providerId = 'http',
-  }) : _providerId = providerId,
-       _dio =
+    this._providerId = 'http',
+  }) : _dio =
            dio ??
            Dio(
              BaseOptions(

@@ -16,8 +16,7 @@ ChapterRepository chapterRepository(Ref ref) {
 
 /// Implementation of [ChapterRepository] delegating to local datasource.
 class ChapterRepositoryImpl implements ChapterRepository {
-  ChapterRepositoryImpl({required ChapterLocalDatasource datasource})
-    : _datasource = datasource;
+  ChapterRepositoryImpl({required this._datasource});
 
   final ChapterLocalDatasource _datasource;
 

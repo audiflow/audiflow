@@ -6,8 +6,7 @@ import '../repositories/subscription_repository.dart';
 /// Orchestrates OPML import: checks duplicates, subscribes,
 /// and collects results.
 class OpmlImportService {
-  OpmlImportService({required SubscriptionRepository repository})
-    : _repository = repository;
+  OpmlImportService({required this._repository});
 
   final SubscriptionRepository _repository;
 

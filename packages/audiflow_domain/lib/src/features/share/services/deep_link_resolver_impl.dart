@@ -16,14 +16,11 @@ import 'deep_link_resolver.dart';
 ///   https://audiflow.reedom.com/p/{itunesId}/e/{base64urlGuid}
 class DeepLinkResolverImpl implements DeepLinkResolver {
   const DeepLinkResolverImpl({
-    required SubscriptionRepository subscriptionRepository,
-    required EpisodeRepository episodeRepository,
-    required ItunesChartsClient itunesChartsClient,
-    required FeedParserService feedParserService,
-  }) : _subscriptionRepository = subscriptionRepository,
-       _episodeRepository = episodeRepository,
-       _itunesChartsClient = itunesChartsClient,
-       _feedParserService = feedParserService;
+    required this._subscriptionRepository,
+    required this._episodeRepository,
+    required this._itunesChartsClient,
+    required this._feedParserService,
+  });
 
   static const _host = 'audiflow.reedom.com';
   static const _scheme = 'https';

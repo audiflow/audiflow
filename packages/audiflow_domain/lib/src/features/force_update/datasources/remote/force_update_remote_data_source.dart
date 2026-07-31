@@ -10,10 +10,9 @@ import '../../models/force_update_config.dart';
 /// throw [StateError] to fail loudly during boot.
 class ForceUpdateRemoteDataSource {
   const ForceUpdateRemoteDataSource({
-    required Dio dio,
+    required this._dio,
     required String configUrl,
-  }) : _dio = dio,
-       _url = configUrl;
+  }) : _url = configUrl;
 
   final Dio _dio;
   final String _url;

@@ -13,12 +13,10 @@ import 'preset_config_repository.dart';
 /// version-based invalidation, and concurrent request deduplication.
 class PresetConfigRepositoryImpl implements PresetConfigRepository {
   PresetConfigRepositoryImpl({
-    required PresetRemoteDatasource remote,
-    required PresetCacheDatasource cache,
-    Logger? logger,
-  }) : _remote = remote,
-       _cache = cache,
-       _logger = logger;
+    required this._remote,
+    required this._cache,
+    this._logger,
+  });
 
   final PresetRemoteDatasource _remote;
   final PresetCacheDatasource _cache;

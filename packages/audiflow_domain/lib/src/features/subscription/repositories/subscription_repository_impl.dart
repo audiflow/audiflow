@@ -36,16 +36,12 @@ SubscriptionRepository subscriptionRepository(Ref ref) {
 /// Implementation of [SubscriptionRepository] using Isar database.
 class SubscriptionRepositoryImpl implements SubscriptionRepository {
   SubscriptionRepositoryImpl({
-    required SubscriptionLocalDatasource datasource,
-    StationReconcilerService? reconcilerService,
-    AnalyticsService? analytics,
-    ParentalControlRepository? parentalControlRepository,
-    Logger? logger,
-  }) : _datasource = datasource,
-       _reconcilerService = reconcilerService,
-       _analytics = analytics,
-       _parentalControlRepository = parentalControlRepository,
-       _logger = logger;
+    required this._datasource,
+    this._reconcilerService,
+    this._analytics,
+    this._parentalControlRepository,
+    this._logger,
+  });
 
   final SubscriptionLocalDatasource _datasource;
   final StationReconcilerService? _reconcilerService;

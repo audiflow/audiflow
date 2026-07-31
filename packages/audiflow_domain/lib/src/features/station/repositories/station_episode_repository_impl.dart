@@ -26,12 +26,10 @@ StationEpisodeRepository stationEpisodeRepository(Ref ref) {
 /// Implementation of [StationEpisodeRepository] using Isar database.
 class StationEpisodeRepositoryImpl implements StationEpisodeRepository {
   StationEpisodeRepositoryImpl({
-    required Isar isar,
-    required StationEpisodeLocalDatasource episodeDatasource,
-    required StationPodcastLocalDatasource podcastDatasource,
-  }) : _isar = isar,
-       _episodeDatasource = episodeDatasource,
-       _podcastDatasource = podcastDatasource;
+    required this._isar,
+    required this._episodeDatasource,
+    required this._podcastDatasource,
+  });
 
   final Isar _isar;
   final StationEpisodeLocalDatasource _episodeDatasource;

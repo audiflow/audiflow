@@ -15,12 +15,10 @@ import '../resolvers/smart_playlist_resolver.dart';
 /// with no definition (auto-detect mode).
 class SmartPlaylistResolverService {
   SmartPlaylistResolverService({
-    required List<SmartPlaylistResolver> resolvers,
-    required List<PresetConfig> presets,
-    Logger? logger,
-  }) : _resolvers = resolvers,
-       _presets = presets,
-       _logger = logger;
+    required this._resolvers,
+    required this._presets,
+    this._logger,
+  });
 
   final List<SmartPlaylistResolver> _resolvers;
   final List<PresetConfig> _presets;

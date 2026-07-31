@@ -20,10 +20,9 @@ EpisodeFavoriteRepository episodeFavoriteRepository(Ref ref) {
 
 class EpisodeFavoriteRepositoryImpl implements EpisodeFavoriteRepository {
   EpisodeFavoriteRepositoryImpl({
-    required Isar isar,
-    required StationReconcilerService reconcilerService,
-  }) : _isar = isar,
-       _reconcilerService = reconcilerService;
+    required this._isar,
+    required this._reconcilerService,
+  });
 
   final Isar _isar;
   final StationReconcilerService _reconcilerService;

@@ -10,11 +10,10 @@ typedef HttpGetFn = Future<String> Function(Uri url);
 
 /// Fetches split preset config files from a remote URL.
 class PresetRemoteDatasource {
-  PresetRemoteDatasource({required String baseUrl, required HttpGetFn httpGet})
+  PresetRemoteDatasource({required String baseUrl, required this._httpGet})
     : _baseUrl = baseUrl.endsWith('/')
           ? baseUrl.substring(0, baseUrl.length - 1)
-          : baseUrl,
-      _httpGet = httpGet;
+          : baseUrl;
 
   final String _baseUrl;
   final HttpGetFn _httpGet;

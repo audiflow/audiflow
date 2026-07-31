@@ -43,14 +43,11 @@ QueueService queueService(Ref ref) {
 /// - Getting the next episode for playback
 class QueueService {
   QueueService({
-    required QueueRepository repository,
-    required EpisodeRepository episodeRepository,
-    required AppSettingsRepository settingsRepository,
-    required Logger logger,
-  }) : _repository = repository,
-       _episodeRepository = episodeRepository,
-       _settingsRepository = settingsRepository,
-       _logger = logger;
+    required this._repository,
+    required this._episodeRepository,
+    required this._settingsRepository,
+    required this._logger,
+  });
 
   final QueueRepository _repository;
   final EpisodeRepository _episodeRepository;

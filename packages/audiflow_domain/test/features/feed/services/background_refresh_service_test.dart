@@ -10,16 +10,12 @@ import 'package:flutter_test/flutter_test.dart';
 
 class FakeAppSettingsRepository implements AppSettingsRepository {
   FakeAppSettingsRepository({
-    bool autoSync = true,
-    bool wifiOnlySync = false,
-    bool notifyNewEpisodes = false,
-    bool wifiOnlyDownload = false,
-    int syncIntervalMinutes = 60,
-  }) : _autoSync = autoSync,
-       _wifiOnlySync = wifiOnlySync,
-       _notifyNewEpisodes = notifyNewEpisodes,
-       _wifiOnlyDownload = wifiOnlyDownload,
-       _syncIntervalMinutes = syncIntervalMinutes;
+    this._autoSync = true,
+    this._wifiOnlySync = false,
+    this._notifyNewEpisodes = false,
+    this._wifiOnlyDownload = false,
+    this._syncIntervalMinutes = 60,
+  });
 
   final bool _autoSync;
   final bool _wifiOnlySync;

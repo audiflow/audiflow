@@ -25,7 +25,7 @@ DownloadFileService downloadFileService(Ref ref) {
 }
 
 class DownloadFileService {
-  DownloadFileService({required Dio dio}) : _dio = dio;
+  DownloadFileService({required this._dio});
 
   final Dio _dio;
   final Map<int, CancelToken> _cancelTokens = {};

@@ -24,10 +24,9 @@ class PodcastRssParser {
   PodcastRssParser({
     HttpFetcher? httpFetcher,
     CacheManager? cacheManager,
-    Logger? logger,
+    this._logger,
   }) : _httpFetcher = httpFetcher ?? HttpFetcher(),
-       _cacheManager = cacheManager ?? CacheManager(),
-       _logger = logger;
+       _cacheManager = cacheManager ?? CacheManager();
   final HttpFetcher _httpFetcher;
   final CacheManager _cacheManager;
   final Logger? _logger;
