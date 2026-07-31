@@ -422,7 +422,14 @@ Future<SmartPlaylistGrouping?> _migrateToNewConfigVersion(
   PresetConfig config;
   try {
     config = await configRepo.getConfig(summary);
-  } on Object {
+  } on Object catch (error, stackTrace) {
+    logger.w(
+      'Failed to load config v${summary.dataVersion} for '
+      'podcastId=$podcastId; keeping stale cache and retrying '
+      'migration on next read',
+      error: error,
+      stackTrace: stackTrace,
+    );
     // Without the new config episodes cannot be re-extracted. Keep
     // the stale cache and serve a transient re-resolve; the next
     // read retries the migration.
