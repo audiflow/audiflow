@@ -29,6 +29,7 @@ import '../resolvers/season_number_resolver.dart';
 import '../resolvers/title_classifier_resolver.dart';
 import '../resolvers/title_discovery_resolver.dart';
 import '../resolvers/year_resolver.dart';
+import '../services/episode_re_extraction_service.dart';
 import '../services/smart_playlist_resolver_service.dart';
 
 part 'preset_providers.g.dart';
@@ -256,7 +257,13 @@ Future<SmartPlaylistGrouping?> _buildGroupingFromCache(
   if (summary != null) {
     final cachedVersion = cachedPlaylists.first.configVersion;
     if (cachedVersion == null || cachedVersion != summary.dataVersion) {
-      return _reResolveFromEpisodes(ref, podcastId, feedUrl);
+      return _migrateToNewConfigVersion(
+        ref,
+        podcastId,
+        feedUrl,
+        summary,
+        logger,
+      );
     }
   }
 
@@ -395,6 +402,57 @@ Future<SmartPlaylistGrouping?> _buildGroupingFromCache(
     ungroupedEpisodeIds: ungroupedIds,
     resolverType: resolverType,
   );
+}
+
+/// Handles an upstream config update (dataVersion bump).
+///
+/// Numbering is extracted only at ingest, so episodes stored under
+/// the old config keep stale season/episode numbers. Re-extract all
+/// episodes under the new config first, then drop the stale cache
+/// and re-resolve so the persisted grouping advances to the new
+/// configVersion.
+Future<SmartPlaylistGrouping?> _migrateToNewConfigVersion(
+  Ref ref,
+  int podcastId,
+  String feedUrl,
+  PresetSummary summary,
+  Logger logger,
+) async {
+  final configRepo = ref.watch(presetConfigRepositoryProvider);
+  PresetConfig config;
+  try {
+    config = await configRepo.getConfig(summary);
+  } on Object catch (error, stackTrace) {
+    logger.w(
+      'Failed to load config v${summary.dataVersion} for '
+      'podcastId=$podcastId; keeping stale cache and retrying '
+      'migration on next read',
+      error: error,
+      stackTrace: stackTrace,
+    );
+    // Without the new config episodes cannot be re-extracted. Keep
+    // the stale cache and serve a transient re-resolve; the next
+    // read retries the migration.
+    return _reResolveFromEpisodes(ref, podcastId, feedUrl);
+  }
+
+  final episodeRepo = ref.watch(episodeRepositoryProvider);
+  final episodes = await episodeRepo.getByPodcastId(podcastId);
+  final changed = EpisodeReExtractionService().reExtract(episodes, config);
+  if (changed.isNotEmpty) {
+    await episodeRepo.upsertEpisodes(changed);
+  }
+  logger.d(
+    'Config version changed to ${summary.dataVersion} for '
+    'podcastId=$podcastId: re-extracted ${changed.length}/'
+    '${episodes.length} episodes',
+  );
+
+  final playlistDatasource = ref.watch(smartPlaylistLocalDatasourceProvider);
+  await playlistDatasource.deleteByPodcastId(podcastId);
+  await playlistDatasource.deleteGroupsByPodcastId(podcastId);
+
+  return _resolveAndPersistSmartPlaylists(ref, podcastId, feedUrl, logger);
 }
 
 /// Resolves smart playlists from episodes and persists to

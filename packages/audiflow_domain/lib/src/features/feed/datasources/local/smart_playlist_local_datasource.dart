@@ -87,6 +87,16 @@ class SmartPlaylistLocalDatasource {
     );
   }
 
+  /// Deletes all smart playlist groups for a podcast.
+  Future<int> deleteGroupsByPodcastId(int podcastId) {
+    return _isar.writeTxn(
+      () => _isar.smartPlaylistGroupEntitys
+          .filter()
+          .podcastIdEqualTo(podcastId)
+          .deleteAll(),
+    );
+  }
+
   /// Returns groups for a playlist.
   Future<List<SmartPlaylistGroupEntity>> getGroupsByPlaylist(
     int podcastId,
