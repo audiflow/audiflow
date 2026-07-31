@@ -32,12 +32,10 @@ EpisodeRepository episodeRepository(Ref ref) {
 /// Implementation of [EpisodeRepository] using Isar database.
 class EpisodeRepositoryImpl implements EpisodeRepository {
   EpisodeRepositoryImpl({
-    required EpisodeLocalDatasource datasource,
-    TranscriptLocalDatasource? transcriptDatasource,
-    ChapterLocalDatasource? chapterDatasource,
-  }) : _datasource = datasource,
-       _transcriptDatasource = transcriptDatasource,
-       _chapterDatasource = chapterDatasource;
+    required this._datasource,
+    this._transcriptDatasource,
+    this._chapterDatasource,
+  });
 
   final EpisodeLocalDatasource _datasource;
   final TranscriptLocalDatasource? _transcriptDatasource;

@@ -35,12 +35,10 @@ QueueRepository queueRepository(Ref ref) {
 /// Implementation of [QueueRepository] using Isar database.
 class QueueRepositoryImpl implements QueueRepository {
   QueueRepositoryImpl({
-    required QueueLocalDatasource queueDatasource,
-    required EpisodeLocalDatasource episodeDatasource,
-    required SubscriptionLocalDatasource subscriptionDatasource,
-  }) : _queueDatasource = queueDatasource,
-       _episodeDatasource = episodeDatasource,
-       _subscriptionDatasource = subscriptionDatasource;
+    required this._queueDatasource,
+    required this._episodeDatasource,
+    required this._subscriptionDatasource,
+  });
 
   final QueueLocalDatasource _queueDatasource;
   final EpisodeLocalDatasource _episodeDatasource;

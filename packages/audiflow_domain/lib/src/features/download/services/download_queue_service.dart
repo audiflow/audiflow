@@ -87,19 +87,13 @@ Future<void> _emitDownloadCompleted(Ref ref, int episodeId, int bytes) async {
 
 class DownloadQueueService {
   DownloadQueueService({
-    required DownloadRepository repository,
-    required DownloadFileService fileService,
+    required this._repository,
+    required this._fileService,
     required EpisodeRepository episodeRepository,
-    required Logger logger,
-    Future<void> Function(int episodeId)? onDownloadCompleted,
-    Future<void> Function(int episodeId, int bytes)?
-    onDownloadCompletedWithBytes,
-  }) : _repository = repository,
-       _fileService = fileService,
-       _episodeRepo = episodeRepository,
-       _logger = logger,
-       _onDownloadCompleted = onDownloadCompleted,
-       _onDownloadCompletedWithBytes = onDownloadCompletedWithBytes {
+    required this._logger,
+    this._onDownloadCompleted,
+    this._onDownloadCompletedWithBytes,
+  }) : _episodeRepo = episodeRepository {
     _init();
   }
 

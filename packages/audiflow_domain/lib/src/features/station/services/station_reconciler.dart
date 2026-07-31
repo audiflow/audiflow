@@ -13,7 +13,7 @@ import '../models/station_podcast.dart';
 /// Evaluates episodes against station filter conditions and maintains
 /// the [StationEpisode] materialized view via diff-based updates.
 class StationReconciler {
-  StationReconciler({required Isar isar}) : _isar = isar;
+  StationReconciler({required this._isar});
 
   final Isar _isar;
 

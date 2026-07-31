@@ -17,9 +17,7 @@ PlaybackHistoryRepository playbackHistoryRepository(Ref ref) {
 
 /// Implementation of [PlaybackHistoryRepository] using Isar database.
 class PlaybackHistoryRepositoryImpl implements PlaybackHistoryRepository {
-  PlaybackHistoryRepositoryImpl({
-    required PlaybackHistoryLocalDatasource datasource,
-  }) : _datasource = datasource;
+  PlaybackHistoryRepositoryImpl({required this._datasource});
 
   final PlaybackHistoryLocalDatasource _datasource;
 

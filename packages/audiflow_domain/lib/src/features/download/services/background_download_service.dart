@@ -26,20 +26,14 @@ const _maxRetryAttempts = 5;
 /// foreground pickup.
 class BackgroundDownloadService {
   BackgroundDownloadService({
-    required DownloadRepository downloadRepo,
-    required EpisodeRepository episodeRepo,
-    required Dio dio,
-    required String downloadsDir,
-    Logger? logger,
-    Duration timeBudget = const Duration(minutes: 5),
-    bool isOnWifi = false,
-  }) : _downloadRepo = downloadRepo,
-       _episodeRepo = episodeRepo,
-       _dio = dio,
-       _downloadsDir = downloadsDir,
-       _logger = logger,
-       _timeBudget = timeBudget,
-       _isOnWifi = isOnWifi;
+    required this._downloadRepo,
+    required this._episodeRepo,
+    required this._dio,
+    required this._downloadsDir,
+    this._logger,
+    this._timeBudget = const Duration(minutes: 5),
+    this._isOnWifi = false,
+  });
 
   final DownloadRepository _downloadRepo;
   final EpisodeRepository _episodeRepo;

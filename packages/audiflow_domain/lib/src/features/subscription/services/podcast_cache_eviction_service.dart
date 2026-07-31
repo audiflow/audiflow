@@ -18,13 +18,11 @@ import '../repositories/subscription_repository.dart';
 class PodcastCacheEvictionService {
   PodcastCacheEvictionService({
     required SubscriptionRepository subscriptionRepository,
-    required Isar isar,
-    required Logger logger,
+    required this._isar,
+    required this._logger,
     this.maxAge = const Duration(days: 7),
     this.maxCachedPodcasts = 20,
-  }) : _subscriptionRepo = subscriptionRepository,
-       _isar = isar,
-       _logger = logger;
+  }) : _subscriptionRepo = subscriptionRepository;
 
   final SubscriptionRepository _subscriptionRepo;
   final Isar _isar;

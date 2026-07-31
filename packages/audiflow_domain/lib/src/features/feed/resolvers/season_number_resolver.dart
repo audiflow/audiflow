@@ -56,7 +56,7 @@ bool hasReliableSeasonNumbers(Iterable<Episode> episodes) {
 
 /// Resolver that groups episodes by the RSS seasonNumber field.
 class SeasonNumberResolver implements SmartPlaylistResolver {
-  SeasonNumberResolver({Logger? logger}) : _logger = logger;
+  SeasonNumberResolver({this._logger});
 
   final Logger? _logger;
 

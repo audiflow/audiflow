@@ -34,30 +34,20 @@ void _noopDiagnosticSink(String event, Map<String, Object?> data) {}
 /// player or `audio_session`.
 class AudioInterruptionHandler {
   AudioInterruptionHandler({
-    required DuckInterruptionBehavior Function() readDuckBehavior,
-    required bool Function() isPlaying,
-    required Duration Function() currentPosition,
-    required Future<void> Function(Duration) seek,
-    required Future<void> Function() pause,
-    required Future<void> Function() resume,
-    required Future<void> Function(double) setVolume,
-    Duration rewindBeforePause = const Duration(
+    required this._readDuckBehavior,
+    required this._isPlaying,
+    required this._currentPosition,
+    required this._seek,
+    required this._pause,
+    required this._resume,
+    required this._setVolume,
+    this._rewindBeforePause = const Duration(
       seconds: SettingsDefaults.interruptionRewindSeconds,
     ),
-    double duckedVolume = 0.3,
-    double fullVolume = 1.0,
-    PlaybackInterruptionDiagnosticSink onDiagnostic = _noopDiagnosticSink,
-  }) : _readDuckBehavior = readDuckBehavior,
-       _isPlaying = isPlaying,
-       _currentPosition = currentPosition,
-       _seek = seek,
-       _pause = pause,
-       _resume = resume,
-       _setVolume = setVolume,
-       _rewindBeforePause = rewindBeforePause,
-       _duckedVolume = duckedVolume,
-       _fullVolume = fullVolume,
-       _onDiagnostic = onDiagnostic;
+    this._duckedVolume = 0.3,
+    this._fullVolume = 1.0,
+    this._onDiagnostic = _noopDiagnosticSink,
+  });
 
   final DuckInterruptionBehavior Function() _readDuckBehavior;
   final bool Function() _isPlaying;

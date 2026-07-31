@@ -59,7 +59,7 @@ class _PluginShowDelegate implements NotificationsShowDelegate {
 }
 
 class BackgroundNotificationService {
-  BackgroundNotificationService({Logger? logger}) : _logger = logger;
+  BackgroundNotificationService({this._logger});
 
   final Logger? _logger;
 

@@ -39,18 +39,13 @@ PlaybackHistoryService playbackHistoryService(Ref ref) {
 class PlaybackHistoryService {
   PlaybackHistoryService(
     this._repository, {
-    required double Function() getCompletionThreshold,
-    StationReconcilerService? reconcilerService,
-    DownloadService? downloadService,
-    ReviewPromptRepository? reviewPromptRepository,
-    ReviewPromptTrigger? reviewPromptTrigger,
+    required this._getCompletionThreshold,
+    this._reconcilerService,
+    this._downloadService,
+    this._reviewPromptRepository,
+    this._reviewPromptTrigger,
     DateTime Function()? clock,
-  }) : _getCompletionThreshold = getCompletionThreshold,
-       _reconcilerService = reconcilerService,
-       _downloadService = downloadService,
-       _reviewPromptRepository = reviewPromptRepository,
-       _reviewPromptTrigger = reviewPromptTrigger,
-       _clock = clock ?? DateTime.now;
+  }) : _clock = clock ?? DateTime.now;
 
   final PlaybackHistoryRepository _repository;
   final double Function() _getCompletionThreshold;

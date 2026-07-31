@@ -4,7 +4,7 @@ import '../../models/parental_control_settings.dart';
 import '../../models/podcast_parental_flags.dart';
 
 class ParentalControlLocalDataSource {
-  ParentalControlLocalDataSource({required Isar isar}) : _isar = isar;
+  ParentalControlLocalDataSource({required this._isar});
 
   final Isar _isar;
 

@@ -25,7 +25,7 @@ class DefaultPodcastBuilder
     implements PodcastEntityBuilder<PodcastFeed, PodcastItem> {
   final Logger? _logger;
 
-  DefaultPodcastBuilder({Logger? logger}) : _logger = logger;
+  DefaultPodcastBuilder({this._logger});
 
   @override
   PodcastFeed buildFeed(Map<String, dynamic> feedData, String sourceUrl) {

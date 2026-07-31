@@ -31,24 +31,16 @@ const _maxNotifications = 7;
 /// [timeBudget] elapses.
 class BackgroundRefreshService {
   BackgroundRefreshService({
-    required SubscriptionRepository subscriptionRepo,
-    required EpisodeRepository episodeRepo,
-    required AutoDownloadEnqueuer autoDownloadEnqueuer,
-    required PlaybackHistoryRepository playbackHistoryRepo,
-    required AppSettingsRepository settingsRepo,
-    required SyncFeedCallback syncFeed,
-    required ShowNotificationCallback showNotification,
-    Logger? logger,
-    Duration timeBudget = const Duration(seconds: 25),
-  }) : _subscriptionRepo = subscriptionRepo,
-       _episodeRepo = episodeRepo,
-       _autoDownloadEnqueuer = autoDownloadEnqueuer,
-       _playbackHistoryRepo = playbackHistoryRepo,
-       _settingsRepo = settingsRepo,
-       _syncFeed = syncFeed,
-       _showNotification = showNotification,
-       _logger = logger,
-       _timeBudget = timeBudget;
+    required this._subscriptionRepo,
+    required this._episodeRepo,
+    required this._autoDownloadEnqueuer,
+    required this._playbackHistoryRepo,
+    required this._settingsRepo,
+    required this._syncFeed,
+    required this._showNotification,
+    this._logger,
+    this._timeBudget = const Duration(seconds: 25),
+  });
 
   final SubscriptionRepository _subscriptionRepo;
   final EpisodeRepository _episodeRepo;

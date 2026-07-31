@@ -36,12 +36,10 @@ FeedSyncService feedSyncService(Ref ref) {
 /// when known episode GUIDs are encountered.
 class FeedSyncService {
   FeedSyncService({
-    required Ref ref,
-    required Logger logger,
+    required this._ref,
+    required this._logger,
     FeedSyncDiagnosticSink? onDiagnostic,
-  }) : _ref = ref,
-       _logger = logger,
-       _onDiagnostic = onDiagnostic ?? noopFeedSyncDiagnosticSink;
+  }) : _onDiagnostic = onDiagnostic ?? noopFeedSyncDiagnosticSink;
 
   final Ref _ref;
   final Logger _logger;

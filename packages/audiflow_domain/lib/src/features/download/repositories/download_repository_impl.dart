@@ -18,8 +18,7 @@ DownloadRepository downloadRepository(Ref ref) {
 
 /// Implementation of [DownloadRepository] using Isar database.
 class DownloadRepositoryImpl implements DownloadRepository {
-  DownloadRepositoryImpl({required DownloadLocalDatasource datasource})
-    : _datasource = datasource;
+  DownloadRepositoryImpl({required this._datasource});
 
   final DownloadLocalDatasource _datasource;
 

@@ -85,28 +85,19 @@ DownloadService downloadService(Ref ref) {
 
 class DownloadService {
   DownloadService({
-    required DownloadRepository repository,
-    required DownloadQueueService queueService,
-    required DownloadFileService fileService,
+    required this._repository,
+    required this._queueService,
+    required this._fileService,
     required EpisodeRepository episodeRepository,
     required SubscriptionRepository subscriptionRepository,
-    required Logger logger,
-    required bool Function() getWifiOnly,
-    required bool Function() getAutoDeletePlayed,
-    required int Function() getBatchDownloadLimit,
-    StationReconcilerService? reconcilerService,
-    AnalyticsService? analytics,
-  }) : _repository = repository,
-       _queueService = queueService,
-       _fileService = fileService,
-       _episodeRepo = episodeRepository,
-       _subscriptionRepo = subscriptionRepository,
-       _logger = logger,
-       _getWifiOnly = getWifiOnly,
-       _getAutoDeletePlayed = getAutoDeletePlayed,
-       _getBatchDownloadLimit = getBatchDownloadLimit,
-       _reconcilerService = reconcilerService,
-       _analytics = analytics;
+    required this._logger,
+    required this._getWifiOnly,
+    required this._getAutoDeletePlayed,
+    required this._getBatchDownloadLimit,
+    this._reconcilerService,
+    this._analytics,
+  }) : _episodeRepo = episodeRepository,
+       _subscriptionRepo = subscriptionRepository;
 
   final DownloadRepository _repository;
   final DownloadQueueService _queueService;

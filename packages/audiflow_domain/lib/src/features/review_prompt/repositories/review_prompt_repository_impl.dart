@@ -15,10 +15,9 @@ import 'review_prompt_repository.dart';
 class ReviewPromptRepositoryImpl implements ReviewPromptRepository {
   ReviewPromptRepositoryImpl(
     this._prefs, {
-    Logger? logger,
+    this._logger,
     DateTime Function()? clock,
-  }) : _logger = logger,
-       _clock = clock ?? DateTime.now {
+  }) : _clock = clock ?? DateTime.now {
     _snapshot = _safeLoad();
   }
 
