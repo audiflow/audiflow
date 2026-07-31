@@ -16,11 +16,17 @@
                     <view key="view" contentMode="scaleToFill" id="Ze5-6b-2t3">
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
+                            <imageView opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleAspectFill" image="LaunchBackground" translatesAutoresizingMaskIntoConstraints="NO" id="bgI-mg-vw1">
+                            </imageView>
                             <imageView opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" image="LaunchImage" translatesAutoresizingMaskIntoConstraints="NO" id="YRO-k0-Ey4">
                             </imageView>
                         </subviews>
-                        <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <color key="backgroundColor" red="0.85882352941176465" green="0.52549019607843139" blue="0.28235294117647058" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
+                            <constraint firstItem="bgI-mg-vw1" firstAttribute="top" secondItem="Ze5-6b-2t3" secondAttribute="top" id="bgc-top-001"/>
+                            <constraint firstItem="bgI-mg-vw1" firstAttribute="bottom" secondItem="Ze5-6b-2t3" secondAttribute="bottom" id="bgc-bot-002"/>
+                            <constraint firstItem="bgI-mg-vw1" firstAttribute="leading" secondItem="Ze5-6b-2t3" secondAttribute="leading" id="bgc-lea-003"/>
+                            <constraint firstItem="bgI-mg-vw1" firstAttribute="trailing" secondItem="Ze5-6b-2t3" secondAttribute="trailing" id="bgc-tra-004"/>
                             <constraint firstItem="YRO-k0-Ey4" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="1a2-6s-vTC"/>
                             <constraint firstItem="YRO-k0-Ey4" firstAttribute="centerY" secondItem="Ze5-6b-2t3" secondAttribute="centerY" id="4X2-HB-R7a"/>
                         </constraints>
@@ -32,6 +38,7 @@
         </scene>
     </scenes>
     <resources>
-        <image name="LaunchImage" width="168" height="185"/>
+        <image name="LaunchBackground" width="1290" height="2796"/>
+        <image name="LaunchImage" width="173" height="173"/>
     </resources>
 </document>
