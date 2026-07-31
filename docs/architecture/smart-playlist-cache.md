@@ -52,6 +52,16 @@ Changes that do NOT require a bump:
 | Pattern-driven config | `SmartPlaylistEntity.configVersion` | Upstream `PatternSummary.dataVersion` change |
 | Auto-detect resolver | `SmartPlaylistEntity.heuristicVersion` | Any resolver's `heuristicVersion` bump |
 
+### Config version migration
+
+Episode numbering (`Episode.seasonNumber` / `episodeNumber`) is extracted from preset rules only at ingest, so a config update leaves already-stored episodes with stale numbering. When a `configVersion` mismatch is detected on cache load, `_migrateToNewConfigVersion` (in `providers/preset_providers.dart`):
+
+1. Fetches the new config and re-runs `EpisodeReExtractionService` over all stored episodes of the podcast, persisting any numbering changes
+2. Deletes the stale `SmartPlaylistEntity` and `SmartPlaylistGroupEntity` rows for the podcast
+3. Re-resolves and persists the grouping, advancing `configVersion` to the new `dataVersion`
+
+If the config fetch fails, the stale cache is kept and a transient in-memory re-resolve is served; the migration retries on the next read.
+
 ### Manual escape hatch
 
 The Storage & Data screen has a "Podcast Cache" clear button that purges all `SmartPlaylistEntity` rows, the disk config cache, and subscription HTTP cache headers.
