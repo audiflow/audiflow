@@ -81,6 +81,7 @@ export 'src/features/feed/services/feed_sync_service.dart';
 export 'src/features/feed/models/feed_sync_result.dart';
 export 'src/features/feed/models/new_episode_notification.dart';
 export 'src/features/feed/services/effective_episode_title.dart';
+export 'src/features/feed/services/episode_re_extraction_service.dart';
 export 'src/features/feed/services/effective_thumbnails.dart';
 export 'src/features/feed/services/smart_playlist_resolver_service.dart';
 
