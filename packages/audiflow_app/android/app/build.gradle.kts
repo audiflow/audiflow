@@ -17,7 +17,9 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "com.reedom.audiflow_app"
-    compileSdk = flutter.compileSdkVersion
+    // permission_handler_android 14.x compiles against SDK 37, which is
+    // above the Flutter 3.47 default (36). Keep in sync with that plugin.
+    compileSdk = 37
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
