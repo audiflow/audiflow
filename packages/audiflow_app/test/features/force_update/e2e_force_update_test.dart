@@ -321,48 +321,46 @@ void main() {
     timeout: _testTimeout,
   );
 
-  testWidgets(
-    '4. Cached HardUpdate is honored when remote is offline',
-    (tester) async {
-      final cachedAt = DateTime.now().toUtc().toIso8601String();
-      final h = await _makeContainer(
-        version: Version.parse('1.0.0'),
-        seedPrefs: {
-          forceUpdateCacheKey: _cachedHardUpdateJson(),
-          forceUpdateLastFetchKey: cachedAt,
-        },
+  testWidgets('4. Cached HardUpdate is honored when remote is offline', (
+    tester,
+  ) async {
+    final cachedAt = DateTime.now().toUtc().toIso8601String();
+    final h = await _makeContainer(
+      version: Version.parse('1.0.0'),
+      seedPrefs: {
+        forceUpdateCacheKey: _cachedHardUpdateJson(),
+        forceUpdateLastFetchKey: cachedAt,
+      },
+    );
+    addTearDown(h.container.dispose);
+
+    // Simulate offline: remote throws on every call.
+    h.adapter.onGet(_configUrl, (server) {
+      server.throws(
+        0,
+        DioException(
+          requestOptions: RequestOptions(path: _configUrl),
+          type: DioExceptionType.connectionError,
+          error: 'offline',
+        ),
       );
-      addTearDown(h.container.dispose);
+    });
 
-      // Simulate offline: remote throws on every call.
-      h.adapter.onGet(_configUrl, (server) {
-        server.throws(
-          0,
-          DioException(
-            requestOptions: RequestOptions(path: _configUrl),
-            type: DioExceptionType.connectionError,
-            error: 'offline',
-          ),
-        );
-      });
+    await tester.pumpWidget(_wrap(h.container));
+    await tester.pumpAndSettle();
 
-      await tester.pumpWidget(_wrap(h.container));
-      await tester.pumpAndSettle();
+    // Cache-honored HardUpdate keeps the screen up even though the
+    // background refresh hit a network error (fail-open contract).
+    expect(find.byType(ForceUpdateScreen), findsOneWidget);
+    expect(find.byKey(const Key('child-ok')), findsNothing);
 
-      // Cache-honored HardUpdate keeps the screen up even though the
-      // background refresh hit a network error (fail-open contract).
-      expect(find.byType(ForceUpdateScreen), findsOneWidget);
-      expect(find.byKey(const Key('child-ok')), findsNothing);
-
-      // The warning sink received the fetch failure.
-      check(h.warningSink.records).isNotEmpty();
-      final hasFetchFailureRecord = h.warningSink.records.any(
-        (r) => r.message.contains('fetch failed') && r.error != null,
-      );
-      check(hasFetchFailureRecord).isTrue();
-    },
-    timeout: _testTimeout,
-  );
+    // The warning sink received the fetch failure.
+    check(h.warningSink.records).isNotEmpty();
+    final hasFetchFailureRecord = h.warningSink.records.any(
+      (r) => r.message.contains('fetch failed') && r.error != null,
+    );
+    check(hasFetchFailureRecord).isTrue();
+  }, timeout: _testTimeout);
 
   testWidgets(
     '5. Soft -> Hard transition via refresh records a warning breadcrumb',

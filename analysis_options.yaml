@@ -12,8 +12,6 @@ analyzer:
     - "**/*.gr.dart"
     - lib/l10n/**
     - lib/generated/**
-  plugins:
-    - custom_lint
 
 linter:
   rules:

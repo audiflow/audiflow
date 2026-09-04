@@ -2,33 +2,21 @@ PODS:
   - Flutter (1.0.0)
   - isar_community_flutter_libs (1.0.0):
     - Flutter
-  - permission_handler_apple (9.3.0):
-    - Flutter
-  - workmanager_apple (0.0.1):
-    - Flutter
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
   - isar_community_flutter_libs (from `.symlinks/plugins/isar_community_flutter_libs/ios`)
-  - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
-  - workmanager_apple (from `.symlinks/plugins/workmanager_apple/ios`)
 
 EXTERNAL SOURCES:
   Flutter:
     :path: Flutter
   isar_community_flutter_libs:
     :path: ".symlinks/plugins/isar_community_flutter_libs/ios"
-  permission_handler_apple:
-    :path: ".symlinks/plugins/permission_handler_apple/ios"
-  workmanager_apple:
-    :path: ".symlinks/plugins/workmanager_apple/ios"
 
 SPEC CHECKSUMS:
-  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  Flutter: 71a624a5bc0c04062bf19101d501e466baf2fb47
   isar_community_flutter_libs: bede843185a61a05ff364a05c9b23209523f7e0d
-  permission_handler_apple: 4ed2196e43d0651e8ff7ca3483a069d469701f2d
-  workmanager_apple: 904529ae31e97fc5be632cf628507652294a0778
 
 PODFILE CHECKSUM: 1487c65af0882a54751d121b143afdcfb5bda9d1
 
-COCOAPODS: 1.16.2
+COCOAPODS: 1.17.0

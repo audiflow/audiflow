@@ -60,7 +60,7 @@ class _FeedSyncSettingsScreenState
       return;
     }
 
-    final status = await Permission.notification.status;
+    final status = await _resolveNotificationPermission();
     if (status.isGranted) {
       await _update(
         repo,
@@ -70,40 +70,42 @@ class _FeedSyncSettingsScreenState
       return;
     }
 
-    if (status.isPermanentlyDenied) {
-      if (!mounted) return;
-      final l10n = AppLocalizations.of(context);
-      await showDialog<void>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: Text(l10n.notificationPermissionRequiredTitle),
-          content: Text(l10n.notificationPermissionRequiredMessage),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(l10n.commonCancel),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(ctx);
-                openAppSettings();
-              },
-              child: Text(l10n.notificationPermissionOpenSettings),
-            ),
-          ],
-        ),
-      );
-      return;
+    if (status.isPermanentlyDenied && mounted) {
+      await _showNotificationPermissionDialog();
     }
+  }
 
-    final result = await Permission.notification.request();
-    if (result.isGranted) {
-      await _update(
-        repo,
-        () => repo.setNotifyNewEpisodes(true),
-        replaceExisting: true,
-      );
-    }
+  // Android reports a permanently denied permission as plain `denied` from
+  // `status`; only `request()` reveals it (and resolves instantly, without a
+  // dialog). So always request unless the status is already conclusive.
+  Future<PermissionStatus> _resolveNotificationPermission() async {
+    final status = await Permission.notification.status;
+    if (status.isGranted || status.isPermanentlyDenied) return status;
+    return Permission.notification.request();
+  }
+
+  Future<void> _showNotificationPermissionDialog() async {
+    final l10n = AppLocalizations.of(context);
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.notificationPermissionRequiredTitle),
+        content: Text(l10n.notificationPermissionRequiredMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.commonCancel),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              openAppSettings();
+            },
+            child: Text(l10n.notificationPermissionOpenSettings),
+          ),
+        ],
+      ),
+    );
   }
 
   @override

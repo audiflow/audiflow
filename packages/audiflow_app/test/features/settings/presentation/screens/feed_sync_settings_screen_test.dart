@@ -1,9 +1,13 @@
 import 'package:audiflow_app/features/settings/presentation/screens/feed_sync_settings_screen.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
+import 'package:audiflow_core/audiflow_core.dart';
+import 'package:checks/checks.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:permission_handler_platform_interface/permission_handler_platform_interface.dart';
+import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -100,4 +104,108 @@ void main() {
       expect(tiles[0].value, isFalse);
     });
   });
+
+  group('FeedSyncSettingsScreen notification permission', () {
+    late PermissionHandlerPlatform originalPlatform;
+    late _FakePermissionHandler fakePermissions;
+
+    setUp(() async {
+      // Notifications default to on; start from off so the tap requests.
+      SharedPreferences.setMockInitialValues({
+        SettingsKeys.notifyNewEpisodes: false,
+      });
+      prefs = await SharedPreferences.getInstance();
+      originalPlatform = PermissionHandlerPlatform.instance;
+    });
+
+    tearDown(() {
+      PermissionHandlerPlatform.instance = originalPlatform;
+    });
+
+    Future<void> tapNotifySwitch(WidgetTester tester) async {
+      await tester.pumpWidget(buildTestWidget());
+      await tester.tap(find.byType(Switch).last);
+      await tester.pumpAndSettle();
+    }
+
+    bool notifySwitchValue(WidgetTester tester) {
+      return tester
+          .widgetList<SwitchListTile>(find.byType(SwitchListTile))
+          .last
+          .value;
+    }
+
+    testWidgets('enables notifications when the request is granted', (
+      tester,
+    ) async {
+      fakePermissions = _FakePermissionHandler(
+        status: PermissionStatus.denied,
+        requestResult: PermissionStatus.granted,
+      );
+      PermissionHandlerPlatform.instance = fakePermissions;
+
+      await tapNotifySwitch(tester);
+
+      check(fakePermissions.requestCount).equals(1);
+      check(notifySwitchValue(tester)).isTrue();
+      check(find.text('Permission required').evaluate()).isEmpty();
+    });
+
+    testWidgets(
+      'shows settings dialog when the request is permanently denied',
+      (tester) async {
+        // Android reports a permanently denied permission as `denied` from
+        // `status`; only the request result reveals it.
+        fakePermissions = _FakePermissionHandler(
+          status: PermissionStatus.denied,
+          requestResult: PermissionStatus.permanentlyDenied,
+        );
+        PermissionHandlerPlatform.instance = fakePermissions;
+
+        await tapNotifySwitch(tester);
+
+        check(fakePermissions.requestCount).equals(1);
+        check(notifySwitchValue(tester)).isFalse();
+        check(find.text('Permission required').evaluate().length).equals(1);
+      },
+    );
+
+    testWidgets('skips the request when status is already permanently denied', (
+      tester,
+    ) async {
+      fakePermissions = _FakePermissionHandler(
+        status: PermissionStatus.permanentlyDenied,
+        requestResult: PermissionStatus.permanentlyDenied,
+      );
+      PermissionHandlerPlatform.instance = fakePermissions;
+
+      await tapNotifySwitch(tester);
+
+      check(fakePermissions.requestCount).equals(0);
+      check(notifySwitchValue(tester)).isFalse();
+      check(find.text('Permission required').evaluate().length).equals(1);
+    });
+  });
+}
+
+class _FakePermissionHandler extends PermissionHandlerPlatform
+    with MockPlatformInterfaceMixin {
+  _FakePermissionHandler({required this.status, required this.requestResult});
+
+  final PermissionStatus status;
+  final PermissionStatus requestResult;
+  int requestCount = 0;
+
+  @override
+  Future<PermissionStatus> checkPermissionStatus(Permission permission) async {
+    return status;
+  }
+
+  @override
+  Future<Map<Permission, PermissionStatus>> requestPermissions(
+    List<Permission> permissions,
+  ) async {
+    requestCount += 1;
+    return {for (final permission in permissions) permission: requestResult};
+  }
 }

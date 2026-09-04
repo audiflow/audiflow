@@ -62,14 +62,13 @@ class OpmlImportController extends _$OpmlImportController {
     state = OpmlPickLoading();
 
     try {
-      final result = await FilePicker.pickFiles(type: FileType.any);
+      final file = await FilePicker.pickFile(type: FileType.any);
 
-      if (result == null || result.files.isEmpty) {
+      if (file == null) {
         state = OpmlPickCancelled();
         return true;
       }
 
-      final file = result.files.first;
       final path = file.path;
       if (path == null) {
         state = OpmlPickError('Could not read file');

@@ -131,7 +131,7 @@ class _PodcastSearchServiceImpl implements PodcastSearchService {
     required PodcastSearchEntityBuilder<T> builder,
   }) async {
     if (1 == _providers.length) {
-      return _providers.first.searchWithBuilder(query, builder: builder);
+      return await _providers.first.searchWithBuilder(query, builder: builder);
     }
 
     // For multiple providers, aggregate results

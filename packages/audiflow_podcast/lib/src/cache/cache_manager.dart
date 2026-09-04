@@ -55,14 +55,14 @@ class CacheManager {
   /// Checks if a cache file exists for the given URL.
   Future<bool> cacheExists(String url) async {
     final cacheFile = await _getCacheFile(url);
-    return cacheFile.exists();
+    return await cacheFile.exists();
   }
 
   /// Gets the size of a cache file in bytes.
   Future<int> getCacheFileSize(String url) async {
     final cacheFile = await _getCacheFile(url);
     if (await cacheFile.exists()) {
-      return cacheFile.length();
+      return await cacheFile.length();
     }
     return 0;
   }

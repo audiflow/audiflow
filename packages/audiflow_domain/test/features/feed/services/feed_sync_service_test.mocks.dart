@@ -3,6 +3,7 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
+
 import 'dart:async' as _i11;
 
 import 'package:audiflow_core/audiflow_core.dart' as _i21;
@@ -1670,6 +1671,89 @@ class MockDio extends _i1.Mock implements _i9.Dio {
                   #deleteUri,
                   [uri],
                   {#data: data, #options: options, #cancelToken: cancelToken},
+                ),
+              ),
+            ),
+          )
+          as _i11.Future<_i8.Response<T>>);
+
+  @override
+  _i11.Future<_i8.Response<T>> query<T>(
+    String? path, {
+    Object? data,
+    Map<String, dynamic>? queryParameters,
+    _i4.Options? options,
+    _i29.CancelToken? cancelToken,
+    _i4.ProgressCallback? onSendProgress,
+    _i4.ProgressCallback? onReceiveProgress,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(
+              #query,
+              [path],
+              {
+                #data: data,
+                #queryParameters: queryParameters,
+                #options: options,
+                #cancelToken: cancelToken,
+                #onSendProgress: onSendProgress,
+                #onReceiveProgress: onReceiveProgress,
+              },
+            ),
+            returnValue: _i11.Future<_i8.Response<T>>.value(
+              _FakeResponse_6<T>(
+                this,
+                Invocation.method(
+                  #query,
+                  [path],
+                  {
+                    #data: data,
+                    #queryParameters: queryParameters,
+                    #options: options,
+                    #cancelToken: cancelToken,
+                    #onSendProgress: onSendProgress,
+                    #onReceiveProgress: onReceiveProgress,
+                  },
+                ),
+              ),
+            ),
+          )
+          as _i11.Future<_i8.Response<T>>);
+
+  @override
+  _i11.Future<_i8.Response<T>> queryUri<T>(
+    Uri? uri, {
+    Object? data,
+    _i4.Options? options,
+    _i29.CancelToken? cancelToken,
+    _i4.ProgressCallback? onSendProgress,
+    _i4.ProgressCallback? onReceiveProgress,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(
+              #queryUri,
+              [uri],
+              {
+                #data: data,
+                #options: options,
+                #cancelToken: cancelToken,
+                #onSendProgress: onSendProgress,
+                #onReceiveProgress: onReceiveProgress,
+              },
+            ),
+            returnValue: _i11.Future<_i8.Response<T>>.value(
+              _FakeResponse_6<T>(
+                this,
+                Invocation.method(
+                  #queryUri,
+                  [uri],
+                  {
+                    #data: data,
+                    #options: options,
+                    #cancelToken: cancelToken,
+                    #onSendProgress: onSendProgress,
+                    #onReceiveProgress: onReceiveProgress,
+                  },
                 ),
               ),
             ),
