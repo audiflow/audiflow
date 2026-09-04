@@ -1,6 +1,7 @@
 import 'package:audiflow_app/features/settings/presentation/screens/feed_sync_settings_screen.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_core/audiflow_core.dart';
+import 'package:checks/checks.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -145,9 +146,9 @@ void main() {
 
       await tapNotifySwitch(tester);
 
-      expect(fakePermissions.requestCount, 1);
-      expect(notifySwitchValue(tester), isTrue);
-      expect(find.text('Permission required'), findsNothing);
+      check(fakePermissions.requestCount).equals(1);
+      check(notifySwitchValue(tester)).isTrue();
+      check(find.text('Permission required').evaluate()).isEmpty();
     });
 
     testWidgets(
@@ -163,9 +164,9 @@ void main() {
 
         await tapNotifySwitch(tester);
 
-        expect(fakePermissions.requestCount, 1);
-        expect(notifySwitchValue(tester), isFalse);
-        expect(find.text('Permission required'), findsOneWidget);
+        check(fakePermissions.requestCount).equals(1);
+        check(notifySwitchValue(tester)).isFalse();
+        check(find.text('Permission required').evaluate().length).equals(1);
       },
     );
 
@@ -180,9 +181,9 @@ void main() {
 
       await tapNotifySwitch(tester);
 
-      expect(fakePermissions.requestCount, 0);
-      expect(notifySwitchValue(tester), isFalse);
-      expect(find.text('Permission required'), findsOneWidget);
+      check(fakePermissions.requestCount).equals(0);
+      check(notifySwitchValue(tester)).isFalse();
+      check(find.text('Permission required').evaluate().length).equals(1);
     });
   });
 }
