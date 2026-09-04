@@ -51,7 +51,7 @@ final class ParentalControlControllerProvider
 }
 
 String _$parentalControlControllerHash() =>
-    r'ead426c9b52597fdcda0bcd2bf7dacf092f27cbe';
+    r'ac6c61d01eb13b6c046547e45d6b5dd136757889';
 
 /// Stateless action holder for parental control write operations.
 ///

@@ -26,6 +26,10 @@ dev_dependencies:
   pedantic_mono: ^1.35.0
 
 dependency_overrides:
+  # flutter_html 3.0.0 (latest) calls the top-level `matches` helper that
+  # html 0.15.7 removed from query_selector. Hold html back until flutter_html
+  # ships a release built against 0.15.7+.
+  html: 0.15.6
   isar_community:
     git:
       url: https://github.com/isar-community/isar-community.git

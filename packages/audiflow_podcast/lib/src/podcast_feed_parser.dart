@@ -122,7 +122,7 @@ class PodcastRssParser {
   Stream<PodcastEntity> parseFromStream(Stream<List<int>> xmlStream) async* {
     StreamingXmlParser? parser;
     late StreamController<PodcastEntity> controller;
-    StreamSubscription? entitySubscription;
+    StreamSubscription<PodcastEntity>? entitySubscription;
 
     try {
       parser = StreamingXmlParser();
@@ -236,7 +236,7 @@ class PodcastRssParser {
   ) async* {
     final cacheBuffer = <int>[];
     StreamController<List<int>>? parsingController;
-    StreamSubscription? networkSubscription;
+    StreamSubscription<List<int>>? networkSubscription;
 
     try {
       parsingController = StreamController<List<int>>();
