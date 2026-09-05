@@ -1,0 +1,29 @@
+# Allowlist for `wt step copy-ignored` (worktrunk). Only gitignored files
+# that also match a pattern here are copied from the primary checkout into a
+# new worktree. Patterns are gitignore-style; a bare name matches at any depth.
+#
+# Copy only hand-maintained files that a fresh worktree cannot regenerate.
+# Everything Flutter, Gradle, or CocoaPods generates stays out: files such as
+# .dart_tool/flutter_build/*/outputs.json, ios/Flutter/Generated.xcconfig, and
+# ios/Flutter/ephemeral/* record absolute paths into the primary checkout, and
+# a worktree build that reads them deleted the primary's generated l10n files
+# and wrote build products there (issue #448). `flutter run`, `pod install`,
+# and Gradle rebuild all of that on the first build.
+
+# Environment and flavor configuration
+.env.*
+.envrc
+
+# Firebase configuration per flavor
+google-services.json
+GoogleService-Info.plist
+
+# Android signing
+key.properties
+upload-keystore.jks
+
+# Pinned Flutter SDK link (fvm)
+.fvm/
+
+# Personal Claude Code permissions for this repo
+settings.local.json
