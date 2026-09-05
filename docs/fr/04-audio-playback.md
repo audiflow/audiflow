@@ -54,8 +54,12 @@ state and resume position stay coherent no matter where the listener touches it.
   playback so audio does not suddenly play out of the phone speaker.
 - **Resume after manual pause**: If the listener paused playback themselves, an interruption
   ending never auto-resumes — only auto-paused playback is auto-resumed.
-- **End of episode**: When an episode finishes, the next queued episode starts automatically;
-  if the queue is empty, playback returns to idle and the mini player clears.
+- **End of episode**: When an episode finishes, the next queued episode starts automatically
+  and the full player, if open, stays open showing the new episode. If the queue is empty,
+  playback returns to idle, the mini player clears, and an open full player dismisses itself
+  (together with any picker or dialog stacked on it) so the listener lands back on the screen
+  underneath instead of a blank player. Stopping playback outright from the system controls
+  clears the same state and dismisses the full player the same way.
 - **Failure case**: If an episode cannot be loaded or played, playback enters an error state
   rather than appearing stuck; the listener can retry by tapping play again.
 

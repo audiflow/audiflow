@@ -62,10 +62,52 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
     super.dispose();
   }
 
+  /// Last episode shown, kept so the exit animation has something to draw.
+  NowPlayingInfo? _lastNowPlaying;
+
+  /// Dismisses the sheet once nothing is left to show.
+  ///
+  /// The service clears now-playing when the queue is exhausted or playback
+  /// is stopped outright; advancing to the next queued episode replaces the
+  /// value instead, so the sheet stays open for that case.
+  ///
+  /// Routes stacked above the sheet (a picker, a dialog) go with it: the
+  /// listener fires once, and a sheet left behind would show nothing. A sheet
+  /// that is already being popped is left alone, since popping again would
+  /// hit the route underneath.
+  void _dismissWhenNothingPlaying(NowPlayingInfo? _, NowPlayingInfo? next) {
+    if (next != null || !mounted) return;
+    final sheetRoute = ModalRoute.of(context);
+    if (sheetRoute == null || !sheetRoute.isActive) return;
+
+    var reachedSheet = false;
+    Navigator.of(context, rootNavigator: true).popUntil((route) {
+      if (reachedSheet) return true;
+      reachedSheet = route == sheetRoute;
+      return false;
+    });
+  }
+
+  /// While the sheet slides out after now-playing was cleared, keep drawing
+  /// the last episode instead of the empty placeholder.
+  NowPlayingInfo? _nowPlayingWhileDismissing(BuildContext context) {
+    final route = ModalRoute.of(context);
+    if (route == null || route.isActive) return null;
+    return _lastNowPlaying;
+  }
+
   @override
   Widget build(BuildContext context) {
+    ref.listen<NowPlayingInfo?>(
+      nowPlayingControllerProvider,
+      _dismissWhenNothingPlaying,
+    );
+
     final l10n = AppLocalizations.of(context);
-    final nowPlaying = ref.watch(nowPlayingControllerProvider);
+    final nowPlaying =
+        ref.watch(nowPlayingControllerProvider) ??
+        _nowPlayingWhileDismissing(context);
+    _lastNowPlaying = nowPlaying ?? _lastNowPlaying;
     final playbackState = ref.watch(audioPlayerControllerProvider);
     final liveProgress = ref.watch(playbackProgressProvider);
     // Fall back to saved position/duration when no audio is loaded (post-restore).
@@ -260,6 +302,9 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
   }
 
   void _popSheetAndPush(String path, {Object? extra}) {
+    // The queue can end while a lookup above is awaited, and the listener
+    // then pops the sheet first; a second pop would hit the route underneath.
+    if (ModalRoute.of(context)?.isCurrent != true) return;
     final router = GoRouter.of(context);
     CupertinoSheetRoute.popSheet(context);
     router.push(path, extra: extra);
