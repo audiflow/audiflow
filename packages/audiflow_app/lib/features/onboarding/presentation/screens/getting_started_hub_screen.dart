@@ -39,12 +39,11 @@ class GettingStartedHubScreen extends ConsumerWidget {
             subtitle: l10n.gettingStartedStationsSubtitle,
             onTap: () => context.go(AppRoutes.stationNew),
           ),
-          _HubTile(
-            icon: Symbols.auto_awesome,
-            title: l10n.gettingStartedSmartPlaylistsTitle,
-            subtitle: l10n.gettingStartedSmartPlaylistsSubtitle,
-            onTap: () => context.go(AppRoutes.search),
-          ),
+          // A "Smart playlists" tile belongs here, but there is no smart
+          // playlist landing screen to open yet — it used to drop the user on
+          // Search, which reads as a broken link. Re-add it (icon
+          // Symbols.auto_awesome, strings gettingStartedSmartPlaylists*) once a
+          // real destination exists. See issue #444.
           const Divider(height: 32),
           ListTile(
             leading: const Icon(Symbols.replay),
