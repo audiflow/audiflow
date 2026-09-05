@@ -8,26 +8,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
+import '../../../../helpers/player_stubs.dart';
+
 const _nowPlaying = NowPlayingInfo(
   episodeUrl: 'https://example.com/episode.mp3',
   episodeTitle: 'Test Episode',
   podcastTitle: 'Test Podcast',
 );
-
-/// Minimal fake that only implements methods used by mini player tests.
-/// All other methods delegate to [noSuchMethod] which throws
-/// [UnimplementedError].
-class _FakeAppSettingsRepository implements AppSettingsRepository {
-  _FakeAppSettingsRepository({this.skipForwardSeconds = 30});
-
-  final int skipForwardSeconds;
-
-  @override
-  int getSkipForwardSeconds() => skipForwardSeconds;
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
-}
 
 void main() {
   Widget buildTestWidget(ProviderContainer container) {
@@ -46,15 +33,15 @@ void main() {
       final container = ProviderContainer(
         overrides: [
           nowPlayingControllerProvider.overrideWith(
-            () => _StubNowPlayingController(_nowPlaying),
+            () => StubNowPlayingController(_nowPlaying),
           ),
           audioPlayerControllerProvider.overrideWith(
-            () => _StubAudioPlayerController(
+            () => StubAudioPlayerController(
               const PlaybackState.paused(episodeUrl: 'test'),
             ),
           ),
           appSettingsRepositoryProvider.overrideWithValue(
-            _FakeAppSettingsRepository(skipForwardSeconds: 30),
+            StubAppSettingsRepository(skipForwardSeconds: 30),
           ),
           playbackProgressProvider.overrideWith((ref) => null),
         ],
@@ -70,18 +57,18 @@ void main() {
     });
 
     testWidgets('calls skipForward on tap', (tester) async {
-      final controller = _StubAudioPlayerController(
+      final controller = StubAudioPlayerController(
         const PlaybackState.playing(episodeUrl: 'test'),
       );
 
       final container = ProviderContainer(
         overrides: [
           nowPlayingControllerProvider.overrideWith(
-            () => _StubNowPlayingController(_nowPlaying),
+            () => StubNowPlayingController(_nowPlaying),
           ),
           audioPlayerControllerProvider.overrideWith(() => controller),
           appSettingsRepositoryProvider.overrideWithValue(
-            _FakeAppSettingsRepository(skipForwardSeconds: 15),
+            StubAppSettingsRepository(skipForwardSeconds: 15),
           ),
           playbackProgressProvider.overrideWith((ref) => null),
         ],
@@ -111,11 +98,11 @@ void main() {
       final container = ProviderContainer(
         overrides: [
           nowPlayingControllerProvider.overrideWith(
-            () => _StubNowPlayingController(_nowPlaying),
+            () => StubNowPlayingController(_nowPlaying),
           ),
           audioPlayerControllerProvider.overrideWith(() => controller),
           appSettingsRepositoryProvider.overrideWithValue(
-            _FakeAppSettingsRepository(),
+            StubAppSettingsRepository(),
           ),
           playbackProgressProvider.overrideWith((ref) => null),
         ],
@@ -152,55 +139,11 @@ void main() {
   });
 }
 
-class _StubNowPlayingController extends NowPlayingController {
-  _StubNowPlayingController(this._initial);
-  final NowPlayingInfo? _initial;
-
-  @override
-  NowPlayingInfo? build() => _initial;
-}
-
-class _StubAudioPlayerController extends AudioPlayerController {
-  _StubAudioPlayerController(this._initial);
-  final PlaybackState _initial;
-
-  bool skipForwardCalled = false;
-
-  @override
-  PlaybackState build() => _initial;
-
-  @override
-  Future<void> skipForward() async {
-    skipForwardCalled = true;
-  }
-
-  @override
-  Future<void> skipBackward() async {}
-
-  @override
-  Future<void> pause() async {}
-
-  @override
-  Future<void> stop() async {}
-
-  @override
-  Future<void> togglePlayPause([String? episodeUrl]) async {}
-
-  @override
-  Future<void> seek(Duration position) async {}
-
-  @override
-  Future<void> resume() async {}
-
-  @override
-  Future<void> setSpeed(double speed) async {}
-}
-
 /// Controller that transitions state to [PlaybackLoading] during
 /// [skipForward], simulating the real player behavior where state
 /// temporarily changes during a seek operation.
 class _StateTransitioningAudioPlayerController
-    extends _StubAudioPlayerController {
+    extends StubAudioPlayerController {
   _StateTransitioningAudioPlayerController(super._initial);
 
   @override
