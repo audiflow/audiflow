@@ -25,18 +25,6 @@ const _secondEpisode = NowPlayingInfo(
 const _openSheetKey = Key('open-sheet');
 const _openDialogKey = Key('open-dialog');
 
-/// Minimal fake that only implements methods used by the player screen.
-class _FakeAppSettingsRepository implements AppSettingsRepository {
-  @override
-  int getSkipForwardSeconds() => 30;
-
-  @override
-  int getSkipBackwardSeconds() => 15;
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
-}
-
 Future<ProviderContainer> _container() async {
   SharedPreferences.setMockInitialValues({});
   final prefs = await SharedPreferences.getInstance();
@@ -49,7 +37,7 @@ Future<ProviderContainer> _container() async {
       ),
       audioPlayerControllerProvider.overrideWith(_pausedPlayer),
       appSettingsRepositoryProvider.overrideWithValue(
-        _FakeAppSettingsRepository(),
+        StubAppSettingsRepository(),
       ),
       playbackProgressProvider.overrideWith((ref) => null),
       playbackSpeedProvider.overrideWith((ref) => Stream.value(1.0)),

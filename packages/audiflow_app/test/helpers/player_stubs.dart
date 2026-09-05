@@ -9,6 +9,27 @@ class StubNowPlayingController extends NowPlayingController {
   NowPlayingInfo? build() => _initial;
 }
 
+/// [AppSettingsRepository] exposing only the skip intervals the player
+/// widgets read; anything else throws so an unexpected call is loud.
+class StubAppSettingsRepository implements AppSettingsRepository {
+  StubAppSettingsRepository({
+    this.skipForwardSeconds = 30,
+    this.skipBackwardSeconds = 15,
+  });
+
+  final int skipForwardSeconds;
+  final int skipBackwardSeconds;
+
+  @override
+  int getSkipForwardSeconds() => skipForwardSeconds;
+
+  @override
+  int getSkipBackwardSeconds() => skipBackwardSeconds;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
 /// [AudioPlayerController] that starts in a fixed state and records skips.
 ///
 /// Only [skipForward] is overridden; the real methods touch the audio

@@ -16,21 +16,6 @@ const _nowPlaying = NowPlayingInfo(
   podcastTitle: 'Test Podcast',
 );
 
-/// Minimal fake that only implements methods used by mini player tests.
-/// All other methods delegate to [noSuchMethod] which throws
-/// [UnimplementedError].
-class _FakeAppSettingsRepository implements AppSettingsRepository {
-  _FakeAppSettingsRepository({this.skipForwardSeconds = 30});
-
-  final int skipForwardSeconds;
-
-  @override
-  int getSkipForwardSeconds() => skipForwardSeconds;
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
-}
-
 void main() {
   Widget buildTestWidget(ProviderContainer container) {
     return UncontrolledProviderScope(
@@ -56,7 +41,7 @@ void main() {
             ),
           ),
           appSettingsRepositoryProvider.overrideWithValue(
-            _FakeAppSettingsRepository(skipForwardSeconds: 30),
+            StubAppSettingsRepository(skipForwardSeconds: 30),
           ),
           playbackProgressProvider.overrideWith((ref) => null),
         ],
@@ -83,7 +68,7 @@ void main() {
           ),
           audioPlayerControllerProvider.overrideWith(() => controller),
           appSettingsRepositoryProvider.overrideWithValue(
-            _FakeAppSettingsRepository(skipForwardSeconds: 15),
+            StubAppSettingsRepository(skipForwardSeconds: 15),
           ),
           playbackProgressProvider.overrideWith((ref) => null),
         ],
@@ -117,7 +102,7 @@ void main() {
           ),
           audioPlayerControllerProvider.overrideWith(() => controller),
           appSettingsRepositoryProvider.overrideWithValue(
-            _FakeAppSettingsRepository(),
+            StubAppSettingsRepository(),
           ),
           playbackProgressProvider.overrideWith((ref) => null),
         ],
