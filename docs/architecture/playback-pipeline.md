@@ -51,8 +51,10 @@ update, but downloads a remote URL asynchronously and drops the follow-up
 update whenever another media item lands first. The iOS plugin also decodes
 the file at native size, and very large `MPMediaItemArtwork` images fail to
 render on the lock screen (#453). The Android plugin still applies its own
-`artDownscale*` setting on top (#451). When preparation fails the remote URL is
-published as a fallback, which is the pre-#453 behavior.
+`artDownscale*` setting on top (#451); it is set to the same 512 px so the
+prepared file decodes whole, because the plugin's power-of-two sample size
+would otherwise halve it to 256 px (#455). When preparation fails the remote
+URL is published as a fallback, which is the pre-#453 behavior.
 
 ### Layer 3: State management (Riverpod)
 
