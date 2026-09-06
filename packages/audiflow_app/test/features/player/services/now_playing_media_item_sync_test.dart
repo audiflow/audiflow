@@ -6,6 +6,7 @@ import 'package:audiflow_app/features/player/services/now_playing_media_item_syn
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:logger/logger.dart';
 
 const _artworkUrl = 'https://example.com/art.jpg';
 final _preparedUri = Uri.file('/cache/now_playing_artwork/abc.png');
@@ -56,6 +57,7 @@ void main() {
       readCurrent: () => sink.current,
       publish: sink.add,
       artworkPreparer: preparer,
+      logger: Logger(level: Level.off),
     );
   });
 

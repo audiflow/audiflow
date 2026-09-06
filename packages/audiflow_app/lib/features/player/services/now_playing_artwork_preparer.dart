@@ -7,8 +7,6 @@ import 'package:logger/logger.dart';
 
 import 'artwork_downscaler.dart';
 
-final _log = Logger(printer: PrefixPrinter(PrettyPrinter(methodCount: 0)));
-
 /// Long-edge limit for the artwork handed to the system media controls.
 ///
 /// The iOS lock screen renders the thumbnail well under this size, and
@@ -38,12 +36,14 @@ class FileNowPlayingArtworkPreparer implements NowPlayingArtworkPreparer {
     required this._cacheDirectory,
     required this._fetchBytes,
     required this._downscale,
+    required this._logger,
     this._maxEdgePixels = nowPlayingArtworkMaxEdgePixels,
   });
 
   final Directory _cacheDirectory;
   final ArtworkBytesFetcher _fetchBytes;
   final ArtworkDownscaler _downscale;
+  final Logger _logger;
   final int _maxEdgePixels;
 
   /// Rapid re-syncs of the same episode must share a single download.
@@ -64,7 +64,7 @@ class FileNowPlayingArtworkPreparer implements NowPlayingArtworkPreparer {
     } on Exception catch (e, stack) {
       // Artwork is decorative; playback metadata must not fail because
       // of it, so the caller falls back to the remote URL instead.
-      _log.w(
+      _logger.w(
         '[NowPlayingArtwork] Failed to prepare $artworkUrl',
         error: e,
         stackTrace: stack,

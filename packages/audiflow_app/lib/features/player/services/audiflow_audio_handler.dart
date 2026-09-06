@@ -47,6 +47,7 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
     readCurrent: () => mediaItem.valueOrNull,
     publish: mediaItem.add,
     artworkPreparer: _ref.read(nowPlayingArtworkPreparerProvider),
+    logger: _log,
   );
 
   /// Completes when the audio session is configured and listeners are active.

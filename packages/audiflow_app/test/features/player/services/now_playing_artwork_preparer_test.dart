@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:audiflow_app/features/player/services/now_playing_artwork_preparer.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:logger/logger.dart';
 
 const _url = 'https://example.com/art.jpg';
 final _encoded = Uint8List.fromList([1, 2, 3]);
@@ -15,15 +16,10 @@ final _scaled = Uint8List.fromList([9, 8, 7]);
 class _Recorder {
   final List<String> fetched = [];
   final List<int> downscaledTo = [];
-  Uint8List? fetchResult;
-  Uint8List? downscaleResult;
+  Uint8List? fetchResult = _encoded;
+  Uint8List? downscaleResult = _scaled;
   Completer<Uint8List?>? fetchGate;
   Exception? fetchError;
-
-  _Recorder() {
-    fetchResult = _encoded;
-    downscaleResult = _scaled;
-  }
 
   Future<Uint8List?> fetch(String url) async {
     fetched.add(url);
@@ -52,6 +48,7 @@ void main() {
       cacheDirectory: Directory('${dir.path}/nested'),
       fetchBytes: recorder.fetch,
       downscale: recorder.downscale,
+      logger: Logger(level: Level.off),
       maxEdgePixels: 100,
     );
   });

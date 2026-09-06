@@ -22,5 +22,6 @@ NowPlayingArtworkPreparer nowPlayingArtworkPreparer(Ref ref) {
     ),
     fetchBytes: fetcher.fetch,
     downscale: downscaleArtworkToPng,
+    logger: ref.watch(namedLoggerProvider('NowPlayingArtwork')),
   );
 }

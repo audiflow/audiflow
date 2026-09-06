@@ -6,8 +6,6 @@ import 'package:logger/logger.dart';
 
 import 'now_playing_artwork_preparer.dart';
 
-final _log = Logger(printer: PrefixPrinter(PrettyPrinter(methodCount: 0)));
-
 /// Publishes [NowPlayingInfo] to audio_service's media item stream.
 ///
 /// Metadata goes out immediately so the lock screen updates without delay;
@@ -20,11 +18,13 @@ class NowPlayingMediaItemSync {
     required this._readCurrent,
     required this._publish,
     required this._artworkPreparer,
+    required this._logger,
   });
 
   final MediaItem? Function() _readCurrent;
   final void Function(MediaItem?) _publish;
   final NowPlayingArtworkPreparer _artworkPreparer;
+  final Logger _logger;
 
   /// Incremented per [sync] so a slow artwork fetch cannot decorate an
   /// item that has since been replaced or cleared.
@@ -34,22 +34,15 @@ class NowPlayingMediaItemSync {
   void sync(NowPlayingInfo? info) {
     final generation = ++_generation;
     if (info == null) {
-      _log.d('[AudioHandler] NowPlaying cleared');
+      _logger.d('[AudioHandler] NowPlaying cleared');
       _publish(null);
       return;
     }
-    _log.i(
+    _logger.i(
       '[AudioHandler] NowPlaying: '
       '${info.episodeTitle} - ${info.podcastTitle}',
     );
-    _publish(
-      MediaItem(
-        id: info.episodeUrl,
-        title: info.episodeTitle,
-        artist: info.podcastTitle,
-        duration: info.totalDuration,
-      ),
-    );
+    _publish(_toMediaItem(info));
     final artworkUrl = info.artworkUrl;
     if (artworkUrl != null) {
       unawaited(_attachArtwork(artworkUrl, generation));
@@ -62,6 +55,13 @@ class NowPlayingMediaItemSync {
     if (current == null || current.duration == duration) return;
     _publish(current.copyWith(duration: duration));
   }
+
+  MediaItem _toMediaItem(NowPlayingInfo info) => MediaItem(
+    id: info.episodeUrl,
+    title: info.episodeTitle,
+    artist: info.podcastTitle,
+    duration: info.totalDuration,
+  );
 
   Future<void> _attachArtwork(String artworkUrl, int generation) async {
     final prepared = await _artworkPreparer.prepare(artworkUrl);
