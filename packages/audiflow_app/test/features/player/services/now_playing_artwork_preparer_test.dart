@@ -38,21 +38,29 @@ class _Recorder {
 
 void main() {
   late Directory tempDirectory;
+  late Directory cacheDirectory;
   late _Recorder recorder;
   late FileNowPlayingArtworkPreparer preparer;
+
+  /// Builds a preparer over the same cache directory and fake fetcher,
+  /// keeping at most [entryLimit] prepared files.
+  FileNowPlayingArtworkPreparer buildPreparer({required int entryLimit}) =>
+      FileNowPlayingArtworkPreparer(
+        cacheDirectory: cacheDirectory,
+        fetchBytes: recorder.fetch,
+        downscale: recorder.downscale,
+        logger: Logger(level: Level.off),
+        maxEdgePixels: 100,
+        entryLimit: entryLimit,
+      );
 
   setUp(() async {
     tempDirectory = await Directory.systemTemp.createTemp(
       'now_playing_artwork_',
     );
+    cacheDirectory = Directory('${tempDirectory.path}/nested');
     recorder = _Recorder();
-    preparer = FileNowPlayingArtworkPreparer(
-      cacheDirectory: Directory('${tempDirectory.path}/nested'),
-      fetchBytes: recorder.fetch,
-      downscale: recorder.downscale,
-      logger: Logger(level: Level.off),
-      maxEdgePixels: 100,
-    );
+    preparer = buildPreparer(entryLimit: nowPlayingArtworkCacheEntryLimit);
   });
 
   tearDown(() => tempDirectory.delete(recursive: true));
@@ -113,6 +121,29 @@ void main() {
       recorder.fetchError = const SocketException('offline');
 
       check(await preparer.prepare(_url)).isNull();
+    });
+
+    test('deletes the oldest files once the limit is reached', () async {
+      final bounded = buildPreparer(entryLimit: 2);
+      final oldest = await bounded.prepare('https://example.com/1.jpg');
+      File.fromUri(oldest!).setLastModifiedSync(DateTime(2020));
+      final middle = await bounded.prepare('https://example.com/2.jpg');
+      File.fromUri(middle!).setLastModifiedSync(DateTime(2021));
+
+      final newest = await bounded.prepare('https://example.com/3.jpg');
+
+      check(File.fromUri(oldest).existsSync()).isFalse();
+      check(File.fromUri(middle).existsSync()).isTrue();
+      check(File.fromUri(newest!).existsSync()).isTrue();
+    });
+
+    test('never deletes the artwork it just prepared', () async {
+      final bounded = buildPreparer(entryLimit: 1);
+      final first = await bounded.prepare('https://example.com/1.jpg');
+      final second = await bounded.prepare('https://example.com/2.jpg');
+
+      check(File.fromUri(first!).existsSync()).isFalse();
+      check(File.fromUri(second!).existsSync()).isTrue();
     });
 
     test('retries after a failed attempt', () async {

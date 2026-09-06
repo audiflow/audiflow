@@ -15,6 +15,13 @@ import 'artwork_downscaler.dart';
 /// which is about 36 MB decoded; 512 px is about 1 MB.
 const nowPlayingArtworkMaxEdgePixels = 512;
 
+/// Maximum number of prepared artwork files kept on disk.
+///
+/// One file lands per distinct artwork URL played, so without a bound the
+/// directory would grow for the life of the install. Recently played
+/// artwork stays cached; anything older is prepared again on demand.
+const nowPlayingArtworkCacheEntryLimit = 32;
+
 /// Fetches the encoded bytes for an artwork URL, or null when unavailable.
 typedef ArtworkBytesFetcher = Future<Uint8List?> Function(String url);
 
@@ -38,6 +45,7 @@ class FileNowPlayingArtworkPreparer implements NowPlayingArtworkPreparer {
     required this._downscale,
     required this._logger,
     this._maxEdgePixels = nowPlayingArtworkMaxEdgePixels,
+    this._entryLimit = nowPlayingArtworkCacheEntryLimit,
   });
 
   final Directory _cacheDirectory;
@@ -45,6 +53,7 @@ class FileNowPlayingArtworkPreparer implements NowPlayingArtworkPreparer {
   final ArtworkDownscaler _downscale;
   final Logger _logger;
   final int _maxEdgePixels;
+  final int _entryLimit;
 
   /// Rapid re-syncs of the same episode must share a single download.
   final Map<String, Future<Uri?>> _inFlight = {};
@@ -81,7 +90,47 @@ class FileNowPlayingArtworkPreparer implements NowPlayingArtworkPreparer {
     final scaled = await _downscale(encoded, _maxEdgePixels);
     if (scaled == null) return null;
     await _writeAtomically(target, scaled);
+    await _pruneToLimit(keep: target);
     return target.uri;
+  }
+
+  /// Deletes the oldest entries until at most [_entryLimit] remain.
+  ///
+  /// Never fails the caller: the artwork this call prepared is already on
+  /// disk, and a full cache directory is better than no lock-screen art.
+  Future<void> _pruneToLimit({required File keep}) async {
+    try {
+      final entries = await _cachedFiles(keep: keep);
+      if (entries.length < _entryLimit) return;
+      final excess = entries.length - _entryLimit + 1;
+      for (final entry in (await _oldestFirst(entries)).take(excess)) {
+        await entry.delete();
+      }
+    } on Exception catch (e) {
+      _logger.d('[NowPlayingArtwork] Cache prune skipped: $e');
+    }
+  }
+
+  /// Prepared PNGs other than [keep]; partial writes are named `.png.part`
+  /// and so are excluded by the suffix test.
+  Future<List<File>> _cachedFiles({required File keep}) => _cacheDirectory
+      .list()
+      .where(
+        (entity) =>
+            entity is File &&
+            entity.path.endsWith('.png') &&
+            entity.path != keep.path,
+      )
+      .cast<File>()
+      .toList();
+
+  Future<List<File>> _oldestFirst(List<File> files) async {
+    final stamped = <({File file, DateTime modified})>[];
+    for (final file in files) {
+      stamped.add((file: file, modified: (await file.stat()).modified));
+    }
+    stamped.sort((first, second) => first.modified.compareTo(second.modified));
+    return [for (final entry in stamped) entry.file];
   }
 
   File _fileFor(String artworkUrl) {

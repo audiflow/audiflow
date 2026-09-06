@@ -43,6 +43,8 @@ out immediately with no artwork; `NowPlayingArtworkPreparer` then fetches the
 artwork (UI image cache first, network on a miss), downscales it to a
 512 px PNG under `<app cache>/now_playing_artwork/`, and the item is re-published
 with a `file:` `artUri`. Later updates (duration, etc.) copy that URI along.
+That directory keeps the 32 most recently written files; older ones are
+deleted after each write and prepared again on demand.
 
 Why a local file: audio_service passes a `file:` URI to the platform on every
 update, but downloads a remote URL asynchronously and drops the follow-up
