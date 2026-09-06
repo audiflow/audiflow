@@ -4,6 +4,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../podcast_detail/presentation/controllers/podcast_detail_controller.dart';
 import 'audiflow_audio_handler.dart';
+import 'now_playing_artwork_preparer.dart';
 
 part 'audio_handler_provider.g.dart';
 
@@ -25,13 +26,19 @@ const audioServiceConfig = AudioServiceConfig(
   artDownscaleHeight: androidArtworkDownscalePixels,
 );
 
-/// Lower bound for the decoded artwork edge on Android.
+/// Requested edge for the decoded artwork bitmap on Android.
 ///
-/// The plugin picks a power-of-two sample size, so the result is at least
-/// this large: 3000 px art decodes to 375 px and 1400 px art to 350 px.
-/// That matches Android's 320 px guideline for MediaMetadata bitmaps.
-/// Raising it to 512 would decode 3000 px art at 1500 px (about 9 MB).
-const androidArtworkDownscalePixels = 256;
+/// Matched to [nowPlayingArtworkMaxEdgePixels] so the prepared file decodes
+/// whole: the plugin only halves while half the source still covers the
+/// request, so an equal size leaves the sample size at 1 and yields 512 px
+/// for about 1 MB. A smaller request would halve it — 256 would decode that
+/// same file at 256 px, under Android's 320 px guideline for MediaMetadata
+/// bitmaps (#455).
+///
+/// On the fallback path, where preparation failed and the remote URL is
+/// published, 3000 px art samples to 750 px (about 2.25 MB): still far from
+/// the 36 MB that full-resolution decoding cost (#451).
+const androidArtworkDownscalePixels = nowPlayingArtworkMaxEdgePixels;
 
 /// Initializes AudioService with [AudiflowAudioHandler] and sets up
 /// media item sync listeners.
