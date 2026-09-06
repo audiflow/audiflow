@@ -31,7 +31,11 @@ class NowPlayingArtworkFetcher {
       options: Options(responseType: ResponseType.bytes),
     );
     final data = response.data;
-    return data == null ? null : Uint8List.fromList(data);
+    if (data == null) return null;
+    // Dio already hands back a Uint8List for ResponseType.bytes; copying
+    // it would double peak memory for artwork this feature exists to
+    // keep small.
+    return data is Uint8List ? data : Uint8List.fromList(data);
   }
 
   Future<Uint8List?> _readCached(String url) async {

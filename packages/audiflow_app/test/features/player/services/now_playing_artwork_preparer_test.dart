@@ -137,6 +137,31 @@ void main() {
       check(File.fromUri(newest!).existsSync()).isTrue();
     });
 
+    test('refreshes the timestamp of a reused file', () async {
+      final uri = await preparer.prepare(_url);
+      File.fromUri(uri!).setLastModifiedSync(DateTime(2020));
+
+      await preparer.prepare(_url);
+
+      check(
+        File.fromUri(uri).lastModifiedSync().isAfter(DateTime(2021)),
+      ).isTrue();
+    });
+
+    test('deletes temp files abandoned by an earlier run', () async {
+      await cacheDirectory.create(recursive: true);
+      final stale = File('${cacheDirectory.path}/abandoned.png.part')
+        ..writeAsBytesSync([0]);
+      stale.setLastModifiedSync(DateTime(2020));
+      final fresh = File('${cacheDirectory.path}/inflight.png.part')
+        ..writeAsBytesSync([0]);
+
+      await preparer.prepare(_url);
+
+      check(stale.existsSync()).isFalse();
+      check(fresh.existsSync()).isTrue();
+    });
+
     test('never deletes the artwork it just prepared', () async {
       final bounded = buildPreparer(entryLimit: 1);
       final first = await bounded.prepare('https://example.com/1.jpg');

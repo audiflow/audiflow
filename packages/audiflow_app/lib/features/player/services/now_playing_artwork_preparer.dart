@@ -22,6 +22,13 @@ const nowPlayingArtworkMaxEdgePixels = 512;
 /// artwork stays cached; anything older is prepared again on demand.
 const nowPlayingArtworkCacheEntryLimit = 32;
 
+/// Suffix of the temporary file a prepared PNG is written through.
+const _partialSuffix = '.part';
+
+/// Age at which an orphaned temp file is considered abandoned rather than
+/// the work of a concurrent, still-running `prepare`.
+const _partialWriteLifetime = Duration(hours: 1);
+
 /// Fetches the encoded bytes for an artwork URL, or null when unavailable.
 typedef ArtworkBytesFetcher = Future<Uint8List?> Function(String url);
 
@@ -84,7 +91,12 @@ class FileNowPlayingArtworkPreparer implements NowPlayingArtworkPreparer {
 
   Future<Uri?> _prepareOrNull(String artworkUrl) async {
     final target = _fileFor(artworkUrl);
-    if (await target.exists()) return target.uri;
+    if (await target.exists()) {
+      // Eviction below orders by mtime, so a cache hit has to refresh it
+      // or a daily-listened podcast is evicted by one-off episodes.
+      await target.setLastModified(DateTime.now());
+      return target.uri;
+    }
     final encoded = await _fetchBytes(artworkUrl);
     if (encoded == null) return null;
     final scaled = await _downscale(encoded, _maxEdgePixels);
@@ -100,6 +112,7 @@ class FileNowPlayingArtworkPreparer implements NowPlayingArtworkPreparer {
   /// disk, and a full cache directory is better than no lock-screen art.
   Future<void> _pruneToLimit({required File keep}) async {
     try {
+      await _deletePartialWrites();
       final entries = await _cachedFiles(keep: keep);
       if (entries.length < _entryLimit) return;
       final excess = entries.length - _entryLimit + 1;
@@ -111,8 +124,24 @@ class FileNowPlayingArtworkPreparer implements NowPlayingArtworkPreparer {
     }
   }
 
-  /// Prepared PNGs other than [keep]; partial writes are named `.png.part`
-  /// and so are excluded by the suffix test.
+  /// Removes temp files orphaned by a kill between write and rename.
+  /// Nothing reads them, and the prune below skips them by suffix, so
+  /// without this they would survive for the life of the install.
+  ///
+  /// Only long-stale files are touched: another `prepare` for a different
+  /// URL may be mid-write, and deleting its temp would fail that call.
+  Future<void> _deletePartialWrites() async {
+    final staleBefore = DateTime.now().subtract(_partialWriteLifetime);
+    await for (final entity in _cacheDirectory.list()) {
+      if (entity is! File || !entity.path.endsWith(_partialSuffix)) continue;
+      if ((await entity.stat()).modified.isBefore(staleBefore)) {
+        await entity.delete();
+      }
+    }
+  }
+
+  /// Prepared PNGs other than [keep]; partial writes are excluded by the
+  /// suffix test and swept by [_deletePartialWrites].
   Future<List<File>> _cachedFiles({required File keep}) => _cacheDirectory
       .list()
       .where(
@@ -142,7 +171,7 @@ class FileNowPlayingArtworkPreparer implements NowPlayingArtworkPreparer {
   /// truncated PNG that would be served as a cache hit forever after.
   Future<void> _writeAtomically(File target, Uint8List bytes) async {
     await _cacheDirectory.create(recursive: true);
-    final temp = File('${target.path}.part');
+    final temp = File('${target.path}$_partialSuffix');
     await temp.writeAsBytes(bytes, flush: true);
     await temp.rename(target.path);
   }

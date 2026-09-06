@@ -45,7 +45,7 @@ class NowPlayingMediaItemSync {
     _publish(_toMediaItem(info));
     final artworkUrl = info.artworkUrl;
     if (artworkUrl != null) {
-      unawaited(_attachArtwork(artworkUrl, generation));
+      unawaited(_attachArtworkGuarded(artworkUrl, generation));
     }
   }
 
@@ -56,19 +56,44 @@ class NowPlayingMediaItemSync {
     _publish(current.copyWith(duration: duration));
   }
 
-  MediaItem _toMediaItem(NowPlayingInfo info) => MediaItem(
-    id: info.episodeUrl,
-    title: info.episodeTitle,
-    artist: info.podcastTitle,
-    duration: info.totalDuration,
-  );
+  MediaItem _toMediaItem(NowPlayingInfo info) {
+    final current = _readCurrent();
+    return MediaItem(
+      id: info.episodeUrl,
+      title: info.episodeTitle,
+      artist: info.podcastTitle,
+      duration: info.totalDuration,
+      // The same episode is re-published on its own (a seek in the
+      // post-restore state re-sets NowPlayingInfo), and dropping the
+      // artwork here would blank the lock screen until the fetch below
+      // resolves.
+      artUri: current?.id == info.episodeUrl ? current?.artUri : null,
+    );
+  }
+
+  /// Artwork is decorative: no failure here may escape into the zone and
+  /// be reported as an unhandled error, since [sync] cannot await it.
+  Future<void> _attachArtworkGuarded(String artworkUrl, int generation) async {
+    try {
+      await _attachArtwork(artworkUrl, generation);
+    } on Object catch (e, stack) {
+      _logger.w(
+        '[AudioHandler] Artwork attach failed for $artworkUrl',
+        error: e,
+        stackTrace: stack,
+      );
+    }
+  }
 
   Future<void> _attachArtwork(String artworkUrl, int generation) async {
     final prepared = await _artworkPreparer.prepare(artworkUrl);
     final current = _readCurrent();
     if (generation != _generation || current == null) return;
     // Without a local copy, let audio_service try the remote URL itself;
-    // that is the pre-#453 path and still works on Android.
-    _publish(current.copyWith(artUri: prepared ?? Uri.parse(artworkUrl)));
+    // that is the pre-#453 path and still works on Android. A feed can
+    // carry an unparseable URL, which leaves the item without artwork.
+    final fallback = Uri.tryParse(artworkUrl);
+    if (prepared == null && fallback == null) return;
+    _publish(current.copyWith(artUri: prepared ?? fallback));
   }
 }

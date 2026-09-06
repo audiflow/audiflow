@@ -35,10 +35,17 @@ ui.TargetImageSize _fitWithin(int width, int height, int maxEdgePixels) {
     return ui.TargetImageSize(width: width, height: height);
   }
   final scale = maxEdgePixels / longEdge;
+  // A banner-shaped image can round its short edge to zero, which the
+  // decoder asserts against.
   return ui.TargetImageSize(
-    width: (width * scale).round(),
-    height: (height * scale).round(),
+    width: _atLeastOnePixel(width * scale),
+    height: _atLeastOnePixel(height * scale),
   );
+}
+
+int _atLeastOnePixel(double edge) {
+  final rounded = edge.round();
+  return rounded < 1 ? 1 : rounded;
 }
 
 Future<Uint8List?> _encodeFirstFrame(ui.Codec codec) async {

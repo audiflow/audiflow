@@ -56,6 +56,14 @@ void main() {
       check(await _decodedSize(result!)).equals((8, 8));
     });
 
+    test('keeps a banner-shaped short edge at one pixel', () async {
+      final source = await _pngOfSize(300, 1);
+
+      final result = await downscaleArtworkToPng(source, 16);
+
+      check(await _decodedSize(result!)).equals((16, 1));
+    });
+
     test('returns null for bytes that are not an image', () async {
       final result = await downscaleArtworkToPng(
         Uint8List.fromList([1, 2, 3, 4]),

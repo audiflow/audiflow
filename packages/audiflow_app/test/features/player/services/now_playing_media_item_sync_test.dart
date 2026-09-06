@@ -100,6 +100,33 @@ void main() {
       check(sink.current!.artUri).equals(Uri.parse(_artworkUrl));
     });
 
+    test('keeps the artwork when the same episode is re-published', () async {
+      sync.sync(_info);
+      preparer.pending.single.complete(_preparedUri);
+      await settle();
+
+      sync.sync(_info.copyWith(savedPosition: const Duration(minutes: 3)));
+
+      check(sink.current!.artUri).equals(_preparedUri);
+    });
+
+    test('drops the artwork when a different episode starts', () {
+      sync.sync(_info);
+
+      sync.sync(_info.copyWith(episodeUrl: 'https://example.com/ep2.mp3'));
+
+      check(sink.current!.artUri).isNull();
+    });
+
+    test('leaves the item unchanged when the artwork URL is invalid', () async {
+      sync.sync(_info.copyWith(artworkUrl: ':::not a url:::'));
+      preparer.pending.single.complete(null);
+      await settle();
+
+      check(sink.current!.artUri).isNull();
+      check(sink.emitted.length).equals(1);
+    });
+
     test('skips preparation when there is no artwork', () {
       sync.sync(_info.copyWith(artworkUrl: null));
 
@@ -119,6 +146,14 @@ void main() {
       await settle();
 
       check(sink.current!.id).equals(next.episodeUrl);
+      check(sink.current!.artUri).isNull();
+    });
+
+    test('survives a preparer that throws', () async {
+      sync.sync(_info);
+      preparer.pending.single.completeError(StateError('boom'));
+      await settle();
+
       check(sink.current!.artUri).isNull();
     });
 
