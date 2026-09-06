@@ -12,7 +12,10 @@ part 'audio_handler_provider.g.dart';
 /// The art downscale size must be set: without it the Android plugin decodes
 /// [MediaItem.artUri] at full resolution, and podcast artwork of 3000x3000
 /// costs about 36 MB per bitmap (#451). Only the Android loader reads the
-/// value; the iOS plugin still decodes the file at native size.
+/// value; the iOS plugin decodes the file at native size, which is why
+/// `NowPlayingMediaItemSync` hands both platforms a pre-scaled local file
+/// (#453). This setting stays as the second line of defense for the remote
+/// URL fallback.
 const audioServiceConfig = AudioServiceConfig(
   androidNotificationChannelId: 'com.audiflow.player',
   androidNotificationChannelName: 'audiflow Playback',

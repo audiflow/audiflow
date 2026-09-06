@@ -39,8 +39,9 @@ state and resume position stay coherent no matter where the listener touches it.
   the end, it replays from the start. Playback continues when the app is backgrounded or the
   screen is locked.
 - **System controls**: While playing, the lock screen and notification shade show the episode
-  with play/pause, skip-forward/back, seek, and stop controls. Operating these is identical to
-  operating the in-app controls — they drive the same playback.
+  title, podcast name, and podcast artwork with play/pause, skip-forward/back, seek, and stop
+  controls. The artwork stays in place across backgrounding and episode changes. Operating
+  these controls is identical to operating the in-app controls — they drive the same playback.
 - **Interruption — short sound**: A brief sound such as a notification chime triggers the
   listener's configured interruption behavior. With "duck" selected, volume drops for the
   duration of the chime and returns to normal afterward. With "pause and rewind" selected,
