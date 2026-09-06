@@ -12,19 +12,19 @@ const _url = 'https://example.com/art.jpg';
 void main() {
   late Dio dio;
   late DioAdapter adapter;
-  late Directory dir;
+  late Directory tempDirectory;
 
   setUp(() async {
     dio = Dio();
     adapter = DioAdapter(dio: dio);
-    dir = await Directory.systemTemp.createTemp('artwork_fetcher_');
+    tempDirectory = await Directory.systemTemp.createTemp('artwork_fetcher_');
   });
 
-  tearDown(() => dir.delete(recursive: true));
+  tearDown(() => tempDirectory.delete(recursive: true));
 
   group('NowPlayingArtworkFetcher', () {
     test('reads the bytes from the UI image cache when present', () async {
-      final cached = File('${dir.path}/cached.jpg')
+      final cached = File('${tempDirectory.path}/cached.jpg')
         ..writeAsBytesSync([7, 7, 7]);
       final fetcher = NowPlayingArtworkFetcher(
         dio: dio,

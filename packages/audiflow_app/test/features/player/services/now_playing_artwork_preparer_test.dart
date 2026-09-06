@@ -30,22 +30,24 @@ class _Recorder {
     return fetchResult;
   }
 
-  Future<Uint8List?> downscale(Uint8List bytes, int maxEdge) async {
-    downscaledTo.add(maxEdge);
+  Future<Uint8List?> downscale(Uint8List bytes, int maxEdgePixels) async {
+    downscaledTo.add(maxEdgePixels);
     return downscaleResult;
   }
 }
 
 void main() {
-  late Directory dir;
+  late Directory tempDirectory;
   late _Recorder recorder;
   late FileNowPlayingArtworkPreparer preparer;
 
   setUp(() async {
-    dir = await Directory.systemTemp.createTemp('now_playing_artwork_');
+    tempDirectory = await Directory.systemTemp.createTemp(
+      'now_playing_artwork_',
+    );
     recorder = _Recorder();
     preparer = FileNowPlayingArtworkPreparer(
-      cacheDirectory: Directory('${dir.path}/nested'),
+      cacheDirectory: Directory('${tempDirectory.path}/nested'),
       fetchBytes: recorder.fetch,
       downscale: recorder.downscale,
       logger: Logger(level: Level.off),
@@ -53,7 +55,7 @@ void main() {
     );
   });
 
-  tearDown(() => dir.delete(recursive: true));
+  tearDown(() => tempDirectory.delete(recursive: true));
 
   group('FileNowPlayingArtworkPreparer', () {
     test('downloads, downscales, and writes a file URI', () async {
@@ -76,10 +78,10 @@ void main() {
     });
 
     test('uses distinct files for distinct URLs', () async {
-      final a = await preparer.prepare(_url);
-      final b = await preparer.prepare('https://example.com/other.jpg');
+      final firstUri = await preparer.prepare(_url);
+      final otherUri = await preparer.prepare('https://example.com/other.jpg');
 
-      check(a).not((it) => it.equals(b));
+      check(firstUri).not((it) => it.equals(otherUri));
     });
 
     test('shares one in-flight download between concurrent calls', () async {
@@ -104,7 +106,7 @@ void main() {
       recorder.downscaleResult = null;
 
       check(await preparer.prepare(_url)).isNull();
-      check(Directory('${dir.path}/nested').existsSync()).isFalse();
+      check(Directory('${tempDirectory.path}/nested').existsSync()).isFalse();
     });
 
     test('returns null instead of throwing when the fetch fails', () async {
