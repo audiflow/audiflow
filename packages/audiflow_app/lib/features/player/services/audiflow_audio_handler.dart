@@ -9,6 +9,8 @@ import 'package:logger/logger.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 import 'audio_interruption_handler.dart';
+import 'now_playing_artwork_provider.dart';
+import 'now_playing_media_item_sync.dart';
 
 final _log = Logger(printer: PrefixPrinter(PrettyPrinter(methodCount: 0)));
 
@@ -38,6 +40,14 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
 
   final Ref _ref;
   late final AudioPlayer _player;
+
+  /// Publishes now-playing metadata and its downscaled artwork to
+  /// [mediaItem]; see [NowPlayingMediaItemSync].
+  late final NowPlayingMediaItemSync _nowPlayingSync = NowPlayingMediaItemSync(
+    readCurrent: () => mediaItem.valueOrNull,
+    publish: mediaItem.add,
+    artworkPreparer: _ref.read(nowPlayingArtworkPreparerProvider),
+  );
 
   /// Completes when the audio session is configured and listeners are active.
   late final Future<void> _sessionReady;
@@ -333,36 +343,11 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
   }
 
   /// Updates the platform media item (lock screen / notification metadata).
-  void syncNowPlaying(NowPlayingInfo? info) {
-    if (info == null) {
-      _log.d('[AudioHandler] NowPlaying cleared');
-      mediaItem.add(null);
-      return;
-    }
-
-    _log.i(
-      '[AudioHandler] NowPlaying: '
-      '${info.episodeTitle} - ${info.podcastTitle}',
-    );
-
-    mediaItem.add(
-      audio_service.MediaItem(
-        id: info.episodeUrl,
-        title: info.episodeTitle,
-        artist: info.podcastTitle,
-        artUri: info.artworkUrl != null ? Uri.parse(info.artworkUrl!) : null,
-        duration: info.totalDuration,
-      ),
-    );
-  }
+  void syncNowPlaying(NowPlayingInfo? info) => _nowPlayingSync.sync(info);
 
   /// Updates the media item duration without changing other fields.
-  void updateDuration(Duration duration) {
-    final current = mediaItem.value;
-    if (current != null && current.duration != duration) {
-      mediaItem.add(current.copyWith(duration: duration));
-    }
-  }
+  void updateDuration(Duration duration) =>
+      _nowPlayingSync.updateDuration(duration);
 
   @override
   Future<void> play() async {

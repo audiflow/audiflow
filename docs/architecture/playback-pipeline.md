@@ -35,6 +35,23 @@ Wraps the AudioPlayer to provide:
 - Remote command center integration (iOS Control Center, Android notification)
 - Audio focus management and phone call interruption handling
 
+#### Now-playing metadata and artwork
+
+`NowPlayingMediaItemSync` (audiflow_app) turns `NowPlayingInfo` into the
+`MediaItem` that audio_service publishes to the platform. The metadata goes
+out immediately with no artwork; `NowPlayingArtworkPreparer` then fetches the
+artwork (UI image cache first, network on a miss), downscales it to a
+512 px PNG under `<app cache>/now_playing_artwork/`, and the item is re-published
+with a `file:` `artUri`. Later updates (duration, etc.) copy that URI along.
+
+Why a local file: audio_service passes a `file:` URI to the platform on every
+update, but downloads a remote URL asynchronously and drops the follow-up
+update whenever another media item lands first. The iOS plugin also decodes
+the file at native size, and very large `MPMediaItemArtwork` images fail to
+render on the lock screen (#453). The Android plugin still applies its own
+`artDownscale*` setting on top (#451). When preparation fails the remote URL is
+published as a fallback, which is the pre-#453 behavior.
+
 ### Layer 3: State management (Riverpod)
 
 | Provider | Type | Purpose |
