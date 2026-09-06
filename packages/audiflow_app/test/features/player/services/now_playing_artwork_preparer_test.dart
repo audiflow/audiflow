@@ -165,10 +165,24 @@ void main() {
     test('never deletes the artwork it just prepared', () async {
       final bounded = buildPreparer(entryLimit: 1);
       final first = await bounded.prepare('https://example.com/1.jpg');
+      File.fromUri(first!).setLastModifiedSync(DateTime(2020));
+
       final second = await bounded.prepare('https://example.com/2.jpg');
 
-      check(File.fromUri(first!).existsSync()).isFalse();
+      check(File.fromUri(first).existsSync()).isFalse();
       check(File.fromUri(second!).existsSync()).isTrue();
+    });
+
+    test('spares entries still inside the eviction grace period', () async {
+      final bounded = buildPreparer(entryLimit: 1);
+      final recent = await bounded.prepare('https://example.com/1.jpg');
+
+      final newest = await bounded.prepare('https://example.com/2.jpg');
+
+      // A prepare racing another must not delete the file that one is
+      // about to publish, even with the cache over its limit.
+      check(File.fromUri(recent!).existsSync()).isTrue();
+      check(File.fromUri(newest!).existsSync()).isTrue();
     });
 
     test('retries after a failed attempt', () async {

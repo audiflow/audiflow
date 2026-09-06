@@ -29,6 +29,13 @@ const _partialSuffix = '.part';
 /// the work of a concurrent, still-running `prepare`.
 const _partialWriteLifetime = Duration(hours: 1);
 
+/// Entries used more recently than this are never evicted.
+///
+/// A prepare that resolves out of order must not delete the file another
+/// prepare just wrote and is about to publish, which would leave the media
+/// item pointing at a missing path.
+const _evictionGracePeriod = Duration(minutes: 5);
+
 /// Fetches the encoded bytes for an artwork URL, or null when unavailable.
 typedef ArtworkBytesFetcher = Future<Uint8List?> Function(String url);
 
@@ -106,7 +113,12 @@ class FileNowPlayingArtworkPreparer implements NowPlayingArtworkPreparer {
     return target.uri;
   }
 
-  /// Deletes the oldest entries until at most [_entryLimit] remain.
+  /// Deletes the least recently used entries until at most [_entryLimit]
+  /// remain, skipping any still inside [_evictionGracePeriod].
+  ///
+  /// The limit is therefore soft: a burst of preparations may leave the
+  /// directory above it until a later call, which is the right trade when
+  /// the alternative is deleting artwork that is currently on screen.
   ///
   /// Never fails the caller: the artwork this call prepared is already on
   /// disk, and a full cache directory is better than no lock-screen art.
@@ -116,7 +128,8 @@ class FileNowPlayingArtworkPreparer implements NowPlayingArtworkPreparer {
       final entries = await _cachedFiles(keep: keep);
       if (entries.length < _entryLimit) return;
       final excess = entries.length - _entryLimit + 1;
-      for (final entry in (await _oldestFirst(entries)).take(excess)) {
+      final evictable = await _evictableOldestFirst(entries);
+      for (final entry in evictable.take(excess)) {
         await entry.delete();
       }
     } on Exception catch (e) {
@@ -153,10 +166,16 @@ class FileNowPlayingArtworkPreparer implements NowPlayingArtworkPreparer {
       .cast<File>()
       .toList();
 
-  Future<List<File>> _oldestFirst(List<File> files) async {
+  /// Eviction candidates, least recently used first. Entries touched
+  /// within [_evictionGracePeriod] are omitted entirely.
+  Future<List<File>> _evictableOldestFirst(List<File> files) async {
+    final protectedAfter = DateTime.now().subtract(_evictionGracePeriod);
     final stamped = <({File file, DateTime modified})>[];
     for (final file in files) {
-      stamped.add((file: file, modified: (await file.stat()).modified));
+      final modified = (await file.stat()).modified;
+      if (modified.isBefore(protectedAfter)) {
+        stamped.add((file: file, modified: modified));
+      }
     }
     stamped.sort((first, second) => first.modified.compareTo(second.modified));
     return [for (final entry in stamped) entry.file];
