@@ -21,13 +21,6 @@ part 'data_reset_service.g.dart';
 /// which has no implementation in plain unit tests.
 typedef DownloadsDirectoryResolver = Future<String> Function();
 
-/// Cancels a writer's in-flight work and completes once it has settled.
-///
-/// Injected as functions so the reset can be tested without constructing
-/// the download queue (which listens to connectivity) or the feed sync
-/// service (which needs a full provider graph).
-typedef WriterCanceller = Future<void> Function();
-
 /// Provides the [DataResetService] backing "Reset All Data".
 @Riverpod(keepAlive: true)
 DataResetService dataResetService(Ref ref) {
@@ -66,6 +59,10 @@ class DataResetService {
   final Isar _isar;
   final SharedPreferencesDataSource _preferences;
   final AudioPlaybackController _playback;
+
+  /// Writer cancellers are injected as functions so the reset can be tested
+  /// without constructing the download queue (which listens to
+  /// connectivity) or the feed sync service (which needs a provider graph).
   final WriterCanceller _cancelBackgroundTasks;
   final WriterCanceller _cancelDownloads;
   final WriterCanceller _cancelFeedSync;
@@ -73,27 +70,25 @@ class DataResetService {
 
   /// Wipes all local data. Throws on I/O failure so the caller can report
   /// a partial reset instead of claiming success.
+  ///
+  /// Every writer is stopped and awaited before the storage it writes to
+  /// is cleared, so a status write or an episode upsert that was mid-flight
+  /// lands before the clear, not after. Playback stops first: the progress
+  /// ticker would otherwise re-create a PlaybackHistory row for the current
+  /// episode seconds after the clear.
   Future<void> resetAll() async {
-    await _quiesceWriters();
+    await _playback.stop();
+    await _cancelBackgroundTasks();
+    await _cancelDownloads();
     // File deletion is the step most likely to fail, so it runs before the
     // database and preferences are touched; a failure then leaves the
     // parental PIN and consent state intact rather than half-reset.
     await _deleteDownloads();
+    // A sync started after this point (app resume, pull to refresh) is not
+    // held back, so cancel right before the clear to keep that window short.
+    await _cancelFeedSync();
     await _isar.writeTxn(() => _isar.clear());
     await _preferences.clear();
-  }
-
-  /// Stops everything that could write to storage after the clear.
-  ///
-  /// Playback stops first: the progress ticker would otherwise re-create a
-  /// PlaybackHistory row for the current episode seconds after the clear.
-  /// The download queue and feed sync are awaited so a status write or an
-  /// episode upsert that was mid-flight lands before the clear, not after.
-  Future<void> _quiesceWriters() async {
-    await _playback.stop();
-    await _cancelBackgroundTasks();
-    await _cancelDownloads();
-    await _cancelFeedSync();
   }
 
   Future<void> _deleteDownloads() async {

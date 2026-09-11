@@ -10,23 +10,23 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../helpers/isar_test_helper.dart';
 
 /// Records each writer the reset quiesces, in order, along with how many
-/// subscriptions existed at the time, so the tests can assert every writer
-/// is stopped before the database is cleared.
+/// subscriptions and whether the downloads directory existed at the time,
+/// so the tests can assert every writer is stopped before the storage it
+/// writes to is cleared.
 class _WriterLog {
-  _WriterLog(this._isar);
+  _WriterLog(this._isar, this._downloadsDir);
 
   final Isar _isar;
-  final List<(String, int)> calls = [];
+  final Directory _downloadsDir;
+  final List<(String, int, bool)> calls = [];
 
   Future<void> record(String writer) async {
-    calls.add((writer, await _isar.subscriptions.count()));
+    calls.add((
+      writer,
+      await _isar.subscriptions.count(),
+      await _downloadsDir.exists(),
+    ));
   }
-
-  Future<void> cancelBackgroundTasks() => record('backgroundTasks');
-
-  Future<void> cancelDownloads() => record('downloads');
-
-  Future<void> cancelFeedSync() => record('feedSync');
 }
 
 class _FakePlaybackController implements AudioPlaybackController {
@@ -63,17 +63,16 @@ void main() {
   late _WriterLog writers;
   late DataResetService service;
 
-  DataResetService buildService(
-    _WriterLog log, {
+  DataResetService buildService({
     required DownloadsDirectoryResolver resolveDownloadsDirectory,
   }) {
     return DataResetService(
       isar: isar,
       preferences: preferences,
-      playback: _FakePlaybackController(log),
-      cancelBackgroundTasks: log.cancelBackgroundTasks,
-      cancelDownloads: log.cancelDownloads,
-      cancelFeedSync: log.cancelFeedSync,
+      playback: _FakePlaybackController(writers),
+      cancelBackgroundTasks: () => writers.record('backgroundTasks'),
+      cancelDownloads: () => writers.record('downloads'),
+      cancelFeedSync: () => writers.record('feedSync'),
       resolveDownloadsDirectory: resolveDownloadsDirectory,
     );
   }
@@ -92,9 +91,8 @@ void main() {
     preferences = SharedPreferencesDataSource(
       await SharedPreferences.getInstance(),
     );
-    writers = _WriterLog(isar);
+    writers = _WriterLog(isar, downloadsDir);
     service = buildService(
-      writers,
       resolveDownloadsDirectory: () async => downloadsDir.path,
     );
   });
@@ -132,26 +130,24 @@ void main() {
       check(after.values).every((count) => count.equals(0));
     });
 
-    test(
-      'stops playback and every writer before clearing the database',
-      () async {
-        await seedEveryCollection(isar);
+    test('stops every writer before clearing what it writes to', () async {
+      await seedEveryCollection(isar);
 
-        await service.resetAll();
+      await service.resetAll();
 
-        check(writers.calls).deepEquals([
-          ('playback', 1),
-          ('backgroundTasks', 1),
-          ('downloads', 1),
-          ('feedSync', 1),
-        ]);
-      },
-    );
+      // Downloads are stopped while their files still exist; the feed sync
+      // is cancelled last, right before the database clear.
+      check(writers.calls).deepEquals([
+        ('playback', 1, true),
+        ('backgroundTasks', 1, true),
+        ('downloads', 1, true),
+        ('feedSync', 1, false),
+      ]);
+    });
 
     test('leaves the database untouched when file deletion fails', () async {
       await seedEveryCollection(isar);
       final blockedService = buildService(
-        writers,
         resolveDownloadsDirectory: () async =>
             throw const FileSystemException('boom'),
       );

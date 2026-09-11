@@ -91,11 +91,13 @@ class BackgroundTaskRegistrar {
     await _cancelByName(taskName);
   }
 
-  /// Cancels both the periodic refresh and the one-off download task.
+  /// Unschedules both the periodic refresh and the one-off download task.
   ///
-  /// Used by "Reset All Data" so a background isolate cannot write feed
-  /// data or a download back after storage is cleared. The periodic task
-  /// is re-registered on the next app resume.
+  /// Used by "Reset All Data" so no background task starts after storage
+  /// is cleared. A task that is already executing is stopped by the
+  /// platform asynchronously (Android) or runs to completion (iOS), so this
+  /// is best effort for in-flight work. The periodic task is re-registered
+  /// on the next app resume.
   static Future<void> cancelAll() async {
     await _cancelByName(taskName);
     await _cancelByName(downloadTaskName);

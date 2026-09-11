@@ -1,14 +1,15 @@
 import 'package:riverpod/riverpod.dart';
 
-/// Cancels every scheduled background task (feed refresh and download).
-typedef BackgroundTaskCanceller = Future<void> Function();
+/// Cancels a writer's in-flight work and completes once it has settled.
+typedef WriterCanceller = Future<void> Function();
 
-/// Provider for cancelling scheduled background tasks.
+/// Provider for cancelling scheduled background tasks (feed refresh and
+/// download).
 ///
 /// "Reset All Data" awaits this before clearing storage so a Workmanager
-/// isolate cannot write feed data or a download back afterwards.
-/// Workmanager lives in the app package, so the app overrides this at
-/// startup; the default is a no-op for hosts without background tasks.
-final backgroundTaskCancellerProvider = Provider<BackgroundTaskCanceller>(
+/// task cannot start after the clear. Workmanager lives in the app package,
+/// so the app overrides this at startup; the default is a no-op for hosts
+/// without background tasks.
+final backgroundTaskCancellerProvider = Provider<WriterCanceller>(
   (ref) => () async {},
 );
