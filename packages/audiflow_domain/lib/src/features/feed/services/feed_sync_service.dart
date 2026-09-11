@@ -19,6 +19,7 @@ import '../repositories/episode_repository_impl.dart';
 import 'episode_extractor_resolver.dart';
 import 'feed_parser_service.dart';
 import 'feed_sync_diagnostic.dart';
+import 'subscription_metadata_updater.dart';
 
 part 'feed_sync_service.g.dart';
 
@@ -203,6 +204,7 @@ class FeedSyncService {
       final episodeRepo = _ref.read(episodeRepositoryProvider);
       final feedParser = _ref.read(feedParserServiceProvider);
       final subscriptionRepo = _ref.read(subscriptionRepositoryProvider);
+      final metadataUpdater = SubscriptionMetadataUpdater(subscriptionRepo);
 
       // Build conditional request headers
       final conditionalHeaders = <String, String>{
@@ -332,6 +334,9 @@ class FeedSyncService {
           }
         },
       )) {
+        if (progress is FeedMetaReady) {
+          await metadataUpdater.applyFeedMeta(sub, progress);
+        }
         if (progress is FeedParseComplete) {
           newEpisodeCount = progress.total;
           stoppedEarly = progress.stoppedEarly;

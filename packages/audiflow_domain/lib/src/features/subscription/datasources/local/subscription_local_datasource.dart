@@ -194,6 +194,26 @@ class SubscriptionLocalDatasource {
     await _isar.writeTxn(() => _isar.subscriptions.put(existing));
   }
 
+  /// Updates podcast metadata parsed from the RSS channel.
+  ///
+  /// Null arguments leave the corresponding stored value untouched.
+  /// Does nothing if no subscription is found for the given [id].
+  Future<void> updateFeedMetadata(
+    int id, {
+    String? artworkUrl,
+    String? artistName,
+    String? description,
+  }) async {
+    final existing = await _isar.subscriptions.get(id);
+    if (existing == null) return;
+
+    existing
+      ..artworkUrl = artworkUrl ?? existing.artworkUrl
+      ..artistName = artistName ?? existing.artistName
+      ..description = description ?? existing.description;
+    await _isar.writeTxn(() => _isar.subscriptions.put(existing));
+  }
+
   /// Updates the auto-download setting for a subscription.
   ///
   /// Does nothing if no subscription is found for the given [id].

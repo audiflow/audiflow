@@ -9,6 +9,7 @@ import '../models/feed_sync_result.dart';
 import '../repositories/episode_repository.dart';
 import 'feed_parser_service.dart';
 import 'feed_sync_diagnostic.dart';
+import 'subscription_metadata_updater.dart';
 
 /// Pure feed sync executor with constructor-injected dependencies.
 ///
@@ -140,6 +141,8 @@ class FeedSyncExecutor {
 
       final knownGuids = await _episodeRepo.getGuidsByPodcastId(sub.id);
 
+      final metadataUpdater = SubscriptionMetadataUpdater(_subscriptionRepo);
+
       var newEpisodeCount = 0;
       var stoppedEarly = false;
       var tailGuidCount = 0;
@@ -153,6 +156,9 @@ class FeedSyncExecutor {
           await _episodeRepo.upsertEpisodes(episodes);
         },
       )) {
+        if (progress is FeedMetaReady) {
+          await metadataUpdater.applyFeedMeta(sub, progress);
+        }
         if (progress is FeedParseComplete) {
           newEpisodeCount = progress.total;
           stoppedEarly = progress.stoppedEarly;

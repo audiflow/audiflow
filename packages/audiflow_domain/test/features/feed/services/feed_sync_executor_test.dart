@@ -15,6 +15,25 @@ class _FakeSubscriptionRepository implements SubscriptionRepository {
   int? lastCacheHeadersId;
   String? lastCacheEtag;
   String? lastCacheLastModified;
+  int feedMetadataCallCount = 0;
+  int? lastFeedMetadataId;
+  String? lastFeedArtworkUrl;
+  String? lastFeedArtistName;
+  String? lastFeedDescription;
+
+  @override
+  Future<void> updateFeedMetadata(
+    int id, {
+    String? artworkUrl,
+    String? artistName,
+    String? description,
+  }) async {
+    feedMetadataCallCount++;
+    lastFeedMetadataId = id;
+    lastFeedArtworkUrl = artworkUrl;
+    lastFeedArtistName = artistName;
+    lastFeedDescription = description;
+  }
 
   @override
   Future<void> updateLastRefreshed(String itunesId, DateTime timestamp) async {
@@ -491,13 +510,18 @@ Subscription _subscription({
   DateTime? lastRefreshedAt,
   String? httpEtag,
   String? httpLastModified,
+  String artistName = 'Test Artist',
+  String? artworkUrl,
+  String? description,
 }) {
   return Subscription()
     ..id = id
     ..itunesId = itunesId
     ..feedUrl = feedUrl
     ..title = title
-    ..artistName = 'Test Artist'
+    ..artistName = artistName
+    ..artworkUrl = artworkUrl
+    ..description = description
     ..genres = ''
     ..explicit = false
     ..subscribedAt = DateTime.now()
@@ -615,6 +639,69 @@ void main() {
       expect(result.success, isTrue);
       expect(result.skipped, isFalse);
       expect(result.newEpisodeCount, 3);
+    });
+
+    test('backfills channel metadata onto an OPML-imported podcast', () async {
+      // OPML supplies only a title and feed URL, so the subscription starts
+      // with no artwork, no author, and no description.
+      final sub = _subscription(artistName: '');
+
+      final parser = _FakeFeedParserService(
+        (xml, id, guids, _) => Stream.fromIterable([
+          const FeedMetaReady(
+            title: 'Test Podcast',
+            description: 'Show notes',
+            imageUrl: 'https://example.com/art.jpg',
+            author: 'Jane Doe',
+          ),
+          const FeedParseComplete(total: 1, stoppedEarly: false),
+        ]),
+      );
+
+      final executor = buildExecutor(
+        dio: _FakeDio((_) => _xmlResponse('<rss></rss>')),
+        feedParser: parser,
+      );
+
+      final result = await executor.syncFeed(sub);
+
+      expect(result.success, isTrue);
+      expect(fakeSubscriptionRepo.lastFeedMetadataId, sub.id);
+      expect(
+        fakeSubscriptionRepo.lastFeedArtworkUrl,
+        'https://example.com/art.jpg',
+      );
+      expect(fakeSubscriptionRepo.lastFeedArtistName, 'Jane Doe');
+      expect(fakeSubscriptionRepo.lastFeedDescription, 'Show notes');
+    });
+
+    test('leaves metadata alone when the channel adds nothing', () async {
+      final sub = _subscription(
+        artistName: 'Jane Doe',
+        artworkUrl: 'https://example.com/art.jpg',
+        description: 'Show notes',
+      );
+
+      final parser = _FakeFeedParserService(
+        (xml, id, guids, _) => Stream.fromIterable([
+          const FeedMetaReady(
+            title: 'Test Podcast',
+            description: 'Show notes',
+            imageUrl: 'https://example.com/art.jpg',
+            author: 'Jane Doe',
+          ),
+          const FeedParseComplete(total: 1, stoppedEarly: false),
+        ]),
+      );
+
+      final executor = buildExecutor(
+        dio: _FakeDio((_) => _xmlResponse('<rss></rss>')),
+        feedParser: parser,
+      );
+
+      await executor.syncFeed(sub);
+
+      expect(fakeSubscriptionRepo.feedMetadataCallCount, 0);
     });
 
     test('syncs when lastRefreshedAt is null', () async {

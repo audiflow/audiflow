@@ -238,6 +238,21 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
   }
 
   @override
+  Future<void> updateFeedMetadata(
+    int id, {
+    String? artworkUrl,
+    String? artistName,
+    String? description,
+  }) {
+    return _datasource.updateFeedMetadata(
+      id,
+      artworkUrl: artworkUrl,
+      artistName: artistName,
+      description: description,
+    );
+  }
+
+  @override
   Future<void> updateHttpCacheHeaders(
     int id, {
     String? etag,
