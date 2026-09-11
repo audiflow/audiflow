@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audiflow_app/features/onboarding/presentation/screens/migration_guide_screen.dart';
 import 'package:audiflow_app/features/settings/presentation/controllers/opml_import_controller.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
@@ -8,7 +10,13 @@ import 'package:flutter_test/flutter_test.dart';
 import '../../../../helpers/pump_app.dart';
 
 /// Records import launches without touching the gate or the file picker.
+///
+/// [pending] stands in for the gate, the picker, and the parse, so a test can
+/// hold the flow open and tap again while it is still running.
 class _FakeOpmlImportController extends OpmlImportController {
+  _FakeOpmlImportController({this.pending});
+
+  final Future<void>? pending;
   int startCount = 0;
 
   @override
@@ -17,6 +25,8 @@ class _FakeOpmlImportController extends OpmlImportController {
   @override
   Future<bool> pickAndParse(BuildContext context) async {
     startCount++;
+    final inFlight = pending;
+    if (inFlight != null) await inFlight;
     return true;
   }
 }
@@ -68,6 +78,32 @@ void main() {
       await tester.pumpAndSettle();
 
       check(fake.startCount).equals(1);
+    });
+
+    testWidgets('ignores a second tap while an import is in flight', (
+      tester,
+    ) async {
+      final inFlight = Completer<void>();
+      final fake = _FakeOpmlImportController(pending: inFlight.future);
+
+      await tester.pumpApp(
+        const MigrationGuideScreen(),
+        overrides: [opmlImportControllerProvider.overrideWith(() => fake)],
+      );
+      await tester.pumpAndSettle();
+
+      final l10n = l10nOf(tester);
+      final button = find.text(l10n.migrationImportCtaButton).first;
+
+      await tester.tap(button);
+      await tester.pump();
+      await tester.tap(button);
+      await tester.pump();
+
+      check(fake.startCount).equals(1);
+
+      inFlight.complete();
+      await tester.pumpAndSettle();
     });
   });
 }

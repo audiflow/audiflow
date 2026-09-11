@@ -7,7 +7,10 @@ import '../controllers/opml_import_controller.dart';
 import '../screens/opml_import_preview_screen.dart';
 
 /// Starts the OPML import: opens the parental-control gate, then the picker.
-typedef OpmlImportStarter = Future<void> Function();
+///
+/// Null while an import is already in flight, so a button wired straight to
+/// it disables itself for the duration.
+typedef OpmlImportStarter = VoidCallback?;
 
 /// Hosts the OPML import flow for a screen and hands its [builder] the
 /// callback that starts it.
@@ -15,16 +18,25 @@ typedef OpmlImportStarter = Future<void> Function();
 /// Owns the controller listener, the preview navigation, and the result
 /// dialog so every entry point into import behaves identically. The
 /// controller is one shared provider, so a screen must listen to it exactly
-/// once — two listeners would push the preview screen twice for a single
+/// once - two listeners would push the preview screen twice for a single
 /// picked file. A screen offering more than one import button therefore
 /// wraps its whole subtree here and wires every button to the same starter.
-class OpmlImportFlow extends ConsumerWidget {
+class OpmlImportFlow extends ConsumerStatefulWidget {
   const OpmlImportFlow({super.key, required this.builder});
 
   final Widget Function(BuildContext context, OpmlImportStarter start) builder;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<OpmlImportFlow> createState() => _OpmlImportFlowState();
+}
+
+class _OpmlImportFlowState extends ConsumerState<OpmlImportFlow> {
+  /// Guards the gap between the tap and the controller reaching its loading
+  /// state, which spans the parental-control gate and the native picker.
+  bool _starting = false;
+
+  @override
+  Widget build(BuildContext context) {
     ref.listen(opmlImportControllerProvider, (_, next) {
       switch (next) {
         case OpmlPickSuccess(:final entries, :final subscribedFeedUrls):
@@ -44,19 +56,31 @@ class OpmlImportFlow extends ConsumerWidget {
       }
     });
 
-    return builder(context, () => _start(context, ref));
+    // Reading the file, parsing it, and checking every entry against the
+    // subscription store runs with the UI interactive. Without this the user
+    // sees nothing happen after the picker closes, taps again, and ends up
+    // with the preview screen pushed twice.
+    final busy =
+        _starting || ref.watch(opmlImportControllerProvider) is OpmlPickLoading;
+
+    return widget.builder(context, busy ? null : _start);
   }
 
-  Future<void> _start(BuildContext context, WidgetRef ref) async {
+  Future<void> _start() async {
     final l10n = AppLocalizations.of(context);
-    final allowed = await ref
-        .read(opmlImportControllerProvider.notifier)
-        .pickAndParse(context);
+    setState(() => _starting = true);
+    try {
+      final allowed = await ref
+          .read(opmlImportControllerProvider.notifier)
+          .pickAndParse(context);
 
-    if (!allowed && context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.parentalControlAccessDenied)));
+      if (!allowed && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.parentalControlAccessDenied)),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _starting = false);
     }
   }
 
