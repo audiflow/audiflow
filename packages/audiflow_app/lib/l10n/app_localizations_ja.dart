@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -1391,6 +1392,16 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get migrationGuideTitle => '他のアプリから移行';
+
+  @override
+  String get migrationImportCtaTitle => 'OPML ファイルはお手元にありますか？';
+
+  @override
+  String get migrationImportCtaButton => '今すぐインポート';
+
+  @override
+  String get migrationImportLocationHint =>
+      'OPML ファイルは、設定 > ストレージとデータ > 購読をインポート からいつでも取り込めます。';
 
   @override
   String get migrationGuideIntro =>

@@ -2642,6 +2642,24 @@ abstract class AppLocalizations {
   /// **'Migrate from another app'**
   String get migrationGuideTitle;
 
+  /// Migration guide import call-to-action heading
+  ///
+  /// In en, this message translates to:
+  /// **'Already have an OPML file?'**
+  String get migrationImportCtaTitle;
+
+  /// Migration guide import call-to-action button
+  ///
+  /// In en, this message translates to:
+  /// **'Import it now'**
+  String get migrationImportCtaButton;
+
+  /// Where the OPML import lives in settings
+  ///
+  /// In en, this message translates to:
+  /// **'You can import an OPML file any time from Settings > Storage & Data > Import Subscriptions.'**
+  String get migrationImportLocationHint;
+
   /// Migration guide intro text
   ///
   /// In en, this message translates to:

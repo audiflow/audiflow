@@ -6,8 +6,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../parental_control/domain/gate_guard.dart';
 import '../../../parental_control/providers/gate_guard_provider.dart';
 import '../controllers/opml_export_controller.dart';
-import '../controllers/opml_import_controller.dart';
-import 'opml_import_preview_screen.dart';
+import '../widgets/opml_import_flow.dart';
 
 /// Screen for managing storage and data: cache, search history,
 /// OPML import/export, and full data reset.
@@ -226,102 +225,22 @@ class _ExportTile extends ConsumerWidget {
   }
 }
 
-class _ImportTile extends ConsumerWidget {
+class _ImportTile extends StatelessWidget {
   const _ImportTile();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
-
-    ref.listen(opmlImportControllerProvider, (_, next) {
-      switch (next) {
-        case OpmlPickSuccess(:final entries, :final subscribedFeedUrls):
-          _navigateToPreview(
-            context,
-            entries: entries,
-            subscribedFeedUrls: subscribedFeedUrls,
-          );
-        case OpmlPickError(:final message):
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(message)));
-        case OpmlPickCancelled():
-        case OpmlPickIdle():
-        case OpmlPickLoading():
-          break;
-      }
-    });
-
-    return ListTile(
-      title: Text(l10n.storageImportTitle),
-      subtitle: Text(l10n.storageImportSubtitle),
-      trailing: OutlinedButton(
-        onPressed: () async {
-          final allowed = await ref
-              .read(opmlImportControllerProvider.notifier)
-              .pickAndParse(context);
-          if (!allowed && context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(l10n.parentalControlAccessDenied)),
-            );
-          }
-        },
-        child: Text(l10n.storageImport),
-      ),
-    );
-  }
-
-  Future<void> _navigateToPreview(
-    BuildContext context, {
-    required List<OpmlEntry> entries,
-    required Set<String> subscribedFeedUrls,
-  }) async {
-    final result = await Navigator.push<OpmlImportResult>(
-      context,
-      MaterialPageRoute<OpmlImportResult>(
-        builder: (_) => OpmlImportPreviewScreen(
-          entries: entries,
-          subscribedFeedUrls: subscribedFeedUrls,
-        ),
-      ),
-    );
-
-    if (result == null || !context.mounted) return;
-
-    await showDialog<void>(
-      context: context,
-      builder: (_) => _ImportSummaryDialog(result: result),
-    );
-  }
-}
-
-class _ImportSummaryDialog extends StatelessWidget {
-  const _ImportSummaryDialog({required this.result});
-
-  final OpmlImportResult result;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final lines = <String>[l10n.storageImportedCount(result.succeeded.length)];
-    if (result.alreadySubscribed.isNotEmpty) {
-      lines.add(
-        l10n.storageAlreadySubscribedCount(result.alreadySubscribed.length),
-      );
-    }
-    if (result.failed.isNotEmpty) {
-      lines.add(l10n.storageFailedCount(result.failed.length));
-    }
 
-    return AlertDialog(
-      title: Text(l10n.storageImportComplete),
-      content: Text(lines.join('\n')),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(l10n.commonOk),
+    return OpmlImportFlow(
+      builder: (context, start) => ListTile(
+        title: Text(l10n.storageImportTitle),
+        subtitle: Text(l10n.storageImportSubtitle),
+        trailing: OutlinedButton(
+          onPressed: start,
+          child: Text(l10n.storageImport),
         ),
-      ],
+      ),
     );
   }
 }
