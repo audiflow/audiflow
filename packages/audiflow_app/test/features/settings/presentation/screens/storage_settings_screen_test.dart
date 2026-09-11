@@ -26,18 +26,30 @@ class _FakeGateGuard implements GateGuard {
   }
 }
 
+class _FakeDataResetService implements DataResetService {
+  int resetCalls = 0;
+
+  @override
+  Future<void> resetAll() async {
+    resetCalls++;
+  }
+}
+
 void main() {
   late SharedPreferences prefs;
+  late _FakeDataResetService resetService;
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     prefs = await SharedPreferences.getInstance();
+    resetService = _FakeDataResetService();
   });
 
   Widget buildTestWidget({_FakeGateGuard? guard}) {
     return ProviderScope(
       overrides: [
         sharedPreferencesProvider.overrideWithValue(prefs),
+        dataResetServiceProvider.overrideWithValue(resetService),
         gateGuardProvider.overrideWithValue(
           guard ?? _FakeGateGuard(allows: true),
         ),
@@ -173,6 +185,20 @@ void main() {
         find.widgetWithText(FilledButton, 'Reset'),
       );
       expect(enabledButton.onPressed, isNotNull);
+    });
+
+    testWidgets('confirming reset runs the data reset service', (tester) async {
+      await tester.pumpWidget(buildTestWidget());
+
+      await tester.tap(find.text('Reset All Data'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'RESET');
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Reset'));
+      await tester.pumpAndSettle();
+
+      expect(resetService.resetCalls, 1);
+      expect(find.text('Data reset complete'), findsOneWidget);
     });
 
     testWidgets(

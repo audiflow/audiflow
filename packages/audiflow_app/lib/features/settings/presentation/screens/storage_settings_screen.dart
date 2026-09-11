@@ -1,6 +1,7 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:isar_community/isar.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../parental_control/domain/gate_guard.dart';
@@ -283,9 +284,10 @@ class _DangerZoneSection extends StatelessWidget {
   Future<void> _showResetDialog(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
 
-    // Reset wipes the PIN hash along with everything else, so an unauthenticated
-    // child could otherwise bypass Restricted Mode by tapping reset. Gate this
-    // entry path the same way Subscribe/OPML/Developer are gated.
+    // Reset clears every Isar collection, including ParentalControlSettings
+    // and its PIN hash, so an unauthenticated child could otherwise bypass
+    // Restricted Mode by tapping reset. Gate this entry path the same way
+    // Subscribe/OPML/Developer are gated.
     final guard = ref.read(gateGuardProvider);
     final allowed = await guard.requireUnlock(
       context,
@@ -299,22 +301,31 @@ class _DangerZoneSection extends StatelessWidget {
       builder: (dialogContext) => _ResetConfirmationDialog(
         onConfirm: () async {
           try {
-            final repo = ref.read(appSettingsRepositoryProvider);
-            await repo.clearAll();
+            await ref.read(dataResetServiceProvider).resetAll();
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(l10n.storageResetComplete)),
               );
             }
           } on Exception catch (e) {
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(l10n.storageResetFailed(e.toString()))),
-              );
-            }
+            if (context.mounted) _showResetFailed(context, l10n, e);
+          } on IsarError catch (e) {
+            // IsarError extends Error, not Exception, so a failed clear
+            // transaction would otherwise escape as an uncaught error.
+            if (context.mounted) _showResetFailed(context, l10n, e);
           }
         },
       ),
+    );
+  }
+
+  void _showResetFailed(
+    BuildContext context,
+    AppLocalizations l10n,
+    Object error,
+  ) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.storageResetFailed(error.toString()))),
     );
   }
 }

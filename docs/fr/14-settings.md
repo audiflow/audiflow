@@ -27,7 +27,7 @@ It also serves a secondary audience: audiflow contributors and podcast creators.
 - The Storage & Data screen reports cache and database size, offers cache and search-history clearing with confirmation dialogs, exposes OPML import/export, and gates a destructive "reset all data" action behind a double confirmation. When Restricted Mode (FR 18) is on, the reset action is additionally PIN-gated, since the reset would otherwise wipe the parental PIN hash and provide a bypass.
 - The Developer screen lists every smart playlist preset (pull-to-refresh fetches a fresh copy), links each to its versioned directory in the preset GitHub repo, offers a contribute link to the repo root, and carries a toggle that, when enabled, reveals an RSS-feed-URL and preset-link block at the bottom of episode detail screens.
 - Edge / failure case: A preferences write that fails to persist (disk error) does not update the in-memory value, so the displayed state never diverges from what was actually stored. Preset links are disabled until the schema version has been seeded. External links that fail to launch are reported rather than crashing.
-- Recovery / fallback: Every preference falls back to a defined default value when nothing has been stored yet. "Reset all data" restores all settings to their defaults alongside clearing the database and caches.
+- Recovery / fallback: Every preference falls back to a defined default value when nothing has been stored yet. "Reset all data" restores all settings to their defaults alongside clearing every Isar collection in one transaction, deleting downloaded audio files, and clearing all SharedPreferences keys.
 
 ## Capabilities
 
