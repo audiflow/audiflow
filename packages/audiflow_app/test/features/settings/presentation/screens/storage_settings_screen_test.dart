@@ -1,7 +1,9 @@
 import 'package:audiflow_app/features/parental_control/domain/gate_guard.dart';
 import 'package:audiflow_app/features/parental_control/providers/gate_guard_provider.dart';
+import 'package:audiflow_app/features/settings/presentation/controllers/theme_controller.dart';
 import 'package:audiflow_app/features/settings/presentation/screens/storage_settings_screen.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
+import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -26,12 +28,18 @@ class _FakeGateGuard implements GateGuard {
   }
 }
 
+/// Clears the shared preferences the way the real service does, so tests
+/// can observe whether the screen refreshes controllers that cached them.
 class _FakeDataResetService implements DataResetService {
+  _FakeDataResetService(this._prefs);
+
+  final SharedPreferences _prefs;
   int resetCalls = 0;
 
   @override
   Future<void> resetAll() async {
     resetCalls++;
+    await _prefs.clear();
   }
 }
 
@@ -40,9 +48,11 @@ void main() {
   late _FakeDataResetService resetService;
 
   setUp(() async {
-    SharedPreferences.setMockInitialValues({});
+    SharedPreferences.setMockInitialValues({
+      SettingsKeys.themeMode: ThemeMode.dark.name,
+    });
     prefs = await SharedPreferences.getInstance();
-    resetService = _FakeDataResetService();
+    resetService = _FakeDataResetService(prefs);
   });
 
   Widget buildTestWidget({_FakeGateGuard? guard}) {
@@ -199,6 +209,25 @@ void main() {
 
       expect(resetService.resetCalls, 1);
       expect(find.text('Data reset complete'), findsOneWidget);
+    });
+
+    testWidgets('confirming reset refreshes controllers that cached prefs', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildTestWidget());
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(StorageSettingsScreen)),
+      );
+      expect(container.read(themeModeControllerProvider), ThemeMode.dark);
+
+      await tester.tap(find.text('Reset All Data'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'RESET');
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Reset'));
+      await tester.pumpAndSettle();
+
+      expect(container.read(themeModeControllerProvider), ThemeMode.system);
     });
 
     testWidgets(

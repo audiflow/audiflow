@@ -6,6 +6,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../parental_control/domain/gate_guard.dart';
 import '../../../parental_control/providers/gate_guard_provider.dart';
 import '../controllers/opml_export_controller.dart';
+import '../controllers/runtime_reset.dart';
 import '../widgets/opml_import_flow.dart';
 
 /// Screen for managing storage and data: cache, search history,
@@ -305,6 +306,7 @@ class _DangerZoneSection extends StatelessWidget {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(l10n.storageResetComplete)),
               );
+              applyRuntimeReset(context, ref);
             }
           } on Object catch (e) {
             // IsarError extends Error, not Exception, so a narrower clause
