@@ -340,18 +340,20 @@ class MockSubscriptionRepository extends _i1.Mock
   @override
   _i11.Future<void> updateFeedMetadata(
     int? id, {
-    String? artworkUrl,
+    String? artworkUrlIfMissing,
     String? artistName,
     String? description,
+    DateTime? syncedAt,
   }) =>
       (super.noSuchMethod(
             Invocation.method(
               #updateFeedMetadata,
               [id],
               {
-                #artworkUrl: artworkUrl,
+                #artworkUrlIfMissing: artworkUrlIfMissing,
                 #artistName: artistName,
                 #description: description,
+                #syncedAt: syncedAt,
               },
             ),
             returnValue: _i11.Future<void>.value(),

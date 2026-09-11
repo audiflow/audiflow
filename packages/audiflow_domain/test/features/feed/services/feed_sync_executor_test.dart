@@ -24,13 +24,14 @@ class _FakeSubscriptionRepository implements SubscriptionRepository {
   @override
   Future<void> updateFeedMetadata(
     int id, {
-    String? artworkUrl,
+    String? artworkUrlIfMissing,
     String? artistName,
     String? description,
+    DateTime? syncedAt,
   }) async {
     feedMetadataCallCount++;
     lastFeedMetadataId = id;
-    lastFeedArtworkUrl = artworkUrl;
+    lastFeedArtworkUrl = artworkUrlIfMissing;
     lastFeedArtistName = artistName;
     lastFeedDescription = description;
   }
@@ -515,6 +516,7 @@ Subscription _subscription({
   // null for the OPML-import case, which also turns off conditional requests.
   String? artworkUrl = 'https://example.com/itunes.jpg',
   String? description,
+  DateTime? feedMetadataSyncedAt,
 }) {
   return Subscription()
     ..id = id
@@ -524,6 +526,7 @@ Subscription _subscription({
     ..artistName = artistName
     ..artworkUrl = artworkUrl
     ..description = description
+    ..feedMetadataSyncedAt = feedMetadataSyncedAt
     ..genres = ''
     ..explicit = false
     ..subscribedAt = DateTime.now()
@@ -714,6 +717,7 @@ void main() {
         artistName: 'Jane Doe',
         artworkUrl: 'https://example.com/art.jpg',
         description: 'Show notes',
+        feedMetadataSyncedAt: DateTime(2026),
       );
 
       final parser = _FakeFeedParserService(

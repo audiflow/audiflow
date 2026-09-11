@@ -344,10 +344,16 @@ class FeedSyncService {
           // Cosmetic metadata must not fail the sync: without this guard a
           // failed write would abort the loop before drop detection, the
           // cache headers, and lastRefreshedAt, so the feed stops converging.
+          // Use catch (e, st) instead of on Exception: Isar throws Error
+          // subclasses, not Exception, on database failures.
           try {
             await metadataUpdater.applyFeedMeta(sub, progress);
-          } on Exception catch (e) {
-            _logger.w('Metadata backfill failed for "${sub.title}": $e');
+          } catch (e, st) {
+            _logger.w(
+              'Metadata backfill failed for "${sub.title}"; sync continues',
+              error: e,
+              stackTrace: st,
+            );
           }
         }
         if (progress is FeedParseComplete) {

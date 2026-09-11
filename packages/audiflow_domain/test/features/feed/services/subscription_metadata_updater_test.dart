@@ -9,19 +9,22 @@ class _FakeSubscriptionRepository implements SubscriptionRepository {
   String? lastArtworkUrl;
   String? lastArtistName;
   String? lastDescription;
+  DateTime? lastSyncedAt;
 
   @override
   Future<void> updateFeedMetadata(
     int id, {
-    String? artworkUrl,
+    String? artworkUrlIfMissing,
     String? artistName,
     String? description,
+    DateTime? syncedAt,
   }) async {
     callCount++;
     lastId = id;
-    lastArtworkUrl = artworkUrl;
+    lastArtworkUrl = artworkUrlIfMissing;
     lastArtistName = artistName;
     lastDescription = description;
+    lastSyncedAt = syncedAt;
   }
 
   @override
@@ -33,6 +36,7 @@ Subscription _subscription({
   String artistName = '',
   String? artworkUrl,
   String? description,
+  DateTime? feedMetadataSyncedAt,
 }) {
   return Subscription()
     ..id = id
@@ -42,6 +46,7 @@ Subscription _subscription({
     ..artistName = artistName
     ..artworkUrl = artworkUrl
     ..description = description
+    ..feedMetadataSyncedAt = feedMetadataSyncedAt
     ..genres = ''
     ..explicit = false
     ..subscribedAt = DateTime.now();
@@ -125,6 +130,7 @@ void main() {
         artistName: 'Search Artist',
         artworkUrl: 'https://example.com/itunes.jpg',
         description: 'Search description',
+        feedMetadataSyncedAt: DateTime(2026),
       );
 
       await updater.applyFeedMeta(
@@ -133,6 +139,27 @@ void main() {
       );
 
       check(repository.callCount).equals(0);
+    });
+
+    test('records the channel read even when nothing changed', () async {
+      final sub = _subscription(
+        artistName: 'Jane Doe',
+        artworkUrl: 'https://example.com/art.jpg',
+        description: 'Show notes',
+      );
+
+      await updater.applyFeedMeta(
+        sub,
+        const FeedMetaReady(
+          title: 'Test Podcast',
+          description: 'Show notes',
+          imageUrl: 'https://example.com/art.jpg',
+          author: 'Jane Doe',
+        ),
+      );
+
+      check(repository.callCount).equals(1);
+      check(repository.lastSyncedAt).isNotNull();
     });
 
     test('writes only the fields the channel actually changes', () async {
@@ -162,6 +189,7 @@ void main() {
         artistName: 'Jane Doe',
         artworkUrl: 'https://example.com/art.jpg',
         description: 'Show notes',
+        feedMetadataSyncedAt: DateTime(2026),
       );
 
       await updater.applyFeedMeta(
@@ -206,6 +234,17 @@ void main() {
           _subscription(artworkUrl: '  '),
         ),
       ).isTrue();
+    });
+
+    test('is false once the channel has been read, artwork or not', () {
+      // The parser recognises only itunes:image, so a feed carrying a plain
+      // RSS <image> yields no artwork at all. Without the timestamp such a
+      // subscription would refetch its whole feed on every refresh forever.
+      check(
+        SubscriptionMetadataUpdater.needsArtworkBackfill(
+          _subscription(feedMetadataSyncedAt: DateTime(2026)),
+        ),
+      ).isFalse();
     });
 
     test('is false once artwork is stored', () {

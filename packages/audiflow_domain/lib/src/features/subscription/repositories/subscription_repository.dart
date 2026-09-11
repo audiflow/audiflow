@@ -94,11 +94,17 @@ abstract class SubscriptionRepository {
   /// value untouched. Callers pass null for fields the channel did not
   /// change, so an OPML-imported subscription can be filled in without
   /// clearing anything a podcast search already supplied.
+  ///
+  /// [artworkUrlIfMissing] is applied only when no artwork is stored, decided
+  /// at write time so a concurrent write cannot be overwritten.
+  /// [syncedAt] records that the channel was read, so a feed carrying no
+  /// artwork stops forcing unconditional requests.
   Future<void> updateFeedMetadata(
     int id, {
-    String? artworkUrl,
+    String? artworkUrlIfMissing,
     String? artistName,
     String? description,
+    DateTime? syncedAt,
   });
 
   /// Updates HTTP cache headers (ETag / Last-Modified) for a subscription.

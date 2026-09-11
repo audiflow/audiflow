@@ -65,13 +65,16 @@ class SubscriptionMetadataUpdater {
       author: author,
       description: description,
     );
-    if (update.isEmpty) return;
+    // The write also records that the channel was read, so a feed carrying no
+    // artwork is not asked for unconditionally on every future refresh.
+    if (update.isEmpty && sub.feedMetadataSyncedAt != null) return;
 
     await _repository.updateFeedMetadata(
       sub.id,
-      artworkUrl: update.artworkUrl,
+      artworkUrlIfMissing: update.artworkUrl,
       artistName: update.artistName,
       description: update.description,
+      syncedAt: DateTime.now(),
     );
   }
 
@@ -91,14 +94,18 @@ class SubscriptionMetadataUpdater {
     );
   }
 
-  /// Whether [sub] is still missing artwork that only its feed can supply.
+  /// Whether [sub] must parse its feed to obtain artwork it does not have.
   ///
-  /// Such a subscription has to parse its feed to get one, so callers skip
-  /// conditional request headers for it: a 304 skips the parse, which would
-  /// leave an OPML-imported podcast blank forever on a show that never
-  /// publishes again.
+  /// Callers skip conditional request headers for such a subscription: a 304
+  /// skips the parse, which would leave an OPML-imported podcast blank
+  /// forever on a show that never publishes again.
+  ///
+  /// True only until the channel has been read once. The parser recognises
+  /// `itunes:image` and nothing else, so a feed carrying a plain RSS
+  /// `<image>` yields no artwork at all; without the timestamp such a
+  /// subscription would download its whole feed on every refresh forever.
   static bool needsArtworkBackfill(Subscription sub) =>
-      _isBlank(sub.artworkUrl);
+      _isBlank(sub.artworkUrl) && sub.feedMetadataSyncedAt == null;
 
   /// Returns the trimmed [feedValue] when it carries new information, or
   /// null when it is blank or already equal to [storedValue].

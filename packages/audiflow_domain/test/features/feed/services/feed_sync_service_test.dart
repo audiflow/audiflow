@@ -302,9 +302,10 @@ void main() {
       verify(
         mockSubscriptionRepo.updateFeedMetadata(
           sub.id,
-          artworkUrl: 'https://example.com/art.jpg',
+          artworkUrlIfMissing: 'https://example.com/art.jpg',
           artistName: 'Jane Doe',
           description: 'Show notes',
+          syncedAt: anyNamed('syncedAt'),
         ),
       ).called(1);
     });
