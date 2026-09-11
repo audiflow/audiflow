@@ -18,7 +18,7 @@ Sub-package of the `audiflow` Flutter monorepo. Depends on `audiflow_core`, `aud
 
 - Repository interfaces and implementations for the feature modules under `lib/src/features/`
 - Isar collection definitions and local/remote data sources
-- Business services (feed sync, playback, download queue, station reconciliation)
+- Business services (feed sync, playback, download queue, station reconciliation, full local-data reset via `DataResetService`)
 - Smart playlist config consumption, caching, and resolver pipeline
 - Background refresh and new-episode notification orchestration
 - Parental control: PIN-gated Restricted Mode (`ParentalControlRepository`, `PinHasher`, `UnlockState`, Riverpod providers)

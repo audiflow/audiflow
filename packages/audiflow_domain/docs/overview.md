@@ -48,7 +48,7 @@ Each feature follows the directory structure: `models/`, `datasources/local/`, `
 | station | `src/features/station/` | `Station`, `StationPodcast`, `StationEpisode`, `StationReconciler` | Custom multi-podcast playlists with filter conditions and materialized episode views |
 | transcript | `src/features/transcript/` | `EpisodeChapter`, `EpisodeTranscript`, `TranscriptSegmentTable`, `TranscriptService` | Chapter and transcript storage, full-text search across transcript segments |
 | voice | `src/features/voice/` | `VoiceCommandOrchestrator`, `VoiceCommandExecutor`, `PlayPodcastByNameService` | Speech recognition state machine, AI-powered command parsing and execution |
-| settings | `src/features/settings/` | `AppSettingsRepository` | User preferences (playback speed, skip durations, notification toggle) |
+| settings | `src/features/settings/` | `AppSettingsRepository`, `DataResetService` | User preferences (playback speed, skip durations, notification toggle) and the full local-data reset behind "Reset All Data" |
 
 ## Primary entry points
 

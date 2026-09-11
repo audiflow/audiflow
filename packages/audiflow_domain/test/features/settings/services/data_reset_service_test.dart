@@ -9,10 +9,43 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../helpers/isar_test_helper.dart';
 
+/// Records stop calls along with how many subscriptions existed at the time,
+/// so the test can assert playback stops before the database is cleared.
+class _FakePlaybackController implements AudioPlaybackController {
+  _FakePlaybackController(this._isar);
+
+  final Isar _isar;
+  final List<int> subscriptionsAtStop = [];
+
+  @override
+  Future<void> stop() async {
+    subscriptionsAtStop.add(await _isar.subscriptions.count());
+  }
+
+  @override
+  Future<void> pause() async {}
+
+  @override
+  Future<void> resume() async {}
+
+  @override
+  Future<void> seek(Duration position) async {}
+
+  @override
+  Future<void> setSpeed(double speed) async {}
+
+  @override
+  Future<void> skipBackward() async {}
+
+  @override
+  Future<void> skipForward() async {}
+}
+
 void main() {
   late Isar isar;
   late Directory downloadsDir;
   late SharedPreferencesDataSource preferences;
+  late _FakePlaybackController playback;
   late DataResetService service;
 
   setUpAll(() async {
@@ -29,9 +62,11 @@ void main() {
     preferences = SharedPreferencesDataSource(
       await SharedPreferences.getInstance(),
     );
+    playback = _FakePlaybackController(isar);
     service = DataResetService(
       isar: isar,
       preferences: preferences,
+      playback: playback,
       resolveDownloadsDirectory: () async => downloadsDir.path,
     );
   });
@@ -67,6 +102,30 @@ void main() {
 
       final after = await countPerCollection();
       check(after.values).every((count) => count.equals(0));
+    });
+
+    test('stops playback before clearing the database', () async {
+      await seedEveryCollection(isar);
+
+      await service.resetAll();
+
+      check(playback.subscriptionsAtStop).deepEquals([1]);
+    });
+
+    test('leaves the database untouched when file deletion fails', () async {
+      await seedEveryCollection(isar);
+      final blockedService = DataResetService(
+        isar: isar,
+        preferences: preferences,
+        playback: playback,
+        resolveDownloadsDirectory: () async =>
+            throw const FileSystemException('boom'),
+      );
+
+      await check(blockedService.resetAll()).throws<FileSystemException>();
+
+      check(await isar.subscriptions.count()).equals(1);
+      check(preferences.getString('settings_theme_mode')).equals('dark');
     });
 
     test('deletes the downloads directory', () async {

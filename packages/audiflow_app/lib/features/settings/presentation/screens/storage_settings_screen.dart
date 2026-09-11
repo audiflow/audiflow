@@ -1,7 +1,6 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:isar_community/isar.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../parental_control/domain/gate_guard.dart';
@@ -307,25 +306,18 @@ class _DangerZoneSection extends StatelessWidget {
                 SnackBar(content: Text(l10n.storageResetComplete)),
               );
             }
-          } on Exception catch (e) {
-            if (context.mounted) _showResetFailed(context, l10n, e);
-          } on IsarError catch (e) {
-            // IsarError extends Error, not Exception, so a failed clear
-            // transaction would otherwise escape as an uncaught error.
-            if (context.mounted) _showResetFailed(context, l10n, e);
+          } on Object catch (e) {
+            // IsarError extends Error, not Exception, so a narrower clause
+            // would let a failed clear transaction escape the dialog with
+            // no feedback at all.
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(l10n.storageResetFailed(e.toString()))),
+              );
+            }
           }
         },
       ),
-    );
-  }
-
-  void _showResetFailed(
-    BuildContext context,
-    AppLocalizations l10n,
-    Object error,
-  ) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.storageResetFailed(error.toString()))),
     );
   }
 }
