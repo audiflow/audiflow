@@ -1,4 +1,8 @@
+import 'dart:async';
+
+import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:logger/logger.dart';
@@ -168,6 +172,116 @@ void main() {
           id: taskId,
           status: const DownloadStatus.cancelled(),
         ),
+      ).called(1);
+    });
+  });
+
+  group('cancelAll', () {
+    test('completes immediately when the queue is idle', () async {
+      await Future<void>.delayed(Duration.zero);
+      clearInteractions(mockRepository);
+
+      await service.cancelAll();
+
+      verifyNever(mockFileService.cancelDownload(any));
+      verifyNever(
+        mockRepository.updateStatus(
+          id: anyNamed('id'),
+          status: anyNamed('status'),
+          localPath: anyNamed('localPath'),
+          lastError: anyNamed('lastError'),
+        ),
+      );
+    });
+
+    test(
+      'cancels the active download and stops before the next task',
+      () async {
+        // Arrange: two pending tasks; the first blocks until cancelled.
+        final first = _task(id: 1, episodeId: 10);
+        final second = _task(id: 2, episodeId: 20);
+        final episode = _episode(id: 10);
+        await Future<void>.delayed(Duration.zero);
+        clearInteractions(mockRepository);
+
+        var pendingCalls = 0;
+        when(
+          mockRepository.getNextPending(isOnWifi: anyNamed('isOnWifi')),
+        ).thenAnswer((_) async {
+          pendingCalls++;
+          return pendingCalls == 1 ? first : second;
+        });
+        when(
+          mockRepository.updateStatus(
+            id: anyNamed('id'),
+            status: anyNamed('status'),
+            localPath: anyNamed('localPath'),
+            lastError: anyNamed('lastError'),
+          ),
+        ).thenAnswer((_) async {});
+        when(mockEpisodeRepo.getById(10)).thenAnswer((_) async => episode);
+
+        final download = Completer<String>();
+        when(
+          mockFileService.downloadFile(
+            taskId: 1,
+            url: first.audioUrl,
+            episodeId: first.episodeId,
+            episodeTitle: episode.title,
+            resumeFromBytes: first.downloadedBytes,
+            onProgress: anyNamed('onProgress'),
+          ),
+        ).thenAnswer((_) => download.future);
+        when(mockFileService.cancelDownload(1)).thenAnswer((_) {
+          download.completeError(
+            DownloadException(
+              DownloadErrorType.cancelled,
+              'Download cancelled',
+            ),
+          );
+        });
+
+        final processing = service.startQueue();
+        await Future<void>.delayed(Duration.zero);
+        check(service.activeDownload?.id).equals(1);
+
+        // Act
+        await service.cancelAll();
+
+        // Assert: the cancelled status landed before cancelAll returned, and
+        // the drain loop did not pick up the second task.
+        verify(mockFileService.cancelDownload(1)).called(1);
+        verify(
+          mockRepository.updateStatus(
+            id: 1,
+            status: const DownloadStatus.cancelled(),
+            lastError: 'Download cancelled',
+          ),
+        ).called(1);
+        verifyNever(
+          mockRepository.updateStatus(
+            id: 2,
+            status: const DownloadStatus.downloading(),
+          ),
+        );
+        check(pendingCalls).equals(1);
+        check(service.activeDownload).isNull();
+        await processing;
+      },
+    );
+
+    test('lets the queue drain again after cancellation', () async {
+      await Future<void>.delayed(Duration.zero);
+      clearInteractions(mockRepository);
+      await service.cancelAll();
+      when(
+        mockRepository.getNextPending(isOnWifi: anyNamed('isOnWifi')),
+      ).thenAnswer((_) async => null);
+
+      await service.startQueue();
+
+      verify(
+        mockRepository.getNextPending(isOnWifi: anyNamed('isOnWifi')),
       ).called(1);
     });
   });

@@ -77,6 +77,9 @@ class _RecordingFeedSyncService implements FeedSyncService {
     Subscription sub, {
     bool forceRefresh = false,
   }) => throw UnimplementedError();
+
+  @override
+  Future<void> cancelAll() => throw UnimplementedError();
 }
 
 OpmlEntry _entry(String title, String feedUrl) =>

@@ -64,6 +64,25 @@ class FeedSyncService {
   final Logger _logger;
   final FeedSyncDiagnosticSink _onDiagnostic;
 
+  /// Every [syncFeed] call that has not completed yet, so [cancelAll] can
+  /// wait for them to unwind before the caller touches storage.
+  final _inFlight = <Future<SingleFeedSyncResult>>{};
+
+  /// Shared by every sync started since the last [cancelAll]; cancelling it
+  /// aborts their feed fetches and marks their pending writes as skipped.
+  CancelToken _cancelToken = CancelToken();
+
+  /// Cancels every in-flight feed sync and waits for them to settle.
+  ///
+  /// "Reset All Data" calls this before clearing storage: a sync awaiting
+  /// a feed response would otherwise resume afterwards and write episodes
+  /// back. Syncs started after this call run normally.
+  Future<void> cancelAll() async {
+    _cancelToken.cancel('Feed sync cancelled');
+    _cancelToken = CancelToken();
+    await Future.wait(_inFlight.toList());
+  }
+
   /// Sync interval derived from user settings.
   Duration get _syncInterval {
     final repo = _ref.read(appSettingsRepositoryProvider);
@@ -178,6 +197,20 @@ class FeedSyncService {
   Future<SingleFeedSyncResult> syncFeed(
     Subscription sub, {
     bool forceRefresh = false,
+  }) {
+    final sync = _syncFeed(
+      sub,
+      forceRefresh: forceRefresh,
+      cancelToken: _cancelToken,
+    );
+    _inFlight.add(sync);
+    return sync.whenComplete(() => _inFlight.remove(sync));
+  }
+
+  Future<SingleFeedSyncResult> _syncFeed(
+    Subscription sub, {
+    required bool forceRefresh,
+    required CancelToken cancelToken,
   }) async {
     try {
       if (!forceRefresh && !_shouldSync(sub.lastRefreshedAt)) {
@@ -231,6 +264,7 @@ class FeedSyncService {
       // Fetch RSS content
       final response = await dio.get<String>(
         sub.feedUrl,
+        cancelToken: cancelToken,
         options: Options(
           headers: conditionalHeaders,
           responseType: ResponseType.plain,
@@ -239,6 +273,10 @@ class FeedSyncService {
               (status == 304 || (200 <= status && status < 300)),
         ),
       );
+
+      // Dio only throws for a cancellation that lands mid-request; one that
+      // lands between the response and the first write needs this check.
+      if (cancelToken.isCancelled) return _cancelledResult(sub);
 
       // 304 Not Modified — feed unchanged, skip parsing.
       // RFC 9110 allows 304 to include updated validators, so persist them.
@@ -300,6 +338,9 @@ class FeedSyncService {
         podcastId: sub.id,
         knownGuids: knownGuids,
         onBatchReady: (episodes, mediaMetas) async {
+          // The parser calls back between progress events, so a batch can
+          // arrive after the loop below decided to break.
+          if (cancelToken.isCancelled) return;
           observedGuids.addAll(episodes.map((e) => e.guid));
           // Apply per-group extractor resolution if pattern config
           // is available.
@@ -345,6 +386,7 @@ class FeedSyncService {
           }
         },
       )) {
+        if (cancelToken.isCancelled) break;
         if (progress is FeedMetaReady) {
           // Cosmetic metadata must not fail the sync: without this guard a
           // failed write would abort the loop before drop detection, the
@@ -377,6 +419,8 @@ class FeedSyncService {
           });
         }
       }
+
+      if (cancelToken.isCancelled) return _cancelledResult(sub);
 
       // Remove episodes whose GUIDs are no longer in the feed. Mirrors the
       // logic in FeedSyncExecutor so the foreground and background paths
@@ -452,6 +496,9 @@ class FeedSyncService {
         newEpisodeCount: newEpisodeCount,
       );
     } catch (e, stack) {
+      if (e is DioException && e.type == DioExceptionType.cancel) {
+        return _cancelledResult(sub);
+      }
       _logger.e(
         'Failed to sync feed for "${sub.title}"',
         error: e,
@@ -493,6 +540,20 @@ class FeedSyncService {
       successCount: results.where((r) => r.success).length,
       skipCount: results.where((r) => r.skipped).length,
       errorCount: results.where((r) => !r.success && !r.skipped).length,
+    );
+  }
+
+  /// A sync that [cancelAll] stopped before it wrote anything.
+  ///
+  /// Reported as skipped rather than failed: nothing went wrong with the
+  /// feed, and the caller asked for the sync to stop.
+  SingleFeedSyncResult _cancelledResult(Subscription sub) {
+    _logger.d('Sync cancelled for "${sub.title}"');
+    return SingleFeedSyncResult(
+      podcastId: sub.id,
+      success: false,
+      skipped: true,
+      errorMessage: 'Sync cancelled',
     );
   }
 

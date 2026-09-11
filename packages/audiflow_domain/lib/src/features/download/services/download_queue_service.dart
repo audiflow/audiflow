@@ -111,6 +111,13 @@ class DownloadQueueService {
   bool _isOnWifi = false;
   Timer? _retryTimer;
 
+  /// The running queue drain, so [cancelAll] can wait for it to settle.
+  Future<void>? _processing;
+
+  /// Set by [cancelAll] so the drain loop stops instead of picking up the
+  /// next pending task after the active one is cancelled.
+  bool _stopRequested = false;
+
   final _activeDownloadController = StreamController<DownloadTask?>.broadcast();
 
   /// Stream of the currently active download.
@@ -162,9 +169,13 @@ class DownloadQueueService {
   Future<void> _processQueue() async {
     if (_isProcessing) return;
     _isProcessing = true;
+    _processing = _drainQueue();
+    await _processing;
+  }
 
+  Future<void> _drainQueue() async {
     try {
-      while (true) {
+      while (!_stopRequested) {
         final nextTask = await _repository.getNextPending(isOnWifi: _isOnWifi);
         if (nextTask == null) break;
 
@@ -172,6 +183,7 @@ class DownloadQueueService {
       }
     } finally {
       _isProcessing = false;
+      _processing = null;
       _activeDownload = null;
       _activeDownloadController.add(null);
     }
@@ -321,6 +333,25 @@ class DownloadQueueService {
       id: taskId,
       status: const DownloadStatus.cancelled(),
     );
+  }
+
+  /// Cancels the active download, stops the queue loop, and waits for the
+  /// in-flight task to settle.
+  ///
+  /// "Reset All Data" calls this before clearing storage: without the wait,
+  /// the cancelled task's status write could land after `Isar.clear()` and
+  /// the file service could recreate the downloads directory it just
+  /// removed. Pending tasks are left in place; the caller clears them.
+  Future<void> cancelAll() async {
+    _stopRequested = true;
+    _retryTimer?.cancel();
+    final active = _activeDownload;
+    if (active != null) _fileService.cancelDownload(active.id);
+    try {
+      await _processing;
+    } finally {
+      _stopRequested = false;
+    }
   }
 
   /// Retries a failed download.
