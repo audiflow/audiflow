@@ -64,12 +64,14 @@ class FeedSyncService {
   final Logger _logger;
   final FeedSyncDiagnosticSink _onDiagnostic;
 
-  /// Every [syncFeed] call that has not completed yet, so [cancelAll] can
-  /// wait for them to unwind before the caller touches storage.
-  final _inFlight = <Future<SingleFeedSyncResult>>{};
+  /// Every sync (single feed or whole batch) that has not completed yet, so
+  /// [cancelAll] can wait for them to unwind before the caller touches
+  /// storage.
+  final _inFlight = <Future<void>>{};
 
   /// Shared by every sync started since the last [cancelAll]; cancelling it
-  /// aborts their feed fetches and marks their pending writes as skipped.
+  /// aborts their feed fetches, marks their pending writes as skipped, and
+  /// stops batch workers from starting the next feed.
   CancelToken _cancelToken = CancelToken();
 
   /// Cancels every in-flight feed sync and waits for them to settle.
@@ -81,6 +83,11 @@ class FeedSyncService {
     _cancelToken.cancel('Feed sync cancelled');
     _cancelToken = CancelToken();
     await Future.wait(_inFlight.toList());
+  }
+
+  Future<T> _track<T>(Future<T> work) {
+    _inFlight.add(work);
+    return work.whenComplete(() => _inFlight.remove(work));
   }
 
   /// Sync interval derived from user settings.
@@ -197,15 +204,9 @@ class FeedSyncService {
   Future<SingleFeedSyncResult> syncFeed(
     Subscription sub, {
     bool forceRefresh = false,
-  }) {
-    final sync = _syncFeed(
-      sub,
-      forceRefresh: forceRefresh,
-      cancelToken: _cancelToken,
-    );
-    _inFlight.add(sync);
-    return sync.whenComplete(() => _inFlight.remove(sync));
-  }
+  }) => _track(
+    _syncFeed(sub, forceRefresh: forceRefresh, cancelToken: _cancelToken),
+  );
 
   Future<SingleFeedSyncResult> _syncFeed(
     Subscription sub, {
@@ -386,7 +387,8 @@ class FeedSyncService {
           }
         },
       )) {
-        if (cancelToken.isCancelled) break;
+        // Returning from inside the loop also cancels the parser stream.
+        if (cancelToken.isCancelled) return _cancelledResult(sub);
         if (progress is FeedMetaReady) {
           // Cosmetic metadata must not fail the sync: without this guard a
           // failed write would abort the loop before drop detection, the
@@ -419,8 +421,6 @@ class FeedSyncService {
           });
         }
       }
-
-      if (cancelToken.isCancelled) return _cancelledResult(sub);
 
       // Remove episodes whose GUIDs are no longer in the feed. Mirrors the
       // logic in FeedSyncExecutor so the foreground and background paths
@@ -518,17 +518,39 @@ class FeedSyncService {
   /// Runs at most [_maxConcurrentFeedSyncs] at a time. Workers pull from a
   /// shared queue rather than splitting the list into fixed chunks, so one
   /// slow feed cannot hold back the rest.
+  ///
+  /// The whole batch shares one cancel token and is tracked as a single
+  /// in-flight unit: a [cancelAll] must stop workers from pulling the next
+  /// feed, not only abort the fetches that were running when it landed.
   Future<FeedSyncResult> _syncSubscriptions(
     List<Subscription> subscriptions, {
     required bool forceRefresh,
+  }) => _track(
+    _syncBatch(
+      subscriptions,
+      forceRefresh: forceRefresh,
+      cancelToken: _cancelToken,
+    ),
+  );
+
+  Future<FeedSyncResult> _syncBatch(
+    List<Subscription> subscriptions, {
+    required bool forceRefresh,
+    required CancelToken cancelToken,
   }) async {
     final pending = Queue<Subscription>.of(subscriptions);
     final results = <SingleFeedSyncResult>[];
 
     Future<void> drainQueue() async {
-      while (pending.isNotEmpty) {
+      while (pending.isNotEmpty && !cancelToken.isCancelled) {
         final sub = pending.removeFirst();
-        results.add(await syncFeed(sub, forceRefresh: forceRefresh));
+        results.add(
+          await _syncFeed(
+            sub,
+            forceRefresh: forceRefresh,
+            cancelToken: cancelToken,
+          ),
+        );
       }
     }
 
@@ -536,7 +558,7 @@ class FeedSyncService {
     await Future.wait([for (var i = 0; i < workerCount; i++) drainQueue()]);
 
     return FeedSyncResult(
-      totalCount: subscriptions.length,
+      totalCount: results.length,
       successCount: results.where((r) => r.success).length,
       skipCount: results.where((r) => r.skipped).length,
       errorCount: results.where((r) => !r.success && !r.skipped).length,
