@@ -5,6 +5,7 @@ import 'package:audiflow_app/features/settings/presentation/screens/storage_sett
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -207,8 +208,8 @@ void main() {
       await tester.tap(find.widgetWithText(FilledButton, 'Reset'));
       await tester.pumpAndSettle();
 
-      expect(resetService.resetCalls, 1);
-      expect(find.text('Data reset complete'), findsOneWidget);
+      check(resetService.resetCalls).equals(1);
+      check(find.text('Data reset complete').evaluate()).length.equals(1);
     });
 
     testWidgets('confirming reset refreshes controllers that cached prefs', (
@@ -218,7 +219,7 @@ void main() {
       final container = ProviderScope.containerOf(
         tester.element(find.byType(StorageSettingsScreen)),
       );
-      expect(container.read(themeModeControllerProvider), ThemeMode.dark);
+      check(container.read(themeModeControllerProvider)).equals(ThemeMode.dark);
 
       await tester.tap(find.text('Reset All Data'));
       await tester.pumpAndSettle();
@@ -227,7 +228,9 @@ void main() {
       await tester.tap(find.widgetWithText(FilledButton, 'Reset'));
       await tester.pumpAndSettle();
 
-      expect(container.read(themeModeControllerProvider), ThemeMode.system);
+      check(
+        container.read(themeModeControllerProvider),
+      ).equals(ThemeMode.system);
     });
 
     testWidgets(
