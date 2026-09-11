@@ -203,10 +203,6 @@ void main() {
           () => repository.setThemeMode(ThemeMode.dark),
         ).throws<UnsupportedError>();
       });
-
-      test('clearAll throws', () {
-        check(() => repository.clearAll()).throws<UnsupportedError>();
-      });
     });
   });
 }

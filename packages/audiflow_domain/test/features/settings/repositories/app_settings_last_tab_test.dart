@@ -54,13 +54,5 @@ void main() {
       await prefs.setInt(SettingsKeys.lastTabIndex, 42);
       expect(repository.getLastTabIndex(), SettingsDefaults.lastTabIndex);
     });
-
-    test('clearAll resets to default', () async {
-      await repository.setLastTabIndex(2);
-      expect(repository.getLastTabIndex(), 2);
-
-      await repository.clearAll();
-      expect(repository.getLastTabIndex(), SettingsDefaults.lastTabIndex);
-    });
   });
 }

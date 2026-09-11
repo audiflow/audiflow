@@ -34,14 +34,6 @@ void main() {
       expect(reloaded.getPrivacyConsentAccepted(), isTrue);
     });
 
-    test('clearAll resets consent to false', () async {
-      await repository.setPrivacyConsentAccepted(true);
-      expect(repository.getPrivacyConsentAccepted(), isTrue);
-
-      await repository.clearAll();
-      expect(repository.getPrivacyConsentAccepted(), isFalse);
-    });
-
     test('explicit set to false persists false', () async {
       await repository.setPrivacyConsentAccepted(true);
       await repository.setPrivacyConsentAccepted(false);

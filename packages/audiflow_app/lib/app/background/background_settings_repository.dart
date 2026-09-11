@@ -160,7 +160,4 @@ class BackgroundSettingsRepository implements AppSettingsRepository {
 
   @override
   Future<void> setPrivacyConsentAccepted(bool accepted) => _unsupported();
-
-  @override
-  Future<void> clearAll() => _unsupported();
 }

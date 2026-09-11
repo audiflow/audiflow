@@ -355,9 +355,6 @@ class _FakeAppSettingsRepository implements AppSettingsRepository {
   @override
   Future<void> setPrivacyConsentAccepted(bool accepted) =>
       throw UnimplementedError();
-
-  @override
-  Future<void> clearAll() => throw UnimplementedError();
 }
 
 class _FakeFeedParserService extends FeedParserService {
