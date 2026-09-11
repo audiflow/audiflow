@@ -1,4 +1,5 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:checks/checks.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
@@ -836,7 +837,7 @@ void main() {
     test('returns empty result for an empty url list', () async {
       final result = await service.syncFeedsByUrls(const []);
 
-      expect(result.totalCount, 0);
+      check(result.totalCount).equals(0);
       verifyNever(mockSubscriptionRepo.getByFeedUrl(any));
     });
 
@@ -849,7 +850,7 @@ void main() {
         'https://example.com/gone.xml',
       ]);
 
-      expect(result.totalCount, 0);
+      check(result.totalCount).equals(0);
       verifyNever(mockDio.get<String>(any, options: anyNamed('options')));
     });
 
@@ -883,9 +884,9 @@ void main() {
         sub2.feedUrl,
       ]);
 
-      expect(result.totalCount, 2);
-      expect(result.successCount, 2);
-      expect(result.errorCount, 0);
+      check(result.totalCount).equals(2);
+      check(result.successCount).equals(2);
+      check(result.errorCount).equals(0);
       verify(
         mockSubscriptionRepo.updateFeedMetadata(
           any,
@@ -918,8 +919,8 @@ void main() {
         'https://example.com/gone.xml',
       ]);
 
-      expect(result.totalCount, 1);
-      expect(result.successCount, 1);
+      check(result.totalCount).equals(1);
+      check(result.successCount).equals(1);
     });
 
     test('forces a refresh even when recently synced', () async {
@@ -939,8 +940,8 @@ void main() {
 
       final result = await service.syncFeedsByUrls([sub.feedUrl]);
 
-      expect(result.successCount, 1);
-      expect(result.skipCount, 0);
+      check(result.successCount).equals(1);
+      check(result.skipCount).equals(0);
       verify(mockDio.get<String>(any, options: anyNamed('options'))).called(1);
     });
 
@@ -972,9 +973,63 @@ void main() {
         sub2.feedUrl,
       ]);
 
-      expect(result.totalCount, 2);
-      expect(result.successCount, 1);
-      expect(result.errorCount, 1);
+      check(result.totalCount).equals(2);
+      check(result.successCount).equals(1);
+      check(result.errorCount).equals(1);
+    });
+
+    test('caps how many feeds sync at the same time', () async {
+      // Each sync spawns a parser isolate, so a large import must not
+      // start one per subscription at once.
+      final subs = [
+        for (var i = 1; i <= 10; i++)
+          _subscription(
+            id: i,
+            itunesId: 'opml:$i',
+            feedUrl: 'https://example.com/feed$i.xml',
+            artistName: '',
+            lastRefreshedAt: null,
+          ),
+      ];
+      for (final sub in subs) {
+        when(
+          mockSubscriptionRepo.getByFeedUrl(sub.feedUrl),
+        ).thenAnswer((_) async => sub);
+      }
+
+      stubMetadataSync(imageUrl: 'https://example.com/art.jpg');
+
+      // A sync is in flight from its fetch until it records the refresh,
+      // which is the last thing a successful sync does.
+      var inFlight = 0;
+      var peakInFlight = 0;
+      when(mockDio.get<String>(any, options: anyNamed('options'))).thenAnswer((
+        _,
+      ) async {
+        inFlight++;
+        if (peakInFlight < inFlight) peakInFlight = inFlight;
+        await Future<void>.delayed(Duration.zero);
+        return Response(
+          data: '<rss></rss>',
+          statusCode: 200,
+          requestOptions: RequestOptions(),
+        );
+      });
+      when(mockSubscriptionRepo.updateLastRefreshed(any, any)).thenAnswer((
+        _,
+      ) async {
+        inFlight--;
+      });
+
+      final result = await service.syncFeedsByUrls([
+        for (final sub in subs) sub.feedUrl,
+      ]);
+
+      check(result.totalCount).equals(10);
+      check(result.successCount).equals(10);
+      check(peakInFlight).isLessOrEqual(4);
+      // Guards against the cap collapsing into a serial loop.
+      check(peakInFlight).not((p) => p.equals(1));
     });
   });
 }

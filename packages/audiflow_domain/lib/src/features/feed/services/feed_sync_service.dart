@@ -1,3 +1,6 @@
+import 'dart:collection';
+import 'dart:math';
+
 import 'package:audiflow_core/audiflow_core.dart' show EpisodeData;
 import 'package:dio/dio.dart';
 import 'package:logger/logger.dart';
@@ -22,6 +25,13 @@ import 'feed_sync_diagnostic.dart';
 import 'subscription_metadata_updater.dart';
 
 part 'feed_sync_service.g.dart';
+
+/// Caps how many feeds sync at the same time.
+///
+/// Each sync fetches a feed, spawns a parser isolate, and writes episodes.
+/// A large OPML import would otherwise start one of those per subscription
+/// at once, which a phone cannot absorb.
+const _maxConcurrentFeedSyncs = 4;
 
 /// Result of a sync that had nothing to sync.
 const _emptyResult = FeedSyncResult(
@@ -456,14 +466,27 @@ class FeedSyncService {
     }
   }
 
-  /// Syncs [subscriptions] in parallel and tallies the outcomes.
+  /// Syncs [subscriptions] and tallies the outcomes.
+  ///
+  /// Runs at most [_maxConcurrentFeedSyncs] at a time. Workers pull from a
+  /// shared queue rather than splitting the list into fixed chunks, so one
+  /// slow feed cannot hold back the rest.
   Future<FeedSyncResult> _syncSubscriptions(
     List<Subscription> subscriptions, {
     required bool forceRefresh,
   }) async {
-    final results = await Future.wait(
-      subscriptions.map((sub) => syncFeed(sub, forceRefresh: forceRefresh)),
-    );
+    final pending = Queue<Subscription>.of(subscriptions);
+    final results = <SingleFeedSyncResult>[];
+
+    Future<void> drainQueue() async {
+      while (pending.isNotEmpty) {
+        final sub = pending.removeFirst();
+        results.add(await syncFeed(sub, forceRefresh: forceRefresh));
+      }
+    }
+
+    final workerCount = min(_maxConcurrentFeedSyncs, subscriptions.length);
+    await Future.wait([for (var i = 0; i < workerCount; i++) drainQueue()]);
 
     return FeedSyncResult(
       totalCount: subscriptions.length,
