@@ -91,10 +91,7 @@ class DownloadFileService {
       return localPath;
     } on DioException catch (e) {
       if (e.type == DioExceptionType.cancel) {
-        throw DownloadException(
-          DownloadErrorType.cancelled,
-          'Download cancelled',
-        );
+        throw DownloadException.cancelled();
       }
       if (e.type == DioExceptionType.connectionError ||
           e.type == DioExceptionType.connectionTimeout) {

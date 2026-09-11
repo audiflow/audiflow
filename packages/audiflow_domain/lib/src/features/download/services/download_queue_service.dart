@@ -107,15 +107,18 @@ class DownloadQueueService {
 
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
   DownloadTask? _activeDownload;
-  bool _isProcessing = false;
   bool _isOnWifi = false;
   Timer? _retryTimer;
 
   /// The running queue drain, so [cancelAll] can wait for it to settle.
   Future<void>? _processing;
 
-  /// Set by [cancelAll] so the drain loop stops instead of picking up the
-  /// next pending task after the active one is cancelled.
+  bool get _isProcessing => _processing != null;
+
+  /// Set by [cancelAll]. While set, the drain loop stops instead of picking
+  /// up the next pending task and automatic triggers (connectivity, retry
+  /// timer) leave the queue idle; only an explicit start lifts it, so the
+  /// queue stays quiet while a reset clears storage.
   bool _stopRequested = false;
 
   final _activeDownloadController = StreamController<DownloadTask?>.broadcast();
@@ -161,30 +164,32 @@ class DownloadQueueService {
   }
 
   /// Starts processing the download queue.
+  ///
+  /// An explicit start lifts a [cancelAll] stop; automatic triggers do not.
   Future<void> startQueue() async {
-    if (_isProcessing) return;
+    _stopRequested = false;
     await _processQueue();
   }
 
   Future<void> _processQueue() async {
     if (_isProcessing) return;
-    _isProcessing = true;
     _processing = _drainQueue();
     await _processing;
   }
 
   Future<void> _drainQueue() async {
     try {
+      // The flag is checked twice: once so a cancelled download does not
+      // trigger another query, and again after the query so a cancelAll
+      // that landed while it ran does not start a download it has no
+      // token to cancel.
       while (!_stopRequested) {
         final nextTask = await _repository.getNextPending(isOnWifi: _isOnWifi);
-        // Re-check after the await: a cancelAll that landed while the
-        // query ran must not start a download it has no token to cancel.
         if (nextTask == null || _stopRequested) break;
 
         await _processDownload(nextTask);
       }
     } finally {
-      _isProcessing = false;
       _processing = null;
       _activeDownload = null;
       _activeDownloadController.add(null);
@@ -213,12 +218,7 @@ class DownloadQueueService {
       // The file service only registers its cancel token once the download
       // starts, so a cancelAll that landed during the awaits above would
       // otherwise let this download run to completion unopposed.
-      if (_stopRequested) {
-        throw DownloadException(
-          DownloadErrorType.cancelled,
-          'Download cancelled',
-        );
-      }
+      if (_stopRequested) throw DownloadException.cancelled();
 
       // Throttle progress updates to avoid overwhelming the database
       var lastUpdateTime = DateTime.now();
@@ -335,7 +335,7 @@ class DownloadQueueService {
       id: taskId,
       status: const DownloadStatus.pending(),
     );
-    if (!_isProcessing) _processQueue();
+    unawaited(startQueue());
   }
 
   /// Cancels a download.
@@ -348,7 +348,7 @@ class DownloadQueueService {
   }
 
   /// Cancels the active download, stops the queue loop, and waits for the
-  /// in-flight task to settle.
+  /// in-flight task to settle. The queue stays idle until [startQueue].
   ///
   /// "Reset All Data" calls this before clearing storage: without the wait,
   /// the cancelled task's status write could land after `Isar.clear()` and
@@ -361,8 +361,14 @@ class DownloadQueueService {
     if (active != null) _fileService.cancelDownload(active.id);
     try {
       await _processing;
-    } finally {
-      _stopRequested = false;
+    } catch (e, stack) {
+      // The drain's own caller already receives this error; a failing
+      // queue is no reason to refuse the reset that would clear it.
+      _logger.w(
+        'Queue drain failed while cancelling',
+        error: e,
+        stackTrace: stack,
+      );
     }
   }
 
@@ -378,7 +384,7 @@ class DownloadQueueService {
       lastError: null,
     );
 
-    if (!_isProcessing) _processQueue();
+    unawaited(startQueue());
   }
 
   void dispose() {

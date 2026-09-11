@@ -233,12 +233,7 @@ void main() {
           ),
         ).thenAnswer((_) => download.future);
         when(mockFileService.cancelDownload(1)).thenAnswer((_) {
-          download.completeError(
-            DownloadException(
-              DownloadErrorType.cancelled,
-              'Download cancelled',
-            ),
-          );
+          download.completeError(DownloadException.cancelled());
         });
 
         final processing = service.startQueue();
@@ -294,6 +289,24 @@ void main() {
         ),
       );
       verifyNever(mockEpisodeRepo.getById(any));
+    });
+
+    test('does not propagate a drain failure to the caller', () async {
+      await Future<void>.delayed(Duration.zero);
+      clearInteractions(mockRepository);
+      final query = Completer<DownloadTask?>();
+      when(
+        mockRepository.getNextPending(isOnWifi: anyNamed('isOnWifi')),
+      ).thenAnswer((_) => query.future);
+
+      // The expectation is attached before the error fires so the drain's
+      // failure reaches its caller instead of the zone's uncaught handler.
+      final failure = check(service.startQueue()).throws<StateError>();
+      final cancelling = service.cancelAll();
+      query.completeError(StateError('database closed'));
+
+      await cancelling;
+      await failure;
     });
 
     test('lets the queue drain again after cancellation', () async {
