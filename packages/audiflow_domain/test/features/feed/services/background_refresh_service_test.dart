@@ -116,8 +116,6 @@ class FakeAppSettingsRepository implements AppSettingsRepository {
   bool getPrivacyConsentAccepted() => true;
   @override
   Future<void> setPrivacyConsentAccepted(bool accepted) async {}
-  @override
-  Future<void> clearAll() async {}
 }
 
 class FakeSubscriptionRepository implements SubscriptionRepository {

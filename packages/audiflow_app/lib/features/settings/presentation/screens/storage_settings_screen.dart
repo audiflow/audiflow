@@ -6,6 +6,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../parental_control/domain/gate_guard.dart';
 import '../../../parental_control/providers/gate_guard_provider.dart';
 import '../controllers/opml_export_controller.dart';
+import '../controllers/runtime_reset.dart';
 import '../widgets/opml_import_flow.dart';
 
 /// Screen for managing storage and data: cache, search history,
@@ -283,9 +284,10 @@ class _DangerZoneSection extends StatelessWidget {
   Future<void> _showResetDialog(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
 
-    // Reset wipes the PIN hash along with everything else, so an unauthenticated
-    // child could otherwise bypass Restricted Mode by tapping reset. Gate this
-    // entry path the same way Subscribe/OPML/Developer are gated.
+    // Reset clears every Isar collection, including ParentalControlSettings
+    // and its PIN hash, so an unauthenticated child could otherwise bypass
+    // Restricted Mode by tapping reset. Gate this entry path the same way
+    // Subscribe/OPML/Developer are gated.
     final guard = ref.read(gateGuardProvider);
     final allowed = await guard.requireUnlock(
       context,
@@ -299,14 +301,17 @@ class _DangerZoneSection extends StatelessWidget {
       builder: (dialogContext) => _ResetConfirmationDialog(
         onConfirm: () async {
           try {
-            final repo = ref.read(appSettingsRepositoryProvider);
-            await repo.clearAll();
+            await ref.read(dataResetServiceProvider).resetAll();
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(l10n.storageResetComplete)),
               );
+              applyRuntimeReset(context, ref);
             }
-          } on Exception catch (e) {
+          } on Object catch (e) {
+            // IsarError extends Error, not Exception, so a narrower clause
+            // would let a failed clear transaction escape the dialog with
+            // no feedback at all.
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(l10n.storageResetFailed(e.toString()))),
