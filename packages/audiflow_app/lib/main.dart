@@ -283,6 +283,9 @@ Future<void> _startApp(
       presetConfigBaseUrlProvider.overrideWithValue(presetConfigBaseUrl),
       feedSyncDiagnosticSinkProvider.overrideWithValue(feedSyncDiagnostic),
       forceUpdateConfigUrlProvider.overrideWithValue(forceUpdateConfigUrl),
+      backgroundTaskCancellerProvider.overrideWithValue(
+        BackgroundTaskRegistrar.cancelAll,
+      ),
       // Wire repository warnings through logger + reporter without
       // capturing a late container reference: the override builder reads
       // both seams from its own `ref`, so the sink closure is bound to

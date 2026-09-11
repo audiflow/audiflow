@@ -9,18 +9,33 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../helpers/isar_test_helper.dart';
 
-/// Records stop calls along with how many subscriptions existed at the time,
-/// so the test can assert playback stops before the database is cleared.
-class _FakePlaybackController implements AudioPlaybackController {
-  _FakePlaybackController(this._isar);
+/// Records each writer the reset quiesces, in order, along with how many
+/// subscriptions existed at the time, so the tests can assert every writer
+/// is stopped before the database is cleared.
+class _WriterLog {
+  _WriterLog(this._isar);
 
   final Isar _isar;
-  final List<int> subscriptionsAtStop = [];
+  final List<(String, int)> calls = [];
+
+  Future<void> record(String writer) async {
+    calls.add((writer, await _isar.subscriptions.count()));
+  }
+
+  Future<void> cancelBackgroundTasks() => record('backgroundTasks');
+
+  Future<void> cancelDownloads() => record('downloads');
+
+  Future<void> cancelFeedSync() => record('feedSync');
+}
+
+class _FakePlaybackController implements AudioPlaybackController {
+  _FakePlaybackController(this._log);
+
+  final _WriterLog _log;
 
   @override
-  Future<void> stop() async {
-    subscriptionsAtStop.add(await _isar.subscriptions.count());
-  }
+  Future<void> stop() => _log.record('playback');
 
   @override
   Future<void> pause() async {}
@@ -45,8 +60,23 @@ void main() {
   late Isar isar;
   late Directory downloadsDir;
   late SharedPreferencesDataSource preferences;
-  late _FakePlaybackController playback;
+  late _WriterLog writers;
   late DataResetService service;
+
+  DataResetService buildService(
+    _WriterLog log, {
+    required DownloadsDirectoryResolver resolveDownloadsDirectory,
+  }) {
+    return DataResetService(
+      isar: isar,
+      preferences: preferences,
+      playback: _FakePlaybackController(log),
+      cancelBackgroundTasks: log.cancelBackgroundTasks,
+      cancelDownloads: log.cancelDownloads,
+      cancelFeedSync: log.cancelFeedSync,
+      resolveDownloadsDirectory: resolveDownloadsDirectory,
+    );
+  }
 
   setUpAll(() async {
     await Isar.initializeIsarCore(download: true);
@@ -62,11 +92,9 @@ void main() {
     preferences = SharedPreferencesDataSource(
       await SharedPreferences.getInstance(),
     );
-    playback = _FakePlaybackController(isar);
-    service = DataResetService(
-      isar: isar,
-      preferences: preferences,
-      playback: playback,
+    writers = _WriterLog(isar);
+    service = buildService(
+      writers,
       resolveDownloadsDirectory: () async => downloadsDir.path,
     );
   });
@@ -104,20 +132,26 @@ void main() {
       check(after.values).every((count) => count.equals(0));
     });
 
-    test('stops playback before clearing the database', () async {
-      await seedEveryCollection(isar);
+    test(
+      'stops playback and every writer before clearing the database',
+      () async {
+        await seedEveryCollection(isar);
 
-      await service.resetAll();
+        await service.resetAll();
 
-      check(playback.subscriptionsAtStop).deepEquals([1]);
-    });
+        check(writers.calls).deepEquals([
+          ('playback', 1),
+          ('backgroundTasks', 1),
+          ('downloads', 1),
+          ('feedSync', 1),
+        ]);
+      },
+    );
 
     test('leaves the database untouched when file deletion fails', () async {
       await seedEveryCollection(isar);
-      final blockedService = DataResetService(
-        isar: isar,
-        preferences: preferences,
-        playback: playback,
+      final blockedService = buildService(
+        writers,
         resolveDownloadsDirectory: () async =>
             throw const FileSystemException('boom'),
       );
