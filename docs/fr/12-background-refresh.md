@@ -41,6 +41,7 @@ It exists to make Audiflow feel current without the listener doing anything. New
 - Reads sync-related settings (auto-sync, Wi-Fi-only sync, notification toggle, interval, Wi-Fi-only download) from a snapshot passed into the background task, since live settings storage is unavailable in the background isolate.
 - Processes subscriptions in priority order — most recently accessed first — and stops cleanly once a fixed time budget is exhausted, leaving unfinished feeds for a later run.
 - Detects newly published episodes and removes episodes that have dropped out of a feed, keeping the local store aligned with the publisher's current feed.
+- Writes the artwork, author, and description carried by the RSS channel back onto the subscription, on the same terms as foreground sync (FR 03), so a podcast imported from OPML gains the details its import could not supply even if it is only ever refreshed in the background.
 - Enqueues downloads for newly discovered episodes of auto-download-enabled podcasts, and schedules a follow-up background download task when pending or stuck downloads exist.
 - Builds per-episode notification payloads (capped per refresh cycle), skipping episodes the listener has already played, and shows one local notification per new episode.
 - Handles notification taps and cold-start launches by decoding the notification payload and deep-linking to the corresponding episode detail screen.
