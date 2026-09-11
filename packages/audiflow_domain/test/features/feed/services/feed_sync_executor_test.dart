@@ -511,7 +511,9 @@ Subscription _subscription({
   String? httpEtag,
   String? httpLastModified,
   String artistName = 'Test Artist',
-  String? artworkUrl,
+  // Defaults to a stored artwork URL, as a search-added podcast has. Pass
+  // null for the OPML-import case, which also turns off conditional requests.
+  String? artworkUrl = 'https://example.com/itunes.jpg',
   String? description,
 }) {
   return Subscription()
@@ -644,7 +646,7 @@ void main() {
     test('backfills channel metadata onto an OPML-imported podcast', () async {
       // OPML supplies only a title and feed URL, so the subscription starts
       // with no artwork, no author, and no description.
-      final sub = _subscription(artistName: '');
+      final sub = _subscription(artistName: '', artworkUrl: null);
 
       final parser = _FakeFeedParserService(
         (xml, id, guids, _) => Stream.fromIterable([
@@ -672,6 +674,38 @@ void main() {
         'https://example.com/art.jpg',
       );
       expect(fakeSubscriptionRepo.lastFeedArtistName, 'Jane Doe');
+      expect(fakeSubscriptionRepo.lastFeedDescription, 'Show notes');
+    });
+
+    test('keeps stored artwork when the channel offers its own', () async {
+      // The channel image is 1400-3000 px against a 600 px search artwork,
+      // so a stored URL is never replaced; author and description still are.
+      final sub = _subscription(
+        artistName: 'Old Artist',
+        artworkUrl: 'https://example.com/itunes.jpg',
+      );
+
+      final parser = _FakeFeedParserService(
+        (xml, id, guids, _) => Stream.fromIterable([
+          const FeedMetaReady(
+            title: 'Test Podcast',
+            description: 'Show notes',
+            imageUrl: 'https://example.com/huge-channel-art.jpg',
+            author: 'New Artist',
+          ),
+          const FeedParseComplete(total: 1, stoppedEarly: false),
+        ]),
+      );
+
+      final executor = buildExecutor(
+        dio: _FakeDio((_) => _xmlResponse('<rss></rss>')),
+        feedParser: parser,
+      );
+
+      await executor.syncFeed(sub);
+
+      expect(fakeSubscriptionRepo.lastFeedArtworkUrl, isNull);
+      expect(fakeSubscriptionRepo.lastFeedArtistName, 'New Artist');
       expect(fakeSubscriptionRepo.lastFeedDescription, 'Show notes');
     });
 
@@ -891,6 +925,37 @@ void main() {
       'does not send conditional headers when subscription has none',
       () async {
         final sub = _subscription(lastRefreshedAt: null);
+
+        final dio = _HeaderCapturingDio();
+
+        final parser = _FakeFeedParserService(
+          (xml, id, guids, _) => Stream.value(
+            const FeedParseComplete(total: 0, stoppedEarly: false),
+          ),
+        );
+
+        final executor = buildExecutor(dio: dio, feedParser: parser);
+
+        await executor.syncFeed(sub);
+
+        expect(dio.lastRequestHeaders?.containsKey('If-None-Match'), isFalse);
+        expect(
+          dio.lastRequestHeaders?.containsKey('If-Modified-Since'),
+          isFalse,
+        );
+      },
+    );
+
+    test(
+      'asks unconditionally while the subscription still lacks artwork',
+      () async {
+        // Otherwise a 304 skips the parse, and an OPML-imported podcast on a
+        // show that never publishes again would stay blank forever.
+        final sub = _subscription(
+          artworkUrl: null,
+          httpEtag: '"etag-value"',
+          httpLastModified: 'Wed, 21 Oct 2026 07:28:00 GMT',
+        );
 
         final dio = _HeaderCapturingDio();
 

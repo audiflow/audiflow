@@ -206,14 +206,20 @@ class FeedSyncService {
       final subscriptionRepo = _ref.read(subscriptionRepositoryProvider);
       final metadataUpdater = SubscriptionMetadataUpdater(subscriptionRepo);
 
-      // Build conditional request headers
+      // Build conditional request headers. A subscription still missing its
+      // artwork has to parse the feed to get it, so it asks unconditionally:
+      // a 304 skips the parse, and a show that never publishes again would
+      // stay blank forever.
+      final needsArtwork = SubscriptionMetadataUpdater.needsArtworkBackfill(
+        sub,
+      );
       final conditionalHeaders = <String, String>{
         'Accept': 'application/rss+xml, application/xml, text/xml',
       };
-      if (sub.httpEtag != null) {
+      if (!needsArtwork && sub.httpEtag != null) {
         conditionalHeaders['If-None-Match'] = sub.httpEtag!;
       }
-      if (sub.httpLastModified != null) {
+      if (!needsArtwork && sub.httpLastModified != null) {
         conditionalHeaders['If-Modified-Since'] = sub.httpLastModified!;
       }
 
@@ -335,7 +341,14 @@ class FeedSyncService {
         },
       )) {
         if (progress is FeedMetaReady) {
-          await metadataUpdater.applyFeedMeta(sub, progress);
+          // Cosmetic metadata must not fail the sync: without this guard a
+          // failed write would abort the loop before drop detection, the
+          // cache headers, and lastRefreshedAt, so the feed stops converging.
+          try {
+            await metadataUpdater.applyFeedMeta(sub, progress);
+          } on Exception catch (e) {
+            _logger.w('Metadata backfill failed for "${sub.title}": $e');
+          }
         }
         if (progress is FeedParseComplete) {
           newEpisodeCount = progress.total;

@@ -76,7 +76,10 @@ void main() {
       expect(repository.lastDescription, 'Show notes');
     });
 
-    test('replaces stored values the feed disagrees with', () async {
+    test('replaces a stored author and description, but not artwork', () async {
+      // The channel image is 1400-3000 px per Apple's spec against a 600 px
+      // search artwork, and artwork is decoded at its intrinsic size, so a
+      // stored URL is never swapped out.
       final sub = _subscription(
         artistName: 'Old Artist',
         artworkUrl: 'https://example.com/old.jpg',
@@ -93,10 +96,28 @@ void main() {
         ),
       );
 
-      expect(repository.lastArtworkUrl, 'https://example.com/new.jpg');
+      expect(repository.lastArtworkUrl, isNull);
       expect(repository.lastArtistName, 'New Artist');
       expect(repository.lastDescription, 'New notes');
     });
+
+    test(
+      'fills artwork when the stored value is blank rather than null',
+      () async {
+        final sub = _subscription(artworkUrl: '   ');
+
+        await updater.applyFeedMeta(
+          sub,
+          const FeedMetaReady(
+            title: 'Test Podcast',
+            description: 'Show notes',
+            imageUrl: 'https://example.com/art.jpg',
+          ),
+        );
+
+        expect(repository.lastArtworkUrl, 'https://example.com/art.jpg');
+      },
+    );
 
     test('keeps stored values when the channel omits them', () async {
       final sub = _subscription(
@@ -171,6 +192,30 @@ void main() {
       expect(repository.lastArtworkUrl, isNull);
       expect(repository.lastArtistName, 'Jane Doe');
       expect(repository.lastDescription, 'Show notes');
+    });
+  });
+
+  group('SubscriptionMetadataUpdater.needsArtworkBackfill', () {
+    test('is true while no artwork is stored', () {
+      expect(
+        SubscriptionMetadataUpdater.needsArtworkBackfill(_subscription()),
+        isTrue,
+      );
+      expect(
+        SubscriptionMetadataUpdater.needsArtworkBackfill(
+          _subscription(artworkUrl: '  '),
+        ),
+        isTrue,
+      );
+    });
+
+    test('is false once artwork is stored', () {
+      expect(
+        SubscriptionMetadataUpdater.needsArtworkBackfill(
+          _subscription(artworkUrl: 'https://example.com/art.jpg'),
+        ),
+        isFalse,
+      );
     });
   });
 }

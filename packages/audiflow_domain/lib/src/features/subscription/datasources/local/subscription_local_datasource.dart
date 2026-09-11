@@ -198,20 +198,27 @@ class SubscriptionLocalDatasource {
   ///
   /// Null arguments leave the corresponding stored value untouched.
   /// Does nothing if no subscription is found for the given [id].
+  ///
+  /// The read happens inside the transaction: a feed sync and a podcast
+  /// detail visit can write the same subscription concurrently, and a
+  /// snapshot taken outside the transaction would let the later put
+  /// resurrect the fields the earlier one just wrote.
   Future<void> updateFeedMetadata(
     int id, {
     String? artworkUrl,
     String? artistName,
     String? description,
-  }) async {
-    final existing = await _isar.subscriptions.get(id);
-    if (existing == null) return;
+  }) {
+    return _isar.writeTxn(() async {
+      final existing = await _isar.subscriptions.get(id);
+      if (existing == null) return;
 
-    existing
-      ..artworkUrl = artworkUrl ?? existing.artworkUrl
-      ..artistName = artistName ?? existing.artistName
-      ..description = description ?? existing.description;
-    await _isar.writeTxn(() => _isar.subscriptions.put(existing));
+      existing
+        ..artworkUrl = artworkUrl ?? existing.artworkUrl
+        ..artistName = artistName ?? existing.artistName
+        ..description = description ?? existing.description;
+      await _isar.subscriptions.put(existing);
+    });
   }
 
   /// Updates the auto-download setting for a subscription.
