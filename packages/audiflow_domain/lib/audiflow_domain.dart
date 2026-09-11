@@ -78,6 +78,7 @@ export 'src/features/feed/services/background_refresh_service.dart';
 export 'src/features/feed/services/feed_sync_diagnostic.dart';
 export 'src/features/feed/services/feed_sync_executor.dart';
 export 'src/features/feed/services/feed_sync_service.dart';
+export 'src/features/feed/services/subscription_metadata_updater.dart';
 export 'src/features/feed/models/feed_sync_result.dart';
 export 'src/features/feed/models/new_episode_notification.dart';
 export 'src/features/feed/services/effective_episode_title.dart';
