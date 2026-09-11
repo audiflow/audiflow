@@ -91,6 +91,15 @@ class FakeSubscriptionRepository implements SubscriptionRepository {
       throw UnimplementedError();
 
   @override
+  Future<void> updateFeedMetadata(
+    int id, {
+    String? artworkUrlIfMissing,
+    String? artistName,
+    String? description,
+    DateTime? syncedAt,
+  }) => throw UnimplementedError();
+
+  @override
   Future<void> updateHttpCacheHeaders(
     int id, {
     String? etag,

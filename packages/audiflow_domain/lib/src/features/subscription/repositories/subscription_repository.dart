@@ -88,6 +88,25 @@ abstract class SubscriptionRepository {
   /// RSS-parsed descriptions so they survive 304 Not Modified cache hits.
   Future<void> updateDescription(int id, String? description);
 
+  /// Updates the podcast metadata a feed refresh parsed from the RSS channel.
+  ///
+  /// Only non-null arguments are written; a null argument leaves the stored
+  /// value untouched. Callers pass null for fields the channel did not
+  /// change, so an OPML-imported subscription can be filled in without
+  /// clearing anything a podcast search already supplied.
+  ///
+  /// [artworkUrlIfMissing] is applied only when no artwork is stored, decided
+  /// at write time so a concurrent write cannot be overwritten.
+  /// [syncedAt] records that the channel was read, so a feed carrying no
+  /// artwork stops forcing unconditional requests.
+  Future<void> updateFeedMetadata(
+    int id, {
+    String? artworkUrlIfMissing,
+    String? artistName,
+    String? description,
+    DateTime? syncedAt,
+  });
+
   /// Updates HTTP cache headers (ETag / Last-Modified) for a subscription.
   ///
   /// Used by conditional requests (If-None-Match / If-Modified-Since)

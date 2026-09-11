@@ -36,13 +36,18 @@ Subscription _subscription({
   String feedUrl = 'https://example.com/feed.xml',
   String title = 'Test Podcast',
   DateTime? lastRefreshedAt,
+  String artistName = 'Test Artist',
+  String? artworkUrl,
+  String? description,
 }) {
   return Subscription()
     ..id = id
     ..itunesId = itunesId
     ..feedUrl = feedUrl
     ..title = title
-    ..artistName = 'Test Artist'
+    ..artistName = artistName
+    ..artworkUrl = artworkUrl
+    ..description = description
     ..genres = ''
     ..explicit = false
     ..subscribedAt = DateTime.now()
@@ -250,6 +255,59 @@ void main() {
       expect(result.success, isTrue);
       expect(result.skipped, isFalse);
       expect(result.newEpisodeCount, 3);
+    });
+
+    test('backfills channel metadata onto an OPML-imported podcast', () async {
+      // Arrange: OPML supplies only a title and feed URL, so the subscription
+      // starts with no artwork, no author, and no description.
+      final sub = _subscription(lastRefreshedAt: null, artistName: '');
+
+      when(mockDio.get<String>(any, options: anyNamed('options'))).thenAnswer(
+        (_) async => Response(
+          data: '<rss></rss>',
+          statusCode: 200,
+          requestOptions: RequestOptions(),
+        ),
+      );
+      when(
+        mockEpisodeRepo.getGuidsByPodcastId(sub.id),
+      ).thenAnswer((_) async => <String>{});
+      when(
+        mockFeedParser.parseWithProgress(
+          xmlContent: anyNamed('xmlContent'),
+          podcastId: anyNamed('podcastId'),
+          knownGuids: anyNamed('knownGuids'),
+          onBatchReady: anyNamed('onBatchReady'),
+        ),
+      ).thenAnswer(
+        (_) => Stream.fromIterable([
+          const FeedMetaReady(
+            title: 'Test Podcast',
+            description: 'Show notes',
+            imageUrl: 'https://example.com/art.jpg',
+            author: 'Jane Doe',
+          ),
+          const FeedParseComplete(total: 1, stoppedEarly: false),
+        ]),
+      );
+      when(
+        mockSubscriptionRepo.updateLastRefreshed(any, any),
+      ).thenAnswer((_) async {});
+
+      // Act
+      final result = await service.syncFeed(sub);
+
+      // Assert
+      expect(result.success, isTrue);
+      verify(
+        mockSubscriptionRepo.updateFeedMetadata(
+          sub.id,
+          artworkUrlIfMissing: 'https://example.com/art.jpg',
+          artistName: 'Jane Doe',
+          description: 'Show notes',
+          syncedAt: anyNamed('syncedAt'),
+        ),
+      ).called(1);
     });
 
     test('syncs when enough time has elapsed', () async {

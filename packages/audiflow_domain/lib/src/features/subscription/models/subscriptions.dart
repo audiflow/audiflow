@@ -34,6 +34,14 @@ class Subscription {
   /// Whether new episodes should be auto-downloaded during background refresh.
   bool autoDownload = false;
 
+  /// When the RSS channel metadata was last read into this subscription.
+  ///
+  /// Null means the feed has never been parsed under the backfill policy, so
+  /// the next refresh asks unconditionally to obtain artwork. Set on every
+  /// successful parse, including one whose channel carried no image, so a
+  /// feed without artwork does not disable conditional requests forever.
+  DateTime? feedMetadataSyncedAt;
+
   /// HTTP ETag header from the last successful feed fetch.
   ///
   /// Sent as `If-None-Match` on subsequent requests to avoid

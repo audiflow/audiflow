@@ -243,17 +243,17 @@ Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
       // Update last accessed timestamp
       await subscriptionRepo.updateLastAccessed(subscription.id);
 
-      // Persist RSS description so 304 Not Modified responses can return
-      // it via the rebuild-from-Isar path. iTunes-sourced descriptions
-      // are often empty; RSS provides the rich content.
-      final feedDescription = result.podcast.description.trim();
-      if (feedDescription.isNotEmpty &&
-          feedDescription != (subscription.description ?? '')) {
-        await subscriptionRepo.updateDescription(
-          subscription.id,
-          feedDescription,
-        );
-      }
+      // Persist the RSS channel metadata so 304 Not Modified responses can
+      // return it via the rebuild-from-Isar path, and so a podcast reached
+      // from here gets the same backfill a feed sync would have given it.
+      // iTunes-sourced descriptions are often empty; RSS provides the rich
+      // content.
+      await SubscriptionMetadataUpdater(subscriptionRepo).apply(
+        subscription,
+        imageUrl: result.podcast.primaryImage?.url,
+        author: result.podcast.author,
+        description: result.podcast.description,
+      );
 
       final episodeRepo = ref.read(episodeRepositoryProvider);
 

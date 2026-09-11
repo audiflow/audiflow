@@ -260,6 +260,30 @@ class MockSubscriptionRepository extends _i1.Mock
           as _i4.Future<void>);
 
   @override
+  _i4.Future<void> updateFeedMetadata(
+    int? id, {
+    String? artworkUrlIfMissing,
+    String? artistName,
+    String? description,
+    DateTime? syncedAt,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(
+              #updateFeedMetadata,
+              [id],
+              {
+                #artworkUrlIfMissing: artworkUrlIfMissing,
+                #artistName: artistName,
+                #description: description,
+                #syncedAt: syncedAt,
+              },
+            ),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
   _i4.Future<void> updateHttpCacheHeaders(
     int? id, {
     String? etag,
