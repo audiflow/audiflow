@@ -1,4 +1,5 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:checks/checks.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
@@ -795,6 +796,240 @@ void main() {
       expect(successCount, 3);
       expect(skipCount, 1);
       expect(errorCount, 1);
+    });
+  });
+
+  group('syncFeedsByUrls', () {
+    void stubMetadataSync({required String imageUrl}) {
+      when(mockDio.get<String>(any, options: anyNamed('options'))).thenAnswer(
+        (_) async => Response(
+          data: '<rss></rss>',
+          statusCode: 200,
+          requestOptions: RequestOptions(),
+        ),
+      );
+      when(
+        mockEpisodeRepo.getGuidsByPodcastId(any),
+      ).thenAnswer((_) async => <String>{});
+      when(
+        mockFeedParser.parseWithProgress(
+          xmlContent: anyNamed('xmlContent'),
+          podcastId: anyNamed('podcastId'),
+          knownGuids: anyNamed('knownGuids'),
+          onBatchReady: anyNamed('onBatchReady'),
+        ),
+      ).thenAnswer(
+        (_) => Stream.fromIterable([
+          FeedMetaReady(
+            title: 'Imported Show',
+            description: 'Show notes',
+            imageUrl: imageUrl,
+            author: 'Jane Doe',
+          ),
+          const FeedParseComplete(total: 1, stoppedEarly: false),
+        ]),
+      );
+      when(
+        mockSubscriptionRepo.updateLastRefreshed(any, any),
+      ).thenAnswer((_) async {});
+    }
+
+    test('returns empty result for an empty url list', () async {
+      final result = await service.syncFeedsByUrls(const []);
+
+      check(result.totalCount).equals(0);
+      verifyNever(mockSubscriptionRepo.getByFeedUrl(any));
+    });
+
+    test('returns empty result when no url matches a subscription', () async {
+      when(
+        mockSubscriptionRepo.getByFeedUrl('https://example.com/gone.xml'),
+      ).thenAnswer((_) async => null);
+
+      final result = await service.syncFeedsByUrls([
+        'https://example.com/gone.xml',
+      ]);
+
+      check(result.totalCount).equals(0);
+      verifyNever(mockDio.get<String>(any, options: anyNamed('options')));
+    });
+
+    test('backfills artwork for every imported feed', () async {
+      // OPML-imported subscriptions carry no artwork and were never synced.
+      final sub1 = _subscription(
+        id: 1,
+        itunesId: 'opml:aaa',
+        feedUrl: 'https://example.com/feed1.xml',
+        artistName: '',
+        lastRefreshedAt: null,
+      );
+      final sub2 = _subscription(
+        id: 2,
+        itunesId: 'opml:bbb',
+        feedUrl: 'https://example.com/feed2.xml',
+        artistName: '',
+        lastRefreshedAt: null,
+      );
+
+      when(
+        mockSubscriptionRepo.getByFeedUrl(sub1.feedUrl),
+      ).thenAnswer((_) async => sub1);
+      when(
+        mockSubscriptionRepo.getByFeedUrl(sub2.feedUrl),
+      ).thenAnswer((_) async => sub2);
+      stubMetadataSync(imageUrl: 'https://example.com/art.jpg');
+
+      final result = await service.syncFeedsByUrls([
+        sub1.feedUrl,
+        sub2.feedUrl,
+      ]);
+
+      check(result.totalCount).equals(2);
+      check(result.successCount).equals(2);
+      check(result.errorCount).equals(0);
+      verify(
+        mockSubscriptionRepo.updateFeedMetadata(
+          any,
+          artworkUrlIfMissing: 'https://example.com/art.jpg',
+          artistName: 'Jane Doe',
+          description: 'Show notes',
+          syncedAt: anyNamed('syncedAt'),
+        ),
+      ).called(2);
+    });
+
+    test('skips urls with no subscription and syncs the rest', () async {
+      final sub = _subscription(
+        id: 1,
+        feedUrl: 'https://example.com/feed1.xml',
+        artistName: '',
+        lastRefreshedAt: null,
+      );
+
+      when(
+        mockSubscriptionRepo.getByFeedUrl(sub.feedUrl),
+      ).thenAnswer((_) async => sub);
+      when(
+        mockSubscriptionRepo.getByFeedUrl('https://example.com/gone.xml'),
+      ).thenAnswer((_) async => null);
+      stubMetadataSync(imageUrl: 'https://example.com/art.jpg');
+
+      final result = await service.syncFeedsByUrls([
+        sub.feedUrl,
+        'https://example.com/gone.xml',
+      ]);
+
+      check(result.totalCount).equals(1);
+      check(result.successCount).equals(1);
+    });
+
+    test('forces a refresh even when recently synced', () async {
+      // A feed imported minutes after its last sync still needs its
+      // metadata, so the timing window must not skip it.
+      final sub = _subscription(
+        id: 1,
+        feedUrl: 'https://example.com/feed1.xml',
+        artistName: '',
+        lastRefreshedAt: DateTime.now().subtract(const Duration(seconds: 30)),
+      );
+
+      when(
+        mockSubscriptionRepo.getByFeedUrl(sub.feedUrl),
+      ).thenAnswer((_) async => sub);
+      stubMetadataSync(imageUrl: 'https://example.com/art.jpg');
+
+      final result = await service.syncFeedsByUrls([sub.feedUrl]);
+
+      check(result.successCount).equals(1);
+      check(result.skipCount).equals(0);
+      verify(mockDio.get<String>(any, options: anyNamed('options'))).called(1);
+    });
+
+    test('reports a failed feed without aborting the others', () async {
+      final sub1 = _subscription(
+        id: 1,
+        feedUrl: 'https://example.com/feed1.xml',
+        lastRefreshedAt: null,
+      );
+      final sub2 = _subscription(
+        id: 2,
+        feedUrl: 'https://example.com/feed2.xml',
+        lastRefreshedAt: null,
+      );
+
+      when(
+        mockSubscriptionRepo.getByFeedUrl(sub1.feedUrl),
+      ).thenAnswer((_) async => sub1);
+      when(
+        mockSubscriptionRepo.getByFeedUrl(sub2.feedUrl),
+      ).thenAnswer((_) async => sub2);
+      stubMetadataSync(imageUrl: 'https://example.com/art.jpg');
+      when(
+        mockDio.get<String>(sub2.feedUrl, options: anyNamed('options')),
+      ).thenThrow(Exception('network down'));
+
+      final result = await service.syncFeedsByUrls([
+        sub1.feedUrl,
+        sub2.feedUrl,
+      ]);
+
+      check(result.totalCount).equals(2);
+      check(result.successCount).equals(1);
+      check(result.errorCount).equals(1);
+    });
+
+    test('caps how many feeds sync at the same time', () async {
+      // Each sync spawns a parser isolate, so a large import must not
+      // start one per subscription at once.
+      final subs = [
+        for (var i = 1; i <= 10; i++)
+          _subscription(
+            id: i,
+            itunesId: 'opml:$i',
+            feedUrl: 'https://example.com/feed$i.xml',
+            artistName: '',
+            lastRefreshedAt: null,
+          ),
+      ];
+      for (final sub in subs) {
+        when(
+          mockSubscriptionRepo.getByFeedUrl(sub.feedUrl),
+        ).thenAnswer((_) async => sub);
+      }
+
+      stubMetadataSync(imageUrl: 'https://example.com/art.jpg');
+
+      // A sync is in flight from its fetch until it records the refresh,
+      // which is the last thing a successful sync does.
+      var inFlight = 0;
+      var peakInFlight = 0;
+      when(mockDio.get<String>(any, options: anyNamed('options'))).thenAnswer((
+        _,
+      ) async {
+        inFlight++;
+        if (peakInFlight < inFlight) peakInFlight = inFlight;
+        await Future<void>.delayed(Duration.zero);
+        return Response(
+          data: '<rss></rss>',
+          statusCode: 200,
+          requestOptions: RequestOptions(),
+        );
+      });
+      when(mockSubscriptionRepo.updateLastRefreshed(any, any)).thenAnswer((
+        _,
+      ) async {
+        inFlight--;
+      });
+
+      final result = await service.syncFeedsByUrls([
+        for (final sub in subs) sub.feedUrl,
+      ]);
+
+      check(result.totalCount).equals(10);
+      check(result.successCount).equals(10);
+      check(peakInFlight).isLessOrEqual(4);
+      // Guards against the cap collapsing into a serial loop.
+      check(peakInFlight).not((p) => p.equals(1));
     });
   });
 }

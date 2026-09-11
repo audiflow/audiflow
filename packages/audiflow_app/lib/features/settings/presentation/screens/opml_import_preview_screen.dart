@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:logger/logger.dart';
 
 import '../../../../l10n/app_localizations.dart';
 
@@ -124,12 +127,52 @@ class _OpmlImportPreviewScreenState
         .toList();
 
     final repo = ref.read(subscriptionRepositoryProvider);
+    final syncService = ref.read(feedSyncServiceProvider);
+    final logger = ref.read(namedLoggerProvider('OpmlImport'));
     final importService = OpmlImportService(repository: repo);
     final result = await importService.importEntries(selectedEntries);
+
+    // OPML gives a title and a feed URL and nothing else, so imported
+    // podcasts land in the library with no artwork. Fetch their feeds now
+    // to fill that in. Not awaited: the summary dialog must not wait on one
+    // request per feed, and the library list is Isar-backed, so rows update
+    // on their own as each feed resolves. The sync service is a keepAlive
+    // singleton, so the work outlives this screen.
+    if (result.succeeded.isNotEmpty) {
+      unawaited(
+        _syncImportedFeeds(syncService, logger, [
+          for (final entry in result.succeeded) entry.feedUrl,
+        ]),
+      );
+    }
 
     if (!mounted) return;
 
     // Pop back and return the result
     Navigator.of(context).pop(result);
+  }
+
+  /// Fetches [feedUrls] so the imported podcasts gain their channel
+  /// metadata.
+  ///
+  /// Swallows failures because the caller does not await this: an escaping
+  /// error would surface as an unhandled async error long after the screen
+  /// is gone. The import itself already succeeded, and the next feed
+  /// refresh retries the backfill. Uses `catch` rather than `on Exception`
+  /// because Isar throws Error subclasses.
+  Future<void> _syncImportedFeeds(
+    FeedSyncService syncService,
+    Logger logger,
+    List<String> feedUrls,
+  ) async {
+    try {
+      await syncService.syncFeedsByUrls(feedUrls);
+    } catch (e, stack) {
+      logger.w(
+        'Post-import feed sync failed; details fill in on the next refresh',
+        error: e,
+        stackTrace: stack,
+      );
+    }
   }
 }

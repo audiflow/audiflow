@@ -1,3 +1,6 @@
+import 'dart:collection';
+import 'dart:math';
+
 import 'package:audiflow_core/audiflow_core.dart' show EpisodeData;
 import 'package:dio/dio.dart';
 import 'package:logger/logger.dart';
@@ -22,6 +25,21 @@ import 'feed_sync_diagnostic.dart';
 import 'subscription_metadata_updater.dart';
 
 part 'feed_sync_service.g.dart';
+
+/// Caps how many feeds sync at the same time.
+///
+/// Each sync fetches a feed, spawns a parser isolate, and writes episodes.
+/// A large OPML import would otherwise start one of those per subscription
+/// at once, which a phone cannot absorb.
+const _maxConcurrentFeedSyncs = 4;
+
+/// Result of a sync that had nothing to sync.
+const _emptyResult = FeedSyncResult(
+  totalCount: 0,
+  successCount: 0,
+  skipCount: 0,
+  errorCount: 0,
+);
 
 /// Provides a singleton [FeedSyncService] for syncing podcast feeds.
 @Riverpod(keepAlive: true)
@@ -64,12 +82,7 @@ class FeedSyncService {
       final settingsRepo = _ref.read(appSettingsRepositoryProvider);
       if (!settingsRepo.getAutoSync()) {
         _logger.i('Auto-sync disabled, skipping');
-        return const FeedSyncResult(
-          totalCount: 0,
-          successCount: 0,
-          skipCount: 0,
-          errorCount: 0,
-        );
+        return _emptyResult;
       }
     }
 
@@ -78,12 +91,7 @@ class FeedSyncService {
 
     if (subscriptions.isEmpty) {
       _logger.i('No subscriptions to sync');
-      return const FeedSyncResult(
-        totalCount: 0,
-        successCount: 0,
-        skipCount: 0,
-        errorCount: 0,
-      );
+      return _emptyResult;
     }
 
     _logger.i(
@@ -91,19 +99,9 @@ class FeedSyncService {
       '(force: $forceRefresh)',
     );
 
-    final results = await Future.wait(
-      subscriptions.map((sub) => syncFeed(sub, forceRefresh: forceRefresh)),
-    );
-
-    final successCount = results.where((r) => r.success).length;
-    final skipCount = results.where((r) => r.skipped).length;
-    final errorCount = results.where((r) => !r.success && !r.skipped).length;
-
-    final result = FeedSyncResult(
-      totalCount: subscriptions.length,
-      successCount: successCount,
-      skipCount: skipCount,
-      errorCount: errorCount,
+    final result = await _syncSubscriptions(
+      subscriptions,
+      forceRefresh: forceRefresh,
     );
 
     _logger.i('Feed sync complete: $result');
@@ -122,12 +120,7 @@ class FeedSyncService {
     final stationPodcasts = await stationPodcastRepo.getByStation(stationId);
     if (stationPodcasts.isEmpty) {
       _logger.d('Station $stationId has no podcasts to sync');
-      return const FeedSyncResult(
-        totalCount: 0,
-        successCount: 0,
-        skipCount: 0,
-        errorCount: 0,
-      );
+      return _emptyResult;
     }
 
     final lookups = await Future.wait(
@@ -137,32 +130,44 @@ class FeedSyncService {
 
     if (subscriptions.isEmpty) {
       _logger.w('Station $stationId: no matching subscriptions found');
-      return const FeedSyncResult(
-        totalCount: 0,
-        successCount: 0,
-        skipCount: 0,
-        errorCount: 0,
-      );
+      return _emptyResult;
     }
 
     _logger.i('Syncing ${subscriptions.length} feeds for station $stationId');
 
-    final results = await Future.wait(
-      subscriptions.map((sub) => syncFeed(sub, forceRefresh: true)),
-    );
-
-    final successCount = results.where((r) => r.success).length;
-    final skipCount = results.where((r) => r.skipped).length;
-    final errorCount = results.where((r) => !r.success && !r.skipped).length;
-
-    final result = FeedSyncResult(
-      totalCount: subscriptions.length,
-      successCount: successCount,
-      skipCount: skipCount,
-      errorCount: errorCount,
-    );
+    final result = await _syncSubscriptions(subscriptions, forceRefresh: true);
 
     _logger.i('Station $stationId feed sync complete: $result');
+    return result;
+  }
+
+  /// Syncs the feeds of the subscriptions matching [feedUrls].
+  ///
+  /// Used right after an OPML import. OPML carries only a title and a
+  /// feed URL, so those subscriptions reach the library with no artwork,
+  /// author or description; one fetch per feed fills them in instead of
+  /// leaving placeholders until the next scheduled sync. Always forces a
+  /// refresh regardless of the timing window. Feed URLs with no matching
+  /// subscription are ignored.
+  Future<FeedSyncResult> syncFeedsByUrls(List<String> feedUrls) async {
+    if (feedUrls.isEmpty) return _emptyResult;
+
+    final subscriptionRepo = _ref.read(subscriptionRepositoryProvider);
+    final lookups = await Future.wait(
+      feedUrls.map(subscriptionRepo.getByFeedUrl),
+    );
+    final subscriptions = lookups.whereType<Subscription>().toList();
+
+    if (subscriptions.isEmpty) {
+      _logger.w('No subscriptions matched ${feedUrls.length} feed urls');
+      return _emptyResult;
+    }
+
+    _logger.i('Syncing ${subscriptions.length} newly imported feeds');
+
+    final result = await _syncSubscriptions(subscriptions, forceRefresh: true);
+
+    _logger.i('Imported feed sync complete: $result');
     return result;
   }
 
@@ -459,6 +464,36 @@ class FeedSyncService {
         errorMessage: e.toString(),
       );
     }
+  }
+
+  /// Syncs [subscriptions] and tallies the outcomes.
+  ///
+  /// Runs at most [_maxConcurrentFeedSyncs] at a time. Workers pull from a
+  /// shared queue rather than splitting the list into fixed chunks, so one
+  /// slow feed cannot hold back the rest.
+  Future<FeedSyncResult> _syncSubscriptions(
+    List<Subscription> subscriptions, {
+    required bool forceRefresh,
+  }) async {
+    final pending = Queue<Subscription>.of(subscriptions);
+    final results = <SingleFeedSyncResult>[];
+
+    Future<void> drainQueue() async {
+      while (pending.isNotEmpty) {
+        final sub = pending.removeFirst();
+        results.add(await syncFeed(sub, forceRefresh: forceRefresh));
+      }
+    }
+
+    final workerCount = min(_maxConcurrentFeedSyncs, subscriptions.length);
+    await Future.wait([for (var i = 0; i < workerCount; i++) drainQueue()]);
+
+    return FeedSyncResult(
+      totalCount: subscriptions.length,
+      successCount: results.where((r) => r.success).length,
+      skipCount: results.where((r) => r.skipped).length,
+      errorCount: results.where((r) => !r.success && !r.skipped).length,
+    );
   }
 
   bool _shouldSync(DateTime? lastRefreshedAt) {
