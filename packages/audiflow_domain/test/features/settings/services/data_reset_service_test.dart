@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar_community/isar.dart';
 import 'package:path/path.dart' as p;
@@ -42,112 +43,6 @@ void main() {
     }
   });
 
-  Future<void> seedEveryCollection() async {
-    final now = DateTime(2026, 1, 1);
-    await isar.writeTxn(() async {
-      await isar.subscriptions.put(
-        Subscription()
-          ..itunesId = '1'
-          ..feedUrl = 'https://example.com/feed.xml'
-          ..title = 'Podcast'
-          ..artistName = 'Artist'
-          ..subscribedAt = now,
-      );
-      await isar.episodes.put(
-        Episode()
-          ..podcastId = 1
-          ..guid = 'guid'
-          ..title = 'Episode'
-          ..audioUrl = 'https://example.com/a.mp3',
-      );
-      await isar.downloadTasks.put(
-        DownloadTask()
-          ..episodeId = 1
-          ..audioUrl = 'https://example.com/a.mp3'
-          ..createdAt = now,
-      );
-      await isar.playbackHistorys.put(PlaybackHistory()..episodeId = 1);
-      await isar.smartPlaylistEntitys.put(
-        SmartPlaylistEntity()
-          ..podcastId = 1
-          ..playlistNumber = 1
-          ..displayName = 'Playlist'
-          ..sortKey = 0
-          ..resolverType = 'all',
-      );
-      await isar.smartPlaylistGroupEntitys.put(
-        SmartPlaylistGroupEntity()
-          ..podcastId = 1
-          ..playlistId = 'p'
-          ..groupId = 'g'
-          ..displayName = 'Group'
-          ..sortKey = 0
-          ..episodeIds = '[]',
-      );
-      await isar.podcastViewPreferences.put(
-        PodcastViewPreference()..podcastId = 1,
-      );
-      await isar.smartPlaylistUserPreferences.put(
-        SmartPlaylistUserPreference()
-          ..podcastId = 1
-          ..playlistId = 'p',
-      );
-      await isar.smartPlaylistGroupUserPreferences.put(
-        SmartPlaylistGroupUserPreference()
-          ..podcastId = 1
-          ..playlistId = 'p'
-          ..groupId = 'g',
-      );
-      await isar.queueItems.put(
-        QueueItem()
-          ..episodeId = 1
-          ..position = 0
-          ..addedAt = now,
-      );
-      await isar.episodeTranscripts.put(
-        EpisodeTranscript()
-          ..episodeId = 1
-          ..url = 'https://example.com/t.srt'
-          ..type = 'srt',
-      );
-      await isar.transcriptSegments.put(
-        TranscriptSegment()
-          ..transcriptId = 1
-          ..startMs = 0
-          ..endMs = 1
-          ..body = 'hello',
-      );
-      await isar.episodeChapters.put(
-        EpisodeChapter()
-          ..episodeId = 1
-          ..sortOrder = 0
-          ..title = 'Chapter'
-          ..startMs = 0,
-      );
-      await isar.stations.put(
-        Station()
-          ..name = 'Station'
-          ..createdAt = now
-          ..updatedAt = now,
-      );
-      await isar.stationPodcasts.put(
-        StationPodcast()
-          ..stationId = 1
-          ..podcastId = 1
-          ..addedAt = now,
-      );
-      await isar.stationEpisodes.put(
-        StationEpisode()
-          ..stationId = 1
-          ..episodeId = 1,
-      );
-      await isar.parentalControlSettings.put(
-        ParentalControlSettings()..restrictedModeEnabled = true,
-      );
-      await isar.podcastParentalFlags.put(PodcastParentalFlags()..itunesId = 1);
-    });
-  }
-
   Future<Map<String, int>> countPerCollection() async {
     final counts = <String, int>{};
     for (final schema in isarSchemas) {
@@ -162,16 +57,16 @@ void main() {
 
   group('DataResetService.resetAll', () {
     test('clears every Isar collection', () async {
-      await seedEveryCollection();
+      await seedEveryCollection(isar);
       // Coverage guard: a collection added to isarSchemas without a seed row
       // here fails before reset runs, rather than silently going untested.
       final before = await countPerCollection();
-      expect(before.values, everyElement(1), reason: before.toString());
+      check(before.values).every((count) => count.equals(1));
 
       await service.resetAll();
 
       final after = await countPerCollection();
-      expect(after.values, everyElement(0), reason: after.toString());
+      check(after.values).every((count) => count.equals(0));
     });
 
     test('deletes the downloads directory', () async {
@@ -180,7 +75,7 @@ void main() {
 
       await service.resetAll();
 
-      expect(await downloadsDir.exists(), isFalse);
+      check(await downloadsDir.exists()).isFalse();
     });
 
     test('succeeds when the downloads directory does not exist', () async {
@@ -188,14 +83,144 @@ void main() {
 
       await service.resetAll();
 
-      expect(await downloadsDir.exists(), isFalse);
+      check(await downloadsDir.exists()).isFalse();
     });
 
     test('clears every SharedPreferences key', () async {
       await service.resetAll();
 
-      expect(preferences.getString('settings_theme_mode'), isNull);
-      expect(preferences.getString('analytics.install_id'), isNull);
+      check(preferences.getString('settings_theme_mode')).isNull();
+      check(preferences.getString('analytics.install_id')).isNull();
     });
   });
+}
+
+final _now = DateTime(2026, 1, 1);
+
+/// Writes one row into every collection registered in [isarSchemas].
+Future<void> seedEveryCollection(Isar isar) async {
+  await isar.writeTxn(() async {
+    await _seedLibrary(isar);
+    await _seedSmartPlaylists(isar);
+    await _seedPlayback(isar);
+    await _seedTranscripts(isar);
+    await _seedStations(isar);
+    await _seedParentalControl(isar);
+  });
+}
+
+Future<void> _seedLibrary(Isar isar) async {
+  await isar.subscriptions.put(
+    Subscription()
+      ..itunesId = '1'
+      ..feedUrl = 'https://example.com/feed.xml'
+      ..title = 'Podcast'
+      ..artistName = 'Artist'
+      ..subscribedAt = _now,
+  );
+  await isar.episodes.put(
+    Episode()
+      ..podcastId = 1
+      ..guid = 'guid'
+      ..title = 'Episode'
+      ..audioUrl = 'https://example.com/a.mp3',
+  );
+  await isar.downloadTasks.put(
+    DownloadTask()
+      ..episodeId = 1
+      ..audioUrl = 'https://example.com/a.mp3'
+      ..createdAt = _now,
+  );
+}
+
+Future<void> _seedSmartPlaylists(Isar isar) async {
+  await isar.smartPlaylistEntitys.put(
+    SmartPlaylistEntity()
+      ..podcastId = 1
+      ..playlistNumber = 1
+      ..displayName = 'Playlist'
+      ..sortKey = 0
+      ..resolverType = 'all',
+  );
+  await isar.smartPlaylistGroupEntitys.put(
+    SmartPlaylistGroupEntity()
+      ..podcastId = 1
+      ..playlistId = 'p'
+      ..groupId = 'g'
+      ..displayName = 'Group'
+      ..sortKey = 0
+      ..episodeIds = '[]',
+  );
+  await isar.podcastViewPreferences.put(PodcastViewPreference()..podcastId = 1);
+  await isar.smartPlaylistUserPreferences.put(
+    SmartPlaylistUserPreference()
+      ..podcastId = 1
+      ..playlistId = 'p',
+  );
+  await isar.smartPlaylistGroupUserPreferences.put(
+    SmartPlaylistGroupUserPreference()
+      ..podcastId = 1
+      ..playlistId = 'p'
+      ..groupId = 'g',
+  );
+}
+
+Future<void> _seedPlayback(Isar isar) async {
+  await isar.playbackHistorys.put(PlaybackHistory()..episodeId = 1);
+  await isar.queueItems.put(
+    QueueItem()
+      ..episodeId = 1
+      ..position = 0
+      ..addedAt = _now,
+  );
+}
+
+Future<void> _seedTranscripts(Isar isar) async {
+  await isar.episodeTranscripts.put(
+    EpisodeTranscript()
+      ..episodeId = 1
+      ..url = 'https://example.com/t.srt'
+      ..type = 'srt',
+  );
+  await isar.transcriptSegments.put(
+    TranscriptSegment()
+      ..transcriptId = 1
+      ..startMs = 0
+      ..endMs = 1
+      ..body = 'hello',
+  );
+  await isar.episodeChapters.put(
+    EpisodeChapter()
+      ..episodeId = 1
+      ..sortOrder = 0
+      ..title = 'Chapter'
+      ..startMs = 0,
+  );
+}
+
+Future<void> _seedStations(Isar isar) async {
+  await isar.stations.put(
+    Station()
+      ..name = 'Station'
+      ..createdAt = _now
+      ..updatedAt = _now,
+  );
+  await isar.stationPodcasts.put(
+    StationPodcast()
+      ..stationId = 1
+      ..podcastId = 1
+      ..addedAt = _now,
+  );
+  await isar.stationEpisodes.put(
+    StationEpisode()
+      ..stationId = 1
+      ..episodeId = 1,
+  );
+}
+
+Future<void> _seedParentalControl(Isar isar) async {
+  await isar.parentalControlSettings.put(
+    ParentalControlSettings()..restrictedModeEnabled = true,
+  );
+  await isar.podcastParentalFlags.put(PodcastParentalFlags()..itunesId = 1);
 }
