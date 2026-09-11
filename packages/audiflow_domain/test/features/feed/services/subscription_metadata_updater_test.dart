@@ -1,4 +1,5 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Captures [updateFeedMetadata] calls; every other member is unused here.
@@ -69,11 +70,11 @@ void main() {
         ),
       );
 
-      expect(repository.callCount, 1);
-      expect(repository.lastId, 1);
-      expect(repository.lastArtworkUrl, 'https://example.com/art.jpg');
-      expect(repository.lastArtistName, 'Jane Doe');
-      expect(repository.lastDescription, 'Show notes');
+      check(repository.callCount).equals(1);
+      check(repository.lastId).equals(1);
+      check(repository.lastArtworkUrl).equals('https://example.com/art.jpg');
+      check(repository.lastArtistName).equals('Jane Doe');
+      check(repository.lastDescription).equals('Show notes');
     });
 
     test('replaces a stored author and description, but not artwork', () async {
@@ -96,9 +97,9 @@ void main() {
         ),
       );
 
-      expect(repository.lastArtworkUrl, isNull);
-      expect(repository.lastArtistName, 'New Artist');
-      expect(repository.lastDescription, 'New notes');
+      check(repository.lastArtworkUrl).isNull();
+      check(repository.lastArtistName).equals('New Artist');
+      check(repository.lastDescription).equals('New notes');
     });
 
     test(
@@ -115,7 +116,7 @@ void main() {
           ),
         );
 
-        expect(repository.lastArtworkUrl, 'https://example.com/art.jpg');
+        check(repository.lastArtworkUrl).equals('https://example.com/art.jpg');
       },
     );
 
@@ -131,7 +132,7 @@ void main() {
         const FeedMetaReady(title: 'Test Podcast', description: '   '),
       );
 
-      expect(repository.callCount, 0);
+      check(repository.callCount).equals(0);
     });
 
     test('writes only the fields the channel actually changes', () async {
@@ -150,10 +151,10 @@ void main() {
         ),
       );
 
-      expect(repository.callCount, 1);
-      expect(repository.lastArtworkUrl, isNull);
-      expect(repository.lastArtistName, isNull);
-      expect(repository.lastDescription, 'Show notes');
+      check(repository.callCount).equals(1);
+      check(repository.lastArtworkUrl).isNull();
+      check(repository.lastArtistName).isNull();
+      check(repository.lastDescription).equals('Show notes');
     });
 
     test('skips the write when the feed matches what is stored', () async {
@@ -173,7 +174,7 @@ void main() {
         ),
       );
 
-      expect(repository.callCount, 0);
+      check(repository.callCount).equals(0);
     });
 
     test('trims surrounding whitespace before comparing and writing', () async {
@@ -189,33 +190,30 @@ void main() {
         ),
       );
 
-      expect(repository.lastArtworkUrl, isNull);
-      expect(repository.lastArtistName, 'Jane Doe');
-      expect(repository.lastDescription, 'Show notes');
+      check(repository.lastArtworkUrl).isNull();
+      check(repository.lastArtistName).equals('Jane Doe');
+      check(repository.lastDescription).equals('Show notes');
     });
   });
 
   group('SubscriptionMetadataUpdater.needsArtworkBackfill', () {
     test('is true while no artwork is stored', () {
-      expect(
+      check(
         SubscriptionMetadataUpdater.needsArtworkBackfill(_subscription()),
-        isTrue,
-      );
-      expect(
+      ).isTrue();
+      check(
         SubscriptionMetadataUpdater.needsArtworkBackfill(
           _subscription(artworkUrl: '  '),
         ),
-        isTrue,
-      );
+      ).isTrue();
     });
 
     test('is false once artwork is stored', () {
-      expect(
+      check(
         SubscriptionMetadataUpdater.needsArtworkBackfill(
           _subscription(artworkUrl: 'https://example.com/art.jpg'),
         ),
-        isFalse,
-      );
+      ).isFalse();
     });
   });
 }
