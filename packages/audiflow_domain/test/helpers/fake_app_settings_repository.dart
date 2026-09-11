@@ -171,29 +171,4 @@ class FakeAppSettingsRepository implements AppSettingsRepository {
   @override
   Future<void> setPrivacyConsentAccepted(bool accepted) async =>
       privacyConsentAccepted = accepted;
-
-  @override
-  Future<void> clearAll() async {
-    themeMode = ThemeMode.system;
-    locale = null;
-    textScale = 1.0;
-    playbackSpeed = 1.0;
-    skipForwardSeconds = 30;
-    skipBackwardSeconds = 10;
-    autoCompleteThreshold = 0.95;
-    continuousPlayback = true;
-    autoPlayOrder = AutoPlayOrder.oldestFirst;
-    duckInterruptionBehavior = SettingsDefaults.duckInterruptionBehavior;
-    wifiOnlyDownload = true;
-    autoDeletePlayed = false;
-    maxConcurrentDownloads = 1;
-    batchDownloadLimit = 25;
-    autoSync = true;
-    syncIntervalMinutes = 60;
-    wifiOnlySync = false;
-    notifyNewEpisodes = true;
-    searchCountry = null;
-    lastTabIndex = 0;
-    privacyConsentAccepted = false;
-  }
 }

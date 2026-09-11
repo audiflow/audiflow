@@ -261,35 +261,6 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
     await _ds.setBool(SettingsKeys.privacyConsentAccepted, accepted);
   }
 
-  // -- Data management --
-
-  @override
-  Future<void> clearAll() async {
-    await Future.wait([
-      _ds.remove(SettingsKeys.themeMode),
-      _ds.remove(SettingsKeys.locale),
-      _ds.remove(SettingsKeys.textScale),
-      _ds.remove(SettingsKeys.playbackSpeed),
-      _ds.remove(SettingsKeys.skipForwardSeconds),
-      _ds.remove(SettingsKeys.skipBackwardSeconds),
-      _ds.remove(SettingsKeys.autoCompleteThreshold),
-      _ds.remove(SettingsKeys.continuousPlayback),
-      _ds.remove(SettingsKeys.autoPlayOrder),
-      _ds.remove(SettingsKeys.duckInterruptionBehavior),
-      _ds.remove(SettingsKeys.wifiOnlyDownload),
-      _ds.remove(SettingsKeys.autoDeletePlayed),
-      _ds.remove(SettingsKeys.maxConcurrentDownloads),
-      _ds.remove(SettingsKeys.batchDownloadLimit),
-      _ds.remove(SettingsKeys.autoSync),
-      _ds.remove(SettingsKeys.syncIntervalMinutes),
-      _ds.remove(SettingsKeys.wifiOnlySync),
-      _ds.remove(SettingsKeys.notifyNewEpisodes),
-      _ds.remove(SettingsKeys.searchCountry),
-      _ds.remove(SettingsKeys.lastTabIndex),
-      _ds.remove(SettingsKeys.privacyConsentAccepted),
-    ]);
-  }
-
   // -- Helpers --
 
   AutoPlayOrder _parseAutoPlayOrder(String? name) {

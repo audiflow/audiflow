@@ -153,9 +153,4 @@ abstract class AppSettingsRepository {
 
   /// Persists the privacy-policy acceptance flag.
   Future<void> setPrivacyConsentAccepted(bool accepted);
-
-  // -- Data management --
-
-  /// Removes all persisted settings, restoring defaults.
-  Future<void> clearAll();
 }

@@ -289,12 +289,6 @@ void main() {
       await repository.setNotifyNewEpisodes(false);
       expect(repository.getNotifyNewEpisodes(), isFalse);
     });
-
-    test('clearAll resets to default', () async {
-      await repository.setNotifyNewEpisodes(false);
-      await repository.clearAll();
-      expect(repository.getNotifyNewEpisodes(), isTrue);
-    });
   });
 
   group('Search country', () {
@@ -331,49 +325,6 @@ void main() {
 
       await repository.setSearchCountry('1');
       expect(repository.getSearchCountry(), 'jp');
-    });
-
-    test('clearAll removes search country', () async {
-      await repository.setSearchCountry('de');
-      await repository.clearAll();
-      expect(repository.getSearchCountry(), isNull);
-    });
-  });
-
-  group('clearAll', () {
-    test('restores all settings to defaults', () async {
-      // Set several values
-      await repository.setThemeMode(ThemeMode.dark);
-      await repository.setLocale('ja');
-      await repository.setPlaybackSpeed(1.5);
-      await repository.setSkipForwardSeconds(15);
-      await repository.setWifiOnlyDownload(false);
-      await repository.setAutoSync(false);
-
-      // Verify they are persisted
-      expect(repository.getThemeMode(), ThemeMode.dark);
-      expect(repository.getLocale(), 'ja');
-      expect(repository.getPlaybackSpeed(), 1.5);
-      expect(repository.getSkipForwardSeconds(), 15);
-      expect(repository.getWifiOnlyDownload(), false);
-      expect(repository.getAutoSync(), false);
-
-      // Clear all
-      await repository.clearAll();
-
-      // Verify defaults restored
-      expect(repository.getThemeMode(), ThemeMode.system);
-      expect(repository.getLocale(), isNull);
-      expect(repository.getPlaybackSpeed(), SettingsDefaults.playbackSpeed);
-      expect(
-        repository.getSkipForwardSeconds(),
-        SettingsDefaults.skipForwardSeconds,
-      );
-      expect(
-        repository.getWifiOnlyDownload(),
-        SettingsDefaults.wifiOnlyDownload,
-      );
-      expect(repository.getAutoSync(), SettingsDefaults.autoSync);
     });
   });
 }
