@@ -177,7 +177,9 @@ class DownloadQueueService {
     try {
       while (!_stopRequested) {
         final nextTask = await _repository.getNextPending(isOnWifi: _isOnWifi);
-        if (nextTask == null) break;
+        // Re-check after the await: a cancelAll that landed while the
+        // query ran must not start a download it has no token to cancel.
+        if (nextTask == null || _stopRequested) break;
 
         await _processDownload(nextTask);
       }
@@ -206,6 +208,16 @@ class DownloadQueueService {
       final episode = await _episodeRepo.getById(task.episodeId);
       if (episode == null) {
         throw DownloadException(DownloadErrorType.unknown, 'Episode not found');
+      }
+
+      // The file service only registers its cancel token once the download
+      // starts, so a cancelAll that landed during the awaits above would
+      // otherwise let this download run to completion unopposed.
+      if (_stopRequested) {
+        throw DownloadException(
+          DownloadErrorType.cancelled,
+          'Download cancelled',
+        );
       }
 
       // Throttle progress updates to avoid overwhelming the database

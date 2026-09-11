@@ -270,6 +270,32 @@ void main() {
       },
     );
 
+    test('does not start a task fetched while cancelling', () async {
+      // Arrange: the pending-task query is still running when cancelAll
+      // lands, so there is no active download to cancel yet.
+      final task = _task(id: 1, episodeId: 10);
+      await Future<void>.delayed(Duration.zero);
+      clearInteractions(mockRepository);
+      final query = Completer<DownloadTask?>();
+      when(
+        mockRepository.getNextPending(isOnWifi: anyNamed('isOnWifi')),
+      ).thenAnswer((_) => query.future);
+
+      final processing = service.startQueue();
+      final cancelling = service.cancelAll();
+      query.complete(task);
+      await cancelling;
+      await processing;
+
+      verifyNever(
+        mockRepository.updateStatus(
+          id: 1,
+          status: const DownloadStatus.downloading(),
+        ),
+      );
+      verifyNever(mockEpisodeRepo.getById(any));
+    });
+
     test('lets the queue drain again after cancellation', () async {
       await Future<void>.delayed(Duration.zero);
       clearInteractions(mockRepository);
