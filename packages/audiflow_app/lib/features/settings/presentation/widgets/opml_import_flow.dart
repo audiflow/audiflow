@@ -67,6 +67,10 @@ class _OpmlImportFlowState extends ConsumerState<OpmlImportFlow> {
   }
 
   Future<void> _start() async {
+    // Disabling the buttons only takes effect on the next frame, so two
+    // callbacks dispatched in the same frame would both get this far.
+    if (_starting) return;
+
     final l10n = AppLocalizations.of(context);
     setState(() => _starting = true);
     try {
