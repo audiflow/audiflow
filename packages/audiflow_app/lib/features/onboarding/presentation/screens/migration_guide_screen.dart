@@ -4,10 +4,15 @@ import 'package:material_symbols_icons/symbols.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../settings/presentation/widgets/opml_import_flow.dart';
 
 /// Per-source migration guide. Each section describes how to
 /// produce an OPML file from a third-party podcast app, then
-/// share it with audiflow via the system share sheet.
+/// hand it to audiflow.
+///
+/// The page opens and closes with a direct import action: most readers
+/// arrive already holding an OPML file, and the page is long enough that a
+/// single action at one end would be missed.
 class MigrationGuideScreen extends StatelessWidget {
   const MigrationGuideScreen({super.key});
 
@@ -27,90 +32,151 @@ class MigrationGuideScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.migrationGuideTitle)),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-        children: [
-          Text(
-            l10n.migrationGuideIntro,
-            style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
-          ),
-          const SizedBox(height: 24),
+      body: OpmlImportFlow(
+        builder: (context, startImport) => ListView(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+          children: [
+            Text(
+              l10n.migrationGuideIntro,
+              style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
+            ),
+            const SizedBox(height: 24),
+            _ImportCallToAction(onImport: startImport),
+            const SizedBox(height: 24),
 
-          // Apple Podcasts
-          _SourceHeader(text: l10n.migrationApplePodcastsTitle),
-          _SourceBody(text: l10n.migrationApplePodcastsBody),
-          const SizedBox(height: 16),
-          _SubsectionLabel(text: l10n.migrationApplePodcastsIosLabel),
-          _StepList(
-            steps: [
-              l10n.migrationApplePodcastsIosStep1,
-              l10n.migrationApplePodcastsIosStep2,
-              l10n.migrationApplePodcastsIosStep3,
-              l10n.migrationApplePodcastsIosStep4,
-            ],
-          ),
-          const SizedBox(height: 12),
-          _OpenLinkButton(
-            label: l10n.migrationApplePodcastsOpenShortcut,
-            url: _appleShortcutUrl,
-          ),
-          const SizedBox(height: 16),
-          _SubsectionLabel(text: l10n.migrationApplePodcastsMacLabel),
-          _SourceBody(text: l10n.migrationApplePodcastsMacBody),
-          const _SectionDivider(),
+            // Apple Podcasts
+            _SourceHeader(text: l10n.migrationApplePodcastsTitle),
+            _SourceBody(text: l10n.migrationApplePodcastsBody),
+            const SizedBox(height: 16),
+            _SubsectionLabel(text: l10n.migrationApplePodcastsIosLabel),
+            _StepList(
+              steps: [
+                l10n.migrationApplePodcastsIosStep1,
+                l10n.migrationApplePodcastsIosStep2,
+                l10n.migrationApplePodcastsIosStep3,
+                l10n.migrationApplePodcastsIosStep4,
+              ],
+            ),
+            const SizedBox(height: 12),
+            _OpenLinkButton(
+              label: l10n.migrationApplePodcastsOpenShortcut,
+              url: _appleShortcutUrl,
+            ),
+            const SizedBox(height: 16),
+            _SubsectionLabel(text: l10n.migrationApplePodcastsMacLabel),
+            _SourceBody(text: l10n.migrationApplePodcastsMacBody),
+            const _SectionDivider(),
 
-          // Pocket Casts
-          _SourceHeader(text: l10n.migrationPocketCastsTitle),
-          _SubsectionLabel(text: l10n.migrationPocketCastsWebLabel),
-          _StepList(
-            steps: [
-              l10n.migrationPocketCastsWebStep1,
-              l10n.migrationPocketCastsWebStep2,
-              l10n.migrationPocketCastsWebStep3,
-              l10n.migrationPocketCastsWebStep4,
-            ],
-          ),
-          const SizedBox(height: 12),
-          _OpenLinkButton(
-            label: l10n.migrationPocketCastsOpenWeb,
-            url: _pocketCastsUrl,
-          ),
-          const SizedBox(height: 16),
-          _SubsectionLabel(text: l10n.migrationPocketCastsAppLabel),
-          _SourceBody(text: l10n.migrationPocketCastsAppBody),
-          const _SectionDivider(),
+            // Pocket Casts
+            _SourceHeader(text: l10n.migrationPocketCastsTitle),
+            _SubsectionLabel(text: l10n.migrationPocketCastsWebLabel),
+            _StepList(
+              steps: [
+                l10n.migrationPocketCastsWebStep1,
+                l10n.migrationPocketCastsWebStep2,
+                l10n.migrationPocketCastsWebStep3,
+                l10n.migrationPocketCastsWebStep4,
+              ],
+            ),
+            const SizedBox(height: 12),
+            _OpenLinkButton(
+              label: l10n.migrationPocketCastsOpenWeb,
+              url: _pocketCastsUrl,
+            ),
+            const SizedBox(height: 16),
+            _SubsectionLabel(text: l10n.migrationPocketCastsAppLabel),
+            _SourceBody(text: l10n.migrationPocketCastsAppBody),
+            const _SectionDivider(),
 
-          // Overcast
-          _SourceHeader(text: l10n.migrationOvercastTitle),
-          _SourceBody(text: l10n.migrationOvercastBody),
-          const SizedBox(height: 12),
-          _StepList(
-            steps: [
-              l10n.migrationOvercastStep1,
-              l10n.migrationOvercastStep2,
-              l10n.migrationOvercastStep3,
-              l10n.migrationOvercastStep4,
-            ],
-          ),
-          const SizedBox(height: 12),
-          _OpenLinkButton(label: l10n.migrationOvercastOpen, url: _overcastUrl),
-          const _SectionDivider(),
+            // Overcast
+            _SourceHeader(text: l10n.migrationOvercastTitle),
+            _SourceBody(text: l10n.migrationOvercastBody),
+            const SizedBox(height: 12),
+            _StepList(
+              steps: [
+                l10n.migrationOvercastStep1,
+                l10n.migrationOvercastStep2,
+                l10n.migrationOvercastStep3,
+                l10n.migrationOvercastStep4,
+              ],
+            ),
+            const SizedBox(height: 12),
+            _OpenLinkButton(
+              label: l10n.migrationOvercastOpen,
+              url: _overcastUrl,
+            ),
+            const _SectionDivider(),
 
-          // Castbox
-          _SourceHeader(text: l10n.migrationCastboxTitle),
-          _SourceBody(text: l10n.migrationCastboxBody),
-          const _SectionDivider(),
+            // Castbox
+            _SourceHeader(text: l10n.migrationCastboxTitle),
+            _SourceBody(text: l10n.migrationCastboxBody),
+            const _SectionDivider(),
 
-          // Spotify
-          _SourceHeader(text: l10n.migrationSpotifyTitle),
-          _SourceBody(text: l10n.migrationSpotifyBody),
-          const _SectionDivider(),
+            // Spotify
+            _SourceHeader(text: l10n.migrationSpotifyTitle),
+            _SourceBody(text: l10n.migrationSpotifyBody),
+            const _SectionDivider(),
 
-          // Other
-          _SourceHeader(text: l10n.migrationOtherTitle),
-          _SourceBody(text: l10n.migrationOtherBody),
-        ],
+            // Other
+            _SourceHeader(text: l10n.migrationOtherTitle),
+            _SourceBody(text: l10n.migrationOtherBody),
+            const _SectionDivider(),
+
+            _ImportCallToAction(onImport: startImport, showLocationHint: true),
+          ],
+        ),
       ),
+    );
+  }
+}
+
+/// Launches the OPML import directly from the guide, so a reader holding a
+/// file does not have to find the action under Storage & Data.
+class _ImportCallToAction extends StatelessWidget {
+  const _ImportCallToAction({
+    required this.onImport,
+    this.showLocationHint = false,
+  });
+
+  final OpmlImportStarter onImport;
+
+  /// Whether to name where the import lives, for readers who come back later.
+  final bool showLocationHint;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.migrationImportCtaTitle,
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton.icon(
+            onPressed: onImport,
+            icon: const Icon(Symbols.file_open, size: 18),
+            label: Text(l10n.migrationImportCtaButton),
+          ),
+        ),
+        if (showLocationHint) ...[
+          const SizedBox(height: 8),
+          Text(
+            l10n.migrationImportLocationHint,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              height: 1.5,
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

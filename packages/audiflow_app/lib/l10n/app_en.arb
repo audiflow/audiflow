@@ -928,6 +928,12 @@
 
   "migrationGuideTitle": "Migrate from another app",
   "@migrationGuideTitle": { "description": "Migration guide screen title" },
+  "migrationImportCtaTitle": "Already have an OPML file?",
+  "@migrationImportCtaTitle": { "description": "Migration guide import call-to-action heading" },
+  "migrationImportCtaButton": "Import it now",
+  "@migrationImportCtaButton": { "description": "Migration guide import call-to-action button" },
+  "migrationImportLocationHint": "You can import an OPML file any time from Settings > Storage & Data > Import Subscriptions.",
+  "@migrationImportLocationHint": { "description": "Where the OPML import lives in settings" },
   "migrationGuideIntro": "Most podcast apps export your subscriptions as an OPML file. Get the file from your old app, then share it with audiflow.",
   "@migrationGuideIntro": { "description": "Migration guide intro text" },
   "migrationStepsLabel": "Steps",

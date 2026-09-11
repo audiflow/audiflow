@@ -9,9 +9,13 @@ extension PumpApp on WidgetTester {
     Widget widget, {
     ThemeMode themeMode = ThemeMode.light,
     Locale locale = const Locale('en'),
+    // flutter_riverpod does not export the `Override` type, so the element
+    // type is erased and cast back, as the other screen tests here do.
+    List<dynamic> overrides = const [],
   }) async {
     await pumpWidget(
       ProviderScope(
+        overrides: overrides.cast(),
         child: MaterialApp(
           themeMode: themeMode,
           locale: locale,

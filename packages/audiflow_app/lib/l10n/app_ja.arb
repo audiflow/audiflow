@@ -550,6 +550,12 @@
 
   "migrationGuideTitle": "他のアプリから移行",
   "@migrationGuideTitle": { "description": "Migration guide screen title" },
+  "migrationImportCtaTitle": "OPML ファイルはお手元にありますか？",
+  "@migrationImportCtaTitle": { "description": "Migration guide import call-to-action heading" },
+  "migrationImportCtaButton": "今すぐインポート",
+  "@migrationImportCtaButton": { "description": "Migration guide import call-to-action button" },
+  "migrationImportLocationHint": "OPML ファイルは、設定 > ストレージとデータ > 購読をインポート からいつでも取り込めます。",
+  "@migrationImportLocationHint": { "description": "Where the OPML import lives in settings" },
   "migrationGuideIntro": "多くのポッドキャストアプリは購読リストを OPML ファイルとして書き出せます。元のアプリからファイルを取り出して、audiflow に共有してください。",
   "@migrationGuideIntro": { "description": "Migration guide intro text" },
   "migrationStepsLabel": "手順",
