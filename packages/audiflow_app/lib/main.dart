@@ -471,7 +471,16 @@ class _MyAppState extends ConsumerState<MyApp> {
         // the banner/list/sound when a notification arrives while the app is
         // in the foreground. Without these, iOS treats the notification as
         // suppressed and it never lands in Notification Center at all.
+        //
+        // requestXxxPermission must stay false: this init only registers the
+        // tap handler, and the plugin's defaults would otherwise raise the iOS
+        // permission dialog over onboarding. Permission is requested lazily
+        // when the user enables new-episode notifications in feed sync
+        // settings, which is the only feature that posts notifications.
         iOS: DarwinInitializationSettings(
+          requestAlertPermission: false,
+          requestBadgePermission: false,
+          requestSoundPermission: false,
           defaultPresentBanner: true,
           defaultPresentList: true,
           defaultPresentSound: true,
