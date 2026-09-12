@@ -48,7 +48,7 @@ Each feature follows the directory structure: `models/`, `datasources/local/`, `
 | station | `src/features/station/` | `Station`, `StationPodcast`, `StationEpisode`, `StationReconciler` | Custom multi-podcast playlists with filter conditions and materialized episode views |
 | transcript | `src/features/transcript/` | `EpisodeChapter`, `EpisodeTranscript`, `TranscriptSegmentTable`, `TranscriptService` | Chapter and transcript storage, full-text search across transcript segments |
 | voice | `src/features/voice/` | `VoiceCommandOrchestrator`, `VoiceCommandExecutor`, `PlayPodcastByNameService` | Speech recognition state machine, AI-powered command parsing and execution |
-| settings | `src/features/settings/` | `AppSettingsRepository`, `DataResetService` | User preferences (playback speed, skip durations, notification toggle) and the full local-data reset behind "Reset All Data" |
+| settings | `src/features/settings/` | `AppSettingsRepository`, `DataResetService` | User preferences (playback speed, skip durations, notification toggle) and the full local-data reset behind "Reset All Data", which stops playback and cancels in-flight downloads, feed syncs, and background tasks before clearing storage |
 
 ## Primary entry points
 
@@ -56,6 +56,7 @@ Each feature follows the directory structure: `models/`, `datasources/local/`, `
 - `lib/patterns.dart`: Pure-Dart barrel file for CLI tools. Exports smart playlist pattern types without Flutter dependencies.
 - `lib/src/common/providers/database_provider.dart`: `isarProvider` -- must be overridden at app startup with initialized Isar instance.
 - `lib/src/common/providers/http_client_provider.dart`: Dio client provider.
+- `lib/src/common/providers/background_task_canceller_provider.dart`: `backgroundTaskCancellerProvider` -- awaited by `DataResetService` before it clears storage; the app overrides it with Workmanager task cancellation, the default is a no-op.
 - `lib/src/features/player/services/audio_player_service.dart`: `AudioPlayerController` -- keepAlive Riverpod notifier wrapping just_audio with queue auto-advance.
 - `lib/src/features/feed/services/background_refresh_service.dart`: Constructor-injected (no Riverpod) for background isolate use.
 - `lib/src/features/feed/resolvers/smart_playlist_resolver.dart`: `SmartPlaylistResolver` interface implemented by four resolver strategies.

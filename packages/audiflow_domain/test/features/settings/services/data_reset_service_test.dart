@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:audiflow_domain/audiflow_domain.dart';
@@ -9,18 +10,62 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../helpers/isar_test_helper.dart';
 
-/// Records stop calls along with how many subscriptions existed at the time,
-/// so the test can assert playback stops before the database is cleared.
-class _FakePlaybackController implements AudioPlaybackController {
-  _FakePlaybackController(this._isar);
+/// Records each writer the reset quiesces, in order, along with how many
+/// subscriptions and whether the downloads directory existed at the time,
+/// so the tests can assert every writer is stopped before the storage it
+/// writes to is cleared.
+class _WriterLog {
+  _WriterLog(this._isar, this._downloadsDir);
 
   final Isar _isar;
-  final List<int> subscriptionsAtStop = [];
+  final Directory _downloadsDir;
+  final List<(String, int, bool)> calls = [];
+  Future<void> _chain = Future.value();
+
+  /// Records are serialized so their order matches the call order even
+  /// when a caller (resume) does not await them.
+  Future<void> record(String writer) {
+    return _chain = _chain.then((_) async {
+      calls.add((
+        writer,
+        await _isar.subscriptions.count(),
+        await _downloadsDir.exists(),
+      ));
+    });
+  }
+
+  /// Completes once every record issued so far has been appended.
+  Future<void> settle() => _chain;
+}
+
+/// A writer that reports its suspend and resume calls to the log.
+class _FakeWriter implements SuspendableWriter {
+  _FakeWriter(this._name, this._log);
+
+  final String _name;
+  final _WriterLog _log;
+
+  /// When set, suspending fails the way a broken in-flight sync would.
+  Object? suspendFailure;
 
   @override
-  Future<void> stop() async {
-    subscriptionsAtStop.add(await _isar.subscriptions.count());
+  Future<void> suspend() async {
+    await _log.record('$_name.suspend');
+    final failure = suspendFailure;
+    if (failure != null) throw failure;
   }
+
+  @override
+  void resume() => unawaited(_log.record('$_name.resume'));
+}
+
+class _FakePlaybackController implements AudioPlaybackController {
+  _FakePlaybackController(this._log);
+
+  final _WriterLog _log;
+
+  @override
+  Future<void> stop() => _log.record('playback');
 
   @override
   Future<void> pause() async {}
@@ -45,8 +90,24 @@ void main() {
   late Isar isar;
   late Directory downloadsDir;
   late SharedPreferencesDataSource preferences;
-  late _FakePlaybackController playback;
+  late _WriterLog writers;
   late DataResetService service;
+
+  DataResetService buildService({
+    required DownloadsDirectoryResolver resolveDownloadsDirectory,
+  }) {
+    return DataResetService(
+      isar: isar,
+      preferences: preferences,
+      playback: _FakePlaybackController(writers),
+      cancelBackgroundTasks: () => writers.record('backgroundTasks'),
+      writers: [
+        _FakeWriter('downloads', writers),
+        _FakeWriter('feedSync', writers),
+      ],
+      resolveDownloadsDirectory: resolveDownloadsDirectory,
+    );
+  }
 
   setUpAll(() async {
     await Isar.initializeIsarCore(download: true);
@@ -62,16 +123,16 @@ void main() {
     preferences = SharedPreferencesDataSource(
       await SharedPreferences.getInstance(),
     );
-    playback = _FakePlaybackController(isar);
-    service = DataResetService(
-      isar: isar,
-      preferences: preferences,
-      playback: playback,
+    writers = _WriterLog(isar, downloadsDir);
+    service = buildService(
       resolveDownloadsDirectory: () async => downloadsDir.path,
     );
   });
 
   tearDown(() async {
+    // Resume records are not awaited by the reset; let them finish before
+    // the database they read from is closed.
+    await writers.settle();
     await isar.close(deleteFromDisk: true);
     if (await downloadsDir.exists()) {
       await downloadsDir.delete(recursive: true);
@@ -104,20 +165,64 @@ void main() {
       check(after.values).every((count) => count.equals(0));
     });
 
-    test('stops playback before clearing the database', () async {
+    test('suspends every writer until storage is cleared', () async {
       await seedEveryCollection(isar);
 
       await service.resetAll();
+      await writers.settle();
 
-      check(playback.subscriptionsAtStop).deepEquals([1]);
+      // Writers are suspended while their storage still exists and resumed
+      // in reverse order only once files, database, and prefs are gone.
+      check(writers.calls).deepEquals([
+        ('playback', 1, true),
+        ('backgroundTasks', 1, true),
+        ('downloads.suspend', 1, true),
+        ('feedSync.suspend', 1, true),
+        ('feedSync.resume', 0, false),
+        ('downloads.resume', 0, false),
+      ]);
+    });
+
+    test('resumes earlier writers when a later suspend fails', () async {
+      final downloads = _FakeWriter('downloads', writers);
+      final feedSync = _FakeWriter('feedSync', writers)
+        ..suspendFailure = StateError('sync broke');
+      final failingService = DataResetService(
+        isar: isar,
+        preferences: preferences,
+        playback: _FakePlaybackController(writers),
+        cancelBackgroundTasks: () => writers.record('backgroundTasks'),
+        writers: [downloads, feedSync],
+        resolveDownloadsDirectory: () async => downloadsDir.path,
+      );
+
+      await check(failingService.resetAll()).throws<StateError>();
+      await writers.settle();
+
+      final names = writers.calls.map((call) => call.$1).toList();
+      check(
+        names.sublist(names.length - 3),
+      ).deepEquals(['feedSync.suspend', 'feedSync.resume', 'downloads.resume']);
+    });
+
+    test('resumes writers when the reset fails', () async {
+      final blockedService = buildService(
+        resolveDownloadsDirectory: () async =>
+            throw const FileSystemException('boom'),
+      );
+
+      await check(blockedService.resetAll()).throws<FileSystemException>();
+      await writers.settle();
+
+      final names = writers.calls.map((call) => call.$1).toList();
+      check(
+        names.sublist(names.length - 2),
+      ).deepEquals(['feedSync.resume', 'downloads.resume']);
     });
 
     test('leaves the database untouched when file deletion fails', () async {
       await seedEveryCollection(isar);
-      final blockedService = DataResetService(
-        isar: isar,
-        preferences: preferences,
-        playback: playback,
+      final blockedService = buildService(
         resolveDownloadsDirectory: () async =>
             throw const FileSystemException('boom'),
       );

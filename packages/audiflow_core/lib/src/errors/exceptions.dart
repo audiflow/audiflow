@@ -48,5 +48,10 @@ class DownloadException extends AppException {
   DownloadException(this.type, [String message = 'Download error occurred'])
     : super(message, 'DOWNLOAD_ERROR_${type.name.toUpperCase()}');
 
+  /// A download stopped on request; the message is stored on the task, so
+  /// every cancel path shares this one wording.
+  DownloadException.cancelled()
+    : this(DownloadErrorType.cancelled, 'Download cancelled');
+
   final DownloadErrorType type;
 }

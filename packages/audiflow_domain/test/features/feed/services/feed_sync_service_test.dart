@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
 import 'package:dio/dio.dart';
@@ -55,6 +57,19 @@ Subscription _subscription({
     ..lastRefreshedAt = lastRefreshedAt;
 }
 
+/// Matches the feed fetch regardless of the cancel token and options the
+/// service attaches, so stubs and verifications stay one line each.
+late MockDio mockDio;
+
+Future<Response<String>> dioGet([String? url]) => mockDio.get<String>(
+  url ?? any,
+  cancelToken: anyNamed('cancelToken'),
+  options: anyNamed('options'),
+);
+
+Response<String> okResponse([String body = '<rss></rss>']) =>
+    Response(data: body, statusCode: 200, requestOptions: RequestOptions());
+
 void main() {
   late MockSubscriptionRepository mockSubscriptionRepo;
   late MockEpisodeRepository mockEpisodeRepo;
@@ -62,7 +77,6 @@ void main() {
   late MockFeedParserService mockFeedParser;
   late MockPresetConfigRepository mockConfigRepo;
   late MockStationPodcastRepository mockStationPodcastRepo;
-  late MockDio mockDio;
   late ProviderContainer container;
   late FeedSyncService service;
 
@@ -164,13 +178,7 @@ void main() {
         mockSubscriptionRepo.getSubscriptions(),
       ).thenAnswer((_) async => [sub1, sub2]);
 
-      when(mockDio.get<String>(any, options: anyNamed('options'))).thenAnswer(
-        (_) async => Response(
-          data: '<rss></rss>',
-          statusCode: 200,
-          requestOptions: RequestOptions(),
-        ),
-      );
+      when(dioGet()).thenAnswer((_) async => okResponse());
 
       when(
         mockEpisodeRepo.getGuidsByPodcastId(any),
@@ -216,20 +224,14 @@ void main() {
       // Assert
       expect(result.success, isTrue);
       expect(result.skipped, isTrue);
-      verifyNever(mockDio.get<String>(any, options: anyNamed('options')));
+      verifyNever(dioGet());
     });
 
     test('syncs when lastRefreshedAt is null', () async {
       // Arrange
       final sub = _subscription(lastRefreshedAt: null);
 
-      when(mockDio.get<String>(any, options: anyNamed('options'))).thenAnswer(
-        (_) async => Response(
-          data: '<rss></rss>',
-          statusCode: 200,
-          requestOptions: RequestOptions(),
-        ),
-      );
+      when(dioGet()).thenAnswer((_) async => okResponse());
       when(
         mockEpisodeRepo.getGuidsByPodcastId(sub.id),
       ).thenAnswer((_) async => <String>{});
@@ -263,13 +265,7 @@ void main() {
       // starts with no artwork, no author, and no description.
       final sub = _subscription(lastRefreshedAt: null, artistName: '');
 
-      when(mockDio.get<String>(any, options: anyNamed('options'))).thenAnswer(
-        (_) async => Response(
-          data: '<rss></rss>',
-          statusCode: 200,
-          requestOptions: RequestOptions(),
-        ),
-      );
+      when(dioGet()).thenAnswer((_) async => okResponse());
       when(
         mockEpisodeRepo.getGuidsByPodcastId(sub.id),
       ).thenAnswer((_) async => <String>{});
@@ -317,13 +313,7 @@ void main() {
         lastRefreshedAt: DateTime.now().subtract(const Duration(hours: 2)),
       );
 
-      when(mockDio.get<String>(any, options: anyNamed('options'))).thenAnswer(
-        (_) async => Response(
-          data: '<rss></rss>',
-          statusCode: 200,
-          requestOptions: RequestOptions(),
-        ),
-      );
+      when(dioGet()).thenAnswer((_) async => okResponse());
       when(
         mockEpisodeRepo.getGuidsByPodcastId(sub.id),
       ).thenAnswer((_) async => <String>{});
@@ -357,13 +347,7 @@ void main() {
         lastRefreshedAt: DateTime.now().subtract(const Duration(minutes: 5)),
       );
 
-      when(mockDio.get<String>(any, options: anyNamed('options'))).thenAnswer(
-        (_) async => Response(
-          data: '<rss></rss>',
-          statusCode: 200,
-          requestOptions: RequestOptions(),
-        ),
-      );
+      when(dioGet()).thenAnswer((_) async => okResponse());
       when(
         mockEpisodeRepo.getGuidsByPodcastId(sub.id),
       ).thenAnswer((_) async => <String>{});
@@ -389,14 +373,14 @@ void main() {
       // Assert
       expect(result.success, isTrue);
       expect(result.skipped, isFalse);
-      verify(mockDio.get<String>(any, options: anyNamed('options'))).called(1);
+      verify(dioGet()).called(1);
     });
 
     test('returns failure on empty RSS response', () async {
       // Arrange
       final sub = _subscription(lastRefreshedAt: null);
 
-      when(mockDio.get<String>(any, options: anyNamed('options'))).thenAnswer(
+      when(dioGet()).thenAnswer(
         (_) async => Response(
           data: '',
           statusCode: 200,
@@ -417,7 +401,7 @@ void main() {
       // Arrange
       final sub = _subscription(lastRefreshedAt: null);
 
-      when(mockDio.get<String>(any, options: anyNamed('options'))).thenAnswer(
+      when(dioGet()).thenAnswer(
         (_) async => Response<String>(
           data: null,
           statusCode: 200,
@@ -437,7 +421,7 @@ void main() {
       // Arrange
       final sub = _subscription(lastRefreshedAt: null);
 
-      when(mockDio.get<String>(any, options: anyNamed('options'))).thenThrow(
+      when(dioGet()).thenThrow(
         DioException(
           requestOptions: RequestOptions(),
           type: DioExceptionType.connectionError,
@@ -458,13 +442,7 @@ void main() {
       // Arrange
       final sub = _subscription(itunesId: 'itunes-42', lastRefreshedAt: null);
 
-      when(mockDio.get<String>(any, options: anyNamed('options'))).thenAnswer(
-        (_) async => Response(
-          data: '<rss></rss>',
-          statusCode: 200,
-          requestOptions: RequestOptions(),
-        ),
-      );
+      when(dioGet()).thenAnswer((_) async => okResponse());
       when(
         mockEpisodeRepo.getGuidsByPodcastId(sub.id),
       ).thenAnswer((_) async => <String>{});
@@ -491,6 +469,138 @@ void main() {
       verify(
         mockSubscriptionRepo.updateLastRefreshed('itunes-42', any),
       ).called(1);
+    });
+  });
+
+  group('suspend', () {
+    void stubParseComplete() {
+      when(
+        mockFeedParser.parseWithProgress(
+          xmlContent: anyNamed('xmlContent'),
+          podcastId: anyNamed('podcastId'),
+          knownGuids: anyNamed('knownGuids'),
+          onBatchReady: anyNamed('onBatchReady'),
+        ),
+      ).thenAnswer(
+        (_) => Stream.value(
+          const FeedParseComplete(total: 1, stoppedEarly: false),
+        ),
+      );
+      when(
+        mockEpisodeRepo.getGuidsByPodcastId(any),
+      ).thenAnswer((_) async => <String>{});
+      when(
+        mockSubscriptionRepo.updateLastRefreshed(any, any),
+      ).thenAnswer((_) async {});
+    }
+
+    test('aborts a sync awaiting the feed response without writing', () async {
+      final sub = _subscription(lastRefreshedAt: null);
+      // Behave like Dio: the request fails only once the token is cancelled.
+      when(dioGet()).thenAnswer((invocation) async {
+        final token = invocation.namedArguments[#cancelToken] as CancelToken;
+        throw await token.whenCancel;
+      });
+      final sync = service.syncFeed(sub);
+
+      await service.suspend();
+
+      final result = await sync;
+      check(result.success).isFalse();
+      check(result.skipped).isTrue();
+      verifyNever(mockEpisodeRepo.upsertEpisodes(any));
+      verifyNever(mockSubscriptionRepo.updateLastRefreshed(any, any));
+    });
+
+    test('skips every write when suspended after the response', () async {
+      final sub = _subscription(lastRefreshedAt: null);
+      stubParseComplete();
+      late Future<void> cancelling;
+      when(dioGet()).thenAnswer((_) async {
+        cancelling = service.suspend();
+        return okResponse();
+      });
+
+      final result = await service.syncFeed(sub);
+      await cancelling;
+
+      check(result.skipped).isTrue();
+      verifyNever(
+        mockFeedParser.parseWithProgress(
+          xmlContent: anyNamed('xmlContent'),
+          podcastId: anyNamed('podcastId'),
+          knownGuids: anyNamed('knownGuids'),
+          onBatchReady: anyNamed('onBatchReady'),
+        ),
+      );
+      verifyNever(mockSubscriptionRepo.updateLastRefreshed(any, any));
+    });
+
+    test('stops batch workers from starting the next feed', () async {
+      // Six feeds, four workers: two are still queued when suspend lands.
+      final subs = [for (var i = 1; i <= 6; i++) _subscription(id: i)];
+      when(
+        mockSubscriptionRepo.getSubscriptions(),
+      ).thenAnswer((_) async => subs);
+      when(dioGet()).thenAnswer((invocation) async {
+        final token = invocation.namedArguments[#cancelToken] as CancelToken;
+        throw await token.whenCancel;
+      });
+      final batch = service.syncAllSubscriptions(forceRefresh: true);
+      await Future<void>.delayed(Duration.zero);
+
+      await service.suspend();
+
+      final result = await batch;
+      verify(dioGet()).called(4);
+      check(result.totalCount).equals(4);
+      check(result.skipCount).equals(4);
+      verifyNever(mockEpisodeRepo.upsertEpisodes(any));
+    });
+
+    test('holds a sync that was mid-lookup when suspended', () async {
+      // The batch captured its token at entry, so even after resume it
+      // must not fetch the subscriptions the lookup returns.
+      final lookup = Completer<List<Subscription>>();
+      when(
+        mockSubscriptionRepo.getSubscriptions(),
+      ).thenAnswer((_) => lookup.future);
+      final batch = service.syncAllSubscriptions(forceRefresh: true);
+
+      final suspending = service.suspend();
+      lookup.complete([_subscription()]);
+      await suspending;
+      service.resume();
+
+      final result = await batch;
+      check(result.totalCount).equals(0);
+      verifyNever(dioGet());
+    });
+
+    test('syncs started while suspended write nothing', () async {
+      when(
+        mockSubscriptionRepo.getSubscriptions(),
+      ).thenAnswer((_) async => [_subscription()]);
+      await service.suspend();
+
+      final result = await service.syncAllSubscriptions(forceRefresh: true);
+
+      check(result.totalCount).equals(0);
+      verifyNever(dioGet());
+      verifyNever(mockSubscriptionRepo.updateLastRefreshed(any, any));
+    });
+
+    test('lets syncs started after resume run normally', () async {
+      final sub = _subscription(lastRefreshedAt: null);
+      stubParseComplete();
+      when(dioGet()).thenAnswer((_) async => okResponse());
+      await service.suspend();
+      service.resume();
+
+      final result = await service.syncFeed(sub);
+
+      check(result.success).isTrue();
+      verify(mockSubscriptionRepo.updateLastRefreshed(any, any)).called(1);
     });
   });
 
@@ -564,13 +674,7 @@ void main() {
     }
 
     void stubSuccessfulSync(Subscription sub) {
-      when(mockDio.get<String>(any, options: anyNamed('options'))).thenAnswer(
-        (_) async => Response(
-          data: '<rss></rss>',
-          statusCode: 200,
-          requestOptions: RequestOptions(),
-        ),
-      );
+      when(dioGet()).thenAnswer((_) async => okResponse());
       when(
         mockEpisodeRepo.getGuidsByPodcastId(sub.id),
       ).thenAnswer((_) async => <String>{});
@@ -598,7 +702,7 @@ void main() {
 
       expect(result.totalCount, 0);
       expect(result.successCount, 0);
-      verifyNever(mockDio.get<String>(any, options: anyNamed('options')));
+      verifyNever(dioGet());
     });
 
     test('returns empty result when no matching subscriptions', () async {
@@ -643,7 +747,7 @@ void main() {
       expect(result.successCount, 2);
       expect(result.errorCount, 0);
       // Force refresh bypasses timing window
-      verify(mockDio.get<String>(any, options: anyNamed('options'))).called(2);
+      verify(dioGet()).called(2);
     });
 
     test('force refreshes even if recently synced', () async {
@@ -663,7 +767,7 @@ void main() {
 
       expect(result.successCount, 1);
       expect(result.skipCount, 0);
-      verify(mockDio.get<String>(any, options: anyNamed('options'))).called(1);
+      verify(dioGet()).called(1);
     });
 
     test('handles partial failures', () async {
@@ -689,17 +793,8 @@ void main() {
 
       // First feed succeeds
       when(
-        mockDio.get<String>(
-          'https://example.com/feed1.xml',
-          options: anyNamed('options'),
-        ),
-      ).thenAnswer(
-        (_) async => Response(
-          data: '<rss></rss>',
-          statusCode: 200,
-          requestOptions: RequestOptions(),
-        ),
-      );
+        dioGet('https://example.com/feed1.xml'),
+      ).thenAnswer((_) async => okResponse());
       when(
         mockEpisodeRepo.getGuidsByPodcastId(10),
       ).thenAnswer((_) async => <String>{});
@@ -720,12 +815,7 @@ void main() {
       ).thenAnswer((_) async {});
 
       // Second feed fails
-      when(
-        mockDio.get<String>(
-          'https://example.com/feed2.xml',
-          options: anyNamed('options'),
-        ),
-      ).thenThrow(
+      when(dioGet('https://example.com/feed2.xml')).thenThrow(
         DioException(
           requestOptions: RequestOptions(),
           type: DioExceptionType.connectionError,
@@ -760,7 +850,7 @@ void main() {
       when(mockSubscriptionRepo.getById(10)).thenAnswer((_) async => sub1);
       when(mockSubscriptionRepo.getById(20)).thenAnswer((_) async => sub2);
 
-      when(mockDio.get<String>(any, options: anyNamed('options'))).thenThrow(
+      when(dioGet()).thenThrow(
         DioException(
           requestOptions: RequestOptions(),
           type: DioExceptionType.connectionError,
@@ -801,13 +891,7 @@ void main() {
 
   group('syncFeedsByUrls', () {
     void stubMetadataSync({required String imageUrl}) {
-      when(mockDio.get<String>(any, options: anyNamed('options'))).thenAnswer(
-        (_) async => Response(
-          data: '<rss></rss>',
-          statusCode: 200,
-          requestOptions: RequestOptions(),
-        ),
-      );
+      when(dioGet()).thenAnswer((_) async => okResponse());
       when(
         mockEpisodeRepo.getGuidsByPodcastId(any),
       ).thenAnswer((_) async => <String>{});
@@ -851,7 +935,7 @@ void main() {
       ]);
 
       check(result.totalCount).equals(0);
-      verifyNever(mockDio.get<String>(any, options: anyNamed('options')));
+      verifyNever(dioGet());
     });
 
     test('backfills artwork for every imported feed', () async {
@@ -942,7 +1026,7 @@ void main() {
 
       check(result.successCount).equals(1);
       check(result.skipCount).equals(0);
-      verify(mockDio.get<String>(any, options: anyNamed('options'))).called(1);
+      verify(dioGet()).called(1);
     });
 
     test('reports a failed feed without aborting the others', () async {
@@ -964,9 +1048,7 @@ void main() {
         mockSubscriptionRepo.getByFeedUrl(sub2.feedUrl),
       ).thenAnswer((_) async => sub2);
       stubMetadataSync(imageUrl: 'https://example.com/art.jpg');
-      when(
-        mockDio.get<String>(sub2.feedUrl, options: anyNamed('options')),
-      ).thenThrow(Exception('network down'));
+      when(dioGet(sub2.feedUrl)).thenThrow(Exception('network down'));
 
       final result = await service.syncFeedsByUrls([
         sub1.feedUrl,
@@ -1003,17 +1085,11 @@ void main() {
       // which is the last thing a successful sync does.
       var inFlight = 0;
       var peakInFlight = 0;
-      when(mockDio.get<String>(any, options: anyNamed('options'))).thenAnswer((
-        _,
-      ) async {
+      when(dioGet()).thenAnswer((_) async {
         inFlight++;
         if (peakInFlight < inFlight) peakInFlight = inFlight;
         await Future<void>.delayed(Duration.zero);
-        return Response(
-          data: '<rss></rss>',
-          statusCode: 200,
-          requestOptions: RequestOptions(),
-        );
+        return okResponse();
       });
       when(mockSubscriptionRepo.updateLastRefreshed(any, any)).thenAnswer((
         _,
