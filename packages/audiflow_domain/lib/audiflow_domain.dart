@@ -33,6 +33,7 @@ export 'src/common/providers/database_provider.dart';
 export 'src/common/providers/http_client_provider.dart';
 export 'src/common/providers/logger_provider.dart';
 export 'src/common/providers/platform_providers.dart';
+export 'src/common/services/suspendable_writer.dart';
 
 // Common datasources
 export 'src/common/datasources/shared_preferences_datasource.dart';

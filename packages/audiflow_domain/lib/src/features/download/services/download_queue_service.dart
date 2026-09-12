@@ -6,6 +6,7 @@ import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/providers/logger_provider.dart';
+import '../../../common/services/suspendable_writer.dart';
 import '../models/download_task.dart';
 import '../../feed/repositories/episode_repository.dart';
 import '../../feed/repositories/episode_repository_impl.dart';
@@ -85,7 +86,7 @@ Future<void> _emitDownloadCompleted(Ref ref, int episodeId, int bytes) async {
   );
 }
 
-class DownloadQueueService {
+class DownloadQueueService implements SuspendableWriter {
   DownloadQueueService({
     required this._repository,
     required this._fileService,
@@ -110,16 +111,20 @@ class DownloadQueueService {
   bool _isOnWifi = false;
   Timer? _retryTimer;
 
-  /// The running queue drain, so [cancelAll] can wait for it to settle.
+  /// The running queue drain, so [suspend] can wait for it to settle.
   Future<void>? _processing;
 
   bool get _isProcessing => _processing != null;
 
-  /// Set by [cancelAll]. While set, the drain loop stops instead of picking
-  /// up the next pending task and automatic triggers (connectivity, retry
-  /// timer) leave the queue idle; only an explicit start lifts it, so the
-  /// queue stays quiet while a reset clears storage.
-  bool _stopRequested = false;
+  /// Progress writes are fired from the download callback without being
+  /// awaited; [suspend] waits for them so none lands after a reset clears
+  /// the task row.
+  final _pendingProgressWrites = <Future<void>>{};
+
+  /// Set by [suspend], cleared by [resume]. While set, the drain loop stops
+  /// instead of picking up the next pending task and every start request
+  /// leaves the queue idle, so it stays quiet while a reset clears storage.
+  bool _isSuspended = false;
 
   final _activeDownloadController = StreamController<DownloadTask?>.broadcast();
 
@@ -163,11 +168,8 @@ class DownloadQueueService {
     }
   }
 
-  /// Starts processing the download queue.
-  ///
-  /// An explicit start lifts a [cancelAll] stop; automatic triggers do not.
+  /// Starts processing the download queue. A no-op while suspended.
   Future<void> startQueue() async {
-    _stopRequested = false;
     await _processQueue();
   }
 
@@ -180,12 +182,12 @@ class DownloadQueueService {
   Future<void> _drainQueue() async {
     try {
       // The flag is checked twice: once so a cancelled download does not
-      // trigger another query, and again after the query so a cancelAll
+      // trigger another query, and again after the query so a suspend
       // that landed while it ran does not start a download it has no
       // token to cancel.
-      while (!_stopRequested) {
+      while (!_isSuspended) {
         final nextTask = await _repository.getNextPending(isOnWifi: _isOnWifi);
-        if (nextTask == null || _stopRequested) break;
+        if (nextTask == null || _isSuspended) break;
 
         await _processDownload(nextTask);
       }
@@ -216,9 +218,9 @@ class DownloadQueueService {
       }
 
       // The file service only registers its cancel token once the download
-      // starts, so a cancelAll that landed during the awaits above would
+      // starts, so a suspend that landed during the awaits above would
       // otherwise let this download run to completion unopposed.
-      if (_stopRequested) throw DownloadException.cancelled();
+      if (_isSuspended) throw DownloadException.cancelled();
 
       // Throttle progress updates to avoid overwhelming the database
       var lastUpdateTime = DateTime.now();
@@ -241,10 +243,12 @@ class DownloadQueueService {
           if (minUpdateInterval <= timeDelta || minBytesDelta <= bytesDelta) {
             lastUpdateTime = now;
             lastReportedBytes = downloaded;
-            _repository.updateProgress(
-              id: task.id,
-              downloadedBytes: downloaded,
-              totalBytes: total,
+            _trackProgressWrite(
+              _repository.updateProgress(
+                id: task.id,
+                downloadedBytes: downloaded,
+                totalBytes: total,
+              ),
             );
           }
         },
@@ -335,7 +339,7 @@ class DownloadQueueService {
       id: taskId,
       status: const DownloadStatus.pending(),
     );
-    unawaited(startQueue());
+    unawaited(_processQueue());
   }
 
   /// Cancels a download.
@@ -347,15 +351,17 @@ class DownloadQueueService {
     );
   }
 
-  /// Cancels the active download, stops the queue loop, and waits for the
-  /// in-flight task to settle. The queue stays idle until [startQueue].
+  /// Cancels the active download, stops the queue loop, waits for the
+  /// in-flight task and its progress writes to settle, and holds the queue
+  /// idle until [resume].
   ///
   /// "Reset All Data" calls this before clearing storage: without the wait,
   /// the cancelled task's status write could land after `Isar.clear()` and
   /// the file service could recreate the downloads directory it just
   /// removed. Pending tasks are left in place; the caller clears them.
-  Future<void> cancelAll() async {
-    _stopRequested = true;
+  @override
+  Future<void> suspend() async {
+    _isSuspended = true;
     _retryTimer?.cancel();
     final active = _activeDownload;
     if (active != null) _fileService.cancelDownload(active.id);
@@ -365,11 +371,25 @@ class DownloadQueueService {
       // The drain's own caller already receives this error; a failing
       // queue is no reason to refuse the reset that would clear it.
       _logger.w(
-        'Queue drain failed while cancelling',
+        'Queue drain failed while suspending',
         error: e,
         stackTrace: stack,
       );
     }
+    await Future.wait(_pendingProgressWrites.toList());
+  }
+
+  @override
+  void resume() {
+    _isSuspended = false;
+  }
+
+  void _trackProgressWrite(Future<void> write) {
+    // Best-effort tracking; a failed progress write must not surface as an
+    // unhandled error from the download callback.
+    final tracked = write.catchError((Object _) {});
+    _pendingProgressWrites.add(tracked);
+    tracked.whenComplete(() => _pendingProgressWrites.remove(tracked));
   }
 
   /// Retries a failed download.
@@ -384,7 +404,7 @@ class DownloadQueueService {
       lastError: null,
     );
 
-    unawaited(startQueue());
+    unawaited(_processQueue());
   }
 
   void dispose() {

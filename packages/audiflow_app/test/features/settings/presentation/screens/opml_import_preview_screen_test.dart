@@ -79,7 +79,10 @@ class _RecordingFeedSyncService implements FeedSyncService {
   }) => throw UnimplementedError();
 
   @override
-  Future<void> cancelAll() => throw UnimplementedError();
+  Future<void> suspend() => throw UnimplementedError();
+
+  @override
+  void resume() => throw UnimplementedError();
 }
 
 OpmlEntry _entry(String title, String feedUrl) =>

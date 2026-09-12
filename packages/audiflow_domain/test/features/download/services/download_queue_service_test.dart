@@ -176,12 +176,12 @@ void main() {
     });
   });
 
-  group('cancelAll', () {
+  group('suspend', () {
     test('completes immediately when the queue is idle', () async {
       await Future<void>.delayed(Duration.zero);
       clearInteractions(mockRepository);
 
-      await service.cancelAll();
+      await service.suspend();
 
       verifyNever(mockFileService.cancelDownload(any));
       verifyNever(
@@ -241,9 +241,9 @@ void main() {
         check(service.activeDownload?.id).equals(1);
 
         // Act
-        await service.cancelAll();
+        await service.suspend();
 
-        // Assert: the cancelled status landed before cancelAll returned, and
+        // Assert: the cancelled status landed before suspend returned, and
         // the drain loop did not pick up the second task.
         verify(mockFileService.cancelDownload(1)).called(1);
         verify(
@@ -266,7 +266,7 @@ void main() {
     );
 
     test('does not start a task fetched while cancelling', () async {
-      // Arrange: the pending-task query is still running when cancelAll
+      // Arrange: the pending-task query is still running when suspend
       // lands, so there is no active download to cancel yet.
       final task = _task(id: 1, episodeId: 10);
       await Future<void>.delayed(Duration.zero);
@@ -277,7 +277,7 @@ void main() {
       ).thenAnswer((_) => query.future);
 
       final processing = service.startQueue();
-      final cancelling = service.cancelAll();
+      final cancelling = service.suspend();
       query.complete(task);
       await cancelling;
       await processing;
@@ -302,20 +302,89 @@ void main() {
       // The expectation is attached before the error fires so the drain's
       // failure reaches its caller instead of the zone's uncaught handler.
       final failure = check(service.startQueue()).throws<StateError>();
-      final cancelling = service.cancelAll();
+      final cancelling = service.suspend();
       query.completeError(StateError('database closed'));
 
       await cancelling;
       await failure;
     });
 
-    test('lets the queue drain again after cancellation', () async {
+    test('waits for a pending progress write', () async {
+      final task = _task(id: 1, episodeId: 10);
+      final episode = _episode(id: 10);
       await Future<void>.delayed(Duration.zero);
       clearInteractions(mockRepository);
-      await service.cancelAll();
+      var pendingCalls = 0;
       when(
         mockRepository.getNextPending(isOnWifi: anyNamed('isOnWifi')),
-      ).thenAnswer((_) async => null);
+      ).thenAnswer((_) async => ++pendingCalls == 1 ? task : null);
+      when(
+        mockRepository.updateStatus(
+          id: anyNamed('id'),
+          status: anyNamed('status'),
+          localPath: anyNamed('localPath'),
+          lastError: anyNamed('lastError'),
+        ),
+      ).thenAnswer((_) async {});
+      when(mockEpisodeRepo.getById(10)).thenAnswer((_) async => episode);
+      final progressWrite = Completer<void>();
+      when(
+        mockRepository.updateProgress(
+          id: anyNamed('id'),
+          downloadedBytes: anyNamed('downloadedBytes'),
+          totalBytes: anyNamed('totalBytes'),
+        ),
+      ).thenAnswer((_) => progressWrite.future);
+      final download = Completer<String>();
+      when(
+        mockFileService.downloadFile(
+          taskId: 1,
+          url: task.audioUrl,
+          episodeId: task.episodeId,
+          episodeTitle: episode.title,
+          resumeFromBytes: task.downloadedBytes,
+          onProgress: anyNamed('onProgress'),
+        ),
+      ).thenAnswer((invocation) {
+        final onProgress =
+            invocation.namedArguments[#onProgress] as DownloadProgressCallback;
+        // Past the byte threshold, so the throttle lets the write through.
+        onProgress(200 * 1024, 1024 * 1024);
+        return download.future;
+      });
+      when(mockFileService.cancelDownload(1)).thenAnswer((_) {
+        download.completeError(DownloadException.cancelled());
+      });
+      unawaited(service.startQueue());
+      await Future<void>.delayed(Duration.zero);
+
+      var suspended = false;
+      unawaited(service.suspend().then((_) => suspended = true));
+      await Future<void>.delayed(Duration.zero);
+
+      check(suspended).isFalse();
+      progressWrite.complete();
+      await Future<void>.delayed(Duration.zero);
+      check(suspended).isTrue();
+    });
+
+    test('keeps the queue idle until resumed', () async {
+      await Future<void>.delayed(Duration.zero);
+      clearInteractions(mockRepository);
+      await service.suspend();
+
+      await service.startQueue();
+
+      verifyNever(
+        mockRepository.getNextPending(isOnWifi: anyNamed('isOnWifi')),
+      );
+    });
+
+    test('lets the queue drain again after resume', () async {
+      await Future<void>.delayed(Duration.zero);
+      clearInteractions(mockRepository);
+      await service.suspend();
+      service.resume();
 
       await service.startQueue();
 

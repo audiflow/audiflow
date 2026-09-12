@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
 import 'package:dio/dio.dart';
@@ -470,7 +472,7 @@ void main() {
     });
   });
 
-  group('cancelAll', () {
+  group('suspend', () {
     void stubParseComplete() {
       when(
         mockFeedParser.parseWithProgress(
@@ -501,7 +503,7 @@ void main() {
       });
       final sync = service.syncFeed(sub);
 
-      await service.cancelAll();
+      await service.suspend();
 
       final result = await sync;
       check(result.success).isFalse();
@@ -510,12 +512,12 @@ void main() {
       verifyNever(mockSubscriptionRepo.updateLastRefreshed(any, any));
     });
 
-    test('skips every write when cancelled after the response', () async {
+    test('skips every write when suspended after the response', () async {
       final sub = _subscription(lastRefreshedAt: null);
       stubParseComplete();
       late Future<void> cancelling;
       when(dioGet()).thenAnswer((_) async {
-        cancelling = service.cancelAll();
+        cancelling = service.suspend();
         return okResponse();
       });
 
@@ -535,7 +537,7 @@ void main() {
     });
 
     test('stops batch workers from starting the next feed', () async {
-      // Six feeds, four workers: two are still queued when cancelAll lands.
+      // Six feeds, four workers: two are still queued when suspend lands.
       final subs = [for (var i = 1; i <= 6; i++) _subscription(id: i)];
       when(
         mockSubscriptionRepo.getSubscriptions(),
@@ -547,7 +549,7 @@ void main() {
       final batch = service.syncAllSubscriptions(forceRefresh: true);
       await Future<void>.delayed(Duration.zero);
 
-      await service.cancelAll();
+      await service.suspend();
 
       final result = await batch;
       verify(dioGet()).called(4);
@@ -556,11 +558,44 @@ void main() {
       verifyNever(mockEpisodeRepo.upsertEpisodes(any));
     });
 
-    test('lets syncs started afterwards run normally', () async {
+    test('holds a sync that was mid-lookup when suspended', () async {
+      // The batch captured its token at entry, so even after resume it
+      // must not fetch the subscriptions the lookup returns.
+      final lookup = Completer<List<Subscription>>();
+      when(
+        mockSubscriptionRepo.getSubscriptions(),
+      ).thenAnswer((_) => lookup.future);
+      final batch = service.syncAllSubscriptions(forceRefresh: true);
+
+      final suspending = service.suspend();
+      lookup.complete([_subscription()]);
+      await suspending;
+      service.resume();
+
+      final result = await batch;
+      check(result.totalCount).equals(0);
+      verifyNever(dioGet());
+    });
+
+    test('syncs started while suspended write nothing', () async {
+      when(
+        mockSubscriptionRepo.getSubscriptions(),
+      ).thenAnswer((_) async => [_subscription()]);
+      await service.suspend();
+
+      final result = await service.syncAllSubscriptions(forceRefresh: true);
+
+      check(result.totalCount).equals(0);
+      verifyNever(dioGet());
+      verifyNever(mockSubscriptionRepo.updateLastRefreshed(any, any));
+    });
+
+    test('lets syncs started after resume run normally', () async {
       final sub = _subscription(lastRefreshedAt: null);
       stubParseComplete();
       when(dioGet()).thenAnswer((_) async => okResponse());
-      await service.cancelAll();
+      await service.suspend();
+      service.resume();
 
       final result = await service.syncFeed(sub);
 

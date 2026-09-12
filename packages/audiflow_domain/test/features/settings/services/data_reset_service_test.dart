@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:audiflow_domain/audiflow_domain.dart';
@@ -19,14 +20,36 @@ class _WriterLog {
   final Isar _isar;
   final Directory _downloadsDir;
   final List<(String, int, bool)> calls = [];
+  Future<void> _chain = Future.value();
 
-  Future<void> record(String writer) async {
-    calls.add((
-      writer,
-      await _isar.subscriptions.count(),
-      await _downloadsDir.exists(),
-    ));
+  /// Records are serialized so their order matches the call order even
+  /// when a caller (resume) does not await them.
+  Future<void> record(String writer) {
+    return _chain = _chain.then((_) async {
+      calls.add((
+        writer,
+        await _isar.subscriptions.count(),
+        await _downloadsDir.exists(),
+      ));
+    });
   }
+
+  /// Completes once every record issued so far has been appended.
+  Future<void> settle() => _chain;
+}
+
+/// A writer that reports its suspend and resume calls to the log.
+class _FakeWriter implements SuspendableWriter {
+  _FakeWriter(this._name, this._log);
+
+  final String _name;
+  final _WriterLog _log;
+
+  @override
+  Future<void> suspend() => _log.record('$_name.suspend');
+
+  @override
+  void resume() => unawaited(_log.record('$_name.resume'));
 }
 
 class _FakePlaybackController implements AudioPlaybackController {
@@ -71,8 +94,10 @@ void main() {
       preferences: preferences,
       playback: _FakePlaybackController(writers),
       cancelBackgroundTasks: () => writers.record('backgroundTasks'),
-      cancelDownloads: () => writers.record('downloads'),
-      cancelFeedSync: () => writers.record('feedSync'),
+      writers: [
+        _FakeWriter('downloads', writers),
+        _FakeWriter('feedSync', writers),
+      ],
       resolveDownloadsDirectory: resolveDownloadsDirectory,
     );
   }
@@ -98,6 +123,9 @@ void main() {
   });
 
   tearDown(() async {
+    // Resume records are not awaited by the reset; let them finish before
+    // the database they read from is closed.
+    await writers.settle();
     await isar.close(deleteFromDisk: true);
     if (await downloadsDir.exists()) {
       await downloadsDir.delete(recursive: true);
@@ -130,19 +158,37 @@ void main() {
       check(after.values).every((count) => count.equals(0));
     });
 
-    test('stops every writer before clearing what it writes to', () async {
+    test('suspends every writer until storage is cleared', () async {
       await seedEveryCollection(isar);
 
       await service.resetAll();
+      await writers.settle();
 
-      // Downloads are stopped while their files still exist; the feed sync
-      // is cancelled last, right before the database clear.
+      // Writers are suspended while their storage still exists and resumed
+      // in reverse order only once files, database, and prefs are gone.
       check(writers.calls).deepEquals([
         ('playback', 1, true),
         ('backgroundTasks', 1, true),
-        ('downloads', 1, true),
-        ('feedSync', 1, false),
+        ('downloads.suspend', 1, true),
+        ('feedSync.suspend', 1, true),
+        ('feedSync.resume', 0, false),
+        ('downloads.resume', 0, false),
       ]);
+    });
+
+    test('resumes writers when the reset fails', () async {
+      final blockedService = buildService(
+        resolveDownloadsDirectory: () async =>
+            throw const FileSystemException('boom'),
+      );
+
+      await check(blockedService.resetAll()).throws<FileSystemException>();
+      await writers.settle();
+
+      final names = writers.calls.map((call) => call.$1).toList();
+      check(
+        names.sublist(names.length - 2),
+      ).deepEquals(['feedSync.resume', 'downloads.resume']);
     });
 
     test('leaves the database untouched when file deletion fails', () async {

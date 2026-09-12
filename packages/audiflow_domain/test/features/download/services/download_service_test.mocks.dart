@@ -291,13 +291,19 @@ class MockDownloadQueueService extends _i1.Mock
           as _i4.Future<void>);
 
   @override
-  _i4.Future<void> cancelAll() =>
+  _i4.Future<void> suspend() =>
       (super.noSuchMethod(
-            Invocation.method(#cancelAll, []),
+            Invocation.method(#suspend, []),
             returnValue: _i4.Future<void>.value(),
             returnValueForMissingStub: _i4.Future<void>.value(),
           )
           as _i4.Future<void>);
+
+  @override
+  void resume() => super.noSuchMethod(
+    Invocation.method(#resume, []),
+    returnValueForMissingStub: null,
+  );
 
   @override
   _i4.Future<void> retryDownload(int? taskId) =>

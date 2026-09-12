@@ -7,6 +7,7 @@ import '../../../common/datasources/shared_preferences_datasource.dart';
 import '../../../common/providers/background_task_canceller_provider.dart';
 import '../../../common/providers/database_provider.dart';
 import '../../../common/providers/platform_providers.dart';
+import '../../../common/services/suspendable_writer.dart';
 import '../../download/services/download_file_service.dart';
 import '../../download/services/download_queue_service.dart';
 import '../../feed/services/feed_sync_service.dart';
@@ -32,15 +33,17 @@ DataResetService dataResetService(Ref ref) {
     ),
     playback: ref.watch(audioPlayerControllerProvider.notifier),
     cancelBackgroundTasks: ref.watch(backgroundTaskCancellerProvider),
-    cancelDownloads: ref.watch(downloadQueueServiceProvider).cancelAll,
-    cancelFeedSync: ref.watch(feedSyncServiceProvider).cancelAll,
+    writers: [
+      ref.watch(downloadQueueServiceProvider),
+      ref.watch(feedSyncServiceProvider),
+    ],
     resolveDownloadsDirectory: fileService.getDownloadsDirectory,
   );
 }
 
 /// Returns the app to its initial state: playback is stopped and every
-/// in-flight writer is cancelled, then every downloaded file, every Isar
-/// collection, and every SharedPreferences key is removed.
+/// writer is suspended, then every downloaded file, every Isar collection,
+/// and every SharedPreferences key is removed.
 ///
 /// Isar is cleared with [Isar.clear] rather than per collection so a
 /// collection added later cannot drift out of the reset path; the
@@ -51,44 +54,46 @@ class DataResetService {
     required this._preferences,
     required this._playback,
     required this._cancelBackgroundTasks,
-    required this._cancelDownloads,
-    required this._cancelFeedSync,
+    required this._writers,
     required this._resolveDownloadsDirectory,
   });
 
   final Isar _isar;
   final SharedPreferencesDataSource _preferences;
   final AudioPlaybackController _playback;
-
-  /// Writer cancellers are injected as functions so the reset can be tested
-  /// without constructing the download queue (which listens to
-  /// connectivity) or the feed sync service (which needs a provider graph).
   final WriterCanceller _cancelBackgroundTasks;
-  final WriterCanceller _cancelDownloads;
-  final WriterCanceller _cancelFeedSync;
+
+  /// Foreground services that write to storage, in suspend order.
+  final List<SuspendableWriter> _writers;
   final DownloadsDirectoryResolver _resolveDownloadsDirectory;
 
   /// Wipes all local data. Throws on I/O failure so the caller can report
   /// a partial reset instead of claiming success.
   ///
-  /// Every writer is stopped and awaited before the storage it writes to
-  /// is cleared, so a status write or an episode upsert that was mid-flight
-  /// lands before the clear, not after. Playback stops first: the progress
-  /// ticker would otherwise re-create a PlaybackHistory row for the current
+  /// Every writer is suspended before the storage it writes to is cleared
+  /// and resumed only afterwards, so a status write or an episode upsert
+  /// that was mid-flight lands before the clear, and work started during
+  /// the reset writes nothing. Playback stops first: the progress ticker
+  /// would otherwise re-create a PlaybackHistory row for the current
   /// episode seconds after the clear.
   Future<void> resetAll() async {
     await _playback.stop();
     await _cancelBackgroundTasks();
-    await _cancelDownloads();
-    // File deletion is the step most likely to fail, so it runs before the
-    // database and preferences are touched; a failure then leaves the
-    // parental PIN and consent state intact rather than half-reset.
-    await _deleteDownloads();
-    // A sync started after this point (app resume, pull to refresh) is not
-    // held back, so cancel right before the clear to keep that window short.
-    await _cancelFeedSync();
-    await _isar.writeTxn(() => _isar.clear());
-    await _preferences.clear();
+    for (final writer in _writers) {
+      await writer.suspend();
+    }
+    try {
+      // File deletion is the step most likely to fail, so it runs before
+      // the database and preferences are touched; a failure then leaves
+      // the parental PIN and consent state intact rather than half-reset.
+      await _deleteDownloads();
+      await _isar.writeTxn(() => _isar.clear());
+      await _preferences.clear();
+    } finally {
+      for (final writer in _writers.reversed) {
+        writer.resume();
+      }
+    }
   }
 
   Future<void> _deleteDownloads() async {
