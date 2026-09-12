@@ -85,7 +85,17 @@ class FeedSyncService implements SuspendableWriter {
   @override
   Future<void> suspend() async {
     _cancelToken.cancel('Feed sync suspended');
-    await Future.wait(_inFlight.toList());
+    try {
+      await Future.wait(_inFlight.toList());
+    } catch (e, stack) {
+      // The sync's own caller already receives this error; a failing sync
+      // is no reason to refuse the reset that would clear its data.
+      _logger.w(
+        'Feed sync failed while suspending',
+        error: e,
+        stackTrace: stack,
+      );
+    }
   }
 
   @override

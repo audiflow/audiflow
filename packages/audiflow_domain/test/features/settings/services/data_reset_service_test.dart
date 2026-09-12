@@ -45,8 +45,15 @@ class _FakeWriter implements SuspendableWriter {
   final String _name;
   final _WriterLog _log;
 
+  /// When set, suspending fails the way a broken in-flight sync would.
+  Object? suspendFailure;
+
   @override
-  Future<void> suspend() => _log.record('$_name.suspend');
+  Future<void> suspend() async {
+    await _log.record('$_name.suspend');
+    final failure = suspendFailure;
+    if (failure != null) throw failure;
+  }
 
   @override
   void resume() => unawaited(_log.record('$_name.resume'));
@@ -174,6 +181,28 @@ void main() {
         ('feedSync.resume', 0, false),
         ('downloads.resume', 0, false),
       ]);
+    });
+
+    test('resumes earlier writers when a later suspend fails', () async {
+      final downloads = _FakeWriter('downloads', writers);
+      final feedSync = _FakeWriter('feedSync', writers)
+        ..suspendFailure = StateError('sync broke');
+      final failingService = DataResetService(
+        isar: isar,
+        preferences: preferences,
+        playback: _FakePlaybackController(writers),
+        cancelBackgroundTasks: () => writers.record('backgroundTasks'),
+        writers: [downloads, feedSync],
+        resolveDownloadsDirectory: () async => downloadsDir.path,
+      );
+
+      await check(failingService.resetAll()).throws<StateError>();
+      await writers.settle();
+
+      final names = writers.calls.map((call) => call.$1).toList();
+      check(
+        names.sublist(names.length - 3),
+      ).deepEquals(['feedSync.suspend', 'feedSync.resume', 'downloads.resume']);
     });
 
     test('resumes writers when the reset fails', () async {

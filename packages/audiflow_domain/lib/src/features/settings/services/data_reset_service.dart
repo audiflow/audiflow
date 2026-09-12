@@ -79,10 +79,12 @@ class DataResetService {
   Future<void> resetAll() async {
     await _playback.stop();
     await _cancelBackgroundTasks();
-    for (final writer in _writers) {
-      await writer.suspend();
-    }
+    // Suspending happens inside the try so a writer that fails to suspend
+    // does not strand the ones suspended before it.
     try {
+      for (final writer in _writers) {
+        await writer.suspend();
+      }
       // File deletion is the step most likely to fail, so it runs before
       // the database and preferences are touched; a failure then leaves
       // the parental PIN and consent state intact rather than half-reset.
