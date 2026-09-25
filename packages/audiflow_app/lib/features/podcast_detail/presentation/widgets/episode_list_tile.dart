@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
@@ -11,6 +13,7 @@ import '../../../download/presentation/helpers/download_action_helper.dart';
 import '../../../queue/presentation/controllers/queue_controller.dart';
 import '../../../share/presentation/helpers/share_helper.dart';
 import '../controllers/podcast_detail_controller.dart';
+import '../helpers/played_status_helper.dart';
 import 'episode_pill_duration_label.dart';
 
 /// Displays a single episode (PodcastItem) with playback controls.
@@ -350,8 +353,19 @@ class EpisodeListTile extends ConsumerWidget {
                           isCompleted ? l10n.markAsUnplayed : l10n.markAsPlayed,
                         ),
                         onTap: () {
+                          // Sheet context: the tile may already be unmounted.
+                          final container = ProviderScope.containerOf(
+                            sheetContext,
+                            listen: false,
+                          );
                           Navigator.pop(sheetContext);
-                          _togglePlayedStatus(ref, audioUrl, isCompleted);
+                          unawaited(
+                            togglePlayedStatus(
+                              container,
+                              audioUrl: audioUrl,
+                              isCurrentlyCompleted: isCompleted,
+                            ),
+                          );
                         },
                       ),
                     if (episodeId != null)
@@ -434,27 +448,6 @@ class EpisodeListTile extends ConsumerWidget {
         );
       },
     );
-  }
-
-  Future<void> _togglePlayedStatus(
-    WidgetRef ref,
-    String audioUrl,
-    bool isCurrentlyCompleted,
-  ) async {
-    final episodeRepo = ref.read(episodeRepositoryProvider);
-    final episode = await episodeRepo.getByAudioUrl(audioUrl);
-    if (episode == null) return;
-
-    final historyService = ref.read(playbackHistoryServiceProvider);
-    if (isCurrentlyCompleted) {
-      await historyService.markIncomplete(episode.id);
-    } else {
-      await historyService.markCompleted(episode.id);
-    }
-
-    ref.invalidate(episodeProgressProvider);
-    ref.invalidate(podcastEpisodeProgressProvider);
-    ref.invalidate(smartPlaylistEpisodesProvider);
   }
 
   Widget _buildDownloadButton(
