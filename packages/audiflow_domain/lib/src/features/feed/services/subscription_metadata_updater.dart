@@ -28,12 +28,11 @@ class SubscriptionMetadataUpdate {
 /// with no artwork, no author, and no description, and nothing else ever
 /// fills them in. The channel element supplies all three.
 ///
-/// Author and description follow the feed: a non-empty channel value replaces
-/// the stored one, so a show that renames itself stays current. Artwork is
-/// only ever filled in when missing — the channel image is 1400-3000 px per
-/// Apple's spec while a search-sourced `artworkUrl` is 600 px, and artwork is
-/// decoded at its intrinsic size, so replacing a stored URL would multiply
-/// decoded image memory across the whole library.
+/// Artwork, author, and description follow the feed: a non-empty channel
+/// value replaces the stored one, so a show that renames itself or replaces
+/// its artwork stays current. The channel image is 1400-3000 px per Apple's
+/// spec, so every artwork render site bounds its decode size to what it
+/// displays rather than decoding at the intrinsic size.
 ///
 /// A blank channel value is never written, so a sparse feed cannot erase
 /// metadata that a podcast search already supplied.
@@ -71,7 +70,7 @@ class SubscriptionMetadataUpdater {
 
     await _repository.updateFeedMetadata(
       sub.id,
-      artworkUrlIfMissing: update.artworkUrl,
+      artworkUrl: update.artworkUrl,
       artistName: update.artistName,
       description: update.description,
       syncedAt: DateTime.now(),
@@ -86,9 +85,7 @@ class SubscriptionMetadataUpdater {
     String? description,
   }) {
     return SubscriptionMetadataUpdate(
-      artworkUrl: _isBlank(sub.artworkUrl)
-          ? _changedValue(imageUrl, sub.artworkUrl)
-          : null,
+      artworkUrl: _changedValue(imageUrl, sub.artworkUrl),
       artistName: _changedValue(author, sub.artistName),
       description: _changedValue(description, sub.description),
     );

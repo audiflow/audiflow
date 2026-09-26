@@ -340,7 +340,7 @@ class MockSubscriptionRepository extends _i1.Mock
   @override
   _i11.Future<void> updateFeedMetadata(
     int? id, {
-    String? artworkUrlIfMissing,
+    String? artworkUrl,
     String? artistName,
     String? description,
     DateTime? syncedAt,
@@ -350,7 +350,7 @@ class MockSubscriptionRepository extends _i1.Mock
               #updateFeedMetadata,
               [id],
               {
-                #artworkUrlIfMissing: artworkUrlIfMissing,
+                #artworkUrl: artworkUrl,
                 #artistName: artistName,
                 #description: description,
                 #syncedAt: syncedAt,

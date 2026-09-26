@@ -299,7 +299,7 @@ void main() {
       verify(
         mockSubscriptionRepo.updateFeedMetadata(
           sub.id,
-          artworkUrlIfMissing: 'https://example.com/art.jpg',
+          artworkUrl: 'https://example.com/art.jpg',
           artistName: 'Jane Doe',
           description: 'Show notes',
           syncedAt: anyNamed('syncedAt'),
@@ -974,7 +974,7 @@ void main() {
       verify(
         mockSubscriptionRepo.updateFeedMetadata(
           any,
-          artworkUrlIfMissing: 'https://example.com/art.jpg',
+          artworkUrl: 'https://example.com/art.jpg',
           artistName: 'Jane Doe',
           description: 'Show notes',
           syncedAt: anyNamed('syncedAt'),
