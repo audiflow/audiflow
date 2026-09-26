@@ -464,11 +464,10 @@ class _PlayerArtwork extends StatelessWidget {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(16),
           child: artworkUrl != null
-              ? Image.network(
-                  artworkUrl!,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) =>
-                      _Placeholder(colorScheme: colorScheme),
+              ? ArtworkImage(
+                  url: artworkUrl!,
+                  loading: const SizedBox.shrink(),
+                  placeholder: _Placeholder(colorScheme: colorScheme),
                 )
               : _Placeholder(colorScheme: colorScheme),
         ),

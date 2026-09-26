@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
+import '../artwork_image.dart';
+
 /// Artwork widget for the mini player.
 ///
 /// Displays episode artwork with rounded corners and a fallback placeholder
@@ -33,22 +35,14 @@ class MiniPlayerArtwork extends StatelessWidget {
           width: size,
           height: size,
           child: imageUrl != null
-              ? Image.network(
-                  imageUrl!,
-                  fit: BoxFit.cover,
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) return child;
-                    return _MiniPlayerArtworkPlaceholder(
-                      colorScheme: colorScheme,
-                      size: size,
-                    );
-                  },
-                  errorBuilder: (context, error, stackTrace) {
-                    return _MiniPlayerArtworkPlaceholder(
-                      colorScheme: colorScheme,
-                      size: size,
-                    );
-                  },
+              ? ArtworkImage(
+                  url: imageUrl!,
+                  width: size,
+                  height: size,
+                  placeholder: _MiniPlayerArtworkPlaceholder(
+                    colorScheme: colorScheme,
+                    size: size,
+                  ),
                 )
               : _MiniPlayerArtworkPlaceholder(
                   colorScheme: colorScheme,

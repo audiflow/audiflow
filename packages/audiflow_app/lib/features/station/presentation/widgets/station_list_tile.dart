@@ -96,12 +96,12 @@ class _StationMosaic extends StatelessWidget {
 
   Widget _buildCell(String? url, double cellSize) {
     final child = url != null
-        ? Image.network(
-            url,
+        ? ArtworkImage(
+            url: url,
             width: cellSize,
             height: cellSize,
-            fit: BoxFit.cover,
-            errorBuilder: (_, _, _) => _placeholder(cellSize),
+            loading: const SizedBox.shrink(),
+            placeholder: _placeholder(cellSize),
           )
         : _placeholder(cellSize);
     return SizedBox(width: cellSize, height: cellSize, child: child);
