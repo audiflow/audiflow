@@ -93,7 +93,10 @@ class _FeedSyncSettingsScreenState extends ConsumerState<FeedSyncSettingsScreen>
     bool replaceExisting = false,
   }) async {
     await setter();
-    ref.invalidate(appSettingsRepositoryProvider);
+    // The screen may have closed mid-write (e.g. the automatic save in
+    // _applyPermission): skip ref, but still re-register, which needs only
+    // repo, so the background task sees the new value.
+    if (mounted) ref.invalidate(appSettingsRepositoryProvider);
     await _updateBackgroundRegistration(repo, replaceExisting: replaceExisting);
   }
 
