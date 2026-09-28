@@ -813,10 +813,12 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
         width: size,
         height: size,
         child: artworkUrl != null
-            ? Image.network(
-                artworkUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => _artworkPlaceholder(colorScheme),
+            ? ArtworkImage(
+                url: artworkUrl,
+                width: size,
+                height: size,
+                loading: const SizedBox.shrink(),
+                placeholder: _artworkPlaceholder(colorScheme),
               )
             : _artworkPlaceholder(colorScheme),
       ),

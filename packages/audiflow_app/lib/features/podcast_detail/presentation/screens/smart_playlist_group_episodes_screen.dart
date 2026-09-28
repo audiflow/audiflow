@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:audiflow_core/audiflow_core.dart' show AutoPlayOrder;
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
-import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -777,28 +776,22 @@ class _GroupHeader extends StatelessWidget {
       );
     }
 
-    return ExtendedImage.network(
-      thumbnailUrl!,
+    return ArtworkImage(
+      url: thumbnailUrl!,
       width: _size,
       height: _size,
-      fit: BoxFit.cover,
-      cache: true,
-      loadStateChanged: (state) {
-        if (state.extendedImageLoadState == LoadState.failed) {
-          return Container(
-            width: _size,
-            height: _size,
-            alignment: Alignment.center,
-            color: colorScheme.surfaceContainerHighest,
-            child: Icon(
-              Icons.broken_image,
-              size: 48,
-              color: colorScheme.onSurfaceVariant,
-            ),
-          );
-        }
-        return null;
-      },
+      loading: const ArtworkLoadingIndicator(),
+      placeholder: Container(
+        width: _size,
+        height: _size,
+        alignment: Alignment.center,
+        color: colorScheme.surfaceContainerHighest,
+        child: Icon(
+          Icons.broken_image,
+          size: 48,
+          color: colorScheme.onSurfaceVariant,
+        ),
+      ),
     );
   }
 }

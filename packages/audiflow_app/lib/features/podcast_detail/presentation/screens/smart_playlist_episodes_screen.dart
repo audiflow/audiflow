@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:audiflow_core/audiflow_core.dart' show AutoPlayOrder;
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
-import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -956,18 +955,12 @@ class _SmartPlaylistHeader extends StatelessWidget {
 
   Widget _buildArtwork(ColorScheme colorScheme) {
     if (podcastArtworkUrl != null) {
-      return ExtendedImage.network(
-        podcastArtworkUrl!,
+      return ArtworkImage(
+        url: podcastArtworkUrl!,
         width: 80,
         height: 80,
-        fit: BoxFit.cover,
-        cache: true,
-        loadStateChanged: (state) {
-          if (state.extendedImageLoadState == LoadState.failed) {
-            return _buildPlaceholder(colorScheme);
-          }
-          return null;
-        },
+        loading: const ArtworkLoadingIndicator(),
+        placeholder: _buildPlaceholder(colorScheme),
       );
     }
     return _buildPlaceholder(colorScheme);
@@ -1133,18 +1126,12 @@ class _SmartPlaylistGroupCard extends StatelessWidget {
     if (thumbnailUrl != null) {
       return ClipRRect(
         borderRadius: BorderRadius.circular(8),
-        child: ExtendedImage.network(
-          thumbnailUrl!,
+        child: ArtworkImage(
+          url: thumbnailUrl!,
           width: _thumbnailSize,
           height: _thumbnailSize,
-          fit: BoxFit.cover,
-          cache: true,
-          loadStateChanged: (state) {
-            if (state.extendedImageLoadState == LoadState.failed) {
-              return _buildPlaceholder(colorScheme);
-            }
-            return null;
-          },
+          loading: const ArtworkLoadingIndicator(),
+          placeholder: _buildPlaceholder(colorScheme),
         ),
       );
     }

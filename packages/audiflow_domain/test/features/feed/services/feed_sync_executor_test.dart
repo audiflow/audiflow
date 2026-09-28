@@ -24,14 +24,14 @@ class _FakeSubscriptionRepository implements SubscriptionRepository {
   @override
   Future<void> updateFeedMetadata(
     int id, {
-    String? artworkUrlIfMissing,
+    String? artworkUrl,
     String? artistName,
     String? description,
     DateTime? syncedAt,
   }) async {
     feedMetadataCallCount++;
     lastFeedMetadataId = id;
-    lastFeedArtworkUrl = artworkUrlIfMissing;
+    lastFeedArtworkUrl = artworkUrl;
     lastFeedArtistName = artistName;
     lastFeedDescription = description;
   }
@@ -677,9 +677,9 @@ void main() {
       expect(fakeSubscriptionRepo.lastFeedDescription, 'Show notes');
     });
 
-    test('keeps stored artwork when the channel offers its own', () async {
-      // The channel image is 1400-3000 px against a 600 px search artwork,
-      // so a stored URL is never replaced; author and description still are.
+    test('replaces stored artwork when the channel offers its own', () async {
+      // A show that replaces its artwork publishes a new channel image URL,
+      // which must win over the search-sourced URL stored at subscribe time.
       final sub = _subscription(
         artistName: 'Old Artist',
         artworkUrl: 'https://example.com/itunes.jpg',
@@ -704,7 +704,10 @@ void main() {
 
       await executor.syncFeed(sub);
 
-      expect(fakeSubscriptionRepo.lastFeedArtworkUrl, isNull);
+      expect(
+        fakeSubscriptionRepo.lastFeedArtworkUrl,
+        'https://example.com/huge-channel-art.jpg',
+      );
       expect(fakeSubscriptionRepo.lastFeedArtistName, 'New Artist');
       expect(fakeSubscriptionRepo.lastFeedDescription, 'Show notes');
     });

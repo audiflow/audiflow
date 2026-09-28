@@ -1,5 +1,7 @@
 import 'package:audiflow_app/features/search/presentation/widgets/podcast_search_result_tile.dart';
 import 'package:audiflow_search/audiflow_search.dart';
+import 'package:audiflow_ui/audiflow_ui.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -117,8 +119,7 @@ void main() {
           buildTestWidget(podcast: podcast, onTap: () {}),
         );
 
-        // Should find an Image widget (network or cached)
-        expect(find.byType(Image), findsOneWidget);
+        check(find.byType(ArtworkImage).evaluate()).length.equals(1);
       });
 
       testWidgets('displays placeholder when artwork URL is null', (

@@ -209,10 +209,10 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                                 _showArtworkOverlay(context, imageUrl, heroTag),
                             child: Hero(
                               tag: heroTag,
-                              child: ExtendedImage.network(
-                                imageUrl,
-                                fit: BoxFit.cover,
-                                cache: true,
+                              child: ArtworkImage(
+                                url: imageUrl,
+                                width: MediaQuery.sizeOf(context).width,
+                                loading: const ArtworkLoadingIndicator(),
                               ),
                             ),
                           ),

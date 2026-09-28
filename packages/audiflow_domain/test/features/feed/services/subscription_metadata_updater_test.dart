@@ -14,14 +14,14 @@ class _FakeSubscriptionRepository implements SubscriptionRepository {
   @override
   Future<void> updateFeedMetadata(
     int id, {
-    String? artworkUrlIfMissing,
+    String? artworkUrl,
     String? artistName,
     String? description,
     DateTime? syncedAt,
   }) async {
     callCount++;
     lastId = id;
-    lastArtworkUrl = artworkUrlIfMissing;
+    lastArtworkUrl = artworkUrl;
     lastArtistName = artistName;
     lastDescription = description;
     lastSyncedAt = syncedAt;
@@ -82,10 +82,9 @@ void main() {
       check(repository.lastDescription).equals('Show notes');
     });
 
-    test('replaces a stored author and description, but not artwork', () async {
-      // The channel image is 1400-3000 px per Apple's spec against a 600 px
-      // search artwork, and artwork is decoded at its intrinsic size, so a
-      // stored URL is never swapped out.
+    test('replaces stored artwork, author, and description', () async {
+      // A show that replaces its artwork publishes a new channel image URL;
+      // keeping the stored one would pin the old artwork forever.
       final sub = _subscription(
         artistName: 'Old Artist',
         artworkUrl: 'https://example.com/old.jpg',
@@ -102,7 +101,7 @@ void main() {
         ),
       );
 
-      check(repository.lastArtworkUrl).isNull();
+      check(repository.lastArtworkUrl).equals('https://example.com/new.jpg');
       check(repository.lastArtistName).equals('New Artist');
       check(repository.lastDescription).equals('New notes');
     });

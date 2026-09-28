@@ -1,6 +1,5 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
-import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -118,16 +117,12 @@ class _ContinueListeningCard extends StatelessWidget {
         width: _artworkSize,
         height: _artworkSize,
         child: episode.episode.imageUrl != null
-            ? ExtendedImage.network(
-                episode.episode.imageUrl!,
-                fit: BoxFit.cover,
-                cache: true,
-                loadStateChanged: (state) {
-                  if (state.extendedImageLoadState == LoadState.failed) {
-                    return _buildPlaceholder(colorScheme);
-                  }
-                  return null;
-                },
+            ? ArtworkImage(
+                url: episode.episode.imageUrl!,
+                width: _artworkSize,
+                height: _artworkSize,
+                loading: const ArtworkLoadingIndicator(),
+                placeholder: _buildPlaceholder(colorScheme),
               )
             : _buildPlaceholder(colorScheme),
       ),

@@ -55,12 +55,12 @@ class SubscriptionListTile extends StatelessWidget {
         width: _artworkSize,
         height: _artworkSize,
         child: artworkUrl != null
-            ? Image.network(
-                artworkUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return _buildPlaceholder(colorScheme);
-                },
+            ? ArtworkImage(
+                url: artworkUrl,
+                width: _artworkSize,
+                height: _artworkSize,
+                loading: const SizedBox.shrink(),
+                placeholder: _buildPlaceholder(colorScheme),
               )
             : _buildPlaceholder(colorScheme),
       ),
