@@ -11,6 +11,7 @@ import '../../../queue/presentation/controllers/queue_controller.dart';
 import '../../../share/presentation/helpers/share_helper.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../controllers/podcast_detail_controller.dart';
+import '../helpers/played_status_helper.dart';
 import '../screens/episode_detail_screen.dart';
 import 'episode_pill_duration_label.dart';
 
@@ -344,8 +345,19 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
                         isCompleted ? l10n.markAsUnplayed : l10n.markAsPlayed,
                       ),
                       onTap: () {
+                        // Sheet context: the tile may already be unmounted.
+                        final container = ProviderScope.containerOf(
+                          sheetContext,
+                          listen: false,
+                        );
                         Navigator.pop(sheetContext);
-                        _togglePlayedStatus(ref, audioUrl, isCompleted);
+                        unawaited(
+                          togglePlayedStatus(
+                            container,
+                            audioUrl: audioUrl,
+                            isCurrentlyCompleted: isCompleted,
+                          ),
+                        );
                       },
                     ),
                     _buildDownloadMenuTile(
@@ -425,30 +437,6 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
         );
       },
     );
-  }
-
-  Future<void> _togglePlayedStatus(
-    WidgetRef ref,
-    String audioUrl,
-    bool isCurrentlyCompleted,
-  ) async {
-    final episodeRepo = ref.read(episodeRepositoryProvider);
-    final dbEpisode = await episodeRepo.getByAudioUrl(audioUrl);
-    if (dbEpisode == null) return;
-
-    final historyService = ref.read(playbackHistoryServiceProvider);
-    if (isCurrentlyCompleted) {
-      await historyService.markIncomplete(dbEpisode.id);
-    } else {
-      await historyService.markCompleted(dbEpisode.id);
-    }
-
-    // Family-level invalidate covers every keyed instance any open
-    // screen might watch (episode by audio URL, podcast batch by feed
-    // URL, smart playlist by episode-id list).
-    ref.invalidate(episodeProgressProvider);
-    ref.invalidate(podcastEpisodeProgressProvider);
-    ref.invalidate(smartPlaylistEpisodesProvider);
   }
 
   Widget _buildDownloadButton(

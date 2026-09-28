@@ -1,6 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:checks/checks.dart';
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -17,6 +20,7 @@ class _StubShowDelegate implements NotificationsShowDelegate {
   final Set<int> _throwOnCallIndices;
   int _callCount = 0;
   final List<int> showedIds = [];
+  final List<NotificationDetails?> shownDetails = [];
 
   @override
   Future<void> show({
@@ -32,6 +36,7 @@ class _StubShowDelegate implements NotificationsShowDelegate {
       throw Exception('simulated show() failure at index $index');
     }
     showedIds.add(id);
+    shownDetails.add(notificationDetails);
   }
 }
 
@@ -117,6 +122,97 @@ void main() {
           );
         },
       );
+    });
+
+    group('artwork', () {
+      const withArtwork = NewEpisodeNotification(
+        episodeId: 1,
+        podcastId: 10,
+        podcastTitle: 'Podcast A',
+        episodeTitle: 'Episode 1',
+        artworkUrl: 'https://example.com/art.jpg',
+      );
+
+      test('attaches artwork file on Android and iOS', () async {
+        final stub = _StubShowDelegate();
+        final requests = <(String, int)>[];
+        final service = BackgroundNotificationService(
+          artworkFileProvider: (url, id) async {
+            requests.add((url, id));
+            return '/tmp/art-$id.png';
+          },
+        );
+
+        await service.showPerEpisodeNotificationsViaDelegate(stub, [
+          withArtwork,
+        ]);
+
+        check(requests).deepEquals([('https://example.com/art.jpg', 1)]);
+        final details = stub.shownDetails.single!;
+        check(details.android!.largeIcon)
+            .isA<FilePathAndroidBitmap>()
+            .has((icon) => icon.data, 'data')
+            .equals('/tmp/art-1.png');
+        check(
+          details.iOS!.attachments!.single.filePath,
+        ).equals('/tmp/art-1.png');
+      });
+
+      test('shows text-only notification when artwork fails', () async {
+        final stub = _StubShowDelegate();
+        final service = BackgroundNotificationService(
+          artworkFileProvider: (_, _) async => throw Exception('network'),
+        );
+
+        await service.showPerEpisodeNotificationsViaDelegate(stub, [
+          withArtwork,
+        ]);
+
+        final details = stub.shownDetails.single!;
+        check(details.android!.largeIcon).isNull();
+        check(details.iOS!.attachments).isNull();
+      });
+
+      test('gives up on artwork that does not arrive in time', () {
+        fakeAsync((async) {
+          final stub = _StubShowDelegate();
+          final service = BackgroundNotificationService(
+            artworkFileProvider: (_, _) => Completer<String?>().future,
+          );
+
+          var done = false;
+          service
+              .showPerEpisodeNotificationsViaDelegate(stub, [withArtwork])
+              .then((_) => done = true);
+          async.elapse(const Duration(seconds: 10));
+
+          check(done).isTrue();
+          check(stub.shownDetails.single!.android!.largeIcon).isNull();
+        });
+      });
+
+      test('skips artwork lookup when podcast has no artwork', () async {
+        final stub = _StubShowDelegate();
+        var calls = 0;
+        final service = BackgroundNotificationService(
+          artworkFileProvider: (_, _) async {
+            calls++;
+            return '/tmp/art.png';
+          },
+        );
+
+        await service.showPerEpisodeNotificationsViaDelegate(stub, [
+          const NewEpisodeNotification(
+            episodeId: 1,
+            podcastId: 10,
+            podcastTitle: 'Podcast A',
+            episodeTitle: 'Episode 1',
+          ),
+        ]);
+
+        check(calls).equals(0);
+        check(stub.shownDetails.single!.android!.largeIcon).isNull();
+      });
     });
 
     group('buildNotificationDetails', () {

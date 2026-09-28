@@ -1,5 +1,6 @@
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:checks/checks.dart';
+import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -9,6 +10,7 @@ void main() {
     String pillLabel = '33m',
     String? dateLabel = 'Apr 29',
     String? description,
+    String? thumbnailUrl,
     bool isPlaying = false,
     bool isLoading = false,
     bool isInProgress = false,
@@ -29,6 +31,7 @@ void main() {
             pillLabel: pillLabel,
             dateLabel: dateLabel,
             description: description,
+            thumbnailUrl: thumbnailUrl,
             isPlaying: isPlaying,
             isLoading: isLoading,
             isInProgress: isInProgress,
@@ -155,6 +158,21 @@ void main() {
       await tester.pumpWidget(buildSubject());
       final cardSize = tester.getSize(find.byType(EpisodeCard));
       check(cardSize.height).equals(episodeCardExtent);
+    });
+
+    testWidgets('decodes thumbnail at display size to stay in memory cache', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        buildSubject(thumbnailUrl: 'https://example.com/art.jpg'),
+      );
+
+      final image = tester.widget<ExtendedImage>(find.byType(ExtendedImage));
+      final expectedWidth = (76 * tester.view.devicePixelRatio).round();
+      check(image.image).isA<ExtendedResizeImage>()
+        ..has((it) => it.width, 'width').equals(expectedWidth)
+        // Height stays null so non-square artwork keeps its aspect ratio.
+        ..has((it) => it.height, 'height').isNull();
     });
   });
 }

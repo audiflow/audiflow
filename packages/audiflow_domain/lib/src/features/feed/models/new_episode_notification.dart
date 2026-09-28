@@ -11,12 +11,16 @@ class NewEpisodeNotification {
     required this.podcastId,
     required this.podcastTitle,
     required this.episodeTitle,
+    this.artworkUrl,
   });
 
   final int episodeId;
   final int podcastId;
   final String podcastTitle;
   final String episodeTitle;
+
+  /// Podcast artwork shown as the notification thumbnail, when available.
+  final String? artworkUrl;
 
   /// Returns a JSON payload string for the notification.
   String toPayload() => jsonEncode(<String, dynamic>{
