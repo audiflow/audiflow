@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audiflow_app/features/settings/presentation/screens/feed_sync_settings_screen.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_core/audiflow_core.dart';
@@ -186,14 +188,133 @@ void main() {
       check(find.text('Permission required').evaluate().length).equals(1);
     });
   });
+
+  group(
+    'FeedSyncSettingsScreen notification toggle reflects OS permission',
+    () {
+      late PermissionHandlerPlatform originalPlatform;
+
+      setUp(() {
+        originalPlatform = PermissionHandlerPlatform.instance;
+      });
+
+      tearDown(() {
+        PermissionHandlerPlatform.instance = originalPlatform;
+      });
+
+      bool notifySwitchValue(WidgetTester tester) {
+        return tester
+            .widgetList<SwitchListTile>(find.byType(SwitchListTile))
+            .last
+            .value;
+      }
+
+      testWidgets('shows OFF when the preference is on but permission is not', (
+        tester,
+      ) async {
+        PermissionHandlerPlatform.instance = _FakePermissionHandler(
+          status: PermissionStatus.denied,
+          requestResult: PermissionStatus.granted,
+        );
+
+        await tester.pumpWidget(buildTestWidget());
+        await tester.pumpAndSettle();
+
+        check(notifySwitchValue(tester)).isFalse();
+      });
+
+      testWidgets('shows ON when the preference is on and permission granted', (
+        tester,
+      ) async {
+        PermissionHandlerPlatform.instance = _FakePermissionHandler(
+          status: PermissionStatus.granted,
+          requestResult: PermissionStatus.granted,
+        );
+
+        await tester.pumpWidget(buildTestWidget());
+        await tester.pumpAndSettle();
+
+        check(notifySwitchValue(tester)).isTrue();
+      });
+
+      testWidgets('re-checks permission when the app resumes', (tester) async {
+        final fake = _FakePermissionHandler(
+          status: PermissionStatus.granted,
+          requestResult: PermissionStatus.granted,
+        );
+        PermissionHandlerPlatform.instance = fake;
+        await tester.pumpWidget(buildTestWidget());
+        await tester.pumpAndSettle();
+
+        // User revokes permission in system settings, then returns.
+        fake.status = PermissionStatus.denied;
+        tester.binding.handleAppLifecycleStateChanged(
+          AppLifecycleState.resumed,
+        );
+        await tester.pumpAndSettle();
+
+        check(notifySwitchValue(tester)).isFalse();
+      });
+
+      testWidgets('turns ON after granting from the effectively-OFF state', (
+        tester,
+      ) async {
+        final fake = _FakePermissionHandler(
+          status: PermissionStatus.denied,
+          requestResult: PermissionStatus.granted,
+        );
+        PermissionHandlerPlatform.instance = fake;
+        await tester.pumpWidget(buildTestWidget());
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byType(Switch).last);
+        await tester.pumpAndSettle();
+
+        check(fake.requestCount).equals(1);
+        check(notifySwitchValue(tester)).isTrue();
+      });
+
+      testWidgets('ignores taps while a permission request is pending', (
+        tester,
+      ) async {
+        final pending = Completer<void>();
+        final fake = _FakePermissionHandler(
+          status: PermissionStatus.denied,
+          requestResult: PermissionStatus.granted,
+          pendingRequest: pending,
+        );
+        PermissionHandlerPlatform.instance = fake;
+        await tester.pumpWidget(buildTestWidget());
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byType(Switch).last);
+        await tester.pump();
+        await tester.tap(find.byType(Switch).last);
+        await tester.pump();
+        pending.complete();
+        await tester.pumpAndSettle();
+
+        check(fake.requestCount).equals(1);
+        check(notifySwitchValue(tester)).isTrue();
+      });
+    },
+  );
 }
 
 class _FakePermissionHandler extends PermissionHandlerPlatform
     with MockPlatformInterfaceMixin {
-  _FakePermissionHandler({required this.status, required this.requestResult});
+  _FakePermissionHandler({
+    required this.status,
+    required this.requestResult,
+    this.pendingRequest,
+  });
 
-  final PermissionStatus status;
+  PermissionStatus status;
   final PermissionStatus requestResult;
+
+  /// When set, requests stay pending until this completes, like an open
+  /// OS permission dialog.
+  final Completer<void>? pendingRequest;
   int requestCount = 0;
 
   @override
@@ -206,6 +327,7 @@ class _FakePermissionHandler extends PermissionHandlerPlatform
     List<Permission> permissions,
   ) async {
     requestCount += 1;
+    await pendingRequest?.future;
     return {for (final permission in permissions) permission: requestResult};
   }
 }

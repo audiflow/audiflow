@@ -16,8 +16,45 @@ class FeedSyncSettingsScreen extends ConsumerStatefulWidget {
       _FeedSyncSettingsScreenState();
 }
 
-class _FeedSyncSettingsScreenState
-    extends ConsumerState<FeedSyncSettingsScreen> {
+class _FeedSyncSettingsScreenState extends ConsumerState<FeedSyncSettingsScreen>
+    with WidgetsBindingObserver {
+  // Null until checked (or if the check fails): fall back to the stored
+  // preference rather than flashing the switch off for granted users.
+  bool? _permissionGranted;
+  bool _permissionRequestInFlight = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _refreshPermission();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  // Permission can be revoked in system settings while the app is
+  // backgrounded; re-check so the switch never claims notifications are on.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _refreshPermission();
+  }
+
+  Future<void> _refreshPermission() async {
+    final PermissionStatus status;
+    try {
+      status = await Permission.notification.status;
+    } on Exception catch (e) {
+      debugPrint('Notification permission check failed: $e');
+      return;
+    }
+    if (!mounted) return;
+    setState(() => _permissionGranted = status.isGranted);
+  }
+
   Future<void> _update(
     AppSettingsRepository repo,
     Future<void> Function() setter, {
@@ -60,7 +97,17 @@ class _FeedSyncSettingsScreenState
       return;
     }
 
-    final status = await _resolveNotificationPermission();
+    // A second request while the OS dialog is open throws on Android.
+    if (_permissionRequestInFlight) return;
+    _permissionRequestInFlight = true;
+    final PermissionStatus status;
+    try {
+      status = await _resolveNotificationPermission();
+    } finally {
+      _permissionRequestInFlight = false;
+    }
+    if (mounted) setState(() => _permissionGranted = status.isGranted);
+
     if (status.isGranted) {
       await _update(
         repo,
@@ -115,7 +162,10 @@ class _FeedSyncSettingsScreenState
     final autoSync = repo.getAutoSync();
     final interval = repo.getSyncIntervalMinutes();
     final wifiOnly = repo.getWifiOnlySync();
-    final notifyNewEpisodes = repo.getNotifyNewEpisodes();
+    // The preference alone is not enough: without OS permission nothing is
+    // shown, so present the switch as off and let a tap request permission.
+    final notifyNewEpisodes =
+        repo.getNotifyNewEpisodes() && _permissionGranted != false;
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settingsFeedSyncTitle)),
