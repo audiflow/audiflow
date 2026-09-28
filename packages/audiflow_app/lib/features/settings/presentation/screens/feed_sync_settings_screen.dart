@@ -47,12 +47,24 @@ class _FeedSyncSettingsScreenState extends ConsumerState<FeedSyncSettingsScreen>
     final PermissionStatus status;
     try {
       status = await Permission.notification.status;
-    } on Exception catch (e) {
-      debugPrint('Notification permission check failed: $e');
+    } on Exception catch (e, stack) {
+      _logPermissionFailure(e, stack);
       return;
     }
     if (!mounted) return;
     setState(() => _permissionGranted = status.isGranted);
+  }
+
+  void _logPermissionFailure(Object error, StackTrace stack) {
+    // ref is unusable once the screen is gone.
+    if (!mounted) return;
+    ref
+        .read(namedLoggerProvider('FeedSyncSettings'))
+        .w(
+          'Notification permission call failed',
+          error: error,
+          stackTrace: stack,
+        );
   }
 
   Future<void> _update(
@@ -103,6 +115,9 @@ class _FeedSyncSettingsScreenState extends ConsumerState<FeedSyncSettingsScreen>
     final PermissionStatus status;
     try {
       status = await _resolveNotificationPermission();
+    } on Exception catch (e, stack) {
+      _logPermissionFailure(e, stack);
+      return;
     } finally {
       _permissionRequestInFlight = false;
     }

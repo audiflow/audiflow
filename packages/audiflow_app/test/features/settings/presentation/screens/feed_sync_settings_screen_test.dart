@@ -274,6 +274,24 @@ void main() {
         check(notifySwitchValue(tester)).isTrue();
       });
 
+      testWidgets('keeps the switch off when the request fails', (
+        tester,
+      ) async {
+        PermissionHandlerPlatform.instance = _FakePermissionHandler(
+          status: PermissionStatus.denied,
+          requestResult: PermissionStatus.granted,
+          requestError: Exception('platform failure'),
+        );
+        await tester.pumpWidget(buildTestWidget());
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byType(Switch).last);
+        await tester.pumpAndSettle();
+
+        check(tester.takeException()).isNull();
+        check(notifySwitchValue(tester)).isFalse();
+      });
+
       testWidgets('ignores taps while a permission request is pending', (
         tester,
       ) async {
@@ -307,6 +325,7 @@ class _FakePermissionHandler extends PermissionHandlerPlatform
     required this.status,
     required this.requestResult,
     this.pendingRequest,
+    this.requestError,
   });
 
   PermissionStatus status;
@@ -315,6 +334,9 @@ class _FakePermissionHandler extends PermissionHandlerPlatform
   /// When set, requests stay pending until this completes, like an open
   /// OS permission dialog.
   final Completer<void>? pendingRequest;
+
+  /// Thrown from requests, like a platform failure.
+  final Exception? requestError;
   int requestCount = 0;
 
   @override
@@ -328,6 +350,8 @@ class _FakePermissionHandler extends PermissionHandlerPlatform
   ) async {
     requestCount += 1;
     await pendingRequest?.future;
+    final error = requestError;
+    if (error != null) throw error;
     return {for (final permission in permissions) permission: requestResult};
   }
 }
