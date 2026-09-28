@@ -23,6 +23,10 @@ class _FeedSyncSettingsScreenState extends ConsumerState<FeedSyncSettingsScreen>
   bool? _permissionGranted;
   bool _permissionRequestInFlight = false;
 
+  // Bumped by every status check and request; a result is applied only if
+  // no newer one started meanwhile, so a slow check cannot undo a grant.
+  int _permissionGeneration = 0;
+
   @override
   void initState() {
     super.initState();
@@ -44,6 +48,8 @@ class _FeedSyncSettingsScreenState extends ConsumerState<FeedSyncSettingsScreen>
   }
 
   Future<void> _refreshPermission() async {
+    if (_permissionRequestInFlight) return;
+    final generation = ++_permissionGeneration;
     final PermissionStatus status;
     try {
       status = await Permission.notification.status;
@@ -51,8 +57,22 @@ class _FeedSyncSettingsScreenState extends ConsumerState<FeedSyncSettingsScreen>
       _logPermissionFailure(e, stack);
       return;
     }
-    if (!mounted) return;
+    if (!mounted || generation != _permissionGeneration) return;
+    await _applyPermission(status);
+  }
+
+  Future<void> _applyPermission(PermissionStatus status) async {
     setState(() => _permissionGranted = status.isGranted);
+    if (status.isGranted) return;
+    // Persist what the switch shows: otherwise a later grant in system
+    // settings would silently enable notifications the user saw as off.
+    final repo = ref.read(appSettingsRepositoryProvider);
+    if (!repo.getNotifyNewEpisodes()) return;
+    await _update(
+      repo,
+      () => repo.setNotifyNewEpisodes(false),
+      replaceExisting: true,
+    );
   }
 
   void _logPermissionFailure(Object error, StackTrace stack) {
@@ -112,6 +132,7 @@ class _FeedSyncSettingsScreenState extends ConsumerState<FeedSyncSettingsScreen>
     // A second request while the OS dialog is open throws on Android.
     if (_permissionRequestInFlight) return;
     _permissionRequestInFlight = true;
+    ++_permissionGeneration;
     final PermissionStatus status;
     try {
       status = await _resolveNotificationPermission();
@@ -121,7 +142,8 @@ class _FeedSyncSettingsScreenState extends ConsumerState<FeedSyncSettingsScreen>
     } finally {
       _permissionRequestInFlight = false;
     }
-    if (mounted) setState(() => _permissionGranted = status.isGranted);
+    if (!mounted) return;
+    await _applyPermission(status);
 
     if (status.isGranted) {
       await _update(

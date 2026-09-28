@@ -292,6 +292,56 @@ void main() {
         check(notifySwitchValue(tester)).isFalse();
       });
 
+      testWidgets('a stale status check does not override a newer grant', (
+        tester,
+      ) async {
+        final fake = _FakePermissionHandler(
+          status: PermissionStatus.denied,
+          requestResult: PermissionStatus.granted,
+        );
+        PermissionHandlerPlatform.instance = fake;
+        await tester.pumpWidget(buildTestWidget());
+        await tester.pumpAndSettle();
+
+        // A resume check starts and stalls, reading the pre-grant status.
+        final staleGate = Completer<void>();
+        fake.nextStatusGate = staleGate;
+        tester.binding.handleAppLifecycleStateChanged(
+          AppLifecycleState.resumed,
+        );
+        await tester.pump();
+
+        await tester.tap(find.byType(Switch).last);
+        await tester.pumpAndSettle();
+        staleGate.complete();
+        await tester.pumpAndSettle();
+
+        check(notifySwitchValue(tester)).isTrue();
+      });
+
+      testWidgets('saves the preference as off when permission is missing', (
+        tester,
+      ) async {
+        final fake = _FakePermissionHandler(
+          status: PermissionStatus.denied,
+          requestResult: PermissionStatus.denied,
+        );
+        PermissionHandlerPlatform.instance = fake;
+        await tester.pumpWidget(buildTestWidget());
+        await tester.pumpAndSettle();
+
+        check(prefs.getBool(SettingsKeys.notifyNewEpisodes)).equals(false);
+
+        // Granting later in system settings must not silently enable it.
+        fake.status = PermissionStatus.granted;
+        tester.binding.handleAppLifecycleStateChanged(
+          AppLifecycleState.resumed,
+        );
+        await tester.pumpAndSettle();
+
+        check(notifySwitchValue(tester)).isFalse();
+      });
+
       testWidgets('ignores taps while a permission request is pending', (
         tester,
       ) async {
@@ -339,9 +389,16 @@ class _FakePermissionHandler extends PermissionHandlerPlatform
   final Exception? requestError;
   int requestCount = 0;
 
+  /// Holds the next status check until completed, then clears itself.
+  Completer<void>? nextStatusGate;
+
   @override
   Future<PermissionStatus> checkPermissionStatus(Permission permission) async {
-    return status;
+    final result = status;
+    final gate = nextStatusGate;
+    nextStatusGate = null;
+    await gate?.future;
+    return result;
   }
 
   @override
