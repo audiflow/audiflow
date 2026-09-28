@@ -545,7 +545,8 @@ void main() {
     );
 
     test('collects per-episode notifications and calls callback', () async {
-      final sub = _makeSubscription(id: 10, title: 'My Podcast');
+      final sub = _makeSubscription(id: 10, title: 'My Podcast')
+        ..artworkUrl = 'https://example.com/art.jpg';
       final episodes = [
         _makeEpisode(id: 101, podcastId: 10, title: 'Episode 1'),
         _makeEpisode(id: 102, podcastId: 10, title: 'Episode 2'),
@@ -587,6 +588,10 @@ void main() {
       expect(capturedNotifications![0].episodeId, 101);
       expect(capturedNotifications![0].podcastTitle, 'My Podcast');
       expect(capturedNotifications![0].episodeTitle, 'Episode 1');
+      expect(
+        capturedNotifications![0].artworkUrl,
+        'https://example.com/art.jpg',
+      );
       expect(capturedNotifications![1].episodeId, 102);
       expect(capturedNotifications![1].episodeTitle, 'Episode 2');
     });

@@ -17,6 +17,7 @@ class _StubShowDelegate implements NotificationsShowDelegate {
   final Set<int> _throwOnCallIndices;
   int _callCount = 0;
   final List<int> showedIds = [];
+  final List<NotificationDetails?> shownDetails = [];
 
   @override
   Future<void> show({
@@ -32,6 +33,7 @@ class _StubShowDelegate implements NotificationsShowDelegate {
       throw Exception('simulated show() failure at index $index');
     }
     showedIds.add(id);
+    shownDetails.add(notificationDetails);
   }
 }
 
@@ -117,6 +119,75 @@ void main() {
           );
         },
       );
+    });
+
+    group('artwork', () {
+      const withArtwork = NewEpisodeNotification(
+        episodeId: 1,
+        podcastId: 10,
+        podcastTitle: 'Podcast A',
+        episodeTitle: 'Episode 1',
+        artworkUrl: 'https://example.com/art.jpg',
+      );
+
+      test('attaches artwork file on Android and iOS', () async {
+        final stub = _StubShowDelegate();
+        final requests = <(String, int)>[];
+        final service = BackgroundNotificationService(
+          artworkFileProvider: (url, id) async {
+            requests.add((url, id));
+            return '/tmp/art-$id.png';
+          },
+        );
+
+        await service.showPerEpisodeNotificationsViaDelegate(stub, [
+          withArtwork,
+        ]);
+
+        expect(requests, [('https://example.com/art.jpg', 1)]);
+        final details = stub.shownDetails.single!;
+        final largeIcon = details.android!.largeIcon! as FilePathAndroidBitmap;
+        expect(largeIcon.data, '/tmp/art-1.png');
+        expect(details.iOS!.attachments!.single.filePath, '/tmp/art-1.png');
+      });
+
+      test('shows text-only notification when artwork fails', () async {
+        final stub = _StubShowDelegate();
+        final service = BackgroundNotificationService(
+          artworkFileProvider: (_, _) async => throw Exception('network'),
+        );
+
+        await service.showPerEpisodeNotificationsViaDelegate(stub, [
+          withArtwork,
+        ]);
+
+        final details = stub.shownDetails.single!;
+        expect(details.android!.largeIcon, isNull);
+        expect(details.iOS!.attachments, isNull);
+      });
+
+      test('skips artwork lookup when podcast has no artwork', () async {
+        final stub = _StubShowDelegate();
+        var calls = 0;
+        final service = BackgroundNotificationService(
+          artworkFileProvider: (_, _) async {
+            calls++;
+            return '/tmp/art.png';
+          },
+        );
+
+        await service.showPerEpisodeNotificationsViaDelegate(stub, [
+          const NewEpisodeNotification(
+            episodeId: 1,
+            podcastId: 10,
+            podcastTitle: 'Podcast A',
+            episodeTitle: 'Episode 1',
+          ),
+        ]);
+
+        expect(calls, 0);
+        expect(stub.shownDetails.single!.android!.largeIcon, isNull);
+      });
     });
 
     group('buildNotificationDetails', () {

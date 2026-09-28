@@ -14,13 +14,23 @@ class NotificationDetail {
     required this.title,
     required this.body,
     required this.payload,
+    this.artworkUrl,
   });
 
   final int id;
   final String title;
   final String body;
   final String payload;
+  final String? artworkUrl;
 }
+
+/// Resolves [artworkUrl] to a local image file for notification
+/// [notificationId], or null when unavailable.
+///
+/// Must return a distinct file per notification: iOS moves attachment files
+/// into its own store, so a shared file would be gone for the next one.
+typedef ArtworkFileProvider =
+    Future<String?> Function(String artworkUrl, int notificationId);
 
 /// Abstracts the `show` call on [FlutterLocalNotificationsPlugin] so tests can
 /// inject a fake without subclassing the plugin (which has a private
@@ -59,9 +69,10 @@ class _PluginShowDelegate implements NotificationsShowDelegate {
 }
 
 class BackgroundNotificationService {
-  BackgroundNotificationService({this._logger});
+  BackgroundNotificationService({this._logger, this._artworkFileProvider});
 
   final Logger? _logger;
+  final ArtworkFileProvider? _artworkFileProvider;
 
   static const _channelId = 'audiflow_new_episodes';
   static const _channelName = 'New Episodes';
@@ -114,26 +125,6 @@ class BackgroundNotificationService {
   ) async {
     final details = buildNotificationDetails(notifications);
 
-    const notificationDetails = NotificationDetails(
-      android: AndroidNotificationDetails(
-        _channelId,
-        _channelName,
-        channelDescription: _channelDescription,
-        importance: Importance.defaultImportance,
-        priority: Priority.defaultPriority,
-      ),
-      // presentBanner/presentList/presentSound ensure the notification is
-      // visible when the app is in the foreground. Without these flags iOS
-      // silently drops foreground banners, which hides both the debug-menu
-      // posted notification and any background-refresh result that arrives
-      // while the user has the app open.
-      iOS: DarwinNotificationDetails(
-        presentBanner: true,
-        presentList: true,
-        presentSound: true,
-      ),
-    );
-
     final errors = <(Object, StackTrace)>[];
 
     for (final detail in details) {
@@ -143,7 +134,7 @@ class BackgroundNotificationService {
           title: detail.title,
           body: detail.body,
           payload: detail.payload,
-          notificationDetails: notificationDetails,
+          notificationDetails: _buildDetails(await _artworkPath(detail)),
         );
         _logger?.i('Showed notification: ${detail.title} — ${detail.body}');
       } catch (e, stack) {
@@ -164,6 +155,47 @@ class BackgroundNotificationService {
     }
   }
 
+  Future<String?> _artworkPath(NotificationDetail detail) async {
+    final url = detail.artworkUrl;
+    final provider = _artworkFileProvider;
+    if (url == null || provider == null) return null;
+    try {
+      return await provider(url, detail.id);
+    } catch (e, stack) {
+      // Artwork is decorative; the notification must still be shown.
+      _logger?.w('Notification artwork failed', error: e, stackTrace: stack);
+      return null;
+    }
+  }
+
+  static NotificationDetails _buildDetails(String? artworkPath) {
+    return NotificationDetails(
+      android: AndroidNotificationDetails(
+        _channelId,
+        _channelName,
+        channelDescription: _channelDescription,
+        importance: Importance.defaultImportance,
+        priority: Priority.defaultPriority,
+        largeIcon: artworkPath == null
+            ? null
+            : FilePathAndroidBitmap(artworkPath),
+      ),
+      // presentBanner/presentList/presentSound ensure the notification is
+      // visible when the app is in the foreground. Without these flags iOS
+      // silently drops foreground banners, which hides both the debug-menu
+      // posted notification and any background-refresh result that arrives
+      // while the user has the app open.
+      iOS: DarwinNotificationDetails(
+        presentBanner: true,
+        presentList: true,
+        presentSound: true,
+        attachments: artworkPath == null
+            ? null
+            : [DarwinNotificationAttachment(artworkPath)],
+      ),
+    );
+  }
+
   /// Builds notification detail records from episode notifications.
   ///
   /// Uses [NewEpisodeNotification.episodeId] as the notification ID
@@ -179,6 +211,7 @@ class BackgroundNotificationService {
             title: n.podcastTitle,
             body: n.episodeTitle,
             payload: n.toPayload(),
+            artworkUrl: n.artworkUrl,
           ),
         )
         .toList();

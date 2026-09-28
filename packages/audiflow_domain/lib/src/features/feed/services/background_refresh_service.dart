@@ -113,6 +113,7 @@ class BackgroundRefreshService {
                   podcastId: sub.id,
                   podcastTitle: sub.title,
                   episodeTitle: episode.title,
+                  artworkUrl: sub.artworkUrl,
                 ),
               );
             }
