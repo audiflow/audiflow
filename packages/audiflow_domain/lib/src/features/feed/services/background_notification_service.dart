@@ -4,6 +4,12 @@ import 'package:meta/meta.dart';
 
 import '../models/new_episode_notification.dart';
 
+/// Android drawable name of the monochrome notification small icon.
+///
+/// Android draws small icons from the alpha channel only, so the full-colour
+/// launcher icon would render as a blank circle.
+const androidNotificationSmallIcon = 'ic_stat_notification';
+
 /// Detail record for a single notification to display.
 ///
 /// Exposed only for testing; not part of the public API contract.
@@ -82,7 +88,9 @@ class BackgroundNotificationService {
   Future<FlutterLocalNotificationsPlugin> initialize() async {
     final plugin = FlutterLocalNotificationsPlugin();
     const initSettings = InitializationSettings(
-      android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+      android: AndroidInitializationSettings(
+        '@drawable/$androidNotificationSmallIcon',
+      ),
       // Background isolate must NOT request permissions — they must already
       // be granted via the foreground initialization in main.dart.
       // Requesting in background silently fails on iOS, preventing all

@@ -21,6 +21,7 @@ const audioServiceConfig = AudioServiceConfig(
   androidNotificationChannelId: 'com.audiflow.player',
   androidNotificationChannelName: 'audiflow Playback',
   androidNotificationOngoing: true,
+  androidNotificationIcon: 'drawable/$androidNotificationSmallIcon',
   androidStopForegroundOnPause: true,
   artDownscaleWidth: androidArtworkDownscalePixels,
   artDownscaleHeight: androidArtworkDownscalePixels,
