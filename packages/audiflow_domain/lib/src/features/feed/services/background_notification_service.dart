@@ -77,6 +77,7 @@ class BackgroundNotificationService {
   static const _channelId = 'audiflow_new_episodes';
   static const _channelName = 'New Episodes';
   static const _channelDescription = 'Notifications for new podcast episodes';
+  static const _artworkTimeout = Duration(seconds: 5);
 
   Future<FlutterLocalNotificationsPlugin> initialize() async {
     final plugin = FlutterLocalNotificationsPlugin();
@@ -124,17 +125,20 @@ class BackgroundNotificationService {
     List<NewEpisodeNotification> notifications,
   ) async {
     final details = buildNotificationDetails(notifications);
+    // Fetch concurrently: the OS grants background refresh only ~30s, and
+    // notifications must not wait on artwork one podcast at a time.
+    final artworkPaths = await Future.wait(details.map(_artworkPath));
 
     final errors = <(Object, StackTrace)>[];
 
-    for (final detail in details) {
+    for (final (index, detail) in details.indexed) {
       try {
         await delegate.show(
           id: detail.id,
           title: detail.title,
           body: detail.body,
           payload: detail.payload,
-          notificationDetails: _buildDetails(await _artworkPath(detail)),
+          notificationDetails: _buildDetails(artworkPaths[index]),
         );
         _logger?.i('Showed notification: ${detail.title} — ${detail.body}');
       } catch (e, stack) {
@@ -160,7 +164,7 @@ class BackgroundNotificationService {
     final provider = _artworkFileProvider;
     if (url == null || provider == null) return null;
     try {
-      return await provider(url, detail.id);
+      return await provider(url, detail.id).timeout(_artworkTimeout);
     } catch (e, stack) {
       // Artwork is decorative; the notification must still be shown.
       _logger?.w('Notification artwork failed', error: e, stackTrace: stack);
