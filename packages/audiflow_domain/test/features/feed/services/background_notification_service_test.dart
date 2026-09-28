@@ -158,6 +158,17 @@ void main() {
         ).equals('/tmp/art-1.png');
       });
 
+      test('tints the small icon with the app icon colour', () async {
+        final stub = _StubShowDelegate();
+
+        await BackgroundNotificationService()
+            .showPerEpisodeNotificationsViaDelegate(stub, [withArtwork]);
+
+        check(
+          stub.shownDetails.single!.android!.color,
+        ).equals(androidNotificationColor);
+      });
+
       test('shows text-only notification when artwork fails', () async {
         final stub = _StubShowDelegate();
         final service = BackgroundNotificationService(

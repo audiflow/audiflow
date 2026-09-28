@@ -469,7 +469,9 @@ class _MyAppState extends ConsumerState<MyApp> {
       final handler = NotificationTapHandler(router: _router);
       final plugin = FlutterLocalNotificationsPlugin();
       const initSettings = InitializationSettings(
-        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+        android: AndroidInitializationSettings(
+          '@drawable/$androidNotificationSmallIcon',
+        ),
         // defaultPresent* tells the UNUserNotificationCenterDelegate to show
         // the banner/list/sound when a notification arrives while the app is
         // in the foreground. Without these, iOS treats the notification as
