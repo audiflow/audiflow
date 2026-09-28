@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:audiflow_app/features/player/services/audio_handler_provider.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
@@ -20,6 +21,22 @@ void main() {
     }
   });
 
+  // An opaque replacement would still exist on disk but bring the blank
+  // circle back, so the mask itself must have both clear and solid pixels.
+  testWidgets('icon has a transparent background around a solid mark', (
+    tester,
+  ) async {
+    for (final density in _densities) {
+      final alpha = await tester.runAsync(
+        () => _alphaChannel(
+          '$_resDir/drawable-$density/$androidNotificationSmallIcon.png',
+        ),
+      );
+      check(because: density, alpha!.first).equals(0);
+      check(because: density, alpha.contains(255)).isTrue();
+    }
+  });
+
   test('keeps the icon through release resource shrinking', () {
     final keep = File('$_resDir/raw/keep.xml').readAsStringSync();
     check(keep).contains('@drawable/$androidNotificationSmallIcon');
@@ -36,4 +53,12 @@ void main() {
       audioServiceConfig.notificationColor,
     ).equals(androidNotificationColor);
   });
+}
+
+Future<List<int>> _alphaChannel(String path) async {
+  final codec = await ui.instantiateImageCodec(File(path).readAsBytesSync());
+  final frame = await codec.getNextFrame();
+  final rgba = await frame.image.toByteData();
+  final bytes = rgba!.buffer.asUint8List();
+  return [for (var i = 3; i < bytes.length; i += 4) bytes[i]];
 }
