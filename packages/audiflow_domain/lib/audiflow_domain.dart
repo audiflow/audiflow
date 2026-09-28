@@ -76,6 +76,7 @@ export 'src/features/feed/repositories/preset_config_repository_impl.dart';
 export 'src/features/feed/services/config_assembler.dart';
 export 'src/features/feed/services/feed_parser_service.dart';
 export 'src/features/feed/services/background_notification_service.dart';
+export 'src/features/feed/services/notification_artwork_files.dart';
 export 'src/features/feed/services/background_refresh_service.dart';
 export 'src/features/feed/services/feed_sync_diagnostic.dart';
 export 'src/features/feed/services/feed_sync_executor.dart';

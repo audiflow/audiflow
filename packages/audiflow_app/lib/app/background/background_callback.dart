@@ -327,7 +327,16 @@ void backgroundCallback() {
         onDiagnostic: feedSyncDiagnostic,
       );
 
-      final notificationService = BackgroundNotificationService(logger: logger);
+      final artworkFiles = NotificationArtworkFiles(
+        dio: dio,
+        directory: () async => Directory(
+          '${(await getTemporaryDirectory()).path}/notification_artwork',
+        ),
+      );
+      final notificationService = BackgroundNotificationService(
+        logger: logger,
+        artworkFileProvider: artworkFiles.fileFor,
+      );
 
       final autoDownloadEnqueuer = AutoDownloadEnqueuer(
         episodeRepo: episodeRepo,
