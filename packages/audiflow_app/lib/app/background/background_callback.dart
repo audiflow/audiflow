@@ -329,7 +329,7 @@ void backgroundCallback() {
 
       final artworkFiles = NotificationArtworkFiles(
         dio: dio,
-        directory: Directory(
+        directory: () async => Directory(
           '${(await getTemporaryDirectory()).path}/notification_artwork',
         ),
       );

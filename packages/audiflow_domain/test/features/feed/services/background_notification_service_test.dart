@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:checks/checks.dart';
 import 'package:fake_async/fake_async.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -146,11 +147,15 @@ void main() {
           withArtwork,
         ]);
 
-        expect(requests, [('https://example.com/art.jpg', 1)]);
+        check(requests).deepEquals([('https://example.com/art.jpg', 1)]);
         final details = stub.shownDetails.single!;
-        final largeIcon = details.android!.largeIcon! as FilePathAndroidBitmap;
-        expect(largeIcon.data, '/tmp/art-1.png');
-        expect(details.iOS!.attachments!.single.filePath, '/tmp/art-1.png');
+        check(details.android!.largeIcon)
+            .isA<FilePathAndroidBitmap>()
+            .has((icon) => icon.data, 'data')
+            .equals('/tmp/art-1.png');
+        check(
+          details.iOS!.attachments!.single.filePath,
+        ).equals('/tmp/art-1.png');
       });
 
       test('shows text-only notification when artwork fails', () async {
@@ -164,8 +169,8 @@ void main() {
         ]);
 
         final details = stub.shownDetails.single!;
-        expect(details.android!.largeIcon, isNull);
-        expect(details.iOS!.attachments, isNull);
+        check(details.android!.largeIcon).isNull();
+        check(details.iOS!.attachments).isNull();
       });
 
       test('gives up on artwork that does not arrive in time', () {
@@ -181,8 +186,8 @@ void main() {
               .then((_) => done = true);
           async.elapse(const Duration(seconds: 10));
 
-          expect(done, isTrue);
-          expect(stub.shownDetails.single!.android!.largeIcon, isNull);
+          check(done).isTrue();
+          check(stub.shownDetails.single!.android!.largeIcon).isNull();
         });
       });
 
@@ -205,8 +210,8 @@ void main() {
           ),
         ]);
 
-        expect(calls, 0);
-        expect(stub.shownDetails.single!.android!.largeIcon, isNull);
+        check(calls).equals(0);
+        check(stub.shownDetails.single!.android!.largeIcon).isNull();
       });
     });
 

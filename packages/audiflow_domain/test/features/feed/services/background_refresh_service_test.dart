@@ -1,6 +1,7 @@
 import 'package:audiflow_core/audiflow_core.dart'
     show AutoPlayOrder, DuckInterruptionBehavior;
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter/material.dart' show ThemeMode;
 import 'package:flutter_test/flutter_test.dart';
 
@@ -119,10 +120,15 @@ class FakeAppSettingsRepository implements AppSettingsRepository {
 }
 
 class FakeSubscriptionRepository implements SubscriptionRepository {
-  FakeSubscriptionRepository({List<Subscription>? subscriptions})
-    : _subscriptions = subscriptions ?? [];
+  FakeSubscriptionRepository({
+    List<Subscription>? subscriptions,
+    this.byId = const {},
+  }) : _subscriptions = subscriptions ?? [];
 
   final List<Subscription> _subscriptions;
+
+  /// Post-sync state returned by [getById], e.g. backfilled metadata.
+  final Map<int, Subscription> byId;
   bool getSubscriptionsCalled = false;
 
   @override
@@ -164,7 +170,7 @@ class FakeSubscriptionRepository implements SubscriptionRepository {
   Future<Subscription?> getByFeedUrl(String feedUrl) async => null;
 
   @override
-  Future<Subscription?> getById(int id) async => null;
+  Future<Subscription?> getById(int id) async => byId[id];
 
   @override
   Future<void> updateLastRefreshed(String itunesId, DateTime timestamp) async {}
@@ -588,12 +594,52 @@ void main() {
       expect(capturedNotifications![0].episodeId, 101);
       expect(capturedNotifications![0].podcastTitle, 'My Podcast');
       expect(capturedNotifications![0].episodeTitle, 'Episode 1');
-      expect(
+      check(
         capturedNotifications![0].artworkUrl,
-        'https://example.com/art.jpg',
-      );
+      ).equals('https://example.com/art.jpg');
       expect(capturedNotifications![1].episodeId, 102);
       expect(capturedNotifications![1].episodeTitle, 'Episode 2');
+    });
+
+    test('uses artwork backfilled by the same sync', () async {
+      final sub = _makeSubscription(id: 10, title: 'My Podcast');
+      final backfilled = _makeSubscription(id: 10, title: 'My Podcast')
+        ..artworkUrl = 'https://example.com/new.jpg';
+      List<NewEpisodeNotification>? captured;
+
+      final service = BackgroundRefreshService(
+        subscriptionRepo: FakeSubscriptionRepository(
+          subscriptions: [sub],
+          byId: {10: backfilled},
+        ),
+        episodeRepo: FakeEpisodeRepository(
+          episodesByPodcastId: {
+            10: [_makeEpisode(id: 101, podcastId: 10, title: 'Episode 1')],
+          },
+        ),
+        autoDownloadEnqueuer: FakeAutoDownloadEnqueuer(),
+        playbackHistoryRepo: FakePlaybackHistoryRepository(),
+        settingsRepo: FakeAppSettingsRepository(
+          autoSync: true,
+          notifyNewEpisodes: true,
+        ),
+        syncFeed: (sub) async => SingleFeedSyncResult(
+          podcastId: sub.id,
+          success: true,
+          skipped: false,
+          newEpisodeCount: 1,
+        ),
+        showNotification: (notifications) async => captured = notifications,
+        timeBudget: const Duration(seconds: 60),
+      );
+
+      await service.execute();
+
+      check(captured)
+          .isNotNull()
+          .single
+          .has((n) => n.artworkUrl, 'artworkUrl')
+          .equals('https://example.com/new.jpg');
     });
 
     test('caps notifications at 7', () async {

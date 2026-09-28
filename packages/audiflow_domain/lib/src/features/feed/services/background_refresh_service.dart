@@ -105,6 +105,9 @@ class BackgroundRefreshService {
             final newest = episodes.take(newestCount);
 
             final history = await _playbackHistoryRepo.getByPodcastId(sub.id);
+            // The sync may have just backfilled artwork; `sub` predates it.
+            final refreshed = await _subscriptionRepo.getById(sub.id);
+            final artworkUrl = refreshed?.artworkUrl ?? sub.artworkUrl;
             for (final episode in newest) {
               if (_hasBeenPlayed(history[episode.id])) continue;
               allNotifications.add(
@@ -113,7 +116,7 @@ class BackgroundRefreshService {
                   podcastId: sub.id,
                   podcastTitle: sub.title,
                   episodeTitle: episode.title,
-                  artworkUrl: sub.artworkUrl,
+                  artworkUrl: artworkUrl,
                 ),
               );
             }
