@@ -73,5 +73,53 @@ void main() {
 
       check(find.text('placeholder').evaluate()).isNotEmpty();
     });
+
+    // flutter_test answers every HTTP request with 400, so the load fails
+    // once ExtendedImage's retries run out (about a second of real time).
+    // Each failure test uses its own URL: a load left pending by an earlier
+    // test stays in the image cache and would never settle here.
+    Future<void> pumpUntilFound(WidgetTester tester, Finder finder) async {
+      for (var i = 0; i < 50 && finder.evaluate().isEmpty; i++) {
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 100)),
+        );
+        await tester.pump();
+      }
+    }
+
+    testWidgets('shows the placeholder when loading fails', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          const ArtworkImage(
+            url: 'https://example.com/failed-placeholder.jpg',
+            width: 64,
+            height: 64,
+            loading: Text('loading'),
+            placeholder: Text('placeholder'),
+          ),
+        ),
+      );
+      await pumpUntilFound(tester, find.text('placeholder'));
+
+      check(find.text('placeholder').evaluate()).isNotEmpty();
+      check(find.text('loading').evaluate()).isEmpty();
+    });
+
+    testWidgets('falls back to the tap-to-retry failure state without a '
+        'placeholder', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          const ArtworkImage(
+            url: 'https://example.com/failed-default.jpg',
+            width: 64,
+            height: 64,
+          ),
+        ),
+      );
+      final failed = find.text('Failed to load image');
+      await pumpUntilFound(tester, failed);
+
+      check(failed.evaluate()).isNotEmpty();
+    });
   });
 }

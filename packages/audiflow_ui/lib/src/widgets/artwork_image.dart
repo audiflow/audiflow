@@ -33,6 +33,7 @@ class ArtworkImage extends StatelessWidget {
   final BoxFit fit;
 
   /// Shown when loading fails, and while loading unless [loading] is given.
+  /// Without it, a failed load shows ExtendedImage's tap-to-retry message.
   final Widget? placeholder;
 
   /// Shown while loading; falls back to [placeholder].
@@ -68,7 +69,9 @@ class ArtworkImage extends StatelessWidget {
       cacheWidth: decodeWidth(logicalWidth, devicePixelRatio),
       loadStateChanged: (state) => switch (state.extendedImageLoadState) {
         LoadState.loading => loading ?? placeholder ?? const SizedBox.shrink(),
-        LoadState.failed => placeholder ?? const SizedBox.shrink(),
+        // Null keeps ExtendedImage's tap-to-retry failure state, so a
+        // site without a placeholder never renders blank.
+        LoadState.failed => placeholder,
         LoadState.completed => null,
       },
     );

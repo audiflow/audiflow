@@ -67,7 +67,7 @@ lib/
 
 | Widget | Location | Inputs | Behavior |
 |--------|----------|--------|----------|
-| `ArtworkImage` | `widgets/` | url, width, height, fit, placeholder, loading | Every network artwork goes through this. Decodes at `width` (or the layout constraint's max width) times the device pixel ratio, so 1400-3000 px channel artwork never lands in the image cache at full size; downloaded bytes are disk-cached once per URL. Pass `width` explicitly inside a `Hero`, whose flight animates constraints. |
+| `ArtworkImage` | `widgets/` | url, width, height, fit, placeholder, loading | Every network artwork goes through this. Decodes at `width` (or the layout constraint's max width) times the device pixel ratio, so 1400-3000 px channel artwork never lands in the image cache at full size; downloaded bytes are disk-cached once per URL. Pass `width` explicitly inside a `Hero`, whose flight animates constraints. A failed load shows `placeholder`, or ExtendedImage's tap-to-retry message when none is given. |
 | `EpisodeCard` | `widgets/cards/` | title, subtitle, description, thumbnailUrl, play/new/completed flags, action buttons | Fixed-height row with standardized 44dp touch targets: thumbnail (hidden when same as podcast art), title, metadata, play button, action row. Thumbnail via `ArtworkImage`. |
 | `PodcastArtworkGridItem` | `widgets/cards/` | title, artworkUrl, onTap | Grid cell with artwork image + title label. Placeholder on load/error. |
 | `EpisodeProgressIndicator` | `widgets/indicators/` | isCompleted, isInProgress, remainingTimeFormatted | Shows "Played" checkmark, remaining time text, or nothing. |
