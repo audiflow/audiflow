@@ -30,4 +30,10 @@ void main() {
       audioServiceConfig.androidNotificationIcon,
     ).equals('drawable/$androidNotificationSmallIcon');
   });
+
+  test('tints the playback notification like new-episode ones', () {
+    check(
+      audioServiceConfig.notificationColor,
+    ).equals(androidNotificationColor);
+  });
 }

@@ -1,3 +1,5 @@
+import 'dart:ui' show Color;
+
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:logger/logger.dart';
 import 'package:meta/meta.dart';
@@ -9,6 +11,11 @@ import '../models/new_episode_notification.dart';
 /// Android draws small icons from the alpha channel only, so the full-colour
 /// launcher icon would render as a blank circle.
 const androidNotificationSmallIcon = 'ic_stat_notification';
+
+/// Tint for the notification small icon: the app icon's background colour,
+/// so the notification matches the launcher icon rather than the system's
+/// default accent.
+const androidNotificationColor = Color(0xFFDB8648);
 
 /// Detail record for a single notification to display.
 ///
@@ -188,6 +195,7 @@ class BackgroundNotificationService {
         channelDescription: _channelDescription,
         importance: Importance.defaultImportance,
         priority: Priority.defaultPriority,
+        color: androidNotificationColor,
         largeIcon: artworkPath == null
             ? null
             : FilePathAndroidBitmap(artworkPath),
