@@ -1,7 +1,6 @@
 import 'package:audiflow_domain/audiflow_domain.dart'
     show EffectiveThumbnails, SmartPlaylistGroup, presetByFeedUrlProvider;
 import 'package:audiflow_ui/audiflow_ui.dart';
-import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -175,18 +174,12 @@ class InlineGroupCard extends ConsumerWidget {
   Widget _buildThumbnail(ColorScheme colorScheme) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(8),
-      child: ExtendedImage.network(
-        group.thumbnailUrl!,
+      child: ArtworkImage(
+        url: group.thumbnailUrl!,
         width: _thumbnailSize,
         height: _thumbnailSize,
-        fit: BoxFit.cover,
-        cache: true,
-        loadStateChanged: (state) {
-          if (state.extendedImageLoadState == LoadState.failed) {
-            return _buildPlaceholder(colorScheme);
-          }
-          return null;
-        },
+        loading: const ArtworkLoadingIndicator(),
+        placeholder: _buildPlaceholder(colorScheme),
       ),
     );
   }

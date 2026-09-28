@@ -1,9 +1,9 @@
 import 'dart:math' as math;
 
-import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 
 import '../styles/borders.dart';
+import 'artwork_image.dart';
 
 /// Full-screen overlay that displays artwork at near-full-screen size
 /// with a Hero animation. Tapping anywhere dismisses the overlay.
@@ -38,38 +38,29 @@ class ArtworkOverlay extends StatelessWidget {
             tag: heroTag,
             child: ClipRRect(
               borderRadius: AppBorders.lg,
-              child: ExtendedImage.network(
-                imageUrl,
+              child: ArtworkImage(
+                url: imageUrl,
                 width: artworkSize,
                 height: artworkSize,
-                fit: BoxFit.cover,
-                cache: true,
-                loadStateChanged: (state) {
-                  if (state.extendedImageLoadState == LoadState.loading) {
-                    return Container(
-                      width: artworkSize,
-                      height: artworkSize,
-                      color: colorScheme.surfaceContainerHighest,
-                      child: const Center(
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    );
-                  }
-                  if (state.extendedImageLoadState == LoadState.failed) {
-                    return Container(
-                      width: artworkSize,
-                      height: artworkSize,
-                      alignment: Alignment.center,
-                      color: colorScheme.surfaceContainerHighest,
-                      child: Icon(
-                        Icons.broken_image,
-                        size: 64,
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                    );
-                  }
-                  return null;
-                },
+                loading: Container(
+                  width: artworkSize,
+                  height: artworkSize,
+                  color: colorScheme.surfaceContainerHighest,
+                  child: const Center(
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+                placeholder: Container(
+                  width: artworkSize,
+                  height: artworkSize,
+                  alignment: Alignment.center,
+                  color: colorScheme.surfaceContainerHighest,
+                  child: Icon(
+                    Icons.broken_image,
+                    size: 64,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
               ),
             ),
           ),

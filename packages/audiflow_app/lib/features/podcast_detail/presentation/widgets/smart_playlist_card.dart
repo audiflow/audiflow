@@ -1,6 +1,5 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
-import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 
 /// Card displaying smart playlist information with tap to navigate.
@@ -117,18 +116,12 @@ class SmartPlaylistCard extends StatelessWidget {
     if (thumbnailUrl != null) {
       return ClipRRect(
         borderRadius: BorderRadius.circular(8),
-        child: ExtendedImage.network(
-          thumbnailUrl!,
+        child: ArtworkImage(
+          url: thumbnailUrl!,
           width: _thumbnailSize,
           height: _thumbnailSize,
-          fit: BoxFit.cover,
-          cache: true,
-          loadStateChanged: (state) {
-            if (state.extendedImageLoadState == LoadState.failed) {
-              return _buildPlaceholder(colorScheme);
-            }
-            return null;
-          },
+          loading: const ArtworkLoadingIndicator(),
+          placeholder: _buildPlaceholder(colorScheme),
         ),
       );
     }

@@ -197,18 +197,15 @@ class SubscriptionLocalDatasource {
   /// Updates podcast metadata parsed from the RSS channel.
   ///
   /// Null arguments leave the corresponding stored value untouched.
-  /// [artworkUrlIfMissing] is written only when no artwork is stored, which
-  /// this method decides for itself rather than trusting the caller.
   /// Does nothing if no subscription is found for the given [id].
   ///
   /// Every read happens inside the transaction: a feed sync and a podcast
   /// detail visit can write the same subscription concurrently, and a
   /// snapshot taken outside the transaction would let the later put
-  /// resurrect the fields the earlier one just wrote, or replace artwork
-  /// the earlier one had just filled in.
+  /// resurrect the fields the earlier one just wrote.
   Future<void> updateFeedMetadata(
     int id, {
-    String? artworkUrlIfMissing,
+    String? artworkUrl,
     String? artistName,
     String? description,
     DateTime? syncedAt,
@@ -217,14 +214,8 @@ class SubscriptionLocalDatasource {
       final existing = await _isar.subscriptions.get(id);
       if (existing == null) return;
 
-      final storedArtwork = existing.artworkUrl;
-      final hasArtwork =
-          storedArtwork != null && storedArtwork.trim().isNotEmpty;
-
       existing
-        ..artworkUrl = hasArtwork
-            ? storedArtwork
-            : (artworkUrlIfMissing ?? storedArtwork)
+        ..artworkUrl = artworkUrl ?? existing.artworkUrl
         ..artistName = artistName ?? existing.artistName
         ..description = description ?? existing.description
         ..feedMetadataSyncedAt = syncedAt ?? existing.feedMetadataSyncedAt;

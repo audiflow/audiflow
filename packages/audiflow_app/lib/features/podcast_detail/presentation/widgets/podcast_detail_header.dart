@@ -157,21 +157,17 @@ class _PodcastArtwork extends StatelessWidget {
       );
     }
 
-    return Image.network(
-      artworkUrl!,
+    return ArtworkImage(
+      url: artworkUrl!,
       width: 100,
       height: 100,
-      fit: BoxFit.cover,
-      loadingBuilder: (context, child, progress) {
-        if (progress == null) return child;
-        return Container(
-          width: 100,
-          height: 100,
-          color: colorScheme.surfaceContainerHighest,
-          child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-        );
-      },
-      errorBuilder: (context, error, stackTrace) => Container(
+      loading: Container(
+        width: 100,
+        height: 100,
+        color: colorScheme.surfaceContainerHighest,
+        child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+      ),
+      placeholder: Container(
         width: 100,
         height: 100,
         alignment: Alignment.center,

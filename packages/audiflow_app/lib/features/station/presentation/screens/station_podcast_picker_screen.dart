@@ -365,10 +365,12 @@ class _Artwork extends StatelessWidget {
         width: _size,
         height: _size,
         child: artworkUrl != null
-            ? Image.network(
-                artworkUrl!,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => _placeholder(),
+            ? ArtworkImage(
+                url: artworkUrl!,
+                width: _size,
+                height: _size,
+                loading: const SizedBox.shrink(),
+                placeholder: _placeholder(),
               )
             : _placeholder(),
       ),

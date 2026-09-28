@@ -240,14 +240,14 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
   @override
   Future<void> updateFeedMetadata(
     int id, {
-    String? artworkUrlIfMissing,
+    String? artworkUrl,
     String? artistName,
     String? description,
     DateTime? syncedAt,
   }) {
     return _datasource.updateFeedMetadata(
       id,
-      artworkUrlIfMissing: artworkUrlIfMissing,
+      artworkUrl: artworkUrl,
       artistName: artistName,
       description: description,
       syncedAt: syncedAt,

@@ -11,6 +11,7 @@ export 'src/styles/spacing.dart';
 export 'src/styles/borders.dart';
 
 // Widgets - Artwork
+export 'src/widgets/artwork_image.dart';
 export 'src/widgets/artwork_overlay.dart';
 
 // Widgets - Buttons

@@ -38,6 +38,7 @@ lib/
       spacing.dart              # Spacing.xxs..xxl (2..48 dp)
       borders.dart              # AppBorders.xs..xl (4..24 radius)
     widgets/
+      artwork_image.dart        # ArtworkImage -- network artwork decoded at its displayed size
       cards/
         episode_card.dart       # EpisodeCard -- fixed-height episode row for sliver lists
         podcast_artwork_grid_item.dart  # PodcastArtworkGridItem -- artwork card for grids
@@ -66,7 +67,8 @@ lib/
 
 | Widget | Location | Inputs | Behavior |
 |--------|----------|--------|----------|
-| `EpisodeCard` | `widgets/cards/` | title, subtitle, description, thumbnailUrl, play/new/completed flags, action buttons | Fixed-height row with standardized 44dp touch targets: thumbnail (hidden when same as podcast art), title, metadata, play button, action row. Uses `extended_image` for caching. |
+| `ArtworkImage` | `widgets/` | url, width, height, fit, placeholder, loading | Every network artwork goes through this. Decodes at `width` (or the layout constraint's max width) times the device pixel ratio, so 1400-3000 px channel artwork never lands in the image cache at full size; downloaded bytes are disk-cached once per URL. Pass `width` explicitly inside a `Hero`, whose flight animates constraints. A failed load shows `placeholder`, or ExtendedImage's tap-to-retry message when none is given. |
+| `EpisodeCard` | `widgets/cards/` | title, subtitle, description, thumbnailUrl, play/new/completed flags, action buttons | Fixed-height row with standardized 44dp touch targets: thumbnail (hidden when same as podcast art), title, metadata, play button, action row. Thumbnail via `ArtworkImage`. |
 | `PodcastArtworkGridItem` | `widgets/cards/` | title, artworkUrl, onTap | Grid cell with artwork image + title label. Placeholder on load/error. |
 | `EpisodeProgressIndicator` | `widgets/indicators/` | isCompleted, isInProgress, remainingTimeFormatted | Shows "Played" checkmark, remaining time text, or nothing. |
 | `MiniPlayerArtwork` | `widgets/player/` | imageUrl, size, borderRadius | Rounded artwork with podcast-icon placeholder fallback. |

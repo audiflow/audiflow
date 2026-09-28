@@ -1,9 +1,9 @@
 import 'package:audiflow_core/audiflow_core.dart';
-import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../styles/spacing.dart';
+import '../artwork_image.dart';
 import '../buttons/episode_play_pill.dart';
 
 /// Fixed height for the episode card, used as itemExtent in sliver lists.
@@ -309,37 +309,24 @@ class _Thumbnail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    // Source artwork is often 3000px square (~36 MB decoded), which evicts
-    // itself from the 100 MB ImageCache and re-decodes with a spinner on
-    // every scroll-back. Decoding at display size keeps it resident.
-    // Width only: setting both would stretch non-square art (exact policy).
-    final decodeWidth =
-        (_thumbnailSize * MediaQuery.devicePixelRatioOf(context)).round();
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(6),
-      child: ExtendedImage.network(
-        url,
+      child: ArtworkImage(
+        url: url,
         width: _thumbnailSize,
         height: _thumbnailSize,
-        cacheWidth: decodeWidth,
-        fit: BoxFit.cover,
-        cache: true,
-        loadStateChanged: (state) {
-          if (state.extendedImageLoadState == LoadState.failed) {
-            return Container(
-              width: _thumbnailSize,
-              height: _thumbnailSize,
-              color: colorScheme.surfaceContainerHighest,
-              child: Icon(
-                Icons.podcasts,
-                size: 32,
-                color: colorScheme.onSurfaceVariant,
-              ),
-            );
-          }
-          return null;
-        },
+        loading: const ArtworkLoadingIndicator(),
+        placeholder: Container(
+          width: _thumbnailSize,
+          height: _thumbnailSize,
+          color: colorScheme.surfaceContainerHighest,
+          child: Icon(
+            Icons.podcasts,
+            size: 32,
+            color: colorScheme.onSurfaceVariant,
+          ),
+        ),
       ),
     );
   }

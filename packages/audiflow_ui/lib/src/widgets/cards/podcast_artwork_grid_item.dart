@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../styles/borders.dart';
 import '../../styles/spacing.dart';
+import '../artwork_image.dart';
 
 /// Grid item displaying podcast artwork with a title label.
 ///
@@ -62,14 +63,9 @@ class PodcastArtworkGridItem extends StatelessWidget {
       return _buildPlaceholder(colorScheme);
     }
 
-    return Image.network(
-      artworkUrl!,
-      fit: BoxFit.cover,
-      loadingBuilder: (_, child, progress) {
-        if (progress == null) return child;
-        return _buildPlaceholder(colorScheme);
-      },
-      errorBuilder: (_, _, _) => _buildPlaceholder(colorScheme),
+    return ArtworkImage(
+      url: artworkUrl!,
+      placeholder: _buildPlaceholder(colorScheme),
     );
   }
 
