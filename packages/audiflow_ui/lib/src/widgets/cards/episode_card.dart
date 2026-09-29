@@ -211,7 +211,7 @@ class EpisodeCard extends StatelessWidget {
                 ? Padding(
                     padding: const EdgeInsets.only(top: 2),
                     child: Text(
-                      _stripHtml(description!),
+                      description!.htmlToPlainText,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodySmall?.copyWith(
@@ -286,19 +286,6 @@ bool _urlPathEquals(String? a, String? b) {
   final uriB = Uri.tryParse(b);
   if (uriA == null || uriB == null) return false;
   return uriA.host == uriB.host && uriA.path == uriB.path;
-}
-
-final _htmlTagPattern = RegExp(r'<[^>]*>');
-final _whitespacePattern = RegExp(r'\s+');
-
-/// Strips HTML tags, decodes entities, and collapses whitespace for
-/// plain-text display.
-String _stripHtml(String html) {
-  return html
-      .replaceAll(_htmlTagPattern, ' ')
-      .htmlEntityDecode
-      .replaceAll(_whitespacePattern, ' ')
-      .trim();
 }
 
 class _Thumbnail extends StatelessWidget {

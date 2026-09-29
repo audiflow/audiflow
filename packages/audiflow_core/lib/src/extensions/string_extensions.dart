@@ -21,6 +21,9 @@ const _namedEntities = <String, String>{
   'raquo': '\u00BB',
 };
 
+final _htmlTagPattern = RegExp(r'<[^>]*>');
+final _whitespacePattern = RegExp(r'\s+');
+
 final _entityPattern = RegExp(r'&(?:#[xX]([0-9a-fA-F]+)|#(\d+)|(\w+));');
 
 /// Parses a numeric code point string and returns the character, or null if
@@ -52,6 +55,13 @@ extension StringExtensions on String {
       return _namedEntities[named] ?? match.group(0)!;
     });
   }
+
+  /// Strips HTML tags, decodes entities, and collapses whitespace for
+  /// plain-text display.
+  String get htmlToPlainText => replaceAll(
+    _htmlTagPattern,
+    ' ',
+  ).htmlEntityDecode.replaceAll(_whitespacePattern, ' ').trim();
 
   /// Check if string is empty or contains only whitespace
   bool get isBlank => trim().isEmpty;

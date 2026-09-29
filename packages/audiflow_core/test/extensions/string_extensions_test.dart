@@ -409,5 +409,22 @@ void main() {
         expect('Hello world 123'.htmlEntityDecode, 'Hello world 123');
       });
     });
+
+    group('htmlToPlainText', () {
+      test('strips tags and collapses whitespace', () {
+        expect(
+          '<p>Hello <b>world</b></p>\n\n<p>Next</p>'.htmlToPlainText,
+          'Hello world Next',
+        );
+      });
+
+      test('decodes entities after stripping tags', () {
+        expect('Tom &amp; Jerry &lt;3'.htmlToPlainText, 'Tom & Jerry <3');
+      });
+
+      test('returns empty string for markup-only input', () {
+        expect('<br/> <p></p>'.htmlToPlainText, '');
+      });
+    });
   });
 }
