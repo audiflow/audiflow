@@ -601,6 +601,50 @@ void main() {
       expect(capturedNotifications![1].episodeTitle, 'Episode 2');
     });
 
+    test('carries episode details for rich notifications', () async {
+      final publishedAt = DateTime.utc(2026, 9, 1, 8);
+      final episode = _makeEpisode(id: 101, podcastId: 10, title: 'Episode 1')
+        ..description = '<p>Show <i>notes</i></p>'
+        ..durationMs = 3900000
+        ..publishedAt = publishedAt;
+      List<NewEpisodeNotification>? captured;
+
+      final service = BackgroundRefreshService(
+        subscriptionRepo: FakeSubscriptionRepository(
+          subscriptions: [_makeSubscription(id: 10, title: 'My Podcast')],
+        ),
+        episodeRepo: FakeEpisodeRepository(
+          episodesByPodcastId: {
+            10: [episode],
+          },
+        ),
+        autoDownloadEnqueuer: FakeAutoDownloadEnqueuer(),
+        playbackHistoryRepo: FakePlaybackHistoryRepository(),
+        settingsRepo: FakeAppSettingsRepository(
+          autoSync: true,
+          notifyNewEpisodes: true,
+        ),
+        syncFeed: (sub) async => SingleFeedSyncResult(
+          podcastId: sub.id,
+          success: true,
+          skipped: false,
+          newEpisodeCount: 1,
+        ),
+        showNotification: (notifications) async => captured = notifications,
+        timeBudget: const Duration(seconds: 60),
+      );
+
+      await service.execute();
+
+      check(captured).isNotNull().single
+        ..has((n) => n.description, 'description').equals('Show notes')
+        ..has(
+          (n) => n.duration,
+          'duration',
+        ).equals(const Duration(hours: 1, minutes: 5))
+        ..has((n) => n.publishedAt, 'publishedAt').equals(publishedAt);
+    });
+
     test('uses artwork backfilled by the same sync', () async {
       final sub = _makeSubscription(id: 10, title: 'My Podcast');
       final backfilled = _makeSubscription(id: 10, title: 'My Podcast')
