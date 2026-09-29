@@ -1,11 +1,15 @@
 import 'package:audiflow_app/features/settings/presentation/screens/developer_settings_screen.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
+import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher_platform_interface/link.dart';
+import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
 
 Widget _buildApp(List<dynamic> overrides) {
   return ProviderScope(
@@ -38,6 +42,22 @@ void main() {
       check(
         find.text('How to ask questions and contribute').evaluate(),
       ).isNotEmpty();
+    });
+
+    testWidgets('contribute row opens the contribute guide', (tester) async {
+      final launcher = _FakeUrlLauncher();
+      final original = UrlLauncherPlatform.instance;
+      UrlLauncherPlatform.instance = launcher;
+      addTearDown(() => UrlLauncherPlatform.instance = original);
+
+      await tester.pumpWidget(
+        _buildApp([sharedPreferencesProvider.overrideWithValue(prefs)]),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Contribute presets'));
+      await tester.pumpAndSettle();
+
+      check(launcher.launchedUrls).deepEquals([PresetUrls.contribute]);
     });
 
     testWidgets('renders toggle defaulting to off', (tester) async {
@@ -106,4 +126,21 @@ class _FakePresetSummaries extends PresetSummaries {
 
   @override
   List<PresetSummary> build() => _initial;
+}
+
+class _FakeUrlLauncher extends UrlLauncherPlatform
+    with MockPlatformInterfaceMixin {
+  final List<String> launchedUrls = [];
+
+  @override
+  LinkDelegate? get linkDelegate => null;
+
+  @override
+  Future<bool> canLaunch(String url) async => true;
+
+  @override
+  Future<bool> launchUrl(String url, LaunchOptions options) async {
+    launchedUrls.add(url);
+    return true;
+  }
 }
