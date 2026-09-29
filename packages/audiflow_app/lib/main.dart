@@ -295,7 +295,9 @@ Future<void> _startApp(
         final reporter = ref.watch(forceUpdateReporterProvider);
         return (String message, {Object? error, StackTrace? stackTrace}) {
           logger.w(message, error: error, stackTrace: stackTrace);
-          if (error != null) {
+          // Offline launches are expected and the repo already falls back
+          // to the cache; only report failures that point at the config.
+          if (error != null && !isConnectivityFailure(error)) {
             unawaited(
               reporter.captureException(
                 error,
