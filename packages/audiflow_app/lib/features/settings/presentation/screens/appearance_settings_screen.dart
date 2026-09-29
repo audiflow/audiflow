@@ -13,10 +13,16 @@ class AppearanceSettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final repo = ref.watch(appSettingsRepositoryProvider);
+    // Watch order matters: both controllers depend on
+    // appSettingsRepositoryProvider, and watching the upstream first trips a
+    // Riverpod < 3.3.2 debug assertion when this screen resumes from a
+    // disabled TickerMode after the upstream was invalidated
+    // (rrousselGit/riverpod#4709). Keep the dependents first until riverpod
+    // can be upgraded.
     final themeMode = ref.watch(themeModeControllerProvider);
-    final locale = repo.getLocale();
     final textScale = ref.watch(textScaleControllerProvider);
+    final repo = ref.watch(appSettingsRepositoryProvider);
+    final locale = repo.getLocale();
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settingsAppearanceTitle)),

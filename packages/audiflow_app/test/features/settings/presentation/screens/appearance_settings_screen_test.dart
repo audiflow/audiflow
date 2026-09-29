@@ -1,6 +1,7 @@
 import 'package:audiflow_app/features/settings/presentation/screens/appearance_settings_screen.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -95,6 +96,51 @@ void main() {
         find.byType(SegmentedButton<ThemeMode>),
       );
       expect(segmented.selected, equals({ThemeMode.dark}));
+    });
+  });
+
+  group('AppearanceSettingsScreen TickerMode pause/resume', () {
+    // Regression for rrousselGit/riverpod#4709 (see #479): resuming a
+    // hidden screen after an upstream provider was invalidated must not
+    // trip Riverpod's pausedActiveSubscriptionCount debug assertion.
+    testWidgets('survives repository invalidation while hidden', (
+      tester,
+    ) async {
+      final container = ProviderContainer(
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+      );
+      addTearDown(container.dispose);
+      final tickerEnabled = ValueNotifier(true);
+      addTearDown(tickerEnabled.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: ValueListenableBuilder<bool>(
+              valueListenable: tickerEnabled,
+              builder: (context, enabled, child) =>
+                  TickerMode(enabled: enabled, child: child!),
+              child: const AppearanceSettingsScreen(),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      tickerEnabled.value = false;
+      await tester.pump();
+      container.invalidate(appSettingsRepositoryProvider);
+      await tester.pump();
+      tickerEnabled.value = true;
+      await tester.pumpAndSettle();
+
+      check(tester.takeException()).isNull();
+      check(
+        find.byType(SegmentedButton<ThemeMode>).evaluate(),
+      ).length.equals(1);
     });
   });
 }
