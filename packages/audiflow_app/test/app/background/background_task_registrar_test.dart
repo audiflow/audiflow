@@ -41,6 +41,20 @@ void main() {
       check(data.containsKey(BackgroundInputKeys.locale)).isFalse();
     });
 
+    test('syncWithSettings does not throw on unsupported platform', () async {
+      for (final autoSync in [true, false]) {
+        await expectLater(
+          BackgroundTaskRegistrar.syncWithSettings(
+            BackgroundSettingsRepository({
+              BackgroundInputKeys.autoSync: autoSync,
+            }),
+            replaceExisting: true,
+          ),
+          completes,
+        );
+      }
+    });
+
     test('cancel does not throw on unsupported platform', () async {
       await expectLater(BackgroundTaskRegistrar.cancel(), completes);
     });

@@ -37,6 +37,24 @@ class BackgroundTaskRegistrar {
     };
   }
 
+  /// Registers the periodic refresh task from current settings, or cancels
+  /// it when auto-sync is off.
+  ///
+  /// Pass [replaceExisting] true when a setting the task reads changes;
+  /// it resets the periodic timer, so avoid it for unrelated changes.
+  static Future<void> syncWithSettings(
+    AppSettingsRepository repo, {
+    bool replaceExisting = false,
+  }) async {
+    if (!repo.getAutoSync()) return cancel();
+    await register(
+      intervalMinutes: repo.getSyncIntervalMinutes(),
+      wifiOnly: repo.getWifiOnlySync(),
+      inputData: buildInputData(repo),
+      replaceExisting: replaceExisting,
+    );
+  }
+
   /// Registers the periodic background refresh task.
   ///
   /// When [replaceExisting] is true, any pending task is cancelled and

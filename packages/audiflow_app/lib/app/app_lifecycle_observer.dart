@@ -93,16 +93,9 @@ class _AppLifecycleObserverState extends ConsumerState<AppLifecycleObserver> {
   }
 
   Future<void> _updateBackgroundRegistration() async {
-    final settingsRepo = ref.read(appSettingsRepositoryProvider);
-    if (settingsRepo.getAutoSync()) {
-      await BackgroundTaskRegistrar.register(
-        intervalMinutes: settingsRepo.getSyncIntervalMinutes(),
-        wifiOnly: settingsRepo.getWifiOnlySync(),
-        inputData: BackgroundTaskRegistrar.buildInputData(settingsRepo),
-      );
-    } else {
-      await BackgroundTaskRegistrar.cancel();
-    }
+    await BackgroundTaskRegistrar.syncWithSettings(
+      ref.read(appSettingsRepositoryProvider),
+    );
   }
 
   Future<void> _syncFeeds({required bool forceRefresh}) async {

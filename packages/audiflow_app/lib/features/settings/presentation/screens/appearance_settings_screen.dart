@@ -2,6 +2,7 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/background/background_task_registrar.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../controllers/theme_controller.dart';
 
@@ -39,6 +40,12 @@ class AppearanceSettingsScreen extends ConsumerWidget {
             onChanged: (value) async {
               await repo.setLocale(value);
               ref.invalidate(appSettingsRepositoryProvider);
+              // The background task formats notification text from a
+              // settings snapshot taken at registration.
+              await BackgroundTaskRegistrar.syncWithSettings(
+                repo,
+                replaceExisting: true,
+              );
             },
           ),
           _TextScaleTile(
