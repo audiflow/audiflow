@@ -7,6 +7,7 @@ import '../../../consent/presentation/controllers/privacy_consent_controller.dar
 import '../../../onboarding/presentation/controllers/onboarding_completion_controller.dart';
 import 'analytics_opt_in_controller.dart';
 import 'last_tab_controller.dart';
+import 'locale_controller.dart';
 import 'theme_controller.dart';
 
 /// Drops the in-memory copies of preferences held by keep-alive controllers
@@ -20,6 +21,7 @@ void applyRuntimeReset(BuildContext context, WidgetRef ref) {
   ref
     ..invalidate(themeModeControllerProvider)
     ..invalidate(textScaleControllerProvider)
+    ..invalidate(localeControllerProvider)
     ..invalidate(analyticsOptInControllerProvider)
     ..invalidate(lastTabControllerProvider)
     ..invalidate(privacyConsentControllerProvider)
