@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:audiflow_app/app/background/background_settings_repository.dart';
 import 'package:audiflow_app/app/background/background_task_registrar.dart';
+import 'package:checks/checks.dart';
 
 void main() {
   group('BackgroundTaskRegistrar', () {
@@ -21,6 +23,22 @@ void main() {
         ),
         completes,
       );
+    });
+
+    test('buildInputData snapshots the language setting', () {
+      final data = BackgroundTaskRegistrar.buildInputData(
+        BackgroundSettingsRepository({BackgroundInputKeys.locale: 'ja'}),
+      );
+
+      check(data[BackgroundInputKeys.locale]).equals('ja');
+    });
+
+    test('buildInputData omits the language when following the system', () {
+      final data = BackgroundTaskRegistrar.buildInputData(
+        BackgroundSettingsRepository(null),
+      );
+
+      check(data.containsKey(BackgroundInputKeys.locale)).isFalse();
     });
 
     test('cancel does not throw on unsupported platform', () async {

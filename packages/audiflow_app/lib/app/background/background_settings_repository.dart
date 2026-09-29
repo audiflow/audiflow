@@ -41,13 +41,14 @@ class BackgroundSettingsRepository implements AppSettingsRepository {
       _data[BackgroundInputKeys.wifiOnlyDownload] as bool? ??
       SettingsDefaults.wifiOnlyDownload;
 
+  /// Language for notification text.
+  @override
+  String? getLocale() => _data[BackgroundInputKeys.locale] as String?;
+
   // -- Unused in background — delegate to defaults or throw on write --
 
   @override
   ThemeMode getThemeMode() => ThemeMode.system;
-
-  @override
-  String? getLocale() => null;
 
   @override
   double getTextScale() => SettingsDefaults.textScale;
