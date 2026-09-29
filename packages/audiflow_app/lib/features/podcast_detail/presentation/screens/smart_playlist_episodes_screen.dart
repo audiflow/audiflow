@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../../l10n/duration_label.dart';
 import '../../../../routing/app_router.dart';
 import '../utils/group_sorting.dart';
 import '../utils/smart_playlist_def_resolver.dart';
@@ -996,13 +997,7 @@ String? _formatDateRange(DateTime? earliest, DateTime? latest) {
 /// Formats duration in ms using localized strings.
 String? _formatDuration(int? totalMs, AppLocalizations l10n) {
   if (totalMs == null || totalMs == 0) return null;
-  final minutes = totalMs ~/ 60000;
-  final hours = minutes ~/ 60;
-  final remainingMinutes = minutes % 60;
-  if (0 < hours) {
-    return l10n.groupDurationHoursMinutes(hours, remainingMinutes);
-  }
-  return l10n.groupDurationMinutes(minutes);
+  return l10n.durationLabel(Duration(milliseconds: totalMs));
 }
 
 /// Height of a group card for fixed-extent lists.
