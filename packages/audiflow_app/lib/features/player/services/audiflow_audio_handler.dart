@@ -8,6 +8,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:logger/logger.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
+import '../../monitoring/services/sentry_diagnostics.dart';
 import 'audio_interruption_handler.dart';
 import 'now_playing_artwork_provider.dart';
 import 'now_playing_media_item_sync.dart';
@@ -101,6 +102,7 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
     // Capture the post-pause state and the long-call resume outcomes
     // (success bail-out vs. unexpected failure) so the on-device session
     // surfaces without needing a crash.
+    if (!sentryDiagnosticsEnabled) return;
     if (event == 'player.interruption:begin-paused' ||
         event == 'player.interruption:begin-pause-failed' ||
         event == 'player.interruption:resume-skipped-session-busy' ||

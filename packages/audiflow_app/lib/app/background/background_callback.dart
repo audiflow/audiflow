@@ -6,6 +6,7 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:isar_community/isar.dart';
@@ -14,6 +15,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:workmanager/workmanager.dart';
 
+import '../../features/monitoring/services/sentry_diagnostics.dart';
 import 'background_settings_repository.dart';
 import 'background_task_registrar.dart';
 
@@ -184,10 +186,14 @@ void backgroundCallback() {
     var sentryInitialized = false;
     try {
       const sentryDsn = String.fromEnvironment('SENTRY_DSN');
-      const sentryEnvironment = String.fromEnvironment(
+      // Mirror the foreground isolate: fall back to the build flavor so
+      // background events are not filed under an "unknown" environment.
+      const sentryEnvironmentDefine = String.fromEnvironment(
         'SENTRY_ENVIRONMENT',
-        defaultValue: 'unknown',
       );
+      final sentryEnvironment = sentryEnvironmentDefine.isNotEmpty
+          ? sentryEnvironmentDefine
+          : appFlavor ?? 'unknown';
       _bgDebug(
         'SENTRY_DSN isEmpty=${sentryDsn.isEmpty}, '
         'env=$sentryEnvironment',
@@ -222,11 +228,13 @@ void backgroundCallback() {
       );
       // Diagnostic: verify background Sentry pipeline works.
       // Remove once investigation is resolved.
-      final startId = await Sentry.captureMessage(
-        'bg-refresh: started',
-        level: SentryLevel.info,
-      );
-      _bgDebug('captureMessage sentryId=$startId');
+      if (sentryDiagnosticsEnabled) {
+        final startId = await Sentry.captureMessage(
+          'bg-refresh: started',
+          level: SentryLevel.info,
+        );
+        _bgDebug('captureMessage sentryId=$startId');
+      }
     }
 
     Isar? isar;
@@ -304,6 +312,7 @@ void backgroundCallback() {
           );
           // For the two highest-signal events capture messages so they
           // show up in the Sentry issue stream (not only breadcrumbs).
+          if (!sentryDiagnosticsEnabled) return;
           if (event == 'feed-sync:drop-result' ||
               event == 'feed-sync:parse-complete') {
             unawaited(
@@ -406,7 +415,7 @@ void backgroundCallback() {
               );
             }
 
-            if (sentryInitialized) {
+            if (sentryInitialized && sentryDiagnosticsEnabled) {
               await Sentry.captureMessage(
                 'bg-notification: dispatching '
                 '${notifications.length} notification(s)',
@@ -507,11 +516,13 @@ void backgroundCallback() {
         );
         // Diagnostic: send completion event with breadcrumb trail attached.
         // Remove once investigation is resolved.
-        final doneId = await Sentry.captureMessage(
-          'bg-refresh: completed',
-          level: SentryLevel.info,
-        );
-        _bgDebug('completion captureMessage sentryId=$doneId');
+        if (sentryDiagnosticsEnabled) {
+          final doneId = await Sentry.captureMessage(
+            'bg-refresh: completed',
+            level: SentryLevel.info,
+          );
+          _bgDebug('completion captureMessage sentryId=$doneId');
+        }
       }
     } catch (e, stack) {
       _bgDebug('background refresh FAILED: $e');
@@ -644,7 +655,7 @@ Future<bool> _executeDownloadTask(Map<String, dynamic>? inputData) async {
     );
     pendingAtStart = pendingAtStartList.length;
 
-    if (sentryInitialized) {
+    if (sentryInitialized && sentryDiagnosticsEnabled) {
       await Sentry.captureMessage(
         'bg-download: started',
         level: SentryLevel.info,
@@ -701,20 +712,22 @@ Future<bool> _executeDownloadTask(Map<String, dynamic>? inputData) async {
           category: 'background.download',
         ),
       );
-      await Sentry.captureMessage(
-        'bg-download: completed',
-        level: SentryLevel.info,
-        withScope: (scope) => scope.setContexts('download_diag', {
-          'isOnWifi': isOnWifi,
-          'pendingAtStart': pendingAtStart,
-          'stuckResetCount': stuckAtStart,
-          'completed': completedCount,
-          'pendingAtEnd': pendingAtEnd,
-          'runnableRemaining': runnableRemainingCount,
-          'rescheduledWifiOnly': rescheduledWifiOnly,
-          'workmanagerSuccess': success,
-        }),
-      );
+      if (sentryDiagnosticsEnabled) {
+        await Sentry.captureMessage(
+          'bg-download: completed',
+          level: SentryLevel.info,
+          withScope: (scope) => scope.setContexts('download_diag', {
+            'isOnWifi': isOnWifi,
+            'pendingAtStart': pendingAtStart,
+            'stuckResetCount': stuckAtStart,
+            'completed': completedCount,
+            'pendingAtEnd': pendingAtEnd,
+            'runnableRemaining': runnableRemainingCount,
+            'rescheduledWifiOnly': rescheduledWifiOnly,
+            'workmanagerSuccess': success,
+          }),
+        );
+      }
     }
   } catch (e, stack) {
     _bgDebug('download task FAILED: $e');
