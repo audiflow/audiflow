@@ -290,24 +290,12 @@ Future<void> _startApp(
       // capturing a late container reference: the override builder reads
       // both seams from its own `ref`, so the sink closure is bound to
       // the container under construction.
-      forceUpdateWarningSinkProvider.overrideWith((ref) {
-        final logger = ref.watch(namedLoggerProvider('ForceUpdate'));
-        final reporter = ref.watch(forceUpdateReporterProvider);
-        return (String message, {Object? error, StackTrace? stackTrace}) {
-          logger.w(message, error: error, stackTrace: stackTrace);
-          // Offline launches are expected and the repo already falls back
-          // to the cache; only report failures that point at the config.
-          if (error != null && !isConnectivityFailure(error)) {
-            unawaited(
-              reporter.captureException(
-                error,
-                stackTrace: stackTrace,
-                message: message,
-              ),
-            );
-          }
-        };
-      }),
+      forceUpdateWarningSinkProvider.overrideWith(
+        (ref) => buildForceUpdateWarningSink(
+          logger: ref.watch(namedLoggerProvider('ForceUpdate')),
+          reporter: ref.watch(forceUpdateReporterProvider),
+        ),
+      ),
     ],
   );
 

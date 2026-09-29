@@ -2,6 +2,7 @@ export 'constants.dart';
 export 'presentation/banner_dismissal_controller.dart';
 export 'presentation/force_update_controller.dart';
 export 'presentation/force_update_reporter.dart';
+export 'presentation/force_update_warning_sink.dart';
 export 'presentation/i18n_message_resolver.dart';
 export 'presentation/update_url_resolver.dart';
 export 'presentation/url_launcher_provider.dart';
