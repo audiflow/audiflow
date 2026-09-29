@@ -23,7 +23,6 @@ class DeveloperSettingsScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final devInfoEnabled = ref.watch(devShowDeveloperInfoProvider);
     final summaries = ref.watch(presetSummariesProvider);
-    final schemaVersion = ref.watch(presetSchemaVersionProvider);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settingsDeveloperTitle)),
@@ -96,39 +95,27 @@ class DeveloperSettingsScreen extends ConsumerWidget {
 
             // Pattern items
             ...summaries.map((summary) {
-              final enabled = 0 < schemaVersion;
               return ListTile(
                 title: Text(summary.displayName),
                 dense: true,
-                trailing: enabled
-                    ? Icon(
-                        Symbols.open_in_new,
-                        size: 18,
-                        color: theme.colorScheme.primary,
-                      )
-                    : null,
-                onTap: enabled
-                    ? () async {
-                        try {
-                          final ok = await launchUrl(
-                            Uri.parse(
-                              PresetUrls.presetDir(
-                                summary.id,
-                                schemaVersion: schemaVersion,
-                              ),
-                            ),
-                            mode: LaunchMode.externalApplication,
-                          );
-                          if (!ok) {
-                            debugPrint(
-                              'launchUrl returned false for preset URL',
-                            );
-                          }
-                        } on Exception catch (e) {
-                          debugPrint('Failed to launch preset URL: $e');
-                        }
-                      }
-                    : null,
+                trailing: Icon(
+                  Symbols.open_in_new,
+                  size: 18,
+                  color: theme.colorScheme.primary,
+                ),
+                onTap: () async {
+                  try {
+                    final ok = await launchUrl(
+                      Uri.parse(PresetUrls.presetDir(summary.id)),
+                      mode: LaunchMode.externalApplication,
+                    );
+                    if (!ok) {
+                      debugPrint('launchUrl returned false for preset URL');
+                    }
+                  } on Exception catch (e) {
+                    debugPrint('Failed to launch preset URL: $e');
+                  }
+                },
               );
             }),
           ],

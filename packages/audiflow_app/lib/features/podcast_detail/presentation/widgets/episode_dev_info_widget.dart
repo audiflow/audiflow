@@ -28,7 +28,6 @@ class EpisodeDevInfoWidget extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final repo = ref.watch(presetConfigRepositoryProvider);
-    final schemaVersion = ref.watch(presetSchemaVersionProvider);
 
     final match = repo.findMatchingPreset(null, feedUrl);
 
@@ -87,8 +86,8 @@ class EpisodeDevInfoWidget extends ConsumerWidget {
         const SizedBox(height: Spacing.xs),
         InkWell(
           onTap: () async {
-            final url = 0 < schemaVersion && match != null
-                ? PresetUrls.presetDir(match.id, schemaVersion: schemaVersion)
+            final url = match != null
+                ? PresetUrls.presetDir(match.id)
                 : PresetUrls.repo;
             try {
               final ok = await launchUrl(
