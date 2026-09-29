@@ -4,6 +4,12 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('PresetUrls', () {
+    test('contribute points at the redirectable site page', () {
+      check(
+        PresetUrls.contribute,
+      ).equals('https://company.reedom.com/audiflow/contribute');
+    });
+
     test('presetDir points at the preset on the main branch', () {
       check(PresetUrls.presetDir('2e86c4b573b7')).equals(
         'https://github.com/audiflow/audiflow-preset/tree/main/presets/2e86c4b573b7',
