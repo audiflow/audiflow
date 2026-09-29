@@ -314,7 +314,30 @@ void main() {
           ).equals('D:1 \u00B7 65min');
       });
 
-      test('uses the default Android style without a body', () async {
+      test('expands date and duration on Android without notes', () async {
+        final stub = _StubShowDelegate();
+
+        await BackgroundNotificationService(
+          textFormatter: _formatter,
+        ).showPerEpisodeNotificationsViaDelegate(stub, [
+          NewEpisodeNotification(
+            episodeId: 1,
+            podcastId: 10,
+            podcastTitle: 'Podcast A',
+            episodeTitle: 'Episode 1',
+            publishedAt: DateTime(2026, 9, 1),
+            duration: const Duration(minutes: 65),
+          ),
+        ]);
+
+        check(
+            stub.shownDetails.single!.android!.styleInformation,
+          ).isA<BigTextStyleInformation>()
+          ..has((style) => style.bigText, 'bigText').equals('D:1 · 65min')
+          ..has((style) => style.summaryText, 'summaryText').isNull();
+      });
+
+      test('uses the default Android style without notes or meta', () async {
         final stub = _StubShowDelegate();
 
         await BackgroundNotificationService(

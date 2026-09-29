@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:audiflow_core/audiflow_core.dart';
+import 'package:characters/characters.dart';
 
 /// Lightweight DTO carrying per-episode data for local notifications.
 ///
@@ -56,13 +57,11 @@ class NewEpisodeNotification {
         .map((candidate) => candidate?.htmlToMultilinePlainText ?? '')
         .firstWhere((plain) => plain.isNotEmpty, orElse: () => '');
     if (text.isEmpty) return null;
-    if (text.length <= descriptionMaxLength) return text;
-    var end = descriptionMaxLength - 1;
-    // Never split a surrogate pair (emoji), which would render as garbage.
-    if (_isHighSurrogate(text.codeUnitAt(end - 1))) end--;
-    return '${text.substring(0, end).trimRight()}…';
+    // Count and cut by grapheme cluster so a joined emoji or a letter with
+    // its combining mark is never split.
+    final characters = text.characters;
+    if (characters.length <= descriptionMaxLength) return text;
+    final kept = characters.take(descriptionMaxLength - 1).string;
+    return '${kept.trimRight()}\u2026';
   }
-
-  static bool _isHighSurrogate(int codeUnit) =>
-      0xD800 <= codeUnit && codeUnit <= 0xDBFF;
 }

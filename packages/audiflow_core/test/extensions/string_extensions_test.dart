@@ -419,6 +419,14 @@ void main() {
         );
       });
 
+      test('treats line breaks with attributes as newlines', () {
+        expect(
+          'One<br class="clear">Two<BR style="x" />Three'
+              .htmlToMultilinePlainText,
+          'One\nTwo\nThree',
+        );
+      });
+
       test('keeps plain-text newlines and drops blank lines', () {
         expect(
           'Line one  \r\n\r\n\n   Line   two\n'.htmlToMultilinePlainText,

@@ -24,7 +24,7 @@ const _namedEntities = <String, String>{
 final _htmlTagPattern = RegExp(r'<[^>]*>');
 final _whitespacePattern = RegExp(r'\s+');
 final _lineBreakTagPattern = RegExp(
-  r'<br\s*/?>|</(?:p|div|li|h[1-6]|blockquote|tr)\s*>',
+  r'<br\b[^>]*>|</(?:p|div|li|h[1-6]|blockquote|tr)\s*>',
   caseSensitive: false,
 );
 final _horizontalSpacePattern = RegExp(r'[^\S\n]+');

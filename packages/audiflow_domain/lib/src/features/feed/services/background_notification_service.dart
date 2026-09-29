@@ -225,11 +225,20 @@ class BackgroundNotificationService {
     }
   }
 
+  /// Expanded Android text: the notes with date and duration as summary, or
+  /// date and duration alone when the episode has no notes.
+  static StyleInformation? _androidStyle(NotificationDetail detail) {
+    final body = detail.body;
+    final meta = detail.meta;
+    if (body != null) return BigTextStyleInformation(body, summaryText: meta);
+    if (meta != null) return BigTextStyleInformation(meta);
+    return null;
+  }
+
   static NotificationDetails _buildDetails(
     NotificationDetail detail,
     String? artworkPath,
   ) {
-    final body = detail.body;
     return NotificationDetails(
       android: AndroidNotificationDetails(
         _channelId,
@@ -244,9 +253,7 @@ class BackgroundNotificationService {
         // Android has no subtitle: the header line carries the podcast, and
         // the expanded view's summary carries date and duration.
         subText: detail.podcastTitle,
-        styleInformation: body == null
-            ? null
-            : BigTextStyleInformation(body, summaryText: detail.meta),
+        styleInformation: _androidStyle(detail),
       ),
       // presentBanner/presentList/presentSound ensure the notification is
       // visible when the app is in the foreground. Without these flags iOS

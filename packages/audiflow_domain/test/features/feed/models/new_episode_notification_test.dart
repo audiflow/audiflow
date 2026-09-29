@@ -55,6 +55,19 @@ void main() {
         ).equals('First\nSecond');
       });
 
+      test('does not split a joined emoji at the cut point', () {
+        const max = NewEpisodeNotification.descriptionMaxLength;
+        // Family emoji: several code points joined by zero-width joiners.
+        const family = '\u{1F468}‍\u{1F469}‍\u{1F467}';
+        final result = NewEpisodeNotification.plainTextDescription(
+          description: '${'a' * (max - 2)}${family}rest',
+          summary: null,
+        );
+
+        // Counted as one character, the emoji is kept whole.
+        check(result).equals('${'a' * (max - 2)}$family…');
+      });
+
       test('falls back to summary when description is blank', () {
         check(
           NewEpisodeNotification.plainTextDescription(
@@ -85,16 +98,6 @@ void main() {
             'length',
           ).equals(NewEpisodeNotification.descriptionMaxLength)
           ..endsWith('\u2026');
-      });
-
-      test('does not split an emoji at the cut point', () {
-        const max = NewEpisodeNotification.descriptionMaxLength;
-        final result = NewEpisodeNotification.plainTextDescription(
-          description: '${'a' * (max - 2)}\u{1F600}rest',
-          summary: null,
-        );
-
-        check(result).equals('${'a' * (max - 2)}\u2026');
       });
     });
   });

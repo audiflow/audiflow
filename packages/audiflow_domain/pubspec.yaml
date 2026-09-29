@@ -17,6 +17,7 @@ dependencies:
     path: ../audiflow_podcast
   audiflow_search:
     path: ../audiflow_search
+  characters: ^1.4.1
   riverpod: ^3.2.0
   isar_community:
     git:
