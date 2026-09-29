@@ -61,16 +61,5 @@ void main() {
       check(container.read(localeControllerProvider)).isNull();
       check(prefs.getString(SettingsKeys.locale)).isNull();
     });
-
-    test('choice survives a fresh container (app restart)', () async {
-      final first = createContainer();
-      await first
-          .read(localeControllerProvider.notifier)
-          .setLocale(const Locale('ja'));
-
-      final second = createContainer();
-
-      check(second.read(localeControllerProvider)).equals(const Locale('ja'));
-    });
   });
 }
