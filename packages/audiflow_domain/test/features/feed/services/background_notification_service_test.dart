@@ -377,19 +377,20 @@ void main() {
           _formatter,
         );
 
-        expect(details.length, 2);
+        check(details).length.equals(2);
 
-        expect(details[0].id, 1);
-        expect(details[0].title, 'Episode 1');
-        expect(details[0].subtitle, 'Podcast A');
-        expect(details[0].body, isNull);
-        final payload0 = jsonDecode(details[0].payload) as Map<String, dynamic>;
-        expect(payload0['type'], 'new_episode');
-        expect(payload0['episodeId'], 1);
-        expect(payload0['podcastId'], 10);
+        check(details[0])
+          ..has((d) => d.id, 'id').equals(1)
+          ..has((d) => d.title, 'title').equals('Episode 1')
+          ..has((d) => d.subtitle, 'subtitle').equals('Podcast A')
+          ..has((d) => d.body, 'body').isNull();
+        check(
+          jsonDecode(details[0].payload) as Map<String, dynamic>,
+        ).deepEquals({'type': 'new_episode', 'episodeId': 1, 'podcastId': 10});
 
-        expect(details[1].id, 2);
-        expect(details[1].title, 'Episode 2');
+        check(details[1])
+          ..has((d) => d.id, 'id').equals(2)
+          ..has((d) => d.title, 'title').equals('Episode 2');
       });
 
       test('returns empty list for empty input', () {
@@ -397,7 +398,7 @@ void main() {
           [],
           _formatter,
         );
-        expect(details, isEmpty);
+        check(details).isEmpty();
       });
     });
   });
