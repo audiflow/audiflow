@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:audiflow_app/features/library/presentation/controllers/library_controller.dart';
 import 'package:audiflow_app/features/library/presentation/screens/library_screen.dart';
+import 'package:audiflow_app/features/station/presentation/controllers/station_list_controller.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
@@ -135,6 +136,58 @@ void main() {
       expect(find.text('Failed to load subscriptions'), findsOneWidget);
       expect(find.byIcon(Icons.refresh), findsOneWidget);
       expect(find.text('Retry'), findsOneWidget);
+    });
+  });
+
+  group('LibraryScreen TickerMode pause/resume', () {
+    // Regression for #479: resuming a hidden LibraryScreen after
+    // librarySubscriptionsProvider was invalidated re-entered Riverpod's
+    // pause bookkeeping and tripped a debug assertion (riverpod < 3.3.2).
+    testWidgets('survives invalidation while hidden', (tester) async {
+      SharedPreferences.setMockInitialValues({
+        'podcast_sort_order': PodcastSortOrder.subscribedAt.name,
+      });
+      final prefs = await SharedPreferences.getInstance();
+      final fixtures = [_sub(1, 'Alpha'), _sub(2, 'Beta')];
+      final container = ProviderContainer(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          librarySubscriptionsProvider.overrideWith(
+            (ref) => Stream.value(fixtures),
+          ),
+          stationListProvider.overrideWith((ref) => Stream.value(<Station>[])),
+        ],
+      );
+      addTearDown(container.dispose);
+      final tickerEnabled = ValueNotifier(true);
+      addTearDown(tickerEnabled.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: ValueListenableBuilder<bool>(
+              valueListenable: tickerEnabled,
+              builder: (context, enabled, child) =>
+                  TickerMode(enabled: enabled, child: child!),
+              child: const LibraryScreen(),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      tickerEnabled.value = false;
+      await tester.pump();
+      container.invalidate(librarySubscriptionsProvider);
+      await tester.pump();
+      tickerEnabled.value = true;
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Alpha'), findsOneWidget);
     });
   });
 
