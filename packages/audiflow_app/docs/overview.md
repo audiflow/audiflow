@@ -100,7 +100,9 @@ Route data is passed via `GoRouterState.extra` as typed objects or `Map<String, 
 - Configuration: `l10n.yaml` at package root
 - Generated output: `lib/l10n/app_localizations.dart`, `app_localizations_en.dart`, `app_localizations_ja.dart`
 - Access pattern: `AppLocalizations.of(context).keyName`
-- Locale resolution: matches device locale to `supportedLocales`; falls back to first supported locale (English)
+- Locale selection: `LocaleController` (Settings > Appearance > Language) feeds `MaterialApp.locale`; `null` means follow the device locale
+- Locale resolution: `resolveSupportedLocale` (`lib/app/app_locale.dart`) matches the explicit or device locale to `supportedLocales` by language code; falls back to first supported locale (English)
+- `Intl.defaultLocale`: kept in step with the resolved locale by `IntlLocaleSync` in `MaterialApp.builder`
 
 ## App bootstrap sequence
 
