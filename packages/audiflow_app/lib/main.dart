@@ -11,7 +11,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart' as intl;
 import 'package:isar_community/isar.dart';
 import 'package:logger/logger.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -24,6 +23,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:workmanager/workmanager.dart';
 
 import 'app/app_lifecycle_observer.dart';
+import 'app/app_locale.dart';
 import 'app/notification/notification_tap_handler.dart';
 import 'app/background/background_callback.dart';
 import 'app/background/background_task_registrar.dart';
@@ -34,6 +34,7 @@ import 'features/monitoring/services/throttled_analytics_service.dart';
 import 'features/player/services/audio_handler_provider.dart';
 import 'features/review_prompt/presentation/review_prompt_gate.dart';
 import 'features/settings/presentation/controllers/last_tab_controller.dart';
+import 'features/settings/presentation/controllers/locale_controller.dart';
 import 'features/settings/presentation/controllers/theme_controller.dart';
 import 'features/settings/presentation/widgets/opml_file_receiver.dart';
 import 'l10n/app_localizations.dart';
@@ -432,8 +433,9 @@ Future<void> _restoreLastPlayed(ProviderContainer container) async {
 /// Root application widget.
 ///
 /// Creates the [MaterialApp.router] with the application router
-/// and theme configuration. Watches [ThemeModeController] and
-/// [TextScaleController] to apply live settings changes.
+/// and theme configuration. Watches [ThemeModeController],
+/// [TextScaleController], and [LocaleController] to apply live settings
+/// changes.
 class MyApp extends ConsumerStatefulWidget {
   const MyApp({super.key});
 
@@ -547,6 +549,7 @@ class _MyAppState extends ConsumerState<MyApp> {
   Widget build(BuildContext context) {
     final themeMode = ref.watch(themeModeControllerProvider);
     final textScale = ref.watch(textScaleControllerProvider);
+    final locale = ref.watch(localeControllerProvider);
 
     return MediaQuery(
       data: MediaQuery.of(
@@ -554,18 +557,10 @@ class _MyAppState extends ConsumerState<MyApp> {
       ).copyWith(textScaler: TextScaler.linear(textScale)),
       child: MaterialApp.router(
         title: 'audiflow',
+        locale: locale,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        localeResolutionCallback: (locale, supportedLocales) {
-          for (final supported in supportedLocales) {
-            if (supported.languageCode == locale?.languageCode) {
-              intl.Intl.defaultLocale = supported.toLanguageTag();
-              return supported;
-            }
-          }
-          intl.Intl.defaultLocale = supportedLocales.first.toLanguageTag();
-          return supportedLocales.first;
-        },
+        localeResolutionCallback: resolveSupportedLocale,
         theme: AppTheme.light(),
         darkTheme: AppTheme.dark(),
         themeMode: themeMode,
@@ -573,8 +568,10 @@ class _MyAppState extends ConsumerState<MyApp> {
         // access to MaterialLocalizations + AppLocalizations and sits
         // above the router subtree — HardUpdate / Maintenance render
         // before any route mounts.
-        builder: (context, child) => ForceUpdateGate(
-          child: ReviewPromptGate(child: OpmlFileReceiver(child: child!)),
+        builder: (context, child) => IntlLocaleSync(
+          child: ForceUpdateGate(
+            child: ReviewPromptGate(child: OpmlFileReceiver(child: child!)),
+          ),
         ),
         routerConfig: _router,
       ),

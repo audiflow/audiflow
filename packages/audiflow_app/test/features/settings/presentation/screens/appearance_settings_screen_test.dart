@@ -1,5 +1,7 @@
+import 'package:audiflow_app/features/settings/presentation/controllers/locale_controller.dart';
 import 'package:audiflow_app/features/settings/presentation/screens/appearance_settings_screen.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
+import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
@@ -96,6 +98,35 @@ void main() {
         find.byType(SegmentedButton<ThemeMode>),
       );
       expect(segmented.selected, equals({ThemeMode.dark}));
+    });
+
+    testWidgets('selecting a language updates the locale controller', (
+      tester,
+    ) async {
+      final container = ProviderContainer(
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+      );
+      addTearDown(container.dispose);
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const AppearanceSettingsScreen(),
+          ),
+        ),
+      );
+
+      await tester.tap(find.byType(DropdownButton<Locale?>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Japanese').last);
+      await tester.pumpAndSettle();
+
+      check(
+        container.read(localeControllerProvider),
+      ).equals(const Locale('ja'));
+      check(prefs.getString(SettingsKeys.locale)).equals('ja');
     });
   });
 

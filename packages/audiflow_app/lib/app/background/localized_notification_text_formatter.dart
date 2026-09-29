@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../l10n/duration_label.dart';
+import '../app_locale.dart';
 
 /// Formats notification text in the app's language without a
 /// `BuildContext`, for use in the background isolate.
@@ -14,8 +15,8 @@ class LocalizedNotificationTextFormatter implements NotificationTextFormatter {
   /// Resolves [storedLocale] (the language setting), or [platformLocale] when
   /// the setting follows the system, to a supported locale.
   ///
-  /// Unsupported languages fall back to the first supported locale, matching
-  /// the foreground app's resolution.
+  /// Uses the foreground app's resolution, so unsupported languages fall
+  /// back to English.
   static Future<LocalizedNotificationTextFormatter> create({
     required String? storedLocale,
     required String platformLocale,
@@ -43,10 +44,9 @@ class LocalizedNotificationTextFormatter implements NotificationTextFormatter {
   static Locale _resolve(String localeName) {
     // Platform locale names look like `ja_JP` or `en-US`.
     final languageCode = localeName.split(RegExp('[_-]')).first;
-    const supported = AppLocalizations.supportedLocales;
-    return supported.firstWhere(
-      (locale) => locale.languageCode == languageCode,
-      orElse: () => supported.first,
+    return resolveSupportedLocale(
+      Locale(languageCode),
+      AppLocalizations.supportedLocales,
     );
   }
 }

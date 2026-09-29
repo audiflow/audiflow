@@ -1,9 +1,8 @@
-import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../app/background/background_task_registrar.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../controllers/locale_controller.dart';
 import '../controllers/theme_controller.dart';
 
 /// Screen for configuring appearance settings: theme, language,
@@ -14,16 +13,9 @@ class AppearanceSettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    // Watch order matters: both controllers depend on
-    // appSettingsRepositoryProvider, and watching the upstream first trips a
-    // Riverpod < 3.3.2 debug assertion when this screen resumes from a
-    // disabled TickerMode after the upstream was invalidated
-    // (rrousselGit/riverpod#4709). Keep the dependents first until riverpod
-    // can be upgraded.
     final themeMode = ref.watch(themeModeControllerProvider);
     final textScale = ref.watch(textScaleControllerProvider);
-    final repo = ref.watch(appSettingsRepositoryProvider);
-    final locale = repo.getLocale();
+    final locale = ref.watch(localeControllerProvider);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settingsAppearanceTitle)),
@@ -37,16 +29,8 @@ class AppearanceSettingsScreen extends ConsumerWidget {
           ),
           _LanguageTile(
             locale: locale,
-            onChanged: (value) async {
-              await repo.setLocale(value);
-              ref.invalidate(appSettingsRepositoryProvider);
-              // The background task formats notification text from a
-              // settings snapshot taken at registration.
-              await BackgroundTaskRegistrar.syncWithSettings(
-                repo,
-                replaceExisting: true,
-              );
-            },
+            onChanged: (value) =>
+                ref.read(localeControllerProvider.notifier).setLocale(value),
           ),
           _TextScaleTile(
             textScale: textScale,
@@ -110,8 +94,8 @@ class _ThemeModeTile extends StatelessWidget {
 class _LanguageTile extends StatelessWidget {
   const _LanguageTile({required this.locale, required this.onChanged});
 
-  final String? locale;
-  final ValueChanged<String?> onChanged;
+  final Locale? locale;
+  final ValueChanged<Locale?> onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -119,7 +103,7 @@ class _LanguageTile extends StatelessWidget {
 
     return ListTile(
       title: Text(l10n.appearanceLanguage),
-      trailing: DropdownButton<String?>(
+      trailing: DropdownButton<Locale?>(
         value: locale,
         onChanged: onChanged,
         items: [
@@ -128,11 +112,11 @@ class _LanguageTile extends StatelessWidget {
             child: Text(l10n.appearanceThemeSystem),
           ),
           DropdownMenuItem(
-            value: 'en',
+            value: const Locale('en'),
             child: Text(l10n.appearanceLanguageEnglish),
           ),
           DropdownMenuItem(
-            value: 'ja',
+            value: const Locale('ja'),
             child: Text(l10n.appearanceLanguageJapanese),
           ),
         ],
