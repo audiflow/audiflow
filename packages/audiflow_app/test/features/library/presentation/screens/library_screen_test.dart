@@ -5,6 +5,7 @@ import 'package:audiflow_app/features/library/presentation/screens/library_scree
 import 'package:audiflow_app/features/station/presentation/controllers/station_list_controller.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -186,8 +187,8 @@ void main() {
       tickerEnabled.value = true;
       await tester.pumpAndSettle();
 
-      expect(tester.takeException(), isNull);
-      expect(find.text('Alpha'), findsOneWidget);
+      check(tester.takeException()).isNull();
+      check(find.text('Alpha').evaluate()).length.equals(1);
     });
   });
 
