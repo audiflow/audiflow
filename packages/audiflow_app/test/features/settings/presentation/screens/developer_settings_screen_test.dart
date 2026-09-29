@@ -35,7 +35,9 @@ void main() {
       await tester.pumpAndSettle();
 
       check(find.text('Contribute presets').evaluate()).isNotEmpty();
-      check(find.text('audiflow/audiflow-preset').evaluate()).isNotEmpty();
+      check(
+        find.text('How to ask questions and contribute').evaluate(),
+      ).isNotEmpty();
     });
 
     testWidgets('renders toggle defaulting to off', (tester) async {

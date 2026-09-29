@@ -2342,16 +2342,16 @@ abstract class AppLocalizations {
   /// **'Smart playlist patterns and debug info'**
   String get settingsDeveloperSubtitle;
 
-  /// Tappable row label linking to the preset repo
+  /// Tappable row label linking to the contribute guide
   ///
   /// In en, this message translates to:
   /// **'Contribute presets'**
   String get developerContributeLabel;
 
-  /// Short repo name shown below the contribute link
+  /// Subtitle below the contribute link, describing the guide page it opens
   ///
   /// In en, this message translates to:
-  /// **'audiflow/audiflow-preset'**
+  /// **'How to ask questions and contribute'**
   String get developerContributeRepo;
 
   /// Toggle title for developer info in episode detail

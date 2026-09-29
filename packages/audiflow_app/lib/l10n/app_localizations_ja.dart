@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -1233,7 +1232,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get developerContributeLabel => 'スマートプレイリストパターンを貢献';
 
   @override
-  String get developerContributeRepo => 'audiflow/audiflow-preset';
+  String get developerContributeRepo => '質問や貢献の方法';
 
   @override
   String get developerShowInfoTitle => '開発者情報を表示';

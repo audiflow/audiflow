@@ -11,7 +11,7 @@ import '../utils/open_preset_url.dart';
 
 /// Settings screen for developer-oriented preferences.
 ///
-/// Shows a contribute link to the preset repo, a toggle for
+/// Shows a contribute link to the contribute guide, a toggle for
 /// developer info in episode detail, and a browsable list of
 /// all presets.
 class DeveloperSettingsScreen extends ConsumerWidget {
@@ -56,7 +56,7 @@ class DeveloperSettingsScreen extends ConsumerWidget {
                 size: 18,
                 color: theme.colorScheme.primary,
               ),
-              onTap: () => openPresetUrl(ref, PresetUrls.repo),
+              onTap: () => openPresetUrl(ref, PresetUrls.contribute),
             ),
             const Divider(height: 1),
 
