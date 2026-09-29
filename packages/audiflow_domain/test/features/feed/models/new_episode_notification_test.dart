@@ -46,6 +46,15 @@ void main() {
         ).equals('Show notes & more');
       });
 
+      test('keeps paragraph breaks as newlines', () {
+        check(
+          NewEpisodeNotification.plainTextDescription(
+            description: '<p>First</p><p>Second</p>',
+            summary: null,
+          ),
+        ).equals('First\nSecond');
+      });
+
       test('falls back to summary when description is blank', () {
         check(
           NewEpisodeNotification.plainTextDescription(

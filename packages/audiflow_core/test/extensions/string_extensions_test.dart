@@ -410,6 +410,27 @@ void main() {
       });
     });
 
+    group('htmlToMultilinePlainText', () {
+      test('turns block boundaries and line breaks into newlines', () {
+        expect(
+          '<p>First <b>para</b></p><p>Second<br/>line</p><ul><li>a</li></ul>'
+              .htmlToMultilinePlainText,
+          'First para\nSecond\nline\na',
+        );
+      });
+
+      test('keeps plain-text newlines and drops blank lines', () {
+        expect(
+          'Line one  \r\n\r\n\n   Line   two\n'.htmlToMultilinePlainText,
+          'Line one\nLine two',
+        );
+      });
+
+      test('decodes entities', () {
+        expect('Tom &amp; Jerry'.htmlToMultilinePlainText, 'Tom & Jerry');
+      });
+    });
+
     group('htmlToPlainText', () {
       test('strips tags and collapses whitespace', () {
         expect(

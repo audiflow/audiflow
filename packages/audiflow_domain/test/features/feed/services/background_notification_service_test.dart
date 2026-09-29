@@ -258,14 +258,14 @@ void main() {
         description: 'Show notes',
       );
 
-      test('puts podcast and date in subtitle, duration and notes in body', () {
+      test('puts podcast, then date and duration, in subtitle', () {
         final detail = BackgroundNotificationService.buildNotificationDetails([
           rich,
         ], _formatter).single;
 
         check(detail.title).equals('Episode 1');
-        check(detail.subtitle).equals('Podcast A \u00B7 D:1');
-        check(detail.body).equals('65min \u00B7 Show notes');
+        check(detail.subtitle).equals('Podcast A\nD:1 \u00B7 65min');
+        check(detail.body).equals('Show notes');
       });
 
       test('omits missing parts without leaving separators', () {
@@ -293,7 +293,7 @@ void main() {
         ).showPerEpisodeNotificationsViaDelegate(stub, [rich]);
 
         final iOS = stub.shownDetails.single!.iOS!;
-        check(iOS.subtitle).equals('Podcast A \u00B7 D:1');
+        check(iOS.subtitle).equals('Podcast A\nD:1 \u00B7 65min');
         check(iOS.categoryIdentifier).equals(newEpisodeNotificationCategory);
       });
 
@@ -306,10 +306,12 @@ void main() {
 
         final android = stub.shownDetails.single!.android!;
         check(android.subText).equals('Podcast A');
-        check(android.styleInformation)
-            .isA<BigTextStyleInformation>()
-            .has((style) => style.bigText, 'bigText')
-            .equals('65min \u00B7 Show notes');
+        check(android.styleInformation).isA<BigTextStyleInformation>()
+          ..has((style) => style.bigText, 'bigText').equals('Show notes')
+          ..has(
+            (style) => style.summaryText,
+            'summaryText',
+          ).equals('D:1 \u00B7 65min');
       });
 
       test('uses the default Android style without a body', () async {

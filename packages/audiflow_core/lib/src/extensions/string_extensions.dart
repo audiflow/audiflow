@@ -23,6 +23,11 @@ const _namedEntities = <String, String>{
 
 final _htmlTagPattern = RegExp(r'<[^>]*>');
 final _whitespacePattern = RegExp(r'\s+');
+final _lineBreakTagPattern = RegExp(
+  r'<br\s*/?>|</(?:p|div|li|h[1-6]|blockquote|tr)\s*>',
+  caseSensitive: false,
+);
+final _horizontalSpacePattern = RegExp(r'[^\S\n]+');
 
 final _entityPattern = RegExp(r'&(?:#[xX]([0-9a-fA-F]+)|#(\d+)|(\w+));');
 
@@ -62,6 +67,17 @@ extension StringExtensions on String {
     _htmlTagPattern,
     ' ',
   ).htmlEntityDecode.replaceAll(_whitespacePattern, ' ').trim();
+
+  /// Like [htmlToPlainText], but keeps paragraph and line breaks as single
+  /// newlines, for surfaces that render multi-line text.
+  String get htmlToMultilinePlainText => replaceAll('\r\n', '\n')
+      .replaceAll(_lineBreakTagPattern, '\n')
+      .replaceAll(_htmlTagPattern, ' ')
+      .htmlEntityDecode
+      .split('\n')
+      .map((line) => line.replaceAll(_horizontalSpacePattern, ' ').trim())
+      .where((line) => line.isNotEmpty)
+      .join('\n');
 
   /// Check if string is empty or contains only whitespace
   bool get isBlank => trim().isEmpty;

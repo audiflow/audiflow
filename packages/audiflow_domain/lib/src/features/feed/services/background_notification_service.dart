@@ -44,7 +44,7 @@ class NotificationDetail {
     required this.id,
     required this.title,
     required this.podcastTitle,
-    required this.subtitle,
+    required this.meta,
     required this.body,
     required this.payload,
     this.artworkUrl,
@@ -57,13 +57,17 @@ class NotificationDetail {
 
   final String podcastTitle;
 
-  /// Podcast title, plus the publish date when known.
-  final String subtitle;
+  /// Publish date and duration; null when the episode has neither.
+  final String? meta;
 
-  /// Duration and description; null when the episode has neither.
+  /// Plain-text description; null when the episode has none.
   final String? body;
   final String payload;
   final String? artworkUrl;
+
+  /// iOS subtitle: the podcast, with [meta] on its own line so the date and
+  /// duration stay together rather than wrapping mid-way.
+  String get subtitle => meta == null ? podcastTitle : '$podcastTitle\n$meta';
 }
 
 /// Resolves [artworkUrl] to a local image file for notification
@@ -237,9 +241,12 @@ class BackgroundNotificationService {
         largeIcon: artworkPath == null
             ? null
             : FilePathAndroidBitmap(artworkPath),
-        // Android has no subtitle; the header line carries the podcast.
+        // Android has no subtitle: the header line carries the podcast, and
+        // the expanded view's summary carries date and duration.
         subText: detail.podcastTitle,
-        styleInformation: body == null ? null : BigTextStyleInformation(body),
+        styleInformation: body == null
+            ? null
+            : BigTextStyleInformation(body, summaryText: detail.meta),
       ),
       // presentBanner/presentList/presentSound ensure the notification is
       // visible when the app is in the foreground. Without these flags iOS
@@ -277,20 +284,17 @@ class BackgroundNotificationService {
   ) {
     final publishedAt = n.publishedAt;
     final duration = n.duration;
-    final bodyParts = [
+    final metaParts = [
+      if (publishedAt != null) formatter.formatDate(publishedAt),
       if (duration != null && Duration.zero < duration)
         formatter.formatDuration(duration),
-      ?n.description,
     ];
     return NotificationDetail(
       id: n.episodeId,
       title: n.episodeTitle,
       podcastTitle: n.podcastTitle,
-      subtitle: [
-        n.podcastTitle,
-        if (publishedAt != null) formatter.formatDate(publishedAt),
-      ].join(_separator),
-      body: bodyParts.isEmpty ? null : bodyParts.join(_separator),
+      meta: metaParts.isEmpty ? null : metaParts.join(_separator),
+      body: n.description,
       payload: n.toPayload(),
       artworkUrl: n.artworkUrl,
     );

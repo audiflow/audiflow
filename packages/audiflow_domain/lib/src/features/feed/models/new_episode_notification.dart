@@ -53,7 +53,7 @@ class NewEpisodeNotification {
     required String? summary,
   }) {
     final text = [description, summary]
-        .map((candidate) => candidate?.htmlToPlainText ?? '')
+        .map((candidate) => candidate?.htmlToMultilinePlainText ?? '')
         .firstWhere((plain) => plain.isNotEmpty, orElse: () => '');
     if (text.isEmpty) return null;
     if (text.length <= descriptionMaxLength) return text;
