@@ -117,6 +117,14 @@ class BackgroundRefreshService {
                   podcastTitle: sub.title,
                   episodeTitle: episode.title,
                   artworkUrl: artworkUrl,
+                  publishedAt: episode.publishedAt,
+                  duration: episode.durationMs == null
+                      ? null
+                      : Duration(milliseconds: episode.durationMs!),
+                  description: NewEpisodeNotification.plainTextDescription(
+                    description: episode.description,
+                    summary: episode.summary,
+                  ),
                 ),
               );
             }

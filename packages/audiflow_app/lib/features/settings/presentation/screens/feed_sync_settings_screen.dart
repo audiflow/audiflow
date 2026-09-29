@@ -97,26 +97,10 @@ class _FeedSyncSettingsScreenState extends ConsumerState<FeedSyncSettingsScreen>
     // _applyPermission): skip ref, but still re-register, which needs only
     // repo, so the background task sees the new value.
     if (mounted) ref.invalidate(appSettingsRepositoryProvider);
-    await _updateBackgroundRegistration(repo, replaceExisting: replaceExisting);
-  }
-
-  // Use [replaceExisting] true when the scheduling parameters or background
-  // behavior settings change (interval, wifi-only, notifications). Passing
-  // true resets the periodic task timer, so avoid it for cosmetic changes.
-  Future<void> _updateBackgroundRegistration(
-    AppSettingsRepository repo, {
-    bool replaceExisting = false,
-  }) async {
-    if (repo.getAutoSync()) {
-      await BackgroundTaskRegistrar.register(
-        intervalMinutes: repo.getSyncIntervalMinutes(),
-        wifiOnly: repo.getWifiOnlySync(),
-        inputData: BackgroundTaskRegistrar.buildInputData(repo),
-        replaceExisting: replaceExisting,
-      );
-    } else {
-      await BackgroundTaskRegistrar.cancel();
-    }
+    await BackgroundTaskRegistrar.syncWithSettings(
+      repo,
+      replaceExisting: replaceExisting,
+    );
   }
 
   Future<void> _onNotifyToggleChanged(

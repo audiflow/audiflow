@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/widgets.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+import '../../../../app/background/background_task_registrar.dart';
 
 part 'locale_controller.g.dart';
 
@@ -22,5 +26,11 @@ class LocaleController extends _$LocaleController {
     final repo = ref.read(appSettingsRepositoryProvider);
     await repo.setLocale(locale?.languageCode);
     state = locale;
+    // The background task formats notification text from a settings
+    // snapshot taken at registration. Not awaited: rescheduling must not hold
+    // up the language switch, and it swallows its own platform errors.
+    unawaited(
+      BackgroundTaskRegistrar.syncWithSettings(repo, replaceExisting: true),
+    );
   }
 }

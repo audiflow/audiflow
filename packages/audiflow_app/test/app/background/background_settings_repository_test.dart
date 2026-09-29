@@ -17,7 +17,12 @@ void main() {
           BackgroundInputKeys.syncIntervalMinutes: 120,
           BackgroundInputKeys.notifyNewEpisodes: false,
           BackgroundInputKeys.wifiOnlyDownload: false,
+          BackgroundInputKeys.locale: 'ja',
         });
+      });
+
+      test('getLocale returns value from data', () {
+        check(repository.getLocale()).equals('ja');
       });
 
       test('getAutoSync returns value from data', () {

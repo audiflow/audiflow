@@ -21,6 +21,14 @@ const _namedEntities = <String, String>{
   'raquo': '\u00BB',
 };
 
+final _htmlTagPattern = RegExp(r'<[^>]*>');
+final _whitespacePattern = RegExp(r'\s+');
+final _lineBreakTagPattern = RegExp(
+  r'<br\b[^>]*>|</(?:p|div|li|h[1-6]|blockquote|tr)\s*>',
+  caseSensitive: false,
+);
+final _horizontalSpacePattern = RegExp(r'[^\S\n]+');
+
 final _entityPattern = RegExp(r'&(?:#[xX]([0-9a-fA-F]+)|#(\d+)|(\w+));');
 
 /// Parses a numeric code point string and returns the character, or null if
@@ -52,6 +60,24 @@ extension StringExtensions on String {
       return _namedEntities[named] ?? match.group(0)!;
     });
   }
+
+  /// Strips HTML tags, decodes entities, and collapses whitespace for
+  /// plain-text display.
+  String get htmlToPlainText => replaceAll(
+    _htmlTagPattern,
+    ' ',
+  ).htmlEntityDecode.replaceAll(_whitespacePattern, ' ').trim();
+
+  /// Like [htmlToPlainText], but keeps paragraph and line breaks as single
+  /// newlines, for surfaces that render multi-line text.
+  String get htmlToMultilinePlainText => replaceAll('\r\n', '\n')
+      .replaceAll(_lineBreakTagPattern, '\n')
+      .replaceAll(_htmlTagPattern, ' ')
+      .htmlEntityDecode
+      .split('\n')
+      .map((line) => line.replaceAll(_horizontalSpacePattern, ' ').trim())
+      .where((line) => line.isNotEmpty)
+      .join('\n');
 
   /// Check if string is empty or contains only whitespace
   bool get isBlank => trim().isEmpty;

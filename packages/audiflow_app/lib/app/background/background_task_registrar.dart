@@ -10,6 +10,10 @@ class BackgroundInputKeys {
   static const notifyNewEpisodes = 'notifyNewEpisodes';
   static const wifiOnlyDownload = 'wifiOnlyDownload';
   static const syncIntervalMinutes = 'syncIntervalMinutes';
+
+  /// Language setting for notification text; absent when following the
+  /// system language.
+  static const locale = 'locale';
 }
 
 class BackgroundTaskRegistrar {
@@ -19,13 +23,37 @@ class BackgroundTaskRegistrar {
   static const downloadTaskName = 'com.audiflow.backgroundDownload';
 
   /// Snapshots the current settings into a map for the background isolate.
-  static Map<String, dynamic> buildInputData(AppSettingsRepository repo) => {
-    BackgroundInputKeys.autoSync: repo.getAutoSync(),
-    BackgroundInputKeys.wifiOnlySync: repo.getWifiOnlySync(),
-    BackgroundInputKeys.notifyNewEpisodes: repo.getNotifyNewEpisodes(),
-    BackgroundInputKeys.wifiOnlyDownload: repo.getWifiOnlyDownload(),
-    BackgroundInputKeys.syncIntervalMinutes: repo.getSyncIntervalMinutes(),
-  };
+  static Map<String, dynamic> buildInputData(AppSettingsRepository repo) {
+    final locale = repo.getLocale();
+    return {
+      BackgroundInputKeys.autoSync: repo.getAutoSync(),
+      BackgroundInputKeys.wifiOnlySync: repo.getWifiOnlySync(),
+      BackgroundInputKeys.notifyNewEpisodes: repo.getNotifyNewEpisodes(),
+      BackgroundInputKeys.wifiOnlyDownload: repo.getWifiOnlyDownload(),
+      BackgroundInputKeys.syncIntervalMinutes: repo.getSyncIntervalMinutes(),
+      // Omitted rather than null: Workmanager input data rejects nulls on
+      // some platforms.
+      BackgroundInputKeys.locale: ?locale,
+    };
+  }
+
+  /// Registers the periodic refresh task from current settings, or cancels
+  /// it when auto-sync is off.
+  ///
+  /// Pass [replaceExisting] true when a setting the task reads changes;
+  /// it resets the periodic timer, so avoid it for unrelated changes.
+  static Future<void> syncWithSettings(
+    AppSettingsRepository repo, {
+    bool replaceExisting = false,
+  }) async {
+    if (!repo.getAutoSync()) return cancel();
+    await register(
+      intervalMinutes: repo.getSyncIntervalMinutes(),
+      wifiOnly: repo.getWifiOnlySync(),
+      inputData: buildInputData(repo),
+      replaceExisting: replaceExisting,
+    );
+  }
 
   /// Registers the periodic background refresh task.
   ///

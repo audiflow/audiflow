@@ -1,4 +1,5 @@
 import 'package:audiflow_core/audiflow_core.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -407,6 +408,48 @@ void main() {
       test('skips regex for strings without ampersand', () {
         // Verifies fast-path: no & means no work
         expect('Hello world 123'.htmlEntityDecode, 'Hello world 123');
+      });
+    });
+
+    group('htmlToMultilinePlainText', () {
+      test('turns block boundaries and line breaks into newlines', () {
+        check(
+          '<p>First <b>para</b></p><p>Second<br/>line</p><ul><li>a</li></ul>'
+              .htmlToMultilinePlainText,
+        ).equals('First para\nSecond\nline\na');
+      });
+
+      test('treats line breaks with attributes as newlines', () {
+        check(
+          'One<br class="clear">Two<BR style="x" />Three'
+              .htmlToMultilinePlainText,
+        ).equals('One\nTwo\nThree');
+      });
+
+      test('keeps plain-text newlines and drops blank lines', () {
+        check(
+          'Line one  \r\n\r\n\n   Line   two\n'.htmlToMultilinePlainText,
+        ).equals('Line one\nLine two');
+      });
+
+      test('decodes entities', () {
+        check('Tom &amp; Jerry'.htmlToMultilinePlainText).equals('Tom & Jerry');
+      });
+    });
+
+    group('htmlToPlainText', () {
+      test('strips tags and collapses whitespace', () {
+        check(
+          '<p>Hello <b>world</b></p>\n\n<p>Next</p>'.htmlToPlainText,
+        ).equals('Hello world Next');
+      });
+
+      test('decodes entities after stripping tags', () {
+        check('Tom &amp; Jerry &lt;3'.htmlToPlainText).equals('Tom & Jerry <3');
+      });
+
+      test('returns empty string for markup-only input', () {
+        check('<br/> <p></p>'.htmlToPlainText).isEmpty();
       });
     });
   });
