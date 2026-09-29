@@ -28,6 +28,7 @@ import 'app/notification/notification_tap_handler.dart';
 import 'app/background/background_callback.dart';
 import 'app/background/background_task_registrar.dart';
 import 'features/force_update/force_update.dart';
+import 'features/monitoring/services/sentry_diagnostics.dart';
 import 'features/monitoring/services/firebase_analytics_service.dart';
 import 'features/monitoring/services/throttled_analytics_service.dart';
 import 'features/player/services/audio_handler_provider.dart';
@@ -114,26 +115,28 @@ Future<void> appMain({
         });
         // Diagnostic: verify foreground Sentry pipeline on boot.
         // Remove once investigation is resolved.
-        unawaited(
-          Sentry.captureMessage(
-                'app-boot: Sentry initialized',
-                level: SentryLevel.info,
-              )
-              .then((sentryId) {
-                if (kDebugMode) {
-                  debugPrint(
-                    '[SENTRY-DIAG] boot captureMessage sentryId=$sentryId',
-                  );
-                }
-              })
-              .catchError((Object error, StackTrace stackTrace) {
-                if (kDebugMode) {
-                  debugPrint(
-                    '[SENTRY-DIAG] boot captureMessage failed: $error',
-                  );
-                }
-              }),
-        );
+        if (sentryDiagnosticsEnabled) {
+          unawaited(
+            Sentry.captureMessage(
+                  'app-boot: Sentry initialized',
+                  level: SentryLevel.info,
+                )
+                .then((sentryId) {
+                  if (kDebugMode) {
+                    debugPrint(
+                      '[SENTRY-DIAG] boot captureMessage sentryId=$sentryId',
+                    );
+                  }
+                })
+                .catchError((Object error, StackTrace stackTrace) {
+                  if (kDebugMode) {
+                    debugPrint(
+                      '[SENTRY-DIAG] boot captureMessage failed: $error',
+                    );
+                  }
+                }),
+          );
+        }
         await _startApp(
           presetConfigBaseUrl,
           prefs: prefs,
@@ -248,7 +251,7 @@ Future<void> _startApp(
     Sentry.addBreadcrumb(
       Breadcrumb(message: event, category: 'feed.sync', data: data),
     );
-    if (event == 'feed-sync:parse-complete') {
+    if (sentryDiagnosticsEnabled && event == 'feed-sync:parse-complete') {
       unawaited(
         Sentry.captureMessage(
           event,
