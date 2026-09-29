@@ -5,9 +5,9 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../utils/open_preset_url.dart';
 
 /// Settings screen for developer-oriented preferences.
 ///
@@ -23,7 +23,6 @@ class DeveloperSettingsScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final devInfoEnabled = ref.watch(devShowDeveloperInfoProvider);
     final summaries = ref.watch(presetSummariesProvider);
-    final schemaVersion = ref.watch(presetSchemaVersionProvider);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settingsDeveloperTitle)),
@@ -57,17 +56,7 @@ class DeveloperSettingsScreen extends ConsumerWidget {
                 size: 18,
                 color: theme.colorScheme.primary,
               ),
-              onTap: () async {
-                try {
-                  final ok = await launchUrl(
-                    Uri.parse(PresetUrls.repo),
-                    mode: LaunchMode.externalApplication,
-                  );
-                  if (!ok) debugPrint('launchUrl returned false for repo URL');
-                } on Exception catch (e) {
-                  debugPrint('Failed to launch repo URL: $e');
-                }
-              },
+              onTap: () => openPresetUrl(ref, PresetUrls.repo),
             ),
             const Divider(height: 1),
 
@@ -96,39 +85,16 @@ class DeveloperSettingsScreen extends ConsumerWidget {
 
             // Pattern items
             ...summaries.map((summary) {
-              final enabled = 0 < schemaVersion;
               return ListTile(
                 title: Text(summary.displayName),
                 dense: true,
-                trailing: enabled
-                    ? Icon(
-                        Symbols.open_in_new,
-                        size: 18,
-                        color: theme.colorScheme.primary,
-                      )
-                    : null,
-                onTap: enabled
-                    ? () async {
-                        try {
-                          final ok = await launchUrl(
-                            Uri.parse(
-                              PresetUrls.presetDir(
-                                summary.id,
-                                schemaVersion: schemaVersion,
-                              ),
-                            ),
-                            mode: LaunchMode.externalApplication,
-                          );
-                          if (!ok) {
-                            debugPrint(
-                              'launchUrl returned false for preset URL',
-                            );
-                          }
-                        } on Exception catch (e) {
-                          debugPrint('Failed to launch preset URL: $e');
-                        }
-                      }
-                    : null,
+                trailing: Icon(
+                  Symbols.open_in_new,
+                  size: 18,
+                  color: theme.colorScheme.primary,
+                ),
+                onTap: () =>
+                    openPresetUrl(ref, PresetUrls.presetDir(summary.id)),
               );
             }),
           ],

@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../settings/presentation/utils/open_preset_url.dart';
 
 /// Displays developer-oriented information at the bottom of an
 /// episode detail screen.
@@ -28,7 +28,6 @@ class EpisodeDevInfoWidget extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final repo = ref.watch(presetConfigRepositoryProvider);
-    final schemaVersion = ref.watch(presetSchemaVersionProvider);
 
     final match = repo.findMatchingPreset(null, feedUrl);
 
@@ -86,20 +85,10 @@ class EpisodeDevInfoWidget extends ConsumerWidget {
         Text(l10n.developerPatternLabel, style: labelStyle),
         const SizedBox(height: Spacing.xs),
         InkWell(
-          onTap: () async {
-            final url = 0 < schemaVersion && match != null
-                ? PresetUrls.presetDir(match.id, schemaVersion: schemaVersion)
-                : PresetUrls.repo;
-            try {
-              final ok = await launchUrl(
-                Uri.parse(url),
-                mode: LaunchMode.externalApplication,
-              );
-              if (!ok) debugPrint('launchUrl returned false for pattern URL');
-            } on Exception catch (e) {
-              debugPrint('Failed to launch pattern URL: $e');
-            }
-          },
+          onTap: () => openPresetUrl(
+            ref,
+            match != null ? PresetUrls.presetDir(match.id) : PresetUrls.repo,
+          ),
           child: Text(
             match?.displayName ?? l10n.developerPatternNotDefined,
             style: valueStyle?.copyWith(color: theme.colorScheme.primary),
