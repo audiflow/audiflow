@@ -18,6 +18,7 @@ import 'package:workmanager/workmanager.dart';
 import '../../features/monitoring/services/sentry_diagnostics.dart';
 import 'background_settings_repository.dart';
 import 'background_task_registrar.dart';
+import 'localized_notification_text_formatter.dart';
 
 // Temporary diagnostic file logger for background refresh investigation.
 // Writes to <appDocDir>/bg_refresh_diag.log so it can be pulled from
@@ -343,6 +344,10 @@ void backgroundCallback() {
         ),
       );
       final notificationService = BackgroundNotificationService(
+        textFormatter: await LocalizedNotificationTextFormatter.create(
+          storedLocale: settingsRepo.getLocale(),
+          platformLocale: Platform.localeName,
+        ),
         logger: logger,
         artworkFileProvider: artworkFiles.fileFor,
       );

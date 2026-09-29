@@ -17,6 +17,24 @@ const androidNotificationSmallIcon = 'ic_stat_notification';
 /// default accent.
 const androidNotificationColor = Color(0xFFDB8648);
 
+/// iOS category of new-episode notifications.
+///
+/// Kept stable so a future Notification Content Extension can claim these
+/// notifications by category.
+const newEpisodeNotificationCategory = 'new_episode';
+
+/// Joins the parts of one notification line.
+const _separator = ' \u00B7 ';
+
+/// Locale-aware text for notification fields.
+///
+/// The background isolate has no `BuildContext`, so the app layer, which
+/// owns localization, supplies an implementation for the stored locale.
+abstract interface class NotificationTextFormatter {
+  String formatDate(DateTime date);
+  String formatDuration(Duration duration);
+}
+
 /// Detail record for a single notification to display.
 ///
 /// Exposed only for testing; not part of the public API contract.
@@ -25,14 +43,25 @@ class NotificationDetail {
   const NotificationDetail({
     required this.id,
     required this.title,
+    required this.podcastTitle,
+    required this.subtitle,
     required this.body,
     required this.payload,
     this.artworkUrl,
   });
 
   final int id;
+
+  /// Episode title.
   final String title;
-  final String body;
+
+  final String podcastTitle;
+
+  /// Podcast title, plus the publish date when known.
+  final String subtitle;
+
+  /// Duration and description; null when the episode has neither.
+  final String? body;
   final String payload;
   final String? artworkUrl;
 }
@@ -82,8 +111,13 @@ class _PluginShowDelegate implements NotificationsShowDelegate {
 }
 
 class BackgroundNotificationService {
-  BackgroundNotificationService({this._logger, this._artworkFileProvider});
+  BackgroundNotificationService({
+    required this._textFormatter,
+    this._logger,
+    this._artworkFileProvider,
+  });
 
+  final NotificationTextFormatter _textFormatter;
   final Logger? _logger;
   final ArtworkFileProvider? _artworkFileProvider;
 
@@ -139,7 +173,7 @@ class BackgroundNotificationService {
     NotificationsShowDelegate delegate,
     List<NewEpisodeNotification> notifications,
   ) async {
-    final details = buildNotificationDetails(notifications);
+    final details = buildNotificationDetails(notifications, _textFormatter);
     // Fetch concurrently: the OS grants background refresh only ~30s, and
     // notifications must not wait on artwork one podcast at a time.
     final artworkPaths = await Future.wait(details.map(_artworkPath));
@@ -153,7 +187,7 @@ class BackgroundNotificationService {
           title: detail.title,
           body: detail.body,
           payload: detail.payload,
-          notificationDetails: _buildDetails(artworkPaths[index]),
+          notificationDetails: _buildDetails(detail, artworkPaths[index]),
         );
         _logger?.i('Showed notification: ${detail.title} — ${detail.body}');
       } catch (e, stack) {
@@ -187,7 +221,11 @@ class BackgroundNotificationService {
     }
   }
 
-  static NotificationDetails _buildDetails(String? artworkPath) {
+  static NotificationDetails _buildDetails(
+    NotificationDetail detail,
+    String? artworkPath,
+  ) {
+    final body = detail.body;
     return NotificationDetails(
       android: AndroidNotificationDetails(
         _channelId,
@@ -199,6 +237,9 @@ class BackgroundNotificationService {
         largeIcon: artworkPath == null
             ? null
             : FilePathAndroidBitmap(artworkPath),
+        // Android has no subtitle; the header line carries the podcast.
+        subText: detail.podcastTitle,
+        styleInformation: body == null ? null : BigTextStyleInformation(body),
       ),
       // presentBanner/presentList/presentSound ensure the notification is
       // visible when the app is in the foreground. Without these flags iOS
@@ -209,6 +250,8 @@ class BackgroundNotificationService {
         presentBanner: true,
         presentList: true,
         presentSound: true,
+        subtitle: detail.subtitle,
+        categoryIdentifier: newEpisodeNotificationCategory,
         attachments: artworkPath == null
             ? null
             : [DarwinNotificationAttachment(artworkPath)],
@@ -223,17 +266,33 @@ class BackgroundNotificationService {
   @visibleForTesting
   static List<NotificationDetail> buildNotificationDetails(
     List<NewEpisodeNotification> notifications,
+    NotificationTextFormatter formatter,
   ) {
-    return notifications
-        .map(
-          (n) => NotificationDetail(
-            id: n.episodeId,
-            title: n.podcastTitle,
-            body: n.episodeTitle,
-            payload: n.toPayload(),
-            artworkUrl: n.artworkUrl,
-          ),
-        )
-        .toList();
+    return notifications.map((n) => _detailFor(n, formatter)).toList();
+  }
+
+  static NotificationDetail _detailFor(
+    NewEpisodeNotification n,
+    NotificationTextFormatter formatter,
+  ) {
+    final publishedAt = n.publishedAt;
+    final duration = n.duration;
+    final bodyParts = [
+      if (duration != null && Duration.zero < duration)
+        formatter.formatDuration(duration),
+      ?n.description,
+    ];
+    return NotificationDetail(
+      id: n.episodeId,
+      title: n.episodeTitle,
+      podcastTitle: n.podcastTitle,
+      subtitle: [
+        n.podcastTitle,
+        if (publishedAt != null) formatter.formatDate(publishedAt),
+      ].join(_separator),
+      body: bodyParts.isEmpty ? null : bodyParts.join(_separator),
+      payload: n.toPayload(),
+      artworkUrl: n.artworkUrl,
+    );
   }
 }

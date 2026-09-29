@@ -40,6 +40,18 @@ class _StubShowDelegate implements NotificationsShowDelegate {
   }
 }
 
+class _StubFormatter implements NotificationTextFormatter {
+  const _StubFormatter();
+
+  @override
+  String formatDate(DateTime date) => 'D:${date.day}';
+
+  @override
+  String formatDuration(Duration duration) => '${duration.inMinutes}min';
+}
+
+const _formatter = _StubFormatter();
+
 // ---------------------------------------------------------------------------
 
 void main() {
@@ -49,7 +61,9 @@ void main() {
         'continues showing subsequent notifications after one fails',
         () async {
           final stub = _StubShowDelegate(throwOnCallIndices: {1});
-          final service = BackgroundNotificationService();
+          final service = BackgroundNotificationService(
+            textFormatter: _formatter,
+          );
 
           final notifications = [
             const NewEpisodeNotification(
@@ -90,7 +104,9 @@ void main() {
         'rethrows a summarized exception when at least one show fails',
         () async {
           final stub = _StubShowDelegate(throwOnCallIndices: {0});
-          final service = BackgroundNotificationService();
+          final service = BackgroundNotificationService(
+            textFormatter: _formatter,
+          );
 
           final notifications = [
             const NewEpisodeNotification(
@@ -137,6 +153,7 @@ void main() {
         final stub = _StubShowDelegate();
         final requests = <(String, int)>[];
         final service = BackgroundNotificationService(
+          textFormatter: _formatter,
           artworkFileProvider: (url, id) async {
             requests.add((url, id));
             return '/tmp/art-$id.png';
@@ -161,8 +178,9 @@ void main() {
       test('tints the small icon with the app icon colour', () async {
         final stub = _StubShowDelegate();
 
-        await BackgroundNotificationService()
-            .showPerEpisodeNotificationsViaDelegate(stub, [withArtwork]);
+        await BackgroundNotificationService(
+          textFormatter: _formatter,
+        ).showPerEpisodeNotificationsViaDelegate(stub, [withArtwork]);
 
         check(
           stub.shownDetails.single!.android!.color,
@@ -172,6 +190,7 @@ void main() {
       test('shows text-only notification when artwork fails', () async {
         final stub = _StubShowDelegate();
         final service = BackgroundNotificationService(
+          textFormatter: _formatter,
           artworkFileProvider: (_, _) async => throw Exception('network'),
         );
 
@@ -188,6 +207,7 @@ void main() {
         fakeAsync((async) {
           final stub = _StubShowDelegate();
           final service = BackgroundNotificationService(
+            textFormatter: _formatter,
             artworkFileProvider: (_, _) => Completer<String?>().future,
           );
 
@@ -206,6 +226,7 @@ void main() {
         final stub = _StubShowDelegate();
         var calls = 0;
         final service = BackgroundNotificationService(
+          textFormatter: _formatter,
           artworkFileProvider: (_, _) async {
             calls++;
             return '/tmp/art.png';
@@ -223,6 +244,89 @@ void main() {
 
         check(calls).equals(0);
         check(stub.shownDetails.single!.android!.largeIcon).isNull();
+      });
+    });
+
+    group('rich content', () {
+      final rich = NewEpisodeNotification(
+        episodeId: 1,
+        podcastId: 10,
+        podcastTitle: 'Podcast A',
+        episodeTitle: 'Episode 1',
+        publishedAt: DateTime(2026, 9, 1),
+        duration: const Duration(minutes: 65),
+        description: 'Show notes',
+      );
+
+      test('puts podcast and date in subtitle, duration and notes in body', () {
+        final detail = BackgroundNotificationService.buildNotificationDetails([
+          rich,
+        ], _formatter).single;
+
+        check(detail.title).equals('Episode 1');
+        check(detail.subtitle).equals('Podcast A \u00B7 D:1');
+        check(detail.body).equals('65min \u00B7 Show notes');
+      });
+
+      test('omits missing parts without leaving separators', () {
+        const partial = NewEpisodeNotification(
+          episodeId: 1,
+          podcastId: 10,
+          podcastTitle: 'Podcast A',
+          episodeTitle: 'Episode 1',
+          description: 'Show notes',
+        );
+
+        final detail = BackgroundNotificationService.buildNotificationDetails([
+          partial,
+        ], _formatter).single;
+
+        check(detail.subtitle).equals('Podcast A');
+        check(detail.body).equals('Show notes');
+      });
+
+      test('sets iOS subtitle and a stable category', () async {
+        final stub = _StubShowDelegate();
+
+        await BackgroundNotificationService(
+          textFormatter: _formatter,
+        ).showPerEpisodeNotificationsViaDelegate(stub, [rich]);
+
+        final iOS = stub.shownDetails.single!.iOS!;
+        check(iOS.subtitle).equals('Podcast A \u00B7 D:1');
+        check(iOS.categoryIdentifier).equals(newEpisodeNotificationCategory);
+      });
+
+      test('expands the body on Android with podcast as sub text', () async {
+        final stub = _StubShowDelegate();
+
+        await BackgroundNotificationService(
+          textFormatter: _formatter,
+        ).showPerEpisodeNotificationsViaDelegate(stub, [rich]);
+
+        final android = stub.shownDetails.single!.android!;
+        check(android.subText).equals('Podcast A');
+        check(android.styleInformation)
+            .isA<BigTextStyleInformation>()
+            .has((style) => style.bigText, 'bigText')
+            .equals('65min \u00B7 Show notes');
+      });
+
+      test('uses the default Android style without a body', () async {
+        final stub = _StubShowDelegate();
+
+        await BackgroundNotificationService(
+          textFormatter: _formatter,
+        ).showPerEpisodeNotificationsViaDelegate(stub, [
+          const NewEpisodeNotification(
+            episodeId: 1,
+            podcastId: 10,
+            podcastTitle: 'Podcast A',
+            episodeTitle: 'Episode 1',
+          ),
+        ]);
+
+        check(stub.shownDetails.single!.android!.styleInformation).isNull();
       });
     });
 
@@ -245,26 +349,28 @@ void main() {
 
         final details = BackgroundNotificationService.buildNotificationDetails(
           notifications,
+          _formatter,
         );
 
         expect(details.length, 2);
 
         expect(details[0].id, 1);
-        expect(details[0].title, 'Podcast A');
-        expect(details[0].body, 'Episode 1');
+        expect(details[0].title, 'Episode 1');
+        expect(details[0].subtitle, 'Podcast A');
+        expect(details[0].body, isNull);
         final payload0 = jsonDecode(details[0].payload) as Map<String, dynamic>;
         expect(payload0['type'], 'new_episode');
         expect(payload0['episodeId'], 1);
         expect(payload0['podcastId'], 10);
 
         expect(details[1].id, 2);
-        expect(details[1].title, 'Podcast A');
-        expect(details[1].body, 'Episode 2');
+        expect(details[1].title, 'Episode 2');
       });
 
       test('returns empty list for empty input', () {
         final details = BackgroundNotificationService.buildNotificationDetails(
           [],
+          _formatter,
         );
         expect(details, isEmpty);
       });
