@@ -48,8 +48,14 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final subscriptionsAsync = ref.watch(librarySubscriptionsProvider);
+    // Watch order matters: sortedSubscriptionsProvider depends on
+    // librarySubscriptionsProvider, and watching the upstream first trips a
+    // Riverpod < 3.3.2 debug assertion when this screen resumes from a
+    // disabled TickerMode after the upstream was invalidated
+    // (rrousselGit/riverpod#4709). Keep the dependent provider first until
+    // riverpod can be upgraded.
     final sortedSubscriptionsAsync = ref.watch(sortedSubscriptionsProvider);
+    final subscriptionsAsync = ref.watch(librarySubscriptionsProvider);
     final stationsAsync = ref.watch(stationListProvider);
     final l10n = AppLocalizations.of(context);
 
