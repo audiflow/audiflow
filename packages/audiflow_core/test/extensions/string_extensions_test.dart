@@ -1,4 +1,5 @@
 import 'package:audiflow_core/audiflow_core.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -412,47 +413,43 @@ void main() {
 
     group('htmlToMultilinePlainText', () {
       test('turns block boundaries and line breaks into newlines', () {
-        expect(
+        check(
           '<p>First <b>para</b></p><p>Second<br/>line</p><ul><li>a</li></ul>'
               .htmlToMultilinePlainText,
-          'First para\nSecond\nline\na',
-        );
+        ).equals('First para\nSecond\nline\na');
       });
 
       test('treats line breaks with attributes as newlines', () {
-        expect(
+        check(
           'One<br class="clear">Two<BR style="x" />Three'
               .htmlToMultilinePlainText,
-          'One\nTwo\nThree',
-        );
+        ).equals('One\nTwo\nThree');
       });
 
       test('keeps plain-text newlines and drops blank lines', () {
-        expect(
+        check(
           'Line one  \r\n\r\n\n   Line   two\n'.htmlToMultilinePlainText,
-          'Line one\nLine two',
-        );
+        ).equals('Line one\nLine two');
       });
 
       test('decodes entities', () {
-        expect('Tom &amp; Jerry'.htmlToMultilinePlainText, 'Tom & Jerry');
+        check('Tom &amp; Jerry'.htmlToMultilinePlainText).equals('Tom & Jerry');
       });
     });
 
     group('htmlToPlainText', () {
       test('strips tags and collapses whitespace', () {
-        expect(
+        check(
           '<p>Hello <b>world</b></p>\n\n<p>Next</p>'.htmlToPlainText,
-          'Hello world Next',
-        );
+        ).equals('Hello world Next');
       });
 
       test('decodes entities after stripping tags', () {
-        expect('Tom &amp; Jerry &lt;3'.htmlToPlainText, 'Tom & Jerry <3');
+        check('Tom &amp; Jerry &lt;3'.htmlToPlainText).equals('Tom & Jerry <3');
       });
 
       test('returns empty string for markup-only input', () {
-        expect('<br/> <p></p>'.htmlToPlainText, '');
+        check('<br/> <p></p>'.htmlToPlainText).isEmpty();
       });
     });
   });

@@ -43,15 +43,14 @@ void main() {
 
     test('syncWithSettings does not throw on unsupported platform', () async {
       for (final autoSync in [true, false]) {
-        await expectLater(
+        await check(
           BackgroundTaskRegistrar.syncWithSettings(
             BackgroundSettingsRepository({
               BackgroundInputKeys.autoSync: autoSync,
             }),
             replaceExisting: true,
           ),
-          completes,
-        );
+        ).completes();
       }
     });
 
