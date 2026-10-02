@@ -118,15 +118,7 @@ class DownloadService {
   /// `podcastId` is the raw iTunes ID when available (non-OPML import),
   /// else the feed URL. `episodeId` is the raw RSS guid. Truncation to
   /// GA's 100-char param limit happens at the event boundary.
-  Future<
-    ({
-      String podcastId,
-      String episodeId,
-      String podcastTitle,
-      String episodeTitle,
-    })?
-  >
-  _analyticsIds(int episodeId) async {
+  Future<EpisodeAnalyticsIds?> _analyticsIds(int episodeId) async {
     final episode = await _episodeRepo.getById(episodeId);
     if (episode == null) return null;
     final guid = episode.guid;
@@ -135,9 +127,11 @@ class DownloadService {
     if (sub == null) return null;
     final feedUrl = sub.feedUrl;
     if (feedUrl.isEmpty) return null;
-    final podcastId = sub.itunesId.startsWith('opml:') ? feedUrl : sub.itunesId;
+    final podcastId =
+        analyticsPodcastId(itunesId: sub.itunesId, feedUrl: feedUrl) ?? feedUrl;
     return (
       podcastId: podcastId,
+      feedUrl: feedUrl,
       episodeId: guid,
       podcastTitle: sub.title,
       episodeTitle: episode.title,
@@ -230,6 +224,7 @@ class DownloadService {
           _analytics?.log(
                 EpisodeDownloadStarted(
                   podcastId: ids.podcastId,
+                  feedUrl: ids.feedUrl,
                   episodeId: ids.episodeId,
                   podcastTitle: ids.podcastTitle,
                   episodeTitle: ids.episodeTitle,

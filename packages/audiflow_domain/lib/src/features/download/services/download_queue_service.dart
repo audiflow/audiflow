@@ -71,12 +71,14 @@ Future<void> _emitDownloadCompleted(Ref ref, int episodeId, int bytes) async {
   if (sub == null) return;
   final feedUrl = sub.feedUrl;
   if (feedUrl.isEmpty) return;
-  final podcastId = sub.itunesId.startsWith('opml:') ? feedUrl : sub.itunesId;
+  final podcastId =
+      analyticsPodcastId(itunesId: sub.itunesId, feedUrl: feedUrl) ?? feedUrl;
   final analytics = ref.read(analyticsServiceProvider);
   unawaited(
     analytics.log(
       EpisodeDownloadCompleted(
         podcastId: podcastId,
+        feedUrl: feedUrl,
         episodeId: guid,
         podcastTitle: sub.title,
         episodeTitle: episode.title,

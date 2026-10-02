@@ -61,10 +61,8 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
     bool explicit = false,
     SubscribeSource source = SubscribeSource.unknown,
   }) async {
-    // Raw podcast_id: iTunes ID when not OPML-imported, else feedUrl.
-    // GA reports read directly without external joins; truncation lives
-    // at the event boundary in AnalyticsEvent.params.
-    final podcastId = itunesId.startsWith('opml:') ? feedUrl : itunesId;
+    final podcastId =
+        analyticsPodcastId(itunesId: itunesId, feedUrl: feedUrl) ?? feedUrl;
 
     // Check for existing cached entry and promote it
     final existing = await _datasource.getByItunesId(itunesId);
@@ -74,6 +72,7 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
         await _analytics?.log(
           PodcastSubscribed(
             podcastId: podcastId,
+            feedUrl: feedUrl,
             podcastTitle: title,
             source: source,
           ),
@@ -98,6 +97,7 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
     await _analytics?.log(
       PodcastSubscribed(
         podcastId: podcastId,
+        feedUrl: feedUrl,
         podcastTitle: title,
         source: source,
       ),
@@ -113,11 +113,18 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
       throw SubscriptionNotFoundException(itunesId);
     }
     if (existing != null) {
-      final podcastId = existing.itunesId.startsWith('opml:')
-          ? existing.feedUrl
-          : existing.itunesId;
+      final podcastId =
+          analyticsPodcastId(
+            itunesId: existing.itunesId,
+            feedUrl: existing.feedUrl,
+          ) ??
+          existing.feedUrl;
       await _analytics?.log(
-        PodcastUnsubscribed(podcastId: podcastId, podcastTitle: existing.title),
+        PodcastUnsubscribed(
+          podcastId: podcastId,
+          feedUrl: existing.feedUrl,
+          podcastTitle: existing.title,
+        ),
       );
       // Best-effort: remove per-podcast parental control flags.
       // Use catch (e, st) instead of on Exception because Isar can throw

@@ -112,6 +112,7 @@ class AudioPlayerController extends _$AudioPlayerController
   /// end of an episode and then returns to `ready`. Cleared in [play]
   /// when a new episode is loaded.
   int? _lastCompletedAnalyticsEpisodeId;
+
   final StreamController<PlayerLifecycleEvent> _lifecycleEvents =
       StreamController<PlayerLifecycleEvent>.broadcast();
 
@@ -131,13 +132,7 @@ class AudioPlayerController extends _$AudioPlayerController
   /// (non-OPML import), else the feed URL. `episodeId` is the raw RSS
   /// guid. Titles come straight from `NowPlayingInfo`; truncation to
   /// GA's 100-char param limit happens at the event boundary.
-  ({
-    String podcastId,
-    String episodeId,
-    String podcastTitle,
-    String episodeTitle,
-  })?
-  _currentAnalyticsIds() {
+  EpisodeAnalyticsIds? _currentAnalyticsIds() {
     final info = ref.read(nowPlayingControllerProvider);
     if (info == null) {
       _log.w('[Analytics] ids: NowPlayingInfo null');
@@ -148,23 +143,20 @@ class AudioPlayerController extends _$AudioPlayerController
       _log.w('[Analytics] ids: missing guid');
       return null;
     }
-    final itunesId = info.itunesId;
-    final feedUrl = info.feedUrl;
-    final hasValidItunesId =
-        itunesId != null &&
-        itunesId.isNotEmpty &&
-        !itunesId.startsWith('opml:');
-    final hasFeedUrl = feedUrl != null && feedUrl.isNotEmpty;
-    if (!hasValidItunesId && !hasFeedUrl) {
+    final podcastId = analyticsPodcastId(
+      itunesId: info.itunesId,
+      feedUrl: info.feedUrl,
+    );
+    if (podcastId == null) {
       _log.w(
         '[Analytics] ids: no podcastId source — '
-        'itunesId=$itunesId feedUrl=$feedUrl',
+        'itunesId=${info.itunesId} feedUrl=${info.feedUrl}',
       );
       return null;
     }
-    final podcastId = hasValidItunesId ? itunesId : feedUrl!;
     return (
       podcastId: podcastId,
+      feedUrl: info.feedUrl,
       episodeId: guid,
       podcastTitle: info.podcastTitle,
       episodeTitle: info.episodeTitle,
@@ -246,10 +238,12 @@ class AudioPlayerController extends _$AudioPlayerController
                     .log(
                       EpisodeCompleted(
                         podcastId: ids.podcastId,
+                        feedUrl: ids.feedUrl,
                         episodeId: ids.episodeId,
                         podcastTitle: ids.podcastTitle,
                         episodeTitle: ids.episodeTitle,
                         durationSec: durationSec,
+                        speed: _player.speed,
                       ),
                     ),
               );
@@ -539,39 +533,41 @@ class AudioPlayerController extends _$AudioPlayerController
         podcastTitleForEmit ??= sub?.title;
       }
 
-      final hasPodcastId =
-          (itunesIdForEmit != null &&
-              itunesIdForEmit.isNotEmpty &&
-              !itunesIdForEmit.startsWith('opml:')) ||
-          (feedUrlForEmit != null && feedUrlForEmit.isNotEmpty);
+      final podcastIdForEmit = analyticsPodcastId(
+        itunesId: itunesIdForEmit,
+        feedUrl: feedUrlForEmit,
+      );
 
-      if (!hasPodcastId || guidForEmit == null || guidForEmit.isEmpty) {
+      EpisodeAnalyticsIds? playIds;
+      if (podcastIdForEmit == null ||
+          guidForEmit == null ||
+          guidForEmit.isEmpty) {
         _log.w(
           '[Analytics] episode_play_start SKIP — '
           'itunesId=$itunesIdForEmit feedUrl=$feedUrlForEmit guid=$guidForEmit',
         );
-      }
-      if (hasPodcastId && guidForEmit != null && guidForEmit.isNotEmpty) {
+      } else {
+        playIds = (
+          podcastId: podcastIdForEmit,
+          feedUrl: feedUrlForEmit,
+          episodeId: guidForEmit,
+          podcastTitle: podcastTitleForEmit ?? '',
+          episodeTitle: metadata?.episodeTitle ?? episode?.title ?? '',
+        );
         final source = _nextPlaySource ?? PlaySource.unknown;
         _nextPlaySource = null;
-        final podcastIdForEmit =
-            (itunesIdForEmit != null &&
-                itunesIdForEmit.isNotEmpty &&
-                !itunesIdForEmit.startsWith('opml:'))
-            ? itunesIdForEmit
-            : feedUrlForEmit!;
-        final episodeTitleForEmit =
-            metadata?.episodeTitle ?? episode?.title ?? '';
         unawaited(
           ref
               .read(analyticsServiceProvider)
               .log(
                 EpisodePlayStarted(
-                  podcastId: podcastIdForEmit,
-                  episodeId: guidForEmit,
-                  podcastTitle: podcastTitleForEmit ?? '',
-                  episodeTitle: episodeTitleForEmit,
+                  podcastId: playIds.podcastId,
+                  feedUrl: playIds.feedUrl,
+                  episodeId: playIds.episodeId,
+                  podcastTitle: playIds.podcastTitle,
+                  episodeTitle: playIds.episodeTitle,
                   source: source,
+                  speed: speed,
                 ),
               ),
         );
@@ -713,6 +709,7 @@ class AudioPlayerController extends _$AudioPlayerController
             .log(
               EpisodePaused(
                 podcastId: ids.podcastId,
+                feedUrl: ids.feedUrl,
                 episodeId: ids.episodeId,
                 podcastTitle: ids.podcastTitle,
                 episodeTitle: ids.episodeTitle,
@@ -743,6 +740,7 @@ class AudioPlayerController extends _$AudioPlayerController
             .log(
               EpisodeResumed(
                 podcastId: ids.podcastId,
+                feedUrl: ids.feedUrl,
                 episodeId: ids.episodeId,
                 podcastTitle: ids.podcastTitle,
                 episodeTitle: ids.episodeTitle,
@@ -856,6 +854,7 @@ class AudioPlayerController extends _$AudioPlayerController
             .log(
               EpisodeSeeked(
                 podcastId: ids.podcastId,
+                feedUrl: ids.feedUrl,
                 episodeId: ids.episodeId,
                 podcastTitle: ids.podcastTitle,
                 episodeTitle: ids.episodeTitle,
