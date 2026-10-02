@@ -19,11 +19,15 @@ class _FakeDownloadRepository implements DownloadRepository {
   final List<int> incrementedRetryIds = [];
 
   @override
-  Future<DownloadTask?> getNextPending({required bool isOnWifi}) async {
+  Future<DownloadTask?> getNextPending({
+    required bool isOnWifi,
+    Set<int> excludeIds = const {},
+  }) async {
     final idx = pending.indexWhere(
       (t) =>
           t.downloadStatus is DownloadStatusPending &&
-          (isOnWifi || !t.wifiOnly),
+          (isOnWifi || !t.wifiOnly) &&
+          !excludeIds.contains(t.id),
     );
     if (0 <= idx) return pending[idx];
     return null;
@@ -56,6 +60,13 @@ class _FakeDownloadRepository implements DownloadRepository {
     incrementedRetryIds.add(id);
     for (final t in pending) {
       if (t.id == id) t.retryCount++;
+    }
+  }
+
+  @override
+  Future<void> resetRetryCount(int id) async {
+    for (final t in pending) {
+      if (t.id == id) t.retryCount = 0;
     }
   }
 

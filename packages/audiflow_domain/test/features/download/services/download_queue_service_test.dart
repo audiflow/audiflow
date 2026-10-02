@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:logger/logger.dart';
@@ -418,6 +419,7 @@ void main() {
 
       // Assert
       verify(mockRepository.getById(taskId)).called(1);
+      verify(mockRepository.resetRetryCount(taskId)).called(1);
       verify(
         mockRepository.updateStatus(
           id: taskId,
@@ -455,7 +457,10 @@ void main() {
 
       var callCount = 0;
       when(
-        mockRepository.getNextPending(isOnWifi: anyNamed('isOnWifi')),
+        mockRepository.getNextPending(
+          isOnWifi: anyNamed('isOnWifi'),
+          excludeIds: anyNamed('excludeIds'),
+        ),
       ).thenAnswer((_) async {
         callCount++;
         if (1 < callCount) return null;
@@ -536,7 +541,10 @@ void main() {
 
       var callCount = 0;
       when(
-        mockRepository.getNextPending(isOnWifi: anyNamed('isOnWifi')),
+        mockRepository.getNextPending(
+          isOnWifi: anyNamed('isOnWifi'),
+          excludeIds: anyNamed('excludeIds'),
+        ),
       ).thenAnswer((_) async {
         callCount++;
         if (1 < callCount) return null;
@@ -571,6 +579,210 @@ void main() {
         ),
       ).called(1);
       verify(mockEpisodeRepo.getById(99)).called(1);
+    });
+  });
+
+  /// Stubs a download of [task] that fails with a network error.
+  void stubFailingDownload(DownloadTask task) {
+    when(
+      mockEpisodeRepo.getById(task.episodeId),
+    ).thenAnswer((_) async => _episode(id: task.episodeId));
+    when(
+      mockFileService.downloadFile(
+        taskId: task.id,
+        url: anyNamed('url'),
+        episodeId: anyNamed('episodeId'),
+        episodeTitle: anyNamed('episodeTitle'),
+        resumeFromBytes: anyNamed('resumeFromBytes'),
+        onProgress: anyNamed('onProgress'),
+      ),
+    ).thenThrow(
+      DownloadException(DownloadErrorType.networkUnavailable, 'offline'),
+    );
+  }
+
+  /// Stubs a successful download of [task].
+  void stubSucceedingDownload(DownloadTask task) {
+    when(
+      mockEpisodeRepo.getById(task.episodeId),
+    ).thenAnswer((_) async => _episode(id: task.episodeId));
+    when(
+      mockFileService.downloadFile(
+        taskId: task.id,
+        url: anyNamed('url'),
+        episodeId: anyNamed('episodeId'),
+        episodeTitle: anyNamed('episodeTitle'),
+        resumeFromBytes: anyNamed('resumeFromBytes'),
+        onProgress: anyNamed('onProgress'),
+      ),
+    ).thenAnswer((_) async => '/downloads/${task.episodeId}.mp3');
+  }
+
+  /// Serves pending tasks the way the datasource does: the oldest of
+  /// [tasks] that is still pending and not excluded. Records the excluded
+  /// ids of every lookup.
+  List<Set<int>> servePending(List<DownloadTask> tasks) {
+    final lookups = <Set<int>>[];
+    final finished = <int>{};
+    when(
+      mockRepository.updateStatus(
+        id: anyNamed('id'),
+        status: anyNamed('status'),
+        localPath: anyNamed('localPath'),
+        lastError: anyNamed('lastError'),
+      ),
+    ).thenAnswer((invocation) async {
+      final id = invocation.namedArguments[#id] as int;
+      final status = invocation.namedArguments[#status] as DownloadStatus;
+      if (status is DownloadStatusCompleted || status is DownloadStatusFailed) {
+        finished.add(id);
+      }
+    });
+    when(
+      mockRepository.getNextPending(
+        isOnWifi: anyNamed('isOnWifi'),
+        excludeIds: anyNamed('excludeIds'),
+      ),
+    ).thenAnswer((invocation) async {
+      final excluded = invocation.namedArguments[#excludeIds] as Set<int>;
+      lookups.add({...excluded});
+      for (final task in tasks) {
+        if (finished.contains(task.id) || excluded.contains(task.id)) continue;
+        return task;
+      }
+      return null;
+    });
+    when(mockRepository.incrementRetryCount(any)).thenAnswer((_) async {});
+    when(mockRepository.getById(any)).thenAnswer((_) async => null);
+    return lookups;
+  }
+
+  group('retry backoff', () {
+    test('does not pick a failed task again before its backoff', () async {
+      await Future<void>.delayed(Duration.zero);
+      final task = _task(id: 1, episodeId: 10);
+      stubFailingDownload(task);
+      final lookups = servePending([task]);
+
+      await service.startQueue();
+
+      verify(
+        mockFileService.downloadFile(
+          taskId: 1,
+          url: anyNamed('url'),
+          episodeId: anyNamed('episodeId'),
+          episodeTitle: anyNamed('episodeTitle'),
+          resumeFromBytes: anyNamed('resumeFromBytes'),
+          onProgress: anyNamed('onProgress'),
+        ),
+      ).called(1);
+      check(lookups).deepEquals([
+        <int>{},
+        {1},
+      ]);
+    });
+
+    test('downloads the next task while a failed one backs off', () async {
+      await Future<void>.delayed(Duration.zero);
+      final failing = _task(id: 1, episodeId: 10);
+      final next = _task(id: 2, episodeId: 20);
+      stubFailingDownload(failing);
+      stubSucceedingDownload(next);
+      servePending([failing, next]);
+
+      await service.startQueue();
+
+      verify(
+        mockRepository.updateStatus(
+          id: 2,
+          status: const DownloadStatus.completed(),
+          localPath: '/downloads/20.mp3',
+        ),
+      ).called(1);
+    });
+
+    test('retries the failed task once its backoff elapses', () {
+      fakeAsync((async) {
+        // A service built inside the fake zone, so its timers and clock
+        // follow fake time.
+        final clock = async.getClock(DateTime(2026));
+        final fakeTimeService = DownloadQueueService(
+          repository: mockRepository,
+          fileService: mockFileService,
+          episodeRepository: mockEpisodeRepo,
+          logger: Logger(level: Level.off),
+          now: clock.now,
+        );
+        final task = _task(id: 1, episodeId: 10);
+        stubFailingDownload(task);
+        servePending([task]);
+        final attempts = <int>[];
+        when(
+          mockFileService.downloadFile(
+            taskId: 1,
+            url: anyNamed('url'),
+            episodeId: anyNamed('episodeId'),
+            episodeTitle: anyNamed('episodeTitle'),
+            resumeFromBytes: anyNamed('resumeFromBytes'),
+            onProgress: anyNamed('onProgress'),
+          ),
+        ).thenAnswer((_) async {
+          attempts.add(async.elapsed.inSeconds);
+          throw DownloadException(DownloadErrorType.networkUnavailable, 'x');
+        });
+
+        async.flushMicrotasks();
+        async.elapse(Duration(seconds: retryDelaysSeconds.first - 1));
+        check(attempts).deepEquals([0]);
+
+        async.elapse(const Duration(seconds: 1));
+        check(attempts).deepEquals([0, retryDelaysSeconds.first]);
+
+        fakeTimeService.dispose();
+      });
+    });
+
+    test('manual retry lifts the backoff immediately', () async {
+      await Future<void>.delayed(Duration.zero);
+      final task = _task(id: 1, episodeId: 10);
+      stubFailingDownload(task);
+      final lookups = servePending([task]);
+      when(mockRepository.resetRetryCount(1)).thenAnswer((_) async {});
+      await service.startQueue();
+      when(mockRepository.getById(1)).thenAnswer((_) async => task);
+      lookups.clear();
+
+      await service.retryDownload(1);
+      await Future<void>.delayed(Duration.zero);
+
+      check(lookups.first).isEmpty();
+    });
+  });
+
+  group('startQueue during a drain', () {
+    test('rescans when a request lands while the queue is draining', () async {
+      await Future<void>.delayed(Duration.zero);
+      final lookupGate = Completer<DownloadTask?>();
+      var lookups = 0;
+      when(
+        mockRepository.getNextPending(
+          isOnWifi: anyNamed('isOnWifi'),
+          excludeIds: anyNamed('excludeIds'),
+        ),
+      ).thenAnswer((_) {
+        lookups++;
+        // The first lookup stalls so a request can land mid-drain.
+        if (lookups == 1) return lookupGate.future;
+        return Future.value(null);
+      });
+
+      final drain = service.startQueue();
+      await Future<void>.delayed(Duration.zero);
+      await service.startQueue();
+      lookupGate.complete(null);
+      await drain;
+
+      check(lookups).equals(2);
     });
   });
 

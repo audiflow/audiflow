@@ -191,6 +191,23 @@ void main() {
     });
   });
 
+  group('resetRetryCount', () {
+    test('sets retry count back to zero', () async {
+      final task = await repository.createDownload(
+        episodeId: 1,
+        audioUrl: 'https://example.com/ep1.mp3',
+        wifiOnly: true,
+      );
+      await repository.incrementRetryCount(task!.id);
+      await repository.incrementRetryCount(task.id);
+
+      await repository.resetRetryCount(task.id);
+
+      final updated = await repository.getById(task.id);
+      expect(updated!.retryCount, 0);
+    });
+  });
+
   group('getByStatus', () {
     test('returns tasks with matching status', () async {
       final task1 = await repository.createDownload(

@@ -94,7 +94,9 @@ class DownloadQueueService implements SuspendableWriter {
     required this._logger,
     this._onDownloadCompleted,
     this._onDownloadCompletedWithBytes,
-  }) : _episodeRepo = episodeRepository {
+    DateTime Function()? now,
+  }) : _episodeRepo = episodeRepository,
+       _now = now ?? DateTime.now {
     _init();
   }
 
@@ -106,13 +108,26 @@ class DownloadQueueService implements SuspendableWriter {
   _onDownloadCompletedWithBytes;
   final Logger _logger;
 
+  /// Clock for retry backoff deadlines; injectable so tests can fake time.
+  final DateTime Function() _now;
+
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
   DownloadTask? _activeDownload;
   bool _isOnWifi = false;
   Timer? _retryTimer;
 
+  /// Tasks waiting out a retry backoff, keyed by task id, mapped to the
+  /// time they become eligible again. The drain skips them so a failing
+  /// task neither retries back-to-back nor holds up the tasks behind it.
+  final _backoffUntil = <int, DateTime>{};
+
   /// The running queue drain, so [suspend] can wait for it to settle.
   Future<void>? _processing;
+
+  /// Set when a start request lands while a drain is running. The drain
+  /// looks again before stopping, so a task enqueued after its last lookup
+  /// is not left pending until the next trigger.
+  bool _isRescanRequested = false;
 
   bool get _isProcessing => _processing != null;
 
@@ -174,7 +189,10 @@ class DownloadQueueService implements SuspendableWriter {
   }
 
   Future<void> _processQueue() async {
-    if (_isProcessing) return;
+    if (_isProcessing) {
+      _isRescanRequested = true;
+      return;
+    }
     _processing = _drainQueue();
     await _processing;
   }
@@ -186,8 +204,16 @@ class DownloadQueueService implements SuspendableWriter {
       // that landed while it ran does not start a download it has no
       // token to cancel.
       while (!_isSuspended) {
-        final nextTask = await _repository.getNextPending(isOnWifi: _isOnWifi);
-        if (nextTask == null || _isSuspended) break;
+        _isRescanRequested = false;
+        final nextTask = await _repository.getNextPending(
+          isOnWifi: _isOnWifi,
+          excludeIds: _idsInBackoff(),
+        );
+        if (_isSuspended) break;
+        if (nextTask == null) {
+          if (_isRescanRequested) continue;
+          break;
+        }
 
         await _processDownload(nextTask);
       }
@@ -195,7 +221,32 @@ class DownloadQueueService implements SuspendableWriter {
       _processing = null;
       _activeDownload = null;
       _activeDownloadController.add(null);
+      _scheduleRetryTimer();
     }
+  }
+
+  /// Drops elapsed backoffs and returns the ids still waiting.
+  Set<int> _idsInBackoff() {
+    final now = _now();
+    _backoffUntil.removeWhere((_, until) => !now.isBefore(until));
+    return _backoffUntil.keys.toSet();
+  }
+
+  /// Arms the retry timer for the earliest backoff to elapse, so the queue
+  /// restarts on its own once a backed-off task is eligible again.
+  void _scheduleRetryTimer() {
+    _retryTimer?.cancel();
+    _retryTimer = null;
+    if (_isSuspended || _backoffUntil.isEmpty) return;
+
+    final earliest = _backoffUntil.values.reduce(
+      (a, b) => a.isBefore(b) ? a : b,
+    );
+    final delay = earliest.difference(_now());
+    _retryTimer = Timer(
+      delay.isNegative ? Duration.zero : delay,
+      () => unawaited(_processQueue()),
+    );
   }
 
   Future<void> _processDownload(DownloadTask task) async {
@@ -308,11 +359,8 @@ class DownloadQueueService implements SuspendableWriter {
           : retryDelaysSeconds.length - 1;
       final delay = Duration(seconds: retryDelaysSeconds[delayIndex]);
       _logger.i('Scheduling retry in ${delay.inSeconds}s');
-
-      _retryTimer?.cancel();
-      _retryTimer = Timer(delay, () {
-        if (!_isProcessing) _processQueue();
-      });
+      // The drain arms the retry timer when it stops.
+      _backoffUntil[task.id] = _now().add(delay);
     } else {
       // Max retries exceeded
       await _repository.updateStatus(
@@ -363,6 +411,7 @@ class DownloadQueueService implements SuspendableWriter {
   Future<void> suspend() async {
     _isSuspended = true;
     _retryTimer?.cancel();
+    _backoffUntil.clear();
     final active = _activeDownload;
     if (active != null) _fileService.cancelDownload(active.id);
     try {
@@ -397,7 +446,8 @@ class DownloadQueueService implements SuspendableWriter {
     final task = await _repository.getById(taskId);
     if (task == null) return;
 
-    // Reset retry count and set to pending
+    _backoffUntil.remove(taskId);
+    await _repository.resetRetryCount(taskId);
     await _repository.updateStatus(
       id: taskId,
       status: const DownloadStatus.pending(),

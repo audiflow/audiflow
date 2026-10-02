@@ -120,12 +120,16 @@ class _DiagDownloadRepo implements DownloadRepository {
   Future<DownloadTask?> getCompletedForEpisode(int episodeId) =>
       _inner.getCompletedForEpisode(episodeId);
   @override
-  Future<DownloadTask?> getNextPending({required bool isOnWifi}) =>
-      _inner.getNextPending(isOnWifi: isOnWifi);
+  Future<DownloadTask?> getNextPending({
+    required bool isOnWifi,
+    Set<int> excludeIds = const {},
+  }) => _inner.getNextPending(isOnWifi: isOnWifi, excludeIds: excludeIds);
   @override
   Future<int> getTotalStorageUsed() => _inner.getTotalStorageUsed();
   @override
   Future<void> incrementRetryCount(int id) => _inner.incrementRetryCount(id);
+  @override
+  Future<void> resetRetryCount(int id) => _inner.resetRetryCount(id);
   @override
   Future<void> updateProgress({
     required int id,

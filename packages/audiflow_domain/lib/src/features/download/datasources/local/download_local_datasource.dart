@@ -89,14 +89,21 @@ class DownloadLocalDatasource {
         .findFirst();
   }
 
-  /// Returns the next pending download (FIFO order, respecting wifiOnly).
-  Future<DownloadTask?> getNextPending({required bool isOnWifi}) {
+  /// Returns the next pending download (FIFO order, respecting wifiOnly),
+  /// skipping tasks whose ids are in [excludeIds].
+  Future<DownloadTask?> getNextPending({
+    required bool isOnWifi,
+    Set<int> excludeIds = const {},
+  }) {
     var query = _isar.downloadTasks.filter().statusEqualTo(
       const DownloadStatus.pending().toDbValue(),
     );
 
     if (!isOnWifi) {
       query = query.and().wifiOnlyEqualTo(false);
+    }
+    for (final id in excludeIds) {
+      query = query.and().not().idEqualTo(id);
     }
 
     return query.sortByCreatedAt().findFirst();

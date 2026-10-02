@@ -255,6 +255,31 @@ void main() {
       expect(task, isNotNull);
       expect(task!.episodeId, 1);
     });
+
+    test('skips tasks whose ids are excluded', () async {
+      final firstId = await datasource.create(makeTask(episodeId: 1));
+      await datasource.create(makeTask(episodeId: 2));
+
+      final task = await datasource.getNextPending(
+        isOnWifi: true,
+        excludeIds: {firstId},
+      );
+
+      expect(task, isNotNull);
+      expect(task!.episodeId, 2);
+    });
+
+    test('returns null when every pending task is excluded', () async {
+      final firstId = await datasource.create(makeTask(episodeId: 1));
+      final secondId = await datasource.create(makeTask(episodeId: 2));
+
+      final task = await datasource.getNextPending(
+        isOnWifi: true,
+        excludeIds: {firstId, secondId},
+      );
+
+      expect(task, isNull);
+    });
   });
 
   group('getCompletedByEpisodeId', () {

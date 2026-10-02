@@ -40,7 +40,13 @@ abstract class DownloadRepository {
   Future<DownloadTask?> getCompletedForEpisode(int episodeId);
 
   /// Returns the next pending download.
-  Future<DownloadTask?> getNextPending({required bool isOnWifi});
+  ///
+  /// Tasks whose ids are in [excludeIds] are skipped, so a task waiting out
+  /// a retry backoff does not hold up the tasks queued behind it.
+  Future<DownloadTask?> getNextPending({
+    required bool isOnWifi,
+    Set<int> excludeIds = const {},
+  });
 
   /// Updates download progress.
   Future<void> updateProgress({
@@ -59,6 +65,9 @@ abstract class DownloadRepository {
 
   /// Increments retry count.
   Future<void> incrementRetryCount(int id);
+
+  /// Resets retry count to zero, giving the task a fresh retry budget.
+  Future<void> resetRetryCount(int id);
 
   /// Deletes a download task and optionally its file.
   Future<void> delete(int id);
