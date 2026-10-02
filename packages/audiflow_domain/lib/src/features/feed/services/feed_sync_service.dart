@@ -535,9 +535,7 @@ class FeedSyncService implements SuspendableWriter {
       // The queue only wakes on network changes and explicit download
       // actions, so without this kick new episodes would sit pending on
       // an unchanged Wi-Fi connection.
-      if (0 < enqueued.created) {
-        unawaited(_ref.read(downloadQueueServiceProvider).startQueue());
-      }
+      if (0 < enqueued.created) unawaited(_startDownloadQueue());
 
       _logger.i('Synced "${sub.title}": $newEpisodeCount episodes processed');
 
@@ -562,6 +560,16 @@ class FeedSyncService implements SuspendableWriter {
         skipped: false,
         errorMessage: e.toString(),
       );
+    }
+  }
+
+  /// Starts the download queue without tying sync completion to the drain.
+  /// A failing drain is logged here, since nothing awaits it.
+  Future<void> _startDownloadQueue() async {
+    try {
+      await _ref.read(downloadQueueServiceProvider).startQueue();
+    } catch (e, stack) {
+      _logger.e('Failed to start download queue', error: e, stackTrace: stack);
     }
   }
 

@@ -39,8 +39,15 @@ class _NoopAutoDownloadEnqueuer implements AutoDownloadEnqueuer {
 class _FakeDownloadQueueService implements DownloadQueueService {
   int startCount = 0;
 
+  /// When set, every start fails with this error.
+  Object? startError;
+
   @override
-  Future<void> startQueue() async => startCount++;
+  Future<void> startQueue() async {
+    startCount++;
+    final error = startError;
+    if (error != null) throw error;
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -519,6 +526,17 @@ void main() {
         await service.syncFeed(sub);
 
         check(queueService.startCount).equals(1);
+      });
+
+      test('keeps a queue failure from escaping the sync', () async {
+        enqueuer.created = 1;
+        queueService.startError = StateError('queue broke');
+
+        final result = await service.syncFeed(sub);
+        // Let the detached start settle; an unhandled error fails the test.
+        await Future<void>.delayed(Duration.zero);
+
+        check(result.success).isTrue();
       });
 
       test('stays idle when nothing was enqueued', () async {
