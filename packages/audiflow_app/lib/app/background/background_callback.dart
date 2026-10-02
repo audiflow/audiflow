@@ -16,6 +16,7 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:workmanager/workmanager.dart';
 
 import '../../features/monitoring/services/sentry_diagnostics.dart';
+import 'background_download_lock.dart';
 import 'background_settings_repository.dart';
 import 'background_task_registrar.dart';
 import 'refresh_download_budget.dart';
@@ -199,7 +200,7 @@ Future<void> _downloadWithinRefreshWindow({
   required DownloadRepository downloadRepo,
   required EpisodeRepository episodeRepo,
   required Dio dio,
-  required String downloadsDir,
+  required String documentsDir,
   required Duration elapsed,
   required Logger logger,
 }) async {
@@ -210,6 +211,11 @@ Future<void> _downloadWithinRefreshWindow({
     return;
   }
 
+  final lock = BackgroundDownloadLock(directory: documentsDir);
+  if (!await lock.tryAcquire()) {
+    _bgDebug('download task is active, skipping refresh-window downloads');
+    return;
+  }
   try {
     // Without this, a download cut off when iOS expired an earlier window
     // would wait for the rarely-run download task to recover it.
@@ -219,7 +225,7 @@ Future<void> _downloadWithinRefreshWindow({
       downloadRepo: downloadRepo,
       episodeRepo: episodeRepo,
       dio: dio,
-      downloadsDir: downloadsDir,
+      downloadsDir: '$documentsDir/downloads',
       logger: logger,
       timeBudget: budget,
       isOnWifi: connectivity.contains(ConnectivityResult.wifi),
@@ -233,6 +239,8 @@ Future<void> _downloadWithinRefreshWindow({
     // Downloads are a bonus here; the dedicated download task scheduled
     // below still picks up whatever is left.
     logger.e('Refresh-window downloads failed', error: e, stackTrace: stack);
+  } finally {
+    await lock.release();
   }
 }
 
@@ -553,7 +561,7 @@ void backgroundCallback() {
         downloadRepo: downloadRepo,
         episodeRepo: episodeRepo,
         dio: dio,
-        downloadsDir: '${dir.path}/downloads',
+        documentsDir: dir.path,
         elapsed: refreshStopwatch.elapsed,
         logger: logger,
       );
@@ -693,9 +701,17 @@ Future<bool> _executeDownloadTask(Map<String, dynamic>? inputData) async {
   var runnableRemainingCount = 0;
   var isOnWifi = false;
   var rescheduledWifiOnly = false;
+  BackgroundDownloadLock? lock;
 
   try {
     final dir = await getApplicationDocumentsDirectory();
+    lock = BackgroundDownloadLock(directory: dir.path);
+    if (!await lock.tryAcquire()) {
+      // A refresh-window pass is transferring; let the scheduler retry
+      // rather than reclaim its in-flight task.
+      _bgDebug('another background download worker is active, deferring');
+      return false;
+    }
     isar = await openIsarWithRecovery(directory: dir.path, logger: logger);
     dio = Dio(
       BaseOptions(
@@ -822,6 +838,7 @@ Future<bool> _executeDownloadTask(Map<String, dynamic>? inputData) async {
       );
     }
   } finally {
+    await lock?.release();
     dio?.close();
     if (isar != null && isar.isOpen) {
       await isar.close();

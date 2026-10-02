@@ -44,7 +44,7 @@ It exists to make Audiflow feel current without the listener doing anything. New
 - Detects newly published episodes and removes episodes that have dropped out of a feed, keeping the local store aligned with the publisher's current feed.
 - Writes the artwork, author, and description carried by the RSS channel back onto the subscription, on the same terms as foreground sync (FR 03), so a podcast imported from OPML gains the details its import could not supply even if it is only ever refreshed in the background.
 - Enqueues downloads for newly discovered episodes of auto-download-enabled podcasts, and schedules a follow-up background download task when pending or stuck downloads exist.
-- On iOS, downloads pending episodes in the time left in the refresh window (up to about 20 seconds into the run, skipped when under 5 seconds remain), honoring the Wi-Fi-only preference.
+- On iOS, downloads pending episodes in the time left in the refresh window (up to about 20 seconds into the run, skipped when under 5 seconds remain), honoring the Wi-Fi-only preference. It and the download task take a shared lock, so the two never transfer at once; whichever finds the lock held defers to the other.
 - Builds per-episode notification payloads (capped per refresh cycle), skipping episodes the listener has already played, and shows one local notification per new episode.
 - Handles notification taps and cold-start launches by decoding the notification payload and deep-linking to the corresponding episode detail screen.
 - Re-registers or cancels the background task in response to settings changes and app lifecycle events so the schedule always reflects current preferences.
