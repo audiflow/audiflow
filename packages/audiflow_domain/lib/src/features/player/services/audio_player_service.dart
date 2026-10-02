@@ -849,6 +849,9 @@ class AudioPlayerController extends _$AudioPlayerController
   void markPausedByInterruption() {
     final url = _currentUrl;
     if (url == null) return;
+    // The state stream may never see this pause either, so the listen
+    // segment has to be closed here too.
+    _closeListenSession(ListenEndReason.pause);
     state = PlaybackState.paused(episodeUrl: url);
   }
 
@@ -859,6 +862,7 @@ class AudioPlayerController extends _$AudioPlayerController
   void markPlayingByInterruption() {
     final url = _currentUrl;
     if (url == null) return;
+    _openListenSession();
     state = PlaybackState.playing(episodeUrl: url);
   }
 
@@ -961,7 +965,11 @@ class AudioPlayerController extends _$AudioPlayerController
     final splitSegment = segmentIds != null && speed != _player.speed;
     if (splitSegment) _closeListenSession(ListenEndReason.speedChange);
     await _player.setSpeed(speed);
-    if (splitSegment) _openListenSession(ids: segmentIds);
+    // Playback may have paused while the engine applied the speed; the
+    // stream has then already closed the segment and must not reopen it.
+    if (splitSegment && _player.playing) {
+      _openListenSession(ids: segmentIds);
+    }
     final settingsRepo = ref.read(appSettingsRepositoryProvider);
     await settingsRepo.setPlaybackSpeed(speed);
     unawaited(
