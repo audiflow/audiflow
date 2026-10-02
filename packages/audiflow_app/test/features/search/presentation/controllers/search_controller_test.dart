@@ -181,6 +181,42 @@ void main() {
       final e = analytics.events.single as SearchQueryEntered;
       check(e.queryLen).equals('hello world'.length);
     });
+
+    test('emits SearchResultSelected with 1-based rank', () {
+      final analytics = FakeAnalyticsService();
+      final c = ProviderContainer(
+        overrides: [
+          appSettingsRepositoryProvider.overrideWithValue(
+            FakeAppSettingsRepository(),
+          ),
+          analyticsServiceProvider.overrideWithValue(analytics),
+        ],
+      );
+      addTearDown(c.dispose);
+
+      c
+          .read(podcastSearchControllerProvider.notifier)
+          .onResultSelected(
+            Podcast(
+              id: '42',
+              name: 'Tech Podcast',
+              artistName: 'Host',
+              feedUrl: 'https://example.com/feed.xml',
+            ),
+            index: 2,
+            resultCount: 10,
+          );
+
+      check(analytics.events).length.equals(1);
+      final e = analytics.events.single as SearchResultSelected;
+      check(e.params).deepEquals({
+        'podcast_id': '42',
+        'feed_key': '7a775db75c1d6d17',
+        'podcast_title': 'Tech Podcast',
+        'rank': 3,
+        'result_count': 10,
+      });
+    });
   });
 
   group('PodcastSearchController search execution (Task 2.1)', () {

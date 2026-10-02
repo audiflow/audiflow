@@ -205,6 +205,240 @@ void main() {
       check(e.params).deepEquals({'mode': 'end_of_chapter'});
     });
 
+    group('feed_key', () {
+      test('podcast-scoped events include feed_key, never the raw URL', () {
+        const feed = 'https://example.com/feed.xml';
+        final events = <AnalyticsEvent>[
+          PodcastSubscribed(
+            podcastId: 'p1',
+            podcastTitle: 'Pod 1',
+            source: SubscribeSource.search,
+            feedUrl: feed,
+          ),
+          PodcastUnsubscribed(
+            podcastId: 'p1',
+            podcastTitle: 'Pod 1',
+            feedUrl: feed,
+          ),
+          EpisodePlayStarted(
+            podcastId: 'p1',
+            episodeId: 'e1',
+            podcastTitle: 'Pod 1',
+            episodeTitle: 'Ep 1',
+            source: PlaySource.queue,
+            feedUrl: feed,
+          ),
+          EpisodePaused(
+            podcastId: 'p1',
+            episodeId: 'e1',
+            podcastTitle: 'Pod 1',
+            episodeTitle: 'Ep 1',
+            positionSec: 1,
+            feedUrl: feed,
+          ),
+          EpisodeResumed(
+            podcastId: 'p1',
+            episodeId: 'e1',
+            podcastTitle: 'Pod 1',
+            episodeTitle: 'Ep 1',
+            positionSec: 1,
+            feedUrl: feed,
+          ),
+          EpisodeCompleted(
+            podcastId: 'p1',
+            episodeId: 'e1',
+            podcastTitle: 'Pod 1',
+            episodeTitle: 'Ep 1',
+            durationSec: 1,
+            feedUrl: feed,
+          ),
+          EpisodeSeeked(
+            podcastId: 'p1',
+            episodeId: 'e1',
+            podcastTitle: 'Pod 1',
+            episodeTitle: 'Ep 1',
+            fromSec: 1,
+            toSec: 2,
+            feedUrl: feed,
+          ),
+          EpisodeDownloadStarted(
+            podcastId: 'p1',
+            episodeId: 'e1',
+            podcastTitle: 'Pod 1',
+            episodeTitle: 'Ep 1',
+            feedUrl: feed,
+          ),
+          EpisodeDownloadCompleted(
+            podcastId: 'p1',
+            episodeId: 'e1',
+            podcastTitle: 'Pod 1',
+            episodeTitle: 'Ep 1',
+            bytes: 1,
+            feedUrl: feed,
+          ),
+        ];
+        for (final e in events) {
+          check(
+            because: e.name,
+            e.params['feed_key'],
+          ).equals('7a775db75c1d6d17');
+          check(because: e.name, e.params.values).not((v) => v.contains(feed));
+        }
+      });
+
+      test('omits feed_key when null or empty', () {
+        final withNull = PodcastSubscribed(
+          podcastId: 'p1',
+          podcastTitle: 'Pod 1',
+          source: SubscribeSource.search,
+        );
+        final withEmpty = PodcastSubscribed(
+          podcastId: 'p1',
+          podcastTitle: 'Pod 1',
+          source: SubscribeSource.search,
+          feedUrl: '',
+        );
+        check(withNull.params.containsKey('feed_key')).isFalse();
+        check(withEmpty.params.containsKey('feed_key')).isFalse();
+      });
+    });
+
+    group('analyticsFeedKey', () {
+      test('is the first 16 hex chars of SHA-256 of the lowercased URL', () {
+        check(
+          analyticsFeedKey('https://example.com/feed.xml'),
+        ).equals('7a775db75c1d6d17');
+      });
+
+      test('ignores letter case', () {
+        check(
+          analyticsFeedKey('HTTPS://Example.com/Feed.XML'),
+        ).equals(analyticsFeedKey('https://example.com/feed.xml'));
+      });
+
+      test('keeps query strings distinct (they can identify the show)', () {
+        check(analyticsFeedKey('https://example.com/feed.php?id=1')).not(
+          (k) =>
+              k.equals(analyticsFeedKey('https://example.com/feed.php?id=2')),
+        );
+      });
+
+      test('distinguishes URLs that share a long prefix', () {
+        final prefix = 'https://example.com/${'a' * 200}';
+        check(
+          analyticsFeedKey('${prefix}1'),
+        ).not((k) => k.equals(analyticsFeedKey('${prefix}2')));
+      });
+    });
+
+    test('EpisodePlayStarted and EpisodeCompleted include speed', () {
+      final start = EpisodePlayStarted(
+        podcastId: 'p1',
+        episodeId: 'e1',
+        podcastTitle: 'Pod 1',
+        episodeTitle: 'Ep 1',
+        source: PlaySource.queue,
+        speed: 1.5,
+      );
+      final complete = EpisodeCompleted(
+        podcastId: 'p1',
+        episodeId: 'e1',
+        podcastTitle: 'Pod 1',
+        episodeTitle: 'Ep 1',
+        durationSec: 1800,
+        speed: 1.25,
+      );
+      check(start.params['speed']).equals(1.5);
+      check(complete.params['speed']).equals(1.25);
+    });
+
+    test('EpisodeListenSession', () {
+      final e = EpisodeListenSession(
+        podcastId: 'p1',
+        feedUrl: 'https://example.com/feed.xml',
+        episodeId: 'e1',
+        podcastTitle: 'Pod 1',
+        episodeTitle: 'Ep 1',
+        startSec: 60,
+        endSec: 600,
+        durationSec: 1800,
+        speed: 1.5,
+        endReason: ListenEndReason.switchEpisode,
+      );
+      check(e.name).equals('episode_listen_session');
+      check(e.params).deepEquals({
+        'podcast_id': 'p1',
+        'feed_key': '7a775db75c1d6d17',
+        'episode_id': 'e1',
+        'podcast_title': 'Pod 1',
+        'episode_title': 'Ep 1',
+        'start_sec': 60,
+        'end_sec': 600,
+        'duration_sec': 1800,
+        'speed': 1.5,
+        'end_reason': 'switch',
+      });
+    });
+
+    test('ListenEndReason param values', () {
+      check(
+        ListenEndReason.values.map((r) => r.paramValue).toList(),
+      ).deepEquals([
+        'pause',
+        'seek',
+        'switch',
+        'stop',
+        'complete',
+        'speed_change',
+      ]);
+    });
+
+    test('SearchResultSelected', () {
+      final e = SearchResultSelected(
+        podcastId: '123',
+        feedUrl: 'https://example.com/feed.xml',
+        podcastTitle: 'Pod 1',
+        rank: 3,
+        resultCount: 50,
+      );
+      check(e.name).equals('search_result_select');
+      check(e.params).deepEquals({
+        'podcast_id': '123',
+        'feed_key': '7a775db75c1d6d17',
+        'podcast_title': 'Pod 1',
+        'rank': 3,
+        'result_count': 50,
+      });
+    });
+
+    group('analyticsPodcastId', () {
+      test('prefers a real iTunes ID', () {
+        check(
+          analyticsPodcastId(itunesId: '123', feedUrl: 'https://f'),
+        ).equals('123');
+      });
+
+      test('falls back to the feed key for OPML imports', () {
+        check(
+          analyticsPodcastId(itunesId: 'opml:abc', feedUrl: 'https://f'),
+        ).equals(analyticsFeedKey('https://f'));
+      });
+
+      test('falls back to the feed key when iTunes ID is null or empty', () {
+        check(
+          analyticsPodcastId(itunesId: null, feedUrl: 'https://f'),
+        ).equals(analyticsFeedKey('https://f'));
+        check(
+          analyticsPodcastId(itunesId: '', feedUrl: 'https://f'),
+        ).equals(analyticsFeedKey('https://f'));
+      });
+
+      test('returns null when neither source is usable', () {
+        check(analyticsPodcastId(itunesId: 'opml:abc', feedUrl: '')).isNull();
+        check(analyticsPodcastId(itunesId: null, feedUrl: null)).isNull();
+      });
+    });
+
     test('truncates string params to 100 chars', () {
       final long = 'a' * 250;
       final e = EpisodePlayStarted(

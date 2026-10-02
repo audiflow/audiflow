@@ -114,6 +114,28 @@ class PodcastSearchController extends _$PodcastSearchController {
     }
   }
 
+  /// Records that the user opened the result at [index] (0-based) out of
+  /// [resultCount] displayed results.
+  void onResultSelected(
+    Podcast podcast, {
+    required int index,
+    required int resultCount,
+  }) {
+    unawaited(
+      ref
+          .read(analyticsServiceProvider)
+          .log(
+            SearchResultSelected(
+              podcastId: podcast.id,
+              feedUrl: podcast.feedUrl,
+              podcastTitle: podcast.name,
+              rank: index + 1,
+              resultCount: resultCount,
+            ),
+          ),
+    );
+  }
+
   /// Clears results and resets to initial state.
   void clear() {
     _clear();

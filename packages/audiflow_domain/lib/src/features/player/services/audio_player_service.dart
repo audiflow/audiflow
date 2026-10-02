@@ -20,6 +20,7 @@ import '../models/playback_progress.dart';
 import '../models/playback_state.dart';
 import '../repositories/playback_history_repository_impl.dart';
 import 'audio_playback_controller.dart';
+import 'listen_session_tracker.dart';
 import 'now_playing_controller.dart';
 import 'playback_history_service.dart';
 import 'player_lifecycle_events.dart';
@@ -112,6 +113,14 @@ class AudioPlayerController extends _$AudioPlayerController
   /// end of an episode and then returns to `ready`. Cleared in [play]
   /// when a new episode is loaded.
   int? _lastCompletedAnalyticsEpisodeId;
+
+  final ListenSessionTracker _listenSession = ListenSessionTracker();
+
+  // While true, the player state stream must not open a listen segment:
+  // play() moves the position (saved resume point) and speed before
+  // playback really starts, and seek() closes/reopens explicitly.
+  bool _isPreparingPlay = false;
+  bool _isSeeking = false;
   final StreamController<PlayerLifecycleEvent> _lifecycleEvents =
       StreamController<PlayerLifecycleEvent>.broadcast();
 
@@ -128,16 +137,10 @@ class AudioPlayerController extends _$AudioPlayerController
   /// feed URL or GUID is missing so emitters can no-op cleanly.
   ///
   /// `podcastId` resolves to the raw iTunes ID when available
-  /// (non-OPML import), else the feed URL. `episodeId` is the raw RSS
+  /// (non-OPML import), else the hashed feed key. `episodeId` is the raw RSS
   /// guid. Titles come straight from `NowPlayingInfo`; truncation to
   /// GA's 100-char param limit happens at the event boundary.
-  ({
-    String podcastId,
-    String episodeId,
-    String podcastTitle,
-    String episodeTitle,
-  })?
-  _currentAnalyticsIds() {
+  EpisodeAnalyticsIds? _currentAnalyticsIds() {
     final info = ref.read(nowPlayingControllerProvider);
     if (info == null) {
       _log.w('[Analytics] ids: NowPlayingInfo null');
@@ -148,27 +151,52 @@ class AudioPlayerController extends _$AudioPlayerController
       _log.w('[Analytics] ids: missing guid');
       return null;
     }
-    final itunesId = info.itunesId;
-    final feedUrl = info.feedUrl;
-    final hasValidItunesId =
-        itunesId != null &&
-        itunesId.isNotEmpty &&
-        !itunesId.startsWith('opml:');
-    final hasFeedUrl = feedUrl != null && feedUrl.isNotEmpty;
-    if (!hasValidItunesId && !hasFeedUrl) {
+    final podcastId = analyticsPodcastId(
+      itunesId: info.itunesId,
+      feedUrl: info.feedUrl,
+    );
+    if (podcastId == null) {
       _log.w(
         '[Analytics] ids: no podcastId source — '
-        'itunesId=$itunesId feedUrl=$feedUrl',
+        'itunesId=${info.itunesId} feedUrl=${info.feedUrl}',
       );
       return null;
     }
-    final podcastId = hasValidItunesId ? itunesId : feedUrl!;
     return (
       podcastId: podcastId,
+      feedUrl: info.feedUrl,
       episodeId: guid,
       podcastTitle: info.podcastTitle,
       episodeTitle: info.episodeTitle,
     );
+  }
+
+  /// Opens a listen segment at the current position unless one is
+  /// already open or play()/seek() is mid-flight. [ids] overrides the
+  /// [NowPlayingInfo]-derived identity (play() may run without metadata,
+  /// leaving [NowPlayingInfo] on the previous episode).
+  void _openListenSession({EpisodeAnalyticsIds? ids}) {
+    if (_isPreparingPlay || _isSeeking || _listenSession.isOpen) return;
+    final resolved = ids ?? _currentAnalyticsIds();
+    if (resolved == null) return;
+    _listenSession.open(
+      ids: resolved,
+      positionSec: _player.position.inSeconds,
+      speed: _player.speed,
+    );
+  }
+
+  /// Closes the open listen segment (if any) and emits it. [position]
+  /// overrides the live player position for callers that captured it
+  /// before moving the playhead.
+  void _closeListenSession(ListenEndReason reason, {Duration? position}) {
+    final session = _listenSession.close(
+      positionSec: (position ?? _player.position).inSeconds,
+      durationSec: _player.duration?.inSeconds ?? 0,
+      reason: reason,
+    );
+    if (session == null) return;
+    unawaited(ref.read(analyticsServiceProvider).log(session));
   }
 
   /// Broadcast stream of lifecycle events. Exposed via
@@ -228,6 +256,7 @@ class AudioPlayerController extends _$AudioPlayerController
 
         if (processingState == ProcessingState.completed) {
           _log.i('[StateStream] COMPLETED detected, advancing queue...');
+          _closeListenSession(ListenEndReason.complete);
 
           // Emit `episode_complete` exactly once per episode load.
           // just_audio can transiently report `completed` during seeks
@@ -246,10 +275,12 @@ class AudioPlayerController extends _$AudioPlayerController
                     .log(
                       EpisodeCompleted(
                         podcastId: ids.podcastId,
+                        feedUrl: ids.feedUrl,
                         episodeId: ids.episodeId,
                         podcastTitle: ids.podcastTitle,
                         episodeTitle: ids.episodeTitle,
                         durationSec: durationSec,
+                        speed: _player.speed,
                       ),
                     ),
               );
@@ -280,9 +311,14 @@ class AudioPlayerController extends _$AudioPlayerController
             processingState == ProcessingState.buffering) {
           state = PlaybackState.loading(episodeUrl: url);
         } else if (playing) {
+          // The stream (not pause()/resume()) drives segment open/close so
+          // fade-out, OS interruptions, and lock-screen controls that call
+          // just_audio directly are covered too.
+          _openListenSession();
           state = PlaybackState.playing(episodeUrl: url);
         } else {
           _log.d('[StateStream] paused (processing=$processingState)');
+          _closeListenSession(ListenEndReason.pause);
           state = PlaybackState.paused(episodeUrl: url);
         }
       },
@@ -398,8 +434,10 @@ class AudioPlayerController extends _$AudioPlayerController
     NowPlayingInfo? metadata,
     Duration? startAt,
   }) async {
+    _isPreparingPlay = true;
     try {
       _log.i('[Play] Starting: url=$url');
+      _closeListenSession(ListenEndReason.switchEpisode);
 
       if (_currentUrl != null && _currentUrl != url) {
         _lifecycleEvents.add(const EpisodeSwitchedLifecycle());
@@ -539,43 +577,51 @@ class AudioPlayerController extends _$AudioPlayerController
         podcastTitleForEmit ??= sub?.title;
       }
 
-      final hasPodcastId =
-          (itunesIdForEmit != null &&
-              itunesIdForEmit.isNotEmpty &&
-              !itunesIdForEmit.startsWith('opml:')) ||
-          (feedUrlForEmit != null && feedUrlForEmit.isNotEmpty);
+      final podcastIdForEmit = analyticsPodcastId(
+        itunesId: itunesIdForEmit,
+        feedUrl: feedUrlForEmit,
+      );
 
-      if (!hasPodcastId || guidForEmit == null || guidForEmit.isEmpty) {
+      EpisodeAnalyticsIds? playIds;
+      if (podcastIdForEmit == null ||
+          guidForEmit == null ||
+          guidForEmit.isEmpty) {
         _log.w(
           '[Analytics] episode_play_start SKIP — '
           'itunesId=$itunesIdForEmit feedUrl=$feedUrlForEmit guid=$guidForEmit',
         );
-      }
-      if (hasPodcastId && guidForEmit != null && guidForEmit.isNotEmpty) {
+      } else {
+        playIds = (
+          podcastId: podcastIdForEmit,
+          feedUrl: feedUrlForEmit,
+          episodeId: guidForEmit,
+          podcastTitle: podcastTitleForEmit ?? '',
+          episodeTitle: metadata?.episodeTitle ?? episode?.title ?? '',
+        );
         final source = _nextPlaySource ?? PlaySource.unknown;
         _nextPlaySource = null;
-        final podcastIdForEmit =
-            (itunesIdForEmit != null &&
-                itunesIdForEmit.isNotEmpty &&
-                !itunesIdForEmit.startsWith('opml:'))
-            ? itunesIdForEmit
-            : feedUrlForEmit!;
-        final episodeTitleForEmit =
-            metadata?.episodeTitle ?? episode?.title ?? '';
         unawaited(
           ref
               .read(analyticsServiceProvider)
               .log(
                 EpisodePlayStarted(
-                  podcastId: podcastIdForEmit,
-                  episodeId: guidForEmit,
-                  podcastTitle: podcastTitleForEmit ?? '',
-                  episodeTitle: episodeTitleForEmit,
+                  podcastId: playIds.podcastId,
+                  feedUrl: playIds.feedUrl,
+                  episodeId: playIds.episodeId,
+                  podcastTitle: playIds.podcastTitle,
+                  episodeTitle: playIds.episodeTitle,
                   source: source,
+                  speed: speed,
                 ),
               ),
         );
       }
+
+      // Open explicitly: when switching from an episode that was already
+      // playing, just_audio keeps `playing == true` across setUrl, so the
+      // state stream may never report a fresh playing transition.
+      _isPreparingPlay = false;
+      _openListenSession(ids: playIds);
 
       _log.d('[Play] Calling _player.play()...');
       // Fire-and-forget: just_audio's `play()` future completes when
@@ -586,6 +632,8 @@ class AudioPlayerController extends _$AudioPlayerController
     } catch (e, stack) {
       _log.e('[Play] ERROR', error: e, stackTrace: stack);
       state = PlaybackState.error(message: 'Failed to play audio: $e');
+    } finally {
+      _isPreparingPlay = false;
     }
   }
 
@@ -713,6 +761,7 @@ class AudioPlayerController extends _$AudioPlayerController
             .log(
               EpisodePaused(
                 podcastId: ids.podcastId,
+                feedUrl: ids.feedUrl,
                 episodeId: ids.episodeId,
                 podcastTitle: ids.podcastTitle,
                 episodeTitle: ids.episodeTitle,
@@ -743,6 +792,7 @@ class AudioPlayerController extends _$AudioPlayerController
             .log(
               EpisodeResumed(
                 podcastId: ids.podcastId,
+                feedUrl: ids.feedUrl,
                 episodeId: ids.episodeId,
                 podcastTitle: ids.podcastTitle,
                 episodeTitle: ids.episodeTitle,
@@ -774,6 +824,7 @@ class AudioPlayerController extends _$AudioPlayerController
   /// Saves final playback progress to history.
   @override
   Future<void> stop() async {
+    _closeListenSession(ListenEndReason.stop);
     // Save final progress before stopping
     await _saveProgressOnStop();
 
@@ -798,6 +849,9 @@ class AudioPlayerController extends _$AudioPlayerController
   void markPausedByInterruption() {
     final url = _currentUrl;
     if (url == null) return;
+    // The state stream may never see this pause either, so the listen
+    // segment has to be closed here too.
+    _closeListenSession(ListenEndReason.pause);
     state = PlaybackState.paused(episodeUrl: url);
   }
 
@@ -808,6 +862,7 @@ class AudioPlayerController extends _$AudioPlayerController
   void markPlayingByInterruption() {
     final url = _currentUrl;
     if (url == null) return;
+    _openListenSession();
     state = PlaybackState.playing(episodeUrl: url);
   }
 
@@ -843,9 +898,21 @@ class AudioPlayerController extends _$AudioPlayerController
     if (duration == null) return;
 
     // Capture the from-position before the just_audio call moves it.
-    final fromSec = _player.position.inSeconds;
+    final fromPosition = _player.position;
+    final fromSec = fromPosition.inSeconds;
     final clampedMs = position.inMilliseconds.clamp(0, duration.inMilliseconds);
-    await _player.seek(Duration(milliseconds: clampedMs));
+
+    // A seek ends the current segment so every session is one gap-free
+    // range of content; the jump itself is what "skipped" analysis reads.
+    final segmentIds = _listenSession.openIds;
+    _closeListenSession(ListenEndReason.seek, position: fromPosition);
+    _isSeeking = true;
+    try {
+      await _player.seek(Duration(milliseconds: clampedMs));
+    } finally {
+      _isSeeking = false;
+    }
+    if (_player.playing) _openListenSession(ids: segmentIds);
     _lifecycleEvents.add(SeekLifecycle(Duration(milliseconds: clampedMs)));
 
     final ids = _currentAnalyticsIds();
@@ -856,6 +923,7 @@ class AudioPlayerController extends _$AudioPlayerController
             .log(
               EpisodeSeeked(
                 podcastId: ids.podcastId,
+                feedUrl: ids.feedUrl,
                 episodeId: ids.episodeId,
                 podcastTitle: ids.podcastTitle,
                 episodeTitle: ids.episodeTitle,
@@ -892,7 +960,16 @@ class AudioPlayerController extends _$AudioPlayerController
   /// Sets the playback speed and persists it to settings.
   @override
   Future<void> setSpeed(double speed) async {
+    // Split the segment so each session has a single speed.
+    final segmentIds = _listenSession.openIds;
+    final splitSegment = segmentIds != null && speed != _player.speed;
+    if (splitSegment) _closeListenSession(ListenEndReason.speedChange);
     await _player.setSpeed(speed);
+    // Playback may have paused while the engine applied the speed; the
+    // stream has then already closed the segment and must not reopen it.
+    if (splitSegment && _player.playing) {
+      _openListenSession(ids: segmentIds);
+    }
     final settingsRepo = ref.read(appSettingsRepositoryProvider);
     await settingsRepo.setPlaybackSpeed(speed);
     unawaited(
