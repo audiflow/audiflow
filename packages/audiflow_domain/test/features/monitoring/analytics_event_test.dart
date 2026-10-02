@@ -329,6 +329,47 @@ void main() {
       check(complete.params['speed']).equals(1.25);
     });
 
+    test('EpisodeListenSession', () {
+      final e = EpisodeListenSession(
+        podcastId: 'p1',
+        feedUrl: 'https://example.com/feed.xml',
+        episodeId: 'e1',
+        podcastTitle: 'Pod 1',
+        episodeTitle: 'Ep 1',
+        startSec: 60,
+        endSec: 600,
+        durationSec: 1800,
+        speed: 1.5,
+        endReason: ListenEndReason.switchEpisode,
+      );
+      check(e.name).equals('episode_listen_session');
+      check(e.params).deepEquals({
+        'podcast_id': 'p1',
+        'feed_url': 'https://example.com/feed.xml',
+        'episode_id': 'e1',
+        'podcast_title': 'Pod 1',
+        'episode_title': 'Ep 1',
+        'start_sec': 60,
+        'end_sec': 600,
+        'duration_sec': 1800,
+        'speed': 1.5,
+        'end_reason': 'switch',
+      });
+    });
+
+    test('ListenEndReason param values', () {
+      check(
+        ListenEndReason.values.map((r) => r.paramValue).toList(),
+      ).deepEquals([
+        'pause',
+        'seek',
+        'switch',
+        'stop',
+        'complete',
+        'speed_change',
+      ]);
+    });
+
     test('SearchResultSelected', () {
       final e = SearchResultSelected(
         podcastId: '123',

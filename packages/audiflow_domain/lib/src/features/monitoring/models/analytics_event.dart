@@ -277,6 +277,63 @@ class SearchQueryEntered extends AnalyticsEvent {
   Map<String, Object> get params => {'query_len': queryLen};
 }
 
+/// Why a contiguous listening segment ended. [paramValue] is the GA
+/// `end_reason` value (`switch` is a Dart keyword, hence the mapping).
+enum ListenEndReason {
+  pause('pause'),
+  seek('seek'),
+  switchEpisode('switch'),
+  stop('stop'),
+  complete('complete'),
+  speedChange('speed_change');
+
+  const ListenEndReason(this.paramValue);
+  final String paramValue;
+}
+
+/// One contiguous stretch of playback: no seek and no speed change
+/// between [startSec] and [endSec], so `end_sec - start_sec` is the
+/// content actually heard and [speed] applies to all of it.
+class EpisodeListenSession extends AnalyticsEvent {
+  const EpisodeListenSession({
+    required this.podcastId,
+    required this.feedUrl,
+    required this.episodeId,
+    required this.podcastTitle,
+    required this.episodeTitle,
+    required this.startSec,
+    required this.endSec,
+    required this.durationSec,
+    required this.speed,
+    required this.endReason,
+  });
+  final String podcastId;
+  final String? feedUrl;
+  final String episodeId;
+  final String podcastTitle;
+  final String episodeTitle;
+  final int startSec;
+  final int endSec;
+  final int durationSec;
+  final double speed;
+  final ListenEndReason endReason;
+  @override
+  String get name => 'episode_listen_session';
+  @override
+  Map<String, Object> get params => {
+    'podcast_id': _trim(podcastId),
+    ..._feedUrlParam(feedUrl),
+    'episode_id': _trim(episodeId),
+    'podcast_title': _trim(podcastTitle),
+    'episode_title': _trim(episodeTitle),
+    'start_sec': startSec,
+    'end_sec': endSec,
+    'duration_sec': durationSec,
+    'speed': speed,
+    'end_reason': endReason.paramValue,
+  };
+}
+
 /// A search result the user opened. The query text is deliberately not
 /// sent (it can contain personal data); [rank] and [resultCount] are
 /// enough to measure result quality.
