@@ -7,6 +7,10 @@
 import 'dart:async' as _i11;
 
 import 'package:audiflow_core/audiflow_core.dart' as _i21;
+import 'package:audiflow_domain/src/features/download/models/download_task.dart'
+    as _i31;
+import 'package:audiflow_domain/src/features/download/services/download_queue_service.dart'
+    as _i30;
 import 'package:audiflow_domain/src/features/feed/builders/podcast_builder.dart'
     as _i3;
 import 'package:audiflow_domain/src/features/feed/models/episode.dart' as _i14;
@@ -1993,4 +1997,88 @@ class MockDio extends _i1.Mock implements _i9.Dio {
             ),
           )
           as _i9.Dio);
+}
+
+/// A class which mocks [DownloadQueueService].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockDownloadQueueService extends _i1.Mock
+    implements _i30.DownloadQueueService {
+  MockDownloadQueueService() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i11.Stream<_i31.DownloadTask?> get activeDownloadStream =>
+      (super.noSuchMethod(
+            Invocation.getter(#activeDownloadStream),
+            returnValue: _i11.Stream<_i31.DownloadTask?>.empty(),
+          )
+          as _i11.Stream<_i31.DownloadTask?>);
+
+  @override
+  _i11.Future<void> startQueue() =>
+      (super.noSuchMethod(
+            Invocation.method(#startQueue, []),
+            returnValue: _i11.Future<void>.value(),
+            returnValueForMissingStub: _i11.Future<void>.value(),
+          )
+          as _i11.Future<void>);
+
+  @override
+  _i11.Future<void> pauseDownload(int? taskId) =>
+      (super.noSuchMethod(
+            Invocation.method(#pauseDownload, [taskId]),
+            returnValue: _i11.Future<void>.value(),
+            returnValueForMissingStub: _i11.Future<void>.value(),
+          )
+          as _i11.Future<void>);
+
+  @override
+  _i11.Future<void> resumeDownload(int? taskId) =>
+      (super.noSuchMethod(
+            Invocation.method(#resumeDownload, [taskId]),
+            returnValue: _i11.Future<void>.value(),
+            returnValueForMissingStub: _i11.Future<void>.value(),
+          )
+          as _i11.Future<void>);
+
+  @override
+  _i11.Future<void> cancelDownload(int? taskId) =>
+      (super.noSuchMethod(
+            Invocation.method(#cancelDownload, [taskId]),
+            returnValue: _i11.Future<void>.value(),
+            returnValueForMissingStub: _i11.Future<void>.value(),
+          )
+          as _i11.Future<void>);
+
+  @override
+  _i11.Future<void> suspend() =>
+      (super.noSuchMethod(
+            Invocation.method(#suspend, []),
+            returnValue: _i11.Future<void>.value(),
+            returnValueForMissingStub: _i11.Future<void>.value(),
+          )
+          as _i11.Future<void>);
+
+  @override
+  void resume() => super.noSuchMethod(
+    Invocation.method(#resume, []),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  _i11.Future<void> retryDownload(int? taskId) =>
+      (super.noSuchMethod(
+            Invocation.method(#retryDownload, [taskId]),
+            returnValue: _i11.Future<void>.value(),
+            returnValueForMissingStub: _i11.Future<void>.value(),
+          )
+          as _i11.Future<void>);
+
+  @override
+  void dispose() => super.noSuchMethod(
+    Invocation.method(#dispose, []),
+    returnValueForMissingStub: null,
+  );
 }

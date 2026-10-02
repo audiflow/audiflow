@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:collection';
 import 'dart:math';
 
@@ -12,6 +13,7 @@ import '../../../common/services/suspendable_writer.dart';
 import '../../../features/subscription/models/subscriptions.dart';
 import '../../../features/subscription/repositories/subscription_repository_impl.dart';
 import '../../download/providers/download_providers.dart';
+import '../../download/services/download_queue_service.dart';
 import '../../station/repositories/station_podcast_repository_impl.dart';
 import '../../station/services/station_reconciler_service.dart';
 import '../models/episode.dart';
@@ -526,10 +528,16 @@ class FeedSyncService implements SuspendableWriter {
       // ran on a different code path).
       final settingsRepo = _ref.read(appSettingsRepositoryProvider);
       final enqueuer = _ref.read(autoDownloadEnqueuerProvider);
-      await enqueuer.enqueueForSubscription(
+      final enqueued = await enqueuer.enqueueForSubscription(
         sub,
         wifiOnly: settingsRepo.getWifiOnlyDownload(),
       );
+      // The queue only wakes on network changes and explicit download
+      // actions, so without this kick new episodes would sit pending on
+      // an unchanged Wi-Fi connection.
+      if (0 < enqueued.created) {
+        unawaited(_ref.read(downloadQueueServiceProvider).startQueue());
+      }
 
       _logger.i('Synced "${sub.title}": $newEpisodeCount episodes processed');
 

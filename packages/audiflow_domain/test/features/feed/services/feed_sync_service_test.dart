@@ -16,18 +16,22 @@ import 'package:riverpod/riverpod.dart';
   PresetConfigRepository,
   StationPodcastRepository,
   Dio,
+  DownloadQueueService,
 ])
 import 'feed_sync_service_test.mocks.dart';
 
 class _NoopAutoDownloadEnqueuer implements AutoDownloadEnqueuer {
+  /// Number of download tasks every enqueue pass reports as created.
+  int created = 0;
+
   @override
   Future<AutoDownloadEnqueueResult> enqueueForSubscription(
     Subscription subscription, {
     required bool wifiOnly,
   }) async {
-    return const AutoDownloadEnqueueResult(
-      inspected: 0,
-      created: 0,
+    return AutoDownloadEnqueueResult(
+      inspected: created,
+      created: created,
       skipped: 0,
     );
   }
@@ -77,6 +81,8 @@ void main() {
   late MockFeedParserService mockFeedParser;
   late MockPresetConfigRepository mockConfigRepo;
   late MockStationPodcastRepository mockStationPodcastRepo;
+  late MockDownloadQueueService mockQueueService;
+  late _NoopAutoDownloadEnqueuer enqueuer;
   late ProviderContainer container;
   late FeedSyncService service;
 
@@ -88,6 +94,9 @@ void main() {
     mockConfigRepo = MockPresetConfigRepository();
     mockStationPodcastRepo = MockStationPodcastRepository();
     mockDio = MockDio();
+    mockQueueService = MockDownloadQueueService();
+    enqueuer = _NoopAutoDownloadEnqueuer();
+    when(mockQueueService.startQueue()).thenAnswer((_) async {});
 
     // Default settings
     when(mockSettingsRepo.getAutoSync()).thenReturn(true);
@@ -108,9 +117,8 @@ void main() {
           mockStationPodcastRepo,
         ),
         dioProvider.overrideWithValue(mockDio),
-        autoDownloadEnqueuerProvider.overrideWithValue(
-          _NoopAutoDownloadEnqueuer(),
-        ),
+        autoDownloadEnqueuerProvider.overrideWithValue(enqueuer),
+        downloadQueueServiceProvider.overrideWithValue(mockQueueService),
       ],
     );
 
@@ -469,6 +477,47 @@ void main() {
       verify(
         mockSubscriptionRepo.updateLastRefreshed('itunes-42', any),
       ).called(1);
+    });
+
+    group('download queue', () {
+      late Subscription sub;
+
+      setUp(() {
+        sub = _subscription(lastRefreshedAt: null);
+        when(dioGet()).thenAnswer((_) async => okResponse());
+        when(
+          mockEpisodeRepo.getGuidsByPodcastId(sub.id),
+        ).thenAnswer((_) async => <String>{});
+        when(
+          mockFeedParser.parseWithProgress(
+            xmlContent: anyNamed('xmlContent'),
+            podcastId: anyNamed('podcastId'),
+            knownGuids: anyNamed('knownGuids'),
+            onBatchReady: anyNamed('onBatchReady'),
+          ),
+        ).thenAnswer(
+          (_) => Stream.value(
+            const FeedParseComplete(total: 1, stoppedEarly: false),
+          ),
+        );
+        when(
+          mockSubscriptionRepo.updateLastRefreshed(any, any),
+        ).thenAnswer((_) async {});
+      });
+
+      test('starts when auto-download tasks were enqueued', () async {
+        enqueuer.created = 2;
+
+        await service.syncFeed(sub);
+
+        verify(mockQueueService.startQueue()).called(1);
+      });
+
+      test('stays idle when nothing was enqueued', () async {
+        await service.syncFeed(sub);
+
+        verifyNever(mockQueueService.startQueue());
+      });
     });
   });
 
