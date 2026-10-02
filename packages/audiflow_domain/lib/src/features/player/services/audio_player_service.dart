@@ -137,7 +137,7 @@ class AudioPlayerController extends _$AudioPlayerController
   /// feed URL or GUID is missing so emitters can no-op cleanly.
   ///
   /// `podcastId` resolves to the raw iTunes ID when available
-  /// (non-OPML import), else the feed URL. `episodeId` is the raw RSS
+  /// (non-OPML import), else the hashed feed key. `episodeId` is the raw RSS
   /// guid. Titles come straight from `NowPlayingInfo`; truncation to
   /// GA's 100-char param limit happens at the event boundary.
   EpisodeAnalyticsIds? _currentAnalyticsIds() {

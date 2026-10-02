@@ -211,7 +211,7 @@ void main() {
       final e = analytics.events.single as SearchResultSelected;
       check(e.params).deepEquals({
         'podcast_id': '42',
-        'feed_url': 'https://example.com/feed.xml',
+        'feed_key': '7a775db75c1d6d17',
         'podcast_title': 'Tech Podcast',
         'rank': 3,
         'result_count': 10,

@@ -1,3 +1,7 @@
+import 'dart:convert';
+
+import 'package:crypto/crypto.dart';
+
 /// Base type for all analytics events.
 ///
 /// Every concrete event maps to a single GA event name and a flat
@@ -27,23 +31,36 @@ String _toSnake(String s) {
 }
 
 // GA4 caps event param values at 100 chars. Truncate at the boundary so
-// raw RSS guids / feedUrls / titles never exceed the limit silently.
+// raw RSS guids / titles never exceed the limit silently.
 String _trim(String s) => s.length <= 100 ? s : s.substring(0, 100);
 
-// `feed_url` is the cross-source join key for aggregation: unlike
+/// Stable, non-reversible key for a feed: the first 16 hex chars (64 bits)
+/// of SHA-256 over the lowercased URL.
+///
+/// The raw URL never reaches GA because members-only feeds embed access
+/// tokens in it (query or path). The URL is otherwise left intact: query
+/// strings can identify the show, so stripping them would merge distinct
+/// podcasts. Lowercasing absorbs casing drift between sources (OPML vs
+/// iTunes) at a negligible merge risk.
+String analyticsFeedKey(String feedUrl) => sha256
+    .convert(utf8.encode(feedUrl.toLowerCase()))
+    .toString()
+    .substring(0, 16);
+
+// `feed_key` is the cross-source join key for aggregation: unlike
 // `podcast_id` it is the same value whichever way the user found the
 // podcast. Omitted (not sent empty) when unknown so GA does not bucket
 // unrelated events under "".
-Map<String, Object> _feedUrlParam(String? feedUrl) =>
+Map<String, Object> _feedKeyParam(String? feedUrl) =>
     feedUrl == null || feedUrl.isEmpty
     ? const {}
-    : {'feed_url': _trim(feedUrl)};
+    : {'feed_key': analyticsFeedKey(feedUrl)};
 
 Map<String, Object> _speedParam(double? speed) =>
     speed == null ? const {} : {'speed': speed};
 
 /// Resolves the `podcast_id` analytics param: the raw iTunes ID when it is
-/// a real one, else the feed URL. OPML imports carry a synthetic
+/// a real one, else the [analyticsFeedKey]. OPML imports carry a synthetic
 /// `opml:`-prefixed iTunes ID that must never reach GA.
 ///
 /// Returns null when neither source is usable so emitters can skip.
@@ -56,7 +73,7 @@ String? analyticsPodcastId({
       !itunesId.startsWith('opml:')) {
     return itunesId;
   }
-  if (feedUrl != null && feedUrl.isNotEmpty) return feedUrl;
+  if (feedUrl != null && feedUrl.isNotEmpty) return analyticsFeedKey(feedUrl);
   return null;
 }
 
@@ -85,7 +102,7 @@ class PodcastSubscribed extends AnalyticsEvent {
   @override
   Map<String, Object> get params => {
     'podcast_id': _trim(podcastId),
-    ..._feedUrlParam(feedUrl),
+    ..._feedKeyParam(feedUrl),
     'podcast_title': _trim(podcastTitle),
     'source': source.name,
   };
@@ -105,7 +122,7 @@ class PodcastUnsubscribed extends AnalyticsEvent {
   @override
   Map<String, Object> get params => {
     'podcast_id': _trim(podcastId),
-    ..._feedUrlParam(feedUrl),
+    ..._feedKeyParam(feedUrl),
     'podcast_title': _trim(podcastTitle),
   };
 }
@@ -132,7 +149,7 @@ class EpisodePlayStarted extends AnalyticsEvent {
   @override
   Map<String, Object> get params => {
     'podcast_id': _trim(podcastId),
-    ..._feedUrlParam(feedUrl),
+    ..._feedKeyParam(feedUrl),
     'episode_id': _trim(episodeId),
     'podcast_title': _trim(podcastTitle),
     'episode_title': _trim(episodeTitle),
@@ -161,7 +178,7 @@ class EpisodePaused extends AnalyticsEvent {
   @override
   Map<String, Object> get params => {
     'podcast_id': _trim(podcastId),
-    ..._feedUrlParam(feedUrl),
+    ..._feedKeyParam(feedUrl),
     'episode_id': _trim(episodeId),
     'podcast_title': _trim(podcastTitle),
     'episode_title': _trim(episodeTitle),
@@ -189,7 +206,7 @@ class EpisodeResumed extends AnalyticsEvent {
   @override
   Map<String, Object> get params => {
     'podcast_id': _trim(podcastId),
-    ..._feedUrlParam(feedUrl),
+    ..._feedKeyParam(feedUrl),
     'episode_id': _trim(episodeId),
     'podcast_title': _trim(podcastTitle),
     'episode_title': _trim(episodeTitle),
@@ -219,7 +236,7 @@ class EpisodeCompleted extends AnalyticsEvent {
   @override
   Map<String, Object> get params => {
     'podcast_id': _trim(podcastId),
-    ..._feedUrlParam(feedUrl),
+    ..._feedKeyParam(feedUrl),
     'episode_id': _trim(episodeId),
     'podcast_title': _trim(podcastTitle),
     'episode_title': _trim(episodeTitle),
@@ -250,7 +267,7 @@ class EpisodeSeeked extends AnalyticsEvent {
   @override
   Map<String, Object> get params => {
     'podcast_id': _trim(podcastId),
-    ..._feedUrlParam(feedUrl),
+    ..._feedKeyParam(feedUrl),
     'episode_id': _trim(episodeId),
     'podcast_title': _trim(podcastTitle),
     'episode_title': _trim(episodeTitle),
@@ -322,7 +339,7 @@ class EpisodeListenSession extends AnalyticsEvent {
   @override
   Map<String, Object> get params => {
     'podcast_id': _trim(podcastId),
-    ..._feedUrlParam(feedUrl),
+    ..._feedKeyParam(feedUrl),
     'episode_id': _trim(episodeId),
     'podcast_title': _trim(podcastTitle),
     'episode_title': _trim(episodeTitle),
@@ -357,7 +374,7 @@ class SearchResultSelected extends AnalyticsEvent {
   @override
   Map<String, Object> get params => {
     'podcast_id': _trim(podcastId),
-    ..._feedUrlParam(feedUrl),
+    ..._feedKeyParam(feedUrl),
     'podcast_title': _trim(podcastTitle),
     'rank': rank,
     'result_count': resultCount,
@@ -382,7 +399,7 @@ class EpisodeDownloadStarted extends AnalyticsEvent {
   @override
   Map<String, Object> get params => {
     'podcast_id': _trim(podcastId),
-    ..._feedUrlParam(feedUrl),
+    ..._feedKeyParam(feedUrl),
     'episode_id': _trim(episodeId),
     'podcast_title': _trim(podcastTitle),
     'episode_title': _trim(episodeTitle),
@@ -409,7 +426,7 @@ class EpisodeDownloadCompleted extends AnalyticsEvent {
   @override
   Map<String, Object> get params => {
     'podcast_id': _trim(podcastId),
-    ..._feedUrlParam(feedUrl),
+    ..._feedKeyParam(feedUrl),
     'episode_id': _trim(episodeId),
     'podcast_title': _trim(podcastTitle),
     'episode_title': _trim(episodeTitle),

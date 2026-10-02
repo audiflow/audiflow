@@ -43,7 +43,7 @@ void main() {
       check(session).isNotNull();
       check(session!.params).deepEquals({
         'podcast_id': 'p1',
-        'feed_url': 'https://example.com/feed.xml',
+        'feed_key': '7a775db75c1d6d17',
         'episode_id': 'e1',
         'podcast_title': 'Pod 1',
         'episode_title': 'Ep 1',

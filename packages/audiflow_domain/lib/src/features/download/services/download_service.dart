@@ -116,7 +116,7 @@ class DownloadService {
   /// can no-op cleanly.
   ///
   /// `podcastId` is the raw iTunes ID when available (non-OPML import),
-  /// else the feed URL. `episodeId` is the raw RSS guid. Truncation to
+  /// else the hashed feed key. `episodeId` is the raw RSS guid. Truncation to
   /// GA's 100-char param limit happens at the event boundary.
   Future<EpisodeAnalyticsIds?> _analyticsIds(int episodeId) async {
     final episode = await _episodeRepo.getById(episodeId);

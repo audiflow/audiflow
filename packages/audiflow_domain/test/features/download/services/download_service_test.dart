@@ -291,7 +291,7 @@ void main() {
           .whereType<EpisodeDownloadStarted>()
           .toList();
       check(events).length.equals(1);
-      check(events.single.podcastId).equals(feedUrl);
+      check(events.single.podcastId).equals(analyticsFeedKey(feedUrl));
       check(events.single.feedUrl).equals(feedUrl);
       check(events.single.podcastTitle).equals('Imported');
     });
