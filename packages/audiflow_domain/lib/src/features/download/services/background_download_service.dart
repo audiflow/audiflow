@@ -50,6 +50,10 @@ class BackgroundDownloadService {
     final stopwatch = Stopwatch()..start();
     var completedCount = 0;
     final errors = <(String, Object, StackTrace)>[];
+    // Tasks that failed in this run. They stay pending for a later run but
+    // are skipped here, so one bad task neither retries in a tight loop
+    // nor blocks the tasks queued behind it.
+    final failedIds = <int>{};
 
     while (true) {
       if (_timeBudget <= stopwatch.elapsed) {
@@ -60,7 +64,10 @@ class BackgroundDownloadService {
         break;
       }
 
-      final task = await _downloadRepo.getNextPending(isOnWifi: _isOnWifi);
+      final task = await _downloadRepo.getNextPending(
+        isOnWifi: _isOnWifi,
+        excludeIds: failedIds,
+      );
       if (task == null) break;
 
       // Re-check budget after the potentially slow getNextPending() call.
@@ -98,7 +105,10 @@ class BackgroundDownloadService {
           stackTrace: stack,
         );
         errors.add(('episodeId=${task.episodeId}', e, stack));
-        break;
+        // Without a connection every remaining task would fail the same
+        // way and burn a retry; leave them for the next run.
+        if (_isConnectionFailure(e)) break;
+        failedIds.add(task.id);
       } catch (e, stack) {
         _logger?.e(
           'BackgroundDownloadService: download failed for '
@@ -107,10 +117,7 @@ class BackgroundDownloadService {
           stackTrace: stack,
         );
         errors.add(('episodeId=${task.episodeId}', e, stack));
-        // Stop after first failure to avoid immediate retry of the same
-        // pending task in a tight loop. The task stays pending for the next
-        // scheduled background run or foreground pickup.
-        break;
+        failedIds.add(task.id);
       }
     }
 
@@ -287,8 +294,7 @@ class BackgroundDownloadService {
           'because time budget was exhausted',
         );
         rethrow;
-      } else if (e.type == DioExceptionType.connectionError ||
-          e.type == DioExceptionType.connectionTimeout) {
+      } else if (_isConnectionFailure(e)) {
         await _handleError(
           task,
           DownloadException(
@@ -334,6 +340,10 @@ class BackgroundDownloadService {
       budgetTimer.cancel();
     }
   }
+
+  bool _isConnectionFailure(DioException error) =>
+      error.type == DioExceptionType.connectionError ||
+      error.type == DioExceptionType.connectionTimeout;
 
   Future<void> _handleError(DownloadTask task, DownloadException error) async {
     if (task.retryCount < _maxRetryAttempts) {

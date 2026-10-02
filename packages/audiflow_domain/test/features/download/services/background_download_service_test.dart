@@ -211,37 +211,47 @@ void main() {
       check(downloadRepo.statusUpdates.length).equals(4);
     });
 
-    test(
-      'handles missing episode by setting error and stopping further processing',
-      () async {
-        downloadRepo.pending.addAll([
-          _task(id: 1, episodeId: 99),
-          _task(id: 2, episodeId: 20, audioUrl: 'https://example.com/b.mp3'),
-        ]);
-        // No episode in episodeRepo for id 99
-        episodeRepo.episodes[20] = _episode(id: 20, title: 'Ep B');
+    test('skips a task with a missing episode and moves on', () async {
+      downloadRepo.pending.addAll([
+        _task(id: 1, episodeId: 99),
+        _task(id: 2, episodeId: 20, audioUrl: 'https://example.com/b.mp3'),
+      ]);
+      // No episode in episodeRepo for id 99
+      episodeRepo.episodes[20] = _episode(id: 20, title: 'Ep B');
+      dioAdapter.onGet(
+        'https://example.com/b.mp3',
+        (server) => server.reply(200, ''),
+      );
 
-        final service = createService();
-        final count = await service.execute();
+      final service = createService();
+      final count = await service.execute();
 
-        check(count).equals(0);
-        // Missing episode should produce an error-related update for the first
-        // task, and execution should stop before processing later pending tasks.
-        final errorUpdates = downloadRepo.statusUpdates
-            .where(
-              (u) =>
-                  u.id == 1 &&
-                  (u.status is DownloadStatusPending ||
-                      u.status is DownloadStatusFailed),
-            )
-            .toList();
-        check(errorUpdates).isNotEmpty();
-        final secondTaskUpdates = downloadRepo.statusUpdates
-            .where((u) => u.id == 2)
-            .toList();
-        check(secondTaskUpdates).isEmpty();
-      },
-    );
+      check(count).equals(1);
+      // The failing task is retried on a later run, not again in this one.
+      check(downloadRepo.incrementedRetryIds).deepEquals([1]);
+      final secondTaskStatuses = downloadRepo.statusUpdates
+          .where((u) => u.id == 2)
+          .map((u) => u.status);
+      check(secondTaskStatuses.last).isA<DownloadStatusCompleted>();
+    });
+
+    test('skips a task the server rejects and moves on', () async {
+      downloadRepo.pending.addAll([
+        _task(id: 1, episodeId: 10, audioUrl: 'https://example.com/a.mp3'),
+        _task(id: 2, episodeId: 20, audioUrl: 'https://example.com/b.mp3'),
+      ]);
+      episodeRepo.episodes[10] = _episode(id: 10, title: 'Ep A');
+      episodeRepo.episodes[20] = _episode(id: 20, title: 'Ep B');
+      dioAdapter
+        ..onGet('https://example.com/a.mp3', (server) => server.reply(404, ''))
+        ..onGet('https://example.com/b.mp3', (server) => server.reply(200, ''));
+
+      final service = createService();
+      final count = await service.execute();
+
+      check(count).equals(1);
+      check(downloadRepo.incrementedRetryIds).deepEquals([1]);
+    });
 
     test('increments retry count on error and breaks', () async {
       downloadRepo.pending.add(_task(id: 1, episodeId: 10, retryCount: 0));
