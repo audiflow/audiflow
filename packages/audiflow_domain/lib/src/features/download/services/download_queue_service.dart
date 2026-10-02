@@ -129,6 +129,10 @@ class DownloadQueueService implements SuspendableWriter {
   /// is not left pending until the next trigger.
   bool _isRescanRequested = false;
 
+  /// Set by [dispose], so a drain that settles afterwards neither picks up
+  /// another task nor re-arms the retry timer on a dead service.
+  bool _isDisposed = false;
+
   bool get _isProcessing => _processing != null;
 
   /// Progress writes are fired from the download callback without being
@@ -203,7 +207,7 @@ class DownloadQueueService implements SuspendableWriter {
       // trigger another query, and again after the query so a suspend
       // that landed while it ran does not start a download it has no
       // token to cancel.
-      while (!_isSuspended) {
+      while (!_isSuspended && !_isDisposed) {
         _isRescanRequested = false;
         final nextTask = await _repository.getNextPending(
           isOnWifi: _isOnWifi,
@@ -220,7 +224,9 @@ class DownloadQueueService implements SuspendableWriter {
     } finally {
       _processing = null;
       _activeDownload = null;
-      _activeDownloadController.add(null);
+      if (!_activeDownloadController.isClosed) {
+        _activeDownloadController.add(null);
+      }
       _scheduleRetryTimer();
     }
   }
@@ -237,7 +243,7 @@ class DownloadQueueService implements SuspendableWriter {
   void _scheduleRetryTimer() {
     _retryTimer?.cancel();
     _retryTimer = null;
-    if (_isSuspended || _backoffUntil.isEmpty) return;
+    if (_isSuspended || _isDisposed || _backoffUntil.isEmpty) return;
 
     final earliest = _backoffUntil.values.reduce(
       (a, b) => a.isBefore(b) ? a : b,
@@ -458,6 +464,7 @@ class DownloadQueueService implements SuspendableWriter {
   }
 
   void dispose() {
+    _isDisposed = true;
     _connectivitySubscription?.cancel();
     _retryTimer?.cancel();
     _activeDownloadController.close();

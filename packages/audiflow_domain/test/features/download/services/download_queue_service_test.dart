@@ -742,6 +742,46 @@ void main() {
       });
     });
 
+    test('does not retry after the service is disposed', () {
+      fakeAsync((async) {
+        final gate = Completer<String>();
+        final fakeTimeService = DownloadQueueService(
+          repository: mockRepository,
+          fileService: mockFileService,
+          episodeRepository: mockEpisodeRepo,
+          logger: Logger(level: Level.off),
+          now: async.getClock(DateTime(2026)).now,
+        );
+        final task = _task(id: 1, episodeId: 10);
+        stubFailingDownload(task);
+        servePending([task]);
+        var attempts = 0;
+        when(
+          mockFileService.downloadFile(
+            taskId: 1,
+            url: anyNamed('url'),
+            episodeId: anyNamed('episodeId'),
+            episodeTitle: anyNamed('episodeTitle'),
+            resumeFromBytes: anyNamed('resumeFromBytes'),
+            onProgress: anyNamed('onProgress'),
+          ),
+        ).thenAnswer((_) {
+          attempts++;
+          return gate.future;
+        });
+
+        async.flushMicrotasks();
+        fakeTimeService.dispose();
+        gate.completeError(
+          DownloadException(DownloadErrorType.networkUnavailable, 'x'),
+        );
+        async.flushMicrotasks();
+        async.elapse(Duration(seconds: retryDelaysSeconds.last));
+
+        check(attempts).equals(1);
+      });
+    });
+
     test('manual retry lifts the backoff immediately', () async {
       await Future<void>.delayed(Duration.zero);
       final task = _task(id: 1, episodeId: 10);
