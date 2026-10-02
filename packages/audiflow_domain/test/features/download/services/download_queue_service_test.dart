@@ -797,6 +797,20 @@ void main() {
 
       check(lookups.first).isEmpty();
     });
+
+    test('resuming a paused task lifts its backoff', () async {
+      await Future<void>.delayed(Duration.zero);
+      final task = _task(id: 1, episodeId: 10);
+      stubFailingDownload(task);
+      final lookups = servePending([task]);
+      await service.startQueue();
+      lookups.clear();
+
+      await service.resumeDownload(1);
+      await Future<void>.delayed(Duration.zero);
+
+      check(lookups.first).isEmpty();
+    });
   });
 
   group('startQueue during a drain', () {

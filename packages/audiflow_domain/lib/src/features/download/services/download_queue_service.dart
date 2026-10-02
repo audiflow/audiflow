@@ -389,6 +389,8 @@ class DownloadQueueService implements SuspendableWriter {
 
   /// Resumes a paused download by moving it back to pending.
   Future<void> resumeDownload(int taskId) async {
+    // An explicit resume should start now, not after a stale backoff.
+    _backoffUntil.remove(taskId);
     await _repository.updateStatus(
       id: taskId,
       status: const DownloadStatus.pending(),
