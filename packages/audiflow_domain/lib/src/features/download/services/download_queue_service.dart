@@ -59,7 +59,7 @@ DownloadQueueService downloadQueueService(Ref ref) {
 /// service stays decoupled from analytics wiring.
 ///
 /// `podcastId` is the raw iTunes ID when available (non-OPML import),
-/// else the feed URL. `episodeId` is the raw RSS guid.
+/// else the hashed feed key. `episodeId` is the raw RSS guid.
 Future<void> _emitDownloadCompleted(Ref ref, int episodeId, int bytes) async {
   final episodeRepo = ref.read(episodeRepositoryProvider);
   final episode = await episodeRepo.getById(episodeId);
@@ -71,12 +71,14 @@ Future<void> _emitDownloadCompleted(Ref ref, int episodeId, int bytes) async {
   if (sub == null) return;
   final feedUrl = sub.feedUrl;
   if (feedUrl.isEmpty) return;
-  final podcastId = sub.itunesId.startsWith('opml:') ? feedUrl : sub.itunesId;
+  final podcastId =
+      analyticsPodcastId(itunesId: sub.itunesId, feedUrl: feedUrl) ?? feedUrl;
   final analytics = ref.read(analyticsServiceProvider);
   unawaited(
     analytics.log(
       EpisodeDownloadCompleted(
         podcastId: podcastId,
+        feedUrl: feedUrl,
         episodeId: guid,
         podcastTitle: sub.title,
         episodeTitle: episode.title,

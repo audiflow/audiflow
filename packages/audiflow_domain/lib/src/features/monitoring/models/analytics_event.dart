@@ -1,3 +1,7 @@
+import 'dart:convert';
+
+import 'package:crypto/crypto.dart';
+
 /// Base type for all analytics events.
 ///
 /// Every concrete event maps to a single GA event name and a flat
@@ -27,16 +31,70 @@ String _toSnake(String s) {
 }
 
 // GA4 caps event param values at 100 chars. Truncate at the boundary so
-// raw RSS guids / feedUrls / titles never exceed the limit silently.
+// raw RSS guids / titles never exceed the limit silently.
 String _trim(String s) => s.length <= 100 ? s : s.substring(0, 100);
+
+/// Stable, non-reversible key for a feed: the first 16 hex chars (64 bits)
+/// of SHA-256 over the lowercased URL.
+///
+/// The raw URL never reaches GA because members-only feeds embed access
+/// tokens in it (query or path). The URL is otherwise left intact: query
+/// strings can identify the show, so stripping them would merge distinct
+/// podcasts. Lowercasing absorbs casing drift between sources (OPML vs
+/// iTunes) at a negligible merge risk.
+String analyticsFeedKey(String feedUrl) => sha256
+    .convert(utf8.encode(feedUrl.toLowerCase()))
+    .toString()
+    .substring(0, 16);
+
+// `feed_key` is the cross-source join key for aggregation: unlike
+// `podcast_id` it is the same value whichever way the user found the
+// podcast. Omitted (not sent empty) when unknown so GA does not bucket
+// unrelated events under "".
+Map<String, Object> _feedKeyParam(String? feedUrl) =>
+    feedUrl == null || feedUrl.isEmpty
+    ? const {}
+    : {'feed_key': analyticsFeedKey(feedUrl)};
+
+Map<String, Object> _speedParam(double? speed) =>
+    speed == null ? const {} : {'speed': speed};
+
+/// Resolves the `podcast_id` analytics param: the raw iTunes ID when it is
+/// a real one, else the [analyticsFeedKey]. OPML imports carry a synthetic
+/// `opml:`-prefixed iTunes ID that must never reach GA.
+///
+/// Returns null when neither source is usable so emitters can skip.
+String? analyticsPodcastId({
+  required String? itunesId,
+  required String? feedUrl,
+}) {
+  if (itunesId != null &&
+      itunesId.isNotEmpty &&
+      !itunesId.startsWith('opml:')) {
+    return itunesId;
+  }
+  if (feedUrl != null && feedUrl.isNotEmpty) return analyticsFeedKey(feedUrl);
+  return null;
+}
+
+/// Podcast/episode identity shared by episode-scoped events.
+typedef EpisodeAnalyticsIds = ({
+  String podcastId,
+  String? feedUrl,
+  String episodeId,
+  String podcastTitle,
+  String episodeTitle,
+});
 
 class PodcastSubscribed extends AnalyticsEvent {
   const PodcastSubscribed({
     required this.podcastId,
+    this.feedUrl,
     required this.podcastTitle,
     required this.source,
   });
   final String podcastId;
+  final String? feedUrl;
   final String podcastTitle;
   final SubscribeSource source;
   @override
@@ -44,6 +102,7 @@ class PodcastSubscribed extends AnalyticsEvent {
   @override
   Map<String, Object> get params => {
     'podcast_id': _trim(podcastId),
+    ..._feedKeyParam(feedUrl),
     'podcast_title': _trim(podcastTitle),
     'source': source.name,
   };
@@ -52,15 +111,18 @@ class PodcastSubscribed extends AnalyticsEvent {
 class PodcastUnsubscribed extends AnalyticsEvent {
   const PodcastUnsubscribed({
     required this.podcastId,
+    this.feedUrl,
     required this.podcastTitle,
   });
   final String podcastId;
+  final String? feedUrl;
   final String podcastTitle;
   @override
   String get name => 'podcast_unsubscribe';
   @override
   Map<String, Object> get params => {
     'podcast_id': _trim(podcastId),
+    ..._feedKeyParam(feedUrl),
     'podcast_title': _trim(podcastTitle),
   };
 }
@@ -68,37 +130,45 @@ class PodcastUnsubscribed extends AnalyticsEvent {
 class EpisodePlayStarted extends AnalyticsEvent {
   const EpisodePlayStarted({
     required this.podcastId,
+    this.feedUrl,
     required this.episodeId,
     required this.podcastTitle,
     required this.episodeTitle,
     required this.source,
+    this.speed,
   });
   final String podcastId;
+  final String? feedUrl;
   final String episodeId;
   final String podcastTitle;
   final String episodeTitle;
   final PlaySource source;
+  final double? speed;
   @override
   String get name => 'episode_play_start';
   @override
   Map<String, Object> get params => {
     'podcast_id': _trim(podcastId),
+    ..._feedKeyParam(feedUrl),
     'episode_id': _trim(episodeId),
     'podcast_title': _trim(podcastTitle),
     'episode_title': _trim(episodeTitle),
     'source': source.name,
+    ..._speedParam(speed),
   };
 }
 
 class EpisodePaused extends AnalyticsEvent {
   const EpisodePaused({
     required this.podcastId,
+    this.feedUrl,
     required this.episodeId,
     required this.podcastTitle,
     required this.episodeTitle,
     required this.positionSec,
   });
   final String podcastId;
+  final String? feedUrl;
   final String episodeId;
   final String podcastTitle;
   final String episodeTitle;
@@ -108,6 +178,7 @@ class EpisodePaused extends AnalyticsEvent {
   @override
   Map<String, Object> get params => {
     'podcast_id': _trim(podcastId),
+    ..._feedKeyParam(feedUrl),
     'episode_id': _trim(episodeId),
     'podcast_title': _trim(podcastTitle),
     'episode_title': _trim(episodeTitle),
@@ -118,12 +189,14 @@ class EpisodePaused extends AnalyticsEvent {
 class EpisodeResumed extends AnalyticsEvent {
   const EpisodeResumed({
     required this.podcastId,
+    this.feedUrl,
     required this.episodeId,
     required this.podcastTitle,
     required this.episodeTitle,
     required this.positionSec,
   });
   final String podcastId;
+  final String? feedUrl;
   final String episodeId;
   final String podcastTitle;
   final String episodeTitle;
@@ -133,6 +206,7 @@ class EpisodeResumed extends AnalyticsEvent {
   @override
   Map<String, Object> get params => {
     'podcast_id': _trim(podcastId),
+    ..._feedKeyParam(feedUrl),
     'episode_id': _trim(episodeId),
     'podcast_title': _trim(podcastTitle),
     'episode_title': _trim(episodeTitle),
@@ -143,31 +217,38 @@ class EpisodeResumed extends AnalyticsEvent {
 class EpisodeCompleted extends AnalyticsEvent {
   const EpisodeCompleted({
     required this.podcastId,
+    this.feedUrl,
     required this.episodeId,
     required this.podcastTitle,
     required this.episodeTitle,
     required this.durationSec,
+    this.speed,
   });
   final String podcastId;
+  final String? feedUrl;
   final String episodeId;
   final String podcastTitle;
   final String episodeTitle;
   final int durationSec;
+  final double? speed;
   @override
   String get name => 'episode_complete';
   @override
   Map<String, Object> get params => {
     'podcast_id': _trim(podcastId),
+    ..._feedKeyParam(feedUrl),
     'episode_id': _trim(episodeId),
     'podcast_title': _trim(podcastTitle),
     'episode_title': _trim(episodeTitle),
     'duration_sec': durationSec,
+    ..._speedParam(speed),
   };
 }
 
 class EpisodeSeeked extends AnalyticsEvent {
   const EpisodeSeeked({
     required this.podcastId,
+    this.feedUrl,
     required this.episodeId,
     required this.podcastTitle,
     required this.episodeTitle,
@@ -175,6 +256,7 @@ class EpisodeSeeked extends AnalyticsEvent {
     required this.toSec,
   });
   final String podcastId;
+  final String? feedUrl;
   final String episodeId;
   final String podcastTitle;
   final String episodeTitle;
@@ -185,6 +267,7 @@ class EpisodeSeeked extends AnalyticsEvent {
   @override
   Map<String, Object> get params => {
     'podcast_id': _trim(podcastId),
+    ..._feedKeyParam(feedUrl),
     'episode_id': _trim(episodeId),
     'podcast_title': _trim(podcastTitle),
     'episode_title': _trim(episodeTitle),
@@ -211,14 +294,103 @@ class SearchQueryEntered extends AnalyticsEvent {
   Map<String, Object> get params => {'query_len': queryLen};
 }
 
+/// Why a contiguous listening segment ended. [paramValue] is the GA
+/// `end_reason` value (`switch` is a Dart keyword, hence the mapping).
+enum ListenEndReason {
+  pause('pause'),
+  seek('seek'),
+  switchEpisode('switch'),
+  stop('stop'),
+  complete('complete'),
+  speedChange('speed_change');
+
+  const ListenEndReason(this.paramValue);
+  final String paramValue;
+}
+
+/// One contiguous stretch of playback: no seek and no speed change
+/// between [startSec] and [endSec], so `end_sec - start_sec` is the
+/// content actually heard and [speed] applies to all of it.
+class EpisodeListenSession extends AnalyticsEvent {
+  const EpisodeListenSession({
+    required this.podcastId,
+    required this.feedUrl,
+    required this.episodeId,
+    required this.podcastTitle,
+    required this.episodeTitle,
+    required this.startSec,
+    required this.endSec,
+    required this.durationSec,
+    required this.speed,
+    required this.endReason,
+  });
+  final String podcastId;
+  final String? feedUrl;
+  final String episodeId;
+  final String podcastTitle;
+  final String episodeTitle;
+  final int startSec;
+  final int endSec;
+  final int durationSec;
+  final double speed;
+  final ListenEndReason endReason;
+  @override
+  String get name => 'episode_listen_session';
+  @override
+  Map<String, Object> get params => {
+    'podcast_id': _trim(podcastId),
+    ..._feedKeyParam(feedUrl),
+    'episode_id': _trim(episodeId),
+    'podcast_title': _trim(podcastTitle),
+    'episode_title': _trim(episodeTitle),
+    'start_sec': startSec,
+    'end_sec': endSec,
+    'duration_sec': durationSec,
+    'speed': speed,
+    'end_reason': endReason.paramValue,
+  };
+}
+
+/// A search result the user opened. The query text is deliberately not
+/// sent (it can contain personal data); [rank] and [resultCount] are
+/// enough to measure result quality.
+class SearchResultSelected extends AnalyticsEvent {
+  const SearchResultSelected({
+    required this.podcastId,
+    required this.feedUrl,
+    required this.podcastTitle,
+    required this.rank,
+    required this.resultCount,
+  });
+  final String podcastId;
+  final String? feedUrl;
+  final String podcastTitle;
+
+  /// 1-based display position.
+  final int rank;
+  final int resultCount;
+  @override
+  String get name => 'search_result_select';
+  @override
+  Map<String, Object> get params => {
+    'podcast_id': _trim(podcastId),
+    ..._feedKeyParam(feedUrl),
+    'podcast_title': _trim(podcastTitle),
+    'rank': rank,
+    'result_count': resultCount,
+  };
+}
+
 class EpisodeDownloadStarted extends AnalyticsEvent {
   const EpisodeDownloadStarted({
     required this.podcastId,
+    this.feedUrl,
     required this.episodeId,
     required this.podcastTitle,
     required this.episodeTitle,
   });
   final String podcastId;
+  final String? feedUrl;
   final String episodeId;
   final String podcastTitle;
   final String episodeTitle;
@@ -227,6 +399,7 @@ class EpisodeDownloadStarted extends AnalyticsEvent {
   @override
   Map<String, Object> get params => {
     'podcast_id': _trim(podcastId),
+    ..._feedKeyParam(feedUrl),
     'episode_id': _trim(episodeId),
     'podcast_title': _trim(podcastTitle),
     'episode_title': _trim(episodeTitle),
@@ -236,12 +409,14 @@ class EpisodeDownloadStarted extends AnalyticsEvent {
 class EpisodeDownloadCompleted extends AnalyticsEvent {
   const EpisodeDownloadCompleted({
     required this.podcastId,
+    this.feedUrl,
     required this.episodeId,
     required this.podcastTitle,
     required this.episodeTitle,
     required this.bytes,
   });
   final String podcastId;
+  final String? feedUrl;
   final String episodeId;
   final String podcastTitle;
   final String episodeTitle;
@@ -251,6 +426,7 @@ class EpisodeDownloadCompleted extends AnalyticsEvent {
   @override
   Map<String, Object> get params => {
     'podcast_id': _trim(podcastId),
+    ..._feedKeyParam(feedUrl),
     'episode_id': _trim(episodeId),
     'podcast_title': _trim(podcastTitle),
     'episode_title': _trim(episodeTitle),

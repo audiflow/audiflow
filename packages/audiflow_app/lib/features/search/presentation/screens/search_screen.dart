@@ -284,7 +284,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               return PodcastSearchResultTile(
                 key: Key('search_result_tile_$index'),
                 podcast: podcast,
-                onTap: () => _navigateToPodcastDetail(podcast),
+                onTap: () => _openResult(result, index),
               );
             },
           );
@@ -305,7 +305,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             return PodcastArtworkGridItem(
               artworkUrl: podcast.artworkUrl,
               title: podcast.name,
-              onTap: () => _navigateToPodcastDetail(podcast),
+              onTap: () => _openResult(result, index),
             );
           },
         );
@@ -313,7 +313,15 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     );
   }
 
-  void _navigateToPodcastDetail(Podcast podcast) {
+  void _openResult(SearchResult result, int index) {
+    final podcast = result.podcasts[index];
+    ref
+        .read(podcastSearchControllerProvider.notifier)
+        .onResultSelected(
+          podcast,
+          index: index,
+          resultCount: result.podcasts.length,
+        );
     context.push('${AppRoutes.podcastDetail}/${podcast.id}', extra: podcast);
   }
 

@@ -42,6 +42,7 @@ void main() {
         check(analytics.events).length.equals(1);
         final e = analytics.events.single as PodcastSubscribed;
         check(e.podcastId).equals('12345');
+        check(e.feedUrl).equals('https://example.com/podcast/feed.xml');
         check(e.podcastTitle).equals('Test');
         check(e.source).equals(SubscribeSource.search);
         // Params carry the title too.
@@ -97,14 +98,16 @@ void main() {
       );
 
       final subscribed = analytics.events.single as PodcastSubscribed;
-      check(subscribed.podcastId).equals(feedUrl);
+      check(subscribed.podcastId).equals(analyticsFeedKey(feedUrl));
+      check(subscribed.feedUrl).equals(feedUrl);
       check(subscribed.source).equals(SubscribeSource.opml);
 
       analytics.reset();
       await repo.unsubscribe('opml:abc123');
 
       final unsubscribed = analytics.events.single as PodcastUnsubscribed;
-      check(unsubscribed.podcastId).equals(feedUrl);
+      check(unsubscribed.podcastId).equals(analyticsFeedKey(feedUrl));
+      check(unsubscribed.feedUrl).equals(feedUrl);
       check(unsubscribed.podcastTitle).equals('Imported');
     });
   });
