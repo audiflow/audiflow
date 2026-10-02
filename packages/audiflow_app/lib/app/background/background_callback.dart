@@ -18,6 +18,7 @@ import 'package:workmanager/workmanager.dart';
 import '../../features/monitoring/services/sentry_diagnostics.dart';
 import 'background_settings_repository.dart';
 import 'background_task_registrar.dart';
+import 'refresh_download_budget.dart';
 import 'localized_notification_text_formatter.dart';
 
 // Temporary diagnostic file logger for background refresh investigation.
@@ -162,6 +163,53 @@ class _DiagDownloadRepo implements DownloadRepository {
       _inner.watchByStatus(status);
 }
 
+/// Downloads pending episodes in whatever is left of the refresh window.
+///
+/// On iOS the dedicated download task is a BGProcessingTask, which the
+/// system tends to run only while the device is charging and idle, so
+/// Wi-Fi-only downloads could wait hours after Wi-Fi returns. The periodic
+/// refresh runs far more often; spending its spare seconds on downloads
+/// lets them advance in chunks, since a cut-off download resumes from its
+/// partial file next time. Android needs none of this: WorkManager runs the
+/// download task as soon as its network constraint is met.
+Future<void> _downloadWithinRefreshWindow({
+  required DownloadRepository downloadRepo,
+  required EpisodeRepository episodeRepo,
+  required Dio dio,
+  required String downloadsDir,
+  required Duration elapsed,
+  required Logger logger,
+}) async {
+  if (!Platform.isIOS) return;
+  final budget = refreshDownloadBudget(elapsed);
+  if (budget == null) {
+    _bgDebug('no time left in refresh window for downloads');
+    return;
+  }
+
+  try {
+    final connectivity = await Connectivity().checkConnectivity();
+    final service = BackgroundDownloadService(
+      downloadRepo: downloadRepo,
+      episodeRepo: episodeRepo,
+      dio: dio,
+      downloadsDir: downloadsDir,
+      logger: logger,
+      timeBudget: budget,
+      isOnWifi: connectivity.contains(ConnectivityResult.wifi),
+    );
+    final completed = await service.execute();
+    _bgDebug(
+      'refresh-window downloads: $completed completed '
+      'within ${budget.inSeconds}s',
+    );
+  } catch (e, stack) {
+    // Downloads are a bonus here; the dedicated download task scheduled
+    // below still picks up whatever is left.
+    logger.e('Refresh-window downloads failed', error: e, stackTrace: stack);
+  }
+}
+
 @pragma('vm:entry-point')
 void backgroundCallback() {
   Workmanager().executeTask((taskName, inputData) async {
@@ -181,6 +229,8 @@ void backgroundCallback() {
       return true;
     }
 
+    // Measures the refresh window so downloads can use what is left of it.
+    final refreshStopwatch = Stopwatch()..start();
     final logger = Logger(
       printer: PrefixPrinter(PrettyPrinter(methodCount: 0)),
     );
@@ -472,6 +522,15 @@ void backgroundCallback() {
       _bgDebug('calling refreshService.execute()');
       await refreshService.execute();
       _bgDebug('refreshService.execute() completed');
+
+      await _downloadWithinRefreshWindow(
+        downloadRepo: downloadRepo,
+        episodeRepo: episodeRepo,
+        dio: dio,
+        downloadsDir: '${dir.path}/downloads',
+        elapsed: refreshStopwatch.elapsed,
+        logger: logger,
+      );
 
       // Schedule background download task if any pending OR stuck
       // "downloading" tasks exist. The stuck-downloading state arises when
