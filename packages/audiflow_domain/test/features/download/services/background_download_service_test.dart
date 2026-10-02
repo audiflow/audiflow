@@ -282,6 +282,52 @@ void main() {
       check(lastStatus.lastError).isNotNull();
     });
 
+    test('stops the run on a receive timeout', () async {
+      downloadRepo.pending.addAll([
+        _task(id: 1, episodeId: 10, audioUrl: 'https://example.com/a.mp3'),
+        _task(id: 2, episodeId: 20, audioUrl: 'https://example.com/b.mp3'),
+      ]);
+      episodeRepo.episodes[10] = _episode(id: 10, title: 'Ep A');
+      episodeRepo.episodes[20] = _episode(id: 20, title: 'Ep B');
+      dioAdapter
+        ..onGet(
+          'https://example.com/a.mp3',
+          (server) => server.throws(
+            0,
+            DioException(
+              type: DioExceptionType.receiveTimeout,
+              requestOptions: RequestOptions(path: ''),
+            ),
+          ),
+        )
+        ..onGet('https://example.com/b.mp3', (server) => server.reply(200, ''));
+
+      final service = createService();
+      final count = await service.execute();
+
+      check(count).equals(0);
+      check(downloadRepo.statusUpdates.where((u) => u.id == 2)).isEmpty();
+    });
+
+    test('discards a partial file the server cannot resume', () async {
+      final task = _task(id: 1, episodeId: 10)..downloadedBytes = 5000;
+      downloadRepo.pending.add(task);
+      episodeRepo.episodes[10] = _episode(id: 10, title: 'Ep');
+      final partial = File('$downloadsDir/10_Ep.mp3')
+        ..createSync(recursive: true)
+        ..writeAsBytesSync(List.filled(5000, 0));
+      dioAdapter.onGet(
+        'https://example.com/ep.mp3',
+        (server) => server.reply(416, ''),
+      );
+
+      final service = createService();
+      await service.execute();
+
+      check(partial.existsSync()).isFalse();
+      check(downloadRepo.incrementedRetryIds).deepEquals([1]);
+    });
+
     test('marks failed after max retries exhausted', () async {
       downloadRepo.pending.add(_task(id: 1, episodeId: 10, retryCount: 5));
       episodeRepo.episodes[10] = _episode(id: 10);

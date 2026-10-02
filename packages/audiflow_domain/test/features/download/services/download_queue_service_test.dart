@@ -813,6 +813,34 @@ void main() {
     });
   });
 
+  group('dispose during a drain', () {
+    test('does not start a task looked up after dispose', () async {
+      await Future<void>.delayed(Duration.zero);
+      final lookupGate = Completer<DownloadTask?>();
+      when(
+        mockRepository.getNextPending(
+          isOnWifi: anyNamed('isOnWifi'),
+          excludeIds: anyNamed('excludeIds'),
+        ),
+      ).thenAnswer((_) => lookupGate.future);
+
+      final drain = service.startQueue();
+      await Future<void>.delayed(Duration.zero);
+      service.dispose();
+      lookupGate.complete(_task(id: 1, episodeId: 10));
+      await drain;
+
+      verifyNever(
+        mockRepository.updateStatus(
+          id: anyNamed('id'),
+          status: anyNamed('status'),
+          localPath: anyNamed('localPath'),
+          lastError: anyNamed('lastError'),
+        ),
+      );
+    });
+  });
+
   group('startQueue during a drain', () {
     test('rescans when a request lands while the queue is draining', () async {
       await Future<void>.delayed(Duration.zero);

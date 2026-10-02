@@ -10,6 +10,7 @@ import '../../feed/repositories/episode_repository.dart';
 import '../models/download_status.dart';
 import '../models/download_task.dart';
 import '../repositories/download_repository.dart';
+import 'download_file_service.dart' show isRangeNotSatisfiable;
 
 /// Maximum retry attempts per download (matches DownloadQueueService).
 const _maxRetryAttempts = 5;
@@ -152,13 +153,14 @@ class BackgroundDownloadService {
       cancelToken.cancel('Time budget exhausted');
     });
 
+    String? localPath;
     try {
       final episode = await _episodeRepo.getById(task.episodeId);
       if (episode == null) {
         throw DownloadException(DownloadErrorType.unknown, 'Episode not found');
       }
 
-      final localPath = _buildLocalPath(
+      localPath = _buildLocalPath(
         episodeId: task.episodeId,
         episodeTitle: episode.title,
         url: task.audioUrl,
@@ -239,16 +241,7 @@ class BackgroundDownloadService {
           'BackgroundDownloadService: server ignored Range header for '
           'episodeId=${task.episodeId}, discarding corrupted file',
         );
-        try {
-          await File(localPath).delete();
-        } on FileSystemException {
-          // Best-effort cleanup; file may already be gone.
-        }
-        await _downloadRepo.updateProgress(
-          id: task.id,
-          downloadedBytes: 0,
-          totalBytes: null,
-        );
+        await _discardPartialFile(task, localPath);
         await _downloadRepo.updateStatus(
           id: task.id,
           status: const DownloadStatus.pending(),
@@ -294,6 +287,17 @@ class BackgroundDownloadService {
           'because time budget was exhausted',
         );
         rethrow;
+      } else if (isRangeNotSatisfiable(e) && localPath != null) {
+        // The partial file cannot be extended; drop it so the next attempt
+        // starts afresh instead of repeating the same request.
+        await _discardPartialFile(task, localPath);
+        await _handleError(
+          task,
+          DownloadException(
+            DownloadErrorType.serverError,
+            'Range not satisfiable; restarting download',
+          ),
+        );
       } else if (_isConnectionFailure(e)) {
         await _handleError(
           task,
@@ -341,9 +345,27 @@ class BackgroundDownloadService {
     }
   }
 
-  bool _isConnectionFailure(DioException error) =>
-      error.type == DioExceptionType.connectionError ||
-      error.type == DioExceptionType.connectionTimeout;
+  /// Failures that point at the network rather than this one download, so
+  /// every remaining task would hit them too.
+  bool _isConnectionFailure(DioException error) => const {
+    DioExceptionType.connectionError,
+    DioExceptionType.connectionTimeout,
+    DioExceptionType.sendTimeout,
+    DioExceptionType.receiveTimeout,
+  }.contains(error.type);
+
+  Future<void> _discardPartialFile(DownloadTask task, String localPath) async {
+    try {
+      await File(localPath).delete();
+    } on FileSystemException {
+      // Best-effort cleanup; file may already be gone.
+    }
+    await _downloadRepo.updateProgress(
+      id: task.id,
+      downloadedBytes: 0,
+      totalBytes: null,
+    );
+  }
 
   Future<void> _handleError(DownloadTask task, DownloadException error) async {
     if (task.retryCount < _maxRetryAttempts) {

@@ -163,6 +163,29 @@ class _DiagDownloadRepo implements DownloadRepository {
       _inner.watchByStatus(status);
 }
 
+/// Resets tasks stuck in "downloading" back to pending and returns how many.
+///
+/// The foreground DownloadQueueService (and an earlier background run) sets
+/// a task to "downloading" before starting the HTTP request; if iOS
+/// suspends or expires that isolate mid-download, the task stays in that
+/// state and getNextPending() (which only queries "pending") would skip it.
+Future<int> _resetStuckDownloads(DownloadRepository downloadRepo) async {
+  final stuckDownloading = await downloadRepo.getByStatus(
+    const DownloadStatus.downloading(),
+  );
+  for (final task in stuckDownloading) {
+    _bgDebug(
+      'resetting stuck downloading task: id=${task.id} '
+      'episodeId=${task.episodeId}',
+    );
+    await downloadRepo.updateStatus(
+      id: task.id,
+      status: const DownloadStatus.pending(),
+    );
+  }
+  return stuckDownloading.length;
+}
+
 /// Downloads pending episodes in whatever is left of the refresh window.
 ///
 /// On iOS the dedicated download task is a BGProcessingTask, which the
@@ -188,6 +211,9 @@ Future<void> _downloadWithinRefreshWindow({
   }
 
   try {
+    // Without this, a download cut off when iOS expired an earlier window
+    // would wait for the rarely-run download task to recover it.
+    await _resetStuckDownloads(downloadRepo);
     final connectivity = await Connectivity().checkConnectivity();
     final service = BackgroundDownloadService(
       downloadRepo: downloadRepo,
@@ -698,25 +724,7 @@ Future<bool> _executeDownloadTask(Map<String, dynamic>? inputData) async {
       isOnWifi: isOnWifi,
     );
 
-    // Reset tasks stuck in "downloading" state from a suspended foreground
-    // isolate. The foreground DownloadQueueService sets status to
-    // "downloading" before starting the HTTP request; if iOS suspends the
-    // app mid-download, those tasks remain in that state and getNextPending()
-    // (which only queries "pending") would skip them.
-    final stuckDownloading = await downloadRepo.getByStatus(
-      const DownloadStatus.downloading(),
-    );
-    stuckAtStart = stuckDownloading.length;
-    for (final task in stuckDownloading) {
-      _bgDebug(
-        'resetting stuck downloading task: id=${task.id} '
-        'episodeId=${task.episodeId}',
-      );
-      await downloadRepo.updateStatus(
-        id: task.id,
-        status: const DownloadStatus.pending(),
-      );
-    }
+    stuckAtStart = await _resetStuckDownloads(downloadRepo);
 
     final pendingAtStartList = await downloadRepo.getByStatus(
       const DownloadStatus.pending(),

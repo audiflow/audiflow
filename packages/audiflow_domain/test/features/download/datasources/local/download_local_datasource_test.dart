@@ -1,4 +1,5 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar_community/isar.dart';
 
@@ -265,8 +266,7 @@ void main() {
         excludeIds: {firstId},
       );
 
-      expect(task, isNotNull);
-      expect(task!.episodeId, 2);
+      check(task).isNotNull().has((t) => t.episodeId, 'episodeId').equals(2);
     });
 
     test('returns null when every pending task is excluded', () async {
@@ -278,7 +278,7 @@ void main() {
         excludeIds: {firstId, secondId},
       );
 
-      expect(task, isNull);
+      check(task).isNull();
     });
   });
 

@@ -1,4 +1,5 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar_community/isar.dart';
 
@@ -204,7 +205,9 @@ void main() {
       await repository.resetRetryCount(task.id);
 
       final updated = await repository.getById(task.id);
-      expect(updated!.retryCount, 0);
+      check(
+        updated,
+      ).isNotNull().has((t) => t.retryCount, 'retryCount').equals(0);
     });
   });
 

@@ -16,7 +16,6 @@ import 'package:riverpod/riverpod.dart';
   PresetConfigRepository,
   StationPodcastRepository,
   Dio,
-  DownloadQueueService,
 ])
 import 'feed_sync_service_test.mocks.dart';
 
@@ -35,6 +34,16 @@ class _NoopAutoDownloadEnqueuer implements AutoDownloadEnqueuer {
       skipped: 0,
     );
   }
+}
+
+class _FakeDownloadQueueService implements DownloadQueueService {
+  int startCount = 0;
+
+  @override
+  Future<void> startQueue() async => startCount++;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 Subscription _subscription({
@@ -81,7 +90,7 @@ void main() {
   late MockFeedParserService mockFeedParser;
   late MockPresetConfigRepository mockConfigRepo;
   late MockStationPodcastRepository mockStationPodcastRepo;
-  late MockDownloadQueueService mockQueueService;
+  late _FakeDownloadQueueService queueService;
   late _NoopAutoDownloadEnqueuer enqueuer;
   late ProviderContainer container;
   late FeedSyncService service;
@@ -94,9 +103,8 @@ void main() {
     mockConfigRepo = MockPresetConfigRepository();
     mockStationPodcastRepo = MockStationPodcastRepository();
     mockDio = MockDio();
-    mockQueueService = MockDownloadQueueService();
+    queueService = _FakeDownloadQueueService();
     enqueuer = _NoopAutoDownloadEnqueuer();
-    when(mockQueueService.startQueue()).thenAnswer((_) async {});
 
     // Default settings
     when(mockSettingsRepo.getAutoSync()).thenReturn(true);
@@ -118,7 +126,7 @@ void main() {
         ),
         dioProvider.overrideWithValue(mockDio),
         autoDownloadEnqueuerProvider.overrideWithValue(enqueuer),
-        downloadQueueServiceProvider.overrideWithValue(mockQueueService),
+        downloadQueueServiceProvider.overrideWithValue(queueService),
       ],
     );
 
@@ -510,13 +518,13 @@ void main() {
 
         await service.syncFeed(sub);
 
-        verify(mockQueueService.startQueue()).called(1);
+        check(queueService.startCount).equals(1);
       });
 
       test('stays idle when nothing was enqueued', () async {
         await service.syncFeed(sub);
 
-        verifyNever(mockQueueService.startQueue());
+        check(queueService.startCount).equals(0);
       });
     });
   });

@@ -10,6 +10,11 @@ import '../../../common/providers/http_client_provider.dart';
 
 part 'download_file_service.g.dart';
 
+/// Whether [error] is a 416 reply to a resume request, meaning the partial
+/// file on disk cannot be extended and the download must start over.
+bool isRangeNotSatisfiable(DioException error) =>
+    error.response?.statusCode == 416;
+
 /// Callback for download progress updates.
 typedef DownloadProgressCallback =
     void Function(int downloadedBytes, int totalBytes);
@@ -52,9 +57,10 @@ class DownloadFileService {
   }) async {
     final cancelToken = CancelToken();
     _cancelTokens[taskId] = cancelToken;
+    String? localPath;
 
     try {
-      final localPath = await _getLocalPath(episodeId, episodeTitle, url);
+      localPath = await _getLocalPath(episodeId, episodeTitle, url);
       final file = File(localPath);
 
       // Ensure directory exists
@@ -107,6 +113,16 @@ class DownloadFileService {
     } on DioException catch (e) {
       if (e.type == DioExceptionType.cancel) {
         throw DownloadException.cancelled();
+      }
+      if (isRangeNotSatisfiable(e) && localPath != null) {
+        // The partial file no longer lines up with the remote file (it may
+        // already be complete, or the episode was replaced). Drop it so the
+        // retry starts afresh instead of repeating the same request.
+        await deleteFile(localPath);
+        throw DownloadException(
+          DownloadErrorType.serverError,
+          'Range not satisfiable; restarting download',
+        );
       }
       if (e.type == DioExceptionType.connectionError ||
           e.type == DioExceptionType.connectionTimeout) {

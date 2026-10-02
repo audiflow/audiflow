@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:checks/checks.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -297,8 +298,8 @@ void main() {
       );
 
       // Assert
-      expect(capturedOptions!.headers?['Range'], 'bytes=5000-');
-      expect(capturedMode, FileAccessMode.append);
+      check(capturedOptions?.headers?['Range']).equals('bytes=5000-');
+      check(capturedMode).equals(FileAccessMode.append);
     });
 
     test('downloads afresh when the partial file is missing', () async {
@@ -340,8 +341,8 @@ void main() {
       );
 
       // Assert
-      expect(capturedOptions!.headers?['Range'], isNull);
-      expect(capturedMode, FileAccessMode.write);
+      check(capturedOptions?.headers?['Range']).isNull();
+      check(capturedMode).equals(FileAccessMode.write);
     });
 
     test('discards the partial file when the server ignores Range', () async {
@@ -377,17 +378,53 @@ void main() {
       );
 
       // Assert
-      await expectLater(
-        download,
-        throwsA(
-          isA<DownloadException>().having(
-            (e) => e.type,
-            'type',
-            DownloadErrorType.serverError,
+      await check(download).throws<DownloadException>(
+        (e) =>
+            e.has((d) => d.type, 'type').equals(DownloadErrorType.serverError),
+      );
+      check(await partial.exists()).isFalse();
+    });
+
+    test('discards the partial file when the range is unsatisfiable', () async {
+      // Arrange: the partial file is already as long as the remote file.
+      final partial = await writePartialFile(5000);
+      when(
+        mockDio.download(
+          any,
+          any,
+          cancelToken: anyNamed('cancelToken'),
+          deleteOnError: anyNamed('deleteOnError'),
+          fileAccessMode: anyNamed('fileAccessMode'),
+          options: anyNamed('options'),
+          onReceiveProgress: anyNamed('onReceiveProgress'),
+        ),
+      ).thenThrow(
+        DioException(
+          type: DioExceptionType.badResponse,
+          requestOptions: RequestOptions(path: '/test'),
+          response: Response(
+            requestOptions: RequestOptions(path: '/test'),
+            statusCode: 416,
           ),
         ),
       );
-      expect(await partial.exists(), isFalse);
+
+      // Act
+      final download = service.downloadFile(
+        taskId: 1,
+        url: 'https://example.com/ep.mp3',
+        episodeId: 1,
+        episodeTitle: 'Test',
+        resumeFromBytes: 5000,
+        onProgress: (_, _) {},
+      );
+
+      // Assert
+      await check(download).throws<DownloadException>(
+        (e) =>
+            e.has((d) => d.type, 'type').equals(DownloadErrorType.serverError),
+      );
+      check(await partial.exists()).isFalse();
     });
 
     test('does not set Range header for fresh download', () async {

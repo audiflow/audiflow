@@ -213,7 +213,7 @@ class DownloadQueueService implements SuspendableWriter {
           isOnWifi: _isOnWifi,
           excludeIds: _idsInBackoff(),
         );
-        if (_isSuspended) break;
+        if (_isSuspended || _isDisposed) break;
         if (nextTask == null) {
           if (_isRescanRequested) continue;
           break;
