@@ -20,17 +20,37 @@ import 'package:riverpod/riverpod.dart';
 import 'feed_sync_service_test.mocks.dart';
 
 class _NoopAutoDownloadEnqueuer implements AutoDownloadEnqueuer {
+  /// Number of download tasks every enqueue pass reports as created.
+  int created = 0;
+
   @override
   Future<AutoDownloadEnqueueResult> enqueueForSubscription(
     Subscription subscription, {
     required bool wifiOnly,
   }) async {
-    return const AutoDownloadEnqueueResult(
-      inspected: 0,
-      created: 0,
+    return AutoDownloadEnqueueResult(
+      inspected: created,
+      created: created,
       skipped: 0,
     );
   }
+}
+
+class _FakeDownloadQueueService implements DownloadQueueService {
+  int startCount = 0;
+
+  /// When set, every start fails with this error.
+  Object? startError;
+
+  @override
+  Future<void> startQueue() async {
+    startCount++;
+    final error = startError;
+    if (error != null) throw error;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 Subscription _subscription({
@@ -77,6 +97,8 @@ void main() {
   late MockFeedParserService mockFeedParser;
   late MockPresetConfigRepository mockConfigRepo;
   late MockStationPodcastRepository mockStationPodcastRepo;
+  late _FakeDownloadQueueService queueService;
+  late _NoopAutoDownloadEnqueuer enqueuer;
   late ProviderContainer container;
   late FeedSyncService service;
 
@@ -88,6 +110,8 @@ void main() {
     mockConfigRepo = MockPresetConfigRepository();
     mockStationPodcastRepo = MockStationPodcastRepository();
     mockDio = MockDio();
+    queueService = _FakeDownloadQueueService();
+    enqueuer = _NoopAutoDownloadEnqueuer();
 
     // Default settings
     when(mockSettingsRepo.getAutoSync()).thenReturn(true);
@@ -108,9 +132,8 @@ void main() {
           mockStationPodcastRepo,
         ),
         dioProvider.overrideWithValue(mockDio),
-        autoDownloadEnqueuerProvider.overrideWithValue(
-          _NoopAutoDownloadEnqueuer(),
-        ),
+        autoDownloadEnqueuerProvider.overrideWithValue(enqueuer),
+        downloadQueueServiceProvider.overrideWithValue(queueService),
       ],
     );
 
@@ -469,6 +492,58 @@ void main() {
       verify(
         mockSubscriptionRepo.updateLastRefreshed('itunes-42', any),
       ).called(1);
+    });
+
+    group('download queue', () {
+      late Subscription sub;
+
+      setUp(() {
+        sub = _subscription(lastRefreshedAt: null);
+        when(dioGet()).thenAnswer((_) async => okResponse());
+        when(
+          mockEpisodeRepo.getGuidsByPodcastId(sub.id),
+        ).thenAnswer((_) async => <String>{});
+        when(
+          mockFeedParser.parseWithProgress(
+            xmlContent: anyNamed('xmlContent'),
+            podcastId: anyNamed('podcastId'),
+            knownGuids: anyNamed('knownGuids'),
+            onBatchReady: anyNamed('onBatchReady'),
+          ),
+        ).thenAnswer(
+          (_) => Stream.value(
+            const FeedParseComplete(total: 1, stoppedEarly: false),
+          ),
+        );
+        when(
+          mockSubscriptionRepo.updateLastRefreshed(any, any),
+        ).thenAnswer((_) async {});
+      });
+
+      test('starts when auto-download tasks were enqueued', () async {
+        enqueuer.created = 2;
+
+        await service.syncFeed(sub);
+
+        check(queueService.startCount).equals(1);
+      });
+
+      test('keeps a queue failure from escaping the sync', () async {
+        enqueuer.created = 1;
+        queueService.startError = StateError('queue broke');
+
+        final result = await service.syncFeed(sub);
+        // Let the detached start settle; an unhandled error fails the test.
+        await Future<void>.delayed(Duration.zero);
+
+        check(result.success).isTrue();
+      });
+
+      test('stays idle when nothing was enqueued', () async {
+        await service.syncFeed(sub);
+
+        check(queueService.startCount).equals(0);
+      });
     });
   });
 

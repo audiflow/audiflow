@@ -10,6 +10,7 @@ import '../../feed/repositories/episode_repository.dart';
 import '../models/download_status.dart';
 import '../models/download_task.dart';
 import '../repositories/download_repository.dart';
+import 'download_file_service.dart' show isRangeNotSatisfiable;
 
 /// Maximum retry attempts per download (matches DownloadQueueService).
 const _maxRetryAttempts = 5;
@@ -50,6 +51,10 @@ class BackgroundDownloadService {
     final stopwatch = Stopwatch()..start();
     var completedCount = 0;
     final errors = <(String, Object, StackTrace)>[];
+    // Tasks that failed in this run. They stay pending for a later run but
+    // are skipped here, so one bad task neither retries in a tight loop
+    // nor blocks the tasks queued behind it.
+    final failedIds = <int>{};
 
     while (true) {
       if (_timeBudget <= stopwatch.elapsed) {
@@ -60,7 +65,10 @@ class BackgroundDownloadService {
         break;
       }
 
-      final task = await _downloadRepo.getNextPending(isOnWifi: _isOnWifi);
+      final task = await _downloadRepo.getNextPending(
+        isOnWifi: _isOnWifi,
+        excludeIds: failedIds,
+      );
       if (task == null) break;
 
       // Re-check budget after the potentially slow getNextPending() call.
@@ -98,7 +106,10 @@ class BackgroundDownloadService {
           stackTrace: stack,
         );
         errors.add(('episodeId=${task.episodeId}', e, stack));
-        break;
+        // Without a connection every remaining task would fail the same
+        // way and burn a retry; leave them for the next run.
+        if (_isConnectionFailure(e)) break;
+        failedIds.add(task.id);
       } catch (e, stack) {
         _logger?.e(
           'BackgroundDownloadService: download failed for '
@@ -107,10 +118,7 @@ class BackgroundDownloadService {
           stackTrace: stack,
         );
         errors.add(('episodeId=${task.episodeId}', e, stack));
-        // Stop after first failure to avoid immediate retry of the same
-        // pending task in a tight loop. The task stays pending for the next
-        // scheduled background run or foreground pickup.
-        break;
+        failedIds.add(task.id);
       }
     }
 
@@ -145,13 +153,14 @@ class BackgroundDownloadService {
       cancelToken.cancel('Time budget exhausted');
     });
 
+    String? localPath;
     try {
       final episode = await _episodeRepo.getById(task.episodeId);
       if (episode == null) {
         throw DownloadException(DownloadErrorType.unknown, 'Episode not found');
       }
 
-      final localPath = _buildLocalPath(
+      localPath = _buildLocalPath(
         episodeId: task.episodeId,
         episodeTitle: episode.title,
         url: task.audioUrl,
@@ -232,16 +241,7 @@ class BackgroundDownloadService {
           'BackgroundDownloadService: server ignored Range header for '
           'episodeId=${task.episodeId}, discarding corrupted file',
         );
-        try {
-          await File(localPath).delete();
-        } on FileSystemException {
-          // Best-effort cleanup; file may already be gone.
-        }
-        await _downloadRepo.updateProgress(
-          id: task.id,
-          downloadedBytes: 0,
-          totalBytes: null,
-        );
+        await _discardPartialFile(task, localPath);
         await _downloadRepo.updateStatus(
           id: task.id,
           status: const DownloadStatus.pending(),
@@ -287,8 +287,18 @@ class BackgroundDownloadService {
           'because time budget was exhausted',
         );
         rethrow;
-      } else if (e.type == DioExceptionType.connectionError ||
-          e.type == DioExceptionType.connectionTimeout) {
+      } else if (isRangeNotSatisfiable(e) && localPath != null) {
+        // The partial file cannot be extended; drop it so the next attempt
+        // starts afresh instead of repeating the same request.
+        await _discardPartialFile(task, localPath);
+        await _handleError(
+          task,
+          DownloadException(
+            DownloadErrorType.serverError,
+            'Range not satisfiable; restarting download',
+          ),
+        );
+      } else if (_isConnectionFailure(e)) {
         await _handleError(
           task,
           DownloadException(
@@ -333,6 +343,28 @@ class BackgroundDownloadService {
     } finally {
       budgetTimer.cancel();
     }
+  }
+
+  /// Failures that point at the network rather than this one download, so
+  /// every remaining task would hit them too.
+  bool _isConnectionFailure(DioException error) => const {
+    DioExceptionType.connectionError,
+    DioExceptionType.connectionTimeout,
+    DioExceptionType.sendTimeout,
+    DioExceptionType.receiveTimeout,
+  }.contains(error.type);
+
+  Future<void> _discardPartialFile(DownloadTask task, String localPath) async {
+    try {
+      await File(localPath).delete();
+    } on FileSystemException {
+      // Best-effort cleanup; file may already be gone.
+    }
+    await _downloadRepo.updateProgress(
+      id: task.id,
+      downloadedBytes: 0,
+      totalBytes: null,
+    );
   }
 
   Future<void> _handleError(DownloadTask task, DownloadException error) async {

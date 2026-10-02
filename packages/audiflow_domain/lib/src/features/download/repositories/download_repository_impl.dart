@@ -81,8 +81,10 @@ class DownloadRepositoryImpl implements DownloadRepository {
       _datasource.getCompletedByEpisodeId(episodeId);
 
   @override
-  Future<DownloadTask?> getNextPending({required bool isOnWifi}) =>
-      _datasource.getNextPending(isOnWifi: isOnWifi);
+  Future<DownloadTask?> getNextPending({
+    required bool isOnWifi,
+    Set<int> excludeIds = const {},
+  }) => _datasource.getNextPending(isOnWifi: isOnWifi, excludeIds: excludeIds);
 
   @override
   Future<void> updateProgress({
@@ -134,6 +136,15 @@ class DownloadRepositoryImpl implements DownloadRepository {
     if (task == null) return;
 
     task.retryCount = task.retryCount + 1;
+    await _datasource.updateById(id, task);
+  }
+
+  @override
+  Future<void> resetRetryCount(int id) async {
+    final task = await _datasource.getById(id);
+    if (task == null) return;
+
+    task.retryCount = 0;
     await _datasource.updateById(id, task);
   }
 

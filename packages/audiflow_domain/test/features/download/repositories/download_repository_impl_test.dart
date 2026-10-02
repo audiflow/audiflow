@@ -1,4 +1,5 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar_community/isar.dart';
 
@@ -188,6 +189,25 @@ void main() {
       await repository.incrementRetryCount(task.id);
       final updated2 = await repository.getById(task.id);
       expect(updated2!.retryCount, 2);
+    });
+  });
+
+  group('resetRetryCount', () {
+    test('sets retry count back to zero', () async {
+      final task = await repository.createDownload(
+        episodeId: 1,
+        audioUrl: 'https://example.com/ep1.mp3',
+        wifiOnly: true,
+      );
+      await repository.incrementRetryCount(task!.id);
+      await repository.incrementRetryCount(task.id);
+
+      await repository.resetRetryCount(task.id);
+
+      final updated = await repository.getById(task.id);
+      check(
+        updated,
+      ).isNotNull().has((t) => t.retryCount, 'retryCount').equals(0);
     });
   });
 

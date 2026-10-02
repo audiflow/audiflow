@@ -347,7 +347,10 @@ class FakeDownloadRepository implements DownloadRepository {
   @override
   Future<DownloadTask?> getCompletedForEpisode(int episodeId) async => null;
   @override
-  Future<DownloadTask?> getNextPending({required bool isOnWifi}) async => null;
+  Future<DownloadTask?> getNextPending({
+    required bool isOnWifi,
+    Set<int> excludeIds = const {},
+  }) async => null;
   @override
   Future<void> updateProgress({
     required int id,
@@ -363,6 +366,8 @@ class FakeDownloadRepository implements DownloadRepository {
   }) async {}
   @override
   Future<void> incrementRetryCount(int id) async {}
+  @override
+  Future<void> resetRetryCount(int id) async {}
   @override
   Future<void> delete(int id) async {}
   @override

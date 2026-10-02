@@ -1,4 +1,5 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar_community/isar.dart';
 
@@ -254,6 +255,30 @@ void main() {
 
       expect(task, isNotNull);
       expect(task!.episodeId, 1);
+    });
+
+    test('skips tasks whose ids are excluded', () async {
+      final firstId = await datasource.create(makeTask(episodeId: 1));
+      await datasource.create(makeTask(episodeId: 2));
+
+      final task = await datasource.getNextPending(
+        isOnWifi: true,
+        excludeIds: {firstId},
+      );
+
+      check(task).isNotNull().has((t) => t.episodeId, 'episodeId').equals(2);
+    });
+
+    test('returns null when every pending task is excluded', () async {
+      final firstId = await datasource.create(makeTask(episodeId: 1));
+      final secondId = await datasource.create(makeTask(episodeId: 2));
+
+      final task = await datasource.getNextPending(
+        isOnWifi: true,
+        excludeIds: {firstId, secondId},
+      );
+
+      check(task).isNull();
     });
   });
 

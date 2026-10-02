@@ -138,9 +138,15 @@ class MockDownloadRepository extends _i1.Mock
           as _i3.Future<_i4.DownloadTask?>);
 
   @override
-  _i3.Future<_i4.DownloadTask?> getNextPending({required bool? isOnWifi}) =>
+  _i3.Future<_i4.DownloadTask?> getNextPending({
+    required bool? isOnWifi,
+    Set<int>? excludeIds = const {},
+  }) =>
       (super.noSuchMethod(
-            Invocation.method(#getNextPending, [], {#isOnWifi: isOnWifi}),
+            Invocation.method(#getNextPending, [], {
+              #isOnWifi: isOnWifi,
+              #excludeIds: excludeIds,
+            }),
             returnValue: _i3.Future<_i4.DownloadTask?>.value(),
           )
           as _i3.Future<_i4.DownloadTask?>);
@@ -185,6 +191,15 @@ class MockDownloadRepository extends _i1.Mock
   _i3.Future<void> incrementRetryCount(int? id) =>
       (super.noSuchMethod(
             Invocation.method(#incrementRetryCount, [id]),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
+
+  @override
+  _i3.Future<void> resetRetryCount(int? id) =>
+      (super.noSuchMethod(
+            Invocation.method(#resetRetryCount, [id]),
             returnValue: _i3.Future<void>.value(),
             returnValueForMissingStub: _i3.Future<void>.value(),
           )

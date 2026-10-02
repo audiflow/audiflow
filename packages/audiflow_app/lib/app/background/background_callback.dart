@@ -16,8 +16,10 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:workmanager/workmanager.dart';
 
 import '../../features/monitoring/services/sentry_diagnostics.dart';
+import 'background_download_lock.dart';
 import 'background_settings_repository.dart';
 import 'background_task_registrar.dart';
+import 'refresh_download_budget.dart';
 import 'localized_notification_text_formatter.dart';
 
 // Temporary diagnostic file logger for background refresh investigation.
@@ -120,12 +122,16 @@ class _DiagDownloadRepo implements DownloadRepository {
   Future<DownloadTask?> getCompletedForEpisode(int episodeId) =>
       _inner.getCompletedForEpisode(episodeId);
   @override
-  Future<DownloadTask?> getNextPending({required bool isOnWifi}) =>
-      _inner.getNextPending(isOnWifi: isOnWifi);
+  Future<DownloadTask?> getNextPending({
+    required bool isOnWifi,
+    Set<int> excludeIds = const {},
+  }) => _inner.getNextPending(isOnWifi: isOnWifi, excludeIds: excludeIds);
   @override
   Future<int> getTotalStorageUsed() => _inner.getTotalStorageUsed();
   @override
   Future<void> incrementRetryCount(int id) => _inner.incrementRetryCount(id);
+  @override
+  Future<void> resetRetryCount(int id) => _inner.resetRetryCount(id);
   @override
   Future<void> updateProgress({
     required int id,
@@ -158,6 +164,86 @@ class _DiagDownloadRepo implements DownloadRepository {
       _inner.watchByStatus(status);
 }
 
+/// Resets tasks stuck in "downloading" back to pending and returns how many.
+///
+/// The foreground DownloadQueueService (and an earlier background run) sets
+/// a task to "downloading" before starting the HTTP request; if iOS
+/// suspends or expires that isolate mid-download, the task stays in that
+/// state and getNextPending() (which only queries "pending") would skip it.
+Future<int> _resetStuckDownloads(DownloadRepository downloadRepo) async {
+  final stuckDownloading = await downloadRepo.getByStatus(
+    const DownloadStatus.downloading(),
+  );
+  for (final task in stuckDownloading) {
+    _bgDebug(
+      'resetting stuck downloading task: id=${task.id} '
+      'episodeId=${task.episodeId}',
+    );
+    await downloadRepo.updateStatus(
+      id: task.id,
+      status: const DownloadStatus.pending(),
+    );
+  }
+  return stuckDownloading.length;
+}
+
+/// Downloads pending episodes in whatever is left of the refresh window.
+///
+/// On iOS the dedicated download task is a BGProcessingTask, which the
+/// system tends to run only while the device is charging and idle, so
+/// Wi-Fi-only downloads could wait hours after Wi-Fi returns. The periodic
+/// refresh runs far more often; spending its spare seconds on downloads
+/// lets them advance in chunks, since a cut-off download resumes from its
+/// partial file next time. Android needs none of this: WorkManager runs the
+/// download task as soon as its network constraint is met.
+Future<void> _downloadWithinRefreshWindow({
+  required DownloadRepository downloadRepo,
+  required EpisodeRepository episodeRepo,
+  required Dio dio,
+  required String documentsDir,
+  required Duration elapsed,
+  required Logger logger,
+}) async {
+  if (!Platform.isIOS) return;
+  final budget = refreshDownloadBudget(elapsed);
+  if (budget == null) {
+    _bgDebug('no time left in refresh window for downloads');
+    return;
+  }
+
+  final lock = BackgroundDownloadLock(directory: documentsDir);
+  if (!await lock.tryAcquire()) {
+    _bgDebug('download task is active, skipping refresh-window downloads');
+    return;
+  }
+  try {
+    // Without this, a download cut off when iOS expired an earlier window
+    // would wait for the rarely-run download task to recover it.
+    await _resetStuckDownloads(downloadRepo);
+    final connectivity = await Connectivity().checkConnectivity();
+    final service = BackgroundDownloadService(
+      downloadRepo: downloadRepo,
+      episodeRepo: episodeRepo,
+      dio: dio,
+      downloadsDir: '$documentsDir/downloads',
+      logger: logger,
+      timeBudget: budget,
+      isOnWifi: connectivity.contains(ConnectivityResult.wifi),
+    );
+    final completed = await service.execute();
+    _bgDebug(
+      'refresh-window downloads: $completed completed '
+      'within ${budget.inSeconds}s',
+    );
+  } catch (e, stack) {
+    // Downloads are a bonus here; the dedicated download task scheduled
+    // below still picks up whatever is left.
+    logger.e('Refresh-window downloads failed', error: e, stackTrace: stack);
+  } finally {
+    await lock.release();
+  }
+}
+
 @pragma('vm:entry-point')
 void backgroundCallback() {
   Workmanager().executeTask((taskName, inputData) async {
@@ -177,6 +263,8 @@ void backgroundCallback() {
       return true;
     }
 
+    // Measures the refresh window so downloads can use what is left of it.
+    final refreshStopwatch = Stopwatch()..start();
     final logger = Logger(
       printer: PrefixPrinter(PrettyPrinter(methodCount: 0)),
     );
@@ -469,6 +557,15 @@ void backgroundCallback() {
       await refreshService.execute();
       _bgDebug('refreshService.execute() completed');
 
+      await _downloadWithinRefreshWindow(
+        downloadRepo: downloadRepo,
+        episodeRepo: episodeRepo,
+        dio: dio,
+        documentsDir: dir.path,
+        elapsed: refreshStopwatch.elapsed,
+        logger: logger,
+      );
+
       // Schedule background download task if any pending OR stuck
       // "downloading" tasks exist. The stuck-downloading state arises when
       // the foreground isolate was suspended/killed mid-download; without
@@ -604,9 +701,17 @@ Future<bool> _executeDownloadTask(Map<String, dynamic>? inputData) async {
   var runnableRemainingCount = 0;
   var isOnWifi = false;
   var rescheduledWifiOnly = false;
+  BackgroundDownloadLock? lock;
 
   try {
     final dir = await getApplicationDocumentsDirectory();
+    lock = BackgroundDownloadLock(directory: dir.path);
+    if (!await lock.tryAcquire()) {
+      // A refresh-window pass is transferring; let the scheduler retry
+      // rather than reclaim its in-flight task.
+      _bgDebug('another background download worker is active, deferring');
+      return false;
+    }
     isar = await openIsarWithRecovery(directory: dir.path, logger: logger);
     dio = Dio(
       BaseOptions(
@@ -635,25 +740,7 @@ Future<bool> _executeDownloadTask(Map<String, dynamic>? inputData) async {
       isOnWifi: isOnWifi,
     );
 
-    // Reset tasks stuck in "downloading" state from a suspended foreground
-    // isolate. The foreground DownloadQueueService sets status to
-    // "downloading" before starting the HTTP request; if iOS suspends the
-    // app mid-download, those tasks remain in that state and getNextPending()
-    // (which only queries "pending") would skip them.
-    final stuckDownloading = await downloadRepo.getByStatus(
-      const DownloadStatus.downloading(),
-    );
-    stuckAtStart = stuckDownloading.length;
-    for (final task in stuckDownloading) {
-      _bgDebug(
-        'resetting stuck downloading task: id=${task.id} '
-        'episodeId=${task.episodeId}',
-      );
-      await downloadRepo.updateStatus(
-        id: task.id,
-        status: const DownloadStatus.pending(),
-      );
-    }
+    stuckAtStart = await _resetStuckDownloads(downloadRepo);
 
     final pendingAtStartList = await downloadRepo.getByStatus(
       const DownloadStatus.pending(),
@@ -751,6 +838,7 @@ Future<bool> _executeDownloadTask(Map<String, dynamic>? inputData) async {
       );
     }
   } finally {
+    await lock?.release();
     dio?.close();
     if (isar != null && isar.isOpen) {
       await isar.close();
