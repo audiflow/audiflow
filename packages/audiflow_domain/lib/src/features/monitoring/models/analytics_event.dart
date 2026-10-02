@@ -277,6 +277,36 @@ class SearchQueryEntered extends AnalyticsEvent {
   Map<String, Object> get params => {'query_len': queryLen};
 }
 
+/// A search result the user opened. The query text is deliberately not
+/// sent (it can contain personal data); [rank] and [resultCount] are
+/// enough to measure result quality.
+class SearchResultSelected extends AnalyticsEvent {
+  const SearchResultSelected({
+    required this.podcastId,
+    required this.feedUrl,
+    required this.podcastTitle,
+    required this.rank,
+    required this.resultCount,
+  });
+  final String podcastId;
+  final String? feedUrl;
+  final String podcastTitle;
+
+  /// 1-based display position.
+  final int rank;
+  final int resultCount;
+  @override
+  String get name => 'search_result_select';
+  @override
+  Map<String, Object> get params => {
+    'podcast_id': _trim(podcastId),
+    ..._feedUrlParam(feedUrl),
+    'podcast_title': _trim(podcastTitle),
+    'rank': rank,
+    'result_count': resultCount,
+  };
+}
+
 class EpisodeDownloadStarted extends AnalyticsEvent {
   const EpisodeDownloadStarted({
     required this.podcastId,

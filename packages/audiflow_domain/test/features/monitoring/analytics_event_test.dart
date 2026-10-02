@@ -329,6 +329,24 @@ void main() {
       check(complete.params['speed']).equals(1.25);
     });
 
+    test('SearchResultSelected', () {
+      final e = SearchResultSelected(
+        podcastId: '123',
+        feedUrl: 'https://example.com/feed.xml',
+        podcastTitle: 'Pod 1',
+        rank: 3,
+        resultCount: 50,
+      );
+      check(e.name).equals('search_result_select');
+      check(e.params).deepEquals({
+        'podcast_id': '123',
+        'feed_url': 'https://example.com/feed.xml',
+        'podcast_title': 'Pod 1',
+        'rank': 3,
+        'result_count': 50,
+      });
+    });
+
     group('analyticsPodcastId', () {
       test('prefers a real iTunes ID', () {
         check(
