@@ -37,7 +37,8 @@ class DownloadFileService {
   /// [episodeId] - Episode ID for filename
   /// [episodeTitle] - Episode title for filename
   /// [onProgress] - Progress callback
-  /// [resumeFromBytes] - Resume from this byte position (0 for fresh download)
+  /// [resumeFromBytes] - Bytes already fetched (0 for fresh download); when
+  ///   non-zero, the download resumes from the partial file on disk
   ///
   /// Returns local file path on success.
   /// Throws [DownloadException] on failure.
@@ -62,10 +63,10 @@ class DownloadFileService {
         await dir.create(recursive: true);
       }
 
-      // Set up headers for resume
+      final resumeOffset = await _resumeOffset(file, resumeFromBytes);
       final headers = <String, dynamic>{};
-      if (0 < resumeFromBytes) {
-        headers['Range'] = 'bytes=$resumeFromBytes-';
+      if (0 < resumeOffset) {
+        headers['Range'] = 'bytes=$resumeOffset-';
       }
 
       final response = await _dio.download(
@@ -73,10 +74,15 @@ class DownloadFileService {
         localPath,
         cancelToken: cancelToken,
         deleteOnError: false,
+        // Append when resuming so the partial file is extended rather than
+        // replaced by the tail the server sends back.
+        fileAccessMode: 0 < resumeOffset
+            ? FileAccessMode.append
+            : FileAccessMode.write,
         options: Options(headers: headers, responseType: ResponseType.stream),
         onReceiveProgress: (received, total) {
-          final totalBytes = total == -1 ? 0 : total + resumeFromBytes;
-          final downloadedBytes = received + resumeFromBytes;
+          final totalBytes = total == -1 ? 0 : total + resumeOffset;
+          final downloadedBytes = received + resumeOffset;
           onProgress(downloadedBytes, totalBytes);
         },
       );
@@ -85,6 +91,15 @@ class DownloadFileService {
         throw DownloadException(
           DownloadErrorType.serverError,
           'Server returned status ${response.statusCode}',
+        );
+      }
+      if (0 < resumeOffset && response.statusCode == 200) {
+        // The server ignored Range and sent the whole file after the
+        // partial bytes. Drop the corrupted file; the retry starts afresh.
+        await deleteFile(localPath);
+        throw DownloadException(
+          DownloadErrorType.serverError,
+          'Server ignored range request',
         );
       }
 
@@ -119,6 +134,14 @@ class DownloadFileService {
     } finally {
       _cancelTokens.remove(taskId);
     }
+  }
+
+  /// Returns the byte offset to resume from: the partial file's length when
+  /// resuming, since the stored count lags behind throttled progress writes
+  /// and a mismatched Range would corrupt the file.
+  Future<int> _resumeOffset(File file, int resumeFromBytes) async {
+    if (resumeFromBytes <= 0 || !await file.exists()) return 0;
+    return file.length();
   }
 
   /// Cancels an active download.

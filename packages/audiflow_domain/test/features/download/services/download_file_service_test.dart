@@ -38,6 +38,15 @@ void main() {
         );
   });
 
+  /// Writes a partial download of [length] bytes where the service stores
+  /// episode 1 titled "Test" from an .mp3 url.
+  Future<File> writePartialFile(int length) async {
+    final file = File('${tempDir.path}/downloads/1_Test.mp3');
+    await file.create(recursive: true);
+    await file.writeAsBytes(List.filled(length, 0));
+    return file;
+  }
+
   tearDown(() async {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
@@ -247,25 +256,75 @@ void main() {
       service.cancelDownload(99);
     });
 
-    test('passes Range header when resuming download', () async {
-      // Arrange
+    test('resumes from the partial file length in append mode', () async {
+      // Arrange: the stored byte count lags behind the file on disk, as
+      // throttled progress writes leave it.
+      await writePartialFile(5000);
       Options? capturedOptions;
+      FileAccessMode? capturedMode;
       when(
         mockDio.download(
           any,
           any,
           cancelToken: anyNamed('cancelToken'),
           deleteOnError: anyNamed('deleteOnError'),
+          fileAccessMode: anyNamed('fileAccessMode'),
           options: anyNamed('options'),
           onReceiveProgress: anyNamed('onReceiveProgress'),
         ),
       ).thenAnswer((invocation) {
         capturedOptions =
             invocation.namedArguments[const Symbol('options')] as Options?;
+        capturedMode =
+            invocation.namedArguments[const Symbol('fileAccessMode')]
+                as FileAccessMode?;
         return Future.value(
           Response(
             requestOptions: RequestOptions(path: '/test'),
             statusCode: 206,
+          ),
+        );
+      });
+
+      // Act
+      await service.downloadFile(
+        taskId: 1,
+        url: 'https://example.com/ep.mp3',
+        episodeId: 1,
+        episodeTitle: 'Test',
+        resumeFromBytes: 4000,
+        onProgress: (_, _) {},
+      );
+
+      // Assert
+      expect(capturedOptions!.headers?['Range'], 'bytes=5000-');
+      expect(capturedMode, FileAccessMode.append);
+    });
+
+    test('downloads afresh when the partial file is missing', () async {
+      // Arrange
+      Options? capturedOptions;
+      FileAccessMode? capturedMode;
+      when(
+        mockDio.download(
+          any,
+          any,
+          cancelToken: anyNamed('cancelToken'),
+          deleteOnError: anyNamed('deleteOnError'),
+          fileAccessMode: anyNamed('fileAccessMode'),
+          options: anyNamed('options'),
+          onReceiveProgress: anyNamed('onReceiveProgress'),
+        ),
+      ).thenAnswer((invocation) {
+        capturedOptions =
+            invocation.namedArguments[const Symbol('options')] as Options?;
+        capturedMode =
+            invocation.namedArguments[const Symbol('fileAccessMode')]
+                as FileAccessMode?;
+        return Future.value(
+          Response(
+            requestOptions: RequestOptions(path: '/test'),
+            statusCode: 200,
           ),
         );
       });
@@ -281,8 +340,54 @@ void main() {
       );
 
       // Assert
-      expect(capturedOptions, isNotNull);
-      expect(capturedOptions!.headers?['Range'], 'bytes=5000-');
+      expect(capturedOptions!.headers?['Range'], isNull);
+      expect(capturedMode, FileAccessMode.write);
+    });
+
+    test('discards the partial file when the server ignores Range', () async {
+      // Arrange
+      final partial = await writePartialFile(5000);
+      when(
+        mockDio.download(
+          any,
+          any,
+          cancelToken: anyNamed('cancelToken'),
+          deleteOnError: anyNamed('deleteOnError'),
+          fileAccessMode: anyNamed('fileAccessMode'),
+          options: anyNamed('options'),
+          onReceiveProgress: anyNamed('onReceiveProgress'),
+        ),
+      ).thenAnswer(
+        (_) => Future.value(
+          Response(
+            requestOptions: RequestOptions(path: '/test'),
+            statusCode: 200,
+          ),
+        ),
+      );
+
+      // Act
+      final download = service.downloadFile(
+        taskId: 1,
+        url: 'https://example.com/ep.mp3',
+        episodeId: 1,
+        episodeTitle: 'Test',
+        resumeFromBytes: 5000,
+        onProgress: (_, _) {},
+      );
+
+      // Assert
+      await expectLater(
+        download,
+        throwsA(
+          isA<DownloadException>().having(
+            (e) => e.type,
+            'type',
+            DownloadErrorType.serverError,
+          ),
+        ),
+      );
+      expect(await partial.exists(), isFalse);
     });
 
     test('does not set Range header for fresh download', () async {
@@ -485,6 +590,7 @@ void main() {
 
     test('adjusts progress for resumed downloads', () async {
       // Arrange
+      await writePartialFile(3000);
       final progressUpdates = <(int, int)>[];
 
       when(
@@ -493,6 +599,7 @@ void main() {
           any,
           cancelToken: anyNamed('cancelToken'),
           deleteOnError: anyNamed('deleteOnError'),
+          fileAccessMode: anyNamed('fileAccessMode'),
           options: anyNamed('options'),
           onReceiveProgress: anyNamed('onReceiveProgress'),
         ),
@@ -522,7 +629,7 @@ void main() {
         },
       );
 
-      // Assert - should add resumeFromBytes to both values
+      // Assert - should add the resume offset to both values
       expect(progressUpdates.length, 1);
       // downloadedBytes = 500 + 3000 = 3500
       // totalBytes = 500 + 3000 = 3500
