@@ -1,0 +1,105 @@
+name: Android Build
+
+# Smoke-builds the Android app so Gradle, AGP, Kotlin, and plugin native code
+# problems surface on the PR instead of at the staging deploy. Runs without
+# secrets: a debug build needs no signing, and a placeholder
+# google-services.json satisfies the Google Services Gradle plugin.
+#
+# Pushes to main are built too: GitHub only lets PRs read caches saved on the
+# default branch, so this keeps the Gradle cache warm for the next PR.
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'packages/audiflow_app/android/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - 'packages/*/pubspec.yaml'
+      - '.github/workflows/android-build.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'packages/audiflow_app/android/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - 'packages/*/pubspec.yaml'
+      - '.github/workflows/android-build.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Android debug build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: zulu
+          java-version: '17'
+
+      - name: Setup Gradle
+        # Caches the Gradle distribution, dependencies, and build cache.
+        # Writes the cache only from the default branch; PRs read it.
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.6'
+          channel: 'stable'
+          cache: true
+
+      - name: Write placeholder google-services.json
+        # The real file is a secret and not needed to compile. The Google
+        # Services plugin only requires a client entry for each package name.
+        run: |
+          cat > packages/audiflow_app/android/app/src/dev/google-services.json <<'EOF'
+          {
+            "project_info": {
+              "project_number": "000000000000",
+              "project_id": "audiflow-ci-placeholder",
+              "storage_bucket": "audiflow-ci-placeholder.appspot.com"
+            },
+            "client": [
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:000000000000:android:0000000000000000000000",
+                  "android_client_info": {
+                    "package_name": "com.reedom.audiflow_app.dev"
+                  }
+                },
+                "oauth_client": [],
+                "api_key": [
+                  {
+                    "current_key": "ci-placeholder-not-a-real-key"
+                  }
+                ],
+                "services": {
+                  "appinvite_service": {
+                    "other_platform_oauth_client": []
+                  }
+                }
+              }
+            ],
+            "configuration_version": "1"
+          }
+          EOF
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Build debug APK
+        working-directory: packages/audiflow_app
+        run: flutter build apk --debug --flavor dev -t lib/main_dev.dart
