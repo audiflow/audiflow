@@ -1,8 +1,8 @@
-• Richer new-episode notifications with artwork, release date, length, and a description preview
+• Richer new-episode notifications: episode title, artwork, release date, length, and a description preview
 • Notifications follow your in-app language
 • The notification toggle reflects your device permission
 • Background downloads run sooner and more reliably
-• Interrupted downloads resume, and brief network drops no longer fail them
-• Artwork updates when a show changes it, and loads more smoothly
+• Interrupted downloads resume, and brief network drops are less likely to fail them
+• Artwork follows show updates and loads more smoothly
 • Fixed the language setting not applying
 • Fixed an error when marking an episode as played

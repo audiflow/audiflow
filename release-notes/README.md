@@ -23,10 +23,11 @@ release-notes/<version>/android/ja-JP.txt
 ## Writing a new entry
 
 1. List the changes since the previous user release. Release tags carry the
-   build number (e.g. `v2.0.0+51`), so look up the full tag first:
+   build number (e.g. `v2.0.0+51`), so look up the full tag of the release users
+   last received, then put it in place of `<previous-tag>`:
    ```bash
    git tag -l 'v*' --sort=-creatordate | head -5
-   git log --no-merges --format='%h %s' v2.0.0+51..HEAD
+   git log --no-merges --format='%h %s' <previous-tag>..HEAD
    ```
 2. Keep only what users notice (features and fixes); leave out build, CI,
    analytics, and other internal work.
