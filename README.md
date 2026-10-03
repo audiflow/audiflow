@@ -19,6 +19,7 @@ A podcast player for Android and iOS built with Flutter.
 - Flutter 3.47.2+ / Dart 3.13.2+
 - iOS (configured in Xcode) / Android 8.0+ (API 26)
 - Melos 7.3+
+- [mise](https://mise.jdx.dev/) (task runner; also installs sops, age, and pre-commit)
 
 ## Getting Started
 
@@ -26,21 +27,37 @@ A podcast player for Android and iOS built with Flutter.
 # Install Melos globally
 dart pub global activate melos
 
+# Trust the mise config and install its tools
+mise trust && mise install
+
+# Maintainers only: clone audiflow-secrets next to this checkout and decrypt
+# (contributors: create your own configs instead, see Secrets below)
+mise run secrets:pull
+
 # Bootstrap all packages
-make bootstrap
+mise run setup
 
 # Run code generation
-make codegen
+mise run codegen
 
 # Run the app (development flavor)
-make run-dev
+mise run run-dev
 ```
 
-> **Note:** The `.env.dev`, `.env.stg`, and `.env.prod` files are gitignored.
-> Create them at the repo root with the required environment variables
-> before running. Ask a team member for the values.
+Run `mise tasks` to see all available tasks.
 
-Run `make help` to see all available commands.
+### Secrets
+
+`.env.dev`, `.env.stg`, `.env.prod`, the Firebase configs, and the Android
+signing files are gitignored.
+
+- **Maintainers:** they live sops/age-encrypted in the private
+  `audiflow/audiflow-secrets` repo, cloned next to this checkout. Place your
+  age key at `~/.config/mise/age.txt`, then run `mise run secrets:pull`.
+  After editing a plaintext file, run `mise run secrets:encrypt -- <path>` and
+  commit in `audiflow-secrets`. In a new worktree, run `mise run secrets:decrypt`.
+- **Contributors:** create the `.env.*` files at the repo root and place your own
+  Firebase configs next to the committed `*.example` templates.
 
 ## Project Structure
 
@@ -60,26 +77,26 @@ This is a monorepo managed by [Melos](https://melos.invertase.dev/) and Flutter 
 ## Development
 
 ```bash
-make test             # Run all tests
-make analyze          # Static analysis (zero issues required)
-make codegen          # Code generation (after adding annotations)
-make check            # Run analyze + test
-make format           # Format code
+mise run test             # Run all tests
+mise run analyze          # Static analysis (zero issues required)
+mise run codegen          # Code generation (after adding annotations)
+mise run check            # Run analyze + test
+mise run format           # Format code
 ```
 
 ### Build Flavors
 
 ```bash
-make run-dev            # Run dev flavor
-make run-stg            # Run staging flavor
-make run-prod           # Run production flavor
-make build-android-dev  # Build dev AAB
-make build-ios-dev      # Build dev IPA
+mise run run-dev            # Run dev flavor
+mise run run-stg            # Run staging flavor
+mise run run-prod           # Run production flavor
+mise run build-android-dev  # Build dev AAB
+mise run build-ios-dev      # Build dev IPA
 ```
 
 Staging and production builds/deploys run through CI.
 
-See `make help` for the full list of targets.
+See `mise tasks` for the full list of tasks.
 
 ## Architecture
 
