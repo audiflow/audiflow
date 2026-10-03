@@ -16,7 +16,7 @@ A podcast player for Android and iOS built with Flutter.
 
 ## Requirements
 
-- [fvm](https://fvm.app/) (pins Flutter 3.47.2 / Dart 3.13.2 via `.fvmrc`)
+- [fvm](https://fvm.app/) (pins Flutter 3.47.6 / Dart 3.13.5 via `.fvmrc`)
 - iOS (configured in Xcode) / Android 8.0+ (API 26)
 - Melos 7.3+
 - [mise](https://mise.jdx.dev/) (task runner; also installs sops, age, and pre-commit)
