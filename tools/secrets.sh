@@ -97,8 +97,10 @@ encrypt_one() {
   type="$(sops_type_for "$rel")"
   mkdir -p "$(dirname "$SECRETS_DIR/$rel")"
   # Encrypt into a temp file and swap it in only after the roundtrip passes,
-  # so a failed run never truncates the existing encrypted copy.
-  local tmp="$SECRETS_DIR/$rel.tmp"
+  # so a failed run never truncates the existing encrypted copy. A unique name
+  # keeps overlapping runs apart; the same directory keeps the mv atomic.
+  local tmp
+  tmp="$(mktemp "$SECRETS_DIR/$rel.XXXXXX")"
   # Run inside audiflow-secrets so sops picks up its .sops.yaml recipients.
   if ! (cd "$SECRETS_DIR" && sops encrypt --input-type "$type" --output-type "$type" \
       --filename-override "$rel" "$REPO_ROOT/$rel" > "$tmp") \
