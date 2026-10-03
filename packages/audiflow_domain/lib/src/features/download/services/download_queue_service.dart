@@ -340,13 +340,20 @@ class DownloadQueueService implements SuspendableWriter {
       task,
       () async => _onDownloadCompleted?.call(task.episodeId),
     );
-    await _runAfterCompletion('Completion bytes report', task, () async {
+    // An unreadable byte count is reported as 0, as for a missing row,
+    // rather than dropping the completion report.
+    var bytes = 0;
+    await _runAfterCompletion('Completion read-back', task, () async {
       // Read the persisted task to obtain the final byte count - the
       // throttled progress updates may not have flushed the last delta.
       final completedTask = await _repository.getById(task.id);
-      final bytes = completedTask?.downloadedBytes ?? 0;
-      await _onDownloadCompletedWithBytes?.call(task.episodeId, bytes);
+      bytes = completedTask?.downloadedBytes ?? 0;
     });
+    await _runAfterCompletion(
+      'Completion bytes report',
+      task,
+      () async => _onDownloadCompletedWithBytes?.call(task.episodeId, bytes),
+    );
   }
 
   /// Runs follow-up work for a completed download, logging any failure so

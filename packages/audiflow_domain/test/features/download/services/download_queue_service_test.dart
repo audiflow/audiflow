@@ -673,6 +673,7 @@ void main() {
       Future<void> Function(int episodeId)? onCompleted,
       Future<void> Function(int episodeId, int bytes)? onCompletedWithBytes,
       bool isReadBackFailing = false,
+      List<DownloadTask>? tasks,
     }) async {
       final callbackService = DownloadQueueService(
         repository: mockRepository,
@@ -687,8 +688,9 @@ void main() {
       addTearDown(callbackService.dispose);
       // Let the drain started by the initial connectivity check finish.
       await Future<void>.delayed(Duration.zero);
-      stubSucceedingDownload(task);
-      servePending([task]);
+      final queued = tasks ?? [task];
+      queued.forEach(stubSucceedingDownload);
+      servePending(queued);
       if (isReadBackFailing) {
         when(mockRepository.getById(1)).thenThrow(StateError('db closed'));
       } else {
@@ -745,6 +747,28 @@ void main() {
       await runDownload(isReadBackFailing: true);
 
       verifyCompletedWithoutRetry();
+      check(reportedBytes).deepEquals([0]);
+    });
+
+    test('moves on to the next task when the completion callback '
+        'throws', () async {
+      final next = _task(id: 2, episodeId: 20);
+
+      await runDownload(
+        tasks: [task, next],
+        onCompleted: (episodeId) async {
+          if (episodeId == task.episodeId) throw StateError('boom');
+        },
+      );
+
+      verifyCompletedWithoutRetry();
+      verify(
+        mockRepository.updateStatus(
+          id: 2,
+          status: const DownloadStatus.completed(),
+          localPath: '/downloads/20.mp3',
+        ),
+      ).called(1);
     });
 
     test('keeps the task completed when the bytes callback throws', () async {
