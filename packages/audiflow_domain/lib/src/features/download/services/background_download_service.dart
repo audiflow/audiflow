@@ -4,13 +4,13 @@ import 'dart:io';
 import 'package:audiflow_core/audiflow_core.dart';
 import 'package:dio/dio.dart';
 import 'package:logger/logger.dart';
-import 'package:path/path.dart' as p;
 
 import '../../feed/repositories/episode_repository.dart';
 import '../models/download_status.dart';
 import '../models/download_task.dart';
 import '../repositories/download_repository.dart';
 import 'download_file_service.dart' show isRangeNotSatisfiable;
+import 'download_path.dart';
 
 /// Maximum retry attempts per download (matches DownloadQueueService).
 const _maxRetryAttempts = 5;
@@ -160,7 +160,8 @@ class BackgroundDownloadService {
         throw DownloadException(DownloadErrorType.unknown, 'Episode not found');
       }
 
-      localPath = _buildLocalPath(
+      localPath = buildDownloadPath(
+        downloadsDir: _downloadsDir,
         episodeId: task.episodeId,
         episodeTitle: episode.title,
         url: task.audioUrl,
@@ -386,23 +387,5 @@ class BackgroundDownloadService {
         'episodeId=${task.episodeId}',
       );
     }
-  }
-
-  String _buildLocalPath({
-    required int episodeId,
-    required String episodeTitle,
-    required String url,
-  }) {
-    final sanitized = episodeTitle
-        .replaceAll(RegExp(r'[<>:"/\\|?*]'), '')
-        .replaceAll(RegExp(r'\s+'), '_');
-    final maxLength = sanitized.length < 50 ? sanitized.length : 50;
-    final name = sanitized.substring(0, maxLength);
-
-    final uri = Uri.tryParse(url);
-    final ext = uri != null ? p.extension(uri.path) : '';
-    final extension = ext.isNotEmpty ? ext : '.mp3';
-
-    return p.join(_downloadsDir, '${episodeId}_$name$extension');
   }
 }

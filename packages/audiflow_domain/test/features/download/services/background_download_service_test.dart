@@ -5,6 +5,7 @@ import 'package:checks/checks.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http_mock_adapter/http_mock_adapter.dart';
+import 'package:path/path.dart' as p;
 
 // ---------------------------------------------------------------------------
 // Fakes
@@ -364,7 +365,7 @@ void main() {
     });
 
     test(
-      'builds local path with sanitized filename and correct extension',
+      'builds the shared local path, stripping # and % like the foreground',
       () async {
         downloadRepo.pending.add(
           _task(
@@ -375,7 +376,7 @@ void main() {
         );
         episodeRepo.episodes[10] = _episode(
           id: 10,
-          title: 'My Episode: "Special" Edition!',
+          title: 'My "Special" Episode #42: 100% Pure',
         );
 
         dioAdapter.onGet(
@@ -389,11 +390,10 @@ void main() {
         final completedUpdate = downloadRepo.statusUpdates
             .where((u) => u.status is DownloadStatusCompleted)
             .first;
-        final path = completedUpdate.localPath!;
 
-        check(path).endsWith('.m4a');
-        check(path).not((it) => it.contains('"'));
-        check(path).contains('10_');
+        check(
+          completedUpdate.localPath,
+        ).equals(p.join(downloadsDir, '10_My_Special_Episode_42_100_Pure.m4a'));
       },
     );
   });

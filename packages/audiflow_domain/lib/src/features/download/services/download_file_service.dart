@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/providers/http_client_provider.dart';
+import 'download_path.dart';
 
 part 'download_file_service.g.dart';
 
@@ -200,29 +201,11 @@ class DownloadFileService {
     String episodeTitle,
     String url,
   ) async {
-    final downloadsDir = await getDownloadsDirectory();
-    final sanitizedTitle = _sanitizeFilename(episodeTitle);
-    final extension = _getExtension(url);
-    return p.join(downloadsDir, '${episodeId}_$sanitizedTitle$extension');
-  }
-
-  String _sanitizeFilename(String name) {
-    // Strip:
-    //   - filesystem-invalid chars: < > : " / \ | * ?
-    //   - URI-reserved chars that break file:// playback when the path is
-    //     parsed as a URI by just_audio/ExoPlayer: # (fragment), % (percent
-    //     encoding). `?` is already covered above.
-    final sanitized = name
-        .replaceAll(RegExp(r'[<>:"/\\|?*#%]'), '')
-        .replaceAll(RegExp(r'\s+'), '_');
-    final maxLength = sanitized.length < 50 ? sanitized.length : 50;
-    return sanitized.substring(0, maxLength);
-  }
-
-  String _getExtension(String url) {
-    final uri = Uri.parse(url);
-    final path = uri.path;
-    final ext = p.extension(path);
-    return ext.isNotEmpty ? ext : '.mp3';
+    return buildDownloadPath(
+      downloadsDir: await getDownloadsDirectory(),
+      episodeId: episodeId,
+      episodeTitle: episodeTitle,
+      url: url,
+    );
   }
 }
