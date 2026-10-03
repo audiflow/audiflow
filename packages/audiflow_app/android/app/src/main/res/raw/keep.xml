@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Notification icons are referenced by name from Dart only, which the
-     release resource shrinker cannot see. -->
+<!-- Resources looked up by name at runtime, which the release resource
+     shrinker cannot see:
+     - ic_stat_notification: notification small icon, named from Dart.
+     - audio_service_*: media control icons that audio_service resolves with
+       getIdentifier(). AGP 9's optimized resource shrinking removes them,
+       and building the media session's custom actions then fails. -->
 <resources xmlns:tools="http://schemas.android.com/tools"
-    tools:keep="@drawable/ic_stat_notification" />
+    tools:keep="@drawable/ic_stat_notification,@drawable/audio_service_*" />
