@@ -93,7 +93,8 @@ jobs:
           cp "$PP_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/"$PP_UUID".mobileprovision
 
       - name: Checkout audiflow-secrets
-        uses: actions/checkout@v4
+        # Pinned to a commit: this step receives the deploy key.
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           repository: audiflow/audiflow-secrets
           ssh-key: ${{ secrets.SECRETS_REPO_DEPLOY_KEY }}
@@ -101,7 +102,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup sops
-        uses: jdx/mise-action@v4
+        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
         with:
           install_args: sops age
           cache: true
@@ -116,12 +117,13 @@ jobs:
             exit 1
           fi
           # mise.toml points SOPS_AGE_KEY_FILE here, matching local machines.
+          # The trap removes the key even when decryption fails.
+          trap 'rm -f ~/.config/mise/age.txt' EXIT
           mkdir -p ~/.config/mise
           (umask 077 && printf '%s\n' "$SOPS_AGE_KEY" > ~/.config/mise/age.txt)
           mise run secrets:decrypt -- \
             .env.stg \
             packages/audiflow_app/ios/config/stg/GoogleService-Info.plist
-          rm -f ~/.config/mise/age.txt
 
       - name: Bump version
         run: |
@@ -365,7 +367,8 @@ jobs:
           java-version: '17'
 
       - name: Checkout audiflow-secrets
-        uses: actions/checkout@v4
+        # Pinned to a commit: this step receives the deploy key.
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           repository: audiflow/audiflow-secrets
           ssh-key: ${{ secrets.SECRETS_REPO_DEPLOY_KEY }}
@@ -373,7 +376,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup sops
-        uses: jdx/mise-action@v4
+        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
         with:
           install_args: sops age
           cache: true
@@ -388,6 +391,8 @@ jobs:
             exit 1
           fi
           # mise.toml points SOPS_AGE_KEY_FILE here, matching local machines.
+          # The trap removes the key even when decryption fails.
+          trap 'rm -f ~/.config/mise/age.txt' EXIT
           mkdir -p ~/.config/mise
           (umask 077 && printf '%s\n' "$SOPS_AGE_KEY" > ~/.config/mise/age.txt)
           mise run secrets:decrypt -- \
@@ -395,7 +400,6 @@ jobs:
             packages/audiflow_app/android/app/src/stg/google-services.json \
             packages/audiflow_app/android/key.properties \
             packages/audiflow_app/android/app/upload-keystore.jks
-          rm -f ~/.config/mise/age.txt
 
       - name: Bump version
         run: |
