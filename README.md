@@ -16,19 +16,25 @@ A podcast player for Android and iOS built with Flutter.
 
 ## Requirements
 
-- Flutter 3.47.2+ / Dart 3.13.2+
+- [fvm](https://fvm.app/) (pins Flutter 3.47.2 / Dart 3.13.2 via `.fvmrc`)
 - iOS (configured in Xcode) / Android 8.0+ (API 26)
 - Melos 7.3+
 - [mise](https://mise.jdx.dev/) (task runner; also installs sops, age, and pre-commit)
 
+mise tasks run Flutter from `.fvm/flutter_sdk`. The project's `mise.toml` disables
+any `flutter` from your global mise config, so mise never installs a second SDK here.
+
 ## Getting Started
 
 ```bash
-# Install Melos globally
-dart pub global activate melos
+# Install the pinned Flutter SDK into .fvm/flutter_sdk
+fvm install
 
 # Trust the mise config and install its tools
 mise trust && mise install
+
+# Install Melos globally (with the fvm Dart SDK)
+mise exec -- dart pub global activate melos
 
 # Maintainers only: clone audiflow-secrets next to this checkout and decrypt
 # (contributors: create your own configs instead, see Secrets below)

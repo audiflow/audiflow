@@ -1,6 +1,11 @@
 # Task runner and tool versions. Run `mise tasks` to list tasks.
 # Flutter itself is pinned by fvm (.fvmrc), not by mise.
 
+[settings]
+# Flutter comes from fvm, not mise; ignore any flutter in the user's global
+# mise config so `mise install` does not download a second SDK.
+disable_tools = ["flutter"]
+
 [tools]
 # Pinned so CI (jdx/mise-action) installs the same versions as local machines.
 sops = "3.13.3"
@@ -9,6 +14,10 @@ age = "1.3.2"
 pre-commit = "4.6.2"
 
 [env]
+# Flutter is pinned by fvm (.fvmrc). Put its SDK first on PATH so tasks never
+# pick up a flutter from the user's global mise config. ~/.pub-cache/bin holds
+# melos from `dart pub global activate melos`.
+_.path = ["{{config_root}}/.fvm/flutter_sdk/bin", "{{env.HOME}}/.pub-cache/bin"]
 # Secrets live sops-encrypted in the private audiflow-secrets repo and are
 # decrypted with this age key (see tools/secrets.sh).
 SOPS_AGE_KEY_FILE = "{{env.HOME}}/.config/mise/age.txt"
