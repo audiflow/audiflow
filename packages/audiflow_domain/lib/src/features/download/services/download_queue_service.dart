@@ -321,18 +321,55 @@ class DownloadQueueService implements SuspendableWriter {
       );
 
       _logger.i('Download completed: episodeId=${task.episodeId}');
-      await _onDownloadCompleted?.call(task.episodeId);
-      // Read the persisted task to obtain the final byte count - the
-      // throttled progress updates may not have flushed the last delta.
-      final completedTask = await _repository.getById(task.id);
-      final bytes = completedTask?.downloadedBytes ?? 0;
-      await _onDownloadCompletedWithBytes?.call(task.episodeId, bytes);
     } on DownloadException catch (e) {
       await _handleDownloadError(task, e);
+      return;
     } catch (e) {
       await _handleDownloadError(
         task,
         DownloadException(DownloadErrorType.unknown, e.toString()),
+      );
+      return;
+    }
+
+    // Outside the download's error handling: a failure here would
+    // otherwise reset the completed task to pending and download the
+    // saved file again.
+    await _runAfterCompletion(
+      'Completion callback',
+      task,
+      () async => _onDownloadCompleted?.call(task.episodeId),
+    );
+    // An unreadable byte count is reported as 0, as for a missing row,
+    // rather than dropping the completion report.
+    var bytes = 0;
+    await _runAfterCompletion('Completion read-back', task, () async {
+      // Read the persisted task to obtain the final byte count - the
+      // throttled progress updates may not have flushed the last delta.
+      final completedTask = await _repository.getById(task.id);
+      bytes = completedTask?.downloadedBytes ?? 0;
+    });
+    await _runAfterCompletion(
+      'Completion bytes report',
+      task,
+      () async => _onDownloadCompletedWithBytes?.call(task.episodeId, bytes),
+    );
+  }
+
+  /// Runs follow-up work for a completed download, logging any failure so
+  /// it neither changes the task's status nor skips the remaining steps.
+  Future<void> _runAfterCompletion(
+    String step,
+    DownloadTask task,
+    Future<void> Function() work,
+  ) async {
+    try {
+      await work();
+    } catch (e, stack) {
+      _logger.w(
+        '$step failed: episodeId=${task.episodeId}',
+        error: e,
+        stackTrace: stack,
       );
     }
   }

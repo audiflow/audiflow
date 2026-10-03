@@ -490,6 +490,7 @@ void main() {
           localPath: '/downloads/10_Test_EP.mp3',
         ),
       ).thenAnswer((_) async {});
+      when(mockRepository.getById(1)).thenAnswer((_) async => task);
 
       // Act
       await service.startQueue();
@@ -656,6 +657,128 @@ void main() {
     when(mockRepository.getById(any)).thenAnswer((_) async => null);
     return lookups;
   }
+
+  group('post-completion work', () {
+    late DownloadTask task;
+    late List<int> reportedBytes;
+
+    setUp(() {
+      task = _task(id: 1, episodeId: 10);
+      reportedBytes = [];
+    });
+
+    /// Runs one successful download through a service whose completion
+    /// callbacks are [onCompleted] and [onCompletedWithBytes].
+    Future<void> runDownload({
+      Future<void> Function(int episodeId)? onCompleted,
+      Future<void> Function(int episodeId, int bytes)? onCompletedWithBytes,
+      bool isReadBackFailing = false,
+      List<DownloadTask>? tasks,
+    }) async {
+      final callbackService = DownloadQueueService(
+        repository: mockRepository,
+        fileService: mockFileService,
+        episodeRepository: mockEpisodeRepo,
+        logger: Logger(level: Level.off),
+        onDownloadCompleted: onCompleted,
+        onDownloadCompletedWithBytes:
+            onCompletedWithBytes ??
+            (_, bytes) async => reportedBytes.add(bytes),
+      );
+      addTearDown(callbackService.dispose);
+      // Let the drain started by the initial connectivity check finish.
+      await Future<void>.delayed(Duration.zero);
+      final queued = tasks ?? [task];
+      queued.forEach(stubSucceedingDownload);
+      servePending(queued);
+      if (isReadBackFailing) {
+        when(mockRepository.getById(1)).thenThrow(StateError('db closed'));
+      } else {
+        when(mockRepository.getById(1)).thenAnswer(
+          (_) async => _task(id: 1, episodeId: 10, downloadedBytes: 4096),
+        );
+      }
+
+      await callbackService.startQueue();
+    }
+
+    void verifyCompletedWithoutRetry() {
+      verify(
+        mockRepository.updateStatus(
+          id: 1,
+          status: const DownloadStatus.completed(),
+          localPath: '/downloads/10.mp3',
+        ),
+      ).called(1);
+      verifyNever(
+        mockRepository.updateStatus(
+          id: 1,
+          status: const DownloadStatus.pending(),
+          lastError: anyNamed('lastError'),
+        ),
+      );
+      verifyNever(mockRepository.incrementRetryCount(any));
+      verify(
+        mockFileService.downloadFile(
+          taskId: 1,
+          url: anyNamed('url'),
+          episodeId: anyNamed('episodeId'),
+          episodeTitle: anyNamed('episodeTitle'),
+          resumeFromBytes: anyNamed('resumeFromBytes'),
+          onProgress: anyNamed('onProgress'),
+        ),
+      ).called(1);
+    }
+
+    test('keeps the task completed when the completion callback '
+        'throws', () async {
+      await runDownload(onCompleted: (_) async => throw StateError('boom'));
+
+      verifyCompletedWithoutRetry();
+    });
+
+    test('still reports bytes when the completion callback throws', () async {
+      await runDownload(onCompleted: (_) async => throw StateError('boom'));
+
+      check(reportedBytes).deepEquals([4096]);
+    });
+
+    test('keeps the task completed when reading it back throws', () async {
+      await runDownload(isReadBackFailing: true);
+
+      verifyCompletedWithoutRetry();
+      check(reportedBytes).deepEquals([0]);
+    });
+
+    test('moves on to the next task when the completion callback '
+        'throws', () async {
+      final next = _task(id: 2, episodeId: 20);
+
+      await runDownload(
+        tasks: [task, next],
+        onCompleted: (episodeId) async {
+          if (episodeId == task.episodeId) throw StateError('boom');
+        },
+      );
+
+      verifyCompletedWithoutRetry();
+      verify(
+        mockRepository.updateStatus(
+          id: 2,
+          status: const DownloadStatus.completed(),
+          localPath: '/downloads/20.mp3',
+        ),
+      ).called(1);
+    });
+
+    test('keeps the task completed when the bytes callback throws', () async {
+      await runDownload(
+        onCompletedWithBytes: (_, _) async => throw StateError('boom'),
+      );
+
+      verifyCompletedWithoutRetry();
+    });
+  });
 
   group('retry backoff', () {
     test('does not pick a failed task again before its backoff', () async {
