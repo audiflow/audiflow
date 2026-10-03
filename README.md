@@ -19,7 +19,7 @@ A podcast player for Android and iOS built with Flutter.
 - Flutter 3.47.2+ / Dart 3.13.2+
 - iOS (configured in Xcode) / Android 8.0+ (API 26)
 - Melos 7.3+
-- [mise](https://mise.jdx.dev/) (task runner; also installs sops and age)
+- [mise](https://mise.jdx.dev/) (task runner; also installs sops, age, and pre-commit)
 
 ## Getting Started
 
@@ -30,7 +30,11 @@ dart pub global activate melos
 # Trust the mise config and install its tools
 mise trust && mise install
 
-# Decrypt secrets (maintainers only) and bootstrap all packages
+# Maintainers only: clone audiflow-secrets next to this checkout and decrypt
+# (contributors: create your own configs instead, see Secrets below)
+mise run secrets:pull
+
+# Bootstrap all packages
 mise run setup
 
 # Run code generation
