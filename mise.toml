@@ -2,8 +2,9 @@
 # Flutter itself is pinned by fvm (.fvmrc), not by mise.
 
 [tools]
-sops = "latest"
-age = "latest"
+# Pinned so CI (jdx/mise-action) installs the same versions as local machines.
+sops = "3.13.3"
+age = "1.3.2"
 # For `mise run install-hooks`.
 pre-commit = "4.6.2"
 
@@ -38,12 +39,16 @@ description = "Clone or update audiflow-secrets, then decrypt into this repo"
 run = "tools/secrets.sh pull"
 
 [tasks."secrets:decrypt"]
-description = "Decrypt audiflow-secrets into this repo (e.g. in a new worktree)"
+description = "Decrypt audiflow-secrets into this repo (e.g. in a new worktree). Optional paths limit what is decrypted"
 run = "tools/secrets.sh decrypt"
 
 [tasks."secrets:encrypt"]
 description = "Encrypt plaintext files into audiflow-secrets. Example: mise run secrets:encrypt -- .env.dev"
 run = "tools/secrets.sh encrypt"
+
+[tasks."secrets:updatekeys"]
+description = "Re-encrypt every secret for the recipients in audiflow-secrets/.sops.yaml (after adding a machine)"
+run = "tools/secrets.sh updatekeys"
 
 # Code Generation
 

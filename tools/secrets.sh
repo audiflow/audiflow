@@ -6,8 +6,9 @@
 #
 # Usage:
 #   tools/secrets.sh pull               clone or update audiflow-secrets, then decrypt
-#   tools/secrets.sh decrypt            decrypt every secret into this repo
+#   tools/secrets.sh decrypt [path...]  decrypt every secret (or only the given paths) into this repo
 #   tools/secrets.sh encrypt <path>...  encrypt plaintext files from this repo into audiflow-secrets
+#   tools/secrets.sh updatekeys         re-encrypt every secret for the recipients in .sops.yaml
 set -euo pipefail
 
 readonly REPO_ROOT="$(git -C "$(dirname "$0")" rev-parse --show-toplevel)"
@@ -60,6 +61,17 @@ decrypt_all() {
   done < <(list_secret_files)
 }
 
+# CI decrypts only what the job needs, so a missing path is an error, not a skip.
+decrypt_paths() {
+  require_secrets_dir
+  local rel
+  for rel in "$@"; do
+    rel="${rel#./}"
+    [[ -f "$SECRETS_DIR/$rel" ]] || { echo "not in audiflow-secrets: $rel" >&2; return 1; }
+    decrypt_one "$rel"
+  done
+}
+
 pull() {
   if is_secrets_checkout; then
     git -C "$SECRETS_DIR" pull --ff-only
@@ -110,14 +122,26 @@ encrypt() {
   echo "Review and commit in $SECRETS_DIR."
 }
 
+# sops guesses the format from the extension and reads .env.dev as binary,
+# so pass the type explicitly, as decrypt and encrypt do.
+updatekeys() {
+  require_secrets_dir
+  local rel
+  while IFS= read -r rel; do
+    (cd "$SECRETS_DIR" && sops updatekeys --yes --input-type "$(sops_type_for "$rel")" "$rel")
+  done < <(list_secret_files)
+  echo "Review and commit in $SECRETS_DIR."
+}
+
 main() {
   local command="${1:-}"
   shift || true
   case "$command" in
     pull) pull ;;
-    decrypt) decrypt_all ;;
+    decrypt) if (( 0 < $# )); then decrypt_paths "$@"; else decrypt_all; fi ;;
     encrypt) encrypt "$@" ;;
-    *) sed -n '2,10p' "$0" >&2; return 1 ;;
+    updatekeys) updatekeys ;;
+    *) sed -n '2,11p' "$0" >&2; return 1 ;;
   esac
 }
 
