@@ -5,6 +5,7 @@ import 'package:checks/checks.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http_mock_adapter/http_mock_adapter.dart';
+import 'package:path/path.dart' as p;
 
 // ---------------------------------------------------------------------------
 // Fakes
@@ -394,6 +395,39 @@ void main() {
         check(path).endsWith('.m4a');
         check(path).not((it) => it.contains('"'));
         check(path).contains('10_');
+      },
+    );
+
+    test(
+      'strips # and % from the filename like the foreground service',
+      () async {
+        downloadRepo.pending.add(
+          _task(
+            id: 1,
+            episodeId: 10,
+            audioUrl: 'https://example.com/audio/episode.m4a',
+          ),
+        );
+        episodeRepo.episodes[10] = _episode(
+          id: 10,
+          title: 'Episode #42: 100% Pure',
+        );
+
+        dioAdapter.onGet(
+          'https://example.com/audio/episode.m4a',
+          (server) => server.reply(200, ''),
+        );
+
+        final service = createService();
+        await service.execute();
+
+        final completedUpdate = downloadRepo.statusUpdates
+            .where((u) => u.status is DownloadStatusCompleted)
+            .first;
+
+        check(
+          completedUpdate.localPath,
+        ).equals(p.join(downloadsDir, '10_Episode_42_100_Pure.m4a'));
       },
     );
   });
