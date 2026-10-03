@@ -44,6 +44,10 @@ run = "tools/secrets.sh decrypt"
 description = "Encrypt plaintext files into audiflow-secrets. Example: mise run secrets:encrypt -- .env.dev"
 run = "tools/secrets.sh encrypt"
 
+[tasks."secrets:updatekeys"]
+description = "Re-encrypt every secret for the recipients in audiflow-secrets/.sops.yaml (after adding a machine)"
+run = "tools/secrets.sh updatekeys"
+
 # Code Generation
 
 [tasks.codegen]

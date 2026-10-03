@@ -8,6 +8,7 @@
 #   tools/secrets.sh pull               clone or update audiflow-secrets, then decrypt
 #   tools/secrets.sh decrypt [path...]  decrypt every secret (or only the given paths) into this repo
 #   tools/secrets.sh encrypt <path>...  encrypt plaintext files from this repo into audiflow-secrets
+#   tools/secrets.sh updatekeys         re-encrypt every secret for the recipients in .sops.yaml
 set -euo pipefail
 
 readonly REPO_ROOT="$(git -C "$(dirname "$0")" rev-parse --show-toplevel)"
@@ -107,6 +108,17 @@ encrypt() {
   echo "Review and commit in $SECRETS_DIR."
 }
 
+# sops guesses the format from the extension and reads .env.dev as binary,
+# so pass the type explicitly, as decrypt and encrypt do.
+updatekeys() {
+  require_secrets_dir
+  local rel
+  while IFS= read -r rel; do
+    (cd "$SECRETS_DIR" && sops updatekeys --yes --input-type "$(sops_type_for "$rel")" "$rel")
+  done < <(list_secret_files)
+  echo "Review and commit in $SECRETS_DIR."
+}
+
 main() {
   local command="${1:-}"
   shift || true
@@ -114,7 +126,8 @@ main() {
     pull) pull ;;
     decrypt) if (( 0 < $# )); then decrypt_paths "$@"; else decrypt_all; fi ;;
     encrypt) encrypt "$@" ;;
-    *) sed -n '2,10p' "$0" >&2; return 1 ;;
+    updatekeys) updatekeys ;;
+    *) sed -n '2,11p' "$0" >&2; return 1 ;;
   esac
 }
 
