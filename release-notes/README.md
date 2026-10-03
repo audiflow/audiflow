@@ -22,12 +22,24 @@ release-notes/<version>/android/ja-JP.txt
 
 ## Writing a new entry
 
-1. List the changes since the previous user release:
-   `git log --no-merges --format='%h %s' v<previous>..HEAD`.
+1. List the changes since the previous user release. Release tags carry the
+   build number (e.g. `v2.0.0+51`), so look up the full tag first:
+   ```bash
+   git tag -l 'v*' --sort=-creatordate | head -5
+   git log --no-merges --format='%h %s' v2.0.0+51..HEAD
+   ```
 2. Keep only what users notice (features and fixes); leave out build, CI,
    analytics, and other internal work.
 3. Describe the effect for the listener, not the implementation, and claim only
    what the change actually does.
-4. Write both languages with the same content for each platform and check the
-   length:
-   `python3 -c "print(len(open('release-notes/<version>/android/en-US.txt').read().rstrip()))"`.
+4. Write both languages with the same content for each platform, then check
+   every file against its store's limit (replace `2.0.1` with the version):
+   ```bash
+   python3 - 2.0.1 <<'EOF'
+   import pathlib, sys
+   limits = {'android': 500, 'ios': 4000}
+   for f in sorted(pathlib.Path('release-notes', sys.argv[1]).glob('*/*.txt')):
+       n = len(f.read_text().rstrip())
+       print(f, n, 'OK' if n <= limits[f.parent.name] else 'TOO LONG')
+   EOF
+   ```
