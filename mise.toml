@@ -4,6 +4,8 @@
 [tools]
 sops = "latest"
 age = "latest"
+# For `mise run install-hooks`.
+pre-commit = "4.6.2"
 
 [env]
 # Secrets live sops-encrypted in the private audiflow-secrets repo and are

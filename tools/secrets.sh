@@ -25,8 +25,13 @@ sops_type_for() {
   esac
 }
 
+# Accepts both a regular clone and a linked worktree (whose .git is a file).
+is_secrets_checkout() {
+  [[ -d "$SECRETS_DIR" ]] && git -C "$SECRETS_DIR" rev-parse --git-dir > /dev/null 2>&1
+}
+
 require_secrets_dir() {
-  [[ -d "$SECRETS_DIR/.git" ]] && return 0
+  is_secrets_checkout && return 0
   echo "audiflow-secrets not found at $SECRETS_DIR." >&2
   echo "Maintainers: run 'mise run secrets:pull'." >&2
   echo "Contributors: create .env.* and Firebase configs yourself (see README)." >&2
@@ -56,7 +61,7 @@ decrypt_all() {
 }
 
 pull() {
-  if [[ -d "$SECRETS_DIR/.git" ]]; then
+  if is_secrets_checkout; then
     git -C "$SECRETS_DIR" pull --ff-only
   else
     git clone "$SECRETS_REMOTE" "$SECRETS_DIR"
@@ -67,8 +72,8 @@ pull() {
 # Fails when the encrypted copy does not decrypt back to the exact plaintext,
 # e.g. a dotenv value that sops would requote.
 verify_roundtrip() {
-  local rel="$1" type="$2"
-  sops decrypt --input-type "$type" --output-type "$type" "$SECRETS_DIR/$rel" \
+  local rel="$1" type="$2" encrypted="$3"
+  sops decrypt --input-type "$type" --output-type "$type" "$encrypted" \
     | cmp -s - "$REPO_ROOT/$rel" && return 0
   echo "roundtrip mismatch for $rel; encrypted copy differs from plaintext" >&2
   return 1
@@ -79,10 +84,17 @@ encrypt_one() {
   [[ -f "$REPO_ROOT/$rel" ]] || { echo "no such file: $rel" >&2; return 1; }
   type="$(sops_type_for "$rel")"
   mkdir -p "$(dirname "$SECRETS_DIR/$rel")"
+  # Encrypt into a temp file and swap it in only after the roundtrip passes,
+  # so a failed run never truncates the existing encrypted copy.
+  local tmp="$SECRETS_DIR/$rel.tmp"
   # Run inside audiflow-secrets so sops picks up its .sops.yaml recipients.
-  (cd "$SECRETS_DIR" && sops encrypt --input-type "$type" --output-type "$type" \
-    --filename-override "$rel" "$REPO_ROOT/$rel" > "$rel")
-  verify_roundtrip "$rel" "$type"
+  if ! (cd "$SECRETS_DIR" && sops encrypt --input-type "$type" --output-type "$type" \
+      --filename-override "$rel" "$REPO_ROOT/$rel" > "$tmp") \
+    || ! verify_roundtrip "$rel" "$type" "$tmp"; then
+    rm -f "$tmp"
+    return 1
+  fi
+  mv "$tmp" "$SECRETS_DIR/$rel"
   echo "encrypted $rel"
 }
 
