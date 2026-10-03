@@ -1,5 +1,8 @@
 name: audiflow
 
+# Use the fvm-pinned Flutter SDK (.fvmrc); written by `fvm use`.
+sdkPath: .fvm/flutter_sdk
+
 packages:
   - packages/**
 
