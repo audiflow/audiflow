@@ -6,7 +6,7 @@
 #
 # Usage:
 #   tools/secrets.sh pull               clone or update audiflow-secrets, then decrypt
-#   tools/secrets.sh decrypt            decrypt every secret into this repo
+#   tools/secrets.sh decrypt [path...]  decrypt every secret (or only the given paths) into this repo
 #   tools/secrets.sh encrypt <path>...  encrypt plaintext files from this repo into audiflow-secrets
 set -euo pipefail
 
@@ -55,6 +55,17 @@ decrypt_all() {
   done < <(list_secret_files)
 }
 
+# CI decrypts only what the job needs, so a missing path is an error, not a skip.
+decrypt_paths() {
+  require_secrets_dir
+  local rel
+  for rel in "$@"; do
+    rel="${rel#./}"
+    [[ -f "$SECRETS_DIR/$rel" ]] || { echo "not in audiflow-secrets: $rel" >&2; return 1; }
+    decrypt_one "$rel"
+  done
+}
+
 pull() {
   if [[ -d "$SECRETS_DIR/.git" ]]; then
     git -C "$SECRETS_DIR" pull --ff-only
@@ -101,7 +112,7 @@ main() {
   shift || true
   case "$command" in
     pull) pull ;;
-    decrypt) decrypt_all ;;
+    decrypt) if (( 0 < $# )); then decrypt_paths "$@"; else decrypt_all; fi ;;
     encrypt) encrypt "$@" ;;
     *) sed -n '2,10p' "$0" >&2; return 1 ;;
   esac

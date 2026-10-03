@@ -11,6 +11,9 @@ concurrency:
 
 env:
   FLUTTER_VERSION: '3.47.2'
+  # Lets mise read the repo's mise.toml (sops/age versions, SOPS_AGE_KEY_FILE)
+  # without an interactive `mise trust`.
+  MISE_TRUSTED_CONFIG_PATHS: ${{ github.workspace }}
 
 jobs:
   prepare:
@@ -89,23 +92,36 @@ jobs:
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp "$PP_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/"$PP_UUID".mobileprovision
 
-      - name: Write .env.stg
-        env:
-          ENV_STG: ${{ secrets.ENV_STG }}
-        run: echo "$ENV_STG" > .env.stg
+      - name: Checkout audiflow-secrets
+        uses: actions/checkout@v4
+        with:
+          repository: audiflow/audiflow-secrets
+          ssh-key: ${{ secrets.SECRETS_REPO_DEPLOY_KEY }}
+          path: .audiflow-secrets
+          persist-credentials: false
 
-      - name: Write Firebase iOS config (stg)
+      - name: Setup sops
+        uses: jdx/mise-action@v4
+        with:
+          install_args: sops age
+          cache: true
+
+      - name: Decrypt secrets
         env:
-          FIREBASE_IOS_CONFIG_STG_BASE64: ${{ secrets.FIREBASE_IOS_CONFIG_STG_BASE64 }}
+          SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+          AUDIFLOW_SECRETS_DIR: ${{ github.workspace }}/.audiflow-secrets
         run: |
-          if [ -z "$FIREBASE_IOS_CONFIG_STG_BASE64" ]; then
-            echo "::error::Missing required secret: FIREBASE_IOS_CONFIG_STG_BASE64"
+          if [ -z "$SOPS_AGE_KEY" ]; then
+            echo "::error::Missing required secret: SOPS_AGE_KEY"
             exit 1
           fi
-          DST=packages/audiflow_app/ios/config/stg/GoogleService-Info.plist
-          mkdir -p "$(dirname "$DST")"
-          printf '%s' "$FIREBASE_IOS_CONFIG_STG_BASE64" | base64 --decode -o "$DST"
-          plutil -lint "$DST"
+          # mise.toml points SOPS_AGE_KEY_FILE here, matching local machines.
+          mkdir -p ~/.config/mise
+          (umask 077 && printf '%s\n' "$SOPS_AGE_KEY" > ~/.config/mise/age.txt)
+          mise run secrets:decrypt -- \
+            .env.stg \
+            packages/audiflow_app/ios/config/stg/GoogleService-Info.plist
+          rm -f ~/.config/mise/age.txt
 
       - name: Bump version
         run: |
@@ -348,43 +364,38 @@ jobs:
           distribution: zulu
           java-version: '17'
 
-      - name: Write .env.stg
-        env:
-          ENV_STG: ${{ secrets.ENV_STG }}
-        run: echo "$ENV_STG" > .env.stg
+      - name: Checkout audiflow-secrets
+        uses: actions/checkout@v4
+        with:
+          repository: audiflow/audiflow-secrets
+          ssh-key: ${{ secrets.SECRETS_REPO_DEPLOY_KEY }}
+          path: .audiflow-secrets
+          persist-credentials: false
 
-      - name: Write Firebase Android config (stg)
+      - name: Setup sops
+        uses: jdx/mise-action@v4
+        with:
+          install_args: sops age
+          cache: true
+
+      - name: Decrypt secrets
         env:
-          FIREBASE_ANDROID_CONFIG_STG_BASE64: ${{ secrets.FIREBASE_ANDROID_CONFIG_STG_BASE64 }}
+          SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+          AUDIFLOW_SECRETS_DIR: ${{ github.workspace }}/.audiflow-secrets
         run: |
-          if [ -z "$FIREBASE_ANDROID_CONFIG_STG_BASE64" ]; then
-            echo "::error::Missing required secret: FIREBASE_ANDROID_CONFIG_STG_BASE64"
+          if [ -z "$SOPS_AGE_KEY" ]; then
+            echo "::error::Missing required secret: SOPS_AGE_KEY"
             exit 1
           fi
-          DST=packages/audiflow_app/android/app/src/stg/google-services.json
-          mkdir -p "$(dirname "$DST")"
-          printf '%s' "$FIREBASE_ANDROID_CONFIG_STG_BASE64" | base64 --decode > "$DST"
-          python3 -c "import json; json.load(open('$DST'))"
-
-      - name: Setup Android signing
-        env:
-          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
-        run: |
-          for var in ANDROID_KEYSTORE_BASE64 ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD ANDROID_STORE_PASSWORD; do
-            if [ -z "${!var}" ]; then
-              echo "::error::Missing required secret: $var"
-              exit 1
-            fi
-          done
-          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > packages/audiflow_app/android/app/upload-keystore.jks
-          printf 'keyAlias=%s\nkeyPassword=%s\nstoreFile=upload-keystore.jks\nstorePassword=%s\n' \
-            "$ANDROID_KEY_ALIAS" "$ANDROID_KEY_PASSWORD" "$ANDROID_STORE_PASSWORD" \
-            > packages/audiflow_app/android/key.properties
-          chmod 600 packages/audiflow_app/android/app/upload-keystore.jks
-          chmod 600 packages/audiflow_app/android/key.properties
+          # mise.toml points SOPS_AGE_KEY_FILE here, matching local machines.
+          mkdir -p ~/.config/mise
+          (umask 077 && printf '%s\n' "$SOPS_AGE_KEY" > ~/.config/mise/age.txt)
+          mise run secrets:decrypt -- \
+            .env.stg \
+            packages/audiflow_app/android/app/src/stg/google-services.json \
+            packages/audiflow_app/android/key.properties \
+            packages/audiflow_app/android/app/upload-keystore.jks
+          rm -f ~/.config/mise/age.txt
 
       - name: Bump version
         run: |
