@@ -864,8 +864,8 @@ packages:
     dependency: "direct overridden"
     description:
       path: "packages/isar_community"
-      ref: "3.3.2-spm.1"
-      resolved-ref: "688c5098e5eadd1a48ce045ed4808e61cc48fc26"
+      ref: "3.3.2-spm.2"
+      resolved-ref: "7c14ea4e4d249d15669ca8dbb5a0ef7a446ee410"
       url: "https://github.com/reedom/isar-community.git"
     source: git
     version: "3.3.2"
@@ -873,8 +873,8 @@ packages:
     dependency: "direct overridden"
     description:
       path: "packages/isar_community_flutter_libs"
-      ref: "3.3.2-spm.1"
-      resolved-ref: "688c5098e5eadd1a48ce045ed4808e61cc48fc26"
+      ref: "3.3.2-spm.2"
+      resolved-ref: "7c14ea4e4d249d15669ca8dbb5a0ef7a446ee410"
       url: "https://github.com/reedom/isar-community.git"
     source: git
     version: "3.3.2"
@@ -882,8 +882,8 @@ packages:
     dependency: "direct overridden"
     description:
       path: "packages/isar_community_generator"
-      ref: "3.3.2-spm.1"
-      resolved-ref: "688c5098e5eadd1a48ce045ed4808e61cc48fc26"
+      ref: "3.3.2-spm.2"
+      resolved-ref: "7c14ea4e4d249d15669ca8dbb5a0ef7a446ee410"
       url: "https://github.com/reedom/isar-community.git"
     source: git
     version: "3.3.2"
