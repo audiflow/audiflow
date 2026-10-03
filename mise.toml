@@ -1,0 +1,153 @@
+# Task runner and tool versions. Run `mise tasks` to list tasks.
+# Flutter itself is pinned by fvm (.fvmrc), not by mise.
+
+[tools]
+sops = "latest"
+age = "latest"
+
+[env]
+# Secrets live sops-encrypted in the private audiflow-secrets repo and are
+# decrypted with this age key (see tools/secrets.sh).
+SOPS_AGE_KEY_FILE = "{{env.HOME}}/.config/mise/age.txt"
+
+# Setup & Dependencies
+
+[tasks.setup]
+description = "Decrypt secrets (if audiflow-secrets is cloned) and bootstrap the workspace"
+# decrypt, not pull: contributors without access to audiflow-secrets must still get through setup.
+run = ["tools/secrets.sh decrypt", "melos bootstrap"]
+
+[tasks.bootstrap]
+description = "Bootstrap workspace (install dependencies)"
+run = "melos bootstrap"
+
+[tasks.clean]
+description = "Clean build artifacts and dependencies"
+run = "melos clean"
+
+[tasks.get]
+description = "Get dependencies for all packages"
+run = "melos run get"
+
+# Secrets
+
+[tasks."secrets:pull"]
+description = "Clone or update audiflow-secrets, then decrypt into this repo"
+run = "tools/secrets.sh pull"
+
+[tasks."secrets:decrypt"]
+description = "Decrypt audiflow-secrets into this repo (e.g. in a new worktree)"
+run = "tools/secrets.sh decrypt"
+
+[tasks."secrets:encrypt"]
+description = "Encrypt plaintext files into audiflow-secrets. Example: mise run secrets:encrypt -- .env.dev"
+run = "tools/secrets.sh encrypt"
+
+# Code Generation
+
+[tasks.codegen]
+description = "Run code generation for all packages"
+run = "melos run codegen"
+
+[tasks.codegen-watch]
+description = "Run code generation in watch mode"
+run = "melos run codegen:watch"
+
+# Quality & Testing
+
+[tasks.analyze]
+description = "Run static analysis"
+run = "melos run analyze"
+
+[tasks.format]
+description = "Check code formatting"
+run = "dart format --set-exit-if-changed ."
+
+[tasks.format-fix]
+description = "Fix code formatting"
+run = "dart format ."
+
+[tasks.test]
+description = "Run all tests"
+run = "melos run test --no-select"
+
+[tasks.test-coverage]
+description = "Run tests with coverage report"
+run = "melos run test:coverage --no-select"
+
+[tasks.check]
+description = "Run analyze + test"
+run = ["mise run analyze", "mise run test"]
+
+# Build & Run
+
+[tasks.run-dev]
+description = "Run app in dev flavor"
+dir = "packages/audiflow_app"
+run = "flutter run --flavor dev -t lib/main_dev.dart --dart-define-from-file=../../.env.dev"
+
+[tasks.run-stg]
+description = "Run app in staging flavor"
+dir = "packages/audiflow_app"
+run = "flutter run --flavor stg -t lib/main_stg.dart --dart-define-from-file=../../.env.stg"
+
+[tasks.run-prod]
+description = "Run app in production flavor"
+dir = "packages/audiflow_app"
+run = "flutter run --flavor prod -t lib/main_prod.dart --dart-define-from-file=../../.env.prod"
+
+[tasks.build-android-dev]
+description = "Build dev AAB"
+dir = "packages/audiflow_app"
+run = [
+  "flutter build appbundle --flavor dev -t lib/main_dev.dart --dart-define-from-file=../../.env.dev",
+  "open build/app/outputs/bundle/devRelease/",
+]
+
+[tasks.build-ios-dev]
+description = "Build dev IPA"
+dir = "packages/audiflow_app"
+run = "flutter build ipa --flavor dev -t lib/main_dev.dart --dart-define-from-file=../../.env.dev"
+
+# Assets
+
+[tasks.icons]
+description = "Generate app icons"
+dir = "packages/audiflow_app"
+run = "dart run flutter_launcher_icons"
+
+[tasks.splash]
+description = "Generate splash screens"
+dir = "packages/audiflow_app"
+run = "dart run flutter_native_splash:create"
+
+# Utilities
+
+[tasks.version]
+description = "Show Flutter, Dart, and Melos versions"
+run = ["flutter --version", "dart --version", "melos --version"]
+
+[tasks.packages]
+description = "List workspace packages"
+run = "melos list"
+
+[tasks.outdated]
+description = "Check for outdated packages"
+run = "melos exec -- flutter pub outdated"
+
+[tasks.upgrade]
+description = "Upgrade all packages"
+run = "melos exec -- flutter pub upgrade"
+
+# Git
+
+[tasks.install-hooks]
+description = "Install git hooks from .pre-commit-config.yaml"
+run = "pre-commit install"
+
+[tasks.git-prune-merged]
+description = "Delete local branches merged into main/develop"
+run = """
+git fetch --prune
+git branch --merged | grep -vE '^\\*|main|master|develop' | xargs -r git branch -d 2>/dev/null || echo "No merged branches to prune"
+"""
