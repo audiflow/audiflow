@@ -365,7 +365,7 @@ void main() {
     });
 
     test(
-      'builds local path with sanitized filename and correct extension',
+      'builds the shared local path, stripping # and % like the foreground',
       () async {
         downloadRepo.pending.add(
           _task(
@@ -376,41 +376,7 @@ void main() {
         );
         episodeRepo.episodes[10] = _episode(
           id: 10,
-          title: 'My Episode: "Special" Edition!',
-        );
-
-        dioAdapter.onGet(
-          'https://example.com/audio/episode.m4a',
-          (server) => server.reply(200, ''),
-        );
-
-        final service = createService();
-        await service.execute();
-
-        final completedUpdate = downloadRepo.statusUpdates
-            .where((u) => u.status is DownloadStatusCompleted)
-            .first;
-        final path = completedUpdate.localPath!;
-
-        check(path).endsWith('.m4a');
-        check(path).not((it) => it.contains('"'));
-        check(path).contains('10_');
-      },
-    );
-
-    test(
-      'strips # and % from the filename like the foreground service',
-      () async {
-        downloadRepo.pending.add(
-          _task(
-            id: 1,
-            episodeId: 10,
-            audioUrl: 'https://example.com/audio/episode.m4a',
-          ),
-        );
-        episodeRepo.episodes[10] = _episode(
-          id: 10,
-          title: 'Episode #42: 100% Pure',
+          title: 'My "Special" Episode #42: 100% Pure',
         );
 
         dioAdapter.onGet(
@@ -427,7 +393,7 @@ void main() {
 
         check(
           completedUpdate.localPath,
-        ).equals(p.join(downloadsDir, '10_Episode_42_100_Pure.m4a'));
+        ).equals(p.join(downloadsDir, '10_My_Special_Episode_42_100_Pure.m4a'));
       },
     );
   });
