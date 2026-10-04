@@ -48,7 +48,7 @@ class PlayerSeekBar extends StatefulWidget {
     required this.leadingLabel,
     required this.trailingLabel,
     this.segments = SeekBarSegment.single,
-    this.semanticValue,
+    this.semanticValueFormatter,
     this.onChangeStart,
     this.onChanged,
     this.onChangeEnd,
@@ -60,6 +60,9 @@ class PlayerSeekBar extends StatefulWidget {
 
   /// Track thickness while the user is scrubbing.
   static const double draggingTrackHeight = 10.0;
+
+  /// Fraction of the track a screen-reader increase/decrease action moves.
+  static const double semanticStep = 0.05;
 
   /// Key of the draggable track area, for tests and integration code.
   static const Key trackKey = ValueKey('player-seek-bar-track');
@@ -76,8 +79,11 @@ class PlayerSeekBar extends StatefulWidget {
   /// Stretches of the track to draw. Defaults to one full-width segment.
   final List<SeekBarSegment> segments;
 
-  /// Value announced by screen readers, e.g. "01:00 of 10:00".
-  final String? semanticValue;
+  /// Formats a track fraction for screen readers, e.g. "01:00 of 10:00".
+  ///
+  /// Also used for the values announced after an increase/decrease action;
+  /// those actions are only offered when a formatter is given.
+  final String Function(double value)? semanticValueFormatter;
 
   /// Called with the value at the moment a drag begins.
   final ValueChanged<double>? onChangeStart;
@@ -109,13 +115,27 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
     final primary = theme.colorScheme.primary;
     final value = (_isDragging ? _dragValue : widget.value).clamp(0.0, 1.0);
 
-    return Semantics(
-      slider: true,
-      value: widget.semanticValue,
+    return _buildSemantics(
+      value: value,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [_buildTrack(value, primary), _buildLabels(theme)],
       ),
+    );
+  }
+
+  Widget _buildSemantics({required double value, required Widget child}) {
+    final format = widget.semanticValueFormatter;
+    if (format == null) return Semantics(slider: true, child: child);
+    const step = PlayerSeekBar.semanticStep;
+    return Semantics(
+      slider: true,
+      value: format(value),
+      increasedValue: format((value + step).clamp(0.0, 1.0)),
+      decreasedValue: format((value - step).clamp(0.0, 1.0)),
+      onIncrease: () => _adjustBy(step),
+      onDecrease: () => _adjustBy(-step),
+      child: child,
     );
   }
 
@@ -161,12 +181,15 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
       // Fixed-width digits keep the labels from jittering every second.
       fontFeatures: const [FontFeature.tabularFigures()],
     );
-    return ExcludeSemantics(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(widget.leadingLabel, style: style),
-          GestureDetector(
+    // The slider node already announces the position; only the trailing
+    // label stays reachable, as a button, so its toggle remains accessible.
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        ExcludeSemantics(child: Text(widget.leadingLabel, style: style)),
+        Semantics(
+          button: widget.onTrailingLabelTap != null,
+          child: GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: widget.onTrailingLabelTap,
             child: Padding(
@@ -174,9 +197,20 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
               child: Text(widget.trailingLabel, style: style),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
+  }
+
+  // Screen-reader adjustments are a one-shot start/change/end sequence so
+  // the parent sees the same callbacks as for a drag.
+  void _adjustBy(double delta) {
+    if (_isDragging) return;
+    final start = widget.value.clamp(0.0, 1.0);
+    final next = (start + delta).clamp(0.0, 1.0);
+    widget.onChangeStart?.call(start);
+    widget.onChanged?.call(next);
+    widget.onChangeEnd?.call(next);
   }
 
   // The drag only "starts" on the first real movement. A drag recognizer

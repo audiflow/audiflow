@@ -17,7 +17,6 @@ class _SeekRecorder {
 Widget _host({
   required double value,
   required _SeekRecorder recorder,
-  String semanticValue = '01:00 of 10:00',
   List<SeekBarSegment> segments = SeekBarSegment.single,
 }) {
   return MaterialApp(
@@ -30,7 +29,7 @@ Widget _host({
             segments: segments,
             leadingLabel: '01:00',
             trailingLabel: '-09:00',
-            semanticValue: semanticValue,
+            semanticValueFormatter: (value) => 'at ${(value * 100).round()}%',
             onChangeStart: recorder.starts.add,
             onChanged: recorder.changes.add,
             onChangeEnd: recorder.ends.add,
@@ -169,17 +168,46 @@ void main() {
 
       final node = tester.getSemantics(find.byType(PlayerSeekBar));
       check(node.flagsCollection.isSlider).isTrue();
-      check(node.value).equals('01:00 of 10:00');
+      check(node.value).equals('at 10%');
       handle.dispose();
     });
   });
 
-  group('SeekBarSegment', () {
-    test('single covers the whole track', () {
-      check(SeekBarSegment.single.single.start).equals(0.0);
-      check(SeekBarSegment.single.single.end).equals(1.0);
+  group('PlayerSeekBar accessibility', () {
+    testWidgets('increase action seeks forward by one semantic step', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      final recorder = _SeekRecorder();
+      await tester.pumpWidget(_host(value: 0.5, recorder: recorder));
+
+      final slider = tester.widget<Semantics>(
+        find.byWidgetPredicate(
+          (widget) => widget is Semantics && widget.properties.slider == true,
+        ),
+      );
+      check(slider.properties.increasedValue).equals('at 55%');
+      slider.properties.onIncrease!();
+      await tester.pump();
+
+      check(recorder.starts.single).equals(0.5);
+      check(
+        recorder.ends.single,
+      ).isCloseTo(0.5 + PlayerSeekBar.semanticStep, 1e-9);
+      handle.dispose();
     });
 
+    testWidgets('trailing label is reachable as a button', (tester) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(_host(value: 0.1, recorder: _SeekRecorder()));
+
+      final node = tester.getSemantics(find.text('-09:00'));
+      check(node.flagsCollection.isButton).isTrue();
+      handle.dispose();
+    });
+  });
+
+  group('PlayerSeekBarPainter', () {
     test('painter repaints when segments change', () {
       const base = PlayerSeekBarPainter(
         value: 0.5,

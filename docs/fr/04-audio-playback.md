@@ -132,7 +132,9 @@ state and resume position stay coherent no matter where the listener touches it.
 - When the duration is unknown, releasing a drag performs no seek. When no audio is loaded
   (e.g. after the app restores a session), the drag updates the saved resume position instead,
   so the next play starts there.
-- Screen readers see a single slider whose value reads "elapsed of total".
+- Screen readers see a single slider whose value reads "elapsed of total"; increase/decrease
+  actions seek by 5% of the episode, and the right-hand label is exposed as a button so the
+  remaining/total toggle stays reachable.
 - The track is drawn from a list of segments so chapter boundaries can be shown later without
   changing the widget API. The mini player's thin progress bar is unchanged.
 
