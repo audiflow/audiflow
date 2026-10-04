@@ -64,6 +64,8 @@ android {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
+    // SystemOutputSwitcherDialogController opens the system output picker.
+    implementation("androidx.mediarouter:mediarouter:1.8.1")
 }
 
 kotlin {
