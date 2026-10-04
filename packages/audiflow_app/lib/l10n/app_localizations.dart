@@ -1172,6 +1172,12 @@ abstract class AppLocalizations {
   /// **'Audio settings, playback speed {speed}'**
   String playerAudioButtonLabel(String speed);
 
+  /// Tooltip and accessibility label for the full player's button that opens the system audio output picker
+  ///
+  /// In en, this message translates to:
+  /// **'Audio output'**
+  String get playerAudioOutputLabel;
+
   /// Title of the player's audio settings sheet
   ///
   /// In en, this message translates to:

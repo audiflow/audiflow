@@ -575,6 +575,9 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get playerAudioOutputLabel => '出力先';
+
+  @override
   String get audioSheetTitle => 'オーディオ';
 
   @override

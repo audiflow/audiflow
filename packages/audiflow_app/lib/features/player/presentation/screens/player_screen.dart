@@ -13,6 +13,8 @@ import 'package:material_symbols_icons/symbols.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
 import '../../helpers/podcast_lookup.dart';
+import '../../services/audio_route_channel.dart';
+import '../widgets/audio_output_picker_button.dart';
 import '../widgets/player_action_row.dart';
 import '../widgets/transcript_tab.dart';
 
@@ -123,6 +125,8 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
                 )
               : null);
     final appSettingsRepo = ref.watch(appSettingsRepositoryProvider);
+    final showOutputPicker =
+        ref.watch(audioOutputPickerAvailableProvider).value ?? false;
 
     final isPlaying = playbackState is PlaybackPlaying;
     final isLoading = playbackState is PlaybackLoading;
@@ -205,7 +209,11 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
                       isPlaying,
                     ),
                   ),
-                  const PlayerActionRow(),
+                  PlayerActionRow(
+                    outputPicker: showOutputPicker
+                        ? const AudioOutputPickerButton()
+                        : null,
+                  ),
                   const SizedBox(height: 16),
                 ],
               ),
