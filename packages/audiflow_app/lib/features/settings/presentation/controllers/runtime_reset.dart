@@ -1,3 +1,5 @@
+import 'package:audiflow_domain/audiflow_domain.dart'
+    show playbackSpeedSettingsControllerProvider;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -25,6 +27,7 @@ void applyRuntimeReset(BuildContext context, WidgetRef ref) {
     ..invalidate(analyticsOptInControllerProvider)
     ..invalidate(lastTabControllerProvider)
     ..invalidate(privacyConsentControllerProvider)
-    ..invalidate(onboardingCompletionControllerProvider);
+    ..invalidate(onboardingCompletionControllerProvider)
+    ..invalidate(playbackSpeedSettingsControllerProvider);
   GoRouter.maybeOf(context)?.go(AppRoutes.consent);
 }

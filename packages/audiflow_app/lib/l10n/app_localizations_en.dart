@@ -587,9 +587,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playerPlayLabel => 'Play';
 
   @override
-  String playerSpeedLabel(String speed) {
-    return 'Playback speed ${speed}x';
+  String playerAudioButtonLabel(String speed) {
+    return 'Audio settings, playback speed $speed';
   }
+
+  @override
+  String get audioSheetTitle => 'Audio';
+
+  @override
+  String get audioSheetSpeedSection => 'Playback speed';
+
+  @override
+  String get playbackSpeedNormal => 'Normal';
 
   @override
   String playerNowPlayingLabel(String title, String podcast) {

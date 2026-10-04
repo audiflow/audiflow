@@ -40,7 +40,6 @@ Future<ProviderContainer> _container() async {
         StubAppSettingsRepository(),
       ),
       playbackProgressProvider.overrideWith((ref) => null),
-      playbackSpeedProvider.overrideWith((ref) => Stream.value(1.0)),
     ],
   );
   addTearDown(container.dispose);

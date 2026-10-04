@@ -13,8 +13,7 @@ import 'package:material_symbols_icons/symbols.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
 import '../../helpers/podcast_lookup.dart';
-import '../widgets/sleep_timer_icon_button.dart';
-import '../widgets/sleep_timer_status_label.dart';
+import '../widgets/player_action_row.dart';
 import '../widgets/transcript_tab.dart';
 
 /// Full player screen presented as a Cupertino sheet.
@@ -206,23 +205,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
                       isPlaying,
                     ),
                   ),
-                  Row(
-                    children: const [
-                      Expanded(
-                        child: Padding(
-                          padding: EdgeInsets.only(right: 12),
-                          child: Align(
-                            alignment: Alignment.centerRight,
-                            child: SleepTimerStatusLabel(),
-                          ),
-                        ),
-                      ),
-                      SleepTimerIconButton(),
-                      SizedBox(width: 16),
-                      _PlaybackSpeedButton(),
-                      Expanded(child: SizedBox.shrink()),
-                    ],
-                  ),
+                  const PlayerActionRow(),
                   const SizedBox(height: 16),
                 ],
               ),
@@ -809,39 +792,5 @@ class _PlayerPlayPauseButton extends ConsumerWidget {
         },
       ),
     );
-  }
-}
-
-class _PlaybackSpeedButton extends ConsumerWidget {
-  const _PlaybackSpeedButton();
-
-  static const _speeds = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
-    final asyncSpeed = ref.watch(playbackSpeedProvider);
-    final speed = asyncSpeed.value ?? 1.0;
-
-    return Semantics(
-      button: true,
-      label: l10n.playerSpeedLabel('$speed'),
-      child: TextButton(
-        onPressed: () {
-          final nextSpeed = _nextSpeed(speed);
-          // Controller emits `playback_speed_change` itself, so the UI
-          // tap must not double-emit here.
-          ref.read(audioPlayerControllerProvider.notifier).setSpeed(nextSpeed);
-        },
-        child: Text('${speed}x', style: Theme.of(context).textTheme.labelLarge),
-      ),
-    );
-  }
-
-  double _nextSpeed(double current) {
-    for (final s in _speeds) {
-      if (current < s) return s;
-    }
-    return _speeds.first;
   }
 }

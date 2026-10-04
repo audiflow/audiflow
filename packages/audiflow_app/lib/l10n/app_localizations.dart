@@ -1166,11 +1166,29 @@ abstract class AppLocalizations {
   /// **'Play'**
   String get playerPlayLabel;
 
-  /// Playback speed accessibility label
+  /// Accessibility label for the full player's Audio button; speed is pre-formatted like 1.3x
   ///
   /// In en, this message translates to:
-  /// **'Playback speed {speed}x'**
-  String playerSpeedLabel(String speed);
+  /// **'Audio settings, playback speed {speed}'**
+  String playerAudioButtonLabel(String speed);
+
+  /// Title of the player's audio settings sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Audio'**
+  String get audioSheetTitle;
+
+  /// Section heading for playback speed in the audio sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Playback speed'**
+  String get audioSheetSpeedSection;
+
+  /// Chip label for normal (1.0x) playback speed
+  ///
+  /// In en, this message translates to:
+  /// **'Normal'**
+  String get playbackSpeedNormal;
 
   /// Mini player accessibility label
   ///

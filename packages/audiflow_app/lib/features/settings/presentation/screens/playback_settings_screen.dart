@@ -1,6 +1,7 @@
 import 'package:audiflow_core/audiflow_core.dart'
-    show AutoPlayOrder, DuckInterruptionBehavior;
+    show AutoPlayOrder, DuckInterruptionBehavior, PlaybackSpeedScale;
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:audiflow_ui/audiflow_ui.dart' show PlaybackSpeedSlider;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -15,7 +16,6 @@ class PlaybackSettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final repo = ref.watch(appSettingsRepositoryProvider);
-    final speed = repo.getPlaybackSpeed();
     final skipForward = repo.getSkipForwardSeconds();
     final skipBackward = repo.getSkipBackwardSeconds();
     final threshold = repo.getAutoCompleteThreshold();
@@ -27,10 +27,7 @@ class PlaybackSettingsScreen extends ConsumerWidget {
       appBar: AppBar(title: Text(l10n.settingsPlaybackTitle)),
       body: ListView(
         children: [
-          _PlaybackSpeedTile(
-            speed: speed,
-            onChanged: (v) => _updateSpeed(ref, repo, v),
-          ),
+          const _PlaybackSpeedTile(),
           _SkipForwardTile(
             seconds: skipForward,
             onChanged: (v) => _update(ref, () => repo.setSkipForwardSeconds(v)),
@@ -65,46 +62,46 @@ class PlaybackSettingsScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _updateSpeed(
-    WidgetRef ref,
-    AppSettingsRepository repo,
-    double speed,
-  ) async {
-    // Use controller's setSpeed to apply to player and persist in one
-    // call. The controller emits `playback_speed_change` itself, so the
-    // UI must not double-emit here.
-    await ref.read(audioPlayerControllerProvider.notifier).setSpeed(speed);
-    ref.invalidate(appSettingsRepositoryProvider);
-  }
-
   Future<void> _update(WidgetRef ref, Future<void> Function() setter) async {
     await setter();
     ref.invalidate(appSettingsRepositoryProvider);
   }
 }
 
-class _PlaybackSpeedTile extends StatelessWidget {
-  const _PlaybackSpeedTile({required this.speed, required this.onChanged});
-
-  final double speed;
-  final ValueChanged<double> onChanged;
-
-  static const _speeds = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
+/// Speed control shared with the player's Audio sheet: same step grid,
+/// same state source, so both always show the same speed.
+class _PlaybackSpeedTile extends ConsumerWidget {
+  const _PlaybackSpeedTile();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final effectiveSpeed = _speeds.contains(speed) ? speed : 1.0;
-    return ListTile(
-      title: Text(l10n.playbackDefaultSpeed),
-      trailing: DropdownButton<double>(
-        value: effectiveSpeed,
-        onChanged: (v) {
-          if (v != null) onChanged(v);
-        },
-        items: [
-          for (final s in _speeds)
-            DropdownMenuItem(value: s, child: Text('${s}x')),
+    final speed = ref.watch(
+      playbackSpeedSettingsControllerProvider.select((s) => s.speed),
+    );
+    // The controller applies, persists, and emits `playback_speed_change`
+    // itself, so the UI must not double-emit here.
+    final controller = ref.read(audioPlayerControllerProvider.notifier);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                l10n.playbackDefaultSpeed,
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              Text(PlaybackSpeedScale.label(speed)),
+            ],
+          ),
+          PlaybackSpeedSlider(
+            speed: speed,
+            onChanged: (v) => controller.setSpeed(v, transient: true),
+            onChangeEnd: controller.setSpeed,
+          ),
         ],
       ),
     );

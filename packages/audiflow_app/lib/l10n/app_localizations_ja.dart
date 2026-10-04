@@ -570,9 +570,18 @@ class AppLocalizationsJa extends AppLocalizations {
   String get playerPlayLabel => '再生';
 
   @override
-  String playerSpeedLabel(String speed) {
-    return '再生速度 $speed倍';
+  String playerAudioButtonLabel(String speed) {
+    return 'オーディオ設定、再生速度 $speed';
   }
+
+  @override
+  String get audioSheetTitle => 'オーディオ';
+
+  @override
+  String get audioSheetSpeedSection => '再生速度';
+
+  @override
+  String get playbackSpeedNormal => '標準';
 
   @override
   String playerNowPlayingLabel(String title, String podcast) {
