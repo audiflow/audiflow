@@ -15,7 +15,6 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
 import '../../helpers/chapter_seek_bar_segments.dart';
 import '../../helpers/playback_time_format.dart';
-import '../../helpers/player_seek.dart';
 import '../../helpers/podcast_lookup.dart';
 import '../widgets/current_chapter_row.dart';
 import '../widgets/player_action_row.dart';
@@ -185,7 +184,9 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
                             )
                           : null,
                       onChapterSelected: (position) => _handleSkip(
-                        () => seekNowPlaying(ref, position),
+                        () => ref
+                            .read(audioPlayerControllerProvider.notifier)
+                            .seekNowPlaying(position),
                         isPlaying,
                       ),
                     ),
@@ -714,10 +715,11 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
     try {
       // Duration unknown -- cannot compute a meaningful position.
       if (duration != Duration.zero) {
-        await seekNowPlaying(
-          ref,
-          Duration(milliseconds: (duration.inMilliseconds * value).round()),
-        );
+        await ref
+            .read(audioPlayerControllerProvider.notifier)
+            .seekNowPlaying(
+              Duration(milliseconds: (duration.inMilliseconds * value).round()),
+            );
       }
     } finally {
       try {

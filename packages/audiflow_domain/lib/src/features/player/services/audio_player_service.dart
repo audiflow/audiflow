@@ -888,6 +888,43 @@ class AudioPlayerController extends _$AudioPlayerController
     return _currentUrl == url;
   }
 
+  /// Seeks the now-playing episode to [position].
+  ///
+  /// With audio loaded this seeks the player. After a restore, before any
+  /// audio is loaded, it moves the saved position instead so the display
+  /// reflects the seek and the next play() starts there.
+  Future<void> seekNowPlaying(Duration position) async {
+    if (currentUrl != null) return seek(position);
+    await _saveSeekWithoutAudio(position);
+  }
+
+  Future<void> _saveSeekWithoutAudio(Duration position) async {
+    final nowPlaying = ref.read(nowPlayingControllerProvider);
+    if (nowPlaying == null) return;
+    // Mirror seek()'s clamp so a chapter start past the end (bad feed data)
+    // cannot become the resume position.
+    final clamped = _clampToKnownDuration(position, nowPlaying.totalDuration);
+    ref
+        .read(nowPlayingControllerProvider.notifier)
+        .setNowPlaying(nowPlaying.copyWith(savedPosition: clamped));
+    final episode = nowPlaying.episode;
+    if (episode == null) return;
+    // Persist so play() seeks to this position.
+    await ref
+        .read(playbackHistoryRepositoryProvider)
+        .saveProgress(
+          episodeId: episode.id,
+          positionMs: clamped.inMilliseconds,
+        );
+  }
+
+  static Duration _clampToKnownDuration(Duration position, Duration? duration) {
+    if (position.isNegative) return Duration.zero;
+    // Zero means unknown, as elsewhere in the player.
+    if (duration == null || duration == Duration.zero) return position;
+    return duration < position ? duration : position;
+  }
+
   /// Seeks to the specified position.
   ///
   /// Clamps position between zero and duration to prevent invalid seeks.
