@@ -32,7 +32,7 @@ Widget _host({
     home: Scaffold(
       // Stands in for the player sheet's swipe-to-dismiss.
       body: GestureDetector(
-        onVerticalDragUpdate: onParentVerticalDrag,
+        onVerticalDragUpdate: onParentVerticalDrag ?? (_) {},
         child: Center(
           child: SizedBox(
             width: _barWidth,
@@ -76,9 +76,13 @@ List<Object?> _recordHaptics(WidgetTester tester) {
 
 /// Starts a drag on the track center and moves past the drag slop, so later
 /// moves are applied in full.
+///
+/// With the sheet's vertical recognizer competing, winning the arena sends
+/// no update; the second move is what actually begins the scrub.
 Future<TestGesture> _startScrub(WidgetTester tester) async {
   final gesture = await tester.startGesture(tester.getCenter(_track));
   await gesture.moveBy(const Offset(40, 0));
+  await gesture.moveBy(const Offset(10, 0));
   await tester.pump();
   return gesture;
 }
@@ -185,8 +189,7 @@ void main() {
 
       check(trackHeight()).equals(PlayerSeekBar.idleTrackHeight);
 
-      final gesture = await tester.startGesture(tester.getCenter(_track));
-      await gesture.moveBy(const Offset(40, 0));
+      final gesture = await _startScrub(tester);
       await tester.pumpAndSettle();
       check(trackHeight()).equals(PlayerSeekBar.draggingTrackHeight);
 
@@ -268,7 +271,7 @@ void main() {
       final haptics = _recordHaptics(tester);
       await tester.pumpWidget(_host(value: 0.5, recorder: _SeekRecorder()));
       final gesture = await _startScrub(tester);
-      // Moves within a band, then across two bands, then back to full.
+      // Moves within full, into half, within half, into quarter, back to full.
       for (final step in [20.0, 40.0, 20.0, 50.0, -120.0]) {
         await gesture.moveBy(Offset(0, step));
       }
@@ -280,21 +283,20 @@ void main() {
     });
 
     testWidgets('next drag starts at full speed again', (tester) async {
-      final recorder = _SeekRecorder();
-      await tester.pumpWidget(_host(value: 0.5, recorder: recorder));
+      final haptics = _recordHaptics(tester);
+      await tester.pumpWidget(_host(value: 0.5, recorder: _SeekRecorder()));
       final first = await _startScrub(tester);
       await first.moveBy(const Offset(0, 200));
       await first.up();
       await tester.pump();
 
-      recorder.ends.clear();
+      haptics.clear();
       final second = await _startScrub(tester);
-      final before = recorder.changes.last;
-      await second.moveBy(const Offset(40, 0));
-      await second.up();
       await tester.pump();
-
-      check(recorder.ends.single - before).isCloseTo(40 / _barWidth, 1e-9);
+      // Only the drag-start haptic: no band change back from fine.
+      check(haptics).length.equals(1);
+      check(_visibleScrubLabels()).isEmpty();
+      await second.up();
     });
 
     testWidgets('a vertical drag on the track goes to the enclosing sheet', (
