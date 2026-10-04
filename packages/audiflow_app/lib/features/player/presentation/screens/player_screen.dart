@@ -572,6 +572,8 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
   late bool _showRemainingTime = ref
       .read(appSettingsRepositoryProvider)
       .getShowRemainingTime();
+  // Bumped per toggle so only the latest write may revert the label.
+  int _labelWriteSequence = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -618,6 +620,7 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
 
   Future<void> _toggleTrailingLabel() async {
     final next = !_showRemainingTime;
+    final sequence = ++_labelWriteSequence;
     final settings = ref.read(appSettingsRepositoryProvider);
     final logger = ref.read(namedLoggerProvider('Player'));
     setState(() => _showRemainingTime = next);
@@ -625,9 +628,10 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
       await settings.setShowRemainingTime(next);
     } on Object catch (e, stack) {
       // Revert so the label never shows a choice that was not saved and
-      // would silently flip back on the next launch.
+      // would silently flip back on the next launch. A newer toggle owns the
+      // label, so a stale failure must not override it.
       logger.w('Failed to save showRemainingTime', error: e, stackTrace: stack);
-      if (!mounted) return;
+      if (!mounted || sequence != _labelWriteSequence) return;
       setState(() => _showRemainingTime = !next);
     }
   }

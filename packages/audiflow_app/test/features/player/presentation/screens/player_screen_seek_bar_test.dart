@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audiflow_app/features/player/presentation/screens/player_screen.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
@@ -49,6 +51,20 @@ class _FailingSettings extends StubAppSettingsRepository {
   @override
   Future<void> setShowRemainingTime(bool enabled) async =>
       throw StateError('write failed');
+}
+
+/// Settings whose first remaining-time write fails only after a later
+/// write has already succeeded, like overlapping slow disk writes.
+class _OutOfOrderSettings extends StubAppSettingsRepository {
+  final firstWrite = Completer<void>();
+  int _writes = 0;
+
+  @override
+  Future<void> setShowRemainingTime(bool enabled) async {
+    _writes++;
+    if (_writes == 1) return firstWrite.future;
+    showRemainingTime = enabled;
+  }
 }
 
 const _unknownDuration = PlaybackProgress(
@@ -129,6 +145,31 @@ void main() {
 
       check(find.text('-09:00').evaluate()).isNotEmpty();
       check(find.text('10:00').evaluate()).isEmpty();
+    });
+
+    testWidgets('a stale failed write does not override a newer toggle', (
+      tester,
+    ) async {
+      final settings = _OutOfOrderSettings();
+      await tester.pumpWidget(await _buildPlayer(settings: settings));
+      await tester.pump();
+
+      await tester.tap(find.text('-09:00'));
+      await tester.pump();
+      await tester.tap(find.text('10:00'));
+      await tester.pump();
+      await tester.tap(find.text('-09:00'));
+      await tester.pump();
+      // The first write (total) fails last; reverting it would show
+      // remaining time while total duration is what is saved.
+      settings.firstWrite.completeError(StateError('write failed'));
+      // One pump runs the catch block, the next renders any revert.
+      await tester.pump();
+      await tester.pump();
+
+      check(find.text('10:00').evaluate()).isNotEmpty();
+      check(find.text('-09:00').evaluate()).isEmpty();
+      check(settings.showRemainingTime).isFalse();
     });
 
     testWidgets('offers no screen-reader steps when duration unknown', (
