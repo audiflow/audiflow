@@ -111,12 +111,17 @@ class _TranscriptTimelineViewState
       onNotification: _handleScrollNotification,
       child: Stack(
         children: [
-          _TimelineList(
-            entries: entries,
-            itemScrollController: _itemScrollController,
-            activeIndex: _activeIndex,
-            alignment: _activeAlignment,
-            onSegmentTap: _handleSegmentTap,
+          Listener(
+            onPointerDown: (_) => _followController.handlePointerDown(),
+            onPointerUp: (_) => _followController.handlePointerUp(),
+            onPointerCancel: (_) => _followController.handlePointerUp(),
+            child: _TimelineList(
+              entries: entries,
+              itemScrollController: _itemScrollController,
+              activeIndex: _activeIndex,
+              alignment: _activeAlignment,
+              onSegmentTap: _handleSegmentTap,
+            ),
           ),
           Positioned(
             right: 16,

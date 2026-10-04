@@ -132,6 +132,76 @@ void main() {
       expect(notified, 0);
     });
 
+    test('a resting pointer holds the countdown until lifted', () {
+      fakeAsync((async) {
+        controller = create();
+
+        controller
+          ..handleUserScrollStart()
+          ..handleScrollEnd()
+          ..handlePointerDown();
+        async.elapse(resumeDelay * 2);
+        expect(controller.isFollowing, isFalse);
+
+        controller.handlePointerUp();
+        async.elapse(resumeDelay - const Duration(milliseconds: 1));
+        expect(controller.isFollowing, isFalse);
+        async.elapse(const Duration(milliseconds: 1));
+        expect(controller.isFollowing, isTrue);
+        expect(resumeCount, 1);
+        controller.dispose();
+      });
+    });
+
+    test('scroll end while a pointer is down does not arm the countdown', () {
+      fakeAsync((async) {
+        controller = create();
+
+        controller
+          ..handlePointerDown()
+          ..handleUserScrollStart()
+          ..handleScrollEnd();
+        async.elapse(resumeDelay * 2);
+
+        expect(controller.isFollowing, isFalse);
+        controller.dispose();
+      });
+    });
+
+    test('countdown waits for every pointer to lift', () {
+      fakeAsync((async) {
+        controller = create();
+
+        controller
+          ..handlePointerDown()
+          ..handlePointerDown()
+          ..handleUserScrollStart()
+          ..handlePointerUp();
+        async.elapse(resumeDelay * 2);
+        expect(controller.isFollowing, isFalse);
+
+        controller.handlePointerUp();
+        async.elapse(resumeDelay);
+        expect(controller.isFollowing, isTrue);
+        controller.dispose();
+      });
+    });
+
+    test('pointer events while following do not change state', () {
+      fakeAsync((async) {
+        controller = create();
+
+        controller
+          ..handlePointerDown()
+          ..handlePointerUp();
+        async.elapse(resumeDelay * 2);
+
+        expect(controller.isFollowing, isTrue);
+        expect(resumeCount, 0);
+        controller.dispose();
+      });
+    });
+
     test('dispose cancels the pending resume', () {
       fakeAsync((async) {
         controller = create();
