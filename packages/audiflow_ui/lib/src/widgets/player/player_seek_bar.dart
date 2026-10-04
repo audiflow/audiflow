@@ -283,13 +283,12 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
     if (label == null || _scrubSpeed == ScrubSpeed.full) {
       return const SizedBox.shrink();
     }
+    // Scaled down rather than ellipsized: on a narrow sheet the band name at
+    // the end of the label is the part the user needs while fine scrubbing.
     return ExcludeSemantics(
-      child: Text(
-        label,
-        style: style,
-        textAlign: TextAlign.center,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Text(label, style: style, maxLines: 1),
       ),
     );
   }

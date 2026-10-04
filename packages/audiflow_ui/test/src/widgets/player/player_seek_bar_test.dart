@@ -2,7 +2,7 @@ import 'package:audiflow_ui/src/widgets/player/player_seek_bar.dart';
 import 'package:audiflow_ui/src/widgets/player/scrub_speed.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -31,6 +31,8 @@ Widget _host({
   bool adjustable = true,
   GestureDragUpdateCallback? onParentVerticalDrag,
   bool withSheetArena = true,
+  double width = _barWidth,
+  Map<ScrubSpeed, String> scrubSpeedLabels = _scrubLabels,
 }) {
   return MaterialApp(
     home: Scaffold(
@@ -41,14 +43,14 @@ Widget _host({
             : null,
         child: Center(
           child: SizedBox(
-            width: _barWidth,
+            width: width,
             child: PlayerSeekBar(
               value: value,
               segments: segments,
               tooltipBuilder: tooltipBuilder,
               leadingLabel: '01:00',
               trailingLabel: '-09:00',
-              scrubSpeedLabels: _scrubLabels,
+              scrubSpeedLabels: scrubSpeedLabels,
               semanticValueFormatter: (value) => 'at ${(value * 100).round()}%',
               adjustable: adjustable,
               onChangeStart: recorder.starts.add,
@@ -271,6 +273,28 @@ void main() {
       await gesture.up();
       await tester.pump();
       check(_visibleScrubLabels()).isEmpty();
+    });
+
+    testWidgets('scales a long label down instead of cutting it', (
+      tester,
+    ) async {
+      const long = 'Scrubbing at half speed for a fine adjustment';
+      await tester.pumpWidget(
+        _host(
+          value: 0.5,
+          recorder: _SeekRecorder(),
+          width: 200,
+          scrubSpeedLabels: const {ScrubSpeed.half: long},
+        ),
+      );
+      final gesture = await _startScrub(tester);
+      await gesture.moveBy(const Offset(0, 60));
+      await tester.pump();
+
+      final paragraph = tester.renderObject<RenderParagraph>(find.text(long));
+      check(paragraph.didExceedMaxLines).isFalse();
+      check(tester.takeException()).isNull();
+      await gesture.up();
     });
 
     testWidgets('fires a light haptic on each band change only', (
