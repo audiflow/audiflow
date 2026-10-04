@@ -75,6 +75,20 @@ state and resume position stay coherent no matter where the listener touches it.
   other than 1.0x, shown in ascending speed order; tapping one applies it, and the chip that
   matches the current speed is highlighted. Only the speed the listener settles on (a chip tap
   or slider release) counts as recently used, not every step crossed while dragging.
+- **Per-podcast audio settings**: A "Custom for this podcast" switch sits at the top of the
+  Audio sheet. Off, the controls edit the global settings and the caption reads "Applies to
+  all podcasts"; on, they edit an override for the now-playing podcast and the caption reads
+  "This podcast only". The controls are never greyed out either way. Turning the switch on
+  copies the current global values into the new override, so nothing audibly changes;
+  turning it off deletes the override and the player returns to the global values at once.
+  Editing with the switch off never creates an override. Whenever the now-playing episode's
+  podcast changes, the player re-resolves override -> global and applies the result, so
+  playing podcast A (override 1.5x) and then podcast B (no override, global 1.0x) switches
+  between the two speeds automatically. The Audio button's label shows the speed in effect.
+  The same sheet opens from the podcast detail menu ("Audio settings"), so an override can
+  be set while nothing is playing. The recent-speed chips are one shared history: a speed
+  committed under an override is recorded there too, so it is one tap away for any podcast.
+  Only speed is overridable today.
 - **Failure case**: If an episode cannot be loaded or played, playback enters an error state
   rather than appearing stuck; the listener can retry by tapping play again.
 
@@ -97,6 +111,12 @@ state and resume position stay coherent no matter where the listener touches it.
   a newest-first list of the two most recent non-normal speeds for the Audio sheet's chips and
   emits `playback_speed_change` once per committed change; intermediate slider steps apply
   the speed without recording it or emitting analytics.
+- Keeps per-podcast audio settings overrides (`PodcastAudioPreference`, resolved through
+  `PodcastAudioPreferenceRepository.resolveForPodcast`). Every speed write names its
+  `AudioSettingsScope` (global or one podcast), and the player is only changed when that
+  scope is the one the now-playing podcast resolves to. `effectiveAudioSettingsApplier`
+  re-applies the resolved speed when the now-playing podcast or its override changes, and
+  `play()` resolves the episode's podcast before playback starts.
 - Resumes an episode from its last saved position, replaying from the start when the saved
   position is at the very end, and honors an explicit start position from timestamped share
   links over the saved position.
