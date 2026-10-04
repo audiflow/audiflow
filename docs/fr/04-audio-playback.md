@@ -62,7 +62,7 @@ state and resume position stay coherent no matter where the listener touches it.
   underneath instead of a blank player. Stopping playback outright from the system controls
   clears the same state and dismisses the full player the same way.
 - **Playback speed**: The full player's bottom action row has three slots: Audio, an output
-  picker (hidden until that feature ships), and the sleep timer. The Audio button shows the
+  picker (see Audio output below), and the sleep timer. The Audio button shows the
   current speed (e.g. `1.3x`) and opens the Audio sheet, which holds quick chips and a
   stepped slider. The slider has 21 positions — 0.5x to 2.0x in 0.1 steps, then 2.2x, 2.4x,
   2.6x, 2.8x, and 3.0x — with 0.5x, 1.0x, 2.0x, and 3.0x labelled under their ticks. It snaps
@@ -75,6 +75,13 @@ state and resume position stay coherent no matter where the listener touches it.
   other than 1.0x, shown in ascending speed order; tapping one applies it, and the chip that
   matches the current speed is highlighted. Only the speed the listener settles on (a chip tap
   or slider release) counts as recently used, not every step crossed while dragging.
+- **Audio output**: The center slot of the action row opens the operating system's own audio
+  output picker; the app does not draw a device list. On iOS it is the system route picker
+  (speaker, Bluetooth, AirPlay), and choosing a route moves playback there. On Android 11 and
+  later it is the system output switcher (speaker, wired, Bluetooth); if the device cannot
+  show it, the button opens Bluetooth settings instead. Android 8-10 have no output switcher,
+  so the button is hidden there and the row shows only Audio and the sleep timer. Cast
+  devices are not offered. The button does not show the current output's name.
 - **Failure case**: If an episode cannot be loaded or played, playback enters an error state
   rather than appearing stuck; the listener can retry by tapping play again.
 
@@ -111,6 +118,10 @@ state and resume position stay coherent no matter where the listener touches it.
   duckable interruptions follow the user's `duck` vs `pause-and-rewind` preference; phone calls
   and noisy-output events (headphone unplug, Bluetooth disconnect) pause; and resume-on-end
   fires only for playback the handler itself paused.
+- Opens the system audio output picker through the `audiflow/audio_route` channel on Android
+  (androidx.mediarouter `SystemOutputSwitcherDialogController`) and a transparent embedded
+  `AVRoutePickerView` on iOS; the platform moves playback to the chosen output, so the player
+  needs no routing code of its own.
 - Fades volume out before pausing when requested, used by the sleep timer's end-of-countdown
   action.
 - Drives the mini player and full player screen, including a slide-in/out animation for the
