@@ -28,8 +28,10 @@ class PlayerScreen extends ConsumerStatefulWidget {
   ConsumerState<PlayerScreen> createState() => _PlayerScreenState();
 }
 
+// TickerProviderStateMixin, not the single variant: the tab controller is
+// recreated when transcript availability resolves after the first frame.
 class _PlayerScreenState extends ConsumerState<PlayerScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   bool _isSeeking = false;
   bool _wasPlayingBeforeSeek = false;
   TabController? _tabController;
