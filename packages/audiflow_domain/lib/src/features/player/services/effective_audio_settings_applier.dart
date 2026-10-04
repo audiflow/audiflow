@@ -75,11 +75,16 @@ EffectiveAudioSettings? nowPlayingAudioSettings(Ref ref) {
 @Riverpod(keepAlive: true)
 void effectiveAudioSettingsApplier(Ref ref) {
   final log = ref.read(namedLoggerProvider('AudioSettings'));
-  ref.listen(nowPlayingAudioSettingsProvider, (_, next) {
-    if (next == null) return;
+  // Only the speed matters to the player: a scope change with the same
+  // speed (switching an override on) must not reach it at all.
+  ref.listen(nowPlayingAudioSettingsProvider.select((s) => s?.settings.speed), (
+    _,
+    speed,
+  ) {
+    if (speed == null) return;
     final player = ref.read(audioPlayerControllerProvider.notifier);
     unawaited(
-      player.applySpeed(next.settings.speed).catchError((Object error) {
+      player.applySpeed(speed).catchError((Object error) {
         log.w('Failed to apply effective speed', error: error);
       }),
     );

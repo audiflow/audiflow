@@ -114,9 +114,13 @@ through `setSpeed`: the now-playing podcast changing, or an override being
 switched off (the player returns to the global speed). `play()` resolves the
 episode's podcast through the same in-memory override state (awaiting its
 load) before playback starts, so it never disagrees with what the UI shows.
+All three paths go through `applySpeed`, which is idempotent (a speed equal
+to the applied or pending one is a no-op) and serialized (one engine call at
+a time; requests made meanwhile collapse into the latest). The applier only
+reads providers and writes the engine, so applying a speed cannot feed back
+into the resolution it listens to.
 The Audio sheet pins its podcast when it opens, so a queue advance mid-drag
-cannot send the rest of the drag to another podcast's settings. `applySpeed` is a no-op for the current speed, so the
-direct and reactive paths never split the listen session twice.
+cannot send the rest of the drag to another podcast's settings.
 
 ## Downloaded episode handling
 

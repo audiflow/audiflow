@@ -127,6 +127,10 @@ class AudioPlayerController extends _$AudioPlayerController
   // playback really starts, and seek() closes/reopens explicitly.
   bool _isPreparingPlay = false;
   bool _isSeeking = false;
+
+  // Latest speed requested through [applySpeed] while [_speedDrain] runs.
+  double? _targetSpeed;
+  Future<void>? _speedDrain;
   final StreamController<PlayerLifecycleEvent> _lifecycleEvents =
       StreamController<PlayerLifecycleEvent>.broadcast();
 
@@ -547,7 +551,7 @@ class AudioPlayerController extends _$AudioPlayerController
       final speed = await _resolveSpeed(
         metadata?.episode?.podcastId ?? episode?.podcastId,
       );
-      await _player.setSpeed(speed);
+      await applySpeed(speed);
 
       // Notify history service of playback start
       if (_currentEpisodeId != null) {
@@ -1027,18 +1031,45 @@ class AudioPlayerController extends _$AudioPlayerController
 
   /// Applies [speed] to the player without persisting it anywhere.
   ///
-  /// Settings changes reach the player through [setSpeed] and
-  /// `effectiveAudioSettingsApplierProvider`; this is their shared
-  /// engine step. A speed equal to the current one is a no-op, so both
-  /// paths can apply the same change without splitting the listen
-  /// session twice.
-  Future<void> applySpeed(double speed) async {
+  /// Settings changes reach the player through [setSpeed],
+  /// `effectiveAudioSettingsApplierProvider`, and [play]; this is their
+  /// single engine step. It is idempotent and serialized: a speed equal
+  /// to the one already applied or pending is a no-op, at most one engine
+  /// call runs at a time, and requests made while one runs collapse into
+  /// the latest. Both setSpeed and the applier request the same change, so
+  /// without this every slider step would reach the engine twice, with
+  /// the calls overlapping on the platform channel.
+  Future<void> applySpeed(double speed) {
     final snapped = PlaybackSpeedScale.snap(speed);
-    if (snapped == _player.speed) return;
+    final pending = _speedDrain;
+    if (snapped == (_targetSpeed ?? _player.speed)) {
+      return pending ?? Future<void>.value();
+    }
+    _targetSpeed = snapped;
+    return pending ?? (_speedDrain = _drainSpeed());
+  }
+
+  Future<void> _drainSpeed() async {
+    try {
+      // Each pass consumes the target, so the loop is bounded by the
+      // requests made while it runs, even when the engine ignores a call
+      // (a disposed player does not update `speed`).
+      for (var target = _targetSpeed; target != null; target = _targetSpeed) {
+        _targetSpeed = null;
+        if (target == _player.speed) continue;
+        await _applyToEngine(target);
+      }
+    } finally {
+      _targetSpeed = null;
+      _speedDrain = null;
+    }
+  }
+
+  Future<void> _applyToEngine(double speed) async {
     // Split the segment so each session has a single speed.
     final segmentIds = _listenSession.openIds;
     if (segmentIds != null) _closeListenSession(ListenEndReason.speedChange);
-    await _player.setSpeed(snapped);
+    await _player.setSpeed(speed);
     // Playback may have paused while the engine applied the speed; the
     // stream has then already closed the segment and must not reopen it.
     if (segmentIds != null && _player.playing) {
