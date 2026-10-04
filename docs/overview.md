@@ -45,6 +45,7 @@ Audiflow is a mobile podcast player for iOS and Android, built with Flutter. It 
 - `packages/audiflow_app/lib/main_stg.dart`: Staging flavor
 - `packages/audiflow_app/lib/main_prod.dart`: Production flavor
 - `packages/audiflow_app/lib/routing/app_router.dart`: Route definitions (GoRouter)
+- `packages/audiflow_app/lib/routing/material_route.dart`: `GoRoute` factory that builds a Flutter `MaterialPage` (go_router 18 cannot detect the `flutter/material` `MaterialApp`, so plain `builder:` routes would lose transitions and iOS swipe-to-back)
 - `packages/audiflow_domain/lib/audiflow_domain.dart`: Domain public API
 
 ## Key dependencies
