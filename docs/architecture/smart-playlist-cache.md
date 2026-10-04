@@ -61,7 +61,7 @@ A grouping is a pure function of the config and the podcast's episodes, so the c
 
 If the matched preset config cannot load at that moment, the stale cache is kept and served; the next read retries. Likewise, a first-time resolve whose preset fails to load serves a transient fallback without persisting it, so a preset-less grouping is never stored under the preset's version and fingerprint.
 
-Most group IDs are derived from content (`season_N` from season numbers, preset group ids), so per-group preferences survive a re-resolve. Title-discovery playlist IDs are numbered by first appearance, so removing the earliest series (e.g. dropped-episode cleanup) or backfilling an older one renumbers the later ones.
+Group and playlist IDs are derived from content, so per-group preferences survive a re-resolve: `season_N` from season numbers, preset group ids, and `discovery_<stableId(name)>` for title-discovery series. Title discovery keeps first-appearance order only in `sortKey`, so removing the earliest series (e.g. dropped-episode cleanup) or backfilling an older one reorders the list without renaming the others. Title-discovery IDs were positional (`season_N`) before; preferences saved under those are orphaned once, when the podcast's grouping is next re-resolved.
 
 When adding a resolver or enrichment input that reads another `Episode` field, add that field to the fingerprint.
 
