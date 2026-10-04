@@ -6,3 +6,4 @@
 • Artwork follows show updates and loads more smoothly
 • Fixed the language setting not applying
 • Fixed an error when marking an episode as played
+• Fixed episodes of a new series landing in "Ungrouped"

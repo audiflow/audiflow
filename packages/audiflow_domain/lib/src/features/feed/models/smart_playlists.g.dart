@@ -114,6 +114,11 @@ const SmartPlaylistEntitySchema = CollectionSchema(
       name: r'zHeuristicVersion',
       type: IsarType.long,
     ),
+    r'zzEpisodeFingerprint': PropertySchema(
+      id: 20,
+      name: r'zzEpisodeFingerprint',
+      type: IsarType.string,
+    ),
   },
 
   estimateSize: _smartPlaylistEntityEstimateSize,
@@ -191,6 +196,12 @@ int _smartPlaylistEntityEstimateSize(
     }
   }
   bytesCount += 3 + object.yearHeaderMode.length * 3;
+  {
+    final value = object.episodeFingerprint;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   return bytesCount;
 }
 
@@ -220,6 +231,7 @@ void _smartPlaylistEntitySerialize(
   writer.writeBool(offsets[17], object.yearGrouped);
   writer.writeString(offsets[18], object.yearHeaderMode);
   writer.writeLong(offsets[19], object.heuristicVersion);
+  writer.writeString(offsets[20], object.episodeFingerprint);
 }
 
 SmartPlaylistEntity _smartPlaylistEntityDeserialize(
@@ -250,6 +262,7 @@ SmartPlaylistEntity _smartPlaylistEntityDeserialize(
   object.yearGrouped = reader.readBool(offsets[17]);
   object.yearHeaderMode = reader.readString(offsets[18]);
   object.heuristicVersion = reader.readLongOrNull(offsets[19]);
+  object.episodeFingerprint = reader.readStringOrNull(offsets[20]);
   return object;
 }
 
@@ -300,6 +313,8 @@ P _smartPlaylistEntityDeserializeProp<P>(
       return (reader.readString(offset)) as P;
     case 19:
       return (reader.readLongOrNull(offset)) as P;
+    case 20:
+      return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -2679,6 +2694,168 @@ extension SmartPlaylistEntityQueryFilter
       );
     });
   }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  episodeFingerprintIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'zzEpisodeFingerprint'),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  episodeFingerprintIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'zzEpisodeFingerprint'),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  episodeFingerprintEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'zzEpisodeFingerprint',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  episodeFingerprintGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'zzEpisodeFingerprint',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  episodeFingerprintLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'zzEpisodeFingerprint',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  episodeFingerprintBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'zzEpisodeFingerprint',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  episodeFingerprintStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'zzEpisodeFingerprint',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  episodeFingerprintEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'zzEpisodeFingerprint',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  episodeFingerprintContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'zzEpisodeFingerprint',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  episodeFingerprintMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'zzEpisodeFingerprint',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  episodeFingerprintIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'zzEpisodeFingerprint', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterFilterCondition>
+  episodeFingerprintIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          property: r'zzEpisodeFingerprint',
+          value: '',
+        ),
+      );
+    });
+  }
 }
 
 extension SmartPlaylistEntityQueryObject
@@ -2978,6 +3155,20 @@ extension SmartPlaylistEntityQuerySortBy
       return query.addSortBy(r'zHeuristicVersion', Sort.desc);
     });
   }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterSortBy>
+  sortByEpisodeFingerprint() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzEpisodeFingerprint', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterSortBy>
+  sortByEpisodeFingerprintDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzEpisodeFingerprint', Sort.desc);
+    });
+  }
 }
 
 extension SmartPlaylistEntityQuerySortThenBy
@@ -3275,6 +3466,20 @@ extension SmartPlaylistEntityQuerySortThenBy
       return query.addSortBy(r'zHeuristicVersion', Sort.desc);
     });
   }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterSortBy>
+  thenByEpisodeFingerprint() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzEpisodeFingerprint', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QAfterSortBy>
+  thenByEpisodeFingerprintDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'zzEpisodeFingerprint', Sort.desc);
+    });
+  }
 }
 
 extension SmartPlaylistEntityQueryWhereDistinct
@@ -3436,6 +3641,16 @@ extension SmartPlaylistEntityQueryWhereDistinct
       return query.addDistinctBy(r'zHeuristicVersion');
     });
   }
+
+  QueryBuilder<SmartPlaylistEntity, SmartPlaylistEntity, QDistinct>
+  distinctByEpisodeFingerprint({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(
+        r'zzEpisodeFingerprint',
+        caseSensitive: caseSensitive,
+      );
+    });
+  }
 }
 
 extension SmartPlaylistEntityQueryProperty
@@ -3581,6 +3796,13 @@ extension SmartPlaylistEntityQueryProperty
   heuristicVersionProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'zHeuristicVersion');
+    });
+  }
+
+  QueryBuilder<SmartPlaylistEntity, String?, QQueryOperations>
+  episodeFingerprintProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'zzEpisodeFingerprint');
     });
   }
 }

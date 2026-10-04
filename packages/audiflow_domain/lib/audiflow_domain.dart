@@ -75,6 +75,7 @@ export 'src/features/feed/resolvers/year_resolver.dart';
 export 'src/features/feed/repositories/preset_config_repository.dart';
 export 'src/features/feed/repositories/preset_config_repository_impl.dart';
 export 'src/features/feed/services/config_assembler.dart';
+export 'src/features/feed/services/episode_fingerprint.dart';
 export 'src/features/feed/services/feed_parser_service.dart';
 export 'src/features/feed/services/background_notification_service.dart';
 export 'src/features/feed/services/notification_artwork_files.dart';

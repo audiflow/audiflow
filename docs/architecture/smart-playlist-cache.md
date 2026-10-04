@@ -51,6 +51,19 @@ Changes that do NOT require a bump:
 |--------|-----------|--------------|
 | Pattern-driven config | `SmartPlaylistEntity.configVersion` | Upstream `PatternSummary.dataVersion` change |
 | Auto-detect resolver | `SmartPlaylistEntity.heuristicVersion` | Any resolver's `heuristicVersion` bump |
+| Both | `SmartPlaylistEntity.episodeFingerprint` | Podcast's episodes added, removed, or edited |
+
+### Episode fingerprint
+
+A grouping is a pure function of the config and the podcast's episodes, so the cache must also be keyed on the episodes. Persisted groups list only the episode IDs known at resolve time; without this key, episodes from a later feed sync (e.g. a brand-new series) fall into ungrouped until the next config bump.
+
+`computeEpisodeFingerprint` (`services/episode_fingerprint.dart`) hashes, per episode sorted by id, every field resolution and enrichment read: id, title, description, season/episode number, publishedAt, imageUrl, durationMs. It uses FNV-1a 64 over code units rather than sha256 over an encoded buffer because it runs on every cached read across all episodes, descriptions included (about 7 ms vs 166 ms for 2,000 episodes with 4,000-character descriptions on a desktop VM). It is stored on each `SmartPlaylistEntity` when a grouping is persisted. On cache load (after the config-version check), a mismatch -- including null from caches written before the field existed -- deletes the podcast's playlist and group rows and re-resolves.
+
+If the matched preset config cannot load at that moment, the stale cache is kept and served; the next read retries. Likewise, a first-time resolve whose preset fails to load serves a transient fallback without persisting it, so a preset-less grouping is never stored under the preset's version and fingerprint.
+
+Most group IDs are derived from content (`season_N` from season numbers, preset group ids), so per-group preferences survive a re-resolve. Title-discovery playlist IDs are numbered by first appearance, so removing the earliest series (e.g. dropped-episode cleanup) or backfilling an older one renumbers the later ones.
+
+When adding a resolver or enrichment input that reads another `Episode` field, add that field to the fingerprint.
 
 ### Config version migration
 
@@ -76,4 +89,5 @@ The Storage & Data screen has a "Podcast Cache" clear button that purges all `Sm
 | `resolvers/title_discovery_resolver.dart` | Title discovery resolver (version 1) |
 | `resolvers/year_resolver.dart` | Year resolver (version 1) |
 | `providers/smart_playlist_providers.dart` | Combined version computation + cache check |
-| `models/smart_playlists.dart` | `SmartPlaylistEntity.heuristicVersion` field |
+| `models/smart_playlists.dart` | `SmartPlaylistEntity.heuristicVersion` / `episodeFingerprint` fields |
+| `services/episode_fingerprint.dart` | Episode input fingerprint for cache invalidation |

@@ -67,4 +67,15 @@ class SmartPlaylistEntity {
   /// compatibility on upgrade.
   @Name('zHeuristicVersion')
   int? heuristicVersion;
+
+  /// Fingerprint of the episode inputs the grouping was resolved from.
+  ///
+  /// When the podcast's episodes no longer produce this value (new,
+  /// removed, or edited episodes), the cached grouping is discarded and
+  /// re-resolved. Null for caches written before fingerprints existed.
+  ///
+  /// Named 'zzEpisodeFingerprint' in Isar so its property id sorts after
+  /// all pre-existing fields, preserving schema compatibility on upgrade.
+  @Name('zzEpisodeFingerprint')
+  String? episodeFingerprint;
 }
