@@ -21,20 +21,38 @@ final class DescriptionChaptersParser {
     r'<\s*/?\s*(?:br|p|li|div|ul|ol|h[1-6]|tr)\b[^>]*>',
     caseSensitive: false,
   );
-  static final _anyTag = RegExp(r'<[^>]*>');
+  // `<` is excluded inside the tag so stray `<` runs cannot backtrack.
+  static final _anyTag = RegExp(r'<[^<>]*>');
   static final _entity = RegExp(
-    r'&(?:(amp|lt|gt|quot|apos|nbsp)|#(\d+)|#x([0-9a-fA-F]+));',
-    caseSensitive: false,
+    r'&(?:([a-zA-Z]+)|#(\d+)|#x([0-9a-fA-F]+));',
   );
+  static const _namedEntities = {
+    'amp': '&',
+    'lt': '<',
+    'gt': '>',
+    'quot': '"',
+    'apos': "'",
+    'nbsp': ' ',
+    'ndash': '–',
+    'mdash': '—',
+    'hellip': '…',
+    'lsquo': '‘',
+    'rsquo': '’',
+    'ldquo': '“',
+    'rdquo': '”',
+    'middot': '·',
+    'bull': '•',
+  };
 
-  // Optional bullet, optional opening bracket, the time, optional closing
-  // bracket, then a separator (dash, colon or whitespace) and the title.
+  // Optional bullet, optional opening bracket, the time, then the title
+  // after either a closing bracket (`【00:00】Title` needs no separator) or
+  // a separator (dash, colon, wave dash or whitespace).
   static final _entryLine = RegExp(
     r'^[\s•·・*\-–—▶►]*[\[(（【]?'
     r'(\d{1,3}(?::\d{2}){1,2})'
-    r'[\])）】]?(?:\s*[-–—:：]\s*|\s+)(.+)$',
+    r'(?:[\])）】]\s*[-–—:：〜~]?\s*|\s*[-–—:：〜~]\s*|\s+)(.+)$',
   );
-  static final _trailingSeparators = RegExp(r'[\s\-–—:：|/・•]+$');
+  static const _trailingSeparators = ' \t-–—:：|/・•〜~';
 
   /// Returns the derived chapters, or an empty list when no block in
   /// [description] qualifies.
@@ -47,6 +65,22 @@ final class DescriptionChaptersParser {
         for (final entry in block)
           PodcastChapter(title: entry.title, startTime: entry.start),
       ];
+    }
+    return const [];
+  }
+
+  /// Parses the first of [texts] that yields chapters.
+  ///
+  /// Used with an episode's description and then its `<content:encoded>`,
+  /// since some feeds keep the full notes only in the latter.
+  List<PodcastChapter> parseFirst(
+    Iterable<String?> texts, {
+    Duration? episodeDuration,
+  }) {
+    for (final text in texts) {
+      if (text == null || text.isEmpty) continue;
+      final chapters = parse(text, episodeDuration: episodeDuration);
+      if (chapters.isNotEmpty) return chapters;
     }
     return const [];
   }
@@ -81,7 +115,7 @@ final class DescriptionChaptersParser {
     final match = _entryLine.firstMatch(line.trim());
     if (match == null) return null;
     final start = _parseTimestamp(match.group(1)!);
-    final title = match.group(2)!.replaceAll(_trailingSeparators, '').trim();
+    final title = _trimTrailingSeparators(match.group(2)!);
     if (start == null || title.isEmpty) return null;
     return _Entry(start, title);
   }
@@ -111,17 +145,20 @@ final class DescriptionChaptersParser {
     return block.last.start < episodeDuration;
   }
 
+  // A loop rather than a `[...]+$` regex, which backtracks quadratically
+  // on long separator runs.
+  static String _trimTrailingSeparators(String value) {
+    var end = value.length;
+    while (0 < end && _trailingSeparators.contains(value[end - 1])) {
+      end--;
+    }
+    return value.substring(0, end).trim();
+  }
+
   static String _decodeEntity(Match match) {
-    final named = match.group(1)?.toLowerCase();
+    final named = match.group(1);
     if (named != null) {
-      return switch (named) {
-        'amp' => '&',
-        'lt' => '<',
-        'gt' => '>',
-        'quot' => '"',
-        'apos' => "'",
-        _ => ' ',
-      };
+      return _namedEntities[named.toLowerCase()] ?? match.group(0)!;
     }
     final decimal = match.group(2);
     final code = decimal != null

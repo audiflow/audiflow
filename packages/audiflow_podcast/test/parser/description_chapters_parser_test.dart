@@ -79,6 +79,31 @@ In this episode we talk about things.
       expect(_titles(description), ['Welcome', 'Guest intro', 'Deep dive']);
     });
 
+    test('Japanese brackets and wave dashes without a space', () {
+      expect(_titles('【00:00】オープニング<br>【05:10】本編<br>【40:00】お便り'), [
+        'オープニング',
+        '本編',
+        'お便り',
+      ]);
+      expect(_titles('[00:00]Intro\n[01:00]Topic\n[02:00]Outro'), [
+        'Intro',
+        'Topic',
+        'Outro',
+      ]);
+      expect(_titles('00:00〜オープニング\n03:00〜本編\n09:00〜エンディング'), [
+        'オープニング',
+        '本編',
+        'エンディング',
+      ]);
+    });
+
+    test('entity separators such as &ndash;', () {
+      expect(
+        _titles('0:00 &ndash; Intro<br>2:00 &mdash; Topic<br>4:00 &ndash; End'),
+        ['Intro', 'Topic', 'End'],
+      );
+    });
+
     test('hour-long episodes with h:mm:ss times', () {
       const description = '''
 00:00:00 Start
@@ -186,8 +211,58 @@ Chapters
       expect(_titles('0:00 A\n1:75 B\n2:00 C'), isEmpty);
     });
 
+    test('pathological separator and bracket runs within a second', () {
+      final noisy = '0:00 A${'- ' * 20000}x\n${'<' * 20000}\n1:00 B\n2:00 C';
+      final watch = Stopwatch()..start();
+      _parser.parse(noisy);
+      expect(watch.elapsed, lessThan(const Duration(seconds: 1)));
+    });
+
     test('an empty description', () {
       expect(_titles(''), isEmpty);
+    });
+  });
+
+  group('IsolateRssParser description chapters', () {
+    const feed = '''<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"
+  xmlns:psc="http://podlove.org/simple-chapters"
+  xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Notes</title>
+    <description>Notes</description>
+    <item>
+      <guid>notes</guid>
+      <title>Notes only</title>
+      <description><![CDATA[<p>0:00 A<br />1:00 B<br />2:00 C</p>]]></description>
+    </item>
+    <item>
+      <guid>encoded</guid>
+      <title>Content encoded only</title>
+      <description>Short teaser</description>
+      <content:encoded><![CDATA[<p>0:00 X<br />1:00 Y<br />2:00 Z</p>]]></content:encoded>
+    </item>
+    <item>
+      <guid>psc</guid>
+      <title>Feed chapters</title>
+      <description><![CDATA[<p>0:00 A<br />1:00 B<br />2:00 C</p>]]></description>
+      <psc:chapters version="1.2">
+        <psc:chapter start="00:00:00" title="Feed"/>
+      </psc:chapters>
+    </item>
+  </channel>
+</rss>''';
+
+    test('derives chapters only where the feed has none', () async {
+      final result = await IsolateRssParser.parseFeed(feedXml: feed);
+      final byGuid = {for (final e in result.episodes) e.guid: e};
+
+      List<String> titles(String guid) =>
+          byGuid[guid]!.descriptionChapters.map((c) => c.title).toList();
+
+      expect(titles('notes'), ['A', 'B', 'C']);
+      expect(titles('encoded'), ['X', 'Y', 'Z']);
+      expect(titles('psc'), isEmpty);
     });
   });
 }
