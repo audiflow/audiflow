@@ -27,6 +27,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
+import '../../../player/presentation/widgets/audio_sheet.dart';
 import '../controllers/podcast_detail_controller.dart';
 import '../widgets/episode_filter_chips.dart';
 import '../widgets/episode_list_section.dart';
@@ -236,6 +237,10 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
                   );
                 case 'play_order':
                   _showPlayOrderSheet();
+                case 'audio_settings':
+                  // Lets the override be edited while nothing is playing.
+                  if (subscription == null) return;
+                  showAudioSheet(context, podcastId: subscription.id);
               }
             },
             itemBuilder: (context) => [
@@ -247,6 +252,11 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
                 value: 'play_order',
                 child: Text(l10n.playOrderMenuTitle),
               ),
+              if (subscription != null)
+                PopupMenuItem(
+                  value: 'audio_settings',
+                  child: Text(l10n.podcastDetailAudioSettingsMenuTitle),
+                ),
             ],
           ),
           if (isSubscribed)
