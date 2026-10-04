@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:audiflow_app/features/player/presentation/widgets/audio_output_picker_button.dart';
 import 'package:audiflow_app/features/player/services/audio_route_channel.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,10 +13,13 @@ class _RecordingAudioRouteChannel extends AudioRouteChannel {
   int showPickerCalls = 0;
   bool opens = true;
 
+  /// When set, showPicker() waits for this instead of answering at once.
+  Completer<bool>? pending;
+
   @override
   Future<bool> showPicker() async {
     showPickerCalls++;
-    return opens;
+    return pending?.future ?? opens;
   }
 }
 
@@ -22,13 +28,17 @@ void main() {
 
   setUp(() => channel = _RecordingAudioRouteChannel());
 
-  Widget host() {
+  Widget host({bool showButton = true}) {
     return ProviderScope(
       overrides: [audioRouteChannelProvider.overrideWithValue(channel)],
-      child: const MaterialApp(
+      child: MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: Scaffold(body: Center(child: AudioOutputPickerButton())),
+        home: Scaffold(
+          body: Center(
+            child: showButton ? const AudioOutputPickerButton() : null,
+          ),
+        ),
       ),
     );
   }
@@ -39,11 +49,11 @@ void main() {
     (tester) async {
       await tester.pumpWidget(host());
 
-      expect(find.byTooltip('Audio output'), findsOneWidget);
+      check(find.byTooltip('Audio output').evaluate()).length.equals(1);
       await tester.tap(find.byType(IconButton));
-      expect(channel.showPickerCalls, 1);
+      check(channel.showPickerCalls).equals(1);
       await tester.pump();
-      expect(find.byType(SnackBar), findsNothing);
+      check(find.byType(SnackBar).evaluate()).isEmpty();
     },
   );
 
@@ -57,7 +67,25 @@ void main() {
       await tester.tap(find.byType(IconButton));
       await tester.pump();
 
-      expect(find.text("Couldn't open audio output settings"), findsOneWidget);
+      check(
+        find.text("Couldn't open audio output settings").evaluate(),
+      ).length.equals(1);
+    },
+  );
+
+  testWidgets(
+    'Android: stays quiet when the player closed before the answer',
+    variant: TargetPlatformVariant.only(TargetPlatform.android),
+    (tester) async {
+      channel.pending = Completer<bool>();
+      await tester.pumpWidget(host());
+      await tester.tap(find.byType(IconButton));
+
+      await tester.pumpWidget(host(showButton: false));
+      channel.pending!.complete(false);
+      await tester.pump();
+
+      check(find.byType(SnackBar).evaluate()).isEmpty();
     },
   );
 
@@ -79,10 +107,12 @@ void main() {
       await tester.pumpWidget(host());
 
       final view = tester.widget<UiKitView>(find.byType(UiKitView));
-      expect(view.viewType, audioRoutePickerViewType);
-      expect(view.creationParams, {'label': 'Audio output'});
+      check(view.viewType).equals(audioRoutePickerViewType);
+      check(
+        view.creationParams as Map<Object?, Object?>?,
+      ).isNotNull().deepEquals({'label': 'Audio output'});
       // The native view owns the tap, so no Flutter button is drawn.
-      expect(find.byType(IconButton), findsNothing);
+      check(find.byType(IconButton).evaluate()).isEmpty();
     },
   );
 }

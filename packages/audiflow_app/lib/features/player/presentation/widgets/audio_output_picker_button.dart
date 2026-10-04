@@ -39,7 +39,9 @@ class _AndroidOutputSwitcherButton extends ConsumerWidget {
     final messenger = ScaffoldMessenger.of(context);
     final message = AppLocalizations.of(context).playerAudioOutputUnavailable;
     final opened = await ref.read(audioRouteChannelProvider).showPicker();
-    if (opened) return;
+    // The player may have closed meanwhile; the app-level messenger would
+    // then show the message over an unrelated screen.
+    if (opened || !context.mounted) return;
     messenger.showSnackBar(SnackBar(content: Text(message)));
   }
 }
