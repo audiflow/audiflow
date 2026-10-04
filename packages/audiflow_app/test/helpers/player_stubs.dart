@@ -9,16 +9,25 @@ class StubNowPlayingController extends NowPlayingController {
   NowPlayingInfo? build() => _initial;
 }
 
-/// [AppSettingsRepository] exposing only the skip intervals and speed the
-/// player widgets read; anything else throws so an unexpected call is loud.
+/// [AppSettingsRepository] exposing only the settings the player widgets
+/// read; anything else throws so an unexpected call is loud.
 class StubAppSettingsRepository implements AppSettingsRepository {
   StubAppSettingsRepository({
     this.skipForwardSeconds = 30,
     this.skipBackwardSeconds = 15,
+    this.showRemainingTime = true,
   });
 
   final int skipForwardSeconds;
   final int skipBackwardSeconds;
+  bool showRemainingTime;
+
+  @override
+  bool getShowRemainingTime() => showRemainingTime;
+
+  @override
+  Future<void> setShowRemainingTime(bool enabled) async =>
+      showRemainingTime = enabled;
 
   @override
   int getSkipForwardSeconds() => skipForwardSeconds;

@@ -1336,6 +1336,31 @@ class AppLocalizationsJa extends AppLocalizations {
   String get sleepTimerIconLabel => 'スリープタイマー';
 
   @override
+  String get sleepTimerStopOnHeader => '終わりで停止';
+
+  @override
+  String get sleepTimerStopAfterHeader => '経過後に停止';
+
+  @override
+  String get sleepTimerEdit => '編集';
+
+  @override
+  String sleepTimerStatusDuration(String remaining, String time) {
+    return 'あと$remainingで停止（$time）';
+  }
+
+  @override
+  String get sleepTimerStatusEndOfEpisode => 'エピソードの終わりで停止';
+
+  @override
+  String get sleepTimerStatusEndOfChapter => 'チャプターの終わりで停止';
+
+  @override
+  String sleepTimerStatusEpisodesLeft(int count) {
+    return '残り$countエピソード';
+  }
+
+  @override
   String get onboardingCarouselSkip => 'スキップ';
 
   @override

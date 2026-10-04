@@ -135,6 +135,16 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
     await _ds.setString(SettingsKeys.duckInterruptionBehavior, behavior.name);
   }
 
+  @override
+  bool getShowRemainingTime() =>
+      _ds.getBool(SettingsKeys.showRemainingTime) ??
+      SettingsDefaults.showRemainingTime;
+
+  @override
+  Future<void> setShowRemainingTime(bool enabled) async {
+    await _ds.setBool(SettingsKeys.showRemainingTime, enabled);
+  }
+
   // -- Downloads --
 
   @override
