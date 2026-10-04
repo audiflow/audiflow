@@ -721,6 +721,58 @@ void main() {
       expect(chapters.first.source, ChapterSource.podlove);
     });
 
+    test('stores description chapters with their source', () async {
+      await insertEpisode('ep-notes');
+
+      await repository.storeTranscriptAndChapterDataFromParsed(podcastId, [
+        const ParsedEpisodeMediaMeta(
+          guid: 'ep-notes',
+          descriptionChapters: [
+            PodcastChapter(title: 'Intro', startTime: Duration.zero),
+            PodcastChapter(title: 'Topic', startTime: Duration(minutes: 5)),
+          ],
+        ),
+      ]);
+
+      final episode = await episodeDatasource.getByPodcastIdAndGuid(
+        podcastId,
+        'ep-notes',
+      );
+      final chapters = await chapterDatasource.getByEpisodeId(episode!.id);
+      expect(chapters.map((c) => c.title), ['Intro', 'Topic']);
+      expect(
+        chapters.map((c) => c.source),
+        everyElement(ChapterSource.description),
+      );
+    });
+
+    test('feed chapters replace description chapters', () async {
+      await insertEpisode('ep-upgrade');
+      await repository.storeTranscriptAndChapterDataFromParsed(podcastId, [
+        const ParsedEpisodeMediaMeta(
+          guid: 'ep-upgrade',
+          descriptionChapters: [
+            PodcastChapter(title: 'Derived', startTime: Duration.zero),
+          ],
+        ),
+      ]);
+
+      await repository.storeTranscriptAndChapterDataFromParsed(podcastId, [
+        const ParsedEpisodeMediaMeta(
+          guid: 'ep-upgrade',
+          chapters: [ParsedChapter(title: 'Feed', startTime: Duration.zero)],
+        ),
+      ]);
+
+      final episode = await episodeDatasource.getByPodcastIdAndGuid(
+        podcastId,
+        'ep-upgrade',
+      );
+      final chapters = await chapterDatasource.getByEpisodeId(episode!.id);
+      expect(chapters.single.title, 'Feed');
+      expect(chapters.single.source, ChapterSource.podlove);
+    });
+
     test('handles empty media metas list', () async {
       await repository.storeTranscriptAndChapterDataFromParsed(podcastId, []);
     });
@@ -760,6 +812,51 @@ void main() {
       );
       check(episode!.chaptersUrl).equals('https://example.com/chapters.json');
       check(episode.chaptersType).equals('application/json+chapters');
+    });
+  });
+
+  group('description chapters from feed items', () {
+    PodcastItem item(String guid, {List<PodcastChapter>? chapters}) =>
+        PodcastItem.fromData(
+          parsedAt: DateTime.now(),
+          sourceUrl: '',
+          title: guid,
+          description: '<p>0:00 Intro<br>4:00 Middle<br>8:00 End</p>',
+          guid: guid,
+          enclosureUrl: 'https://example.com/$guid.mp3',
+          chapters: chapters,
+        );
+
+    Future<List<EpisodeChapter>> chaptersOf(String guid) async {
+      final episode = await episodeDatasource.getByPodcastIdAndGuid(
+        podcastId,
+        guid,
+      );
+      return chapterDatasource.getByEpisodeId(episode!.id);
+    }
+
+    test('derives chapters when the item has none', () async {
+      await repository.upsertFromFeedItems(podcastId, [item('ep-d')]);
+
+      final chapters = await chaptersOf('ep-d');
+      check(
+        chapters.map((c) => c.title),
+      ).deepEquals(['Intro', 'Middle', 'End']);
+      check(chapters.first.source).equals(ChapterSource.description);
+    });
+
+    test('keeps feed chapters when the item has them', () async {
+      await repository.upsertFromFeedItems(podcastId, [
+        item(
+          'ep-f',
+          chapters: const [
+            PodcastChapter(title: 'Feed', startTime: Duration.zero),
+          ],
+        ),
+      ]);
+
+      final chapters = await chaptersOf('ep-f');
+      check(chapters.single.title).equals('Feed');
     });
   });
 

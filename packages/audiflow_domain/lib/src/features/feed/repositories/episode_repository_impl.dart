@@ -8,6 +8,7 @@ import '../../transcript/datasources/local/transcript_local_datasource.dart';
 import '../../transcript/models/chapter_source.dart';
 import '../../transcript/models/episode_chapter.dart';
 import '../../transcript/models/episode_transcript.dart';
+import '../../transcript/services/chapter_mapping.dart';
 import '../datasources/local/episode_local_datasource.dart';
 import '../models/episode.dart';
 import '../models/feed_parse_progress.dart';
@@ -174,13 +175,19 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
   ) async {
     final hasTranscriptItems = items.where((i) => i.hasTranscripts);
     final hasChapterItems = items.where((i) => i.hasChapters);
+    final derivedByGuid = _deriveDescriptionChapters(items);
 
-    if (hasTranscriptItems.isEmpty && hasChapterItems.isEmpty) return;
+    if (hasTranscriptItems.isEmpty &&
+        hasChapterItems.isEmpty &&
+        derivedByGuid.isEmpty) {
+      return;
+    }
 
     // Resolve episode IDs for items that need transcript/chapter storage
     final guidsNeedingLookup = <String>{
       ...hasTranscriptItems.map((i) => i.guid!),
       ...hasChapterItems.map((i) => i.guid!),
+      ...derivedByGuid.keys,
     };
 
     final guidToId = <String, int>{};
@@ -195,7 +202,37 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
 
     await _storeTranscriptMetas(hasTranscriptItems, guidToId);
     await _storeChapters(hasChapterItems, guidToId);
+    await _storeDescriptionChapters(derivedByGuid, guidToId);
   }
+
+  /// Stores chapters derived from show notes, keyed by guid.
+  Future<void> _storeDescriptionChapters(
+    Map<String, List<PodcastChapter>> chaptersByGuid,
+    Map<String, int> guidToId,
+  ) async {
+    final rows = <int, List<EpisodeChapter>>{};
+    for (final MapEntry(key: guid, value: chapters) in chaptersByGuid.entries) {
+      final episodeId = guidToId[guid];
+      if (episodeId == null) continue;
+      rows[episodeId] = toEpisodeChapters(episodeId, chapters);
+    }
+    await _storeChapterRows(rows, ChapterSource.description);
+  }
+
+  /// Chapters derived from show notes, keyed by guid, for items whose feed
+  /// entry has no chapters of its own.
+  Map<String, List<PodcastChapter>> _deriveDescriptionChapters(
+    List<PodcastItem> items,
+  ) => {
+    for (final item in items.where((i) => !i.hasChapters))
+      if (deriveDescriptionChapters(
+            description: item.description,
+            contentEncoded: item.contentEncoded,
+            duration: item.duration,
+          )
+          case final chapters when chapters.isNotEmpty)
+        item.guid!: chapters,
+  };
 
   /// Builds and upserts transcript metadata.
   Future<void> _storeTranscriptMetas(
@@ -249,19 +286,17 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
             ..imageUrl = chapter.imageUrl,
       ];
     }
-    await _storeFeedChapters(chaptersByEpisode);
+    await _storeChapterRows(chaptersByEpisode, ChapterSource.podlove);
   }
 
-  /// Stores `<psc:chapters>` from the feed, keeping any higher-priority
-  /// chapters (such as `<podcast:chapters>` JSON) already stored.
-  Future<void> _storeFeedChapters(
+  /// Stores chapters from [source], keeping any higher-priority chapters
+  /// (such as `<podcast:chapters>` JSON) already stored.
+  Future<void> _storeChapterRows(
     Map<int, List<EpisodeChapter>> chaptersByEpisode,
+    ChapterSource source,
   ) async {
     if (_chapterDatasource == null || chaptersByEpisode.isEmpty) return;
-    await _chapterDatasource.replaceChapters(
-      chaptersByEpisode,
-      source: ChapterSource.podlove,
-    );
+    await _chapterDatasource.replaceChapters(chaptersByEpisode, source: source);
   }
 
   @override
@@ -325,7 +360,11 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
             ..imageUrl = c.imageUrl,
       ];
     }
-    await _storeFeedChapters(chaptersByEpisode);
+    await _storeChapterRows(chaptersByEpisode, ChapterSource.podlove);
+    await _storeDescriptionChapters({
+      for (final meta in withData)
+        if (meta.hasDescriptionChapters) meta.guid: meta.descriptionChapters,
+    }, guidToId);
   }
 
   @override

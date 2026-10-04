@@ -53,6 +53,8 @@ void main() {
   Future<int> insertEpisode({
     String? chaptersUrl = _chaptersUrl,
     String? chaptersType = 'application/json+chapters',
+    String? description,
+    int? durationMs,
   }) async {
     await episodeDatasource.upsert(
       Episode()
@@ -61,7 +63,9 @@ void main() {
         ..title = 'Episode 1'
         ..audioUrl = 'https://example.com/ep1.mp3'
         ..chaptersUrl = chaptersUrl
-        ..chaptersType = chaptersType,
+        ..chaptersType = chaptersType
+        ..description = description
+        ..durationMs = durationMs,
     );
     return (await episodeDatasource.getByPodcastIdAndGuid(1, 'ep1'))!.id;
   }
@@ -242,6 +246,63 @@ void main() {
 
       expect(results, [isTrue, isTrue]);
       verify(mockDio.get<String>(any, options: anyNamed('options'))).called(1);
+    });
+  });
+
+  group('description chapters', () {
+    const notes = '<p>00:00 オープニング<br />02:57 人生の選択<br />17:22 イベント</p>';
+
+    test('derives chapters for an episode without any', () async {
+      final episodeId = await insertEpisode(
+        chaptersUrl: null,
+        description: notes,
+        durationMs: const Duration(minutes: 30).inMilliseconds,
+      );
+
+      expect(await service.ensureChapters(episodeId), isTrue);
+      final chapters = await chapterDatasource.getByEpisodeId(episodeId);
+      expect(chapters.map((c) => c.title), ['オープニング', '人生の選択', 'イベント']);
+      expect(
+        chapters.map((c) => c.source),
+        everyElement(ChapterSource.description),
+      );
+      expect(await service.ensureChapters(episodeId), isFalse);
+    });
+
+    test('leaves feed chapters alone', () async {
+      final episodeId = await insertEpisode(
+        chaptersUrl: null,
+        description: notes,
+      );
+      await chapterDatasource.replaceChapters({
+        episodeId: [pscChapter(episodeId, 'From psc')],
+      }, source: ChapterSource.podlove);
+
+      expect(await service.ensureChapters(episodeId), isFalse);
+      expect(await storedTitles(episodeId), ['From psc']);
+    });
+
+    test('falls back to notes when JSON fails, JSON wins later', () async {
+      final episodeId = await insertEpisode(description: notes);
+      failWith(DioExceptionType.connectionError);
+
+      await service.ensureChapters(episodeId);
+      expect(await storedTitles(episodeId), ['オープニング', '人生の選択', 'イベント']);
+
+      now = now.add(ChapterService.retryCooldown);
+      respondWith(_validJson);
+      await service.ensureChapters(episodeId);
+      expect(await storedTitles(episodeId), ['Intro', 'Topic']);
+    });
+
+    test('derives nothing from notes without a timestamp list', () async {
+      final episodeId = await insertEpisode(
+        chaptersUrl: null,
+        description: 'Just talking at 12:30 today.',
+      );
+
+      expect(await service.ensureChapters(episodeId), isFalse);
+      expect(await storedTitles(episodeId), isEmpty);
     });
   });
 }

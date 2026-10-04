@@ -12,6 +12,7 @@ import '../models/chapter_source.dart';
 import '../models/episode_chapter.dart';
 import '../repositories/chapter_repository.dart';
 import '../repositories/chapter_repository_impl.dart';
+import 'chapter_mapping.dart';
 
 part 'chapter_service.g.dart';
 
@@ -29,7 +30,8 @@ ChapterService chapterService(Ref ref) {
 ///
 /// `<podcast:chapters>` only links a JSON file, so sync stores the link and
 /// this service fetches the file the first time the episode's chapters are
-/// needed, mirroring how transcripts are fetched on demand.
+/// needed, mirroring how transcripts are fetched on demand. Episodes left
+/// without chapters fall back to a timestamp list in their show notes.
 class ChapterService {
   ChapterService({
     required this._chapterRepository,
@@ -72,7 +74,9 @@ class ChapterService {
     try {
       final episode = await _episodeRepository.getById(episodeId);
       if (episode == null) return false;
-      return await _ensureJsonChapters(episode);
+      final jsonChanged = await _ensureJsonChapters(episode);
+      final derived = await _ensureDescriptionChapters(episode);
+      return jsonChanged || derived;
     } catch (e, st) {
       // Isar failures surface as Error subclasses, so catch everything:
       // chapter loading must never break the caller.
@@ -104,8 +108,29 @@ class ChapterService {
     if (chapters == null) return false;
 
     final replaced = await _chapterRepository.replaceChapters({
-      episode.id: _toEntities(episode.id, chapters, url),
+      episode.id: toEpisodeChapters(episode.id, chapters, sourceUrl: url),
     }, source: ChapterSource.podcastChaptersJson);
+    return replaced.isNotEmpty;
+  }
+
+  /// Derives chapters from the show notes when the episode has none.
+  ///
+  /// Feed sync derives them for episodes it parses, but an incremental sync
+  /// stops at the first known episode, so episodes stored before this
+  /// existed are only covered here, the first time they play.
+  Future<bool> _ensureDescriptionChapters(Episode episode) async {
+    final stored = await _chapterRepository.getByEpisodeId(episode.id);
+    if (stored.isNotEmpty) return false;
+    final durationMs = episode.durationMs;
+    final chapters = deriveDescriptionChapters(
+      description: episode.description,
+      contentEncoded: episode.contentEncoded,
+      duration: durationMs == null ? null : Duration(milliseconds: durationMs),
+    );
+    if (chapters.isEmpty) return false;
+    final replaced = await _chapterRepository.replaceChapters({
+      episode.id: toEpisodeChapters(episode.id, chapters),
+    }, source: ChapterSource.description);
     return replaced.isNotEmpty;
   }
 
@@ -160,21 +185,4 @@ class ChapterService {
   // `application/json` for the same file.
   static bool _isJsonChapters(String? type) =>
       type != null && type.toLowerCase().contains('json');
-
-  static List<EpisodeChapter> _toEntities(
-    int episodeId,
-    List<PodcastChapter> chapters,
-    String sourceUrl,
-  ) => [
-    for (final (index, chapter) in chapters.indexed)
-      EpisodeChapter()
-        ..episodeId = episodeId
-        ..sortOrder = index
-        ..title = chapter.title
-        ..startMs = chapter.startTime.inMilliseconds
-        ..endMs = chapter.endTime?.inMilliseconds
-        ..url = chapter.url
-        ..imageUrl = chapter.imageUrl
-        ..sourceUrl = sourceUrl,
-  ];
 }

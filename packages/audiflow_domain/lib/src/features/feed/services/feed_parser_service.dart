@@ -3,6 +3,7 @@ import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/providers/logger_provider.dart';
+import '../../transcript/services/chapter_mapping.dart';
 import '../builders/podcast_builder.dart';
 import '../models/episode.dart';
 import '../models/feed_parse_progress.dart';
@@ -276,12 +277,23 @@ class FeedParserService {
               ..chaptersType = chaptersLink?.type,
           );
 
-          if (transcripts != null || chapters != null) {
+          // Feed chapters always win, so only derive when there are none.
+          final descriptionChapters = chapters == null
+              ? deriveDescriptionChapters(
+                  description: description,
+                  contentEncoded: contentEncoded,
+                  duration: duration,
+                )
+              : const <PodcastChapter>[];
+          if (transcripts != null ||
+              chapters != null ||
+              descriptionChapters.isNotEmpty) {
             mediaMetaBuffer.add(
               ParsedEpisodeMediaMeta(
                 guid: resolvedGuid,
                 transcripts: transcripts,
                 chapters: chapters,
+                descriptionChapters: descriptionChapters,
               ),
             );
           }

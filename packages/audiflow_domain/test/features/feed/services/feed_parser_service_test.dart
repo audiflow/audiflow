@@ -66,6 +66,37 @@ void main() {
 </rss>
 ''';
 
+  const testXmlWithDescriptionChapters = '''
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:psc="http://podlove.org/simple-chapters">
+  <channel>
+    <title>Notes Podcast</title>
+    <description>Chapters in notes</description>
+    <item>
+      <guid>ep-notes</guid>
+      <title>Chapters only in notes</title>
+      <description><![CDATA[<p>0:00 Intro<br />5:00 Topic<br />9:00 Outro</p>]]></description>
+      <enclosure url="https://example.com/notes.mp3" type="audio/mpeg"/>
+    </item>
+    <item>
+      <guid>ep-psc</guid>
+      <title>Feed chapters too</title>
+      <description><![CDATA[<p>0:00 A<br />5:00 B<br />9:00 C</p>]]></description>
+      <enclosure url="https://example.com/psc.mp3" type="audio/mpeg"/>
+      <psc:chapters version="1.2">
+        <psc:chapter start="00:00:00" title="Feed intro"/>
+      </psc:chapters>
+    </item>
+    <item>
+      <guid>ep-plain</guid>
+      <title>No chapters</title>
+      <description>Talking at 12:30 about nothing.</description>
+      <enclosure url="https://example.com/plain.mp3" type="audio/mpeg"/>
+    </item>
+  </channel>
+</rss>
+''';
+
   setUp(() {
     service = FeedParserService();
   });
@@ -178,6 +209,28 @@ void main() {
         result.episodes.single.chaptersLink?.url,
         'https://example.com/ep1.json',
       );
+    });
+  });
+
+  group('description chapters', () {
+    test('derives chapters only for episodes without feed chapters', () async {
+      final metas = <ParsedEpisodeMediaMeta>[];
+      await for (final _ in service.parseWithProgress(
+        xmlContent: testXmlWithDescriptionChapters,
+        podcastId: 1,
+        knownGuids: {},
+        onBatchReady: (_, batch) async => metas.addAll(batch),
+      )) {}
+
+      final byGuid = {for (final m in metas) m.guid: m};
+      expect(byGuid.keys, unorderedEquals(['ep-notes', 'ep-psc']));
+      expect(byGuid['ep-notes']!.descriptionChapters.map((c) => c.title), [
+        'Intro',
+        'Topic',
+        'Outro',
+      ]);
+      expect(byGuid['ep-psc']!.hasDescriptionChapters, isFalse);
+      expect(byGuid['ep-psc']!.hasChapters, isTrue);
     });
   });
 
