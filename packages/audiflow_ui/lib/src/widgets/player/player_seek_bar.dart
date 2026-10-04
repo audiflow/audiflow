@@ -1,13 +1,15 @@
+import 'dart:math' as math;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 
 /// A contiguous stretch of the seek bar track, in fractions of the whole
 /// track (0.0 to 1.0).
 ///
-/// The track is drawn as a list of segments so that callers can later pass
-/// chapter boundaries (with gaps between them) without changing the
-/// [PlayerSeekBar] API.
+/// The track is drawn as a list of segments, typically one per chapter;
+/// [PlayerSeekBar] leaves a small gap wherever one segment meets the next.
 @immutable
 class SeekBarSegment {
   const SeekBarSegment({required this.start, required this.end})
@@ -39,6 +41,9 @@ class SeekBarSegment {
 /// the value by the finger's travel from wherever it currently is, instead of
 /// jumping to the touch point, and a tap never seeks.
 ///
+/// While dragging, an optional [tooltipBuilder] shows a bubble above the
+/// track that follows the scrub position and stays inside the bar's width.
+///
 /// The widget is controlled like [Slider]: it reports value changes through
 /// the callbacks and renders whatever [value] the parent passes back.
 class PlayerSeekBar extends StatefulWidget {
@@ -48,6 +53,7 @@ class PlayerSeekBar extends StatefulWidget {
     required this.leadingLabel,
     required this.trailingLabel,
     this.segments = SeekBarSegment.single,
+    this.tooltipBuilder,
     this.semanticValueFormatter,
     this.onChangeStart,
     this.onChanged,
@@ -61,11 +67,20 @@ class PlayerSeekBar extends StatefulWidget {
   /// Track thickness while the user is scrubbing.
   static const double draggingTrackHeight = 10.0;
 
+  /// Width of the gap left between adjacent segments.
+  static const double segmentGap = 2.0;
+
+  /// Space between the tooltip and the top of the touch area.
+  static const double tooltipSpacing = 4.0;
+
   /// Fraction of the track a screen-reader increase/decrease action moves.
   static const double semanticStep = 0.05;
 
   /// Key of the draggable track area, for tests and integration code.
   static const Key trackKey = ValueKey('player-seek-bar-track');
+
+  /// Key of the scrub tooltip bubble, present only while dragging.
+  static const Key tooltipKey = ValueKey('player-seek-bar-tooltip');
 
   /// Played fraction of the track (0.0 to 1.0).
   final double value;
@@ -78,6 +93,11 @@ class PlayerSeekBar extends StatefulWidget {
 
   /// Stretches of the track to draw. Defaults to one full-width segment.
   final List<SeekBarSegment> segments;
+
+  /// Builds the tooltip content for the scrub position while dragging.
+  ///
+  /// The bar supplies the bubble around it. No tooltip is shown when null.
+  final Widget Function(BuildContext context, double value)? tooltipBuilder;
 
   /// Formats a track fraction for screen readers, e.g. "01:00 of 10:00".
   ///
@@ -119,7 +139,10 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
       value: value,
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        children: [_buildTrack(value, primary), _buildLabels(theme)],
+        children: [
+          _withTooltip(value, _buildTrack(value, primary)),
+          _buildLabels(theme),
+        ],
       ),
     );
   }
@@ -161,6 +184,7 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
                   value: value,
                   trackHeight: height,
                   segments: widget.segments,
+                  segmentGap: PlayerSeekBar.segmentGap,
                   activeColor: primary,
                   inactiveColor: primary.withValues(alpha: 0.3),
                 ),
@@ -169,6 +193,33 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
           ),
         );
       },
+    );
+  }
+
+  // The tooltip floats above the track without taking layout space, so the
+  // bar keeps its height whether or not the user is scrubbing. The Stack is
+  // always present: wrapping the track only once a drag starts would remount
+  // its gesture detector and cancel that drag.
+  Widget _withTooltip(double value, Widget track) {
+    final builder = widget.tooltipBuilder;
+    final showTooltip = _isDragging && builder != null;
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        track,
+        if (showTooltip)
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: _touchAreaHeight + PlayerSeekBar.tooltipSpacing,
+            child: IgnorePointer(
+              child: _TooltipPositioner(
+                anchor: value,
+                child: _TooltipBubble(child: builder(context, value)),
+              ),
+            ),
+          ),
+      ],
     );
   }
 
@@ -254,11 +305,16 @@ class PlayerSeekBarPainter extends CustomPainter {
     required this.segments,
     required this.activeColor,
     required this.inactiveColor,
+    this.segmentGap = 0.0,
   });
 
   final double value;
   final double trackHeight;
   final List<SeekBarSegment> segments;
+
+  /// Width removed where two segments meet, split between both sides. The
+  /// outer ends of the track are never inset.
+  final double segmentGap;
   final Color activeColor;
   final Color inactiveColor;
 
@@ -270,13 +326,15 @@ class PlayerSeekBarPainter extends CustomPainter {
     final inactivePaint = Paint()..color = inactiveColor;
     final playedX = size.width * value;
 
+    final halfGap = segmentGap / 2;
+
     for (final segment in segments) {
-      final rect = Rect.fromLTWH(
-        size.width * segment.start,
-        top,
-        size.width * (segment.end - segment.start),
-        trackHeight,
-      );
+      final left =
+          size.width * segment.start + (0 < segment.start ? halfGap : 0);
+      final right = size.width * segment.end - (segment.end < 1 ? halfGap : 0);
+      // A segment narrower than the gap would draw inverted; skip it.
+      if (right <= left) continue;
+      final rect = Rect.fromLTRB(left, top, right, top + trackHeight);
       final shape = RRect.fromRectAndRadius(rect, radius);
       canvas.drawRRect(shape, inactivePaint);
       if (playedX <= rect.left) continue;
@@ -295,7 +353,91 @@ class PlayerSeekBarPainter extends CustomPainter {
   bool shouldRepaint(PlayerSeekBarPainter oldDelegate) =>
       oldDelegate.value != value ||
       oldDelegate.trackHeight != trackHeight ||
+      oldDelegate.segmentGap != segmentGap ||
       oldDelegate.activeColor != activeColor ||
       oldDelegate.inactiveColor != inactiveColor ||
       !listEquals(oldDelegate.segments, segments);
+}
+
+/// Rounded bubble around the tooltip content, in the inverse surface colors
+/// so it reads against both the artwork and the sheet background.
+class _TooltipBubble extends StatelessWidget {
+  const _TooltipBubble({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textStyle = Theme.of(context).textTheme.bodySmall?.copyWith(
+      color: colorScheme.onInverseSurface,
+      fontFeatures: const [FontFeature.tabularFigures()],
+    );
+    return DecoratedBox(
+      key: PlayerSeekBar.tooltipKey,
+      decoration: BoxDecoration(
+        color: colorScheme.inverseSurface,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        child: DefaultTextStyle.merge(
+          style: textStyle,
+          textAlign: TextAlign.center,
+          child: IconTheme.merge(
+            data: IconThemeData(color: colorScheme.onInverseSurface),
+            child: child,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Centers its child over the [anchor] fraction of the available width,
+/// shifted inward as needed so it never extends past either edge.
+class _TooltipPositioner extends SingleChildRenderObjectWidget {
+  const _TooltipPositioner({required this.anchor, super.child});
+
+  final double anchor;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderTooltipPositioner(anchor);
+
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    _RenderTooltipPositioner renderObject,
+  ) {
+    renderObject.anchor = anchor;
+  }
+}
+
+class _RenderTooltipPositioner extends RenderShiftedBox {
+  _RenderTooltipPositioner(this._anchor) : super(null);
+
+  double _anchor;
+
+  set anchor(double value) {
+    if (value == _anchor) return;
+    _anchor = value;
+    markNeedsLayout();
+  }
+
+  @override
+  void performLayout() {
+    final child = this.child;
+    final width = constraints.maxWidth;
+    if (child == null) {
+      size = constraints.constrain(Size(width, 0));
+      return;
+    }
+    child.layout(BoxConstraints(maxWidth: width), parentUsesSize: true);
+    final childSize = child.size;
+    size = constraints.constrain(Size(width, childSize.height));
+    final maxLeft = math.max(0.0, width - childSize.width);
+    final left = (width * _anchor - childSize.width / 2).clamp(0.0, maxLeft);
+    (child.parentData! as BoxParentData).offset = Offset(left, 0);
+  }
 }
