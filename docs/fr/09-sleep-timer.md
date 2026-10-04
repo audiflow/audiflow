@@ -15,7 +15,7 @@ refs:
     - packages/audiflow_domain/lib/src/features/player/providers/sleep_timer_providers.dart
     - packages/audiflow_app/lib/features/player/presentation/controllers/sleep_timer_ui_controller.dart
     - packages/audiflow_app/lib/features/player/presentation/widgets/sleep_timer_sheet.dart
-  - packages/audiflow_app/lib/features/player/presentation/widgets/sleep_timer_sheet_status_line.dart
+    - packages/audiflow_app/lib/features/player/presentation/widgets/sleep_timer_sheet_status_line.dart
     - packages/audiflow_app/lib/features/player/presentation/widgets/sleep_timer_numeric_panel.dart
     - packages/audiflow_app/lib/features/player/presentation/widgets/sleep_timer_chip.dart
     - packages/audiflow_app/lib/features/player/presentation/widgets/sleep_timer_icon_button.dart
