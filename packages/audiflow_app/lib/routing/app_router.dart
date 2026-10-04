@@ -37,6 +37,7 @@ import '../features/parental_control/presentation/screens/pin_setup_screen.dart'
 import '../features/settings/presentation/screens/settings_screen.dart';
 import '../features/settings/presentation/screens/storage_settings_screen.dart';
 import '../features/settings/presentation/screens/developer_settings_screen.dart';
+import 'material_route.dart';
 import 'scaffold_with_nav_bar.dart';
 
 /// SharedPreferences key for the onboarding-completion flag.
@@ -243,33 +244,33 @@ GoRouter createAppRouter({
           StatefulShellBranch(
             navigatorKey: _searchNavigatorKey,
             routes: [
-              GoRoute(
+              materialRoute(
                 path: AppRoutes.search,
                 builder: (context, state) => const SearchScreen(),
                 routes: [
-                  GoRoute(
+                  materialRoute(
                     path: 'podcast/:id',
                     builder: (context, state) =>
                         _buildPodcastDetailScreen(state),
                     routes: [
-                      GoRoute(
+                      materialRoute(
                         path: AppRoutes.smartPlaylistEpisodes,
                         builder: (context, state) =>
                             _buildSmartPlaylistEpisodesScreen(state),
                         routes: [
-                          GoRoute(
+                          materialRoute(
                             path: AppRoutes.smartPlaylistGroupEpisodesPath,
                             builder: (context, state) =>
                                 _buildGroupEpisodesScreen(state),
                           ),
                         ],
                       ),
-                      GoRoute(
+                      materialRoute(
                         path: AppRoutes.smartPlaylistDirectGroup,
                         builder: (context, state) =>
                             _buildGroupEpisodesScreen(state),
                       ),
-                      GoRoute(
+                      materialRoute(
                         path: AppRoutes.episodeDetail,
                         builder: (context, state) =>
                             _buildEpisodeDetailScreen(state),
@@ -283,49 +284,49 @@ GoRouter createAppRouter({
           StatefulShellBranch(
             navigatorKey: _libraryNavigatorKey,
             routes: [
-              GoRoute(
+              materialRoute(
                 path: AppRoutes.library,
                 builder: (context, state) => const LibraryScreen(),
                 routes: [
-                  GoRoute(
+                  materialRoute(
                     path: 'podcast/:id',
                     builder: (context, state) =>
                         _buildPodcastDetailScreen(state),
                     routes: [
-                      GoRoute(
+                      materialRoute(
                         path: AppRoutes.smartPlaylistEpisodes,
                         builder: (context, state) =>
                             _buildSmartPlaylistEpisodesScreen(state),
                         routes: [
-                          GoRoute(
+                          materialRoute(
                             path: AppRoutes.smartPlaylistGroupEpisodesPath,
                             builder: (context, state) =>
                                 _buildGroupEpisodesScreen(state),
                           ),
                         ],
                       ),
-                      GoRoute(
+                      materialRoute(
                         path: AppRoutes.smartPlaylistDirectGroup,
                         builder: (context, state) =>
                             _buildGroupEpisodesScreen(state),
                       ),
-                      GoRoute(
+                      materialRoute(
                         path: AppRoutes.episodeDetail,
                         builder: (context, state) =>
                             _buildEpisodeDetailScreen(state),
                       ),
                     ],
                   ),
-                  GoRoute(
+                  materialRoute(
                     path: 'station/new',
                     builder: (context, state) => const StationEditScreen(),
                   ),
-                  GoRoute(
+                  materialRoute(
                     path: 'station/:stationId',
                     builder: (context, state) =>
                         _buildStationDetailScreen(state),
                     routes: [
-                      GoRoute(
+                      materialRoute(
                         path: 'edit',
                         builder: (context, state) =>
                             _buildStationEditScreen(state),
@@ -339,7 +340,7 @@ GoRouter createAppRouter({
           StatefulShellBranch(
             navigatorKey: _queueNavigatorKey,
             routes: [
-              GoRoute(
+              materialRoute(
                 path: AppRoutes.queue,
                 builder: (context, state) => const QueueScreen(),
               ),
@@ -348,74 +349,74 @@ GoRouter createAppRouter({
           StatefulShellBranch(
             navigatorKey: _settingsNavigatorKey,
             routes: [
-              GoRoute(
+              materialRoute(
                 path: AppRoutes.settings,
                 builder: (context, state) => const SettingsScreen(),
                 routes: [
-                  GoRoute(
+                  materialRoute(
                     path: 'appearance',
                     builder: (context, state) =>
                         const AppearanceSettingsScreen(),
                   ),
-                  GoRoute(
+                  materialRoute(
                     path: 'playback',
                     builder: (context, state) => const PlaybackSettingsScreen(),
                   ),
-                  GoRoute(
+                  materialRoute(
                     path: 'downloads',
                     builder: (context, state) =>
                         const DownloadsSettingsScreen(),
                     routes: [
-                      GoRoute(
+                      materialRoute(
                         path: 'management',
                         builder: (context, state) =>
                             const DownloadManagementScreen(),
                       ),
                     ],
                   ),
-                  GoRoute(
+                  materialRoute(
                     path: 'feed-sync',
                     builder: (context, state) => const FeedSyncSettingsScreen(),
                   ),
-                  GoRoute(
+                  materialRoute(
                     path: 'storage',
                     builder: (context, state) => const StorageSettingsScreen(),
                   ),
-                  GoRoute(
+                  materialRoute(
                     path: 'about',
                     builder: (context, state) => const AboutScreen(),
                   ),
-                  GoRoute(
+                  materialRoute(
                     path: 'privacy',
                     builder: (context, state) => const PrivacySettingsScreen(),
                   ),
-                  GoRoute(
+                  materialRoute(
                     path: 'developer',
                     builder: (context, state) =>
                         const DeveloperSettingsScreen(),
                   ),
-                  GoRoute(
+                  materialRoute(
                     path: 'getting-started',
                     builder: (context, state) =>
                         const GettingStartedHubScreen(),
                     routes: [
-                      GoRoute(
+                      materialRoute(
                         path: 'migration',
                         builder: (context, state) =>
                             const MigrationGuideScreen(),
                       ),
                     ],
                   ),
-                  GoRoute(
+                  materialRoute(
                     path: 'parental-control',
                     builder: (context, state) =>
                         const ParentalControlSettingsScreen(),
                     routes: [
-                      GoRoute(
+                      materialRoute(
                         path: 'pin-setup',
                         builder: (context, state) => const PinSetupScreen(),
                       ),
-                      GoRoute(
+                      materialRoute(
                         path: 'pin-change',
                         builder: (context, state) => const PinChangeScreen(),
                       ),
@@ -427,29 +428,29 @@ GoRouter createAppRouter({
           ),
         ],
       ),
-      GoRoute(
+      materialRoute(
         parentNavigatorKey: rootNavigatorKey,
         path: AppRoutes.consent,
         builder: (context, state) => const ConsentScreen(),
       ),
-      GoRoute(
+      materialRoute(
         parentNavigatorKey: rootNavigatorKey,
         path: AppRoutes.onboarding,
         builder: (context, state) => const OnboardingCarouselScreen(),
       ),
-      GoRoute(
+      materialRoute(
         parentNavigatorKey: rootNavigatorKey,
         path: AppRoutes.transcript,
         builder: (context, state) => _buildTranscriptScreen(state),
       ),
-      GoRoute(
+      materialRoute(
         parentNavigatorKey: rootNavigatorKey,
         path: AppRoutes.deepLinkPodcast,
         builder: (context, state) {
           return DeepLinkScreen(uri: state.uri);
         },
         routes: [
-          GoRoute(
+          materialRoute(
             path: 'e/:encodedGuid',
             builder: (context, state) {
               return DeepLinkScreen(uri: state.uri);
@@ -457,7 +458,7 @@ GoRouter createAppRouter({
           ),
         ],
       ),
-      GoRoute(
+      materialRoute(
         parentNavigatorKey: rootNavigatorKey,
         path: AppRoutes.notificationEpisode,
         builder: (context, state) => _NotificationEpisodeScreen(
