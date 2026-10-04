@@ -1,8 +1,9 @@
-• Richer new-episode notifications: episode title, artwork, release date, length, and a description preview
+• Richer new-episode notifications: title, artwork, date, length, and a preview
 • Notifications follow your in-app language
 • The notification toggle reflects your device permission
-• Interrupted downloads resume, and brief network drops are less likely to fail them
+• Interrupted downloads resume and survive brief network drops better
 • Artwork follows show updates and loads more smoothly
-• Fixed the notification icon showing as a blank circle
+• Fixed a blank notification icon
 • Fixed the language setting not applying
 • Fixed an error when marking an episode as played
+• Fixed episodes of a new series landing in "Ungrouped"
