@@ -157,7 +157,12 @@ class _SpeedChips extends StatelessWidget {
                   : PlaybackSpeedScale.label(chipSpeed),
             ),
             selected: chipSpeed == speed,
-            onSelected: (_) => onSelected(chipSpeed),
+            onSelected: (_) {
+              // Re-tapping the current speed is not a new choice. The chip
+              // stays enabled so the highlight keeps its selected styling.
+              if (chipSpeed == speed) return;
+              onSelected(chipSpeed);
+            },
           ),
       ],
     );

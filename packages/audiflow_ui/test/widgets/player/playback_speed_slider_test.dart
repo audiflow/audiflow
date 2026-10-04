@@ -73,4 +73,29 @@ void main() {
     expect(haptics, changes.length);
     expect(ends, [3.0]);
   });
+
+  testWidgets('tapping the current step does not fire onChangeEnd', (
+    tester,
+  ) async {
+    final ends = <double>[];
+    await tester.pumpWidget(
+      host(speed: 0.5, onChanged: (_) {}, onChangeEnd: ends.add),
+    );
+    // The first step sits at the start of the track (after the padding).
+    final slider = tester.widget<Slider>(find.byType(Slider));
+    expect(slider.value, 0);
+    final rect = tester.getRect(find.byType(Slider));
+    final gesture = await tester.startGesture(
+      rect.centerLeft + const Offset(1, 0),
+    );
+    await gesture.up();
+    await tester.pump();
+
+    expect(ends, isEmpty);
+
+    // A tap on another step is a real choice.
+    await tester.tapAt(rect.centerRight - const Offset(1, 0));
+    await tester.pump();
+    expect(ends, [3.0]);
+  });
 }

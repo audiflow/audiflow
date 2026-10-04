@@ -71,4 +71,14 @@ void main() {
     expect(commits, [1.0]);
     expect(previews, isEmpty);
   });
+
+  testWidgets('tapping the already selected chip commits nothing', (
+    tester,
+  ) async {
+    await tester.pumpWidget(host(speed: 2.0, chipSpeeds: [1.0, 2.0]));
+
+    await tester.tap(find.widgetWithText(ChoiceChip, '2.0x'));
+
+    expect(commits, isEmpty);
+  });
 }

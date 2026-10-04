@@ -44,15 +44,14 @@ class AudioButton extends ConsumerWidget {
       playbackSpeedSettingsControllerProvider.select((s) => s.speed),
     );
     final label = PlaybackSpeedScale.label(speed);
-    return Semantics(
-      button: true,
-      excludeSemantics: true,
-      label: l10n.playerAudioButtonLabel(label),
-      child: TextButton.icon(
-        icon: const Icon(Symbols.speed),
-        label: Text(label, style: Theme.of(context).textTheme.labelLarge),
-        onPressed: () => showAudioSheet(context),
+    return TextButton.icon(
+      icon: const Icon(Symbols.speed),
+      label: Text(
+        label,
+        semanticsLabel: l10n.playerAudioButtonLabel(label),
+        style: Theme.of(context).textTheme.labelLarge,
       ),
+      onPressed: () => showAudioSheet(context),
     );
   }
 }

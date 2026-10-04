@@ -30,25 +30,16 @@ class PlaybackSpeedSlider extends StatefulWidget {
 }
 
 class _PlaybackSpeedSliderState extends State<PlaybackSpeedSlider> {
-  // Index under the thumb during (and just after) a drag. Applying a
-  // speed is async, so [widget.speed] lags the gesture; tracking the
-  // index locally keeps the thumb responsive and stops repeated
-  // callbacks for the same step.
+  // Index under the thumb while dragging. The parent may rebuild with
+  // the new speed a moment later; tracking the index locally keeps the
+  // thumb responsive and stops repeated callbacks for the same step.
   int? _dragIndex;
-  bool _isDragging = false;
+  int? _gestureStartIndex;
 
   int get _index =>
       _dragIndex ?? PlaybackSpeedScale.indexForSpeed(widget.speed);
 
-  @override
-  void didUpdateWidget(PlaybackSpeedSlider oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    // Once the gesture is over, the first speed update from the parent
-    // takes over so the thumb never disagrees with the real speed.
-    if (!_isDragging && widget.speed != oldWidget.speed) _dragIndex = null;
-  }
-
-  void _handleChangeStart(double value) => _isDragging = true;
+  void _handleChangeStart(double value) => _gestureStartIndex = _index;
 
   void _handleChanged(double value) {
     final index = value.round();
@@ -59,14 +50,14 @@ class _PlaybackSpeedSliderState extends State<PlaybackSpeedSlider> {
   }
 
   void _handleChangeEnd(double value) {
-    _isDragging = false;
-    final speed = PlaybackSpeedScale.speedForIndex(value.round());
-    // Keep the dragged index until the parent catches up, unless it
-    // already has, to avoid the thumb snapping back for a frame.
-    if (PlaybackSpeedScale.snap(widget.speed) == speed) {
-      setState(() => _dragIndex = null);
-    }
-    widget.onChangeEnd?.call(speed);
+    final index = value.round();
+    final startIndex = _gestureStartIndex;
+    _gestureStartIndex = null;
+    setState(() => _dragIndex = null);
+    // A tap on the thumb or a drag back to the start changes nothing, so
+    // it must not count as a new choice.
+    if (index == startIndex) return;
+    widget.onChangeEnd?.call(PlaybackSpeedScale.speedForIndex(index));
   }
 
   @override

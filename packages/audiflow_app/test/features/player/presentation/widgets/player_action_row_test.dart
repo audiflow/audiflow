@@ -48,6 +48,19 @@ void main() {
     expect(find.byType(SleepTimerIconButton), findsOneWidget);
   });
 
+  testWidgets('Audio button announces itself with the speed', (tester) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(host(await container()));
+
+    expect(
+      find.bySemanticsLabel('Audio settings, playback speed 1.3x'),
+      findsOneWidget,
+    );
+    final node = tester.getSemantics(find.byType(AudioButton));
+    expect(node.flagsCollection.isButton, isTrue);
+    semantics.dispose();
+  });
+
   testWidgets('hides the output picker slot until one is provided', (
     tester,
   ) async {
