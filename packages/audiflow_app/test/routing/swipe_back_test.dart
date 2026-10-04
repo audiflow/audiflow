@@ -6,6 +6,7 @@ import 'package:audiflow_app/routing/material_route.dart';
 import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -29,15 +30,16 @@ void main() {
       await tester.pumpAndSettle();
 
       final route = ModalRoute.of(tester.element(find.text('a')))!;
-      expect(route, isA<MaterialRouteTransitionMixin<void>>());
-      expect(route.settings, isA<MaterialPage<void>>());
-      expect(route.settings.name, '/a');
+      check(route).isA<MaterialRouteTransitionMixin<void>>();
+      check(route.settings).isA<MaterialPage<void>>();
+      check(route.settings.name).equals('/a');
     });
   });
 
   group('AppRouter swipe-to-back', () {
     late GoRouter router;
     late SharedPreferences prefs;
+    late ProviderContainer container;
 
     setUp(() async {
       SharedPreferences.setMockInitialValues({
@@ -45,18 +47,23 @@ void main() {
         'onboarding.carousel_completed_v1': true,
       });
       prefs = await SharedPreferences.getInstance();
-      router = createAppRouter(
-        prefs: prefs,
-        container: ProviderContainer(
-          overrides: [
-            isRestrictedModeOnProvider.overrideWithValue(false),
-            isUnlockedProvider.overrideWithValue(true),
-          ],
-        ),
+      container = ProviderContainer(
+        overrides: [
+          isRestrictedModeOnProvider.overrideWithValue(false),
+          isUnlockedProvider.overrideWithValue(true),
+          // Keep the redirect off Isar; a loading stream fails open.
+          parentalControlSettingsStreamProvider.overrideWith(
+            (ref) => const Stream.empty(),
+          ),
+        ],
       );
+      router = createAppRouter(prefs: prefs, container: container);
     });
 
-    tearDown(() => router.dispose());
+    tearDown(() {
+      router.dispose();
+      container.dispose();
+    });
 
     Widget buildTestApp() {
       return ProviderScope(
@@ -92,12 +99,12 @@ void main() {
       await tester.pumpAndSettle();
       unawaited(router.push(AppRoutes.settingsPrivacy));
       await tester.pumpAndSettle();
-      expect(router.state.matchedLocation, AppRoutes.settingsPrivacy);
+      check(router.state.matchedLocation).equals(AppRoutes.settingsPrivacy);
 
       await tester.dragFrom(const Offset(5, 300), const Offset(300, 0));
       await tester.pumpAndSettle();
 
-      expect(router.state.matchedLocation, AppRoutes.settings);
+      check(router.state.matchedLocation).equals(AppRoutes.settings);
     }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
   });
 }
