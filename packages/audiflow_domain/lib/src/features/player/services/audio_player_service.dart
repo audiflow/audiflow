@@ -974,15 +974,19 @@ class AudioPlayerController extends _$AudioPlayerController
     final segmentIds = _listenSession.openIds;
     final splitSegment = segmentIds != null && snapped != _player.speed;
     if (splitSegment) _closeListenSession(ListenEndReason.speedChange);
+    // Start saving before awaiting the engine: save() updates the speed
+    // state synchronously, so speed controls follow a fast slider drag
+    // instead of trailing behind queued engine calls.
+    final saved = ref
+        .read(playbackSpeedSettingsControllerProvider.notifier)
+        .save(snapped, recordRecent: !transient);
     await _player.setSpeed(snapped);
     // Playback may have paused while the engine applied the speed; the
     // stream has then already closed the segment and must not reopen it.
     if (splitSegment && _player.playing) {
       _openListenSession(ids: segmentIds);
     }
-    await ref
-        .read(playbackSpeedSettingsControllerProvider.notifier)
-        .save(snapped, recordRecent: !transient);
+    await saved;
     if (transient) return;
     unawaited(
       ref
