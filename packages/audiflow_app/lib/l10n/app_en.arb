@@ -574,6 +574,12 @@
   "@playerTranscriptLoading": { "description": "Transcript loading message" },
   "playerTranscriptEmpty": "No transcript available",
   "@playerTranscriptEmpty": { "description": "No transcript available message" },
+  "playerChaptersTitle": "Chapters",
+  "@playerChaptersTitle": { "description": "Title of the chapter list sheet, and the chapter row label before the first chapter starts" },
+  "playerCurrentChapterLabel": "Chapter {number}: {title}. Show chapter list",
+  "@playerCurrentChapterLabel": { "description": "Accessibility label for the current chapter row in the player", "placeholders": { "number": { "type": "int" }, "title": { "type": "String" } } },
+  "playerChapterItemLabel": "Chapter {number}: {title}, starts at {time}",
+  "@playerChapterItemLabel": { "description": "Accessibility label for a chapter in the chapter list", "placeholders": { "number": { "type": "int" }, "title": { "type": "String" }, "time": { "type": "String" } } },
   "playerTranscriptJumpToCurrent": "Jump to current",
   "@playerTranscriptJumpToCurrent": { "description": "Jump to current position button label" },
 

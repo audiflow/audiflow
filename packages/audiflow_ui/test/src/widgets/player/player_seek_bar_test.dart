@@ -19,6 +19,7 @@ Widget _host({
   required double value,
   required _SeekRecorder recorder,
   List<SeekBarSegment> segments = SeekBarSegment.single,
+  Widget Function(BuildContext context, double value)? tooltipBuilder,
   bool adjustable = true,
 }) {
   return MaterialApp(
@@ -29,6 +30,7 @@ Widget _host({
           child: PlayerSeekBar(
             value: value,
             segments: segments,
+            tooltipBuilder: tooltipBuilder,
             leadingLabel: '01:00',
             trailingLabel: '-09:00',
             semanticValueFormatter: (value) => 'at ${(value * 100).round()}%',
@@ -249,6 +251,131 @@ void main() {
       );
       check(split.shouldRepaint(base)).isTrue();
       check(base.shouldRepaint(base)).isFalse();
+    });
+
+    test('leaves a gap only where segments meet', () {
+      const painter = PlayerSeekBarPainter(
+        value: 0,
+        trackHeight: 6,
+        segments: [
+          SeekBarSegment(start: 0, end: 0.5),
+          SeekBarSegment(start: 0.5, end: 1),
+        ],
+        segmentGap: 2,
+        activeColor: Colors.blue,
+        inactiveColor: Colors.grey,
+      );
+      const radius = Radius.circular(3);
+      expect(
+        (Canvas canvas) => painter.paint(canvas, const Size(400, 10)),
+        paints
+          ..rrect(rrect: RRect.fromLTRBR(0, 2, 199, 8, radius))
+          ..rrect(rrect: RRect.fromLTRBR(201, 2, 400, 8, radius)),
+      );
+    });
+
+    test('skips a segment narrower than the gap', () {
+      const painter = PlayerSeekBarPainter(
+        value: 0,
+        trackHeight: 6,
+        segments: [
+          SeekBarSegment(start: 0, end: 0.5),
+          SeekBarSegment(start: 0.5, end: 0.502),
+          SeekBarSegment(start: 0.502, end: 1),
+        ],
+        segmentGap: 2,
+        activeColor: Colors.blue,
+        inactiveColor: Colors.grey,
+      );
+      expect(
+        (Canvas canvas) => painter.paint(canvas, const Size(400, 10)),
+        paints
+          ..rrect()
+          ..rrect(),
+      );
+      expect(
+        (Canvas canvas) => painter.paint(canvas, const Size(400, 10)),
+        isNot(
+          paints
+            ..rrect()
+            ..rrect()
+            ..rrect(),
+        ),
+      );
+    });
+  });
+
+  group('PlayerSeekBar tooltip', () {
+    Widget tooltipHost(double value) => _host(
+      value: value,
+      recorder: _SeekRecorder(),
+      tooltipBuilder: (context, value) => Text('at ${(value * 100).round()}%'),
+    );
+
+    Future<TestGesture> startDrag(WidgetTester tester, double dx) async {
+      final gesture = await tester.startGesture(tester.getCenter(_track));
+      await gesture.moveBy(Offset(dx, 0));
+      await tester.pump();
+      return gesture;
+    }
+
+    testWidgets('is hidden until a drag starts', (tester) async {
+      await tester.pumpWidget(tooltipHost(0.5));
+
+      check(find.byKey(PlayerSeekBar.tooltipKey).evaluate()).isEmpty();
+    });
+
+    testWidgets('follows the scrub value and hides on release', (tester) async {
+      await tester.pumpWidget(tooltipHost(0.5));
+
+      final gesture = await startDrag(tester, _barWidth * 0.1);
+      check(find.text('at 60%').evaluate()).isNotEmpty();
+      final tooltip = tester.getRect(find.byKey(PlayerSeekBar.tooltipKey));
+      final track = tester.getRect(_track);
+      check(tooltip.bottom).isLessOrEqual(track.top);
+      check(
+        (tooltip.center.dx - (track.left + _barWidth * 0.6)).abs(),
+      ).isLessThan(1);
+
+      await gesture.up();
+      await tester.pump();
+      check(find.byKey(PlayerSeekBar.tooltipKey).evaluate()).isEmpty();
+    });
+
+    testWidgets('stays inside the bar at both edges', (tester) async {
+      await tester.pumpWidget(tooltipHost(0.0));
+      final track = tester.getRect(_track);
+
+      var gesture = await startDrag(tester, -10);
+      var tooltip = tester.getRect(find.byKey(PlayerSeekBar.tooltipKey));
+      check(tooltip.left).equals(track.left);
+      await gesture.up();
+      await tester.pump();
+
+      await tester.pumpWidget(tooltipHost(1.0));
+      gesture = await startDrag(tester, 10);
+      tooltip = tester.getRect(find.byKey(PlayerSeekBar.tooltipKey));
+      check(tooltip.right).equals(track.right);
+      await gesture.up();
+    });
+
+    testWidgets('drag continues across the first update', (tester) async {
+      final recorder = _SeekRecorder();
+      await tester.pumpWidget(
+        _host(
+          value: 0.5,
+          recorder: recorder,
+          tooltipBuilder: (context, value) => const Text('tip'),
+        ),
+      );
+
+      final gesture = await startDrag(tester, 10);
+      await gesture.moveBy(const Offset(_barWidth * 0.1, 0));
+      await gesture.up();
+      await tester.pump();
+
+      check(recorder.ends).length.equals(1);
+      check(recorder.ends.single).isGreaterThan(0.6);
     });
   });
 }

@@ -876,6 +876,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playerTranscriptEmpty => 'No transcript available';
 
   @override
+  String get playerChaptersTitle => 'Chapters';
+
+  @override
+  String playerCurrentChapterLabel(int number, String title) {
+    return 'Chapter $number: $title. Show chapter list';
+  }
+
+  @override
+  String playerChapterItemLabel(int number, String title, String time) {
+    return 'Chapter $number: $title, starts at $time';
+  }
+
+  @override
   String get playerTranscriptJumpToCurrent => 'Jump to current';
 
   @override

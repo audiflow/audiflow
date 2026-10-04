@@ -857,6 +857,19 @@ class AppLocalizationsJa extends AppLocalizations {
   String get playerTranscriptEmpty => '書き起こしがありません';
 
   @override
+  String get playerChaptersTitle => 'チャプター';
+
+  @override
+  String playerCurrentChapterLabel(int number, String title) {
+    return 'チャプター$number: $title。チャプター一覧を表示';
+  }
+
+  @override
+  String playerChapterItemLabel(int number, String title, String time) {
+    return 'チャプター$number: $title、$timeから';
+  }
+
+  @override
   String get playerTranscriptJumpToCurrent => '現在位置へ';
 
   @override

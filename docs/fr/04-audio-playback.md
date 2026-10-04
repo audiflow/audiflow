@@ -154,8 +154,15 @@ state and resume position stay coherent no matter where the listener touches it.
 - Screen readers see a single slider whose value reads "elapsed of total"; increase/decrease
   actions seek by 5% of the episode, and the right-hand label is exposed as a button so the
   remaining/total toggle stays reachable.
-- The track is drawn from a list of segments so chapter boundaries can be shown later without
-  changing the widget API. The mini player's thin progress bar is unchanged.
+- For episodes with chapters, the track is split into one segment per chapter with a 2 pt gap
+  at each chapter start (an untitled lead-in segment when the first chapter starts after
+  zero). While dragging, and only then, a tooltip above the bar shows the chapter under the
+  scrub position and the position itself; episodes without chapters show the position only.
+  The tooltip follows the finger but is kept within the bar at both edges. Chapter display is
+  described in FR 08. Episodes without chapters keep a single unbroken track.
+- The artwork above the episode info shrinks to make room for the text below it, down to a
+  160 pt minimum; on screens too short for that the area above the seek bar scrolls instead.
+- The mini player's thin progress bar is unchanged.
 
 ## Boundaries
 
@@ -167,8 +174,9 @@ state and resume position stay coherent no matter where the listener touches it.
 - **Does not own the sleep timer.** Countdown modes, end-of-episode / end-of-chapter triggers,
   and timer persistence belong to FR 09 (sleep timer). Playback only exposes the fade-out-and-
   pause action the timer invokes and the lifecycle events the timer observes.
-- **Does not own transcripts or chapters.** Transcript and chapter display is a separate
-  feature; playback only provides the position other features read.
+- **Does not own transcripts or chapters.** Transcript and chapter display, including the
+  chapter gaps and tooltip on the seek bar, is FR 08; playback only provides the position
+  other features read.
 - **Does not define play order for ad-hoc queues.** The group → playlist → podcast → global
   play-order cascade is a separate feature; playback consumes its result via the queue.
 - **Does not perform discovery, subscription, or feed parsing.** Playback operates on episodes
