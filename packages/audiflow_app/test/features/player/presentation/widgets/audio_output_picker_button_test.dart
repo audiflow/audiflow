@@ -1,7 +1,6 @@
 import 'package:audiflow_app/features/player/presentation/widgets/audio_output_picker_button.dart';
 import 'package:audiflow_app/features/player/services/audio_route_channel.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -33,40 +32,40 @@ void main() {
     );
   }
 
-  testWidgets('Android: tapping opens the system output switcher', (
-    tester,
-  ) async {
-    debugDefaultTargetPlatformOverride = TargetPlatform.android;
-    await tester.pumpWidget(host());
+  testWidgets(
+    'Android: tapping opens the system output switcher',
+    variant: TargetPlatformVariant.only(TargetPlatform.android),
+    (tester) async {
+      await tester.pumpWidget(host());
 
-    expect(find.byTooltip('Audio output'), findsOneWidget);
-    await tester.tap(find.byType(IconButton));
-    expect(channel.showPickerCalls, 1);
-    debugDefaultTargetPlatformOverride = null;
-  });
+      expect(find.byTooltip('Audio output'), findsOneWidget);
+      await tester.tap(find.byType(IconButton));
+      expect(channel.showPickerCalls, 1);
+    },
+  );
 
-  testWidgets('iOS: native route picker sits over the Flutter icon', (
-    tester,
-  ) async {
-    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
-    final messenger = tester.binding.defaultBinaryMessenger;
-    messenger.setMockMethodCallHandler(
-      SystemChannels.platform_views,
-      (_) async => null,
-    );
-    addTearDown(
-      () => messenger.setMockMethodCallHandler(
+  testWidgets(
+    'iOS: native route picker sits over the Flutter icon',
+    variant: TargetPlatformVariant.only(TargetPlatform.iOS),
+    (tester) async {
+      final messenger = tester.binding.defaultBinaryMessenger;
+      messenger.setMockMethodCallHandler(
         SystemChannels.platform_views,
-        null,
-      ),
-    );
-    await tester.pumpWidget(host());
+        (_) async => null,
+      );
+      addTearDown(
+        () => messenger.setMockMethodCallHandler(
+          SystemChannels.platform_views,
+          null,
+        ),
+      );
+      await tester.pumpWidget(host());
 
-    final view = tester.widget<UiKitView>(find.byType(UiKitView));
-    expect(view.viewType, audioRoutePickerViewType);
-    expect(view.creationParams, {'label': 'Audio output'});
-    // The native view owns the tap, so no Flutter button is drawn.
-    expect(find.byType(IconButton), findsNothing);
-    debugDefaultTargetPlatformOverride = null;
-  });
+      final view = tester.widget<UiKitView>(find.byType(UiKitView));
+      expect(view.viewType, audioRoutePickerViewType);
+      expect(view.creationParams, {'label': 'Audio output'});
+      // The native view owns the tap, so no Flutter button is drawn.
+      expect(find.byType(IconButton), findsNothing);
+    },
+  );
 }
