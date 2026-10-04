@@ -8,6 +8,7 @@ import android.provider.Settings
 import androidx.mediarouter.app.SystemOutputSwitcherDialogController
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodChannel
+import java.lang.ref.WeakReference
 
 /**
  * Handles `audiflow/audio_route`: opens the system media output switcher.
@@ -21,10 +22,16 @@ object AudioRouteChannel {
     private const val CHANNEL_NAME = "audiflow/audio_route"
 
     fun register(messenger: BinaryMessenger, activity: Activity) {
+        // audio_service caches the engine beyond the activity's lifetime, so
+        // a strong reference here would leak a destroyed MainActivity.
+        val activityRef = WeakReference(activity)
         MethodChannel(messenger, CHANNEL_NAME).setMethodCallHandler { call, result ->
             when (call.method) {
                 "isPickerAvailable" -> result.success(isPickerAvailable())
-                "showPicker" -> result.success(showPicker(activity))
+                "showPicker" -> {
+                    val current = activityRef.get()?.takeUnless { it.isFinishing }
+                    result.success(current != null && showPicker(current))
+                }
                 else -> result.notImplemented()
             }
         }

@@ -28,19 +28,32 @@ final class AudioRoutePickerViewFactory: NSObject, FlutterPlatformViewFactory {
   }
 }
 
+/// Route picker whose inner button carries the app's accessibility label.
+///
+/// VoiceOver focuses the private UIButton inside `AVRoutePickerView`, not
+/// the container, so the label must go on that button. It is created
+/// lazily, hence the assignment on every layout pass.
+private final class LabeledRoutePickerView: AVRoutePickerView {
+  var buttonAccessibilityLabel: String?
+
+  override func layoutSubviews() {
+    super.layoutSubviews()
+    guard let label = buttonAccessibilityLabel else { return }
+    subviews.compactMap { $0 as? UIButton }.first?.accessibilityLabel = label
+  }
+}
+
 private final class AudioRoutePickerPlatformView: NSObject, FlutterPlatformView {
-  private let picker: AVRoutePickerView
+  private let picker: LabeledRoutePickerView
 
   init(frame: CGRect, label: String?) {
-    picker = AVRoutePickerView(frame: frame)
+    picker = LabeledRoutePickerView(frame: frame)
     picker.backgroundColor = .clear
     // Clear tints hide the native glyph so only the Flutter icon shows.
     picker.tintColor = .clear
     picker.activeTintColor = .clear
     picker.prioritizesVideoDevices = false
-    if let label {
-      picker.accessibilityLabel = label
-    }
+    picker.buttonAccessibilityLabel = label
     super.init()
   }
 
