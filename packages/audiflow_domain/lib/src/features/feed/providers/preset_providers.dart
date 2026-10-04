@@ -277,7 +277,10 @@ Future<SmartPlaylistGrouping?> _buildGroupingFromCache(
   // Without this check, episodes added by a later feed sync would
   // fall into ungrouped until the next config bump.
   final cachedFingerprint = cachedPlaylists.first.episodeFingerprint;
-  if (cachedFingerprint != computeEpisodeFingerprint(episodes)) {
+  final episodesChanged =
+      cachedFingerprint != computeEpisodeFingerprint(episodes);
+  if (episodesChanged &&
+      await _isPresetLoadable(configRepo, summary, podcastId, logger)) {
     logger.d(
       'Episodes changed since smart playlists were cached for '
       'podcastId=$podcastId; re-resolving',
@@ -421,6 +424,32 @@ Future<SmartPlaylistGrouping?> _buildGroupingFromCache(
   );
 }
 
+/// Whether the matched preset config can be loaded right now.
+///
+/// Re-resolving deletes the cached grouping first. When the preset
+/// cannot load, keeping the stale preset grouping beats replacing it
+/// with an auto-detect fallback; the next read retries.
+Future<bool> _isPresetLoadable(
+  PresetConfigRepository configRepo,
+  PresetSummary? summary,
+  int podcastId,
+  Logger logger,
+) async {
+  if (summary == null) return true;
+  try {
+    await configRepo.getConfig(summary);
+    return true;
+  } on Object catch (error, stackTrace) {
+    logger.w(
+      'Failed to load config v${summary.dataVersion} for '
+      'podcastId=$podcastId; keeping cached grouping until it loads',
+      error: error,
+      stackTrace: stackTrace,
+    );
+    return false;
+  }
+}
+
 /// Handles an upstream config update (dataVersion bump).
 ///
 /// Numbering is extracted only at ingest, so episodes stored under
@@ -495,8 +524,22 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
     );
     try {
       config = await repo.getConfig(summary);
-    } on Object {
-      // If remote fetch fails, continue without config
+    } on Object catch (error, stackTrace) {
+      // Persisting a preset-less fallback would stamp it with the
+      // preset's version and fingerprint, so later reads would accept
+      // it and never retry the preset. Serve it transiently instead.
+      logger.w(
+        'Failed to load config v${summary.dataVersion} for '
+        'podcastId=$podcastId; serving unpersisted grouping',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      return _reResolveFromEpisodes(
+        ref,
+        podcastId,
+        feedUrl,
+        podcastImageUrl: podcastImageUrl,
+      );
     }
   }
 

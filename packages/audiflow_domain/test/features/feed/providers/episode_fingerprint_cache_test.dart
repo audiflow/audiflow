@@ -1,5 +1,6 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
-import 'package:flutter_test/flutter_test.dart';
+import 'package:checks/checks.dart';
+import 'package:flutter_test/flutter_test.dart' hide expect;
 import 'package:isar_community/isar.dart';
 import 'package:riverpod/riverpod.dart';
 
@@ -53,6 +54,9 @@ SmartPlaylistGroup? _groupOf(SmartPlaylistGrouping grouping, int episodeId) {
   }
   return null;
 }
+
+List<int>? _groupMates(SmartPlaylistGrouping grouping, int episodeId) =>
+    _groupOf(grouping, episodeId)?.episodeIds;
 
 void main() {
   late Isar isar;
@@ -118,10 +122,9 @@ void main() {
       ]);
       final grouping = await reread();
 
-      expect(grouping.ungroupedEpisodeIds, isNot(contains(3)));
-      expect(grouping.ungroupedEpisodeIds, isNot(contains(4)));
-      expect(_groupOf(grouping, 3)?.episodeIds, containsAll([3, 4]));
-      expect(_allGroups(grouping), hasLength(2));
+      check(grouping.ungroupedEpisodeIds).isEmpty();
+      check(_groupMates(grouping, 3)).isNotNull().unorderedEquals([3, 4]);
+      check(_allGroups(grouping)).length.equals(2);
     });
 
     test('a new episode of an existing series joins that group', () async {
@@ -130,8 +133,8 @@ void main() {
       episodeRepo.episodes.add(_seriesEpisode(3, 1, 3));
       final grouping = await reread();
 
-      expect(_groupOf(grouping, 3)?.episodeIds, containsAll([1, 2, 3]));
-      expect(_groupOf(grouping, 3)?.latestDate, DateTime(2026, 1, 3));
+      check(_groupMates(grouping, 3)).isNotNull().unorderedEquals([1, 2, 3]);
+      check(_groupOf(grouping, 3)?.latestDate).equals(DateTime(2026, 1, 3));
     });
 
     test('a removed episode disappears from its group', () async {
@@ -140,8 +143,8 @@ void main() {
       episodeRepo.episodes.removeWhere((e) => e.id == 2);
       final grouping = await reread();
 
-      expect(_groupOf(grouping, 2), isNull);
-      expect(_groupOf(grouping, 1)?.episodeIds, [1]);
+      check(_groupOf(grouping, 2)).isNull();
+      check(_groupMates(grouping, 1)).isNotNull().deepEquals([1]);
     });
 
     test('an episode whose numbering changed moves to its new group', () async {
@@ -152,8 +155,8 @@ void main() {
         ..add(_seriesEpisode(2, 3, 1));
       final grouping = await reread();
 
-      expect(_groupOf(grouping, 1)?.episodeIds, [1]);
-      expect(_groupOf(grouping, 2)?.episodeIds, [2]);
+      check(_groupMates(grouping, 1)).isNotNull().deepEquals([1]);
+      check(_groupMates(grouping, 2)).isNotNull().deepEquals([2]);
     });
 
     test(
@@ -162,17 +165,19 @@ void main() {
         // No season number: legitimately ungrouped on every resolve.
         episodeRepo.episodes.add(testEpisode(id: 9, title: 'Bonus'));
         final first = await readSmartPlaylists(container, 1);
-        expect(first!.ungroupedEpisodeIds, [9]);
+        check(first)
+            .isNotNull()
+            .has((g) => g.ungroupedEpisodeIds, 'ungrouped')
+            .deepEquals([9]);
         final callsAfterFirstResolve = configRepo.getConfigCalls;
 
         final second = await reread();
 
-        expect(second.ungroupedEpisodeIds, [9]);
-        expect(
+        check(second.ungroupedEpisodeIds).deepEquals([9]);
+        check(
+          because: 'a cache hit must not re-resolve',
           configRepo.getConfigCalls,
-          callsAfterFirstResolve,
-          reason: 'A cache hit must not re-resolve',
-        );
+        ).equals(callsAfterFirstResolve);
       },
     );
 
@@ -203,10 +208,37 @@ void main() {
 
       final grouping = (await readSmartPlaylists(container, 1))!;
 
-      expect(grouping.ungroupedEpisodeIds, isEmpty);
-      expect(_groupOf(grouping, 3)?.id, 'season_2');
+      check(grouping.ungroupedEpisodeIds).isEmpty();
+      check(_groupOf(grouping, 3)?.id).equals('season_2');
       final entities = await datasource.getByPodcastId(1);
-      expect(entities.first.episodeFingerprint, isNotNull);
+      check(entities.first.episodeFingerprint).isNotNull();
+    });
+
+    test('keeps the cached grouping while the preset cannot load, then '
+        're-resolves once it does', () async {
+      await readSmartPlaylists(container, 1);
+      episodeRepo.episodes.add(_seriesEpisode(3, 2, 1));
+
+      configRepo.failGetConfig = true;
+      final offline = await reread();
+
+      check(_groupMates(offline, 1)).isNotNull().unorderedEquals([1, 2]);
+      final cachedGroups = await datasource.getGroupsByPlaylist(1, 'regular');
+      check(cachedGroups.map((g) => g.groupId)).deepEquals(['season_1']);
+
+      configRepo.failGetConfig = false;
+      final online = await reread();
+
+      check(_groupOf(online, 3)?.id).equals('season_2');
+    });
+
+    test('a preset-less fallback is never persisted under the preset '
+        'version', () async {
+      configRepo.failGetConfig = true;
+
+      await readSmartPlaylists(container, 1);
+
+      check(await datasource.getByPodcastId(1)).isEmpty();
     });
   });
 }

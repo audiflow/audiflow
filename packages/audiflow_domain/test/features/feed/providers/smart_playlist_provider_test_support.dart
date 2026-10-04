@@ -52,6 +52,9 @@ class FakeConfigRepository implements PresetConfigRepository {
   /// Number of [getConfig] calls; a cache hit never loads the config.
   int getConfigCalls = 0;
 
+  /// Simulates an offline device with no disk-cached config.
+  bool failGetConfig = false;
+
   @override
   PresetSummary? findMatchingPreset(String? podcastGuid, String feedUrl) =>
       summary;
@@ -59,6 +62,7 @@ class FakeConfigRepository implements PresetConfigRepository {
   @override
   Future<PresetConfig> getConfig(PresetSummary summary) async {
     getConfigCalls++;
+    if (failGetConfig) throw StateError('config unavailable');
     return config!;
   }
 
