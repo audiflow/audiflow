@@ -82,7 +82,7 @@ void main() {
 
       await container
           .read(playbackSpeedSettingsControllerProvider.notifier)
-          .save(2.4, recordRecent: true);
+          .save(2.4, commit: true);
       await tester.pump();
 
       expect(find.text('2.4x'), findsOneWidget);

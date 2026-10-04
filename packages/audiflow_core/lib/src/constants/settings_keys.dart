@@ -44,6 +44,10 @@ class SettingsKeys {
   static const String duckInterruptionBehavior =
       'settings_duck_interruption_behavior';
 
+  /// Whether the player's right-hand time label shows remaining time
+  /// (`-mm:ss`) instead of the total duration.
+  static const String showRemainingTime = 'settings_show_remaining_time';
+
   // -- Downloads --
 
   /// Restrict downloads to Wi-Fi connections.
@@ -126,6 +130,9 @@ class SettingsDefaults {
   /// Seconds to rewind before an interruption-driven pause so the listener
   /// does not miss content when playback resumes.
   static const int interruptionRewindSeconds = 2;
+
+  /// Default player time label mode (remaining time).
+  static const bool showRemainingTime = true;
 
   /// Default Wi-Fi only download setting.
   static const bool wifiOnlyDownload = true;

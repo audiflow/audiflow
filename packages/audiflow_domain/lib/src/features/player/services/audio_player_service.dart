@@ -974,9 +974,9 @@ class AudioPlayerController extends _$AudioPlayerController
   /// global value without touching the player, and a podcast scope with
   /// no override is ignored rather than creating one. Pass [transient]
   /// for intermediate slider steps during a drag: the speed is applied
-  /// and saved but neither recorded as a recent speed nor reported to
-  /// analytics. The final value
-  /// of the gesture must then be committed with a non-transient call.
+  /// and held in memory, but not persisted, recorded as a recent speed,
+  /// or reported to analytics. The final value of the gesture must then
+  /// be committed with a non-transient call.
   ///
   /// Committed speeds are recorded in the shared recent-speed list
   /// whichever scope they were saved to.
@@ -1010,7 +1010,7 @@ class AudioPlayerController extends _$AudioPlayerController
     final global = ref.read(playbackSpeedSettingsControllerProvider.notifier);
     switch (scope) {
       case GlobalAudioSettingsScope():
-        await global.save(speed, recordRecent: !transient);
+        await global.save(speed, commit: !transient);
       case PodcastAudioSettingsScope(:final podcastId):
         final override = ref.read(
           podcastAudioOverrideControllerProvider(podcastId).notifier,
@@ -1018,7 +1018,7 @@ class AudioPlayerController extends _$AudioPlayerController
         // The override was switched off under a pending edit: drop the
         // edit rather than recording a speed nothing saved.
         if (!override.hasOverride) return false;
-        final saved = override.saveSpeed(speed);
+        final saved = override.saveSpeed(speed, persist: !transient);
         if (!transient) await global.recordRecent(speed);
         await saved;
     }

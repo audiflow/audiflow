@@ -46,12 +46,18 @@ class PodcastAudioOverrideController extends _$PodcastAudioOverrideController {
   /// Sets the override's speed (snapped to the grid).
   ///
   /// Ignored when the podcast has no override: a speed edit must never
-  /// create one implicitly.
-  Future<void> saveSpeed(double speed) async {
+  /// create one implicitly. Slider drags pass `persist: false` for
+  /// intermediate steps, matching the global speed: memory only, so a
+  /// drag does not queue a write per step.
+  Future<void> saveSpeed(double speed, {required bool persist}) async {
     if (!hasOverride) return;
     final updated = state.value!.copyWith(
       speed: PlaybackSpeedScale.snap(speed),
     );
+    if (!persist) {
+      state = AsyncData(updated);
+      return;
+    }
     await _update(updated, (repo) => repo.set(podcastId, updated));
   }
 

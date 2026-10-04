@@ -81,6 +81,13 @@ abstract class AppSettingsRepository {
   /// Persists the duck interruption behavior preference.
   Future<void> setDuckInterruptionBehavior(DuckInterruptionBehavior behavior);
 
+  /// Whether the player shows remaining time instead of total duration
+  /// in its right-hand time label.
+  bool getShowRemainingTime();
+
+  /// Persists the player time label mode.
+  Future<void> setShowRemainingTime(bool enabled);
+
   // -- Downloads --
 
   /// Whether downloads are restricted to Wi-Fi.

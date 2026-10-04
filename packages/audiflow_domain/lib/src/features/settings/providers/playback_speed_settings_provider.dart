@@ -59,22 +59,24 @@ class PlaybackSpeedSettingsController
     );
   }
 
-  /// Persists [speed] (snapped to the grid) as the current speed.
+  /// Sets [speed] (snapped to the grid) as the current speed.
   ///
-  /// When [recordRecent] is true the speed is also pushed onto the
-  /// recent list. Slider drags pass false for intermediate steps so only
-  /// the speed the user settles on is remembered.
-  Future<void> save(double speed, {required bool recordRecent}) async {
+  /// When [commit] is true the speed is persisted and pushed onto the
+  /// recent list. Slider drags pass false for intermediate steps: those
+  /// only update memory, so a drag does not queue a disk write per step
+  /// and only the speed the user settles on is stored and remembered.
+  Future<void> save(double speed, {required bool commit}) async {
     final snapped = PlaybackSpeedScale.snap(speed);
     final repo = ref.read(appSettingsRepositoryProvider);
-    final recent = recordRecent
+    final recent = commit
         ? RecentPlaybackSpeeds.record(state.recentSpeeds, snapped)
         : state.recentSpeeds;
     // Update memory first so the UI follows the slider without waiting
     // on disk; persistence failures surface to the caller.
     state = PlaybackSpeedSettings(speed: snapped, recentSpeeds: recent);
+    if (!commit) return;
     await repo.setPlaybackSpeed(snapped);
-    if (recordRecent) await repo.setRecentPlaybackSpeeds(recent);
+    await repo.setRecentPlaybackSpeeds(recent);
   }
 
   /// Pushes [speed] onto the recent list without changing the global

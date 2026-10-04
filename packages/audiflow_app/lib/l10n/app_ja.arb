@@ -514,6 +514,26 @@
   "@sleepTimerStart": { "description": "Primary CTA on the numeric input panel" },
   "sleepTimerIconLabel": "スリープタイマー",
   "@sleepTimerIconLabel": { "description": "Accessibility label for the sleep-timer icon button" },
+  "sleepTimerStopOnHeader": "終わりで停止",
+  "@sleepTimerStopOnHeader": { "description": "Sleep timer sheet card header for end-of-episode / end-of-chapter options" },
+  "sleepTimerStopAfterHeader": "経過後に停止",
+  "@sleepTimerStopAfterHeader": { "description": "Sleep timer sheet card header for the minutes / episodes options" },
+  "sleepTimerEdit": "編集",
+  "@sleepTimerEdit": { "description": "Trailing control that opens the numeric keypad for a remembered value" },
+  "sleepTimerStatusDuration": "あと{remaining}で停止（{time}）",
+  "@sleepTimerStatusDuration": {
+    "description": "Sleep timer sheet status line for an active duration timer",
+    "placeholders": { "remaining": { "type": "String" }, "time": { "type": "String" } }
+  },
+  "sleepTimerStatusEndOfEpisode": "エピソードの終わりで停止",
+  "@sleepTimerStatusEndOfEpisode": { "description": "Sleep timer sheet status line for an active end-of-episode timer" },
+  "sleepTimerStatusEndOfChapter": "チャプターの終わりで停止",
+  "@sleepTimerStatusEndOfChapter": { "description": "Sleep timer sheet status line for an active end-of-chapter timer" },
+  "sleepTimerStatusEpisodesLeft": "残り{count}エピソード",
+  "@sleepTimerStatusEpisodesLeft": {
+    "description": "Sleep timer sheet status line for an active episode-count timer",
+    "placeholders": { "count": { "type": "int" } }
+  },
 
   "onboardingCarouselSkip": "スキップ",
   "@onboardingCarouselSkip": { "description": "Skip button on the onboarding carousel" },

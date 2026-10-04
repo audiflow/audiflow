@@ -128,13 +128,17 @@ void main() {
       expect(analytics.events.whereType<PlaybackSpeedChanged>(), hasLength(1));
     });
 
-    test('transient steps save without recording a recent speed', () async {
+    test('transient steps update memory only', () async {
       overrides.overrides[1] = const AudioSettings(speed: 1.0);
       await playPodcast(1);
 
       await controller().setSpeed(1.8, scope: scope, transient: true);
 
-      expect(overrides.overrides[1], const AudioSettings(speed: 1.8));
+      expect(
+        container.read(podcastAudioOverrideControllerProvider(1)).value,
+        const AudioSettings(speed: 1.8),
+      );
+      expect(overrides.overrides[1], const AudioSettings(speed: 1.0));
       expect(playerSpeed(), 1.8);
       expect(settings().recentSpeeds, isEmpty);
       expect(analytics.events.whereType<PlaybackSpeedChanged>(), isEmpty);

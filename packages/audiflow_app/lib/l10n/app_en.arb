@@ -899,6 +899,26 @@
   "@sleepTimerStart": { "description": "Primary CTA on the numeric input panel" },
   "sleepTimerIconLabel": "Sleep timer",
   "@sleepTimerIconLabel": { "description": "Accessibility label for the sleep-timer icon button" },
+  "sleepTimerStopOnHeader": "Stop on",
+  "@sleepTimerStopOnHeader": { "description": "Sleep timer sheet card header for end-of-episode / end-of-chapter options" },
+  "sleepTimerStopAfterHeader": "Stop after",
+  "@sleepTimerStopAfterHeader": { "description": "Sleep timer sheet card header for the minutes / episodes options" },
+  "sleepTimerEdit": "Edit",
+  "@sleepTimerEdit": { "description": "Trailing control that opens the numeric keypad for a remembered value" },
+  "sleepTimerStatusDuration": "Stopping in {remaining} (at {time})",
+  "@sleepTimerStatusDuration": {
+    "description": "Sleep timer sheet status line for an active duration timer",
+    "placeholders": { "remaining": { "type": "String" }, "time": { "type": "String" } }
+  },
+  "sleepTimerStatusEndOfEpisode": "Stops at end of episode",
+  "@sleepTimerStatusEndOfEpisode": { "description": "Sleep timer sheet status line for an active end-of-episode timer" },
+  "sleepTimerStatusEndOfChapter": "Stops at end of chapter",
+  "@sleepTimerStatusEndOfChapter": { "description": "Sleep timer sheet status line for an active end-of-chapter timer" },
+  "sleepTimerStatusEpisodesLeft": "{count, plural, one{{count} episode left} other{{count} episodes left}}",
+  "@sleepTimerStatusEpisodesLeft": {
+    "description": "Sleep timer sheet status line for an active episode-count timer",
+    "placeholders": { "count": { "type": "int" } }
+  },
 
   "onboardingCarouselSkip": "Skip",
   "@onboardingCarouselSkip": { "description": "Skip button on the onboarding carousel" },
