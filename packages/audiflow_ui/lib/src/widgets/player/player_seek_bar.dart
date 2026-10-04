@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'scrub_speed.dart';
+
 /// A contiguous stretch of the seek bar track, in fractions of the whole
 /// track (0.0 to 1.0).
 ///
@@ -39,6 +41,10 @@ class SeekBarSegment {
 /// the value by the finger's travel from wherever it currently is, instead of
 /// jumping to the touch point, and a tap never seeks.
 ///
+/// Once a drag has started, moving the finger vertically away from the track
+/// slows it down for fine adjustment (see [scrubSpeedForDistance]); the
+/// current speed is shown between the time labels from [scrubSpeedLabels].
+///
 /// The widget is controlled like [Slider]: it reports value changes through
 /// the callbacks and renders whatever [value] the parent passes back.
 class PlayerSeekBar extends StatefulWidget {
@@ -49,6 +55,7 @@ class PlayerSeekBar extends StatefulWidget {
     required this.trailingLabel,
     this.segments = SeekBarSegment.single,
     this.semanticValueFormatter,
+    this.scrubSpeedLabels = const {},
     this.onChangeStart,
     this.onChanged,
     this.onChangeEnd,
@@ -85,6 +92,11 @@ class PlayerSeekBar extends StatefulWidget {
   /// those actions are only offered when a formatter is given.
   final String Function(double value)? semanticValueFormatter;
 
+  /// Text shown between the time labels while scrubbing at a reduced speed.
+  ///
+  /// Nothing is shown at [ScrubSpeed.full] or for speeds without an entry.
+  final Map<ScrubSpeed, String> scrubSpeedLabels;
+
   /// Called with the value at the moment a drag begins.
   final ValueChanged<double>? onChangeStart;
 
@@ -108,6 +120,7 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
   bool _isDragging = false;
   double _dragValue = 0.0;
   double _trackWidth = 0.0;
+  ScrubSpeed _scrubSpeed = ScrubSpeed.full;
 
   @override
   Widget build(BuildContext context) {
@@ -119,7 +132,7 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
       value: value,
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        children: [_buildTrack(value, primary), _buildLabels(theme)],
+        children: [_buildTrack(value, primary), _buildLabels(theme, primary)],
       ),
     );
   }
@@ -176,7 +189,7 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
       ? PlayerSeekBar.draggingTrackHeight
       : PlayerSeekBar.idleTrackHeight;
 
-  Widget _buildLabels(ThemeData theme) {
+  Widget _buildLabels(ThemeData theme, Color primary) {
     final style = theme.textTheme.bodySmall?.copyWith(
       // Fixed-width digits keep the labels from jittering every second.
       fontFeatures: const [FontFeature.tabularFigures()],
@@ -184,9 +197,9 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
     // The slider node already announces the position; only the trailing
     // label stays reachable, as a button, so its toggle remains accessible.
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         ExcludeSemantics(child: Text(widget.leadingLabel, style: style)),
+        Expanded(child: _buildScrubSpeedLabel(style?.copyWith(color: primary))),
         Semantics(
           button: widget.onTrailingLabelTap != null,
           child: GestureDetector(
@@ -199,6 +212,24 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
           ),
         ),
       ],
+    );
+  }
+
+  // Purely visual feedback for sighted scrubbing; screen readers adjust via
+  // the slider actions, which have no speed bands.
+  Widget _buildScrubSpeedLabel(TextStyle? style) {
+    final label = _isDragging ? widget.scrubSpeedLabels[_scrubSpeed] : null;
+    if (label == null || _scrubSpeed == ScrubSpeed.full) {
+      return const SizedBox.shrink();
+    }
+    return ExcludeSemantics(
+      child: Text(
+        label,
+        style: style,
+        textAlign: TextAlign.center,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
     );
   }
 
@@ -226,11 +257,31 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
     widget.onChangeStart?.call(start);
   }
 
+  // The horizontal drag recognizer only wins the arena on horizontal
+  // movement, so a drag that starts vertically still reaches the enclosing
+  // sheet's swipe-to-dismiss. Once won, it keeps reporting the finger's full
+  // position (even outside the bar), which drives the speed bands.
   void _handleDragUpdate(DragUpdateDetails details) {
+    if (_trackWidth <= 0) return;
     final delta = details.primaryDelta ?? details.delta.dx;
-    if (delta == 0 || _trackWidth <= 0) return;
+    if (!_isDragging && delta == 0) return;
     if (!_isDragging) _beginDrag();
-    final next = (_dragValue + delta / _trackWidth).clamp(0.0, 1.0);
+    _updateScrubSpeed(details.localPosition.dy - _touchAreaHeight / 2);
+    _moveDragValueBy(delta * _scrubSpeed.factor / _trackWidth);
+  }
+
+  void _updateScrubSpeed(double distanceFromTrack) {
+    final speed = scrubSpeedForDistance(distanceFromTrack);
+    if (speed == _scrubSpeed) return;
+    HapticFeedback.lightImpact();
+    setState(() => _scrubSpeed = speed);
+  }
+
+  // Single place where a drag changes the position, so lift-off handling can
+  // hook in without touching the gesture plumbing.
+  void _moveDragValueBy(double fraction) {
+    if (fraction == 0) return;
+    final next = (_dragValue + fraction).clamp(0.0, 1.0);
     if (next == _dragValue) return;
     setState(() => _dragValue = next);
     widget.onChanged?.call(next);
@@ -239,7 +290,10 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
   void _handleDragFinish() {
     if (!_isDragging) return;
     final end = _dragValue;
-    setState(() => _isDragging = false);
+    setState(() {
+      _isDragging = false;
+      _scrubSpeed = ScrubSpeed.full;
+    });
     widget.onChangeEnd?.call(end);
   }
 }
