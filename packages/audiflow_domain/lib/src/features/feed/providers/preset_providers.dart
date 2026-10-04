@@ -29,6 +29,7 @@ import '../resolvers/season_number_resolver.dart';
 import '../resolvers/title_classifier_resolver.dart';
 import '../resolvers/title_discovery_resolver.dart';
 import '../resolvers/year_resolver.dart';
+import '../services/episode_fingerprint.dart';
 import '../services/episode_re_extraction_service.dart';
 import '../services/smart_playlist_resolver_service.dart';
 
@@ -239,8 +240,10 @@ Future<SmartPlaylistGrouping?> podcastSmartPlaylists(
 /// records and their persisted groups.
 ///
 /// Reconstructs the full grouping from database entities.
-/// Re-resolves only when config version has changed (upstream
-/// config update).
+/// Re-resolves when the config version has changed (upstream
+/// config update) or the podcast's episodes no longer match the
+/// cached episode fingerprint (feed sync added, removed, or edited
+/// episodes).
 Future<SmartPlaylistGrouping?> _buildGroupingFromCache(
   Ref ref,
   int podcastId,
@@ -269,6 +272,20 @@ Future<SmartPlaylistGrouping?> _buildGroupingFromCache(
 
   final episodes = await episodeRepo.getByPodcastId(podcastId);
   if (episodes.isEmpty) return null;
+
+  // Persisted groups only list the episodes known at resolve time.
+  // Without this check, episodes added by a later feed sync would
+  // fall into ungrouped until the next config bump.
+  final cachedFingerprint = cachedPlaylists.first.episodeFingerprint;
+  if (cachedFingerprint != computeEpisodeFingerprint(episodes)) {
+    logger.d(
+      'Episodes changed since smart playlists were cached for '
+      'podcastId=$podcastId; re-resolving',
+    );
+    await playlistDatasource.deleteByPodcastId(podcastId);
+    await playlistDatasource.deleteGroupsByPodcastId(podcastId);
+    return _resolveAndPersistSmartPlaylists(ref, podcastId, feedUrl, logger);
+  }
 
   final resolverType = cachedPlaylists.first.resolverType;
   final ungroupedIds = <int>[];
@@ -530,6 +547,7 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
 
   final configVersion = summary?.dataVersion;
   final heuristicVer = summary == null ? autoDetectHeuristicVersion : null;
+  final episodeFingerprint = computeEpisodeFingerprint(episodes);
 
   for (final playlist in result.playlists) {
     _enrichPlaylist(
@@ -542,6 +560,7 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
       podcastImageUrl: podcastImage,
       configVersion: configVersion,
       heuristicVersion: heuristicVer,
+      episodeFingerprint: episodeFingerprint,
     );
   }
 
@@ -636,6 +655,7 @@ void _enrichPlaylist(
   String? podcastImageUrl,
   int? configVersion,
   int? heuristicVersion,
+  String? episodeFingerprint,
 }) {
   // Get episodes for this playlist, sorted by publishedAt
   // (newest first)
@@ -688,7 +708,8 @@ void _enrichPlaylist(
       ..episodeSortField = playlist.episodeSort?.field.name
       ..episodeSortOrder = playlist.episodeSort?.order.name
       ..configVersion = configVersion
-      ..heuristicVersion = heuristicVersion,
+      ..heuristicVersion = heuristicVersion
+      ..episodeFingerprint = episodeFingerprint,
   );
 }
 

@@ -328,7 +328,8 @@ void main() {
         ..playlistStructure =
             'split' // Wrong: should be 'grouped'
         ..yearHeaderMode = 'none'
-        ..configVersion = 1;
+        ..configVersion = 1
+        ..episodeFingerprint = computeEpisodeFingerprint(episodes);
 
       await isar.writeTxn(() async {
         await isar.smartPlaylistEntitys.put(entity);
@@ -390,7 +391,8 @@ void main() {
         ..resolverType = 'seasonNumber'
         ..playlistStructure = 'split'
         ..yearHeaderMode = 'none'
-        ..configVersion = 1;
+        ..configVersion = 1
+        ..episodeFingerprint = computeEpisodeFingerprint(episodes);
 
       await isar.writeTxn(() async {
         await isar.smartPlaylistEntitys.put(entity);

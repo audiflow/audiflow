@@ -51,6 +51,15 @@ Changes that do NOT require a bump:
 |--------|-----------|--------------|
 | Pattern-driven config | `SmartPlaylistEntity.configVersion` | Upstream `PatternSummary.dataVersion` change |
 | Auto-detect resolver | `SmartPlaylistEntity.heuristicVersion` | Any resolver's `heuristicVersion` bump |
+| Both | `SmartPlaylistEntity.episodeFingerprint` | Podcast's episodes added, removed, or edited |
+
+### Episode fingerprint
+
+A grouping is a pure function of the config and the podcast's episodes, so the cache must also be keyed on the episodes. Persisted groups list only the episode IDs known at resolve time; without this key, episodes from a later feed sync (e.g. a brand-new series) fall into ungrouped until the next config bump.
+
+`computeEpisodeFingerprint` (`services/episode_fingerprint.dart`) hashes, per episode sorted by id, every field resolution and enrichment read: id, title, description, season/episode number, publishedAt, imageUrl, durationMs. It is stored on each `SmartPlaylistEntity` when a grouping is persisted. On cache load (after the config-version check), a mismatch -- including null from caches written before the field existed -- deletes the podcast's playlist and group rows and re-resolves. Group IDs are derived from inputs (`season_N`, preset group ids), so per-group user preferences survive a re-resolve.
+
+When adding a resolver or enrichment input that reads another `Episode` field, add that field to the fingerprint.
 
 ### Config version migration
 
@@ -76,4 +85,5 @@ The Storage & Data screen has a "Podcast Cache" clear button that purges all `Sm
 | `resolvers/title_discovery_resolver.dart` | Title discovery resolver (version 1) |
 | `resolvers/year_resolver.dart` | Year resolver (version 1) |
 | `providers/smart_playlist_providers.dart` | Combined version computation + cache check |
-| `models/smart_playlists.dart` | `SmartPlaylistEntity.heuristicVersion` field |
+| `models/smart_playlists.dart` | `SmartPlaylistEntity.heuristicVersion` / `episodeFingerprint` fields |
+| `services/episode_fingerprint.dart` | Episode input fingerprint for cache invalidation |
