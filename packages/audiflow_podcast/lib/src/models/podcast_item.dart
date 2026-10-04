@@ -1,4 +1,5 @@
 import 'podcast_chapter.dart';
+import 'podcast_chapters_link.dart';
 import 'podcast_entity.dart';
 import 'podcast_image.dart';
 import 'podcast_transcript.dart';
@@ -31,6 +32,7 @@ class PodcastItem extends PodcastEntity {
     this.isPermaLink,
     this.contentEncoded,
     this.chapters,
+    this.chaptersLink,
     this.transcripts,
   });
 
@@ -80,6 +82,14 @@ class PodcastItem extends PodcastEntity {
         )
         .toList();
 
+    final chaptersLinkMap = data['chaptersLink'] as Map<String, dynamic>?;
+    final chaptersLink = chaptersLinkMap == null
+        ? null
+        : PodcastChaptersLink(
+            url: chaptersLinkMap['url'] as String,
+            type: chaptersLinkMap['type'] as String,
+          );
+
     return PodcastItem.fromData(
       parsedAt: DateTime.now(),
       sourceUrl: sourceUrl ?? '',
@@ -106,6 +116,7 @@ class PodcastItem extends PodcastEntity {
       isPermaLink: data['isPermaLink'] as bool?,
       contentEncoded: data['contentEncoded'] as String?,
       chapters: chapters,
+      chaptersLink: chaptersLink,
       transcripts: transcripts,
     );
   }
@@ -137,6 +148,7 @@ class PodcastItem extends PodcastEntity {
     bool? isPermaLink,
     String? contentEncoded,
     List<PodcastChapter>? chapters,
+    PodcastChaptersLink? chaptersLink,
     List<PodcastTranscript>? transcripts,
   }) {
     // Validate required fields
@@ -222,6 +234,7 @@ class PodcastItem extends PodcastEntity {
       isPermaLink: isPermaLink,
       contentEncoded: _trimOrNull(contentEncoded),
       chapters: chapters,
+      chaptersLink: chaptersLink,
       transcripts: transcripts,
     );
   }
@@ -300,6 +313,9 @@ class PodcastItem extends PodcastEntity {
 
   /// Chapter markers.
   final List<PodcastChapter>? chapters;
+
+  /// External chapters file linked by `<podcast:chapters>`.
+  final PodcastChaptersLink? chaptersLink;
 
   /// Transcript links.
   final List<PodcastTranscript>? transcripts;
@@ -499,6 +515,7 @@ class PodcastItem extends PodcastEntity {
           isPermaLink == other.isPermaLink &&
           contentEncoded == other.contentEncoded &&
           _listEquals(chapters, other.chapters) &&
+          chaptersLink == other.chaptersLink &&
           _listEquals(transcripts, other.transcripts);
 
   @override
@@ -528,6 +545,7 @@ class PodcastItem extends PodcastEntity {
       isPermaLink.hashCode ^
       contentEncoded.hashCode ^
       chapters.hashCode ^
+      chaptersLink.hashCode ^
       transcripts.hashCode;
 
   @override
