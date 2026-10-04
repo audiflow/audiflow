@@ -1,12 +1,13 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-EpisodeChapter _chapter(int id, int startMs, [String? title]) => EpisodeChapter()
-  ..id = id
-  ..episodeId = 1
-  ..sortOrder = id
-  ..title = title ?? 'Chapter $id'
-  ..startMs = startMs;
+EpisodeChapter _chapter(int id, int startMs, [String? title]) =>
+    EpisodeChapter()
+      ..id = id
+      ..episodeId = 1
+      ..sortOrder = id
+      ..title = title ?? 'Chapter $id'
+      ..startMs = startMs;
 
 void main() {
   group('chapterIndexAt', () {
