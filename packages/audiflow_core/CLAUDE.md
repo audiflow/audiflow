@@ -24,7 +24,7 @@ Leaf dependency in the audiflow monorepo -- no internal package dependencies. Al
 - Extension methods on `String` (`linkifyUrls`, `plainTextToHtml`, `htmlToPlainText`, `htmlToMultilinePlainText`, `isBlank`), `DateTime` (`formatEpisodeDate()`), `Duration`
 - Validators and formatters
 - Device utilities
-- Shared models (`AutoPlayOrder`, `EpisodeData`)
+- Shared models (`AutoPlayOrder`, `EpisodeData`, `PlaybackSpeedScale` speed grid and `RecentPlaybackSpeeds` rules)
 
 ## Non-responsibilities
 

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:audiflow_core/audiflow_core.dart';
 import 'package:flutter/material.dart';
 
@@ -48,13 +50,25 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
   // -- Playback --
 
   @override
-  double getPlaybackSpeed() =>
-      _ds.getDouble(SettingsKeys.playbackSpeed) ??
-      SettingsDefaults.playbackSpeed;
+  double getPlaybackSpeed() => PlaybackSpeedScale.snap(
+    _ds.getDouble(SettingsKeys.playbackSpeed) ?? SettingsDefaults.playbackSpeed,
+  );
 
   @override
   Future<void> setPlaybackSpeed(double speed) async {
     await _ds.setDouble(SettingsKeys.playbackSpeed, speed);
+  }
+
+  @override
+  List<double> getRecentPlaybackSpeeds() {
+    final raw = _ds.getString(SettingsKeys.recentPlaybackSpeeds);
+    if (raw == null) return const [];
+    return RecentPlaybackSpeeds.normalize(_decodeSpeedList(raw));
+  }
+
+  @override
+  Future<void> setRecentPlaybackSpeeds(List<double> speeds) async {
+    await _ds.setString(SettingsKeys.recentPlaybackSpeeds, jsonEncode(speeds));
   }
 
   @override
@@ -299,5 +313,20 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
       'dark' => ThemeMode.dark,
       _ => ThemeMode.system,
     };
+  }
+
+  /// Decodes a stored JSON number list, returning an empty list for
+  /// corrupt data so a bad value never breaks the player.
+  static List<double> _decodeSpeedList(String raw) {
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) return const [];
+      return [
+        for (final value in decoded)
+          if (value is num) value.toDouble(),
+      ];
+    } on FormatException {
+      return const [];
+    }
   }
 }

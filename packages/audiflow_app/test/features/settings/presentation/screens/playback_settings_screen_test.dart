@@ -1,6 +1,7 @@
 import 'package:audiflow_app/features/settings/presentation/screens/playback_settings_screen.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -44,7 +45,47 @@ void main() {
       await tester.pumpWidget(buildTestWidget());
 
       expect(find.text('Default Playback Speed'), findsOneWidget);
-      expect(find.text('1.0x'), findsOneWidget);
+      // Current value plus the slider's 1.0x landmark label.
+      expect(find.text('1.0x'), findsNWidgets(2));
+      expect(find.byType(PlaybackSpeedSlider), findsOneWidget);
+    });
+
+    testWidgets('rounds a legacy off-grid speed to the nearest step', (
+      tester,
+    ) async {
+      SharedPreferences.setMockInitialValues({'settings_playback_speed': 1.25});
+      prefs = await SharedPreferences.getInstance();
+      await tester.pumpWidget(buildTestWidget());
+
+      expect(find.text('1.3x'), findsOneWidget);
+      final slider = tester.widget<PlaybackSpeedSlider>(
+        find.byType(PlaybackSpeedSlider),
+      );
+      expect(slider.speed, 1.3);
+    });
+
+    testWidgets('reflects speed changes made elsewhere', (tester) async {
+      final container = ProviderContainer(
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+      );
+      addTearDown(container.dispose);
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const PlaybackSettingsScreen(),
+          ),
+        ),
+      );
+
+      await container
+          .read(playbackSpeedSettingsControllerProvider.notifier)
+          .save(2.4, commit: true);
+      await tester.pump();
+
+      expect(find.text('2.4x'), findsOneWidget);
     });
 
     testWidgets('shows skip forward with 30 default', (tester) async {
@@ -74,7 +115,8 @@ void main() {
 
       expect(find.text('Auto-Complete Threshold'), findsOneWidget);
       expect(find.text('95%'), findsOneWidget);
-      expect(find.byType(Slider), findsOneWidget);
+      // Speed slider plus threshold slider.
+      expect(find.byType(Slider), findsNWidgets(2));
     });
 
     testWidgets('shows continuous playback enabled by default', (tester) async {

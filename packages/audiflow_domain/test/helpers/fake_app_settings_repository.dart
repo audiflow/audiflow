@@ -11,6 +11,7 @@ class FakeAppSettingsRepository implements AppSettingsRepository {
   String? locale;
   double textScale = 1.0;
   double playbackSpeed = 1.0;
+  List<double> recentPlaybackSpeeds = const [];
   int skipForwardSeconds = 30;
   int skipBackwardSeconds = 10;
   double autoCompleteThreshold = 0.95;
@@ -54,6 +55,13 @@ class FakeAppSettingsRepository implements AppSettingsRepository {
 
   @override
   Future<void> setPlaybackSpeed(double speed) async => playbackSpeed = speed;
+
+  @override
+  List<double> getRecentPlaybackSpeeds() => recentPlaybackSpeeds;
+
+  @override
+  Future<void> setRecentPlaybackSpeeds(List<double> speeds) async =>
+      recentPlaybackSpeeds = speeds;
 
   @override
   int getSkipForwardSeconds() => skipForwardSeconds;

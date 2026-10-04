@@ -1166,11 +1166,29 @@ abstract class AppLocalizations {
   /// **'Play'**
   String get playerPlayLabel;
 
-  /// Playback speed accessibility label
+  /// Accessibility label for the full player's Audio button; speed is pre-formatted like 1.3x
   ///
   /// In en, this message translates to:
-  /// **'Playback speed {speed}x'**
-  String playerSpeedLabel(String speed);
+  /// **'Audio settings, playback speed {speed}'**
+  String playerAudioButtonLabel(String speed);
+
+  /// Title of the player's audio settings sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Audio'**
+  String get audioSheetTitle;
+
+  /// Section heading for playback speed in the audio sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Playback speed'**
+  String get audioSheetSpeedSection;
+
+  /// Chip label for normal (1.0x) playback speed
+  ///
+  /// In en, this message translates to:
+  /// **'Normal'**
+  String get playbackSpeedNormal;
 
   /// Mini player accessibility label
   ///
@@ -2539,6 +2557,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sleep timer'**
   String get sleepTimerIconLabel;
+
+  /// Sleep timer sheet card header for end-of-episode / end-of-chapter options
+  ///
+  /// In en, this message translates to:
+  /// **'Stop on'**
+  String get sleepTimerStopOnHeader;
+
+  /// Sleep timer sheet card header for the minutes / episodes options
+  ///
+  /// In en, this message translates to:
+  /// **'Stop after'**
+  String get sleepTimerStopAfterHeader;
+
+  /// Trailing control that opens the numeric keypad for a remembered value
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get sleepTimerEdit;
+
+  /// Sleep timer sheet status line for an active duration timer
+  ///
+  /// In en, this message translates to:
+  /// **'Stopping in {remaining} (at {time})'**
+  String sleepTimerStatusDuration(String remaining, String time);
+
+  /// Sleep timer sheet status line for an active end-of-episode timer
+  ///
+  /// In en, this message translates to:
+  /// **'Stops at end of episode'**
+  String get sleepTimerStatusEndOfEpisode;
+
+  /// Sleep timer sheet status line for an active end-of-chapter timer
+  ///
+  /// In en, this message translates to:
+  /// **'Stops at end of chapter'**
+  String get sleepTimerStatusEndOfChapter;
+
+  /// Sleep timer sheet status line for an active episode-count timer
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} episode left} other{{count} episodes left}}'**
+  String sleepTimerStatusEpisodesLeft(int count);
 
   /// Skip button on the onboarding carousel
   ///

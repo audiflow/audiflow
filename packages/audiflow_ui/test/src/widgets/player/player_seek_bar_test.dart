@@ -1,6 +1,7 @@
 import 'package:audiflow_ui/src/widgets/player/player_seek_bar.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -19,6 +20,7 @@ Widget _host({
   required _SeekRecorder recorder,
   List<SeekBarSegment> segments = SeekBarSegment.single,
   Widget Function(BuildContext context, double value)? tooltipBuilder,
+  bool adjustable = true,
 }) {
   return MaterialApp(
     home: Scaffold(
@@ -32,6 +34,7 @@ Widget _host({
             leadingLabel: '01:00',
             trailingLabel: '-09:00',
             semanticValueFormatter: (value) => 'at ${(value * 100).round()}%',
+            adjustable: adjustable,
             onChangeStart: recorder.starts.add,
             onChanged: recorder.changes.add,
             onChangeEnd: recorder.ends.add,
@@ -196,6 +199,24 @@ void main() {
       check(
         recorder.ends.single,
       ).isCloseTo(0.5 + PlayerSeekBar.semanticStep, 1e-9);
+      handle.dispose();
+    });
+
+    testWidgets('offers no adjust actions when not adjustable', (tester) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(
+        _host(value: 0.5, recorder: _SeekRecorder(), adjustable: false),
+      );
+
+      final node = tester.getSemantics(find.byType(PlayerSeekBar));
+      check(node.flagsCollection.isSlider).isTrue();
+      check(node.value).equals('at 50%');
+      check(
+        node.getSemanticsData().hasAction(SemanticsAction.increase),
+      ).isFalse();
+      check(
+        node.getSemanticsData().hasAction(SemanticsAction.decrease),
+      ).isFalse();
       handle.dispose();
     });
 

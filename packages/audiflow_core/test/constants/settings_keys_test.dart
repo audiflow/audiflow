@@ -11,6 +11,7 @@ void main() {
         SettingsKeys.textScale,
         // Playback
         SettingsKeys.playbackSpeed,
+        SettingsKeys.recentPlaybackSpeeds,
         SettingsKeys.skipForwardSeconds,
         SettingsKeys.skipBackwardSeconds,
         SettingsKeys.autoCompleteThreshold,
@@ -26,7 +27,7 @@ void main() {
         SettingsKeys.wifiOnlySync,
       };
 
-      expect(keys.length, equals(15));
+      expect(keys.length, equals(16));
     });
 
     group('Appearance keys', () {
@@ -46,6 +47,13 @@ void main() {
     group('Playback keys', () {
       test('playbackSpeed has correct value', () {
         expect(SettingsKeys.playbackSpeed, equals('settings_playback_speed'));
+      });
+
+      test('recentPlaybackSpeeds has correct value', () {
+        expect(
+          SettingsKeys.recentPlaybackSpeeds,
+          equals('settings_recent_playback_speeds'),
+        );
       });
 
       test('skipForwardSeconds has correct value', () {

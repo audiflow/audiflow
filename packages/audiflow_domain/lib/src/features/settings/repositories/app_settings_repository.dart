@@ -29,11 +29,20 @@ abstract class AppSettingsRepository {
 
   // -- Playback --
 
-  /// Current audio playback speed multiplier.
+  /// Current audio playback speed multiplier, snapped to
+  /// [PlaybackSpeedScale.steps] so legacy off-grid values (e.g. 1.25)
+  /// read as the nearest step.
   double getPlaybackSpeed();
 
   /// Persists the audio playback speed multiplier.
   Future<void> setPlaybackSpeed(double speed);
+
+  /// Recently used non-normal speeds, newest first, sanitized by
+  /// [RecentPlaybackSpeeds.normalize].
+  List<double> getRecentPlaybackSpeeds();
+
+  /// Persists the recently used speeds (newest first).
+  Future<void> setRecentPlaybackSpeeds(List<double> speeds);
 
   /// Seconds to skip forward on tap.
   int getSkipForwardSeconds();

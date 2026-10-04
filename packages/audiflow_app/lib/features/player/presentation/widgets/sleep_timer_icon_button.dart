@@ -8,7 +8,7 @@ import 'sleep_timer_sheet.dart';
 /// Sleep-timer icon button for the full player's action row.
 ///
 /// The icon switches between outlined (inactive) and filled (active)
-/// variants. Tapping opens the sleep-timer sheet.
+/// variants. Tapping opens the sleep-timer sheet via [showSleepTimerSheet].
 class SleepTimerIconButton extends ConsumerWidget {
   const SleepTimerIconButton({super.key});
 
@@ -25,53 +25,55 @@ class SleepTimerIconButton extends ConsumerWidget {
         isActive ? Icons.nights_stay : Icons.nights_stay_outlined,
         color: isActive ? theme.colorScheme.primary : null,
       ),
-      onPressed: () => _open(context, ref),
+      onPressed: () => showSleepTimerSheet(context),
     );
   }
+}
 
-  void _open(BuildContext context, WidgetRef ref) {
-    showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      isScrollControlled: true,
-      useSafeArea: true,
-      builder: (ctx) {
-        return Consumer(
-          builder: (ctx, ref, _) {
-            final state = ref.watch(sleepTimerControllerProvider);
-            final hasChaptersAsync = ref.watch(
-              currentEpisodeHasChaptersProvider,
-            );
-            final hasChapters = hasChaptersAsync.value ?? false;
-            final notifier = ref.read(sleepTimerControllerProvider.notifier);
-            return SleepTimerSheet(
-              state: state,
-              hasChapters: hasChapters,
-              onOff: () {
-                notifier.setOff();
-                Navigator.of(ctx).pop();
-              },
-              onEndOfEpisode: () {
-                notifier.setEndOfEpisode();
-                Navigator.of(ctx).pop();
-              },
-              onEndOfChapter: () {
-                notifier.setEndOfChapter();
-                Navigator.of(ctx).pop();
-              },
-              onDurationStart: (d) async {
-                await notifier.setDuration(d);
-                if (ctx.mounted) Navigator.of(ctx).pop();
-              },
-              onEpisodesStart: (n) async {
-                await notifier.setEpisodes(n);
-                if (ctx.mounted) Navigator.of(ctx).pop();
-              },
-              onCloseSheet: () => Navigator.of(ctx).pop(),
-            );
-          },
-        );
-      },
-    );
-  }
+/// Opens the sleep-timer sheet wired to [sleepTimerControllerProvider].
+///
+/// Shared by every control that opens the timer (the icon button and the
+/// status label next to it) so they always show the same sheet.
+Future<void> showSleepTimerSheet(BuildContext context) {
+  return showModalBottomSheet<void>(
+    context: context,
+    showDragHandle: true,
+    isScrollControlled: true,
+    useSafeArea: true,
+    builder: (ctx) {
+      return Consumer(
+        builder: (ctx, ref, _) {
+          final state = ref.watch(sleepTimerControllerProvider);
+          final hasChaptersAsync = ref.watch(currentEpisodeHasChaptersProvider);
+          final hasChapters = hasChaptersAsync.value ?? false;
+          final notifier = ref.read(sleepTimerControllerProvider.notifier);
+          return SleepTimerSheet(
+            state: state,
+            hasChapters: hasChapters,
+            onOff: () {
+              notifier.setOff();
+              Navigator.of(ctx).pop();
+            },
+            onEndOfEpisode: () {
+              notifier.setEndOfEpisode();
+              Navigator.of(ctx).pop();
+            },
+            onEndOfChapter: () {
+              notifier.setEndOfChapter();
+              Navigator.of(ctx).pop();
+            },
+            onDurationStart: (d) async {
+              await notifier.setDuration(d);
+              if (ctx.mounted) Navigator.of(ctx).pop();
+            },
+            onEpisodesStart: (n) async {
+              await notifier.setEpisodes(n);
+              if (ctx.mounted) Navigator.of(ctx).pop();
+            },
+            onCloseSheet: () => Navigator.of(ctx).pop(),
+          );
+        },
+      );
+    },
+  );
 }

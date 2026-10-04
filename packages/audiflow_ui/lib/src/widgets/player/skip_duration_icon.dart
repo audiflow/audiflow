@@ -1,22 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
-// Forward durations always use flipped replay + text overlay for visual
-// consistency with the backward icons. No dedicated forward_N glyphs.
-
-IconData? _skipBackwardIconData(int seconds) => switch (seconds) {
-  5 => Symbols.replay_5,
-  10 => Symbols.replay_10,
-  30 => Symbols.replay_30,
-  _ => null,
-};
-
 /// Displays a skip-duration icon that dynamically reflects the configured
 /// number of [seconds].
 ///
-/// Backward 5, 10, and 30 use dedicated Material Symbols (`replay_5`, etc.).
-/// All forward durations use a horizontally flipped `replay` icon with a text
-/// overlay so the style is consistent across all values.
+/// Both directions render a `replay` glyph with a text overlay; forward flips
+/// the glyph horizontally. Dedicated glyphs such as `replay_10` are avoided on
+/// purpose: their embedded digits differ in size and weight from the overlay,
+/// so backward and forward buttons would not match.
 class SkipDurationIcon extends StatelessWidget {
   const SkipDurationIcon({
     required this.seconds,
@@ -33,25 +24,11 @@ class SkipDurationIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Backward 5/10/30 use dedicated Material Symbol glyphs.
-    if (!isForward) {
-      final dedicated = _skipBackwardIconData(seconds);
-      if (dedicated != null) {
-        return Icon(dedicated, size: size, color: color);
-      }
-    }
+    final glyph = Icon(Symbols.replay, size: size, color: color);
+    final icon = isForward ? Transform.flip(flipX: true, child: glyph) : glyph;
 
-    // All forward durations and non-dedicated backward durations use
-    // replay icon + text overlay. Forward flips the icon horizontally.
     // ExcludeSemantics prevents duplicate screen reader announcements --
     // the parent Semantics widget already provides the accessibility label.
-    final icon = isForward
-        ? Transform.flip(
-            flipX: true,
-            child: Icon(Symbols.replay, size: size, color: color),
-          )
-        : Icon(Symbols.replay, size: size, color: color);
-
     return ExcludeSemantics(
       child: SizedBox(
         width: size,

@@ -8,6 +8,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:logger/logger.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../../l10n/app_localizations.dart';
@@ -17,8 +18,7 @@ import '../../helpers/playback_time_format.dart';
 import '../../helpers/player_seek.dart';
 import '../../helpers/podcast_lookup.dart';
 import '../widgets/current_chapter_row.dart';
-import '../widgets/sleep_timer_icon_button.dart';
-import '../widgets/sleep_timer_status_label.dart';
+import '../widgets/player_action_row.dart';
 import '../widgets/transcript_tab.dart';
 
 /// Full player screen presented as a Cupertino sheet.
@@ -32,8 +32,10 @@ class PlayerScreen extends ConsumerStatefulWidget {
   ConsumerState<PlayerScreen> createState() => _PlayerScreenState();
 }
 
+// TickerProviderStateMixin, not the single variant: the tab controller is
+// recreated when transcript availability resolves after the first frame.
 class _PlayerScreenState extends ConsumerState<PlayerScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   bool _isSeeking = false;
   bool _wasPlayingBeforeSeek = false;
   TabController? _tabController;
@@ -214,23 +216,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
                       isPlaying,
                     ),
                   ),
-                  Row(
-                    children: const [
-                      Expanded(
-                        child: Padding(
-                          padding: EdgeInsets.only(right: 12),
-                          child: Align(
-                            alignment: Alignment.centerRight,
-                            child: SleepTimerStatusLabel(),
-                          ),
-                        ),
-                      ),
-                      SleepTimerIconButton(),
-                      SizedBox(width: 16),
-                      _PlaybackSpeedButton(),
-                      Expanded(child: SizedBox.shrink()),
-                    ],
-                  ),
+                  const PlayerActionRow(),
                   const SizedBox(height: 16),
                 ],
               ),
@@ -603,9 +589,22 @@ class _PlayerProgressBar extends ConsumerStatefulWidget {
 class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
   bool _isDragging = false;
   double _dragValue = 0.0;
-  late bool _showRemainingTime = ref
-      .read(appSettingsRepositoryProvider)
-      .getShowRemainingTime();
+  late bool _showRemainingTime;
+  // Last value known to be persisted; a failed write reverts to it.
+  late bool _savedShowRemainingTime;
+  // Writes run one after another so they finish in tap order, which keeps
+  // _savedShowRemainingTime accurate.
+  Future<void> _labelWrites = Future<void>.value();
+  // Bumped per toggle so only the latest write may revert the label.
+  int _labelWriteSequence = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _showRemainingTime = _savedShowRemainingTime = ref
+        .read(appSettingsRepositoryProvider)
+        .getShowRemainingTime();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -632,6 +631,9 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
       semanticValueFormatter: (value) =>
           '${formatPlaybackTime(_positionAt(value, displayPosition))}'
           ' of ${formatPlaybackTime(duration)}',
+      // A seek is dropped while the duration is unknown, so screen readers
+      // must not be offered steps that would never move the position.
+      adjustable: duration != null && duration != Duration.zero,
       onChangeStart: (value) {
         setState(() {
           _isDragging = true;
@@ -678,24 +680,52 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
 
   void _toggleTrailingLabel() {
     final next = !_showRemainingTime;
+    final sequence = ++_labelWriteSequence;
+    final settings = ref.read(appSettingsRepositoryProvider);
+    final logger = ref.read(namedLoggerProvider('Player'));
     setState(() => _showRemainingTime = next);
-    unawaited(
-      ref.read(appSettingsRepositoryProvider).setShowRemainingTime(next),
+    _labelWrites = _labelWrites.then(
+      (_) => _persistTrailingLabel(next, sequence, settings, logger),
     );
+  }
+
+  Future<void> _persistTrailingLabel(
+    bool value,
+    int sequence,
+    AppSettingsRepository settings,
+    Logger logger,
+  ) async {
+    try {
+      await settings.setShowRemainingTime(value);
+      _savedShowRemainingTime = value;
+    } on Object catch (e, stack) {
+      logger.w('Failed to save showRemainingTime', error: e, stackTrace: stack);
+      // A queued newer toggle decides the label; otherwise fall back to the
+      // last saved choice so the label matches what the next launch shows.
+      if (!mounted || sequence != _labelWriteSequence) return;
+      setState(() => _showRemainingTime = _savedShowRemainingTime);
+    }
   }
 
   Future<void> _handleSeekEnd(double value) async {
     final duration = widget.progress?.duration ?? Duration.zero;
-    // Duration unknown -- cannot compute a meaningful position.
-    if (duration != Duration.zero) {
-      await seekNowPlaying(
-        ref,
-        Duration(milliseconds: (duration.inMilliseconds * value).round()),
-      );
+    // A failed seek must still release the parent's seek guard and end the
+    // drag, or the play/pause icon and the bar would stay frozen.
+    try {
+      // Duration unknown -- cannot compute a meaningful position.
+      if (duration != Duration.zero) {
+        await seekNowPlaying(
+          ref,
+          Duration(milliseconds: (duration.inMilliseconds * value).round()),
+        );
+      }
+    } finally {
+      try {
+        await widget.onSeekEnd?.call();
+      } finally {
+        if (mounted) setState(() => _isDragging = false);
+      }
     }
-    await widget.onSeekEnd?.call();
-    if (!mounted) return;
-    setState(() => _isDragging = false);
   }
 
   /// Position at track fraction [value]; falls back to [fallback] when the
@@ -838,39 +868,5 @@ class _PlayerPlayPauseButton extends ConsumerWidget {
         },
       ),
     );
-  }
-}
-
-class _PlaybackSpeedButton extends ConsumerWidget {
-  const _PlaybackSpeedButton();
-
-  static const _speeds = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
-    final asyncSpeed = ref.watch(playbackSpeedProvider);
-    final speed = asyncSpeed.value ?? 1.0;
-
-    return Semantics(
-      button: true,
-      label: l10n.playerSpeedLabel('$speed'),
-      child: TextButton(
-        onPressed: () {
-          final nextSpeed = _nextSpeed(speed);
-          // Controller emits `playback_speed_change` itself, so the UI
-          // tap must not double-emit here.
-          ref.read(audioPlayerControllerProvider.notifier).setSpeed(nextSpeed);
-        },
-        child: Text('${speed}x', style: Theme.of(context).textTheme.labelLarge),
-      ),
-    );
-  }
-
-  double _nextSpeed(double current) {
-    for (final s in _speeds) {
-      if (current < s) return s;
-    }
-    return _speeds.first;
   }
 }
