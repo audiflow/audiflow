@@ -146,6 +146,25 @@ void main() {
       handle.dispose();
     });
 
+    testWidgets('shows the localized label while fine scrubbing', (
+      tester,
+    ) async {
+      final settings = StubAppSettingsRepository();
+      await tester.pumpWidget(await _buildPlayer(settings: settings));
+      await tester.pump();
+
+      final gesture = await tester.startGesture(tester.getCenter(_track));
+      await gesture.moveBy(const Offset(30, 0));
+      await gesture.moveBy(const Offset(0, -160));
+      await tester.pump();
+      check(find.text('Scrubbing (fine)').evaluate()).isNotEmpty();
+
+      await gesture.up();
+      await tester.pump();
+      check(find.text('Scrubbing (fine)').evaluate()).isEmpty();
+      await tester.pump(const Duration(milliseconds: 200));
+    });
+
     testWidgets('play/pause icon does not change while scrubbing', (
       tester,
     ) async {

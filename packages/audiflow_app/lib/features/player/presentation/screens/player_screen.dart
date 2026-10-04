@@ -580,6 +580,7 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
         ? _computeDragPosition(duration)
         : progress?.position;
 
+    final l10n = AppLocalizations.of(context);
     return PlayerSeekBar(
       value: displayValue,
       leadingLabel: _formatDuration(displayPosition),
@@ -589,6 +590,11 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
       semanticValueFormatter: (value) =>
           '${_formatDuration(_positionAt(value, displayPosition))}'
           ' of ${_formatDuration(duration)}',
+      scrubSpeedLabels: {
+        ScrubSpeed.half: l10n.playerScrubSpeedHalf,
+        ScrubSpeed.quarter: l10n.playerScrubSpeedQuarter,
+        ScrubSpeed.fine: l10n.playerScrubSpeedFine,
+      },
       onChangeStart: (value) {
         setState(() {
           _isDragging = true;

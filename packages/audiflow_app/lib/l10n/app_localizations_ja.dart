@@ -570,6 +570,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get playerPlayLabel => '再生';
 
   @override
+  String get playerScrubSpeedHalf => '半速スクラブ';
+
+  @override
+  String get playerScrubSpeedQuarter => '1/4速スクラブ';
+
+  @override
+  String get playerScrubSpeedFine => '微調整スクラブ';
+
+  @override
   String playerSpeedLabel(String speed) {
     return '再生速度 $speed倍';
   }

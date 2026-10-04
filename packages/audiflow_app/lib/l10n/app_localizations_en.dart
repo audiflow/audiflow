@@ -587,6 +587,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playerPlayLabel => 'Play';
 
   @override
+  String get playerScrubSpeedHalf => 'Scrubbing (half speed)';
+
+  @override
+  String get playerScrubSpeedQuarter => 'Scrubbing (quarter speed)';
+
+  @override
+  String get playerScrubSpeedFine => 'Scrubbing (fine)';
+
+  @override
   String playerSpeedLabel(String speed) {
     return 'Playback speed ${speed}x';
   }
