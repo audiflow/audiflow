@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:audiflow_core/audiflow_core.dart';
+
 import 'package:just_audio/just_audio.dart';
 import 'package:riverpod/riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -13,6 +15,7 @@ import '../../feed/repositories/episode_repository_impl.dart';
 import '../../monitoring/models/analytics_event.dart';
 import '../../monitoring/providers/analytics_providers.dart';
 import '../../queue/services/queue_service.dart';
+import '../../settings/providers/playback_speed_settings_provider.dart';
 import '../../settings/providers/settings_providers.dart';
 import '../../subscription/repositories/subscription_repository_impl.dart';
 import '../models/now_playing_info.dart';
@@ -958,24 +961,37 @@ class AudioPlayerController extends _$AudioPlayerController
   }
 
   /// Sets the playback speed and persists it to settings.
+  ///
+  /// [speed] is snapped to [PlaybackSpeedScale.steps]. Pass
+  /// [transient] for intermediate slider steps during a drag: the speed
+  /// is applied and persisted, but it is neither recorded as a recent
+  /// speed nor reported to analytics. The final value of the gesture
+  /// must then be committed with a non-transient call.
   @override
-  Future<void> setSpeed(double speed) async {
+  Future<void> setSpeed(double speed, {bool transient = false}) async {
+    final snapped = PlaybackSpeedScale.snap(speed);
     // Split the segment so each session has a single speed.
     final segmentIds = _listenSession.openIds;
-    final splitSegment = segmentIds != null && speed != _player.speed;
+    final splitSegment = segmentIds != null && snapped != _player.speed;
     if (splitSegment) _closeListenSession(ListenEndReason.speedChange);
-    await _player.setSpeed(speed);
+    // Start saving before awaiting the engine: save() updates the speed
+    // state synchronously, so speed controls follow a fast slider drag
+    // instead of trailing behind queued engine calls.
+    final saved = ref
+        .read(playbackSpeedSettingsControllerProvider.notifier)
+        .save(snapped, commit: !transient);
+    await _player.setSpeed(snapped);
     // Playback may have paused while the engine applied the speed; the
     // stream has then already closed the segment and must not reopen it.
     if (splitSegment && _player.playing) {
       _openListenSession(ids: segmentIds);
     }
-    final settingsRepo = ref.read(appSettingsRepositoryProvider);
-    await settingsRepo.setPlaybackSpeed(speed);
+    await saved;
+    if (transient) return;
     unawaited(
       ref
           .read(analyticsServiceProvider)
-          .log(PlaybackSpeedChanged(speed: speed)),
+          .log(PlaybackSpeedChanged(speed: snapped)),
     );
   }
 }

@@ -21,6 +21,9 @@ class SettingsKeys {
   /// Audio playback speed multiplier.
   static const String playbackSpeed = 'settings_playback_speed';
 
+  /// Recently used non-normal playback speeds, newest first (JSON list).
+  static const String recentPlaybackSpeeds = 'settings_recent_playback_speeds';
+
   /// Seconds to skip forward on tap.
   static const String skipForwardSeconds = 'settings_skip_forward_seconds';
 

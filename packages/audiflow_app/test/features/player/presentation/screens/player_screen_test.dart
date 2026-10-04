@@ -46,7 +46,6 @@ Future<ProviderContainer> _container({
         StubAppSettingsRepository(),
       ),
       playbackProgressProvider.overrideWith((ref) => null),
-      playbackSpeedProvider.overrideWith((ref) => Stream.value(1.0)),
       ...extra,
     ],
   );

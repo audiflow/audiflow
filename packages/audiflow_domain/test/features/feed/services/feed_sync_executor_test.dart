@@ -265,6 +265,13 @@ class _FakeAppSettingsRepository implements AppSettingsRepository {
   Future<void> setPlaybackSpeed(double speed) => throw UnimplementedError();
 
   @override
+  List<double> getRecentPlaybackSpeeds() => throw UnimplementedError();
+
+  @override
+  Future<void> setRecentPlaybackSpeeds(List<double> speeds) =>
+      throw UnimplementedError();
+
+  @override
   int getSkipForwardSeconds() => throw UnimplementedError();
 
   @override

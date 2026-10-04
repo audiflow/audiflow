@@ -36,6 +36,12 @@ class StubAppSettingsRepository implements AppSettingsRepository {
   int getSkipBackwardSeconds() => skipBackwardSeconds;
 
   @override
+  double getPlaybackSpeed() => 1.0;
+
+  @override
+  List<double> getRecentPlaybackSpeeds() => const [];
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }
 

@@ -1,0 +1,90 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
+part of 'playback_speed_settings_provider.dart';
+
+// **************************************************************************
+// RiverpodGenerator
+// **************************************************************************
+
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
+/// Holds [PlaybackSpeedSettings] and persists changes.
+///
+/// UI must not call [save] directly: speed changes go through
+/// `AudioPlayerController.setSpeed`, which applies the speed to the
+/// player, emits analytics, and then calls [save].
+
+@ProviderFor(PlaybackSpeedSettingsController)
+final playbackSpeedSettingsControllerProvider =
+    PlaybackSpeedSettingsControllerProvider._();
+
+/// Holds [PlaybackSpeedSettings] and persists changes.
+///
+/// UI must not call [save] directly: speed changes go through
+/// `AudioPlayerController.setSpeed`, which applies the speed to the
+/// player, emits analytics, and then calls [save].
+final class PlaybackSpeedSettingsControllerProvider
+    extends
+        $NotifierProvider<
+          PlaybackSpeedSettingsController,
+          PlaybackSpeedSettings
+        > {
+  /// Holds [PlaybackSpeedSettings] and persists changes.
+  ///
+  /// UI must not call [save] directly: speed changes go through
+  /// `AudioPlayerController.setSpeed`, which applies the speed to the
+  /// player, emits analytics, and then calls [save].
+  PlaybackSpeedSettingsControllerProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'playbackSpeedSettingsControllerProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$playbackSpeedSettingsControllerHash();
+
+  @$internal
+  @override
+  PlaybackSpeedSettingsController create() => PlaybackSpeedSettingsController();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(PlaybackSpeedSettings value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<PlaybackSpeedSettings>(value),
+    );
+  }
+}
+
+String _$playbackSpeedSettingsControllerHash() =>
+    r'18b4085f3495d30b8dff4ae3638ba97e5509adf1';
+
+/// Holds [PlaybackSpeedSettings] and persists changes.
+///
+/// UI must not call [save] directly: speed changes go through
+/// `AudioPlayerController.setSpeed`, which applies the speed to the
+/// player, emits analytics, and then calls [save].
+
+abstract class _$PlaybackSpeedSettingsController
+    extends $Notifier<PlaybackSpeedSettings> {
+  PlaybackSpeedSettings build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<PlaybackSpeedSettings, PlaybackSpeedSettings>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<PlaybackSpeedSettings, PlaybackSpeedSettings>,
+              PlaybackSpeedSettings,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
+}
