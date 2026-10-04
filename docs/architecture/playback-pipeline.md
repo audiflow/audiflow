@@ -64,6 +64,7 @@ URL is published as a fallback, which is the pre-#453 behavior.
 | `audioPlayerControllerProvider` | keepAlive Notifier | Play/pause/seek/stop/setSpeed commands, fade-out-and-pause |
 | `playbackProgressStreamProvider` | keepAlive Stream | Combined position + duration + buffered |
 | `playbackSpeedProvider` | keepAlive Stream | Current speed from player |
+| `playbackSpeedSettingsControllerProvider` | keepAlive Notifier | Persisted speed and recent speeds; the source speed controls display |
 | `nowPlayingControllerProvider` | keepAlive Notifier | Episode metadata for mini player and player screen |
 | `playbackHistoryServiceProvider` | keepAlive | Records completed episodes |
 | `sleepTimerControllerProvider` | keepAlive Notifier | Sleep timer state, countdown, and episode/chapter tracking |
