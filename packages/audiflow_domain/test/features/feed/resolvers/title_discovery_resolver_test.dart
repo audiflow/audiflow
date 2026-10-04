@@ -1,4 +1,5 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Episode _makeEpisode(int id, String title, DateTime publishedAt) {
@@ -10,6 +11,20 @@ Episode _makeEpisode(int id, String title, DateTime publishedAt) {
     ..audioUrl = 'https://example.com/$id.mp3'
     ..publishedAt = publishedAt;
 }
+
+const _hintDefinition = SmartPlaylistDefinition(
+  id: 'test',
+  displayName: 'Test',
+  grouping: GroupingConfig(
+    by: 'titleDiscovery',
+    discoveryHint: r'\[(\w+)\s+\d+\]',
+  ),
+  priority: 0,
+);
+
+Map<String, String> _idsByName(SmartPlaylistGrouping grouping) => {
+  for (final p in grouping.playlists) p.displayName: p.id,
+};
 
 void main() {
   group('TitleDiscoveryResolver', () {
@@ -112,6 +127,62 @@ void main() {
 
       final result = resolver.resolve(episodes, definition);
       expect(result, isNull);
+    });
+
+    group('playlist ids', () {
+      final rome = _makeEpisode(1, '[Rome 1] First', DateTime(2024, 1, 1));
+      final venezia = _makeEpisode(2, '[Venezia 1] Canals', DateTime(2024, 2));
+      final firenze = _makeEpisode(3, '[Firenze 1] Arts', DateTime(2024, 3));
+
+      test('stay the same when the earliest series is dropped', () {
+        final resolver = TitleDiscoveryResolver();
+        final before = resolver.resolve([
+          rome,
+          venezia,
+          firenze,
+        ], _hintDefinition);
+        final after = resolver.resolve([venezia, firenze], _hintDefinition);
+
+        check(
+          _idsByName(after!)['Venezia'],
+        ).equals(_idsByName(before!)['Venezia']);
+        check(
+          _idsByName(after)['Firenze'],
+        ).equals(_idsByName(before)['Firenze']);
+      });
+
+      test('stay the same when an older series is backfilled, while sortKey '
+          'follows appearance order', () {
+        final resolver = TitleDiscoveryResolver();
+        final before = resolver.resolve([venezia, firenze], _hintDefinition);
+        final after = resolver.resolve([
+          rome,
+          venezia,
+          firenze,
+        ], _hintDefinition);
+
+        check(
+          _idsByName(after!)['Venezia'],
+        ).equals(_idsByName(before!)['Venezia']);
+        check(
+          after.playlists.map((p) => p.displayName),
+        ).deepEquals(['Rome', 'Venezia', 'Firenze']);
+        check(after.playlists.map((p) => p.sortKey)).deepEquals([1, 2, 3]);
+      });
+
+      test('are distinct per series and never positional', () {
+        final result = TitleDiscoveryResolver().resolve([
+          rome,
+          venezia,
+          firenze,
+        ], _hintDefinition)!;
+
+        final ids = result.playlists.map((p) => p.id).toList();
+        check(ids.toSet()).length.equals(3);
+        for (final id in ids) {
+          check(id).not((it) => it.startsWith('season_'));
+        }
+      });
     });
   });
 }

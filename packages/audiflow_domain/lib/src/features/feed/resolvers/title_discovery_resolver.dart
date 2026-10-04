@@ -1,3 +1,5 @@
+import 'package:audiflow_core/audiflow_core.dart';
+
 import '../models/episode.dart';
 import '../extensions/episode_extensions.dart';
 import '../models/smart_playlist.dart';
@@ -94,7 +96,10 @@ class TitleDiscoveryResolver implements SmartPlaylistResolver {
       final playlistEpisodes = grouped[name]!;
       playlists.add(
         SmartPlaylist(
-          id: 'season_${i + 1}',
+          // Keyed by name, not position: dropping the earliest series or
+          // backfilling an older one must not renumber the others, or
+          // per-playlist preferences attach to the wrong series.
+          id: 'discovery_${stableId(name)}',
           displayName: name,
           sortKey: i + 1,
           episodeIds: playlistEpisodes.map((e) => e.id).toList(),
