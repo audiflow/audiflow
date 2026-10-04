@@ -58,9 +58,10 @@ void main() {
       host(speed: 1.0, onChanged: changes.add, onChangeEnd: ends.add),
     );
     // Drag from the start of the track to its end: every step is crossed.
-    final rect = tester.getRect(find.byType(Slider));
+    // The slider has a 24 pt horizontal padding outside its track.
+    final rect = tester.getRect(find.byType(Slider)).deflate(24);
     final gesture = await tester.startGesture(rect.centerLeft);
-    for (var dx = 0.0; dx <= rect.width; dx += 4) {
+    for (var dx = 0.0; dx <= rect.width + 24; dx += 4) {
       await gesture.moveTo(rect.centerLeft + Offset(dx, 0));
       await tester.pump();
     }
@@ -84,7 +85,7 @@ void main() {
     // The first step sits at the start of the track (after the padding).
     final slider = tester.widget<Slider>(find.byType(Slider));
     expect(slider.value, 0);
-    final rect = tester.getRect(find.byType(Slider));
+    final rect = tester.getRect(find.byType(Slider)).deflate(24);
     final gesture = await tester.startGesture(
       rect.centerLeft + const Offset(1, 0),
     );
@@ -97,5 +98,20 @@ void main() {
     await tester.tapAt(rect.centerRight - const Offset(1, 0));
     await tester.pump();
     expect(ends, [3.0]);
+  });
+
+  testWidgets('tapping a landmark label selects that speed', (tester) async {
+    // A tap on the track picks the nearest tick, so landing on the
+    // labelled speed proves the label sits over its own tick.
+    for (final speed in PlaybackSpeedSlider.landmarkSpeeds) {
+      final start = speed == 1.0 ? 2.0 : 1.0;
+      final changes = <double>[];
+      await tester.pumpWidget(host(speed: start, onChanged: changes.add));
+      final label = find.text(PlaybackSpeedScale.label(speed));
+      final sliderCenterY = tester.getCenter(find.byType(Slider)).dy;
+      await tester.tapAt(Offset(tester.getCenter(label).dx, sliderCenterY));
+      await tester.pumpAndSettle();
+      expect(changes.last, speed, reason: 'label for $speed');
+    }
   });
 }

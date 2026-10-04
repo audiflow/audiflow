@@ -33,15 +33,18 @@ void main() {
       .map((chip) => (chip.label as Text).data!)
       .toList();
 
-  testWidgets('shows title, large readout, and the slider', (tester) async {
+  testWidgets('shows title, chips, and the slider without a big readout', (
+    tester,
+  ) async {
     await tester.pumpWidget(host(speed: 1.3, chipSpeeds: [1.0, 1.3]));
 
     expect(find.text('Audio'), findsOneWidget);
-    // Readout plus the selected chip.
-    expect(find.text('1.3x'), findsNWidgets(2));
+    // Only the selected chip shows the current speed.
+    expect(find.text('1.3x'), findsOneWidget);
     expect(find.byType(PlaybackSpeedSlider), findsOneWidget);
-    expect(find.text('0.5x'), findsOneWidget);
-    expect(find.text('3.0x'), findsOneWidget);
+    for (final label in ['0.5x', '1.0x', '2.0x', '3.0x']) {
+      expect(find.text(label), findsOneWidget);
+    }
   });
 
   testWidgets('renders chips in the given ascending order', (tester) async {

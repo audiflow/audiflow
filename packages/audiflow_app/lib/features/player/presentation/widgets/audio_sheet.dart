@@ -107,12 +107,9 @@ class _SpeedSection extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // No big speed readout: the selected chip and the slider's value
+        // indicator already show the current speed.
         Text(l10n.audioSheetSpeedSection, style: theme.textTheme.labelLarge),
-        Text(
-          PlaybackSpeedScale.label(speed),
-          style: theme.textTheme.displaySmall,
-          textAlign: TextAlign.center,
-        ),
         const SizedBox(height: 8),
         _SpeedChips(
           speed: speed,
@@ -125,7 +122,6 @@ class _SpeedSection extends StatelessWidget {
           onChanged: onSpeedPreview,
           onChangeEnd: onSpeedCommit,
         ),
-        const _SliderBoundLabels(),
       ],
     );
   }
@@ -165,33 +161,6 @@ class _SpeedChips extends StatelessWidget {
             },
           ),
       ],
-    );
-  }
-}
-
-class _SliderBoundLabels extends StatelessWidget {
-  const _SliderBoundLabels();
-
-  @override
-  Widget build(BuildContext context) {
-    final style = Theme.of(context).textTheme.labelSmall;
-    return ExcludeSemantics(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              PlaybackSpeedScale.label(PlaybackSpeedScale.min),
-              style: style,
-            ),
-            Text(
-              PlaybackSpeedScale.label(PlaybackSpeedScale.max),
-              style: style,
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

@@ -45,7 +45,8 @@ void main() {
       await tester.pumpWidget(buildTestWidget());
 
       expect(find.text('Default Playback Speed'), findsOneWidget);
-      expect(find.text('1.0x'), findsOneWidget);
+      // Current value plus the slider's 1.0x landmark label.
+      expect(find.text('1.0x'), findsNWidgets(2));
       expect(find.byType(PlaybackSpeedSlider), findsOneWidget);
     });
 
