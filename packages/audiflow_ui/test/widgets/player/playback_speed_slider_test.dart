@@ -1,6 +1,7 @@
 import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -113,5 +114,121 @@ void main() {
       await tester.pumpAndSettle();
       expect(changes.last, speed, reason: 'label for $speed');
     }
+  });
+
+  group('jitter handling', () {
+    // Center of the tick at [index] for the 420 pt wide host.
+    Offset tickCenter(WidgetTester tester, int index) {
+      final rect = tester.getRect(find.byType(Slider));
+      const inset = 24.0 + 2.0; // padding + half the rounded track
+      final span = rect.width - 2 * inset;
+      final x = rect.left + inset + span * index / PlaybackSpeedScale.maxIndex;
+      return Offset(x, rect.center.dy);
+    }
+
+    double stepWidth(WidgetTester tester) =>
+        tickCenter(tester, 1).dx - tickCenter(tester, 0).dx;
+
+    testWidgets('a roll onto the next step at lift-off is undone', (
+      tester,
+    ) async {
+      final changes = <double>[];
+      final ends = <double>[];
+      await tester.pumpWidget(
+        host(speed: 1.0, onChanged: changes.add, onChangeEnd: ends.add),
+      );
+      final target = PlaybackSpeedScale.indexForSpeed(1.5);
+      final gesture = await tester.startGesture(
+        tickCenter(tester, PlaybackSpeedScale.indexForSpeed(1.0)),
+      );
+      // Slide to 1.5x and rest there.
+      for (var t = 1; t <= 10; t++) {
+        await gesture.moveTo(
+          tickCenter(tester, target) - Offset(stepWidth(tester) * (10 - t), 0),
+          timeStamp: Duration(milliseconds: 20 * t),
+        );
+        await tester.pump();
+      }
+      // The finger rolls one step right as it lifts.
+      await gesture.moveTo(
+        tickCenter(tester, target + 1),
+        timeStamp: const Duration(milliseconds: 500),
+      );
+      await tester.pump();
+      expect(changes.last, 1.6);
+      await gesture.up(timeStamp: const Duration(milliseconds: 530));
+      await tester.pump();
+
+      expect(changes.last, 1.5);
+      expect(ends, [1.5]);
+    });
+
+    testWidgets('resting on a boundary does not toggle steps', (tester) async {
+      final changes = <double>[];
+      await tester.pumpWidget(host(speed: 0.8, onChanged: changes.add));
+      final gesture = await tester.startGesture(
+        tickCenter(tester, PlaybackSpeedScale.indexForSpeed(0.8)),
+      );
+      // Drag up to the 1.0/1.1 boundary, then wobble a few points on it.
+      final one = tickCenter(tester, PlaybackSpeedScale.indexForSpeed(1.0));
+      final boundary = one.dx + stepWidth(tester) / 2;
+      for (final dx in [-3.0, 3.0, -2.0, 4.0, -4.0, 2.0]) {
+        await gesture.moveTo(Offset(boundary + dx, one.dy));
+        await tester.pump();
+      }
+      await gesture.up();
+      await tester.pump();
+
+      expect(changes.last, 1.0);
+      expect(changes, isNot(contains(1.1)));
+    });
+
+    testWidgets('a tap commits where the finger went down', (tester) async {
+      final ends = <double>[];
+      await tester.pumpWidget(
+        host(speed: 1.0, onChanged: (_) {}, onChangeEnd: ends.add),
+      );
+      final down = tickCenter(tester, PlaybackSpeedScale.indexForSpeed(1.5));
+      final gesture = await tester.startGesture(down);
+      // Lift-off roll smaller than the drag slop.
+      await gesture.moveTo(down + Offset(stepWidth(tester) * 0.7, 0));
+      await gesture.up();
+      await tester.pump();
+
+      expect(ends, [1.5]);
+    });
+
+    testWidgets('shows the speed above the thumb while dragging', (
+      tester,
+    ) async {
+      await tester.pumpWidget(host(speed: 1.0, onChanged: (_) {}));
+      final start = tickCenter(tester, PlaybackSpeedScale.indexForSpeed(1.0));
+      final gesture = await tester.startGesture(start);
+      await gesture.moveTo(start + Offset(stepWidth(tester) * 2, 0));
+      await tester.pump();
+
+      expect(find.text('1.2x'), findsOneWidget);
+
+      await gesture.up();
+      await tester.pump();
+      expect(find.text('1.2x'), findsNothing);
+    });
+
+    testWidgets('screen reader increase moves exactly one step', (
+      tester,
+    ) async {
+      final semantics = tester.ensureSemantics();
+      final changes = <double>[];
+      await tester.pumpWidget(host(speed: 1.0, onChanged: changes.add));
+
+      tester.semantics.performAction(
+        find.semantics.byValue('1.0x'),
+        SemanticsAction.increase,
+      );
+      await tester.pump();
+
+      expect(changes, [1.1]);
+      semantics.dispose();
+    });
   });
 }

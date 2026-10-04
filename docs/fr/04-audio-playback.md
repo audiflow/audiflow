@@ -63,10 +63,15 @@ state and resume position stay coherent no matter where the listener touches it.
   clears the same state and dismisses the full player the same way.
 - **Playback speed**: The full player's bottom action row has three slots: Audio, an output
   picker (hidden until that feature ships), and the sleep timer. The Audio button shows the
-  current speed (e.g. `1.3x`) and opens the Audio sheet, which holds a large speed readout,
-  quick chips, and a stepped slider. The slider has 21 positions — 0.5x to 2.0x in 0.1 steps,
-  then 2.2x, 2.4x, 2.6x, 2.8x, and 3.0x — snaps to them, applies each step immediately, and
-  gives a light haptic per step. The chips are "Normal" plus up to two recently used speeds
+  current speed (e.g. `1.3x`) and opens the Audio sheet, which holds quick chips and a
+  stepped slider. The slider has 21 positions — 0.5x to 2.0x in 0.1 steps, then 2.2x, 2.4x,
+  2.6x, 2.8x, and 3.0x — with 0.5x, 1.0x, 2.0x, and 3.0x labelled under their ticks. It snaps
+  to the positions, applies each step immediately, gives a light haptic per step, and shows
+  the speed above the thumb while dragging. The slider commits the speed the listener meant:
+  a step is only taken once the finger is well past a boundary, so resting on a boundary does
+  not flicker between two speeds; a single-step change made just before lift-off, after the
+  finger had rested on the previous step, is undone; and a tap uses the touch-down point
+  rather than the lift-off point. The chips are "Normal" plus up to two recently used speeds
   other than 1.0x, shown in ascending speed order; tapping one applies it, and the chip that
   matches the current speed is highlighted. Only the speed the listener settles on (a chip tap
   or slider release) counts as recently used, not every step crossed while dragging.

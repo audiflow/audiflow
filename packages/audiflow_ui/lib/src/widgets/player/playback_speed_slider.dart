@@ -1,6 +1,9 @@
 import 'package:audiflow_core/audiflow_core.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
+import 'step_drag_tracker.dart';
 
 /// Slider over [PlaybackSpeedScale.steps] with a light haptic per step.
 ///
@@ -42,37 +45,171 @@ class _PlaybackSpeedSliderState extends State<PlaybackSpeedSlider> {
   // thumb responsive and stops repeated callbacks for the same step.
   int? _dragIndex;
   int? _gestureStartIndex;
+  StepDragTracker? _tracker;
+  // Timestamp of the latest pointer event. Recorded by a Listener that
+  // sees each event before the drag recognizer reports it.
+  Duration _lastPointerTime = Duration.zero;
+  // Where a tap went down. A tap commits this point rather than the
+  // lift-off point, which can roll onto a neighbouring step.
+  Offset? _tapDownPosition;
 
   int get _index =>
       _dragIndex ?? PlaybackSpeedScale.indexForSpeed(widget.speed);
 
-  void _handleChangeStart(double value) => _gestureStartIndex = _index;
+  bool get _isDragging => _tracker != null;
 
-  void _handleChanged(double value) {
-    final index = value.round();
-    if (index == _index) return;
+  // -- Pointer gestures (handled above the Slider) --
+
+  double _positionInSteps(Offset local, double width) {
+    final first = _SliderGeometry.tickX(0, width);
+    final last = _SliderGeometry.tickX(PlaybackSpeedScale.maxIndex, width);
+    final fraction = ((local.dx - first) / (last - first)).clamp(0.0, 1.0);
+    return fraction * PlaybackSpeedScale.maxIndex;
+  }
+
+  void _handleTapUp(double width) {
+    final down = _tapDownPosition;
+    _tapDownPosition = null;
+    if (down == null) return;
+    final startIndex = _index;
+    final index = _positionInSteps(down, width).round();
+    if (index == startIndex) return;
+    _select(index, haptic: true);
+    _commit(index, startIndex: startIndex);
+  }
+
+  void _handleDragStart(DragStartDetails details, double width) {
+    _gestureStartIndex = _index;
+    // The first contact jumps to the step under the finger, like a tap.
+    final index = _positionInSteps(details.localPosition, width).round();
+    _tracker = StepDragTracker(startIndex: index, startTime: _lastPointerTime);
+    if (index == _index) return setState(() {});
+    _select(index, haptic: true);
+  }
+
+  void _handleDragUpdate(DragUpdateDetails details, double width) {
+    final tracker = _tracker;
+    if (tracker == null) return;
+    final position = _positionInSteps(details.localPosition, width);
+    if (!tracker.update(position, _lastPointerTime)) return;
+    _select(tracker.index, haptic: true);
+  }
+
+  void _handleDragEnd() {
+    final tracker = _tracker;
+    if (tracker == null) return;
+    final index = tracker.resolveRelease(_lastPointerTime);
+    // Lift-off roll undone: put the player back on the settled step.
+    if (index != _index) _select(index, haptic: false);
+    _commit(index, startIndex: _gestureStartIndex);
+  }
+
+  void _select(int index, {required bool haptic}) {
     setState(() => _dragIndex = index);
-    HapticFeedback.lightImpact();
+    if (haptic) HapticFeedback.lightImpact();
     widget.onChanged(PlaybackSpeedScale.speedForIndex(index));
   }
 
-  void _handleChangeEnd(double value) {
-    final index = value.round();
-    final startIndex = _gestureStartIndex;
-    _gestureStartIndex = null;
-    setState(() => _dragIndex = null);
+  void _commit(int index, {required int? startIndex}) {
+    setState(() {
+      _tracker = null;
+      _gestureStartIndex = null;
+      _dragIndex = null;
+    });
     // A tap on the thumb or a drag back to the start changes nothing, so
     // it must not count as a new choice.
     if (index == startIndex) return;
     widget.onChangeEnd?.call(PlaybackSpeedScale.speedForIndex(index));
   }
 
+  // -- Slider callbacks (reached only by semantics and keyboard actions,
+  // because pointer input is captured by the gesture layer) --
+
+  void _handleChangeStart(double value) => _gestureStartIndex = _index;
+
+  void _handleChanged(double value) {
+    final index = value.round();
+    if (index == _index) return;
+    _select(index, haptic: true);
+  }
+
+  void _handleChangeEnd(double value) =>
+      _commit(value.round(), startIndex: _gestureStartIndex);
+
   @override
   Widget build(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [_buildSlider(context), const _LandmarkLabels()],
+      children: [
+        LayoutBuilder(
+          builder: (context, constraints) => Stack(
+            clipBehavior: Clip.none,
+            children: [
+              _buildSlider(context),
+              Positioned.fill(child: _gestureLayer(constraints.maxWidth)),
+              if (_isDragging) _valueBubble(context, constraints.maxWidth),
+            ],
+          ),
+        ),
+        const _LandmarkLabels(),
+      ],
+    );
+  }
+
+  /// Captures pointer input before the Slider so drags go through the
+  /// jitter filter. Sitting above the Slider (not wrapping it in
+  /// IgnorePointer) keeps the Slider's semantics actions working.
+  Widget _gestureLayer(double width) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      dragStartBehavior: DragStartBehavior.down,
+      onTapDown: (details) => _tapDownPosition = details.localPosition,
+      onTapUp: (_) => _handleTapUp(width),
+      onTapCancel: () => _tapDownPosition = null,
+      onHorizontalDragStart: (details) => _handleDragStart(details, width),
+      onHorizontalDragUpdate: (details) => _handleDragUpdate(details, width),
+      onHorizontalDragEnd: (_) => _handleDragEnd(),
+      onHorizontalDragCancel: _handleDragEnd,
+      child: Listener(
+        behavior: HitTestBehavior.opaque,
+        onPointerDown: (event) => _lastPointerTime = event.timeStamp,
+        onPointerMove: (event) => _lastPointerTime = event.timeStamp,
+        onPointerUp: (event) => _lastPointerTime = event.timeStamp,
+      ),
+    );
+  }
+
+  /// Speed shown above the thumb while dragging. The Slider's own value
+  /// indicator never appears because it does not receive the pointer.
+  Widget _valueBubble(BuildContext context, double width) {
+    final theme = Theme.of(context);
+    final label = PlaybackSpeedScale.label(
+      PlaybackSpeedScale.speedForIndex(_index),
+    );
+    return Positioned(
+      left: _SliderGeometry.tickX(_index, width),
+      top: 0,
+      child: FractionalTranslation(
+        translation: const Offset(-0.5, -1),
+        child: ExcludeSemantics(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              child: Text(
+                label,
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: theme.colorScheme.onPrimary,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -82,7 +219,7 @@ class _PlaybackSpeedSliderState extends State<PlaybackSpeedSlider> {
       PlaybackSpeedScale.speedForIndex(_index),
     );
     // Pinning the padding and track height makes the tick positions
-    // computable, which the landmark labels below rely on.
+    // computable, which the gesture layer and labels rely on.
     return SliderTheme(
       data: SliderTheme.of(
         context,
