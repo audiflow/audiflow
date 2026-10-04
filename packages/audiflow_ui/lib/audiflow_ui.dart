@@ -28,6 +28,7 @@ export 'src/widgets/indicators/episode_progress_indicator.dart';
 // Widgets - Player
 export 'src/widgets/player/mini_player_artwork.dart';
 export 'src/widgets/player/mini_player_progress_bar.dart';
+export 'src/widgets/player/player_seek_bar.dart';
 export 'src/widgets/player/skip_duration_icon.dart';
 
 // Widgets - Downloads
