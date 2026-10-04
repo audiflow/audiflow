@@ -54,3 +54,26 @@ String formatSleepTimerRemaining(DateTime deadline) {
   if (0 < hours) return '${pad2(hours)}:${pad2(minutes)}:${pad2(seconds)}';
   return '${pad2(minutes)}:${pad2(seconds)}';
 }
+
+/// Status line shown under the sleep-timer sheet title while a timer is
+/// active. Returns null when no timer is running.
+///
+/// [formatClock] renders the wall-clock deadline (e.g. "23:45") so the
+/// caller can honour the platform's 12/24-hour setting.
+String? formatSleepTimerSheetStatus(
+  SleepTimerConfig config,
+  AppLocalizations l10n, {
+  required String Function(DateTime deadline) formatClock,
+}) {
+  return switch (config) {
+    SleepTimerConfigOff() => null,
+    SleepTimerConfigEndOfEpisode() => l10n.sleepTimerStatusEndOfEpisode,
+    SleepTimerConfigEndOfChapter() => l10n.sleepTimerStatusEndOfChapter,
+    SleepTimerConfigEpisodes(:final remaining) =>
+      l10n.sleepTimerStatusEpisodesLeft(remaining),
+    SleepTimerConfigDuration(:final deadline) => l10n.sleepTimerStatusDuration(
+      formatSleepTimerRemaining(deadline),
+      formatClock(deadline),
+    ),
+  };
+}
