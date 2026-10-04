@@ -97,7 +97,7 @@ state and resume position stay coherent no matter where the listener touches it.
   1.75x) are rounded to the nearest step, halves rounding up, when read. The controller keeps
   a newest-first list of the two most recent non-normal speeds for the Audio sheet's chips and
   emits `playback_speed_change` once per committed change; intermediate slider steps apply
-  the speed without recording it or emitting analytics.
+  the speed in memory only, without persisting it, recording it, or emitting analytics.
 - Resumes an episode from its last saved position, replaying from the start when the saved
   position is at the very end, and honors an explicit start position from timestamped share
   links over the saved position.

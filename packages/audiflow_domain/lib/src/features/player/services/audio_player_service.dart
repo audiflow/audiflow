@@ -979,7 +979,7 @@ class AudioPlayerController extends _$AudioPlayerController
     // instead of trailing behind queued engine calls.
     final saved = ref
         .read(playbackSpeedSettingsControllerProvider.notifier)
-        .save(snapped, recordRecent: !transient);
+        .save(snapped, commit: !transient);
     await _player.setSpeed(snapped);
     // Playback may have paused while the engine applied the speed; the
     // stream has then already closed the segment and must not reopen it.

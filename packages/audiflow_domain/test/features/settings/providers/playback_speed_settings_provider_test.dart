@@ -31,7 +31,7 @@ void main() {
   });
 
   test('save records a recent speed and persists both values', () async {
-    await notifier().save(2.0, recordRecent: true);
+    await notifier().save(2.0, commit: true);
 
     final state = container.read(playbackSpeedSettingsControllerProvider);
     expect(state.speed, 2.0);
@@ -40,25 +40,26 @@ void main() {
     expect(repo.recentPlaybackSpeeds, [2.0, 1.5]);
   });
 
-  test('save without recordRecent leaves the recent list alone', () async {
-    await notifier().save(2.4, recordRecent: false);
+  test('a preview step updates memory only', () async {
+    await notifier().save(2.4, commit: false);
 
     final state = container.read(playbackSpeedSettingsControllerProvider);
     expect(state.speed, 2.4);
     expect(state.recentSpeeds, [1.5]);
+    expect(repo.playbackSpeed, 1.5);
     expect(repo.recentPlaybackSpeeds, [1.5]);
   });
 
   test('save snaps off-grid speeds', () async {
-    await notifier().save(1.25, recordRecent: true);
+    await notifier().save(1.25, commit: true);
 
     expect(container.read(playbackSpeedSettingsControllerProvider).speed, 1.3);
     expect(repo.playbackSpeed, 1.3);
   });
 
   test('chip speeds stay ascending regardless of recency', () async {
-    await notifier().save(0.8, recordRecent: true);
-    await notifier().save(2.0, recordRecent: true);
+    await notifier().save(0.8, commit: true);
+    await notifier().save(2.0, commit: true);
 
     final state = container.read(playbackSpeedSettingsControllerProvider);
     expect(state.recentSpeeds, [2.0, 0.8]);
