@@ -10,6 +10,7 @@ refs:
   modules:
     - packages/audiflow_app/lib/features/player/
     - packages/audiflow_domain/lib/src/features/player/
+    - packages/audiflow_ui/lib/src/widgets/player/
 ---
 # FR 04: Audio playback
 
@@ -113,6 +114,27 @@ state and resume position stay coherent no matter where the listener touches it.
 - Durations on episode rows use a single compact format shared app-wide: `{minutes}m` at one
   minute or longer, `0:ss` below one minute. Pill state labels are localized for English and
   Japanese.
+
+### Full player seek bar
+
+- The full player uses a thumbless, rounded seek bar (`PlayerSeekBar` in `audiflow_ui`): a
+  6 pt track that thickens to 10 pt while dragging, with the played part in the theme's
+  primary color and the rest in the same color at 30% opacity.
+- Scrubbing is delta-based: a horizontal drag moves the position by the finger's travel from
+  the current position instead of jumping to the touch point, and a tap on the track never
+  seeks. A light haptic fires when a drag begins.
+- The left label shows elapsed time. The right label shows remaining time as `-mm:ss` (or
+  `-h:mm:ss`) by default; tapping it toggles to the total duration. The choice persists as the
+  `showRemainingTime` setting. Remaining time is media time and does not account for playback
+  speed.
+- While scrubbing, the play/pause button keeps the state it had when the drag began, so the
+  brief buffering after the seek does not flicker the icon.
+- When the duration is unknown, releasing a drag performs no seek. When no audio is loaded
+  (e.g. after the app restores a session), the drag updates the saved resume position instead,
+  so the next play starts there.
+- Screen readers see a single slider whose value reads "elapsed of total".
+- The track is drawn from a list of segments so chapter boundaries can be shown later without
+  changing the widget API. The mini player's thin progress bar is unchanged.
 
 ## Boundaries
 

@@ -35,6 +35,7 @@ It also serves a secondary audience: audiflow contributors and podcast creators.
 - Persists every preference through a single `AppSettingsRepository` backed by SharedPreferences, with synchronous getters that return the stored value or a defined default and asynchronous setters that persist changes.
 - Acts as the source of truth that feature services read instead of hard-coded constants (sync interval, completion threshold, skip durations, download concurrency, Wi-Fi policy, and similar).
 - Hosts general preferences directly: appearance (theme mode, locale, text scale), playback tuning, download policy, feed sync cadence, new-episode notifications, search country, last-selected tab, and privacy/analytics opt-in.
+- Stores some preferences that are changed in place rather than from a settings screen: `showRemainingTime` (default on) records whether the full player's right-hand time label shows remaining time or total duration, and is toggled by tapping that label (FR 04).
 - Provides a Storage & Data screen for cache and database inspection, search-history clearing, OPML import/export, and a guarded full-reset action.
 - Provides an About screen showing version and build, open-source licenses, feedback, and app-store rating links.
 - Provides a Developer screen that browses all smart playlist presets, links them to their directories in the GitHub repo, and exposes a persisted toggle controlling developer info in episode detail.

@@ -567,113 +567,88 @@ class _PlayerProgressBar extends ConsumerStatefulWidget {
 class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
   bool _isDragging = false;
   double _dragValue = 0.0;
+  late bool _showRemainingTime = ref
+      .read(appSettingsRepositoryProvider)
+      .getShowRemainingTime();
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final progress = widget.progress;
-
+    final duration = progress?.duration;
     final displayValue = _isDragging ? _dragValue : (progress?.progress ?? 0.0);
     final displayPosition = _isDragging
-        ? _computeDragPosition(progress?.duration)
+        ? _computeDragPosition(duration)
         : progress?.position;
 
-    return Semantics(
-      slider: true,
-      value:
+    return PlayerSeekBar(
+      value: displayValue,
+      leadingLabel: _formatDuration(displayPosition),
+      trailingLabel: _showRemainingTime
+          ? _formatRemaining(displayPosition, duration)
+          : _formatDuration(duration),
+      semanticValue:
           '${_formatDuration(displayPosition)}'
-          ' of ${_formatDuration(progress?.duration)}',
-      child: Column(
-        children: [
-          SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              trackHeight: 4,
-              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-            ),
-            child: Slider(
-              value: displayValue,
-              // iOS-26-style scrubbing: drag moves the thumb by delta from its
-              // current position instead of jumping to the touch point. Flutter's
-              // default (tapAndSlide) snaps the thumb to the finger on touch-down.
-              allowedInteraction: SliderInteraction.slideOnly,
-              onChangeStart: (value) {
-                setState(() {
-                  _isDragging = true;
-                  _dragValue = value;
-                });
-                widget.onSeekStart?.call();
-              },
-              onChanged: (value) {
-                setState(() => _dragValue = value);
-              },
-              onChangeEnd: (value) async {
-                final duration = progress?.duration ?? Duration.zero;
-                if (duration == Duration.zero) {
-                  // Duration unknown -- cannot compute a meaningful position.
-                  await widget.onSeekEnd?.call();
-                  if (!mounted) return;
-                  setState(() => _isDragging = false);
-                  return;
-                }
-                final seekPosition = Duration(
-                  milliseconds: (duration.inMilliseconds * value).round(),
-                );
-                final controller = ref.read(
-                  audioPlayerControllerProvider.notifier,
-                );
-                if (controller.currentUrl != null) {
-                  await controller.seek(seekPosition);
-                } else {
-                  // No audio loaded (post-restore): update saved position
-                  // so the display reflects the drag and play() starts here.
-                  final nowPlaying = ref.read(nowPlayingControllerProvider);
-                  if (nowPlaying != null) {
-                    ref
-                        .read(nowPlayingControllerProvider.notifier)
-                        .setNowPlaying(
-                          nowPlaying.copyWith(savedPosition: seekPosition),
-                        );
-                    // Persist so play() seeks to this position.
-                    final episode = nowPlaying.episode;
-                    if (episode != null) {
-                      await ref
-                          .read(playbackHistoryRepositoryProvider)
-                          .saveProgress(
-                            episodeId: episode.id,
-                            positionMs: seekPosition.inMilliseconds,
-                          );
-                    }
-                  }
-                }
-                await widget.onSeekEnd?.call();
-                if (!mounted) return;
-                setState(() => _isDragging = false);
-              },
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                ExcludeSemantics(
-                  child: Text(
-                    _formatDuration(displayPosition),
-                    style: theme.textTheme.bodySmall,
-                  ),
-                ),
-                ExcludeSemantics(
-                  child: Text(
-                    _formatDuration(progress?.duration),
-                    style: theme.textTheme.bodySmall,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+          ' of ${_formatDuration(duration)}',
+      onChangeStart: (value) {
+        setState(() {
+          _isDragging = true;
+          _dragValue = value;
+        });
+        widget.onSeekStart?.call();
+      },
+      onChanged: (value) => setState(() => _dragValue = value),
+      onChangeEnd: _handleSeekEnd,
+      onTrailingLabelTap: _toggleTrailingLabel,
     );
+  }
+
+  void _toggleTrailingLabel() {
+    final next = !_showRemainingTime;
+    setState(() => _showRemainingTime = next);
+    unawaited(
+      ref.read(appSettingsRepositoryProvider).setShowRemainingTime(next),
+    );
+  }
+
+  Future<void> _handleSeekEnd(double value) async {
+    final duration = widget.progress?.duration ?? Duration.zero;
+    // Duration unknown -- cannot compute a meaningful position.
+    if (duration != Duration.zero) {
+      await _seekTo(
+        Duration(milliseconds: (duration.inMilliseconds * value).round()),
+      );
+    }
+    await widget.onSeekEnd?.call();
+    if (!mounted) return;
+    setState(() => _isDragging = false);
+  }
+
+  Future<void> _seekTo(Duration position) async {
+    final controller = ref.read(audioPlayerControllerProvider.notifier);
+    if (controller.currentUrl != null) {
+      await controller.seek(position);
+      return;
+    }
+    await _saveSeekWithoutAudio(position);
+  }
+
+  /// No audio loaded (post-restore): update the saved position so the
+  /// display reflects the drag and play() starts here.
+  Future<void> _saveSeekWithoutAudio(Duration position) async {
+    final nowPlaying = ref.read(nowPlayingControllerProvider);
+    if (nowPlaying == null) return;
+    ref
+        .read(nowPlayingControllerProvider.notifier)
+        .setNowPlaying(nowPlaying.copyWith(savedPosition: position));
+    // Persist so play() seeks to this position.
+    final episode = nowPlaying.episode;
+    if (episode == null) return;
+    await ref
+        .read(playbackHistoryRepositoryProvider)
+        .saveProgress(
+          episodeId: episode.id,
+          positionMs: position.inMilliseconds,
+        );
   }
 
   Duration? _computeDragPosition(Duration? duration) {
@@ -681,6 +656,13 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
     return Duration(
       milliseconds: (duration.inMilliseconds * _dragValue).round(),
     );
+  }
+
+  // Remaining media time; deliberately not scaled by playback speed.
+  String _formatRemaining(Duration? position, Duration? duration) {
+    if (position == null || duration == null) return '--:--';
+    final remaining = duration - position;
+    return '-${_formatDuration(remaining.isNegative ? Duration.zero : remaining)}';
   }
 
   String _formatDuration(Duration? duration) {
