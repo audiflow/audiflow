@@ -12,7 +12,11 @@ import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
+import '../../helpers/chapter_seek_bar_segments.dart';
+import '../../helpers/playback_time_format.dart';
+import '../../helpers/player_seek.dart';
 import '../../helpers/podcast_lookup.dart';
+import '../widgets/current_chapter_row.dart';
 import '../widgets/sleep_timer_icon_button.dart';
 import '../widgets/sleep_timer_status_label.dart';
 import '../widgets/transcript_tab.dart';
@@ -178,6 +182,10 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
                               nowPlaying.podcastTitle,
                             )
                           : null,
+                      onChapterSelected: (position) => _handleSkip(
+                        () => seekNowPlaying(ref, position),
+                        isPlaying,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -382,9 +390,13 @@ class _PlayerTabBody extends StatelessWidget {
     required this.artworkUrl,
     required this.episodeTitle,
     required this.podcastTitle,
+    required this.onChapterSelected,
     this.onEpisodeTitleTap,
     this.onPodcastTitleTap,
   });
+
+  /// Smallest height the artwork shrinks to before the page scrolls.
+  static const double artworkMinHeight = 160;
 
   final TabController tabController;
   final bool hasTranscript;
@@ -394,19 +406,43 @@ class _PlayerTabBody extends StatelessWidget {
   final String podcastTitle;
   final VoidCallback? onEpisodeTitleTap;
   final VoidCallback? onPodcastTitleTap;
+  final ValueChanged<Duration> onChapterSelected;
 
   @override
   Widget build(BuildContext context) {
-    final nowPlayingContent = Column(
-      children: [
-        Expanded(
-          child: Center(child: _PlayerArtwork(artworkUrl: artworkUrl)),
-        ),
-        _PlayerInfo(
-          episodeTitle: episodeTitle,
-          podcastTitle: podcastTitle,
-          onEpisodeTitleTap: onEpisodeTitleTap,
-          onPodcastTitleTap: onPodcastTitleTap,
+    // The artwork takes whatever height is left and shrinks to make room for
+    // the text below. SliverFillRemaining sizes the column to at least its
+    // intrinsic height, and the tight 160 box reports exactly 160 as the
+    // artwork's intrinsic height (at layout the Expanded's tighter height
+    // still wins), so the artwork never drops below 160 and the page
+    // scrolls instead. Clamping physics, and not being the primary scroll
+    // view, keep it from grabbing drags when everything fits, so the sheet
+    // can still be swiped down.
+    final nowPlayingContent = CustomScrollView(
+      primary: false,
+      physics: const ClampingScrollPhysics(),
+      slivers: [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Column(
+            children: [
+              Expanded(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints.tightFor(
+                    height: artworkMinHeight,
+                  ),
+                  child: Center(child: _PlayerArtwork(artworkUrl: artworkUrl)),
+                ),
+              ),
+              _PlayerInfo(
+                episodeTitle: episodeTitle,
+                podcastTitle: podcastTitle,
+                onEpisodeTitleTap: onEpisodeTitleTap,
+                onPodcastTitleTap: onPodcastTitleTap,
+              ),
+              CurrentChapterRow(onChapterSelected: onChapterSelected),
+            ],
+          ),
         ),
       ],
     );
@@ -579,16 +615,20 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
     final displayPosition = _isDragging
         ? _computeDragPosition(duration)
         : progress?.position;
+    final chapters = ref.watch(currentEpisodeChaptersProvider).value ?? [];
 
     return PlayerSeekBar(
       value: displayValue,
-      leadingLabel: _formatDuration(displayPosition),
+      leadingLabel: formatPlaybackTime(displayPosition),
       trailingLabel: _showRemainingTime
           ? _formatRemaining(displayPosition, duration)
-          : _formatDuration(duration),
+          : formatPlaybackTime(duration),
+      segments: chapterSeekBarSegments(chapters, duration ?? Duration.zero),
+      tooltipBuilder: (context, value) =>
+          _buildTooltip(chapters, _positionAt(value, null)),
       semanticValueFormatter: (value) =>
-          '${_formatDuration(_positionAt(value, displayPosition))}'
-          ' of ${_formatDuration(duration)}',
+          '${formatPlaybackTime(_positionAt(value, displayPosition))}'
+          ' of ${formatPlaybackTime(duration)}',
       onChangeStart: (value) {
         setState(() {
           _isDragging = true;
@@ -611,6 +651,28 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
     super.dispose();
   }
 
+  /// Chapter title (when the position is inside a chapter) over the scrub
+  /// position.
+  Widget _buildTooltip(List<EpisodeChapter> chapters, Duration? position) {
+    final index = position == null ? null : chapterIndexAt(chapters, position);
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 240),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (index != null)
+            Text(
+              chapters[index].title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+          Text(formatPlaybackTime(position)),
+        ],
+      ),
+    );
+  }
+
   void _toggleTrailingLabel() {
     final next = !_showRemainingTime;
     setState(() => _showRemainingTime = next);
@@ -623,41 +685,14 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
     final duration = widget.progress?.duration ?? Duration.zero;
     // Duration unknown -- cannot compute a meaningful position.
     if (duration != Duration.zero) {
-      await _seekTo(
+      await seekNowPlaying(
+        ref,
         Duration(milliseconds: (duration.inMilliseconds * value).round()),
       );
     }
     await widget.onSeekEnd?.call();
     if (!mounted) return;
     setState(() => _isDragging = false);
-  }
-
-  Future<void> _seekTo(Duration position) async {
-    final controller = ref.read(audioPlayerControllerProvider.notifier);
-    if (controller.currentUrl != null) {
-      await controller.seek(position);
-      return;
-    }
-    await _saveSeekWithoutAudio(position);
-  }
-
-  /// No audio loaded (post-restore): update the saved position so the
-  /// display reflects the drag and play() starts here.
-  Future<void> _saveSeekWithoutAudio(Duration position) async {
-    final nowPlaying = ref.read(nowPlayingControllerProvider);
-    if (nowPlaying == null) return;
-    ref
-        .read(nowPlayingControllerProvider.notifier)
-        .setNowPlaying(nowPlaying.copyWith(savedPosition: position));
-    // Persist so play() seeks to this position.
-    final episode = nowPlaying.episode;
-    if (episode == null) return;
-    await ref
-        .read(playbackHistoryRepositoryProvider)
-        .saveProgress(
-          episodeId: episode.id,
-          positionMs: position.inMilliseconds,
-        );
   }
 
   /// Position at track fraction [value]; falls back to [fallback] when the
@@ -682,18 +717,7 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
       return '--:--';
     }
     final remaining = duration - position;
-    return '-${_formatDuration(remaining.isNegative ? Duration.zero : remaining)}';
-  }
-
-  String _formatDuration(Duration? duration) {
-    if (duration == null) return '--:--';
-    final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
-    final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
-    if (60 <= duration.inMinutes) {
-      final hours = duration.inHours;
-      return '$hours:$minutes:$seconds';
-    }
-    return '$minutes:$seconds';
+    return '-${formatPlaybackTime(remaining.isNegative ? Duration.zero : remaining)}';
   }
 }
 

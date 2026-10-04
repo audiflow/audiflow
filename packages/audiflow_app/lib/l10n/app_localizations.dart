@@ -1652,6 +1652,24 @@ abstract class AppLocalizations {
   /// **'No transcript available'**
   String get playerTranscriptEmpty;
 
+  /// Title of the chapter list sheet, and the chapter row label before the first chapter starts
+  ///
+  /// In en, this message translates to:
+  /// **'Chapters'**
+  String get playerChaptersTitle;
+
+  /// Accessibility label for the current chapter row in the player
+  ///
+  /// In en, this message translates to:
+  /// **'Chapter {number}: {title}. Show chapter list'**
+  String playerCurrentChapterLabel(int number, String title);
+
+  /// Accessibility label for a chapter in the chapter list
+  ///
+  /// In en, this message translates to:
+  /// **'Chapter {number}: {title}, starts at {time}'**
+  String playerChapterItemLabel(int number, String title, String time);
+
   /// Jump to current position button label
   ///
   /// In en, this message translates to:
