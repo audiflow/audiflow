@@ -11,7 +11,8 @@ part of 'current_chapter_providers.dart';
 /// Chapters of the now-playing episode, ordered by start time.
 ///
 /// Empty when nothing is playing, the episode is not stored locally, or it
-/// has no chapters.
+/// has no chapters. Watches the store so a feed refresh that adds or edits
+/// chapters reaches the open player without switching episodes.
 
 @ProviderFor(currentEpisodeChapters)
 final currentEpisodeChaptersProvider = CurrentEpisodeChaptersProvider._();
@@ -19,22 +20,24 @@ final currentEpisodeChaptersProvider = CurrentEpisodeChaptersProvider._();
 /// Chapters of the now-playing episode, ordered by start time.
 ///
 /// Empty when nothing is playing, the episode is not stored locally, or it
-/// has no chapters.
+/// has no chapters. Watches the store so a feed refresh that adds or edits
+/// chapters reaches the open player without switching episodes.
 
 final class CurrentEpisodeChaptersProvider
     extends
         $FunctionalProvider<
           AsyncValue<List<EpisodeChapter>>,
           List<EpisodeChapter>,
-          FutureOr<List<EpisodeChapter>>
+          Stream<List<EpisodeChapter>>
         >
     with
         $FutureModifier<List<EpisodeChapter>>,
-        $FutureProvider<List<EpisodeChapter>> {
+        $StreamProvider<List<EpisodeChapter>> {
   /// Chapters of the now-playing episode, ordered by start time.
   ///
   /// Empty when nothing is playing, the episode is not stored locally, or it
-  /// has no chapters.
+  /// has no chapters. Watches the store so a feed refresh that adds or edits
+  /// chapters reaches the open player without switching episodes.
   CurrentEpisodeChaptersProvider._()
     : super(
         from: null,
@@ -51,18 +54,18 @@ final class CurrentEpisodeChaptersProvider
 
   @$internal
   @override
-  $FutureProviderElement<List<EpisodeChapter>> $createElement(
+  $StreamProviderElement<List<EpisodeChapter>> $createElement(
     $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
+  ) => $StreamProviderElement(pointer);
 
   @override
-  FutureOr<List<EpisodeChapter>> create(Ref ref) {
+  Stream<List<EpisodeChapter>> create(Ref ref) {
     return currentEpisodeChapters(ref);
   }
 }
 
 String _$currentEpisodeChaptersHash() =>
-    r'a9fa5ff1b5d0690ebf686ca42d61d59ca8a040a6';
+    r'f3d8e6e94d68a416c1daa6fe7864d7d8db6a5dc2';
 
 /// The chapter containing the current playback position.
 ///

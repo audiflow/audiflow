@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:riverpod/riverpod.dart';
 
@@ -10,6 +13,22 @@ class _FakeChapterRepository implements ChapterRepository {
   @override
   Future<List<EpisodeChapter>> getByEpisodeId(int episodeId) async =>
       chapters.where((c) => c.episodeId == episodeId).toList();
+
+  @override
+  Stream<List<EpisodeChapter>> watchByEpisodeId(int episodeId) =>
+      Stream.fromFuture(getByEpisodeId(episodeId));
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
+/// Emits whatever the test pushes, like the store's watch query.
+class _LiveChapterRepository implements ChapterRepository {
+  final controller = StreamController<List<EpisodeChapter>>.broadcast();
+
+  @override
+  Stream<List<EpisodeChapter>> watchByEpisodeId(int episodeId) =>
+      controller.stream;
 
   @override
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
@@ -80,32 +99,67 @@ void main() {
 
   setUp(() => progress = null);
 
+  // The provider is auto-disposed; a listener keeps it alive until the
+  // store's first emission.
+  Future<List<EpisodeChapter>> readChapters(ProviderContainer container) {
+    container.listen(currentEpisodeChaptersProvider, (_, _) {});
+    return container.read(currentEpisodeChaptersProvider.future);
+  }
+
   group('currentEpisodeChaptersProvider', () {
     test('is empty when nothing is playing', () async {
       final container = makeContainer(nowPlaying: null);
-      expect(await container.read(currentEpisodeChaptersProvider.future), []);
+      check(await readChapters(container)).isEmpty();
     });
 
     test('is empty for an episode without a local record', () async {
       final container = makeContainer(
         nowPlaying: _nowPlaying(withEpisode: false),
       );
-      expect(await container.read(currentEpisodeChaptersProvider.future), []);
+      check(await readChapters(container)).isEmpty();
     });
 
     test('orders chapters by start time', () async {
       final container = makeContainer(nowPlaying: _nowPlaying());
-      final chapters = await container.read(
-        currentEpisodeChaptersProvider.future,
+      final chapters = await readChapters(container);
+      check(chapters.map((c) => c.startMs)).deepEquals([0, 60000]);
+    });
+
+    test('follows chapter changes in the store', () async {
+      final repository = _LiveChapterRepository();
+      addTearDown(repository.controller.close);
+      final container = ProviderContainer(
+        overrides: [
+          chapterRepositoryProvider.overrideWithValue(repository),
+          nowPlayingControllerProvider.overrideWith(
+            () => _FixedNowPlaying(_nowPlaying()),
+          ),
+        ],
       );
-      expect(chapters.map((c) => c.startMs), [0, 60000]);
+      addTearDown(container.dispose);
+      container.listen(currentEpisodeChaptersProvider, (_, _) {});
+
+      repository.controller.add([_chapter(0, 0)]);
+      await Future<void>.delayed(Duration.zero);
+      check(
+        container.read(currentEpisodeChaptersProvider).value,
+      ).isNotNull().length.equals(1);
+
+      repository.controller.add([_chapter(1, 60000), _chapter(0, 0)]);
+      await Future<void>.delayed(Duration.zero);
+      check(
+        container
+            .read(currentEpisodeChaptersProvider)
+            .value!
+            .map((c) => c.startMs),
+      ).deepEquals([0, 60000]);
     });
   });
 
   group('currentChapterProvider', () {
     Future<CurrentChapter?> readCurrent(ProviderContainer container) async {
       container.listen(currentChapterProvider, (_, _) {});
-      await container.read(currentEpisodeChaptersProvider.future);
+      await readChapters(container);
       return container.read(currentChapterProvider);
     }
 
@@ -113,8 +167,8 @@ void main() {
       progress = _progress(const Duration(seconds: 90));
       final container = makeContainer(nowPlaying: _nowPlaying());
       final current = await readCurrent(container);
-      expect(current?.index, 1);
-      expect(current?.chapter.title, 'Chapter 1');
+      check(current?.index).equals(1);
+      check(current?.chapter.title).equals('Chapter 1');
     });
 
     test('falls back to the saved position while idle', () async {
@@ -122,7 +176,7 @@ void main() {
       final container = makeContainer(
         nowPlaying: _nowPlaying(savedPosition: const Duration(seconds: 70)),
       );
-      expect((await readCurrent(container))?.index, 1);
+      check((await readCurrent(container))?.index).equals(1);
     });
 
     test('is null before a late first chapter', () async {
@@ -131,7 +185,7 @@ void main() {
         nowPlaying: _nowPlaying(),
         chapters: [_chapter(0, 30000)],
       );
-      expect(await readCurrent(container), isNull);
+      check(await readCurrent(container)).isNull();
     });
 
     test('is null for an episode without chapters', () async {
@@ -140,7 +194,7 @@ void main() {
         nowPlaying: _nowPlaying(),
         chapters: const [],
       );
-      expect(await readCurrent(container), isNull);
+      check(await readCurrent(container)).isNull();
     });
 
     test('does not notify while the position stays in a chapter', () async {
@@ -164,7 +218,7 @@ void main() {
         currentChapterProvider,
         (_, next) => notified.add(next?.index),
       );
-      await container.read(currentEpisodeChaptersProvider.future);
+      await readChapters(container);
       container.read(currentChapterProvider);
       notified.clear();
 
@@ -175,7 +229,7 @@ void main() {
       container.read(position.notifier).set(const Duration(seconds: 61));
       container.read(currentChapterProvider);
 
-      expect(notified, [1]);
+      check(notified).deepEquals([1]);
     });
   });
 }

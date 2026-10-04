@@ -18,13 +18,23 @@ Future<void> seekNowPlaying(WidgetRef ref, Duration position) async {
 Future<void> _saveSeekWithoutAudio(WidgetRef ref, Duration position) async {
   final nowPlaying = ref.read(nowPlayingControllerProvider);
   if (nowPlaying == null) return;
+  // Mirror the player's clamp so a chapter start past the end (bad feed
+  // data) cannot become the resume position.
+  final clamped = _clampToEpisode(position, nowPlaying.totalDuration);
   ref
       .read(nowPlayingControllerProvider.notifier)
-      .setNowPlaying(nowPlaying.copyWith(savedPosition: position));
+      .setNowPlaying(nowPlaying.copyWith(savedPosition: clamped));
   final episode = nowPlaying.episode;
   if (episode == null) return;
   // Persist so play() seeks to this position.
   await ref
       .read(playbackHistoryRepositoryProvider)
-      .saveProgress(episodeId: episode.id, positionMs: position.inMilliseconds);
+      .saveProgress(episodeId: episode.id, positionMs: clamped.inMilliseconds);
+}
+
+Duration _clampToEpisode(Duration position, Duration? duration) {
+  if (position.isNegative) return Duration.zero;
+  // Zero means unknown, as elsewhere in the player.
+  if (duration == null || duration == Duration.zero) return position;
+  return duration < position ? duration : position;
 }

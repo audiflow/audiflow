@@ -87,7 +87,9 @@ Future<Widget> _buildPlayer({
       ),
       playbackSpeedProvider.overrideWith((ref) => Stream.value(1.0)),
       episodeHasTranscriptProvider.overrideWith((ref, id) async => false),
-      currentEpisodeChaptersProvider.overrideWith((ref) async => chapters),
+      currentEpisodeChaptersProvider.overrideWith(
+        (ref) => Stream.value(chapters),
+      ),
     ],
     child: const MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,

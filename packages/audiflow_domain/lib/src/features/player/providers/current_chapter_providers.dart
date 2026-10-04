@@ -2,7 +2,7 @@ import 'package:riverpod/riverpod.dart' show ProviderListenableSelect;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../transcript/models/episode_chapter.dart';
-import '../../transcript/providers/transcript_providers.dart';
+import '../../transcript/repositories/chapter_repository_impl.dart';
 import '../models/current_chapter.dart';
 import '../services/audio_player_service.dart';
 import '../services/now_playing_controller.dart';
@@ -12,17 +12,23 @@ part 'current_chapter_providers.g.dart';
 /// Chapters of the now-playing episode, ordered by start time.
 ///
 /// Empty when nothing is playing, the episode is not stored locally, or it
-/// has no chapters.
+/// has no chapters. Watches the store so a feed refresh that adds or edits
+/// chapters reaches the open player without switching episodes.
 @riverpod
-Future<List<EpisodeChapter>> currentEpisodeChapters(Ref ref) async {
+Stream<List<EpisodeChapter>> currentEpisodeChapters(Ref ref) {
   final episodeId = ref.watch(
     nowPlayingControllerProvider.select((info) => info?.episode?.id),
   );
-  if (episodeId == null) return const [];
-  final chapters = await ref.watch(episodeChaptersProvider(episodeId).future);
-  // Sorted defensively: chapter lookup by position depends on the order.
-  return [...chapters]..sort((a, b) => a.startMs.compareTo(b.startMs));
+  if (episodeId == null) return Stream.value(const []);
+  return ref
+      .watch(chapterRepositoryProvider)
+      .watchByEpisodeId(episodeId)
+      // Sorted defensively: chapter lookup by position depends on the order.
+      .map((chapters) => [...chapters]..sort(_byStart));
 }
+
+int _byStart(EpisodeChapter a, EpisodeChapter b) =>
+    a.startMs.compareTo(b.startMs);
 
 /// The chapter containing the current playback position.
 ///
