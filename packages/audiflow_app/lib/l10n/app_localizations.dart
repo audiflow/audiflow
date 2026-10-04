@@ -1190,6 +1190,24 @@ abstract class AppLocalizations {
   /// **'Normal'**
   String get playbackSpeedNormal;
 
+  /// Seek bar label while scrubbing at half speed
+  ///
+  /// In en, this message translates to:
+  /// **'Scrubbing (half speed)'**
+  String get playerScrubSpeedHalf;
+
+  /// Seek bar label while scrubbing at quarter speed
+  ///
+  /// In en, this message translates to:
+  /// **'Scrubbing (quarter speed)'**
+  String get playerScrubSpeedQuarter;
+
+  /// Seek bar label while scrubbing at one-eighth speed
+  ///
+  /// In en, this message translates to:
+  /// **'Scrubbing (fine)'**
+  String get playerScrubSpeedFine;
+
   /// Mini player accessibility label
   ///
   /// In en, this message translates to:

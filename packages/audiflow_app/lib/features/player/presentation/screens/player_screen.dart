@@ -620,6 +620,7 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
     final chapters =
         ref.watch(currentEpisodeChaptersProvider).unwrapPrevious().value ?? [];
 
+    final l10n = AppLocalizations.of(context);
     return PlayerSeekBar(
       value: displayValue,
       leadingLabel: formatPlaybackTime(displayPosition),
@@ -635,6 +636,11 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
       // A seek is dropped while the duration is unknown, so screen readers
       // must not be offered steps that would never move the position.
       adjustable: duration != null && duration != Duration.zero,
+      scrubSpeedLabels: {
+        ScrubSpeed.half: l10n.playerScrubSpeedHalf,
+        ScrubSpeed.quarter: l10n.playerScrubSpeedQuarter,
+        ScrubSpeed.fine: l10n.playerScrubSpeedFine,
+      },
       onChangeStart: (value) {
         setState(() {
           _isDragging = true;

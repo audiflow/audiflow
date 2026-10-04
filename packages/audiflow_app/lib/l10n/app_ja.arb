@@ -200,6 +200,9 @@
   "audioSheetTitle": "オーディオ",
   "audioSheetSpeedSection": "再生速度",
   "playbackSpeedNormal": "標準",
+  "playerScrubSpeedHalf": "半速スクラブ",
+  "playerScrubSpeedQuarter": "1/4速スクラブ",
+  "playerScrubSpeedFine": "微調整スクラブ",
   "playerNowPlayingLabel": "再生中: {title} - {podcast}",
 
   "podcastDetailFeedUrlMissing": "フィードURLがありません",

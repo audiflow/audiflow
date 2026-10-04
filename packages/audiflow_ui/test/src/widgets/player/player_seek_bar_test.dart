@@ -1,7 +1,8 @@
 import 'package:audiflow_ui/src/widgets/player/player_seek_bar.dart';
+import 'package:audiflow_ui/src/widgets/player/scrub_speed.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -15,36 +16,107 @@ class _SeekRecorder {
   int trailingTaps = 0;
 }
 
+const _scrubLabels = {
+  ScrubSpeed.full: 'full',
+  ScrubSpeed.half: 'half',
+  ScrubSpeed.quarter: 'quarter',
+  ScrubSpeed.fine: 'fine',
+};
+
 Widget _host({
   required double value,
   required _SeekRecorder recorder,
   List<SeekBarSegment> segments = SeekBarSegment.single,
   Widget Function(BuildContext context, double value)? tooltipBuilder,
   bool adjustable = true,
+  GestureDragUpdateCallback? onParentVerticalDrag,
+  bool withSheetArena = true,
+  double width = _barWidth,
+  Map<ScrubSpeed, String> scrubSpeedLabels = _scrubLabels,
 }) {
   return MaterialApp(
     home: Scaffold(
-      body: Center(
-        child: SizedBox(
-          width: _barWidth,
-          child: PlayerSeekBar(
-            value: value,
-            segments: segments,
-            tooltipBuilder: tooltipBuilder,
-            leadingLabel: '01:00',
-            trailingLabel: '-09:00',
-            semanticValueFormatter: (value) => 'at ${(value * 100).round()}%',
-            adjustable: adjustable,
-            onChangeStart: recorder.starts.add,
-            onChanged: recorder.changes.add,
-            onChangeEnd: recorder.ends.add,
-            onTrailingLabelTap: () => recorder.trailingTaps++,
+      // Stands in for the player sheet's swipe-to-dismiss.
+      body: GestureDetector(
+        onVerticalDragUpdate: withSheetArena
+            ? onParentVerticalDrag ?? (_) {}
+            : null,
+        child: Center(
+          child: SizedBox(
+            width: width,
+            child: PlayerSeekBar(
+              value: value,
+              segments: segments,
+              tooltipBuilder: tooltipBuilder,
+              leadingLabel: '01:00',
+              trailingLabel: '-09:00',
+              scrubSpeedLabels: scrubSpeedLabels,
+              semanticValueFormatter: (value) => 'at ${(value * 100).round()}%',
+              adjustable: adjustable,
+              onChangeStart: recorder.starts.add,
+              onChanged: recorder.changes.add,
+              onChangeEnd: recorder.ends.add,
+              onTrailingLabelTap: () => recorder.trailingTaps++,
+            ),
           ),
         ),
       ),
     ),
   );
 }
+
+/// Captures haptic feedback requests sent to the platform.
+List<Object?> _recordHaptics(WidgetTester tester) {
+  final haptics = <Object?>[];
+  tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+    SystemChannels.platform,
+    (call) async {
+      if (call.method == 'HapticFeedback.vibrate') haptics.add(call.arguments);
+      return null;
+    },
+  );
+  addTearDown(
+    () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      null,
+    ),
+  );
+  return haptics;
+}
+
+/// Starts a drag on the track center and moves past the drag slop, so later
+/// moves are applied in full.
+///
+/// With the sheet's vertical recognizer competing, winning the arena sends
+/// no update; the second move is what actually begins the scrub.
+Future<TestGesture> _startScrub(WidgetTester tester) async {
+  final gesture = await tester.startGesture(tester.getCenter(_track));
+  await gesture.moveBy(const Offset(40, 0));
+  await gesture.moveBy(const Offset(10, 0));
+  await tester.pump();
+  return gesture;
+}
+
+/// Value change caused by a 100 pt horizontal move made [dy] pt below the
+/// track.
+Future<double> _travelAt(WidgetTester tester, double dy) async {
+  final recorder = _SeekRecorder();
+  await tester.pumpWidget(_host(value: 0.5, recorder: recorder));
+  final gesture = await _startScrub(tester);
+  await gesture.moveBy(Offset(0, dy));
+  final before = recorder.changes.last;
+  await gesture.moveBy(const Offset(100, 0));
+  await gesture.up();
+  await tester.pump();
+  return recorder.ends.single - before;
+}
+
+const _labelTexts = ['full', 'half', 'quarter', 'fine'];
+
+List<String> _visibleScrubLabels() => [
+  for (final text in _labelTexts)
+    if (find.text(text).evaluate().isNotEmpty) text,
+];
 
 Finder get _track => find.byKey(PlayerSeekBar.trackKey);
 
@@ -102,22 +174,7 @@ void main() {
     });
 
     testWidgets('fires a light haptic on drag start', (tester) async {
-      final haptics = <Object?>[];
-      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-        SystemChannels.platform,
-        (call) async {
-          if (call.method == 'HapticFeedback.vibrate') {
-            haptics.add(call.arguments);
-          }
-          return null;
-        },
-      );
-      addTearDown(
-        () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-          SystemChannels.platform,
-          null,
-        ),
-      );
+      final haptics = _recordHaptics(tester);
       await tester.pumpWidget(_host(value: 0.5, recorder: _SeekRecorder()));
 
       await tester.drag(_track, const Offset(40, 0));
@@ -142,8 +199,7 @@ void main() {
 
       check(trackHeight()).equals(PlayerSeekBar.idleTrackHeight);
 
-      final gesture = await tester.startGesture(tester.getCenter(_track));
-      await gesture.moveBy(const Offset(40, 0));
+      final gesture = await _startScrub(tester);
       await tester.pumpAndSettle();
       check(trackHeight()).equals(PlayerSeekBar.draggingTrackHeight);
 
@@ -175,6 +231,147 @@ void main() {
       check(node.flagsCollection.isSlider).isTrue();
       check(node.value).equals('at 10%');
       handle.dispose();
+    });
+  });
+
+  group('PlayerSeekBar fine scrubbing', () {
+    testWidgets('150 pt away, travel is one eighth of full speed', (
+      tester,
+    ) async {
+      final full = await _travelAt(tester, 0);
+      final fine = await _travelAt(tester, 150);
+
+      check(full).isCloseTo(100 / _barWidth, 1e-9);
+      check(fine).isCloseTo(full / 8, 1e-9);
+    });
+
+    testWidgets('slows down by band above the track too', (tester) async {
+      check(await _travelAt(tester, -60)).isCloseTo(50 / _barWidth, 1e-9);
+      check(await _travelAt(tester, -110)).isCloseTo(25 / _barWidth, 1e-9);
+    });
+
+    testWidgets('shows the band label only below full speed', (tester) async {
+      await tester.pumpWidget(_host(value: 0.5, recorder: _SeekRecorder()));
+      final gesture = await _startScrub(tester);
+      check(_visibleScrubLabels()).isEmpty();
+
+      final seen = <List<String>>[];
+      for (final step in [60.0, 50.0, 50.0, -120.0]) {
+        await gesture.moveBy(Offset(0, step));
+        await tester.pump();
+        seen.add(_visibleScrubLabels());
+      }
+      check(seen).deepEquals([
+        ['half'],
+        ['quarter'],
+        ['fine'],
+        <String>[],
+      ]);
+
+      await gesture.moveBy(const Offset(0, 60));
+      await tester.pump();
+      await gesture.up();
+      await tester.pump();
+      check(_visibleScrubLabels()).isEmpty();
+    });
+
+    testWidgets('scales a long label down instead of cutting it', (
+      tester,
+    ) async {
+      const long = 'Scrubbing at half speed for a fine adjustment';
+      await tester.pumpWidget(
+        _host(
+          value: 0.5,
+          recorder: _SeekRecorder(),
+          width: 200,
+          scrubSpeedLabels: const {ScrubSpeed.half: long},
+        ),
+      );
+      final gesture = await _startScrub(tester);
+      await gesture.moveBy(const Offset(0, 60));
+      await tester.pump();
+
+      final paragraph = tester.renderObject<RenderParagraph>(find.text(long));
+      check(paragraph.didExceedMaxLines).isFalse();
+      check(tester.takeException()).isNull();
+      await gesture.up();
+    });
+
+    testWidgets('fires a light haptic on each band change only', (
+      tester,
+    ) async {
+      final haptics = _recordHaptics(tester);
+      await tester.pumpWidget(_host(value: 0.5, recorder: _SeekRecorder()));
+      final gesture = await _startScrub(tester);
+      // Moves within full, into half, within half, into quarter, back to full.
+      for (final step in [20.0, 40.0, 20.0, 50.0, -120.0]) {
+        await gesture.moveBy(Offset(0, step));
+      }
+      await gesture.up();
+      await tester.pump();
+
+      check(haptics).length.equals(4);
+      check(haptics.toSet()).deepEquals({'HapticFeedbackType.lightImpact'});
+    });
+
+    testWidgets('next drag starts at full speed again', (tester) async {
+      final haptics = _recordHaptics(tester);
+      await tester.pumpWidget(_host(value: 0.5, recorder: _SeekRecorder()));
+      final first = await _startScrub(tester);
+      await first.moveBy(const Offset(0, 200));
+      await first.up();
+      await tester.pump();
+
+      haptics.clear();
+      final second = await _startScrub(tester);
+      await tester.pump();
+      // Only the drag-start haptic: no band change back from fine.
+      check(haptics).length.equals(1);
+      check(_visibleScrubLabels()).isEmpty();
+      await second.up();
+    });
+
+    testWidgets('a vertical drag on the track goes to the enclosing sheet', (
+      tester,
+    ) async {
+      final recorder = _SeekRecorder();
+      var parentDrags = 0;
+      await tester.pumpWidget(
+        _host(
+          value: 0.5,
+          recorder: recorder,
+          onParentVerticalDrag: (_) => parentDrags++,
+        ),
+      );
+
+      await tester.drag(_track, const Offset(5, 120));
+      await tester.pump();
+
+      check(parentDrags).isGreaterThan(0);
+      check(recorder.starts).isEmpty();
+    });
+
+    testWidgets('a started scrub keeps the finger when it moves vertically', (
+      tester,
+    ) async {
+      final recorder = _SeekRecorder();
+      var parentDrags = 0;
+      await tester.pumpWidget(
+        _host(
+          value: 0.5,
+          recorder: recorder,
+          onParentVerticalDrag: (_) => parentDrags++,
+        ),
+      );
+
+      final gesture = await _startScrub(tester);
+      await gesture.moveBy(const Offset(0, 200));
+      await gesture.moveBy(const Offset(40, 0));
+      await gesture.up();
+      await tester.pump();
+
+      check(parentDrags).equals(0);
+      check(recorder.ends).length.equals(1);
     });
   });
 
@@ -306,9 +503,13 @@ void main() {
   });
 
   group('PlayerSeekBar tooltip', () {
+    // These tests assert drag-to-value math. Competing with the sheet's
+    // vertical recognizer costs a drag its first touch slop (18pt), so they
+    // run without that arena.
     Widget tooltipHost(double value) => _host(
       value: value,
       recorder: _SeekRecorder(),
+      withSheetArena: false,
       tooltipBuilder: (context, value) => Text('at ${(value * 100).round()}%'),
     );
 
@@ -366,6 +567,7 @@ void main() {
           value: 0.5,
           recorder: recorder,
           tooltipBuilder: (context, value) => const Text('tip'),
+          withSheetArena: false,
         ),
       );
 

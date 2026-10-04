@@ -382,6 +382,12 @@
   "@audioSheetSpeedSection": { "description": "Section heading for playback speed in the audio sheet" },
   "playbackSpeedNormal": "Normal",
   "@playbackSpeedNormal": { "description": "Chip label for normal (1.0x) playback speed" },
+  "playerScrubSpeedHalf": "Scrubbing (half speed)",
+  "@playerScrubSpeedHalf": { "description": "Seek bar label while scrubbing at half speed" },
+  "playerScrubSpeedQuarter": "Scrubbing (quarter speed)",
+  "@playerScrubSpeedQuarter": { "description": "Seek bar label while scrubbing at quarter speed" },
+  "playerScrubSpeedFine": "Scrubbing (fine)",
+  "@playerScrubSpeedFine": { "description": "Seek bar label while scrubbing at one-eighth speed" },
   "playerNowPlayingLabel": "Now playing: {title} by {podcast}",
   "@playerNowPlayingLabel": { "description": "Mini player accessibility label", "placeholders": { "title": { "type": "String" }, "podcast": { "type": "String" } } },
 

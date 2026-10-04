@@ -584,6 +584,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get playbackSpeedNormal => '標準';
 
   @override
+  String get playerScrubSpeedHalf => '半速スクラブ';
+
+  @override
+  String get playerScrubSpeedQuarter => '1/4速スクラブ';
+
+  @override
+  String get playerScrubSpeedFine => '微調整スクラブ';
+
+  @override
   String playerNowPlayingLabel(String title, String podcast) {
     return '再生中: $title - $podcast';
   }

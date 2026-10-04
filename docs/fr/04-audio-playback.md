@@ -142,6 +142,13 @@ state and resume position stay coherent no matter where the listener touches it.
 - Scrubbing is delta-based: a horizontal drag moves the position by the finger's travel from
   the current position instead of jumping to the touch point, and a tap on the track never
   seeks. A light haptic fires when a drag begins.
+- Fine scrubbing: once a drag has started, moving the finger vertically away from the track
+  (up or down) scales how far horizontal travel moves the position: full speed within 50 pt,
+  half speed from 50 pt, quarter speed from 100 pt, and one eighth from 150 pt. A light haptic
+  fires each time the band changes, and a localized label ("Scrubbing (half speed)",
+  "Scrubbing (quarter speed)", "Scrubbing (fine)") appears between the time labels while below
+  full speed. The drag stays with the seek bar even when the finger leaves its bounds; a drag
+  that starts vertically is not a scrub and still reaches the player sheet's swipe-to-dismiss.
 - The left label shows elapsed time. The right label shows remaining time as `-mm:ss` (or
   `-h:mm:ss`) by default; tapping it toggles to the total duration. The choice persists as the
   `showRemainingTime` setting. Remaining time is media time and does not account for playback
