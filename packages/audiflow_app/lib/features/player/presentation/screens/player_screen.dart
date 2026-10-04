@@ -586,8 +586,8 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
       trailingLabel: _showRemainingTime
           ? _formatRemaining(displayPosition, duration)
           : _formatDuration(duration),
-      semanticValue:
-          '${_formatDuration(displayPosition)}'
+      semanticValueFormatter: (value) =>
+          '${_formatDuration(_positionAt(value, displayPosition))}'
           ' of ${_formatDuration(duration)}',
       onChangeStart: (value) {
         setState(() {
@@ -600,6 +600,15 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
       onChangeEnd: _handleSeekEnd,
       onTrailingLabelTap: _toggleTrailingLabel,
     );
+  }
+
+  @override
+  void dispose() {
+    // The bar can vanish mid-drag (e.g. now-playing cleared). Release the
+    // parent's seek guard so the play/pause icon does not stay frozen; the
+    // abandoned drag itself is not committed.
+    if (_isDragging) unawaited(widget.onSeekEnd?.call());
+    super.dispose();
   }
 
   void _toggleTrailingLabel() {
@@ -651,6 +660,14 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
         );
   }
 
+  /// Position at track fraction [value]; falls back to [fallback] when the
+  /// duration is unknown and a fraction cannot be mapped to a time.
+  Duration? _positionAt(double value, Duration? fallback) {
+    final duration = widget.progress?.duration;
+    if (duration == null || duration == Duration.zero) return fallback;
+    return Duration(milliseconds: (duration.inMilliseconds * value).round());
+  }
+
   Duration? _computeDragPosition(Duration? duration) {
     if (duration == null) return null;
     return Duration(
@@ -660,7 +677,10 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
 
   // Remaining media time; deliberately not scaled by playback speed.
   String _formatRemaining(Duration? position, Duration? duration) {
-    if (position == null || duration == null) return '--:--';
+    // A zero duration means "unknown" (e.g. restored session without metadata).
+    if (position == null || duration == null || duration == Duration.zero) {
+      return '--:--';
+    }
     final remaining = duration - position;
     return '-${_formatDuration(remaining.isNegative ? Duration.zero : remaining)}';
   }

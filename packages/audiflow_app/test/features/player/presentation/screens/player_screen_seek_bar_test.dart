@@ -46,6 +46,7 @@ class _SeekingAudioPlayerController extends AudioPlayerController {
 Future<Widget> _buildPlayer({
   required StubAppSettingsRepository settings,
   AudioPlayerController Function()? player,
+  PlaybackProgress progress = _progress,
 }) async {
   SharedPreferences.setMockInitialValues({});
   final prefs = await SharedPreferences.getInstance();
@@ -63,7 +64,7 @@ Future<Widget> _buildPlayer({
             ),
       ),
       appSettingsRepositoryProvider.overrideWithValue(settings),
-      playbackProgressProvider.overrideWith((ref) => _progress),
+      playbackProgressProvider.overrideWith((ref) => progress),
       playbackSpeedProvider.overrideWith((ref) => Stream.value(1.0)),
     ],
     child: const MaterialApp(
@@ -100,6 +101,26 @@ void main() {
       check(find.text('10:00').evaluate()).isNotEmpty();
       check(find.text('-09:00').evaluate()).isEmpty();
       check(settings.showRemainingTime).isFalse();
+    });
+
+    testWidgets('shows placeholder remaining time when duration unknown', (
+      tester,
+    ) async {
+      final settings = StubAppSettingsRepository();
+      await tester.pumpWidget(
+        await _buildPlayer(
+          settings: settings,
+          progress: const PlaybackProgress(
+            position: Duration(minutes: 1),
+            duration: Duration.zero,
+            bufferedPosition: Duration.zero,
+          ),
+        ),
+      );
+      await tester.pump();
+
+      check(find.text('--:--').evaluate()).isNotEmpty();
+      check(find.text('-00:00').evaluate()).isEmpty();
     });
 
     testWidgets('restores the total-duration label from settings', (

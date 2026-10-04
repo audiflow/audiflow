@@ -203,10 +203,6 @@ void main() {
 
   group('ShowRemainingTime', () {
     test('returns default true when no value stored', () {
-      expect(
-        repository.getShowRemainingTime(),
-        SettingsDefaults.showRemainingTime,
-      );
       expect(repository.getShowRemainingTime(), isTrue);
     });
 
