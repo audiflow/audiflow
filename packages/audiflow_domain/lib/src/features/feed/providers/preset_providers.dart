@@ -279,15 +279,35 @@ Future<SmartPlaylistGrouping?> _buildGroupingFromCache(
   final cachedFingerprint = cachedPlaylists.first.episodeFingerprint;
   final episodesChanged =
       cachedFingerprint != computeEpisodeFingerprint(episodes);
-  if (episodesChanged &&
-      await _isPresetLoadable(configRepo, summary, podcastId, logger)) {
-    logger.d(
-      'Episodes changed since smart playlists were cached for '
-      'podcastId=$podcastId; re-resolving',
-    );
-    await playlistDatasource.deleteByPodcastId(podcastId);
-    await playlistDatasource.deleteGroupsByPodcastId(podcastId);
-    return _resolveAndPersistSmartPlaylists(ref, podcastId, feedUrl, logger);
+  if (episodesChanged) {
+    final preset = summary == null
+        ? null
+        : await _tryLoadPreset(
+            configRepo,
+            summary,
+            podcastId,
+            logger,
+            onFailure: 'keeping cached grouping until it loads',
+          );
+    // Without the preset, the stale preset grouping beats replacing it
+    // with an auto-detect fallback; the next read retries. The loaded
+    // config is handed over so a second load cannot fail after the
+    // rows are gone.
+    if (summary == null || preset != null) {
+      logger.d(
+        'Episodes changed since smart playlists were cached for '
+        'podcastId=$podcastId; re-resolving',
+      );
+      await playlistDatasource.deleteByPodcastId(podcastId);
+      await playlistDatasource.deleteGroupsByPodcastId(podcastId);
+      return _resolveAndPersistSmartPlaylists(
+        ref,
+        podcastId,
+        feedUrl,
+        logger,
+        preloadedConfig: preset,
+      );
+    }
   }
 
   final resolverType = cachedPlaylists.first.resolverType;
@@ -424,29 +444,25 @@ Future<SmartPlaylistGrouping?> _buildGroupingFromCache(
   );
 }
 
-/// Whether the matched preset config can be loaded right now.
-///
-/// Re-resolving deletes the cached grouping first. When the preset
-/// cannot load, keeping the stale preset grouping beats replacing it
-/// with an auto-detect fallback; the next read retries.
-Future<bool> _isPresetLoadable(
+/// Loads the matched preset config, or returns null when it cannot
+/// load right now; [onFailure] describes the fallback for the log.
+Future<PresetConfig?> _tryLoadPreset(
   PresetConfigRepository configRepo,
-  PresetSummary? summary,
+  PresetSummary summary,
   int podcastId,
-  Logger logger,
-) async {
-  if (summary == null) return true;
+  Logger logger, {
+  required String onFailure,
+}) async {
   try {
-    await configRepo.getConfig(summary);
-    return true;
+    return await configRepo.getConfig(summary);
   } on Object catch (error, stackTrace) {
     logger.w(
       'Failed to load config v${summary.dataVersion} for '
-      'podcastId=$podcastId; keeping cached grouping until it loads',
+      'podcastId=$podcastId; $onFailure',
       error: error,
       stackTrace: stackTrace,
     );
-    return false;
+    return null;
   }
 }
 
@@ -509,6 +525,7 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
   String feedUrl,
   Logger logger, {
   String? podcastImageUrl,
+  PresetConfig? preloadedConfig,
 }) async {
   final episodeRepo = ref.watch(episodeRepositoryProvider);
   final playlistDatasource = ref.watch(smartPlaylistLocalDatasourceProvider);
@@ -516,24 +533,23 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
   // Load matching config from repository
   final repo = ref.watch(presetConfigRepositoryProvider);
   final summary = repo.findMatchingPreset(null, feedUrl);
-  PresetConfig? config;
+  var config = preloadedConfig;
   if (summary != null) {
     logger.d(
       'Matched smart playlist pattern: '
       '"${summary.displayName}" dataVersion=${summary.dataVersion}',
     );
-    try {
-      config = await repo.getConfig(summary);
-    } on Object catch (error, stackTrace) {
-      // Persisting a preset-less fallback would stamp it with the
-      // preset's version and fingerprint, so later reads would accept
-      // it and never retry the preset. Serve it transiently instead.
-      logger.w(
-        'Failed to load config v${summary.dataVersion} for '
-        'podcastId=$podcastId; serving unpersisted grouping',
-        error: error,
-        stackTrace: stackTrace,
-      );
+    config ??= await _tryLoadPreset(
+      repo,
+      summary,
+      podcastId,
+      logger,
+      onFailure: 'serving unpersisted grouping',
+    );
+    // Persisting a preset-less fallback would stamp it with the
+    // preset's version and fingerprint, so later reads would accept
+    // it and never retry the preset. Serve it transiently instead.
+    if (config == null) {
       return _reResolveFromEpisodes(
         ref,
         podcastId,

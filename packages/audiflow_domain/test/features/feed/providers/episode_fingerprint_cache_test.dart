@@ -115,6 +115,7 @@ void main() {
     test('episodes of a new series published after caching get their own '
         'group instead of falling into ungrouped', () async {
       await readSmartPlaylists(container, 1);
+      final callsBeforeReResolve = configRepo.getConfigCalls;
 
       episodeRepo.episodes.addAll([
         _seriesEpisode(3, 2, 1),
@@ -122,6 +123,10 @@ void main() {
       ]);
       final grouping = await reread();
 
+      check(
+        because: 'a second load could fail after the cache is deleted',
+        configRepo.getConfigCalls - callsBeforeReResolve,
+      ).equals(1);
       check(grouping.ungroupedEpisodeIds).isEmpty();
       check(_groupMates(grouping, 3)).isNotNull().unorderedEquals([3, 4]);
       check(_allGroups(grouping)).length.equals(2);
