@@ -307,6 +307,12 @@ class _FakeAppSettingsRepository implements AppSettingsRepository {
       throw UnimplementedError();
 
   @override
+  bool getShowRemainingTime() => throw UnimplementedError();
+
+  @override
+  Future<void> setShowRemainingTime(bool enabled) => throw UnimplementedError();
+
+  @override
   bool getWifiOnlyDownload() => throw UnimplementedError();
 
   @override

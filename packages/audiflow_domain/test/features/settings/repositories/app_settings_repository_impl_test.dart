@@ -201,6 +201,21 @@ void main() {
     });
   });
 
+  group('ShowRemainingTime', () {
+    test('returns default true when no value stored', () {
+      expect(
+        repository.getShowRemainingTime(),
+        SettingsDefaults.showRemainingTime,
+      );
+      expect(repository.getShowRemainingTime(), isTrue);
+    });
+
+    test('persists and reads show remaining time', () async {
+      await repository.setShowRemainingTime(false);
+      expect(repository.getShowRemainingTime(), isFalse);
+    });
+  });
+
   group('WifiOnlyDownload', () {
     test('returns default when no value stored', () {
       expect(

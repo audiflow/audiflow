@@ -84,6 +84,10 @@ class FakeAppSettingsRepository implements AppSettingsRepository {
     DuckInterruptionBehavior behavior,
   ) async {}
   @override
+  bool getShowRemainingTime() => true;
+  @override
+  Future<void> setShowRemainingTime(bool enabled) async {}
+  @override
   Future<void> setWifiOnlyDownload(bool enabled) async {}
   @override
   bool getAutoDeletePlayed() => false;

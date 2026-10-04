@@ -76,6 +76,9 @@ class BackgroundSettingsRepository implements AppSettingsRepository {
       SettingsDefaults.duckInterruptionBehavior;
 
   @override
+  bool getShowRemainingTime() => SettingsDefaults.showRemainingTime;
+
+  @override
   bool getAutoDeletePlayed() => SettingsDefaults.autoDeletePlayed;
 
   @override
@@ -128,6 +131,9 @@ class BackgroundSettingsRepository implements AppSettingsRepository {
   @override
   Future<void> setDuckInterruptionBehavior(DuckInterruptionBehavior behavior) =>
       _unsupported();
+
+  @override
+  Future<void> setShowRemainingTime(bool enabled) => _unsupported();
 
   @override
   Future<void> setWifiOnlyDownload(bool enabled) => _unsupported();

@@ -18,6 +18,7 @@ class FakeAppSettingsRepository implements AppSettingsRepository {
   AutoPlayOrder autoPlayOrder = AutoPlayOrder.oldestFirst;
   DuckInterruptionBehavior duckInterruptionBehavior =
       SettingsDefaults.duckInterruptionBehavior;
+  bool showRemainingTime = true;
   bool wifiOnlyDownload = true;
   bool autoDeletePlayed = false;
   int maxConcurrentDownloads = 1;
@@ -97,6 +98,13 @@ class FakeAppSettingsRepository implements AppSettingsRepository {
   Future<void> setDuckInterruptionBehavior(
     DuckInterruptionBehavior behavior,
   ) async => duckInterruptionBehavior = behavior;
+
+  @override
+  bool getShowRemainingTime() => showRemainingTime;
+
+  @override
+  Future<void> setShowRemainingTime(bool enabled) async =>
+      showRemainingTime = enabled;
 
   @override
   bool getWifiOnlyDownload() => wifiOnlyDownload;
