@@ -5,6 +5,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../common/providers/database_provider.dart';
 import '../../transcript/datasources/local/chapter_local_datasource.dart';
 import '../../transcript/datasources/local/transcript_local_datasource.dart';
+import '../../transcript/models/chapter_source.dart';
 import '../../transcript/models/episode_chapter.dart';
 import '../../transcript/models/episode_transcript.dart';
 import '../datasources/local/episode_local_datasource.dart';
@@ -109,6 +110,8 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
         ..contentEncoded = item.contentEncoded
         ..summary = item.summary
         ..link = item.link
+        ..chaptersUrl = item.chaptersLink?.url
+        ..chaptersType = item.chaptersLink?.type
         ..itunesExplicit = item.isExplicit ?? false;
     }).toList();
 
@@ -155,6 +158,8 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
         ..contentEncoded = item.contentEncoded
         ..summary = item.summary
         ..link = item.link
+        ..chaptersUrl = item.chaptersLink?.url
+        ..chaptersType = item.chaptersLink?.type
         ..itunesExplicit = item.isExplicit ?? false;
     }).toList();
 
@@ -228,13 +233,12 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
   ) async {
     if (_chapterDatasource == null) return;
 
-    final chapters = <EpisodeChapter>[];
+    final chaptersByEpisode = <int, List<EpisodeChapter>>{};
     for (final item in items) {
       final episodeId = guidToId[item.guid!];
       if (episodeId == null) continue;
-
-      for (final (index, chapter) in item.chapters!.indexed) {
-        chapters.add(
+      chaptersByEpisode[episodeId] = [
+        for (final (index, chapter) in item.chapters!.indexed)
           EpisodeChapter()
             ..episodeId = episodeId
             ..sortOrder = index
@@ -243,13 +247,21 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
             ..endMs = chapter.endTime?.inMilliseconds
             ..url = chapter.url
             ..imageUrl = chapter.imageUrl,
-        );
-      }
+      ];
     }
+    await _storeFeedChapters(chaptersByEpisode);
+  }
 
-    if (chapters.isNotEmpty) {
-      await _chapterDatasource.upsertChapters(chapters);
-    }
+  /// Stores `<psc:chapters>` from the feed, keeping any higher-priority
+  /// chapters (such as `<podcast:chapters>` JSON) already stored.
+  Future<void> _storeFeedChapters(
+    Map<int, List<EpisodeChapter>> chaptersByEpisode,
+  ) async {
+    if (_chapterDatasource == null || chaptersByEpisode.isEmpty) return;
+    await _chapterDatasource.replaceChapters(
+      chaptersByEpisode,
+      source: ChapterSource.podlove,
+    );
   }
 
   @override
@@ -297,30 +309,23 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
       }
     }
 
-    // Store chapters
-    if (_chapterDatasource != null) {
-      final chapterEntities = <EpisodeChapter>[];
-      for (final meta in withData) {
-        if (!meta.hasChapters) continue;
-        final episodeId = guidToId[meta.guid];
-        if (episodeId == null) continue;
-
-        for (final (index, c) in meta.chapters!.indexed) {
-          chapterEntities.add(
-            EpisodeChapter()
-              ..episodeId = episodeId
-              ..sortOrder = index
-              ..title = c.title
-              ..startMs = c.startTime.inMilliseconds
-              ..url = c.url
-              ..imageUrl = c.imageUrl,
-          );
-        }
-      }
-      if (chapterEntities.isNotEmpty) {
-        await _chapterDatasource.upsertChapters(chapterEntities);
-      }
+    final chaptersByEpisode = <int, List<EpisodeChapter>>{};
+    for (final meta in withData) {
+      if (!meta.hasChapters) continue;
+      final episodeId = guidToId[meta.guid];
+      if (episodeId == null) continue;
+      chaptersByEpisode[episodeId] = [
+        for (final (index, c) in meta.chapters!.indexed)
+          EpisodeChapter()
+            ..episodeId = episodeId
+            ..sortOrder = index
+            ..title = c.title
+            ..startMs = c.startTime.inMilliseconds
+            ..url = c.url
+            ..imageUrl = c.imageUrl,
+      ];
     }
+    await _storeFeedChapters(chaptersByEpisode);
   }
 
   @override

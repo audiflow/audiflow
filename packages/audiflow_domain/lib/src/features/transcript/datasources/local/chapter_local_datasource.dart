@@ -1,5 +1,6 @@
 import 'package:isar_community/isar.dart';
 
+import '../../models/chapter_source.dart';
 import '../../models/episode_chapter.dart';
 
 /// Local datasource for chapter CRUD operations using Isar.
@@ -46,6 +47,47 @@ class ChapterLocalDatasource {
       }
       await _isar.episodeChapters.putAll(chapters);
     });
+  }
+
+  /// Replaces each episode's chapters with the given ones from [source].
+  ///
+  /// Episodes whose stored chapters come from a higher-priority source are
+  /// left untouched. Returns the ids of episodes whose chapters were
+  /// replaced. Each list must belong to the episode id it is keyed by.
+  Future<Set<int>> replaceChapters(
+    Map<int, List<EpisodeChapter>> chaptersByEpisode, {
+    required ChapterSource source,
+  }) {
+    return _isar.writeTxn(() async {
+      final replaced = <int>{};
+      for (final MapEntry(key: episodeId, value: chapters)
+          in chaptersByEpisode.entries) {
+        final stored = _isar.episodeChapters.filter().episodeIdEqualTo(
+          episodeId,
+        );
+        final storedSource = await stored.sourceProperty().findFirst();
+        if (storedSource != null && !source.canReplace(storedSource)) {
+          continue;
+        }
+        await stored.deleteAll();
+        for (final chapter in chapters) {
+          chapter.source = source;
+        }
+        await _isar.episodeChapters.putAll(chapters);
+        replaced.add(episodeId);
+      }
+      return replaced;
+    });
+  }
+
+  /// Returns the source of an episode's stored chapters, or null when the
+  /// episode has none.
+  Future<ChapterSource?> getSourceByEpisodeId(int episodeId) {
+    return _isar.episodeChapters
+        .filter()
+        .episodeIdEqualTo(episodeId)
+        .sourceProperty()
+        .findFirst();
   }
 
   /// Deletes all chapters for an episode.

@@ -121,4 +121,92 @@ void main() {
       expect(await stream.first, isEmpty);
     });
   });
+
+  group('replaceChapters', () {
+    EpisodeChapter chapter(int sortOrder, String title, {int? id}) =>
+        EpisodeChapter()
+          ..episodeId = id ?? episodeId
+          ..sortOrder = sortOrder
+          ..title = title
+          ..startMs = sortOrder * 1000;
+
+    Future<List<String>> titles() async => (await datasource.getByEpisodeId(
+      episodeId,
+    )).map((c) => c.title).toList();
+
+    test('new chapters default to the podlove source', () {
+      expect(EpisodeChapter().source, ChapterSource.podlove);
+    });
+
+    test('stores chapters with the given source', () async {
+      final replaced = await datasource.replaceChapters({
+        episodeId: [chapter(0, 'A'), chapter(1, 'B')],
+      }, source: ChapterSource.podcastChaptersJson);
+
+      expect(replaced, {episodeId});
+      expect(await titles(), ['A', 'B']);
+      expect(
+        await datasource.getSourceByEpisodeId(episodeId),
+        ChapterSource.podcastChaptersJson,
+      );
+    });
+
+    test('drops stale rows when the new list is shorter', () async {
+      await datasource.upsertChapters([chapter(0, 'A'), chapter(1, 'B')]);
+
+      await datasource.replaceChapters({
+        episodeId: [chapter(0, 'Only')],
+      }, source: ChapterSource.podlove);
+
+      expect(await titles(), ['Only']);
+    });
+
+    test('lower priority never replaces higher priority', () async {
+      await datasource.replaceChapters({
+        episodeId: [chapter(0, 'Json')],
+      }, source: ChapterSource.podcastChaptersJson);
+
+      final fromPodlove = await datasource.replaceChapters({
+        episodeId: [chapter(0, 'Psc')],
+      }, source: ChapterSource.podlove);
+      final fromDescription = await datasource.replaceChapters({
+        episodeId: [chapter(0, 'Desc')],
+      }, source: ChapterSource.description);
+
+      expect(fromPodlove, isEmpty);
+      expect(fromDescription, isEmpty);
+      expect(await titles(), ['Json']);
+    });
+
+    test('higher priority replaces lower priority', () async {
+      await datasource.replaceChapters({
+        episodeId: [chapter(0, 'Desc'), chapter(1, 'Desc 2')],
+      }, source: ChapterSource.description);
+
+      await datasource.replaceChapters({
+        episodeId: [chapter(0, 'Psc')],
+      }, source: ChapterSource.podlove);
+
+      expect(await titles(), ['Psc']);
+      expect(
+        await datasource.getSourceByEpisodeId(episodeId),
+        ChapterSource.podlove,
+      );
+    });
+
+    test('leaves other episodes untouched', () async {
+      await datasource.upsertChapters([chapter(0, 'Other', id: 2)]);
+
+      await datasource.replaceChapters({
+        episodeId: [chapter(0, 'Mine')],
+      }, source: ChapterSource.podlove);
+
+      final other = await datasource.getByEpisodeId(2);
+      expect(other.single.title, 'Other');
+    });
+
+    test('getSourceByEpisodeId returns null without chapters', () async {
+      expect(await datasource.getSourceByEpisodeId(episodeId), isNull);
+    });
+  });
 }

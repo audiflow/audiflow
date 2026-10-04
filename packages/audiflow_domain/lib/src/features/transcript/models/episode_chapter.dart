@@ -1,5 +1,7 @@
 import 'package:isar_community/isar.dart';
 
+import 'chapter_source.dart';
+
 part 'episode_chapter.g.dart';
 
 @collection
@@ -15,4 +17,11 @@ class EpisodeChapter {
   int? endMs;
   String? url;
   String? imageUrl;
+
+  /// Origin of this chapter.
+  ///
+  /// Rows written before this field existed read back as
+  /// [ChapterSource.podlove]; see [ChapterSource] for why.
+  @Enumerated(EnumType.name)
+  ChapterSource source = ChapterSource.podlove;
 }

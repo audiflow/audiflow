@@ -49,6 +49,23 @@ void main() {
 </rss>
 ''';
 
+  const testXmlWithChaptersLink = '''
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"
+  xmlns:podcast="https://podcastindex.org/namespace/1.0">
+  <channel>
+    <title>Chapters Podcast</title>
+    <description>JSON chapters</description>
+    <item>
+      <guid>ep-json</guid>
+      <title>Episode with JSON chapters</title>
+      <enclosure url="https://example.com/ep1.mp3" type="audio/mpeg"/>
+      <podcast:chapters url="https://example.com/ep1.json" type="application/json+chapters"/>
+    </item>
+  </channel>
+</rss>
+''';
+
   setUp(() {
     service = FeedParserService();
   });
@@ -137,6 +154,30 @@ void main() {
       expect(allMediaMetas.first.hasTranscripts, isTrue);
       expect(allMediaMetas.first.transcripts, hasLength(1));
       expect(allMediaMetas.first.transcripts!.first.type, 'text/vtt');
+    });
+  });
+
+  group('chapters link', () {
+    test('parseWithProgress stores the link on the episode', () async {
+      final episodes = <Episode>[];
+      await for (final _ in service.parseWithProgress(
+        xmlContent: testXmlWithChaptersLink,
+        podcastId: 1,
+        knownGuids: {},
+        onBatchReady: (batch, _) async => episodes.addAll(batch),
+      )) {}
+
+      expect(episodes.single.chaptersUrl, 'https://example.com/ep1.json');
+      expect(episodes.single.chaptersType, 'application/json+chapters');
+    });
+
+    test('parseFromString maps the link to PodcastItem', () async {
+      final result = await service.parseFromString(testXmlWithChaptersLink);
+
+      expect(
+        result.episodes.single.chaptersLink?.url,
+        'https://example.com/ep1.json',
+      );
     });
   });
 

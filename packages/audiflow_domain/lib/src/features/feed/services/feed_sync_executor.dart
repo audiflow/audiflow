@@ -160,6 +160,14 @@ class FeedSyncExecutor {
         onBatchReady: (episodes, mediaMetas) async {
           observedGuids.addAll(episodes.map((e) => e.guid));
           await _episodeRepo.upsertEpisodes(episodes);
+          // Same as the foreground sync, so episodes first seen by a
+          // background refresh still get their transcripts and chapters.
+          if (mediaMetas.isNotEmpty) {
+            await _episodeRepo.storeTranscriptAndChapterDataFromParsed(
+              sub.id,
+              mediaMetas,
+            );
+          }
         },
       )) {
         if (progress is FeedMetaReady) {

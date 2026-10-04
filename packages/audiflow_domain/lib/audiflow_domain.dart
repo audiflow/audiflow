@@ -159,6 +159,7 @@ export 'src/features/download/models/download_task.dart';
 export 'src/features/feed/models/smart_playlist_groups.dart';
 export 'src/features/queue/models/queue_item.dart';
 export 'src/features/subscription/models/subscriptions.dart';
+export 'src/features/transcript/models/chapter_source.dart';
 export 'src/features/transcript/models/episode_chapter.dart';
 export 'src/features/transcript/models/episode_transcript.dart';
 export 'src/features/transcript/models/transcript_segment_table.dart';

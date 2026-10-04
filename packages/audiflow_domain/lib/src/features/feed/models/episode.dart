@@ -28,6 +28,15 @@ class Episode {
   /// Episode web page URL.
   String? link;
 
+  /// URL of the chapters file linked by `<podcast:chapters>`.
+  ///
+  /// Only the link is stored during feed sync; the file is fetched the
+  /// first time the episode's chapters are needed.
+  String? chaptersUrl;
+
+  /// MIME type of [chaptersUrl] as declared by the feed.
+  String? chaptersType;
+
   /// Whether the feed marks this episode as explicit content.
   ///
   /// Sourced from the iTunes `<itunes:explicit>` element. Values `true`, `yes`,
