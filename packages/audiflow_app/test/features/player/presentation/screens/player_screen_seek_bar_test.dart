@@ -53,8 +53,8 @@ class _FailingSettings extends StubAppSettingsRepository {
       throw StateError('write failed');
 }
 
-/// Settings whose first remaining-time write fails only after a later
-/// write has already succeeded, like overlapping slow disk writes.
+/// Settings whose first remaining-time write is slow and then fails, while
+/// later writes succeed.
 class _OutOfOrderSettings extends StubAppSettingsRepository {
   final firstWrite = Completer<void>();
   int _writes = 0;
@@ -64,6 +64,18 @@ class _OutOfOrderSettings extends StubAppSettingsRepository {
     _writes++;
     if (_writes == 1) return firstWrite.future;
     showRemainingTime = enabled;
+  }
+}
+
+/// Settings whose remaining-time writes all wait for [gate] and then fail,
+/// so several toggles can be in flight before any failure lands.
+class _GatedFailingSettings extends StubAppSettingsRepository {
+  final gate = Completer<void>();
+
+  @override
+  Future<void> setShowRemainingTime(bool enabled) async {
+    await gate.future;
+    throw StateError('write failed');
   }
 }
 
@@ -141,13 +153,13 @@ void main() {
       await tester.pump();
 
       await tester.tap(find.text('-09:00'));
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       check(find.text('-09:00').evaluate()).isNotEmpty();
       check(find.text('10:00').evaluate()).isEmpty();
     });
 
-    testWidgets('a stale failed write does not override a newer toggle', (
+    testWidgets('an earlier failed write does not override a newer toggle', (
       tester,
     ) async {
       final settings = _OutOfOrderSettings();
@@ -160,16 +172,33 @@ void main() {
       await tester.pump();
       await tester.tap(find.text('-09:00'));
       await tester.pump();
-      // The first write (total) fails last; reverting it would show
-      // remaining time while total duration is what is saved.
+      // The first write (total) fails after the newer taps; reverting it
+      // would show remaining time while total duration is what is saved.
       settings.firstWrite.completeError(StateError('write failed'));
-      // One pump runs the catch block, the next renders any revert.
-      await tester.pump();
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       check(find.text('10:00').evaluate()).isNotEmpty();
       check(find.text('-09:00').evaluate()).isEmpty();
       check(settings.showRemainingTime).isFalse();
+    });
+
+    testWidgets('falls back to the saved choice when every write fails', (
+      tester,
+    ) async {
+      final settings = _GatedFailingSettings();
+      await tester.pumpWidget(await _buildPlayer(settings: settings));
+      await tester.pump();
+
+      await tester.tap(find.text('-09:00'));
+      await tester.pump();
+      await tester.tap(find.text('10:00'));
+      await tester.pump();
+      settings.gate.complete();
+      await tester.pumpAndSettle();
+
+      // Remaining time is the only choice ever saved.
+      check(find.text('-09:00').evaluate()).isNotEmpty();
+      check(find.text('10:00').evaluate()).isEmpty();
     });
 
     testWidgets('offers no screen-reader steps when duration unknown', (

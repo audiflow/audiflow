@@ -8,6 +8,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:logger/logger.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../../l10n/app_localizations.dart';
@@ -569,11 +570,22 @@ class _PlayerProgressBar extends ConsumerStatefulWidget {
 class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
   bool _isDragging = false;
   double _dragValue = 0.0;
-  late bool _showRemainingTime = ref
-      .read(appSettingsRepositoryProvider)
-      .getShowRemainingTime();
+  late bool _showRemainingTime;
+  // Last value known to be persisted; a failed write reverts to it.
+  late bool _savedShowRemainingTime;
+  // Writes run one after another so they finish in tap order, which keeps
+  // _savedShowRemainingTime accurate.
+  Future<void> _labelWrites = Future<void>.value();
   // Bumped per toggle so only the latest write may revert the label.
   int _labelWriteSequence = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _showRemainingTime = _savedShowRemainingTime = ref
+        .read(appSettingsRepositoryProvider)
+        .getShowRemainingTime();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -605,7 +617,7 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
       },
       onChanged: (value) => setState(() => _dragValue = value),
       onChangeEnd: _handleSeekEnd,
-      onTrailingLabelTap: () => unawaited(_toggleTrailingLabel()),
+      onTrailingLabelTap: _toggleTrailingLabel,
     );
   }
 
@@ -618,35 +630,53 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
     super.dispose();
   }
 
-  Future<void> _toggleTrailingLabel() async {
+  void _toggleTrailingLabel() {
     final next = !_showRemainingTime;
     final sequence = ++_labelWriteSequence;
     final settings = ref.read(appSettingsRepositoryProvider);
     final logger = ref.read(namedLoggerProvider('Player'));
     setState(() => _showRemainingTime = next);
+    _labelWrites = _labelWrites.then(
+      (_) => _persistTrailingLabel(next, sequence, settings, logger),
+    );
+  }
+
+  Future<void> _persistTrailingLabel(
+    bool value,
+    int sequence,
+    AppSettingsRepository settings,
+    Logger logger,
+  ) async {
     try {
-      await settings.setShowRemainingTime(next);
+      await settings.setShowRemainingTime(value);
+      _savedShowRemainingTime = value;
     } on Object catch (e, stack) {
-      // Revert so the label never shows a choice that was not saved and
-      // would silently flip back on the next launch. A newer toggle owns the
-      // label, so a stale failure must not override it.
       logger.w('Failed to save showRemainingTime', error: e, stackTrace: stack);
+      // A queued newer toggle decides the label; otherwise fall back to the
+      // last saved choice so the label matches what the next launch shows.
       if (!mounted || sequence != _labelWriteSequence) return;
-      setState(() => _showRemainingTime = !next);
+      setState(() => _showRemainingTime = _savedShowRemainingTime);
     }
   }
 
   Future<void> _handleSeekEnd(double value) async {
     final duration = widget.progress?.duration ?? Duration.zero;
-    // Duration unknown -- cannot compute a meaningful position.
-    if (duration != Duration.zero) {
-      await _seekTo(
-        Duration(milliseconds: (duration.inMilliseconds * value).round()),
-      );
+    // A failed seek must still release the parent's seek guard and end the
+    // drag, or the play/pause icon and the bar would stay frozen.
+    try {
+      // Duration unknown -- cannot compute a meaningful position.
+      if (duration != Duration.zero) {
+        await _seekTo(
+          Duration(milliseconds: (duration.inMilliseconds * value).round()),
+        );
+      }
+    } finally {
+      try {
+        await widget.onSeekEnd?.call();
+      } finally {
+        if (mounted) setState(() => _isDragging = false);
+      }
     }
-    await widget.onSeekEnd?.call();
-    if (!mounted) return;
-    setState(() => _isDragging = false);
   }
 
   Future<void> _seekTo(Duration position) async {
