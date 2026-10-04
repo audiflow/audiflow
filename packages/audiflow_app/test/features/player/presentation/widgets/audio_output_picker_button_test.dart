@@ -8,11 +8,12 @@ import 'package:flutter_test/flutter_test.dart';
 
 class _RecordingAudioRouteChannel extends AudioRouteChannel {
   int showPickerCalls = 0;
+  bool opens = true;
 
   @override
   Future<bool> showPicker() async {
     showPickerCalls++;
-    return true;
+    return opens;
   }
 }
 
@@ -41,6 +42,22 @@ void main() {
       expect(find.byTooltip('Audio output'), findsOneWidget);
       await tester.tap(find.byType(IconButton));
       expect(channel.showPickerCalls, 1);
+      await tester.pump();
+      expect(find.byType(SnackBar), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'Android: tells the listener when nothing could be opened',
+    variant: TargetPlatformVariant.only(TargetPlatform.android),
+    (tester) async {
+      channel.opens = false;
+      await tester.pumpWidget(host());
+
+      await tester.tap(find.byType(IconButton));
+      await tester.pump();
+
+      expect(find.text("Couldn't open audio output settings"), findsOneWidget);
     },
   );
 

@@ -595,6 +595,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playerAudioOutputLabel => 'Audio output';
 
   @override
+  String get playerAudioOutputUnavailable =>
+      'Couldn\'t open audio output settings';
+
+  @override
   String get audioSheetTitle => 'Audio';
 
   @override

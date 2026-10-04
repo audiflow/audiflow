@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -29,8 +31,16 @@ class _AndroidOutputSwitcherButton extends ConsumerWidget {
     return IconButton(
       tooltip: AppLocalizations.of(context).playerAudioOutputLabel,
       icon: const Icon(Symbols.media_output),
-      onPressed: () => ref.read(audioRouteChannelProvider).showPicker(),
+      onPressed: () => unawaited(_openPicker(context, ref)),
     );
+  }
+
+  Future<void> _openPicker(BuildContext context, WidgetRef ref) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final message = AppLocalizations.of(context).playerAudioOutputUnavailable;
+    final opened = await ref.read(audioRouteChannelProvider).showPicker();
+    if (opened) return;
+    messenger.showSnackBar(SnackBar(content: Text(message)));
   }
 }
 

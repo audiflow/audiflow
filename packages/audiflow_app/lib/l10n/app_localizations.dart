@@ -1178,6 +1178,12 @@ abstract class AppLocalizations {
   /// **'Audio output'**
   String get playerAudioOutputLabel;
 
+  /// Snackbar shown when neither the system output picker nor Bluetooth settings could be opened
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open audio output settings'**
+  String get playerAudioOutputUnavailable;
+
   /// Title of the player's audio settings sheet
   ///
   /// In en, this message translates to:

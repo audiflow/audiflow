@@ -79,7 +79,8 @@ state and resume position stay coherent no matter where the listener touches it.
   output picker; the app does not draw a device list. On iOS it is the system route picker
   (speaker, Bluetooth, AirPlay), and choosing a route moves playback there. On Android 11 and
   later it is the system output switcher (speaker, wired, Bluetooth); if the device cannot
-  show it, the button opens Bluetooth settings instead. Android 8-10 have no output switcher,
+  show it, the button opens Bluetooth settings instead, and a short message appears if neither
+  opens. Android 8-10 have no output switcher,
   so the button is hidden there and the row shows only Audio and the sleep timer. Cast
   devices are not offered. The button does not show the current output's name.
 - **Failure case**: If an episode cannot be loaded or played, playback enters an error state

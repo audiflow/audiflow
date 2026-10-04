@@ -378,6 +378,8 @@
   "@playerAudioButtonLabel": { "description": "Accessibility label for the full player's Audio button; speed is pre-formatted like 1.3x", "placeholders": { "speed": { "type": "String" } } },
   "playerAudioOutputLabel": "Audio output",
   "@playerAudioOutputLabel": { "description": "Tooltip and accessibility label for the full player's button that opens the system audio output picker" },
+  "playerAudioOutputUnavailable": "Couldn't open audio output settings",
+  "@playerAudioOutputUnavailable": { "description": "Snackbar shown when neither the system output picker nor Bluetooth settings could be opened" },
   "audioSheetTitle": "Audio",
   "@audioSheetTitle": { "description": "Title of the player's audio settings sheet" },
   "audioSheetSpeedSection": "Playback speed",
