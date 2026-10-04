@@ -76,6 +76,35 @@ void main() {
       await repository.setPlaybackSpeed(2.0);
       expect(repository.getPlaybackSpeed(), 2.0);
     });
+
+    test('snaps legacy off-grid speeds on read', () async {
+      await repository.setPlaybackSpeed(1.25);
+      expect(repository.getPlaybackSpeed(), 1.3);
+    });
+  });
+
+  group('RecentPlaybackSpeeds', () {
+    test('returns empty list when no value stored', () {
+      expect(repository.getRecentPlaybackSpeeds(), isEmpty);
+    });
+
+    test('persists and reads recent speeds in order', () async {
+      await repository.setRecentPlaybackSpeeds([2.0, 1.5]);
+      expect(repository.getRecentPlaybackSpeeds(), [2.0, 1.5]);
+    });
+
+    test('returns empty list for corrupt data', () async {
+      await dataSource.setString(SettingsKeys.recentPlaybackSpeeds, 'not json');
+      expect(repository.getRecentPlaybackSpeeds(), isEmpty);
+    });
+
+    test('sanitizes stored values', () async {
+      await dataSource.setString(
+        SettingsKeys.recentPlaybackSpeeds,
+        '[1.0, 1.25, "x", 0.75, 2.0]',
+      );
+      expect(repository.getRecentPlaybackSpeeds(), [1.3, 0.8]);
+    });
   });
 
   group('SkipForwardSeconds', () {

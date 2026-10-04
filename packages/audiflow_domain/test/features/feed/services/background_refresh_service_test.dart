@@ -57,6 +57,10 @@ class FakeAppSettingsRepository implements AppSettingsRepository {
   @override
   Future<void> setPlaybackSpeed(double speed) async {}
   @override
+  List<double> getRecentPlaybackSpeeds() => const [];
+  @override
+  Future<void> setRecentPlaybackSpeeds(List<double> speeds) async {}
+  @override
   int getSkipForwardSeconds() => 30;
   @override
   Future<void> setSkipForwardSeconds(int seconds) async {}

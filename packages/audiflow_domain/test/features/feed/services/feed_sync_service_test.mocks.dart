@@ -646,6 +646,23 @@ class MockAppSettingsRepository extends _i1.Mock
           as _i11.Future<void>);
 
   @override
+  List<double> getRecentPlaybackSpeeds() =>
+      (super.noSuchMethod(
+            Invocation.method(#getRecentPlaybackSpeeds, []),
+            returnValue: <double>[],
+          )
+          as List<double>);
+
+  @override
+  _i11.Future<void> setRecentPlaybackSpeeds(List<double>? speeds) =>
+      (super.noSuchMethod(
+            Invocation.method(#setRecentPlaybackSpeeds, [speeds]),
+            returnValue: _i11.Future<void>.value(),
+            returnValueForMissingStub: _i11.Future<void>.value(),
+          )
+          as _i11.Future<void>);
+
+  @override
   int getSkipForwardSeconds() =>
       (super.noSuchMethod(
             Invocation.method(#getSkipForwardSeconds, []),

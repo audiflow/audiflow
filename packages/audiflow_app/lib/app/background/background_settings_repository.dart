@@ -57,6 +57,9 @@ class BackgroundSettingsRepository implements AppSettingsRepository {
   double getPlaybackSpeed() => SettingsDefaults.playbackSpeed;
 
   @override
+  List<double> getRecentPlaybackSpeeds() => const [];
+
+  @override
   int getSkipForwardSeconds() => SettingsDefaults.skipForwardSeconds;
 
   @override
@@ -109,6 +112,9 @@ class BackgroundSettingsRepository implements AppSettingsRepository {
 
   @override
   Future<void> setPlaybackSpeed(double speed) => _unsupported();
+
+  @override
+  Future<void> setRecentPlaybackSpeeds(List<double> speeds) => _unsupported();
 
   @override
   Future<void> setSkipForwardSeconds(int seconds) => _unsupported();
