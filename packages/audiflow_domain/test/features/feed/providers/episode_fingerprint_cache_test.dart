@@ -237,6 +237,26 @@ void main() {
       check(_groupOf(online, 3)?.id).equals('season_2');
     });
 
+    test('a re-resolve persists the version of the config it used, even if '
+        'summaries refresh mid-load', () async {
+      await readSmartPlaylists(container, 1);
+      episodeRepo.episodes.add(_seriesEpisode(3, 2, 1));
+      configRepo.onGetConfig = () {
+        configRepo.summary = const PresetSummary(
+          id: 'test-pattern',
+          dataVersion: 2,
+          displayName: 'Test Pattern',
+          feedUrlHint: 'example.com',
+          playlistCount: 1,
+        );
+      };
+
+      await reread();
+
+      final entities = await datasource.getByPodcastId(1);
+      check(entities.map((e) => e.configVersion)).every((v) => v.equals(1));
+    });
+
     test('a preset-less fallback is never persisted under the preset '
         'version', () async {
       configRepo.failGetConfig = true;

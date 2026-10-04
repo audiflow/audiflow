@@ -291,8 +291,8 @@ Future<SmartPlaylistGrouping?> _buildGroupingFromCache(
           );
     // Without the preset, the stale preset grouping beats replacing it
     // with an auto-detect fallback; the next read retries. The loaded
-    // config is handed over so a second load cannot fail after the
-    // rows are gone.
+    // config is handed over with its summary so neither a second load
+    // nor a summary refresh can diverge after the rows are gone.
     if (summary == null || preset != null) {
       logger.d(
         'Episodes changed since smart playlists were cached for '
@@ -305,7 +305,7 @@ Future<SmartPlaylistGrouping?> _buildGroupingFromCache(
         podcastId,
         feedUrl,
         logger,
-        preloadedConfig: preset,
+        preloaded: preset == null ? null : (summary: summary!, config: preset),
       );
     }
   }
@@ -525,15 +525,15 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
   String feedUrl,
   Logger logger, {
   String? podcastImageUrl,
-  PresetConfig? preloadedConfig,
+  ({PresetSummary summary, PresetConfig config})? preloaded,
 }) async {
   final episodeRepo = ref.watch(episodeRepositoryProvider);
   final playlistDatasource = ref.watch(smartPlaylistLocalDatasourceProvider);
 
   // Load matching config from repository
   final repo = ref.watch(presetConfigRepositoryProvider);
-  final summary = repo.findMatchingPreset(null, feedUrl);
-  var config = preloadedConfig;
+  final summary = preloaded?.summary ?? repo.findMatchingPreset(null, feedUrl);
+  var config = preloaded?.config;
   if (summary != null) {
     logger.d(
       'Matched smart playlist pattern: '

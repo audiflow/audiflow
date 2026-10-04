@@ -46,8 +46,12 @@ class FakeEpisodeRepository implements EpisodeRepository {
 class FakeConfigRepository implements PresetConfigRepository {
   FakeConfigRepository({this.summary, this.config});
 
-  final PresetSummary? summary;
+  /// Mutable so tests can simulate a root-meta refresh mid-load.
+  PresetSummary? summary;
   final PresetConfig? config;
+
+  /// Runs inside [getConfig], before it returns.
+  void Function()? onGetConfig;
 
   /// Number of [getConfig] calls; a cache hit never loads the config.
   int getConfigCalls = 0;
@@ -63,6 +67,7 @@ class FakeConfigRepository implements PresetConfigRepository {
   Future<PresetConfig> getConfig(PresetSummary summary) async {
     getConfigCalls++;
     if (failGetConfig) throw StateError('config unavailable');
+    onGetConfig?.call();
     return config!;
   }
 
