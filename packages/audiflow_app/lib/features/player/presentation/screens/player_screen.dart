@@ -8,13 +8,17 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:logger/logger.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
+import '../../helpers/chapter_seek_bar_segments.dart';
+import '../../helpers/playback_time_format.dart';
 import '../../helpers/podcast_lookup.dart';
 import '../../services/audio_route_channel.dart';
 import '../widgets/audio_output_picker_button.dart';
+import '../widgets/current_chapter_row.dart';
 import '../widgets/player_action_row.dart';
 import '../widgets/transcript_tab.dart';
 
@@ -29,8 +33,10 @@ class PlayerScreen extends ConsumerStatefulWidget {
   ConsumerState<PlayerScreen> createState() => _PlayerScreenState();
 }
 
+// TickerProviderStateMixin, not the single variant: the tab controller is
+// recreated when transcript availability resolves after the first frame.
 class _PlayerScreenState extends ConsumerState<PlayerScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   bool _isSeeking = false;
   bool _wasPlayingBeforeSeek = false;
   TabController? _tabController;
@@ -181,6 +187,12 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
                               nowPlaying.podcastTitle,
                             )
                           : null,
+                      onChapterSelected: (position) => _handleSkip(
+                        () => ref
+                            .read(audioPlayerControllerProvider.notifier)
+                            .seekNowPlaying(position),
+                        isPlaying,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -373,9 +385,13 @@ class _PlayerTabBody extends StatelessWidget {
     required this.artworkUrl,
     required this.episodeTitle,
     required this.podcastTitle,
+    required this.onChapterSelected,
     this.onEpisodeTitleTap,
     this.onPodcastTitleTap,
   });
+
+  /// Smallest height the artwork shrinks to before the page scrolls.
+  static const double artworkMinHeight = 160;
 
   final TabController tabController;
   final bool hasTranscript;
@@ -385,19 +401,43 @@ class _PlayerTabBody extends StatelessWidget {
   final String podcastTitle;
   final VoidCallback? onEpisodeTitleTap;
   final VoidCallback? onPodcastTitleTap;
+  final ValueChanged<Duration> onChapterSelected;
 
   @override
   Widget build(BuildContext context) {
-    final nowPlayingContent = Column(
-      children: [
-        Expanded(
-          child: Center(child: _PlayerArtwork(artworkUrl: artworkUrl)),
-        ),
-        _PlayerInfo(
-          episodeTitle: episodeTitle,
-          podcastTitle: podcastTitle,
-          onEpisodeTitleTap: onEpisodeTitleTap,
-          onPodcastTitleTap: onPodcastTitleTap,
+    // The artwork takes whatever height is left and shrinks to make room for
+    // the text below. SliverFillRemaining sizes the column to at least its
+    // intrinsic height, and the tight 160 box reports exactly 160 as the
+    // artwork's intrinsic height (at layout the Expanded's tighter height
+    // still wins), so the artwork never drops below 160 and the page
+    // scrolls instead. Clamping physics, and not being the primary scroll
+    // view, keep it from grabbing drags when everything fits, so the sheet
+    // can still be swiped down.
+    final nowPlayingContent = CustomScrollView(
+      primary: false,
+      physics: const ClampingScrollPhysics(),
+      slivers: [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Column(
+            children: [
+              Expanded(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints.tightFor(
+                    height: artworkMinHeight,
+                  ),
+                  child: Center(child: _PlayerArtwork(artworkUrl: artworkUrl)),
+                ),
+              ),
+              _PlayerInfo(
+                episodeTitle: episodeTitle,
+                podcastTitle: podcastTitle,
+                onEpisodeTitleTap: onEpisodeTitleTap,
+                onPodcastTitleTap: onPodcastTitleTap,
+              ),
+              CurrentChapterRow(onChapterSelected: onChapterSelected),
+            ],
+          ),
         ),
       ],
     );
@@ -558,113 +598,158 @@ class _PlayerProgressBar extends ConsumerStatefulWidget {
 class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
   bool _isDragging = false;
   double _dragValue = 0.0;
+  late bool _showRemainingTime;
+  // Last value known to be persisted; a failed write reverts to it.
+  late bool _savedShowRemainingTime;
+  // Writes run one after another so they finish in tap order, which keeps
+  // _savedShowRemainingTime accurate.
+  Future<void> _labelWrites = Future<void>.value();
+  // Bumped per toggle so only the latest write may revert the label.
+  int _labelWriteSequence = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _showRemainingTime = _savedShowRemainingTime = ref
+        .read(appSettingsRepositoryProvider)
+        .getShowRemainingTime();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final progress = widget.progress;
-
+    final duration = progress?.duration;
     final displayValue = _isDragging ? _dragValue : (progress?.progress ?? 0.0);
     final displayPosition = _isDragging
-        ? _computeDragPosition(progress?.duration)
+        ? _computeDragPosition(duration)
         : progress?.position;
+    // unwrapPrevious: while a new episode's chapters load, do not split the
+    // bar with the previous episode's chapters.
+    final chapters =
+        ref.watch(currentEpisodeChaptersProvider).unwrapPrevious().value ?? [];
 
-    return Semantics(
-      slider: true,
-      value:
-          '${_formatDuration(displayPosition)}'
-          ' of ${_formatDuration(progress?.duration)}',
+    final l10n = AppLocalizations.of(context);
+    return PlayerSeekBar(
+      value: displayValue,
+      leadingLabel: formatPlaybackTime(displayPosition),
+      trailingLabel: _showRemainingTime
+          ? _formatRemaining(displayPosition, duration)
+          : formatPlaybackTime(duration),
+      segments: chapterSeekBarSegments(chapters, duration ?? Duration.zero),
+      tooltipBuilder: (context, value) =>
+          _buildTooltip(chapters, _positionAt(value, null)),
+      semanticValueFormatter: (value) =>
+          '${formatPlaybackTime(_positionAt(value, displayPosition))}'
+          ' of ${formatPlaybackTime(duration)}',
+      // A seek is dropped while the duration is unknown, so screen readers
+      // must not be offered steps that would never move the position.
+      adjustable: duration != null && duration != Duration.zero,
+      scrubSpeedLabels: {
+        ScrubSpeed.half: l10n.playerScrubSpeedHalf,
+        ScrubSpeed.quarter: l10n.playerScrubSpeedQuarter,
+        ScrubSpeed.fine: l10n.playerScrubSpeedFine,
+      },
+      onChangeStart: (value) {
+        setState(() {
+          _isDragging = true;
+          _dragValue = value;
+        });
+        widget.onSeekStart?.call();
+      },
+      onChanged: (value) => setState(() => _dragValue = value),
+      onChangeEnd: _handleSeekEnd,
+      onTrailingLabelTap: _toggleTrailingLabel,
+    );
+  }
+
+  @override
+  void dispose() {
+    // The bar can vanish mid-drag (e.g. now-playing cleared). Release the
+    // parent's seek guard so the play/pause icon does not stay frozen; the
+    // abandoned drag itself is not committed.
+    if (_isDragging) unawaited(widget.onSeekEnd?.call());
+    super.dispose();
+  }
+
+  /// Chapter title (when the position is inside a chapter) over the scrub
+  /// position.
+  Widget _buildTooltip(List<EpisodeChapter> chapters, Duration? position) {
+    final index = position == null ? null : chapterIndexAt(chapters, position);
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 240),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              trackHeight: 4,
-              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+          if (index != null)
+            Text(
+              chapters[index].title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontWeight: FontWeight.w600),
             ),
-            child: Slider(
-              value: displayValue,
-              // iOS-26-style scrubbing: drag moves the thumb by delta from its
-              // current position instead of jumping to the touch point. Flutter's
-              // default (tapAndSlide) snaps the thumb to the finger on touch-down.
-              allowedInteraction: SliderInteraction.slideOnly,
-              onChangeStart: (value) {
-                setState(() {
-                  _isDragging = true;
-                  _dragValue = value;
-                });
-                widget.onSeekStart?.call();
-              },
-              onChanged: (value) {
-                setState(() => _dragValue = value);
-              },
-              onChangeEnd: (value) async {
-                final duration = progress?.duration ?? Duration.zero;
-                if (duration == Duration.zero) {
-                  // Duration unknown -- cannot compute a meaningful position.
-                  await widget.onSeekEnd?.call();
-                  if (!mounted) return;
-                  setState(() => _isDragging = false);
-                  return;
-                }
-                final seekPosition = Duration(
-                  milliseconds: (duration.inMilliseconds * value).round(),
-                );
-                final controller = ref.read(
-                  audioPlayerControllerProvider.notifier,
-                );
-                if (controller.currentUrl != null) {
-                  await controller.seek(seekPosition);
-                } else {
-                  // No audio loaded (post-restore): update saved position
-                  // so the display reflects the drag and play() starts here.
-                  final nowPlaying = ref.read(nowPlayingControllerProvider);
-                  if (nowPlaying != null) {
-                    ref
-                        .read(nowPlayingControllerProvider.notifier)
-                        .setNowPlaying(
-                          nowPlaying.copyWith(savedPosition: seekPosition),
-                        );
-                    // Persist so play() seeks to this position.
-                    final episode = nowPlaying.episode;
-                    if (episode != null) {
-                      await ref
-                          .read(playbackHistoryRepositoryProvider)
-                          .saveProgress(
-                            episodeId: episode.id,
-                            positionMs: seekPosition.inMilliseconds,
-                          );
-                    }
-                  }
-                }
-                await widget.onSeekEnd?.call();
-                if (!mounted) return;
-                setState(() => _isDragging = false);
-              },
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                ExcludeSemantics(
-                  child: Text(
-                    _formatDuration(displayPosition),
-                    style: theme.textTheme.bodySmall,
-                  ),
-                ),
-                ExcludeSemantics(
-                  child: Text(
-                    _formatDuration(progress?.duration),
-                    style: theme.textTheme.bodySmall,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          Text(formatPlaybackTime(position)),
         ],
       ),
     );
+  }
+
+  void _toggleTrailingLabel() {
+    final next = !_showRemainingTime;
+    final sequence = ++_labelWriteSequence;
+    final settings = ref.read(appSettingsRepositoryProvider);
+    final logger = ref.read(namedLoggerProvider('Player'));
+    setState(() => _showRemainingTime = next);
+    _labelWrites = _labelWrites.then(
+      (_) => _persistTrailingLabel(next, sequence, settings, logger),
+    );
+  }
+
+  Future<void> _persistTrailingLabel(
+    bool value,
+    int sequence,
+    AppSettingsRepository settings,
+    Logger logger,
+  ) async {
+    try {
+      await settings.setShowRemainingTime(value);
+      _savedShowRemainingTime = value;
+    } on Object catch (e, stack) {
+      logger.w('Failed to save showRemainingTime', error: e, stackTrace: stack);
+      // A queued newer toggle decides the label; otherwise fall back to the
+      // last saved choice so the label matches what the next launch shows.
+      if (!mounted || sequence != _labelWriteSequence) return;
+      setState(() => _showRemainingTime = _savedShowRemainingTime);
+    }
+  }
+
+  Future<void> _handleSeekEnd(double value) async {
+    final duration = widget.progress?.duration ?? Duration.zero;
+    // A failed seek must still release the parent's seek guard and end the
+    // drag, or the play/pause icon and the bar would stay frozen.
+    try {
+      // Duration unknown -- cannot compute a meaningful position.
+      if (duration != Duration.zero) {
+        await ref
+            .read(audioPlayerControllerProvider.notifier)
+            .seekNowPlaying(
+              Duration(milliseconds: (duration.inMilliseconds * value).round()),
+            );
+      }
+    } finally {
+      try {
+        await widget.onSeekEnd?.call();
+      } finally {
+        if (mounted) setState(() => _isDragging = false);
+      }
+    }
+  }
+
+  /// Position at track fraction [value]; falls back to [fallback] when the
+  /// duration is unknown and a fraction cannot be mapped to a time.
+  Duration? _positionAt(double value, Duration? fallback) {
+    final duration = widget.progress?.duration;
+    if (duration == null || duration == Duration.zero) return fallback;
+    return Duration(milliseconds: (duration.inMilliseconds * value).round());
   }
 
   Duration? _computeDragPosition(Duration? duration) {
@@ -674,15 +759,14 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
     );
   }
 
-  String _formatDuration(Duration? duration) {
-    if (duration == null) return '--:--';
-    final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
-    final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
-    if (60 <= duration.inMinutes) {
-      final hours = duration.inHours;
-      return '$hours:$minutes:$seconds';
+  // Remaining media time; deliberately not scaled by playback speed.
+  String _formatRemaining(Duration? position, Duration? duration) {
+    // A zero duration means "unknown" (e.g. restored session without metadata).
+    if (position == null || duration == null || duration == Duration.zero) {
+      return '--:--';
     }
-    return '$minutes:$seconds';
+    final remaining = duration - position;
+    return '-${formatPlaybackTime(remaining.isNegative ? Duration.zero : remaining)}';
   }
 }
 

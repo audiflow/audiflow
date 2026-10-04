@@ -540,6 +540,23 @@ class MockAppSettingsRepository extends _i1.Mock
           as _i4.Future<void>);
 
   @override
+  bool getShowRemainingTime() =>
+      (super.noSuchMethod(
+            Invocation.method(#getShowRemainingTime, []),
+            returnValue: false,
+          )
+          as bool);
+
+  @override
+  _i4.Future<void> setShowRemainingTime(bool? enabled) =>
+      (super.noSuchMethod(
+            Invocation.method(#setShowRemainingTime, [enabled]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
   bool getWifiOnlyDownload() =>
       (super.noSuchMethod(
             Invocation.method(#getWifiOnlyDownload, []),

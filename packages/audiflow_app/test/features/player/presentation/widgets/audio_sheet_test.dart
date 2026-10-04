@@ -13,17 +13,34 @@ void main() {
     commits = [];
   });
 
-  Widget host({required double speed, required List<double> chipSpeeds}) {
+  Widget host({
+    required double speed,
+    required List<double> chipSpeeds,
+    double? height,
+    double textScale = 1,
+  }) {
+    final sheet = AudioSheet(
+      speed: speed,
+      chipSpeeds: chipSpeeds,
+      onSpeedPreview: previews.add,
+      onSpeedCommit: commits.add,
+    );
     return MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(
+          context,
+        ).copyWith(textScaler: TextScaler.linear(textScale)),
+        child: child!,
+      ),
       home: Scaffold(
-        body: AudioSheet(
-          speed: speed,
-          chipSpeeds: chipSpeeds,
-          onSpeedPreview: previews.add,
-          onSpeedCommit: commits.add,
-        ),
+        body: height == null
+            ? sheet
+            : Align(
+                alignment: Alignment.topCenter,
+                child: SizedBox(height: height, child: sheet),
+              ),
       ),
     );
   }
@@ -32,6 +49,22 @@ void main() {
       .widgetList<ChoiceChip>(find.byType(ChoiceChip))
       .map((chip) => (chip.label as Text).data!)
       .toList();
+
+  testWidgets('scrolls instead of overflowing in a short sheet', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      host(speed: 1.3, chipSpeeds: [0.8, 1.0, 1.3], height: 120, textScale: 2),
+    );
+
+    expect(tester.takeException(), isNull);
+    await tester.scrollUntilVisible(
+      find.byType(PlaybackSpeedSlider),
+      50,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.byType(PlaybackSpeedSlider).hitTestable(), findsOneWidget);
+  });
 
   testWidgets('shows title, chips, and the slider without a big readout', (
     tester,

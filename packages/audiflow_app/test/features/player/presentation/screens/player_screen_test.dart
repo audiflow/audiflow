@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audiflow_app/features/player/presentation/screens/player_screen.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
@@ -5,6 +7,7 @@ import 'package:checks/checks.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -25,7 +28,10 @@ const _secondEpisode = NowPlayingInfo(
 const _openSheetKey = Key('open-sheet');
 const _openDialogKey = Key('open-dialog');
 
-Future<ProviderContainer> _container() async {
+Future<ProviderContainer> _container({
+  NowPlayingInfo nowPlaying = _firstEpisode,
+  List<Override> extra = const [],
+}) async {
   SharedPreferences.setMockInitialValues({});
   final prefs = await SharedPreferences.getInstance();
   final container = ProviderContainer(
@@ -33,13 +39,14 @@ Future<ProviderContainer> _container() async {
       sharedPreferencesProvider.overrideWithValue(prefs),
       analyticsServiceProvider.overrideWithValue(FakeAnalyticsService()),
       nowPlayingControllerProvider.overrideWith(
-        () => StubNowPlayingController(_firstEpisode),
+        () => StubNowPlayingController(nowPlaying),
       ),
       audioPlayerControllerProvider.overrideWith(_pausedPlayer),
       appSettingsRepositoryProvider.overrideWithValue(
         StubAppSettingsRepository(),
       ),
       playbackProgressProvider.overrideWith((ref) => null),
+      ...extra,
     ],
   );
   addTearDown(container.dispose);
@@ -160,6 +167,40 @@ void main() {
 
       check(find.byType(PlayerScreen).evaluate().length).equals(1);
       check(find.text('Second Episode').evaluate().length).equals(1);
+    });
+  });
+
+  group('PlayerScreen tabs', () {
+    testWidgets('adds the transcript tab when availability resolves late', (
+      tester,
+    ) async {
+      // Transcript availability is async: the first frame builds one tab,
+      // then the controller is rebuilt with two. Recreating it must not
+      // exceed the State's ticker budget.
+      final transcriptKnown = Completer<bool>();
+      final episode = Episode()
+        ..id = 7
+        ..podcastId = 1
+        ..guid = 'guid-7'
+        ..title = 'Transcribed Episode'
+        ..audioUrl = 'https://example.com/first.mp3';
+      final container = await _container(
+        nowPlaying: _firstEpisode.copyWith(episode: episode),
+        extra: [
+          episodeHasTranscriptProvider(
+            7,
+          ).overrideWith((ref) => transcriptKnown.future),
+        ],
+      );
+      await tester.pumpWidget(_buildHost(container));
+      await _openPlayerSheet(tester);
+      check(find.byType(Tab).evaluate()).isEmpty();
+
+      transcriptKnown.complete(true);
+      await tester.pumpAndSettle();
+
+      check(tester.takeException()).isNull();
+      check(find.byType(Tab).evaluate().length).equals(2);
     });
   });
 }

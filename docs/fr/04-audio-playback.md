@@ -10,6 +10,7 @@ refs:
   modules:
     - packages/audiflow_app/lib/features/player/
     - packages/audiflow_domain/lib/src/features/player/
+    - packages/audiflow_ui/lib/src/widgets/player/
 ---
 # FR 04: Audio playback
 
@@ -104,7 +105,7 @@ state and resume position stay coherent no matter where the listener touches it.
   1.75x) are rounded to the nearest step, halves rounding up, when read. The controller keeps
   a newest-first list of the two most recent non-normal speeds for the Audio sheet's chips and
   emits `playback_speed_change` once per committed change; intermediate slider steps apply
-  the speed without recording it or emitting analytics.
+  the speed in memory only, without persisting it, recording it, or emitting analytics.
 - Resumes an episode from its last saved position, replaying from the start when the saved
   position is at the very end, and honors an explicit start position from timestamped share
   links over the saved position.
@@ -145,6 +146,43 @@ state and resume position stay coherent no matter where the listener touches it.
   minute or longer, `0:ss` below one minute. Pill state labels are localized for English and
   Japanese.
 
+### Full player seek bar
+
+- The full player uses a thumbless, rounded seek bar (`PlayerSeekBar` in `audiflow_ui`): a
+  6 pt track that thickens to 10 pt while dragging, with the played part in the theme's
+  primary color and the rest in the same color at 30% opacity.
+- Scrubbing is delta-based: a horizontal drag moves the position by the finger's travel from
+  the current position instead of jumping to the touch point, and a tap on the track never
+  seeks. A light haptic fires when a drag begins.
+- Fine scrubbing: once a drag has started, moving the finger vertically away from the track
+  (up or down) scales how far horizontal travel moves the position: full speed within 50 pt,
+  half speed from 50 pt, quarter speed from 100 pt, and one eighth from 150 pt. A light haptic
+  fires each time the band changes, and a localized label ("Scrubbing (half speed)",
+  "Scrubbing (quarter speed)", "Scrubbing (fine)") appears between the time labels while below
+  full speed. The drag stays with the seek bar even when the finger leaves its bounds; a drag
+  that starts vertically is not a scrub and still reaches the player sheet's swipe-to-dismiss.
+- The left label shows elapsed time. The right label shows remaining time as `-mm:ss` (or
+  `-h:mm:ss`) by default; tapping it toggles to the total duration. The choice persists as the
+  `showRemainingTime` setting. Remaining time is media time and does not account for playback
+  speed.
+- While scrubbing, the play/pause button keeps the state it had when the drag began, so the
+  brief buffering after the seek does not flicker the icon.
+- When the duration is unknown, releasing a drag performs no seek. When no audio is loaded
+  (e.g. after the app restores a session), the drag updates the saved resume position instead,
+  so the next play starts there.
+- Screen readers see a single slider whose value reads "elapsed of total"; increase/decrease
+  actions seek by 5% of the episode, and the right-hand label is exposed as a button so the
+  remaining/total toggle stays reachable.
+- For episodes with chapters, the track is split into one segment per chapter with a 2 pt gap
+  at each chapter start (an untitled lead-in segment when the first chapter starts after
+  zero). While dragging, and only then, a tooltip above the bar shows the chapter under the
+  scrub position and the position itself; episodes without chapters show the position only.
+  The tooltip follows the finger but is kept within the bar at both edges. Chapter display is
+  described in FR 08. Episodes without chapters keep a single unbroken track.
+- The artwork above the episode info shrinks to make room for the text below it, down to a
+  160 pt minimum; on screens too short for that the area above the seek bar scrolls instead.
+- The mini player's thin progress bar is unchanged.
+
 ## Boundaries
 
 - **Does not own the queue.** What plays after the current episode — manual queue, ad-hoc
@@ -155,8 +193,9 @@ state and resume position stay coherent no matter where the listener touches it.
 - **Does not own the sleep timer.** Countdown modes, end-of-episode / end-of-chapter triggers,
   and timer persistence belong to FR 09 (sleep timer). Playback only exposes the fade-out-and-
   pause action the timer invokes and the lifecycle events the timer observes.
-- **Does not own transcripts or chapters.** Transcript and chapter display is a separate
-  feature; playback only provides the position other features read.
+- **Does not own transcripts or chapters.** Transcript and chapter display, including the
+  chapter gaps and tooltip on the seek bar, is FR 08; playback only provides the position
+  other features read.
 - **Does not define play order for ad-hoc queues.** The group → playlist → podcast → global
   play-order cascade is a separate feature; playback consumes its result via the queue.
 - **Does not perform discovery, subscription, or feed parsing.** Playback operates on episodes

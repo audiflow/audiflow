@@ -590,6 +590,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get playbackSpeedNormal => '標準';
 
   @override
+  String get playerScrubSpeedHalf => '半速スクラブ';
+
+  @override
+  String get playerScrubSpeedQuarter => '1/4速スクラブ';
+
+  @override
+  String get playerScrubSpeedFine => '微調整スクラブ';
+
+  @override
   String playerNowPlayingLabel(String title, String podcast) {
     return '再生中: $title - $podcast';
   }
@@ -861,6 +870,19 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get playerTranscriptEmpty => '書き起こしがありません';
+
+  @override
+  String get playerChaptersTitle => 'チャプター';
+
+  @override
+  String playerCurrentChapterLabel(int number, String title) {
+    return 'チャプター$number: $title。チャプター一覧を表示';
+  }
+
+  @override
+  String playerChapterItemLabel(int number, String title, String time) {
+    return 'チャプター$number: $title、$timeから';
+  }
 
   @override
   String get playerTranscriptJumpToCurrent => '現在位置へ';
@@ -1340,6 +1362,31 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get sleepTimerIconLabel => 'スリープタイマー';
+
+  @override
+  String get sleepTimerStopOnHeader => '終わりで停止';
+
+  @override
+  String get sleepTimerStopAfterHeader => '経過後に停止';
+
+  @override
+  String get sleepTimerEdit => '編集';
+
+  @override
+  String sleepTimerStatusDuration(String remaining, String time) {
+    return 'あと$remainingで停止（$time）';
+  }
+
+  @override
+  String get sleepTimerStatusEndOfEpisode => 'エピソードの終わりで停止';
+
+  @override
+  String get sleepTimerStatusEndOfChapter => 'チャプターの終わりで停止';
+
+  @override
+  String sleepTimerStatusEpisodesLeft(int count) {
+    return '残り$countエピソード';
+  }
 
   @override
   String get onboardingCarouselSkip => 'スキップ';

@@ -1202,6 +1202,24 @@ abstract class AppLocalizations {
   /// **'Normal'**
   String get playbackSpeedNormal;
 
+  /// Seek bar label while scrubbing at half speed
+  ///
+  /// In en, this message translates to:
+  /// **'Scrubbing (half speed)'**
+  String get playerScrubSpeedHalf;
+
+  /// Seek bar label while scrubbing at quarter speed
+  ///
+  /// In en, this message translates to:
+  /// **'Scrubbing (quarter speed)'**
+  String get playerScrubSpeedQuarter;
+
+  /// Seek bar label while scrubbing at one-eighth speed
+  ///
+  /// In en, this message translates to:
+  /// **'Scrubbing (fine)'**
+  String get playerScrubSpeedFine;
+
   /// Mini player accessibility label
   ///
   /// In en, this message translates to:
@@ -1681,6 +1699,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No transcript available'**
   String get playerTranscriptEmpty;
+
+  /// Title of the chapter list sheet, and the chapter row label before the first chapter starts
+  ///
+  /// In en, this message translates to:
+  /// **'Chapters'**
+  String get playerChaptersTitle;
+
+  /// Accessibility label for the current chapter row in the player
+  ///
+  /// In en, this message translates to:
+  /// **'Chapter {number}: {title}. Show chapter list'**
+  String playerCurrentChapterLabel(int number, String title);
+
+  /// Accessibility label for a chapter in the chapter list
+  ///
+  /// In en, this message translates to:
+  /// **'Chapter {number}: {title}, starts at {time}'**
+  String playerChapterItemLabel(int number, String title, String time);
 
   /// Jump to current position button label
   ///
@@ -2551,6 +2587,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sleep timer'**
   String get sleepTimerIconLabel;
+
+  /// Sleep timer sheet card header for end-of-episode / end-of-chapter options
+  ///
+  /// In en, this message translates to:
+  /// **'Stop on'**
+  String get sleepTimerStopOnHeader;
+
+  /// Sleep timer sheet card header for the minutes / episodes options
+  ///
+  /// In en, this message translates to:
+  /// **'Stop after'**
+  String get sleepTimerStopAfterHeader;
+
+  /// Trailing control that opens the numeric keypad for a remembered value
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get sleepTimerEdit;
+
+  /// Sleep timer sheet status line for an active duration timer
+  ///
+  /// In en, this message translates to:
+  /// **'Stopping in {remaining} (at {time})'**
+  String sleepTimerStatusDuration(String remaining, String time);
+
+  /// Sleep timer sheet status line for an active end-of-episode timer
+  ///
+  /// In en, this message translates to:
+  /// **'Stops at end of episode'**
+  String get sleepTimerStatusEndOfEpisode;
+
+  /// Sleep timer sheet status line for an active end-of-chapter timer
+  ///
+  /// In en, this message translates to:
+  /// **'Stops at end of chapter'**
+  String get sleepTimerStatusEndOfChapter;
+
+  /// Sleep timer sheet status line for an active episode-count timer
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} episode left} other{{count} episodes left}}'**
+  String sleepTimerStatusEpisodesLeft(int count);
 
   /// Skip button on the onboarding carousel
   ///
