@@ -13,6 +13,7 @@ import '../../features/feed/models/smart_playlist_groups.dart';
 import '../../features/feed/models/smart_playlist_user_preference.dart';
 import '../../features/feed/models/smart_playlists.dart';
 import '../../features/player/models/playback_history.dart';
+import '../../features/settings/models/podcast_audio_preference.dart';
 import '../../features/queue/models/queue_item.dart';
 import '../../features/station/models/station.dart';
 import '../../features/station/models/station_episode.dart';
@@ -47,6 +48,7 @@ const List<CollectionSchema<dynamic>> isarSchemas = [
   StationEpisodeSchema,
   ParentalControlSettingsSchema,
   PodcastParentalFlagsSchema,
+  PodcastAudioPreferenceSchema,
 ];
 
 /// Opens Isar with automatic recovery on schema-mismatch [IsarError]s.

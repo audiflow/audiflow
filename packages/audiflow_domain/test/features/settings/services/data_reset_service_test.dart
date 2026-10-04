@@ -327,6 +327,11 @@ Future<void> _seedSmartPlaylists(Isar isar) async {
       ..playlistId = 'p'
       ..groupId = 'g',
   );
+  await isar.podcastAudioPreferences.put(
+    PodcastAudioPreference()
+      ..podcastId = 1
+      ..speed = 1.5,
+  );
 }
 
 Future<void> _seedPlayback(Isar isar) async {
