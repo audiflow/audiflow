@@ -575,6 +575,12 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get playerAudioOutputLabel => '出力先';
+
+  @override
+  String get playerAudioOutputUnavailable => '出力先の設定を開けませんでした';
+
+  @override
   String get audioSheetTitle => 'オーディオ';
 
   @override

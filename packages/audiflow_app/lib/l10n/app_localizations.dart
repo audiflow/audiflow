@@ -1172,6 +1172,18 @@ abstract class AppLocalizations {
   /// **'Audio settings, playback speed {speed}'**
   String playerAudioButtonLabel(String speed);
 
+  /// Tooltip and accessibility label for the full player's button that opens the system audio output picker
+  ///
+  /// In en, this message translates to:
+  /// **'Audio output'**
+  String get playerAudioOutputLabel;
+
+  /// Snackbar shown when neither the system output picker nor Bluetooth settings could be opened
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open audio output settings'**
+  String get playerAudioOutputUnavailable;
+
   /// Title of the player's audio settings sheet
   ///
   /// In en, this message translates to:

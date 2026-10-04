@@ -197,6 +197,8 @@
   "playerPauseLabel": "一時停止",
   "playerPlayLabel": "再生",
   "playerAudioButtonLabel": "オーディオ設定、再生速度 {speed}",
+  "playerAudioOutputLabel": "出力先",
+  "playerAudioOutputUnavailable": "出力先の設定を開けませんでした",
   "audioSheetTitle": "オーディオ",
   "audioSheetSpeedSection": "再生速度",
   "playbackSpeedNormal": "標準",

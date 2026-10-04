@@ -8,6 +8,7 @@ import io.flutter.plugin.common.MethodChannel
 class MainActivity : AudioServiceActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        AudioRouteChannel.register(flutterEngine.dartExecutor.binaryMessenger, this)
 
         MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
