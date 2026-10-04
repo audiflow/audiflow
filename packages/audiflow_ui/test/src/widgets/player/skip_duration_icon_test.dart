@@ -90,6 +90,22 @@ void main() {
       check(find.byType(Transform).evaluate().where(_isFlip)).isNotEmpty();
     });
 
+    testWidgets('mirrors the glyph but never the digits', (tester) async {
+      await _pumpIcon(tester, seconds: 10, isForward: true);
+
+      final flip = find.byWidgetPredicate(
+        (widget) => widget is Transform && widget.transform.entry(0, 0) == -1,
+      );
+      check(
+        find
+            .ancestor(of: find.byIcon(Symbols.replay), matching: flip)
+            .evaluate(),
+      ).isNotEmpty();
+      check(
+        find.ancestor(of: find.text('10'), matching: flip).evaluate(),
+      ).isEmpty();
+    });
+
     testWidgets('applies provided size to replay icon', (tester) async {
       await _pumpIcon(tester, seconds: 30, isForward: true, size: 48);
 
