@@ -4,6 +4,29 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+Widget _sheet({
+  required SleepTimerConfig config,
+  int lastMinutes = 0,
+  int lastEpisodes = 0,
+  VoidCallback? onOff,
+  ValueChanged<Duration>? onDurationStart,
+}) => wrap(
+  SleepTimerSheet(
+    state: SleepTimerState(
+      config: config,
+      lastMinutes: lastMinutes,
+      lastEpisodes: lastEpisodes,
+    ),
+    hasChapters: false,
+    onOff: onOff ?? () {},
+    onEndOfEpisode: () {},
+    onEndOfChapter: () {},
+    onDurationStart: onDurationStart ?? (_) {},
+    onEpisodesStart: (_) {},
+    onCloseSheet: () {},
+  ),
+);
+
 Widget wrap(Widget child) => MaterialApp(
   localizationsDelegates: AppLocalizations.localizationsDelegates,
   supportedLocales: AppLocalizations.supportedLocales,
@@ -11,7 +34,7 @@ Widget wrap(Widget child) => MaterialApp(
 );
 
 void main() {
-  testWidgets('shows Off, End of episode, Set minutes/episodes by default', (
+  testWidgets('shows End of episode, Set minutes/episodes by default', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -34,7 +57,11 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Off'), findsOneWidget);
+    // Off is replaced by a Cancel button that only appears while active.
+    expect(find.text('Off'), findsNothing);
+    expect(find.text('Cancel'), findsNothing);
+    expect(find.text('Stop on'), findsOneWidget);
+    expect(find.text('Stop after'), findsOneWidget);
     expect(find.text('End of episode'), findsOneWidget);
     expect(find.text('End of chapter'), findsNothing);
     expect(find.text('Set minutes'), findsOneWidget);
@@ -151,5 +178,83 @@ void main() {
       find.descendant(of: row, matching: find.byIcon(Icons.check)),
       findsOneWidget,
     );
+  });
+
+  group('active timer', () {
+    testWidgets('shows status line and Cancel calls onOff', (tester) async {
+      var offCalls = 0;
+      await tester.pumpWidget(
+        _sheet(
+          config: const SleepTimerConfig.endOfEpisode(),
+          onOff: () => offCalls++,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Stops at end of episode'), findsOneWidget);
+      await tester.tap(find.text('Cancel'));
+      expect(offCalls, 1);
+    });
+
+    testWidgets('shows episodes left for an episode-count timer', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _sheet(
+          config: const SleepTimerConfig.episodes(total: 3, remaining: 2),
+          lastEpisodes: 3,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('2 episodes left'), findsOneWidget);
+    });
+
+    testWidgets('shows countdown for a duration timer', (tester) async {
+      final deadline = DateTime.now().add(const Duration(minutes: 5));
+      await tester.pumpWidget(
+        _sheet(
+          config: SleepTimerConfig.duration(
+            total: const Duration(minutes: 5),
+            deadline: deadline,
+          ),
+          lastMinutes: 5,
+        ),
+      );
+      await tester.pump();
+
+      expect(find.textContaining('Stopping in '), findsOneWidget);
+      // Unmount so the 1Hz refresh timer is cancelled before teardown.
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+  });
+
+  testWidgets('Edit control on remembered minutes opens numeric panel', (
+    tester,
+  ) async {
+    var started = false;
+    await tester.pumpWidget(
+      _sheet(
+        config: const SleepTimerConfig.off(),
+        lastMinutes: 30,
+        onDurationStart: (_) => started = true,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Edit'));
+    await tester.pumpAndSettle();
+    expect(find.text('Minutes'), findsOneWidget);
+    expect(started, isFalse);
+  });
+
+  testWidgets('long-press on Set minutes opens numeric panel', (tester) async {
+    await tester.pumpWidget(_sheet(config: const SleepTimerConfig.off()));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Edit'), findsNothing);
+    await tester.longPress(find.text('Set minutes'));
+    await tester.pumpAndSettle();
+    expect(find.text('Minutes'), findsOneWidget);
   });
 }
