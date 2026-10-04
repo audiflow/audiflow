@@ -6,34 +6,71 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/app_localizations.dart';
 
-/// Opens the player's Audio sheet wired to the playback speed state.
-Future<void> showAudioSheet(BuildContext context) {
+/// Opens the Audio sheet for [podcastId], or for the now-playing podcast
+/// when [podcastId] is null.
+///
+/// The sheet edits the podcast's override while it has one and the
+/// global settings otherwise. Without a podcast (an episode that is not
+/// in the database) it only edits the global settings.
+Future<void> showAudioSheet(BuildContext context, {int? podcastId}) {
   return showModalBottomSheet<void>(
     context: context,
     showDragHandle: true,
     isScrollControlled: true,
     useSafeArea: true,
-    builder: (_) => Consumer(
-      builder: (context, ref, _) {
-        final settings = ref.watch(playbackSpeedSettingsControllerProvider);
-        final controller = ref.read(audioPlayerControllerProvider.notifier);
-        return AudioSheet(
-          speed: settings.speed,
-          chipSpeeds: settings.chipSpeeds,
-          onSpeedPreview: (speed) =>
-              controller.setSpeed(speed, transient: true),
-          onSpeedCommit: controller.setSpeed,
-        );
-      },
-    ),
+    builder: (_) => _AudioSheetHost(podcastId: podcastId),
   );
 }
 
-/// Audio settings sheet for the full player.
+class _AudioSheetHost extends ConsumerWidget {
+  const _AudioSheetHost({required this.podcastId});
+
+  final int? podcastId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final targetId = podcastId ?? ref.watch(nowPlayingPodcastIdProvider);
+    final effective = ref.watch(effectiveAudioSettingsProvider(targetId));
+    final chipSpeeds = ref
+        .watch(playbackSpeedSettingsControllerProvider)
+        .chipSpeeds;
+    // Only while the override loads; short enough that a spinner would
+    // just flicker.
+    if (effective == null) return const SizedBox(height: 160);
+    final scope = effective.scope;
+    final player = ref.read(audioPlayerControllerProvider.notifier);
+    return AudioSheet(
+      podcastOverride: targetId == null
+          ? null
+          : scope is PodcastAudioSettingsScope,
+      onPodcastOverrideChanged: targetId == null
+          ? null
+          : (enabled) => _setOverride(ref, targetId, enabled: enabled),
+      speed: effective.settings.speed,
+      chipSpeeds: chipSpeeds,
+      onSpeedPreview: (speed) =>
+          player.setSpeed(speed, scope: scope, transient: true),
+      onSpeedCommit: (speed) => player.setSpeed(speed, scope: scope),
+    );
+  }
+
+  Future<void> _setOverride(
+    WidgetRef ref,
+    int podcastId, {
+    required bool enabled,
+  }) {
+    final controller = ref.read(
+      podcastAudioOverrideControllerProvider(podcastId).notifier,
+    );
+    return enabled ? controller.enable() : controller.disable();
+  }
+}
+
+/// Audio settings sheet for the full player and the podcast detail menu.
 ///
-/// Laid out as a column of sections so later audio options (per-podcast
-/// speed override, output routing) can be appended below the speed
-/// section without restructuring it.
+/// Laid out as a column of sections so later audio options (output
+/// routing, skip silence) can be appended below the speed section
+/// without restructuring it.
 class AudioSheet extends StatelessWidget {
   const AudioSheet({
     super.key,
@@ -41,9 +78,11 @@ class AudioSheet extends StatelessWidget {
     required this.chipSpeeds,
     required this.onSpeedPreview,
     required this.onSpeedCommit,
+    this.podcastOverride,
+    this.onPodcastOverrideChanged,
   });
 
-  /// Current playback speed.
+  /// Current playback speed of the scope being edited.
   final double speed;
 
   /// Quick-pick speeds in ascending order (normal plus recents).
@@ -55,10 +94,19 @@ class AudioSheet extends StatelessWidget {
   /// Applies and records a final speed choice (chip tap, slider release).
   final ValueChanged<double> onSpeedCommit;
 
+  /// Whether the controls edit a podcast override (true) or the global
+  /// settings (false). Null hides the switch: there is no podcast to
+  /// scope to.
+  final bool? podcastOverride;
+
+  /// Turns the podcast override on or off.
+  final ValueChanged<bool>? onPodcastOverrideChanged;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final override = podcastOverride;
     return SafeArea(
       top: false,
       child: Padding(
@@ -72,7 +120,22 @@ class AudioSheet extends StatelessWidget {
               style: theme.textTheme.titleMedium,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
+            if (override != null)
+              // Controls below stay enabled either way; the caption says
+              // which settings they edit.
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(l10n.audioSheetPodcastOverride),
+                subtitle: Text(
+                  override
+                      ? l10n.audioSheetScopePodcast
+                      : l10n.audioSheetScopeGlobal,
+                ),
+                value: override,
+                onChanged: onPodcastOverrideChanged,
+              ),
+            const SizedBox(height: 8),
             _SpeedSection(
               speed: speed,
               chipSpeeds: chipSpeeds,

@@ -51,6 +51,7 @@
   "playbackAutoPlayOrderAsDisplayed": "表示順",
   "playOrderMenuTitle": "再生順序",
   "podcastDetailDescriptionMenuTitle": "概要",
+  "podcastDetailAudioSettingsMenuTitle": "オーディオ設定",
   "podcastDetailDescriptionSheetTitle": "概要",
   "podcastDetailNoDescription": "概要はありません",
   "podcastDetailSettingsTooltip": "設定",
@@ -199,6 +200,9 @@
   "playerAudioButtonLabel": "オーディオ設定、再生速度 {speed}",
   "audioSheetTitle": "オーディオ",
   "audioSheetSpeedSection": "再生速度",
+  "audioSheetPodcastOverride": "この番組専用の設定",
+  "audioSheetScopePodcast": "この番組だけに適用",
+  "audioSheetScopeGlobal": "すべての番組に適用",
   "playbackSpeedNormal": "標準",
   "playerNowPlayingLabel": "再生中: {title} - {podcast}",
 

@@ -295,7 +295,7 @@ final class AudioPlayerControllerProvider
 }
 
 String _$audioPlayerControllerHash() =>
-    r'74c0cb13eb6d91b19f325e360eda1993c2e3529c';
+    r'7ff433ea133e94407761649ed1b9423b436c6351';
 
 /// Controller for managing audio playback.
 ///

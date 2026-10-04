@@ -15,14 +15,18 @@ import '../../feed/repositories/episode_repository_impl.dart';
 import '../../monitoring/models/analytics_event.dart';
 import '../../monitoring/providers/analytics_providers.dart';
 import '../../queue/services/queue_service.dart';
+import '../../settings/models/audio_settings_scope.dart';
 import '../../settings/providers/playback_speed_settings_provider.dart';
+import '../../settings/providers/podcast_audio_override_provider.dart';
 import '../../settings/providers/settings_providers.dart';
+import '../../settings/repositories/podcast_audio_preference_repository.dart';
 import '../../subscription/repositories/subscription_repository_impl.dart';
 import '../models/now_playing_info.dart';
 import '../models/playback_progress.dart';
 import '../models/playback_state.dart';
 import '../repositories/playback_history_repository_impl.dart';
 import 'audio_playback_controller.dart';
+import 'effective_audio_settings_applier.dart';
 import 'listen_session_tracker.dart';
 import 'now_playing_controller.dart';
 import 'playback_history_service.dart';
@@ -538,9 +542,8 @@ class AudioPlayerController extends _$AudioPlayerController
         }
       }
 
-      // Apply persisted playback speed
-      final settingsRepo = ref.read(appSettingsRepositoryProvider);
-      final speed = settingsRepo.getPlaybackSpeed();
+      // Apply the episode's podcast override, or the global speed.
+      final speed = await _resolveSpeed(episode?.podcastId);
       await _player.setSpeed(speed);
 
       // Notify history service of playback start
@@ -960,39 +963,93 @@ class AudioPlayerController extends _$AudioPlayerController
     await seek(_player.position - Duration(seconds: seconds));
   }
 
-  /// Sets the playback speed and persists it to settings.
+  /// Persists [speed] to [scope] and applies it to the player when
+  /// [scope] is the one the now-playing podcast resolves to.
   ///
-  /// [speed] is snapped to [PlaybackSpeedScale.steps]. Pass
-  /// [transient] for intermediate slider steps during a drag: the speed
-  /// is applied and persisted, but it is neither recorded as a recent
-  /// speed nor reported to analytics. The final value of the gesture
-  /// must then be committed with a non-transient call.
-  @override
-  Future<void> setSpeed(double speed, {bool transient = false}) async {
+  /// [speed] is snapped to [PlaybackSpeedScale.steps]. Editing the global
+  /// scope while the now-playing podcast has an override persists the
+  /// global value without touching the player, and a podcast scope with
+  /// no override is ignored rather than creating one. Pass [transient]
+  /// for intermediate slider steps during a drag: the speed is applied
+  /// but neither recorded as a recent speed nor reported to analytics (a
+  /// podcast override is not written to disk either). The final value
+  /// of the gesture must then be committed with a non-transient call.
+  ///
+  /// Committed speeds are recorded in the shared recent-speed list
+  /// whichever scope they were saved to.
+  Future<void> setSpeed(
+    double speed, {
+    required AudioSettingsScope scope,
+    bool transient = false,
+  }) async {
     final snapped = PlaybackSpeedScale.snap(speed);
-    // Split the segment so each session has a single speed.
-    final segmentIds = _listenSession.openIds;
-    final splitSegment = segmentIds != null && snapped != _player.speed;
-    if (splitSegment) _closeListenSession(ListenEndReason.speedChange);
-    // Start saving before awaiting the engine: save() updates the speed
+    // Start saving before awaiting the engine: saving updates the speed
     // state synchronously, so speed controls follow a fast slider drag
     // instead of trailing behind queued engine calls.
-    final saved = ref
-        .read(playbackSpeedSettingsControllerProvider.notifier)
-        .save(snapped, recordRecent: !transient);
-    await _player.setSpeed(snapped);
-    // Playback may have paused while the engine applied the speed; the
-    // stream has then already closed the segment and must not reopen it.
-    if (splitSegment && _player.playing) {
-      _openListenSession(ids: segmentIds);
+    final saved = _saveSpeed(scope, snapped, transient: transient);
+    if (ref.read(nowPlayingAudioSettingsProvider)?.scope == scope) {
+      await applySpeed(snapped);
     }
-    await saved;
-    if (transient) return;
+    if (!await saved || transient) return;
     unawaited(
       ref
           .read(analyticsServiceProvider)
           .log(PlaybackSpeedChanged(speed: snapped)),
     );
+  }
+
+  /// Returns false when nothing was saved.
+  Future<bool> _saveSpeed(
+    AudioSettingsScope scope,
+    double speed, {
+    required bool transient,
+  }) async {
+    final global = ref.read(playbackSpeedSettingsControllerProvider.notifier);
+    switch (scope) {
+      case GlobalAudioSettingsScope():
+        await global.save(speed, recordRecent: !transient);
+      case PodcastAudioSettingsScope(:final podcastId):
+        final provider = podcastAudioOverrideControllerProvider(podcastId);
+        // The override was switched off under a pending edit: drop the
+        // edit rather than recording a speed nothing saved.
+        if (ref.read(provider).value == null) return false;
+        final override = ref.read(provider.notifier);
+        final saved = override.saveSpeed(speed, persist: !transient);
+        if (!transient) await global.recordRecent(speed);
+        await saved;
+    }
+    return true;
+  }
+
+  /// Applies [speed] to the player without persisting it anywhere.
+  ///
+  /// Settings changes reach the player through [setSpeed] and
+  /// `effectiveAudioSettingsApplierProvider`; this is their shared
+  /// engine step. A speed equal to the current one is a no-op, so both
+  /// paths can apply the same change without splitting the listen
+  /// session twice.
+  Future<void> applySpeed(double speed) async {
+    final snapped = PlaybackSpeedScale.snap(speed);
+    if (snapped == _player.speed) return;
+    // Split the segment so each session has a single speed.
+    final segmentIds = _listenSession.openIds;
+    if (segmentIds != null) _closeListenSession(ListenEndReason.speedChange);
+    await _player.setSpeed(snapped);
+    // Playback may have paused while the engine applied the speed; the
+    // stream has then already closed the segment and must not reopen it.
+    if (segmentIds != null && _player.playing) {
+      _openListenSession(ids: segmentIds);
+    }
+  }
+
+  Future<double> _resolveSpeed(int? podcastId) async {
+    if (podcastId == null) {
+      return ref.read(appSettingsRepositoryProvider).getPlaybackSpeed();
+    }
+    final resolved = await ref
+        .read(podcastAudioPreferenceRepositoryProvider)
+        .resolveForPodcast(podcastId);
+    return resolved.speed;
   }
 }
 

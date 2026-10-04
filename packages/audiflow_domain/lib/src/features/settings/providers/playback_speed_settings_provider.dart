@@ -42,7 +42,7 @@ final class PlaybackSpeedSettings {
   }
 }
 
-/// Holds [PlaybackSpeedSettings] and persists changes.
+/// Holds the global [PlaybackSpeedSettings] and persists changes.
 ///
 /// UI must not call [save] directly: speed changes go through
 /// `AudioPlayerController.setSpeed`, which applies the speed to the
@@ -75,5 +75,22 @@ class PlaybackSpeedSettingsController
     state = PlaybackSpeedSettings(speed: snapped, recentSpeeds: recent);
     await repo.setPlaybackSpeed(snapped);
     if (recordRecent) await repo.setRecentPlaybackSpeeds(recent);
+  }
+
+  /// Pushes [speed] onto the recent list without changing the global
+  /// speed.
+  ///
+  /// Used when a speed is committed to a podcast override: the quick-pick
+  /// chips are one shared history of speeds the user settled on, whichever
+  /// scope the speed was saved to.
+  Future<void> recordRecent(double speed) async {
+    final recent = RecentPlaybackSpeeds.record(
+      state.recentSpeeds,
+      PlaybackSpeedScale.snap(speed),
+    );
+    state = PlaybackSpeedSettings(speed: state.speed, recentSpeeds: recent);
+    await ref
+        .read(appSettingsRepositoryProvider)
+        .setRecentPlaybackSpeeds(recent);
   }
 }

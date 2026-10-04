@@ -77,9 +77,6 @@ class _FakePlaybackController implements AudioPlaybackController {
   Future<void> seek(Duration position) async {}
 
   @override
-  Future<void> setSpeed(double speed) async {}
-
-  @override
   Future<void> skipBackward() async {}
 
   @override
