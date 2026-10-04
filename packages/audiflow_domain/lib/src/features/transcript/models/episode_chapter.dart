@@ -24,4 +24,8 @@ class EpisodeChapter {
   /// [ChapterSource.podlove]; see [ChapterSource] for why.
   @Enumerated(EnumType.name)
   ChapterSource source = ChapterSource.podlove;
+
+  /// URL of the file these chapters were fetched from, for sources that
+  /// live outside the feed (`<podcast:chapters>` JSON); null otherwise.
+  String? sourceUrl;
 }

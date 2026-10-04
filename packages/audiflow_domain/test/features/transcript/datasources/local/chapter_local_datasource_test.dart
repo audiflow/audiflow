@@ -134,7 +134,9 @@ void main() {
       episodeId,
     )).map((c) => c.title).toList();
 
-    test('new chapters default to the podlove source', () {
+    // Rows written before `source` existed rely on the generated reader's
+    // fallback to podlove (episode_chapter.g.dart), not on this default.
+    test('chapters built in code default to the podlove source', () {
       expect(EpisodeChapter().source, ChapterSource.podlove);
     });
 
@@ -145,9 +147,10 @@ void main() {
 
       expect(replaced, {episodeId});
       expect(await titles(), ['A', 'B']);
+      final stored = await datasource.getByEpisodeId(episodeId);
       expect(
-        await datasource.getSourceByEpisodeId(episodeId),
-        ChapterSource.podcastChaptersJson,
+        stored.map((c) => c.source),
+        everyElement(ChapterSource.podcastChaptersJson),
       );
     });
 
@@ -188,10 +191,8 @@ void main() {
       }, source: ChapterSource.podlove);
 
       expect(await titles(), ['Psc']);
-      expect(
-        await datasource.getSourceByEpisodeId(episodeId),
-        ChapterSource.podlove,
-      );
+      final stored = await datasource.getByEpisodeId(episodeId);
+      expect(stored.single.source, ChapterSource.podlove);
     });
 
     test('leaves other episodes untouched', () async {
@@ -203,10 +204,6 @@ void main() {
 
       final other = await datasource.getByEpisodeId(2);
       expect(other.single.title, 'Other');
-    });
-
-    test('getSourceByEpisodeId returns null without chapters', () async {
-      expect(await datasource.getSourceByEpisodeId(episodeId), isNull);
     });
   });
 }

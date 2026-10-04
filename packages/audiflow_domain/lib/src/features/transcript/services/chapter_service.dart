@@ -86,21 +86,40 @@ class ChapterService {
   }
 
   Future<bool> _ensureJsonChapters(Episode episode) async {
-    final url = episode.chaptersUrl;
-    if (url == null || !_isJsonChapters(episode.chaptersType)) return false;
-    final storedSource = await _chapterRepository.getSourceByEpisodeId(
-      episode.id,
-    );
-    if (storedSource == ChapterSource.podcastChaptersJson) return false;
+    final stored = await _chapterRepository.getByEpisodeId(episode.id);
+    final storedJsonUrl =
+        stored.firstOrNull?.source == ChapterSource.podcastChaptersJson
+        ? stored.first.sourceUrl
+        : null;
+    final url = _isJsonChapters(episode.chaptersType)
+        ? episode.chaptersUrl
+        : null;
+    if (url == null) return _dropUnlinkedJsonChapters(episode, stored);
+    // Publishers revise chapter files after release; a new URL means new
+    // content, so only an unchanged URL counts as already fetched.
+    if (storedJsonUrl == url) return false;
     if (_isCoolingDown(url)) return false;
 
     final chapters = await _fetchJsonChapters(url);
     if (chapters == null) return false;
 
     final replaced = await _chapterRepository.replaceChapters({
-      episode.id: _toEntities(episode.id, chapters),
+      episode.id: _toEntities(episode.id, chapters, url),
     }, source: ChapterSource.podcastChaptersJson);
     return replaced.isNotEmpty;
+  }
+
+  /// Removes JSON chapters whose link the feed no longer carries, so they
+  /// stop outranking chapters from the feed itself.
+  Future<bool> _dropUnlinkedJsonChapters(
+    Episode episode,
+    List<EpisodeChapter> stored,
+  ) async {
+    if (stored.firstOrNull?.source != ChapterSource.podcastChaptersJson) {
+      return false;
+    }
+    await _chapterRepository.deleteByEpisodeId(episode.id);
+    return true;
   }
 
   /// Fetches and parses a chapters file; null when it yields no chapters.
@@ -123,6 +142,9 @@ class ChapterService {
       _logger.w('Failed to fetch chapters file: $url', error: e);
     } on FormatException catch (e) {
       _logger.w('Malformed chapters file: $url', error: e);
+    } catch (e, st) {
+      // Anything else still counts as a failed attempt for the cooldown.
+      _logger.w('Failed to load chapters file: $url', error: e, stackTrace: st);
     }
     _failedAt[url] = _now();
     return null;
@@ -142,6 +164,7 @@ class ChapterService {
   static List<EpisodeChapter> _toEntities(
     int episodeId,
     List<PodcastChapter> chapters,
+    String sourceUrl,
   ) => [
     for (final (index, chapter) in chapters.indexed)
       EpisodeChapter()
@@ -151,6 +174,7 @@ class ChapterService {
         ..startMs = chapter.startTime.inMilliseconds
         ..endMs = chapter.endTime?.inMilliseconds
         ..url = chapter.url
-        ..imageUrl = chapter.imageUrl,
+        ..imageUrl = chapter.imageUrl
+        ..sourceUrl = sourceUrl,
   ];
 }

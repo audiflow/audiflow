@@ -80,16 +80,6 @@ class ChapterLocalDatasource {
     });
   }
 
-  /// Returns the source of an episode's stored chapters, or null when the
-  /// episode has none.
-  Future<ChapterSource?> getSourceByEpisodeId(int episodeId) {
-    return _isar.episodeChapters
-        .filter()
-        .episodeIdEqualTo(episodeId)
-        .sourceProperty()
-        .findFirst();
-  }
-
   /// Deletes all chapters for an episode.
   ///
   /// Returns the number of deleted rows.

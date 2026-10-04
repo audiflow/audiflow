@@ -40,10 +40,6 @@ class ChapterRepositoryImpl implements ChapterRepository {
   }) => _datasource.replaceChapters(chaptersByEpisode, source: source);
 
   @override
-  Future<ChapterSource?> getSourceByEpisodeId(int episodeId) =>
-      _datasource.getSourceByEpisodeId(episodeId);
-
-  @override
   Future<int> deleteByEpisodeId(int episodeId) =>
       _datasource.deleteByEpisodeId(episodeId);
 }

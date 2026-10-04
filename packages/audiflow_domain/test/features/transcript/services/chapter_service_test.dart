@@ -137,6 +137,41 @@ void main() {
       verify(mockDio.get<String>(any, options: anyNamed('options'))).called(1);
     });
 
+    test('fetches again when the chapters URL changes', () async {
+      final episodeId = await insertEpisode();
+      respondWith(_validJson);
+      await service.ensureChapters(episodeId);
+
+      await insertEpisode(chaptersUrl: 'https://example.com/ep1/v2.json');
+      respondWith('{"chapters": [{"startTime": 0, "title": "Revised"}]}');
+
+      expect(await service.ensureChapters(episodeId), isTrue);
+      expect(await storedTitles(episodeId), ['Revised']);
+      final stored = await chapterDatasource.getByEpisodeId(episodeId);
+      expect(stored.single.sourceUrl, 'https://example.com/ep1/v2.json');
+    });
+
+    test('drops JSON chapters once the feed removes the link', () async {
+      final episodeId = await insertEpisode();
+      respondWith(_validJson);
+      await service.ensureChapters(episodeId);
+
+      await insertEpisode(chaptersUrl: null);
+
+      expect(await service.ensureChapters(episodeId), isTrue);
+      expect(await storedTitles(episodeId), isEmpty);
+    });
+
+    test('keeps psc chapters when there is no link', () async {
+      final episodeId = await insertEpisode(chaptersUrl: null);
+      await chapterDatasource.replaceChapters({
+        episodeId: [pscChapter(episodeId, 'From psc')],
+      }, source: ChapterSource.podlove);
+
+      expect(await service.ensureChapters(episodeId), isFalse);
+      expect(await storedTitles(episodeId), ['From psc']);
+    });
+
     test('does nothing without a chapters link', () async {
       final episodeId = await insertEpisode(chaptersUrl: null);
 

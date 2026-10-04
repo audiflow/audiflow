@@ -39,9 +39,14 @@ const EpisodeChapterSchema = CollectionSchema(
       type: IsarType.string,
       enumMap: _EpisodeChaptersourceEnumValueMap,
     ),
-    r'startMs': PropertySchema(id: 5, name: r'startMs', type: IsarType.long),
-    r'title': PropertySchema(id: 6, name: r'title', type: IsarType.string),
-    r'url': PropertySchema(id: 7, name: r'url', type: IsarType.string),
+    r'sourceUrl': PropertySchema(
+      id: 5,
+      name: r'sourceUrl',
+      type: IsarType.string,
+    ),
+    r'startMs': PropertySchema(id: 6, name: r'startMs', type: IsarType.long),
+    r'title': PropertySchema(id: 7, name: r'title', type: IsarType.string),
+    r'url': PropertySchema(id: 8, name: r'url', type: IsarType.string),
   },
 
   estimateSize: _episodeChapterEstimateSize,
@@ -91,6 +96,12 @@ int _episodeChapterEstimateSize(
     }
   }
   bytesCount += 3 + object.source.name.length * 3;
+  {
+    final value = object.sourceUrl;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   bytesCount += 3 + object.title.length * 3;
   {
     final value = object.url;
@@ -112,9 +123,10 @@ void _episodeChapterSerialize(
   writer.writeString(offsets[2], object.imageUrl);
   writer.writeLong(offsets[3], object.sortOrder);
   writer.writeString(offsets[4], object.source.name);
-  writer.writeLong(offsets[5], object.startMs);
-  writer.writeString(offsets[6], object.title);
-  writer.writeString(offsets[7], object.url);
+  writer.writeString(offsets[5], object.sourceUrl);
+  writer.writeLong(offsets[6], object.startMs);
+  writer.writeString(offsets[7], object.title);
+  writer.writeString(offsets[8], object.url);
 }
 
 EpisodeChapter _episodeChapterDeserialize(
@@ -132,9 +144,10 @@ EpisodeChapter _episodeChapterDeserialize(
   object.source =
       _EpisodeChaptersourceValueEnumMap[reader.readStringOrNull(offsets[4])] ??
       ChapterSource.podlove;
-  object.startMs = reader.readLong(offsets[5]);
-  object.title = reader.readString(offsets[6]);
-  object.url = reader.readStringOrNull(offsets[7]);
+  object.sourceUrl = reader.readStringOrNull(offsets[5]);
+  object.startMs = reader.readLong(offsets[6]);
+  object.title = reader.readString(offsets[7]);
+  object.url = reader.readStringOrNull(offsets[8]);
   return object;
 }
 
@@ -160,10 +173,12 @@ P _episodeChapterDeserializeProp<P>(
               ChapterSource.podlove)
           as P;
     case 5:
-      return (reader.readLong(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 6:
-      return (reader.readString(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 7:
+      return (reader.readString(offset)) as P;
+    case 8:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1161,6 +1176,165 @@ extension EpisodeChapterQueryFilter
   }
 
   QueryBuilder<EpisodeChapter, EpisodeChapter, QAfterFilterCondition>
+  sourceUrlIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'sourceUrl'),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeChapter, EpisodeChapter, QAfterFilterCondition>
+  sourceUrlIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'sourceUrl'),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeChapter, EpisodeChapter, QAfterFilterCondition>
+  sourceUrlEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'sourceUrl',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeChapter, EpisodeChapter, QAfterFilterCondition>
+  sourceUrlGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'sourceUrl',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeChapter, EpisodeChapter, QAfterFilterCondition>
+  sourceUrlLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'sourceUrl',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeChapter, EpisodeChapter, QAfterFilterCondition>
+  sourceUrlBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'sourceUrl',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeChapter, EpisodeChapter, QAfterFilterCondition>
+  sourceUrlStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'sourceUrl',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeChapter, EpisodeChapter, QAfterFilterCondition>
+  sourceUrlEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'sourceUrl',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeChapter, EpisodeChapter, QAfterFilterCondition>
+  sourceUrlContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'sourceUrl',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeChapter, EpisodeChapter, QAfterFilterCondition>
+  sourceUrlMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'sourceUrl',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeChapter, EpisodeChapter, QAfterFilterCondition>
+  sourceUrlIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'sourceUrl', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeChapter, EpisodeChapter, QAfterFilterCondition>
+  sourceUrlIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'sourceUrl', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeChapter, EpisodeChapter, QAfterFilterCondition>
   startMsEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -1588,6 +1762,19 @@ extension EpisodeChapterQuerySortBy
     });
   }
 
+  QueryBuilder<EpisodeChapter, EpisodeChapter, QAfterSortBy> sortBySourceUrl() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sourceUrl', Sort.asc);
+    });
+  }
+
+  QueryBuilder<EpisodeChapter, EpisodeChapter, QAfterSortBy>
+  sortBySourceUrlDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sourceUrl', Sort.desc);
+    });
+  }
+
   QueryBuilder<EpisodeChapter, EpisodeChapter, QAfterSortBy> sortByStartMs() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'startMs', Sort.asc);
@@ -1704,6 +1891,19 @@ extension EpisodeChapterQuerySortThenBy
     });
   }
 
+  QueryBuilder<EpisodeChapter, EpisodeChapter, QAfterSortBy> thenBySourceUrl() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sourceUrl', Sort.asc);
+    });
+  }
+
+  QueryBuilder<EpisodeChapter, EpisodeChapter, QAfterSortBy>
+  thenBySourceUrlDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sourceUrl', Sort.desc);
+    });
+  }
+
   QueryBuilder<EpisodeChapter, EpisodeChapter, QAfterSortBy> thenByStartMs() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'startMs', Sort.asc);
@@ -1780,6 +1980,14 @@ extension EpisodeChapterQueryWhereDistinct
     });
   }
 
+  QueryBuilder<EpisodeChapter, EpisodeChapter, QDistinct> distinctBySourceUrl({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'sourceUrl', caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<EpisodeChapter, EpisodeChapter, QDistinct> distinctByStartMs() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'startMs');
@@ -1839,6 +2047,12 @@ extension EpisodeChapterQueryProperty
   sourceProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'source');
+    });
+  }
+
+  QueryBuilder<EpisodeChapter, String?, QQueryOperations> sourceUrlProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'sourceUrl');
     });
   }
 
