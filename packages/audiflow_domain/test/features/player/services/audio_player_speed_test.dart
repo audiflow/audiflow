@@ -128,19 +128,16 @@ void main() {
       expect(analytics.events.whereType<PlaybackSpeedChanged>(), hasLength(1));
     });
 
-    test('transient steps update memory only', () async {
+    test('transient steps save without recording a recent speed', () async {
       overrides.overrides[1] = const AudioSettings(speed: 1.0);
       await playPodcast(1);
 
       await controller().setSpeed(1.8, scope: scope, transient: true);
 
-      expect(
-        container.read(podcastAudioOverrideControllerProvider(1)).value,
-        const AudioSettings(speed: 1.8),
-      );
-      expect(overrides.overrides[1], const AudioSettings(speed: 1.0));
+      expect(overrides.overrides[1], const AudioSettings(speed: 1.8));
       expect(playerSpeed(), 1.8);
       expect(settings().recentSpeeds, isEmpty);
+      expect(analytics.events.whereType<PlaybackSpeedChanged>(), isEmpty);
     });
 
     test('does not touch the player for another podcast', () async {
@@ -176,6 +173,18 @@ void main() {
       await overrideOf(1).enable();
 
       expect(overrides.overrides[1], const AudioSettings(speed: 1.3));
+    });
+
+    test('a failed write restores the previous state', () async {
+      overrides.failWrites = true;
+      await container.read(podcastAudioOverrideControllerProvider(1).future);
+
+      await expectLater(overrideOf(1).enable(), throwsA(isA<StateError>()));
+
+      expect(
+        container.read(podcastAudioOverrideControllerProvider(1)).value,
+        isNull,
+      );
     });
 
     test('disable deletes the override', () async {

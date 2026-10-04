@@ -12,6 +12,12 @@ part 'podcast_audio_override_provider.g.dart';
 /// UI must not call [saveSpeed] directly: speed changes go through
 /// `AudioPlayerController.setSpeed` with a podcast scope, which also
 /// applies the speed to the player and records analytics.
+///
+/// Every mutation updates memory before disk so controls follow input
+/// immediately, and restores the previous state when the write fails so
+/// memory never disagrees with what `play()` would read after a restart.
+/// Mutations are ignored until the stored override has loaded: acting on
+/// a loading state could be overwritten by the pending load.
 @Riverpod(keepAlive: true)
 class PodcastAudioOverrideController extends _$PodcastAudioOverrideController {
   @override
@@ -19,39 +25,47 @@ class PodcastAudioOverrideController extends _$PodcastAudioOverrideController {
     return ref.watch(podcastAudioPreferenceRepositoryProvider).get(podcastId);
   }
 
+  /// Whether the stored override has loaded and exists.
+  bool get hasOverride => state is AsyncData && state.value != null;
+
   /// Creates the override by copying the current global settings, so
   /// switching it on does not change what the listener hears.
   Future<void> enable() async {
-    if (state.value != null) return;
+    if (state is! AsyncData || hasOverride) return;
     final global = ref.read(playbackSpeedSettingsControllerProvider);
     final created = AudioSettings(speed: global.speed);
-    state = AsyncData(created);
-    await ref
-        .read(podcastAudioPreferenceRepositoryProvider)
-        .set(podcastId, created);
+    await _update(created, (repo) => repo.set(podcastId, created));
   }
 
   /// Deletes the override; the podcast follows the global settings again.
   Future<void> disable() async {
-    state = const AsyncData(null);
-    await ref.read(podcastAudioPreferenceRepositoryProvider).clear(podcastId);
+    if (!hasOverride) return;
+    await _update(null, (repo) => repo.clear(podcastId));
   }
 
   /// Sets the override's speed (snapped to the grid).
   ///
   /// Ignored when the podcast has no override: a speed edit must never
-  /// create one implicitly. Slider drags pass `persist: false` for
-  /// intermediate steps so only the settled value reaches the database.
-  Future<void> saveSpeed(double speed, {required bool persist}) async {
-    final current = state.value;
-    if (current == null) return;
-    final updated = current.copyWith(speed: PlaybackSpeedScale.snap(speed));
-    // Update memory first so the UI follows the slider without waiting
-    // on disk; persistence failures surface to the caller.
-    state = AsyncData(updated);
-    if (!persist) return;
-    await ref
-        .read(podcastAudioPreferenceRepositoryProvider)
-        .set(podcastId, updated);
+  /// create one implicitly.
+  Future<void> saveSpeed(double speed) async {
+    if (!hasOverride) return;
+    final updated = state.value!.copyWith(
+      speed: PlaybackSpeedScale.snap(speed),
+    );
+    await _update(updated, (repo) => repo.set(podcastId, updated));
+  }
+
+  Future<void> _update(
+    AudioSettings? next,
+    Future<void> Function(PodcastAudioPreferenceRepository repo) write,
+  ) async {
+    final previous = state;
+    state = AsyncData(next);
+    try {
+      await write(ref.read(podcastAudioPreferenceRepositoryProvider));
+    } catch (_) {
+      state = previous;
+      rethrow;
+    }
   }
 }

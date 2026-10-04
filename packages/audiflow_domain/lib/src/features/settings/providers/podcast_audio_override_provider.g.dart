@@ -13,6 +13,12 @@ part of 'podcast_audio_override_provider.dart';
 /// UI must not call [saveSpeed] directly: speed changes go through
 /// `AudioPlayerController.setSpeed` with a podcast scope, which also
 /// applies the speed to the player and records analytics.
+///
+/// Every mutation updates memory before disk so controls follow input
+/// immediately, and restores the previous state when the write fails so
+/// memory never disagrees with what `play()` would read after a restart.
+/// Mutations are ignored until the stored override has loaded: acting on
+/// a loading state could be overwritten by the pending load.
 
 @ProviderFor(PodcastAudioOverrideController)
 final podcastAudioOverrideControllerProvider =
@@ -23,6 +29,12 @@ final podcastAudioOverrideControllerProvider =
 /// UI must not call [saveSpeed] directly: speed changes go through
 /// `AudioPlayerController.setSpeed` with a podcast scope, which also
 /// applies the speed to the player and records analytics.
+///
+/// Every mutation updates memory before disk so controls follow input
+/// immediately, and restores the previous state when the write fails so
+/// memory never disagrees with what `play()` would read after a restart.
+/// Mutations are ignored until the stored override has loaded: acting on
+/// a loading state could be overwritten by the pending load.
 final class PodcastAudioOverrideControllerProvider
     extends
         $AsyncNotifierProvider<PodcastAudioOverrideController, AudioSettings?> {
@@ -31,6 +43,12 @@ final class PodcastAudioOverrideControllerProvider
   /// UI must not call [saveSpeed] directly: speed changes go through
   /// `AudioPlayerController.setSpeed` with a podcast scope, which also
   /// applies the speed to the player and records analytics.
+  ///
+  /// Every mutation updates memory before disk so controls follow input
+  /// immediately, and restores the previous state when the write fails so
+  /// memory never disagrees with what `play()` would read after a restart.
+  /// Mutations are ignored until the stored override has loaded: acting on
+  /// a loading state could be overwritten by the pending load.
   PodcastAudioOverrideControllerProvider._({
     required PodcastAudioOverrideControllerFamily super.from,
     required int super.argument,
@@ -69,13 +87,19 @@ final class PodcastAudioOverrideControllerProvider
 }
 
 String _$podcastAudioOverrideControllerHash() =>
-    r'13edb64c1684859703740eabcb2c1615bb1573f3';
+    r'2432194732420b9dc80e2e9975c0c1b7ef6204bf';
 
 /// Holds a podcast's audio settings override; null when it has none.
 ///
 /// UI must not call [saveSpeed] directly: speed changes go through
 /// `AudioPlayerController.setSpeed` with a podcast scope, which also
 /// applies the speed to the player and records analytics.
+///
+/// Every mutation updates memory before disk so controls follow input
+/// immediately, and restores the previous state when the write fails so
+/// memory never disagrees with what `play()` would read after a restart.
+/// Mutations are ignored until the stored override has loaded: acting on
+/// a loading state could be overwritten by the pending load.
 
 final class PodcastAudioOverrideControllerFamily extends $Family
     with
@@ -100,6 +124,12 @@ final class PodcastAudioOverrideControllerFamily extends $Family
   /// UI must not call [saveSpeed] directly: speed changes go through
   /// `AudioPlayerController.setSpeed` with a podcast scope, which also
   /// applies the speed to the player and records analytics.
+  ///
+  /// Every mutation updates memory before disk so controls follow input
+  /// immediately, and restores the previous state when the write fails so
+  /// memory never disagrees with what `play()` would read after a restart.
+  /// Mutations are ignored until the stored override has loaded: acting on
+  /// a loading state could be overwritten by the pending load.
 
   PodcastAudioOverrideControllerProvider call(int podcastId) =>
       PodcastAudioOverrideControllerProvider._(argument: podcastId, from: this);
@@ -113,6 +143,12 @@ final class PodcastAudioOverrideControllerFamily extends $Family
 /// UI must not call [saveSpeed] directly: speed changes go through
 /// `AudioPlayerController.setSpeed` with a podcast scope, which also
 /// applies the speed to the player and records analytics.
+///
+/// Every mutation updates memory before disk so controls follow input
+/// immediately, and restores the previous state when the write fails so
+/// memory never disagrees with what `play()` would read after a restart.
+/// Mutations are ignored until the stored override has loaded: acting on
+/// a loading state could be overwritten by the pending load.
 
 abstract class _$PodcastAudioOverrideController
     extends $AsyncNotifier<AudioSettings?> {

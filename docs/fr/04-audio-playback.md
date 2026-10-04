@@ -111,12 +111,12 @@ state and resume position stay coherent no matter where the listener touches it.
   a newest-first list of the two most recent non-normal speeds for the Audio sheet's chips and
   emits `playback_speed_change` once per committed change; intermediate slider steps apply
   the speed without recording it or emitting analytics.
-- Keeps per-podcast audio settings overrides (`PodcastAudioPreference`, resolved through
-  `PodcastAudioPreferenceRepository.resolveForPodcast`). Every speed write names its
+- Keeps per-podcast audio settings overrides (`PodcastAudioPreference`, behind
+  `PodcastAudioPreferenceRepository`). Every speed write names its
   `AudioSettingsScope` (global or one podcast), and the player is only changed when that
   scope is the one the now-playing podcast resolves to. `effectiveAudioSettingsApplier`
   re-applies the resolved speed when the now-playing podcast or its override changes, and
-  `play()` resolves the episode's podcast before playback starts.
+  `play()` resolves the episode's podcast from the same state before playback starts.
 - Resumes an episode from its last saved position, replaying from the start when the saved
   position is at the very end, and honors an explicit start position from timestamped share
   links over the saved position.

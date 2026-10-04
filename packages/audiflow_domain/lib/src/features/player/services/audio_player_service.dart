@@ -19,7 +19,6 @@ import '../../settings/models/audio_settings_scope.dart';
 import '../../settings/providers/playback_speed_settings_provider.dart';
 import '../../settings/providers/podcast_audio_override_provider.dart';
 import '../../settings/providers/settings_providers.dart';
-import '../../settings/repositories/podcast_audio_preference_repository.dart';
 import '../../subscription/repositories/subscription_repository_impl.dart';
 import '../models/now_playing_info.dart';
 import '../models/playback_progress.dart';
@@ -543,7 +542,11 @@ class AudioPlayerController extends _$AudioPlayerController
       }
 
       // Apply the episode's podcast override, or the global speed.
-      final speed = await _resolveSpeed(episode?.podcastId);
+      // Resolve the podcast the way NowPlayingInfo exposes it, so this
+      // agrees with effectiveAudioSettingsApplier and the Audio button.
+      final speed = await _resolveSpeed(
+        metadata?.episode?.podcastId ?? episode?.podcastId,
+      );
       await _player.setSpeed(speed);
 
       // Notify history service of playback start
@@ -971,8 +974,8 @@ class AudioPlayerController extends _$AudioPlayerController
   /// global value without touching the player, and a podcast scope with
   /// no override is ignored rather than creating one. Pass [transient]
   /// for intermediate slider steps during a drag: the speed is applied
-  /// but neither recorded as a recent speed nor reported to analytics (a
-  /// podcast override is not written to disk either). The final value
+  /// and saved but neither recorded as a recent speed nor reported to
+  /// analytics. The final value
   /// of the gesture must then be committed with a non-transient call.
   ///
   /// Committed speeds are recorded in the shared recent-speed list
@@ -1009,12 +1012,13 @@ class AudioPlayerController extends _$AudioPlayerController
       case GlobalAudioSettingsScope():
         await global.save(speed, recordRecent: !transient);
       case PodcastAudioSettingsScope(:final podcastId):
-        final provider = podcastAudioOverrideControllerProvider(podcastId);
+        final override = ref.read(
+          podcastAudioOverrideControllerProvider(podcastId).notifier,
+        );
         // The override was switched off under a pending edit: drop the
         // edit rather than recording a speed nothing saved.
-        if (ref.read(provider).value == null) return false;
-        final override = ref.read(provider.notifier);
-        final saved = override.saveSpeed(speed, persist: !transient);
+        if (!override.hasOverride) return false;
+        final saved = override.saveSpeed(speed);
         if (!transient) await global.recordRecent(speed);
         await saved;
     }
@@ -1042,14 +1046,22 @@ class AudioPlayerController extends _$AudioPlayerController
     }
   }
 
+  /// Resolves through the same in-memory state the Audio sheet edits
+  /// (rather than reading the database) so playback never starts at a
+  /// speed the UI does not show.
   Future<double> _resolveSpeed(int? podcastId) async {
-    if (podcastId == null) {
-      return ref.read(appSettingsRepositoryProvider).getPlaybackSpeed();
+    final global = ref.read(playbackSpeedSettingsControllerProvider).speed;
+    if (podcastId == null) return global;
+    try {
+      final override = await ref.read(
+        podcastAudioOverrideControllerProvider(podcastId).future,
+      );
+      return override?.speed ?? global;
+    } catch (error) {
+      // Same fallback as effectiveAudioSettingsProvider on a failed load.
+      _log.w('[Play] Override load failed, using global speed: $error');
+      return global;
     }
-    final resolved = await ref
-        .read(podcastAudioPreferenceRepositoryProvider)
-        .resolveForPodcast(podcastId);
-    return resolved.speed;
   }
 }
 

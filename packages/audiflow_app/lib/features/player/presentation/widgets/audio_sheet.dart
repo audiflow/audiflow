@@ -13,12 +13,21 @@ import '../../../../l10n/app_localizations.dart';
 /// global settings otherwise. Without a podcast (an episode that is not
 /// in the database) it only edits the global settings.
 Future<void> showAudioSheet(BuildContext context, {int? podcastId}) {
+  // Pin the podcast for the life of the sheet: following the now-playing
+  // podcast would retarget a drag in progress when the queue advances,
+  // sending the rest of it to another podcast's (or the global) settings.
+  final targetId =
+      podcastId ??
+      ProviderScope.containerOf(
+        context,
+        listen: false,
+      ).read(nowPlayingPodcastIdProvider);
   return showModalBottomSheet<void>(
     context: context,
     showDragHandle: true,
     isScrollControlled: true,
     useSafeArea: true,
-    builder: (_) => _AudioSheetHost(podcastId: podcastId),
+    builder: (_) => _AudioSheetHost(podcastId: targetId),
   );
 }
 
@@ -29,7 +38,7 @@ class _AudioSheetHost extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final targetId = podcastId ?? ref.watch(nowPlayingPodcastIdProvider);
+    final targetId = podcastId;
     final effective = ref.watch(effectiveAudioSettingsProvider(targetId));
     final chipSpeeds = ref
         .watch(playbackSpeedSettingsControllerProvider)
@@ -58,11 +67,23 @@ class _AudioSheetHost extends ConsumerWidget {
     WidgetRef ref,
     int podcastId, {
     required bool enabled,
-  }) {
+  }) async {
     final controller = ref.read(
       podcastAudioOverrideControllerProvider(podcastId).notifier,
     );
-    return enabled ? controller.enable() : controller.disable();
+    try {
+      await (enabled ? controller.enable() : controller.disable());
+    } catch (error, stackTrace) {
+      // The controller has already rolled the switch back; log rather
+      // than leave an unhandled error from a switch callback.
+      ref
+          .read(namedLoggerProvider('AudioSheet'))
+          .e(
+            'Failed to toggle podcast override',
+            error: error,
+            stackTrace: stackTrace,
+          );
+    }
   }
 }
 
