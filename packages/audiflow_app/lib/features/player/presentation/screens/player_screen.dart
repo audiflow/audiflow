@@ -8,13 +8,16 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:logger/logger.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
+import '../../helpers/chapter_seek_bar_segments.dart';
+import '../../helpers/playback_time_format.dart';
 import '../../helpers/podcast_lookup.dart';
-import '../widgets/sleep_timer_icon_button.dart';
-import '../widgets/sleep_timer_status_label.dart';
+import '../widgets/current_chapter_row.dart';
+import '../widgets/player_action_row.dart';
 import '../widgets/transcript_tab.dart';
 
 /// Full player screen presented as a Cupertino sheet.
@@ -28,8 +31,10 @@ class PlayerScreen extends ConsumerStatefulWidget {
   ConsumerState<PlayerScreen> createState() => _PlayerScreenState();
 }
 
+// TickerProviderStateMixin, not the single variant: the tab controller is
+// recreated when transcript availability resolves after the first frame.
 class _PlayerScreenState extends ConsumerState<PlayerScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   bool _isSeeking = false;
   bool _wasPlayingBeforeSeek = false;
   TabController? _tabController;
@@ -178,6 +183,12 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
                               nowPlaying.podcastTitle,
                             )
                           : null,
+                      onChapterSelected: (position) => _handleSkip(
+                        () => ref
+                            .read(audioPlayerControllerProvider.notifier)
+                            .seekNowPlaying(position),
+                        isPlaying,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -206,23 +217,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
                       isPlaying,
                     ),
                   ),
-                  Row(
-                    children: const [
-                      Expanded(
-                        child: Padding(
-                          padding: EdgeInsets.only(right: 12),
-                          child: Align(
-                            alignment: Alignment.centerRight,
-                            child: SleepTimerStatusLabel(),
-                          ),
-                        ),
-                      ),
-                      SleepTimerIconButton(),
-                      SizedBox(width: 16),
-                      _PlaybackSpeedButton(),
-                      Expanded(child: SizedBox.shrink()),
-                    ],
-                  ),
+                  const PlayerActionRow(),
                   const SizedBox(height: 16),
                 ],
               ),
@@ -382,9 +377,13 @@ class _PlayerTabBody extends StatelessWidget {
     required this.artworkUrl,
     required this.episodeTitle,
     required this.podcastTitle,
+    required this.onChapterSelected,
     this.onEpisodeTitleTap,
     this.onPodcastTitleTap,
   });
+
+  /// Smallest height the artwork shrinks to before the page scrolls.
+  static const double artworkMinHeight = 160;
 
   final TabController tabController;
   final bool hasTranscript;
@@ -394,19 +393,43 @@ class _PlayerTabBody extends StatelessWidget {
   final String podcastTitle;
   final VoidCallback? onEpisodeTitleTap;
   final VoidCallback? onPodcastTitleTap;
+  final ValueChanged<Duration> onChapterSelected;
 
   @override
   Widget build(BuildContext context) {
-    final nowPlayingContent = Column(
-      children: [
-        Expanded(
-          child: Center(child: _PlayerArtwork(artworkUrl: artworkUrl)),
-        ),
-        _PlayerInfo(
-          episodeTitle: episodeTitle,
-          podcastTitle: podcastTitle,
-          onEpisodeTitleTap: onEpisodeTitleTap,
-          onPodcastTitleTap: onPodcastTitleTap,
+    // The artwork takes whatever height is left and shrinks to make room for
+    // the text below. SliverFillRemaining sizes the column to at least its
+    // intrinsic height, and the tight 160 box reports exactly 160 as the
+    // artwork's intrinsic height (at layout the Expanded's tighter height
+    // still wins), so the artwork never drops below 160 and the page
+    // scrolls instead. Clamping physics, and not being the primary scroll
+    // view, keep it from grabbing drags when everything fits, so the sheet
+    // can still be swiped down.
+    final nowPlayingContent = CustomScrollView(
+      primary: false,
+      physics: const ClampingScrollPhysics(),
+      slivers: [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Column(
+            children: [
+              Expanded(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints.tightFor(
+                    height: artworkMinHeight,
+                  ),
+                  child: Center(child: _PlayerArtwork(artworkUrl: artworkUrl)),
+                ),
+              ),
+              _PlayerInfo(
+                episodeTitle: episodeTitle,
+                podcastTitle: podcastTitle,
+                onEpisodeTitleTap: onEpisodeTitleTap,
+                onPodcastTitleTap: onPodcastTitleTap,
+              ),
+              CurrentChapterRow(onChapterSelected: onChapterSelected),
+            ],
+          ),
         ),
       ],
     );
@@ -567,9 +590,22 @@ class _PlayerProgressBar extends ConsumerStatefulWidget {
 class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
   bool _isDragging = false;
   double _dragValue = 0.0;
-  late bool _showRemainingTime = ref
-      .read(appSettingsRepositoryProvider)
-      .getShowRemainingTime();
+  late bool _showRemainingTime;
+  // Last value known to be persisted; a failed write reverts to it.
+  late bool _savedShowRemainingTime;
+  // Writes run one after another so they finish in tap order, which keeps
+  // _savedShowRemainingTime accurate.
+  Future<void> _labelWrites = Future<void>.value();
+  // Bumped per toggle so only the latest write may revert the label.
+  int _labelWriteSequence = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _showRemainingTime = _savedShowRemainingTime = ref
+        .read(appSettingsRepositoryProvider)
+        .getShowRemainingTime();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -579,17 +615,27 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
     final displayPosition = _isDragging
         ? _computeDragPosition(duration)
         : progress?.position;
+    // unwrapPrevious: while a new episode's chapters load, do not split the
+    // bar with the previous episode's chapters.
+    final chapters =
+        ref.watch(currentEpisodeChaptersProvider).unwrapPrevious().value ?? [];
 
     final l10n = AppLocalizations.of(context);
     return PlayerSeekBar(
       value: displayValue,
-      leadingLabel: _formatDuration(displayPosition),
+      leadingLabel: formatPlaybackTime(displayPosition),
       trailingLabel: _showRemainingTime
           ? _formatRemaining(displayPosition, duration)
-          : _formatDuration(duration),
+          : formatPlaybackTime(duration),
+      segments: chapterSeekBarSegments(chapters, duration ?? Duration.zero),
+      tooltipBuilder: (context, value) =>
+          _buildTooltip(chapters, _positionAt(value, null)),
       semanticValueFormatter: (value) =>
-          '${_formatDuration(_positionAt(value, displayPosition))}'
-          ' of ${_formatDuration(duration)}',
+          '${formatPlaybackTime(_positionAt(value, displayPosition))}'
+          ' of ${formatPlaybackTime(duration)}',
+      // A seek is dropped while the duration is unknown, so screen readers
+      // must not be offered steps that would never move the position.
+      adjustable: duration != null && duration != Duration.zero,
       scrubSpeedLabels: {
         ScrubSpeed.half: l10n.playerScrubSpeedHalf,
         ScrubSpeed.quarter: l10n.playerScrubSpeedQuarter,
@@ -617,53 +663,77 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
     super.dispose();
   }
 
+  /// Chapter title (when the position is inside a chapter) over the scrub
+  /// position.
+  Widget _buildTooltip(List<EpisodeChapter> chapters, Duration? position) {
+    final index = position == null ? null : chapterIndexAt(chapters, position);
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 240),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (index != null)
+            Text(
+              chapters[index].title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+          Text(formatPlaybackTime(position)),
+        ],
+      ),
+    );
+  }
+
   void _toggleTrailingLabel() {
     final next = !_showRemainingTime;
+    final sequence = ++_labelWriteSequence;
+    final settings = ref.read(appSettingsRepositoryProvider);
+    final logger = ref.read(namedLoggerProvider('Player'));
     setState(() => _showRemainingTime = next);
-    unawaited(
-      ref.read(appSettingsRepositoryProvider).setShowRemainingTime(next),
+    _labelWrites = _labelWrites.then(
+      (_) => _persistTrailingLabel(next, sequence, settings, logger),
     );
+  }
+
+  Future<void> _persistTrailingLabel(
+    bool value,
+    int sequence,
+    AppSettingsRepository settings,
+    Logger logger,
+  ) async {
+    try {
+      await settings.setShowRemainingTime(value);
+      _savedShowRemainingTime = value;
+    } on Object catch (e, stack) {
+      logger.w('Failed to save showRemainingTime', error: e, stackTrace: stack);
+      // A queued newer toggle decides the label; otherwise fall back to the
+      // last saved choice so the label matches what the next launch shows.
+      if (!mounted || sequence != _labelWriteSequence) return;
+      setState(() => _showRemainingTime = _savedShowRemainingTime);
+    }
   }
 
   Future<void> _handleSeekEnd(double value) async {
     final duration = widget.progress?.duration ?? Duration.zero;
-    // Duration unknown -- cannot compute a meaningful position.
-    if (duration != Duration.zero) {
-      await _seekTo(
-        Duration(milliseconds: (duration.inMilliseconds * value).round()),
-      );
+    // A failed seek must still release the parent's seek guard and end the
+    // drag, or the play/pause icon and the bar would stay frozen.
+    try {
+      // Duration unknown -- cannot compute a meaningful position.
+      if (duration != Duration.zero) {
+        await ref
+            .read(audioPlayerControllerProvider.notifier)
+            .seekNowPlaying(
+              Duration(milliseconds: (duration.inMilliseconds * value).round()),
+            );
+      }
+    } finally {
+      try {
+        await widget.onSeekEnd?.call();
+      } finally {
+        if (mounted) setState(() => _isDragging = false);
+      }
     }
-    await widget.onSeekEnd?.call();
-    if (!mounted) return;
-    setState(() => _isDragging = false);
-  }
-
-  Future<void> _seekTo(Duration position) async {
-    final controller = ref.read(audioPlayerControllerProvider.notifier);
-    if (controller.currentUrl != null) {
-      await controller.seek(position);
-      return;
-    }
-    await _saveSeekWithoutAudio(position);
-  }
-
-  /// No audio loaded (post-restore): update the saved position so the
-  /// display reflects the drag and play() starts here.
-  Future<void> _saveSeekWithoutAudio(Duration position) async {
-    final nowPlaying = ref.read(nowPlayingControllerProvider);
-    if (nowPlaying == null) return;
-    ref
-        .read(nowPlayingControllerProvider.notifier)
-        .setNowPlaying(nowPlaying.copyWith(savedPosition: position));
-    // Persist so play() seeks to this position.
-    final episode = nowPlaying.episode;
-    if (episode == null) return;
-    await ref
-        .read(playbackHistoryRepositoryProvider)
-        .saveProgress(
-          episodeId: episode.id,
-          positionMs: position.inMilliseconds,
-        );
   }
 
   /// Position at track fraction [value]; falls back to [fallback] when the
@@ -688,18 +758,7 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
       return '--:--';
     }
     final remaining = duration - position;
-    return '-${_formatDuration(remaining.isNegative ? Duration.zero : remaining)}';
-  }
-
-  String _formatDuration(Duration? duration) {
-    if (duration == null) return '--:--';
-    final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
-    final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
-    if (60 <= duration.inMinutes) {
-      final hours = duration.inHours;
-      return '$hours:$minutes:$seconds';
-    }
-    return '$minutes:$seconds';
+    return '-${formatPlaybackTime(remaining.isNegative ? Duration.zero : remaining)}';
   }
 }
 
@@ -817,39 +876,5 @@ class _PlayerPlayPauseButton extends ConsumerWidget {
         },
       ),
     );
-  }
-}
-
-class _PlaybackSpeedButton extends ConsumerWidget {
-  const _PlaybackSpeedButton();
-
-  static const _speeds = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
-    final asyncSpeed = ref.watch(playbackSpeedProvider);
-    final speed = asyncSpeed.value ?? 1.0;
-
-    return Semantics(
-      button: true,
-      label: l10n.playerSpeedLabel('$speed'),
-      child: TextButton(
-        onPressed: () {
-          final nextSpeed = _nextSpeed(speed);
-          // Controller emits `playback_speed_change` itself, so the UI
-          // tap must not double-emit here.
-          ref.read(audioPlayerControllerProvider.notifier).setSpeed(nextSpeed);
-        },
-        child: Text('${speed}x', style: Theme.of(context).textTheme.labelLarge),
-      ),
-    );
-  }
-
-  double _nextSpeed(double current) {
-    for (final s in _speeds) {
-      if (current < s) return s;
-    }
-    return _speeds.first;
   }
 }

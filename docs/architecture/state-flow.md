@@ -32,6 +32,7 @@ These providers persist across navigation and screen changes:
 | `audioPlayerProvider` | audiflow_domain | Singleton `AudioPlayer` instance |
 | `playbackProgressStreamProvider` | audiflow_domain | Combined position/duration/buffered stream |
 | `playbackSpeedProvider` | audiflow_domain | Current playback speed stream |
+| `playbackSpeedSettingsControllerProvider` | audiflow_domain | Persisted playback speed and recent speeds |
 | `nowPlayingControllerProvider` | audiflow_domain | Currently playing episode metadata |
 | `audioPlayerControllerProvider` | audiflow_domain | Play/pause/seek/stop/fadeOutAndPause commands |
 | `sleepTimerControllerProvider` | audiflow_domain | Sleep timer state, countdown, mode management |

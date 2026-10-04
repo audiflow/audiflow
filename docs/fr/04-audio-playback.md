@@ -62,6 +62,20 @@ state and resume position stay coherent no matter where the listener touches it.
   (together with any picker or dialog stacked on it) so the listener lands back on the screen
   underneath instead of a blank player. Stopping playback outright from the system controls
   clears the same state and dismisses the full player the same way.
+- **Playback speed**: The full player's bottom action row has three slots: Audio, an output
+  picker (hidden until that feature ships), and the sleep timer. The Audio button shows the
+  current speed (e.g. `1.3x`) and opens the Audio sheet, which holds quick chips and a
+  stepped slider. The slider has 21 positions — 0.5x to 2.0x in 0.1 steps, then 2.2x, 2.4x,
+  2.6x, 2.8x, and 3.0x — with 0.5x, 1.0x, 2.0x, and 3.0x labelled under their ticks. It snaps
+  to the positions, applies each step immediately, gives a light haptic per step, and shows
+  the speed above the thumb while dragging. The slider commits the speed the listener meant:
+  a step is only taken once the finger is well past a boundary, so resting on a boundary does
+  not flicker between two speeds; a single-step change made just before lift-off, after the
+  finger had rested on the previous step, is undone; and a tap uses the touch-down point
+  rather than the lift-off point. The chips are "Normal" plus up to two recently used speeds
+  other than 1.0x, shown in ascending speed order; tapping one applies it, and the chip that
+  matches the current speed is highlighted. Only the speed the listener settles on (a chip tap
+  or slider release) counts as recently used, not every step crossed while dragging.
 - **Failure case**: If an episode cannot be loaded or played, playback enters an error state
   rather than appearing stuck; the listener can retry by tapping play again.
 
@@ -78,7 +92,12 @@ state and resume position stay coherent no matter where the listener touches it.
 - Provides play, pause, resume, toggle, stop, seek, and skip-forward / skip-back, with skip
   intervals taken from user settings; all seeks are clamped to valid bounds and are no-ops when
   nothing is loaded.
-- Adjusts playback speed and persists the chosen speed so it applies to future episodes.
+- Adjusts playback speed on a fixed step grid (`PlaybackSpeedScale`) and persists the chosen
+  speed so it applies to future episodes. Stored speeds that predate the grid (0.75x, 1.25x,
+  1.75x) are rounded to the nearest step, halves rounding up, when read. The controller keeps
+  a newest-first list of the two most recent non-normal speeds for the Audio sheet's chips and
+  emits `playback_speed_change` once per committed change; intermediate slider steps apply
+  the speed in memory only, without persisting it, recording it, or emitting analytics.
 - Resumes an episode from its last saved position, replaying from the start when the saved
   position is at the very end, and honors an explicit start position from timestamped share
   links over the saved position.
@@ -142,8 +161,15 @@ state and resume position stay coherent no matter where the listener touches it.
 - Screen readers see a single slider whose value reads "elapsed of total"; increase/decrease
   actions seek by 5% of the episode, and the right-hand label is exposed as a button so the
   remaining/total toggle stays reachable.
-- The track is drawn from a list of segments so chapter boundaries can be shown later without
-  changing the widget API. The mini player's thin progress bar is unchanged.
+- For episodes with chapters, the track is split into one segment per chapter with a 2 pt gap
+  at each chapter start (an untitled lead-in segment when the first chapter starts after
+  zero). While dragging, and only then, a tooltip above the bar shows the chapter under the
+  scrub position and the position itself; episodes without chapters show the position only.
+  The tooltip follows the finger but is kept within the bar at both edges. Chapter display is
+  described in FR 08. Episodes without chapters keep a single unbroken track.
+- The artwork above the episode info shrinks to make room for the text below it, down to a
+  160 pt minimum; on screens too short for that the area above the seek bar scrolls instead.
+- The mini player's thin progress bar is unchanged.
 
 ## Boundaries
 
@@ -155,8 +181,9 @@ state and resume position stay coherent no matter where the listener touches it.
 - **Does not own the sleep timer.** Countdown modes, end-of-episode / end-of-chapter triggers,
   and timer persistence belong to FR 09 (sleep timer). Playback only exposes the fade-out-and-
   pause action the timer invokes and the lifecycle events the timer observes.
-- **Does not own transcripts or chapters.** Transcript and chapter display is a separate
-  feature; playback only provides the position other features read.
+- **Does not own transcripts or chapters.** Transcript and chapter display, including the
+  chapter gaps and tooltip on the seek bar, is FR 08; playback only provides the position
+  other features read.
 - **Does not define play order for ad-hoc queues.** The group → playlist → podcast → global
   play-order cascade is a separate feature; playback consumes its result via the queue.
 - **Does not perform discovery, subscription, or feed parsing.** Playback operates on episodes

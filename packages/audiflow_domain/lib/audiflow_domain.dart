@@ -118,6 +118,7 @@ export 'src/features/feed/repositories/episode_favorite_repository.dart';
 export 'src/features/feed/repositories/episode_favorite_repository_impl.dart';
 
 // Player feature
+export 'src/features/player/models/current_chapter.dart';
 export 'src/features/player/models/now_playing_info.dart';
 export 'src/features/player/models/playback_progress.dart';
 export 'src/features/player/models/playback_state.dart';
@@ -132,6 +133,7 @@ export 'src/features/player/services/player_lifecycle_events.dart';
 export 'src/features/player/services/sleep_timer_service.dart';
 export 'src/features/player/datasources/local/sleep_timer_preferences_datasource.dart';
 export 'src/features/player/controllers/sleep_timer_controller.dart';
+export 'src/features/player/providers/current_chapter_providers.dart';
 export 'src/features/player/providers/sleep_timer_providers.dart';
 
 // Player feature - Playback History
@@ -194,6 +196,7 @@ export 'src/features/queue/services/queue_service.dart';
 export 'src/features/settings/repositories/app_settings_repository.dart';
 export 'src/features/settings/repositories/app_settings_repository_impl.dart';
 export 'src/features/settings/providers/settings_providers.dart';
+export 'src/features/settings/providers/playback_speed_settings_provider.dart';
 export 'src/features/settings/providers/developer_settings_provider.dart';
 export 'src/features/settings/services/data_reset_service.dart';
 

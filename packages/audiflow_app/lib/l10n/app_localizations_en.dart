@@ -587,6 +587,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playerPlayLabel => 'Play';
 
   @override
+  String playerAudioButtonLabel(String speed) {
+    return 'Audio settings, playback speed $speed';
+  }
+
+  @override
+  String get audioSheetTitle => 'Audio';
+
+  @override
+  String get audioSheetSpeedSection => 'Playback speed';
+
+  @override
+  String get playbackSpeedNormal => 'Normal';
+
+  @override
   String get playerScrubSpeedHalf => 'Scrubbing (half speed)';
 
   @override
@@ -594,11 +608,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get playerScrubSpeedFine => 'Scrubbing (fine)';
-
-  @override
-  String playerSpeedLabel(String speed) {
-    return 'Playback speed ${speed}x';
-  }
 
   @override
   String playerNowPlayingLabel(String title, String podcast) {
@@ -874,6 +883,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get playerTranscriptEmpty => 'No transcript available';
+
+  @override
+  String get playerChaptersTitle => 'Chapters';
+
+  @override
+  String playerCurrentChapterLabel(int number, String title) {
+    return 'Chapter $number: $title. Show chapter list';
+  }
+
+  @override
+  String playerChapterItemLabel(int number, String title, String time) {
+    return 'Chapter $number: $title, starts at $time';
+  }
 
   @override
   String get playerTranscriptJumpToCurrent => 'Jump to current';
@@ -1372,6 +1394,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sleepTimerIconLabel => 'Sleep timer';
+
+  @override
+  String get sleepTimerStopOnHeader => 'Stop on';
+
+  @override
+  String get sleepTimerStopAfterHeader => 'Stop after';
+
+  @override
+  String get sleepTimerEdit => 'Edit';
+
+  @override
+  String sleepTimerStatusDuration(String remaining, String time) {
+    return 'Stopping in $remaining (at $time)';
+  }
+
+  @override
+  String get sleepTimerStatusEndOfEpisode => 'Stops at end of episode';
+
+  @override
+  String get sleepTimerStatusEndOfChapter => 'Stops at end of chapter';
+
+  @override
+  String sleepTimerStatusEpisodesLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count episodes left',
+      one: '$count episode left',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get onboardingCarouselSkip => 'Skip';

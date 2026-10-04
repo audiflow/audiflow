@@ -4,13 +4,12 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../monitoring/models/analytics_event.dart';
 import '../../monitoring/providers/analytics_providers.dart';
-import '../../transcript/repositories/chapter_repository_impl.dart';
 import '../models/sleep_timer_config.dart';
 import '../models/sleep_timer_event.dart';
 import '../models/sleep_timer_state.dart';
+import '../providers/current_chapter_providers.dart';
 import '../providers/sleep_timer_providers.dart';
 import '../services/audio_player_service.dart';
-import '../services/now_playing_controller.dart';
 import '../services/player_lifecycle_events.dart';
 import '../services/sleep_timer_service.dart';
 
@@ -23,12 +22,7 @@ part 'sleep_timer_controller.g.dart';
 /// episode is playing or when the episode has no chapters.
 @riverpod
 Future<bool> currentEpisodeHasChapters(Ref ref) async {
-  final nowPlaying = ref.watch(nowPlayingControllerProvider);
-  final episodeId = nowPlaying?.episode?.id;
-  if (episodeId == null) return false;
-  final chapters = await ref
-      .watch(chapterRepositoryProvider)
-      .getByEpisodeId(episodeId);
+  final chapters = await ref.watch(currentEpisodeChaptersProvider.future);
   return chapters.isNotEmpty;
 }
 

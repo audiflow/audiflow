@@ -196,10 +196,13 @@
   "playerLoadingLabel": "読み込み中",
   "playerPauseLabel": "一時停止",
   "playerPlayLabel": "再生",
+  "playerAudioButtonLabel": "オーディオ設定、再生速度 {speed}",
+  "audioSheetTitle": "オーディオ",
+  "audioSheetSpeedSection": "再生速度",
+  "playbackSpeedNormal": "標準",
   "playerScrubSpeedHalf": "半速スクラブ",
   "playerScrubSpeedQuarter": "1/4速スクラブ",
   "playerScrubSpeedFine": "微調整スクラブ",
-  "playerSpeedLabel": "再生速度 {speed}倍",
   "playerNowPlayingLabel": "再生中: {title} - {podcast}",
 
   "podcastDetailFeedUrlMissing": "フィードURLがありません",
@@ -312,6 +315,9 @@
   "playerTabTranscript": "書き起こし",
   "playerTranscriptLoading": "書き起こしを読み込み中...",
   "playerTranscriptEmpty": "書き起こしがありません",
+  "playerChaptersTitle": "チャプター",
+  "playerCurrentChapterLabel": "チャプター{number}: {title}。チャプター一覧を表示",
+  "playerChapterItemLabel": "チャプター{number}: {title}、{time}から",
   "playerTranscriptJumpToCurrent": "現在位置へ",
 
   "episodeTranscriptAvailable": "書き起こしあり",
@@ -510,6 +516,26 @@
   "@sleepTimerStart": { "description": "Primary CTA on the numeric input panel" },
   "sleepTimerIconLabel": "スリープタイマー",
   "@sleepTimerIconLabel": { "description": "Accessibility label for the sleep-timer icon button" },
+  "sleepTimerStopOnHeader": "終わりで停止",
+  "@sleepTimerStopOnHeader": { "description": "Sleep timer sheet card header for end-of-episode / end-of-chapter options" },
+  "sleepTimerStopAfterHeader": "経過後に停止",
+  "@sleepTimerStopAfterHeader": { "description": "Sleep timer sheet card header for the minutes / episodes options" },
+  "sleepTimerEdit": "編集",
+  "@sleepTimerEdit": { "description": "Trailing control that opens the numeric keypad for a remembered value" },
+  "sleepTimerStatusDuration": "あと{remaining}で停止（{time}）",
+  "@sleepTimerStatusDuration": {
+    "description": "Sleep timer sheet status line for an active duration timer",
+    "placeholders": { "remaining": { "type": "String" }, "time": { "type": "String" } }
+  },
+  "sleepTimerStatusEndOfEpisode": "エピソードの終わりで停止",
+  "@sleepTimerStatusEndOfEpisode": { "description": "Sleep timer sheet status line for an active end-of-episode timer" },
+  "sleepTimerStatusEndOfChapter": "チャプターの終わりで停止",
+  "@sleepTimerStatusEndOfChapter": { "description": "Sleep timer sheet status line for an active end-of-chapter timer" },
+  "sleepTimerStatusEpisodesLeft": "残り{count}エピソード",
+  "@sleepTimerStatusEpisodesLeft": {
+    "description": "Sleep timer sheet status line for an active episode-count timer",
+    "placeholders": { "count": { "type": "int" } }
+  },
 
   "onboardingCarouselSkip": "スキップ",
   "@onboardingCarouselSkip": { "description": "Skip button on the onboarding carousel" },
