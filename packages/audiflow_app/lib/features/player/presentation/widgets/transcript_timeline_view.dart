@@ -1,8 +1,10 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../controllers/transcript_follow_controller.dart';
 
 /// A timeline entry is either a chapter header or a transcript segment.
 sealed class _TimelineEntry {
@@ -21,7 +23,9 @@ class _SegmentEntry extends _TimelineEntry {
 
 /// Displays chapters and transcript segments in a merged timeline.
 ///
-/// Highlights the currently active segment and auto-scrolls to it.
+/// Highlights the currently active segment and keeps it about one third
+/// down the viewport. A user drag pauses following until scrolling has been
+/// idle for a few seconds or the jump-to-current button is tapped.
 /// Tapping a segment seeks playback to that position.
 class TranscriptTimelineView extends ConsumerStatefulWidget {
   const TranscriptTimelineView({
@@ -40,13 +44,19 @@ class TranscriptTimelineView extends ConsumerStatefulWidget {
 
 class _TranscriptTimelineViewState
     extends ConsumerState<TranscriptTimelineView> {
-  final _scrollController = ScrollController();
+  /// Fraction of the viewport above the active segment, so it stays visible
+  /// below the header while leaving upcoming lines in view.
+  static const _activeAlignment = 0.33;
+
+  final _itemScrollController = ItemScrollController();
+  late final _followController = TranscriptFollowController(
+    onAutoResume: _scrollToActive,
+  );
   int _activeIndex = -1;
-  bool _userScrolling = false;
 
   @override
   void dispose() {
-    _scrollController.dispose();
+    _followController.dispose();
     super.dispose();
   }
 
@@ -103,15 +113,20 @@ class _TranscriptTimelineViewState
         children: [
           _TimelineList(
             entries: entries,
-            scrollController: _scrollController,
+            itemScrollController: _itemScrollController,
             activeIndex: _activeIndex,
+            alignment: _activeAlignment,
             onSegmentTap: _handleSegmentTap,
           ),
           Positioned(
             right: 16,
             bottom: 16,
-            child: _JumpToCurrentButton(
-              onPressed: () => _scrollToActive(entries),
+            child: ListenableBuilder(
+              listenable: _followController,
+              builder: (context, _) => _JumpToCurrentButton(
+                visible: !_followController.isFollowing,
+                onPressed: _handleJumpToCurrent,
+              ),
             ),
           ),
         ],
@@ -163,21 +178,22 @@ class _TranscriptTimelineViewState
     // Auto-scroll when active segment changes
     if (newActiveIndex != _activeIndex) {
       _activeIndex = newActiveIndex;
-      if (!_userScrolling && -1 < _activeIndex) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _scrollToIndex(_activeIndex);
-        });
+      if (_followController.isFollowing && -1 < _activeIndex) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToActive());
       }
     }
 
     return entries;
   }
 
-  bool _handleScrollNotification(ScrollNotification n) {
-    if (n is ScrollStartNotification) {
-      _userScrolling = true;
-    } else if (n is ScrollEndNotification) {
-      _userScrolling = false;
+  bool _handleScrollNotification(ScrollNotification notification) {
+    // Only drags carry dragDetails; programmatic scrollTo animations do not,
+    // so auto-follow never interrupts itself.
+    if (notification is ScrollStartNotification &&
+        notification.dragDetails != null) {
+      _followController.handleUserScrollStart();
+    } else if (notification is ScrollEndNotification) {
+      _followController.handleScrollEnd();
     }
     return false;
   }
@@ -188,28 +204,18 @@ class _TranscriptTimelineViewState
         .seek(Duration(milliseconds: segment.startMs));
   }
 
-  void _scrollToActive(List<_TimelineEntry> entries) {
-    if (-1 < _activeIndex) {
-      _scrollToIndex(_activeIndex);
-    }
+  void _handleJumpToCurrent() {
+    _followController.resumeNow();
+    _scrollToActive();
   }
 
-  void _scrollToIndex(int index) {
-    if (!_scrollController.hasClients) return;
+  void _scrollToActive() {
+    if (!mounted || _activeIndex < 0) return;
+    if (!_itemScrollController.isAttached) return;
 
-    // Estimate position: 56px per item
-    const estimatedItemHeight = 56.0;
-    final itemOffset = index * estimatedItemHeight;
-
-    // Place the active segment roughly one-third from the top of the
-    // viewport so it stays visible below the header.
-    final viewportHeight = _scrollController.position.viewportDimension;
-    final centeredOffset = itemOffset - viewportHeight / 3;
-    final maxScroll = _scrollController.position.maxScrollExtent;
-    final targetOffset = centeredOffset.clamp(0.0, maxScroll);
-
-    _scrollController.animateTo(
-      targetOffset,
+    _itemScrollController.scrollTo(
+      index: _activeIndex,
+      alignment: _activeAlignment,
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
     );
@@ -219,21 +225,28 @@ class _TranscriptTimelineViewState
 class _TimelineList extends StatelessWidget {
   const _TimelineList({
     required this.entries,
-    required this.scrollController,
+    required this.itemScrollController,
     required this.activeIndex,
+    required this.alignment,
     required this.onSegmentTap,
   });
 
   final List<_TimelineEntry> entries;
-  final ScrollController scrollController;
+  final ItemScrollController itemScrollController;
   final int activeIndex;
+  final double alignment;
   final ValueChanged<TranscriptSegment> onSegmentTap;
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      controller: scrollController,
+    final hasActive = 0 <= activeIndex;
+    // Initial values are only read on first build; starting at the active
+    // segment avoids an animated jump when the tab opens mid-episode.
+    return ScrollablePositionedList.builder(
+      itemScrollController: itemScrollController,
       itemCount: entries.length,
+      initialScrollIndex: hasActive ? activeIndex : 0,
+      initialAlignment: hasActive ? alignment : 0,
       padding: const EdgeInsets.only(bottom: 72),
       itemBuilder: (context, index) {
         final entry = entries[index];
@@ -332,8 +345,9 @@ class _SegmentTile extends StatelessWidget {
 }
 
 class _JumpToCurrentButton extends StatelessWidget {
-  const _JumpToCurrentButton({required this.onPressed});
+  const _JumpToCurrentButton({required this.visible, required this.onPressed});
 
+  final bool visible;
   final VoidCallback onPressed;
 
   @override
@@ -341,12 +355,19 @@ class _JumpToCurrentButton extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
 
-    return FloatingActionButton.small(
-      onPressed: onPressed,
-      backgroundColor: colorScheme.secondaryContainer,
-      foregroundColor: colorScheme.onSecondaryContainer,
-      tooltip: l10n.playerTranscriptJumpToCurrent,
-      child: const Icon(Icons.my_location, size: 20),
+    return IgnorePointer(
+      ignoring: !visible,
+      child: AnimatedOpacity(
+        opacity: visible ? 1 : 0,
+        duration: const Duration(milliseconds: 200),
+        child: FloatingActionButton.small(
+          onPressed: onPressed,
+          backgroundColor: colorScheme.secondaryContainer,
+          foregroundColor: colorScheme.onSecondaryContainer,
+          tooltip: l10n.playerTranscriptJumpToCurrent,
+          child: const Icon(Icons.my_location, size: 20),
+        ),
+      ),
     );
   }
 }
