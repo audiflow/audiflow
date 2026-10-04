@@ -1,4 +1,5 @@
 import 'package:audiflow_app/features/player/presentation/controllers/transcript_follow_controller.dart';
+import 'package:checks/checks.dart';
 import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -21,7 +22,7 @@ void main() {
       controller = create();
       addTearDown(controller.dispose);
 
-      expect(controller.isFollowing, isTrue);
+      check(controller.isFollowing).isTrue();
     });
 
     test('user drag stops following and notifies listeners', () {
@@ -32,8 +33,8 @@ void main() {
 
       controller.handleUserScrollStart();
 
-      expect(controller.isFollowing, isFalse);
-      expect(notified, 1);
+      check(controller.isFollowing).isFalse();
+      check(notified).equals(1);
     });
 
     test('scroll end while following does nothing', () {
@@ -43,8 +44,8 @@ void main() {
         controller.handleScrollEnd();
         async.elapse(resumeDelay * 2);
 
-        expect(controller.isFollowing, isTrue);
-        expect(resumeCount, 0);
+        check(controller.isFollowing).isTrue();
+        check(resumeCount).equals(0);
         controller.dispose();
       });
     });
@@ -57,12 +58,12 @@ void main() {
           ..handleUserScrollStart()
           ..handleScrollEnd();
         async.elapse(resumeDelay - const Duration(milliseconds: 1));
-        expect(controller.isFollowing, isFalse);
-        expect(resumeCount, 0);
+        check(controller.isFollowing).isFalse();
+        check(resumeCount).equals(0);
 
         async.elapse(const Duration(milliseconds: 1));
-        expect(controller.isFollowing, isTrue);
-        expect(resumeCount, 1);
+        check(controller.isFollowing).isTrue();
+        check(resumeCount).equals(1);
         controller.dispose();
       });
     });
@@ -77,14 +78,14 @@ void main() {
         async.elapse(const Duration(seconds: 4));
         controller.handleUserScrollStart();
         async.elapse(const Duration(seconds: 4));
-        expect(controller.isFollowing, isFalse);
+        check(controller.isFollowing).isFalse();
 
         controller.handleScrollEnd();
         async.elapse(const Duration(seconds: 4));
-        expect(controller.isFollowing, isFalse);
+        check(controller.isFollowing).isFalse();
         async.elapse(const Duration(seconds: 1));
-        expect(controller.isFollowing, isTrue);
-        expect(resumeCount, 1);
+        check(controller.isFollowing).isTrue();
+        check(resumeCount).equals(1);
         controller.dispose();
       });
     });
@@ -96,8 +97,8 @@ void main() {
         controller.handleUserScrollStart();
         async.elapse(resumeDelay * 3);
 
-        expect(controller.isFollowing, isFalse);
-        expect(resumeCount, 0);
+        check(controller.isFollowing).isFalse();
+        check(resumeCount).equals(0);
         controller.dispose();
       });
     });
@@ -112,11 +113,11 @@ void main() {
           ..addListener(() => notified++);
 
         controller.resumeNow();
-        expect(controller.isFollowing, isTrue);
-        expect(notified, 1);
+        check(controller.isFollowing).isTrue();
+        check(notified).equals(1);
 
         async.elapse(resumeDelay * 2);
-        expect(resumeCount, 0);
+        check(resumeCount).equals(0);
         controller.dispose();
       });
     });
@@ -129,7 +130,7 @@ void main() {
 
       controller.resumeNow();
 
-      expect(notified, 0);
+      check(notified).equals(0);
     });
 
     test('a resting pointer holds the countdown until lifted', () {
@@ -141,14 +142,14 @@ void main() {
           ..handleScrollEnd()
           ..handlePointerDown();
         async.elapse(resumeDelay * 2);
-        expect(controller.isFollowing, isFalse);
+        check(controller.isFollowing).isFalse();
 
         controller.handlePointerUp();
         async.elapse(resumeDelay - const Duration(milliseconds: 1));
-        expect(controller.isFollowing, isFalse);
+        check(controller.isFollowing).isFalse();
         async.elapse(const Duration(milliseconds: 1));
-        expect(controller.isFollowing, isTrue);
-        expect(resumeCount, 1);
+        check(controller.isFollowing).isTrue();
+        check(resumeCount).equals(1);
         controller.dispose();
       });
     });
@@ -163,7 +164,7 @@ void main() {
           ..handleScrollEnd();
         async.elapse(resumeDelay * 2);
 
-        expect(controller.isFollowing, isFalse);
+        check(controller.isFollowing).isFalse();
         controller.dispose();
       });
     });
@@ -178,11 +179,11 @@ void main() {
           ..handleUserScrollStart()
           ..handlePointerUp();
         async.elapse(resumeDelay * 2);
-        expect(controller.isFollowing, isFalse);
+        check(controller.isFollowing).isFalse();
 
         controller.handlePointerUp();
         async.elapse(resumeDelay);
-        expect(controller.isFollowing, isTrue);
+        check(controller.isFollowing).isTrue();
         controller.dispose();
       });
     });
@@ -196,8 +197,8 @@ void main() {
           ..handlePointerUp();
         async.elapse(resumeDelay * 2);
 
-        expect(controller.isFollowing, isTrue);
-        expect(resumeCount, 0);
+        check(controller.isFollowing).isTrue();
+        check(resumeCount).equals(0);
         controller.dispose();
       });
     });
@@ -212,7 +213,7 @@ void main() {
           ..dispose();
         async.elapse(resumeDelay * 2);
 
-        expect(resumeCount, 0);
+        check(resumeCount).equals(0);
       });
     });
   });
