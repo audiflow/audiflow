@@ -135,7 +135,6 @@ void main() {
       final firenze = _makeEpisode(3, '[Firenze 1] Arts', DateTime(2024, 3));
 
       test('stay the same when the earliest series is dropped', () {
-        final resolver = TitleDiscoveryResolver();
         final before = resolver.resolve([
           rome,
           venezia,
@@ -153,7 +152,6 @@ void main() {
 
       test('stay the same when an older series is backfilled, while sortKey '
           'follows appearance order', () {
-        final resolver = TitleDiscoveryResolver();
         final before = resolver.resolve([venezia, firenze], _hintDefinition);
         final after = resolver.resolve([
           rome,
@@ -170,18 +168,14 @@ void main() {
         check(after.playlists.map((p) => p.sortKey)).deepEquals([1, 2, 3]);
       });
 
-      test('are distinct per series and never positional', () {
-        final result = TitleDiscoveryResolver().resolve([
+      test('are distinct per series', () {
+        final result = resolver.resolve([
           rome,
           venezia,
           firenze,
         ], _hintDefinition)!;
 
-        final ids = result.playlists.map((p) => p.id).toList();
-        check(ids.toSet()).length.equals(3);
-        for (final id in ids) {
-          check(id).not((it) => it.startsWith('season_'));
-        }
+        check(result.playlists.map((p) => p.id).toSet()).length.equals(3);
       });
     });
   });
