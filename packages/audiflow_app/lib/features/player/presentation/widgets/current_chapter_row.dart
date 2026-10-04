@@ -18,11 +18,18 @@ class CurrentChapterRow extends ConsumerWidget {
   /// Called with a chapter's start position when it is picked from the list.
   final ValueChanged<Duration> onChapterSelected;
 
+  void _openList(BuildContext context) {
+    showChapterListSheet(
+      context: context,
+      onChapterSelected: onChapterSelected,
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final hasChapters = ref.watch(
       currentEpisodeChaptersProvider.select(
-        (chapters) => chapters.value?.isNotEmpty ?? false,
+        (chapters) => chapters.unwrapPrevious().value?.isNotEmpty ?? false,
       ),
     );
     if (!hasChapters) return const SizedBox.shrink();
@@ -44,12 +51,11 @@ class CurrentChapterRow extends ConsumerWidget {
         button: true,
         label: semanticsLabel,
         excludeSemantics: true,
+        // The InkWell's tap action is excluded with its text, so re-expose it.
+        onTap: () => _openList(context),
         child: InkWell(
           borderRadius: BorderRadius.circular(8),
-          onTap: () => showChapterListSheet(
-            context: context,
-            onChapterSelected: onChapterSelected,
-          ),
+          onTap: () => _openList(context),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
             child: _RowContent(text: text),

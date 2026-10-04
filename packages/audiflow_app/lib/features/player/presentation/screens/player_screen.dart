@@ -615,7 +615,10 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
     final displayPosition = _isDragging
         ? _computeDragPosition(duration)
         : progress?.position;
-    final chapters = ref.watch(currentEpisodeChaptersProvider).value ?? [];
+    // unwrapPrevious: while a new episode's chapters load, do not split the
+    // bar with the previous episode's chapters.
+    final chapters =
+        ref.watch(currentEpisodeChaptersProvider).unwrapPrevious().value ?? [];
 
     return PlayerSeekBar(
       value: displayValue,

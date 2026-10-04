@@ -121,4 +121,4 @@ final class CurrentChapterProvider
   }
 }
 
-String _$currentChapterHash() => r'50ed7cafcb035e41097415840c25fad4b8ee2574';
+String _$currentChapterHash() => r'5a40965211a081b6e5b337e1e8c06ad4e1698074';

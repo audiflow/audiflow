@@ -31,7 +31,12 @@ Future<List<EpisodeChapter>> currentEpisodeChapters(Ref ref) async {
 /// every progress tick.
 @riverpod
 CurrentChapter? currentChapter(Ref ref) {
-  final chapters = ref.watch(currentEpisodeChaptersProvider).value;
+  // unwrapPrevious: while a new episode's chapters load, report no chapter
+  // rather than one from the previous episode.
+  final chapters = ref
+      .watch(currentEpisodeChaptersProvider)
+      .unwrapPrevious()
+      .value;
   if (chapters == null || chapters.isEmpty) return null;
   final position = _currentPosition(ref);
   if (position == null) return null;

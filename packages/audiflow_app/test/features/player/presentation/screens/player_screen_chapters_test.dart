@@ -170,6 +170,44 @@ void main() {
       check(find.byType(ChapterListSheet).evaluate()).isEmpty();
     });
 
+    testWidgets('screen readers can open the list and pick a chapter', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      final player = _RecordingAudioPlayerController();
+      await tester.pumpWidget(
+        await _buildPlayer(chapters: _chapters, player: player),
+      );
+      await tester.pump();
+
+      final row = find.semantics.byLabel(RegExp(r'^Chapter 1: Intro'));
+      tester.semantics.tap(row);
+      await tester.pumpAndSettle();
+      check(find.byType(ChapterListSheet).evaluate()).isNotEmpty();
+
+      final item = find.semantics.byLabel(RegExp(r'^Chapter 2: Interview'));
+      tester.semantics.tap(item);
+      await tester.pumpAndSettle();
+      check(player.seeks).deepEquals([const Duration(minutes: 5)]);
+      handle.dispose();
+    });
+
+    testWidgets('row offers the list before the first chapter starts', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        await _buildPlayer(
+          chapters: [_chapter(0, const Duration(minutes: 2), 'Late')],
+        ),
+      );
+      await tester.pump();
+
+      await tester.tap(find.text('Chapters'));
+      await tester.pumpAndSettle();
+      check(find.byType(ChapterListSheet).evaluate()).isNotEmpty();
+      check(find.text('Late').evaluate()).isNotEmpty();
+    });
+
     testWidgets('scrub tooltip shows the chapter under the finger', (
       tester,
     ) async {

@@ -37,7 +37,8 @@ class ChapterListSheet extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final chapters = ref.watch(currentEpisodeChaptersProvider).value ?? [];
+    final chapters =
+        ref.watch(currentEpisodeChaptersProvider).unwrapPrevious().value ?? [];
     final currentIndex = ref.watch(currentChapterProvider)?.index;
 
     return Column(
@@ -94,6 +95,8 @@ class _ChapterTile extends StatelessWidget {
       label: l10n.playerChapterItemLabel(number, chapter.title, startTime),
       selected: isCurrent,
       button: true,
+      // The tile's own tap action is excluded with its text, so re-expose it.
+      onTap: onTap,
       excludeSemantics: true,
       child: ListTile(
         selected: isCurrent,
