@@ -175,7 +175,12 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
   ) async {
     final hasTranscriptItems = items.where((i) => i.hasTranscripts);
     final hasChapterItems = items.where((i) => i.hasChapters);
-    final derivedByGuid = _deriveDescriptionChapters(items);
+    // Derived by the isolate parser, off the UI isolate.
+    final derivedByGuid = {
+      for (final item in items)
+        if (item.descriptionChapters.isNotEmpty)
+          item.guid!: item.descriptionChapters,
+    };
 
     if (hasTranscriptItems.isEmpty &&
         hasChapterItems.isEmpty &&
@@ -218,21 +223,6 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
     }
     await _storeChapterRows(rows, ChapterSource.description);
   }
-
-  /// Chapters derived from show notes, keyed by guid, for items whose feed
-  /// entry has no chapters of its own.
-  Map<String, List<PodcastChapter>> _deriveDescriptionChapters(
-    List<PodcastItem> items,
-  ) => {
-    for (final item in items.where((i) => !i.hasChapters))
-      if (deriveDescriptionChapters(
-            description: item.description,
-            contentEncoded: item.contentEncoded,
-            duration: item.duration,
-          )
-          case final chapters when chapters.isNotEmpty)
-        item.guid!: chapters,
-  };
 
   /// Builds and upserts transcript metadata.
   Future<void> _storeTranscriptMetas(

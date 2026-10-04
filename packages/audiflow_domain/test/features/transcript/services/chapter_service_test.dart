@@ -295,6 +295,25 @@ void main() {
       expect(await storedTitles(episodeId), ['Intro', 'Topic']);
     });
 
+    test('refreshes and drops chapters as the notes change', () async {
+      final episodeId = await insertEpisode(
+        chaptersUrl: null,
+        description: notes,
+      );
+      await service.ensureChapters(episodeId);
+
+      await insertEpisode(
+        chaptersUrl: null,
+        description: '0:00 New A<br>1:00 New B<br>2:00 New C',
+      );
+      expect(await service.ensureChapters(episodeId), isTrue);
+      expect(await storedTitles(episodeId), ['New A', 'New B', 'New C']);
+
+      await insertEpisode(chaptersUrl: null, description: 'No list now');
+      expect(await service.ensureChapters(episodeId), isTrue);
+      expect(await storedTitles(episodeId), isEmpty);
+    });
+
     test('derives nothing from notes without a timestamp list', () async {
       final episodeId = await insertEpisode(
         chaptersUrl: null,

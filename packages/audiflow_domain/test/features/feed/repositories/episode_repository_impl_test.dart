@@ -816,47 +816,51 @@ void main() {
   });
 
   group('description chapters from feed items', () {
-    PodcastItem item(String guid, {List<PodcastChapter>? chapters}) =>
-        PodcastItem.fromData(
-          parsedAt: DateTime.now(),
-          sourceUrl: '',
-          title: guid,
-          description: '<p>0:00 Intro<br>4:00 Middle<br>8:00 End</p>',
-          guid: guid,
-          enclosureUrl: 'https://example.com/$guid.mp3',
-          chapters: chapters,
-        );
+    const derived = [
+      PodcastChapter(title: 'Intro', startTime: Duration.zero),
+      PodcastChapter(title: 'Middle', startTime: Duration(minutes: 4)),
+    ];
 
-    Future<List<EpisodeChapter>> chaptersOf(String guid) async {
-      final episode = await episodeDatasource.getByPodcastIdAndGuid(
-        podcastId,
-        guid,
-      );
-      return chapterDatasource.getByEpisodeId(episode!.id);
-    }
+    PodcastItem item(String guid) => PodcastItem.fromData(
+      parsedAt: DateTime.now(),
+      sourceUrl: '',
+      title: guid,
+      description: 'desc',
+      guid: guid,
+      enclosureUrl: 'https://example.com/$guid.mp3',
+      descriptionChapters: derived,
+    );
 
-    test('derives chapters when the item has none', () async {
+    Future<int> episodeIdOf(String guid) async =>
+        (await episodeDatasource.getByPodcastIdAndGuid(podcastId, guid))!.id;
+
+    test('stores derived chapters with the description source', () async {
       await repository.upsertFromFeedItems(podcastId, [item('ep-d')]);
 
-      final chapters = await chaptersOf('ep-d');
-      check(
-        chapters.map((c) => c.title),
-      ).deepEquals(['Intro', 'Middle', 'End']);
+      final chapters = await chapterDatasource.getByEpisodeId(
+        await episodeIdOf('ep-d'),
+      );
+      check(chapters.map((c) => c.title)).deepEquals(['Intro', 'Middle']);
       check(chapters.first.source).equals(ChapterSource.description);
     });
 
-    test('keeps feed chapters when the item has them', () async {
-      await repository.upsertFromFeedItems(podcastId, [
-        item(
-          'ep-f',
-          chapters: const [
-            PodcastChapter(title: 'Feed', startTime: Duration.zero),
-          ],
-        ),
-      ]);
+    test('leaves stored JSON chapters untouched', () async {
+      await repository.upsertFromFeedItems(podcastId, [item('ep-j')]);
+      final episodeId = await episodeIdOf('ep-j');
+      await chapterDatasource.replaceChapters({
+        episodeId: [
+          EpisodeChapter()
+            ..episodeId = episodeId
+            ..sortOrder = 0
+            ..title = 'From JSON'
+            ..startMs = 0,
+        ],
+      }, source: ChapterSource.podcastChaptersJson);
 
-      final chapters = await chaptersOf('ep-f');
-      check(chapters.single.title).equals('Feed');
+      await repository.upsertFromFeedItems(podcastId, [item('ep-j')]);
+
+      final chapters = await chapterDatasource.getByEpisodeId(episodeId);
+      check(chapters.single.title).equals('From JSON');
     });
   });
 

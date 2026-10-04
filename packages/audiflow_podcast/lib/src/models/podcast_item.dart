@@ -33,6 +33,7 @@ class PodcastItem extends PodcastEntity {
     this.contentEncoded,
     this.chapters,
     this.chaptersLink,
+    this.descriptionChapters = const [],
     this.transcripts,
   });
 
@@ -149,6 +150,7 @@ class PodcastItem extends PodcastEntity {
     String? contentEncoded,
     List<PodcastChapter>? chapters,
     PodcastChaptersLink? chaptersLink,
+    List<PodcastChapter> descriptionChapters = const [],
     List<PodcastTranscript>? transcripts,
   }) {
     // Validate required fields
@@ -235,6 +237,7 @@ class PodcastItem extends PodcastEntity {
       contentEncoded: _trimOrNull(contentEncoded),
       chapters: chapters,
       chaptersLink: chaptersLink,
+      descriptionChapters: descriptionChapters,
       transcripts: transcripts,
     );
   }
@@ -316,6 +319,11 @@ class PodcastItem extends PodcastEntity {
 
   /// External chapters file linked by `<podcast:chapters>`.
   final PodcastChaptersLink? chaptersLink;
+
+  /// Chapters derived from a timestamp list in the show notes; empty when
+  /// the feed has its own chapters, the notes hold no such list, or the
+  /// parser that produced this item does not derive them.
+  final List<PodcastChapter> descriptionChapters;
 
   /// Transcript links.
   final List<PodcastTranscript>? transcripts;
@@ -516,6 +524,7 @@ class PodcastItem extends PodcastEntity {
           contentEncoded == other.contentEncoded &&
           _listEquals(chapters, other.chapters) &&
           chaptersLink == other.chaptersLink &&
+          _listEquals(descriptionChapters, other.descriptionChapters) &&
           _listEquals(transcripts, other.transcripts);
 
   @override
@@ -546,6 +555,7 @@ class PodcastItem extends PodcastEntity {
       contentEncoded.hashCode ^
       chapters.hashCode ^
       chaptersLink.hashCode ^
+      descriptionChapters.hashCode ^
       transcripts.hashCode;
 
   @override

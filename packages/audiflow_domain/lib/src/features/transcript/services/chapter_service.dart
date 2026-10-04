@@ -113,25 +113,46 @@ class ChapterService {
     return replaced.isNotEmpty;
   }
 
-  /// Derives chapters from the show notes when the episode has none.
+  /// Derives chapters from the show notes unless feed or JSON chapters
+  /// are stored.
   ///
   /// Feed sync derives them for episodes it parses, but an incremental sync
   /// stops at the first known episode, so episodes stored before this
-  /// existed are only covered here, the first time they play.
+  /// existed are only covered here, the first time they play. Previously
+  /// derived chapters are refreshed, or dropped once the notes lose them.
   Future<bool> _ensureDescriptionChapters(Episode episode) async {
     final stored = await _chapterRepository.getByEpisodeId(episode.id);
-    if (stored.isNotEmpty) return false;
+    final source = stored.firstOrNull?.source;
+    if (source != null && source != ChapterSource.description) return false;
     final durationMs = episode.durationMs;
     final chapters = deriveDescriptionChapters(
       description: episode.description,
       contentEncoded: episode.contentEncoded,
       duration: durationMs == null ? null : Duration(milliseconds: durationMs),
     );
-    if (chapters.isEmpty) return false;
+    if (chapters.isEmpty) {
+      if (stored.isEmpty) return false;
+      await _chapterRepository.deleteByEpisodeId(episode.id);
+      return true;
+    }
+    if (_sameChapters(stored, chapters)) return false;
     final replaced = await _chapterRepository.replaceChapters({
       episode.id: toEpisodeChapters(episode.id, chapters),
     }, source: ChapterSource.description);
     return replaced.isNotEmpty;
+  }
+
+  static bool _sameChapters(
+    List<EpisodeChapter> stored,
+    List<PodcastChapter> derived,
+  ) {
+    if (stored.length != derived.length) return false;
+    for (final (index, chapter) in derived.indexed) {
+      final row = stored[index];
+      if (row.title != chapter.title) return false;
+      if (row.startMs != chapter.startTime.inMilliseconds) return false;
+    }
+    return true;
   }
 
   /// Removes JSON chapters whose link the feed no longer carries, so they

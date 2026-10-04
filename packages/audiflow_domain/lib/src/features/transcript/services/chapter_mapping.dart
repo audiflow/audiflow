@@ -14,14 +14,10 @@ List<PodcastChapter> deriveDescriptionChapters({
   required String? description,
   String? contentEncoded,
   Duration? duration,
-}) {
-  for (final text in [description, contentEncoded]) {
-    if (text == null || text.isEmpty) continue;
-    final chapters = _parser.parse(text, episodeDuration: duration);
-    if (chapters.isNotEmpty) return chapters;
-  }
-  return const [];
-}
+}) => _parser.parseFirst([
+  description,
+  contentEncoded,
+], episodeDuration: duration);
 
 /// Builds chapter rows for [episodeId] from parsed [chapters].
 List<EpisodeChapter> toEpisodeChapters(

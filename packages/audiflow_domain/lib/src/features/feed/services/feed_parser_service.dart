@@ -3,7 +3,6 @@ import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/providers/logger_provider.dart';
-import '../../transcript/services/chapter_mapping.dart';
 import '../builders/podcast_builder.dart';
 import '../models/episode.dart';
 import '../models/feed_parse_progress.dart';
@@ -170,6 +169,7 @@ class FeedParserService {
                   )
                   .toList(),
               chaptersLink: e.chaptersLink,
+              descriptionChapters: e.descriptionChapters,
             ),
           )
           .toList();
@@ -253,6 +253,7 @@ class FeedParserService {
           :final transcripts,
           :final chapters,
           :final chaptersLink,
+          :final descriptionChapters,
         ):
           final resolvedGuid =
               guid ??
@@ -277,14 +278,6 @@ class FeedParserService {
               ..chaptersType = chaptersLink?.type,
           );
 
-          // Feed chapters always win, so only derive when there are none.
-          final descriptionChapters = chapters == null
-              ? deriveDescriptionChapters(
-                  description: description,
-                  contentEncoded: contentEncoded,
-                  duration: duration,
-                )
-              : const <PodcastChapter>[];
           if (transcripts != null ||
               chapters != null ||
               descriptionChapters.isNotEmpty) {
