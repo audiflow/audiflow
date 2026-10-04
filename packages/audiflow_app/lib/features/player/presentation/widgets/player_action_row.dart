@@ -56,17 +56,45 @@ class AudioButton extends ConsumerWidget {
   }
 }
 
-class _SleepTimerSlot extends StatelessWidget {
+class _SleepTimerSlot extends ConsumerWidget {
   const _SleepTimerSlot();
 
   @override
-  Widget build(BuildContext context) {
-    return const Row(
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isActive = ref.watch(
+      sleepTimerControllerProvider.select(
+        (state) => state.config is! SleepTimerConfigOff,
+      ),
+    );
+    return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        SleepTimerIconButton(),
-        Flexible(child: SleepTimerStatusLabel()),
+        const SleepTimerIconButton(),
+        // Only an active timer has a label; an empty tappable box would
+        // be an unlabeled button for screen readers.
+        if (isActive) const Flexible(child: _SleepTimerLabelButton()),
       ],
+    );
+  }
+}
+
+/// Status label that opens the sleep-timer sheet, giving the icon a
+/// larger tap target while a timer runs.
+class _SleepTimerLabelButton extends StatelessWidget {
+  const _SleepTimerLabelButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      child: InkWell(
+        customBorder: const StadiumBorder(),
+        onTap: () => showSleepTimerSheet(context),
+        child: const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+          child: SleepTimerStatusLabel(),
+        ),
+      ),
     );
   }
 }

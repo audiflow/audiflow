@@ -1,6 +1,7 @@
 import 'package:audiflow_app/features/player/presentation/widgets/audio_sheet.dart';
 import 'package:audiflow_app/features/player/presentation/widgets/player_action_row.dart';
 import 'package:audiflow_app/features/player/presentation/widgets/sleep_timer_icon_button.dart';
+import 'package:audiflow_app/features/player/presentation/widgets/sleep_timer_sheet.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
@@ -85,5 +86,35 @@ void main() {
     expect(find.byType(AudioSheet), findsOneWidget);
     final sheet = tester.widget<AudioSheet>(find.byType(AudioSheet));
     expect(sheet.speed, 1.3);
+  });
+
+  testWidgets('tapping the sleep timer status label opens the sheet', (
+    tester,
+  ) async {
+    final c = await container();
+    c.read(sleepTimerControllerProvider.notifier).setEndOfEpisode();
+    await tester.pumpWidget(host(c));
+
+    await tester.tap(find.text('Episode end'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(SleepTimerSheet), findsOneWidget);
+  });
+
+  testWidgets('sleep timer label is announced as a button', (tester) async {
+    final semantics = tester.ensureSemantics();
+    final c = await container();
+    c.read(sleepTimerControllerProvider.notifier).setEndOfEpisode();
+    await tester.pumpWidget(host(c));
+
+    final node = tester.getSemantics(find.text('Episode end'));
+    expect(node.flagsCollection.isButton, isTrue);
+    semantics.dispose();
+  });
+
+  testWidgets('no label button while the timer is off', (tester) async {
+    await tester.pumpWidget(host(await container()));
+
+    expect(find.byType(InkWell), findsNWidgets(2)); // Audio + icon button
   });
 }
