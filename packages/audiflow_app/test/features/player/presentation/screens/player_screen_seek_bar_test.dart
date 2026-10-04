@@ -4,6 +4,7 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -42,6 +43,19 @@ class _SeekingAudioPlayerController extends AudioPlayerController {
     state = const PlaybackState.loading(episodeUrl: _episodeUrl);
   }
 }
+
+/// Settings whose remaining-time write always fails, like a full disk.
+class _FailingSettings extends StubAppSettingsRepository {
+  @override
+  Future<void> setShowRemainingTime(bool enabled) async =>
+      throw StateError('write failed');
+}
+
+const _unknownDuration = PlaybackProgress(
+  position: Duration(minutes: 1),
+  duration: Duration.zero,
+  bufferedPosition: Duration.zero,
+);
 
 Future<Widget> _buildPlayer({
   required StubAppSettingsRepository settings,
@@ -101,6 +115,38 @@ void main() {
       check(find.text('10:00').evaluate()).isNotEmpty();
       check(find.text('-09:00').evaluate()).isEmpty();
       check(settings.showRemainingTime).isFalse();
+    });
+
+    testWidgets('reverts the label when the setting cannot be saved', (
+      tester,
+    ) async {
+      final settings = _FailingSettings();
+      await tester.pumpWidget(await _buildPlayer(settings: settings));
+      await tester.pump();
+
+      await tester.tap(find.text('-09:00'));
+      await tester.pump();
+
+      check(find.text('-09:00').evaluate()).isNotEmpty();
+      check(find.text('10:00').evaluate()).isEmpty();
+    });
+
+    testWidgets('offers no screen-reader steps when duration unknown', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      final settings = StubAppSettingsRepository();
+      await tester.pumpWidget(
+        await _buildPlayer(settings: settings, progress: _unknownDuration),
+      );
+      await tester.pump();
+
+      final data = tester
+          .getSemantics(find.byType(PlayerSeekBar))
+          .getSemanticsData();
+      check(data.hasAction(SemanticsAction.increase)).isFalse();
+      check(data.hasAction(SemanticsAction.decrease)).isFalse();
+      handle.dispose();
     });
 
     testWidgets('shows placeholder remaining time when duration unknown', (

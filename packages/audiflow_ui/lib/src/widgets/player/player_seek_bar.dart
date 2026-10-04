@@ -49,6 +49,7 @@ class PlayerSeekBar extends StatefulWidget {
     required this.trailingLabel,
     this.segments = SeekBarSegment.single,
     this.semanticValueFormatter,
+    this.adjustable = true,
     this.onChangeStart,
     this.onChanged,
     this.onChangeEnd,
@@ -84,6 +85,12 @@ class PlayerSeekBar extends StatefulWidget {
   /// Also used for the values announced after an increase/decrease action;
   /// those actions are only offered when a formatter is given.
   final String Function(double value)? semanticValueFormatter;
+
+  /// Whether screen readers are offered increase/decrease actions.
+  ///
+  /// Pass false while a seek cannot take effect (e.g. the duration is still
+  /// unknown), so the actions do not announce a position that never comes.
+  final bool adjustable;
 
   /// Called with the value at the moment a drag begins.
   final ValueChanged<double>? onChangeStart;
@@ -127,6 +134,9 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
   Widget _buildSemantics({required double value, required Widget child}) {
     final format = widget.semanticValueFormatter;
     if (format == null) return Semantics(slider: true, child: child);
+    if (!widget.adjustable) {
+      return Semantics(slider: true, value: format(value), child: child);
+    }
     const step = PlayerSeekBar.semanticStep;
     return Semantics(
       slider: true,

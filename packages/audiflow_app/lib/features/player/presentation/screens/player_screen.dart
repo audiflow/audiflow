@@ -591,6 +591,9 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
       semanticValueFormatter: (value) =>
           '${_formatDuration(_positionAt(value, displayPosition))}'
           ' of ${_formatDuration(duration)}',
+      // A seek is dropped while the duration is unknown, so screen readers
+      // must not be offered steps that would never move the position.
+      adjustable: duration != null && duration != Duration.zero,
       onChangeStart: (value) {
         setState(() {
           _isDragging = true;
@@ -600,7 +603,7 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
       },
       onChanged: (value) => setState(() => _dragValue = value),
       onChangeEnd: _handleSeekEnd,
-      onTrailingLabelTap: _toggleTrailingLabel,
+      onTrailingLabelTap: () => unawaited(_toggleTrailingLabel()),
     );
   }
 
@@ -613,12 +616,20 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
     super.dispose();
   }
 
-  void _toggleTrailingLabel() {
+  Future<void> _toggleTrailingLabel() async {
     final next = !_showRemainingTime;
+    final settings = ref.read(appSettingsRepositoryProvider);
+    final logger = ref.read(namedLoggerProvider('Player'));
     setState(() => _showRemainingTime = next);
-    unawaited(
-      ref.read(appSettingsRepositoryProvider).setShowRemainingTime(next),
-    );
+    try {
+      await settings.setShowRemainingTime(next);
+    } on Object catch (e, stack) {
+      // Revert so the label never shows a choice that was not saved and
+      // would silently flip back on the next launch.
+      logger.w('Failed to save showRemainingTime', error: e, stackTrace: stack);
+      if (!mounted) return;
+      setState(() => _showRemainingTime = !next);
+    }
   }
 
   Future<void> _handleSeekEnd(double value) async {
