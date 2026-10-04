@@ -43,7 +43,7 @@ This repository is part of:
 6. `audio_service` manages background playback, system controls, and audio focus
 7. Playback position is persisted to Isar for resume-on-relaunch
 8. Downloads are managed via `flutter_downloader` with queue and WiFi-only options
-9. Transcript metadata is extracted during feed sync; content is fetched lazily on first play
+9. Transcript metadata, `<psc:chapters>`, and `<podcast:chapters>` links are extracted during feed sync; transcript content is fetched when the transcript is opened, and JSON chapters when the episode becomes now playing
 10. Background refresh (via workmanager) periodically syncs feeds and sends new episode notifications
 11. Station reconciler updates station episode lists when feeds sync, episodes download, or subscriptions change
 
