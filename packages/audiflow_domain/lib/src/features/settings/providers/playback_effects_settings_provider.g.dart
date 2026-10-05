@@ -64,7 +64,7 @@ final class PlaybackEffectsSettingsControllerProvider
 }
 
 String _$playbackEffectsSettingsControllerHash() =>
-    r'58b2d249a9c03da76e9b56e5e9f7a2817013dc64';
+    r'5f2fb711733674ba2114a2f59f83ce9206f56c03';
 
 /// Holds the global [PlaybackEffects] and persists changes.
 ///

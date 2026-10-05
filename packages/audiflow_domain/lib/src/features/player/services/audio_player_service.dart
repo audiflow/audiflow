@@ -175,7 +175,6 @@ class AudioPlayerController extends _$AudioPlayerController
   bool? _targetSkipSilence;
   bool? _targetVoiceBoost;
   Future<void>? _engineDrain;
-  bool _isDraining = false;
   final StreamController<PlayerLifecycleEvent> _lifecycleEvents =
       StreamController<PlayerLifecycleEvent>.broadcast();
 
@@ -1198,16 +1197,12 @@ class AudioPlayerController extends _$AudioPlayerController
     final pending = _engineDrain;
     if (pending != null) return pending;
     if (!_hasEngineTarget) return Future<void>.value();
-    final drain = _drainEngine();
-    // A drain whose calls all turn out to be no-ops finishes before
-    // returning; keeping it would make later requests wait on a drain
-    // that no longer consumes them.
-    if (_isDraining) _engineDrain = drain;
-    return drain;
+    // The drain always awaits before finishing, so it is still running
+    // when stored here.
+    return _engineDrain = _drainEngine();
   }
 
   Future<void> _drainEngine() async {
-    _isDraining = true;
     // A failed engine call must not drop a newer pending request, so the
     // loop keeps going and reports only a failure of the final pass.
     Object? failure;
@@ -1218,9 +1213,13 @@ class AudioPlayerController extends _$AudioPlayerController
       // (a disposed player does not update its values).
       while (_hasEngineTarget) {
         failure = null;
-        for (final call in _takeEngineCalls()) {
+        for (final step in [
+          _applyTargetSpeed,
+          _applyTargetSkipSilence,
+          _applyTargetVoiceBoost,
+        ]) {
           try {
-            await call();
+            await step();
           } catch (error, stackTrace) {
             failure = error;
             failureStack = stackTrace;
@@ -1229,39 +1228,38 @@ class AudioPlayerController extends _$AudioPlayerController
       }
       if (failure != null) Error.throwWithStackTrace(failure, failureStack!);
     } finally {
-      _clearEngineTargets();
-      _isDraining = false;
+      _targetSpeed = null;
+      _targetSkipSilence = null;
+      _targetVoiceBoost = null;
       _engineDrain = null;
     }
   }
 
-  /// Consumes the pending targets as engine calls. Each call re-checks
-  /// the engine value when it runs, since an earlier call of the pass may
-  /// have yielded.
-  List<Future<void> Function()> _takeEngineCalls() {
+  // Each step takes its target only when it runs. Taking every target at
+  // the start of a pass would lose a request made while an earlier step
+  // awaits: the request is compared against the engine value, which the
+  // queued step has not changed yet. The engine values update before the
+  // platform call is awaited, so a request made during a step's own call
+  // is compared correctly.
+  Future<void> _applyTargetSpeed() async {
     final speed = _targetSpeed;
-    final skipSilence = _targetSkipSilence;
-    final voiceBoost = _targetVoiceBoost;
-    _clearEngineTargets();
-    return [
-      if (speed != null)
-        () async {
-          if (speed != _player.speed) await _applyToEngine(speed);
-        },
-      if (skipSilence != null) () => _player.setSkipSilenceEnabled(skipSilence),
-      if (voiceBoost != null) () => _applyVoiceBoost(voiceBoost),
-    ];
-  }
-
-  void _clearEngineTargets() {
     _targetSpeed = null;
-    _targetSkipSilence = null;
-    _targetVoiceBoost = null;
+    if (speed == null || speed == _player.speed) return;
+    await _applyToEngine(speed);
   }
 
-  Future<void> _applyVoiceBoost(bool enabled) async {
+  Future<void> _applyTargetSkipSilence() async {
+    final enabled = _targetSkipSilence;
+    _targetSkipSilence = null;
+    if (enabled == null) return;
+    await _player.setSkipSilenceEnabled(enabled);
+  }
+
+  Future<void> _applyTargetVoiceBoost() async {
+    final enabled = _targetVoiceBoost;
+    _targetVoiceBoost = null;
     final effect = ref.read(voiceBoostEffectProvider);
-    if (effect == null || effect.enabled == enabled) return;
+    if (enabled == null || effect == null || effect.enabled == enabled) return;
     await effect.setEnabled(enabled);
   }
 

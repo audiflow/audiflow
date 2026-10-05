@@ -40,9 +40,12 @@ class PlaybackEffectsSettingsController
         PlaybackEffect.voiceBoost => repo.setVoiceBoost(enabled),
       };
     } catch (_) {
-      // A newer toggle replaced the pending state; rolling back would
-      // discard that input.
-      if (state == next) state = previous;
+      // Roll back only this effect, and only while it still holds the
+      // failed value: the other effect is stored under its own key, and a
+      // newer toggle of this one must not be discarded.
+      if (state.isEnabled(effect) == enabled) {
+        state = state.withEffect(effect, enabled: previous.isEnabled(effect));
+      }
       rethrow;
     }
   }

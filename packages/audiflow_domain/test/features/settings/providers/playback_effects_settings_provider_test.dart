@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:riverpod/riverpod.dart';
@@ -8,6 +10,17 @@ class _FailingSettingsRepository extends FakeAppSettingsRepository {
   @override
   Future<void> setVoiceBoost(bool enabled) async =>
       throw StateError('write failed');
+}
+
+/// Fails silence skipping writes once [gate] completes.
+class _SlowFailingSkipSilenceRepository extends FakeAppSettingsRepository {
+  final gate = Completer<void>();
+
+  @override
+  Future<void> setSkipSilence(bool enabled) async {
+    await gate.future;
+    throw StateError('write failed');
+  }
 }
 
 void main() {
@@ -62,5 +75,26 @@ void main() {
     );
 
     expect(state(), PlaybackEffects.off);
+  });
+
+  test('a failed write keeps the other effect toggled meanwhile', () async {
+    container.dispose();
+    final slow = _SlowFailingSkipSilenceRepository();
+    container = createContainer(slow);
+
+    final skip = expectLater(
+      notifier().save(PlaybackEffect.skipSilence, enabled: true),
+      throwsA(isA<StateError>()),
+    );
+    await notifier().save(PlaybackEffect.voiceBoost, enabled: true);
+    slow.gate.complete();
+    await skip;
+
+    // Memory matches what a restart would read.
+    expect(
+      state(),
+      const PlaybackEffects(skipSilence: false, voiceBoost: true),
+    );
+    expect(slow.voiceBoost, isTrue);
   });
 }

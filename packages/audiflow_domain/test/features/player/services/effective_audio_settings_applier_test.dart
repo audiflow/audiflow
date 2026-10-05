@@ -280,5 +280,24 @@ void main() {
         check(player.skipSilenceCalls).deepEquals([true]);
       },
     );
+
+    test('a toggle made while an earlier call runs is not lost', () async {
+      player.gate = Completer<void>();
+
+      final first = controller().applyAudioSettings(
+        skipSilence.copyWith(speed: 1.5),
+      );
+      await pumpEventQueue();
+      // The speed call is in flight; silence skipping is still queued.
+      final second = controller().applyAudioSettings(
+        const AudioSettings(speed: 1.5, effects: PlaybackEffects.off),
+      );
+      player.gate!.complete();
+      await first;
+      await second;
+
+      check(player.skipSilenceEnabled).isFalse();
+      check(player.maxInFlight).equals(1);
+    });
   });
 }

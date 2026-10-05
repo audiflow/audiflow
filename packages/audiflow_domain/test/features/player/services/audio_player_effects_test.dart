@@ -143,6 +143,27 @@ void main() {
       expect(skipSilenceApplied(), isFalse);
     });
 
+    test('a failed write restores the override', () async {
+      overrides.overrides[1] = const AudioSettings(
+        speed: 1.0,
+        effects: PlaybackEffects.off,
+      );
+      await playPodcast(1);
+      overrides.failWrites = true;
+
+      await expectLater(
+        controller().setEffect(
+          PlaybackEffect.voiceBoost,
+          enabled: true,
+          scope: _podcast,
+        ),
+        throwsA(isA<StateError>()),
+      );
+
+      expect(overrideOf(1)!.effects, PlaybackEffects.off);
+      expect(voiceBoostApplied(), isFalse);
+    });
+
     test('enable copies the global effects', () async {
       repo
         ..skipSilence = true
