@@ -4,7 +4,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart' show kTouchSlop;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
 
 import 'scrub_speed.dart';
 import 'seek_release_tracker.dart';
@@ -458,7 +457,6 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
   // that is alone in the gesture arena also wins plain taps (firing start and
   // end with no movement), and a tap must never count as a seek.
   void _beginDrag() {
-    HapticFeedback.lightImpact();
     final start = widget.value.clamp(0.0, 1.0);
     _pointerCancelled = false;
     _fingerTravel = 0.0;
@@ -494,7 +492,8 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
   void _updateScrubSpeed(double distanceFromTrack) {
     final speed = scrubSpeedForDistance(distanceFromTrack);
     if (speed == _scrubSpeed) return;
-    HapticFeedback.lightImpact();
+    // No haptic: listeners found per-band vibration noisy while scrubbing.
+    // The band label between the time labels shows the speed instead.
     setState(() => _scrubSpeed = speed);
   }
 
