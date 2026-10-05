@@ -587,6 +587,89 @@ void main() {
     });
   });
 
+  group('PlayerSeekBar lift-off', () {
+    Duration ms(int value) => Duration(milliseconds: value);
+
+    // Drags right to about 0.6 over 200 ms, without the sheet arena so every move
+    // after the first is applied in full.
+    Future<TestGesture> dragToSixtyPercent(
+      WidgetTester tester,
+      _SeekRecorder recorder,
+    ) async {
+      await tester.pumpWidget(
+        _host(value: 0.5, recorder: recorder, withSheetArena: false),
+      );
+      final gesture = await tester.startGesture(tester.getCenter(_track));
+      await gesture.moveBy(const Offset(1, 0), timeStamp: ms(10));
+      for (var t = 1; t <= 10; t++) {
+        await gesture.moveBy(
+          const Offset(_barWidth * 0.01, 0),
+          timeStamp: ms(10 + 20 * t),
+        );
+      }
+      await tester.pump();
+      return gesture;
+    }
+
+    testWidgets('a roll after holding still commits the settled position', (
+      tester,
+    ) async {
+      final recorder = _SeekRecorder();
+      final gesture = await dragToSixtyPercent(tester, recorder);
+      final settled = recorder.changes.last;
+
+      // Rests until 500 ms, then rolls 6 pt as it lifts.
+      await gesture.moveBy(const Offset(6, 0), timeStamp: ms(520));
+      check(recorder.changes.last).equals(settled + 6 / _barWidth);
+      await gesture.up(timeStamp: ms(540));
+      await tester.pump();
+
+      check(recorder.ends.single).equals(settled);
+      // The parent's displayed value ends on the committed position too.
+      check(recorder.changes.last).equals(settled);
+    });
+
+    testWidgets('a drag still moving at lift-off commits the final position', (
+      tester,
+    ) async {
+      final recorder = _SeekRecorder();
+      final gesture = await dragToSixtyPercent(tester, recorder);
+
+      await gesture.moveBy(const Offset(6, 0), timeStamp: ms(220));
+      await gesture.up(timeStamp: ms(230));
+      await tester.pump();
+
+      check(recorder.ends.single).equals(recorder.changes.last);
+      check(recorder.ends.single).isGreaterThan(0.6 + 5 / _barWidth);
+    });
+
+    testWidgets('respects the fine-scrub speed', (tester) async {
+      final recorder = _SeekRecorder();
+      final gesture = await dragToSixtyPercent(tester, recorder);
+      // Into the one-eighth band, then hold still.
+      await gesture.moveBy(const Offset(0, 160), timeStamp: ms(220));
+      final settled = recorder.changes.last;
+      await gesture.moveBy(const Offset(16, 0), timeStamp: ms(520));
+      check(recorder.changes.last).equals(settled + 2 / _barWidth);
+      await gesture.up(timeStamp: ms(540));
+      await tester.pump();
+
+      check(recorder.ends.single).equals(settled);
+    });
+
+    testWidgets('a cancelled drag commits its current position', (
+      tester,
+    ) async {
+      final recorder = _SeekRecorder();
+      final gesture = await dragToSixtyPercent(tester, recorder);
+      await gesture.moveBy(const Offset(6, 0), timeStamp: ms(520));
+      await gesture.cancel();
+      await tester.pump();
+
+      check(recorder.ends.single).equals(recorder.changes.last);
+    });
+  });
+
   group('PlayerSeekBar tooltip', () {
     // These tests assert drag-to-value math. Competing with the sheet's
     // vertical recognizer costs a drag its first touch slop (18pt), so they
