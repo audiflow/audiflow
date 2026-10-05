@@ -1422,6 +1422,58 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String sleepTimerSemanticsLabel(String status) {
+    return 'スリープタイマー、$status';
+  }
+
+  @override
+  String sleepTimerSemanticsStatusAndTimeLeft(String status, String timeLeft) {
+    return '$status、$timeLeft';
+  }
+
+  @override
+  String get sleepTimerSemanticsEndOfEpisode => 'エピソードの終わりで停止';
+
+  @override
+  String get sleepTimerSemanticsEndOfChapter => 'チャプターの終わりで停止';
+
+  @override
+  String sleepTimerSemanticsEpisodes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countエピソード後に停止',
+      one: 'このエピソードの終わりで停止',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String sleepTimerSemanticsTimeLeft(String time) {
+    return '残り$time';
+  }
+
+  @override
+  String sleepTimerSemanticsTimeLeftPlusEpisodes(String time, int count) {
+    return '残り$time、さらに$countエピソード';
+  }
+
+  @override
+  String sleepTimerSpokenHours(int count) {
+    return '$count時間';
+  }
+
+  @override
+  String sleepTimerSpokenSeconds(int count) {
+    return '$count秒';
+  }
+
+  @override
+  String sleepTimerSpokenHoursMinutes(String hours, String minutes) {
+    return '$hours$minutes';
+  }
+
+  @override
   String get onboardingCarouselSkip => 'スキップ';
 
   @override

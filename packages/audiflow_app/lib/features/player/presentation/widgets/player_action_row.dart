@@ -7,7 +7,6 @@ import 'package:material_symbols_icons/symbols.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'audio_sheet.dart';
 import 'sleep_timer_icon_button.dart';
-import 'sleep_timer_status_label.dart';
 
 /// Bottom action row of the full player.
 ///
@@ -27,7 +26,7 @@ class PlayerActionRow extends StatelessWidget {
       children: [
         const Expanded(child: Center(child: AudioButton())),
         if (picker != null) Expanded(child: Center(child: picker)),
-        const Expanded(child: Center(child: _SleepTimerSlot())),
+        const Expanded(child: Center(child: SleepTimerIconButton())),
       ],
     );
   }
@@ -40,14 +39,7 @@ class AudioButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    // The speed in effect for the now-playing podcast (override or
-    // global); the global speed while the override is still loading.
-    final globalSpeed = ref.watch(
-      playbackSpeedSettingsControllerProvider.select((s) => s.speed),
-    );
-    final speed =
-        ref.watch(nowPlayingAudioSettingsProvider)?.settings.speed ??
-        globalSpeed;
+    final speed = ref.watch(nowPlayingSpeedProvider);
     final label = PlaybackSpeedScale.label(speed);
     return TextButton.icon(
       icon: const Icon(Symbols.speed),
@@ -57,49 +49,6 @@ class AudioButton extends ConsumerWidget {
         style: Theme.of(context).textTheme.labelLarge,
       ),
       onPressed: () => showAudioSheet(context),
-    );
-  }
-}
-
-class _SleepTimerSlot extends ConsumerWidget {
-  const _SleepTimerSlot();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final isActive = ref.watch(
-      sleepTimerControllerProvider.select(
-        (state) => state.config is! SleepTimerConfigOff,
-      ),
-    );
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const SleepTimerIconButton(),
-        // Only an active timer has a label; an empty tappable box would
-        // be an unlabeled button for screen readers.
-        if (isActive) const Flexible(child: _SleepTimerLabelButton()),
-      ],
-    );
-  }
-}
-
-/// Status label that opens the sleep-timer sheet, giving the icon a
-/// larger tap target while a timer runs.
-class _SleepTimerLabelButton extends StatelessWidget {
-  const _SleepTimerLabelButton();
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      child: InkWell(
-        customBorder: const StadiumBorder(),
-        onTap: () => showSleepTimerSheet(context),
-        child: const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-          child: SleepTimerStatusLabel(),
-        ),
-      ),
     );
   }
 }

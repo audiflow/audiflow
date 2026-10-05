@@ -33,6 +33,9 @@ Widget _host({
   bool withSheetArena = true,
   double width = _barWidth,
   Map<ScrubSpeed, String> scrubSpeedLabels = _scrubLabels,
+  String trailingLabel = '-09:00',
+  Widget? trailingLabelIcon,
+  String? trailingLabelSemanticsLabel,
 }) {
   return MaterialApp(
     home: Scaffold(
@@ -49,7 +52,9 @@ Widget _host({
               segments: segments,
               tooltipBuilder: tooltipBuilder,
               leadingLabel: '01:00',
-              trailingLabel: '-09:00',
+              trailingLabel: trailingLabel,
+              trailingLabelIcon: trailingLabelIcon,
+              trailingLabelSemanticsLabel: trailingLabelSemanticsLabel,
               scrubSpeedLabels: scrubSpeedLabels,
               semanticValueFormatter: (value) => 'at ${(value * 100).round()}%',
               adjustable: adjustable,
@@ -511,6 +516,78 @@ void main() {
 
       final node = tester.getSemantics(find.text('-09:00'));
       check(node.flagsCollection.isButton).isTrue();
+      handle.dispose();
+    });
+
+    testWidgets('shows a glyph before the trailing label', (tester) async {
+      const glyphKey = Key('glyph');
+      await tester.pumpWidget(
+        _host(
+          value: 0.1,
+          recorder: _SeekRecorder(),
+          trailingLabelIcon: const Icon(Icons.bedtime, key: glyphKey),
+        ),
+      );
+
+      final glyph = tester.getRect(find.byKey(glyphKey));
+      final label = tester.getRect(find.text('-09:00'));
+      check(glyph.right).isLessOrEqual(label.left);
+    });
+
+    testWidgets('a long trailing label scales down instead of overflowing', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _host(
+          value: 0.1,
+          recorder: _SeekRecorder(),
+          width: 160,
+          trailingLabel: '12:34:56 +12',
+          trailingLabelIcon: const Icon(Icons.bedtime),
+        ),
+      );
+
+      check(tester.takeException()).isNull();
+      final bar = tester.getRect(find.byType(PlayerSeekBar));
+      final label = tester.getRect(find.text('12:34:56 +12'));
+      check(label.right).isLessOrEqual(bar.right);
+    });
+
+    testWidgets('tapping the glyph also calls onTrailingLabelTap', (
+      tester,
+    ) async {
+      const glyphKey = Key('glyph');
+      final recorder = _SeekRecorder();
+      await tester.pumpWidget(
+        _host(
+          value: 0.1,
+          recorder: recorder,
+          trailingLabelIcon: const Icon(Icons.bedtime, key: glyphKey),
+        ),
+      );
+
+      await tester.tap(find.byKey(glyphKey));
+      check(recorder.trailingTaps).equals(1);
+    });
+
+    testWidgets('trailing semantics label replaces the visible text', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(
+        _host(
+          value: 0.1,
+          recorder: _SeekRecorder(),
+          trailingLabelSemanticsLabel: 'Sleep timer, 9 minutes left',
+        ),
+      );
+
+      final node = tester.getSemantics(
+        find.bySemanticsLabel('Sleep timer, 9 minutes left'),
+      );
+      check(node.flagsCollection.isButton).isTrue();
+      check(node.getSemanticsData().hasAction(SemanticsAction.tap)).isTrue();
+      check(find.bySemanticsLabel('-09:00').evaluate()).isEmpty();
       handle.dispose();
     });
   });
