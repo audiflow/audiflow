@@ -152,6 +152,24 @@ void main() {
       check(harness.state).isNull();
     });
 
+    test('a rejected go back does not undo a later dismissal', () async {
+      await harness.controller.seekWithUndo(const Duration(minutes: 20));
+      harness.player
+        ..holdSeeks = true
+        ..rejectSeeks = true;
+      final goBack = harness.controller.goBack();
+      harness.player
+        ..holdSeeks = false
+        ..rejectSeeks = false;
+      await harness.controller.seekWithUndo(const Duration(minutes: 40));
+      harness.controller.dismiss();
+      harness.player.rejectSeeks = true;
+      harness.player.held.single.complete();
+
+      await check(goBack).throws<StateError>();
+      check(harness.state).isNull();
+    });
+
     test('a rejected go back brings the pill back for a retry', () {
       fakeAsync((async) {
         harness.controller.seekWithUndo(const Duration(minutes: 20));

@@ -85,15 +85,17 @@ class SeekUndoController extends _$SeekUndoController {
     // gap before it runs.
     final episodeUrl = ref.read(nowPlayingControllerProvider)?.episodeUrl;
     if (episodeUrl != undo.episodeUrl) return;
+    final generation = _offerGeneration;
     try {
       await ref
           .read(audioPlayerControllerProvider.notifier)
           .seekNowPlaying(undo.origin);
     } on Object {
-      // Not restored over a newer offer or onto another episode.
+      // Not restored once a later jump or dismissal has taken over, or onto
+      // another episode.
       final stillSameEpisode =
           ref.read(nowPlayingControllerProvider)?.episodeUrl == undo.episodeUrl;
-      if (state == null && stillSameEpisode) _offer(undo);
+      if (generation == _offerGeneration && stillSameEpisode) _offer(undo);
       rethrow;
     }
   }
