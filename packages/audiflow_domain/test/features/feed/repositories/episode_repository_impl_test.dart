@@ -783,11 +783,10 @@ void main() {
         'ep-notes',
       );
       final chapters = await chapterDatasource.getByEpisodeId(episode!.id);
-      expect(chapters.map((c) => c.title), ['Intro', 'Topic']);
-      expect(
+      check(chapters.map((c) => c.title)).deepEquals(['Intro', 'Topic']);
+      check(
         chapters.map((c) => c.source),
-        everyElement(ChapterSource.description),
-      );
+      ).every((it) => it.equals(ChapterSource.description));
     });
 
     test('feed chapters replace description chapters', () async {
@@ -813,8 +812,8 @@ void main() {
         'ep-upgrade',
       );
       final chapters = await chapterDatasource.getByEpisodeId(episode!.id);
-      expect(chapters.single.title, 'Feed');
-      expect(chapters.single.source, ChapterSource.podlove);
+      check(chapters.single.title).equals('Feed');
+      check(chapters.single.source).equals(ChapterSource.podlove);
     });
 
     test('handles empty media metas list', () async {

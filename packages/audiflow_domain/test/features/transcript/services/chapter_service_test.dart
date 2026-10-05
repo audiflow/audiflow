@@ -288,14 +288,15 @@ void main() {
         durationMs: const Duration(minutes: 30).inMilliseconds,
       );
 
-      expect(await service.ensureChapters(episodeId), isTrue);
+      check(await service.ensureChapters(episodeId)).isTrue();
       final chapters = await chapterDatasource.getByEpisodeId(episodeId);
-      expect(chapters.map((c) => c.title), ['オープニング', '人生の選択', 'イベント']);
-      expect(
+      check(
+        chapters.map((c) => c.title),
+      ).deepEquals(['オープニング', '人生の選択', 'イベント']);
+      check(
         chapters.map((c) => c.source),
-        everyElement(ChapterSource.description),
-      );
-      expect(await service.ensureChapters(episodeId), isFalse);
+      ).every((it) => it.equals(ChapterSource.description));
+      check(await service.ensureChapters(episodeId)).isFalse();
     });
 
     test('leaves feed chapters alone', () async {
@@ -307,8 +308,8 @@ void main() {
         episodeId: [pscChapter(episodeId, 'From psc')],
       }, source: ChapterSource.podlove);
 
-      expect(await service.ensureChapters(episodeId), isFalse);
-      expect(await storedTitles(episodeId), ['From psc']);
+      check(await service.ensureChapters(episodeId)).isFalse();
+      check(await storedTitles(episodeId)).deepEquals(['From psc']);
     });
 
     test('falls back to notes when JSON fails, JSON wins later', () async {
@@ -316,12 +317,14 @@ void main() {
       failWith(DioExceptionType.connectionError);
 
       await service.ensureChapters(episodeId);
-      expect(await storedTitles(episodeId), ['オープニング', '人生の選択', 'イベント']);
+      check(
+        await storedTitles(episodeId),
+      ).deepEquals(['オープニング', '人生の選択', 'イベント']);
 
       now = now.add(ChapterService.retryCooldown);
       respondWith(_validJson);
       await service.ensureChapters(episodeId);
-      expect(await storedTitles(episodeId), ['Intro', 'Topic']);
+      check(await storedTitles(episodeId)).deepEquals(['Intro', 'Topic']);
     });
 
     test('refreshes and drops chapters as the notes change', () async {
@@ -335,12 +338,14 @@ void main() {
         chaptersUrl: null,
         description: '0:00 New A<br>1:00 New B<br>2:00 New C',
       );
-      expect(await service.ensureChapters(episodeId), isTrue);
-      expect(await storedTitles(episodeId), ['New A', 'New B', 'New C']);
+      check(await service.ensureChapters(episodeId)).isTrue();
+      check(
+        await storedTitles(episodeId),
+      ).deepEquals(['New A', 'New B', 'New C']);
 
       await insertEpisode(chaptersUrl: null, description: 'No list now');
-      expect(await service.ensureChapters(episodeId), isTrue);
-      expect(await storedTitles(episodeId), isEmpty);
+      check(await service.ensureChapters(episodeId)).isTrue();
+      check(await storedTitles(episodeId)).isEmpty();
     });
 
     test('derives nothing from notes without a timestamp list', () async {
@@ -349,8 +354,8 @@ void main() {
         description: 'Just talking at 12:30 today.',
       );
 
-      expect(await service.ensureChapters(episodeId), isFalse);
-      expect(await storedTitles(episodeId), isEmpty);
+      check(await service.ensureChapters(episodeId)).isFalse();
+      check(await storedTitles(episodeId)).isEmpty();
     });
   });
 }

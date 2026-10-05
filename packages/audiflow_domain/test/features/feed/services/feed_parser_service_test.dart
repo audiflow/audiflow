@@ -223,14 +223,12 @@ void main() {
       )) {}
 
       final byGuid = {for (final m in metas) m.guid: m};
-      expect(byGuid.keys, unorderedEquals(['ep-notes', 'ep-psc']));
-      expect(byGuid['ep-notes']!.descriptionChapters.map((c) => c.title), [
-        'Intro',
-        'Topic',
-        'Outro',
-      ]);
-      expect(byGuid['ep-psc']!.hasDescriptionChapters, isFalse);
-      expect(byGuid['ep-psc']!.hasChapters, isTrue);
+      check(byGuid.keys).unorderedEquals(['ep-notes', 'ep-psc']);
+      check(
+        byGuid['ep-notes']!.descriptionChapters.map((c) => c.title),
+      ).deepEquals(['Intro', 'Topic', 'Outro']);
+      check(byGuid['ep-psc']!.hasDescriptionChapters).isFalse();
+      check(byGuid['ep-psc']!.hasChapters).isTrue();
     });
   });
 

@@ -1,4 +1,5 @@
 import 'package:audiflow_podcast/audiflow_podcast.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 const _parser = DescriptionChaptersParser();
@@ -31,7 +32,7 @@ void main() {
         episodeDuration: const Duration(minutes: 58),
       );
 
-      expect(chapters.map((c) => c.title), [
+      check(chapters.map((c) => c.title)).deepEquals([
         'オープニング・改名のご報告',
         '人生の選択とエレベーターでの挨拶',
         '餃子の王将とイベントでの出会い',
@@ -42,8 +43,12 @@ void main() {
         '暗号を解く方法を発見したら発表すべきか',
         'イベントのお知らせ',
       ]);
-      expect(chapters[1].startTime, const Duration(minutes: 2, seconds: 57));
-      expect(chapters.last.startTime, const Duration(minutes: 52, seconds: 41));
+      check(
+        chapters[1].startTime,
+      ).equals(const Duration(minutes: 2, seconds: 57));
+      check(
+        chapters.last.startTime,
+      ).equals(const Duration(minutes: 52, seconds: 41));
     });
 
     test('an English plain-text list with separators', () {
@@ -55,12 +60,14 @@ In this episode we talk about things.
 12:40: Listener questions
 ''';
 
-      expect(_titles(description), [
+      check(_titles(description)).deepEquals([
         'Intro',
         'The main topic',
         'Listener questions',
       ]);
-      expect(_starts(description)[1], const Duration(minutes: 5, seconds: 12));
+      check(
+        _starts(description)[1],
+      ).equals(const Duration(minutes: 5, seconds: 12));
     });
 
     test('bullet-prefixed list items', () {
@@ -68,7 +75,7 @@ In this episode we talk about things.
           '<ul><li>• 00:00 Opening</li><li>• 10:00 News</li>'
           '<li>• 20:00 Closing</li></ul>';
 
-      expect(_titles(description), ['Opening', 'News', 'Closing']);
+      check(_titles(description)).deepEquals(['Opening', 'News', 'Closing']);
     });
 
     test('bracketed times and a paragraph per line', () {
@@ -76,21 +83,23 @@ In this episode we talk about things.
           '<p>[00:00] Welcome</p><p>[03:30] Guest intro</p>'
           '<p>(15:00) Deep dive</p>';
 
-      expect(_titles(description), ['Welcome', 'Guest intro', 'Deep dive']);
+      check(
+        _titles(description),
+      ).deepEquals(['Welcome', 'Guest intro', 'Deep dive']);
     });
 
     test('Japanese brackets and wave dashes without a space', () {
-      expect(_titles('【00:00】オープニング<br>【05:10】本編<br>【40:00】お便り'), [
+      check(_titles('【00:00】オープニング<br>【05:10】本編<br>【40:00】お便り')).deepEquals([
         'オープニング',
         '本編',
         'お便り',
       ]);
-      expect(_titles('[00:00]Intro\n[01:00]Topic\n[02:00]Outro'), [
+      check(_titles('[00:00]Intro\n[01:00]Topic\n[02:00]Outro')).deepEquals([
         'Intro',
         'Topic',
         'Outro',
       ]);
-      expect(_titles('00:00〜オープニング\n03:00〜本編\n09:00〜エンディング'), [
+      check(_titles('00:00〜オープニング\n03:00〜本編\n09:00〜エンディング')).deepEquals([
         'オープニング',
         '本編',
         'エンディング',
@@ -98,10 +107,9 @@ In this episode we talk about things.
     });
 
     test('entity separators such as &ndash;', () {
-      expect(
+      check(
         _titles('0:00 &ndash; Intro<br>2:00 &mdash; Topic<br>4:00 &ndash; End'),
-        ['Intro', 'Topic', 'End'],
-      );
+      ).deepEquals(['Intro', 'Topic', 'End']);
     });
 
     test('hour-long episodes with h:mm:ss times', () {
@@ -112,7 +120,7 @@ In this episode we talk about things.
 1:30:00 Wrap up
 ''';
 
-      expect(_starts(description), [
+      check(_starts(description)).deepEquals([
         Duration.zero,
         const Duration(minutes: 45, seconds: 10),
         const Duration(hours: 1, minutes: 2, seconds: 3),
@@ -121,7 +129,7 @@ In this episode we talk about things.
     });
 
     test('a short intro before the first entry', () {
-      expect(_titles('0:08 Topic A\n4:00 Topic B\n9:00 Topic C'), [
+      check(_titles('0:08 Topic A\n4:00 Topic B\n9:00 Topic C')).deepEquals([
         'Topic A',
         'Topic B',
         'Topic C',
@@ -129,7 +137,9 @@ In this episode we talk about things.
     });
 
     test('decodes entities in titles', () {
-      expect(_titles('0:00 Q&amp;A<br>1:00 Tom &amp; Jerry<br>2:00 End'), [
+      check(
+        _titles('0:00 Q&amp;A<br>1:00 Tom &amp; Jerry<br>2:00 End'),
+      ).deepEquals([
         'Q&A',
         'Tom & Jerry',
         'End',
@@ -149,7 +159,7 @@ Links mentioned:
 4:00 Second list C
 ''';
 
-      expect(_titles(description), [
+      check(_titles(description)).deepEquals([
         'First list A',
         'First list B',
         'First list C',
@@ -166,23 +176,23 @@ Chapters
 2:00 C
 ''';
 
-      expect(_titles(description), ['A', 'B', 'C']);
+      check(_titles(description)).deepEquals(['A', 'B', 'C']);
     });
   });
 
   group('DescriptionChaptersParser rejects', () {
     test('a list that does not start near zero', () {
-      expect(_titles('0:11 A\n1:00 B\n2:00 C'), isEmpty);
-      expect(_titles('5:00 A\n10:00 B\n15:00 C'), isEmpty);
+      check(_titles('0:11 A\n1:00 B\n2:00 C')).isEmpty();
+      check(_titles('5:00 A\n10:00 B\n15:00 C')).isEmpty();
     });
 
     test('times that are not strictly increasing', () {
-      expect(_titles('0:00 A\n5:00 B\n3:00 C'), isEmpty);
-      expect(_titles('0:00 A\n5:00 B\n5:00 C'), isEmpty);
+      check(_titles('0:00 A\n5:00 B\n3:00 C')).isEmpty();
+      check(_titles('0:00 A\n5:00 B\n5:00 C')).isEmpty();
     });
 
     test('fewer than three entries', () {
-      expect(_titles('0:00 Intro\n10:00 Outro'), isEmpty);
+      check(_titles('0:00 Intro\n10:00 Outro')).isEmpty();
     });
 
     test('timestamps inside sentences', () {
@@ -190,36 +200,35 @@ Chapters
           'We meet at 0:00 sharp. At 12:30 we discuss news, and around '
           '45:00 we wrap up.<br>See you at 1:00:00 next week.';
 
-      expect(_titles(description), isEmpty);
+      check(_titles(description)).isEmpty();
     });
 
     test('a start time at or after the episode duration', () {
-      expect(
+      check(
         _titles(
           '0:00 A\n10:00 B\n30:00 C',
           duration: const Duration(minutes: 30),
         ),
-        isEmpty,
-      );
+      ).isEmpty();
     });
 
     test('lines without a title', () {
-      expect(_titles('0:00\n1:00 -\n2:00 C'), isEmpty);
+      check(_titles('0:00\n1:00 -\n2:00 C')).isEmpty();
     });
 
     test('out-of-range fields', () {
-      expect(_titles('0:00 A\n1:75 B\n2:00 C'), isEmpty);
+      check(_titles('0:00 A\n1:75 B\n2:00 C')).isEmpty();
     });
 
     test('pathological separator and bracket runs within a second', () {
       final noisy = '0:00 A${'- ' * 20000}x\n${'<' * 20000}\n1:00 B\n2:00 C';
       final watch = Stopwatch()..start();
       _parser.parse(noisy);
-      expect(watch.elapsed, lessThan(const Duration(seconds: 1)));
+      check(watch.elapsed).isLessThan(const Duration(seconds: 1));
     });
 
     test('an empty description', () {
-      expect(_titles(''), isEmpty);
+      check(_titles('')).isEmpty();
     });
   });
 
@@ -260,9 +269,9 @@ Chapters
       List<String> titles(String guid) =>
           byGuid[guid]!.descriptionChapters.map((c) => c.title).toList();
 
-      expect(titles('notes'), ['A', 'B', 'C']);
-      expect(titles('encoded'), ['X', 'Y', 'Z']);
-      expect(titles('psc'), isEmpty);
+      check(titles('notes')).deepEquals(['A', 'B', 'C']);
+      check(titles('encoded')).deepEquals(['X', 'Y', 'Z']);
+      check(titles('psc')).isEmpty();
     });
   });
 }
