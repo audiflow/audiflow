@@ -5,7 +5,7 @@ void main() {
   test('lifecycle events are distinct sealed variants', () {
     const a = EpisodeCompletedLifecycle();
     const b = EpisodeSwitchedLifecycle();
-    const c = SeekLifecycle(Duration(seconds: 30));
+    const c = SeekLifecycle(Duration(seconds: 30), seekId: 1);
 
     expect(a, isA<PlayerLifecycleEvent>());
     expect(b, isA<PlayerLifecycleEvent>());
