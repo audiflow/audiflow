@@ -34,6 +34,7 @@ A podcast catalogue is not a uniform thing. Some shows publish a flat stream of 
 - **Persistence**: For a subscribed podcast, every view-mode, filter, and sort change is written immediately — there is no save step — and the screen reactively reflects the stored value. Reopening the podcast restores the last-used view mode, filter, and sort.
 - **Non-subscribed podcasts**: A podcast the listener has not subscribed to (opened from search or a deep link) still supports all the same controls, but the choices are held only for the duration of that visit and start from defaults — there is nothing yet to persist them against.
 - **View-mode self-correction**: If a podcast's stored preference says "show a playlist" but the grouping that playlist belonged to is no longer available, the screen falls back to the flat episode list and rewrites the stored preference to match, so the view does not silently flip back later.
+- **Audio settings**: The app bar menu has an "Audio settings" entry (once the podcast has a local record) that opens the player's Audio sheet for this podcast, so its per-podcast speed override can be switched on, edited, or removed while nothing is playing. Edits made here reach the player immediately when this podcast is the one playing.
 - **Empty and error cases**: A podcast with no feed URL, or whose feed fails to load, shows a dedicated empty or error state with a retry affordance rather than a blank list. A filter that matches nothing shows an empty list under the still-visible chips.
 
 ## Capabilities
@@ -54,6 +55,7 @@ A podcast catalogue is not a uniform thing. Some shows publish a flat stream of 
 - Does not play episodes or define playback-completion semantics. Starting, pausing, resuming, and the played / in-progress / unplayed status that the filter chips key on all belong to FR 04 (Audio playback); this screen only reads that status to filter and only hands episodes off to be played.
 - Does not display transcripts or chapters — that is FR 08 (Transcript and chapters). The detail screen routes into an episode; transcript and chapter rendering is owned there.
 - Does not own the play-order cascade or the play-order bottom sheet. The group → playlist → podcast → global resolution and the sheet that edits a podcast's order are FR 11 (Play order); the detail screen only opens that sheet and consumes the resolved order.
+- Does not own audio settings or their per-podcast override. The Audio sheet, the override switch, and override -> global resolution are FR 04 (Audio playback); the detail screen only opens that sheet for its podcast.
 - Does not download episodes or manage the download queue — that is FR 05 (Download and queue).
 - Does not author, host, or resolve smart-playlist configuration, and does not decide whether a low-value auto-detected grouping should be suppressed; it consumes the resolved groupings and the visibility decision made upstream.
 

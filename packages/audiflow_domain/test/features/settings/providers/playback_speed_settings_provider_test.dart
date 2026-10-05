@@ -57,6 +57,16 @@ void main() {
     expect(repo.playbackSpeed, 1.3);
   });
 
+  test('recordRecent adds a recent speed without changing the speed', () async {
+    await notifier().recordRecent(2.0);
+
+    final state = container.read(playbackSpeedSettingsControllerProvider);
+    expect(state.speed, 1.5);
+    expect(state.recentSpeeds, [2.0, 1.5]);
+    expect(repo.playbackSpeed, 1.5);
+    expect(repo.recentPlaybackSpeeds, [2.0, 1.5]);
+  });
+
   test('chip speeds stay ascending regardless of recency', () async {
     await notifier().save(0.8, commit: true);
     await notifier().save(2.0, commit: true);

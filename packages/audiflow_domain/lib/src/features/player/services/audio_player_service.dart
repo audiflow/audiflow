@@ -15,7 +15,9 @@ import '../../feed/repositories/episode_repository_impl.dart';
 import '../../monitoring/models/analytics_event.dart';
 import '../../monitoring/providers/analytics_providers.dart';
 import '../../queue/services/queue_service.dart';
+import '../../settings/models/audio_settings_scope.dart';
 import '../../settings/providers/playback_speed_settings_provider.dart';
+import '../../settings/providers/podcast_audio_override_provider.dart';
 import '../../settings/providers/settings_providers.dart';
 import '../../subscription/repositories/subscription_repository_impl.dart';
 import '../models/now_playing_info.dart';
@@ -23,6 +25,7 @@ import '../models/playback_progress.dart';
 import '../models/playback_state.dart';
 import '../repositories/playback_history_repository_impl.dart';
 import 'audio_playback_controller.dart';
+import 'effective_audio_settings_applier.dart';
 import 'listen_session_tracker.dart';
 import 'now_playing_controller.dart';
 import 'playback_history_service.dart';
@@ -124,6 +127,10 @@ class AudioPlayerController extends _$AudioPlayerController
   // playback really starts, and seek() closes/reopens explicitly.
   bool _isPreparingPlay = false;
   bool _isSeeking = false;
+
+  // Latest speed requested through [applySpeed] while [_speedDrain] runs.
+  double? _targetSpeed;
+  Future<void>? _speedDrain;
   final StreamController<PlayerLifecycleEvent> _lifecycleEvents =
       StreamController<PlayerLifecycleEvent>.broadcast();
 
@@ -538,10 +545,15 @@ class AudioPlayerController extends _$AudioPlayerController
         }
       }
 
-      // Apply persisted playback speed
-      final settingsRepo = ref.read(appSettingsRepositoryProvider);
-      final speed = settingsRepo.getPlaybackSpeed();
-      await _player.setSpeed(speed);
+      // Apply the episode's podcast override, or the global speed.
+      // Resolve the podcast the way NowPlayingInfo exposes it, so this
+      // agrees with effectiveAudioSettingsApplier and the Audio button.
+      final speed = await _resolveSpeed(
+        metadata?.episode?.podcastId ?? episode?.podcastId,
+      );
+      // A newer play() may have started while the override loaded; its
+      // own resolution owns the speed now.
+      if (_currentUrl == url) await applySpeed(speed);
 
       // Notify history service of playback start
       if (_currentEpisodeId != null) {
@@ -888,6 +900,43 @@ class AudioPlayerController extends _$AudioPlayerController
     return _currentUrl == url;
   }
 
+  /// Seeks the now-playing episode to [position].
+  ///
+  /// With audio loaded this seeks the player. After a restore, before any
+  /// audio is loaded, it moves the saved position instead so the display
+  /// reflects the seek and the next play() starts there.
+  Future<void> seekNowPlaying(Duration position) async {
+    if (currentUrl != null) return seek(position);
+    await _saveSeekWithoutAudio(position);
+  }
+
+  Future<void> _saveSeekWithoutAudio(Duration position) async {
+    final nowPlaying = ref.read(nowPlayingControllerProvider);
+    if (nowPlaying == null) return;
+    // Mirror seek()'s clamp so a chapter start past the end (bad feed data)
+    // cannot become the resume position.
+    final clamped = _clampToKnownDuration(position, nowPlaying.totalDuration);
+    ref
+        .read(nowPlayingControllerProvider.notifier)
+        .setNowPlaying(nowPlaying.copyWith(savedPosition: clamped));
+    final episode = nowPlaying.episode;
+    if (episode == null) return;
+    // Persist so play() seeks to this position.
+    await ref
+        .read(playbackHistoryRepositoryProvider)
+        .saveProgress(
+          episodeId: episode.id,
+          positionMs: clamped.inMilliseconds,
+        );
+  }
+
+  static Duration _clampToKnownDuration(Duration position, Duration? duration) {
+    if (position.isNegative) return Duration.zero;
+    // Zero means unknown, as elsewhere in the player.
+    if (duration == null || duration == Duration.zero) return position;
+    return duration < position ? duration : position;
+  }
+
   /// Seeks to the specified position.
   ///
   /// Clamps position between zero and duration to prevent invalid seeks.
@@ -960,39 +1009,149 @@ class AudioPlayerController extends _$AudioPlayerController
     await seek(_player.position - Duration(seconds: seconds));
   }
 
-  /// Sets the playback speed and persists it to settings.
+  /// Persists [speed] to [scope] and applies it to the player when
+  /// [scope] is the one the now-playing podcast resolves to.
   ///
-  /// [speed] is snapped to [PlaybackSpeedScale.steps]. Pass
-  /// [transient] for intermediate slider steps during a drag: the speed
-  /// is applied and persisted, but it is neither recorded as a recent
-  /// speed nor reported to analytics. The final value of the gesture
-  /// must then be committed with a non-transient call.
-  @override
-  Future<void> setSpeed(double speed, {bool transient = false}) async {
+  /// [speed] is snapped to [PlaybackSpeedScale.steps]. Editing the global
+  /// scope while the now-playing podcast has an override persists the
+  /// global value without touching the player, and a podcast scope with
+  /// no override is ignored rather than creating one. Pass [transient]
+  /// for intermediate slider steps during a drag: the speed is applied
+  /// and held in memory, but not persisted, recorded as a recent speed,
+  /// or reported to analytics. The final value of the gesture must then
+  /// be committed with a non-transient call.
+  ///
+  /// Committed speeds are recorded in the shared recent-speed list
+  /// whichever scope they were saved to.
+  Future<void> setSpeed(
+    double speed, {
+    required AudioSettingsScope scope,
+    bool transient = false,
+  }) async {
     final snapped = PlaybackSpeedScale.snap(speed);
-    // Split the segment so each session has a single speed.
-    final segmentIds = _listenSession.openIds;
-    final splitSegment = segmentIds != null && snapped != _player.speed;
-    if (splitSegment) _closeListenSession(ListenEndReason.speedChange);
-    // Start saving before awaiting the engine: save() updates the speed
+    // Start saving before awaiting the engine: saving updates the speed
     // state synchronously, so speed controls follow a fast slider drag
     // instead of trailing behind queued engine calls.
-    final saved = ref
-        .read(playbackSpeedSettingsControllerProvider.notifier)
-        .save(snapped, commit: !transient);
-    await _player.setSpeed(snapped);
-    // Playback may have paused while the engine applied the speed; the
-    // stream has then already closed the segment and must not reopen it.
-    if (splitSegment && _player.playing) {
-      _openListenSession(ids: segmentIds);
+    final saved = _saveSpeed(scope, snapped, transient: transient);
+    // A failed save must not surface as an unhandled error while the
+    // engine call is awaited; it is still rethrown by `await saved` below.
+    saved.ignore();
+    if (ref.read(nowPlayingAudioSettingsProvider)?.scope == scope) {
+      await applySpeed(snapped);
     }
-    await saved;
-    if (transient) return;
+    if (!await saved || transient) return;
     unawaited(
       ref
           .read(analyticsServiceProvider)
           .log(PlaybackSpeedChanged(speed: snapped)),
     );
+  }
+
+  /// Returns false when nothing was saved.
+  Future<bool> _saveSpeed(
+    AudioSettingsScope scope,
+    double speed, {
+    required bool transient,
+  }) async {
+    final global = ref.read(playbackSpeedSettingsControllerProvider.notifier);
+    switch (scope) {
+      case GlobalAudioSettingsScope():
+        await global.save(speed, commit: !transient);
+      case PodcastAudioSettingsScope(:final podcastId):
+        final override = ref.read(
+          podcastAudioOverrideControllerProvider(podcastId).notifier,
+        );
+        // The override was switched off under a pending edit: drop the
+        // edit rather than recording a speed nothing saved.
+        if (!override.hasOverride) return false;
+        // Record only once the write succeeded: a failed write rolls the
+        // override back, and the chip must not offer a speed never saved.
+        await override.saveSpeed(speed, persist: !transient);
+        if (!transient) await global.recordRecent(speed);
+    }
+    return true;
+  }
+
+  /// Applies [speed] to the player without persisting it anywhere.
+  ///
+  /// Settings changes reach the player through [setSpeed],
+  /// `effectiveAudioSettingsApplierProvider`, and [play]; this is their
+  /// single engine step. It is idempotent and serialized: a speed equal
+  /// to the one already applied or pending is a no-op, at most one engine
+  /// call runs at a time, and requests made while one runs collapse into
+  /// the latest. Both setSpeed and the applier request the same change, so
+  /// without this every slider step would reach the engine twice, with
+  /// the calls overlapping on the platform channel.
+  Future<void> applySpeed(double speed) {
+    final snapped = PlaybackSpeedScale.snap(speed);
+    final pending = _speedDrain;
+    if (snapped == (_targetSpeed ?? _player.speed)) {
+      return pending ?? Future<void>.value();
+    }
+    _targetSpeed = snapped;
+    return pending ?? (_speedDrain = _drainSpeed());
+  }
+
+  Future<void> _drainSpeed() async {
+    // A failed engine call must not drop a newer pending request, so the
+    // loop keeps going and reports only a failure of the final speed.
+    Object? failure;
+    StackTrace? failureStack;
+    try {
+      // Each pass consumes the target, so the loop is bounded by the
+      // requests made while it runs, even when the engine ignores a call
+      // (a disposed player does not update `speed`).
+      for (var target = _targetSpeed; target != null; target = _targetSpeed) {
+        _targetSpeed = null;
+        failure = null;
+        if (target == _player.speed) continue;
+        try {
+          await _applyToEngine(target);
+        } catch (error, stackTrace) {
+          failure = error;
+          failureStack = stackTrace;
+        }
+      }
+      if (failure != null) Error.throwWithStackTrace(failure, failureStack!);
+    } finally {
+      _targetSpeed = null;
+      _speedDrain = null;
+    }
+  }
+
+  Future<void> _applyToEngine(double speed) async {
+    // Split the segment so each session has a single speed.
+    final segmentIds = _listenSession.openIds;
+    if (segmentIds != null) _closeListenSession(ListenEndReason.speedChange);
+    try {
+      await _player.setSpeed(speed);
+    } finally {
+      // Reopen even when the engine rejected the speed, since playback
+      // continues. Playback may have paused while the engine applied the
+      // speed; the stream has then already closed the segment and must
+      // not reopen it.
+      if (segmentIds != null && _player.playing) {
+        _openListenSession(ids: segmentIds);
+      }
+    }
+  }
+
+  /// Resolves through the same in-memory state the Audio sheet edits
+  /// (rather than reading the database) so playback never starts at a
+  /// speed the UI does not show.
+  Future<double> _resolveSpeed(int? podcastId) async {
+    final global = ref.read(playbackSpeedSettingsControllerProvider).speed;
+    if (podcastId == null) return global;
+    try {
+      final override = await ref.read(
+        podcastAudioOverrideControllerProvider(podcastId).future,
+      );
+      return override?.speed ?? global;
+    } catch (error) {
+      // Same fallback as effectiveAudioSettingsProvider on a failed load.
+      _log.w('[Play] Override load failed, using global speed: $error');
+      return global;
+    }
   }
 }
 

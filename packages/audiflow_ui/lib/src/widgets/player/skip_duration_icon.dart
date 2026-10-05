@@ -22,6 +22,12 @@ class SkipDurationIcon extends StatelessWidget {
   final double size;
   final Color? color;
 
+  // The replay arc is centered 54% down the icon box (the arrow head takes
+  // the top). Digits with `height: 1` sit about 1.4% of the icon size above
+  // their line box's center, so a top inset of 10% of the size centers them
+  // in the arc. The previous 16% left them visibly low.
+  static const double _digitTopInsetFactor = 0.10;
+
   @override
   Widget build(BuildContext context) {
     final glyph = Icon(Symbols.replay, size: size, color: color);
@@ -38,7 +44,7 @@ class SkipDurationIcon extends StatelessWidget {
           children: [
             icon,
             Padding(
-              padding: EdgeInsets.only(top: size * 0.16),
+              padding: EdgeInsets.only(top: size * _digitTopInsetFactor),
               child: Text(
                 '$seconds',
                 style: TextStyle(
