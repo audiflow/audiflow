@@ -35,7 +35,7 @@ void main() {
     expect(slider.value, PlaybackSpeedScale.indexForSpeed(1.3).toDouble());
   });
 
-  testWidgets('drag emits each step once with haptics, then the end value', (
+  testWidgets('drag emits each step once without haptics, then the end value', (
     tester,
   ) async {
     final changes = <double>[];
@@ -72,7 +72,7 @@ void main() {
     expect(changes.toSet().length, changes.length);
     expect(changes.last, 3.0);
     expect(changes, contains(2.2));
-    expect(haptics, changes.length);
+    expect(haptics, 0);
     expect(ends, [3.0]);
   });
 
