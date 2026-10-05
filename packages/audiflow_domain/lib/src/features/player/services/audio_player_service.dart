@@ -884,25 +884,26 @@ class AudioPlayerController extends _$AudioPlayerController
   /// Saves playback progress to history.
   @override
   Future<void> pause() async {
-    // Save progress on pause — skip during source loading to avoid
-    // persisting stale data from the previous episode.
-    if (_currentEpisodeId != null && !_isLoadingSource) {
-      final progress = ref.read(playbackProgressProvider);
-      if (progress != null) {
-        final historyService = ref.read(playbackHistoryServiceProvider);
-        await historyService.onPlaybackPaused(
-          _currentEpisodeId!,
-          progress,
-          speed: _player.speed,
-        );
-      }
-    }
-    // Capture position before delegating so a racing seek cannot move
-    // the reported position out from under the analytics emit.
+    // Everything saved and reported is captured before the engine pause,
+    // so a racing seek or play() cannot change it. Skip the save during
+    // source loading to avoid persisting stale data from the previous
+    // episode.
+    final episodeId = _isLoadingSource ? null : _currentEpisodeId;
+    final progress = episodeId == null
+        ? null
+        : ref.read(playbackProgressProvider);
+    final speed = _player.speed;
     final positionSec = _player.position.inSeconds;
+    final ids = _currentAnalyticsIds();
+
+    // Silence first: a slow history write must not keep audio playing.
     await _player.pause();
 
-    final ids = _currentAnalyticsIds();
+    if (episodeId != null && progress != null) {
+      await ref
+          .read(playbackHistoryServiceProvider)
+          .onPlaybackPaused(episodeId, progress, speed: speed);
+    }
     if (ids != null) {
       unawaited(
         ref
@@ -919,6 +920,39 @@ class AudioPlayerController extends _$AudioPlayerController
             ),
       );
     }
+  }
+
+  /// Pauses, then moves to [position] on the player's own account and
+  /// saves it as the resume point.
+  ///
+  /// Used by the end-of-chapter sleep timer, which notices a chapter
+  /// boundary only after playback has crossed it. Pausing first keeps the
+  /// next chapter from being heard while the seek runs; the explicit save
+  /// afterwards replaces the position [pause] recorded just past the
+  /// boundary, because a seek while paused is not saved on its own.
+  Future<void> pauseAt(Duration position) async {
+    // [position] belongs to the episode playing now. A play() of another
+    // episode during either await owns the player and its history, so
+    // neither the seek nor the save may touch it.
+    final attempt = _playAttempt;
+    final url = _currentUrl;
+    final episodeId = _currentEpisodeId;
+    bool stillCurrent() =>
+        _playAttempt == attempt &&
+        _currentUrl == url &&
+        _currentEpisodeId == episodeId;
+
+    await pause();
+    if (url == null || episodeId == null || !stillCurrent()) return;
+    // Resumed while the paused position was saved: moving the playing
+    // audio back to the boundary would be an audible jump.
+    if (_player.playing) return;
+    final target = _clampToKnownDuration(position, _player.duration);
+    await seekAutomatically(target);
+    if (!stillCurrent()) return;
+    await ref
+        .read(playbackHistoryRepositoryProvider)
+        .saveProgress(episodeId: episodeId, positionMs: target.inMilliseconds);
   }
 
   /// Resumes playback if paused.

@@ -59,7 +59,7 @@ audiflow_cli -> audiflow_domain, audiflow_podcast
 - Cross-feature event streams (PlayerEvent, PlayerLifecycleEvent, DownloadEvent, SubscriptionEvent, FeedSyncEvent)
 - Background refresh service with prioritized sync
 - Background notification service for new episode alerts
-- Sleep timer controller and service (countdown, episode/chapter tracking, fade-out trigger)
+- Sleep timer controller and service (countdown, episode/chapter tracking, fade-out or immediate pause trigger)
 - Play order preference repository with cascade resolution (group -> playlist -> podcast -> global)
 - Feed sync executor with unconditional dropped-episode cleanup (RSS is the source of truth; no favorited / downloaded / played-state guards)
 

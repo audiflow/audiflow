@@ -46,6 +46,24 @@ void main() {
       check(observeAt(60)).isA<ChapterChangedEvent>();
     });
 
+    test('the change carries where the chapter left behind ends', () {
+      check(observeAt(30)).isNull();
+      check(observeAt(60))
+          .isA<ChapterChangedEvent>()
+          .has((e) => e.targetEnd, 'targetEnd')
+          .equals(const Duration(seconds: 60));
+    });
+
+    test('an update past several chapter starts ends the first one', () {
+      chapters = [_chapter(0, 0), _chapter(1, 60), _chapter(2, 61)];
+      check(observeAt(30)).isNull();
+      // One position update jumps from chapter 0 over chapter 1 into 2.
+      check(observeAt(62))
+          .isA<ChapterChangedEvent>()
+          .has((e) => e.targetEnd, 'targetEnd')
+          .equals(const Duration(seconds: 60));
+    });
+
     test('moving backward without a seek only re-baselines', () {
       check(observeAt(90)).isNull();
       check(observeAt(30)).isNull();

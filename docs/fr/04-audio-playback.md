@@ -157,7 +157,7 @@ state and resume position stay coherent no matter where the listener touches it.
   `AVRoutePickerView` on iOS; the platform moves playback to the chosen output, so the player
   needs no routing code of its own.
 - Fades volume out before pausing when requested, used by the sleep timer's end-of-countdown
-  action.
+  action (the end-of-chapter timer instead pauses at once and returns to the chapter boundary).
 - Drives the mini player and full player screen, including a slide-in/out animation for the
   mini player and flicker-free seeking that preserves the visual state during the brief
   buffering that follows a scrub.
@@ -260,8 +260,8 @@ state and resume position stay coherent no matter where the listener touches it.
 - **Does not own downloads.** Acquiring and storing local episode files is FR 05; playback only
   checks whether a completed download exists and prefers its file path when it does.
 - **Does not own the sleep timer.** Countdown modes, end-of-episode / end-of-chapter triggers,
-  and timer persistence belong to FR 09 (sleep timer). Playback only exposes the fade-out-and-
-  pause action the timer invokes and the lifecycle events the timer observes.
+  and timer persistence belong to FR 09 (sleep timer). Playback only exposes the pause-at-position and
+  fade-out-and-pause actions the timer invokes and the lifecycle events the timer observes.
 - **Does not own transcripts or chapters.** Transcript and chapter display, including the
   chapter gaps and tooltip on the seek bar, is FR 08; playback only provides the position
   other features read.
