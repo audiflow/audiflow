@@ -42,7 +42,7 @@ final class PlaybackSpeedSettings {
   }
 }
 
-/// Holds [PlaybackSpeedSettings] and persists changes.
+/// Holds the global [PlaybackSpeedSettings] and persists changes.
 ///
 /// UI must not call [save] directly: speed changes go through
 /// `AudioPlayerController.setSpeed`, which applies the speed to the
@@ -50,11 +50,20 @@ final class PlaybackSpeedSettings {
 @Riverpod(keepAlive: true)
 class PlaybackSpeedSettingsController
     extends _$PlaybackSpeedSettingsController {
+  // The last speed the listener settled on. It differs from `state.speed`
+  // only during a slider drag; it is updated before the write starts so it
+  // never lags a commit that is still being persisted.
+  late double _committedSpeed;
+
+  /// The current speed, ignoring any uncommitted drag preview.
+  double get committedSpeed => _committedSpeed;
+
   @override
   PlaybackSpeedSettings build() {
     final repo = ref.watch(appSettingsRepositoryProvider);
+    _committedSpeed = repo.getPlaybackSpeed();
     return PlaybackSpeedSettings(
-      speed: repo.getPlaybackSpeed(),
+      speed: _committedSpeed,
       recentSpeeds: repo.getRecentPlaybackSpeeds(),
     );
   }
@@ -75,7 +84,25 @@ class PlaybackSpeedSettingsController
     // on disk; persistence failures surface to the caller.
     state = PlaybackSpeedSettings(speed: snapped, recentSpeeds: recent);
     if (!commit) return;
+    _committedSpeed = snapped;
     await repo.setPlaybackSpeed(snapped);
     await repo.setRecentPlaybackSpeeds(recent);
+  }
+
+  /// Pushes [speed] onto the recent list without changing the global
+  /// speed.
+  ///
+  /// Used when a speed is committed to a podcast override: the quick-pick
+  /// chips are one shared history of speeds the user settled on, whichever
+  /// scope the speed was saved to.
+  Future<void> recordRecent(double speed) async {
+    final recent = RecentPlaybackSpeeds.record(
+      state.recentSpeeds,
+      PlaybackSpeedScale.snap(speed),
+    );
+    state = PlaybackSpeedSettings(speed: state.speed, recentSpeeds: recent);
+    await ref
+        .read(appSettingsRepositoryProvider)
+        .setRecentPlaybackSpeeds(recent);
   }
 }

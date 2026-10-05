@@ -1,5 +1,7 @@
 import 'package:audiflow_domain/audiflow_domain.dart'
-    show playbackSpeedSettingsControllerProvider;
+    show
+        playbackSpeedSettingsControllerProvider,
+        podcastAudioOverrideControllerProvider;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -28,6 +30,7 @@ void applyRuntimeReset(BuildContext context, WidgetRef ref) {
     ..invalidate(lastTabControllerProvider)
     ..invalidate(privacyConsentControllerProvider)
     ..invalidate(onboardingCompletionControllerProvider)
-    ..invalidate(playbackSpeedSettingsControllerProvider);
+    ..invalidate(playbackSpeedSettingsControllerProvider)
+    ..invalidate(podcastAudioOverrideControllerProvider);
   GoRouter.maybeOf(context)?.go(AppRoutes.consent);
 }

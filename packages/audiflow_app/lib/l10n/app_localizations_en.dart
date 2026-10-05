@@ -153,6 +153,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get podcastDetailDescriptionMenuTitle => 'Description';
 
   @override
+  String get podcastDetailAudioSettingsMenuTitle => 'Audio settings';
+
+  @override
   String get podcastDetailDescriptionSheetTitle => 'Description';
 
   @override
@@ -603,6 +606,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get audioSheetSpeedSection => 'Playback speed';
+
+  @override
+  String get audioSheetPodcastOverride => 'Custom for this podcast';
+
+  @override
+  String get audioSheetScopePodcast => 'This podcast only';
+
+  @override
+  String get audioSheetScopeGlobal => 'Applies to all podcasts';
 
   @override
   String get playbackSpeedNormal => 'Normal';

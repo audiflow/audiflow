@@ -77,9 +77,6 @@ class _FakePlaybackController implements AudioPlaybackController {
   Future<void> seek(Duration position) async {}
 
   @override
-  Future<void> setSpeed(double speed) async {}
-
-  @override
   Future<void> skipBackward() async {}
 
   @override
@@ -326,6 +323,11 @@ Future<void> _seedSmartPlaylists(Isar isar) async {
       ..podcastId = 1
       ..playlistId = 'p'
       ..groupId = 'g',
+  );
+  await isar.podcastAudioPreferences.put(
+    PodcastAudioPreference()
+      ..podcastId = 1
+      ..speed = 1.5,
   );
 }
 
