@@ -251,8 +251,13 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
     bool wasPlaying,
   ) async {
     _beginSeek(wasPlaying);
-    await skipAction();
-    await _endSeek();
+    // A failed seek must still release the guard, or the play/pause icon
+    // stays frozen.
+    try {
+      await skipAction();
+    } finally {
+      await _endSeek();
+    }
   }
 
   Future<void> _navigateToPodcast(Episode episode, String podcastTitle) async {
@@ -529,7 +534,7 @@ class _PlayerArtwork extends StatelessWidget {
           Align(
             alignment: Alignment.bottomCenter,
             child: Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(8),
               child: SeekUndoOverlay(onGoBack: onSeekUndo),
             ),
           ),

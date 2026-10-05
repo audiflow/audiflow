@@ -51,7 +51,8 @@ class _SeekUndoPill extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final foreground = colorScheme.onInverseSurface;
 
-    // Scales down on the smallest artwork rather than overflowing it.
+    // Sized to fit the 160 pt minimum artwork at normal text size; larger
+    // text scales down rather than overflowing the artwork.
     return FittedBox(
       fit: BoxFit.scaleDown,
       child: Material(
@@ -68,7 +69,7 @@ class _SeekUndoPill extends StatelessWidget {
               label: Text(l10n.playerSeekUndoGoBack),
               style: TextButton.styleFrom(
                 foregroundColor: foreground,
-                padding: const EdgeInsetsDirectional.only(start: 16, end: 8),
+                padding: const EdgeInsetsDirectional.only(start: 12, end: 4),
               ),
             ),
             IconButton(
