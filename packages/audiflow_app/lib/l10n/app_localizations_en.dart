@@ -623,6 +623,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get audioSheetScopeGlobal => 'Applies to all podcasts';
 
   @override
+  String get audioSheetEffectsSection => 'Effects';
+
+  @override
+  String get audioSheetSkipSilence => 'Shorten silences';
+
+  @override
+  String get audioSheetSkipSilenceCaption => 'Skips quiet gaps between words';
+
+  @override
+  String get audioSheetVoiceBoost => 'Voice boost';
+
+  @override
+  String get audioSheetVoiceBoostCaption => 'Makes quiet speech louder';
+
+  @override
   String get playbackSpeedNormal => 'Normal';
 
   @override

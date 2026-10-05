@@ -4,6 +4,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../common/providers/database_provider.dart';
 import '../datasources/local/podcast_audio_preference_local_datasource.dart';
 import '../models/audio_settings.dart';
+import '../models/playback_effects.dart';
 import '../providers/settings_providers.dart';
 import 'app_settings_repository.dart';
 
@@ -38,14 +39,22 @@ class PodcastAudioPreferenceRepositoryImpl
   Future<AudioSettings?> get(int podcastId) async {
     final row = await _datasource.get(podcastId);
     if (row == null) return null;
-    return AudioSettings(speed: PlaybackSpeedScale.snap(row.speed));
+    return AudioSettings(
+      speed: PlaybackSpeedScale.snap(row.speed),
+      effects: PlaybackEffects(
+        skipSilence: row.skipSilence ?? _settings.getSkipSilence(),
+        voiceBoost: row.voiceBoost ?? _settings.getVoiceBoost(),
+      ),
+    );
   }
 
   @override
   Future<void> set(int podcastId, AudioSettings settings) {
-    return _datasource.upsertSpeed(
+    return _datasource.upsert(
       podcastId,
-      PlaybackSpeedScale.snap(settings.speed),
+      speed: PlaybackSpeedScale.snap(settings.speed),
+      skipSilence: settings.effects.skipSilence,
+      voiceBoost: settings.effects.voiceBoost,
     );
   }
 
@@ -55,7 +64,14 @@ class PodcastAudioPreferenceRepositoryImpl
   @override
   Future<AudioSettings> resolveForPodcast(int podcastId) async {
     final override = await get(podcastId);
-    return override ?? AudioSettings(speed: _settings.getPlaybackSpeed());
+    return override ??
+        AudioSettings(
+          speed: _settings.getPlaybackSpeed(),
+          effects: PlaybackEffects(
+            skipSilence: _settings.getSkipSilence(),
+            voiceBoost: _settings.getVoiceBoost(),
+          ),
+        );
   }
 }
 

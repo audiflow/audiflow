@@ -48,6 +48,12 @@ class SettingsKeys {
   /// (`-mm:ss`) instead of the total duration.
   static const String showRemainingTime = 'settings_show_remaining_time';
 
+  /// Whether silent passages are skipped during playback (Android only).
+  static const String skipSilence = 'settings_skip_silence';
+
+  /// Whether the voice boost loudness effect is on (Android only).
+  static const String voiceBoost = 'settings_voice_boost';
+
   // -- Downloads --
 
   /// Restrict downloads to Wi-Fi connections.
@@ -133,6 +139,12 @@ class SettingsDefaults {
 
   /// Default player time label mode (remaining time).
   static const bool showRemainingTime = true;
+
+  /// Default silence skipping setting.
+  static const bool skipSilence = false;
+
+  /// Default voice boost setting.
+  static const bool voiceBoost = false;
 
   /// Default Wi-Fi only download setting.
   static const bool wifiOnlyDownload = true;

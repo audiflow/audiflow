@@ -2,16 +2,19 @@ import 'package:audiflow_core/audiflow_core.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../models/audio_settings.dart';
+import '../models/playback_effects.dart';
 import '../repositories/podcast_audio_preference_repository.dart';
+import 'playback_effects_settings_provider.dart';
 import 'playback_speed_settings_provider.dart';
 
 part 'podcast_audio_override_provider.g.dart';
 
 /// Holds a podcast's audio settings override; null when it has none.
 ///
-/// UI must not call [saveSpeed] directly: speed changes go through
-/// `AudioPlayerController.setSpeed` with a podcast scope, which also
-/// applies the speed to the player and records analytics.
+/// UI must not call [saveSpeed] or [saveEffect] directly: changes go
+/// through `AudioPlayerController.setSpeed` and `setEffect` with a podcast
+/// scope, which also apply them to the player (and record speed
+/// analytics).
 ///
 /// Every mutation updates memory before disk so controls follow input
 /// immediately, and restores the previous state when the write fails so
@@ -20,9 +23,19 @@ part 'podcast_audio_override_provider.g.dart';
 /// a loading state could be overwritten by the pending load.
 @Riverpod(keepAlive: true)
 class PodcastAudioOverrideController extends _$PodcastAudioOverrideController {
+  // The override as last read from or written to the store, and the number
+  // of writes still running. Every write stores the whole row, so when the
+  // last pending write fails memory returns to this rather than to the
+  // state that write replaced, which an earlier failed write may have left.
+  AudioSettings? _persisted;
+  int _writesInFlight = 0;
+
   @override
-  Future<AudioSettings?> build(int podcastId) {
-    return ref.watch(podcastAudioPreferenceRepositoryProvider).get(podcastId);
+  Future<AudioSettings?> build(int podcastId) async {
+    final repo = ref.watch(podcastAudioPreferenceRepositoryProvider);
+    final stored = await repo.get(podcastId);
+    _persisted = stored;
+    return stored;
   }
 
   /// Whether the stored override has loaded and exists.
@@ -39,7 +52,10 @@ class PodcastAudioOverrideController extends _$PodcastAudioOverrideController {
     final globalSpeed = ref
         .read(playbackSpeedSettingsControllerProvider.notifier)
         .committedSpeed;
-    final created = AudioSettings(speed: globalSpeed);
+    final created = AudioSettings(
+      speed: globalSpeed,
+      effects: ref.read(playbackEffectsSettingsControllerProvider),
+    );
     await _update(created, (repo) => repo.set(podcastId, created));
   }
 
@@ -67,19 +83,44 @@ class PodcastAudioOverrideController extends _$PodcastAudioOverrideController {
     await _update(updated, (repo) => repo.set(podcastId, updated));
   }
 
+  /// Switches [effect] in the override to [enabled].
+  ///
+  /// Ignored when the podcast has no override, for the same reason as
+  /// [saveSpeed].
+  Future<void> saveEffect(
+    PlaybackEffect effect, {
+    required bool enabled,
+  }) async {
+    if (!hasOverride) return;
+    final current = state.value!;
+    if (current.effects.isEnabled(effect) == enabled) return;
+    final updated = current.copyWith(
+      effects: current.effects.withEffect(effect, enabled: enabled),
+    );
+    await _update(updated, (repo) => repo.set(podcastId, updated));
+  }
+
   Future<void> _update(
     AudioSettings? next,
     Future<void> Function(PodcastAudioPreferenceRepository repo) write,
   ) async {
     final previous = state;
     state = AsyncData(next);
+    _writesInFlight += 1;
     try {
       await write(ref.read(podcastAudioPreferenceRepositoryProvider));
+      _persisted = next;
     } catch (_) {
       // A newer edit (such as a slider preview) replaced the pending
       // state; rolling back would discard that input.
-      if (state is AsyncData && state.value == next) state = previous;
+      if (state is AsyncData && state.value == next) {
+        // An earlier write still running persists the state this one
+        // replaced; otherwise only the stored row is safe to show.
+        state = _writesInFlight == 1 ? AsyncData(_persisted) : previous;
+      }
       rethrow;
+    } finally {
+      _writesInFlight -= 1;
     }
   }
 }

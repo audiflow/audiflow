@@ -6,6 +6,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../common/providers/logger_provider.dart';
 import '../../settings/models/audio_settings.dart';
 import '../../settings/models/audio_settings_scope.dart';
+import '../../settings/providers/playback_effects_settings_provider.dart';
 import '../../settings/providers/playback_speed_settings_provider.dart';
 import '../../settings/providers/podcast_audio_override_provider.dart';
 import 'audio_player_service.dart';
@@ -52,9 +53,10 @@ EffectiveAudioSettings _global(Ref ref) {
   final speed = ref.watch(
     playbackSpeedSettingsControllerProvider.select((s) => s.speed),
   );
+  final effects = ref.watch(playbackEffectsSettingsControllerProvider);
   return (
     scope: const GlobalAudioSettingsScope(),
-    settings: AudioSettings(speed: speed),
+    settings: AudioSettings(speed: speed, effects: effects),
   );
 }
 
@@ -75,17 +77,17 @@ EffectiveAudioSettings? nowPlayingAudioSettings(Ref ref) {
 @Riverpod(keepAlive: true)
 void effectiveAudioSettingsApplier(Ref ref) {
   final log = ref.read(namedLoggerProvider('AudioSettings'));
-  // Only the speed matters to the player: a scope change with the same
-  // speed (switching an override on) must not reach it at all.
-  ref.listen(nowPlayingAudioSettingsProvider.select((s) => s?.settings.speed), (
+  // Only the values matter to the player: a scope change with the same
+  // values (switching an override on) must not reach it at all.
+  ref.listen(nowPlayingAudioSettingsProvider.select((s) => s?.settings), (
     _,
-    speed,
+    settings,
   ) {
-    if (speed == null) return;
+    if (settings == null) return;
     final player = ref.read(audioPlayerControllerProvider.notifier);
     unawaited(
-      player.applySpeed(speed).catchError((Object error) {
-        log.w('Failed to apply effective speed', error: error);
+      player.applyAudioSettings(settings).catchError((Object error) {
+        log.w('Failed to apply effective audio settings', error: error);
       }),
     );
   });

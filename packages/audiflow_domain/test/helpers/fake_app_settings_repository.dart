@@ -20,6 +20,14 @@ class FakeAppSettingsRepository implements AppSettingsRepository {
   DuckInterruptionBehavior duckInterruptionBehavior =
       SettingsDefaults.duckInterruptionBehavior;
   bool showRemainingTime = true;
+  bool skipSilence = false;
+  bool voiceBoost = false;
+
+  /// The stored global audio settings, as an override would inherit them.
+  AudioSettings get audioSettings => AudioSettings(
+    speed: playbackSpeed,
+    effects: PlaybackEffects(skipSilence: skipSilence, voiceBoost: voiceBoost),
+  );
   bool wifiOnlyDownload = true;
   bool autoDeletePlayed = false;
   int maxConcurrentDownloads = 1;
@@ -113,6 +121,18 @@ class FakeAppSettingsRepository implements AppSettingsRepository {
   @override
   Future<void> setShowRemainingTime(bool enabled) async =>
       showRemainingTime = enabled;
+
+  @override
+  bool getSkipSilence() => skipSilence;
+
+  @override
+  Future<void> setSkipSilence(bool enabled) async => skipSilence = enabled;
+
+  @override
+  bool getVoiceBoost() => voiceBoost;
+
+  @override
+  Future<void> setVoiceBoost(bool enabled) async => voiceBoost = enabled;
 
   @override
   bool getWifiOnlyDownload() => wifiOnlyDownload;

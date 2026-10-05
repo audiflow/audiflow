@@ -1232,6 +1232,36 @@ abstract class AppLocalizations {
   /// **'Applies to all podcasts'**
   String get audioSheetScopeGlobal;
 
+  /// Section heading for silence skipping and voice boost in the audio sheet (Android only)
+  ///
+  /// In en, this message translates to:
+  /// **'Effects'**
+  String get audioSheetEffectsSection;
+
+  /// Switch that skips silent passages during playback
+  ///
+  /// In en, this message translates to:
+  /// **'Shorten silences'**
+  String get audioSheetSkipSilence;
+
+  /// Caption under the silence skipping switch
+  ///
+  /// In en, this message translates to:
+  /// **'Skips quiet gaps between words'**
+  String get audioSheetSkipSilenceCaption;
+
+  /// Switch that raises playback loudness so speech is easier to hear
+  ///
+  /// In en, this message translates to:
+  /// **'Voice boost'**
+  String get audioSheetVoiceBoost;
+
+  /// Caption under the voice boost switch
+  ///
+  /// In en, this message translates to:
+  /// **'Makes quiet speech louder'**
+  String get audioSheetVoiceBoostCaption;
+
   /// Chip label for normal (1.0x) playback speed
   ///
   /// In en, this message translates to:

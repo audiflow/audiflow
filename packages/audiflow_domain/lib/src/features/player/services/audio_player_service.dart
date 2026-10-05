@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:audiflow_core/audiflow_core.dart';
+import 'package:flutter/foundation.dart';
 
 import 'package:just_audio/just_audio.dart';
 import 'package:riverpod/riverpod.dart';
@@ -15,7 +16,10 @@ import '../../feed/repositories/episode_repository_impl.dart';
 import '../../monitoring/models/analytics_event.dart';
 import '../../monitoring/providers/analytics_providers.dart';
 import '../../queue/services/queue_service.dart';
+import '../../settings/models/audio_settings.dart';
 import '../../settings/models/audio_settings_scope.dart';
+import '../../settings/models/playback_effects.dart';
+import '../../settings/providers/playback_effects_settings_provider.dart';
 import '../../settings/providers/playback_speed_settings_provider.dart';
 import '../../settings/providers/podcast_audio_override_provider.dart';
 import '../../settings/providers/settings_providers.dart';
@@ -33,15 +37,52 @@ import 'player_lifecycle_events.dart';
 
 part 'audio_player_service.g.dart';
 
+/// Target gain of the voice boost effect in decibels.
+///
+/// Initial value; tune on a device so speech is clearly louder without
+/// clipping.
+const double voiceBoostTargetGainDb = 6.0;
+
+/// Whether the player applies [PlaybackEffect]s on this platform.
+///
+/// just_audio implements silence skipping and audio effects only on
+/// Android. Elsewhere the effects UI is hidden and stored effect values
+/// are ignored.
+@Riverpod(keepAlive: true)
+bool audioEffectsSupported(Ref ref) =>
+    defaultTargetPlatform == TargetPlatform.android;
+
+/// The loudness effect behind voice boost, or null where effects are not
+/// supported.
+///
+/// Created once for the player: just_audio attaches an effect to a
+/// single player, and only when that player is constructed.
+@Riverpod(keepAlive: true)
+AndroidLoudnessEnhancer? voiceBoostEffect(Ref ref) {
+  if (!ref.watch(audioEffectsSupportedProvider)) return null;
+  final effect = AndroidLoudnessEnhancer();
+  // The player is not connected yet, so this only stores the gain; it is
+  // sent with the pipeline when the player connects.
+  unawaited(effect.setTargetGain(voiceBoostTargetGainDb));
+  return effect;
+}
+
 /// Provides a singleton [AudioPlayer] instance.
 ///
 /// This provider is kept alive for the app's lifetime to maintain audio state
 /// across navigation and screen changes.
 @Riverpod(keepAlive: true)
 AudioPlayer audioPlayer(Ref ref) {
+  final voiceBoost = ref.watch(voiceBoostEffectProvider);
   // handleInterruptions must be false when using audio_service,
   // which manages the remote command center and audio session.
-  final player = AudioPlayer(handleInterruptions: false);
+  final player = AudioPlayer(
+    handleInterruptions: false,
+    // Effects can only be attached here, at construction.
+    audioPipeline: voiceBoost == null
+        ? null
+        : AudioPipeline(androidAudioEffects: [voiceBoost]),
+  );
   ref.onDispose(() => player.dispose());
   return player;
 }
@@ -131,9 +172,12 @@ class AudioPlayerController extends _$AudioPlayerController
   // Pairs each seek announcement with its completion or failure report.
   int _lastSeekId = 0;
 
-  // Latest speed requested through [applySpeed] while [_speedDrain] runs.
+  // Engine values requested through [applySpeed] or [applyAudioSettings]
+  // and not yet applied by [_engineDrain]; null when nothing is pending.
   double? _targetSpeed;
-  Future<void>? _speedDrain;
+  bool? _targetSkipSilence;
+  bool? _targetVoiceBoost;
+  Future<void>? _engineDrain;
   final StreamController<PlayerLifecycleEvent> _lifecycleEvents =
       StreamController<PlayerLifecycleEvent>.broadcast();
 
@@ -554,15 +598,16 @@ class AudioPlayerController extends _$AudioPlayerController
         }
       }
 
-      // Apply the episode's podcast override, or the global speed.
+      // Apply the episode's podcast override, or the global settings.
       // Resolve the podcast the way NowPlayingInfo exposes it, so this
       // agrees with effectiveAudioSettingsApplier and the Audio button.
-      final speed = await _resolveSpeed(
+      final settings = await _resolveSettings(
         metadata?.episode?.podcastId ?? episode?.podcastId,
       );
+      final speed = settings.speed;
       // A newer play() may have started while the override loaded; its
-      // own resolution owns the speed now.
-      if (_currentUrl == url) await applySpeed(speed);
+      // own resolution owns the settings now.
+      if (_currentUrl == url) await applyAudioSettings(settings);
 
       // Notify history service of playback start
       if (_currentEpisodeId != null) {
@@ -1108,51 +1153,157 @@ class AudioPlayerController extends _$AudioPlayerController
     return true;
   }
 
-  /// Applies [speed] to the player without persisting it anywhere.
+  /// Persists [effect] to [scope] and applies it to the player when
+  /// [scope] is the one the now-playing podcast resolves to.
   ///
-  /// Settings changes reach the player through [setSpeed],
-  /// `effectiveAudioSettingsApplierProvider`, and [play]; this is their
-  /// single engine step. It is idempotent and serialized: a speed equal
-  /// to the one already applied or pending is a no-op, at most one engine
-  /// call runs at a time, and requests made while one runs collapse into
-  /// the latest. Both setSpeed and the applier request the same change, so
-  /// without this every slider step would reach the engine twice, with
-  /// the calls overlapping on the platform channel.
-  Future<void> applySpeed(double speed) {
-    final snapped = PlaybackSpeedScale.snap(speed);
-    final pending = _speedDrain;
-    if (snapped == (_targetSpeed ?? _player.speed)) {
-      return pending ?? Future<void>.value();
+  /// Mirrors [setSpeed]: a podcast scope with no override is ignored
+  /// rather than creating one. The value is stored on every platform but
+  /// reaches the player only where `audioEffectsSupportedProvider` is
+  /// true.
+  Future<void> setEffect(
+    PlaybackEffect effect, {
+    required bool enabled,
+    required AudioSettingsScope scope,
+  }) async {
+    switch (scope) {
+      case GlobalAudioSettingsScope():
+        await ref
+            .read(playbackEffectsSettingsControllerProvider.notifier)
+            .save(effect, enabled: enabled);
+      case PodcastAudioSettingsScope(:final podcastId):
+        await ref
+            .read(podcastAudioOverrideControllerProvider(podcastId).notifier)
+            .saveEffect(effect, enabled: enabled);
     }
-    _targetSpeed = snapped;
-    return pending ?? (_speedDrain = _drainSpeed());
+    final now = ref.read(nowPlayingAudioSettingsProvider);
+    if (now?.scope == scope) await applyAudioSettings(now!.settings);
   }
 
-  Future<void> _drainSpeed() async {
+  /// Applies [speed] to the player without persisting it anywhere.
+  ///
+  /// Settings changes reach the player through [setSpeed], [setEffect],
+  /// `effectiveAudioSettingsApplierProvider`, and [play]; this and
+  /// [applyAudioSettings] are their single engine step. It is idempotent
+  /// and serialized: a value equal to the one already applied or pending
+  /// is a no-op, at most one engine call runs at a time, and requests made
+  /// while one runs collapse into the latest. Both setSpeed and the
+  /// applier request the same change, so without this every slider step
+  /// would reach the engine twice, with the calls overlapping on the
+  /// platform channel.
+  Future<void> applySpeed(double speed) {
+    _requestSpeed(speed);
+    return _drainEngineIfPending();
+  }
+
+  /// Applies the speed and effects of [settings] through the same
+  /// serialized, idempotent path as [applySpeed].
+  ///
+  /// Effects are skipped where `audioEffectsSupportedProvider` is false,
+  /// so stored values never reach an engine that does not implement them.
+  Future<void> applyAudioSettings(AudioSettings settings) {
+    _requestSpeed(settings.speed);
+    _requestEffects(settings.effects);
+    return _drainEngineIfPending();
+  }
+
+  void _requestSpeed(double speed) {
+    final snapped = PlaybackSpeedScale.snap(speed);
+    if (snapped != (_targetSpeed ?? _player.speed)) _targetSpeed = snapped;
+  }
+
+  void _requestEffects(PlaybackEffects effects) {
+    if (!ref.read(audioEffectsSupportedProvider)) return;
+    final skipSilence = effects.skipSilence;
+    if (skipSilence != (_targetSkipSilence ?? _player.skipSilenceEnabled)) {
+      _targetSkipSilence = skipSilence;
+    }
+    final voiceBoost = ref.read(voiceBoostEffectProvider);
+    if (voiceBoost == null) return;
+    if (effects.voiceBoost != (_targetVoiceBoost ?? voiceBoost.enabled)) {
+      _targetVoiceBoost = effects.voiceBoost;
+    }
+  }
+
+  bool get _hasEngineTarget =>
+      _targetSpeed != null ||
+      _targetSkipSilence != null ||
+      _targetVoiceBoost != null;
+
+  Future<void> _drainEngineIfPending() {
+    final pending = _engineDrain;
+    if (pending != null) return pending;
+    if (!_hasEngineTarget) return Future<void>.value();
+    // The drain always awaits before finishing, so it is still running
+    // when stored here.
+    return _engineDrain = _drainEngine();
+  }
+
+  Future<void> _drainEngine() async {
     // A failed engine call must not drop a newer pending request, so the
-    // loop keeps going and reports only a failure of the final speed.
-    Object? failure;
-    StackTrace? failureStack;
+    // loop keeps going. A failure is reported unless a newer request for
+    // the same setting replaced it; another setting succeeding later does
+    // not clear it.
+    final steps = [
+      _applyTargetSpeed,
+      _applyTargetSkipSilence,
+      _applyTargetVoiceBoost,
+    ];
+    final failures = <int, (Object, StackTrace)>{};
     try {
-      // Each pass consumes the target, so the loop is bounded by the
+      // Each pass consumes the targets, so the loop is bounded by the
       // requests made while it runs, even when the engine ignores a call
-      // (a disposed player does not update `speed`).
-      for (var target = _targetSpeed; target != null; target = _targetSpeed) {
-        _targetSpeed = null;
-        failure = null;
-        if (target == _player.speed) continue;
-        try {
-          await _applyToEngine(target);
-        } catch (error, stackTrace) {
-          failure = error;
-          failureStack = stackTrace;
+      // (a disposed player does not update its values).
+      while (_hasEngineTarget) {
+        for (final (index, step) in steps.indexed) {
+          try {
+            if (await step()) failures.remove(index);
+          } catch (error, stackTrace) {
+            failures[index] = (error, stackTrace);
+          }
         }
       }
-      if (failure != null) Error.throwWithStackTrace(failure, failureStack!);
+      final failure = failures.values.firstOrNull;
+      if (failure != null) Error.throwWithStackTrace(failure.$1, failure.$2);
     } finally {
       _targetSpeed = null;
-      _speedDrain = null;
+      _targetSkipSilence = null;
+      _targetVoiceBoost = null;
+      _engineDrain = null;
     }
+  }
+
+  // Each step takes its target only when it runs. Taking every target at
+  // the start of a pass would lose a request made while an earlier step
+  // awaits: the request is compared against the engine value, which the
+  // queued step has not changed yet. The engine values update before the
+  // platform call is awaited, so a request made during a step's own call
+  // is compared correctly. Each returns whether it took a target, which
+  // supersedes an earlier failure of the same setting.
+  Future<bool> _applyTargetSpeed() async {
+    final speed = _targetSpeed;
+    _targetSpeed = null;
+    if (speed == null) return false;
+    if (speed != _player.speed) await _applyToEngine(speed);
+    return true;
+  }
+
+  Future<bool> _applyTargetSkipSilence() async {
+    final enabled = _targetSkipSilence;
+    _targetSkipSilence = null;
+    if (enabled == null) return false;
+    await _player.setSkipSilenceEnabled(enabled);
+    return true;
+  }
+
+  Future<bool> _applyTargetVoiceBoost() async {
+    final enabled = _targetVoiceBoost;
+    _targetVoiceBoost = null;
+    if (enabled == null) return false;
+    final effect = ref.read(voiceBoostEffectProvider);
+    if (effect != null && effect.enabled != enabled) {
+      await effect.setEnabled(enabled);
+    }
+    return true;
   }
 
   Future<void> _applyToEngine(double speed) async {
@@ -1173,19 +1324,22 @@ class AudioPlayerController extends _$AudioPlayerController
   }
 
   /// Resolves through the same in-memory state the Audio sheet edits
-  /// (rather than reading the database) so playback never starts at a
-  /// speed the UI does not show.
-  Future<double> _resolveSpeed(int? podcastId) async {
-    final global = ref.read(playbackSpeedSettingsControllerProvider).speed;
+  /// (rather than reading the database) so playback never starts with
+  /// settings the UI does not show.
+  Future<AudioSettings> _resolveSettings(int? podcastId) async {
+    final global = AudioSettings(
+      speed: ref.read(playbackSpeedSettingsControllerProvider).speed,
+      effects: ref.read(playbackEffectsSettingsControllerProvider),
+    );
     if (podcastId == null) return global;
     try {
       final override = await ref.read(
         podcastAudioOverrideControllerProvider(podcastId).future,
       );
-      return override?.speed ?? global;
+      return override ?? global;
     } catch (error) {
       // Same fallback as effectiveAudioSettingsProvider on a failed load.
-      _log.w('[Play] Override load failed, using global speed: $error');
+      _log.w('[Play] Override load failed, using global settings: $error');
       return global;
     }
   }

@@ -15,7 +15,7 @@ void main() {
 
   setUp(() {
     repo = FakeAppSettingsRepository();
-    overrides = FakePodcastAudioPreferenceRepository(() => repo.playbackSpeed);
+    overrides = FakePodcastAudioPreferenceRepository(() => repo.audioSettings);
     analytics = FakeAnalyticsService();
     container = ProviderContainer(
       overrides: [
@@ -100,7 +100,10 @@ void main() {
     });
 
     test('does not touch the player while an override is in effect', () async {
-      overrides.overrides[1] = const AudioSettings(speed: 2.0);
+      overrides.overrides[1] = const AudioSettings(
+        speed: 2.0,
+        effects: PlaybackEffects.off,
+      );
       await playPodcast(1);
       await controller().applySpeed(2.0);
 
@@ -115,12 +118,18 @@ void main() {
     const scope = PodcastAudioSettingsScope(1);
 
     test('persists to the override and applies when it is playing', () async {
-      overrides.overrides[1] = const AudioSettings(speed: 1.0);
+      overrides.overrides[1] = const AudioSettings(
+        speed: 1.0,
+        effects: PlaybackEffects.off,
+      );
       await playPodcast(1);
 
       await controller().setSpeed(1.5, scope: scope);
 
-      expect(overrides.overrides[1], const AudioSettings(speed: 1.5));
+      expect(
+        overrides.overrides[1],
+        const AudioSettings(speed: 1.5, effects: PlaybackEffects.off),
+      );
       expect(repo.playbackSpeed, 1.0);
       expect(playerSpeed(), 1.5);
       // Recent chips are one shared history across scopes.
@@ -129,23 +138,32 @@ void main() {
     });
 
     test('transient steps update memory only', () async {
-      overrides.overrides[1] = const AudioSettings(speed: 1.0);
+      overrides.overrides[1] = const AudioSettings(
+        speed: 1.0,
+        effects: PlaybackEffects.off,
+      );
       await playPodcast(1);
 
       await controller().setSpeed(1.8, scope: scope, transient: true);
 
       expect(
         container.read(podcastAudioOverrideControllerProvider(1)).value,
-        const AudioSettings(speed: 1.8),
+        const AudioSettings(speed: 1.8, effects: PlaybackEffects.off),
       );
-      expect(overrides.overrides[1], const AudioSettings(speed: 1.0));
+      expect(
+        overrides.overrides[1],
+        const AudioSettings(speed: 1.0, effects: PlaybackEffects.off),
+      );
       expect(playerSpeed(), 1.8);
       expect(settings().recentSpeeds, isEmpty);
       expect(analytics.events.whereType<PlaybackSpeedChanged>(), isEmpty);
     });
 
     test('does not touch the player for another podcast', () async {
-      overrides.overrides[2] = const AudioSettings(speed: 1.0);
+      overrides.overrides[2] = const AudioSettings(
+        speed: 1.0,
+        effects: PlaybackEffects.off,
+      );
       await playPodcast(1);
       await container.read(podcastAudioOverrideControllerProvider(2).future);
 
@@ -154,12 +172,18 @@ void main() {
         scope: const PodcastAudioSettingsScope(2),
       );
 
-      expect(overrides.overrides[2], const AudioSettings(speed: 2.0));
+      expect(
+        overrides.overrides[2],
+        const AudioSettings(speed: 2.0, effects: PlaybackEffects.off),
+      );
       expect(playerSpeed(), 1.0);
     });
 
     test('a failed write is not recorded as a recent speed', () async {
-      overrides.overrides[1] = const AudioSettings(speed: 1.0);
+      overrides.overrides[1] = const AudioSettings(
+        speed: 1.0,
+        effects: PlaybackEffects.off,
+      );
       await playPodcast(1);
       overrides.failWrites = true;
 
@@ -171,7 +195,7 @@ void main() {
       expect(settings().recentSpeeds, isEmpty);
       expect(
         container.read(podcastAudioOverrideControllerProvider(1)).value,
-        const AudioSettings(speed: 1.0),
+        const AudioSettings(speed: 1.0, effects: PlaybackEffects.off),
       );
     });
 
@@ -193,7 +217,10 @@ void main() {
 
       await overrideOf(1).enable();
 
-      expect(overrides.overrides[1], const AudioSettings(speed: 1.3));
+      expect(
+        overrides.overrides[1],
+        const AudioSettings(speed: 1.3, effects: PlaybackEffects.off),
+      );
     });
 
     test('enable ignores an uncommitted global drag preview', () async {
@@ -203,7 +230,10 @@ void main() {
 
       await overrideOf(1).enable();
 
-      expect(overrides.overrides[1], const AudioSettings(speed: 1.3));
+      expect(
+        overrides.overrides[1],
+        const AudioSettings(speed: 1.3, effects: PlaybackEffects.off),
+      );
     });
 
     test('enable copies a commit whose write is still pending', () async {
@@ -214,7 +244,10 @@ void main() {
       await overrideOf(1).enable();
       await commit;
 
-      expect(overrides.overrides[1], const AudioSettings(speed: 1.6));
+      expect(
+        overrides.overrides[1],
+        const AudioSettings(speed: 1.6, effects: PlaybackEffects.off),
+      );
     });
 
     test('a failed write restores the previous state', () async {
@@ -230,7 +263,10 @@ void main() {
     });
 
     test('a failed write keeps a newer pending edit', () async {
-      overrides.overrides[1] = const AudioSettings(speed: 1.0);
+      overrides.overrides[1] = const AudioSettings(
+        speed: 1.0,
+        effects: PlaybackEffects.off,
+      );
       await container.read(podcastAudioOverrideControllerProvider(1).future);
       overrides.failWrites = true;
 
@@ -243,12 +279,15 @@ void main() {
 
       expect(
         container.read(podcastAudioOverrideControllerProvider(1)).value,
-        const AudioSettings(speed: 1.8),
+        const AudioSettings(speed: 1.8, effects: PlaybackEffects.off),
       );
     });
 
     test('disable deletes the override', () async {
-      overrides.overrides[1] = const AudioSettings(speed: 2.0);
+      overrides.overrides[1] = const AudioSettings(
+        speed: 2.0,
+        effects: PlaybackEffects.off,
+      );
       await container.read(podcastAudioOverrideControllerProvider(1).future);
 
       await overrideOf(1).disable();
@@ -265,7 +304,10 @@ void main() {
     );
 
     test('re-applies when the now-playing podcast changes', () async {
-      overrides.overrides[1] = const AudioSettings(speed: 1.5);
+      overrides.overrides[1] = const AudioSettings(
+        speed: 1.5,
+        effects: PlaybackEffects.off,
+      );
 
       await playPodcast(1);
       await pumpEventQueue();
@@ -281,7 +323,10 @@ void main() {
     });
 
     test('turning the override off restores the global speed', () async {
-      overrides.overrides[1] = const AudioSettings(speed: 1.5);
+      overrides.overrides[1] = const AudioSettings(
+        speed: 1.5,
+        effects: PlaybackEffects.off,
+      );
       await playPodcast(1);
       await pumpEventQueue();
       expect(playerSpeed(), 1.5);

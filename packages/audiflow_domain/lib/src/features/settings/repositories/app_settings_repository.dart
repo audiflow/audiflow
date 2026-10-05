@@ -88,6 +88,20 @@ abstract class AppSettingsRepository {
   /// Persists the player time label mode.
   Future<void> setShowRemainingTime(bool enabled);
 
+  /// Whether silent passages are skipped during playback. Honored on
+  /// Android only.
+  bool getSkipSilence();
+
+  /// Persists the silence skipping setting.
+  Future<void> setSkipSilence(bool enabled);
+
+  /// Whether the voice boost loudness effect is on. Honored on Android
+  /// only.
+  bool getVoiceBoost();
+
+  /// Persists the voice boost setting.
+  Future<void> setVoiceBoost(bool enabled);
+
   // -- Downloads --
 
   /// Whether downloads are restricted to Wi-Fi.

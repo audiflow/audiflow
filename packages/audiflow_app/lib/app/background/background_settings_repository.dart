@@ -82,6 +82,12 @@ class BackgroundSettingsRepository implements AppSettingsRepository {
   bool getShowRemainingTime() => SettingsDefaults.showRemainingTime;
 
   @override
+  bool getSkipSilence() => SettingsDefaults.skipSilence;
+
+  @override
+  bool getVoiceBoost() => SettingsDefaults.voiceBoost;
+
+  @override
   bool getAutoDeletePlayed() => SettingsDefaults.autoDeletePlayed;
 
   @override
@@ -140,6 +146,12 @@ class BackgroundSettingsRepository implements AppSettingsRepository {
 
   @override
   Future<void> setShowRemainingTime(bool enabled) => _unsupported();
+
+  @override
+  Future<void> setSkipSilence(bool enabled) => _unsupported();
+
+  @override
+  Future<void> setVoiceBoost(bool enabled) => _unsupported();
 
   @override
   Future<void> setWifiOnlyDownload(bool enabled) => _unsupported();

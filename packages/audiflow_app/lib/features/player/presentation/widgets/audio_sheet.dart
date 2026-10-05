@@ -43,6 +43,7 @@ class _AudioSheetHost extends ConsumerWidget {
     final chipSpeeds = ref
         .watch(playbackSpeedSettingsControllerProvider)
         .chipSpeeds;
+    final effectsSupported = ref.watch(audioEffectsSupportedProvider);
     // Only while the override loads; short enough that a spinner would
     // just flicker.
     if (effective == null) return const SizedBox(height: 160);
@@ -60,7 +61,28 @@ class _AudioSheetHost extends ConsumerWidget {
       onSpeedPreview: (speed) =>
           player.setSpeed(speed, scope: scope, transient: true),
       onSpeedCommit: (speed) => player.setSpeed(speed, scope: scope),
+      effects: effectsSupported ? effective.settings.effects : null,
+      onEffectChanged: (effect, enabled) =>
+          _setEffect(ref, effect, enabled: enabled, scope: scope),
     );
+  }
+
+  Future<void> _setEffect(
+    WidgetRef ref,
+    PlaybackEffect effect, {
+    required bool enabled,
+    required AudioSettingsScope scope,
+  }) async {
+    final player = ref.read(audioPlayerControllerProvider.notifier);
+    try {
+      await player.setEffect(effect, enabled: enabled, scope: scope);
+    } catch (error, stackTrace) {
+      // The settings controller has already rolled the toggle back; log
+      // rather than leave an unhandled error from a switch callback.
+      ref
+          .read(namedLoggerProvider('AudioSheet'))
+          .e('Failed to set $effect', error: error, stackTrace: stackTrace);
+    }
   }
 
   Future<void> _setOverride(
@@ -89,9 +111,8 @@ class _AudioSheetHost extends ConsumerWidget {
 
 /// Audio settings sheet for the full player and the podcast detail menu.
 ///
-/// Laid out as a column of sections so later audio options (output
-/// routing, skip silence) can be appended below the speed section
-/// without restructuring it.
+/// Laid out as a column of sections: the speed, then the effects where
+/// the platform supports them.
 class AudioSheet extends StatelessWidget {
   const AudioSheet({
     super.key,
@@ -101,6 +122,8 @@ class AudioSheet extends StatelessWidget {
     required this.onSpeedCommit,
     this.podcastOverride,
     this.onPodcastOverrideChanged,
+    this.effects,
+    this.onEffectChanged,
   });
 
   /// Current playback speed of the scope being edited.
@@ -122,6 +145,13 @@ class AudioSheet extends StatelessWidget {
 
   /// Turns the podcast override on or off.
   final ValueChanged<bool>? onPodcastOverrideChanged;
+
+  /// Effects of the scope being edited. Null hides the effects section:
+  /// the platform does not apply them.
+  final PlaybackEffects? effects;
+
+  /// Switches one effect on or off.
+  final void Function(PlaybackEffect effect, bool enabled)? onEffectChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -165,11 +195,57 @@ class AudioSheet extends StatelessWidget {
               onSpeedPreview: onSpeedPreview,
               onSpeedCommit: onSpeedCommit,
             ),
+            if (effects case final effects?) ...[
+              const SizedBox(height: 16),
+              _EffectsSection(effects: effects, onChanged: onEffectChanged),
+            ],
           ],
         ),
       ),
     );
   }
+}
+
+class _EffectsSection extends StatelessWidget {
+  const _EffectsSection({required this.effects, required this.onChanged});
+
+  final PlaybackEffects effects;
+  final void Function(PlaybackEffect effect, bool enabled)? onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(l10n.audioSheetEffectsSection, style: theme.textTheme.labelLarge),
+        for (final effect in PlaybackEffect.values)
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text(_title(l10n, effect)),
+            subtitle: Text(_caption(l10n, effect)),
+            value: effects.isEnabled(effect),
+            onChanged: onChanged == null
+                ? null
+                : (enabled) => onChanged!(effect, enabled),
+          ),
+      ],
+    );
+  }
+
+  static String _title(AppLocalizations l10n, PlaybackEffect effect) =>
+      switch (effect) {
+        PlaybackEffect.skipSilence => l10n.audioSheetSkipSilence,
+        PlaybackEffect.voiceBoost => l10n.audioSheetVoiceBoost,
+      };
+
+  static String _caption(AppLocalizations l10n, PlaybackEffect effect) =>
+      switch (effect) {
+        PlaybackEffect.skipSilence => l10n.audioSheetSkipSilenceCaption,
+        PlaybackEffect.voiceBoost => l10n.audioSheetVoiceBoostCaption,
+      };
 }
 
 class _SpeedSection extends StatelessWidget {

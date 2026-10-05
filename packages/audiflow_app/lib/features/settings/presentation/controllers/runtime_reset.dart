@@ -1,5 +1,6 @@
 import 'package:audiflow_domain/audiflow_domain.dart'
     show
+        playbackEffectsSettingsControllerProvider,
         playbackSpeedSettingsControllerProvider,
         podcastAudioOverrideControllerProvider;
 import 'package:flutter/widgets.dart';
@@ -31,6 +32,7 @@ void applyRuntimeReset(BuildContext context, WidgetRef ref) {
     ..invalidate(privacyConsentControllerProvider)
     ..invalidate(onboardingCompletionControllerProvider)
     ..invalidate(playbackSpeedSettingsControllerProvider)
+    ..invalidate(playbackEffectsSettingsControllerProvider)
     ..invalidate(podcastAudioOverrideControllerProvider);
   GoRouter.maybeOf(context)?.go(AppRoutes.consent);
 }

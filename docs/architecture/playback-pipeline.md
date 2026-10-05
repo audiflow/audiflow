@@ -60,11 +60,14 @@ URL is published as a fallback, which is the pre-#453 behavior.
 
 | Provider | Type | Purpose |
 |----------|------|---------|
-| `audioPlayerProvider` | keepAlive sync | Singleton AudioPlayer |
-| `audioPlayerControllerProvider` | keepAlive Notifier | Play/pause/seek/stop commands, `setSpeed(speed, scope:)` (persist to a scope) and `applySpeed` (player only), fade-out-and-pause |
+| `audioEffectsSupportedProvider` | keepAlive sync | True on Android only; gates the effects UI and every effect engine call |
+| `voiceBoostEffectProvider` | keepAlive sync | The `AndroidLoudnessEnhancer` (target gain `voiceBoostTargetGainDb`) attached to the player, null where effects are unsupported |
+| `audioPlayerProvider` | keepAlive sync | Singleton AudioPlayer, constructed with an `AudioPipeline` holding the voice boost effect on Android |
+| `audioPlayerControllerProvider` | keepAlive Notifier | Play/pause/seek/stop commands, `setSpeed(speed, scope:)` and `setEffect(effect, enabled:, scope:)` (persist to a scope), `applySpeed` and `applyAudioSettings` (player only), fade-out-and-pause |
 | `playbackProgressStreamProvider` | keepAlive Stream | Combined position + duration + buffered |
 | `playbackSpeedProvider` | keepAlive Stream | Current speed from player |
 | `playbackSpeedSettingsControllerProvider` | keepAlive Notifier | Persisted global speed and the shared recent speeds |
+| `playbackEffectsSettingsControllerProvider` | keepAlive Notifier | Persisted global silence skipping and voice boost |
 | `podcastAudioOverrideControllerProvider(podcastId)` | keepAlive AsyncNotifier | A podcast's audio settings override, null when it has none |
 | `effectiveAudioSettingsProvider(podcastId)` | keepAlive | Override -> global resolution with the scope it came from; null while the override loads |
 | `nowPlayingAudioSettingsProvider` | keepAlive | `effectiveAudioSettingsProvider` for the now-playing podcast |
@@ -97,8 +100,9 @@ URL is published as a fallback, which is the pre-#453 behavior.
 
 ## Audio settings scope
 
-Speed is stored globally (`AppSettingsRepository`) and optionally per podcast
-(`PodcastAudioPreference` in Isar). Each write names an `AudioSettingsScope`:
+Speed and the effects (silence skipping, voice boost) are stored globally
+(`AppSettingsRepository`) and optionally per podcast (`PodcastAudioPreference`
+in Isar). Each write names an `AudioSettingsScope`:
 
 - `GlobalAudioSettingsScope`: the Playback settings screen, and the Audio sheet
   while its per-podcast switch is off.
@@ -106,19 +110,29 @@ Speed is stored globally (`AppSettingsRepository`) and optionally per podcast
   A write to a podcast with no override is dropped, so an override is only ever
   created by switching it on (which copies the global values).
 
-`AudioPlayerController.setSpeed` persists to the named scope and applies the
-speed only when that scope is the one `nowPlayingAudioSettingsProvider`
-resolves to, so a global edit never overrides a podcast override on the
-player. `effectiveAudioSettingsApplierProvider` covers changes that do not go
-through `setSpeed`: the now-playing podcast changing, or an override being
-switched off (the player returns to the global speed). `play()` resolves the
-episode's podcast through the same in-memory override state (awaiting its
-load) before playback starts, so it never disagrees with what the UI shows.
-All three paths go through `applySpeed`, which is idempotent (a speed equal
-to the applied or pending one is a no-op) and serialized (one engine call at
-a time; requests made meanwhile collapse into the latest). The applier only
-reads providers and writes the engine, so applying a speed cannot feed back
+`AudioPlayerController.setSpeed` and `setEffect` persist to the named scope
+and apply the value only when that scope is the one
+`nowPlayingAudioSettingsProvider` resolves to, so a global edit never
+overrides a podcast override on the player. `effectiveAudioSettingsApplierProvider`
+covers changes that do not go through them: the now-playing podcast changing,
+or an override being switched off (the player returns to the global values).
+`play()` resolves the episode's podcast through the same in-memory override
+state (awaiting its load) before playback starts, so it never disagrees with
+what the UI shows. All these paths go through `applySpeed` or
+`applyAudioSettings`, which share one engine drain: it is idempotent (a value
+equal to the applied or pending one is a no-op) and serialized (one engine
+call at a time, whether speed, `setSkipSilenceEnabled`, or the loudness
+effect; requests made meanwhile collapse into the latest). The applier only
+reads providers and writes the engine, so applying a value cannot feed back
 into the resolution it listens to.
+
+Effects reach the engine only where `audioEffectsSupportedProvider` is true
+(Android): just_audio 0.10.x implements silence skipping and audio effects
+only there. The loudness effect can only be attached when the `AudioPlayer`
+is constructed, so `audioPlayerProvider` always attaches it on Android and
+voice boost toggles its `enabled` flag; while disabled the effect is
+bypassed. Silence skipping and the effect state are player-level, so they
+carry across episodes and are re-resolved on each `play()`.
 The Audio sheet pins its podcast when it opens, so a queue advance mid-drag
 cannot send the rest of the drag to another podcast's settings.
 

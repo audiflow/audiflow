@@ -8,6 +8,129 @@ part of 'audio_player_service.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Whether the player applies [PlaybackEffect]s on this platform.
+///
+/// just_audio implements silence skipping and audio effects only on
+/// Android. Elsewhere the effects UI is hidden and stored effect values
+/// are ignored.
+
+@ProviderFor(audioEffectsSupported)
+final audioEffectsSupportedProvider = AudioEffectsSupportedProvider._();
+
+/// Whether the player applies [PlaybackEffect]s on this platform.
+///
+/// just_audio implements silence skipping and audio effects only on
+/// Android. Elsewhere the effects UI is hidden and stored effect values
+/// are ignored.
+
+final class AudioEffectsSupportedProvider
+    extends $FunctionalProvider<bool, bool, bool>
+    with $Provider<bool> {
+  /// Whether the player applies [PlaybackEffect]s on this platform.
+  ///
+  /// just_audio implements silence skipping and audio effects only on
+  /// Android. Elsewhere the effects UI is hidden and stored effect values
+  /// are ignored.
+  AudioEffectsSupportedProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'audioEffectsSupportedProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$audioEffectsSupportedHash();
+
+  @$internal
+  @override
+  $ProviderElement<bool> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  bool create(Ref ref) {
+    return audioEffectsSupported(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(bool value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<bool>(value),
+    );
+  }
+}
+
+String _$audioEffectsSupportedHash() =>
+    r'9aa12a3aa400b011ceef98b60acd534405cebaa3';
+
+/// The loudness effect behind voice boost, or null where effects are not
+/// supported.
+///
+/// Created once for the player: just_audio attaches an effect to a
+/// single player, and only when that player is constructed.
+
+@ProviderFor(voiceBoostEffect)
+final voiceBoostEffectProvider = VoiceBoostEffectProvider._();
+
+/// The loudness effect behind voice boost, or null where effects are not
+/// supported.
+///
+/// Created once for the player: just_audio attaches an effect to a
+/// single player, and only when that player is constructed.
+
+final class VoiceBoostEffectProvider
+    extends
+        $FunctionalProvider<
+          AndroidLoudnessEnhancer?,
+          AndroidLoudnessEnhancer?,
+          AndroidLoudnessEnhancer?
+        >
+    with $Provider<AndroidLoudnessEnhancer?> {
+  /// The loudness effect behind voice boost, or null where effects are not
+  /// supported.
+  ///
+  /// Created once for the player: just_audio attaches an effect to a
+  /// single player, and only when that player is constructed.
+  VoiceBoostEffectProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'voiceBoostEffectProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$voiceBoostEffectHash();
+
+  @$internal
+  @override
+  $ProviderElement<AndroidLoudnessEnhancer?> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  AndroidLoudnessEnhancer? create(Ref ref) {
+    return voiceBoostEffect(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(AndroidLoudnessEnhancer? value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<AndroidLoudnessEnhancer?>(value),
+    );
+  }
+}
+
+String _$voiceBoostEffectHash() => r'8816cd5873c6639ab90ba05f19166b6c7431bca9';
+
 /// Provides a singleton [AudioPlayer] instance.
 ///
 /// This provider is kept alive for the app's lifetime to maintain audio state
@@ -61,7 +184,7 @@ final class AudioPlayerProvider
   }
 }
 
-String _$audioPlayerHash() => r'39aa2c7d111a8c4afdcf352654abd1ca07ad0c40';
+String _$audioPlayerHash() => r'e06b17f4525089009f510dd175d5ddf623f26d08';
 
 /// Provides a stream of the current playback speed.
 ///
@@ -295,7 +418,7 @@ final class AudioPlayerControllerProvider
 }
 
 String _$audioPlayerControllerHash() =>
-    r'6bac38dc6b01114789d08c716e7854c75075cea9';
+    r'1c04d13692bdc45152e9825a077a19252c77c190';
 
 /// Controller for managing audio playback.
 ///

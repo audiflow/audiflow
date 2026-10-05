@@ -605,6 +605,21 @@ class AppLocalizationsJa extends AppLocalizations {
   String get audioSheetScopeGlobal => 'すべての番組に適用';
 
   @override
+  String get audioSheetEffectsSection => 'エフェクト';
+
+  @override
+  String get audioSheetSkipSilence => '無音を短縮';
+
+  @override
+  String get audioSheetSkipSilenceCaption => '話の合間の無音を飛ばします';
+
+  @override
+  String get audioSheetVoiceBoost => 'ボイスブースト';
+
+  @override
+  String get audioSheetVoiceBoostCaption => '小さな声を聞き取りやすくします';
+
+  @override
   String get playbackSpeedNormal => '標準';
 
   @override

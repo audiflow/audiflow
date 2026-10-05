@@ -42,6 +42,12 @@ class StubAppSettingsRepository implements AppSettingsRepository {
   List<double> getRecentPlaybackSpeeds() => const [];
 
   @override
+  bool getSkipSilence() => false;
+
+  @override
+  bool getVoiceBoost() => false;
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }
 
