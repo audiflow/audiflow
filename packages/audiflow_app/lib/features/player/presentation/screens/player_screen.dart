@@ -20,6 +20,7 @@ import '../../services/audio_route_channel.dart';
 import '../widgets/audio_output_picker_button.dart';
 import '../widgets/current_chapter_row.dart';
 import '../widgets/player_action_row.dart';
+import '../widgets/sleep_timer_countdown_format.dart';
 import '../widgets/transcript_tab.dart';
 
 /// Full player screen presented as a Cupertino sheet.
@@ -610,6 +611,10 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
   Future<void> _labelWrites = Future<void>.value();
   // Bumped per toggle so only the latest write may revert the label.
   int _labelWriteSequence = 0;
+  // While a sleep timer runs, the trailing label shows its countdown unless
+  // the user tapped back to the time label. Session-only; a newly armed
+  // timer shows the countdown again.
+  bool _showSleepCountdown = true;
 
   @override
   void initState() {
@@ -633,12 +638,44 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
         ref.watch(currentEpisodeChaptersProvider).unwrapPrevious().value ?? [];
 
     final l10n = AppLocalizations.of(context);
+    ref.listen(sleepTimerControllerProvider.select((state) => state.config), (
+      previous,
+      next,
+    ) {
+      if (isNewSleepTimerArm(previous, next)) {
+        setState(() => _showSleepCountdown = true);
+      }
+    });
+    final sleepConfig = ref.watch(
+      sleepTimerControllerProvider.select((state) => state.config),
+    );
+    final sleepLeft = ref.watch(sleepTimerTimeLeftProvider);
+    // Scrubbing needs position feedback, so the time label comes back
+    // until the drag is released.
+    final sleepCountdown = _showSleepCountdown && !_isDragging
+        ? sleepLeft
+        : null;
     return PlayerSeekBar(
       value: displayValue,
       leadingLabel: formatPlaybackTime(displayPosition),
-      trailingLabel: _showRemainingTime
-          ? _formatRemaining(displayPosition, duration)
-          : formatPlaybackTime(duration),
+      trailingLabel: sleepCountdown != null
+          ? formatSleepTimerCountdown(sleepCountdown)
+          : _timeTrailingLabel(displayPosition, duration),
+      trailingLabelIcon: sleepCountdown != null
+          ? Icon(
+              Symbols.sleep,
+              size: 14,
+              color: Theme.of(context).colorScheme.primary,
+            )
+          : null,
+      trailingLabelSemanticsLabel: sleepCountdown != null
+          ? sleepTimerSemanticsLabel(
+              sleepConfig,
+              sleepCountdown,
+              l10n,
+              includeMode: false,
+            )
+          : null,
       segments: chapterSeekBarSegments(chapters, duration ?? Duration.zero),
       tooltipBuilder: (context, value) =>
           _buildTooltip(chapters, _positionAt(value, null)),
@@ -662,8 +699,18 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
       },
       onChanged: (value) => setState(() => _dragValue = value),
       onChangeEnd: _handleSeekEnd,
-      onTrailingLabelTap: _toggleTrailingLabel,
+      // While a countdown is available the tap switches between it and the
+      // time label, leaving the remaining/total choice untouched.
+      onTrailingLabelTap: sleepLeft != null
+          ? () => setState(() => _showSleepCountdown = !_showSleepCountdown)
+          : _toggleTrailingLabel,
     );
+  }
+
+  String _timeTrailingLabel(Duration? position, Duration? duration) {
+    return _showRemainingTime
+        ? _formatRemaining(position, duration)
+        : formatPlaybackTime(duration);
   }
 
   @override

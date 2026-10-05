@@ -542,6 +542,60 @@
     "description": "Sleep timer sheet status line for an active episode-count timer",
     "placeholders": { "count": { "type": "int" } }
   },
+  "sleepTimerSemanticsLabel": "スリープタイマー、{status}",
+  "@sleepTimerSemanticsLabel": {
+    "description": "Screen reader label for the sleep-timer icon and the seek bar sleep countdown while a timer is active",
+    "placeholders": { "status": { "type": "String" } }
+  },
+  "sleepTimerSemanticsStatusAndTimeLeft": "{status}、{timeLeft}",
+  "@sleepTimerSemanticsStatusAndTimeLeft": {
+    "description": "Joins the sleep timer's stop condition and its time left for screen readers",
+    "placeholders": {
+      "status": { "type": "String" },
+      "timeLeft": { "type": "String" }
+    }
+  },
+  "sleepTimerSemanticsEndOfEpisode": "エピソードの終わりで停止",
+  "@sleepTimerSemanticsEndOfEpisode": { "description": "Screen reader phrase for an active end-of-episode timer" },
+  "sleepTimerSemanticsEndOfChapter": "チャプターの終わりで停止",
+  "@sleepTimerSemanticsEndOfChapter": { "description": "Screen reader phrase for an active end-of-chapter timer" },
+  "sleepTimerSemanticsEpisodes": "{count, plural, =1{このエピソードの終わりで停止} other{{count}エピソード後に停止}}",
+  "@sleepTimerSemanticsEpisodes": {
+    "description": "Screen reader phrase for an active episode-count timer; count includes the current episode",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "sleepTimerSemanticsTimeLeft": "残り{time}",
+  "@sleepTimerSemanticsTimeLeft": {
+    "description": "Screen reader phrase for the time until the sleep timer stops playback",
+    "placeholders": { "time": { "type": "String" } }
+  },
+  "sleepTimerSemanticsTimeLeftPlusEpisodes": "残り{time}、さらに{count}エピソード",
+  "@sleepTimerSemanticsTimeLeftPlusEpisodes": {
+    "description": "Screen reader phrase when the time left covers only the current episode and further episodes of unknown length follow",
+    "placeholders": {
+      "time": { "type": "String" },
+      "count": { "type": "int" }
+    }
+  },
+  "sleepTimerSpokenHours": "{count}時間",
+  "@sleepTimerSpokenHours": {
+    "description": "Spoken hours part of the sleep timer's time left",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "sleepTimerSpokenSeconds": "{count}秒",
+  "@sleepTimerSpokenSeconds": {
+    "description": "Spoken time left under a minute",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "sleepTimerSpokenHoursMinutes": "{hours}{minutes}",
+  "@sleepTimerSpokenHoursMinutes": {
+    "description": "Joins spoken hours and minutes, e.g. 1 hour 5 minutes",
+    "placeholders": {
+      "hours": { "type": "String" },
+      "minutes": { "type": "String" }
+    }
+  },
+
 
   "onboardingCarouselSkip": "スキップ",
   "@onboardingCarouselSkip": { "description": "Skip button on the onboarding carousel" },

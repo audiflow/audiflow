@@ -11,6 +11,9 @@ refs:
     - packages/audiflow_domain/lib/src/features/player/models/sleep_timer_event.dart
     - packages/audiflow_domain/lib/src/features/player/services/sleep_timer_service.dart
     - packages/audiflow_domain/lib/src/features/player/services/chapter_crossing_tracker.dart
+    - packages/audiflow_domain/lib/src/features/player/services/sleep_timer_time_left_calculator.dart
+    - packages/audiflow_domain/lib/src/features/player/models/sleep_timer_time_left.dart
+    - packages/audiflow_domain/lib/src/features/player/providers/sleep_timer_time_left_provider.dart
     - packages/audiflow_domain/lib/src/features/player/datasources/local/sleep_timer_preferences_datasource.dart
     - packages/audiflow_domain/lib/src/features/player/controllers/sleep_timer_controller.dart
     - packages/audiflow_domain/lib/src/features/player/providers/sleep_timer_providers.dart
@@ -20,7 +23,7 @@ refs:
     - packages/audiflow_app/lib/features/player/presentation/widgets/sleep_timer_numeric_panel.dart
     - packages/audiflow_app/lib/features/player/presentation/widgets/sleep_timer_chip.dart
     - packages/audiflow_app/lib/features/player/presentation/widgets/sleep_timer_icon_button.dart
-    - packages/audiflow_app/lib/features/player/presentation/widgets/sleep_timer_status_label.dart
+    - packages/audiflow_app/lib/features/player/presentation/widgets/sleep_timer_countdown_format.dart
     - packages/audiflow_app/lib/features/player/presentation/widgets/sleep_timer_label_format.dart
 ---
 # FR 09: Sleep timer
@@ -37,7 +40,7 @@ Audiflow keeps the timer deliberately compact and opinionated rather than exposi
 
 - **Arming a timer**: A sleep (moon) icon in the full-player action row opens a single bottom sheet. The sheet groups its options into two rounded cards. The "Stop on" card holds End of episode and End of chapter; "End of chapter" is shown only when the currently playing episode actually has chapter data. The "Stop after" card holds a minutes entry and an episodes entry, which show "Set minutes" / "Set episodes" the first time; once a value has been used, they instead show the remembered value (e.g. "30 minutes") with a trailing "Edit" control. While a timer is armed, a status line under the sheet title describes it ("Stopping in mm:ss (at HH:MM)", "Stops at end of episode", "Stops at end of chapter", or "N episodes left", with the countdown refreshing once per second), the active option is highlighted with a check mark inside its card, and a Cancel button below the cards turns the timer off. When no timer is armed, neither the status line nor the Cancel button is shown.
 - **Numeric entry**: Choosing the minutes or episodes entry for the first time swaps the same sheet to a numeric input panel — a large readout, a number pad, and a Start button — with no nested sheets. Minutes are bounded to 1–999, episodes to 1–99. When a value is already remembered, a short tap on the entry starts the timer immediately with that value, while a long press or the "Edit" control opens the numeric panel pre-filled for editing.
-- **Active-timer feedback**: While a timer is armed, the sleep icon is tinted with the primary color, and a status chip appears above the mini player. The chip reads "Sleep · Episode end", "Sleep · Chapter end", "Sleep · N eps left", or a live "Sleep · mm:ss" countdown for duration timers (switching to h:mm:ss past an hour), refreshing once per second. Tapping the chip opens the same sleep sheet from anywhere in the app without navigating away; a delete control on the chip cancels the timer directly.
+- **Active-timer feedback**: While a timer is armed, the sleep icon is filled and tinted with the primary color; it shows only whether a timer is on, with no text beside it. Screen readers hear the full status on the icon, e.g. "Sleep timer, stops at end of episode, 12 minutes left". The full player's seek bar shows the time until playback stops in place of its right-hand time label, marked with a sleep glyph (zZ) (tap to switch back to the time label, see FR 04). That time is wall-clock time for a duration timer, refreshing every second and unaffected by playback speed. The other modes divide media time by the playback speed in effect: the episode's remaining time for end of episode; the time to the next chapter's start for end of chapter (to the end of the episode in the last chapter, and to the end of the first chapter during a lead-in); and for "after N episodes", the current episode's remaining time plus the durations of the next N−1 queued episodes (fewer if the queue runs out first). When any of those queued durations is unknown, the countdown shows the current episode's remaining time followed by `+N`, the number of further episodes. When the stop point cannot be placed (unknown episode length, or no chapters), the seek bar keeps its regular label. A status chip also appears above the mini player. The chip reads "Sleep · Episode end", "Sleep · Chapter end", "Sleep · N eps left", or a live "Sleep · mm:ss" countdown for duration timers (switching to h:mm:ss past an hour), refreshing once per second. Tapping the chip opens the same sleep sheet from anywhere in the app without navigating away; a delete control on the chip cancels the timer directly.
 - **When the timer fires**: Playback fades from the current volume down to silence over roughly eight seconds and then pauses; the original volume is restored so the next session starts at the listener's preferred level. The timer config resets to Off, and if the app is in the foreground a brief "Sleep timer ended" snackbar is shown. Remembered minute and episode values are left untouched.
 - **End-of-episode and end-of-chapter cases**: An end-of-episode timer fires when the current episode finishes naturally; if the listener manually switches episodes, the timer simply carries over to the new episode. An end-of-chapter timer fires when playback reaches the next chapter boundary on its own; if the listener seeks out of the current chapter (seek bar, skip buttons, chapter list, transcript, lock screen), the timer retargets to the chapter the seek lands in instead of firing, even when that is the start of the next chapter. Chapters that finish loading, or are replaced, while the timer is armed never count as a boundary. Armed during an untitled lead-in before the first chapter, the timer fires at the end of the first chapter. If the playing episode changes to one with no chapters while an end-of-chapter timer is armed, the timer is treated as inactive.
 - **Episode-count case**: An "after N episodes" timer decrements only when an episode completes on its own. Manually skipping to the next episode does not consume a count. When the last counted episode completes, the timer fires before the queue auto-advances.
@@ -50,7 +53,7 @@ Audiflow keeps the timer deliberately compact and opinionated rather than exposi
 - Evaluates timer progress against player lifecycle signals (episode completion, manual episode switch, seeks), chapter boundaries crossed during playback, and a one-second tick for duration timers, deciding via pure, side-effect-free logic whether to keep, fire, decrement, or retarget.
 - Distinguishes natural episode completion from manual skips so episode-count timers only decrement on genuine listening progress, and transfers end-of-episode timers across manual episode changes.
 - Fades audio out smoothly before pausing when a timer fires, restoring the pre-fade volume afterwards, and cancels an in-flight fade cleanly if the timer is turned off.
-- Surfaces timer state continuously through a tinted player icon and an above-mini-player status chip with a live countdown, and emits a one-shot event that drives a foreground "ended" snackbar.
+- Surfaces timer state continuously through a tinted player icon, a seek bar countdown to the stop point that accounts for playback speed, and an above-mini-player status chip with a live countdown, and emits a one-shot event that drives a foreground "ended" snackbar.
 - Hides the end-of-chapter option and disarms end-of-chapter timers when the current episode carries no chapter data, keeping the menu honest about what is possible.
 - Reports each armed timer to analytics (mode and, where relevant, the chosen value) for product insight.
 
@@ -72,6 +75,9 @@ Audiflow keeps the timer deliberately compact and opinionated rather than exposi
   - `packages/audiflow_domain/lib/src/features/player/models/sleep_timer_event.dart`
   - `packages/audiflow_domain/lib/src/features/player/services/sleep_timer_service.dart`
   - `packages/audiflow_domain/lib/src/features/player/services/chapter_crossing_tracker.dart`
+  - `packages/audiflow_domain/lib/src/features/player/services/sleep_timer_time_left_calculator.dart`
+  - `packages/audiflow_domain/lib/src/features/player/models/sleep_timer_time_left.dart`
+  - `packages/audiflow_domain/lib/src/features/player/providers/sleep_timer_time_left_provider.dart`
   - `packages/audiflow_domain/lib/src/features/player/datasources/local/sleep_timer_preferences_datasource.dart`
   - `packages/audiflow_domain/lib/src/features/player/controllers/sleep_timer_controller.dart`
   - `packages/audiflow_domain/lib/src/features/player/providers/sleep_timer_providers.dart`
@@ -81,6 +87,6 @@ Audiflow keeps the timer deliberately compact and opinionated rather than exposi
   - `packages/audiflow_app/lib/features/player/presentation/widgets/sleep_timer_numeric_panel.dart`
   - `packages/audiflow_app/lib/features/player/presentation/widgets/sleep_timer_chip.dart`
   - `packages/audiflow_app/lib/features/player/presentation/widgets/sleep_timer_icon_button.dart`
-  - `packages/audiflow_app/lib/features/player/presentation/widgets/sleep_timer_status_label.dart`
+  - `packages/audiflow_app/lib/features/player/presentation/widgets/sleep_timer_countdown_format.dart`
   - `packages/audiflow_app/lib/features/player/presentation/widgets/sleep_timer_label_format.dart`
 - **Related FR**: `04-audio-playback.md`

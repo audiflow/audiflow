@@ -2654,6 +2654,66 @@ abstract class AppLocalizations {
   /// **'{count, plural, one{{count} episode left} other{{count} episodes left}}'**
   String sleepTimerStatusEpisodesLeft(int count);
 
+  /// Screen reader label for the sleep-timer icon and the seek bar sleep countdown while a timer is active
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep timer, {status}'**
+  String sleepTimerSemanticsLabel(String status);
+
+  /// Joins the sleep timer's stop condition and its time left for screen readers
+  ///
+  /// In en, this message translates to:
+  /// **'{status}, {timeLeft}'**
+  String sleepTimerSemanticsStatusAndTimeLeft(String status, String timeLeft);
+
+  /// Screen reader phrase for an active end-of-episode timer
+  ///
+  /// In en, this message translates to:
+  /// **'stops at end of episode'**
+  String get sleepTimerSemanticsEndOfEpisode;
+
+  /// Screen reader phrase for an active end-of-chapter timer
+  ///
+  /// In en, this message translates to:
+  /// **'stops at end of chapter'**
+  String get sleepTimerSemanticsEndOfChapter;
+
+  /// Screen reader phrase for an active episode-count timer; count includes the current episode
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{stops at end of this episode} other{stops after {count} episodes}}'**
+  String sleepTimerSemanticsEpisodes(int count);
+
+  /// Screen reader phrase for the time until the sleep timer stops playback
+  ///
+  /// In en, this message translates to:
+  /// **'{time} left'**
+  String sleepTimerSemanticsTimeLeft(String time);
+
+  /// Screen reader phrase when the time left covers only the current episode and further episodes of unknown length follow
+  ///
+  /// In en, this message translates to:
+  /// **'{time} left, plus {count, plural, one{1 more episode} other{{count} more episodes}}'**
+  String sleepTimerSemanticsTimeLeftPlusEpisodes(String time, int count);
+
+  /// Spoken hours part of the sleep timer's time left
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} hour} other{{count} hours}}'**
+  String sleepTimerSpokenHours(int count);
+
+  /// Spoken time left under a minute
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} second} other{{count} seconds}}'**
+  String sleepTimerSpokenSeconds(int count);
+
+  /// Joins spoken hours and minutes, e.g. 1 hour 5 minutes
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} {minutes}'**
+  String sleepTimerSpokenHoursMinutes(String hours, String minutes);
+
   /// Skip button on the onboarding carousel
   ///
   /// In en, this message translates to:

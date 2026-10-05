@@ -935,6 +935,60 @@
     "description": "Sleep timer sheet status line for an active episode-count timer",
     "placeholders": { "count": { "type": "int" } }
   },
+  "sleepTimerSemanticsLabel": "Sleep timer, {status}",
+  "@sleepTimerSemanticsLabel": {
+    "description": "Screen reader label for the sleep-timer icon and the seek bar sleep countdown while a timer is active",
+    "placeholders": { "status": { "type": "String", "example": "stops at end of episode, 12 minutes left" } }
+  },
+  "sleepTimerSemanticsStatusAndTimeLeft": "{status}, {timeLeft}",
+  "@sleepTimerSemanticsStatusAndTimeLeft": {
+    "description": "Joins the sleep timer's stop condition and its time left for screen readers",
+    "placeholders": {
+      "status": { "type": "String", "example": "stops at end of episode" },
+      "timeLeft": { "type": "String", "example": "12 minutes left" }
+    }
+  },
+  "sleepTimerSemanticsEndOfEpisode": "stops at end of episode",
+  "@sleepTimerSemanticsEndOfEpisode": { "description": "Screen reader phrase for an active end-of-episode timer" },
+  "sleepTimerSemanticsEndOfChapter": "stops at end of chapter",
+  "@sleepTimerSemanticsEndOfChapter": { "description": "Screen reader phrase for an active end-of-chapter timer" },
+  "sleepTimerSemanticsEpisodes": "{count, plural, one{stops at end of this episode} other{stops after {count} episodes}}",
+  "@sleepTimerSemanticsEpisodes": {
+    "description": "Screen reader phrase for an active episode-count timer; count includes the current episode",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "sleepTimerSemanticsTimeLeft": "{time} left",
+  "@sleepTimerSemanticsTimeLeft": {
+    "description": "Screen reader phrase for the time until the sleep timer stops playback",
+    "placeholders": { "time": { "type": "String", "example": "12 minutes" } }
+  },
+  "sleepTimerSemanticsTimeLeftPlusEpisodes": "{time} left, plus {count, plural, one{1 more episode} other{{count} more episodes}}",
+  "@sleepTimerSemanticsTimeLeftPlusEpisodes": {
+    "description": "Screen reader phrase when the time left covers only the current episode and further episodes of unknown length follow",
+    "placeholders": {
+      "time": { "type": "String", "example": "12 minutes" },
+      "count": { "type": "int" }
+    }
+  },
+  "sleepTimerSpokenHours": "{count, plural, one{{count} hour} other{{count} hours}}",
+  "@sleepTimerSpokenHours": {
+    "description": "Spoken hours part of the sleep timer's time left",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "sleepTimerSpokenSeconds": "{count, plural, one{{count} second} other{{count} seconds}}",
+  "@sleepTimerSpokenSeconds": {
+    "description": "Spoken time left under a minute",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "sleepTimerSpokenHoursMinutes": "{hours} {minutes}",
+  "@sleepTimerSpokenHoursMinutes": {
+    "description": "Joins spoken hours and minutes, e.g. 1 hour 5 minutes",
+    "placeholders": {
+      "hours": { "type": "String", "example": "1 hour" },
+      "minutes": { "type": "String", "example": "5 minutes" }
+    }
+  },
+
 
   "onboardingCarouselSkip": "Skip",
   "@onboardingCarouselSkip": { "description": "Skip button on the onboarding carousel" },
