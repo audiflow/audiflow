@@ -177,10 +177,13 @@ void main() {
       final track = tester.getRect(_track);
       final label = tester.getRect(find.text('-09:00'));
 
+      // Explicit ids far above the tester's auto-assigned pointers, which
+      // keep counting across tests and would collide under shuffled order.
       final labelTap = await tester.startGesture(
         Offset(label.center.dx, track.bottom - 2),
+        pointer: 1001,
       );
-      final other = await tester.startGesture(track.center, pointer: 2);
+      final other = await tester.startGesture(track.center, pointer: 1002);
       await labelTap.up();
       await other.up();
       await tester.pump();
@@ -699,7 +702,8 @@ void main() {
       final settled = recorder.changes.last;
       final other = await tester.startGesture(
         tester.getCenter(_track) + const Offset(-40, 0),
-        pointer: 7,
+        // Far above the auto-assigned ids so shuffled order cannot collide.
+        pointer: 1003,
       );
       await other.cancel();
       await gesture.moveBy(const Offset(6, 0), timeStamp: ms(520));
