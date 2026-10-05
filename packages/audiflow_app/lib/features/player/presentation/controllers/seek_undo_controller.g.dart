@@ -72,7 +72,7 @@ final class SeekUndoControllerProvider
 }
 
 String _$seekUndoControllerHash() =>
-    r'219003392c9adafe6da14721e2cbab93a65423dc';
+    r'aaa0b7d7e50b1d7bca7cc5e5fa9d1d72ba38fa03';
 
 /// Offers a temporary undo for seek jumps made from the player screen.
 ///

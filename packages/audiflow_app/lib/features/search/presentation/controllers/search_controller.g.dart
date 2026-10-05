@@ -98,7 +98,7 @@ final class PodcastSearchControllerProvider
 }
 
 String _$podcastSearchControllerHash() =>
-    r'70136b27d5a9d648ca93f488fab00eb5cf44f593';
+    r'76ba88b3ccedc1a8ed32ca478867e61cffc70954';
 
 /// Controller for managing podcast search state and operations.
 

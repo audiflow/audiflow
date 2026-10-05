@@ -53,7 +53,7 @@ final class LocaleControllerProvider
   }
 }
 
-String _$localeControllerHash() => r'9bca26067633093a337e4091ff1623234d519b1c';
+String _$localeControllerHash() => r'f1e8b9ebb853721ead4f8528d1fc19be9d1417c0';
 
 /// Controls the app-wide UI language.
 ///
