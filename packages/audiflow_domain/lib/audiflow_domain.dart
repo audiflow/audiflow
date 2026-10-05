@@ -127,6 +127,7 @@ export 'src/features/player/models/sleep_timer_event.dart';
 export 'src/features/player/models/sleep_timer_state.dart';
 export 'src/features/player/services/audio_playback_controller.dart';
 export 'src/features/player/services/audio_player_service.dart';
+export 'src/features/player/services/chapter_crossing_tracker.dart';
 export 'src/features/player/services/effective_audio_settings_applier.dart';
 export 'src/features/player/services/listen_session_tracker.dart';
 export 'src/features/player/services/now_playing_controller.dart';

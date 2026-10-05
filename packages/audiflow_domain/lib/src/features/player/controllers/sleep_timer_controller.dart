@@ -4,12 +4,15 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../monitoring/models/analytics_event.dart';
 import '../../monitoring/providers/analytics_providers.dart';
+import '../../transcript/models/episode_chapter.dart';
+import '../models/current_chapter.dart';
 import '../models/sleep_timer_config.dart';
 import '../models/sleep_timer_event.dart';
 import '../models/sleep_timer_state.dart';
 import '../providers/current_chapter_providers.dart';
 import '../providers/sleep_timer_providers.dart';
 import '../services/audio_player_service.dart';
+import '../services/chapter_crossing_tracker.dart';
 import '../services/player_lifecycle_events.dart';
 import '../services/sleep_timer_service.dart';
 
@@ -36,6 +39,7 @@ class SleepTimerController extends _$SleepTimerController {
 
   final StreamController<SleepTimerEvent> _events =
       StreamController<SleepTimerEvent>.broadcast();
+  final ChapterCrossingTracker _chapterTracker = ChapterCrossingTracker();
   Timer? _tick;
 
   Stream<SleepTimerEvent> get events => _events.stream;
@@ -55,6 +59,16 @@ class SleepTimerController extends _$SleepTimerController {
     // no AsyncValue wrapper.
     final stream = ref.watch(playerLifecycleEventsProvider);
     final lifecycleSub = stream.listen(_onLifecycle);
+
+    // Tracked whatever the mode, so a timer armed mid-chapter already knows
+    // which chapter it is in. Both are listened: a chapter list replaced
+    // without changing the current chapter must still move the baseline.
+    ref.listen<CurrentChapter?>(
+      currentChapterProvider,
+      (_, _) => _observeChapter(),
+      fireImmediately: true,
+    );
+    ref.listen(currentEpisodeChaptersProvider, (_, _) => _observeChapter());
 
     ref.onDispose(() {
       lifecycleSub.cancel();
@@ -142,33 +156,50 @@ class SleepTimerController extends _$SleepTimerController {
     });
   }
 
-  void _onTick() {
-    final hasChapters =
-        ref.read(currentEpisodeHasChaptersProvider).value ?? false;
-    final decision = _service.evaluate(
-      config: state.config,
-      event: TickEvent(DateTime.now()),
-      currentEpisodeHasChapters: hasChapters,
-    );
-    _applyDecision(decision);
-  }
+  void _onTick() => _evaluate(TickEvent(DateTime.now()));
 
   void _onLifecycle(PlayerLifecycleEvent event) {
+    if (event is SeekLifecycle) {
+      _chapterTracker.seekCompleted();
+      return;
+    }
     final mapped = switch (event) {
       EpisodeCompletedLifecycle() => const EpisodeCompletedEvent(),
       EpisodeSwitchedLifecycle() => const ManualEpisodeSwitchedEvent(),
+      SeekStartedLifecycle(:final target) => _chapterTracker.seekStarted(
+        target,
+        now: DateTime.now(),
+      ),
       SeekLifecycle() => null,
     };
-    if (mapped == null) return;
+    if (mapped != null) _evaluate(mapped);
+  }
 
-    final hasChapters =
-        ref.read(currentEpisodeHasChaptersProvider).value ?? false;
-    final decision = _service.evaluate(
-      config: state.config,
-      event: mapped,
-      currentEpisodeHasChapters: hasChapters,
+  void _observeChapter() {
+    final chapterEvent = _chapterTracker.observe(
+      chapters: _currentChapters(),
+      current: ref.read(currentChapterProvider),
+      now: DateTime.now(),
     );
-    _applyDecision(decision);
+    if (chapterEvent != null) _evaluate(chapterEvent);
+  }
+
+  // Read from the chapter list this controller listens to, not from
+  // currentEpisodeHasChaptersProvider: that one is auto-disposed and only
+  // resolved while the sleep sheet is open, so in the background it would
+  // read as "no chapters" and keep an end-of-chapter timer from firing.
+  List<EpisodeChapter>? _currentChapters() =>
+      ref.read(currentEpisodeChaptersProvider).unwrapPrevious().value;
+
+  void _evaluate(SleepTimerPlayerEvent event) {
+    final hasChapters = _currentChapters()?.isNotEmpty ?? false;
+    _applyDecision(
+      _service.evaluate(
+        config: state.config,
+        event: event,
+        currentEpisodeHasChapters: hasChapters,
+      ),
+    );
   }
 
   void _applyDecision(SleepTimerDecision decision) {
@@ -188,6 +219,8 @@ class SleepTimerController extends _$SleepTimerController {
           );
         }
       case RetargetChapterDecision():
+        // The tracker already moved its baseline to the seek target, so the
+        // next natural crossing ends the new chapter.
         return;
     }
   }

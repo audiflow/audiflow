@@ -1,0 +1,84 @@
+import '../../transcript/models/episode_chapter.dart';
+import '../models/current_chapter.dart';
+import 'sleep_timer_service.dart';
+
+/// Turns current-chapter changes into the sleep timer's chapter events.
+///
+/// A chapter change counts as a natural crossing only when playback moves
+/// forward into a later chapter of the same chapter list. Everything else
+/// re-baselines silently: chapters loading or being replaced under the
+/// listener, an episode switch, or an untagged backward jump.
+///
+/// Seeks are tagged by the player ([seekStarted] / [seekCompleted]) rather
+/// than guessed from position jumps. A seek that leaves the baseline chapter
+/// yields [SeekedPastChapterEvent] and moves the baseline to the target
+/// chapter, which is how the end-of-chapter timer retargets.
+///
+/// Pure state machine: the caller supplies the clock.
+class ChapterCrossingTracker {
+  /// How long chapter changes after a seek starts are attributed to it.
+  ///
+  /// Normally the seek's completion ends the window first. The bound only
+  /// matters for repositioning that reports no completion (resume at a
+  /// saved position, seeking a restored episode, a failed seek), so that a
+  /// lost completion cannot suppress chapter crossings for good. Position
+  /// updates read before the jump can arrive while a remote source buffers,
+  /// which is why the window is several seconds rather than one tick.
+  static const seekSettleWindow = Duration(seconds: 5);
+
+  List<EpisodeChapter>? _chapters;
+  int? _index;
+  DateTime? _settleUntil;
+
+  /// Feeds the current chapter list and the chapter at the position.
+  ///
+  /// [chapters] is compared by identity: the chapter provider emits a new
+  /// list whenever the store changes, so a different list means the
+  /// chapters loaded or changed rather than the position moving.
+  SleepTimerPlayerEvent? observe({
+    required List<EpisodeChapter>? chapters,
+    required CurrentChapter? current,
+    required DateTime now,
+  }) {
+    final index = current?.index;
+    if (!identical(chapters, _chapters)) {
+      _chapters = chapters;
+      _index = index;
+      return null;
+    }
+    if (index == _index) return null;
+    // Positions read before or during the jump; the seek set the baseline.
+    if (_isSettling(now)) return null;
+    final previous = _index;
+    _index = index;
+    // A lead-in before the first chapter is not a chapter, so entering
+    // chapter one from it is not the end of a chapter.
+    if (previous == null || index == null) return null;
+    return previous < index ? const ChapterChangedEvent() : null;
+  }
+
+  /// Marks a seek to [target] that is about to move the position.
+  ///
+  /// A seek that stays in the baseline chapter needs no window: every
+  /// position before or after the jump maps to the same chapter.
+  SleepTimerPlayerEvent? seekStarted(Duration target, {required DateTime now}) {
+    final chapters = _chapters;
+    if (chapters == null || chapters.isEmpty) return null;
+    final targetIndex = chapterIndexAt(chapters, target);
+    if (targetIndex == _index) return null;
+    _index = targetIndex;
+    _settleUntil = now.add(seekSettleWindow);
+    return const SeekedPastChapterEvent();
+  }
+
+  /// Marks the seek as committed by the player; later changes are playback.
+  void seekCompleted() => _settleUntil = null;
+
+  bool _isSettling(DateTime now) {
+    final until = _settleUntil;
+    if (until == null) return false;
+    if (now.isBefore(until)) return true;
+    _settleUntil = null;
+    return false;
+  }
+}
