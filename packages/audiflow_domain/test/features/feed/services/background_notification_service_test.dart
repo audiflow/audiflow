@@ -299,6 +299,21 @@ void main() {
         check(stub.showedIds).isEmpty();
       });
 
+      test('does not blame the artwork when the retry fails too', () async {
+        final stub = _StubShowDelegate(throwOnCallIndices: {0, 1});
+        final failures = <String>[];
+        final service = BackgroundNotificationService(
+          textFormatter: _formatter,
+          artworkFileProvider: (_, id) async => '/tmp/art-$id.png',
+          onArtworkFailure: (url, _) => failures.add(url),
+        );
+
+        await check(
+          service.showPerEpisodeNotificationsViaDelegate(stub, [withArtwork]),
+        ).throws<Exception>();
+        check(failures).isEmpty();
+      });
+
       test('gives up on artwork that does not arrive in time', () {
         fakeAsync((async) {
           final stub = _StubShowDelegate();

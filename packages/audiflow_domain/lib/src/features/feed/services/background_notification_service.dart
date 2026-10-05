@@ -229,11 +229,11 @@ class BackgroundNotificationService {
         error: e,
         stackTrace: stack,
       );
-      // A rejected attachment is an artwork failure even when the text-only
-      // retry succeeds.
+      await _show(delegate, detail, null);
+      // Only a text-only success shows the attachment was the problem; a
+      // failure of both is not the artwork's fault.
       final url = detail.artworkUrl;
       if (url != null) _reportArtworkFailure(url, e);
-      await _show(delegate, detail, null);
     }
   }
 
