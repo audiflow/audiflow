@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
-import 'dart:ui' as ui;
 
 import 'package:dio/dio.dart';
 
-/// Downloads podcast artwork and writes notification-sized thumbnails.
+import 'notification_artwork_encoder.dart';
+
+/// Downloads podcast artwork and writes per-notification image files in the
+/// form chosen by the injected [NotificationArtworkEncoder].
 ///
 /// Use [fileFor] as a `BackgroundNotificationService` artwork provider.
 class NotificationArtworkFiles {
@@ -14,15 +16,14 @@ class NotificationArtworkFiles {
   NotificationArtworkFiles({
     required this._dio,
     required this._directory,
+    required this._encoder,
     this._maxBytes = defaultMaxBytes,
     this._downloadTimeout = defaultDownloadTimeout,
   });
 
-  /// Podcast artwork is often 3000x3000 (~36 MB decoded); Android decodes
-  /// large icons without sampling, so shrink before handing the file over.
-  static const thumbnailWidth = 256;
-
   /// Artwork URLs come from feeds; cap what a single response may buffer.
+  /// Also keeps passthrough files well under iOS's 10 MB image attachment
+  /// limit.
   static const defaultMaxBytes = 5 * 1024 * 1024;
 
   /// Stops the download itself, not just the caller's wait, so an abandoned
@@ -31,23 +32,24 @@ class NotificationArtworkFiles {
 
   final Dio _dio;
   final Future<Directory> Function() _directory;
+  final NotificationArtworkEncoder _encoder;
   final int _maxBytes;
   final Duration _downloadTimeout;
 
   // Several new episodes of one podcast share artwork; fetch it once.
-  final Map<String, Future<Uint8List>> _thumbnails = {};
+  final Map<String, Future<EncodedArtwork>> _artworks = {};
   Future<Directory>? _preparedDirectory;
 
-  /// Writes the thumbnail for [artworkUrl] to a file owned by
+  /// Writes the artwork for [artworkUrl] to a file owned by
   /// [notificationId] and returns its path.
   Future<String> fileFor(String artworkUrl, int notificationId) async {
-    final bytes = await _thumbnails.putIfAbsent(
+    final artwork = await _artworks.putIfAbsent(
       artworkUrl,
-      () => _downloadThumbnail(artworkUrl),
+      () => _downloadAndEncode(artworkUrl),
     );
     final directory = await (_preparedDirectory ??= _prepareDirectory());
-    final file = File('${directory.path}/$notificationId.png');
-    await file.writeAsBytes(bytes, flush: true);
+    final file = File('${directory.path}/$notificationId.${artwork.extension}');
+    await file.writeAsBytes(artwork.bytes, flush: true);
     return file.path;
   }
 
@@ -59,12 +61,12 @@ class NotificationArtworkFiles {
     return directory.create(recursive: true);
   }
 
-  Future<Uint8List> _downloadThumbnail(String url) async {
+  Future<EncodedArtwork> _downloadAndEncode(String url) async {
     final cancelToken = CancelToken();
     final timer = Timer(_downloadTimeout, cancelToken.cancel);
     try {
       final bytes = await _download(url, cancelToken);
-      return await downscaleToPng(bytes, thumbnailWidth);
+      return await _encoder.encode(bytes);
     } finally {
       timer.cancel();
     }
@@ -88,20 +90,5 @@ class NotificationArtworkFiles {
     }
     if (builder.isEmpty) throw StateError('Empty artwork response: $url');
     return builder.takeBytes();
-  }
-}
-
-/// Decodes [bytes] at [width] (aspect ratio kept) and re-encodes as PNG.
-Future<Uint8List> downscaleToPng(Uint8List bytes, int width) async {
-  final codec = await ui.instantiateImageCodec(bytes, targetWidth: width);
-  final frame = await codec.getNextFrame();
-  codec.dispose();
-  final image = frame.image;
-  try {
-    final png = await image.toByteData(format: ui.ImageByteFormat.png);
-    if (png == null) throw StateError('PNG encoding failed');
-    return png.buffer.asUint8List();
-  } finally {
-    image.dispose();
   }
 }

@@ -430,6 +430,12 @@ void backgroundCallback() {
         directory: () async => Directory(
           '${(await getTemporaryDirectory()).path}/notification_artwork',
         ),
+        // iOS disables the GPU for a backgrounded engine and Impeller then
+        // stalls dart:ui image decoding, so iOS attaches the original file
+        // (it scales attachments itself). Android needs a small large icon.
+        encoder: Platform.isIOS
+            ? const PassthroughArtworkEncoder()
+            : const DownscalingArtworkEncoder(),
       );
       final notificationService = BackgroundNotificationService(
         textFormatter: await LocalizedNotificationTextFormatter.create(
