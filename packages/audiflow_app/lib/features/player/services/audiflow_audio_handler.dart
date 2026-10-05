@@ -70,7 +70,7 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
         readDuckBehavior: () => _settings.getDuckInterruptionBehavior(),
         isPlaying: () => _player.playing,
         currentPosition: () => _player.position,
-        seek: _controller.seek,
+        seek: _controller.seekAutomatically,
         pause: () async {
           await _controller.pause();
           // just_audio's internal `playing` flag does not flip during

@@ -31,6 +31,7 @@ void main() {
   Future<void> setUpContainer({
     double speed = 1.0,
     PlaybackQueue queue = const PlaybackQueue(),
+    List<EpisodeChapter> chapters = const [],
   }) async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
@@ -50,7 +51,7 @@ void main() {
           ),
         ),
         currentEpisodeChaptersProvider.overrideWith(
-          (ref) => Stream.value(const []),
+          (ref) => Stream.value(chapters),
         ),
         nowPlayingSpeedProvider.overrideWith((ref) => speed),
         playbackQueueProvider.overrideWith((ref) => Stream.value(queue)),
@@ -82,6 +83,34 @@ void main() {
     check(
       container.read(sleepTimerTimeLeftProvider),
     ).equals(const SleepTimerTimeLeft(Duration(minutes: 20)));
+  });
+
+  test('counts an end-of-chapter timer in the last chapter to the episode '
+      'end', () async {
+    // Position 10 of 40 minutes, in the last of two chapters.
+    await setUpContainer(
+      speed: 2.0,
+      chapters: [
+        EpisodeChapter()
+          ..episodeId = 1
+          ..sortOrder = 0
+          ..title = 'Intro'
+          ..startMs = 0,
+        EpisodeChapter()
+          ..episodeId = 1
+          ..sortOrder = 1
+          ..title = 'Main'
+          ..startMs = 5 * 60000,
+      ],
+    );
+    final sub = container.listen(sleepTimerTimeLeftProvider, (_, _) {});
+    addTearDown(sub.close);
+    await pumpEventQueue();
+    timer().setEndOfChapter();
+    await pumpEventQueue();
+    check(
+      container.read(sleepTimerTimeLeftProvider),
+    ).equals(const SleepTimerTimeLeft(Duration(minutes: 15)));
   });
 
   test('sums the queue after the now-playing episode', () async {

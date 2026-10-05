@@ -76,11 +76,53 @@ void main() {
   });
 
   group('seeks', () {
-    test('a seek out of the chapter retargets', () {
+    test('a seek forward out of the chapter leaves it', () {
       check(observeAt(30)).isNull();
       check(
         tracker.seekStarted(1, const Duration(seconds: 60), now: t0),
-      ).isA<SeekedPastChapterEvent>();
+      ).isA<SeekedOutOfChapterEvent>();
+    });
+
+    test('a seek backward out of the chapter leaves it', () {
+      check(observeAt(90)).isNull();
+      check(
+        tracker.seekStarted(1, const Duration(seconds: 30), now: t0),
+      ).isA<SeekedOutOfChapterEvent>();
+    });
+
+    test('a seek from the lead-in into the first chapter stays', () {
+      chapters = [_chapter(0, 10), _chapter(1, 60)];
+      check(observeAt(5)).isNull();
+      check(
+        tracker.seekStarted(1, const Duration(seconds: 20), now: t0),
+      ).isNull();
+      tracker.seekCompleted(1);
+      check(observeAt(60)).isA<ChapterChangedEvent>();
+    });
+
+    test('a seek from the lead-in past the first chapter leaves it', () {
+      chapters = [_chapter(0, 10), _chapter(1, 60)];
+      check(observeAt(5)).isNull();
+      check(
+        tracker.seekStarted(1, const Duration(seconds: 70), now: t0),
+      ).isA<SeekedOutOfChapterEvent>();
+    });
+
+    test('a resume after the source read zero does not leave', () {
+      // The baseline came from the saved position; the loaded source then
+      // reports zero before the player seeks back to that position.
+      check(observeAt(90)).isNull();
+      check(observeAt(0)).isNull();
+      check(
+        tracker.seekStarted(
+          1,
+          const Duration(seconds: 90),
+          now: t0,
+          automatic: true,
+        ),
+      ).isNull();
+      tracker.seekCompleted(1);
+      check(observeAt(120)).isA<ChapterChangedEvent>();
     });
 
     test('a seek within the chapter changes nothing', () {
@@ -168,6 +210,56 @@ void main() {
       check(observeAt(30, now: soon)).isNull();
       tracker.seekCompleted(2);
       check(observeAt(60, now: soon)).isA<ChapterChangedEvent>();
+    });
+
+    test('an automatic rewind into the previous chapter stays', () {
+      check(observeAt(62)).isNull();
+      check(
+        tracker.seekStarted(
+          1,
+          const Duration(seconds: 57),
+          now: t0,
+          automatic: true,
+        ),
+      ).isNull();
+      tracker.seekCompleted(1);
+      // Playing back into the chapter the listener was in ends nothing.
+      check(observeAt(57)).isNull();
+      check(observeAt(60)).isNull();
+      check(observeAt(120)).isA<ChapterChangedEvent>();
+    });
+
+    test('a list reloaded during a rewind keeps the rewind baseline', () {
+      check(observeAt(62)).isNull();
+      tracker.seekStarted(
+        1,
+        const Duration(seconds: 57),
+        now: t0,
+        automatic: true,
+      );
+      tracker.seekCompleted(1);
+      check(observeAt(57)).isNull();
+      chapters = _chapters();
+      check(observeAt(58)).isNull();
+      // Playing back into the chapter the listener was in still ends nothing.
+      check(observeAt(60)).isNull();
+      check(observeAt(120)).isA<ChapterChangedEvent>();
+    });
+
+    test('a seek after an automatic rewind compares with the chapter', () {
+      check(observeAt(62)).isNull();
+      tracker.seekStarted(
+        1,
+        const Duration(seconds: 57),
+        now: t0,
+        automatic: true,
+      );
+      tracker.seekCompleted(1);
+      check(observeAt(57)).isNull();
+      // Leaving chapter 1 for chapter 0 on request still leaves it.
+      check(
+        tracker.seekStarted(2, const Duration(seconds: 20), now: t0),
+      ).isA<SeekedOutOfChapterEvent>();
     });
 
     test('without chapters a seek yields nothing', () {

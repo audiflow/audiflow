@@ -133,6 +133,82 @@ void main() {
       },
     );
 
+    Future<List<SleepTimerEvent>> recordEvents(
+      ProviderContainer container,
+    ) async {
+      final events = <SleepTimerEvent>[];
+      final sub = container
+          .read(sleepTimerControllerProvider.notifier)
+          .events
+          .listen(events.add);
+      addTearDown(sub.cancel);
+      return events;
+    }
+
+    Future<void> emitAndSettle(PlayerLifecycleEvent event) async {
+      fakeLifecycle.emit(event);
+      await pumpEventQueue();
+    }
+
+    test('a manual switch cancels endOfEpisode and says so', () async {
+      final container = await makeContainer();
+      addTearDown(container.dispose);
+      container.read(sleepTimerControllerProvider.notifier).setEndOfEpisode();
+      final events = await recordEvents(container);
+
+      await emitAndSettle(const EpisodeSwitchedLifecycle());
+
+      final state = container.read(sleepTimerControllerProvider);
+      expect(state.config, const SleepTimerConfig.off());
+      expect(events, [isA<SleepTimerCancelled>()]);
+    });
+
+    test('a seek within the episode keeps endOfEpisode', () async {
+      final container = await makeContainer();
+      addTearDown(container.dispose);
+      container.read(sleepTimerControllerProvider.notifier).setEndOfEpisode();
+      final events = await recordEvents(container);
+
+      await emitAndSettle(
+        const SeekStartedLifecycle(Duration(minutes: 5), seekId: 1),
+      );
+      await emitAndSettle(const SeekLifecycle(Duration(minutes: 5), seekId: 1));
+
+      final state = container.read(sleepTimerControllerProvider);
+      expect(state.config, const SleepTimerConfig.endOfEpisode());
+      expect(events, isEmpty);
+    });
+
+    test('a manual switch neither cancels nor decrements episodes', () async {
+      final container = await makeContainer();
+      addTearDown(container.dispose);
+      await container
+          .read(sleepTimerControllerProvider.notifier)
+          .setEpisodes(3);
+      final events = await recordEvents(container);
+
+      await emitAndSettle(const EpisodeSwitchedLifecycle());
+
+      final state = container.read(sleepTimerControllerProvider);
+      expect(
+        state.config,
+        const SleepTimerConfig.episodes(total: 3, remaining: 3),
+      );
+      expect(events, isEmpty);
+    });
+
+    test('turning the timer off emits no cancellation event', () async {
+      final container = await makeContainer();
+      addTearDown(container.dispose);
+      container.read(sleepTimerControllerProvider.notifier).setEndOfEpisode();
+      final events = await recordEvents(container);
+
+      container.read(sleepTimerControllerProvider.notifier).setOff();
+      await pumpEventQueue();
+
+      expect(events, isEmpty);
+    });
+
     test('setOff() while episodes active clears config', () async {
       final container = await makeContainer();
       addTearDown(container.dispose);
