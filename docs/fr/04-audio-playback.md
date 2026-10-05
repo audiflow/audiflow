@@ -203,6 +203,24 @@ state and resume position stay coherent no matter where the listener touches it.
   160 pt minimum; on screens too short for that the area above the seek bar scrolls instead.
 - The mini player's thin progress bar is unchanged.
 
+### Go back after a jump
+
+- After a deliberate jump on the full player — releasing a seek bar drag, picking a chapter
+  from the chapter list, or tapping a transcript segment — a "Go back" pill appears at the
+  bottom center of the artwork, with a close button beside it. Any jump distance counts.
+- Tapping "Go back" returns playback to where it was just before the jump and hides the pill.
+  The close button hides it without seeking. Otherwise it fades out 10 seconds after the
+  latest jump.
+- A further jump while the pill is showing keeps the original position, so "Go back" undoes
+  the whole run of jumps, and restarts the 10-second countdown.
+- The skip-forward / skip-back buttons, the lock screen, and other system controls never
+  show the pill.
+- Changing episode discards the pill and its position.
+- The pill works before audio has loaded too (a restored session): the jump and the return
+  both move the saved resume position, as the seek bar does.
+- Implemented by `SeekUndoController` (`seekWithUndo`, `goBack`, `dismiss`), a thin layer
+  over `AudioPlayerController.seekNowPlaying`, and the `SeekUndoOverlay` widget.
+
 ## Boundaries
 
 - **Does not own the queue.** What plays after the current episode — manual queue, ad-hoc
