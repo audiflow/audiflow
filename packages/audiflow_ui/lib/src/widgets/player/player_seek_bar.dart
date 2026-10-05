@@ -335,6 +335,11 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
           button: widget.onTrailingLabelTap != null,
           label: widget.trailingLabelSemanticsLabel,
           excludeSemantics: widget.trailingLabelSemanticsLabel != null,
+          // Excluding the children drops the gesture's tap action, so the
+          // node offers it itself.
+          onTap: widget.trailingLabelSemanticsLabel != null
+              ? widget.onTrailingLabelTap
+              : null,
           child: GestureDetector(
             key: _trailingLabelKey,
             behavior: HitTestBehavior.opaque,

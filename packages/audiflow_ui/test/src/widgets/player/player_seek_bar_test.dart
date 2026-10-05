@@ -563,6 +563,7 @@ void main() {
         find.bySemanticsLabel('Sleep timer, 9 minutes left'),
       );
       check(node.flagsCollection.isButton).isTrue();
+      check(node.getSemanticsData().hasAction(SemanticsAction.tap)).isTrue();
       check(find.bySemanticsLabel('-09:00').evaluate()).isEmpty();
       handle.dispose();
     });
