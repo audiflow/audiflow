@@ -152,7 +152,9 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
   // Lets the track forward taps that land on the part of the trailing label
   // it covers (see [_forwardLabelTap]).
   final GlobalKey _trailingLabelKey = GlobalKey();
-  Offset? _pointerDownPosition;
+  // The one pointer that may become a forwarded label tap; later touches are
+  // ignored until it lifts.
+  PointerDownEvent? _labelTapDown;
   bool _isDragging = false;
   double _dragValue = 0.0;
   double _trackWidth = 0.0;
@@ -243,21 +245,31 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
   Widget _forwardLabelTap(Widget track) {
     if (widget.onTrailingLabelTap == null) return track;
     return Listener(
-      onPointerDown: (event) => _pointerDownPosition = event.position,
-      onPointerCancel: (_) => _pointerDownPosition = null,
+      onPointerDown: _handleTrackPointerDown,
+      onPointerCancel: (event) => _clearLabelTap(event.pointer),
       onPointerUp: _handleTrackPointerUp,
       child: track,
     );
   }
 
+  void _handleTrackPointerDown(PointerDownEvent event) {
+    if (_labelTapDown != null) return;
+    if (!_isOnTrailingLabel(event.position)) return;
+    _labelTapDown = event;
+  }
+
+  void _clearLabelTap(int pointer) {
+    if (_labelTapDown?.pointer == pointer) _labelTapDown = null;
+  }
+
   // Runs before the drag recognizer sees the up event, so [_isDragging] still
   // tells a scrub apart from a tap.
   void _handleTrackPointerUp(PointerUpEvent event) {
-    final down = _pointerDownPosition;
-    _pointerDownPosition = null;
-    if (down == null || _isDragging) return;
-    if (kTouchSlop < (event.position - down).distance) return;
-    if (!_isOnTrailingLabel(event.position)) return;
+    final down = _labelTapDown;
+    if (down == null || down.pointer != event.pointer) return;
+    _labelTapDown = null;
+    if (_isDragging) return;
+    if (kTouchSlop < (event.position - down.position).distance) return;
     widget.onTrailingLabelTap?.call();
   }
 

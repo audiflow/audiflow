@@ -169,6 +169,44 @@ void main() {
       },
     );
 
+    testWidgets('a second touch does not cancel the covered label tap', (
+      tester,
+    ) async {
+      final recorder = _SeekRecorder();
+      await tester.pumpWidget(_host(value: 0.5, recorder: recorder));
+      final track = tester.getRect(_track);
+      final label = tester.getRect(find.text('-09:00'));
+
+      final labelTap = await tester.startGesture(
+        Offset(label.center.dx, track.bottom - 2),
+      );
+      final other = await tester.startGesture(track.center, pointer: 2);
+      await labelTap.up();
+      await other.up();
+      await tester.pump();
+
+      check(recorder.trailingTaps).equals(1);
+    });
+
+    testWidgets(
+      'a touch that starts off the label and lifts on it is ignored',
+      (tester) async {
+        final recorder = _SeekRecorder();
+        await tester.pumpWidget(_host(value: 0.5, recorder: recorder));
+        final track = tester.getRect(_track);
+        final label = tester.getRect(find.text('-09:00'));
+        // The label's tap box includes 16 pt of left padding.
+        final onLabel = Offset(label.left - 14, track.bottom - 2);
+
+        final gesture = await tester.startGesture(onLabel - const Offset(8, 0));
+        await gesture.moveTo(onLabel);
+        await gesture.up();
+        await tester.pump();
+
+        check(recorder.trailingTaps).equals(0);
+      },
+    );
+
     testWidgets('shows leading and trailing labels', (tester) async {
       await tester.pumpWidget(_host(value: 0.1, recorder: _SeekRecorder()));
 
