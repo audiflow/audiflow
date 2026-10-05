@@ -44,6 +44,8 @@ void main() {
     ValueChanged<bool>? onPodcastOverrideChanged,
     double? height,
     double textScale = 1,
+    PlaybackEffects? effects,
+    void Function(PlaybackEffect effect, bool enabled)? onEffectChanged,
   }) {
     final sheet = AudioSheet(
       speed: speed,
@@ -52,13 +54,16 @@ void main() {
       onSpeedCommit: commits.add,
       podcastOverride: podcastOverride,
       onPodcastOverrideChanged: onPodcastOverrideChanged,
+      effects: effects,
+      onEffectChanged: onEffectChanged,
     );
     return MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       builder: (context, child) => MediaQuery(
-        data: MediaQuery.of(context)
-            .copyWith(textScaler: TextScaler.linear(textScale)),
+        data: MediaQuery.of(
+          context,
+        ).copyWith(textScaler: TextScaler.linear(textScale)),
         child: child!,
       ),
       home: Scaffold(
@@ -71,6 +76,10 @@ void main() {
       ),
     );
   }
+
+  bool switchValue(WidgetTester tester, String title) => tester
+      .widget<SwitchListTile>(find.widgetWithText(SwitchListTile, title))
+      .value;
 
   List<String> chipLabels(WidgetTester tester) => tester
       .widgetList<ChoiceChip>(find.byType(ChoiceChip))
@@ -204,13 +213,60 @@ void main() {
     });
   });
 
+  group('effects section', () {
+    testWidgets('is hidden where effects are not supported', (tester) async {
+      await tester.pumpWidget(host(speed: 1.0, chipSpeeds: [1.0]));
+
+      expect(find.text('Effects'), findsNothing);
+      expect(find.text('Shorten silences'), findsNothing);
+      expect(find.text('Voice boost'), findsNothing);
+    });
+
+    testWidgets('shows each effect with its current value', (tester) async {
+      await tester.pumpWidget(
+        host(
+          speed: 1.0,
+          chipSpeeds: [1.0],
+          effects: const PlaybackEffects(skipSilence: true, voiceBoost: false),
+          onEffectChanged: (_, _) {},
+        ),
+      );
+
+      expect(find.text('Effects'), findsOneWidget);
+      expect(switchValue(tester, 'Shorten silences'), isTrue);
+      expect(switchValue(tester, 'Voice boost'), isFalse);
+    });
+
+    testWidgets('toggling reports the effect and its new value', (
+      tester,
+    ) async {
+      final changes = <(PlaybackEffect, bool)>[];
+      await tester.pumpWidget(
+        host(
+          speed: 1.0,
+          chipSpeeds: [1.0],
+          effects: PlaybackEffects.off,
+          onEffectChanged: (effect, enabled) => changes.add((effect, enabled)),
+        ),
+      );
+
+      await tester.tap(find.text('Voice boost'));
+
+      expect(changes, [(PlaybackEffect.voiceBoost, true)]);
+    });
+  });
+
   group('showAudioSheet for a podcast', () {
     late _MemoryOverrides overrides;
 
-    Future<void> open(WidgetTester tester) async {
+    Future<void> open(
+      WidgetTester tester, {
+      bool effectsSupported = true,
+    }) async {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            audioEffectsSupportedProvider.overrideWithValue(effectsSupported),
             appSettingsRepositoryProvider.overrideWithValue(
               StubAppSettingsRepository(),
             ),
@@ -253,7 +309,7 @@ void main() {
         1.5,
       );
 
-      await tester.tap(find.byType(Switch));
+      await tester.tap(find.text('Custom for this podcast'));
       await tester.pumpAndSettle();
 
       expect(overrides.rows, isEmpty);
@@ -271,7 +327,7 @@ void main() {
 
       expect(find.text('Applies to all podcasts'), findsOneWidget);
 
-      await tester.tap(find.byType(Switch));
+      await tester.tap(find.text('Custom for this podcast'));
       await tester.pumpAndSettle();
 
       expect(
@@ -279,6 +335,32 @@ void main() {
         const AudioSettings(speed: 1.0, effects: PlaybackEffects.off),
       );
       expect(find.text('This podcast only'), findsOneWidget);
+    });
+
+    testWidgets('an effect toggle edits the podcast override', (tester) async {
+      overrides.rows[7] = const AudioSettings(
+        speed: 1.0,
+        effects: PlaybackEffects.off,
+      );
+      await open(tester);
+
+      await tester.tap(find.text('Shorten silences'));
+      await tester.pumpAndSettle();
+
+      expect(
+        overrides.rows[7]!.effects,
+        const PlaybackEffects(skipSilence: true, voiceBoost: false),
+      );
+      expect(switchValue(tester, 'Shorten silences'), isTrue);
+    });
+
+    testWidgets('hides the effects where they are not supported', (
+      tester,
+    ) async {
+      await open(tester, effectsSupported: false);
+
+      expect(find.text('Custom for this podcast'), findsOneWidget);
+      expect(find.text('Effects'), findsNothing);
     });
   });
 }
