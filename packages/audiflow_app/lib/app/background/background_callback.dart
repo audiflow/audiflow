@@ -16,6 +16,7 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:workmanager/workmanager.dart';
 
 import '../../features/monitoring/services/sentry_diagnostics.dart';
+import 'artwork_failure_report.dart';
 import 'background_download_lock.dart';
 import 'background_settings_repository.dart';
 import 'background_task_registrar.dart';
@@ -48,6 +49,26 @@ void _bgDebug(String message) {
   } catch (_) {
     // Best-effort — never crash the background task for logging
   }
+}
+
+// Artwork failures degrade silently to a text-only notification; record
+// actionable ones so missing thumbnails can be traced in the run's Sentry
+// breadcrumbs. Network noise is dropped, and only sanitized fields are kept.
+void _artworkFailureBreadcrumb(String artworkUrl, Object error) {
+  final report = artworkFailureReport(artworkUrl, error);
+  if (report == null) return;
+  _bgDebug(
+    'notification artwork failed url=${report.url} '
+    'category=${report.category}',
+  );
+  Sentry.addBreadcrumb(
+    Breadcrumb(
+      message: 'Notification artwork failed',
+      category: 'notification.artwork',
+      level: SentryLevel.warning,
+      data: {'url': report.url, 'errorCategory': report.category},
+    ),
+  );
 }
 
 // Temporary diagnostic wrapper for auto-download investigation.
@@ -430,6 +451,12 @@ void backgroundCallback() {
         directory: () async => Directory(
           '${(await getTemporaryDirectory()).path}/notification_artwork',
         ),
+        // iOS disables the GPU for a backgrounded engine and Impeller then
+        // stalls dart:ui image decoding, so iOS attaches the original file
+        // (it scales attachments itself). Android needs a small large icon.
+        encoder: Platform.isIOS
+            ? const PassthroughArtworkEncoder()
+            : const DownscalingArtworkEncoder(),
       );
       final notificationService = BackgroundNotificationService(
         textFormatter: await LocalizedNotificationTextFormatter.create(
@@ -438,6 +465,7 @@ void backgroundCallback() {
         ),
         logger: logger,
         artworkFileProvider: artworkFiles.fileFor,
+        onArtworkFailure: sentryInitialized ? _artworkFailureBreadcrumb : null,
       );
 
       final autoDownloadEnqueuer = AutoDownloadEnqueuer(

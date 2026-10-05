@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
@@ -75,6 +76,26 @@ Future<Directory> _tempDirectory() async {
 
 const _url = 'https://example.com/a.jpg';
 
+// Real 1x1 images (PNG from zlib, JPEG from sips with metadata stripped), so
+// passthrough is exercised with content iOS would actually receive.
+final _validPng = base64Decode(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGMwTjsDAAI1AWaKkkQyAAAAAElFTkSuQmCC',
+);
+final _validJpeg = base64Decode(
+  '/9j/4AAQSkZJRgABAQAASABIAAD/wAARCAABAAEDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9sAQwACAgICAgIDAgIDBQMDAwUGBQUFBQYIBgYGBgYICggICAgICAoKCgoKCgoKDAwMDAwMDg4ODg4PDw8PDw8PDw8P/9sAQwECAgIEBAQHBAQHEAsJCxAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQ/90ABAAB/9oADAMBAAIRAxEAPwDweiiiv7wP53P/2Q==',
+);
+
+/// Records what it is given and labels the output with a fixed extension.
+class _RecordingEncoder implements NotificationArtworkEncoder {
+  final inputs = <Uint8List>[];
+
+  @override
+  Future<EncodedArtwork> encode(Uint8List bytes) async {
+    inputs.add(bytes);
+    return EncodedArtwork(bytes: bytes, extension: 'jpg');
+  }
+}
+
 void main() {
   testWidgets('writes a downscaled thumbnail per notification, fetching once', (
     tester,
@@ -85,6 +106,7 @@ void main() {
       final files = NotificationArtworkFiles(
         dio: Dio()..httpClientAdapter = adapter,
         directory: () async => directory,
+        encoder: const DownscalingArtworkEncoder(),
       );
 
       final first = await files.fileFor(_url, 1);
@@ -105,6 +127,7 @@ void main() {
       final files = NotificationArtworkFiles(
         dio: Dio()..httpClientAdapter = _BytesAdapter(await _png(64, 64)),
         directory: () async => directory,
+        encoder: const DownscalingArtworkEncoder(),
       );
 
       await files.fileFor(_url, 1);
@@ -119,6 +142,7 @@ void main() {
       final files = NotificationArtworkFiles(
         dio: Dio()..httpClientAdapter = _BytesAdapter(Uint8List(2048)),
         directory: () async => directory,
+        encoder: const DownscalingArtworkEncoder(),
         maxBytes: 1024,
       );
 
@@ -133,6 +157,7 @@ void main() {
       final files = NotificationArtworkFiles(
         dio: Dio()..httpClientAdapter = adapter,
         directory: () async => directory,
+        encoder: const DownscalingArtworkEncoder(),
         downloadTimeout: const Duration(milliseconds: 50),
       );
 
@@ -140,4 +165,78 @@ void main() {
       check(adapter.cancelled).isTrue();
     });
   });
+
+  test('names files with the extension chosen by the encoder', () async {
+    final directory = await _tempDirectory();
+    final original = Uint8List.fromList([0xFF, 0xD8, 0xFF, 0x01, 0x02]);
+    final encoder = _RecordingEncoder();
+    final files = NotificationArtworkFiles(
+      dio: Dio()..httpClientAdapter = _BytesAdapter(original),
+      directory: () async => directory,
+      encoder: encoder,
+    );
+
+    final first = await files.fileFor(_url, 1);
+    final second = await files.fileFor(_url, 2);
+
+    check(first).equals('${directory.path}/1.jpg');
+    check(second).equals('${directory.path}/2.jpg');
+    check(encoder.inputs).length.equals(1);
+    check(await File(first).readAsBytes()).deepEquals(original);
+  });
+
+  test('passthrough writes the original bytes without decoding', () async {
+    final directory = await _tempDirectory();
+    // A PNG signature followed by junk: decoding it would throw.
+    final original = Uint8List.fromList([
+      ...[0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A],
+      ...[0x00, 0x01, 0x02],
+    ]);
+    final files = NotificationArtworkFiles(
+      dio: Dio()..httpClientAdapter = _BytesAdapter(original),
+      directory: () async => directory,
+      encoder: const PassthroughArtworkEncoder(),
+    );
+
+    final path = await files.fileFor(_url, 7);
+
+    check(path).equals('${directory.path}/7.png');
+    check(await File(path).readAsBytes()).deepEquals(original);
+  });
+
+  test('writes no file for an unrecognised format', () async {
+    final directory = await _tempDirectory();
+    final files = NotificationArtworkFiles(
+      dio: Dio()..httpClientAdapter = _BytesAdapter(Uint8List(64)),
+      directory: () async => directory,
+      encoder: const PassthroughArtworkEncoder(),
+    );
+
+    await check(
+      files.fileFor(_url, 1),
+    ).throws<UnsupportedArtworkFormatException>();
+    check(directory.listSync()).isEmpty();
+  });
+
+  for (final (extension, image) in [('png', _validPng), ('jpg', _validJpeg)]) {
+    testWidgets('passthrough attaches a valid $extension byte-for-byte', (
+      tester,
+    ) async {
+      await tester.runAsync(() async {
+        // Guards the fixture itself: it must be a decodable image.
+        check(await _decodedSize(image)).equals(const ui.Size(1, 1));
+        final directory = await _tempDirectory();
+        final files = NotificationArtworkFiles(
+          dio: Dio()..httpClientAdapter = _BytesAdapter(image),
+          directory: () async => directory,
+          encoder: const PassthroughArtworkEncoder(),
+        );
+
+        final path = await files.fileFor(_url, 3);
+
+        check(path).equals('${directory.path}/3.$extension');
+        check(await File(path).readAsBytes()).deepEquals(image);
+      });
+    });
+  }
 }

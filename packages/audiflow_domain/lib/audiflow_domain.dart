@@ -78,6 +78,7 @@ export 'src/features/feed/services/config_assembler.dart';
 export 'src/features/feed/services/episode_fingerprint.dart';
 export 'src/features/feed/services/feed_parser_service.dart';
 export 'src/features/feed/services/background_notification_service.dart';
+export 'src/features/feed/services/notification_artwork_encoder.dart';
 export 'src/features/feed/services/notification_artwork_files.dart';
 export 'src/features/feed/services/background_refresh_service.dart';
 export 'src/features/feed/services/feed_sync_diagnostic.dart';

@@ -10,6 +10,8 @@ refs:
     - packages/audiflow_app/lib/app/notification/
     - packages/audiflow_domain/lib/src/features/feed/services/background_refresh_service.dart
     - packages/audiflow_domain/lib/src/features/feed/services/background_notification_service.dart
+    - packages/audiflow_domain/lib/src/features/feed/services/notification_artwork_files.dart
+    - packages/audiflow_domain/lib/src/features/feed/services/notification_artwork_encoder.dart
     - packages/audiflow_domain/lib/src/features/feed/services/feed_sync_executor.dart
     - packages/audiflow_domain/lib/src/features/feed/models/new_episode_notification.dart
     - packages/audiflow_domain/lib/src/features/download/services/auto_download_enqueuer.dart
@@ -46,6 +48,11 @@ It exists to make Audiflow feel current without the listener doing anything. New
 - Enqueues downloads for newly discovered episodes of auto-download-enabled podcasts, and schedules a follow-up background download task when pending or stuck downloads exist.
 - On iOS, downloads pending episodes in the time left in the refresh window (up to about 20 seconds into the run, skipped when under 5 seconds remain), honoring the Wi-Fi-only preference. It and the download task take a shared lock, so the two never transfer at once; whichever finds the lock held defers to the other.
 - Builds per-episode notification payloads (capped per refresh cycle), skipping episodes the listener has already played, and shows one local notification per new episode.
+- Attaches podcast artwork to each notification, downloading each artwork URL once per run (capped at 5 MB and a few seconds) and writing a separate file per notification, because iOS moves attachment files into its own store. The file differs by platform:
+  - Android: the artwork is decoded and re-encoded as a 256 px wide PNG, because Android decodes the large icon at full size without sampling and podcast artwork is often 3000x3000.
+  - iOS: the downloaded bytes are attached unchanged, named by their sniffed format (JPEG, PNG or GIF; the extension is how iOS identifies an attachment's type). Other formats are left out rather than attached under a wrong name. iOS disables the GPU while the app is in the background, and the Flutter engine then holds image decoding and PNG encoding until the app returns to the foreground, so decoding on iOS would leave most background-posted notifications without artwork. iOS scales attachments itself and accepts images up to 10 MB.
+  - Artwork that fails or misses its deadline is left out and the notification is shown without it. If the OS rejects a notification that carries artwork (for example, iOS cannot read the attachment), it is posted again once without artwork, and counts as failed only if that retry also fails.
+  - Actionable artwork failures (unsupported format, image decode or encode failure, bad HTTP status, oversize or empty response) are recorded as a Sentry breadcrumb from the background run. A notification rejected with its attachment but accepted by the text-only retry counts as an artwork failure; when the retry fails too, the attachment is not blamed. Expected network noise (timeouts, cancellations, connection errors) is not recorded. The breadcrumb and the diagnostic log hold only the artwork URL reduced to scheme and host (no credentials, path, query or fragment, since signed CDN URLs can carry tokens in the path) and an error category (error type, Dio failure type, HTTP status), never the error message.
 - Handles notification taps and cold-start launches by decoding the notification payload and deep-linking to the corresponding episode detail screen.
 - Re-registers or cancels the background task in response to settings changes and app lifecycle events so the schedule always reflects current preferences.
 
@@ -67,11 +74,14 @@ It exists to make Audiflow feel current without the listener doing anything. New
   - `docs/superpowers/specs/2026-04-02-per-episode-notification-design.md`
 - **Source files**:
   - `packages/audiflow_app/lib/app/background/background_callback.dart`
+  - `packages/audiflow_app/lib/app/background/artwork_failure_report.dart`
   - `packages/audiflow_app/lib/app/background/background_task_registrar.dart`
   - `packages/audiflow_app/lib/app/background/background_settings_repository.dart`
   - `packages/audiflow_app/lib/app/notification/notification_tap_handler.dart`
   - `packages/audiflow_domain/lib/src/features/feed/services/background_refresh_service.dart`
   - `packages/audiflow_domain/lib/src/features/feed/services/background_notification_service.dart`
+  - `packages/audiflow_domain/lib/src/features/feed/services/notification_artwork_files.dart`
+  - `packages/audiflow_domain/lib/src/features/feed/services/notification_artwork_encoder.dart`
   - `packages/audiflow_domain/lib/src/features/feed/services/feed_sync_executor.dart`
   - `packages/audiflow_domain/lib/src/features/feed/models/new_episode_notification.dart`
   - `packages/audiflow_domain/lib/src/features/download/services/auto_download_enqueuer.dart`

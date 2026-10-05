@@ -78,6 +78,10 @@ class NotificationDetail {
 typedef ArtworkFileProvider =
     Future<String?> Function(String artworkUrl, int notificationId);
 
+/// Told when artwork for [artworkUrl] could not be attached, including a
+/// timeout, so the app layer can surface it to telemetry.
+typedef ArtworkFailureSink = void Function(String artworkUrl, Object error);
+
 /// Abstracts the `show` call on [FlutterLocalNotificationsPlugin] so tests can
 /// inject a fake without subclassing the plugin (which has a private
 /// constructor in v21+).
@@ -119,11 +123,13 @@ class BackgroundNotificationService {
     required this._textFormatter,
     this._logger,
     this._artworkFileProvider,
+    this._onArtworkFailure,
   });
 
   final NotificationTextFormatter _textFormatter;
   final Logger? _logger;
   final ArtworkFileProvider? _artworkFileProvider;
+  final ArtworkFailureSink? _onArtworkFailure;
 
   static const _channelId = 'audiflow_new_episodes';
   static const _channelName = 'New Episodes';
@@ -186,13 +192,7 @@ class BackgroundNotificationService {
 
     for (final (index, detail) in details.indexed) {
       try {
-        await delegate.show(
-          id: detail.id,
-          title: detail.title,
-          body: detail.body,
-          payload: detail.payload,
-          notificationDetails: _buildDetails(detail, artworkPaths[index]),
-        );
+        await _showWithFallback(delegate, detail, artworkPaths[index]);
         _logger?.i('Showed notification: ${detail.title} — ${detail.body}');
       } catch (e, stack) {
         _logger?.e('Failed to show notification', error: e, stackTrace: stack);
@@ -212,6 +212,43 @@ class BackgroundNotificationService {
     }
   }
 
+  /// iOS rejects a notification whose attachment it cannot read, so a
+  /// failure with artwork is retried text-only rather than losing the
+  /// notification.
+  Future<void> _showWithFallback(
+    NotificationsShowDelegate delegate,
+    NotificationDetail detail,
+    String? artworkPath,
+  ) async {
+    try {
+      await _show(delegate, detail, artworkPath);
+    } catch (e, stack) {
+      if (artworkPath == null) rethrow;
+      _logger?.w(
+        'Retrying notification without artwork',
+        error: e,
+        stackTrace: stack,
+      );
+      await _show(delegate, detail, null);
+      // Only a text-only success shows the attachment was the problem; a
+      // failure of both is not the artwork's fault.
+      final url = detail.artworkUrl;
+      if (url != null) _reportArtworkFailure(url, e);
+    }
+  }
+
+  Future<void> _show(
+    NotificationsShowDelegate delegate,
+    NotificationDetail detail,
+    String? artworkPath,
+  ) => delegate.show(
+    id: detail.id,
+    title: detail.title,
+    body: detail.body,
+    payload: detail.payload,
+    notificationDetails: _buildDetails(detail, artworkPath),
+  );
+
   Future<String?> _artworkPath(NotificationDetail detail) async {
     final url = detail.artworkUrl;
     final provider = _artworkFileProvider;
@@ -221,7 +258,17 @@ class BackgroundNotificationService {
     } catch (e, stack) {
       // Artwork is decorative; the notification must still be shown.
       _logger?.w('Notification artwork failed', error: e, stackTrace: stack);
+      _reportArtworkFailure(url, e);
       return null;
+    }
+  }
+
+  void _reportArtworkFailure(String url, Object error) {
+    try {
+      _onArtworkFailure?.call(url, error);
+    } catch (e, stack) {
+      // Telemetry must never cost the notification.
+      _logger?.w('Artwork failure sink threw', error: e, stackTrace: stack);
     }
   }
 
