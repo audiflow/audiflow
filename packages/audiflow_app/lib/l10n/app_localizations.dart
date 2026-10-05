@@ -1142,6 +1142,18 @@ abstract class AppLocalizations {
   /// **'Episode artwork'**
   String get playerArtworkLabel;
 
+  /// Button on the temporary pill shown after a seek jump; returns to the position before the jump
+  ///
+  /// In en, this message translates to:
+  /// **'Go back'**
+  String get playerSeekUndoGoBack;
+
+  /// Accessibility label for the close button on the go-back pill
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss'**
+  String get playerSeekUndoDismiss;
+
   /// Rewind accessibility label
   ///
   /// In en, this message translates to:
