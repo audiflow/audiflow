@@ -10,9 +10,10 @@ part of 'podcast_audio_override_provider.dart';
 // ignore_for_file: type=lint, type=warning
 /// Holds a podcast's audio settings override; null when it has none.
 ///
-/// UI must not call [saveSpeed] directly: speed changes go through
-/// `AudioPlayerController.setSpeed` with a podcast scope, which also
-/// applies the speed to the player and records analytics.
+/// UI must not call [saveSpeed] or [saveEffect] directly: changes go
+/// through `AudioPlayerController.setSpeed` and `setEffect` with a podcast
+/// scope, which also apply them to the player (and record speed
+/// analytics).
 ///
 /// Every mutation updates memory before disk so controls follow input
 /// immediately, and restores the previous state when the write fails so
@@ -26,9 +27,10 @@ final podcastAudioOverrideControllerProvider =
 
 /// Holds a podcast's audio settings override; null when it has none.
 ///
-/// UI must not call [saveSpeed] directly: speed changes go through
-/// `AudioPlayerController.setSpeed` with a podcast scope, which also
-/// applies the speed to the player and records analytics.
+/// UI must not call [saveSpeed] or [saveEffect] directly: changes go
+/// through `AudioPlayerController.setSpeed` and `setEffect` with a podcast
+/// scope, which also apply them to the player (and record speed
+/// analytics).
 ///
 /// Every mutation updates memory before disk so controls follow input
 /// immediately, and restores the previous state when the write fails so
@@ -40,9 +42,10 @@ final class PodcastAudioOverrideControllerProvider
         $AsyncNotifierProvider<PodcastAudioOverrideController, AudioSettings?> {
   /// Holds a podcast's audio settings override; null when it has none.
   ///
-  /// UI must not call [saveSpeed] directly: speed changes go through
-  /// `AudioPlayerController.setSpeed` with a podcast scope, which also
-  /// applies the speed to the player and records analytics.
+  /// UI must not call [saveSpeed] or [saveEffect] directly: changes go
+  /// through `AudioPlayerController.setSpeed` and `setEffect` with a podcast
+  /// scope, which also apply them to the player (and record speed
+  /// analytics).
   ///
   /// Every mutation updates memory before disk so controls follow input
   /// immediately, and restores the previous state when the write fails so
@@ -87,13 +90,14 @@ final class PodcastAudioOverrideControllerProvider
 }
 
 String _$podcastAudioOverrideControllerHash() =>
-    r'88cd5666075c6e1314a912c53afecd3af9bf98b9';
+    r'ffcd5d41def87b97aed32bdb80898c5c49cc260b';
 
 /// Holds a podcast's audio settings override; null when it has none.
 ///
-/// UI must not call [saveSpeed] directly: speed changes go through
-/// `AudioPlayerController.setSpeed` with a podcast scope, which also
-/// applies the speed to the player and records analytics.
+/// UI must not call [saveSpeed] or [saveEffect] directly: changes go
+/// through `AudioPlayerController.setSpeed` and `setEffect` with a podcast
+/// scope, which also apply them to the player (and record speed
+/// analytics).
 ///
 /// Every mutation updates memory before disk so controls follow input
 /// immediately, and restores the previous state when the write fails so
@@ -121,9 +125,10 @@ final class PodcastAudioOverrideControllerFamily extends $Family
 
   /// Holds a podcast's audio settings override; null when it has none.
   ///
-  /// UI must not call [saveSpeed] directly: speed changes go through
-  /// `AudioPlayerController.setSpeed` with a podcast scope, which also
-  /// applies the speed to the player and records analytics.
+  /// UI must not call [saveSpeed] or [saveEffect] directly: changes go
+  /// through `AudioPlayerController.setSpeed` and `setEffect` with a podcast
+  /// scope, which also apply them to the player (and record speed
+  /// analytics).
   ///
   /// Every mutation updates memory before disk so controls follow input
   /// immediately, and restores the previous state when the write fails so
@@ -140,9 +145,10 @@ final class PodcastAudioOverrideControllerFamily extends $Family
 
 /// Holds a podcast's audio settings override; null when it has none.
 ///
-/// UI must not call [saveSpeed] directly: speed changes go through
-/// `AudioPlayerController.setSpeed` with a podcast scope, which also
-/// applies the speed to the player and records analytics.
+/// UI must not call [saveSpeed] or [saveEffect] directly: changes go
+/// through `AudioPlayerController.setSpeed` and `setEffect` with a podcast
+/// scope, which also apply them to the player (and record speed
+/// analytics).
 ///
 /// Every mutation updates memory before disk so controls follow input
 /// immediately, and restores the previous state when the write fails so

@@ -1,4 +1,5 @@
 import 'podcast_chapter.dart';
+import 'podcast_chapters_link.dart';
 import 'podcast_entity.dart';
 import 'podcast_image.dart';
 import 'podcast_transcript.dart';
@@ -31,6 +32,8 @@ class PodcastItem extends PodcastEntity {
     this.isPermaLink,
     this.contentEncoded,
     this.chapters,
+    this.chaptersLink,
+    this.descriptionChapters = const [],
     this.transcripts,
   });
 
@@ -80,6 +83,14 @@ class PodcastItem extends PodcastEntity {
         )
         .toList();
 
+    final chaptersLinkMap = data['chaptersLink'] as Map<String, dynamic>?;
+    final chaptersLink = chaptersLinkMap == null
+        ? null
+        : PodcastChaptersLink(
+            url: chaptersLinkMap['url'] as String,
+            type: chaptersLinkMap['type'] as String,
+          );
+
     return PodcastItem.fromData(
       parsedAt: DateTime.now(),
       sourceUrl: sourceUrl ?? '',
@@ -106,6 +117,7 @@ class PodcastItem extends PodcastEntity {
       isPermaLink: data['isPermaLink'] as bool?,
       contentEncoded: data['contentEncoded'] as String?,
       chapters: chapters,
+      chaptersLink: chaptersLink,
       transcripts: transcripts,
     );
   }
@@ -137,6 +149,8 @@ class PodcastItem extends PodcastEntity {
     bool? isPermaLink,
     String? contentEncoded,
     List<PodcastChapter>? chapters,
+    PodcastChaptersLink? chaptersLink,
+    List<PodcastChapter> descriptionChapters = const [],
     List<PodcastTranscript>? transcripts,
   }) {
     // Validate required fields
@@ -222,6 +236,8 @@ class PodcastItem extends PodcastEntity {
       isPermaLink: isPermaLink,
       contentEncoded: _trimOrNull(contentEncoded),
       chapters: chapters,
+      chaptersLink: chaptersLink,
+      descriptionChapters: descriptionChapters,
       transcripts: transcripts,
     );
   }
@@ -300,6 +316,14 @@ class PodcastItem extends PodcastEntity {
 
   /// Chapter markers.
   final List<PodcastChapter>? chapters;
+
+  /// External chapters file linked by `<podcast:chapters>`.
+  final PodcastChaptersLink? chaptersLink;
+
+  /// Chapters derived from a timestamp list in the show notes; empty when
+  /// the feed has its own chapters, the notes hold no such list, or the
+  /// parser that produced this item does not derive them.
+  final List<PodcastChapter> descriptionChapters;
 
   /// Transcript links.
   final List<PodcastTranscript>? transcripts;
@@ -499,6 +523,8 @@ class PodcastItem extends PodcastEntity {
           isPermaLink == other.isPermaLink &&
           contentEncoded == other.contentEncoded &&
           _listEquals(chapters, other.chapters) &&
+          chaptersLink == other.chaptersLink &&
+          _listEquals(descriptionChapters, other.descriptionChapters) &&
           _listEquals(transcripts, other.transcripts);
 
   @override
@@ -520,20 +546,27 @@ class PodcastItem extends PodcastEntity {
       summary.hashCode ^
       author.hashCode ^
       isExplicit.hashCode ^
-      images.hashCode ^
+      _listHash(images) ^
       link.hashCode ^
-      categories.hashCode ^
+      _listHash(categories) ^
       comments.hashCode ^
       source.hashCode ^
       isPermaLink.hashCode ^
       contentEncoded.hashCode ^
-      chapters.hashCode ^
+      _listHash(chapters) ^
+      chaptersLink.hashCode ^
+      _listHash(descriptionChapters) ^
       transcripts.hashCode;
 
   @override
   String toString() {
     return 'PodcastItem{title: $title, episodeNumber: $episodeNumber, seasonNumber: $seasonNumber, duration: $formattedDuration, publishDate: $publishDate}';
   }
+
+  // Hashes by contents to match [_listEquals]; an identity hash would give
+  // equal items different hash codes.
+  static int _listHash<T>(List<T>? list) =>
+      list == null ? null.hashCode : Object.hashAll(list);
 
   static bool _listEquals<T>(List<T>? a, List<T>? b) {
     if (a == null && b == null) return true;

@@ -554,6 +554,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get playerArtworkLabel => 'エピソードのアートワーク';
 
   @override
+  String get playerSeekUndoGoBack => '戻る';
+
+  @override
+  String get playerSeekUndoDismiss => '閉じる';
+
+  @override
   String playerRewindLabel(int seconds) {
     return '$seconds秒巻き戻し';
   }
@@ -597,6 +603,21 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get audioSheetScopeGlobal => 'すべての番組に適用';
+
+  @override
+  String get audioSheetEffectsSection => 'エフェクト';
+
+  @override
+  String get audioSheetSkipSilence => '無音を短縮';
+
+  @override
+  String get audioSheetSkipSilenceCaption => '話の合間の無音を飛ばします';
+
+  @override
+  String get audioSheetVoiceBoost => 'ボイスブースト';
+
+  @override
+  String get audioSheetVoiceBoostCaption => '小さな声を聞き取りやすくします';
 
   @override
   String get playbackSpeedNormal => '標準';

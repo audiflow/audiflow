@@ -571,6 +571,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playerArtworkLabel => 'Episode artwork';
 
   @override
+  String get playerSeekUndoGoBack => 'Go back';
+
+  @override
+  String get playerSeekUndoDismiss => 'Dismiss';
+
+  @override
   String playerRewindLabel(int seconds) {
     return 'Rewind $seconds seconds';
   }
@@ -615,6 +621,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get audioSheetScopeGlobal => 'Applies to all podcasts';
+
+  @override
+  String get audioSheetEffectsSection => 'Effects';
+
+  @override
+  String get audioSheetSkipSilence => 'Shorten silences';
+
+  @override
+  String get audioSheetSkipSilenceCaption => 'Skips quiet gaps between words';
+
+  @override
+  String get audioSheetVoiceBoost => 'Voice boost';
+
+  @override
+  String get audioSheetVoiceBoostCaption => 'Makes quiet speech louder';
 
   @override
   String get playbackSpeedNormal => 'Normal';

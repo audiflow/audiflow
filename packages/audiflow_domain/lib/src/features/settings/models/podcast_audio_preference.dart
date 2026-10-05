@@ -6,8 +6,8 @@ part 'podcast_audio_preference.g.dart';
 ///
 /// A row exists only while the override is switched on; deleting it
 /// returns the podcast to the global settings. [skipSilence] and
-/// [voiceBoost] are reserved for upcoming audio options and stay null
-/// (meaning "inherit global") until those options exist.
+/// [voiceBoost] are null on rows written before those options existed;
+/// such a row takes the global value for them when it is loaded.
 @collection
 @Name('PodcastAudioPreference')
 class PodcastAudioPreference {

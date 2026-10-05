@@ -88,6 +88,7 @@ export 'src/errors/podcast_exception.dart';
 // Error types
 export 'src/errors/podcast_parse_error.dart';
 export 'src/models/podcast_chapter.dart';
+export 'src/models/podcast_chapters_link.dart';
 // Entity models
 export 'src/models/podcast_entity.dart';
 export 'src/models/podcast_feed.dart';
@@ -97,7 +98,9 @@ export 'src/models/podcast_transcript.dart';
 // Network utilities (for advanced usage)
 export 'src/network/http_fetcher.dart' show CacheInfo;
 // Parser exports
+export 'src/parser/description_chapters_parser.dart';
 export 'src/parser/isolate_rss_parser.dart';
+export 'src/parser/json_chapters_parser.dart';
 export 'src/parser/parse_progress.dart';
 export 'src/parser/podcast_entity_builder.dart';
 // Transcript parsing

@@ -105,7 +105,7 @@ audiflow_cli -> audiflow_domain, audiflow_podcast
 #### Responsibilities
 - Streaming RSS XML parsing (memory-efficient)
 - RSS 2.0 and iTunes namespace support
-- Podcast transcript and chapter tag extraction (`<podcast:transcript>`, `<podcast:chapters>`)
+- Podcast transcript and chapter tag extraction (`<podcast:transcript>`, `<psc:chapters>`, `<podcast:chapters>` links) and JSON chapters file parsing
 - HTTP feed fetching with caching and conditional requests
 - Builder interface (`PodcastEntityBuilder`) for zero-copy entity construction
 - Graceful handling of malformed feeds

@@ -1,3 +1,6 @@
+import '../models/podcast_chapter.dart';
+import '../models/podcast_chapters_link.dart';
+
 /// Progress events emitted during isolate-based RSS parsing.
 ///
 /// Used to communicate parsing state from the isolate back to the main thread.
@@ -41,6 +44,8 @@ final class ParsedEpisode extends ParseProgress {
     this.link,
     this.transcripts,
     this.chapters,
+    this.chaptersLink,
+    this.descriptionChapters = const [],
   });
 
   final String? guid;
@@ -66,6 +71,15 @@ final class ParsedEpisode extends ParseProgress {
 
   final List<ParsedTranscript>? transcripts;
   final List<ParsedChapter>? chapters;
+
+  /// Link to an external chapters file from `<podcast:chapters>`.
+  final PodcastChaptersLink? chaptersLink;
+
+  /// Chapters derived from a timestamp list in the show notes; empty when
+  /// the feed has its own chapters or the notes hold no such list.
+  ///
+  /// Derived here so the work stays off the UI isolate during sync.
+  final List<PodcastChapter> descriptionChapters;
 }
 
 /// Transcript metadata extracted from `<podcast:transcript>` elements.

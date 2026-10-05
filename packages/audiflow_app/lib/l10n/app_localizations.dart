@@ -1142,6 +1142,18 @@ abstract class AppLocalizations {
   /// **'Episode artwork'**
   String get playerArtworkLabel;
 
+  /// Button on the temporary pill shown after a seek jump; returns to the position before the jump
+  ///
+  /// In en, this message translates to:
+  /// **'Go back'**
+  String get playerSeekUndoGoBack;
+
+  /// Accessibility label for the close button on the go-back pill
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss'**
+  String get playerSeekUndoDismiss;
+
   /// Rewind accessibility label
   ///
   /// In en, this message translates to:
@@ -1219,6 +1231,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Applies to all podcasts'**
   String get audioSheetScopeGlobal;
+
+  /// Section heading for silence skipping and voice boost in the audio sheet (Android only)
+  ///
+  /// In en, this message translates to:
+  /// **'Effects'**
+  String get audioSheetEffectsSection;
+
+  /// Switch that skips silent passages during playback
+  ///
+  /// In en, this message translates to:
+  /// **'Shorten silences'**
+  String get audioSheetSkipSilence;
+
+  /// Caption under the silence skipping switch
+  ///
+  /// In en, this message translates to:
+  /// **'Skips quiet gaps between words'**
+  String get audioSheetSkipSilenceCaption;
+
+  /// Switch that raises playback loudness so speech is easier to hear
+  ///
+  /// In en, this message translates to:
+  /// **'Voice boost'**
+  String get audioSheetVoiceBoost;
+
+  /// Caption under the voice boost switch
+  ///
+  /// In en, this message translates to:
+  /// **'Makes quiet speech louder'**
+  String get audioSheetVoiceBoostCaption;
 
   /// Chip label for normal (1.0x) playback speed
   ///

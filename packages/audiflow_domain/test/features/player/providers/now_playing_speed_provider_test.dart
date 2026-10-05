@@ -21,7 +21,7 @@ void main() {
   test('is the resolved speed for the now-playing podcast', () async {
     final container = await _container((
       scope: const PodcastAudioSettingsScope(7),
-      settings: const AudioSettings(speed: 1.8),
+      settings: const AudioSettings(speed: 1.8, effects: PlaybackEffects.off),
     ));
     check(container.read(nowPlayingSpeedProvider)).equals(1.8);
   });

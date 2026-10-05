@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
@@ -203,10 +206,12 @@ class _TranscriptTimelineViewState
     return false;
   }
 
+  // Not seekWithUndo: the go-back pill sits on the artwork, which is out of
+  // sight on this tab, so an undo offer here would be invisible.
   void _handleSegmentTap(TranscriptSegment segment) {
     ref
         .read(audioPlayerControllerProvider.notifier)
-        .seek(Duration(milliseconds: segment.startMs));
+        .seekNowPlaying(Duration(milliseconds: segment.startMs));
   }
 
   void _handleJumpToCurrent() {
@@ -318,33 +323,114 @@ class _SegmentTile extends StatelessWidget {
         color: isActive
             ? colorScheme.primaryContainer.withValues(alpha: 0.3)
             : null,
-        child: SelectionArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (segment.speaker != null)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 2),
-                  child: Text(
-                    segment.speaker!,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w600,
+        // SelectionArea's tap recognizer wins single taps on the text, so
+        // the InkWell only sees taps on the padding; the passive detector
+        // makes taps on the text seek too.
+        child: _PassiveTapDetector(
+          onTap: onTap,
+          child: SelectionArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (segment.speaker != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 2),
+                    child: Text(
+                      segment.speaker!,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
+                Text(
+                  segment.body,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: isActive
+                        ? colorScheme.onPrimaryContainer
+                        : colorScheme.onSurface,
+                  ),
                 ),
-              Text(
-                segment.body,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: isActive
-                      ? colorScheme.onPrimaryContainer
-                      : colorScheme.onSurface,
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Reports a single tap from raw pointer events.
+///
+/// A [Listener] stays out of the gesture arena, so the [SelectionArea]
+/// below keeps every gesture it owns (long-press selection, handle drags,
+/// double-tap word selection) while a plain tap still reaches [onTap]. A
+/// press held for the long-press timeout, one that moves past touch slop
+/// (a scroll), or a second finger cancels the tap.
+class _PassiveTapDetector extends StatefulWidget {
+  const _PassiveTapDetector({required this.onTap, required this.child});
+
+  final VoidCallback onTap;
+  final Widget child;
+
+  @override
+  State<_PassiveTapDetector> createState() => _PassiveTapDetectorState();
+}
+
+class _PassiveTapDetectorState extends State<_PassiveTapDetector> {
+  int? _pointer;
+  Offset _downPosition = Offset.zero;
+  // A timer rather than event timestamps, which synthesized events (tests,
+  // some accessibility tools) leave at zero.
+  Timer? _longPressTimer;
+
+  void _handleDown(PointerDownEvent event) {
+    // A second finger means a pinch or multi-touch, not a tap.
+    if (_pointer != null) {
+      _reset();
+      return;
+    }
+    _pointer = event.pointer;
+    _downPosition = event.position;
+    _longPressTimer = Timer(kLongPressTimeout, _reset);
+  }
+
+  void _handleMove(PointerMoveEvent event) {
+    if (event.pointer != _pointer) return;
+    final travel = (event.position - _downPosition).distance;
+    if (kTouchSlop < travel) _reset();
+  }
+
+  void _handleUp(PointerUpEvent event) {
+    if (event.pointer != _pointer) return;
+    _reset();
+    widget.onTap();
+  }
+
+  void _handleCancel(PointerCancelEvent event) {
+    if (event.pointer == _pointer) _reset();
+  }
+
+  void _reset() {
+    _longPressTimer?.cancel();
+    _longPressTimer = null;
+    _pointer = null;
+  }
+
+  @override
+  void dispose() {
+    _longPressTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Listener(
+      onPointerDown: _handleDown,
+      onPointerMove: _handleMove,
+      onPointerUp: _handleUp,
+      onPointerCancel: _handleCancel,
+      child: widget.child,
     );
   }
 }

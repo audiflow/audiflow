@@ -73,4 +73,4 @@ final class AudioHandlerProvider
   }
 }
 
-String _$audioHandlerHash() => r'c62295fa8eedc47736e50e97699229d08c0cea22';
+String _$audioHandlerHash() => r'fdc8b1b4391853f45f4a769599add0048ea1b0a6';

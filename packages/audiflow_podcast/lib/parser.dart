@@ -24,6 +24,7 @@ export 'src/errors/podcast_parse_error.dart';
 
 // Entity models
 export 'src/models/podcast_chapter.dart';
+export 'src/models/podcast_chapters_link.dart';
 export 'src/models/podcast_entity.dart';
 export 'src/models/podcast_feed.dart';
 export 'src/models/podcast_image.dart';

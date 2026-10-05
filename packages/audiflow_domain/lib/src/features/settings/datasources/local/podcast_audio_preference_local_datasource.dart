@@ -13,18 +13,22 @@ class PodcastAudioPreferenceLocalDatasource {
     return _isar.podcastAudioPreferences.getByPodcastId(podcastId);
   }
 
-  /// Creates or updates the override row for [podcastId].
-  ///
-  /// Only [speed] is written; the reserved columns of an existing row
-  /// are kept as they are.
-  Future<void> upsertSpeed(int podcastId, double speed) async {
+  /// Creates or replaces the override row for [podcastId].
+  Future<void> upsert(
+    int podcastId, {
+    required double speed,
+    required bool skipSilence,
+    required bool voiceBoost,
+  }) async {
     await _isar.writeTxn(() async {
       final existing = await _isar.podcastAudioPreferences.getByPodcastId(
         podcastId,
       );
       final pref =
-          existing ?? (PodcastAudioPreference()..podcastId = podcastId);
-      pref.speed = speed;
+          (existing ?? (PodcastAudioPreference()..podcastId = podcastId))
+            ..speed = speed
+            ..skipSilence = skipSilence
+            ..voiceBoost = voiceBoost;
       await _isar.podcastAudioPreferences.put(pref);
     });
   }

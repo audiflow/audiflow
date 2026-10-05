@@ -2,6 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/providers/database_provider.dart';
 import '../datasources/local/chapter_local_datasource.dart';
+import '../models/chapter_source.dart';
 import '../models/episode_chapter.dart';
 import 'chapter_repository.dart';
 
@@ -31,6 +32,17 @@ class ChapterRepositoryImpl implements ChapterRepository {
   @override
   Future<void> upsertChapters(List<EpisodeChapter> chapters) =>
       _datasource.upsertChapters(chapters);
+
+  @override
+  Future<Set<int>> replaceChapters(
+    Map<int, List<EpisodeChapter>> chaptersByEpisode, {
+    required ChapterSource source,
+    Map<int, String?> linkedJsonUrls = const {},
+  }) => _datasource.replaceChapters(
+    chaptersByEpisode,
+    source: source,
+    linkedJsonUrls: linkedJsonUrls,
+  );
 
   @override
   Future<int> deleteByEpisodeId(int episodeId) =>

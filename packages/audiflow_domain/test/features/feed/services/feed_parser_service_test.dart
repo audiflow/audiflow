@@ -1,3 +1,4 @@
+import 'package:checks/checks.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_podcast/audiflow_podcast.dart'
     show TranscriptFileParser;
@@ -44,6 +45,54 @@ void main() {
       <guid>ep-no-transcript</guid>
       <title>Episode without Transcript</title>
       <enclosure url="https://example.com/ep2.mp3" type="audio/mpeg"/>
+    </item>
+  </channel>
+</rss>
+''';
+
+  const testXmlWithChaptersLink = '''
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"
+  xmlns:podcast="https://podcastindex.org/namespace/1.0">
+  <channel>
+    <title>Chapters Podcast</title>
+    <description>JSON chapters</description>
+    <item>
+      <guid>ep-json</guid>
+      <title>Episode with JSON chapters</title>
+      <enclosure url="https://example.com/ep1.mp3" type="audio/mpeg"/>
+      <podcast:chapters url="https://example.com/ep1.json" type="application/json+chapters"/>
+    </item>
+  </channel>
+</rss>
+''';
+
+  const testXmlWithDescriptionChapters = '''
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:psc="http://podlove.org/simple-chapters">
+  <channel>
+    <title>Notes Podcast</title>
+    <description>Chapters in notes</description>
+    <item>
+      <guid>ep-notes</guid>
+      <title>Chapters only in notes</title>
+      <description><![CDATA[<p>0:00 Intro<br />5:00 Topic<br />9:00 Outro</p>]]></description>
+      <enclosure url="https://example.com/notes.mp3" type="audio/mpeg"/>
+    </item>
+    <item>
+      <guid>ep-psc</guid>
+      <title>Feed chapters too</title>
+      <description><![CDATA[<p>0:00 A<br />5:00 B<br />9:00 C</p>]]></description>
+      <enclosure url="https://example.com/psc.mp3" type="audio/mpeg"/>
+      <psc:chapters version="1.2">
+        <psc:chapter start="00:00:00" title="Feed intro"/>
+      </psc:chapters>
+    </item>
+    <item>
+      <guid>ep-plain</guid>
+      <title>No chapters</title>
+      <description>Talking at 12:30 about nothing.</description>
+      <enclosure url="https://example.com/plain.mp3" type="audio/mpeg"/>
     </item>
   </channel>
 </rss>
@@ -137,6 +186,49 @@ void main() {
       expect(allMediaMetas.first.hasTranscripts, isTrue);
       expect(allMediaMetas.first.transcripts, hasLength(1));
       expect(allMediaMetas.first.transcripts!.first.type, 'text/vtt');
+    });
+  });
+
+  group('chapters link', () {
+    test('parseWithProgress stores the link on the episode', () async {
+      final episodes = <Episode>[];
+      await for (final _ in service.parseWithProgress(
+        xmlContent: testXmlWithChaptersLink,
+        podcastId: 1,
+        knownGuids: {},
+        onBatchReady: (batch, _) async => episodes.addAll(batch),
+      )) {}
+
+      check(episodes.single.chaptersUrl).equals('https://example.com/ep1.json');
+      check(episodes.single.chaptersType).equals('application/json+chapters');
+    });
+
+    test('parseFromString maps the link to PodcastItem', () async {
+      final result = await service.parseFromString(testXmlWithChaptersLink);
+
+      check(
+        result.episodes.single.chaptersLink?.url,
+      ).equals('https://example.com/ep1.json');
+    });
+  });
+
+  group('description chapters', () {
+    test('derives chapters only for episodes without feed chapters', () async {
+      final metas = <ParsedEpisodeMediaMeta>[];
+      await for (final _ in service.parseWithProgress(
+        xmlContent: testXmlWithDescriptionChapters,
+        podcastId: 1,
+        knownGuids: {},
+        onBatchReady: (_, batch) async => metas.addAll(batch),
+      )) {}
+
+      final byGuid = {for (final m in metas) m.guid: m};
+      check(byGuid.keys).unorderedEquals(['ep-notes', 'ep-psc']);
+      check(
+        byGuid['ep-notes']!.descriptionChapters.map((c) => c.title),
+      ).deepEquals(['Intro', 'Topic', 'Outro']);
+      check(byGuid['ep-psc']!.hasDescriptionChapters).isFalse();
+      check(byGuid['ep-psc']!.hasChapters).isTrue();
     });
   });
 

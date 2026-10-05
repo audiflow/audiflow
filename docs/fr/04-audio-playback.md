@@ -89,7 +89,14 @@ state and resume position stay coherent no matter where the listener touches it.
   The same sheet opens from the podcast detail menu ("Audio settings"), so an override can
   be set while nothing is playing. The recent-speed chips are one shared history: a speed
   committed under an override is recorded there too, so it is one tap away for any podcast.
-  Only speed is overridable today.
+  The speed and both effects below follow the switch.
+- **Silence skipping and voice boost (Android only)**: On Android the Audio sheet has an
+  Effects section below the speed with two switches. "Shorten silences" skips quiet gaps so a
+  talk episode finishes sooner. "Voice boost" raises loudness with a fixed target gain (6 dB to
+  start, to be tuned on devices) so quiet speech is easier to hear. Both are off by default,
+  take effect at once, and follow the per-podcast switch like the speed does. On iOS the
+  section is not shown and any stored values are ignored, because the audio engine implements
+  neither effect there.
 - **Audio output**: The center slot of the action row opens the operating system's own audio
   output picker; the app does not draw a device list. On iOS it is the system route picker
   (speaker, Bluetooth, AirPlay), and choosing a route moves playback there. On Android 11 and
@@ -124,8 +131,13 @@ state and resume position stay coherent no matter where the listener touches it.
   `PodcastAudioPreferenceRepository`). Every speed write names its
   `AudioSettingsScope` (global or one podcast), and the player is only changed when that
   scope is the one the now-playing podcast resolves to. `effectiveAudioSettingsApplier`
-  re-applies the resolved speed when the now-playing podcast or its override changes, and
+  re-applies the resolved settings when the now-playing podcast or its override changes, and
   `play()` resolves the episode's podcast from the same state before playback starts.
+- On Android, applies silence skipping (`AudioPlayer.setSkipSilenceEnabled`) and voice boost
+  (an `AndroidLoudnessEnhancer` attached when the player is constructed) through the same
+  serialized engine path as the speed. Effect writes name their scope the same way as speed
+  writes. Elsewhere `audioEffectsSupportedProvider` is false and effects never reach the
+  engine.
 - Resumes an episode from its last saved position, replaying from the start when the saved
   position is at the very end, and honors an explicit start position from timestamped share
   links over the saved position.
@@ -181,6 +193,16 @@ state and resume position stay coherent no matter where the listener touches it.
   "Scrubbing (quarter speed)", "Scrubbing (fine)") appears between the time labels while below
   full speed. The drag stays with the seek bar even when the finger leaves its bounds; a drag
   that starts vertically is not a scrub and still reaches the player sheet's swipe-to-dismiss.
+- Lift-off settling: as a finger leaves the glass the contact point rolls by a few points,
+  which would nudge the seek away from where the user stopped. If the position had held still
+  (within 2 pt of track) for at least 150 ms and then moved only within the last 60 ms before
+  lift-off, by no more than 12 pt under the finger, the drag commits the settled position
+  instead. A drag still moving at lift-off, a flick, or a larger final push commits the final
+  position, and a cancelled drag commits its position as it stands; a second touch on the bar
+  does not change how the dragging finger's release is judged. Stillness is judged on the
+  position after fine-scrub scaling (what the bar shows), while the late move is measured
+  under the finger, so a deliberate final push while fine scrubbing is kept. The rule uses
+  pointer event timestamps; the displayed time and the seek both use the committed position. The thresholds are initial values to be tuned on a device.
 - The left label shows elapsed time. The right label shows remaining time as `-mm:ss` (or
   `-h:mm:ss`) by default; tapping it toggles to the total duration. The choice persists as the
   `showRemainingTime` setting. Remaining time is media time and does not account for playback
@@ -209,6 +231,27 @@ state and resume position stay coherent no matter where the listener touches it.
 - The artwork above the episode info shrinks to make room for the text below it, down to a
   160 pt minimum; on screens too short for that the area above the seek bar scrolls instead.
 - The mini player's thin progress bar is unchanged.
+
+### Go back after a jump
+
+- After a deliberate jump on the full player — releasing a seek bar drag or picking a chapter
+  from the chapter list — a "Go back" pill appears at the bottom center of the artwork, with a
+  close button beside it. Any jump distance counts.
+- Tapping "Go back" returns playback to where it was just before the jump and hides the pill.
+  The close button hides it without seeking. Otherwise it fades out 10 seconds after the
+  latest jump.
+- A further jump while the pill is showing keeps the original position, so "Go back" undoes
+  the whole run of jumps, and restarts the 10-second countdown.
+- The skip-forward / skip-back buttons, the lock screen, and other system controls never
+  show the pill. Neither does tapping a transcript segment: the Transcript tab hides the
+  artwork, so the pill would not be seen.
+- Changing episode discards the pill and its position.
+- A jump the player rejects shows no pill, and a rejected return brings the pill back so the
+  listener can retry.
+- The pill works before audio has loaded too (a restored session): the jump and the return
+  both move the saved resume position, as the seek bar does.
+- Implemented by `SeekUndoController` (`seekWithUndo`, `goBack`, `dismiss`), a thin layer
+  over `AudioPlayerController.seekNowPlaying`, and the `SeekUndoOverlay` widget.
 
 ## Boundaries
 

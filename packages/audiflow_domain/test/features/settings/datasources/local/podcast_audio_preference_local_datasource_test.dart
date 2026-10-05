@@ -26,36 +26,40 @@ void main() {
     check(await datasource.get(1)).isNull();
   });
 
-  test('upsertSpeed creates then updates a single row', () async {
-    await datasource.upsertSpeed(1, 1.5);
-    await datasource.upsertSpeed(1, 2.0);
+  test('upsert creates then updates a single row', () async {
+    await datasource.upsert(
+      1,
+      speed: 1.5,
+      skipSilence: false,
+      voiceBoost: true,
+    );
+    await datasource.upsert(
+      1,
+      speed: 2.0,
+      skipSilence: true,
+      voiceBoost: false,
+    );
 
-    final row = await datasource.get(1);
-    check(row).isNotNull().has((r) => r.speed, 'speed').equals(2.0);
+    final row = (await datasource.get(1))!;
+    check(row.speed).equals(2.0);
+    check(row.skipSilence).equals(true);
+    check(row.voiceBoost).equals(false);
     check(await isar.podcastAudioPreferences.count()).equals(1);
   });
 
-  test('upsertSpeed keeps the reserved columns of an existing row', () async {
-    await isar.writeTxn(
-      () => isar.podcastAudioPreferences.put(
-        PodcastAudioPreference()
-          ..podcastId = 1
-          ..speed = 1.0
-          ..skipSilence = true
-          ..voiceBoost = false,
-      ),
-    );
-
-    await datasource.upsertSpeed(1, 1.5);
-
-    final row = (await datasource.get(1))!;
-    check(row.skipSilence).equals(true);
-    check(row.voiceBoost).equals(false);
-  });
-
   test('delete removes only the given podcast', () async {
-    await datasource.upsertSpeed(1, 1.5);
-    await datasource.upsertSpeed(2, 0.8);
+    await datasource.upsert(
+      1,
+      speed: 1.5,
+      skipSilence: false,
+      voiceBoost: false,
+    );
+    await datasource.upsert(
+      2,
+      speed: 0.8,
+      skipSilence: false,
+      voiceBoost: false,
+    );
 
     await datasource.delete(1);
 

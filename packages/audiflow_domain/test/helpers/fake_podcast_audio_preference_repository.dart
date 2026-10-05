@@ -1,12 +1,12 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
 
-/// In-memory [PodcastAudioPreferenceRepository] that resolves against a
-/// caller-supplied global speed.
+/// In-memory [PodcastAudioPreferenceRepository] that resolves against
+/// caller-supplied global settings.
 class FakePodcastAudioPreferenceRepository
     implements PodcastAudioPreferenceRepository {
-  FakePodcastAudioPreferenceRepository(this._globalSpeed);
+  FakePodcastAudioPreferenceRepository(this._globalSettings);
 
-  final double Function() _globalSpeed;
+  final AudioSettings Function() _globalSettings;
   final Map<int, AudioSettings> overrides = {};
 
   /// When true, writes throw the way a failed Isar transaction would.
@@ -33,5 +33,5 @@ class FakePodcastAudioPreferenceRepository
 
   @override
   Future<AudioSettings> resolveForPodcast(int podcastId) async =>
-      overrides[podcastId] ?? AudioSettings(speed: _globalSpeed());
+      overrides[podcastId] ?? _globalSettings();
 }
