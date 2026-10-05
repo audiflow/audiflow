@@ -95,6 +95,26 @@ void main() {
       check(history.savedPositionsMs).deepEquals([180000]);
     });
 
+    test('announces the clamped target as a seek', () async {
+      final container = makeContainer(
+        _restored(totalDuration: const Duration(minutes: 3)),
+      );
+      final events = <PlayerLifecycleEvent>[];
+      final sub = container
+          .read(audioPlayerControllerProvider.notifier)
+          .lifecycleEvents
+          .listen(events.add);
+      addTearDown(sub.cancel);
+
+      await seekWithoutAudio(container, const Duration(minutes: 5));
+      await pumpEventQueue();
+
+      check(events).single
+          .isA<SeekStartedLifecycle>()
+          .has((e) => e.target, 'target')
+          .equals(const Duration(minutes: 3));
+    });
+
     test('does nothing when nothing is playing', () async {
       final container = makeContainer(null);
       final saved = await seekWithoutAudio(

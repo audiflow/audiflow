@@ -526,6 +526,7 @@ class AudioPlayerController extends _$AudioPlayerController
             ? startAt.inMilliseconds.clamp(0, 1 << 31)
             : startAt.inMilliseconds.clamp(0, duration.inMilliseconds);
         _log.d('[Play] Honouring explicit startAt: ${clampedMs}ms');
+        _announceSeek(Duration(milliseconds: clampedMs));
         await _player.seek(Duration(milliseconds: clampedMs));
         _lifecycleEvents.add(SeekLifecycle(Duration(milliseconds: clampedMs)));
       } else if (_currentEpisodeId != null) {
@@ -540,6 +541,7 @@ class AudioPlayerController extends _$AudioPlayerController
             _log.d('[Play] Position near end, replaying from start');
           } else {
             _log.d('[Play] Seeking to saved position: ${history.positionMs}ms');
+            _announceSeek(Duration(milliseconds: history.positionMs));
             await _player.seek(Duration(milliseconds: history.positionMs));
           }
         }
@@ -916,6 +918,7 @@ class AudioPlayerController extends _$AudioPlayerController
     // Mirror seek()'s clamp so a chapter start past the end (bad feed data)
     // cannot become the resume position.
     final clamped = _clampToKnownDuration(position, nowPlaying.totalDuration);
+    _announceSeek(clamped);
     ref
         .read(nowPlayingControllerProvider.notifier)
         .setNowPlaying(nowPlaying.copyWith(savedPosition: clamped));
@@ -928,6 +931,12 @@ class AudioPlayerController extends _$AudioPlayerController
           episodeId: episode.id,
           positionMs: clamped.inMilliseconds,
         );
+  }
+
+  // Announced before the position moves so a chapter change caused by the
+  // jump is not mistaken for playback crossing a chapter boundary.
+  void _announceSeek(Duration target) {
+    _lifecycleEvents.add(SeekStartedLifecycle(target));
   }
 
   static Duration _clampToKnownDuration(Duration position, Duration? duration) {
@@ -958,6 +967,7 @@ class AudioPlayerController extends _$AudioPlayerController
     // range of content; the jump itself is what "skipped" analysis reads.
     final segmentIds = _listenSession.openIds;
     _closeListenSession(ListenEndReason.seek, position: fromPosition);
+    _announceSeek(Duration(milliseconds: clampedMs));
     _isSeeking = true;
     try {
       await _player.seek(Duration(milliseconds: clampedMs));
