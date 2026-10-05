@@ -1470,6 +1470,76 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String sleepTimerSemanticsLabel(String status) {
+    return 'Sleep timer, $status';
+  }
+
+  @override
+  String sleepTimerSemanticsStatusAndTimeLeft(String status, String timeLeft) {
+    return '$status, $timeLeft';
+  }
+
+  @override
+  String get sleepTimerSemanticsEndOfEpisode => 'stops at end of episode';
+
+  @override
+  String get sleepTimerSemanticsEndOfChapter => 'stops at end of chapter';
+
+  @override
+  String sleepTimerSemanticsEpisodes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'stops after $count episodes',
+      one: 'stops at end of this episode',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String sleepTimerSemanticsTimeLeft(String time) {
+    return '$time left';
+  }
+
+  @override
+  String sleepTimerSemanticsTimeLeftPlusEpisodes(String time, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count more episodes',
+      one: '1 more episode',
+    );
+    return '$time left, plus $_temp0';
+  }
+
+  @override
+  String sleepTimerSpokenHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hours',
+      one: '$count hour',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String sleepTimerSpokenSeconds(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count seconds',
+      one: '$count second',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String sleepTimerSpokenHoursMinutes(String hours, String minutes) {
+    return '$hours $minutes';
+  }
+
+  @override
   String get onboardingCarouselSkip => 'Skip';
 
   @override

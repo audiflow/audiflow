@@ -4,9 +4,7 @@ import '../../../../l10n/app_localizations.dart';
 
 /// Pure label formatter for the active sleep-timer config.
 ///
-/// Returns null when no timer is running. The output is shared by the
-/// chip (above the mini player) and the inline status label (in the
-/// player action row).
+/// Returns null when no timer is running.
 String? formatSleepTimerLabel(SleepTimerConfig config, AppLocalizations l10n) {
   return switch (config) {
     SleepTimerConfigOff() => null,

@@ -12,7 +12,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../helpers/player_stubs.dart';
 
 void main() {
-  Future<ProviderContainer> container() async {
+  Future<ProviderContainer> container({SleepTimerTimeLeft? timeLeft}) async {
     SharedPreferences.setMockInitialValues({'settings_playback_speed': 1.3});
     final prefs = await SharedPreferences.getInstance();
     final container = ProviderContainer(
@@ -23,6 +23,7 @@ void main() {
           () => StubAudioPlayerController(const PlaybackState.idle()),
         ),
         currentEpisodeHasChaptersProvider.overrideWith((ref) async => false),
+        sleepTimerTimeLeftProvider.overrideWith((ref) => timeLeft),
       ],
     );
     addTearDown(container.dispose);
@@ -88,36 +89,62 @@ void main() {
     expect(sheet.speed, 1.3);
   });
 
-  testWidgets('tapping the sleep timer status label opens the sheet', (
-    tester,
-  ) async {
+  testWidgets('tapping the sleep timer icon opens the sheet', (tester) async {
     final c = await container();
     c.read(sleepTimerControllerProvider.notifier).setEndOfEpisode();
     await tester.pumpWidget(host(c));
 
-    await tester.tap(find.text('Episode end'));
+    await tester.tap(find.byType(SleepTimerIconButton));
     await tester.pumpAndSettle();
 
     expect(find.byType(SleepTimerSheet), findsOneWidget);
   });
 
-  testWidgets('sleep timer label is announced as a button', (tester) async {
-    final semantics = tester.ensureSemantics();
+  testWidgets('shows no text beside the moon icon while a timer runs', (
+    tester,
+  ) async {
     final c = await container();
     c.read(sleepTimerControllerProvider.notifier).setEndOfEpisode();
     await tester.pumpWidget(host(c));
-    // Flush the provider disposal check scheduled when the controller
-    // subscribed to the chapter providers.
     await tester.pumpAndSettle();
 
-    final node = tester.getSemantics(find.text('Episode end'));
+    final slot = find.ancestor(
+      of: find.byType(SleepTimerIconButton),
+      matching: find.byType(Expanded),
+    );
+    expect(
+      find.descendant(of: slot, matching: find.byType(Text)),
+      findsNothing,
+    );
+    expect(find.text('Episode end'), findsNothing);
+  });
+
+  testWidgets('moon icon announces the full sleep timer status', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    final c = await container(
+      timeLeft: const SleepTimerTimeLeft(Duration(minutes: 12)),
+    );
+    c.read(sleepTimerControllerProvider.notifier).setEndOfEpisode();
+    await tester.pumpWidget(host(c));
+    await tester.pumpAndSettle();
+
+    final node = tester.getSemantics(
+      find.bySemanticsLabel(
+        'Sleep timer, stops at end of episode, 12 minutes left',
+      ),
+    );
     expect(node.flagsCollection.isButton, isTrue);
     semantics.dispose();
   });
 
-  testWidgets('no label button while the timer is off', (tester) async {
+  testWidgets('moon icon carries no status while off', (tester) async {
+    final semantics = tester.ensureSemantics();
     await tester.pumpWidget(host(await container()));
 
-    expect(find.byType(InkWell), findsNWidgets(2)); // Audio + icon button
+    expect(find.byTooltip('Sleep timer'), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp('Sleep timer, ')), findsNothing);
+    semantics.dispose();
   });
 }

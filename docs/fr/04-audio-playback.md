@@ -207,6 +207,13 @@ state and resume position stay coherent no matter where the listener touches it.
   `-h:mm:ss`) by default; tapping it toggles to the total duration. The choice persists as the
   `showRemainingTime` setting. Remaining time is media time and does not account for playback
   speed.
+- While a sleep timer is armed, the right label instead shows a sleep glyph (zZ) and the time
+  until the timer stops playback, in the same clock format (see FR 09 for how that time is
+  computed). Tapping it switches between this sleep countdown and the regular time label
+  (remaining or total, whichever was last chosen) without changing the `showRemainingTime`
+  setting; arming a new timer brings the countdown back. While scrubbing, the right label shows
+  the regular time label for position feedback and returns to the countdown on release. Screen
+  readers hear the countdown as a sleep status ("Sleep timer, 12 minutes left").
 - While scrubbing, the play/pause button keeps the state it had when the drag began, so the
   brief buffering after the seek does not flicker the icon.
 - When the duration is unknown, releasing a drag performs no seek. When no audio is loaded
