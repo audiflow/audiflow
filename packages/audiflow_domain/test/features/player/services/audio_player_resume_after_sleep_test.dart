@@ -90,6 +90,7 @@ class _ListQueueService extends FakeQueueService {
 
   final List<Episode> episodes;
   Completer<void>? queueGate;
+  Completer<void>? popGate;
   int pops = 0;
 
   @override
@@ -110,6 +111,7 @@ class _ListQueueService extends FakeQueueService {
 
   @override
   Future<Episode?> popNextEpisode() async {
+    await popGate?.future;
     if (episodes.isEmpty) return null;
     pops++;
     return episodes.removeAt(0);
@@ -274,5 +276,23 @@ void main() {
         ).not((it) => it.isA<PlaybackPaused>());
       },
     );
+  });
+
+  group('natural completion', () {
+    test('an episode picked while the queue is read keeps playing', () async {
+      queue.episodes.clear();
+      queue.popGate = Completer<void>();
+      await controller().play(_url);
+      await pumpEventQueue();
+      player.completeSource();
+      await pumpEventQueue();
+
+      await controller().play(_thirdUrl);
+      queue.popGate!.complete();
+      await pumpEventQueue();
+
+      check(controller().currentUrl).equals(_thirdUrl);
+      check(player.stopCalls).equals(0);
+    });
   });
 }

@@ -468,8 +468,12 @@ class AudioPlayerController extends _$AudioPlayerController
   Future<void> _handlePlaybackComplete() async {
     try {
       _log.i('[Complete] Getting next episode from queue...');
+      final attempt = _playAttempt;
       final queueService = ref.read(queueServiceProvider);
       final nextEpisode = await queueService.popNextEpisode();
+      // An episode picked while the queue was read owns the player; neither
+      // starting the queued one nor closing may override it.
+      if (_playAttempt != attempt) return;
 
       if (nextEpisode != null) {
         _log.i(
