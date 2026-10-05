@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart' show kTouchSlop;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -142,8 +143,18 @@ class PlayerSeekBar extends StatefulWidget {
 
 class _PlayerSeekBarState extends State<PlayerSeekBar> {
   static const double _touchAreaHeight = 32.0;
+  // How far the time labels tuck under the bottom of the touch area. The
+  // track is drawn in the middle of the 32 pt touch area, so without this
+  // the labels sat about 17 pt below a 6 pt bar, which read as detached.
+  static const double _labelOverlap = 10.0;
   static const Duration _thicknessAnimation = Duration(milliseconds: 150);
 
+  // Lets the track forward taps that land on the part of the trailing label
+  // it covers (see [_forwardLabelTap]).
+  final GlobalKey _trailingLabelKey = GlobalKey();
+  // The one pointer that may become a forwarded label tap; later touches are
+  // ignored until it lifts.
+  PointerDownEvent? _labelTapDown;
   bool _isDragging = false;
   double _dragValue = 0.0;
   double _trackWidth = 0.0;
@@ -157,11 +168,18 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
 
     return _buildSemantics(
       value: value,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+      // The track is stacked last so its whole touch area stays draggable
+      // where the labels tuck underneath it.
+      child: Stack(
+        clipBehavior: Clip.none,
         children: [
-          _withTooltip(value, _buildTrack(value, primary)),
-          _buildLabels(theme, primary),
+          Padding(
+            padding: const EdgeInsets.only(
+              top: _touchAreaHeight - _labelOverlap,
+            ),
+            child: _buildLabels(theme, primary),
+          ),
+          _withTooltip(value, _forwardLabelTap(_buildTrack(value, primary))),
         ],
       ),
     );
@@ -219,6 +237,48 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
     );
   }
 
+  // The track sits on top of the tucked-in labels so drags work across its
+  // whole touch area, which hides the top of the trailing label from hit
+  // testing. Forward taps landing there so the label's toggle keeps its full
+  // tap target. A raw Listener is used because a tap recognizer would join
+  // the gesture arena and make a lone drag wait for the touch slop.
+  Widget _forwardLabelTap(Widget track) {
+    if (widget.onTrailingLabelTap == null) return track;
+    return Listener(
+      onPointerDown: _handleTrackPointerDown,
+      onPointerCancel: (event) => _clearLabelTap(event.pointer),
+      onPointerUp: _handleTrackPointerUp,
+      child: track,
+    );
+  }
+
+  void _handleTrackPointerDown(PointerDownEvent event) {
+    if (_labelTapDown != null) return;
+    if (!_isOnTrailingLabel(event.position)) return;
+    _labelTapDown = event;
+  }
+
+  void _clearLabelTap(int pointer) {
+    if (_labelTapDown?.pointer == pointer) _labelTapDown = null;
+  }
+
+  // Runs before the drag recognizer sees the up event, so [_isDragging] still
+  // tells a scrub apart from a tap.
+  void _handleTrackPointerUp(PointerUpEvent event) {
+    final down = _labelTapDown;
+    if (down == null || down.pointer != event.pointer) return;
+    _labelTapDown = null;
+    if (_isDragging) return;
+    if (kTouchSlop < (event.position - down.position).distance) return;
+    widget.onTrailingLabelTap?.call();
+  }
+
+  bool _isOnTrailingLabel(Offset globalPosition) {
+    final box = _trailingLabelKey.currentContext?.findRenderObject();
+    if (box is! RenderBox || !box.hasSize) return false;
+    return box.size.contains(box.globalToLocal(globalPosition));
+  }
+
   // The tooltip floats above the track without taking layout space, so the
   // bar keeps its height whether or not the user is scrubbing. The Stack is
   // always present: wrapping the track only once a drag starts would remount
@@ -264,6 +324,7 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
         Semantics(
           button: widget.onTrailingLabelTap != null,
           child: GestureDetector(
+            key: _trailingLabelKey,
             behavior: HitTestBehavior.opaque,
             onTap: widget.onTrailingLabelTap,
             child: Padding(
