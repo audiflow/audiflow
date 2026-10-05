@@ -7,6 +7,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 
 import 'scrub_speed.dart';
+import 'seek_release_tracker.dart';
 
 /// A contiguous stretch of the seek bar track, in fractions of the whole
 /// track (0.0 to 1.0).
@@ -50,6 +51,10 @@ class SeekBarSegment {
 /// Once a drag has started, moving the finger vertically away from the track
 /// slows it down for fine adjustment (see [scrubSpeedForDistance]); the
 /// current speed is shown between the time labels from [scrubSpeedLabels].
+///
+/// On release, a small move made just as the finger lifts off after holding
+/// still is discarded, and the position the user settled on is committed
+/// (see [SeekReleaseTracker]).
 ///
 /// The widget is controlled like [Slider]: it reports value changes through
 /// the callbacks and renders whatever [value] the parent passes back.
@@ -159,6 +164,22 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
   double _dragValue = 0.0;
   double _trackWidth = 0.0;
   ScrubSpeed _scrubSpeed = ScrubSpeed.full;
+  SeekReleaseTracker? _releaseTracker;
+  // Timestamp of the latest pointer event on the track. Recorded by a
+  // Listener below the drag recognizer, so it is current when the
+  // recognizer's callbacks run.
+  Duration _lastPointerTime = Duration.zero;
+  // Pointer of the latest move on the track, which is the one driving the
+  // drag when the recognizer reports an update.
+  int? _lastMovedPointer;
+  int? _dragPointer;
+  // A cancel after the drag started arrives as a drag end, not as a drag
+  // cancel, so the Listener flags it to skip the lift-off rule. Only the
+  // dragging pointer counts, so an unrelated touch cannot change the release.
+  bool _pointerCancelled = false;
+  // Raw horizontal finger travel since the drag began, before fine-scrub
+  // scaling, so the release rule can measure roll under the finger.
+  double _fingerTravel = 0.0;
 
   @override
   Widget build(BuildContext context) {
@@ -211,23 +232,35 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
           key: PlayerSeekBar.trackKey,
           behavior: HitTestBehavior.opaque,
           onHorizontalDragUpdate: _handleDragUpdate,
-          onHorizontalDragEnd: (_) => _handleDragFinish(),
-          onHorizontalDragCancel: _handleDragFinish,
-          child: SizedBox(
-            height: _touchAreaHeight,
-            width: double.infinity,
-            child: TweenAnimationBuilder<double>(
-              tween: Tween(end: _trackHeight),
-              duration: _thicknessAnimation,
-              curve: Curves.easeOut,
-              builder: (context, height, _) => CustomPaint(
-                painter: PlayerSeekBarPainter(
-                  value: value,
-                  trackHeight: height,
-                  segments: widget.segments,
-                  segmentGap: PlayerSeekBar.segmentGap,
-                  activeColor: primary,
-                  inactiveColor: primary.withValues(alpha: 0.3),
+          onHorizontalDragEnd: (_) => _handleDragEnd(),
+          onHorizontalDragCancel: () => _finishDrag(_dragValue),
+          child: Listener(
+            behavior: HitTestBehavior.opaque,
+            onPointerDown: _recordPointerTime,
+            onPointerMove: (event) {
+              _lastMovedPointer = event.pointer;
+              _recordPointerTime(event);
+            },
+            onPointerUp: _recordPointerTime,
+            onPointerCancel: (event) {
+              if (event.pointer == _dragPointer) _pointerCancelled = true;
+            },
+            child: SizedBox(
+              height: _touchAreaHeight,
+              width: double.infinity,
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(end: _trackHeight),
+                duration: _thicknessAnimation,
+                curve: Curves.easeOut,
+                builder: (context, height, _) => CustomPaint(
+                  painter: PlayerSeekBarPainter(
+                    value: value,
+                    trackHeight: height,
+                    segments: widget.segments,
+                    segmentGap: PlayerSeekBar.segmentGap,
+                    activeColor: primary,
+                    inactiveColor: primary.withValues(alpha: 0.3),
+                  ),
                 ),
               ),
             ),
@@ -235,6 +268,10 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
         );
       },
     );
+  }
+
+  void _recordPointerTime(PointerEvent event) {
+    _lastPointerTime = event.timeStamp;
   }
 
   // The track sits on top of the tucked-in labels so drags work across its
@@ -371,6 +408,14 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
   void _beginDrag() {
     HapticFeedback.lightImpact();
     final start = widget.value.clamp(0.0, 1.0);
+    _pointerCancelled = false;
+    _fingerTravel = 0.0;
+    _releaseTracker = SeekReleaseTracker(
+      startValue: start,
+      startTime: _lastPointerTime,
+      trackWidth: _trackWidth,
+      startFinger: _fingerTravel,
+    );
     setState(() {
       _isDragging = true;
       _dragValue = start;
@@ -387,6 +432,9 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
     final delta = details.primaryDelta ?? details.delta.dx;
     if (!_isDragging && delta == 0) return;
     if (!_isDragging) _beginDrag();
+    // The recognizer may follow a newer finger, so re-read it on each update.
+    _dragPointer = _lastMovedPointer;
+    _fingerTravel += delta;
     _updateScrubSpeed(details.localPosition.dy - _touchAreaHeight / 2);
     _moveDragValueBy(delta * _scrubSpeed.factor / _trackWidth);
   }
@@ -403,14 +451,35 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
   void _moveDragValueBy(double fraction) {
     if (fraction == 0) return;
     final next = (_dragValue + fraction).clamp(0.0, 1.0);
+    // Recorded even when clamped at an end of the track, so the finger
+    // position the release rule compares against stays current while the
+    // finger pushes past the end.
+    _releaseTracker?.update(next, _lastPointerTime, finger: _fingerTravel);
     if (next == _dragValue) return;
     setState(() => _dragValue = next);
     widget.onChanged?.call(next);
   }
 
-  void _handleDragFinish() {
+  // On lift-off, commit the settled position when the last move was roll.
+  // The parent hears the corrected value through onChanged first, so a
+  // parent that shows the drag value displays what is committed.
+  void _handleDragEnd() {
+    final tracker = _releaseTracker;
+    if (!_isDragging || tracker == null) return;
+    if (_pointerCancelled) return _finishDrag(_dragValue);
+    final end = tracker.resolveRelease(_lastPointerTime);
+    if (end != _dragValue) {
+      setState(() => _dragValue = end);
+      widget.onChanged?.call(end);
+    }
+    _finishDrag(end);
+  }
+
+  // A cancel is not a lift-off, so it commits the position as it stands.
+  void _finishDrag(double end) {
     if (!_isDragging) return;
-    final end = _dragValue;
+    _releaseTracker = null;
+    _dragPointer = null;
     setState(() {
       _isDragging = false;
       _scrubSpeed = ScrubSpeed.full;
