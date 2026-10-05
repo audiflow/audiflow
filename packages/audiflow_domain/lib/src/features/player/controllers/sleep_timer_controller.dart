@@ -220,8 +220,8 @@ class SleepTimerController extends _$SleepTimerController {
     switch (decision) {
       case KeepDecision():
         return;
-      case FireDecision(:final immediate):
-        _fire(immediate: immediate);
+      case FireDecision(:final stop):
+        _fire(stop);
       case DecrementEpisodesDecision():
         final cfg = state.config;
         if (cfg is SleepTimerConfigEpisodes) {
@@ -244,20 +244,23 @@ class SleepTimerController extends _$SleepTimerController {
     state = state.copyWith(config: const SleepTimerConfig.off());
   }
 
-  void _fire({bool immediate = false}) {
+  void _fire(SleepTimerStop stop) {
     _tick?.cancel();
     _tick = null;
     final player = ref.read(audioPlayerControllerProvider.notifier);
-    if (immediate) {
-      // Audio already reached silence at end-of-stream. Calling pause()
-      // here would emit a redundant playerStateStream event that re-enters
-      // the completed-state handler concurrently and consumes the
-      // suppression flag, letting the original handler advance the queue.
-      // The audio_player_service's completed-state branch sets
-      // PlaybackState.paused itself once it observes the flag.
-      player.suppressNextAutoAdvance();
-    } else {
-      unawaited(player.fadeOutAndPause());
+    switch (stop) {
+      case SleepTimerStop.fadeOut:
+        unawaited(player.fadeOutAndPause());
+      case SleepTimerStop.pauseNow:
+        unawaited(player.pause());
+      case SleepTimerStop.holdAtEndOfStream:
+        // Audio already reached silence at end-of-stream. Calling pause()
+        // here would emit a redundant playerStateStream event that re-enters
+        // the completed-state handler concurrently and consumes the
+        // suppression flag, letting the original handler advance the queue.
+        // The audio_player_service's completed-state branch sets
+        // PlaybackState.paused itself once it observes the flag.
+        player.suppressNextAutoAdvance();
     }
     _events.add(const SleepTimerFired());
     state = state.copyWith(config: const SleepTimerConfig.off());

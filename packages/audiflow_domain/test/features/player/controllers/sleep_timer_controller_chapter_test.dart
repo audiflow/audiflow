@@ -9,7 +9,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// Records fades and stops instead of driving a real audio player.
 class _FakePlayer extends AudioPlayerController {
   int fadeCount = 0;
+  int pauseCount = 0;
   int suppressCount = 0;
+
+  @override
+  Future<void> pause() async => pauseCount++;
 
   @override
   void suppressNextAutoAdvance() => suppressCount++;
@@ -146,18 +150,24 @@ void main() {
 
   void checkNotFired() {
     check(player.fadeCount).equals(0);
+    check(player.pauseCount).equals(0);
     check(timerEvents).isEmpty();
     check(config()).isA<SleepTimerConfigEndOfChapter>();
   }
 
+  // Crossing into the next chapter pauses at once: a fade would play the
+  // next chapter's opening while the volume drops.
   void checkFiredOnce() {
-    check(player.fadeCount).equals(1);
+    check(player.pauseCount).equals(1);
+    check(player.fadeCount).equals(0);
+    check(player.suppressCount).equals(0);
     check(timerEvents).single.isA<SleepTimerFired>();
     check(config()).isA<SleepTimerConfigOff>();
   }
 
   void checkCancelled() {
     check(player.fadeCount).equals(0);
+    check(player.pauseCount).equals(0);
     check(player.suppressCount).equals(0);
     check(timerEvents).single.isA<SleepTimerCancelled>();
     check(config()).isA<SleepTimerConfigOff>();
@@ -170,7 +180,7 @@ void main() {
   }
 
   test(
-    'fades and pauses when playback crosses into the next chapter',
+    'pauses without a fade when playback crosses into the next chapter',
     () async {
       await playEpisode(1, _threeChapters(1));
       await playAt(const Duration(seconds: 30));
@@ -300,6 +310,7 @@ void main() {
     // The end-of-episode stop: no fade, and the queue does not advance.
     check(player.suppressCount).equals(1);
     check(player.fadeCount).equals(0);
+    check(player.pauseCount).equals(0);
     check(timerEvents).single.isA<SleepTimerFired>();
     check(config()).isA<SleepTimerConfigOff>();
   });

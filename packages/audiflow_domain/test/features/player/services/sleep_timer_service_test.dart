@@ -27,14 +27,14 @@ void main() {
   });
 
   group('SleepTimerService.evaluate — endOfEpisode', () {
-    test('fires on EpisodeCompletedEvent with immediate=true', () {
+    test('fires on EpisodeCompletedEvent holding at end of stream', () {
       final decision = service.evaluate(
         config: const SleepTimerConfig.endOfEpisode(),
         event: const EpisodeCompletedEvent(),
         currentEpisodeHasChapters: false,
       );
       expect(decision, isA<FireDecision>());
-      expect((decision as FireDecision).immediate, isTrue);
+      expect((decision as FireDecision).stop, SleepTimerStop.holdAtEndOfStream);
     });
 
     test('cancels on ManualEpisodeSwitchedEvent', () {
@@ -72,15 +72,14 @@ void main() {
   });
 
   group('SleepTimerService.evaluate — endOfChapter', () {
-    test('fires on ChapterChangedEvent', () {
-      expect(
-        service.evaluate(
-          config: const SleepTimerConfig.endOfChapter(),
-          event: const ChapterChangedEvent(),
-          currentEpisodeHasChapters: true,
-        ),
-        isA<FireDecision>(),
+    test('pauses at once without a fade on ChapterChangedEvent', () {
+      final decision = service.evaluate(
+        config: const SleepTimerConfig.endOfChapter(),
+        event: const ChapterChangedEvent(),
+        currentEpisodeHasChapters: true,
       );
+      expect(decision, isA<FireDecision>());
+      expect((decision as FireDecision).stop, SleepTimerStop.pauseNow);
     });
 
     test('cancels on SeekedOutOfChapterEvent', () {
@@ -101,7 +100,7 @@ void main() {
         currentEpisodeHasChapters: true,
       );
       expect(decision, isA<FireDecision>());
-      expect((decision as FireDecision).immediate, isTrue);
+      expect((decision as FireDecision).stop, SleepTimerStop.holdAtEndOfStream);
     });
 
     test('cancels on a manual episode switch, with or without chapters', () {
@@ -188,24 +187,17 @@ void main() {
   });
 
   group('SleepTimerService.evaluate — episodes', () {
-    test('fires when remaining == 1 and episode completes (immediate)', () {
+    test('fires when remaining == 1 and episode completes (end of stream)', () {
       final decision = service.evaluate(
         config: const SleepTimerConfig.episodes(total: 3, remaining: 1),
         event: const EpisodeCompletedEvent(),
         currentEpisodeHasChapters: false,
       );
       expect(decision, isA<FireDecision>());
-      expect((decision as FireDecision).immediate, isTrue);
+      expect((decision as FireDecision).stop, SleepTimerStop.holdAtEndOfStream);
     });
 
-    test('chapter and duration fires use fade (immediate=false)', () {
-      final chapter = service.evaluate(
-        config: const SleepTimerConfig.endOfChapter(),
-        event: const ChapterChangedEvent(),
-        currentEpisodeHasChapters: true,
-      );
-      expect((chapter as FireDecision).immediate, isFalse);
-
+    test('duration fires fade out', () {
       final duration = service.evaluate(
         config: SleepTimerConfig.duration(
           total: const Duration(minutes: 30),
@@ -214,7 +206,7 @@ void main() {
         event: TickEvent(t0),
         currentEpisodeHasChapters: false,
       );
-      expect((duration as FireDecision).immediate, isFalse);
+      expect((duration as FireDecision).stop, SleepTimerStop.fadeOut);
     });
 
     test('decrements when remaining > 1 and episode completes', () {
