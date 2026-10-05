@@ -543,6 +543,9 @@ class AudioPlayerController extends _$AudioPlayerController
             _log.d('[Play] Seeking to saved position: ${history.positionMs}ms');
             _announceSeek(Duration(milliseconds: history.positionMs));
             await _player.seek(Duration(milliseconds: history.positionMs));
+            _lifecycleEvents.add(
+              SeekLifecycle(Duration(milliseconds: history.positionMs)),
+            );
           }
         }
       }
@@ -922,6 +925,7 @@ class AudioPlayerController extends _$AudioPlayerController
     ref
         .read(nowPlayingControllerProvider.notifier)
         .setNowPlaying(nowPlaying.copyWith(savedPosition: clamped));
+    _lifecycleEvents.add(SeekLifecycle(clamped));
     final episode = nowPlaying.episode;
     if (episode == null) return;
     // Persist so play() seeks to this position.

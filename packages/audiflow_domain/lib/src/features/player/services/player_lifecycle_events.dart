@@ -22,14 +22,15 @@ final class EpisodeSwitchedLifecycle extends PlayerLifecycleEvent {
 ///
 /// Emitted before the position changes so listeners that follow position
 /// continuity (the end-of-chapter sleep timer) can tell a jump from
-/// playback. [SeekLifecycle] follows only when `AudioPlayerController.seek`
-/// commits.
+/// playback. [SeekLifecycle] follows once the position has moved; it is
+/// missing only when the seek fails.
 final class SeekStartedLifecycle extends PlayerLifecycleEvent {
   const SeekStartedLifecycle(this.target);
   final Duration target;
 }
 
-/// The user seeked to a new absolute position.
+/// The position moved to a new absolute position on request, as announced
+/// by the preceding [SeekStartedLifecycle].
 final class SeekLifecycle extends PlayerLifecycleEvent {
   const SeekLifecycle(this.position);
   final Duration position;

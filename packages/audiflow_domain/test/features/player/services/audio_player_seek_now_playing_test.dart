@@ -95,7 +95,7 @@ void main() {
       check(history.savedPositionsMs).deepEquals([180000]);
     });
 
-    test('announces the clamped target as a seek', () async {
+    test('reports the clamped target as a seek', () async {
       final container = makeContainer(
         _restored(totalDuration: const Duration(minutes: 3)),
       );
@@ -109,9 +109,14 @@ void main() {
       await seekWithoutAudio(container, const Duration(minutes: 5));
       await pumpEventQueue();
 
-      check(events).single
+      check(events).length.equals(2);
+      check(events.first)
           .isA<SeekStartedLifecycle>()
           .has((e) => e.target, 'target')
+          .equals(const Duration(minutes: 3));
+      check(events.last)
+          .isA<SeekLifecycle>()
+          .has((e) => e.position, 'position')
           .equals(const Duration(minutes: 3));
     });
 
