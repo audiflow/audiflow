@@ -59,6 +59,8 @@ class PlayerSeekBar extends StatefulWidget {
     required this.value,
     required this.leadingLabel,
     required this.trailingLabel,
+    this.trailingLabelIcon,
+    this.trailingLabelSemanticsLabel,
     this.segments = SeekBarSegment.single,
     this.tooltipBuilder,
     this.semanticValueFormatter,
@@ -99,6 +101,14 @@ class PlayerSeekBar extends StatefulWidget {
 
   /// Label under the end of the track (remaining or total time).
   final String trailingLabel;
+
+  /// Glyph shown just before [trailingLabel], e.g. to mark that the label
+  /// shows something other than the playback time.
+  final Widget? trailingLabelIcon;
+
+  /// Replaces [trailingLabel] for screen readers when the visible text does
+  /// not speak well on its own.
+  final String? trailingLabelSemanticsLabel;
 
   /// Stretches of the track to draw. Defaults to one full-width segment.
   final List<SeekBarSegment> segments;
@@ -323,16 +333,35 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
         Expanded(child: _buildScrubSpeedLabel(style?.copyWith(color: primary))),
         Semantics(
           button: widget.onTrailingLabelTap != null,
+          label: widget.trailingLabelSemanticsLabel,
+          excludeSemantics: widget.trailingLabelSemanticsLabel != null,
           child: GestureDetector(
             key: _trailingLabelKey,
             behavior: HitTestBehavior.opaque,
             onTap: widget.onTrailingLabelTap,
             child: Padding(
               padding: const EdgeInsets.only(left: 16, top: 4, bottom: 4),
-              child: Text(widget.trailingLabel, style: style),
+              child: _buildTrailingLabel(style),
             ),
           ),
         ),
+      ],
+    );
+  }
+
+  Widget _buildTrailingLabel(TextStyle? style) {
+    final text = Text(widget.trailingLabel, style: style);
+    final icon = widget.trailingLabelIcon;
+    if (icon == null) return text;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconTheme.merge(
+          data: IconThemeData(size: style?.fontSize, color: style?.color),
+          child: icon,
+        ),
+        const SizedBox(width: 2),
+        text,
       ],
     );
   }

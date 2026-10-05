@@ -33,6 +33,8 @@ Widget _host({
   bool withSheetArena = true,
   double width = _barWidth,
   Map<ScrubSpeed, String> scrubSpeedLabels = _scrubLabels,
+  Widget? trailingLabelIcon,
+  String? trailingLabelSemanticsLabel,
 }) {
   return MaterialApp(
     home: Scaffold(
@@ -50,6 +52,8 @@ Widget _host({
               tooltipBuilder: tooltipBuilder,
               leadingLabel: '01:00',
               trailingLabel: '-09:00',
+              trailingLabelIcon: trailingLabelIcon,
+              trailingLabelSemanticsLabel: trailingLabelSemanticsLabel,
               scrubSpeedLabels: scrubSpeedLabels,
               semanticValueFormatter: (value) => 'at ${(value * 100).round()}%',
               adjustable: adjustable,
@@ -508,6 +512,58 @@ void main() {
 
       final node = tester.getSemantics(find.text('-09:00'));
       check(node.flagsCollection.isButton).isTrue();
+      handle.dispose();
+    });
+
+    testWidgets('shows a glyph before the trailing label', (tester) async {
+      const glyphKey = Key('glyph');
+      await tester.pumpWidget(
+        _host(
+          value: 0.1,
+          recorder: _SeekRecorder(),
+          trailingLabelIcon: const Icon(Icons.bedtime, key: glyphKey),
+        ),
+      );
+
+      final glyph = tester.getRect(find.byKey(glyphKey));
+      final label = tester.getRect(find.text('-09:00'));
+      check(glyph.right).isLessOrEqual(label.left);
+    });
+
+    testWidgets('tapping the glyph also calls onTrailingLabelTap', (
+      tester,
+    ) async {
+      const glyphKey = Key('glyph');
+      final recorder = _SeekRecorder();
+      await tester.pumpWidget(
+        _host(
+          value: 0.1,
+          recorder: recorder,
+          trailingLabelIcon: const Icon(Icons.bedtime, key: glyphKey),
+        ),
+      );
+
+      await tester.tap(find.byKey(glyphKey));
+      check(recorder.trailingTaps).equals(1);
+    });
+
+    testWidgets('trailing semantics label replaces the visible text', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(
+        _host(
+          value: 0.1,
+          recorder: _SeekRecorder(),
+          trailingLabelSemanticsLabel: 'Sleep timer, 9 minutes left',
+        ),
+      );
+
+      final node = tester.getSemantics(
+        find.bySemanticsLabel('Sleep timer, 9 minutes left'),
+      );
+      check(node.flagsCollection.isButton).isTrue();
+      check(find.bySemanticsLabel('-09:00').evaluate()).isEmpty();
       handle.dispose();
     });
   });
