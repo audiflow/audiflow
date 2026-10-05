@@ -190,6 +190,8 @@
   "playerNowPlaying": "再生中",
   "playerNoAudio": "再生中の音声はありません",
   "playerArtworkLabel": "エピソードのアートワーク",
+  "playerSeekUndoGoBack": "戻る",
+  "playerSeekUndoDismiss": "閉じる",
   "playerRewindLabel": "{seconds}秒巻き戻し",
   "@playerRewindLabel": { "placeholders": { "seconds": { "type": "int" } } },
   "playerForwardLabel": "{seconds}秒早送り",
