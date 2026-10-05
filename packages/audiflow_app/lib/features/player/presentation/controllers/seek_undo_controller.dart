@@ -49,14 +49,28 @@ class SeekUndoController extends _$SeekUndoController {
   ///
   /// A jump made while the pill is already up keeps the first origin, so
   /// "Go back" undoes the whole run of jumps, and restarts the timer.
+  ///
+  /// A seek the player rejects (throws) withdraws an offer it created, so
+  /// the pill never offers to undo a jump that did not happen.
   Future<void> seekWithUndo(Duration target) async {
+    final previous = state;
     _recordOrigin();
-    await ref
-        .read(audioPlayerControllerProvider.notifier)
-        .seekNowPlaying(target);
+    try {
+      await ref
+          .read(audioPlayerControllerProvider.notifier)
+          .seekNowPlaying(target);
+    } on Object {
+      // Only an offer this jump created is withdrawn; an earlier one still
+      // describes a jump that happened.
+      if (!identical(state, previous)) dismiss();
+      rethrow;
+    }
   }
 
   /// Seeks back to the recorded origin and hides the pill.
+  ///
+  /// If the player rejects the seek (throws), the pill comes back so the
+  /// listener can retry.
   Future<void> goBack() async {
     final undo = state;
     if (undo == null) return;
@@ -65,9 +79,14 @@ class SeekUndoController extends _$SeekUndoController {
     // gap before it runs.
     final episodeUrl = ref.read(nowPlayingControllerProvider)?.episodeUrl;
     if (episodeUrl != undo.episodeUrl) return;
-    await ref
-        .read(audioPlayerControllerProvider.notifier)
-        .seekNowPlaying(undo.origin);
+    try {
+      await ref
+          .read(audioPlayerControllerProvider.notifier)
+          .seekNowPlaying(undo.origin);
+    } on Object {
+      _offer(undo);
+      rethrow;
+    }
   }
 
   /// Hides the pill without seeking.
@@ -79,12 +98,19 @@ class SeekUndoController extends _$SeekUndoController {
   void _recordOrigin() {
     final nowPlaying = ref.read(nowPlayingControllerProvider);
     if (nowPlaying == null) return;
-    if (state?.episodeUrl != nowPlaying.episodeUrl) {
-      final origin = _currentPosition(nowPlaying);
-      if (origin == null) return;
-      state = SeekUndoState(origin: origin, episodeUrl: nowPlaying.episodeUrl);
+    final current = state;
+    if (current != null && current.episodeUrl == nowPlaying.episodeUrl) {
+      return _offer(current);
     }
+    final origin = _currentPosition(nowPlaying);
+    if (origin == null) return;
+    _offer(SeekUndoState(origin: origin, episodeUrl: nowPlaying.episodeUrl));
+  }
+
+  // Shows [undo] and (re)starts the countdown that hides it.
+  void _offer(SeekUndoState undo) {
     _cancelTimer();
+    state = undo;
     _hideTimer = Timer(visibleDuration, dismiss);
   }
 

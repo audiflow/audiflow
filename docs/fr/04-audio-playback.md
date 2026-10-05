@@ -227,6 +227,8 @@ state and resume position stay coherent no matter where the listener touches it.
   show the pill. Neither does tapping a transcript segment: the Transcript tab hides the
   artwork, so the pill would not be seen.
 - Changing episode discards the pill and its position.
+- A jump the player rejects shows no pill, and a rejected return brings the pill back so the
+  listener can retry.
 - The pill works before audio has loaded too (a restored session): the jump and the return
   both move the saved resume position, as the seek bar does.
 - Implemented by `SeekUndoController` (`seekWithUndo`, `goBack`, `dismiss`), a thin layer

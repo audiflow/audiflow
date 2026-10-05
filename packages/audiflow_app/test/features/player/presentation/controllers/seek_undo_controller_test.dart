@@ -29,11 +29,17 @@ PlaybackProgress _progressAt(Duration position) => PlaybackProgress(
 class _RecordingAudioPlayerController extends AudioPlayerController {
   final List<Duration> seeks = [];
 
+  /// When true, the next seeks throw as a rejected player seek does.
+  bool rejectSeeks = false;
+
   @override
   PlaybackState build() => const PlaybackState.idle();
 
   @override
-  Future<void> seekNowPlaying(Duration position) async => seeks.add(position);
+  Future<void> seekNowPlaying(Duration position) async {
+    if (rejectSeeks) throw StateError('seek rejected');
+    seeks.add(position);
+  }
 }
 
 class _Harness {
@@ -75,6 +81,51 @@ void main() {
 
     test('starts hidden', () {
       check(harness.state).isNull();
+    });
+
+    test('a rejected jump shows no pill', () async {
+      harness.player.rejectSeeks = true;
+
+      await check(
+        harness.controller.seekWithUndo(const Duration(minutes: 20)),
+      ).throws<StateError>();
+
+      check(harness.state).isNull();
+    });
+
+    test('a rejected second jump keeps the first offer', () async {
+      await harness.controller.seekWithUndo(const Duration(minutes: 20));
+      harness.player.rejectSeeks = true;
+
+      await check(
+        harness.controller.seekWithUndo(const Duration(minutes: 40)),
+      ).throws<StateError>();
+
+      check(harness.state)
+          .isNotNull()
+          .has((s) => s.origin, 'origin')
+          .equals(const Duration(minutes: 3));
+    });
+
+    test('a rejected go back brings the pill back for a retry', () {
+      fakeAsync((async) {
+        harness.controller.seekWithUndo(const Duration(minutes: 20));
+        async.flushMicrotasks();
+        harness.player.rejectSeeks = true;
+
+        Object? error;
+        harness.controller.goBack().catchError((Object e) => error = e);
+        async.flushMicrotasks();
+
+        check(error).isA<StateError>();
+        check(harness.state)
+            .isNotNull()
+            .has((s) => s.origin, 'origin')
+            .equals(const Duration(minutes: 3));
+        // The retry window restarts and still expires.
+        async.elapse(SeekUndoController.visibleDuration);
+        check(harness.state).isNull();
+      });
     });
 
     test('seekWithUndo records the origin and seeks to the target', () async {
