@@ -122,6 +122,91 @@ Finder get _track => find.byKey(PlayerSeekBar.trackKey);
 
 void main() {
   group('PlayerSeekBar', () {
+    testWidgets(
+      'labels sit close under the bar yet the full touch area drags',
+      (tester) async {
+        final recorder = _SeekRecorder();
+        await tester.pumpWidget(
+          _host(value: 0.5, recorder: recorder, withSheetArena: false),
+        );
+        final track = tester.getRect(_track);
+        final label = tester.getRect(find.text('01:00'));
+        // The bar is drawn mid-touch-area; the labels start below the bar
+        // but inside the bottom of its touch area.
+        check(track.center.dy).isLessThan(label.top);
+        check(label.top).isLessThan(track.bottom);
+
+        // A drag starting at the very bottom of the touch area, over the
+        // labels row, still seeks forward.
+        final gesture = await tester.startGesture(
+          Offset(track.center.dx, track.bottom - 2),
+        );
+        await gesture.moveBy(const Offset(40, 0));
+        await gesture.moveBy(const Offset(40, 0));
+        await gesture.up();
+        await tester.pump();
+        check(recorder.ends).length.equals(1);
+        check(0.5).isLessThan(recorder.ends.single);
+      },
+    );
+
+    testWidgets(
+      'tapping the part of the trailing label under the touch area toggles',
+      (tester) async {
+        final recorder = _SeekRecorder();
+        await tester.pumpWidget(_host(value: 0.5, recorder: recorder));
+        final track = tester.getRect(_track);
+        final label = tester.getRect(find.text('-09:00'));
+        // Above the label's vertical middle, still inside the track's area.
+        final point = Offset(label.center.dx, track.bottom - 2);
+        check(point.dy).isLessThan(label.center.dy);
+
+        await tester.tapAt(point);
+        await tester.pump();
+
+        check(recorder.trailingTaps).equals(1);
+        check(recorder.ends).isEmpty();
+      },
+    );
+
+    testWidgets('a second touch does not cancel the covered label tap', (
+      tester,
+    ) async {
+      final recorder = _SeekRecorder();
+      await tester.pumpWidget(_host(value: 0.5, recorder: recorder));
+      final track = tester.getRect(_track);
+      final label = tester.getRect(find.text('-09:00'));
+
+      final labelTap = await tester.startGesture(
+        Offset(label.center.dx, track.bottom - 2),
+      );
+      final other = await tester.startGesture(track.center, pointer: 2);
+      await labelTap.up();
+      await other.up();
+      await tester.pump();
+
+      check(recorder.trailingTaps).equals(1);
+    });
+
+    testWidgets(
+      'a touch that starts off the label and lifts on it is ignored',
+      (tester) async {
+        final recorder = _SeekRecorder();
+        await tester.pumpWidget(_host(value: 0.5, recorder: recorder));
+        final track = tester.getRect(_track);
+        final label = tester.getRect(find.text('-09:00'));
+        // The label's tap box includes 16 pt of left padding.
+        final onLabel = Offset(label.left - 14, track.bottom - 2);
+
+        final gesture = await tester.startGesture(onLabel - const Offset(8, 0));
+        await gesture.moveTo(onLabel);
+        await gesture.up();
+        await tester.pump();
+
+        check(recorder.trailingTaps).equals(0);
+      },
+    );
+
     testWidgets('shows leading and trailing labels', (tester) async {
       await tester.pumpWidget(_host(value: 0.1, recorder: _SeekRecorder()));
 

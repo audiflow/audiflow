@@ -221,6 +221,10 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
                       isPlaying,
                     ),
                   ),
+                  // The action row's buttons carry their own inner padding,
+                  // so 8 pt here makes the visible gap below the play button
+                  // match the one above it, below the time labels.
+                  const SizedBox(height: 8),
                   PlayerActionRow(
                     outputPicker: showOutputPicker
                         ? const AudioOutputPickerButton()
