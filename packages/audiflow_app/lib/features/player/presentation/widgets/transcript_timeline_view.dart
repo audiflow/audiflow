@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../controllers/seek_undo_controller.dart';
 import '../controllers/transcript_follow_controller.dart';
 
 /// A timeline entry is either a chapter header or a transcript segment.
@@ -205,8 +206,8 @@ class _TranscriptTimelineViewState
 
   void _handleSegmentTap(TranscriptSegment segment) {
     ref
-        .read(audioPlayerControllerProvider.notifier)
-        .seek(Duration(milliseconds: segment.startMs));
+        .read(seekUndoControllerProvider.notifier)
+        .seekWithUndo(Duration(milliseconds: segment.startMs));
   }
 
   void _handleJumpToCurrent() {

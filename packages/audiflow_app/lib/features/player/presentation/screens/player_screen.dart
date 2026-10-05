@@ -17,9 +17,11 @@ import '../../helpers/chapter_seek_bar_segments.dart';
 import '../../helpers/playback_time_format.dart';
 import '../../helpers/podcast_lookup.dart';
 import '../../services/audio_route_channel.dart';
+import '../controllers/seek_undo_controller.dart';
 import '../widgets/audio_output_picker_button.dart';
 import '../widgets/current_chapter_row.dart';
 import '../widgets/player_action_row.dart';
+import '../widgets/seek_undo_overlay.dart';
 import '../widgets/transcript_tab.dart';
 
 /// Full player screen presented as a Cupertino sheet.
@@ -189,8 +191,12 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
                           : null,
                       onChapterSelected: (position) => _handleSkip(
                         () => ref
-                            .read(audioPlayerControllerProvider.notifier)
-                            .seekNowPlaying(position),
+                            .read(seekUndoControllerProvider.notifier)
+                            .seekWithUndo(position),
+                        isPlaying,
+                      ),
+                      onSeekUndo: () => _handleSkip(
+                        ref.read(seekUndoControllerProvider.notifier).goBack,
                         isPlaying,
                       ),
                     ),
@@ -390,6 +396,7 @@ class _PlayerTabBody extends StatelessWidget {
     required this.episodeTitle,
     required this.podcastTitle,
     required this.onChapterSelected,
+    required this.onSeekUndo,
     this.onEpisodeTitleTap,
     this.onPodcastTitleTap,
   });
@@ -406,6 +413,7 @@ class _PlayerTabBody extends StatelessWidget {
   final VoidCallback? onEpisodeTitleTap;
   final VoidCallback? onPodcastTitleTap;
   final ValueChanged<Duration> onChapterSelected;
+  final VoidCallback onSeekUndo;
 
   @override
   Widget build(BuildContext context) {
@@ -430,7 +438,12 @@ class _PlayerTabBody extends StatelessWidget {
                   constraints: const BoxConstraints.tightFor(
                     height: artworkMinHeight,
                   ),
-                  child: Center(child: _PlayerArtwork(artworkUrl: artworkUrl)),
+                  child: Center(
+                    child: _PlayerArtwork(
+                      artworkUrl: artworkUrl,
+                      onSeekUndo: onSeekUndo,
+                    ),
+                  ),
                 ),
               ),
               _PlayerInfo(
@@ -482,30 +495,45 @@ class _DragHandle extends StatelessWidget {
 }
 
 class _PlayerArtwork extends StatelessWidget {
-  const _PlayerArtwork({this.artworkUrl});
+  const _PlayerArtwork({required this.onSeekUndo, this.artworkUrl});
 
   final String? artworkUrl;
+  final VoidCallback onSeekUndo;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Semantics(
-      image: true,
-      label: l10n.playerArtworkLabel,
-      child: AspectRatio(
-        aspectRatio: 1,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: artworkUrl != null
-              ? ArtworkImage(
-                  url: artworkUrl!,
-                  loading: const SizedBox.shrink(),
-                  placeholder: _Placeholder(colorScheme: colorScheme),
-                )
-              : _Placeholder(colorScheme: colorScheme),
-        ),
+    // The pill sits beside, not inside, the image semantics node so screen
+    // readers reach its buttons.
+    return AspectRatio(
+      aspectRatio: 1,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Semantics(
+            image: true,
+            label: l10n.playerArtworkLabel,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: artworkUrl != null
+                  ? ArtworkImage(
+                      url: artworkUrl!,
+                      loading: const SizedBox.shrink(),
+                      placeholder: _Placeholder(colorScheme: colorScheme),
+                    )
+                  : _Placeholder(colorScheme: colorScheme),
+            ),
+          ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: SeekUndoOverlay(onGoBack: onSeekUndo),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -734,8 +762,8 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
       // Duration unknown -- cannot compute a meaningful position.
       if (duration != Duration.zero) {
         await ref
-            .read(audioPlayerControllerProvider.notifier)
-            .seekNowPlaying(
+            .read(seekUndoControllerProvider.notifier)
+            .seekWithUndo(
               Duration(milliseconds: (duration.inMilliseconds * value).round()),
             );
       }

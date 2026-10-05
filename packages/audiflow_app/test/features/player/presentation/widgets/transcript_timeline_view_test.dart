@@ -1,3 +1,4 @@
+import 'package:audiflow_app/features/player/presentation/controllers/seek_undo_controller.dart';
 import 'package:audiflow_app/features/player/presentation/widgets/transcript_timeline_view.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
@@ -60,10 +61,23 @@ double _jumpButtonOpacity(WidgetTester tester) {
   return opacity.opacity;
 }
 
+/// Playing controller that records now-playing seeks.
+class _RecordingAudioPlayerController extends StubAudioPlayerController {
+  _RecordingAudioPlayerController()
+    : super(const PlaybackState.playing(episodeUrl: 'test'));
+
+  final List<Duration> seeks = [];
+
+  @override
+  Future<void> seekNowPlaying(Duration position) async => seeks.add(position);
+}
+
 void main() {
   late ProviderContainer container;
+  late _RecordingAudioPlayerController player;
 
   setUp(() {
+    player = _RecordingAudioPlayerController();
     container = ProviderContainer(
       overrides: [
         transcriptSegmentsProvider(
@@ -81,9 +95,14 @@ void main() {
             bufferedPosition: Duration.zero,
           ),
         ),
-        audioPlayerControllerProvider.overrideWith(
-          () => StubAudioPlayerController(
-            const PlaybackState.playing(episodeUrl: 'test'),
+        audioPlayerControllerProvider.overrideWith(() => player),
+        nowPlayingControllerProvider.overrideWith(
+          () => StubNowPlayingController(
+            const NowPlayingInfo(
+              episodeUrl: 'test',
+              episodeTitle: 'Episode',
+              podcastTitle: 'Podcast',
+            ),
           ),
         ),
       ],
@@ -171,5 +190,27 @@ void main() {
     await tester.pumpAndSettle();
     check(_activeText().evaluate()).length.equals(1);
     check(_jumpButtonOpacity(tester)).equals(0);
+  });
+
+  testWidgets('tapping a segment seeks there and offers to go back', (
+    tester,
+  ) async {
+    await pumpView(tester);
+
+    // The tile's padding, outside the text's selection gestures.
+    final tile = find
+        .ancestor(of: _activeText(), matching: find.byType(InkWell))
+        .first;
+    await tester.tapAt(tester.getTopLeft(tile) + const Offset(4, 4));
+    await tester.pump();
+
+    check(player.seeks).deepEquals([
+      const Duration(milliseconds: _activeSegment * _segmentLengthMs),
+    ]);
+    check(container.read(seekUndoControllerProvider)).isNotNull();
+
+    // Let the pill time out so no timer outlives the test.
+    await tester.pump(SeekUndoController.visibleDuration);
+    check(container.read(seekUndoControllerProvider)).isNull();
   });
 }
