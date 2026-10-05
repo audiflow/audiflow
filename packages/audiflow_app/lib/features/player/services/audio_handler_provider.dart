@@ -84,5 +84,9 @@ Future<AudiflowAudioHandler> audioHandler(Ref ref) async {
   });
   ref.onDispose(lifecycleSub.cancel);
 
+  // Fetch on-demand chapters (e.g. <podcast:chapters> JSON) whenever an
+  // episode becomes the now-playing one.
+  ref.read(nowPlayingChapterLoaderProvider);
+
   return handler;
 }

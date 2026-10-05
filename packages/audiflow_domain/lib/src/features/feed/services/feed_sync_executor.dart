@@ -45,6 +45,32 @@ class FeedSyncExecutor {
   ///
   /// Skips if the feed was refreshed within the sync interval,
   /// unless [forceRefresh] is true.
+  /// Stores transcript and chapter metadata from a parsed batch, as the
+  /// foreground sync does, so episodes first seen by a background refresh
+  /// still get them.
+  ///
+  /// Like the cosmetic feed metadata, a failure here must not fail the sync,
+  /// or drop detection, the cache headers, and lastRefreshedAt are skipped.
+  Future<void> _storeMediaMetas(
+    Subscription sub,
+    List<ParsedEpisodeMediaMeta> mediaMetas,
+  ) async {
+    if (mediaMetas.isEmpty) return;
+    try {
+      await _episodeRepo.storeTranscriptAndChapterDataFromParsed(
+        sub.id,
+        mediaMetas,
+      );
+    } catch (e, st) {
+      // Isar throws Error subclasses, so catch everything.
+      _logger?.w(
+        'Transcript/chapter metadata failed for "${sub.title}"; sync continues',
+        error: e,
+        stackTrace: st,
+      );
+    }
+  }
+
   Future<SingleFeedSyncResult> syncFeed(
     Subscription sub, {
     bool forceRefresh = false,
@@ -160,6 +186,7 @@ class FeedSyncExecutor {
         onBatchReady: (episodes, mediaMetas) async {
           observedGuids.addAll(episodes.map((e) => e.guid));
           await _episodeRepo.upsertEpisodes(episodes);
+          await _storeMediaMetas(sub, mediaMetas);
         },
       )) {
         if (progress is FeedMetaReady) {

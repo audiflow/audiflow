@@ -2,6 +2,7 @@ import 'dart:async';
 
 import '../errors/podcast_parse_error.dart';
 import '../models/podcast_chapter.dart';
+import '../models/podcast_chapters_link.dart';
 import '../models/podcast_feed.dart';
 import '../models/podcast_image.dart';
 import '../models/podcast_item.dart';
@@ -214,6 +215,7 @@ class EntityFactory {
         isPermaLink: isPermaLink,
         contentEncoded: _extractOptionalString(itemData, 'contentEncoded'),
         chapters: chapters,
+        chaptersLink: _extractChaptersLink(itemData),
         transcripts: transcripts,
       );
     } catch (e) {
@@ -359,6 +361,16 @@ class EntityFactory {
     }
 
     return chapters.isEmpty ? null : chapters;
+  }
+
+  /// Extracts the `<podcast:chapters>` link from item data.
+  PodcastChaptersLink? _extractChaptersLink(Map<String, dynamic> itemData) {
+    final link = itemData['chaptersLink'] as Map<String, dynamic>?;
+    if (link == null) return null;
+    final url = link['url'] as String?;
+    final type = link['type'] as String?;
+    if (url == null || type == null) return null;
+    return PodcastChaptersLink(url: url, type: type);
   }
 
   /// Extracts transcripts from item data.

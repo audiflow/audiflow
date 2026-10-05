@@ -89,7 +89,7 @@ PlayerEvent stream (audiflow_domain)
   |-- Watched by: queue service, history service, analytics, station reconciler
 
 PlayerLifecycleEvent stream (audiflow_domain)
-  |-- EpisodeCompleted, EpisodeSwitched, Seek
+  |-- EpisodeCompleted, EpisodeSwitched, SeekStarted, Seek
   |-- Watched by: sleep timer controller
 
 DownloadEvent stream (audiflow_domain)
