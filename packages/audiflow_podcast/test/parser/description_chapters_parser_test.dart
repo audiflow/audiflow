@@ -227,6 +227,14 @@ Chapters
       check(watch.elapsed).isLessThan(const Duration(seconds: 1));
     });
 
+    test('stray `<` before long whitespace runs stays fast', () {
+      final notes = List.filled(200, '<${' ' * 2000}x').join();
+      final watch = Stopwatch()..start();
+
+      check(_parser.parse(notes)).isEmpty();
+      check(watch.elapsed).isLessThan(const Duration(seconds: 1));
+    });
+
     test('an empty description', () {
       check(_titles('')).isEmpty();
     });

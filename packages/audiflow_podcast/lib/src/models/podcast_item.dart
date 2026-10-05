@@ -546,22 +546,27 @@ class PodcastItem extends PodcastEntity {
       summary.hashCode ^
       author.hashCode ^
       isExplicit.hashCode ^
-      images.hashCode ^
+      _listHash(images) ^
       link.hashCode ^
-      categories.hashCode ^
+      _listHash(categories) ^
       comments.hashCode ^
       source.hashCode ^
       isPermaLink.hashCode ^
       contentEncoded.hashCode ^
-      chapters.hashCode ^
+      _listHash(chapters) ^
       chaptersLink.hashCode ^
-      descriptionChapters.hashCode ^
+      _listHash(descriptionChapters) ^
       transcripts.hashCode;
 
   @override
   String toString() {
     return 'PodcastItem{title: $title, episodeNumber: $episodeNumber, seasonNumber: $seasonNumber, duration: $formattedDuration, publishDate: $publishDate}';
   }
+
+  // Hashes by contents to match [_listEquals]; an identity hash would give
+  // equal items different hash codes.
+  static int _listHash<T>(List<T>? list) =>
+      list == null ? null.hashCode : Object.hashAll(list);
 
   static bool _listEquals<T>(List<T>? a, List<T>? b) {
     if (a == null && b == null) return true;

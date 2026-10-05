@@ -1,7 +1,7 @@
-import 'package:checks/checks.dart';
-import 'package:audiflow_domain/audiflow_domain.dart';
 import 'dart:typed_data';
 
+import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:checks/checks.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar_community/isar.dart';
@@ -26,6 +26,27 @@ class _FakeHttpAdapter implements HttpClientAdapter {
 
   @override
   void close({bool force = false}) {}
+}
+
+/// Runs [onRead] right after the [readsBeforeHook]-th chapter read, to
+/// interleave a concurrent write between a read and the write that follows.
+class _InterleavingChapterRepository extends ChapterRepositoryImpl {
+  _InterleavingChapterRepository({required super.datasource});
+
+  int readsBeforeHook = 0;
+  Future<void> Function()? onRead;
+
+  @override
+  Future<List<EpisodeChapter>> getByEpisodeId(int episodeId) async {
+    final rows = await super.getByEpisodeId(episodeId);
+    readsBeforeHook--;
+    final hook = onRead;
+    if (hook != null && readsBeforeHook == 0) {
+      onRead = null;
+      await hook();
+    }
+    return rows;
+  }
 }
 
 const _chaptersUrl = 'https://example.com/ep1/chapters.json';
@@ -347,6 +368,41 @@ void main() {
       check(await service.ensureChapters(episodeId)).isTrue();
       check(await storedTitles(episodeId)).isEmpty();
     });
+
+    test(
+      'dropping derived chapters keeps feed chapters stored meanwhile',
+      () async {
+        final repository = _InterleavingChapterRepository(
+          datasource: chapterDatasource,
+        );
+        service = ChapterService(
+          chapterRepository: repository,
+          episodeRepository: EpisodeRepositoryImpl(
+            datasource: episodeDatasource,
+          ),
+          dio: Dio()..httpClientAdapter = http,
+          logger: Logger(level: Level.off),
+          now: () => now,
+        );
+        final episodeId = await insertEpisode(
+          chaptersUrl: null,
+          description: notes,
+        );
+        await service.ensureChapters(episodeId);
+        await insertEpisode(chaptersUrl: null, description: 'No list now');
+        // Sync stores feed chapters after the description step has read the
+        // derived ones (the second read; the JSON step reads first).
+        repository
+          ..readsBeforeHook = 2
+          ..onRead = () => chapterDatasource.replaceChapters({
+            episodeId: [pscChapter(episodeId, 'From psc')],
+          }, source: ChapterSource.podlove);
+
+        await service.ensureChapters(episodeId);
+
+        check(await storedTitles(episodeId)).deepEquals(['From psc']);
+      },
+    );
 
     test('derives nothing from notes without a timestamp list', () async {
       final episodeId = await insertEpisode(

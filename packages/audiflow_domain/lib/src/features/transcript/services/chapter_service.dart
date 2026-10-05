@@ -137,8 +137,13 @@ class ChapterService {
     );
     if (chapters.isEmpty) {
       if (stored.isEmpty) return false;
-      await _chapterRepository.deleteByEpisodeId(episode.id);
-      return true;
+      // Replacing with nothing at description rank, rather than deleting,
+      // keeps feed chapters that sync may have stored since the read above:
+      // the rank check and the delete run in one transaction.
+      final cleared = await _chapterRepository.replaceChapters({
+        episode.id: <EpisodeChapter>[],
+      }, source: ChapterSource.description);
+      return cleared.isNotEmpty;
     }
     if (_sameChapters(stored, chapters)) return false;
     final replaced = await _chapterRepository.replaceChapters({

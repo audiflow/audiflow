@@ -17,8 +17,10 @@ final class DescriptionChaptersParser {
   /// intro before a list that would otherwise start at `0:00`.
   static const maximumFirstStart = Duration(seconds: 10);
 
+  // Each run of whitespace has exactly one place to match, and `<` is
+  // excluded inside the tag, so malformed notes cannot backtrack.
   static final _lineBreakTag = RegExp(
-    r'<\s*/?\s*(?:br|p|li|div|ul|ol|h[1-6]|tr)\b[^>]*>',
+    r'<\s*(?:/\s*)?(?:br|p|li|div|ul|ol|h[1-6]|tr)\b[^<>]*>',
     caseSensitive: false,
   );
   // `<` is excluded inside the tag so stray `<` runs cannot backtrack.

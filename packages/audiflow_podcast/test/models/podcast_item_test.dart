@@ -2,12 +2,31 @@ import 'package:audiflow_podcast/src/models/podcast_chapter.dart';
 import 'package:audiflow_podcast/src/models/podcast_image.dart';
 import 'package:audiflow_podcast/src/models/podcast_item.dart';
 import 'package:audiflow_podcast/src/models/podcast_transcript.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../helpers/test_constants.dart';
 
 void main() {
   group('PodcastItem', () {
+    test('equal items with separate but equal lists hash alike', () {
+      PodcastItem build() => PodcastItem(
+        parsedAt: testParsedAt,
+        sourceUrl: testSourceUrl,
+        title: 'Episode 1',
+        description: 'Notes',
+        descriptionChapters: [
+          const PodcastChapter(title: 'Intro', startTime: Duration.zero),
+        ],
+      );
+
+      final a = build();
+      final b = build();
+
+      check(a).equals(b);
+      check(a.hashCode).equals(b.hashCode);
+    });
+
     group('constructor', () {
       test('should create item with required fields and defaults', () {
         final item = PodcastItem(
