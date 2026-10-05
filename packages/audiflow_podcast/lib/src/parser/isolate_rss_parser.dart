@@ -3,6 +3,7 @@ import 'dart:isolate';
 
 import 'package:xml/xml.dart';
 
+import '../models/podcast_chapters_link.dart';
 import 'parse_progress.dart';
 
 /// Trims whitespace and returns null for blank strings.
@@ -391,6 +392,7 @@ class IsolateRssParser {
       link: _extractText(item, 'link'),
       transcripts: _extractTranscripts(item),
       chapters: _extractChapters(item),
+      chaptersLink: _extractChaptersLink(item),
     );
   }
 
@@ -413,11 +415,27 @@ class IsolateRssParser {
     return transcripts.isEmpty ? null : transcripts;
   }
 
+  /// Item XML is parsed standalone, so namespace URIs are not resolved and
+  /// `<podcast:chapters>` is told apart from `<psc:chapters>` by prefix.
+  static bool _isPodcastChapters(XmlElement element) =>
+      element.localName == 'chapters' && element.name.prefix == 'podcast';
+
+  static PodcastChaptersLink? _extractChaptersLink(XmlElement item) {
+    for (final element in item.children.whereType<XmlElement>()) {
+      if (!_isPodcastChapters(element)) continue;
+      final url = _nullIfBlank(element.getAttribute('url'));
+      final type = _nullIfBlank(element.getAttribute('type'));
+      if (url == null || type == null) continue;
+      return PodcastChaptersLink(url: url, type: type);
+    }
+    return null;
+  }
+
   static List<ParsedChapter>? _extractChapters(XmlElement item) {
     // Find psc:chapters container element
     XmlElement? chaptersElement;
     for (final element in item.children.whereType<XmlElement>()) {
-      if (element.localName == 'chapters') {
+      if (element.localName == 'chapters' && !_isPodcastChapters(element)) {
         chaptersElement = element;
         break;
       }

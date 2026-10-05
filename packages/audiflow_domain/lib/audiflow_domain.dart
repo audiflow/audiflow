@@ -163,6 +163,7 @@ export 'src/features/download/models/download_task.dart';
 export 'src/features/feed/models/smart_playlist_groups.dart';
 export 'src/features/queue/models/queue_item.dart';
 export 'src/features/subscription/models/subscriptions.dart';
+export 'src/features/transcript/models/chapter_source.dart';
 export 'src/features/transcript/models/episode_chapter.dart';
 export 'src/features/transcript/models/episode_transcript.dart';
 export 'src/features/transcript/models/transcript_segment_table.dart';
@@ -214,11 +215,13 @@ export 'src/features/settings/services/data_reset_service.dart';
 export 'src/features/transcript/datasources/local/chapter_local_datasource.dart';
 export 'src/features/transcript/datasources/local/transcript_local_datasource.dart';
 export 'src/features/transcript/models/transcript_search_result.dart';
+export 'src/features/transcript/providers/chapter_loader_provider.dart';
 export 'src/features/transcript/providers/transcript_providers.dart';
 export 'src/features/transcript/repositories/chapter_repository.dart';
 export 'src/features/transcript/repositories/chapter_repository_impl.dart';
 export 'src/features/transcript/repositories/transcript_repository.dart';
 export 'src/features/transcript/repositories/transcript_repository_impl.dart';
+export 'src/features/transcript/services/chapter_service.dart';
 export 'src/features/transcript/services/transcript_service.dart';
 
 // Station feature - models
