@@ -21,9 +21,13 @@ class _RecordingAudioPlayer extends AudioPlayer {
 
   final List<String> calls;
   Completer<void>? holdPause;
+  bool _playing = false;
 
   @override
   Duration? get duration => const Duration(minutes: 10);
+
+  @override
+  bool get playing => _playing;
 
   @override
   Future<Duration?> setUrl(
@@ -35,10 +39,11 @@ class _RecordingAudioPlayer extends AudioPlayer {
   }) async => duration;
 
   @override
-  Future<void> play() async {}
+  Future<void> play() async => _playing = true;
 
   @override
   Future<void> pause() async {
+    _playing = false;
     calls.add('pause');
     await holdPause?.future;
   }
@@ -99,6 +104,9 @@ class _QuietHistoryService implements PlaybackHistoryService {
 
   final List<String> calls;
 
+  /// Keeps the paused-position save open, as a slow database write does.
+  Completer<void>? holdSave;
+
   @override
   void onPlaybackResumed() {}
 
@@ -117,7 +125,10 @@ class _QuietHistoryService implements PlaybackHistoryService {
     int episodeId,
     PlaybackProgress progress, {
     double speed = 1.0,
-  }) async => calls.add('save paused');
+  }) async {
+    calls.add('save paused');
+    await holdSave?.future;
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
@@ -126,6 +137,7 @@ class _QuietHistoryService implements PlaybackHistoryService {
 void main() {
   late _RecordingAudioPlayer player;
   late _RecordingHistoryRepository history;
+  late _QuietHistoryService historyService;
   late ProviderContainer container;
   late StreamController<PlaybackProgress> progress;
 
@@ -144,7 +156,7 @@ void main() {
         downloadServiceProvider.overrideWithValue(_NoDownloadService()),
         playbackHistoryRepositoryProvider.overrideWithValue(history),
         playbackHistoryServiceProvider.overrideWithValue(
-          _QuietHistoryService(calls),
+          historyService = _QuietHistoryService(calls),
         ),
         playbackProgressStreamProvider.overrideWith((ref) => progress.stream),
         audioPlayerProvider.overrideWith((ref) {
@@ -253,6 +265,25 @@ void main() {
     await paused;
     await pumpEventQueue();
 
+    check(player.calls.where((call) => call.startsWith('seek'))).isEmpty();
+    check(history.savedPositionsMs).isEmpty();
+  });
+
+  test('a resume during the paused-position save keeps playing on', () async {
+    await playEpisode();
+    player.calls.clear();
+    history.savedPositionsMs.clear();
+    final hold = Completer<void>();
+    historyService.holdSave = hold;
+
+    final paused = controller().pauseAt(const Duration(seconds: 60));
+    await pumpEventQueue();
+    await controller().resume();
+    hold.complete();
+    await paused;
+    await pumpEventQueue();
+
+    // Moving playing audio back to the boundary would be an audible jump.
     check(player.calls.where((call) => call.startsWith('seek'))).isEmpty();
     check(history.savedPositionsMs).isEmpty();
   });

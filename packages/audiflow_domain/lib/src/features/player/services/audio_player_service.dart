@@ -893,6 +893,9 @@ class AudioPlayerController extends _$AudioPlayerController
 
     await pause();
     if (url == null || episodeId == null || !stillCurrent()) return;
+    // Resumed while the paused position was saved: moving the playing
+    // audio back to the boundary would be an audible jump.
+    if (_player.playing) return;
     final target = _clampToKnownDuration(position, _player.duration);
     await seekAutomatically(target);
     if (!stillCurrent()) return;
