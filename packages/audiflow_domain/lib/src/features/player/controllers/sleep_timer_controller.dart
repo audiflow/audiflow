@@ -177,8 +177,13 @@ class SleepTimerController extends _$SleepTimerController {
     final mapped = switch (event) {
       EpisodeCompletedLifecycle() => const EpisodeCompletedEvent(),
       EpisodeSwitchedLifecycle() => const ManualEpisodeSwitchedEvent(),
-      SeekStartedLifecycle(:final seekId, :final target) =>
-        _chapterTracker.seekStarted(seekId, target, now: DateTime.now()),
+      SeekStartedLifecycle(:final seekId, :final target, :final automatic) =>
+        _chapterTracker.seekStarted(
+          seekId,
+          target,
+          now: DateTime.now(),
+          automatic: automatic,
+        ),
       SeekLifecycle() || SeekFailedLifecycle() => null,
     };
     if (mapped != null) _evaluate(mapped);
@@ -227,11 +232,16 @@ class SleepTimerController extends _$SleepTimerController {
             ),
           );
         }
-      case RetargetChapterDecision():
-        // The tracker already moved its baseline to the seek target, so the
-        // next natural crossing ends the new chapter.
-        return;
+      case CancelDecision():
+        _cancelForLeftTarget();
     }
+  }
+
+  void _cancelForLeftTarget() {
+    _tick?.cancel();
+    _tick = null;
+    _events.add(const SleepTimerCancelled());
+    state = state.copyWith(config: const SleepTimerConfig.off());
   }
 
   void _fire({bool immediate = false}) {

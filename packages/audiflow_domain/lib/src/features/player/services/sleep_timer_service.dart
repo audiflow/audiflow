@@ -27,9 +27,10 @@ final class ChapterChangedEvent extends SleepTimerPlayerEvent {
   const ChapterChangedEvent();
 }
 
-/// Emitted when the user seeks past the current chapter's end.
-final class SeekedPastChapterEvent extends SleepTimerPlayerEvent {
-  const SeekedPastChapterEvent();
+/// Emitted when a requested seek leaves the current chapter, forward or
+/// backward.
+final class SeekedOutOfChapterEvent extends SleepTimerPlayerEvent {
+  const SeekedOutOfChapterEvent();
 }
 
 /// Pure decision produced by [SleepTimerService.evaluate].
@@ -56,8 +57,10 @@ final class DecrementEpisodesDecision extends SleepTimerDecision {
   const DecrementEpisodesDecision();
 }
 
-final class RetargetChapterDecision extends SleepTimerDecision {
-  const RetargetChapterDecision();
+/// The listener left the episode or chapter the timer refers to, so the
+/// timer is turned off without pausing.
+final class CancelDecision extends SleepTimerDecision {
+  const CancelDecision();
 }
 
 /// Pure decision evaluator for the sleep timer.
@@ -76,17 +79,13 @@ class SleepTimerService {
       case SleepTimerConfigOff():
         return const KeepDecision();
       case SleepTimerConfigEndOfEpisode():
-        if (event is EpisodeCompletedEvent) {
-          return const FireDecision(immediate: true);
-        }
-        return const KeepDecision();
+        return switch (event) {
+          EpisodeCompletedEvent() => const FireDecision(immediate: true),
+          ManualEpisodeSwitchedEvent() => const CancelDecision(),
+          _ => const KeepDecision(),
+        };
       case SleepTimerConfigEndOfChapter():
-        if (!currentEpisodeHasChapters) return const KeepDecision();
-        if (event is ChapterChangedEvent) return const FireDecision();
-        if (event is SeekedPastChapterEvent) {
-          return const RetargetChapterDecision();
-        }
-        return const KeepDecision();
+        return _evaluateEndOfChapter(event, currentEpisodeHasChapters);
       case SleepTimerConfigDuration(:final deadline):
         if (event is TickEvent && deadline.compareTo(event.now) <= 0) {
           return const FireDecision();
@@ -99,5 +98,27 @@ class SleepTimerService {
         }
         return const KeepDecision();
     }
+  }
+
+  // The timer refers to the chapter playing when it was armed: leaving it
+  // cancels rather than retargets, because "the end of what I am listening
+  // to now" no longer exists once the listener moves elsewhere.
+  SleepTimerDecision _evaluateEndOfChapter(
+    SleepTimerPlayerEvent event,
+    bool currentEpisodeHasChapters,
+  ) {
+    // Checked before the chapter guard: leaving the episode ends the
+    // timer even when its chapters are unavailable.
+    if (event is ManualEpisodeSwitchedEvent) return const CancelDecision();
+    if (!currentEpisodeHasChapters) return const KeepDecision();
+    return switch (event) {
+      ChapterChangedEvent() => const FireDecision(),
+      // The playing chapter ends with the episode when no later chapter
+      // follows (the last chapter), so this is the same stop as the
+      // end-of-episode timer, without a fade and without auto-advance.
+      EpisodeCompletedEvent() => const FireDecision(immediate: true),
+      SeekedOutOfChapterEvent() => const CancelDecision(),
+      _ => const KeepDecision(),
+    };
   }
 }

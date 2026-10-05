@@ -37,12 +37,23 @@ void main() {
       expect((decision as FireDecision).immediate, isTrue);
     });
 
-    test('keeps on ManualEpisodeSwitchedEvent (transfers implicitly)', () {
+    test('cancels on ManualEpisodeSwitchedEvent', () {
       expect(
         service.evaluate(
           config: const SleepTimerConfig.endOfEpisode(),
           event: const ManualEpisodeSwitchedEvent(),
           currentEpisodeHasChapters: false,
+        ),
+        isA<CancelDecision>(),
+      );
+    });
+
+    test('keeps when a seek leaves a chapter of the episode', () {
+      expect(
+        service.evaluate(
+          config: const SleepTimerConfig.endOfEpisode(),
+          event: const SeekedOutOfChapterEvent(),
+          currentEpisodeHasChapters: true,
         ),
         isA<KeepDecision>(),
       );
@@ -72,14 +83,48 @@ void main() {
       );
     });
 
-    test('retargets on SeekedPastChapterEvent', () {
+    test('cancels on SeekedOutOfChapterEvent', () {
       expect(
         service.evaluate(
           config: const SleepTimerConfig.endOfChapter(),
-          event: const SeekedPastChapterEvent(),
+          event: const SeekedOutOfChapterEvent(),
           currentEpisodeHasChapters: true,
         ),
-        isA<RetargetChapterDecision>(),
+        isA<CancelDecision>(),
+      );
+    });
+
+    test('fires without a fade when the episode completes', () {
+      final decision = service.evaluate(
+        config: const SleepTimerConfig.endOfChapter(),
+        event: const EpisodeCompletedEvent(),
+        currentEpisodeHasChapters: true,
+      );
+      expect(decision, isA<FireDecision>());
+      expect((decision as FireDecision).immediate, isTrue);
+    });
+
+    test('cancels on a manual episode switch, with or without chapters', () {
+      for (final hasChapters in [true, false]) {
+        expect(
+          service.evaluate(
+            config: const SleepTimerConfig.endOfChapter(),
+            event: const ManualEpisodeSwitchedEvent(),
+            currentEpisodeHasChapters: hasChapters,
+          ),
+          isA<CancelDecision>(),
+        );
+      }
+    });
+
+    test('keeps on episode completion when chapters are unavailable', () {
+      expect(
+        service.evaluate(
+          config: const SleepTimerConfig.endOfChapter(),
+          event: const EpisodeCompletedEvent(),
+          currentEpisodeHasChapters: false,
+        ),
+        isA<KeepDecision>(),
       );
     });
 

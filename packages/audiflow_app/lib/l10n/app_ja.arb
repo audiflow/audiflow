@@ -521,6 +521,8 @@
   },
   "sleepTimerFiredSnackbar": "スリープタイマーが終了しました",
   "@sleepTimerFiredSnackbar": { "description": "Snackbar shown when a timer fires in the foreground" },
+  "sleepTimerCancelledSnackbar": "スリープタイマーを解除しました",
+  "@sleepTimerCancelledSnackbar": { "description": "Snackbar shown when a timer is cancelled because the listener left the episode or chapter it refers to" },
   "sleepTimerNumericMinutesTitle": "分",
   "@sleepTimerNumericMinutesTitle": { "description": "Numeric input panel title for minutes" },
   "sleepTimerNumericEpisodesTitle": "エピソード",

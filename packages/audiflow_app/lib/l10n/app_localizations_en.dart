@@ -1424,6 +1424,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sleepTimerFiredSnackbar => 'Sleep timer ended';
 
   @override
+  String get sleepTimerCancelledSnackbar => 'Sleep timer cancelled';
+
+  @override
   String get sleepTimerNumericMinutesTitle => 'Minutes';
 
   @override

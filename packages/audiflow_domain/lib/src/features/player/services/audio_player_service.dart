@@ -519,7 +519,11 @@ class AudioPlayerController extends _$AudioPlayerController
       _log.i('[Play] Starting: url=$url');
       _closeListenSession(ListenEndReason.switchEpisode);
 
-      if (_currentUrl != null && _currentUrl != url) {
+      // A restored episode has no audio loaded yet, but leaving it for
+      // another one is still a switch.
+      final previousUrl =
+          _currentUrl ?? ref.read(nowPlayingControllerProvider)?.episodeUrl;
+      if (previousUrl != null && previousUrl != url) {
         _lifecycleEvents.add(const EpisodeSwitchedLifecycle());
       }
 
@@ -614,7 +618,7 @@ class AudioPlayerController extends _$AudioPlayerController
           } else {
             _log.d('[Play] Seeking to saved position: ${history.positionMs}ms');
             final target = Duration(milliseconds: history.positionMs);
-            final seekId = _announceSeek(target);
+            final seekId = _announceSeek(target, automatic: true);
             await _seekPlayer(target, seekId: seekId);
             _lifecycleEvents.add(SeekLifecycle(target, seekId: seekId));
           }
@@ -1043,9 +1047,11 @@ class AudioPlayerController extends _$AudioPlayerController
   // Announced before the position moves so a chapter change caused by the
   // jump is not mistaken for playback crossing a chapter boundary. Returns
   // the id the closing report must carry.
-  int _announceSeek(Duration target) {
+  int _announceSeek(Duration target, {bool automatic = false}) {
     _lastSeekId += 1;
-    _lifecycleEvents.add(SeekStartedLifecycle(target, seekId: _lastSeekId));
+    _lifecycleEvents.add(
+      SeekStartedLifecycle(target, seekId: _lastSeekId, automatic: automatic),
+    );
     return _lastSeekId;
   }
 
@@ -1076,7 +1082,17 @@ class AudioPlayerController extends _$AudioPlayerController
   /// (common transient state right after loading a remote source), waits
   /// briefly for [durationStream] to publish before giving up.
   @override
-  Future<void> seek(Duration position) async {
+  Future<void> seek(Duration position) => _seekLoaded(position);
+
+  /// Seeks like [seek], on the player's own account rather than the
+  /// listener's (a rewind after an audio interruption).
+  ///
+  /// Listeners that follow where the listener is, such as the
+  /// end-of-chapter sleep timer, treat it as staying in place.
+  Future<void> seekAutomatically(Duration position) =>
+      _seekLoaded(position, automatic: true);
+
+  Future<void> _seekLoaded(Duration position, {bool automatic = false}) async {
     if (_currentUrl == null) return;
     final duration = _player.duration ?? await _awaitDuration();
     if (duration == null) return;
@@ -1090,7 +1106,10 @@ class AudioPlayerController extends _$AudioPlayerController
     // range of content; the jump itself is what "skipped" analysis reads.
     final segmentIds = _listenSession.openIds;
     _closeListenSession(ListenEndReason.seek, position: fromPosition);
-    final seekId = _announceSeek(Duration(milliseconds: clampedMs));
+    final seekId = _announceSeek(
+      Duration(milliseconds: clampedMs),
+      automatic: automatic,
+    );
     _isSeeking = true;
     try {
       await _seekPlayer(Duration(milliseconds: clampedMs), seekId: seekId);

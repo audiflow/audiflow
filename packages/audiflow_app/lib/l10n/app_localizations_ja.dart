@@ -1385,6 +1385,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get sleepTimerFiredSnackbar => 'スリープタイマーが終了しました';
 
   @override
+  String get sleepTimerCancelledSnackbar => 'スリープタイマーを解除しました';
+
+  @override
   String get sleepTimerNumericMinutesTitle => '分';
 
   @override
