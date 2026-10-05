@@ -67,8 +67,8 @@ state and resume position stay coherent no matter where the listener touches it.
   current speed (e.g. `1.3x`) and opens the Audio sheet, which holds quick chips and a
   stepped slider. The slider has 21 positions — 0.5x to 2.0x in 0.1 steps, then 2.2x, 2.4x,
   2.6x, 2.8x, and 3.0x — with 0.5x, 1.0x, 2.0x, and 3.0x labelled under their ticks. It snaps
-  to the positions, applies each step immediately, gives a light haptic per step, and shows
-  the speed above the thumb while dragging. The slider commits the speed the listener meant:
+  to the positions, applies each step immediately, and shows the speed above the thumb while
+  dragging; it gives no haptic per step. The slider commits the speed the listener meant:
   a step is only taken once the finger is well past a boundary, so resting on a boundary does
   not flicker between two speeds; a single-step change made just before lift-off, after the
   finger had rested on the previous step, is undone; and a tap uses the touch-down point
