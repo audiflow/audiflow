@@ -595,6 +595,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get playerAudioOutputLabel => 'Audio output';
+
+  @override
+  String get playerAudioOutputUnavailable =>
+      'Couldn\'t open audio output settings';
+
+  @override
   String get audioSheetTitle => 'Audio';
 
   @override
@@ -611,6 +618,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get playbackSpeedNormal => 'Normal';
+
+  @override
+  String get playerScrubSpeedHalf => 'Scrubbing (half speed)';
+
+  @override
+  String get playerScrubSpeedQuarter => 'Scrubbing (quarter speed)';
+
+  @override
+  String get playerScrubSpeedFine => 'Scrubbing (fine)';
 
   @override
   String playerNowPlayingLabel(String title, String podcast) {
@@ -886,6 +902,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get playerTranscriptEmpty => 'No transcript available';
+
+  @override
+  String get playerChaptersTitle => 'Chapters';
+
+  @override
+  String playerCurrentChapterLabel(int number, String title) {
+    return 'Chapter $number: $title. Show chapter list';
+  }
+
+  @override
+  String playerChapterItemLabel(int number, String title, String time) {
+    return 'Chapter $number: $title, starts at $time';
+  }
 
   @override
   String get playerTranscriptJumpToCurrent => 'Jump to current';

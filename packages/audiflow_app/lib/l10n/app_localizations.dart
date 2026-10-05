@@ -1178,6 +1178,18 @@ abstract class AppLocalizations {
   /// **'Audio settings, playback speed {speed}'**
   String playerAudioButtonLabel(String speed);
 
+  /// Tooltip and accessibility label for the full player's button that opens the system audio output picker
+  ///
+  /// In en, this message translates to:
+  /// **'Audio output'**
+  String get playerAudioOutputLabel;
+
+  /// Snackbar shown when neither the system output picker nor Bluetooth settings could be opened
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open audio output settings'**
+  String get playerAudioOutputUnavailable;
+
   /// Title of the player's audio settings sheet
   ///
   /// In en, this message translates to:
@@ -1213,6 +1225,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Normal'**
   String get playbackSpeedNormal;
+
+  /// Seek bar label while scrubbing at half speed
+  ///
+  /// In en, this message translates to:
+  /// **'Scrubbing (half speed)'**
+  String get playerScrubSpeedHalf;
+
+  /// Seek bar label while scrubbing at quarter speed
+  ///
+  /// In en, this message translates to:
+  /// **'Scrubbing (quarter speed)'**
+  String get playerScrubSpeedQuarter;
+
+  /// Seek bar label while scrubbing at one-eighth speed
+  ///
+  /// In en, this message translates to:
+  /// **'Scrubbing (fine)'**
+  String get playerScrubSpeedFine;
 
   /// Mini player accessibility label
   ///
@@ -1693,6 +1723,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No transcript available'**
   String get playerTranscriptEmpty;
+
+  /// Title of the chapter list sheet, and the chapter row label before the first chapter starts
+  ///
+  /// In en, this message translates to:
+  /// **'Chapters'**
+  String get playerChaptersTitle;
+
+  /// Accessibility label for the current chapter row in the player
+  ///
+  /// In en, this message translates to:
+  /// **'Chapter {number}: {title}. Show chapter list'**
+  String playerCurrentChapterLabel(int number, String title);
+
+  /// Accessibility label for a chapter in the chapter list
+  ///
+  /// In en, this message translates to:
+  /// **'Chapter {number}: {title}, starts at {time}'**
+  String playerChapterItemLabel(int number, String title, String time);
 
   /// Jump to current position button label
   ///

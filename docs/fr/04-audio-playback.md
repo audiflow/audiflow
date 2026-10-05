@@ -63,7 +63,7 @@ state and resume position stay coherent no matter where the listener touches it.
   underneath instead of a blank player. Stopping playback outright from the system controls
   clears the same state and dismisses the full player the same way.
 - **Playback speed**: The full player's bottom action row has three slots: Audio, an output
-  picker (hidden until that feature ships), and the sleep timer. The Audio button shows the
+  picker (see Audio output below), and the sleep timer. The Audio button shows the
   current speed (e.g. `1.3x`) and opens the Audio sheet, which holds quick chips and a
   stepped slider. The slider has 21 positions — 0.5x to 2.0x in 0.1 steps, then 2.2x, 2.4x,
   2.6x, 2.8x, and 3.0x — with 0.5x, 1.0x, 2.0x, and 3.0x labelled under their ticks. It snaps
@@ -90,6 +90,14 @@ state and resume position stay coherent no matter where the listener touches it.
   be set while nothing is playing. The recent-speed chips are one shared history: a speed
   committed under an override is recorded there too, so it is one tap away for any podcast.
   Only speed is overridable today.
+- **Audio output**: The center slot of the action row opens the operating system's own audio
+  output picker; the app does not draw a device list. On iOS it is the system route picker
+  (speaker, Bluetooth, AirPlay), and choosing a route moves playback there. On Android 11 and
+  later it is the system output switcher (speaker, wired, Bluetooth); if the device cannot
+  show it, the button opens Bluetooth settings instead, and a short message appears if neither
+  opens. Android 8-10 have no output switcher,
+  so the button is hidden there and the row shows only Audio and the sleep timer. Cast
+  devices are not offered. The button does not show the current output's name.
 - **Failure case**: If an episode cannot be loaded or played, playback enters an error state
   rather than appearing stuck; the listener can retry by tapping play again.
 
@@ -132,6 +140,10 @@ state and resume position stay coherent no matter where the listener touches it.
   duckable interruptions follow the user's `duck` vs `pause-and-rewind` preference; phone calls
   and noisy-output events (headphone unplug, Bluetooth disconnect) pause; and resume-on-end
   fires only for playback the handler itself paused.
+- Opens the system audio output picker through the `audiflow/audio_route` channel on Android
+  (androidx.mediarouter `SystemOutputSwitcherDialogController`) and a transparent embedded
+  `AVRoutePickerView` on iOS; the platform moves playback to the chosen output, so the player
+  needs no routing code of its own.
 - Fades volume out before pausing when requested, used by the sleep timer's end-of-countdown
   action.
 - Drives the mini player and full player screen, including a slide-in/out animation for the
@@ -162,6 +174,13 @@ state and resume position stay coherent no matter where the listener touches it.
 - Scrubbing is delta-based: a horizontal drag moves the position by the finger's travel from
   the current position instead of jumping to the touch point, and a tap on the track never
   seeks. A light haptic fires when a drag begins.
+- Fine scrubbing: once a drag has started, moving the finger vertically away from the track
+  (up or down) scales how far horizontal travel moves the position: full speed within 50 pt,
+  half speed from 50 pt, quarter speed from 100 pt, and one eighth from 150 pt. A light haptic
+  fires each time the band changes, and a localized label ("Scrubbing (half speed)",
+  "Scrubbing (quarter speed)", "Scrubbing (fine)") appears between the time labels while below
+  full speed. The drag stays with the seek bar even when the finger leaves its bounds; a drag
+  that starts vertically is not a scrub and still reaches the player sheet's swipe-to-dismiss.
 - The left label shows elapsed time. The right label shows remaining time as `-mm:ss` (or
   `-h:mm:ss`) by default; tapping it toggles to the total duration. The choice persists as the
   `showRemainingTime` setting. Remaining time is media time and does not account for playback
@@ -174,8 +193,15 @@ state and resume position stay coherent no matter where the listener touches it.
 - Screen readers see a single slider whose value reads "elapsed of total"; increase/decrease
   actions seek by 5% of the episode, and the right-hand label is exposed as a button so the
   remaining/total toggle stays reachable.
-- The track is drawn from a list of segments so chapter boundaries can be shown later without
-  changing the widget API. The mini player's thin progress bar is unchanged.
+- For episodes with chapters, the track is split into one segment per chapter with a 2 pt gap
+  at each chapter start (an untitled lead-in segment when the first chapter starts after
+  zero). While dragging, and only then, a tooltip above the bar shows the chapter under the
+  scrub position and the position itself; episodes without chapters show the position only.
+  The tooltip follows the finger but is kept within the bar at both edges. Chapter display is
+  described in FR 08. Episodes without chapters keep a single unbroken track.
+- The artwork above the episode info shrinks to make room for the text below it, down to a
+  160 pt minimum; on screens too short for that the area above the seek bar scrolls instead.
+- The mini player's thin progress bar is unchanged.
 
 ## Boundaries
 
@@ -187,8 +213,9 @@ state and resume position stay coherent no matter where the listener touches it.
 - **Does not own the sleep timer.** Countdown modes, end-of-episode / end-of-chapter triggers,
   and timer persistence belong to FR 09 (sleep timer). Playback only exposes the fade-out-and-
   pause action the timer invokes and the lifecycle events the timer observes.
-- **Does not own transcripts or chapters.** Transcript and chapter display is a separate
-  feature; playback only provides the position other features read.
+- **Does not own transcripts or chapters.** Transcript and chapter display, including the
+  chapter gaps and tooltip on the seek bar, is FR 08; playback only provides the position
+  other features read.
 - **Does not define play order for ad-hoc queues.** The group → playlist → podcast → global
   play-order cascade is a separate feature; playback consumes its result via the queue.
 - **Does not perform discovery, subscription, or feed parsing.** Playback operates on episodes

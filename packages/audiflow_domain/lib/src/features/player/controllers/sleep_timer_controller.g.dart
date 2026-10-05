@@ -57,7 +57,7 @@ final class CurrentEpisodeHasChaptersProvider
 }
 
 String _$currentEpisodeHasChaptersHash() =>
-    r'938d723ddac11a76a3d76c02c749cc42da6a3aa8';
+    r'd0d172f026cf49292b7b20fd54dab0b036b2cd12';
 
 /// Coordinates the sleep timer: subscribes to player lifecycle events,
 /// runs a 1s duration tick, and executes decisions from [SleepTimerService].
