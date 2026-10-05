@@ -52,6 +52,7 @@ class ChapterCrossingTracker {
     final index = current?.index;
     if (!identical(chapters, _chapters)) {
       _chapters = chapters;
+      if (_keepsRewind(chapters, index)) return null;
       _index = index;
       _rewound = false;
       return null;
@@ -139,6 +140,16 @@ class ChapterCrossingTracker {
     // zero before the player moved back to where the listener was.
     _index = targetIndex;
     _rewound = false;
+  }
+
+  /// Whether a reloaded list leaves a rewind's baseline in place.
+  ///
+  /// Re-baselining at the rewound position would make playing back into
+  /// the listener's chapter look like the end of the earlier one.
+  bool _keepsRewind(List<EpisodeChapter>? chapters, int? index) {
+    final baseline = _index;
+    if (!_rewound || chapters == null || baseline == null) return false;
+    return baseline < chapters.length && _isBefore(index, baseline);
   }
 
   // The lead-in (null) comes before every chapter.

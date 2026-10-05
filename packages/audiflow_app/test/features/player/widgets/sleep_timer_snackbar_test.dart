@@ -70,6 +70,27 @@ void main() {
     expect(find.text('Sleep timer cancelled'), findsOneWidget);
   });
 
+  testWidgets('shows nothing for a cancellation in the background', (
+    tester,
+  ) async {
+    final c = await pumpHost(tester);
+    c.read(sleepTimerControllerProvider.notifier).setEndOfEpisode();
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    addTearDown(
+      () => tester.binding.handleAppLifecycleStateChanged(
+        AppLifecycleState.resumed,
+      ),
+    );
+
+    lifecycle.add(const EpisodeSwitchedLifecycle());
+    await tester.pump();
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.byType(SnackBar), findsNothing);
+  });
+
   testWidgets('shows nothing when the timer is turned off directly', (
     tester,
   ) async {

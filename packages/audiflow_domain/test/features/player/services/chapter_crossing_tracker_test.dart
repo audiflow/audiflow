@@ -229,6 +229,23 @@ void main() {
       check(observeAt(120)).isA<ChapterChangedEvent>();
     });
 
+    test('a list reloaded during a rewind keeps the rewind baseline', () {
+      check(observeAt(62)).isNull();
+      tracker.seekStarted(
+        1,
+        const Duration(seconds: 57),
+        now: t0,
+        automatic: true,
+      );
+      tracker.seekCompleted(1);
+      check(observeAt(57)).isNull();
+      chapters = _chapters();
+      check(observeAt(58)).isNull();
+      // Playing back into the chapter the listener was in still ends nothing.
+      check(observeAt(60)).isNull();
+      check(observeAt(120)).isA<ChapterChangedEvent>();
+    });
+
     test('a seek after an automatic rewind compares with the chapter', () {
       check(observeAt(62)).isNull();
       tracker.seekStarted(

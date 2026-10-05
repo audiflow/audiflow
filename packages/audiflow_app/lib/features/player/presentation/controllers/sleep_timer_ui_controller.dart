@@ -34,7 +34,7 @@ class _SleepTimerSnackbarHostState
   }
 
   void _showSnackbar(SleepTimerEvent event) {
-    if (!mounted) return;
+    if (!mounted || _isInBackground) return;
     final messenger = ScaffoldMessenger.maybeOf(context);
     if (messenger == null) return;
     final l10n = AppLocalizations.of(context);
@@ -44,6 +44,15 @@ class _SleepTimerSnackbarHostState
     };
     messenger.showSnackBar(SnackBar(content: Text(message)));
   }
+
+  // A snackbar queued while hidden would surface stale on return.
+  static bool get _isInBackground =>
+      switch (WidgetsBinding.instance.lifecycleState) {
+        AppLifecycleState.hidden ||
+        AppLifecycleState.paused ||
+        AppLifecycleState.detached => true,
+        _ => false,
+      };
 
   @override
   void dispose() {
