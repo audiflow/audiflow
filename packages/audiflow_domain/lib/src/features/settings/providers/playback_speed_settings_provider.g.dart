@@ -62,7 +62,7 @@ final class PlaybackSpeedSettingsControllerProvider
 }
 
 String _$playbackSpeedSettingsControllerHash() =>
-    r'0db32d4939026adf21e7c8da669ebafb9303165f';
+    r'fa49b318238e541c92e3ae865ab3922323cd93c8';
 
 /// Holds the global [PlaybackSpeedSettings] and persists changes.
 ///
