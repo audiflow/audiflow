@@ -50,6 +50,24 @@ void _bgDebug(String message) {
   }
 }
 
+// Artwork failures degrade silently to a text-only notification; record
+// them so missing thumbnails can be traced in the run's Sentry breadcrumbs.
+void _artworkFailureBreadcrumb(String artworkUrl, Object error) {
+  _bgDebug('notification artwork failed url=$artworkUrl error=$error');
+  Sentry.addBreadcrumb(
+    Breadcrumb(
+      message: 'Notification artwork failed',
+      category: 'notification.artwork',
+      level: SentryLevel.warning,
+      data: {
+        'url': artworkUrl,
+        'errorType': error.runtimeType.toString(),
+        'error': error.toString(),
+      },
+    ),
+  );
+}
+
 // Temporary diagnostic wrapper for auto-download investigation.
 // Delegates all calls to the real repo, adding Sentry breadcrumbs for
 // createDownload. Remove once investigation is resolved.
@@ -444,6 +462,7 @@ void backgroundCallback() {
         ),
         logger: logger,
         artworkFileProvider: artworkFiles.fileFor,
+        onArtworkFailure: sentryInitialized ? _artworkFailureBreadcrumb : null,
       );
 
       final autoDownloadEnqueuer = AutoDownloadEnqueuer(

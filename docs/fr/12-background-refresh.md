@@ -51,6 +51,7 @@ It exists to make Audiflow feel current without the listener doing anything. New
 - Attaches podcast artwork to each notification, downloading each artwork URL once per run (capped at 5 MB and a few seconds) and writing a separate file per notification, because iOS moves attachment files into its own store. The file differs by platform:
   - Android: the artwork is decoded and re-encoded as a 256 px wide PNG, because Android decodes the large icon at full size without sampling and podcast artwork is often 3000x3000.
   - iOS: the downloaded bytes are attached unchanged, named by their sniffed format (JPEG, PNG or GIF; the extension is how iOS identifies an attachment's type). Other formats are left out rather than attached under a wrong name. iOS disables the GPU while the app is in the background, and the Flutter engine then holds image decoding and PNG encoding until the app returns to the foreground, so decoding on iOS would leave most background-posted notifications without artwork. iOS scales attachments itself and accepts images up to 10 MB.
+  - Artwork that fails or misses its deadline is reported as a Sentry breadcrumb from the background run; the notification is shown without it.
 - Handles notification taps and cold-start launches by decoding the notification payload and deep-linking to the corresponding episode detail screen.
 - Re-registers or cancels the background task in response to settings changes and app lifecycle events so the schedule always reflects current preferences.
 

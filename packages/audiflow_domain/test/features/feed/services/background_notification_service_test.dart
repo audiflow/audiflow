@@ -203,6 +203,56 @@ void main() {
         check(details.iOS!.attachments).isNull();
       });
 
+      test('reports artwork failures to the failure callback', () async {
+        final stub = _StubShowDelegate();
+        final failures = <(String, Object)>[];
+        final error = Exception('network');
+        final service = BackgroundNotificationService(
+          textFormatter: _formatter,
+          artworkFileProvider: (_, _) async => throw error,
+          onArtworkFailure: (url, e) => failures.add((url, e)),
+        );
+
+        await service.showPerEpisodeNotificationsViaDelegate(stub, [
+          withArtwork,
+        ]);
+
+        check(failures).deepEquals([('https://example.com/art.jpg', error)]);
+        check(stub.shownDetails).length.equals(1);
+      });
+
+      test('still shows the notification when the callback throws', () async {
+        final stub = _StubShowDelegate();
+        final service = BackgroundNotificationService(
+          textFormatter: _formatter,
+          artworkFileProvider: (_, _) async => throw Exception('network'),
+          onArtworkFailure: (_, _) => throw StateError('sink broke'),
+        );
+
+        await service.showPerEpisodeNotificationsViaDelegate(stub, [
+          withArtwork,
+        ]);
+
+        check(stub.shownDetails.single!.iOS!.attachments).isNull();
+      });
+
+      test('reports artwork that times out', () {
+        fakeAsync((async) {
+          final stub = _StubShowDelegate();
+          final failures = <Object>[];
+          final service = BackgroundNotificationService(
+            textFormatter: _formatter,
+            artworkFileProvider: (_, _) => Completer<String?>().future,
+            onArtworkFailure: (_, e) => failures.add(e),
+          );
+
+          service.showPerEpisodeNotificationsViaDelegate(stub, [withArtwork]);
+          async.elapse(const Duration(seconds: 10));
+
+          check(failures.single).isA<TimeoutException>();
+        });
+      });
+
       test('gives up on artwork that does not arrive in time', () {
         fakeAsync((async) {
           final stub = _StubShowDelegate();

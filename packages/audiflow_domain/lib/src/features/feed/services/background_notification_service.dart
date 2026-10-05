@@ -78,6 +78,10 @@ class NotificationDetail {
 typedef ArtworkFileProvider =
     Future<String?> Function(String artworkUrl, int notificationId);
 
+/// Told when artwork for [artworkUrl] could not be attached, including a
+/// timeout, so the app layer can surface it to telemetry.
+typedef ArtworkFailureSink = void Function(String artworkUrl, Object error);
+
 /// Abstracts the `show` call on [FlutterLocalNotificationsPlugin] so tests can
 /// inject a fake without subclassing the plugin (which has a private
 /// constructor in v21+).
@@ -119,11 +123,13 @@ class BackgroundNotificationService {
     required this._textFormatter,
     this._logger,
     this._artworkFileProvider,
+    this._onArtworkFailure,
   });
 
   final NotificationTextFormatter _textFormatter;
   final Logger? _logger;
   final ArtworkFileProvider? _artworkFileProvider;
+  final ArtworkFailureSink? _onArtworkFailure;
 
   static const _channelId = 'audiflow_new_episodes';
   static const _channelName = 'New Episodes';
@@ -221,7 +227,17 @@ class BackgroundNotificationService {
     } catch (e, stack) {
       // Artwork is decorative; the notification must still be shown.
       _logger?.w('Notification artwork failed', error: e, stackTrace: stack);
+      _reportArtworkFailure(url, e);
       return null;
+    }
+  }
+
+  void _reportArtworkFailure(String url, Object error) {
+    try {
+      _onArtworkFailure?.call(url, error);
+    } catch (e, stack) {
+      // Telemetry must never cost the notification.
+      _logger?.w('Artwork failure sink threw', error: e, stackTrace: stack);
     }
   }
 
