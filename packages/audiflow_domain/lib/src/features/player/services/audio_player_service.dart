@@ -172,6 +172,11 @@ class AudioPlayerController extends _$AudioPlayerController
   // Pairs each seek announcement with its completion or failure report.
   int _lastSeekId = 0;
 
+  // The play() still loading. A second play() of the same episode, such as
+  // a repeated tap while a slow device stalls, joins it: another setUrl
+  // would interrupt this load and fail both with "Loading interrupted".
+  ({String url, Duration? startAt, Future<void> done})? _pendingPlay;
+
   // Engine values requested through [applySpeed] or [applyAudioSettings]
   // and not yet applied by [_engineDrain]; null when nothing is pending.
   double? _targetSpeed;
@@ -486,7 +491,19 @@ class AudioPlayerController extends _$AudioPlayerController
   /// share links (`?t=<seconds>`) to honour explicit user intent.
   ///
   /// Integrates with [PlaybackHistoryService] to track playback progress.
-  Future<void> play(
+  Future<void> play(String url, {NowPlayingInfo? metadata, Duration? startAt}) {
+    final pending = _pendingPlay;
+    if (pending != null && pending.url == url && pending.startAt == startAt) {
+      return pending.done;
+    }
+    final done = _loadAndPlay(url, metadata: metadata, startAt: startAt);
+    _pendingPlay = (url: url, startAt: startAt, done: done);
+    return done.whenComplete(() {
+      if (identical(_pendingPlay?.done, done)) _pendingPlay = null;
+    });
+  }
+
+  Future<void> _loadAndPlay(
     String url, {
     NowPlayingInfo? metadata,
     Duration? startAt,
@@ -696,7 +713,7 @@ class AudioPlayerController extends _$AudioPlayerController
       // Fire-and-forget: just_audio's `play()` future completes when
       // playback stops/pauses, not when it starts. Awaiting it would
       // pin this method until the next pause and defer any work below.
-      unawaited(_player.play());
+      _startEngine();
       _log.i('[Play] _player.play() dispatched');
     } catch (e, stack) {
       _log.e('[Play] ERROR', error: e, stackTrace: stack);
@@ -870,7 +887,26 @@ class AudioPlayerController extends _$AudioPlayerController
             ),
       );
     }
-    unawaited(_player.play());
+    _startEngine();
+  }
+
+  // just_audio's play() future lasts until playback stops, so nothing awaits
+  // it, and it fails when the load behind it is interrupted ("Loading
+  // interrupted"). Handled here so the failure shows instead of escaping as
+  // an unhandled error. A newer episode owns the state once it loads.
+  void _startEngine() {
+    final url = _currentUrl;
+    unawaited(
+      _player.play().onError((error, stackTrace) {
+        _log.e(
+          '[Play] Engine play failed',
+          error: error,
+          stackTrace: stackTrace,
+        );
+        if (_currentUrl != url) return;
+        state = PlaybackState.error(message: 'Failed to play audio: $error');
+      }),
+    );
   }
 
   /// Toggles between play and pause states.
