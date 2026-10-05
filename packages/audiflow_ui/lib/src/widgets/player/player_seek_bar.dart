@@ -364,30 +364,48 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
     );
     // The slider node already announces the position; only the trailing
     // label stays reachable, as a button, so its toggle remains accessible.
-    return Row(
-      children: [
-        ExcludeSemantics(child: Text(widget.leadingLabel, style: style)),
-        Expanded(child: _buildScrubSpeedLabel(style?.copyWith(color: primary))),
-        Semantics(
-          button: widget.onTrailingLabelTap != null,
-          label: widget.trailingLabelSemanticsLabel,
-          excludeSemantics: widget.trailingLabelSemanticsLabel != null,
-          // Excluding the children drops the gesture's tap action, so the
-          // node offers it itself.
-          onTap: widget.trailingLabelSemanticsLabel != null
-              ? widget.onTrailingLabelTap
-              : null,
-          child: GestureDetector(
-            key: _trailingLabelKey,
-            behavior: HitTestBehavior.opaque,
-            onTap: widget.onTrailingLabelTap,
-            child: Padding(
-              padding: const EdgeInsets.only(left: 16, top: 4, bottom: 4),
-              child: _buildTrailingLabel(style),
-            ),
+    return LayoutBuilder(
+      builder: (context, constraints) => Row(
+        children: [
+          ExcludeSemantics(child: Text(widget.leadingLabel, style: style)),
+          Expanded(
+            child: _buildScrubSpeedLabel(style?.copyWith(color: primary)),
+          ),
+          // A sleep countdown with its glyph and a `+N` suffix is wider than
+          // a time label; capped at half the row, it scales down on a narrow
+          // sheet or with large text instead of overflowing.
+          ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: constraints.maxWidth / 2),
+            child: _buildTrailingButton(style),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTrailingButton(TextStyle? style) {
+    return Semantics(
+      button: widget.onTrailingLabelTap != null,
+      label: widget.trailingLabelSemanticsLabel,
+      excludeSemantics: widget.trailingLabelSemanticsLabel != null,
+      // Excluding the children drops the gesture's tap action, so the
+      // node offers it itself.
+      onTap: widget.trailingLabelSemanticsLabel != null
+          ? widget.onTrailingLabelTap
+          : null,
+      child: GestureDetector(
+        key: _trailingLabelKey,
+        behavior: HitTestBehavior.opaque,
+        onTap: widget.onTrailingLabelTap,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 16, top: 4, bottom: 4),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerRight,
+            child: _buildTrailingLabel(style),
           ),
         ),
-      ],
+      ),
     );
   }
 

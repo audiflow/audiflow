@@ -33,6 +33,7 @@ Widget _host({
   bool withSheetArena = true,
   double width = _barWidth,
   Map<ScrubSpeed, String> scrubSpeedLabels = _scrubLabels,
+  String trailingLabel = '-09:00',
   Widget? trailingLabelIcon,
   String? trailingLabelSemanticsLabel,
 }) {
@@ -51,7 +52,7 @@ Widget _host({
               segments: segments,
               tooltipBuilder: tooltipBuilder,
               leadingLabel: '01:00',
-              trailingLabel: '-09:00',
+              trailingLabel: trailingLabel,
               trailingLabelIcon: trailingLabelIcon,
               trailingLabelSemanticsLabel: trailingLabelSemanticsLabel,
               scrubSpeedLabels: scrubSpeedLabels,
@@ -531,6 +532,25 @@ void main() {
       final glyph = tester.getRect(find.byKey(glyphKey));
       final label = tester.getRect(find.text('-09:00'));
       check(glyph.right).isLessOrEqual(label.left);
+    });
+
+    testWidgets('a long trailing label scales down instead of overflowing', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _host(
+          value: 0.1,
+          recorder: _SeekRecorder(),
+          width: 160,
+          trailingLabel: '12:34:56 +12',
+          trailingLabelIcon: const Icon(Icons.bedtime),
+        ),
+      );
+
+      check(tester.takeException()).isNull();
+      final bar = tester.getRect(find.byType(PlayerSeekBar));
+      final label = tester.getRect(find.text('12:34:56 +12'));
+      check(label.right).isLessOrEqual(bar.right);
     });
 
     testWidgets('tapping the glyph also calls onTrailingLabelTap', (
