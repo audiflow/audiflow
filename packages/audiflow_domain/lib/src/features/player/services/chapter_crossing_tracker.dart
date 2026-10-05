@@ -28,6 +28,7 @@ class ChapterCrossingTracker {
 
   List<EpisodeChapter>? _chapters;
   int? _index;
+  int? _indexBeforeSeek;
   DateTime? _settleUntil;
 
   /// Feeds the current chapter list and the chapter at the position.
@@ -67,6 +68,7 @@ class ChapterCrossingTracker {
     final chapters = _chapters;
     if (chapters == null || chapters.isEmpty) return null;
     _settleUntil = now.add(seekSettleWindow);
+    _indexBeforeSeek = _index;
     final targetIndex = chapterIndexAt(chapters, target);
     if (targetIndex == _index) return null;
     _index = targetIndex;
@@ -75,6 +77,16 @@ class ChapterCrossingTracker {
 
   /// Marks the seek as committed by the player; later changes are playback.
   void seekCompleted() => _settleUntil = null;
+
+  /// Marks the seek as rejected: the position stayed where it was, so the
+  /// baseline returns to the chapter the seek left.
+  ///
+  /// The retarget already sent stays harmless: the timer still waits for
+  /// the end of the chapter that is playing.
+  void seekFailed() {
+    _settleUntil = null;
+    _index = _indexBeforeSeek;
+  }
 
   bool _isSettling(DateTime now) {
     final until = _settleUntil;

@@ -527,7 +527,7 @@ class AudioPlayerController extends _$AudioPlayerController
             : startAt.inMilliseconds.clamp(0, duration.inMilliseconds);
         _log.d('[Play] Honouring explicit startAt: ${clampedMs}ms');
         _announceSeek(Duration(milliseconds: clampedMs));
-        await _player.seek(Duration(milliseconds: clampedMs));
+        await _seekPlayer(Duration(milliseconds: clampedMs));
         _lifecycleEvents.add(SeekLifecycle(Duration(milliseconds: clampedMs)));
       } else if (_currentEpisodeId != null) {
         final historyRepo = ref.read(playbackHistoryRepositoryProvider);
@@ -542,7 +542,7 @@ class AudioPlayerController extends _$AudioPlayerController
           } else {
             _log.d('[Play] Seeking to saved position: ${history.positionMs}ms');
             _announceSeek(Duration(milliseconds: history.positionMs));
-            await _player.seek(Duration(milliseconds: history.positionMs));
+            await _seekPlayer(Duration(milliseconds: history.positionMs));
             _lifecycleEvents.add(
               SeekLifecycle(Duration(milliseconds: history.positionMs)),
             );
@@ -943,6 +943,17 @@ class AudioPlayerController extends _$AudioPlayerController
     _lifecycleEvents.add(SeekStartedLifecycle(target));
   }
 
+  // Closes an announced seek the player rejected, so listeners that moved
+  // their state to the target can roll it back.
+  Future<void> _seekPlayer(Duration target) async {
+    try {
+      await _player.seek(target);
+    } on Object {
+      _lifecycleEvents.add(const SeekFailedLifecycle());
+      rethrow;
+    }
+  }
+
   static Duration _clampToKnownDuration(Duration position, Duration? duration) {
     if (position.isNegative) return Duration.zero;
     // Zero means unknown, as elsewhere in the player.
@@ -974,7 +985,7 @@ class AudioPlayerController extends _$AudioPlayerController
     _announceSeek(Duration(milliseconds: clampedMs));
     _isSeeking = true;
     try {
-      await _player.seek(Duration(milliseconds: clampedMs));
+      await _seekPlayer(Duration(milliseconds: clampedMs));
     } finally {
       _isSeeking = false;
     }

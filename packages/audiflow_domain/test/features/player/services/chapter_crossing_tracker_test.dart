@@ -121,6 +121,14 @@ void main() {
       check(observeAt(60, now: later)).isA<ChapterChangedEvent>();
     });
 
+    test('a failed seek returns the baseline to the chapter it left', () {
+      check(observeAt(30)).isNull();
+      tracker.seekStarted(const Duration(seconds: 130), now: t0);
+      tracker.seekFailed();
+      // Playback never left chapter 0, so its end still fires.
+      check(observeAt(60)).isA<ChapterChangedEvent>();
+    });
+
     test('without chapters a seek yields nothing', () {
       chapters = const [];
       check(

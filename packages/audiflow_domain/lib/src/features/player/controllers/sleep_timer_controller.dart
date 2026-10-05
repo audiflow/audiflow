@@ -166,6 +166,10 @@ class SleepTimerController extends _$SleepTimerController {
       _chapterTracker.seekCompleted();
       return;
     }
+    if (event is SeekFailedLifecycle) {
+      _chapterTracker.seekFailed();
+      return;
+    }
     final mapped = switch (event) {
       EpisodeCompletedLifecycle() => const EpisodeCompletedEvent(),
       EpisodeSwitchedLifecycle() => const ManualEpisodeSwitchedEvent(),
@@ -173,7 +177,7 @@ class SleepTimerController extends _$SleepTimerController {
         target,
         now: DateTime.now(),
       ),
-      SeekLifecycle() => null,
+      SeekLifecycle() || SeekFailedLifecycle() => null,
     };
     if (mapped != null) _evaluate(mapped);
   }

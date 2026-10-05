@@ -187,6 +187,19 @@ void main() {
     checkFiredOnce();
   });
 
+  test('a failed seek keeps the timer on the playing chapter', () async {
+    await playEpisode(1, _threeChapters(1));
+    await playAt(const Duration(seconds: 30));
+    armEndOfChapter();
+
+    await lifecycleEvent(const SeekStartedLifecycle(Duration(seconds: 130)));
+    await lifecycleEvent(const SeekFailedLifecycle());
+    checkNotFired();
+
+    await playAt(const Duration(milliseconds: 60100));
+    checkFiredOnce();
+  });
+
   test('chapters loading after arming do not fire the timer', () async {
     await playEpisode(1, const []);
     await playAt(const Duration(seconds: 90));

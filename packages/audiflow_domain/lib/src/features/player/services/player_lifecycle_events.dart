@@ -22,8 +22,8 @@ final class EpisodeSwitchedLifecycle extends PlayerLifecycleEvent {
 ///
 /// Emitted before the position changes so listeners that follow position
 /// continuity (the end-of-chapter sleep timer) can tell a jump from
-/// playback. [SeekLifecycle] follows once the position has moved; it is
-/// missing only when the seek fails.
+/// playback. [SeekLifecycle] follows once the position has moved, or
+/// [SeekFailedLifecycle] when the player rejects the seek.
 final class SeekStartedLifecycle extends PlayerLifecycleEvent {
   const SeekStartedLifecycle(this.target);
   final Duration target;
@@ -34,4 +34,10 @@ final class SeekStartedLifecycle extends PlayerLifecycleEvent {
 final class SeekLifecycle extends PlayerLifecycleEvent {
   const SeekLifecycle(this.position);
   final Duration position;
+}
+
+/// The seek announced by the preceding [SeekStartedLifecycle] failed; the
+/// position did not move to its target.
+final class SeekFailedLifecycle extends PlayerLifecycleEvent {
+  const SeekFailedLifecycle();
 }
