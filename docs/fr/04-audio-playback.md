@@ -89,7 +89,14 @@ state and resume position stay coherent no matter where the listener touches it.
   The same sheet opens from the podcast detail menu ("Audio settings"), so an override can
   be set while nothing is playing. The recent-speed chips are one shared history: a speed
   committed under an override is recorded there too, so it is one tap away for any podcast.
-  Only speed is overridable today.
+  The speed and both effects below follow the switch.
+- **Silence skipping and voice boost (Android only)**: On Android the Audio sheet has an
+  Effects section below the speed with two switches. "Shorten silences" skips quiet gaps so a
+  talk episode finishes sooner. "Voice boost" raises loudness with a fixed target gain (6 dB to
+  start, to be tuned on devices) so quiet speech is easier to hear. Both are off by default,
+  take effect at once, and follow the per-podcast switch like the speed does. On iOS the
+  section is not shown and any stored values are ignored, because the audio engine implements
+  neither effect there.
 - **Audio output**: The center slot of the action row opens the operating system's own audio
   output picker; the app does not draw a device list. On iOS it is the system route picker
   (speaker, Bluetooth, AirPlay), and choosing a route moves playback there. On Android 11 and
@@ -124,8 +131,13 @@ state and resume position stay coherent no matter where the listener touches it.
   `PodcastAudioPreferenceRepository`). Every speed write names its
   `AudioSettingsScope` (global or one podcast), and the player is only changed when that
   scope is the one the now-playing podcast resolves to. `effectiveAudioSettingsApplier`
-  re-applies the resolved speed when the now-playing podcast or its override changes, and
+  re-applies the resolved settings when the now-playing podcast or its override changes, and
   `play()` resolves the episode's podcast from the same state before playback starts.
+- On Android, applies silence skipping (`AudioPlayer.setSkipSilenceEnabled`) and voice boost
+  (an `AndroidLoudnessEnhancer` attached when the player is constructed) through the same
+  serialized engine path as the speed. Effect writes name their scope the same way as speed
+  writes. Elsewhere `audioEffectsSupportedProvider` is false and effects never reach the
+  engine.
 - Resumes an episode from its last saved position, replaying from the start when the saved
   position is at the very end, and honors an explicit start position from timestamped share
   links over the saved position.
