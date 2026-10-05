@@ -218,6 +218,23 @@ void main() {
     },
   );
 
+  test(
+    'an update past several chapter starts stops at the target end',
+    () async {
+      await playEpisode(1, [
+        _chapter(1, 0, 0),
+        _chapter(1, 1, 60),
+        _chapter(1, 2, 61),
+      ]);
+      await playAt(const Duration(seconds: 30));
+      armEndOfChapter();
+
+      // One position update skips the one-second chapter 1 entirely.
+      await playAt(const Duration(milliseconds: 61100));
+      checkFiredOnce(const Duration(seconds: 60));
+    },
+  );
+
   test('a seek forward out of the chapter cancels the timer', () async {
     await playEpisode(1, _threeChapters(1));
     await playAt(const Duration(seconds: 30));

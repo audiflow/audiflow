@@ -220,8 +220,8 @@ class SleepTimerController extends _$SleepTimerController {
     switch (decision) {
       case KeepDecision():
         return;
-      case FireDecision(:final stop):
-        _fire(stop);
+      case FireDecision(:final stop, :final returnTo):
+        _fire(stop, returnTo: returnTo);
       case DecrementEpisodesDecision():
         final cfg = state.config;
         if (cfg is SleepTimerConfigEpisodes) {
@@ -244,14 +244,7 @@ class SleepTimerController extends _$SleepTimerController {
     state = state.copyWith(config: const SleepTimerConfig.off());
   }
 
-  // The crossing is noticed one position update after the boundary, so
-  // the start of the chapter now playing is where the target chapter ended.
-  Duration? _enteredChapterStart() {
-    final startMs = ref.read(currentChapterProvider)?.chapter.startMs;
-    return startMs == null ? null : Duration(milliseconds: startMs);
-  }
-
-  void _fire(SleepTimerStop stop) {
+  void _fire(SleepTimerStop stop, {Duration? returnTo}) {
     _tick?.cancel();
     _tick = null;
     final player = ref.read(audioPlayerControllerProvider.notifier);
@@ -259,8 +252,9 @@ class SleepTimerController extends _$SleepTimerController {
       case SleepTimerStop.fadeOut:
         unawaited(player.fadeOutAndPause());
       case SleepTimerStop.pauseNow:
-        final boundary = _enteredChapterStart();
-        unawaited(boundary == null ? player.pause() : player.pauseAt(boundary));
+        // The crossing is noticed one position update after the boundary,
+        // so the player returns to where the target chapter ended.
+        unawaited(returnTo == null ? player.pause() : player.pauseAt(returnTo));
       case SleepTimerStop.holdAtEndOfStream:
         // Audio already reached silence at end-of-stream. Calling pause()
         // here would emit a redundant playerStateStream event that re-enters

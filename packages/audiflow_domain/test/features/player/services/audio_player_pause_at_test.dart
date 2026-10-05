@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -7,13 +9,18 @@ import 'package:riverpod/riverpod.dart';
 import '../../../helpers/fake_app_settings_repository.dart';
 
 const _url = 'https://example.com/a.mp3';
+const _otherUrl = 'https://example.com/b.mp3';
 const _episodeId = 7;
+const _otherEpisodeId = 8;
 
 /// Records the engine calls in order instead of playing audio.
+///
+/// [holdPause] keeps the engine pause open, as a slow platform call does.
 class _RecordingAudioPlayer extends AudioPlayer {
-  _RecordingAudioPlayer() : super(handleInterruptions: false);
+  _RecordingAudioPlayer(this.calls) : super(handleInterruptions: false);
 
-  final List<String> calls = [];
+  final List<String> calls;
+  Completer<void>? holdPause;
 
   @override
   Duration? get duration => const Duration(minutes: 10);
@@ -31,7 +38,13 @@ class _RecordingAudioPlayer extends AudioPlayer {
   Future<void> play() async {}
 
   @override
-  Future<void> pause() async => calls.add('pause');
+  Future<void> pause() async {
+    calls.add('pause');
+    await holdPause?.future;
+  }
+
+  @override
+  Future<void> stop() async => calls.add('stop');
 
   @override
   Future<void> seek(Duration? position, {int? index}) async =>
@@ -41,11 +54,11 @@ class _RecordingAudioPlayer extends AudioPlayer {
 class _KnownEpisodeRepository implements EpisodeRepository {
   @override
   Future<Episode?> getByAudioUrl(String audioUrl) async => Episode()
-    ..id = _episodeId
+    ..id = audioUrl == _url ? _episodeId : _otherEpisodeId
     ..podcastId = 1
     ..guid = 'guid'
     ..title = 'Episode'
-    ..audioUrl = _url;
+    ..audioUrl = audioUrl;
 
   @override
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
@@ -79,7 +92,16 @@ class _RecordingHistoryRepository implements PlaybackHistoryRepository {
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }
 
+/// Logs paused-position saves into the engine call log, so tests can see
+/// which came first.
 class _QuietHistoryService implements PlaybackHistoryService {
+  _QuietHistoryService(this.calls);
+
+  final List<String> calls;
+
+  @override
+  void onPlaybackResumed() {}
+
   @override
   Future<void> onPlaybackStarted(int episodeId, int positionMs) async {}
 
@@ -95,7 +117,7 @@ class _QuietHistoryService implements PlaybackHistoryService {
     int episodeId,
     PlaybackProgress progress, {
     double speed = 1.0,
-  }) async {}
+  }) async => calls.add('save paused');
 
   @override
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
@@ -105,9 +127,12 @@ void main() {
   late _RecordingAudioPlayer player;
   late _RecordingHistoryRepository history;
   late ProviderContainer container;
+  late StreamController<PlaybackProgress> progress;
 
   setUp(() {
-    player = _RecordingAudioPlayer();
+    progress = StreamController<PlaybackProgress>.broadcast();
+    final calls = <String>[];
+    player = _RecordingAudioPlayer(calls);
     history = _RecordingHistoryRepository();
     container = ProviderContainer(
       overrides: [
@@ -119,8 +144,9 @@ void main() {
         downloadServiceProvider.overrideWithValue(_NoDownloadService()),
         playbackHistoryRepositoryProvider.overrideWithValue(history),
         playbackHistoryServiceProvider.overrideWithValue(
-          _QuietHistoryService(),
+          _QuietHistoryService(calls),
         ),
+        playbackProgressStreamProvider.overrideWith((ref) => progress.stream),
         audioPlayerProvider.overrideWith((ref) {
           ref.onDispose(player.dispose);
           return player;
@@ -129,21 +155,36 @@ void main() {
     );
   });
 
-  tearDown(() => container.dispose());
+  tearDown(() async {
+    container.dispose();
+    await progress.close();
+  });
 
   AudioPlayerController controller() =>
       container.read(audioPlayerControllerProvider.notifier);
 
   // Full metadata spares play() the subscription lookup for analytics.
-  Future<void> playEpisode() => controller().play(
-    _url,
-    metadata: const NowPlayingInfo(
-      episodeUrl: _url,
-      episodeTitle: 'Episode',
-      podcastTitle: 'Podcast',
-      feedUrl: 'https://example.com/feed.xml',
-    ),
-  );
+  Future<void> playEpisode([String url = _url]) async {
+    await controller().play(
+      url,
+      metadata: NowPlayingInfo(
+        episodeUrl: url,
+        episodeTitle: 'Episode',
+        podcastTitle: 'Podcast',
+        feedUrl: 'https://example.com/feed.xml',
+      ),
+    );
+    // A position just past the boundary, as when the crossing is seen.
+    container.listen(playbackProgressStreamProvider, (_, _) {});
+    progress.add(
+      const PlaybackProgress(
+        position: Duration(milliseconds: 60200),
+        duration: Duration(minutes: 10),
+        bufferedPosition: Duration.zero,
+      ),
+    );
+    await pumpEventQueue();
+  }
 
   test('pauses before moving back to the position', () async {
     await playEpisode();
@@ -151,7 +192,7 @@ void main() {
 
     await controller().pauseAt(const Duration(seconds: 60));
 
-    check(player.calls).deepEquals(['pause', 'seek 60000']);
+    check(player.calls).deepEquals(['pause', 'save paused', 'seek 60000']);
   });
 
   test('saves the position as the resume point', () async {
@@ -177,5 +218,42 @@ void main() {
     check(events.whereType<SeekStartedLifecycle>()).single
       ..has((e) => e.automatic, 'automatic').isTrue()
       ..has((e) => e.target, 'target').equals(const Duration(seconds: 60));
+  });
+
+  test('silences the engine before the paused position is saved', () async {
+    await playEpisode();
+    await pumpEventQueue();
+    player.calls.clear();
+    player.holdPause = Completer<void>();
+
+    final paused = controller().pauseAt(const Duration(seconds: 60));
+    await pumpEventQueue();
+    // A slow engine pause holds everything after it, so nothing is saved
+    // while audio may still be playing.
+    check(player.calls).deepEquals(['pause']);
+
+    player.holdPause!.complete();
+    await paused;
+    check(player.calls).deepEquals(['pause', 'save paused', 'seek 60000']);
+  });
+
+  test('a play of another episode during the pause keeps the old '
+      'boundary off it', () async {
+    await playEpisode();
+    player.calls.clear();
+    history.savedPositionsMs.clear();
+    final hold = Completer<void>();
+    player.holdPause = hold;
+
+    final paused = controller().pauseAt(const Duration(seconds: 60));
+    await pumpEventQueue();
+    player.holdPause = null;
+    await playEpisode(_otherUrl);
+    hold.complete();
+    await paused;
+    await pumpEventQueue();
+
+    check(player.calls.where((call) => call.startsWith('seek'))).isEmpty();
+    check(history.savedPositionsMs).isEmpty();
   });
 }

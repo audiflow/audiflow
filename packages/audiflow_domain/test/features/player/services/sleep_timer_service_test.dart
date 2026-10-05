@@ -75,11 +75,12 @@ void main() {
     test('pauses at once without a fade on ChapterChangedEvent', () {
       final decision = service.evaluate(
         config: const SleepTimerConfig.endOfChapter(),
-        event: const ChapterChangedEvent(),
+        event: const ChapterChangedEvent(Duration(seconds: 60)),
         currentEpisodeHasChapters: true,
       );
       expect(decision, isA<FireDecision>());
       expect((decision as FireDecision).stop, SleepTimerStop.pauseNow);
+      expect(decision.returnTo, const Duration(seconds: 60));
     });
 
     test('cancels on SeekedOutOfChapterEvent', () {
@@ -131,7 +132,7 @@ void main() {
       expect(
         service.evaluate(
           config: const SleepTimerConfig.endOfChapter(),
-          event: const ChapterChangedEvent(),
+          event: const ChapterChangedEvent(Duration(seconds: 60)),
           currentEpisodeHasChapters: false,
         ),
         isA<KeepDecision>(),

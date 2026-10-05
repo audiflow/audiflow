@@ -24,7 +24,11 @@ final class ManualEpisodeSwitchedEvent extends SleepTimerPlayerEvent {
 
 /// Emitted when the current chapter boundary is reached during natural playback.
 final class ChapterChangedEvent extends SleepTimerPlayerEvent {
-  const ChapterChangedEvent();
+  const ChapterChangedEvent(this.targetEnd);
+
+  /// Where the chapter playback left ends: the start of the chapter right
+  /// after it, even when one position update passed several chapters.
+  final Duration targetEnd;
 }
 
 /// Emitted when a requested seek leaves the current chapter, forward or
@@ -67,9 +71,13 @@ enum SleepTimerStop {
 }
 
 final class FireDecision extends SleepTimerDecision {
-  const FireDecision({this.stop = SleepTimerStop.fadeOut});
+  const FireDecision({this.stop = SleepTimerStop.fadeOut, this.returnTo});
 
   final SleepTimerStop stop;
+
+  /// Position to move back to after a [SleepTimerStop.pauseNow] stop: the
+  /// end of the target chapter. Null keeps the position where it stopped.
+  final Duration? returnTo;
 }
 
 final class DecrementEpisodesDecision extends SleepTimerDecision {
@@ -135,8 +143,9 @@ class SleepTimerService {
     if (event is ManualEpisodeSwitchedEvent) return const CancelDecision();
     if (!currentEpisodeHasChapters) return const KeepDecision();
     return switch (event) {
-      ChapterChangedEvent() => const FireDecision(
+      ChapterChangedEvent(:final targetEnd) => FireDecision(
         stop: SleepTimerStop.pauseNow,
+        returnTo: targetEnd,
       ),
       // The playing chapter ends with the episode when no later chapter
       // follows (the last chapter), so this is the same stop as the
