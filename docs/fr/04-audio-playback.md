@@ -67,8 +67,8 @@ state and resume position stay coherent no matter where the listener touches it.
   current speed (e.g. `1.3x`) and opens the Audio sheet, which holds quick chips and a
   stepped slider. The slider has 21 positions — 0.5x to 2.0x in 0.1 steps, then 2.2x, 2.4x,
   2.6x, 2.8x, and 3.0x — with 0.5x, 1.0x, 2.0x, and 3.0x labelled under their ticks. It snaps
-  to the positions, applies each step immediately, gives a light haptic per step, and shows
-  the speed above the thumb while dragging. The slider commits the speed the listener meant:
+  to the positions, applies each step immediately, and shows the speed above the thumb while
+  dragging; it gives no haptic per step. The slider commits the speed the listener meant:
   a step is only taken once the finger is well past a boundary, so resting on a boundary does
   not flicker between two speeds; a single-step change made just before lift-off, after the
   finger had rested on the previous step, is undone; and a tap uses the touch-down point
@@ -185,11 +185,10 @@ state and resume position stay coherent no matter where the listener touches it.
   primary color and the rest in the same color at 30% opacity.
 - Scrubbing is delta-based: a horizontal drag moves the position by the finger's travel from
   the current position instead of jumping to the touch point, and a tap on the track never
-  seeks. A light haptic fires when a drag begins.
+  seeks. The seek bar gives no haptic feedback.
 - Fine scrubbing: once a drag has started, moving the finger vertically away from the track
   (up or down) scales how far horizontal travel moves the position: full speed within 50 pt,
-  half speed from 50 pt, quarter speed from 100 pt, and one eighth from 150 pt. A light haptic
-  fires each time the band changes, and a localized label ("Scrubbing (half speed)",
+  half speed from 50 pt, quarter speed from 100 pt, and one eighth from 150 pt. A localized label ("Scrubbing (half speed)",
   "Scrubbing (quarter speed)", "Scrubbing (fine)") appears between the time labels while below
   full speed. The drag stays with the seek bar even when the finger leaves its bounds; a drag
   that starts vertically is not a scrub and still reaches the player sheet's swipe-to-dismiss.

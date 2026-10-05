@@ -266,14 +266,14 @@ void main() {
       check(recorder.ends.single).equals(1.0);
     });
 
-    testWidgets('fires a light haptic on drag start', (tester) async {
+    testWidgets('does not vibrate when a drag starts', (tester) async {
       final haptics = _recordHaptics(tester);
       await tester.pumpWidget(_host(value: 0.5, recorder: _SeekRecorder()));
 
       await tester.drag(_track, const Offset(40, 0));
       await tester.pump();
 
-      check(haptics).deepEquals(['HapticFeedbackType.lightImpact']);
+      check(haptics).isEmpty();
     });
 
     testWidgets('thickens the track while dragging', (tester) async {
@@ -390,9 +390,7 @@ void main() {
       await gesture.up();
     });
 
-    testWidgets('fires a light haptic on each band change only', (
-      tester,
-    ) async {
+    testWidgets('does not vibrate on band changes', (tester) async {
       final haptics = _recordHaptics(tester);
       await tester.pumpWidget(_host(value: 0.5, recorder: _SeekRecorder()));
       final gesture = await _startScrub(tester);
@@ -403,23 +401,18 @@ void main() {
       await gesture.up();
       await tester.pump();
 
-      check(haptics).length.equals(4);
-      check(haptics.toSet()).deepEquals({'HapticFeedbackType.lightImpact'});
+      check(haptics).isEmpty();
     });
 
     testWidgets('next drag starts at full speed again', (tester) async {
-      final haptics = _recordHaptics(tester);
       await tester.pumpWidget(_host(value: 0.5, recorder: _SeekRecorder()));
       final first = await _startScrub(tester);
       await first.moveBy(const Offset(0, 200));
       await first.up();
       await tester.pump();
 
-      haptics.clear();
       final second = await _startScrub(tester);
       await tester.pump();
-      // Only the drag-start haptic: no band change back from fine.
-      check(haptics).length.equals(1);
       check(_visibleScrubLabels()).isEmpty();
       await second.up();
     });

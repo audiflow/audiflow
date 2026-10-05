@@ -1,11 +1,13 @@
 import 'package:audiflow_core/audiflow_core.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import 'step_drag_tracker.dart';
 
-/// Slider over [PlaybackSpeedScale.steps] with a light haptic per step.
+/// Slider over [PlaybackSpeedScale.steps].
+///
+/// It gives no haptic per step: on a device, a tick for each of the 21
+/// steps crossed in one drag felt like noise rather than feedback.
 ///
 /// Landmark speeds ([landmarkSpeeds]) are labelled under the exact tick
 /// they belong to, so the uneven step grid (0.1 up to 2.0, then 0.2)
@@ -74,7 +76,7 @@ class _PlaybackSpeedSliderState extends State<PlaybackSpeedSlider> {
     final startIndex = _index;
     final index = _positionInSteps(down, width).round();
     if (index == startIndex) return;
-    _select(index, haptic: true);
+    _select(index);
     _commit(index, startIndex: startIndex);
   }
 
@@ -84,7 +86,7 @@ class _PlaybackSpeedSliderState extends State<PlaybackSpeedSlider> {
     final index = _positionInSteps(details.localPosition, width).round();
     _tracker = StepDragTracker(startIndex: index, startTime: _lastPointerTime);
     if (index == _index) return setState(() {});
-    _select(index, haptic: true);
+    _select(index);
   }
 
   void _handleDragUpdate(DragUpdateDetails details, double width) {
@@ -92,7 +94,7 @@ class _PlaybackSpeedSliderState extends State<PlaybackSpeedSlider> {
     if (tracker == null) return;
     final position = _positionInSteps(details.localPosition, width);
     if (!tracker.update(position, _lastPointerTime)) return;
-    _select(tracker.index, haptic: true);
+    _select(tracker.index);
   }
 
   void _handleDragEnd() {
@@ -100,13 +102,12 @@ class _PlaybackSpeedSliderState extends State<PlaybackSpeedSlider> {
     if (tracker == null) return;
     final index = tracker.resolveRelease(_lastPointerTime);
     // Lift-off roll undone: put the player back on the settled step.
-    if (index != _index) _select(index, haptic: false);
+    if (index != _index) _select(index);
     _commit(index, startIndex: _gestureStartIndex);
   }
 
-  void _select(int index, {required bool haptic}) {
+  void _select(int index) {
     setState(() => _dragIndex = index);
-    if (haptic) HapticFeedback.lightImpact();
     widget.onChanged(PlaybackSpeedScale.speedForIndex(index));
   }
 
@@ -130,7 +131,7 @@ class _PlaybackSpeedSliderState extends State<PlaybackSpeedSlider> {
   void _handleChanged(double value) {
     final index = value.round();
     if (index == _index) return;
-    _select(index, haptic: true);
+    _select(index);
   }
 
   void _handleChangeEnd(double value) =>
