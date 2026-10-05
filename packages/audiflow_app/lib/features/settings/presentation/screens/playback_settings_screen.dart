@@ -99,8 +99,15 @@ class _PlaybackSpeedTile extends ConsumerWidget {
           ),
           PlaybackSpeedSlider(
             speed: speed,
-            onChanged: (v) => controller.setSpeed(v, transient: true),
-            onChangeEnd: controller.setSpeed,
+            // Always the global default, even while the now-playing
+            // podcast has an override.
+            onChanged: (v) => controller.setSpeed(
+              v,
+              scope: const GlobalAudioSettingsScope(),
+              transient: true,
+            ),
+            onChangeEnd: (v) =>
+                controller.setSpeed(v, scope: const GlobalAudioSettingsScope()),
           ),
         ],
       ),

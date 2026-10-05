@@ -118,6 +118,7 @@ export 'src/features/feed/repositories/episode_favorite_repository.dart';
 export 'src/features/feed/repositories/episode_favorite_repository_impl.dart';
 
 // Player feature
+export 'src/features/player/models/current_chapter.dart';
 export 'src/features/player/models/now_playing_info.dart';
 export 'src/features/player/models/playback_progress.dart';
 export 'src/features/player/models/playback_state.dart';
@@ -126,12 +127,14 @@ export 'src/features/player/models/sleep_timer_event.dart';
 export 'src/features/player/models/sleep_timer_state.dart';
 export 'src/features/player/services/audio_playback_controller.dart';
 export 'src/features/player/services/audio_player_service.dart';
+export 'src/features/player/services/effective_audio_settings_applier.dart';
 export 'src/features/player/services/listen_session_tracker.dart';
 export 'src/features/player/services/now_playing_controller.dart';
 export 'src/features/player/services/player_lifecycle_events.dart';
 export 'src/features/player/services/sleep_timer_service.dart';
 export 'src/features/player/datasources/local/sleep_timer_preferences_datasource.dart';
 export 'src/features/player/controllers/sleep_timer_controller.dart';
+export 'src/features/player/providers/current_chapter_providers.dart';
 export 'src/features/player/providers/sleep_timer_providers.dart';
 
 // Player feature - Playback History
@@ -192,10 +195,16 @@ export 'src/features/queue/repositories/queue_repository_impl.dart';
 export 'src/features/queue/services/queue_service.dart';
 
 // Settings feature
+export 'src/features/settings/datasources/local/podcast_audio_preference_local_datasource.dart';
+export 'src/features/settings/models/audio_settings.dart';
+export 'src/features/settings/models/audio_settings_scope.dart';
+export 'src/features/settings/models/podcast_audio_preference.dart';
 export 'src/features/settings/repositories/app_settings_repository.dart';
 export 'src/features/settings/repositories/app_settings_repository_impl.dart';
 export 'src/features/settings/providers/settings_providers.dart';
 export 'src/features/settings/providers/playback_speed_settings_provider.dart';
+export 'src/features/settings/providers/podcast_audio_override_provider.dart';
+export 'src/features/settings/repositories/podcast_audio_preference_repository.dart';
 export 'src/features/settings/providers/developer_settings_provider.dart';
 export 'src/features/settings/services/data_reset_service.dart';
 

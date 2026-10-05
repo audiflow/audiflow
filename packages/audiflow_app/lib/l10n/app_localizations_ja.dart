@@ -150,6 +150,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get podcastDetailDescriptionMenuTitle => '概要';
 
   @override
+  String get podcastDetailAudioSettingsMenuTitle => 'オーディオ設定';
+
+  @override
   String get podcastDetailDescriptionSheetTitle => '概要';
 
   @override
@@ -575,13 +578,37 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get playerAudioOutputLabel => '出力先';
+
+  @override
+  String get playerAudioOutputUnavailable => '出力先の設定を開けませんでした';
+
+  @override
   String get audioSheetTitle => 'オーディオ';
 
   @override
   String get audioSheetSpeedSection => '再生速度';
 
   @override
+  String get audioSheetPodcastOverride => 'この番組専用の設定';
+
+  @override
+  String get audioSheetScopePodcast => 'この番組だけに適用';
+
+  @override
+  String get audioSheetScopeGlobal => 'すべての番組に適用';
+
+  @override
   String get playbackSpeedNormal => '標準';
+
+  @override
+  String get playerScrubSpeedHalf => '半速スクラブ';
+
+  @override
+  String get playerScrubSpeedQuarter => '1/4速スクラブ';
+
+  @override
+  String get playerScrubSpeedFine => '微調整スクラブ';
 
   @override
   String playerNowPlayingLabel(String title, String podcast) {
@@ -855,6 +882,19 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get playerTranscriptEmpty => '書き起こしがありません';
+
+  @override
+  String get playerChaptersTitle => 'チャプター';
+
+  @override
+  String playerCurrentChapterLabel(int number, String title) {
+    return 'チャプター$number: $title。チャプター一覧を表示';
+  }
+
+  @override
+  String playerChapterItemLabel(int number, String title, String time) {
+    return 'チャプター$number: $title、$timeから';
+  }
 
   @override
   String get playerTranscriptJumpToCurrent => '現在位置へ';
