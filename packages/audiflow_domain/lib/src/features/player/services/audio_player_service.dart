@@ -177,6 +177,11 @@ class AudioPlayerController extends _$AudioPlayerController
   // would interrupt this load and fail both with "Loading interrupted".
   ({String url, Duration? startAt, Future<void> done})? _pendingPlay;
 
+  // Bumped by every play() load and by stop(). An engine failure reported
+  // after a newer attempt began belongs to the old attempt, even when both
+  // attempts play the same URL, so it must not overwrite the newer state.
+  int _playAttempt = 0;
+
   // Engine values requested through [applySpeed] or [applyAudioSettings]
   // and not yet applied by [_engineDrain]; null when nothing is pending.
   double? _targetSpeed;
@@ -508,6 +513,7 @@ class AudioPlayerController extends _$AudioPlayerController
     NowPlayingInfo? metadata,
     Duration? startAt,
   }) async {
+    _playAttempt++;
     _isPreparingPlay = true;
     try {
       _log.i('[Play] Starting: url=$url');
@@ -893,9 +899,11 @@ class AudioPlayerController extends _$AudioPlayerController
   // just_audio's play() future lasts until playback stops, so nothing awaits
   // it, and it fails when the load behind it is interrupted ("Loading
   // interrupted"). Handled here so the failure shows instead of escaping as
-  // an unhandled error. A newer episode owns the state once it loads.
+  // an unhandled error. A newer play() or a stop() owns the state from then
+  // on, so a late failure of this attempt is only logged.
   void _startEngine() {
     final url = _currentUrl;
+    final attempt = _playAttempt;
     unawaited(
       _player.play().onError((error, stackTrace) {
         _log.e(
@@ -903,7 +911,7 @@ class AudioPlayerController extends _$AudioPlayerController
           error: error,
           stackTrace: stackTrace,
         );
-        if (_currentUrl != url) return;
+        if (_playAttempt != attempt || _currentUrl != url) return;
         state = PlaybackState.error(message: 'Failed to play audio: $error');
       }),
     );
@@ -929,6 +937,10 @@ class AudioPlayerController extends _$AudioPlayerController
   /// Saves final playback progress to history.
   @override
   Future<void> stop() async {
+    // Cleared before any await: a play() right after stop() must start its
+    // own load, not join the one this stop interrupts.
+    _pendingPlay = null;
+    _playAttempt++;
     _closeListenSession(ListenEndReason.stop);
     // Save final progress before stopping
     await _saveProgressOnStop();

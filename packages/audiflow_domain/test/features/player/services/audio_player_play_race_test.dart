@@ -10,15 +10,27 @@ import '../../../helpers/fake_app_settings_repository.dart';
 
 const _url = 'https://example.com/a.mp3';
 
-/// Stands in for just_audio on a slow device: loads wait on [loadGate], and
-/// [playError] makes `play()` fail the way an interrupted load does.
+/// Stands in for just_audio on a slow device: loads wait on [loadGate], a
+/// new load or a stop interrupts the outstanding one as just_audio does,
+/// [playError] makes `play()` fail the way an interrupted load does, and
+/// [holdPlay] keeps the `play()` future open as playback does.
 class _SlowAudioPlayer extends AudioPlayer {
   _SlowAudioPlayer() : super(handleInterruptions: false);
 
   final List<String> loadedUrls = [];
   Completer<void> loadGate = Completer<void>()..complete();
   Object? playError;
+  Completer<void>? holdPlay;
   int playCalls = 0;
+  int interruptedLoads = 0;
+  Completer<void>? _outstandingLoad;
+
+  void _interruptOutstandingLoad() {
+    final load = _outstandingLoad;
+    if (load == null || load.isCompleted) return;
+    interruptedLoads++;
+    load.completeError(PlayerInterruptedException('Loading interrupted'));
+  }
 
   @override
   Future<Duration?> setUrl(
@@ -29,15 +41,27 @@ class _SlowAudioPlayer extends AudioPlayer {
     dynamic tag,
   }) async {
     loadedUrls.add(url);
-    await loadGate.future;
+    _interruptOutstandingLoad();
+    final load = Completer<void>();
+    _outstandingLoad = load;
+    unawaited(
+      loadGate.future.then((_) {
+        if (!load.isCompleted) load.complete();
+      }),
+    );
+    await load.future;
     return const Duration(minutes: 10);
   }
+
+  @override
+  Future<void> stop() async => _interruptOutstandingLoad();
 
   @override
   Future<void> play() async {
     playCalls++;
     final error = playError;
     if (error != null) throw error;
+    await holdPlay?.future;
   }
 }
 
@@ -101,6 +125,7 @@ void main() {
       await Future.wait([first, second]);
 
       check(player.loadedUrls).deepEquals([_url]);
+      check(player.interruptedLoads).equals(0);
       check(player.playCalls).equals(1);
       check(
         container.read(audioPlayerControllerProvider),
@@ -116,6 +141,39 @@ void main() {
       await Future.wait([first, second]);
 
       check(player.loadedUrls).deepEquals([_url, 'https://example.com/b.mp3']);
+      check(player.interruptedLoads).equals(1);
+    });
+
+    test('a play after stop starts a new load of the same episode', () async {
+      player.loadGate = Completer<void>();
+      final first = controller().play(_url);
+      await pumpEventQueue();
+      // Replay before the stopped load has unwound: joining it would end
+      // in the interruption the stop caused.
+      final stopped = controller().stop();
+      final second = controller().play(_url);
+      await pumpEventQueue();
+      player.loadGate.complete();
+      await Future.wait([first, stopped, second]);
+
+      check(player.loadedUrls).deepEquals([_url, _url]);
+    });
+
+    test('a stale engine failure does not override a replay', () async {
+      final firstPlayback = Completer<void>();
+      player.holdPlay = firstPlayback;
+      await controller().play(_url);
+      player.holdPlay = null;
+      await controller().stop();
+      await controller().play(_url);
+      firstPlayback.completeError(
+        PlayerInterruptedException('Loading interrupted'),
+      );
+      await pumpEventQueue();
+
+      check(
+        container.read(audioPlayerControllerProvider),
+      ).isA<PlaybackLoading>();
     });
 
     test('a failing engine play() is not an unhandled error', () async {
