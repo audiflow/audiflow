@@ -24,7 +24,11 @@ final class ManualEpisodeSwitchedEvent extends SleepTimerPlayerEvent {
 
 /// Emitted when the current chapter boundary is reached during natural playback.
 final class ChapterChangedEvent extends SleepTimerPlayerEvent {
-  const ChapterChangedEvent();
+  const ChapterChangedEvent(this.targetEnd);
+
+  /// Where the chapter playback left ends: the start of the chapter right
+  /// after it, even when one position update passed several chapters.
+  final Duration targetEnd;
 }
 
 /// Emitted when a requested seek leaves the current chapter, forward or
@@ -42,15 +46,38 @@ final class KeepDecision extends SleepTimerDecision {
   const KeepDecision();
 }
 
-final class FireDecision extends SleepTimerDecision {
-  const FireDecision({this.immediate = false});
-
-  /// When true, the controller should pause without fading.
+/// How the controller stops playback when the timer fires.
+enum SleepTimerStop {
+  /// Fade the volume out over several seconds, then pause.
   ///
-  /// Set for end-of-episode triggers where audio has already reached silence:
-  /// fading would only take effect against the auto-advanced next episode,
-  /// which is the bug this flag prevents.
-  final bool immediate;
+  /// For triggers that fire mid-content (duration deadline), where a calm
+  /// fade is gentler than an abrupt cut.
+  fadeOut,
+
+  /// Pause right away, without a fade, then return to the start of the
+  /// chapter just entered.
+  ///
+  /// For the end-of-chapter boundary: the next chapter is already playing,
+  /// so a fade would let its opening be heard while the volume drops, and
+  /// resuming should start that chapter from its beginning.
+  pauseNow,
+
+  /// Audio already reached the end of the stream: keep it from advancing
+  /// to the next episode instead of pausing.
+  ///
+  /// Fading or pausing here would only take effect against the
+  /// auto-advanced next episode, which is the bug this mode prevents.
+  holdAtEndOfStream,
+}
+
+final class FireDecision extends SleepTimerDecision {
+  const FireDecision({this.stop = SleepTimerStop.fadeOut, this.returnTo});
+
+  final SleepTimerStop stop;
+
+  /// Position to move back to after a [SleepTimerStop.pauseNow] stop: the
+  /// end of the target chapter. Null keeps the position where it stopped.
+  final Duration? returnTo;
 }
 
 final class DecrementEpisodesDecision extends SleepTimerDecision {
@@ -80,7 +107,9 @@ class SleepTimerService {
         return const KeepDecision();
       case SleepTimerConfigEndOfEpisode():
         return switch (event) {
-          EpisodeCompletedEvent() => const FireDecision(immediate: true),
+          EpisodeCompletedEvent() => const FireDecision(
+            stop: SleepTimerStop.holdAtEndOfStream,
+          ),
           ManualEpisodeSwitchedEvent() => const CancelDecision(),
           _ => const KeepDecision(),
         };
@@ -93,7 +122,9 @@ class SleepTimerService {
         return const KeepDecision();
       case SleepTimerConfigEpisodes(:final remaining):
         if (event is EpisodeCompletedEvent) {
-          if (remaining <= 1) return const FireDecision(immediate: true);
+          if (remaining <= 1) {
+            return const FireDecision(stop: SleepTimerStop.holdAtEndOfStream);
+          }
           return const DecrementEpisodesDecision();
         }
         return const KeepDecision();
@@ -112,11 +143,16 @@ class SleepTimerService {
     if (event is ManualEpisodeSwitchedEvent) return const CancelDecision();
     if (!currentEpisodeHasChapters) return const KeepDecision();
     return switch (event) {
-      ChapterChangedEvent() => const FireDecision(),
+      ChapterChangedEvent(:final targetEnd) => FireDecision(
+        stop: SleepTimerStop.pauseNow,
+        returnTo: targetEnd,
+      ),
       // The playing chapter ends with the episode when no later chapter
       // follows (the last chapter), so this is the same stop as the
       // end-of-episode timer, without a fade and without auto-advance.
-      EpisodeCompletedEvent() => const FireDecision(immediate: true),
+      EpisodeCompletedEvent() => const FireDecision(
+        stop: SleepTimerStop.holdAtEndOfStream,
+      ),
       SeekedOutOfChapterEvent() => const CancelDecision(),
       _ => const KeepDecision(),
     };

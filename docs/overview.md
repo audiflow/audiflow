@@ -13,7 +13,7 @@ Audiflow is a mobile podcast player for iOS and Android, built with Flutter. It 
 - Queue building and reordering
 - Smart playlist config fetching, caching, and rendering
 - Playback position persistence and resume
-- Sleep timer with multiple modes (duration countdown, end of episode, end of chapter, episode count) and fade-out pause
+- Sleep timer with multiple modes (duration countdown, end of episode, end of chapter, episode count); countdowns fade out, content-boundary stops pause at once
 - Playback speed control
 - Configurable audio interruption behavior (duck volume or pause-and-rewind)
 - Podcast transcript and chapter display

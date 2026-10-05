@@ -70,7 +70,13 @@ class ChapterCrossingTracker {
     // A lead-in before the first chapter is not a chapter, so entering
     // chapter one from it is not the end of a chapter.
     if (previous == null || index == null) return null;
-    return previous < index ? const ChapterChangedEvent() : null;
+    if (index <= previous) return null;
+    // The chapter after the baseline, not the current one: a single
+    // position update can pass several short chapters.
+    final nextStartMs =
+        chapters?.elementAtOrNull(previous + 1)?.startMs ??
+        current!.chapter.startMs;
+    return ChapterChangedEvent(Duration(milliseconds: nextStartMs));
   }
 
   /// Marks a seek to [target] that is about to move the position.

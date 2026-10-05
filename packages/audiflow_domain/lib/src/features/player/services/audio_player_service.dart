@@ -152,6 +152,7 @@ class AudioPlayerController extends _$AudioPlayerController
   double? _preFadeVolume;
   Completer<void>? _fadeCompleter;
   bool _suppressNextAutoAdvance = false;
+  Future<void>? _queueAdvance;
   PlaySource? _nextPlaySource;
 
   /// Episode id for which `episode_complete` has already been emitted in
@@ -323,6 +324,7 @@ class AudioPlayerController extends _$AudioPlayerController
 
         if (processingState == ProcessingState.completed) {
           _log.i('[StateStream] COMPLETED detected, advancing queue...');
+          final attempt = _playAttempt;
           _closeListenSession(ListenEndReason.complete);
 
           // Emit `episode_complete` exactly once per episode load.
@@ -361,18 +363,19 @@ class AudioPlayerController extends _$AudioPlayerController
           // suppressNextAutoAdvance() before we decide whether to advance.
           await _saveProgressOnStop();
 
-          if (_suppressNextAutoAdvance) {
-            _suppressNextAutoAdvance = false;
-            _log.i(
-              '[StateStream] Auto-advance suppressed by sleep timer; '
-              'pausing at episode end',
-            );
-            state = PlaybackState.paused(episodeUrl: url);
+          final suppressed = _suppressNextAutoAdvance;
+          _suppressNextAutoAdvance = false;
+          // A play during the save (such as Play tapped right at the
+          // sleep stop) owns the player now.
+          if (_playAttempt != attempt) return;
+
+          if (suppressed) {
+            await _holdAtEpisodeEnd(url, attempt);
             return;
           }
 
           // Try to auto-play next from queue
-          await _handlePlaybackComplete();
+          await _advanceQueueOnce();
           _log.i('[StateStream] _handlePlaybackComplete finished');
         } else if (processingState == ProcessingState.loading ||
             processingState == ProcessingState.buffering) {
@@ -410,6 +413,54 @@ class AudioPlayerController extends _$AudioPlayerController
     );
   }
 
+  /// Stops at the end of the episode in place of the queue advance the sleep
+  /// timer suppressed.
+  ///
+  /// With a next episode queued, stays paused so tapping play continues with
+  /// it. With nothing queued there is nothing to continue, so the player
+  /// closes exactly as when the queue runs out on its own.
+  Future<void> _holdAtEpisodeEnd(String url, int attempt) async {
+    final hasNext = await _hasQueuedEpisode();
+    // Play tapped during the lookup already advanced; pausing or closing
+    // now would act on the episode it started.
+    if (_playAttempt != attempt) return;
+    if (hasNext) {
+      _log.i('[StateStream] Sleep timer stop; pausing at episode end');
+      state = PlaybackState.paused(episodeUrl: url);
+      return;
+    }
+    _log.i('[StateStream] Sleep timer stop with empty queue; closing player');
+    await _closePlayer();
+  }
+
+  // An unreadable queue keeps the player open: closing it cannot be undone
+  // by tapping play, while a paused player still can be.
+  Future<bool> _hasQueuedEpisode() async {
+    try {
+      final queue = await ref.read(queueServiceProvider).getQueue();
+      return queue.nextItem != null;
+    } catch (e, stack) {
+      _log.e('[StateStream] Queue lookup failed', error: e, stackTrace: stack);
+      return true;
+    }
+  }
+
+  // Stops the engine too: a completed source keeps just_audio's `playing`
+  // true, which the lock screen would still show as playing.
+  Future<void> _closePlayer() async {
+    state = const PlaybackState.idle();
+    _currentUrl = null;
+    _currentEpisodeId = null;
+    ref.read(nowPlayingControllerProvider.notifier).clear();
+    await _player.stop();
+  }
+
+  // The completed-state handler and Play on a finished source both advance
+  // the queue; overlapping calls (a double tap, Play during the handler)
+  // join one advance so a single finish never pops two episodes.
+  Future<void> _advanceQueueOnce() => _queueAdvance ??=
+      _handlePlaybackComplete().whenComplete(() => _queueAdvance = null);
+
   /// Handles playback completion by attempting to play the next episode.
   ///
   /// If there's a next episode in the queue, starts playing it automatically.
@@ -417,8 +468,12 @@ class AudioPlayerController extends _$AudioPlayerController
   Future<void> _handlePlaybackComplete() async {
     try {
       _log.i('[Complete] Getting next episode from queue...');
+      final attempt = _playAttempt;
       final queueService = ref.read(queueServiceProvider);
       final nextEpisode = await queueService.popNextEpisode();
+      // An episode picked while the queue was read owns the player; neither
+      // starting the queued one nor closing may override it.
+      if (_playAttempt != attempt) return;
 
       if (nextEpisode != null) {
         _log.i(
@@ -459,11 +514,7 @@ class AudioPlayerController extends _$AudioPlayerController
         _log.i('[Complete] play() returned successfully');
       } else {
         _log.i('[Complete] No next episode, going idle');
-        // No more episodes in queue, go idle
-        state = const PlaybackState.idle();
-        _currentUrl = null;
-        _currentEpisodeId = null;
-        ref.read(nowPlayingControllerProvider.notifier).clear();
+        await _closePlayer();
       }
     } catch (e, stack) {
       _log.e(
@@ -833,25 +884,26 @@ class AudioPlayerController extends _$AudioPlayerController
   /// Saves playback progress to history.
   @override
   Future<void> pause() async {
-    // Save progress on pause — skip during source loading to avoid
-    // persisting stale data from the previous episode.
-    if (_currentEpisodeId != null && !_isLoadingSource) {
-      final progress = ref.read(playbackProgressProvider);
-      if (progress != null) {
-        final historyService = ref.read(playbackHistoryServiceProvider);
-        await historyService.onPlaybackPaused(
-          _currentEpisodeId!,
-          progress,
-          speed: _player.speed,
-        );
-      }
-    }
-    // Capture position before delegating so a racing seek cannot move
-    // the reported position out from under the analytics emit.
+    // Everything saved and reported is captured before the engine pause,
+    // so a racing seek or play() cannot change it. Skip the save during
+    // source loading to avoid persisting stale data from the previous
+    // episode.
+    final episodeId = _isLoadingSource ? null : _currentEpisodeId;
+    final progress = episodeId == null
+        ? null
+        : ref.read(playbackProgressProvider);
+    final speed = _player.speed;
     final positionSec = _player.position.inSeconds;
+    final ids = _currentAnalyticsIds();
+
+    // Silence first: a slow history write must not keep audio playing.
     await _player.pause();
 
-    final ids = _currentAnalyticsIds();
+    if (episodeId != null && progress != null) {
+      await ref
+          .read(playbackHistoryServiceProvider)
+          .onPlaybackPaused(episodeId, progress, speed: speed);
+    }
     if (ids != null) {
       unawaited(
         ref
@@ -870,13 +922,51 @@ class AudioPlayerController extends _$AudioPlayerController
     }
   }
 
+  /// Pauses, then moves to [position] on the player's own account and
+  /// saves it as the resume point.
+  ///
+  /// Used by the end-of-chapter sleep timer, which notices a chapter
+  /// boundary only after playback has crossed it. Pausing first keeps the
+  /// next chapter from being heard while the seek runs; the explicit save
+  /// afterwards replaces the position [pause] recorded just past the
+  /// boundary, because a seek while paused is not saved on its own.
+  Future<void> pauseAt(Duration position) async {
+    // [position] belongs to the episode playing now. A play() of another
+    // episode during either await owns the player and its history, so
+    // neither the seek nor the save may touch it.
+    final attempt = _playAttempt;
+    final url = _currentUrl;
+    final episodeId = _currentEpisodeId;
+    bool stillCurrent() =>
+        _playAttempt == attempt &&
+        _currentUrl == url &&
+        _currentEpisodeId == episodeId;
+
+    await pause();
+    if (url == null || episodeId == null || !stillCurrent()) return;
+    // Resumed while the paused position was saved: moving the playing
+    // audio back to the boundary would be an audible jump.
+    if (_player.playing) return;
+    final target = _clampToKnownDuration(position, _player.duration);
+    await seekAutomatically(target);
+    if (!stillCurrent()) return;
+    await ref
+        .read(playbackHistoryRepositoryProvider)
+        .saveProgress(episodeId: episodeId, positionMs: target.inMilliseconds);
+  }
+
   /// Resumes playback if paused.
   ///
   /// No-op when no audio source is loaded (e.g. after app restart before
-  /// the user taps play on an episode).
+  /// the user taps play on an episode). When the loaded episode already
+  /// played to its end, continues with the next queued episode instead.
   @override
   Future<void> resume() async {
     if (_currentUrl == null) return;
+    if (_isParkedAtEnd) {
+      await _advanceQueueOnce();
+      return;
+    }
     ref.read(playbackHistoryServiceProvider).onPlaybackResumed();
     // Emit BEFORE dispatching `_player.play()`. just_audio's `play()`
     // future does not complete until playback stops/pauses, so awaiting
@@ -923,13 +1013,20 @@ class AudioPlayerController extends _$AudioPlayerController
     );
   }
 
+  // A source that finished without auto-advancing (the end-of-episode sleep
+  // timer suppressed it) stays completed with just_audio's `playing` still
+  // true, so `_player.play()` would be a no-op. Playing on from here means
+  // the advance the timer held back.
+  bool get _isParkedAtEnd =>
+      _player.processingState == ProcessingState.completed;
+
   /// Toggles between play and pause states.
   ///
   /// If audio is playing, it will pause. If paused, it will resume.
   /// If a URL is provided and no audio is loaded, it will start playing
   /// from that URL.
   Future<void> togglePlayPause([String? url]) async {
-    if (_player.playing) {
+    if (_player.playing && !_isParkedAtEnd) {
       await pause();
     } else if (_currentUrl != null) {
       await resume();
