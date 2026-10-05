@@ -7,6 +7,7 @@ import '../../transcript/datasources/local/chapter_local_datasource.dart';
 import '../../transcript/datasources/local/transcript_local_datasource.dart';
 import '../../transcript/models/chapter_source.dart';
 import '../../transcript/models/episode_chapter.dart';
+import '../../transcript/models/json_chapters_link.dart';
 import '../../transcript/models/episode_transcript.dart';
 import '../datasources/local/episode_local_datasource.dart';
 import '../models/episode.dart';
@@ -261,7 +262,18 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
     await _chapterDatasource.replaceChapters(
       chaptersByEpisode,
       source: ChapterSource.podlove,
+      linkedJsonUrls: await _linkedJsonUrls(chaptersByEpisode.keys),
     );
+  }
+
+  /// Each episode's current JSON chapters link, read after the episodes were
+  /// upserted, so a re-import that drops or changes the link can store the
+  /// feed's own chapters over the stale JSON ones.
+  Future<Map<int, String?>> _linkedJsonUrls(Iterable<int> episodeIds) async {
+    return {
+      for (final id in episodeIds)
+        id: (await _datasource.getById(id))?.jsonChaptersUrl,
+    };
   }
 
   @override

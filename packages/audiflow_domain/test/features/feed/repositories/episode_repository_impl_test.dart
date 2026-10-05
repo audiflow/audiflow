@@ -663,7 +663,16 @@ void main() {
     });
 
     test('keeps stored JSON chapters over psc chapters', () async {
-      await insertEpisode('ep-json');
+      const jsonUrl = 'https://example.com/ep-json.json';
+      await episodeDatasource.upsert(
+        makeEpisode(
+            guid: 'ep-json',
+            title: 'Episode ep-json',
+            audioUrl: 'https://example.com/ep-json.mp3',
+          )
+          ..chaptersUrl = jsonUrl
+          ..chaptersType = 'application/json+chapters',
+      );
       final episode = await episodeDatasource.getByPodcastIdAndGuid(
         podcastId,
         'ep-json',
@@ -674,7 +683,8 @@ void main() {
             ..episodeId = episode.id
             ..sortOrder = 0
             ..title = 'From JSON'
-            ..startMs = 0,
+            ..startMs = 0
+            ..sourceUrl = jsonUrl,
         ],
       }, source: ChapterSource.podcastChaptersJson);
 
@@ -690,6 +700,40 @@ void main() {
       final chapters = await chapterDatasource.getByEpisodeId(episode.id);
       expect(chapters.single.title, 'From JSON');
     });
+
+    test(
+      'stores psc chapters over JSON ones the feed no longer links',
+      () async {
+        await insertEpisode('ep-unlinked');
+        final episode = await episodeDatasource.getByPodcastIdAndGuid(
+          podcastId,
+          'ep-unlinked',
+        );
+        await chapterDatasource.replaceChapters({
+          episode!.id: [
+            EpisodeChapter()
+              ..episodeId = episode.id
+              ..sortOrder = 0
+              ..title = 'From JSON'
+              ..startMs = 0
+              ..sourceUrl = 'https://example.com/old.json',
+          ],
+        }, source: ChapterSource.podcastChaptersJson);
+
+        await repository.storeTranscriptAndChapterDataFromParsed(podcastId, [
+          const ParsedEpisodeMediaMeta(
+            guid: 'ep-unlinked',
+            chapters: [
+              ParsedChapter(title: 'From psc', startTime: Duration.zero),
+            ],
+          ),
+        ]);
+
+        final chapters = await chapterDatasource.getByEpisodeId(episode.id);
+        expect(chapters.single.title, 'From psc');
+        expect(chapters.single.source, ChapterSource.podlove);
+      },
+    );
 
     test('replaces previous psc chapters on resync', () async {
       await insertEpisode('ep-resync');

@@ -52,11 +52,15 @@ class ChapterLocalDatasource {
   /// Replaces each episode's chapters with the given ones from [source].
   ///
   /// Episodes whose stored chapters come from a higher-priority source are
-  /// left untouched. Returns the ids of episodes whose chapters were
-  /// replaced. Each list must belong to the episode id it is keyed by.
+  /// left untouched, except stored JSON chapters whose file the episode no
+  /// longer links according to [linkedJsonUrls] (episode id to its current
+  /// JSON chapters URL; episodes missing from it keep the plain ranking).
+  /// Returns the ids of episodes whose chapters were replaced. Each list must
+  /// belong to the episode id it is keyed by.
   Future<Set<int>> replaceChapters(
     Map<int, List<EpisodeChapter>> chaptersByEpisode, {
     required ChapterSource source,
+    Map<int, String?> linkedJsonUrls = const {},
   }) {
     return _isar.writeTxn(() async {
       final replaced = <int>{};
@@ -65,8 +69,9 @@ class ChapterLocalDatasource {
         final stored = _isar.episodeChapters.filter().episodeIdEqualTo(
           episodeId,
         );
-        final storedSource = await stored.sourceProperty().findFirst();
-        if (storedSource != null && !source.canReplace(storedSource)) {
+        final storedFirst = await stored.findFirst();
+        if (storedFirst != null &&
+            !_mayReplace(storedFirst, source, linkedJsonUrls)) {
           continue;
         }
         await stored.deleteAll();
@@ -78,6 +83,19 @@ class ChapterLocalDatasource {
       }
       return replaced;
     });
+  }
+
+  // JSON chapters outrank feed chapters only while the episode still links
+  // the file they came from.
+  static bool _mayReplace(
+    EpisodeChapter storedFirst,
+    ChapterSource source,
+    Map<int, String?> linkedJsonUrls,
+  ) {
+    if (source.canReplace(storedFirst.source)) return true;
+    if (storedFirst.source != ChapterSource.podcastChaptersJson) return false;
+    if (!linkedJsonUrls.containsKey(storedFirst.episodeId)) return false;
+    return linkedJsonUrls[storedFirst.episodeId] != storedFirst.sourceUrl;
   }
 
   /// Deletes all chapters for an episode.
