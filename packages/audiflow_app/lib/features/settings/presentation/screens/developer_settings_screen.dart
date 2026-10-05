@@ -8,12 +8,13 @@ import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../utils/open_preset_url.dart';
+import '../widgets/test_notifications_tile.dart';
 
 /// Settings screen for developer-oriented preferences.
 ///
 /// Shows a contribute link to the contribute guide, a toggle for
-/// developer info in episode detail, and a browsable list of
-/// all presets.
+/// developer info in episode detail, a test-notification action outside
+/// production, and a browsable list of all presets.
 class DeveloperSettingsScreen extends ConsumerWidget {
   const DeveloperSettingsScreen({super.key});
 
@@ -70,6 +71,12 @@ class DeveloperSettingsScreen extends ConsumerWidget {
               ),
             ),
             const Divider(height: 1),
+
+            // Debug aid for notification changes; not offered in production.
+            if (FlavorConfig.current.flavor != Flavor.prod) ...[
+              const TestNotificationsTile(),
+              const Divider(height: 1),
+            ],
 
             // Pattern list header
             Padding(

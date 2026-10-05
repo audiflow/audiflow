@@ -2498,6 +2498,36 @@ abstract class AppLocalizations {
   /// **'Display RSS feed URL and pattern links in episode details'**
   String get developerShowInfoSubtitle;
 
+  /// Developer settings action that posts sample new-episode notifications
+  ///
+  /// In en, this message translates to:
+  /// **'Send test notifications'**
+  String get developerTestNotificationsTitle;
+
+  /// Subtitle explaining which notifications the test action posts
+  ///
+  /// In en, this message translates to:
+  /// **'Newest episode of each podcast, up to 3'**
+  String get developerTestNotificationsSubtitle;
+
+  /// Snackbar after test notifications were posted
+  ///
+  /// In en, this message translates to:
+  /// **'Sent {count} test notifications'**
+  String developerTestNotificationsSent(int count);
+
+  /// Snackbar when no subscribed podcast has an episode to notify about
+  ///
+  /// In en, this message translates to:
+  /// **'No podcast episodes to notify about'**
+  String get developerTestNotificationsNone;
+
+  /// Snackbar when posting test notifications failed
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to send test notifications'**
+  String get developerTestNotificationsFailed;
+
   /// Section header for the pattern list
   ///
   /// In en, this message translates to:

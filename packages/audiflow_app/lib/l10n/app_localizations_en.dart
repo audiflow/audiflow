@@ -1338,6 +1338,26 @@ class AppLocalizationsEn extends AppLocalizations {
       'Display RSS feed URL and pattern links in episode details';
 
   @override
+  String get developerTestNotificationsTitle => 'Send test notifications';
+
+  @override
+  String get developerTestNotificationsSubtitle =>
+      'Newest episode of each podcast, up to 3';
+
+  @override
+  String developerTestNotificationsSent(int count) {
+    return 'Sent $count test notifications';
+  }
+
+  @override
+  String get developerTestNotificationsNone =>
+      'No podcast episodes to notify about';
+
+  @override
+  String get developerTestNotificationsFailed =>
+      'Failed to send test notifications';
+
+  @override
   String get developerPatternsHeader => 'Smart Playlist Patterns';
 
   @override

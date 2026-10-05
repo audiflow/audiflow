@@ -111,20 +111,10 @@ class BackgroundRefreshService {
             for (final episode in newest) {
               if (_hasBeenPlayed(history[episode.id])) continue;
               allNotifications.add(
-                NewEpisodeNotification(
-                  episodeId: episode.id,
-                  podcastId: sub.id,
-                  podcastTitle: sub.title,
-                  episodeTitle: episode.title,
+                NewEpisodeNotification.fromEpisode(
+                  subscription: sub,
+                  episode: episode,
                   artworkUrl: artworkUrl,
-                  publishedAt: episode.publishedAt,
-                  duration: episode.durationMs == null
-                      ? null
-                      : Duration(milliseconds: episode.durationMs!),
-                  description: NewEpisodeNotification.plainTextDescription(
-                    description: episode.description,
-                    summary: episode.summary,
-                  ),
                 ),
               );
             }
