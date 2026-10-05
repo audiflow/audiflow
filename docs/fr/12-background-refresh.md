@@ -51,7 +51,8 @@ It exists to make Audiflow feel current without the listener doing anything. New
 - Attaches podcast artwork to each notification, downloading each artwork URL once per run (capped at 5 MB and a few seconds) and writing a separate file per notification, because iOS moves attachment files into its own store. The file differs by platform:
   - Android: the artwork is decoded and re-encoded as a 256 px wide PNG, because Android decodes the large icon at full size without sampling and podcast artwork is often 3000x3000.
   - iOS: the downloaded bytes are attached unchanged, named by their sniffed format (JPEG, PNG or GIF; the extension is how iOS identifies an attachment's type). Other formats are left out rather than attached under a wrong name. iOS disables the GPU while the app is in the background, and the Flutter engine then holds image decoding and PNG encoding until the app returns to the foreground, so decoding on iOS would leave most background-posted notifications without artwork. iOS scales attachments itself and accepts images up to 10 MB.
-  - Artwork that fails or misses its deadline is reported as a Sentry breadcrumb from the background run; the notification is shown without it.
+  - Artwork that fails or misses its deadline is left out and the notification is shown without it. If the OS rejects a notification that carries artwork (for example, iOS cannot read the attachment), it is posted again once without artwork, and counts as failed only if that retry also fails.
+  - Actionable artwork failures (unsupported format, image decode or encode failure, bad HTTP status, oversize or empty response) are recorded as a Sentry breadcrumb from the background run. Expected network noise (timeouts, cancellations, connection errors) is not recorded. The breadcrumb and the diagnostic log hold only the artwork URL reduced to scheme, host and path (no credentials, query or fragment) and an error category (error type, Dio failure type, HTTP status), never the error message.
 - Handles notification taps and cold-start launches by decoding the notification payload and deep-linking to the corresponding episode detail screen.
 - Re-registers or cancels the background task in response to settings changes and app lifecycle events so the schedule always reflects current preferences.
 
@@ -73,6 +74,7 @@ It exists to make Audiflow feel current without the listener doing anything. New
   - `docs/superpowers/specs/2026-04-02-per-episode-notification-design.md`
 - **Source files**:
   - `packages/audiflow_app/lib/app/background/background_callback.dart`
+  - `packages/audiflow_app/lib/app/background/artwork_failure_report.dart`
   - `packages/audiflow_app/lib/app/background/background_task_registrar.dart`
   - `packages/audiflow_app/lib/app/background/background_settings_repository.dart`
   - `packages/audiflow_app/lib/app/notification/notification_tap_handler.dart`

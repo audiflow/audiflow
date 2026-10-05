@@ -16,6 +16,7 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:workmanager/workmanager.dart';
 
 import '../../features/monitoring/services/sentry_diagnostics.dart';
+import 'artwork_failure_report.dart';
 import 'background_download_lock.dart';
 import 'background_settings_repository.dart';
 import 'background_task_registrar.dart';
@@ -51,19 +52,21 @@ void _bgDebug(String message) {
 }
 
 // Artwork failures degrade silently to a text-only notification; record
-// them so missing thumbnails can be traced in the run's Sentry breadcrumbs.
+// actionable ones so missing thumbnails can be traced in the run's Sentry
+// breadcrumbs. Network noise is dropped, and only sanitized fields are kept.
 void _artworkFailureBreadcrumb(String artworkUrl, Object error) {
-  _bgDebug('notification artwork failed url=$artworkUrl error=$error');
+  final report = artworkFailureReport(artworkUrl, error);
+  if (report == null) return;
+  _bgDebug(
+    'notification artwork failed url=${report.url} '
+    'category=${report.category}',
+  );
   Sentry.addBreadcrumb(
     Breadcrumb(
       message: 'Notification artwork failed',
       category: 'notification.artwork',
       level: SentryLevel.warning,
-      data: {
-        'url': artworkUrl,
-        'errorType': error.runtimeType.toString(),
-        'error': error.toString(),
-      },
+      data: {'url': report.url, 'errorCategory': report.category},
     ),
   );
 }

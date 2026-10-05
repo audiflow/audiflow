@@ -253,6 +253,36 @@ void main() {
         });
       });
 
+      test('retries without the attachment when show rejects it', () async {
+        final stub = _StubShowDelegate(throwOnCallIndices: {0});
+        final service = BackgroundNotificationService(
+          textFormatter: _formatter,
+          artworkFileProvider: (_, id) async => '/tmp/art-$id.png',
+        );
+
+        await service.showPerEpisodeNotificationsViaDelegate(stub, [
+          withArtwork,
+        ]);
+
+        check(stub.showedIds).deepEquals([1]);
+        final details = stub.shownDetails.single!;
+        check(details.iOS!.attachments).isNull();
+        check(details.android!.largeIcon).isNull();
+      });
+
+      test('fails when the text-only retry also fails', () async {
+        final stub = _StubShowDelegate(throwOnCallIndices: {0, 1});
+        final service = BackgroundNotificationService(
+          textFormatter: _formatter,
+          artworkFileProvider: (_, id) async => '/tmp/art-$id.png',
+        );
+
+        await check(
+          service.showPerEpisodeNotificationsViaDelegate(stub, [withArtwork]),
+        ).throws<Exception>();
+        check(stub.showedIds).isEmpty();
+      });
+
       test('gives up on artwork that does not arrive in time', () {
         fakeAsync((async) {
           final stub = _StubShowDelegate();

@@ -192,13 +192,7 @@ class BackgroundNotificationService {
 
     for (final (index, detail) in details.indexed) {
       try {
-        await delegate.show(
-          id: detail.id,
-          title: detail.title,
-          body: detail.body,
-          payload: detail.payload,
-          notificationDetails: _buildDetails(detail, artworkPaths[index]),
-        );
+        await _showWithFallback(delegate, detail, artworkPaths[index]);
         _logger?.i('Showed notification: ${detail.title} — ${detail.body}');
       } catch (e, stack) {
         _logger?.e('Failed to show notification', error: e, stackTrace: stack);
@@ -217,6 +211,39 @@ class BackgroundNotificationService {
       );
     }
   }
+
+  /// iOS rejects a notification whose attachment it cannot read, so a
+  /// failure with artwork is retried text-only rather than losing the
+  /// notification.
+  Future<void> _showWithFallback(
+    NotificationsShowDelegate delegate,
+    NotificationDetail detail,
+    String? artworkPath,
+  ) async {
+    try {
+      await _show(delegate, detail, artworkPath);
+    } catch (e, stack) {
+      if (artworkPath == null) rethrow;
+      _logger?.w(
+        'Retrying notification without artwork',
+        error: e,
+        stackTrace: stack,
+      );
+      await _show(delegate, detail, null);
+    }
+  }
+
+  Future<void> _show(
+    NotificationsShowDelegate delegate,
+    NotificationDetail detail,
+    String? artworkPath,
+  ) => delegate.show(
+    id: detail.id,
+    title: detail.title,
+    body: detail.body,
+    payload: detail.payload,
+    notificationDetails: _buildDetails(detail, artworkPath),
+  );
 
   Future<String?> _artworkPath(NotificationDetail detail) async {
     final url = detail.artworkUrl;
