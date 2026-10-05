@@ -1,3 +1,4 @@
+import 'package:audiflow_app/features/player/presentation/controllers/seek_undo_controller.dart';
 import 'package:audiflow_app/features/player/presentation/widgets/transcript_timeline_view.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
@@ -60,10 +61,23 @@ double _jumpButtonOpacity(WidgetTester tester) {
   return opacity.opacity;
 }
 
+/// Playing controller that records now-playing seeks.
+class _RecordingAudioPlayerController extends StubAudioPlayerController {
+  _RecordingAudioPlayerController()
+    : super(const PlaybackState.playing(episodeUrl: 'test'));
+
+  final List<Duration> seeks = [];
+
+  @override
+  Future<void> seekNowPlaying(Duration position) async => seeks.add(position);
+}
+
 void main() {
   late ProviderContainer container;
+  late _RecordingAudioPlayerController player;
 
   setUp(() {
+    player = _RecordingAudioPlayerController();
     container = ProviderContainer(
       overrides: [
         transcriptSegmentsProvider(
@@ -81,9 +95,14 @@ void main() {
             bufferedPosition: Duration.zero,
           ),
         ),
-        audioPlayerControllerProvider.overrideWith(
-          () => StubAudioPlayerController(
-            const PlaybackState.playing(episodeUrl: 'test'),
+        audioPlayerControllerProvider.overrideWith(() => player),
+        nowPlayingControllerProvider.overrideWith(
+          () => StubNowPlayingController(
+            const NowPlayingInfo(
+              episodeUrl: 'test',
+              episodeTitle: 'Episode',
+              podcastTitle: 'Podcast',
+            ),
           ),
         ),
       ],
@@ -171,5 +190,85 @@ void main() {
     await tester.pumpAndSettle();
     check(_activeText().evaluate()).length.equals(1);
     check(_jumpButtonOpacity(tester)).equals(0);
+  });
+
+  testWidgets('tapping a segment seeks there without a go-back offer', (
+    tester,
+  ) async {
+    await pumpView(tester);
+
+    // The tile's padding, outside the text's selection gestures.
+    final tile = find
+        .ancestor(of: _activeText(), matching: find.byType(InkWell))
+        .first;
+    await tester.tapAt(tester.getTopLeft(tile) + const Offset(4, 4));
+    await tester.pump();
+
+    check(player.seeks).deepEquals([
+      const Duration(milliseconds: _activeSegment * _segmentLengthMs),
+    ]);
+    // The pill lives on the artwork, out of sight on this tab.
+    check(container.read(seekUndoControllerProvider)).isNull();
+  });
+
+  group('segment text', () {
+    const activeStart = Duration(
+      milliseconds: _activeSegment * _segmentLengthMs,
+    );
+
+    testWidgets('a tap on the text seeks to the segment', (tester) async {
+      await pumpView(tester);
+
+      await tester.tap(_activeText());
+      await tester.pumpAndSettle();
+
+      check(player.seeks).deepEquals([activeStart]);
+    });
+
+    testWidgets('a long press selects text and does not seek', (tester) async {
+      await pumpView(tester);
+
+      await tester.longPress(_activeText());
+      await tester.pumpAndSettle();
+
+      check(player.seeks).isEmpty();
+      check(find.text('Copy').evaluate()).isNotEmpty();
+    });
+
+    testWidgets('a double tap still selects a word', (tester) async {
+      await pumpView(tester);
+
+      final center = tester.getCenter(_activeText());
+      await tester.tapAt(center);
+      await tester.pump(const Duration(milliseconds: 50));
+      await tester.tapAt(center);
+      await tester.pumpAndSettle();
+
+      check(find.text('Copy').evaluate()).isNotEmpty();
+      // Each tap of the pair seeks to the same segment start.
+      check(player.seeks).deepEquals([activeStart, activeStart]);
+    });
+
+    testWidgets('a tap during a selection seeks and clears it', (tester) async {
+      await pumpView(tester);
+      await tester.longPress(_activeText());
+      await tester.pumpAndSettle();
+      check(find.text('Copy').evaluate()).isNotEmpty();
+
+      await tester.tap(_activeText());
+      await tester.pumpAndSettle();
+
+      check(player.seeks).deepEquals([activeStart]);
+      check(find.text('Copy').evaluate()).isEmpty();
+    });
+
+    testWidgets('a drag across the text does not seek', (tester) async {
+      await pumpView(tester);
+
+      await tester.drag(_activeText(), const Offset(0, -40));
+      await tester.pumpAndSettle();
+
+      check(player.seeks).isEmpty();
+    });
   });
 }

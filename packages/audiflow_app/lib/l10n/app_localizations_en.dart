@@ -571,6 +571,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playerArtworkLabel => 'Episode artwork';
 
   @override
+  String get playerSeekUndoGoBack => 'Go back';
+
+  @override
+  String get playerSeekUndoDismiss => 'Dismiss';
+
+  @override
   String playerRewindLabel(int seconds) {
     return 'Rewind $seconds seconds';
   }

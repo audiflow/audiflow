@@ -554,6 +554,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get playerArtworkLabel => 'エピソードのアートワーク';
 
   @override
+  String get playerSeekUndoGoBack => '戻る';
+
+  @override
+  String get playerSeekUndoDismiss => '閉じる';
+
+  @override
   String playerRewindLabel(int seconds) {
     return '$seconds秒巻き戻し';
   }
