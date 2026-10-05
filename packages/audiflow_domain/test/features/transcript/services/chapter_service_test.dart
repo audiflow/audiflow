@@ -1,3 +1,4 @@
+import 'package:checks/checks.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'dart:typed_data';
 
@@ -114,15 +115,14 @@ void main() {
 
       final changed = await service.ensureChapters(episodeId);
 
-      expect(changed, isTrue);
+      check(changed).isTrue();
       final chapters = await chapterDatasource.getByEpisodeId(episodeId);
-      expect(chapters.map((c) => c.title), ['Intro', 'Topic']);
-      expect(chapters[1].startMs, 60000);
-      expect(chapters[1].imageUrl, 'https://example.com/t.jpg');
-      expect(
+      check(chapters.map((c) => c.title)).deepEquals(['Intro', 'Topic']);
+      check(chapters[1].startMs).equals(60000);
+      check(chapters[1].imageUrl).equals('https://example.com/t.jpg');
+      check(
         chapters.map((c) => c.source),
-        everyElement(ChapterSource.podcastChaptersJson),
-      );
+      ).every((it) => it.equals(ChapterSource.podcastChaptersJson));
     });
 
     test('replaces stored psc chapters', () async {
@@ -134,7 +134,7 @@ void main() {
 
       await service.ensureChapters(episodeId);
 
-      expect(await storedTitles(episodeId), ['Intro', 'Topic']);
+      check(await storedTitles(episodeId)).deepEquals(['Intro', 'Topic']);
     });
 
     test('does not fetch again once JSON chapters are stored', () async {
@@ -144,8 +144,8 @@ void main() {
 
       final changed = await service.ensureChapters(episodeId);
 
-      expect(changed, isFalse);
-      expect(http.requests, 1);
+      check(changed).isFalse();
+      check(http.requests).equals(1);
     });
 
     test('fetches again when the chapters URL changes', () async {
@@ -156,10 +156,10 @@ void main() {
       await insertEpisode(chaptersUrl: 'https://example.com/ep1/v2.json');
       respondWith('{"chapters": [{"startTime": 0, "title": "Revised"}]}');
 
-      expect(await service.ensureChapters(episodeId), isTrue);
-      expect(await storedTitles(episodeId), ['Revised']);
+      check(await service.ensureChapters(episodeId)).isTrue();
+      check(await storedTitles(episodeId)).deepEquals(['Revised']);
       final stored = await chapterDatasource.getByEpisodeId(episodeId);
-      expect(stored.single.sourceUrl, 'https://example.com/ep1/v2.json');
+      check(stored.single.sourceUrl).equals('https://example.com/ep1/v2.json');
     });
 
     test('a link changed during the download fetches the new file', () async {
@@ -177,11 +177,11 @@ void main() {
         return ResponseBody.fromString(_validJson, 200);
       };
 
-      expect(await service.ensureChapters(episodeId), isTrue);
-      expect(await storedTitles(episodeId), ['Revised']);
+      check(await service.ensureChapters(episodeId)).isTrue();
+      check(await storedTitles(episodeId)).deepEquals(['Revised']);
       final stored = await chapterDatasource.getByEpisodeId(episodeId);
-      expect(stored.single.sourceUrl, v2);
-      expect(http.requests, 2);
+      check(stored.single.sourceUrl).equals(v2);
+      check(http.requests).equals(2);
     });
 
     test('drops JSON chapters once the feed removes the link', () async {
@@ -191,8 +191,8 @@ void main() {
 
       await insertEpisode(chaptersUrl: null);
 
-      expect(await service.ensureChapters(episodeId), isTrue);
-      expect(await storedTitles(episodeId), isEmpty);
+      check(await service.ensureChapters(episodeId)).isTrue();
+      check(await storedTitles(episodeId)).isEmpty();
     });
 
     test('keeps psc chapters when there is no link', () async {
@@ -201,26 +201,26 @@ void main() {
         episodeId: [pscChapter(episodeId, 'From psc')],
       }, source: ChapterSource.podlove);
 
-      expect(await service.ensureChapters(episodeId), isFalse);
-      expect(await storedTitles(episodeId), ['From psc']);
+      check(await service.ensureChapters(episodeId)).isFalse();
+      check(await storedTitles(episodeId)).deepEquals(['From psc']);
     });
 
     test('does nothing without a chapters link', () async {
       final episodeId = await insertEpisode(chaptersUrl: null);
 
-      expect(await service.ensureChapters(episodeId), isFalse);
-      expect(http.requests, 0);
+      check(await service.ensureChapters(episodeId)).isFalse();
+      check(http.requests).equals(0);
     });
 
     test('ignores non-JSON chapters types', () async {
       final episodeId = await insertEpisode(chaptersType: 'text/plain');
 
-      expect(await service.ensureChapters(episodeId), isFalse);
-      expect(http.requests, 0);
+      check(await service.ensureChapters(episodeId)).isFalse();
+      check(http.requests).equals(0);
     });
 
     test('returns false for an unknown episode', () async {
-      expect(await service.ensureChapters(999), isFalse);
+      check(await service.ensureChapters(999)).isFalse();
     });
 
     test('network failure keeps stored chapters and does not throw', () async {
@@ -230,24 +230,24 @@ void main() {
       }, source: ChapterSource.podlove);
       failWith(DioExceptionType.connectionError);
 
-      expect(await service.ensureChapters(episodeId), isFalse);
-      expect(await storedTitles(episodeId), ['From psc']);
+      check(await service.ensureChapters(episodeId)).isFalse();
+      check(await storedTitles(episodeId)).deepEquals(['From psc']);
     });
 
     test('malformed JSON leaves the episode without chapters', () async {
       final episodeId = await insertEpisode();
       respondWith('{"chapters": [');
 
-      expect(await service.ensureChapters(episodeId), isFalse);
-      expect(await storedTitles(episodeId), isEmpty);
+      check(await service.ensureChapters(episodeId)).isFalse();
+      check(await storedTitles(episodeId)).isEmpty();
     });
 
     test('JSON without usable chapters stores nothing', () async {
       final episodeId = await insertEpisode();
       respondWith('{"version": "1.2.0", "chapters": [{"startTime": 0}]}');
 
-      expect(await service.ensureChapters(episodeId), isFalse);
-      expect(await storedTitles(episodeId), isEmpty);
+      check(await service.ensureChapters(episodeId)).isFalse();
+      check(await storedTitles(episodeId)).isEmpty();
     });
 
     test('retries a failed URL only after the cooldown', () async {
@@ -257,11 +257,11 @@ void main() {
 
       now = now.add(const Duration(minutes: 1));
       await service.ensureChapters(episodeId);
-      expect(http.requests, 1);
+      check(http.requests).equals(1);
 
       now = now.add(ChapterService.retryCooldown);
       respondWith(_validJson);
-      expect(await service.ensureChapters(episodeId), isTrue);
+      check(await service.ensureChapters(episodeId)).isTrue();
     });
 
     test('concurrent calls share one fetch', () async {
@@ -273,8 +273,8 @@ void main() {
         service.ensureChapters(episodeId),
       ]);
 
-      expect(results, [isTrue, isTrue]);
-      expect(http.requests, 1);
+      check(results).deepEquals([true, true]);
+      check(http.requests).equals(1);
     });
   });
 

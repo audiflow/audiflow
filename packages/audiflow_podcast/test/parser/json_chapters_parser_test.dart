@@ -1,4 +1,5 @@
 import 'package:audiflow_podcast/audiflow_podcast.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -16,13 +17,13 @@ void main() {
   ]
 }''');
 
-      expect(chapters, hasLength(2));
-      expect(chapters[0].title, 'Intro');
-      expect(chapters[0].startTime, Duration.zero);
-      expect(chapters[0].imageUrl, 'https://example.com/a.jpg');
-      expect(chapters[1].startTime, const Duration(milliseconds: 65500));
-      expect(chapters[1].endTime, const Duration(seconds: 120));
-      expect(chapters[1].url, 'https://example.com/topic');
+      check(chapters).length.equals(2);
+      check(chapters[0].title).equals('Intro');
+      check(chapters[0].startTime).equals(Duration.zero);
+      check(chapters[0].imageUrl).equals('https://example.com/a.jpg');
+      check(chapters[1].startTime).equals(const Duration(milliseconds: 65500));
+      check(chapters[1].endTime).equals(const Duration(seconds: 120));
+      check(chapters[1].url).equals('https://example.com/topic');
     });
 
     test('skips toc:false entries', () {
@@ -33,7 +34,7 @@ void main() {
   {"startTime": 20, "title": "Shown", "toc": true}
 ]}''');
 
-      expect(chapters.map((c) => c.title), ['Intro', 'Shown']);
+      check(chapters.map((c) => c.title)).deepEquals(['Intro', 'Shown']);
     });
 
     test('skips entries without a title or start time', () {
@@ -46,7 +47,7 @@ void main() {
   {"startTime": 30, "title": "Kept"}
 ]}''');
 
-      expect(chapters.map((c) => c.title), ['Kept']);
+      check(chapters.map((c) => c.title)).deepEquals(['Kept']);
     });
 
     test('sorts unsorted entries by start time', () {
@@ -57,7 +58,7 @@ void main() {
   {"startTime": 120, "title": "B"}
 ]}''');
 
-      expect(chapters.map((c) => c.title), ['A', 'B', 'C']);
+      check(chapters.map((c) => c.title)).deepEquals(['A', 'B', 'C']);
     });
 
     test('drops an end time that is not after the start', () {
@@ -66,20 +67,22 @@ void main() {
   {"startTime": 30, "endTime": 10, "title": "A"}
 ]}''');
 
-      expect(chapters.single.endTime, isNull);
+      check(chapters.single.endTime).isNull();
     });
 
     test('returns empty for an empty chapters array', () {
-      expect(parser.parse('{"version": "1.2.0", "chapters": []}'), isEmpty);
+      check(parser.parse('{"version": "1.2.0", "chapters": []}')).isEmpty();
     });
 
     test('throws FormatException for malformed JSON', () {
-      expect(() => parser.parse('{"chapters": ['), throwsFormatException);
+      check(() => parser.parse('{"chapters": [')).throws<FormatException>();
     });
 
     test('throws FormatException when chapters is missing', () {
-      expect(() => parser.parse('{"version": "1.2.0"}'), throwsFormatException);
-      expect(() => parser.parse('[1, 2]'), throwsFormatException);
+      check(
+        () => parser.parse('{"version": "1.2.0"}'),
+      ).throws<FormatException>();
+      check(() => parser.parse('[1, 2]')).throws<FormatException>();
     });
   });
 }

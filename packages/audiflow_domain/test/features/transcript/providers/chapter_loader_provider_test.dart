@@ -1,3 +1,4 @@
+import 'package:checks/checks.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:riverpod/riverpod.dart';
@@ -64,14 +65,14 @@ void main() {
   test('loads chapters when an episode becomes now playing', () async {
     final container = makeContainer(changed: false);
     container.read(nowPlayingChapterLoaderProvider);
-    expect(service.requested, isEmpty);
+    check(service.requested).isEmpty();
 
     (container.read(nowPlayingControllerProvider.notifier) as _NowPlaying).play(
       7,
     );
     await Future<void>.delayed(Duration.zero);
 
-    expect(service.requested, [7]);
+    check(service.requested).deepEquals([7]);
   });
 
   test('refreshes the episode chapters when new ones are stored', () async {
@@ -79,7 +80,7 @@ void main() {
     final sub = container.listen(episodeChaptersProvider(7), (_, _) {});
     addTearDown(sub.close);
     await container.read(episodeChaptersProvider(7).future);
-    expect(repository.reads, 1);
+    check(repository.reads).equals(1);
 
     container.read(nowPlayingChapterLoaderProvider);
     (container.read(nowPlayingControllerProvider.notifier) as _NowPlaying).play(
@@ -88,7 +89,7 @@ void main() {
     await Future<void>.delayed(Duration.zero);
     await container.read(episodeChaptersProvider(7).future);
 
-    expect(repository.reads, 2);
+    check(repository.reads).equals(2);
   });
 
   test('does not refresh when nothing changed', () async {
@@ -104,6 +105,6 @@ void main() {
     await Future<void>.delayed(Duration.zero);
     await container.read(episodeChaptersProvider(7).future);
 
-    expect(repository.reads, 1);
+    check(repository.reads).equals(1);
   });
 }

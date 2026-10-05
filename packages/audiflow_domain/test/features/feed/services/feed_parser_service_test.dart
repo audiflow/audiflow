@@ -1,3 +1,4 @@
+import 'package:checks/checks.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_podcast/audiflow_podcast.dart'
     show TranscriptFileParser;
@@ -198,17 +199,16 @@ void main() {
         onBatchReady: (batch, _) async => episodes.addAll(batch),
       )) {}
 
-      expect(episodes.single.chaptersUrl, 'https://example.com/ep1.json');
-      expect(episodes.single.chaptersType, 'application/json+chapters');
+      check(episodes.single.chaptersUrl).equals('https://example.com/ep1.json');
+      check(episodes.single.chaptersType).equals('application/json+chapters');
     });
 
     test('parseFromString maps the link to PodcastItem', () async {
       final result = await service.parseFromString(testXmlWithChaptersLink);
 
-      expect(
+      check(
         result.episodes.single.chaptersLink?.url,
-        'https://example.com/ep1.json',
-      );
+      ).equals('https://example.com/ep1.json');
     });
   });
 

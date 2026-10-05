@@ -1,3 +1,4 @@
+import 'package:checks/checks.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar_community/isar.dart';
@@ -137,7 +138,7 @@ void main() {
     // Rows written before `source` existed rely on the generated reader's
     // fallback to podlove (episode_chapter.g.dart), not on this default.
     test('chapters built in code default to the podlove source', () {
-      expect(EpisodeChapter().source, ChapterSource.podlove);
+      check(EpisodeChapter().source).equals(ChapterSource.podlove);
     });
 
     test('stores chapters with the given source', () async {
@@ -145,13 +146,12 @@ void main() {
         episodeId: [chapter(0, 'A'), chapter(1, 'B')],
       }, source: ChapterSource.podcastChaptersJson);
 
-      expect(replaced, {episodeId});
-      expect(await titles(), ['A', 'B']);
+      check(replaced).unorderedEquals({episodeId});
+      check(await titles()).deepEquals(['A', 'B']);
       final stored = await datasource.getByEpisodeId(episodeId);
-      expect(
+      check(
         stored.map((c) => c.source),
-        everyElement(ChapterSource.podcastChaptersJson),
-      );
+      ).every((it) => it.equals(ChapterSource.podcastChaptersJson));
     });
 
     test('drops stale rows when the new list is shorter', () async {
@@ -161,7 +161,7 @@ void main() {
         episodeId: [chapter(0, 'Only')],
       }, source: ChapterSource.podlove);
 
-      expect(await titles(), ['Only']);
+      check(await titles()).deepEquals(['Only']);
     });
 
     test('lower priority never replaces higher priority', () async {
@@ -176,9 +176,9 @@ void main() {
         episodeId: [chapter(0, 'Desc')],
       }, source: ChapterSource.description);
 
-      expect(fromPodlove, isEmpty);
-      expect(fromDescription, isEmpty);
-      expect(await titles(), ['Json']);
+      check(fromPodlove).isEmpty();
+      check(fromDescription).isEmpty();
+      check(await titles()).deepEquals(['Json']);
     });
 
     group('JSON chapters whose link changed', () {
@@ -198,8 +198,8 @@ void main() {
           linkedJsonUrls: {episodeId: linkA},
         );
 
-        expect(replaced, isEmpty);
-        expect(await titles(), ['Json']);
+        check(replaced).isEmpty();
+        check(await titles()).deepEquals(['Json']);
       });
 
       test('lose their rank once the link is removed', () async {
@@ -213,8 +213,8 @@ void main() {
           linkedJsonUrls: {episodeId: null},
         );
 
-        expect(replaced, {episodeId});
-        expect(await titles(), ['Psc']);
+        check(replaced).unorderedEquals({episodeId});
+        check(await titles()).deepEquals(['Psc']);
       });
 
       test('lose their rank once the link points elsewhere', () async {
@@ -228,7 +228,7 @@ void main() {
           linkedJsonUrls: {episodeId: 'https://example.com/b.json'},
         );
 
-        expect(await titles(), ['Psc']);
+        check(await titles()).deepEquals(['Psc']);
       });
     });
 
@@ -241,9 +241,9 @@ void main() {
         episodeId: [chapter(0, 'Psc')],
       }, source: ChapterSource.podlove);
 
-      expect(await titles(), ['Psc']);
+      check(await titles()).deepEquals(['Psc']);
       final stored = await datasource.getByEpisodeId(episodeId);
-      expect(stored.single.source, ChapterSource.podlove);
+      check(stored.single.source).equals(ChapterSource.podlove);
     });
 
     test('leaves other episodes untouched', () async {
@@ -254,7 +254,7 @@ void main() {
       }, source: ChapterSource.podlove);
 
       final other = await datasource.getByEpisodeId(2);
-      expect(other.single.title, 'Other');
+      check(other.single.title).equals('Other');
     });
   });
 }

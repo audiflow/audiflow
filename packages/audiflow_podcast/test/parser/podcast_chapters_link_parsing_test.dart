@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:audiflow_podcast/audiflow_podcast.dart';
 import 'package:audiflow_podcast/src/parser/streaming_xml_parser.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 const _feedWithBothChapterKinds = '''<?xml version="1.0" encoding="UTF-8"?>
@@ -54,28 +55,26 @@ void main() {
 
     test('captures url and type', () {
       final link = byGuid('ep-json-only').chaptersLink;
-      expect(
-        link,
+      check(link).equals(
         const PodcastChaptersLink(
           url: 'https://example.com/ep2/chapters.json',
           type: 'application/json+chapters',
         ),
       );
-      expect(byGuid('ep-json-only').chapters, isNull);
+      check(byGuid('ep-json-only').chapters).isNull();
     });
 
     test('keeps psc chapters when podcast:chapters comes first', () {
       final episode = byGuid('ep-json-first');
-      expect(
+      check(
         episode.chaptersLink?.url,
-        'https://example.com/ep1/chapters.json',
-      );
-      expect(episode.chapters, hasLength(1));
-      expect(episode.chapters!.single.title, 'Intro');
+      ).equals('https://example.com/ep1/chapters.json');
+      check(episode.chapters).isNotNull().length.equals(1);
+      check(episode.chapters!.single.title).equals('Intro');
     });
 
     test('ignores a link without url', () {
-      expect(byGuid('ep-missing-url').chaptersLink, isNull);
+      check(byGuid('ep-missing-url').chaptersLink).isNull();
     });
   });
 
@@ -94,19 +93,17 @@ void main() {
 
     void expectLinks(List<PodcastItem> items) {
       final byGuid = {for (final i in items) i.guid: i};
-      expect(
+      check(
         byGuid['ep-json-first']!.chaptersLink?.url,
-        'https://example.com/ep1/chapters.json',
-      );
-      expect(byGuid['ep-json-first']!.chapters, hasLength(1));
-      expect(
-        byGuid['ep-json-only']!.chaptersLink,
+      ).equals('https://example.com/ep1/chapters.json');
+      check(byGuid['ep-json-first']!.chapters).isNotNull().length.equals(1);
+      check(byGuid['ep-json-only']!.chaptersLink).equals(
         const PodcastChaptersLink(
           url: 'https://example.com/ep2/chapters.json',
           type: 'application/json+chapters',
         ),
       );
-      expect(byGuid['ep-missing-url']!.chaptersLink, isNull);
+      check(byGuid['ep-missing-url']!.chaptersLink).isNull();
     }
 
     test('DOM path captures the link', () async {

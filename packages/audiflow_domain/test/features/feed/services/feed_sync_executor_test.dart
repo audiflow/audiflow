@@ -1,5 +1,6 @@
 import 'package:audiflow_core/audiflow_core.dart'
     show AutoPlayOrder, DuckInterruptionBehavior;
+import 'package:checks/checks.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_podcast/audiflow_podcast.dart' show ParsedChapter;
 import 'package:dio/dio.dart';
@@ -1022,7 +1023,7 @@ void main() {
 
       await executor.syncFeed(sub);
 
-      expect(fakeEpisodeRepo.storedMediaMetas, [meta]);
+      check(fakeEpisodeRepo.storedMediaMetas).deepEquals([meta]);
     });
 
     test('a metadata failure does not fail the sync', () async {
@@ -1045,7 +1046,7 @@ void main() {
 
       final result = await executor.syncFeed(sub);
 
-      expect(result.success, isTrue);
+      check(result.success).isTrue();
     });
   });
 
