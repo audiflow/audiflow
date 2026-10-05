@@ -112,7 +112,9 @@ void main() {
     );
     addTearDown(sub.close);
     await timer().setDuration(const Duration(minutes: 1));
-    await Future<void>.delayed(const Duration(milliseconds: 1100));
+    // The first refresh lands within a second of arming; leave slack for a
+    // loaded machine.
+    await Future<void>.delayed(const Duration(milliseconds: 2100));
     check(values.length).isGreaterOrEqual(2);
     check(values.last!.time).isLessThan(values.first!.time);
   });

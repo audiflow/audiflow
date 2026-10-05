@@ -19,9 +19,9 @@ typedef SleepTimerPlayback = ({
 
 /// Time until the sleep timer described by [config] stops playback.
 ///
-/// Returns null when no timer is armed or the stop point cannot be placed
-/// (unknown episode length, or an end-of-chapter timer without chapters,
-/// which the timer treats as inactive). A duration timer counts down wall-
+/// Returns null when no timer is armed or the stop point cannot be placed:
+/// unknown episode length, an end-of-chapter timer without chapters (which
+/// the timer treats as inactive), or one in the last chapter. A duration timer counts down wall-
 /// clock time from [now]; every other mode counts media time divided by the
 /// playback speed.
 SleepTimerTimeLeft? computeSleepTimerTimeLeft({
@@ -59,18 +59,20 @@ Duration? _mediaUntil(SleepTimerPlayback playback, Duration? end) {
 /// Media time to the boundary the end-of-chapter timer fires on.
 ///
 /// The timer fires when playback crosses into the next chapter, so the
-/// stop point is the next chapter's start. During a lead-in before the
-/// first chapter it fires at the end of the first chapter, and in the last
-/// chapter the stop point is the end of the episode.
+/// stop point is the next chapter's start; during a lead-in before the
+/// first chapter it is the end of the first chapter. In the last chapter
+/// there is no further crossing in this episode (the timer does not fire at
+/// the episode end), so the stop point is unknown.
 Duration? _mediaUntilChapterEnd(SleepTimerPlayback playback) {
   final chapters = playback.chapters;
   final position = playback.position;
   if (chapters.isEmpty || position == null) return null;
   final nextIndex = (chapterIndexAt(chapters, position) ?? 0) + 1;
-  final end = nextIndex < chapters.length
-      ? Duration(milliseconds: chapters[nextIndex].startMs)
-      : playback.duration;
-  return _mediaUntil(playback, end);
+  if (chapters.length <= nextIndex) return null;
+  return _mediaUntil(
+    playback,
+    Duration(milliseconds: chapters[nextIndex].startMs),
+  );
 }
 
 /// The current episode's remainder plus the next `remaining - 1` queued

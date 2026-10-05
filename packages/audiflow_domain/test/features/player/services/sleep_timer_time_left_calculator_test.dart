@@ -106,14 +106,12 @@ void main() {
         ).equals(const SleepTimerTimeLeft(Duration(minutes: 8)));
       });
 
-      test('runs to the episode end in the last chapter', () {
+      test('is unknown in the last chapter, which never fires', () {
         final playback = _playback(
           position: const Duration(minutes: 30),
           chapters: _chapters,
         );
-        check(
-          _compute(config, playback),
-        ).equals(const SleepTimerTimeLeft(Duration(minutes: 10)));
+        check(_compute(config, playback)).isNull();
       });
 
       test('ends with the first chapter during a lead-in', () {
