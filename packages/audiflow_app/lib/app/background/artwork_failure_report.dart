@@ -10,7 +10,7 @@ import 'package:dio/dio.dart';
 class ArtworkFailureReport {
   const ArtworkFailureReport({required this.url, required this.category});
 
-  /// Scheme, host and path of the artwork URL.
+  /// Scheme and host of the artwork URL.
   final String url;
 
   /// Error type, refined with the Dio failure type and HTTP status.
@@ -28,11 +28,13 @@ ArtworkFailureReport? artworkFailureReport(String artworkUrl, Object error) {
   );
 }
 
-/// [url] reduced to scheme, host and path; `<invalid>` when it has no host.
+/// [url] reduced to scheme and host; `<invalid>` when it has no host.
+///
+/// The path is dropped as well: signed CDN URLs can carry tokens there.
 String sanitizeArtworkUrl(String url) {
   final uri = Uri.tryParse(url);
   if (uri == null || uri.host.isEmpty) return '<invalid>';
-  return Uri(scheme: uri.scheme, host: uri.host, path: uri.path).toString();
+  return Uri(scheme: uri.scheme, host: uri.host).toString();
 }
 
 const _noiseDioTypes = {

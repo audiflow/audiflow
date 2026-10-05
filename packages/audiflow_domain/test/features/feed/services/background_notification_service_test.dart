@@ -270,6 +270,22 @@ void main() {
         check(details.android!.largeIcon).isNull();
       });
 
+      test('reports an attachment that show rejects', () async {
+        final stub = _StubShowDelegate(throwOnCallIndices: {0});
+        final failures = <String>[];
+        final service = BackgroundNotificationService(
+          textFormatter: _formatter,
+          artworkFileProvider: (_, id) async => '/tmp/art-$id.png',
+          onArtworkFailure: (url, _) => failures.add(url),
+        );
+
+        await service.showPerEpisodeNotificationsViaDelegate(stub, [
+          withArtwork,
+        ]);
+
+        check(failures).deepEquals([withArtwork.artworkUrl!]);
+      });
+
       test('fails when the text-only retry also fails', () async {
         final stub = _StubShowDelegate(throwOnCallIndices: {0, 1});
         final service = BackgroundNotificationService(

@@ -23,10 +23,9 @@ DioException _dio(DioExceptionType type, {Object? error, int? status}) {
 
 void main() {
   group('sanitizeArtworkUrl', () {
-    test('keeps scheme, host and path only', () {
-      check(
-        sanitizeArtworkUrl(_url),
-      ).equals('https://cdn.example.com/art/cover.jpg');
+    test('keeps scheme and host only', () {
+      // Paths can carry signed tokens too.
+      check(sanitizeArtworkUrl(_url)).equals('https://cdn.example.com');
     });
 
     test('hides unparseable or host-less values', () {
@@ -62,10 +61,7 @@ void main() {
       );
 
       check(report).isNotNull()
-        ..has(
-          (r) => r.url,
-          'url',
-        ).equals('https://cdn.example.com/art/cover.jpg')
+        ..has((r) => r.url, 'url').equals('https://cdn.example.com')
         ..has(
           (r) => r.category,
           'category',
