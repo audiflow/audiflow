@@ -210,4 +210,65 @@ void main() {
     // The pill lives on the artwork, out of sight on this tab.
     check(container.read(seekUndoControllerProvider)).isNull();
   });
+
+  group('segment text', () {
+    const activeStart = Duration(
+      milliseconds: _activeSegment * _segmentLengthMs,
+    );
+
+    testWidgets('a tap on the text seeks to the segment', (tester) async {
+      await pumpView(tester);
+
+      await tester.tap(_activeText());
+      await tester.pumpAndSettle();
+
+      check(player.seeks).deepEquals([activeStart]);
+    });
+
+    testWidgets('a long press selects text and does not seek', (tester) async {
+      await pumpView(tester);
+
+      await tester.longPress(_activeText());
+      await tester.pumpAndSettle();
+
+      check(player.seeks).isEmpty();
+      check(find.text('Copy').evaluate()).isNotEmpty();
+    });
+
+    testWidgets('a double tap still selects a word', (tester) async {
+      await pumpView(tester);
+
+      final center = tester.getCenter(_activeText());
+      await tester.tapAt(center);
+      await tester.pump(const Duration(milliseconds: 50));
+      await tester.tapAt(center);
+      await tester.pumpAndSettle();
+
+      check(find.text('Copy').evaluate()).isNotEmpty();
+      // Each tap of the pair seeks to the same segment start.
+      check(player.seeks).deepEquals([activeStart, activeStart]);
+    });
+
+    testWidgets('a tap during a selection seeks and clears it', (tester) async {
+      await pumpView(tester);
+      await tester.longPress(_activeText());
+      await tester.pumpAndSettle();
+      check(find.text('Copy').evaluate()).isNotEmpty();
+
+      await tester.tap(_activeText());
+      await tester.pumpAndSettle();
+
+      check(player.seeks).deepEquals([activeStart]);
+      check(find.text('Copy').evaluate()).isEmpty();
+    });
+
+    testWidgets('a drag across the text does not seek', (tester) async {
+      await pumpView(tester);
+
+      await tester.drag(_activeText(), const Offset(0, -40));
+      await tester.pumpAndSettle();
+
+      check(player.seeks).isEmpty();
+    });
+  });
 }
