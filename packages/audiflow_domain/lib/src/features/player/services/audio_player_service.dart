@@ -873,10 +873,15 @@ class AudioPlayerController extends _$AudioPlayerController
   /// Resumes playback if paused.
   ///
   /// No-op when no audio source is loaded (e.g. after app restart before
-  /// the user taps play on an episode).
+  /// the user taps play on an episode). When the loaded episode already
+  /// played to its end, continues with the next queued episode instead.
   @override
   Future<void> resume() async {
     if (_currentUrl == null) return;
+    if (_isParkedAtEnd) {
+      await _handlePlaybackComplete();
+      return;
+    }
     ref.read(playbackHistoryServiceProvider).onPlaybackResumed();
     // Emit BEFORE dispatching `_player.play()`. just_audio's `play()`
     // future does not complete until playback stops/pauses, so awaiting
@@ -923,13 +928,20 @@ class AudioPlayerController extends _$AudioPlayerController
     );
   }
 
+  // A source that finished without auto-advancing (the end-of-episode sleep
+  // timer suppressed it) stays completed with just_audio's `playing` still
+  // true, so `_player.play()` would be a no-op. Playing on from here means
+  // the advance the timer held back.
+  bool get _isParkedAtEnd =>
+      _player.processingState == ProcessingState.completed;
+
   /// Toggles between play and pause states.
   ///
   /// If audio is playing, it will pause. If paused, it will resume.
   /// If a URL is provided and no audio is loaded, it will start playing
   /// from that URL.
   Future<void> togglePlayPause([String? url]) async {
-    if (_player.playing) {
+    if (_player.playing && !_isParkedAtEnd) {
       await pause();
     } else if (_currentUrl != null) {
       await resume();
