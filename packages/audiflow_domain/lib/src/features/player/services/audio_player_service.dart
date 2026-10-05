@@ -870,6 +870,27 @@ class AudioPlayerController extends _$AudioPlayerController
     }
   }
 
+  /// Pauses, then moves to [position] on the player's own account and
+  /// saves it as the resume point.
+  ///
+  /// Used by the end-of-chapter sleep timer, which notices a chapter
+  /// boundary only after playback has crossed it. Pausing first keeps the
+  /// next chapter from being heard while the seek runs; the explicit save
+  /// afterwards replaces the position [pause] recorded just past the
+  /// boundary, because a seek while paused is not saved on its own.
+  Future<void> pauseAt(Duration position) async {
+    await pause();
+    final episodeId = _currentEpisodeId;
+    if (_currentUrl == null || episodeId == null) return;
+    final target = _clampToKnownDuration(position, _player.duration);
+    await seekAutomatically(target);
+    // A play() of another episode during the seek owns the history now.
+    if (_currentEpisodeId != episodeId) return;
+    await ref
+        .read(playbackHistoryRepositoryProvider)
+        .saveProgress(episodeId: episodeId, positionMs: target.inMilliseconds);
+  }
+
   /// Resumes playback if paused.
   ///
   /// No-op when no audio source is loaded (e.g. after app restart before

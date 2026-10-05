@@ -244,6 +244,13 @@ class SleepTimerController extends _$SleepTimerController {
     state = state.copyWith(config: const SleepTimerConfig.off());
   }
 
+  // The crossing is noticed one position update after the boundary, so
+  // the start of the chapter now playing is where the target chapter ended.
+  Duration? _enteredChapterStart() {
+    final startMs = ref.read(currentChapterProvider)?.chapter.startMs;
+    return startMs == null ? null : Duration(milliseconds: startMs);
+  }
+
   void _fire(SleepTimerStop stop) {
     _tick?.cancel();
     _tick = null;
@@ -252,7 +259,8 @@ class SleepTimerController extends _$SleepTimerController {
       case SleepTimerStop.fadeOut:
         unawaited(player.fadeOutAndPause());
       case SleepTimerStop.pauseNow:
-        unawaited(player.pause());
+        final boundary = _enteredChapterStart();
+        unawaited(boundary == null ? player.pause() : player.pauseAt(boundary));
       case SleepTimerStop.holdAtEndOfStream:
         // Audio already reached silence at end-of-stream. Calling pause()
         // here would emit a redundant playerStateStream event that re-enters

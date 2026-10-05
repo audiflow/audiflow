@@ -11,9 +11,13 @@ class _FakePlayer extends AudioPlayerController {
   int fadeCount = 0;
   int pauseCount = 0;
   int suppressCount = 0;
+  final pausedAt = <Duration>[];
 
   @override
   Future<void> pause() async => pauseCount++;
+
+  @override
+  Future<void> pauseAt(Duration position) async => pausedAt.add(position);
 
   @override
   void suppressNextAutoAdvance() => suppressCount++;
@@ -151,14 +155,18 @@ void main() {
   void checkNotFired() {
     check(player.fadeCount).equals(0);
     check(player.pauseCount).equals(0);
+    check(player.pausedAt).isEmpty();
     check(timerEvents).isEmpty();
     check(config()).isA<SleepTimerConfigEndOfChapter>();
   }
 
   // Crossing into the next chapter pauses at once: a fade would play the
-  // next chapter's opening while the volume drops.
-  void checkFiredOnce() {
-    check(player.pauseCount).equals(1);
+  // next chapter's opening while the volume drops. The position returns to
+  // [boundary], the start of the chapter just entered, so resuming plays
+  // that chapter from its beginning.
+  void checkFiredOnce(Duration boundary) {
+    check(player.pausedAt).deepEquals([boundary]);
+    check(player.pauseCount).equals(0);
     check(player.fadeCount).equals(0);
     check(player.suppressCount).equals(0);
     check(timerEvents).single.isA<SleepTimerFired>();
@@ -168,6 +176,7 @@ void main() {
   void checkCancelled() {
     check(player.fadeCount).equals(0);
     check(player.pauseCount).equals(0);
+    check(player.pausedAt).isEmpty();
     check(player.suppressCount).equals(0);
     check(timerEvents).single.isA<SleepTimerCancelled>();
     check(config()).isA<SleepTimerConfigOff>();
@@ -180,7 +189,7 @@ void main() {
   }
 
   test(
-    'pauses without a fade when playback crosses into the next chapter',
+    'pauses without a fade at the start of the next chapter on a crossing',
     () async {
       await playEpisode(1, _threeChapters(1));
       await playAt(const Duration(seconds: 30));
@@ -190,7 +199,22 @@ void main() {
       checkNotFired();
 
       await playAt(const Duration(milliseconds: 60100));
-      checkFiredOnce();
+      checkFiredOnce(const Duration(seconds: 60));
+
+      // The player then moves back to the boundary on its own account: no
+      // cancellation follows the fire.
+      await lifecycleEvent(
+        const SeekStartedLifecycle(
+          Duration(seconds: 60),
+          seekId: 1,
+          automatic: true,
+        ),
+      );
+      await playAt(const Duration(seconds: 60));
+      await lifecycleEvent(
+        const SeekLifecycle(Duration(seconds: 60), seekId: 1),
+      );
+      checkFiredOnce(const Duration(seconds: 60));
     },
   );
 
@@ -233,7 +257,7 @@ void main() {
     checkNotFired();
 
     await playAt(const Duration(milliseconds: 120100));
-    checkFiredOnce();
+    checkFiredOnce(const Duration(seconds: 120));
   });
 
   test(
@@ -273,7 +297,7 @@ void main() {
     checkNotFired();
 
     await playAt(const Duration(milliseconds: 120100));
-    checkFiredOnce();
+    checkFiredOnce(const Duration(seconds: 120));
   });
 
   test('a rewind after an interruption keeps the timer', () async {
@@ -295,7 +319,7 @@ void main() {
     checkNotFired();
 
     await playAt(const Duration(milliseconds: 120100));
-    checkFiredOnce();
+    checkFiredOnce(const Duration(seconds: 120));
   });
 
   test('armed in the last chapter, it stops at the episode end', () async {
@@ -311,6 +335,7 @@ void main() {
     check(player.suppressCount).equals(1);
     check(player.fadeCount).equals(0);
     check(player.pauseCount).equals(0);
+    check(player.pausedAt).isEmpty();
     check(timerEvents).single.isA<SleepTimerFired>();
     check(config()).isA<SleepTimerConfigOff>();
   });
@@ -347,7 +372,7 @@ void main() {
       checkNotFired();
 
       await playAt(const Duration(milliseconds: 120100));
-      checkFiredOnce();
+      checkFiredOnce(const Duration(seconds: 120));
     },
   );
 }

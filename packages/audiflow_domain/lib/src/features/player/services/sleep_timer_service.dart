@@ -50,10 +50,12 @@ enum SleepTimerStop {
   /// fade is gentler than an abrupt cut.
   fadeOut,
 
-  /// Pause right away, without a fade.
+  /// Pause right away, without a fade, then return to the start of the
+  /// chapter just entered.
   ///
   /// For the end-of-chapter boundary: the next chapter is already playing,
-  /// so a fade would let its opening be heard while the volume drops.
+  /// so a fade would let its opening be heard while the volume drops, and
+  /// resuming should start that chapter from its beginning.
   pauseNow,
 
   /// Audio already reached the end of the stream: keep it from advancing
