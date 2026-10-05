@@ -310,6 +310,10 @@ Future<void> _startApp(
   // rather than read: an unlistened provider pauses its subscriptions.
   container.listen(effectiveAudioSettingsApplierProvider, (_, _) {});
 
+  // Keep the sleep timer following chapter boundaries while no sleep-timer
+  // widget is on screen (backgrounded app, covered route).
+  container.listen(sleepTimerControllerProvider, (_, _) {});
+
   // Restore last played episode for mini player
   await _restoreLastPlayed(container);
 

@@ -207,7 +207,8 @@ Managed by `SleepTimerController` (keepAlive Notifier, separate from `AudioPlaye
 - **Modes**: Off, duration (minutes countdown), end of episode, end of chapter, episode count
 - Duration mode: 1-second tick timer counts down to a deadline; fires when expired
 - Episode mode: Decrements remaining count on episode completion
-- End-of-episode / end-of-chapter: Fires on the corresponding lifecycle event
+- End-of-episode: Fires on the episode-completed lifecycle event
+- End-of-chapter: `ChapterCrossingTracker` follows `currentChapterProvider` and fires when playback moves forward into the next chapter. The player emits `SeekStartedLifecycle` before every requested position change (seek, resume at a saved or explicit position, seek on a restored episode), so a seek that leaves the chapter retargets the timer instead of firing; a seek the player rejects emits `SeekFailedLifecycle` and the baseline returns to the chapter still playing. Each report carries the id of the seek it closes, so a late report cannot end a newer seek's settle window. Chapter lists that load or change under the listener only move the baseline. Listened from `main.dart` so the tracking does not pause while no sleep-timer widget is on screen
 - **Fire action**: Fades out audio volume then pauses (`AudioPlayerController.fadeOutAndPause`)
 - Timer pauses when playback pauses, resumes when playback resumes
 - Remembers last-used minutes and episode count across sessions (persisted via `SleepTimerPreferencesDatasource`)

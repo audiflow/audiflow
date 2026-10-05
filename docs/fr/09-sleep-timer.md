@@ -10,6 +10,7 @@ refs:
     - packages/audiflow_domain/lib/src/features/player/models/sleep_timer_state.dart
     - packages/audiflow_domain/lib/src/features/player/models/sleep_timer_event.dart
     - packages/audiflow_domain/lib/src/features/player/services/sleep_timer_service.dart
+    - packages/audiflow_domain/lib/src/features/player/services/chapter_crossing_tracker.dart
     - packages/audiflow_domain/lib/src/features/player/datasources/local/sleep_timer_preferences_datasource.dart
     - packages/audiflow_domain/lib/src/features/player/controllers/sleep_timer_controller.dart
     - packages/audiflow_domain/lib/src/features/player/providers/sleep_timer_providers.dart
@@ -38,7 +39,7 @@ Audiflow keeps the timer deliberately compact and opinionated rather than exposi
 - **Numeric entry**: Choosing the minutes or episodes entry for the first time swaps the same sheet to a numeric input panel — a large readout, a number pad, and a Start button — with no nested sheets. Minutes are bounded to 1–999, episodes to 1–99. When a value is already remembered, a short tap on the entry starts the timer immediately with that value, while a long press or the "Edit" control opens the numeric panel pre-filled for editing.
 - **Active-timer feedback**: While a timer is armed, the sleep icon is tinted with the primary color, and a status chip appears above the mini player. The chip reads "Sleep · Episode end", "Sleep · Chapter end", "Sleep · N eps left", or a live "Sleep · mm:ss" countdown for duration timers (switching to h:mm:ss past an hour), refreshing once per second. Tapping the chip opens the same sleep sheet from anywhere in the app without navigating away; a delete control on the chip cancels the timer directly.
 - **When the timer fires**: Playback fades from the current volume down to silence over roughly eight seconds and then pauses; the original volume is restored so the next session starts at the listener's preferred level. The timer config resets to Off, and if the app is in the foreground a brief "Sleep timer ended" snackbar is shown. Remembered minute and episode values are left untouched.
-- **End-of-episode and end-of-chapter cases**: An end-of-episode timer fires when the current episode finishes naturally; if the listener manually switches episodes, the timer simply carries over to the new episode. An end-of-chapter timer fires at the next chapter boundary; if the listener seeks past the current chapter, the timer retargets to the new chapter. If the playing episode changes to one with no chapters while an end-of-chapter timer is armed, the timer is treated as inactive.
+- **End-of-episode and end-of-chapter cases**: An end-of-episode timer fires when the current episode finishes naturally; if the listener manually switches episodes, the timer simply carries over to the new episode. An end-of-chapter timer fires when playback reaches the next chapter boundary on its own; if the listener seeks out of the current chapter (seek bar, skip buttons, chapter list, transcript, lock screen), the timer retargets to the chapter the seek lands in instead of firing, even when that is the start of the next chapter. Chapters that finish loading, or are replaced, while the timer is armed never count as a boundary. Armed during an untitled lead-in before the first chapter, the timer fires at the end of the first chapter. If the playing episode changes to one with no chapters while an end-of-chapter timer is armed, the timer is treated as inactive.
 - **Episode-count case**: An "after N episodes" timer decrements only when an episode completes on its own. Manually skipping to the next episode does not consume a count. When the last counted episode completes, the timer fires before the queue auto-advances.
 - **Cancelling and edge cases**: A timer is cancelled only through the sheet's Cancel button or the chip's delete control — there is no toggle-off on an already-active entry. Cancelling mid fade-out aborts the fade and restores volume. A duration timer is wall-clock based, so it still fires even if playback was paused when the deadline passed. The active timer is session-only: force-quitting the app clears it, though the remembered minute and episode values survive a restart.
 
@@ -46,7 +47,7 @@ Audiflow keeps the timer deliberately compact and opinionated rather than exposi
 
 - Offers four mutually exclusive timer modes — fixed duration, episode count, end of current episode, end of current chapter — plus an explicit Off state, surfaced through one compact bottom sheet.
 - Remembers the listener's most recent minute and episode selections persistently across app restarts, while keeping the active timer itself session-only.
-- Evaluates timer progress against player lifecycle signals (episode completion, manual episode switch) and a one-second tick for duration timers, deciding via pure, side-effect-free logic whether to keep, fire, decrement, or retarget.
+- Evaluates timer progress against player lifecycle signals (episode completion, manual episode switch, seeks), chapter boundaries crossed during playback, and a one-second tick for duration timers, deciding via pure, side-effect-free logic whether to keep, fire, decrement, or retarget.
 - Distinguishes natural episode completion from manual skips so episode-count timers only decrement on genuine listening progress, and transfers end-of-episode timers across manual episode changes.
 - Fades audio out smoothly before pausing when a timer fires, restoring the pre-fade volume afterwards, and cancels an in-flight fade cleanly if the timer is turned off.
 - Surfaces timer state continuously through a tinted player icon and an above-mini-player status chip with a live countdown, and emits a one-shot event that drives a foreground "ended" snackbar.
@@ -70,6 +71,7 @@ Audiflow keeps the timer deliberately compact and opinionated rather than exposi
   - `packages/audiflow_domain/lib/src/features/player/models/sleep_timer_state.dart`
   - `packages/audiflow_domain/lib/src/features/player/models/sleep_timer_event.dart`
   - `packages/audiflow_domain/lib/src/features/player/services/sleep_timer_service.dart`
+  - `packages/audiflow_domain/lib/src/features/player/services/chapter_crossing_tracker.dart`
   - `packages/audiflow_domain/lib/src/features/player/datasources/local/sleep_timer_preferences_datasource.dart`
   - `packages/audiflow_domain/lib/src/features/player/controllers/sleep_timer_controller.dart`
   - `packages/audiflow_domain/lib/src/features/player/providers/sleep_timer_providers.dart`
