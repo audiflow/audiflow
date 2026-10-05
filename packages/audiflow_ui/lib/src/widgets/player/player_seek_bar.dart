@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart' show kTouchSlop;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -148,6 +149,10 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
   static const double _labelOverlap = 10.0;
   static const Duration _thicknessAnimation = Duration(milliseconds: 150);
 
+  // Lets the track forward taps that land on the part of the trailing label
+  // it covers (see [_forwardLabelTap]).
+  final GlobalKey _trailingLabelKey = GlobalKey();
+  Offset? _pointerDownPosition;
   bool _isDragging = false;
   double _dragValue = 0.0;
   double _trackWidth = 0.0;
@@ -172,7 +177,7 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
             ),
             child: _buildLabels(theme, primary),
           ),
-          _withTooltip(value, _buildTrack(value, primary)),
+          _withTooltip(value, _forwardLabelTap(_buildTrack(value, primary))),
         ],
       ),
     );
@@ -230,6 +235,38 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
     );
   }
 
+  // The track sits on top of the tucked-in labels so drags work across its
+  // whole touch area, which hides the top of the trailing label from hit
+  // testing. Forward taps landing there so the label's toggle keeps its full
+  // tap target. A raw Listener is used because a tap recognizer would join
+  // the gesture arena and make a lone drag wait for the touch slop.
+  Widget _forwardLabelTap(Widget track) {
+    if (widget.onTrailingLabelTap == null) return track;
+    return Listener(
+      onPointerDown: (event) => _pointerDownPosition = event.position,
+      onPointerCancel: (_) => _pointerDownPosition = null,
+      onPointerUp: _handleTrackPointerUp,
+      child: track,
+    );
+  }
+
+  // Runs before the drag recognizer sees the up event, so [_isDragging] still
+  // tells a scrub apart from a tap.
+  void _handleTrackPointerUp(PointerUpEvent event) {
+    final down = _pointerDownPosition;
+    _pointerDownPosition = null;
+    if (down == null || _isDragging) return;
+    if (kTouchSlop < (event.position - down).distance) return;
+    if (!_isOnTrailingLabel(event.position)) return;
+    widget.onTrailingLabelTap?.call();
+  }
+
+  bool _isOnTrailingLabel(Offset globalPosition) {
+    final box = _trailingLabelKey.currentContext?.findRenderObject();
+    if (box is! RenderBox || !box.hasSize) return false;
+    return box.size.contains(box.globalToLocal(globalPosition));
+  }
+
   // The tooltip floats above the track without taking layout space, so the
   // bar keeps its height whether or not the user is scrubbing. The Stack is
   // always present: wrapping the track only once a drag starts would remount
@@ -275,6 +312,7 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
         Semantics(
           button: widget.onTrailingLabelTap != null,
           child: GestureDetector(
+            key: _trailingLabelKey,
             behavior: HitTestBehavior.opaque,
             onTap: widget.onTrailingLabelTap,
             child: Padding(

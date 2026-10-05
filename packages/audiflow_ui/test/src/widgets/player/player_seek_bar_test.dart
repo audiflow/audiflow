@@ -131,18 +131,41 @@ void main() {
         );
         final track = tester.getRect(_track);
         final label = tester.getRect(find.text('01:00'));
-        // The bar is drawn mid-touch-area; the labels tuck under its bottom.
-        check(label.top - track.center.dy).isLessThan(16);
+        // The bar is drawn mid-touch-area; the labels start below the bar
+        // but inside the bottom of its touch area.
+        check(track.center.dy).isLessThan(label.top);
+        check(label.top).isLessThan(track.bottom);
 
         // A drag starting at the very bottom of the touch area, over the
-        // labels row, still scrubs.
+        // labels row, still seeks forward.
         final gesture = await tester.startGesture(
           Offset(track.center.dx, track.bottom - 2),
         );
         await gesture.moveBy(const Offset(40, 0));
+        await gesture.moveBy(const Offset(40, 0));
         await gesture.up();
         await tester.pump();
         check(recorder.ends).length.equals(1);
+        check(0.5).isLessThan(recorder.ends.single);
+      },
+    );
+
+    testWidgets(
+      'tapping the part of the trailing label under the touch area toggles',
+      (tester) async {
+        final recorder = _SeekRecorder();
+        await tester.pumpWidget(_host(value: 0.5, recorder: recorder));
+        final track = tester.getRect(_track);
+        final label = tester.getRect(find.text('-09:00'));
+        // Above the label's vertical middle, still inside the track's area.
+        final point = Offset(label.center.dx, track.bottom - 2);
+        check(point.dy).isLessThan(label.center.dy);
+
+        await tester.tapAt(point);
+        await tester.pump();
+
+        check(recorder.trailingTaps).equals(1);
+        check(recorder.ends).isEmpty();
       },
     );
 
