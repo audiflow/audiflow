@@ -79,14 +79,16 @@ void main() {
     test('a seek out of the chapter retargets', () {
       check(observeAt(30)).isNull();
       check(
-        tracker.seekStarted(const Duration(seconds: 60), now: t0),
+        tracker.seekStarted(1, const Duration(seconds: 60), now: t0),
       ).isA<SeekedPastChapterEvent>();
     });
 
     test('a seek within the chapter changes nothing', () {
       check(observeAt(30)).isNull();
-      check(tracker.seekStarted(const Duration(seconds: 50), now: t0)).isNull();
-      tracker.seekCompleted();
+      check(
+        tracker.seekStarted(1, const Duration(seconds: 50), now: t0),
+      ).isNull();
+      tracker.seekCompleted(1);
       check(observeAt(60)).isA<ChapterChangedEvent>();
     });
 
@@ -94,26 +96,26 @@ void main() {
       // Resume: the baseline comes from the saved position, while the
       // freshly loaded source reports zero until the seek lands.
       check(observeAt(90)).isNull();
-      tracker.seekStarted(const Duration(seconds: 90), now: t0);
+      tracker.seekStarted(1, const Duration(seconds: 90), now: t0);
       check(observeAt(0)).isNull();
       check(observeAt(90)).isNull();
-      tracker.seekCompleted();
+      tracker.seekCompleted(1);
       check(observeAt(120)).isA<ChapterChangedEvent>();
     });
 
     test('positions before the jump do not look like crossings', () {
       check(observeAt(90)).isNull();
-      tracker.seekStarted(const Duration(seconds: 30), now: t0);
+      tracker.seekStarted(1, const Duration(seconds: 30), now: t0);
       // A stale position from chapter 1 is "forward" of the target.
       check(observeAt(90)).isNull();
       check(observeAt(30)).isNull();
-      tracker.seekCompleted();
+      tracker.seekCompleted(1);
       check(observeAt(60)).isA<ChapterChangedEvent>();
     });
 
     test('the settle window ends without a completion', () {
       check(observeAt(90)).isNull();
-      tracker.seekStarted(const Duration(seconds: 30), now: t0);
+      tracker.seekStarted(1, const Duration(seconds: 30), now: t0);
       // Inside the window a stale position forward of the target is ignored.
       check(observeAt(90, now: t0.add(const Duration(seconds: 1)))).isNull();
       check(observeAt(30, now: t0.add(const Duration(seconds: 2)))).isNull();
@@ -123,34 +125,49 @@ void main() {
 
     test('a failed seek returns the baseline to the chapter it left', () {
       check(observeAt(30)).isNull();
-      tracker.seekStarted(const Duration(seconds: 130), now: t0);
-      tracker.seekFailed(const Duration(seconds: 30));
+      tracker.seekStarted(1, const Duration(seconds: 130), now: t0);
+      tracker.seekFailed(1, const Duration(seconds: 30), now: t0);
       // Playback never left chapter 0, so its end still fires.
       check(observeAt(60)).isA<ChapterChangedEvent>();
     });
 
     test('a failed seek re-baselines against a reloaded list', () {
       check(observeAt(130)).isNull();
-      tracker.seekStarted(const Duration(seconds: 10), now: t0);
+      tracker.seekStarted(1, const Duration(seconds: 10), now: t0);
       // The list is replaced while the seek runs: 130s is now chapter 0.
       chapters = [_chapter(0, 0), _chapter(1, 200)];
       check(observeAt(130)).isNull();
-      tracker.seekFailed(const Duration(seconds: 130));
+      tracker.seekFailed(1, const Duration(seconds: 130), now: t0);
       check(observeAt(200)).isA<ChapterChangedEvent>();
     });
 
     test('overlapping seeks settle only after the last report', () {
       check(observeAt(30)).isNull();
-      tracker.seekStarted(const Duration(seconds: 70), now: t0);
-      tracker.seekStarted(const Duration(seconds: 130), now: t0);
-      tracker.seekFailed(const Duration(seconds: 30));
+      tracker.seekStarted(1, const Duration(seconds: 70), now: t0);
+      tracker.seekStarted(2, const Duration(seconds: 130), now: t0);
+      tracker.seekFailed(1, const Duration(seconds: 30), now: t0);
       // The second seek is still moving: positions on the way are ignored
       // and its target stays the baseline.
       check(observeAt(70)).isNull();
       check(observeAt(130)).isNull();
-      tracker.seekCompleted();
+      tracker.seekCompleted(2);
       check(observeAt(30)).isNull();
       check(observeAt(60)).isA<ChapterChangedEvent>();
+    });
+
+    test('a late report for an expired seek keeps a newer window', () {
+      check(observeAt(90)).isNull();
+      tracker.seekStarted(1, const Duration(seconds: 130), now: t0);
+      final later = t0.add(ChapterCrossingTracker.seekSettleWindow);
+      check(observeAt(130, now: later)).isNull();
+      tracker.seekStarted(2, const Duration(seconds: 30), now: later);
+      tracker.seekCompleted(1);
+      // A position from before the second jump is still attributed to it.
+      final soon = later.add(const Duration(seconds: 1));
+      check(observeAt(130, now: soon)).isNull();
+      check(observeAt(30, now: soon)).isNull();
+      tracker.seekCompleted(2);
+      check(observeAt(60, now: soon)).isA<ChapterChangedEvent>();
     });
 
     test('without chapters a seek yields nothing', () {
@@ -158,7 +175,9 @@ void main() {
       check(
         tracker.observe(chapters: chapters, current: null, now: t0),
       ).isNull();
-      check(tracker.seekStarted(const Duration(seconds: 60), now: t0)).isNull();
+      check(
+        tracker.seekStarted(1, const Duration(seconds: 60), now: t0),
+      ).isNull();
     });
   });
 }

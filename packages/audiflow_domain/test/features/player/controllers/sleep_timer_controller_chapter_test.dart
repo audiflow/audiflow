@@ -174,10 +174,12 @@ void main() {
 
     // Jump to the start of the next chapter, as the chapter list does. A
     // position from before the jump still arrives while the seek runs.
-    await lifecycleEvent(const SeekStartedLifecycle(Duration(seconds: 60)));
+    await lifecycleEvent(
+      const SeekStartedLifecycle(Duration(seconds: 60), seekId: 1),
+    );
     await playAt(const Duration(milliseconds: 30200));
     await playAt(const Duration(seconds: 60));
-    await lifecycleEvent(const SeekLifecycle(Duration(seconds: 60)));
+    await lifecycleEvent(const SeekLifecycle(Duration(seconds: 60), seekId: 1));
     checkNotFired();
 
     // The timer now ends the chapter the seek landed in.
@@ -192,8 +194,12 @@ void main() {
     await playAt(const Duration(seconds: 30));
     armEndOfChapter();
 
-    await lifecycleEvent(const SeekStartedLifecycle(Duration(seconds: 130)));
-    await lifecycleEvent(const SeekFailedLifecycle(Duration(seconds: 30)));
+    await lifecycleEvent(
+      const SeekStartedLifecycle(Duration(seconds: 130), seekId: 1),
+    );
+    await lifecycleEvent(
+      const SeekFailedLifecycle(Duration(seconds: 30), seekId: 1),
+    );
     checkNotFired();
 
     await playAt(const Duration(milliseconds: 60100));

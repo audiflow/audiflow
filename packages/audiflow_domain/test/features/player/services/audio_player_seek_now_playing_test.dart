@@ -118,6 +118,11 @@ void main() {
           .isA<SeekLifecycle>()
           .has((e) => e.position, 'position')
           .equals(const Duration(minutes: 3));
+      final started = events.first as SeekStartedLifecycle;
+      check(events.last)
+          .isA<SeekLifecycle>()
+          .has((e) => e.seekId, 'seekId')
+          .equals(started.seekId);
     });
 
     test('does nothing when nothing is playing', () async {

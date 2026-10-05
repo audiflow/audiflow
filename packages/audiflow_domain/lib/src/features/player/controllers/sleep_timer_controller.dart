@@ -163,20 +163,22 @@ class SleepTimerController extends _$SleepTimerController {
 
   void _onLifecycle(PlayerLifecycleEvent event) {
     if (event is SeekLifecycle) {
-      _chapterTracker.seekCompleted();
+      _chapterTracker.seekCompleted(event.seekId);
       return;
     }
     if (event is SeekFailedLifecycle) {
-      _chapterTracker.seekFailed(event.position);
+      _chapterTracker.seekFailed(
+        event.seekId,
+        event.position,
+        now: DateTime.now(),
+      );
       return;
     }
     final mapped = switch (event) {
       EpisodeCompletedLifecycle() => const EpisodeCompletedEvent(),
       EpisodeSwitchedLifecycle() => const ManualEpisodeSwitchedEvent(),
-      SeekStartedLifecycle(:final target) => _chapterTracker.seekStarted(
-        target,
-        now: DateTime.now(),
-      ),
+      SeekStartedLifecycle(:final seekId, :final target) =>
+        _chapterTracker.seekStarted(seekId, target, now: DateTime.now()),
       SeekLifecycle() || SeekFailedLifecycle() => null,
     };
     if (mapped != null) _evaluate(mapped);

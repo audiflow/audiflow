@@ -28,11 +28,11 @@ class ChapterCrossingTracker {
 
   List<EpisodeChapter>? _chapters;
   int? _index;
-  DateTime? _settleUntil;
 
-  /// Seeks announced but not yet completed or failed. Overlapping seeks
-  /// keep the window open until the last one is reported.
-  int _pendingSeeks = 0;
+  /// Settle deadline of each seek announced but not yet reported, by seek
+  /// id. Each seek has its own window, so a late report for an expired
+  /// seek cannot close a newer one.
+  final Map<int, DateTime> _pendingSeeks = {};
 
   /// Feeds the current chapter list and the chapter at the position.
   ///
@@ -67,11 +67,14 @@ class ChapterCrossingTracker {
   /// live position can still differ from the baseline (a resume reads zero
   /// right after the source loads, while the baseline came from the saved
   /// position).
-  SleepTimerPlayerEvent? seekStarted(Duration target, {required DateTime now}) {
+  SleepTimerPlayerEvent? seekStarted(
+    int seekId,
+    Duration target, {
+    required DateTime now,
+  }) {
     final chapters = _chapters;
     if (chapters == null || chapters.isEmpty) return null;
-    _settleUntil = now.add(seekSettleWindow);
-    _pendingSeeks += 1;
+    _pendingSeeks[seekId] = now.add(seekSettleWindow);
     final targetIndex = chapterIndexAt(chapters, target);
     if (targetIndex == _index) return null;
     _index = targetIndex;
@@ -80,7 +83,7 @@ class ChapterCrossingTracker {
 
   /// Marks a seek as committed by the player; once no other seek is
   /// pending, later changes are playback.
-  void seekCompleted() => _settleSeek();
+  void seekCompleted(int seekId) => _pendingSeeks.remove(seekId);
 
   /// Marks a seek as rejected while the player stays at [position].
   ///
@@ -89,26 +92,17 @@ class ChapterCrossingTracker {
   /// may have made stale. A seek still pending already set the baseline to
   /// its own target, so it is left alone. The retarget already sent stays
   /// harmless: the timer still waits for the end of the playing chapter.
-  void seekFailed(Duration position) {
-    _settleSeek();
-    if (0 < _pendingSeeks) return;
+  void seekFailed(int seekId, Duration position, {required DateTime now}) {
+    _pendingSeeks.remove(seekId);
+    if (_isSettling(now)) return;
     final chapters = _chapters;
     if (chapters == null || chapters.isEmpty) return;
     _index = chapterIndexAt(chapters, position);
   }
 
-  void _settleSeek() {
-    if (0 < _pendingSeeks) _pendingSeeks -= 1;
-    if (_pendingSeeks == 0) _settleUntil = null;
-  }
-
   bool _isSettling(DateTime now) {
-    final until = _settleUntil;
-    if (until == null) return false;
-    if (now.isBefore(until)) return true;
-    // A lost report must not keep later seeks' windows open forever.
-    _settleUntil = null;
-    _pendingSeeks = 0;
-    return false;
+    // A lost report must not hold its window open past the bound.
+    _pendingSeeks.removeWhere((_, until) => !now.isBefore(until));
+    return _pendingSeeks.isNotEmpty;
   }
 }
