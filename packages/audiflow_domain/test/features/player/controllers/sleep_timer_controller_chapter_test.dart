@@ -193,7 +193,7 @@ void main() {
     armEndOfChapter();
 
     await lifecycleEvent(const SeekStartedLifecycle(Duration(seconds: 130)));
-    await lifecycleEvent(const SeekFailedLifecycle());
+    await lifecycleEvent(const SeekFailedLifecycle(Duration(seconds: 30)));
     checkNotFired();
 
     await playAt(const Duration(milliseconds: 60100));

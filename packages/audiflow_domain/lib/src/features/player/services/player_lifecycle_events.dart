@@ -37,7 +37,8 @@ final class SeekLifecycle extends PlayerLifecycleEvent {
 }
 
 /// The seek announced by the preceding [SeekStartedLifecycle] failed; the
-/// position did not move to its target.
+/// player stayed at [position] instead of moving to the target.
 final class SeekFailedLifecycle extends PlayerLifecycleEvent {
-  const SeekFailedLifecycle();
+  const SeekFailedLifecycle(this.position);
+  final Duration position;
 }

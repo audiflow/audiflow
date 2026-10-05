@@ -167,7 +167,7 @@ class SleepTimerController extends _$SleepTimerController {
       return;
     }
     if (event is SeekFailedLifecycle) {
-      _chapterTracker.seekFailed();
+      _chapterTracker.seekFailed(event.position);
       return;
     }
     final mapped = switch (event) {

@@ -949,7 +949,7 @@ class AudioPlayerController extends _$AudioPlayerController
     try {
       await _player.seek(target);
     } on Object {
-      _lifecycleEvents.add(const SeekFailedLifecycle());
+      _lifecycleEvents.add(SeekFailedLifecycle(_player.position));
       rethrow;
     }
   }

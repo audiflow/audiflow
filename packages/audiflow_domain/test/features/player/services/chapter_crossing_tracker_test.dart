@@ -124,8 +124,32 @@ void main() {
     test('a failed seek returns the baseline to the chapter it left', () {
       check(observeAt(30)).isNull();
       tracker.seekStarted(const Duration(seconds: 130), now: t0);
-      tracker.seekFailed();
+      tracker.seekFailed(const Duration(seconds: 30));
       // Playback never left chapter 0, so its end still fires.
+      check(observeAt(60)).isA<ChapterChangedEvent>();
+    });
+
+    test('a failed seek re-baselines against a reloaded list', () {
+      check(observeAt(130)).isNull();
+      tracker.seekStarted(const Duration(seconds: 10), now: t0);
+      // The list is replaced while the seek runs: 130s is now chapter 0.
+      chapters = [_chapter(0, 0), _chapter(1, 200)];
+      check(observeAt(130)).isNull();
+      tracker.seekFailed(const Duration(seconds: 130));
+      check(observeAt(200)).isA<ChapterChangedEvent>();
+    });
+
+    test('overlapping seeks settle only after the last report', () {
+      check(observeAt(30)).isNull();
+      tracker.seekStarted(const Duration(seconds: 70), now: t0);
+      tracker.seekStarted(const Duration(seconds: 130), now: t0);
+      tracker.seekFailed(const Duration(seconds: 30));
+      // The second seek is still moving: positions on the way are ignored
+      // and its target stays the baseline.
+      check(observeAt(70)).isNull();
+      check(observeAt(130)).isNull();
+      tracker.seekCompleted();
+      check(observeAt(30)).isNull();
       check(observeAt(60)).isA<ChapterChangedEvent>();
     });
 
