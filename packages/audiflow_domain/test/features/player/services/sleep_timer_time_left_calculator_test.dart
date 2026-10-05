@@ -106,9 +106,33 @@ void main() {
         ).equals(const SleepTimerTimeLeft(Duration(minutes: 8)));
       });
 
-      test('is unknown in the last chapter, which never fires', () {
+      test('runs to the episode end in the last chapter, scaled', () {
+        // The timer stops at episode completion there: 10 minutes left.
+        check(
+          _compute(
+            config,
+            _playback(
+              position: const Duration(minutes: 30),
+              chapters: _chapters,
+            ),
+          ),
+        ).equals(const SleepTimerTimeLeft(Duration(minutes: 10)));
+        check(
+          _compute(
+            config,
+            _playback(
+              speed: 2.0,
+              position: const Duration(minutes: 30),
+              chapters: _chapters,
+            ),
+          ),
+        ).equals(const SleepTimerTimeLeft(Duration(minutes: 5)));
+      });
+
+      test('is null in the last chapter while the length is unknown', () {
         final playback = _playback(
           position: const Duration(minutes: 30),
+          duration: null,
           chapters: _chapters,
         );
         check(_compute(config, playback)).isNull();

@@ -20,10 +20,10 @@ typedef SleepTimerPlayback = ({
 /// Time until the sleep timer described by [config] stops playback.
 ///
 /// Returns null when no timer is armed or the stop point cannot be placed:
-/// unknown episode length, an end-of-chapter timer without chapters (which
-/// the timer treats as inactive), or one in the last chapter. A duration timer counts down wall-
-/// clock time from [now]; every other mode counts media time divided by the
-/// playback speed.
+/// unknown episode length, or an end-of-chapter timer without chapters
+/// (which the timer treats as inactive). A duration timer counts down
+/// wall-clock time from [now]; every other mode counts media time divided
+/// by the playback speed.
 SleepTimerTimeLeft? computeSleepTimerTimeLeft({
   required SleepTimerConfig config,
   required DateTime now,
@@ -60,15 +60,17 @@ Duration? _mediaUntil(SleepTimerPlayback playback, Duration? end) {
 ///
 /// The timer fires when playback crosses into the next chapter, so the
 /// stop point is the next chapter's start; during a lead-in before the
-/// first chapter it is the end of the first chapter. In the last chapter
-/// there is no further crossing in this episode (the timer does not fire at
-/// the episode end), so the stop point is unknown.
+/// first chapter it is the end of the first chapter. The last chapter ends
+/// with the episode, and the timer stops playback at episode completion
+/// there, so the stop point is the episode end.
 Duration? _mediaUntilChapterEnd(SleepTimerPlayback playback) {
   final chapters = playback.chapters;
   final position = playback.position;
   if (chapters.isEmpty || position == null) return null;
   final nextIndex = (chapterIndexAt(chapters, position) ?? 0) + 1;
-  if (chapters.length <= nextIndex) return null;
+  if (chapters.length <= nextIndex) {
+    return _mediaUntil(playback, playback.duration);
+  }
   return _mediaUntil(
     playback,
     Duration(milliseconds: chapters[nextIndex].startMs),
