@@ -672,6 +672,25 @@ void main() {
       check(recorder.ends.single).equals(settled + 8 / _barWidth);
     });
 
+    testWidgets('a roll back from past the end commits the end', (
+      tester,
+    ) async {
+      final recorder = _SeekRecorder();
+      final gesture = await dragToSixtyPercent(tester, recorder);
+      // Past the end of the bar, then on outward while held at 1.0.
+      await gesture.moveBy(
+        const Offset(_barWidth * 0.5, 0),
+        timeStamp: ms(220),
+      );
+      await gesture.moveBy(const Offset(40, 0), timeStamp: ms(240));
+      check(recorder.changes.last).equals(1.0);
+      await gesture.moveBy(const Offset(-6, 0), timeStamp: ms(520));
+      await gesture.up(timeStamp: ms(540));
+      await tester.pump();
+
+      check(recorder.ends.single).equals(1.0);
+    });
+
     testWidgets('a cancelled second touch does not skip the lift-off rule', (
       tester,
     ) async {

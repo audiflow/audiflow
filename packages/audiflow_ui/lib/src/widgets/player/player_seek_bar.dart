@@ -451,8 +451,11 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
   void _moveDragValueBy(double fraction) {
     if (fraction == 0) return;
     final next = (_dragValue + fraction).clamp(0.0, 1.0);
-    if (next == _dragValue) return;
+    // Recorded even when clamped at an end of the track, so the finger
+    // position the release rule compares against stays current while the
+    // finger pushes past the end.
     _releaseTracker?.update(next, _lastPointerTime, finger: _fingerTravel);
+    if (next == _dragValue) return;
     setState(() => _dragValue = next);
     widget.onChanged?.call(next);
   }
