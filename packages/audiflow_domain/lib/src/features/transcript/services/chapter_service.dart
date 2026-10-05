@@ -13,6 +13,7 @@ import '../models/episode_chapter.dart';
 import '../models/json_chapters_link.dart';
 import '../repositories/chapter_repository.dart';
 import '../repositories/chapter_repository_impl.dart';
+import 'chapter_mapping.dart';
 
 part 'chapter_service.g.dart';
 
@@ -30,7 +31,8 @@ ChapterService chapterService(Ref ref) {
 ///
 /// `<podcast:chapters>` only links a JSON file, so sync stores the link and
 /// this service fetches the file the first time the episode's chapters are
-/// needed, mirroring how transcripts are fetched on demand.
+/// needed, mirroring how transcripts are fetched on demand. Episodes left
+/// without chapters fall back to a timestamp list in their show notes.
 class ChapterService {
   ChapterService({
     required this._chapterRepository,
@@ -73,7 +75,9 @@ class ChapterService {
     try {
       final episode = await _episodeRepository.getById(episodeId);
       if (episode == null) return false;
-      return await _ensureJsonChapters(episode);
+      final jsonChanged = await _ensureJsonChapters(episode);
+      final derived = await _ensureDescriptionChapters(episode);
+      return jsonChanged || derived;
     } catch (e, st) {
       // Isar failures surface as Error subclasses, so catch everything:
       // chapter loading must never break the caller.
@@ -109,9 +113,56 @@ class ChapterService {
     if (current.jsonChaptersUrl != url) return _ensureJsonChapters(current);
 
     final replaced = await _chapterRepository.replaceChapters({
-      episode.id: _toEntities(episode.id, chapters, url),
+      episode.id: toEpisodeChapters(episode.id, chapters, sourceUrl: url),
     }, source: ChapterSource.podcastChaptersJson);
     return replaced.isNotEmpty;
+  }
+
+  /// Derives chapters from the show notes unless feed or JSON chapters
+  /// are stored.
+  ///
+  /// Feed sync derives them for episodes it parses, but an incremental sync
+  /// stops at the first known episode, so episodes stored before this
+  /// existed are only covered here, the first time they play. Previously
+  /// derived chapters are refreshed, or dropped once the notes lose them.
+  Future<bool> _ensureDescriptionChapters(Episode episode) async {
+    final stored = await _chapterRepository.getByEpisodeId(episode.id);
+    final source = stored.firstOrNull?.source;
+    if (source != null && source != ChapterSource.description) return false;
+    final durationMs = episode.durationMs;
+    final chapters = deriveDescriptionChapters(
+      description: episode.description,
+      contentEncoded: episode.contentEncoded,
+      duration: durationMs == null ? null : Duration(milliseconds: durationMs),
+    );
+    if (chapters.isEmpty) {
+      if (stored.isEmpty) return false;
+      // Replacing with nothing at description rank, rather than deleting,
+      // keeps feed chapters that sync may have stored since the read above:
+      // the rank check and the delete run in one transaction.
+      final cleared = await _chapterRepository.replaceChapters({
+        episode.id: <EpisodeChapter>[],
+      }, source: ChapterSource.description);
+      return cleared.isNotEmpty;
+    }
+    if (_sameChapters(stored, chapters)) return false;
+    final replaced = await _chapterRepository.replaceChapters({
+      episode.id: toEpisodeChapters(episode.id, chapters),
+    }, source: ChapterSource.description);
+    return replaced.isNotEmpty;
+  }
+
+  static bool _sameChapters(
+    List<EpisodeChapter> stored,
+    List<PodcastChapter> derived,
+  ) {
+    if (stored.length != derived.length) return false;
+    for (final (index, chapter) in derived.indexed) {
+      final row = stored[index];
+      if (row.title != chapter.title) return false;
+      if (row.startMs != chapter.startTime.inMilliseconds) return false;
+    }
+    return true;
   }
 
   /// Removes JSON chapters whose link the feed no longer carries, so they
@@ -160,21 +211,4 @@ class ChapterService {
     if (failedAt == null) return false;
     return _now().isBefore(failedAt.add(retryCooldown));
   }
-
-  static List<EpisodeChapter> _toEntities(
-    int episodeId,
-    List<PodcastChapter> chapters,
-    String sourceUrl,
-  ) => [
-    for (final (index, chapter) in chapters.indexed)
-      EpisodeChapter()
-        ..episodeId = episodeId
-        ..sortOrder = index
-        ..title = chapter.title
-        ..startMs = chapter.startTime.inMilliseconds
-        ..endMs = chapter.endTime?.inMilliseconds
-        ..url = chapter.url
-        ..imageUrl = chapter.imageUrl
-        ..sourceUrl = sourceUrl,
-  ];
 }

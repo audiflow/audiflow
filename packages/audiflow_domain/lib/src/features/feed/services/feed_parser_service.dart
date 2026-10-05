@@ -169,6 +169,7 @@ class FeedParserService {
                   )
                   .toList(),
               chaptersLink: e.chaptersLink,
+              descriptionChapters: e.descriptionChapters,
             ),
           )
           .toList();
@@ -252,6 +253,7 @@ class FeedParserService {
           :final transcripts,
           :final chapters,
           :final chaptersLink,
+          :final descriptionChapters,
         ):
           final resolvedGuid =
               guid ??
@@ -276,12 +278,15 @@ class FeedParserService {
               ..chaptersType = chaptersLink?.type,
           );
 
-          if (transcripts != null || chapters != null) {
+          if (transcripts != null ||
+              chapters != null ||
+              descriptionChapters.isNotEmpty) {
             mediaMetaBuffer.add(
               ParsedEpisodeMediaMeta(
                 guid: resolvedGuid,
                 transcripts: transcripts,
                 chapters: chapters,
+                descriptionChapters: descriptionChapters,
               ),
             );
           }

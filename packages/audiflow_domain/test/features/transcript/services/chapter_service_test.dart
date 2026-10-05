@@ -1,7 +1,7 @@
-import 'package:checks/checks.dart';
-import 'package:audiflow_domain/audiflow_domain.dart';
 import 'dart:typed_data';
 
+import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:checks/checks.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar_community/isar.dart';
@@ -26,6 +26,27 @@ class _FakeHttpAdapter implements HttpClientAdapter {
 
   @override
   void close({bool force = false}) {}
+}
+
+/// Runs [onRead] right after the [readsBeforeHook]-th chapter read, to
+/// interleave a concurrent write between a read and the write that follows.
+class _InterleavingChapterRepository extends ChapterRepositoryImpl {
+  _InterleavingChapterRepository({required super.datasource});
+
+  int readsBeforeHook = 0;
+  Future<void> Function()? onRead;
+
+  @override
+  Future<List<EpisodeChapter>> getByEpisodeId(int episodeId) async {
+    final rows = await super.getByEpisodeId(episodeId);
+    readsBeforeHook--;
+    final hook = onRead;
+    if (hook != null && readsBeforeHook == 0) {
+      onRead = null;
+      await hook();
+    }
+    return rows;
+  }
 }
 
 const _chaptersUrl = 'https://example.com/ep1/chapters.json';
@@ -71,6 +92,8 @@ void main() {
   Future<int> insertEpisode({
     String? chaptersUrl = _chaptersUrl,
     String? chaptersType = 'application/json+chapters',
+    String? description,
+    int? durationMs,
   }) async {
     await episodeDatasource.upsert(
       Episode()
@@ -79,7 +102,9 @@ void main() {
         ..title = 'Episode 1'
         ..audioUrl = 'https://example.com/ep1.mp3'
         ..chaptersUrl = chaptersUrl
-        ..chaptersType = chaptersType,
+        ..chaptersType = chaptersType
+        ..description = description
+        ..durationMs = durationMs,
     );
     return (await episodeDatasource.getByPodcastIdAndGuid(1, 'ep1'))!.id;
   }
@@ -271,6 +296,122 @@ void main() {
 
       check(results).deepEquals([true, true]);
       check(http.requests).equals(1);
+    });
+  });
+
+  group('description chapters', () {
+    const notes = '<p>00:00 オープニング<br />02:57 人生の選択<br />17:22 イベント</p>';
+
+    test('derives chapters for an episode without any', () async {
+      final episodeId = await insertEpisode(
+        chaptersUrl: null,
+        description: notes,
+        durationMs: const Duration(minutes: 30).inMilliseconds,
+      );
+
+      check(await service.ensureChapters(episodeId)).isTrue();
+      final chapters = await chapterDatasource.getByEpisodeId(episodeId);
+      check(
+        chapters.map((c) => c.title),
+      ).deepEquals(['オープニング', '人生の選択', 'イベント']);
+      check(
+        chapters.map((c) => c.source),
+      ).every((it) => it.equals(ChapterSource.description));
+      check(await service.ensureChapters(episodeId)).isFalse();
+    });
+
+    test('leaves feed chapters alone', () async {
+      final episodeId = await insertEpisode(
+        chaptersUrl: null,
+        description: notes,
+      );
+      await chapterDatasource.replaceChapters({
+        episodeId: [pscChapter(episodeId, 'From psc')],
+      }, source: ChapterSource.podlove);
+
+      check(await service.ensureChapters(episodeId)).isFalse();
+      check(await storedTitles(episodeId)).deepEquals(['From psc']);
+    });
+
+    test('falls back to notes when JSON fails, JSON wins later', () async {
+      final episodeId = await insertEpisode(description: notes);
+      failWith(DioExceptionType.connectionError);
+
+      await service.ensureChapters(episodeId);
+      check(
+        await storedTitles(episodeId),
+      ).deepEquals(['オープニング', '人生の選択', 'イベント']);
+
+      now = now.add(ChapterService.retryCooldown);
+      respondWith(_validJson);
+      await service.ensureChapters(episodeId);
+      check(await storedTitles(episodeId)).deepEquals(['Intro', 'Topic']);
+    });
+
+    test('refreshes and drops chapters as the notes change', () async {
+      final episodeId = await insertEpisode(
+        chaptersUrl: null,
+        description: notes,
+      );
+      await service.ensureChapters(episodeId);
+
+      await insertEpisode(
+        chaptersUrl: null,
+        description: '0:00 New A<br>1:00 New B<br>2:00 New C',
+      );
+      check(await service.ensureChapters(episodeId)).isTrue();
+      check(
+        await storedTitles(episodeId),
+      ).deepEquals(['New A', 'New B', 'New C']);
+
+      await insertEpisode(chaptersUrl: null, description: 'No list now');
+      check(await service.ensureChapters(episodeId)).isTrue();
+      check(await storedTitles(episodeId)).isEmpty();
+    });
+
+    test(
+      'dropping derived chapters keeps feed chapters stored meanwhile',
+      () async {
+        final repository = _InterleavingChapterRepository(
+          datasource: chapterDatasource,
+        );
+        service = ChapterService(
+          chapterRepository: repository,
+          episodeRepository: EpisodeRepositoryImpl(
+            datasource: episodeDatasource,
+          ),
+          dio: Dio()..httpClientAdapter = http,
+          logger: Logger(level: Level.off),
+          now: () => now,
+        );
+        final episodeId = await insertEpisode(
+          chaptersUrl: null,
+          description: notes,
+        );
+        await service.ensureChapters(episodeId);
+        await insertEpisode(chaptersUrl: null, description: 'No list now');
+        // Sync stores feed chapters after the description step has read the
+        // derived ones (the second read; the JSON step reads first).
+        repository
+          ..readsBeforeHook = 2
+          ..onRead = () => chapterDatasource.replaceChapters({
+            episodeId: [pscChapter(episodeId, 'From psc')],
+          }, source: ChapterSource.podlove);
+
+        await service.ensureChapters(episodeId);
+
+        check(await storedTitles(episodeId)).deepEquals(['From psc']);
+      },
+    );
+
+    test('derives nothing from notes without a timestamp list', () async {
+      final episodeId = await insertEpisode(
+        chaptersUrl: null,
+        description: 'Just talking at 12:30 today.',
+      );
+
+      check(await service.ensureChapters(episodeId)).isFalse();
+      check(await storedTitles(episodeId)).isEmpty();
     });
   });
 }

@@ -98,6 +98,7 @@ export 'src/models/podcast_transcript.dart';
 // Network utilities (for advanced usage)
 export 'src/network/http_fetcher.dart' show CacheInfo;
 // Parser exports
+export 'src/parser/description_chapters_parser.dart';
 export 'src/parser/isolate_rss_parser.dart';
 export 'src/parser/json_chapters_parser.dart';
 export 'src/parser/parse_progress.dart';
