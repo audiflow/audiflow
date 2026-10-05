@@ -6,9 +6,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:riverpod/riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Records fades instead of driving a real audio player.
+/// Records fades and stops instead of driving a real audio player.
 class _FakePlayer extends AudioPlayerController {
   int fadeCount = 0;
+  int suppressCount = 0;
+
+  @override
+  void suppressNextAutoAdvance() => suppressCount++;
 
   @override
   PlaybackState build() => const PlaybackState.idle();
@@ -152,6 +156,19 @@ void main() {
     check(config()).isA<SleepTimerConfigOff>();
   }
 
+  void checkCancelled() {
+    check(player.fadeCount).equals(0);
+    check(player.suppressCount).equals(0);
+    check(timerEvents).single.isA<SleepTimerCancelled>();
+    check(config()).isA<SleepTimerConfigOff>();
+  }
+
+  Future<void> seek(int seekId, Duration target) async {
+    await lifecycleEvent(SeekStartedLifecycle(target, seekId: seekId));
+    await playAt(target);
+    await lifecycleEvent(SeekLifecycle(target, seekId: seekId));
+  }
+
   test(
     'fades and pauses when playback crosses into the next chapter',
     () async {
@@ -167,7 +184,7 @@ void main() {
     },
   );
 
-  test('a seek past the chapter retargets instead of firing', () async {
+  test('a seek forward out of the chapter cancels the timer', () async {
     await playEpisode(1, _threeChapters(1));
     await playAt(const Duration(seconds: 30));
     armEndOfChapter();
@@ -180,61 +197,124 @@ void main() {
     await playAt(const Duration(milliseconds: 30200));
     await playAt(const Duration(seconds: 60));
     await lifecycleEvent(const SeekLifecycle(Duration(seconds: 60), seekId: 1));
-    checkNotFired();
+    checkCancelled();
 
-    // The timer now ends the chapter the seek landed in.
-    await playAt(const Duration(milliseconds: 119800));
-    checkNotFired();
+    // Nothing fires later at the end of the chapter the seek landed in.
     await playAt(const Duration(milliseconds: 120100));
-    checkFiredOnce();
+    checkCancelled();
   });
 
-  test('a failed seek keeps the timer on the playing chapter', () async {
+  test('a seek backward out of the chapter cancels the timer', () async {
     await playEpisode(1, _threeChapters(1));
-    await playAt(const Duration(seconds: 30));
-    armEndOfChapter();
-
-    await lifecycleEvent(
-      const SeekStartedLifecycle(Duration(seconds: 130), seekId: 1),
-    );
-    await lifecycleEvent(
-      const SeekFailedLifecycle(Duration(seconds: 30), seekId: 1),
-    );
-    checkNotFired();
-
-    await playAt(const Duration(milliseconds: 60100));
-    checkFiredOnce();
-  });
-
-  test('chapters loading after arming do not fire the timer', () async {
-    await playEpisode(1, const []);
     await playAt(const Duration(seconds: 90));
     armEndOfChapter();
 
-    // Chapters arrive for the playing episode, then are replaced by a set
-    // with more boundaries: the chapter at 90s moves from index 0 to 1.
-    chapters.emit(1, [_chapter(1, 0, 0), _chapter(1, 1, 120)]);
-    await pumpEventQueue();
-    chapters.emit(1, _threeChapters(1));
-    await pumpEventQueue();
-    await playAt(const Duration(seconds: 91));
+    await seek(1, const Duration(seconds: 30));
+    checkCancelled();
+  });
+
+  test('a seek within the chapter keeps the timer', () async {
+    await playEpisode(1, _threeChapters(1));
+    await playAt(const Duration(seconds: 70));
+    armEndOfChapter();
+
+    await seek(1, const Duration(seconds: 100));
+    await seek(2, const Duration(seconds: 65));
     checkNotFired();
 
     await playAt(const Duration(milliseconds: 120100));
     checkFiredOnce();
   });
 
-  test('an episode without chapters leaves the timer inactive', () async {
+  test(
+    'a seek that fails still cancels: the listener asked to leave',
+    () async {
+      await playEpisode(1, _threeChapters(1));
+      await playAt(const Duration(seconds: 30));
+      armEndOfChapter();
+
+      await lifecycleEvent(
+        const SeekStartedLifecycle(Duration(seconds: 130), seekId: 1),
+      );
+      await lifecycleEvent(
+        const SeekFailedLifecycle(Duration(seconds: 30), seekId: 1),
+      );
+      checkCancelled();
+    },
+  );
+
+  test('resuming at the saved position keeps the timer', () async {
+    await playEpisode(1, _threeChapters(1));
+    await playAt(const Duration(seconds: 90));
+    armEndOfChapter();
+
+    // The source reports zero once loaded, before the player seeks back to
+    // the saved position.
+    await playAt(Duration.zero);
+    await lifecycleEvent(
+      const SeekStartedLifecycle(
+        Duration(seconds: 90),
+        seekId: 1,
+        resumesSavedPosition: true,
+      ),
+    );
+    await playAt(const Duration(seconds: 90));
+    await lifecycleEvent(const SeekLifecycle(Duration(seconds: 90), seekId: 1));
+    checkNotFired();
+
+    await playAt(const Duration(milliseconds: 120100));
+    checkFiredOnce();
+  });
+
+  test('armed in the last chapter, it stops at the episode end', () async {
+    await playEpisode(1, _threeChapters(1));
+    await playAt(const Duration(seconds: 150));
+    armEndOfChapter();
+
+    await playAt(const Duration(seconds: 299));
+    checkNotFired();
+
+    await lifecycleEvent(const EpisodeCompletedLifecycle());
+    // The end-of-episode stop: no fade, and the queue does not advance.
+    check(player.suppressCount).equals(1);
+    check(player.fadeCount).equals(0);
+    check(timerEvents).single.isA<SleepTimerFired>();
+    check(config()).isA<SleepTimerConfigOff>();
+  });
+
+  test('a manual episode switch cancels the timer', () async {
     await playEpisode(1, _threeChapters(1));
     await playAt(const Duration(seconds: 30));
     armEndOfChapter();
 
     await lifecycleEvent(const EpisodeSwitchedLifecycle());
-    await playEpisode(2, const []);
-    for (final seconds in [0, 59, 61, 121, 200]) {
-      await playAt(Duration(seconds: seconds));
-    }
+    await playEpisode(2, _threeChapters(2));
+    await playAt(const Duration(seconds: 10));
+    checkCancelled();
 
-    checkNotFired();
+    // The new episode's chapter boundary does not fire anything.
+    await playAt(const Duration(milliseconds: 60100));
+    checkCancelled();
   });
+
+  test(
+    'chapters loading after arming neither fire nor cancel the timer',
+    () async {
+      await playEpisode(1, const []);
+      await playAt(const Duration(seconds: 90));
+      armEndOfChapter();
+
+      // Chapters arrive for the playing episode, then are replaced by a set
+      // with more boundaries: the chapter at 90s moves from index 0 to 1.
+      chapters.emit(1, [_chapter(1, 0, 0), _chapter(1, 1, 120)]);
+      await pumpEventQueue();
+      chapters.emit(1, _threeChapters(1));
+      await pumpEventQueue();
+      await playAt(const Duration(seconds: 91));
+      checkNotFired();
+
+      await playAt(const Duration(milliseconds: 120100));
+      checkFiredOnce();
+    },
+  );
 }

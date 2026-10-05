@@ -76,11 +76,53 @@ void main() {
   });
 
   group('seeks', () {
-    test('a seek out of the chapter retargets', () {
+    test('a seek forward out of the chapter leaves it', () {
       check(observeAt(30)).isNull();
       check(
         tracker.seekStarted(1, const Duration(seconds: 60), now: t0),
-      ).isA<SeekedPastChapterEvent>();
+      ).isA<SeekedOutOfChapterEvent>();
+    });
+
+    test('a seek backward out of the chapter leaves it', () {
+      check(observeAt(90)).isNull();
+      check(
+        tracker.seekStarted(1, const Duration(seconds: 30), now: t0),
+      ).isA<SeekedOutOfChapterEvent>();
+    });
+
+    test('a seek from the lead-in into the first chapter stays', () {
+      chapters = [_chapter(0, 10), _chapter(1, 60)];
+      check(observeAt(5)).isNull();
+      check(
+        tracker.seekStarted(1, const Duration(seconds: 20), now: t0),
+      ).isNull();
+      tracker.seekCompleted(1);
+      check(observeAt(60)).isA<ChapterChangedEvent>();
+    });
+
+    test('a seek from the lead-in past the first chapter leaves it', () {
+      chapters = [_chapter(0, 10), _chapter(1, 60)];
+      check(observeAt(5)).isNull();
+      check(
+        tracker.seekStarted(1, const Duration(seconds: 70), now: t0),
+      ).isA<SeekedOutOfChapterEvent>();
+    });
+
+    test('a resume after the source read zero does not leave', () {
+      // The baseline came from the saved position; the loaded source then
+      // reports zero before the player seeks back to that position.
+      check(observeAt(90)).isNull();
+      check(observeAt(0)).isNull();
+      check(
+        tracker.seekStarted(
+          1,
+          const Duration(seconds: 90),
+          now: t0,
+          resumesSavedPosition: true,
+        ),
+      ).isNull();
+      tracker.seekCompleted(1);
+      check(observeAt(120)).isA<ChapterChangedEvent>();
     });
 
     test('a seek within the chapter changes nothing', () {

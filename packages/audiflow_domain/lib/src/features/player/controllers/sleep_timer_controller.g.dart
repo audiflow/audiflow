@@ -105,7 +105,7 @@ final class SleepTimerControllerProvider
 }
 
 String _$sleepTimerControllerHash() =>
-    r'8eefc8a9e913c17679d4ae3590cfe27c3bd737dd';
+    r'e34558f2662626ca2d6510513f5cc765a8095629';
 
 /// Coordinates the sleep timer: subscribes to player lifecycle events,
 /// runs a 1s duration tick, and executes decisions from [SleepTimerService].

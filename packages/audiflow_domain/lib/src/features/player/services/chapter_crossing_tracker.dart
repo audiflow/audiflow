@@ -11,8 +11,8 @@ import 'sleep_timer_service.dart';
 ///
 /// Seeks are tagged by the player ([seekStarted] / [seekCompleted]) rather
 /// than guessed from position jumps. A seek that leaves the baseline chapter
-/// yields [SeekedPastChapterEvent] and moves the baseline to the target
-/// chapter, which is how the end-of-chapter timer retargets.
+/// yields [SeekedOutOfChapterEvent], which cancels an end-of-chapter timer,
+/// and moves the baseline to the target chapter.
 ///
 /// Pure state machine: the caller supplies the clock.
 class ChapterCrossingTracker {
@@ -67,18 +67,29 @@ class ChapterCrossingTracker {
   /// live position can still differ from the baseline (a resume reads zero
   /// right after the source loads, while the baseline came from the saved
   /// position).
+  ///
+  /// [resumesSavedPosition] marks the player returning to where the
+  /// listener already was. It only moves the baseline: the zero read while
+  /// the source loads may already have moved it, and a resume is not the
+  /// listener leaving the chapter.
   SleepTimerPlayerEvent? seekStarted(
     int seekId,
     Duration target, {
     required DateTime now,
+    bool resumesSavedPosition = false,
   }) {
     final chapters = _chapters;
     if (chapters == null || chapters.isEmpty) return null;
     _pendingSeeks[seekId] = now.add(seekSettleWindow);
+    final previous = _index;
     final targetIndex = chapterIndexAt(chapters, target);
-    if (targetIndex == _index) return null;
+    if (targetIndex == previous) return null;
     _index = targetIndex;
-    return const SeekedPastChapterEvent();
+    if (resumesSavedPosition) return null;
+    // A lead-in is not a chapter: a timer armed there ends the first
+    // chapter, so jumping into that chapter does not leave it.
+    if (previous == null && targetIndex == 0) return null;
+    return const SeekedOutOfChapterEvent();
   }
 
   /// Marks a seek as committed by the player; once no other seek is
@@ -90,8 +101,8 @@ class ChapterCrossingTracker {
   /// The baseline moves to the chapter at [position] in the current list,
   /// not back to a saved index that a reloaded list or an overlapping seek
   /// may have made stale. A seek still pending already set the baseline to
-  /// its own target, so it is left alone. The retarget already sent stays
-  /// harmless: the timer still waits for the end of the playing chapter.
+  /// its own target, so it is left alone. A cancellation already sent for
+  /// the seek stands: the listener asked to leave the chapter.
   void seekFailed(int seekId, Duration position, {required DateTime now}) {
     _pendingSeeks.remove(seekId);
     if (_isSettling(now)) return;
