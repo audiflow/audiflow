@@ -106,6 +106,9 @@ void main() {
     final c = await container();
     c.read(sleepTimerControllerProvider.notifier).setEndOfEpisode();
     await tester.pumpWidget(host(c));
+    // Flush the provider disposal check scheduled when the controller
+    // subscribed to the chapter providers.
+    await tester.pumpAndSettle();
 
     final node = tester.getSemantics(find.text('Episode end'));
     expect(node.flagsCollection.isButton, isTrue);
