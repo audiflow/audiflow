@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 import '../../../../l10n/app_localizations.dart';
-import '../controllers/seek_undo_controller.dart';
 import '../controllers/transcript_follow_controller.dart';
 
 /// A timeline entry is either a chapter header or a transcript segment.
@@ -204,10 +203,12 @@ class _TranscriptTimelineViewState
     return false;
   }
 
+  // Not seekWithUndo: the go-back pill sits on the artwork, which is out of
+  // sight on this tab, so an undo offer here would be invisible.
   void _handleSegmentTap(TranscriptSegment segment) {
     ref
-        .read(seekUndoControllerProvider.notifier)
-        .seekWithUndo(Duration(milliseconds: segment.startMs));
+        .read(audioPlayerControllerProvider.notifier)
+        .seekNowPlaying(Duration(milliseconds: segment.startMs));
   }
 
   void _handleJumpToCurrent() {

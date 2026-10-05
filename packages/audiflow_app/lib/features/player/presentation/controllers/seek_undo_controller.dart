@@ -18,13 +18,14 @@ final class SeekUndoState {
 
 /// Offers a temporary undo for seek jumps made from the player screen.
 ///
-/// Only deliberate jumps (seek bar release, chapter tap, transcript tap) go
-/// through [seekWithUndo]; skip buttons and system controls seek directly,
-/// so they never show the pill. This is a thin layer over
-/// [AudioPlayerController.seekNowPlaying] and leaves its internals alone.
+/// Only deliberate jumps made in view of the artwork (seek bar release,
+/// chapter pick) go through [seekWithUndo]; skip buttons, transcript taps,
+/// and system controls seek directly, so they never show the pill. This is
+/// a thin layer over [AudioPlayerController.seekNowPlaying] and leaves its
+/// internals alone.
 ///
-/// Kept alive so a transcript tap, made while the artwork tab may be torn
-/// down, still leaves the pill waiting when the listener swipes back.
+/// Kept alive so the origin and its timer survive the artwork being torn
+/// down and rebuilt (e.g. a tab switch) within the visible window.
 @Riverpod(keepAlive: true)
 class SeekUndoController extends _$SeekUndoController {
   /// How long the pill stays up after the latest jump.

@@ -192,7 +192,7 @@ void main() {
     check(_jumpButtonOpacity(tester)).equals(0);
   });
 
-  testWidgets('tapping a segment seeks there and offers to go back', (
+  testWidgets('tapping a segment seeks there without a go-back offer', (
     tester,
   ) async {
     await pumpView(tester);
@@ -207,10 +207,7 @@ void main() {
     check(player.seeks).deepEquals([
       const Duration(milliseconds: _activeSegment * _segmentLengthMs),
     ]);
-    check(container.read(seekUndoControllerProvider)).isNotNull();
-
-    // Let the pill time out so no timer outlives the test.
-    await tester.pump(SeekUndoController.visibleDuration);
+    // The pill lives on the artwork, out of sight on this tab.
     check(container.read(seekUndoControllerProvider)).isNull();
   });
 }
