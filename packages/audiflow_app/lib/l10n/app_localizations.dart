@@ -2630,6 +2630,12 @@ abstract class AppLocalizations {
   /// **'Sleep timer ended'**
   String get sleepTimerFiredSnackbar;
 
+  /// Snackbar shown when a timer is cancelled because the listener left the episode or chapter it refers to
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep timer cancelled'**
+  String get sleepTimerCancelledSnackbar;
+
   /// Numeric input panel title for minutes
   ///
   /// In en, this message translates to:

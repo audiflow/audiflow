@@ -921,6 +921,8 @@
   },
   "sleepTimerFiredSnackbar": "Sleep timer ended",
   "@sleepTimerFiredSnackbar": { "description": "Snackbar shown when a timer fires in the foreground" },
+  "sleepTimerCancelledSnackbar": "Sleep timer cancelled",
+  "@sleepTimerCancelledSnackbar": { "description": "Snackbar shown when a timer is cancelled because the listener left the episode or chapter it refers to" },
   "sleepTimerNumericMinutesTitle": "Minutes",
   "@sleepTimerNumericMinutesTitle": { "description": "Numeric input panel title for minutes" },
   "sleepTimerNumericEpisodesTitle": "Episodes",
