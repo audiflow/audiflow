@@ -3,7 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../models/audio_settings.dart';
 import '../repositories/podcast_audio_preference_repository.dart';
-import 'playback_speed_settings_provider.dart';
+import 'settings_providers.dart';
 
 part 'podcast_audio_override_provider.g.dart';
 
@@ -28,12 +28,18 @@ class PodcastAudioOverrideController extends _$PodcastAudioOverrideController {
   /// Whether the stored override has loaded and exists.
   bool get hasOverride => state is AsyncData && state.value != null;
 
-  /// Creates the override by copying the current global settings, so
+  /// Creates the override by copying the stored global settings, so
   /// switching it on does not change what the listener hears.
+  ///
+  /// Reads the stored value rather than the in-memory one: they differ
+  /// only during a global slider drag, and copying that uncommitted
+  /// preview would persist a speed the listener never settled on.
   Future<void> enable() async {
     if (state is! AsyncData || hasOverride) return;
-    final global = ref.read(playbackSpeedSettingsControllerProvider);
-    final created = AudioSettings(speed: global.speed);
+    final globalSpeed = ref
+        .read(appSettingsRepositoryProvider)
+        .getPlaybackSpeed();
+    final created = AudioSettings(speed: globalSpeed);
     await _update(created, (repo) => repo.set(podcastId, created));
   }
 
@@ -70,7 +76,9 @@ class PodcastAudioOverrideController extends _$PodcastAudioOverrideController {
     try {
       await write(ref.read(podcastAudioPreferenceRepositoryProvider));
     } catch (_) {
-      state = previous;
+      // A newer edit (such as a slider preview) replaced the pending
+      // state; rolling back would discard that input.
+      if (state is AsyncData && state.value == next) state = previous;
       rethrow;
     }
   }

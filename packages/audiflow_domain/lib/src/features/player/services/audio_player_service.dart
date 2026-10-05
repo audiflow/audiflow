@@ -551,7 +551,9 @@ class AudioPlayerController extends _$AudioPlayerController
       final speed = await _resolveSpeed(
         metadata?.episode?.podcastId ?? episode?.podcastId,
       );
-      await applySpeed(speed);
+      // A newer play() may have started while the override loaded; its
+      // own resolution owns the speed now.
+      if (_currentUrl == url) await applySpeed(speed);
 
       // Notify history service of playback start
       if (_currentEpisodeId != null) {
@@ -1031,6 +1033,9 @@ class AudioPlayerController extends _$AudioPlayerController
     // state synchronously, so speed controls follow a fast slider drag
     // instead of trailing behind queued engine calls.
     final saved = _saveSpeed(scope, snapped, transient: transient);
+    // A failed save must not surface as an unhandled error while the
+    // engine call is awaited; it is still rethrown by `await saved` below.
+    saved.ignore();
     if (ref.read(nowPlayingAudioSettingsProvider)?.scope == scope) {
       await applySpeed(snapped);
     }
@@ -1059,9 +1064,10 @@ class AudioPlayerController extends _$AudioPlayerController
         // The override was switched off under a pending edit: drop the
         // edit rather than recording a speed nothing saved.
         if (!override.hasOverride) return false;
-        final saved = override.saveSpeed(speed, persist: !transient);
+        // Record only once the write succeeded: a failed write rolls the
+        // override back, and the chip must not offer a speed never saved.
+        await override.saveSpeed(speed, persist: !transient);
         if (!transient) await global.recordRecent(speed);
-        await saved;
     }
     return true;
   }
@@ -1087,15 +1093,26 @@ class AudioPlayerController extends _$AudioPlayerController
   }
 
   Future<void> _drainSpeed() async {
+    // A failed engine call must not drop a newer pending request, so the
+    // loop keeps going and reports only a failure of the final speed.
+    Object? failure;
+    StackTrace? failureStack;
     try {
       // Each pass consumes the target, so the loop is bounded by the
       // requests made while it runs, even when the engine ignores a call
       // (a disposed player does not update `speed`).
       for (var target = _targetSpeed; target != null; target = _targetSpeed) {
         _targetSpeed = null;
+        failure = null;
         if (target == _player.speed) continue;
-        await _applyToEngine(target);
+        try {
+          await _applyToEngine(target);
+        } catch (error, stackTrace) {
+          failure = error;
+          failureStack = stackTrace;
+        }
       }
+      if (failure != null) Error.throwWithStackTrace(failure, failureStack!);
     } finally {
       _targetSpeed = null;
       _speedDrain = null;
@@ -1106,11 +1123,16 @@ class AudioPlayerController extends _$AudioPlayerController
     // Split the segment so each session has a single speed.
     final segmentIds = _listenSession.openIds;
     if (segmentIds != null) _closeListenSession(ListenEndReason.speedChange);
-    await _player.setSpeed(speed);
-    // Playback may have paused while the engine applied the speed; the
-    // stream has then already closed the segment and must not reopen it.
-    if (segmentIds != null && _player.playing) {
-      _openListenSession(ids: segmentIds);
+    try {
+      await _player.setSpeed(speed);
+    } finally {
+      // Reopen even when the engine rejected the speed, since playback
+      // continues. Playback may have paused while the engine applied the
+      // speed; the stream has then already closed the segment and must
+      // not reopen it.
+      if (segmentIds != null && _player.playing) {
+        _openListenSession(ids: segmentIds);
+      }
     }
   }
 

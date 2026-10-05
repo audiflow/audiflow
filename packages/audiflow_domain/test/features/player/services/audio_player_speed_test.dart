@@ -158,6 +158,23 @@ void main() {
       expect(playerSpeed(), 1.0);
     });
 
+    test('a failed write is not recorded as a recent speed', () async {
+      overrides.overrides[1] = const AudioSettings(speed: 1.0);
+      await playPodcast(1);
+      overrides.failWrites = true;
+
+      await expectLater(
+        controller().setSpeed(1.5, scope: scope),
+        throwsA(isA<StateError>()),
+      );
+
+      expect(settings().recentSpeeds, isEmpty);
+      expect(
+        container.read(podcastAudioOverrideControllerProvider(1)).value,
+        const AudioSettings(speed: 1.0),
+      );
+    });
+
     test('is ignored when the podcast has no override', () async {
       await playPodcast(1);
 
@@ -179,6 +196,16 @@ void main() {
       expect(overrides.overrides[1], const AudioSettings(speed: 1.3));
     });
 
+    test('enable ignores an uncommitted global drag preview', () async {
+      repo.playbackSpeed = 1.3;
+      await container.read(podcastAudioOverrideControllerProvider(1).future);
+      await controller().setSpeed(1.8, scope: _global, transient: true);
+
+      await overrideOf(1).enable();
+
+      expect(overrides.overrides[1], const AudioSettings(speed: 1.3));
+    });
+
     test('a failed write restores the previous state', () async {
       overrides.failWrites = true;
       await container.read(podcastAudioOverrideControllerProvider(1).future);
@@ -188,6 +215,24 @@ void main() {
       expect(
         container.read(podcastAudioOverrideControllerProvider(1)).value,
         isNull,
+      );
+    });
+
+    test('a failed write keeps a newer pending edit', () async {
+      overrides.overrides[1] = const AudioSettings(speed: 1.0);
+      await container.read(podcastAudioOverrideControllerProvider(1).future);
+      overrides.failWrites = true;
+
+      final write = expectLater(
+        overrideOf(1).saveSpeed(1.5, persist: true),
+        throwsA(isA<StateError>()),
+      );
+      await overrideOf(1).saveSpeed(1.8, persist: false);
+      await write;
+
+      expect(
+        container.read(podcastAudioOverrideControllerProvider(1)).value,
+        const AudioSettings(speed: 1.8),
       );
     });
 
