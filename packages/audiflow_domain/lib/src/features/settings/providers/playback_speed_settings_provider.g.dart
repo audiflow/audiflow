@@ -8,7 +8,7 @@ part of 'playback_speed_settings_provider.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Holds [PlaybackSpeedSettings] and persists changes.
+/// Holds the global [PlaybackSpeedSettings] and persists changes.
 ///
 /// UI must not call [save] directly: speed changes go through
 /// `AudioPlayerController.setSpeed`, which applies the speed to the
@@ -18,7 +18,7 @@ part of 'playback_speed_settings_provider.dart';
 final playbackSpeedSettingsControllerProvider =
     PlaybackSpeedSettingsControllerProvider._();
 
-/// Holds [PlaybackSpeedSettings] and persists changes.
+/// Holds the global [PlaybackSpeedSettings] and persists changes.
 ///
 /// UI must not call [save] directly: speed changes go through
 /// `AudioPlayerController.setSpeed`, which applies the speed to the
@@ -29,7 +29,7 @@ final class PlaybackSpeedSettingsControllerProvider
           PlaybackSpeedSettingsController,
           PlaybackSpeedSettings
         > {
-  /// Holds [PlaybackSpeedSettings] and persists changes.
+  /// Holds the global [PlaybackSpeedSettings] and persists changes.
   ///
   /// UI must not call [save] directly: speed changes go through
   /// `AudioPlayerController.setSpeed`, which applies the speed to the
@@ -62,9 +62,9 @@ final class PlaybackSpeedSettingsControllerProvider
 }
 
 String _$playbackSpeedSettingsControllerHash() =>
-    r'18b4085f3495d30b8dff4ae3638ba97e5509adf1';
+    r'0db32d4939026adf21e7c8da669ebafb9303165f';
 
-/// Holds [PlaybackSpeedSettings] and persists changes.
+/// Holds the global [PlaybackSpeedSettings] and persists changes.
 ///
 /// UI must not call [save] directly: speed changes go through
 /// `AudioPlayerController.setSpeed`, which applies the speed to the

@@ -40,9 +40,14 @@ class AudioButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final speed = ref.watch(
+    // The speed in effect for the now-playing podcast (override or
+    // global); the global speed while the override is still loading.
+    final globalSpeed = ref.watch(
       playbackSpeedSettingsControllerProvider.select((s) => s.speed),
     );
+    final speed =
+        ref.watch(nowPlayingAudioSettingsProvider)?.settings.speed ??
+        globalSpeed;
     final label = PlaybackSpeedScale.label(speed);
     return TextButton.icon(
       icon: const Icon(Symbols.speed),

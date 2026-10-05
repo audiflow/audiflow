@@ -61,10 +61,14 @@ URL is published as a fallback, which is the pre-#453 behavior.
 | Provider | Type | Purpose |
 |----------|------|---------|
 | `audioPlayerProvider` | keepAlive sync | Singleton AudioPlayer |
-| `audioPlayerControllerProvider` | keepAlive Notifier | Play/pause/seek/stop/setSpeed commands, fade-out-and-pause |
+| `audioPlayerControllerProvider` | keepAlive Notifier | Play/pause/seek/stop commands, `setSpeed(speed, scope:)` (persist to a scope) and `applySpeed` (player only), fade-out-and-pause |
 | `playbackProgressStreamProvider` | keepAlive Stream | Combined position + duration + buffered |
 | `playbackSpeedProvider` | keepAlive Stream | Current speed from player |
-| `playbackSpeedSettingsControllerProvider` | keepAlive Notifier | Persisted speed and recent speeds; the source speed controls display |
+| `playbackSpeedSettingsControllerProvider` | keepAlive Notifier | Persisted global speed and the shared recent speeds |
+| `podcastAudioOverrideControllerProvider(podcastId)` | keepAlive AsyncNotifier | A podcast's audio settings override, null when it has none |
+| `effectiveAudioSettingsProvider(podcastId)` | keepAlive | Override -> global resolution with the scope it came from; null while the override loads |
+| `nowPlayingAudioSettingsProvider` | keepAlive | `effectiveAudioSettingsProvider` for the now-playing podcast |
+| `effectiveAudioSettingsApplierProvider` | keepAlive | Applies `nowPlayingAudioSettingsProvider` to the player on change; listened from `main.dart` |
 | `nowPlayingControllerProvider` | keepAlive Notifier | Episode metadata for mini player and player screen |
 | `playbackHistoryServiceProvider` | keepAlive | Records completed episodes |
 | `sleepTimerControllerProvider` | keepAlive Notifier | Sleep timer state, countdown, and episode/chapter tracking |
@@ -90,6 +94,33 @@ URL is published as a fallback, which is the pre-#453 behavior.
 8. UI rebuilds: mini player shows progress, player screen shows seek bar
 9. Position is periodically saved to Isar for resume capability
 10. On completion: history recorded, queue advanced (if queue has next item)
+
+## Audio settings scope
+
+Speed is stored globally (`AppSettingsRepository`) and optionally per podcast
+(`PodcastAudioPreference` in Isar). Each write names an `AudioSettingsScope`:
+
+- `GlobalAudioSettingsScope`: the Playback settings screen, and the Audio sheet
+  while its per-podcast switch is off.
+- `PodcastAudioSettingsScope(podcastId)`: the Audio sheet while the switch is on.
+  A write to a podcast with no override is dropped, so an override is only ever
+  created by switching it on (which copies the global values).
+
+`AudioPlayerController.setSpeed` persists to the named scope and applies the
+speed only when that scope is the one `nowPlayingAudioSettingsProvider`
+resolves to, so a global edit never overrides a podcast override on the
+player. `effectiveAudioSettingsApplierProvider` covers changes that do not go
+through `setSpeed`: the now-playing podcast changing, or an override being
+switched off (the player returns to the global speed). `play()` resolves the
+episode's podcast through the same in-memory override state (awaiting its
+load) before playback starts, so it never disagrees with what the UI shows.
+All three paths go through `applySpeed`, which is idempotent (a speed equal
+to the applied or pending one is a no-op) and serialized (one engine call at
+a time; requests made meanwhile collapse into the latest). The applier only
+reads providers and writes the engine, so applying a speed cannot feed back
+into the resolution it listens to.
+The Audio sheet pins its podcast when it opens, so a queue advance mid-drag
+cannot send the rest of the drag to another podcast's settings.
 
 ## Downloaded episode handling
 

@@ -306,6 +306,10 @@ Future<void> _startApp(
   // Initialize audio service for platform media controls
   await container.read(audioHandlerProvider.future);
 
+  // Keep the player on the now-playing podcast's audio settings. Listened
+  // rather than read: an unlistened provider pauses its subscriptions.
+  container.listen(effectiveAudioSettingsApplierProvider, (_, _) {});
+
   // Restore last played episode for mini player
   await _restoreLastPlayed(container);
 

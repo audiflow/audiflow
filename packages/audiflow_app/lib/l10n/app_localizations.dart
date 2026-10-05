@@ -380,6 +380,12 @@ abstract class AppLocalizations {
   /// **'Description'**
   String get podcastDetailDescriptionMenuTitle;
 
+  /// Menu entry that opens the audio sheet for this podcast
+  ///
+  /// In en, this message translates to:
+  /// **'Audio settings'**
+  String get podcastDetailAudioSettingsMenuTitle;
+
   /// Title for the podcast description modal sheet
   ///
   /// In en, this message translates to:
@@ -1195,6 +1201,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Playback speed'**
   String get audioSheetSpeedSection;
+
+  /// Switch at the top of the audio sheet that makes its settings apply to one podcast only
+  ///
+  /// In en, this message translates to:
+  /// **'Custom for this podcast'**
+  String get audioSheetPodcastOverride;
+
+  /// Caption under the per-podcast switch when it is on
+  ///
+  /// In en, this message translates to:
+  /// **'This podcast only'**
+  String get audioSheetScopePodcast;
+
+  /// Caption under the per-podcast switch when it is off
+  ///
+  /// In en, this message translates to:
+  /// **'Applies to all podcasts'**
+  String get audioSheetScopeGlobal;
 
   /// Chip label for normal (1.0x) playback speed
   ///

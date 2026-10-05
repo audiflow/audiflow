@@ -18,7 +18,9 @@ NowPlayingInfo _nowPlaying() => NowPlayingInfo(
   episodeUrl: _episodeUrl,
   episodeTitle: 'Episode',
   podcastTitle: 'Podcast',
-  episode: Episode()..id = 1,
+  episode: Episode()
+    ..id = 1
+    ..podcastId = 1,
 );
 
 PlaybackProgress _progressAt(Duration position) => PlaybackProgress(

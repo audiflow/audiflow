@@ -150,6 +150,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get podcastDetailDescriptionMenuTitle => '概要';
 
   @override
+  String get podcastDetailAudioSettingsMenuTitle => 'オーディオ設定';
+
+  @override
   String get podcastDetailDescriptionSheetTitle => '概要';
 
   @override
@@ -585,6 +588,15 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get audioSheetSpeedSection => '再生速度';
+
+  @override
+  String get audioSheetPodcastOverride => 'この番組専用の設定';
+
+  @override
+  String get audioSheetScopePodcast => 'この番組だけに適用';
+
+  @override
+  String get audioSheetScopeGlobal => 'すべての番組に適用';
 
   @override
   String get playbackSpeedNormal => '標準';
