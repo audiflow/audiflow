@@ -18,12 +18,12 @@ import 'sleep_timer_service.dart';
 class ChapterCrossingTracker {
   /// How long chapter changes after a seek starts are attributed to it.
   ///
-  /// Normally the seek's completion ends the window first. The bound only
-  /// matters for repositioning that reports no completion (resume at a
-  /// saved position, seeking a restored episode, a failed seek), so that a
-  /// lost completion cannot suppress chapter crossings for good. Position
-  /// updates read before the jump can arrive while a remote source buffers,
-  /// which is why the window is several seconds rather than one tick.
+  /// The player reports every committed seek, which ends the window first.
+  /// The bound only matters when that report never comes (a failed seek),
+  /// so a lost completion cannot suppress chapter crossings for good.
+  /// Position updates read before the jump can arrive while a remote source
+  /// buffers, which is why the window is several seconds rather than one
+  /// tick.
   static const seekSettleWindow = Duration(seconds: 5);
 
   List<EpisodeChapter>? _chapters;
@@ -59,15 +59,17 @@ class ChapterCrossingTracker {
 
   /// Marks a seek to [target] that is about to move the position.
   ///
-  /// A seek that stays in the baseline chapter needs no window: every
-  /// position before or after the jump maps to the same chapter.
+  /// The window opens even when the target is in the baseline chapter: the
+  /// live position can still differ from the baseline (a resume reads zero
+  /// right after the source loads, while the baseline came from the saved
+  /// position).
   SleepTimerPlayerEvent? seekStarted(Duration target, {required DateTime now}) {
     final chapters = _chapters;
     if (chapters == null || chapters.isEmpty) return null;
+    _settleUntil = now.add(seekSettleWindow);
     final targetIndex = chapterIndexAt(chapters, target);
     if (targetIndex == _index) return null;
     _index = targetIndex;
-    _settleUntil = now.add(seekSettleWindow);
     return const SeekedPastChapterEvent();
   }
 

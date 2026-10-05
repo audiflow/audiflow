@@ -39,7 +39,7 @@ class SleepTimerController extends _$SleepTimerController {
 
   final StreamController<SleepTimerEvent> _events =
       StreamController<SleepTimerEvent>.broadcast();
-  final ChapterCrossingTracker _chapterTracker = ChapterCrossingTracker();
+  ChapterCrossingTracker _chapterTracker = ChapterCrossingTracker();
   Timer? _tick;
 
   Stream<SleepTimerEvent> get events => _events.stream;
@@ -60,6 +60,9 @@ class SleepTimerController extends _$SleepTimerController {
     final stream = ref.watch(playerLifecycleEventsProvider);
     final lifecycleSub = stream.listen(_onLifecycle);
 
+    // A fresh tracker makes the immediate observation below a baseline, so
+    // build() never evaluates a chapter event.
+    _chapterTracker = ChapterCrossingTracker();
     // Tracked whatever the mode, so a timer armed mid-chapter already knows
     // which chapter it is in. Both are listened: a chapter list replaced
     // without changing the current chapter must still move the baseline.

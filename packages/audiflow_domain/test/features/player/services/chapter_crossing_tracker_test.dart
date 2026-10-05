@@ -86,7 +86,19 @@ void main() {
     test('a seek within the chapter changes nothing', () {
       check(observeAt(30)).isNull();
       check(tracker.seekStarted(const Duration(seconds: 50), now: t0)).isNull();
+      tracker.seekCompleted();
       check(observeAt(60)).isA<ChapterChangedEvent>();
+    });
+
+    test('a seek within the chapter still ignores the position it left', () {
+      // Resume: the baseline comes from the saved position, while the
+      // freshly loaded source reports zero until the seek lands.
+      check(observeAt(90)).isNull();
+      tracker.seekStarted(const Duration(seconds: 90), now: t0);
+      check(observeAt(0)).isNull();
+      check(observeAt(90)).isNull();
+      tracker.seekCompleted();
+      check(observeAt(120)).isA<ChapterChangedEvent>();
     });
 
     test('positions before the jump do not look like crossings', () {
@@ -100,8 +112,11 @@ void main() {
     });
 
     test('the settle window ends without a completion', () {
-      check(observeAt(30)).isNull();
-      tracker.seekStarted(const Duration(seconds: 40), now: t0);
+      check(observeAt(90)).isNull();
+      tracker.seekStarted(const Duration(seconds: 30), now: t0);
+      // Inside the window a stale position forward of the target is ignored.
+      check(observeAt(90, now: t0.add(const Duration(seconds: 1)))).isNull();
+      check(observeAt(30, now: t0.add(const Duration(seconds: 2)))).isNull();
       final later = t0.add(ChapterCrossingTracker.seekSettleWindow);
       check(observeAt(60, now: later)).isA<ChapterChangedEvent>();
     });
