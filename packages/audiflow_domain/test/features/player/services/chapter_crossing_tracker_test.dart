@@ -118,7 +118,7 @@ void main() {
           1,
           const Duration(seconds: 90),
           now: t0,
-          resumesSavedPosition: true,
+          automatic: true,
         ),
       ).isNull();
       tracker.seekCompleted(1);
@@ -210,6 +210,39 @@ void main() {
       check(observeAt(30, now: soon)).isNull();
       tracker.seekCompleted(2);
       check(observeAt(60, now: soon)).isA<ChapterChangedEvent>();
+    });
+
+    test('an automatic rewind into the previous chapter stays', () {
+      check(observeAt(62)).isNull();
+      check(
+        tracker.seekStarted(
+          1,
+          const Duration(seconds: 57),
+          now: t0,
+          automatic: true,
+        ),
+      ).isNull();
+      tracker.seekCompleted(1);
+      // Playing back into the chapter the listener was in ends nothing.
+      check(observeAt(57)).isNull();
+      check(observeAt(60)).isNull();
+      check(observeAt(120)).isA<ChapterChangedEvent>();
+    });
+
+    test('a seek after an automatic rewind compares with the chapter', () {
+      check(observeAt(62)).isNull();
+      tracker.seekStarted(
+        1,
+        const Duration(seconds: 57),
+        now: t0,
+        automatic: true,
+      );
+      tracker.seekCompleted(1);
+      check(observeAt(57)).isNull();
+      // Leaving chapter 1 for chapter 0 on request still leaves it.
+      check(
+        tracker.seekStarted(2, const Duration(seconds: 20), now: t0),
+      ).isA<SeekedOutOfChapterEvent>();
     });
 
     test('without chapters a seek yields nothing', () {

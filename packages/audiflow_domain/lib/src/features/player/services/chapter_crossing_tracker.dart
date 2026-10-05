@@ -29,6 +29,11 @@ class ChapterCrossingTracker {
   List<EpisodeChapter>? _chapters;
   int? _index;
 
+  /// Set while an automatic rewind has put playback in a chapter before the
+  /// baseline. The listener is still in the baseline chapter, so playing
+  /// back into it is not the end of the earlier one.
+  bool _rewound = false;
+
   /// Settle deadline of each seek announced but not yet reported, by seek
   /// id. Each seek has its own window, so a late report for an expired
   /// seek cannot close a newer one.
@@ -48,11 +53,17 @@ class ChapterCrossingTracker {
     if (!identical(chapters, _chapters)) {
       _chapters = chapters;
       _index = index;
+      _rewound = false;
       return null;
     }
-    if (index == _index) return null;
     // Positions read before or during the jump; the seek set the baseline.
     if (_isSettling(now)) return null;
+    if (index == _index) {
+      _rewound = false;
+      return null;
+    }
+    if (_rewound && _isBefore(index, _index)) return null;
+    _rewound = false;
     final previous = _index;
     _index = index;
     // A lead-in before the first chapter is not a chapter, so entering
@@ -68,15 +79,16 @@ class ChapterCrossingTracker {
   /// right after the source loads, while the baseline came from the saved
   /// position).
   ///
-  /// [resumesSavedPosition] marks the player returning to where the
-  /// listener already was. It only moves the baseline: the zero read while
-  /// the source loads may already have moved it, and a resume is not the
-  /// listener leaving the chapter.
+  /// [automatic] marks a seek the player makes on its own (a resume at the
+  /// saved position, a rewind after an interruption). It never yields an
+  /// event, because the listener did not leave the chapter: a rewind keeps
+  /// the baseline until playback returns to it, and a resume moves the
+  /// baseline to where the listener was.
   SleepTimerPlayerEvent? seekStarted(
     int seekId,
     Duration target, {
     required DateTime now,
-    bool resumesSavedPosition = false,
+    bool automatic = false,
   }) {
     final chapters = _chapters;
     if (chapters == null || chapters.isEmpty) return null;
@@ -84,8 +96,12 @@ class ChapterCrossingTracker {
     final previous = _index;
     final targetIndex = chapterIndexAt(chapters, target);
     if (targetIndex == previous) return null;
+    if (automatic) {
+      _followAutomaticSeek(targetIndex);
+      return null;
+    }
     _index = targetIndex;
-    if (resumesSavedPosition) return null;
+    _rewound = false;
     // A lead-in is not a chapter: a timer armed there ends the first
     // chapter, so jumping into that chapter does not leave it.
     if (previous == null && targetIndex == 0) return null;
@@ -109,6 +125,26 @@ class ChapterCrossingTracker {
     final chapters = _chapters;
     if (chapters == null || chapters.isEmpty) return;
     _index = chapterIndexAt(chapters, position);
+    _rewound = false;
+  }
+
+  void _followAutomaticSeek(int? targetIndex) {
+    // A rewind into an earlier chapter: the baseline stays, so playback
+    // returning to it does not end a chapter.
+    if (_isBefore(targetIndex, _index)) {
+      _rewound = true;
+      return;
+    }
+    // A resume: the baseline is behind only because a fresh source read
+    // zero before the player moved back to where the listener was.
+    _index = targetIndex;
+    _rewound = false;
+  }
+
+  // The lead-in (null) comes before every chapter.
+  static bool _isBefore(int? index, int? other) {
+    if (other == null) return false;
+    return index == null || index < other;
   }
 
   bool _isSettling(DateTime now) {

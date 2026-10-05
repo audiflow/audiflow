@@ -29,17 +29,19 @@ final class SeekStartedLifecycle extends PlayerLifecycleEvent {
   const SeekStartedLifecycle(
     this.target, {
     required this.seekId,
-    this.resumesSavedPosition = false,
+    this.automatic = false,
   });
   final Duration target;
 
   /// Identifies this seek among overlapping ones.
   final int seekId;
 
-  /// True when the player returns to the saved position of the episode it
-  /// loads, rather than moving on request. Such a seek does not leave the
-  /// chapter the listener was in, so it never cancels a sleep timer.
-  final bool resumesSavedPosition;
+  /// True when the player moves the position on its own rather than
+  /// because the listener asked to go there: resuming the saved position
+  /// of the episode it loads, or rewinding a little after an audio
+  /// interruption. Such a seek does not leave the chapter the listener was
+  /// in, so it never cancels a sleep timer.
+  final bool automatic;
 }
 
 /// The position moved to a new absolute position on request, as announced

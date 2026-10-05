@@ -255,11 +255,33 @@ void main() {
       const SeekStartedLifecycle(
         Duration(seconds: 90),
         seekId: 1,
-        resumesSavedPosition: true,
+        automatic: true,
       ),
     );
     await playAt(const Duration(seconds: 90));
     await lifecycleEvent(const SeekLifecycle(Duration(seconds: 90), seekId: 1));
+    checkNotFired();
+
+    await playAt(const Duration(milliseconds: 120100));
+    checkFiredOnce();
+  });
+
+  test('a rewind after an interruption keeps the timer', () async {
+    await playEpisode(1, _threeChapters(1));
+    await playAt(const Duration(seconds: 62));
+    armEndOfChapter();
+
+    // Pause-and-rewind lands a few seconds into the previous chapter.
+    await lifecycleEvent(
+      const SeekStartedLifecycle(
+        Duration(seconds: 57),
+        seekId: 1,
+        automatic: true,
+      ),
+    );
+    await playAt(const Duration(seconds: 57));
+    await lifecycleEvent(const SeekLifecycle(Duration(seconds: 57), seekId: 1));
+    await playAt(const Duration(milliseconds: 60100));
     checkNotFired();
 
     await playAt(const Duration(milliseconds: 120100));

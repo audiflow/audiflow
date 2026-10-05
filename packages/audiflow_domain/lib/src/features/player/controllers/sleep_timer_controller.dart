@@ -177,16 +177,12 @@ class SleepTimerController extends _$SleepTimerController {
     final mapped = switch (event) {
       EpisodeCompletedLifecycle() => const EpisodeCompletedEvent(),
       EpisodeSwitchedLifecycle() => const ManualEpisodeSwitchedEvent(),
-      SeekStartedLifecycle(
-        :final seekId,
-        :final target,
-        :final resumesSavedPosition,
-      ) =>
+      SeekStartedLifecycle(:final seekId, :final target, :final automatic) =>
         _chapterTracker.seekStarted(
           seekId,
           target,
           now: DateTime.now(),
-          resumesSavedPosition: resumesSavedPosition,
+          automatic: automatic,
         ),
       SeekLifecycle() || SeekFailedLifecycle() => null,
     };
