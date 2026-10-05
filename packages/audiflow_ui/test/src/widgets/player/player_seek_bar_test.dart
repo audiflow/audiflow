@@ -177,10 +177,13 @@ void main() {
       final track = tester.getRect(_track);
       final label = tester.getRect(find.text('-09:00'));
 
+      // Explicit ids far above the tester's auto-assigned pointers, which
+      // keep counting across tests and would collide under shuffled order.
       final labelTap = await tester.startGesture(
         Offset(label.center.dx, track.bottom - 2),
+        pointer: 1001,
       );
-      final other = await tester.startGesture(track.center, pointer: 2);
+      final other = await tester.startGesture(track.center, pointer: 1002);
       await labelTap.up();
       await other.up();
       await tester.pump();
@@ -584,6 +587,143 @@ void main() {
             ..rrect(),
         ),
       );
+    });
+  });
+
+  group('PlayerSeekBar lift-off', () {
+    Duration ms(int value) => Duration(milliseconds: value);
+
+    // Drags right to about 0.6 over 200 ms, without the sheet arena so every move
+    // after the first is applied in full.
+    Future<TestGesture> dragToSixtyPercent(
+      WidgetTester tester,
+      _SeekRecorder recorder,
+    ) async {
+      await tester.pumpWidget(
+        _host(value: 0.5, recorder: recorder, withSheetArena: false),
+      );
+      final gesture = await tester.startGesture(tester.getCenter(_track));
+      await gesture.moveBy(const Offset(1, 0), timeStamp: ms(10));
+      for (var t = 1; t <= 10; t++) {
+        await gesture.moveBy(
+          const Offset(_barWidth * 0.01, 0),
+          timeStamp: ms(10 + 20 * t),
+        );
+      }
+      await tester.pump();
+      return gesture;
+    }
+
+    testWidgets('a roll after holding still commits the settled position', (
+      tester,
+    ) async {
+      final recorder = _SeekRecorder();
+      final gesture = await dragToSixtyPercent(tester, recorder);
+      final settled = recorder.changes.last;
+
+      // Rests until 500 ms, then rolls 6 pt as it lifts.
+      await gesture.moveBy(const Offset(6, 0), timeStamp: ms(520));
+      check(recorder.changes.last).equals(settled + 6 / _barWidth);
+      await gesture.up(timeStamp: ms(540));
+      await tester.pump();
+
+      check(recorder.ends.single).equals(settled);
+      // The parent's displayed value ends on the committed position too.
+      check(recorder.changes.last).equals(settled);
+    });
+
+    testWidgets('a drag still moving at lift-off commits the final position', (
+      tester,
+    ) async {
+      final recorder = _SeekRecorder();
+      final gesture = await dragToSixtyPercent(tester, recorder);
+
+      await gesture.moveBy(const Offset(6, 0), timeStamp: ms(220));
+      await gesture.up(timeStamp: ms(230));
+      await tester.pump();
+
+      check(recorder.ends.single).equals(recorder.changes.last);
+      check(recorder.ends.single).isGreaterThan(0.6 + 5 / _barWidth);
+    });
+
+    testWidgets('respects the fine-scrub speed', (tester) async {
+      final recorder = _SeekRecorder();
+      final gesture = await dragToSixtyPercent(tester, recorder);
+      // Into the one-eighth band, then hold still.
+      await gesture.moveBy(const Offset(0, 160), timeStamp: ms(220));
+      final settled = recorder.changes.last;
+      await gesture.moveBy(const Offset(8, 0), timeStamp: ms(520));
+      check(recorder.changes.last).equals(settled + 1 / _barWidth);
+      await gesture.up(timeStamp: ms(540));
+      await tester.pump();
+
+      check(recorder.ends.single).equals(settled);
+    });
+
+    testWidgets('keeps a fine-scrub push that is long under the finger', (
+      tester,
+    ) async {
+      final recorder = _SeekRecorder();
+      final gesture = await dragToSixtyPercent(tester, recorder);
+      await gesture.moveBy(const Offset(0, 160), timeStamp: ms(220));
+      final settled = recorder.changes.last;
+      // 64 pt under the finger moves the bar only 8 pt at one-eighth speed.
+      await gesture.moveBy(const Offset(64, 0), timeStamp: ms(520));
+      await gesture.up(timeStamp: ms(540));
+      await tester.pump();
+
+      check(recorder.ends.single).equals(settled + 8 / _barWidth);
+    });
+
+    testWidgets('a roll back from past the end commits the end', (
+      tester,
+    ) async {
+      final recorder = _SeekRecorder();
+      final gesture = await dragToSixtyPercent(tester, recorder);
+      // Past the end of the bar, then on outward while held at 1.0.
+      await gesture.moveBy(
+        const Offset(_barWidth * 0.5, 0),
+        timeStamp: ms(220),
+      );
+      await gesture.moveBy(const Offset(40, 0), timeStamp: ms(240));
+      check(recorder.changes.last).equals(1.0);
+      await gesture.moveBy(const Offset(-6, 0), timeStamp: ms(520));
+      await gesture.up(timeStamp: ms(540));
+      await tester.pump();
+
+      check(recorder.ends.single).equals(1.0);
+    });
+
+    testWidgets('a cancelled second touch does not skip the lift-off rule', (
+      tester,
+    ) async {
+      final recorder = _SeekRecorder();
+      final gesture = await dragToSixtyPercent(tester, recorder);
+      final settled = recorder.changes.last;
+      final other = await tester.startGesture(
+        tester.getCenter(_track) + const Offset(-40, 0),
+        // Far above the auto-assigned ids so shuffled order cannot collide.
+        pointer: 1003,
+      );
+      await other.cancel();
+      await gesture.moveBy(const Offset(6, 0), timeStamp: ms(520));
+      await gesture.up(timeStamp: ms(540));
+      await tester.pump();
+
+      check(recorder.ends.single).equals(settled);
+    });
+
+    testWidgets('a cancelled drag commits its current position', (
+      tester,
+    ) async {
+      final recorder = _SeekRecorder();
+      final gesture = await dragToSixtyPercent(tester, recorder);
+      final settled = recorder.changes.last;
+      await gesture.moveBy(const Offset(6, 0), timeStamp: ms(520));
+      await gesture.cancel();
+      await tester.pump();
+
+      check(recorder.ends.single).equals(settled + 6 / _barWidth);
     });
   });
 

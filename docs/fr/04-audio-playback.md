@@ -193,6 +193,16 @@ state and resume position stay coherent no matter where the listener touches it.
   "Scrubbing (quarter speed)", "Scrubbing (fine)") appears between the time labels while below
   full speed. The drag stays with the seek bar even when the finger leaves its bounds; a drag
   that starts vertically is not a scrub and still reaches the player sheet's swipe-to-dismiss.
+- Lift-off settling: as a finger leaves the glass the contact point rolls by a few points,
+  which would nudge the seek away from where the user stopped. If the position had held still
+  (within 2 pt of track) for at least 150 ms and then moved only within the last 60 ms before
+  lift-off, by no more than 12 pt under the finger, the drag commits the settled position
+  instead. A drag still moving at lift-off, a flick, or a larger final push commits the final
+  position, and a cancelled drag commits its position as it stands; a second touch on the bar
+  does not change how the dragging finger's release is judged. Stillness is judged on the
+  position after fine-scrub scaling (what the bar shows), while the late move is measured
+  under the finger, so a deliberate final push while fine scrubbing is kept. The rule uses
+  pointer event timestamps; the displayed time and the seek both use the committed position. The thresholds are initial values to be tuned on a device.
 - The left label shows elapsed time. The right label shows remaining time as `-mm:ss` (or
   `-h:mm:ss`) by default; tapping it toggles to the total duration. The choice persists as the
   `showRemainingTime` setting. Remaining time is media time and does not account for playback
