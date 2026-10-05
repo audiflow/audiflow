@@ -1,4 +1,5 @@
 import 'package:audiflow_ui/src/widgets/player/seek_release_tracker.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Duration ms(int value) => Duration(milliseconds: value);
@@ -43,7 +44,7 @@ void main() {
       tracker.update(pt(104), ms(410));
       tracker.update(pt(107), ms(425));
 
-      expect(tracker.resolveRelease(ms(440)), pt(100));
+      check(tracker.resolveRelease(ms(440))).equals(pt(100));
     });
 
     test('a roll backwards is undone as well', () {
@@ -51,23 +52,35 @@ void main() {
       tracker.update(pt(180), ms(50));
       tracker.update(pt(174), ms(330));
 
-      expect(tracker.resolveRelease(ms(350)), pt(180));
+      check(tracker.resolveRelease(ms(350))).equals(pt(180));
     });
 
     test('the dwell may be the time since the drag began', () {
       final tracker = _tracker(start: pt(100));
       tracker.update(pt(103), ms(200));
 
-      expect(tracker.resolveRelease(ms(220)), pt(100));
+      check(tracker.resolveRelease(ms(220))).equals(pt(100));
     });
+  });
 
-    test('works on fine-scrub scaled positions', () {
+  group('fine scrubbing', () {
+    test('a small finger roll is undone', () {
       // At one-eighth speed a 6 pt finger roll moves the bar 0.75 pt.
       final tracker = _tracker();
       _drag(tracker, from: 0, speed: 0.5, frames: 20, startMs: 0);
-      tracker.update(pt(10.75), ms(400));
+      tracker.update(pt(10.75), ms(400), finger: 10 + 6);
 
-      expect(tracker.resolveRelease(ms(420)), pt(10));
+      check(tracker.resolveRelease(ms(420))).equals(pt(10));
+    });
+
+    test('a final push measured under the finger is kept', () {
+      // At one-eighth speed a 64 pt push moves the bar only 8 pt, inside
+      // the roll limit on the bar but far beyond it under the finger.
+      final tracker = _tracker();
+      _drag(tracker, from: 0, speed: 0.5, frames: 20, startMs: 0);
+      tracker.update(pt(18), ms(400), finger: 10 + 64);
+
+      check(tracker.resolveRelease(ms(420))).equals(pt(18));
     });
   });
 
@@ -76,7 +89,7 @@ void main() {
       final tracker = _tracker();
       final last = _drag(tracker, from: 0, speed: 1, frames: 40, startMs: 0);
 
-      expect(tracker.resolveRelease(ms(405)), pt(last));
+      check(tracker.resolveRelease(ms(405))).equals(pt(last));
     });
 
     test('a slow drag of under a point per frame is not mistaken for '
@@ -84,7 +97,7 @@ void main() {
       final tracker = _tracker();
       final last = _drag(tracker, from: 0, speed: 0.4, frames: 40, startMs: 0);
 
-      expect(tracker.resolveRelease(ms(405)), pt(last));
+      check(tracker.resolveRelease(ms(405))).equals(pt(last));
     });
 
     test('a flick from rest commits the final position', () {
@@ -92,7 +105,7 @@ void main() {
       tracker.update(pt(130), ms(300));
       tracker.update(pt(170), ms(310));
 
-      expect(tracker.resolveRelease(ms(320)), pt(170));
+      check(tracker.resolveRelease(ms(320))).equals(pt(170));
     });
 
     test('a flick at the end of a drag commits the final position', () {
@@ -101,14 +114,14 @@ void main() {
       tracker.update(pt(110), ms(110));
       tracker.update(pt(140), ms(120));
 
-      expect(tracker.resolveRelease(ms(125)), pt(140));
+      check(tracker.resolveRelease(ms(125))).equals(pt(140));
     });
 
     test('a move the finger rested on before lifting is kept', () {
       final tracker = _tracker(start: pt(100));
       tracker.update(pt(105), ms(300));
 
-      expect(tracker.resolveRelease(ms(500)), pt(105));
+      check(tracker.resolveRelease(ms(500))).equals(pt(105));
     });
 
     test('a pause shorter than the dwell does not count', () {
@@ -116,20 +129,20 @@ void main() {
       _drag(tracker, from: 0, speed: 5, frames: 20, startMs: 0);
       tracker.update(pt(105), ms(300));
 
-      expect(tracker.resolveRelease(ms(320)), pt(105));
+      check(tracker.resolveRelease(ms(320))).equals(pt(105));
     });
 
     test('a drag that began inside the late window is kept', () {
       final tracker = _tracker(start: pt(100));
       tracker.update(pt(103), ms(20));
 
-      expect(tracker.resolveRelease(ms(40)), pt(103));
+      check(tracker.resolveRelease(ms(40))).equals(pt(103));
     });
 
     test('no movement keeps the start position', () {
       final tracker = _tracker(start: pt(50));
 
-      expect(tracker.resolveRelease(ms(500)), pt(50));
+      check(tracker.resolveRelease(ms(500))).equals(pt(50));
     });
   });
 
@@ -142,6 +155,6 @@ void main() {
     );
     tracker.update(pt(103), ms(300));
 
-    expect(tracker.resolveRelease(ms(340)), pt(103));
+    check(tracker.resolveRelease(ms(340))).equals(pt(103));
   });
 }

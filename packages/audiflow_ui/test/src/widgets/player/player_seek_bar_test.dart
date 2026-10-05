@@ -649,8 +649,41 @@ void main() {
       // Into the one-eighth band, then hold still.
       await gesture.moveBy(const Offset(0, 160), timeStamp: ms(220));
       final settled = recorder.changes.last;
-      await gesture.moveBy(const Offset(16, 0), timeStamp: ms(520));
-      check(recorder.changes.last).equals(settled + 2 / _barWidth);
+      await gesture.moveBy(const Offset(8, 0), timeStamp: ms(520));
+      check(recorder.changes.last).equals(settled + 1 / _barWidth);
+      await gesture.up(timeStamp: ms(540));
+      await tester.pump();
+
+      check(recorder.ends.single).equals(settled);
+    });
+
+    testWidgets('keeps a fine-scrub push that is long under the finger', (
+      tester,
+    ) async {
+      final recorder = _SeekRecorder();
+      final gesture = await dragToSixtyPercent(tester, recorder);
+      await gesture.moveBy(const Offset(0, 160), timeStamp: ms(220));
+      final settled = recorder.changes.last;
+      // 64 pt under the finger moves the bar only 8 pt at one-eighth speed.
+      await gesture.moveBy(const Offset(64, 0), timeStamp: ms(520));
+      await gesture.up(timeStamp: ms(540));
+      await tester.pump();
+
+      check(recorder.ends.single).equals(settled + 8 / _barWidth);
+    });
+
+    testWidgets('a cancelled second touch does not skip the lift-off rule', (
+      tester,
+    ) async {
+      final recorder = _SeekRecorder();
+      final gesture = await dragToSixtyPercent(tester, recorder);
+      final settled = recorder.changes.last;
+      final other = await tester.startGesture(
+        tester.getCenter(_track) + const Offset(-40, 0),
+        pointer: 7,
+      );
+      await other.cancel();
+      await gesture.moveBy(const Offset(6, 0), timeStamp: ms(520));
       await gesture.up(timeStamp: ms(540));
       await tester.pump();
 

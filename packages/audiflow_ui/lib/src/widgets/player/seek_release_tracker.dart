@@ -10,18 +10,28 @@
 /// commits the final position.
 ///
 /// Values are track fractions (0.0 to 1.0) after any fine-scrub scaling, so
-/// the rule judges what the user saw on the bar, not raw finger travel.
-/// Distances are compared in track points ([trackWidth] per whole track).
+/// stillness is judged on what the user saw on the bar. Roll is a physical
+/// shift of the contact point, so the late move is measured in finger
+/// points: under fine scrubbing a deliberate final push travels far under
+/// the finger while moving the bar only a little, and must be kept.
+/// Distances are compared in points ([trackWidth] per whole track).
 class SeekReleaseTracker {
   SeekReleaseTracker({
     required double startValue,
     required Duration startTime,
     required this.trackWidth,
+    double? startFinger,
     this.minDwell = defaultMinDwell,
     this.lateMoveWindow = defaultLateMoveWindow,
     this.stillness = defaultStillness,
     this.maxRoll = defaultMaxRoll,
-  }) : _history = [(value: startValue, at: startTime)];
+  }) : _history = [
+         (
+           value: startValue,
+           at: startTime,
+           finger: startFinger ?? startValue * trackWidth,
+         ),
+       ];
 
   // Initial values, to be tuned on a device.
   //
@@ -56,17 +66,21 @@ class SeekReleaseTracker {
   /// Largest drift, in track points, that still counts as holding still.
   final double stillness;
 
-  /// Largest late move, in track points, that counts as roll.
+  /// Largest late move, in finger points, that counts as roll.
   final double maxRoll;
 
-  final List<({double value, Duration at})> _history;
+  final List<({double value, Duration at, double finger})> _history;
 
   /// The most recent drag position.
   double get value => _history.last.value;
 
   /// Records that the drag moved to [value] at [at].
-  void update(double value, Duration at) {
-    _history.add((value: value, at: at));
+  ///
+  /// [finger] is the finger's horizontal position in points, from any fixed
+  /// origin. It defaults to [value]'s position on the track, which matches
+  /// the finger at full scrub speed.
+  void update(double value, Duration at, {double? finger}) {
+    _history.add((value: value, at: at, finger: finger ?? value * trackWidth));
   }
 
   /// The position to commit when the finger lifts off at [liftOff].
@@ -77,10 +91,11 @@ class SeekReleaseTracker {
     if (settledIndex == -1 || settledIndex == _history.length - 1) {
       return value;
     }
-    final settled = _history[settledIndex].value;
-    if (maxRoll < _points(value - settled)) return value;
+    final settled = _history[settledIndex];
+    final roll = (_history.last.finger - settled.finger).abs();
+    if (maxRoll < roll) return value;
     if (!_heldStill(settledIndex, settleEnd - minDwell)) return value;
-    return settled;
+    return settled.value;
   }
 
   // Walks back from the settled sample until one at or before [dwellStart];
