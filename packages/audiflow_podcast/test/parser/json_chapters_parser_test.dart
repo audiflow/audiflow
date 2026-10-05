@@ -1,0 +1,88 @@
+import 'package:audiflow_podcast/audiflow_podcast.dart';
+import 'package:checks/checks.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+void main() {
+  const parser = JsonChaptersParser();
+
+  group('JsonChaptersParser', () {
+    test('parses titles, times, images and urls', () {
+      final chapters = parser.parse('''
+{
+  "version": "1.2.0",
+  "chapters": [
+    {"startTime": 0, "title": "Intro", "img": "https://example.com/a.jpg"},
+    {"startTime": 65.5, "endTime": 120, "title": "Topic",
+     "url": "https://example.com/topic"}
+  ]
+}''');
+
+      check(chapters).length.equals(2);
+      check(chapters[0].title).equals('Intro');
+      check(chapters[0].startTime).equals(Duration.zero);
+      check(chapters[0].imageUrl).equals('https://example.com/a.jpg');
+      check(chapters[1].startTime).equals(const Duration(milliseconds: 65500));
+      check(chapters[1].endTime).equals(const Duration(seconds: 120));
+      check(chapters[1].url).equals('https://example.com/topic');
+    });
+
+    test('skips toc:false entries', () {
+      final chapters = parser.parse('''
+{"version": "1.2.0", "chapters": [
+  {"startTime": 0, "title": "Intro"},
+  {"startTime": 10, "title": "Hidden ad", "toc": false},
+  {"startTime": 20, "title": "Shown", "toc": true}
+]}''');
+
+      check(chapters.map((c) => c.title)).deepEquals(['Intro', 'Shown']);
+    });
+
+    test('skips entries without a title or start time', () {
+      final chapters = parser.parse('''
+{"version": "1.2.0", "chapters": [
+  {"startTime": 0},
+  {"startTime": 5, "title": "  "},
+  {"title": "No start"},
+  {"startTime": "12", "title": "String start"},
+  {"startTime": 30, "title": "Kept"}
+]}''');
+
+      check(chapters.map((c) => c.title)).deepEquals(['Kept']);
+    });
+
+    test('sorts unsorted entries by start time', () {
+      final chapters = parser.parse('''
+{"version": "1.2.0", "chapters": [
+  {"startTime": 300, "title": "C"},
+  {"startTime": 0, "title": "A"},
+  {"startTime": 120, "title": "B"}
+]}''');
+
+      check(chapters.map((c) => c.title)).deepEquals(['A', 'B', 'C']);
+    });
+
+    test('drops an end time that is not after the start', () {
+      final chapters = parser.parse('''
+{"version": "1.2.0", "chapters": [
+  {"startTime": 30, "endTime": 10, "title": "A"}
+]}''');
+
+      check(chapters.single.endTime).isNull();
+    });
+
+    test('returns empty for an empty chapters array', () {
+      check(parser.parse('{"version": "1.2.0", "chapters": []}')).isEmpty();
+    });
+
+    test('throws FormatException for malformed JSON', () {
+      check(() => parser.parse('{"chapters": [')).throws<FormatException>();
+    });
+
+    test('throws FormatException when chapters is missing', () {
+      check(
+        () => parser.parse('{"version": "1.2.0"}'),
+      ).throws<FormatException>();
+      check(() => parser.parse('[1, 2]')).throws<FormatException>();
+    });
+  });
+}

@@ -1,3 +1,4 @@
+import 'package:checks/checks.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar_community/isar.dart';
@@ -119,6 +120,141 @@ void main() {
 
       // First emission - empty
       expect(await stream.first, isEmpty);
+    });
+  });
+
+  group('replaceChapters', () {
+    EpisodeChapter chapter(int sortOrder, String title, {int? id}) =>
+        EpisodeChapter()
+          ..episodeId = id ?? episodeId
+          ..sortOrder = sortOrder
+          ..title = title
+          ..startMs = sortOrder * 1000;
+
+    Future<List<String>> titles() async => (await datasource.getByEpisodeId(
+      episodeId,
+    )).map((c) => c.title).toList();
+
+    // Rows written before `source` existed rely on the generated reader's
+    // fallback to podlove (episode_chapter.g.dart), not on this default.
+    test('chapters built in code default to the podlove source', () {
+      check(EpisodeChapter().source).equals(ChapterSource.podlove);
+    });
+
+    test('stores chapters with the given source', () async {
+      final replaced = await datasource.replaceChapters({
+        episodeId: [chapter(0, 'A'), chapter(1, 'B')],
+      }, source: ChapterSource.podcastChaptersJson);
+
+      check(replaced).unorderedEquals({episodeId});
+      check(await titles()).deepEquals(['A', 'B']);
+      final stored = await datasource.getByEpisodeId(episodeId);
+      check(
+        stored.map((c) => c.source),
+      ).every((it) => it.equals(ChapterSource.podcastChaptersJson));
+    });
+
+    test('drops stale rows when the new list is shorter', () async {
+      await datasource.upsertChapters([chapter(0, 'A'), chapter(1, 'B')]);
+
+      await datasource.replaceChapters({
+        episodeId: [chapter(0, 'Only')],
+      }, source: ChapterSource.podlove);
+
+      check(await titles()).deepEquals(['Only']);
+    });
+
+    test('lower priority never replaces higher priority', () async {
+      await datasource.replaceChapters({
+        episodeId: [chapter(0, 'Json')],
+      }, source: ChapterSource.podcastChaptersJson);
+
+      final fromPodlove = await datasource.replaceChapters({
+        episodeId: [chapter(0, 'Psc')],
+      }, source: ChapterSource.podlove);
+      final fromDescription = await datasource.replaceChapters({
+        episodeId: [chapter(0, 'Desc')],
+      }, source: ChapterSource.description);
+
+      check(fromPodlove).isEmpty();
+      check(fromDescription).isEmpty();
+      check(await titles()).deepEquals(['Json']);
+    });
+
+    group('JSON chapters whose link changed', () {
+      const linkA = 'https://example.com/a.json';
+      Future<void> storeJsonFromA() => datasource.replaceChapters({
+        episodeId: [chapter(0, 'Json')..sourceUrl = linkA],
+      }, source: ChapterSource.podcastChaptersJson);
+
+      test('keep their rank while the episode still links them', () async {
+        await storeJsonFromA();
+
+        final replaced = await datasource.replaceChapters(
+          {
+            episodeId: [chapter(0, 'Psc')],
+          },
+          source: ChapterSource.podlove,
+          linkedJsonUrls: {episodeId: linkA},
+        );
+
+        check(replaced).isEmpty();
+        check(await titles()).deepEquals(['Json']);
+      });
+
+      test('lose their rank once the link is removed', () async {
+        await storeJsonFromA();
+
+        final replaced = await datasource.replaceChapters(
+          {
+            episodeId: [chapter(0, 'Psc')],
+          },
+          source: ChapterSource.podlove,
+          linkedJsonUrls: {episodeId: null},
+        );
+
+        check(replaced).unorderedEquals({episodeId});
+        check(await titles()).deepEquals(['Psc']);
+      });
+
+      test('lose their rank once the link points elsewhere', () async {
+        await storeJsonFromA();
+
+        await datasource.replaceChapters(
+          {
+            episodeId: [chapter(0, 'Psc')],
+          },
+          source: ChapterSource.podlove,
+          linkedJsonUrls: {episodeId: 'https://example.com/b.json'},
+        );
+
+        check(await titles()).deepEquals(['Psc']);
+      });
+    });
+
+    test('higher priority replaces lower priority', () async {
+      await datasource.replaceChapters({
+        episodeId: [chapter(0, 'Desc'), chapter(1, 'Desc 2')],
+      }, source: ChapterSource.description);
+
+      await datasource.replaceChapters({
+        episodeId: [chapter(0, 'Psc')],
+      }, source: ChapterSource.podlove);
+
+      check(await titles()).deepEquals(['Psc']);
+      final stored = await datasource.getByEpisodeId(episodeId);
+      check(stored.single.source).equals(ChapterSource.podlove);
+    });
+
+    test('leaves other episodes untouched', () async {
+      await datasource.upsertChapters([chapter(0, 'Other', id: 2)]);
+
+      await datasource.replaceChapters({
+        episodeId: [chapter(0, 'Mine')],
+      }, source: ChapterSource.podlove);
+
+      final other = await datasource.getByEpisodeId(2);
+      check(other.single.title).equals('Other');
     });
   });
 }

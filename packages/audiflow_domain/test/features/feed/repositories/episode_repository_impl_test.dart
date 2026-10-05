@@ -662,6 +662,109 @@ void main() {
       );
     });
 
+    test('keeps stored JSON chapters over psc chapters', () async {
+      const jsonUrl = 'https://example.com/ep-json.json';
+      await episodeDatasource.upsert(
+        makeEpisode(
+            guid: 'ep-json',
+            title: 'Episode ep-json',
+            audioUrl: 'https://example.com/ep-json.mp3',
+          )
+          ..chaptersUrl = jsonUrl
+          ..chaptersType = 'application/json+chapters',
+      );
+      final episode = await episodeDatasource.getByPodcastIdAndGuid(
+        podcastId,
+        'ep-json',
+      );
+      await chapterDatasource.replaceChapters({
+        episode!.id: [
+          EpisodeChapter()
+            ..episodeId = episode.id
+            ..sortOrder = 0
+            ..title = 'From JSON'
+            ..startMs = 0
+            ..sourceUrl = jsonUrl,
+        ],
+      }, source: ChapterSource.podcastChaptersJson);
+
+      await repository.storeTranscriptAndChapterDataFromParsed(podcastId, [
+        const ParsedEpisodeMediaMeta(
+          guid: 'ep-json',
+          chapters: [
+            ParsedChapter(title: 'From psc', startTime: Duration.zero),
+          ],
+        ),
+      ]);
+
+      final chapters = await chapterDatasource.getByEpisodeId(episode.id);
+      check(chapters.single.title).equals('From JSON');
+    });
+
+    test(
+      'stores psc chapters over JSON ones the feed no longer links',
+      () async {
+        await insertEpisode('ep-unlinked');
+        final episode = await episodeDatasource.getByPodcastIdAndGuid(
+          podcastId,
+          'ep-unlinked',
+        );
+        await chapterDatasource.replaceChapters({
+          episode!.id: [
+            EpisodeChapter()
+              ..episodeId = episode.id
+              ..sortOrder = 0
+              ..title = 'From JSON'
+              ..startMs = 0
+              ..sourceUrl = 'https://example.com/old.json',
+          ],
+        }, source: ChapterSource.podcastChaptersJson);
+
+        await repository.storeTranscriptAndChapterDataFromParsed(podcastId, [
+          const ParsedEpisodeMediaMeta(
+            guid: 'ep-unlinked',
+            chapters: [
+              ParsedChapter(title: 'From psc', startTime: Duration.zero),
+            ],
+          ),
+        ]);
+
+        final chapters = await chapterDatasource.getByEpisodeId(episode.id);
+        check(chapters.single.title).equals('From psc');
+        check(chapters.single.source).equals(ChapterSource.podlove);
+      },
+    );
+
+    test('replaces previous psc chapters on resync', () async {
+      await insertEpisode('ep-resync');
+      ParsedEpisodeMediaMeta meta(List<String> titles) =>
+          ParsedEpisodeMediaMeta(
+            guid: 'ep-resync',
+            chapters: [
+              for (final (i, t) in titles.indexed)
+                ParsedChapter(
+                  title: t,
+                  startTime: Duration(minutes: i),
+                ),
+            ],
+          );
+
+      await repository.storeTranscriptAndChapterDataFromParsed(podcastId, [
+        meta(['A', 'B', 'C']),
+      ]);
+      await repository.storeTranscriptAndChapterDataFromParsed(podcastId, [
+        meta(['X', 'Y']),
+      ]);
+
+      final episode = await episodeDatasource.getByPodcastIdAndGuid(
+        podcastId,
+        'ep-resync',
+      );
+      final chapters = await chapterDatasource.getByEpisodeId(episode!.id);
+      check(chapters.map((c) => c.title)).deepEquals(['X', 'Y']);
+      check(chapters.first.source).equals(ChapterSource.podlove);
+    });
+
     test('handles empty media metas list', () async {
       await repository.storeTranscriptAndChapterDataFromParsed(podcastId, []);
     });
@@ -675,6 +778,32 @@ void main() {
         podcastId,
         mediaMetas,
       );
+    });
+  });
+
+  group('chapters link', () {
+    test('upsertFromFeedItems stores the podcast:chapters link', () async {
+      await repository.upsertFromFeedItems(podcastId, [
+        PodcastItem.fromData(
+          parsedAt: DateTime.now(),
+          sourceUrl: '',
+          title: 'ep',
+          description: 'desc',
+          guid: 'ep-link',
+          enclosureUrl: 'https://example.com/ep-link.mp3',
+          chaptersLink: const PodcastChaptersLink(
+            url: 'https://example.com/chapters.json',
+            type: 'application/json+chapters',
+          ),
+        ),
+      ]);
+
+      final episode = await episodeDatasource.getByPodcastIdAndGuid(
+        podcastId,
+        'ep-link',
+      );
+      check(episode!.chaptersUrl).equals('https://example.com/chapters.json');
+      check(episode.chaptersType).equals('application/json+chapters');
     });
   });
 

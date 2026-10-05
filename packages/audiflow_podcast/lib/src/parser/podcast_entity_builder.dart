@@ -96,6 +96,7 @@ import '../errors/podcast_parse_error.dart';
 /// - `itunesSeason` (int?)
 /// - `itunesEpisodeType` (String?)
 /// - `chapters` (List<Map<String, dynamic>>?)
+/// - `chaptersLink` (Map<String, dynamic>?, keys `url` and `type`)
 /// - `transcripts` (List<Map<String, dynamic>>?)
 abstract class PodcastEntityBuilder<TFeed, TItem> {
   /// Called when feed-level metadata is parsed.

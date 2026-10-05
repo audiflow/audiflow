@@ -168,6 +168,7 @@ class FeedParserService {
                     ),
                   )
                   .toList(),
+              chaptersLink: e.chaptersLink,
             ),
           )
           .toList();
@@ -250,6 +251,7 @@ class FeedParserService {
           :final link,
           :final transcripts,
           :final chapters,
+          :final chaptersLink,
         ):
           final resolvedGuid =
               guid ??
@@ -269,7 +271,9 @@ class FeedParserService {
               ..seasonNumber = seasonNumber
               ..contentEncoded = contentEncoded
               ..summary = summary
-              ..link = link,
+              ..link = link
+              ..chaptersUrl = chaptersLink?.url
+              ..chaptersType = chaptersLink?.type,
           );
 
           if (transcripts != null || chapters != null) {

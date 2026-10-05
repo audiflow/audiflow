@@ -1,3 +1,4 @@
+import 'package:checks/checks.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_podcast/audiflow_podcast.dart'
     show TranscriptFileParser;
@@ -44,6 +45,23 @@ void main() {
       <guid>ep-no-transcript</guid>
       <title>Episode without Transcript</title>
       <enclosure url="https://example.com/ep2.mp3" type="audio/mpeg"/>
+    </item>
+  </channel>
+</rss>
+''';
+
+  const testXmlWithChaptersLink = '''
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"
+  xmlns:podcast="https://podcastindex.org/namespace/1.0">
+  <channel>
+    <title>Chapters Podcast</title>
+    <description>JSON chapters</description>
+    <item>
+      <guid>ep-json</guid>
+      <title>Episode with JSON chapters</title>
+      <enclosure url="https://example.com/ep1.mp3" type="audio/mpeg"/>
+      <podcast:chapters url="https://example.com/ep1.json" type="application/json+chapters"/>
     </item>
   </channel>
 </rss>
@@ -137,6 +155,29 @@ void main() {
       expect(allMediaMetas.first.hasTranscripts, isTrue);
       expect(allMediaMetas.first.transcripts, hasLength(1));
       expect(allMediaMetas.first.transcripts!.first.type, 'text/vtt');
+    });
+  });
+
+  group('chapters link', () {
+    test('parseWithProgress stores the link on the episode', () async {
+      final episodes = <Episode>[];
+      await for (final _ in service.parseWithProgress(
+        xmlContent: testXmlWithChaptersLink,
+        podcastId: 1,
+        knownGuids: {},
+        onBatchReady: (batch, _) async => episodes.addAll(batch),
+      )) {}
+
+      check(episodes.single.chaptersUrl).equals('https://example.com/ep1.json');
+      check(episodes.single.chaptersType).equals('application/json+chapters');
+    });
+
+    test('parseFromString maps the link to PodcastItem', () async {
+      final result = await service.parseFromString(testXmlWithChaptersLink);
+
+      check(
+        result.episodes.single.chaptersLink?.url,
+      ).equals('https://example.com/ep1.json');
     });
   });
 

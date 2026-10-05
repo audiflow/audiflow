@@ -1,6 +1,8 @@
 import 'package:audiflow_core/audiflow_core.dart'
     show AutoPlayOrder, DuckInterruptionBehavior;
+import 'package:checks/checks.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:audiflow_podcast/audiflow_podcast.dart' show ParsedChapter;
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart' show ThemeMode;
 import 'package:flutter_test/flutter_test.dart';
@@ -189,11 +191,18 @@ class _FakeEpisodeRepository implements EpisodeRepository {
   @override
   Future<List<Episode>> getByIds(List<int> ids) => throw UnimplementedError();
 
+  final List<ParsedEpisodeMediaMeta> storedMediaMetas = [];
+  Object? mediaMetaError;
+
   @override
   Future<void> storeTranscriptAndChapterDataFromParsed(
     int podcastId,
     List<ParsedEpisodeMediaMeta> mediaMetas,
-  ) => throw UnimplementedError();
+  ) async {
+    final error = mediaMetaError;
+    if (error != null) throw error;
+    storedMediaMetas.addAll(mediaMetas);
+  }
 
   @override
   Future<Episode?> getByPodcastIdAndGuid(int podcastId, String guid) =>
@@ -993,6 +1002,52 @@ void main() {
         );
       },
     );
+  });
+
+  group('FeedSyncExecutor media metadata', () {
+    test('stores transcript and chapter metadata from batches', () async {
+      final sub = _subscription(id: 7, lastRefreshedAt: null);
+      const meta = ParsedEpisodeMediaMeta(
+        guid: 'a',
+        chapters: [ParsedChapter(title: 'Intro', startTime: Duration.zero)],
+      );
+      final parser = _FakeFeedParserService((xml, id, guids, onBatch) async* {
+        await onBatch([_ep(sub.id, 'a')], const [meta]);
+        yield const FeedParseComplete(total: 1, stoppedEarly: false);
+      });
+
+      final executor = buildExecutor(
+        dio: _FakeDio((_) => _xmlResponse('<rss></rss>')),
+        feedParser: parser,
+      );
+
+      await executor.syncFeed(sub);
+
+      check(fakeEpisodeRepo.storedMediaMetas).deepEquals([meta]);
+    });
+
+    test('a metadata failure does not fail the sync', () async {
+      final sub = _subscription(id: 7, lastRefreshedAt: null);
+      const meta = ParsedEpisodeMediaMeta(
+        guid: 'a',
+        chapters: [ParsedChapter(title: 'Intro', startTime: Duration.zero)],
+      );
+      final parser = _FakeFeedParserService((xml, id, guids, onBatch) async* {
+        await onBatch([_ep(sub.id, 'a')], const [meta]);
+        yield const FeedParseComplete(total: 1, stoppedEarly: false);
+      });
+      // Isar reports database failures as Error subclasses.
+      fakeEpisodeRepo.mediaMetaError = StateError('db write failed');
+
+      final executor = buildExecutor(
+        dio: _FakeDio((_) => _xmlResponse('<rss></rss>')),
+        feedParser: parser,
+      );
+
+      final result = await executor.syncFeed(sub);
+
+      check(result.success).isTrue();
+    });
   });
 
   group('FeedSyncExecutor dropped-episode deletion', () {

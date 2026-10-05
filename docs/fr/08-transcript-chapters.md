@@ -17,7 +17,7 @@ refs:
 
 Many podcasts publish timed transcripts and chapter markers alongside their audio. Audiflow uses this data to make episodes easier to follow, search, and reference. Listeners who want to read along while listening, jump to a specific moment, skim an episode before committing to it, or look back at something that was said gain a richer experience than audio alone provides. Accessibility also benefits: a visible transcript helps listeners in noisy environments and those who prefer reading.
 
-The feature exists because the Podcasting 2.0 standard now makes transcript and chapter metadata broadly available through RSS (`<podcast:transcript>` and `<podcast:chapters>`). Audiflow consumes that metadata so the player is not just a playback surface but also a navigable, readable view of the episode. Transcript metadata is captured cheaply during normal feed sync, while the larger transcript file content is fetched lazily only when a listener actually opens the transcript, keeping sync fast and storage lean.
+The feature exists because feeds now commonly publish transcript and chapter metadata through RSS: transcripts through the Podcasting 2.0 `<podcast:transcript>` tag, and chapters either inline as Podlove Simple Chapters (`<psc:chapters>`) or as a JSON file linked by the Podcasting 2.0 `<podcast:chapters>` tag. Audiflow consumes that metadata so the player is not just a playback surface but also a navigable, readable view of the episode. Metadata and links are captured cheaply during normal feed sync, while larger files (transcripts and JSON chapters) are fetched lazily only when they are needed, keeping sync fast and storage lean.
 
 ## User-visible Behavior
 
@@ -32,10 +32,13 @@ The feature exists because the Podcasting 2.0 standard now makes transcript and 
 - **Edge case (chapters only)**: An episode may have chapters but no transcript. In that case the timeline still shows the chapter list for navigation, without segment text.
 - **Edge / failure case (no data)**: When an episode has neither transcript nor chapter data, the Transcript tab is not shown at all. If a transcript is advertised but its file cannot be fetched or parsed, the tab shows an empty or error state rather than blocking playback.
 - **Recovery / fallback**: Transcript availability is also surfaced earlier, as an indicator on episode list items, so listeners know before opening the player whether read-along is available.
+- **Chapter sources**: An episode shows chapters from one source at a time, chosen by priority: the `<podcast:chapters>` JSON file first, then `<psc:chapters>` in the feed. `<psc:chapters>` are stored during feed sync. For `<podcast:chapters>`, sync stores only the link; the JSON file is downloaded when the episode becomes the now-playing episode (starting playback or restoring it at launch), and its chapters then replace any `<psc:chapters>` and appear in the player without reopening it. JSON entries marked `toc: false` and entries without a title are skipped. A later sync never replaces stored chapters with chapters from a lower-priority source. When a synced feed links a different JSON file, it is fetched again; when the link disappears, the JSON chapters are removed.
+- **Failure case (JSON chapters)**: If the JSON file cannot be fetched or parsed, the episode keeps whatever chapters it already had (or none), playback is unaffected, and no error is shown. The download is retried the next time the episode becomes now playing, at most once every 10 minutes per file.
 
 ## Capabilities
 
-- Captures transcript metadata (URL, MIME type, language, relationship) and chapter data (title, start time, optional artwork and link) during feed sync, without downloading transcript files.
+- Captures transcript metadata (URL, MIME type, language, relationship), `<psc:chapters>` chapter data (title, start time, optional artwork and link), and the `<podcast:chapters>` JSON link during feed sync, without downloading transcript or chapter files.
+- Lazily downloads and stores `<podcast:chapters>` JSON chapters for the now-playing episode, preferring them over `<psc:chapters>`.
 - Lazily downloads, parses, and stores transcript file content on first demand, preferring richer formats (VTT, which carries speaker labels) over plainer ones (SRT) when both are offered.
 - Presents a unified player timeline that merges chapter headers and transcript segments in playback order.
 - Synchronizes the timeline with playback: highlights the active segment and auto-scrolls to follow it, pausing auto-scroll on manual interaction.
@@ -74,4 +77,7 @@ The feature exists because the Podcasting 2.0 standard now makes transcript and 
   - `packages/audiflow_ui/lib/src/widgets/player/player_seek_bar.dart`
   - `packages/audiflow_app/lib/features/podcast_detail/presentation/widgets/episode_list_tile.dart`
   - `packages/audiflow_domain/lib/src/features/transcript/`
+  - `packages/audiflow_domain/lib/src/features/transcript/services/chapter_service.dart`
+  - `packages/audiflow_domain/lib/src/features/transcript/providers/chapter_loader_provider.dart`
+  - `packages/audiflow_podcast/lib/src/parser/json_chapters_parser.dart`
 - **Related FR**: `04-audio-playback.md`

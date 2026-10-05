@@ -383,6 +383,11 @@ class StreamingXmlParser {
       _addTranscriptToItemData(element, itemData);
     }
 
+    // Handle podcast:chapters (Podcasting 2.0 JSON chapters link)
+    if (element.name.qualified == 'podcast:chapters') {
+      _addChaptersLinkToItemData(element, itemData);
+    }
+
     // Handle psc:chapters (Podlove Simple Chapters)
     if (element.localName == 'chapters' &&
         (element.namespaceUri == 'http://podlove.org/simple-chapters' ||
@@ -653,6 +658,11 @@ class StreamingXmlParser {
       _addTranscriptToItemData(element, _state.currentItemData);
     }
 
+    // Handle podcast:chapters (Podcasting 2.0 JSON chapters link)
+    if (element.name.qualified == 'podcast:chapters') {
+      _addChaptersLinkToItemData(element, _state.currentItemData);
+    }
+
     // Handle psc:chapters (Podlove Simple Chapters)
     if (element.localName == 'chapters' &&
         (element.namespaceUri == 'http://podlove.org/simple-chapters' ||
@@ -892,6 +902,20 @@ class StreamingXmlParser {
       'rel': _nullIfBlank(element.getAttribute('rel')),
     });
     itemData['transcripts'] = transcripts;
+  }
+
+  /// Store the `<podcast:chapters>` link in itemData['chaptersLink'].
+  ///
+  /// Only the link is kept; the chapters file is fetched on demand later.
+  /// Skips elements missing required `url` or `type` attributes.
+  void _addChaptersLinkToItemData(
+    XmlElement element,
+    Map<String, dynamic> itemData,
+  ) {
+    final url = _nullIfBlank(element.getAttribute('url'));
+    final type = _nullIfBlank(element.getAttribute('type'));
+    if (url == null || type == null) return;
+    itemData['chaptersLink'] = {'url': url, 'type': type};
   }
 
   /// Extract Podlove Simple Chapters from a `<psc:chapters>` element.
