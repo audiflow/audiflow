@@ -591,7 +591,7 @@ class AudioPlayerController extends _$AudioPlayerController
           } else {
             _log.d('[Play] Seeking to saved position: ${history.positionMs}ms');
             final target = Duration(milliseconds: history.positionMs);
-            final seekId = _announceSeek(target);
+            final seekId = _announceSeek(target, resumesSavedPosition: true);
             await _seekPlayer(target, seekId: seekId);
             _lifecycleEvents.add(SeekLifecycle(target, seekId: seekId));
           }
@@ -989,9 +989,15 @@ class AudioPlayerController extends _$AudioPlayerController
   // Announced before the position moves so a chapter change caused by the
   // jump is not mistaken for playback crossing a chapter boundary. Returns
   // the id the closing report must carry.
-  int _announceSeek(Duration target) {
+  int _announceSeek(Duration target, {bool resumesSavedPosition = false}) {
     _lastSeekId += 1;
-    _lifecycleEvents.add(SeekStartedLifecycle(target, seekId: _lastSeekId));
+    _lifecycleEvents.add(
+      SeekStartedLifecycle(
+        target,
+        seekId: _lastSeekId,
+        resumesSavedPosition: resumesSavedPosition,
+      ),
+    );
     return _lastSeekId;
   }
 
