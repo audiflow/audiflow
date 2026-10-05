@@ -142,6 +142,10 @@ void main() {
 
       check(player.loadedUrls).deepEquals([_url, 'https://example.com/b.mp3']);
       check(player.interruptedLoads).equals(1);
+      // The interrupted first load must not report over the second.
+      check(
+        container.read(audioPlayerControllerProvider),
+      ).isA<PlaybackLoading>();
     });
 
     test('a play after stop starts a new load of the same episode', () async {
@@ -157,6 +161,11 @@ void main() {
       await Future.wait([first, stopped, second]);
 
       check(player.loadedUrls).deepEquals([_url, _url]);
+      // The replay survives both the stop and the stopped load's failure.
+      check(controller().currentUrl).equals(_url);
+      check(
+        container.read(audioPlayerControllerProvider),
+      ).isA<PlaybackLoading>();
     });
 
     test('a stale engine failure does not override a replay', () async {

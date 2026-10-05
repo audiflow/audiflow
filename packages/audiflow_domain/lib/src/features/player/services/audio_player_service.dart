@@ -513,7 +513,7 @@ class AudioPlayerController extends _$AudioPlayerController
     NowPlayingInfo? metadata,
     Duration? startAt,
   }) async {
-    _playAttempt++;
+    final attempt = ++_playAttempt;
     _isPreparingPlay = true;
     try {
       _log.i('[Play] Starting: url=$url');
@@ -723,6 +723,8 @@ class AudioPlayerController extends _$AudioPlayerController
       _log.i('[Play] _player.play() dispatched');
     } catch (e, stack) {
       _log.e('[Play] ERROR', error: e, stackTrace: stack);
+      // A newer play() or stop() interrupted this load and owns the state.
+      if (_playAttempt != attempt) return;
       state = PlaybackState.error(message: 'Failed to play audio: $e');
     } finally {
       _isPreparingPlay = false;
@@ -940,12 +942,16 @@ class AudioPlayerController extends _$AudioPlayerController
     // Cleared before any await: a play() right after stop() must start its
     // own load, not join the one this stop interrupts.
     _pendingPlay = null;
-    _playAttempt++;
+    final attempt = ++_playAttempt;
     _closeListenSession(ListenEndReason.stop);
     // Save final progress before stopping
     await _saveProgressOnStop();
+    // A play() that began while this stop awaited owns the player now;
+    // stopping or clearing would cancel it.
+    if (_playAttempt != attempt) return;
 
     await _player.stop();
+    if (_playAttempt != attempt) return;
     _currentUrl = null;
     _currentEpisodeId = null;
     state = const PlaybackState.idle();
