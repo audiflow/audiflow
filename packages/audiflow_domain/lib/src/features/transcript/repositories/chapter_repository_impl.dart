@@ -37,7 +37,12 @@ class ChapterRepositoryImpl implements ChapterRepository {
   Future<Set<int>> replaceChapters(
     Map<int, List<EpisodeChapter>> chaptersByEpisode, {
     required ChapterSource source,
-  }) => _datasource.replaceChapters(chaptersByEpisode, source: source);
+    Map<int, String?> linkedJsonUrls = const {},
+  }) => _datasource.replaceChapters(
+    chaptersByEpisode,
+    source: source,
+    linkedJsonUrls: linkedJsonUrls,
+  );
 
   @override
   Future<int> deleteByEpisodeId(int episodeId) =>

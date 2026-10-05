@@ -181,6 +181,57 @@ void main() {
       expect(await titles(), ['Json']);
     });
 
+    group('JSON chapters whose link changed', () {
+      const linkA = 'https://example.com/a.json';
+      Future<void> storeJsonFromA() => datasource.replaceChapters({
+        episodeId: [chapter(0, 'Json')..sourceUrl = linkA],
+      }, source: ChapterSource.podcastChaptersJson);
+
+      test('keep their rank while the episode still links them', () async {
+        await storeJsonFromA();
+
+        final replaced = await datasource.replaceChapters(
+          {
+            episodeId: [chapter(0, 'Psc')],
+          },
+          source: ChapterSource.podlove,
+          linkedJsonUrls: {episodeId: linkA},
+        );
+
+        expect(replaced, isEmpty);
+        expect(await titles(), ['Json']);
+      });
+
+      test('lose their rank once the link is removed', () async {
+        await storeJsonFromA();
+
+        final replaced = await datasource.replaceChapters(
+          {
+            episodeId: [chapter(0, 'Psc')],
+          },
+          source: ChapterSource.podlove,
+          linkedJsonUrls: {episodeId: null},
+        );
+
+        expect(replaced, {episodeId});
+        expect(await titles(), ['Psc']);
+      });
+
+      test('lose their rank once the link points elsewhere', () async {
+        await storeJsonFromA();
+
+        await datasource.replaceChapters(
+          {
+            episodeId: [chapter(0, 'Psc')],
+          },
+          source: ChapterSource.podlove,
+          linkedJsonUrls: {episodeId: 'https://example.com/b.json'},
+        );
+
+        expect(await titles(), ['Psc']);
+      });
+    });
+
     test('higher priority replaces lower priority', () async {
       await datasource.replaceChapters({
         episodeId: [chapter(0, 'Desc'), chapter(1, 'Desc 2')],

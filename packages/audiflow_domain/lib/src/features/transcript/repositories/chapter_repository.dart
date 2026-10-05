@@ -15,10 +15,13 @@ abstract class ChapterRepository {
   /// Replaces each episode's chapters with the given ones from [source],
   /// unless its stored chapters come from a higher-priority source.
   ///
-  /// Returns the ids of episodes whose chapters were replaced.
+  /// Stored JSON chapters lose that priority when [linkedJsonUrls] shows the
+  /// episode no longer links their file. Returns the ids of episodes whose
+  /// chapters were replaced.
   Future<Set<int>> replaceChapters(
     Map<int, List<EpisodeChapter>> chaptersByEpisode, {
     required ChapterSource source,
+    Map<int, String?> linkedJsonUrls = const {},
   });
 
   /// Deletes all chapters for an episode.

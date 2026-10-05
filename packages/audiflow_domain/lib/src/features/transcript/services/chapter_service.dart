@@ -10,6 +10,7 @@ import '../../feed/repositories/episode_repository.dart';
 import '../../feed/repositories/episode_repository_impl.dart';
 import '../models/chapter_source.dart';
 import '../models/episode_chapter.dart';
+import '../models/json_chapters_link.dart';
 import '../repositories/chapter_repository.dart';
 import '../repositories/chapter_repository_impl.dart';
 import 'chapter_mapping.dart';
@@ -95,9 +96,7 @@ class ChapterService {
         stored.firstOrNull?.source == ChapterSource.podcastChaptersJson
         ? stored.first.sourceUrl
         : null;
-    final url = _isJsonChapters(episode.chaptersType)
-        ? episode.chaptersUrl
-        : null;
+    final url = episode.jsonChaptersUrl;
     if (url == null) return _dropUnlinkedJsonChapters(episode, stored);
     // Publishers revise chapter files after release; a new URL means new
     // content, so only an unchanged URL counts as already fetched.
@@ -106,6 +105,12 @@ class ChapterService {
 
     final chapters = await _fetchJsonChapters(url);
     if (chapters == null) return false;
+    // Sync may relink the episode while the file downloads. Storing the old
+    // file would then outrank the new link, so start over with the episode
+    // as it is now.
+    final current = await _episodeRepository.getById(episode.id);
+    if (current == null) return false;
+    if (current.jsonChaptersUrl != url) return _ensureJsonChapters(current);
 
     final replaced = await _chapterRepository.replaceChapters({
       episode.id: toEpisodeChapters(episode.id, chapters, sourceUrl: url),
@@ -201,9 +206,4 @@ class ChapterService {
     if (failedAt == null) return false;
     return _now().isBefore(failedAt.add(retryCooldown));
   }
-
-  // Feeds declare `application/json+chapters`, but some use plain
-  // `application/json` for the same file.
-  static bool _isJsonChapters(String? type) =>
-      type != null && type.toLowerCase().contains('json');
 }
