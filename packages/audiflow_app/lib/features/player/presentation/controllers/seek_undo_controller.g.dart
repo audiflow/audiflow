@@ -10,37 +10,40 @@ part of 'seek_undo_controller.dart';
 // ignore_for_file: type=lint, type=warning
 /// Offers a temporary undo for seek jumps made from the player screen.
 ///
-/// Only deliberate jumps (seek bar release, chapter tap, transcript tap) go
-/// through [seekWithUndo]; skip buttons and system controls seek directly,
-/// so they never show the pill. This is a thin layer over
-/// [AudioPlayerController.seekNowPlaying] and leaves its internals alone.
+/// Only deliberate jumps made in view of the artwork (seek bar release,
+/// chapter pick) go through [seekWithUndo]; skip buttons, transcript taps,
+/// and system controls seek directly, so they never show the pill. This is
+/// a thin layer over [AudioPlayerController.seekNowPlaying] and leaves its
+/// internals alone.
 ///
-/// Kept alive so a transcript tap, made while the artwork tab may be torn
-/// down, still leaves the pill waiting when the listener swipes back.
+/// Kept alive so the origin and its timer survive the artwork being torn
+/// down and rebuilt (e.g. a tab switch) within the visible window.
 
 @ProviderFor(SeekUndoController)
 final seekUndoControllerProvider = SeekUndoControllerProvider._();
 
 /// Offers a temporary undo for seek jumps made from the player screen.
 ///
-/// Only deliberate jumps (seek bar release, chapter tap, transcript tap) go
-/// through [seekWithUndo]; skip buttons and system controls seek directly,
-/// so they never show the pill. This is a thin layer over
-/// [AudioPlayerController.seekNowPlaying] and leaves its internals alone.
+/// Only deliberate jumps made in view of the artwork (seek bar release,
+/// chapter pick) go through [seekWithUndo]; skip buttons, transcript taps,
+/// and system controls seek directly, so they never show the pill. This is
+/// a thin layer over [AudioPlayerController.seekNowPlaying] and leaves its
+/// internals alone.
 ///
-/// Kept alive so a transcript tap, made while the artwork tab may be torn
-/// down, still leaves the pill waiting when the listener swipes back.
+/// Kept alive so the origin and its timer survive the artwork being torn
+/// down and rebuilt (e.g. a tab switch) within the visible window.
 final class SeekUndoControllerProvider
     extends $NotifierProvider<SeekUndoController, SeekUndoState?> {
   /// Offers a temporary undo for seek jumps made from the player screen.
   ///
-  /// Only deliberate jumps (seek bar release, chapter tap, transcript tap) go
-  /// through [seekWithUndo]; skip buttons and system controls seek directly,
-  /// so they never show the pill. This is a thin layer over
-  /// [AudioPlayerController.seekNowPlaying] and leaves its internals alone.
+  /// Only deliberate jumps made in view of the artwork (seek bar release,
+  /// chapter pick) go through [seekWithUndo]; skip buttons, transcript taps,
+  /// and system controls seek directly, so they never show the pill. This is
+  /// a thin layer over [AudioPlayerController.seekNowPlaying] and leaves its
+  /// internals alone.
   ///
-  /// Kept alive so a transcript tap, made while the artwork tab may be torn
-  /// down, still leaves the pill waiting when the listener swipes back.
+  /// Kept alive so the origin and its timer survive the artwork being torn
+  /// down and rebuilt (e.g. a tab switch) within the visible window.
   SeekUndoControllerProvider._()
     : super(
         from: null,
@@ -69,17 +72,18 @@ final class SeekUndoControllerProvider
 }
 
 String _$seekUndoControllerHash() =>
-    r'067b4c30400897d5a03d79dfd98e80bc617290b2';
+    r'219003392c9adafe6da14721e2cbab93a65423dc';
 
 /// Offers a temporary undo for seek jumps made from the player screen.
 ///
-/// Only deliberate jumps (seek bar release, chapter tap, transcript tap) go
-/// through [seekWithUndo]; skip buttons and system controls seek directly,
-/// so they never show the pill. This is a thin layer over
-/// [AudioPlayerController.seekNowPlaying] and leaves its internals alone.
+/// Only deliberate jumps made in view of the artwork (seek bar release,
+/// chapter pick) go through [seekWithUndo]; skip buttons, transcript taps,
+/// and system controls seek directly, so they never show the pill. This is
+/// a thin layer over [AudioPlayerController.seekNowPlaying] and leaves its
+/// internals alone.
 ///
-/// Kept alive so a transcript tap, made while the artwork tab may be torn
-/// down, still leaves the pill waiting when the listener swipes back.
+/// Kept alive so the origin and its timer survive the artwork being torn
+/// down and rebuilt (e.g. a tab switch) within the visible window.
 
 abstract class _$SeekUndoController extends $Notifier<SeekUndoState?> {
   SeekUndoState? build();
