@@ -169,6 +169,9 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
   // Listener below the drag recognizer, so it is current when the
   // recognizer's callbacks run.
   Duration _lastPointerTime = Duration.zero;
+  // A cancel after the drag started arrives as a drag end, not as a drag
+  // cancel, so the Listener flags it to skip the lift-off rule.
+  bool _pointerCancelled = false;
 
   @override
   Widget build(BuildContext context) {
@@ -225,9 +228,13 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
           onHorizontalDragCancel: () => _finishDrag(_dragValue),
           child: Listener(
             behavior: HitTestBehavior.opaque,
-            onPointerDown: _recordPointerTime,
+            onPointerDown: (event) {
+              _pointerCancelled = false;
+              _recordPointerTime(event);
+            },
             onPointerMove: _recordPointerTime,
             onPointerUp: _recordPointerTime,
+            onPointerCancel: (_) => _pointerCancelled = true,
             child: SizedBox(
               height: _touchAreaHeight,
               width: double.infinity,
@@ -434,12 +441,13 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
     widget.onChanged?.call(next);
   }
 
-  // A lift-off: commit the settled position when the last move was roll.
+  // On lift-off, commit the settled position when the last move was roll.
   // The parent hears the corrected value through onChanged first, so a
   // parent that shows the drag value displays what is committed.
   void _handleDragEnd() {
     final tracker = _releaseTracker;
     if (!_isDragging || tracker == null) return;
+    if (_pointerCancelled) return _finishDrag(_dragValue);
     final end = tracker.resolveRelease(_lastPointerTime);
     if (end != _dragValue) {
       setState(() => _dragValue = end);

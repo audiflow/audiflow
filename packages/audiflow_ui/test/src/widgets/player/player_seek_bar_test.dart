@@ -662,11 +662,12 @@ void main() {
     ) async {
       final recorder = _SeekRecorder();
       final gesture = await dragToSixtyPercent(tester, recorder);
+      final settled = recorder.changes.last;
       await gesture.moveBy(const Offset(6, 0), timeStamp: ms(520));
       await gesture.cancel();
       await tester.pump();
 
-      check(recorder.ends.single).equals(recorder.changes.last);
+      check(recorder.ends.single).equals(settled + 6 / _barWidth);
     });
   });
 

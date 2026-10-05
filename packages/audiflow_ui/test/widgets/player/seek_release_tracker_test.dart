@@ -8,8 +8,11 @@ const _trackWidth = 400.0;
 /// Track fraction for [points] along a [_trackWidth] track.
 double pt(double points) => points / _trackWidth;
 
-SeekReleaseTracker _tracker({double start = 0.0}) =>
-    SeekReleaseTracker(startValue: start, startTime: ms(0), trackWidth: 400);
+SeekReleaseTracker _tracker({double start = 0.0}) => SeekReleaseTracker(
+  startValue: start,
+  startTime: ms(0),
+  trackWidth: _trackWidth,
+);
 
 /// Feeds a drag moving [speed] points per 10 ms from [from] for [frames]
 /// samples starting at [startMs]. Returns the last position.
