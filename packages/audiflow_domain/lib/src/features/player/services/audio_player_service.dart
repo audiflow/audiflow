@@ -1240,29 +1240,30 @@ class AudioPlayerController extends _$AudioPlayerController
 
   Future<void> _drainEngine() async {
     // A failed engine call must not drop a newer pending request, so the
-    // loop keeps going and reports only a failure of the final pass.
-    Object? failure;
-    StackTrace? failureStack;
+    // loop keeps going. A failure is reported unless a newer request for
+    // the same setting replaced it; another setting succeeding later does
+    // not clear it.
+    final steps = [
+      _applyTargetSpeed,
+      _applyTargetSkipSilence,
+      _applyTargetVoiceBoost,
+    ];
+    final failures = <int, (Object, StackTrace)>{};
     try {
       // Each pass consumes the targets, so the loop is bounded by the
       // requests made while it runs, even when the engine ignores a call
       // (a disposed player does not update its values).
       while (_hasEngineTarget) {
-        failure = null;
-        for (final step in [
-          _applyTargetSpeed,
-          _applyTargetSkipSilence,
-          _applyTargetVoiceBoost,
-        ]) {
+        for (final (index, step) in steps.indexed) {
           try {
-            await step();
+            if (await step()) failures.remove(index);
           } catch (error, stackTrace) {
-            failure = error;
-            failureStack = stackTrace;
+            failures[index] = (error, stackTrace);
           }
         }
       }
-      if (failure != null) Error.throwWithStackTrace(failure, failureStack!);
+      final failure = failures.values.firstOrNull;
+      if (failure != null) Error.throwWithStackTrace(failure.$1, failure.$2);
     } finally {
       _targetSpeed = null;
       _targetSkipSilence = null;
@@ -1276,27 +1277,33 @@ class AudioPlayerController extends _$AudioPlayerController
   // awaits: the request is compared against the engine value, which the
   // queued step has not changed yet. The engine values update before the
   // platform call is awaited, so a request made during a step's own call
-  // is compared correctly.
-  Future<void> _applyTargetSpeed() async {
+  // is compared correctly. Each returns whether it took a target, which
+  // supersedes an earlier failure of the same setting.
+  Future<bool> _applyTargetSpeed() async {
     final speed = _targetSpeed;
     _targetSpeed = null;
-    if (speed == null || speed == _player.speed) return;
-    await _applyToEngine(speed);
+    if (speed == null) return false;
+    if (speed != _player.speed) await _applyToEngine(speed);
+    return true;
   }
 
-  Future<void> _applyTargetSkipSilence() async {
+  Future<bool> _applyTargetSkipSilence() async {
     final enabled = _targetSkipSilence;
     _targetSkipSilence = null;
-    if (enabled == null) return;
+    if (enabled == null) return false;
     await _player.setSkipSilenceEnabled(enabled);
+    return true;
   }
 
-  Future<void> _applyTargetVoiceBoost() async {
+  Future<bool> _applyTargetVoiceBoost() async {
     final enabled = _targetVoiceBoost;
     _targetVoiceBoost = null;
+    if (enabled == null) return false;
     final effect = ref.read(voiceBoostEffectProvider);
-    if (enabled == null || effect == null || effect.enabled == enabled) return;
-    await effect.setEnabled(enabled);
+    if (effect != null && effect.enabled != enabled) {
+      await effect.setEnabled(enabled);
+    }
+    return true;
   }
 
   Future<void> _applyToEngine(double speed) async {

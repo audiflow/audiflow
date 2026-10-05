@@ -1,4 +1,5 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:riverpod/riverpod.dart';
 
@@ -63,10 +64,9 @@ void main() {
   }
 
   test('the voice boost effect uses the target gain', () {
-    expect(
+    check(
       container.read(voiceBoostEffectProvider)!.targetGain,
-      voiceBoostTargetGainDb,
-    );
+    ).equals(voiceBoostTargetGainDb);
   });
 
   group('global scope', () {
@@ -82,10 +82,10 @@ void main() {
         scope: _global,
       );
 
-      expect(repo.skipSilence, isTrue);
-      expect(repo.voiceBoost, isTrue);
-      expect(skipSilenceApplied(), isTrue);
-      expect(voiceBoostApplied(), isTrue);
+      check(repo.skipSilence).isTrue();
+      check(repo.voiceBoost).isTrue();
+      check(skipSilenceApplied()).isTrue();
+      check(voiceBoostApplied()).equals(true);
     });
 
     test('does not touch the player while an override is in effect', () async {
@@ -101,8 +101,8 @@ void main() {
         scope: _global,
       );
 
-      expect(repo.skipSilence, isTrue);
-      expect(skipSilenceApplied(), isFalse);
+      check(repo.skipSilence).isTrue();
+      check(skipSilenceApplied()).isFalse();
     });
   });
 
@@ -124,10 +124,10 @@ void main() {
         speed: 1.0,
         effects: PlaybackEffects(skipSilence: false, voiceBoost: true),
       );
-      expect(overrides.overrides[1], expected);
-      expect(overrideOf(1), expected);
-      expect(repo.voiceBoost, isFalse);
-      expect(voiceBoostApplied(), isTrue);
+      check(overrides.overrides[1]).equals(expected);
+      check(overrideOf(1)).equals(expected);
+      check(repo.voiceBoost).isFalse();
+      check(voiceBoostApplied()).equals(true);
     });
 
     test('is ignored when the podcast has no override', () async {
@@ -139,8 +139,8 @@ void main() {
         scope: _podcast,
       );
 
-      expect(overrides.overrides, isEmpty);
-      expect(skipSilenceApplied(), isFalse);
+      check(overrides.overrides).isEmpty();
+      check(skipSilenceApplied()).isFalse();
     });
 
     test('a failed write restores the override', () async {
@@ -151,17 +151,16 @@ void main() {
       await playPodcast(1);
       overrides.failWrites = true;
 
-      await expectLater(
+      await check(
         controller().setEffect(
           PlaybackEffect.voiceBoost,
           enabled: true,
           scope: _podcast,
         ),
-        throwsA(isA<StateError>()),
-      );
+      ).throws<StateError>();
 
-      expect(overrideOf(1)!.effects, PlaybackEffects.off);
-      expect(voiceBoostApplied(), isFalse);
+      check(overrideOf(1)!.effects).equals(PlaybackEffects.off);
+      check(voiceBoostApplied()).equals(false);
     });
 
     test('enable copies the global effects', () async {
@@ -174,10 +173,9 @@ void main() {
           .read(podcastAudioOverrideControllerProvider(1).notifier)
           .enable();
 
-      expect(
+      check(
         overrides.overrides[1]!.effects,
-        const PlaybackEffects(skipSilence: true, voiceBoost: true),
-      );
+      ).equals(const PlaybackEffects(skipSilence: true, voiceBoost: true));
     });
   });
 
@@ -194,9 +192,9 @@ void main() {
         scope: _global,
       );
 
-      expect(repo.skipSilence, isTrue);
-      expect(skipSilenceApplied(), isFalse);
-      expect(voiceBoostApplied(), isNull);
+      check(repo.skipSilence).isTrue();
+      check(skipSilenceApplied()).isFalse();
+      check(voiceBoostApplied()).isNull();
     });
 
     test('applyAudioSettings applies only the speed', () async {
@@ -207,8 +205,8 @@ void main() {
         ),
       );
 
-      expect(container.read(audioPlayerProvider).speed, 1.5);
-      expect(skipSilenceApplied(), isFalse);
+      check(container.read(audioPlayerProvider).speed).equals(1.5);
+      check(skipSilenceApplied()).isFalse();
     });
   });
 }

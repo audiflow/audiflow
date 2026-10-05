@@ -29,6 +29,9 @@ class _SpyAudioPlayer extends AudioPlayer {
   /// Every silence skipping value that reaches the engine.
   final List<bool> skipSilenceCalls = [];
 
+  /// When set, silence skipping calls also wait on it, after [gate].
+  Completer<void>? skipSilenceGate;
+
   @override
   Future<void> setSpeed(double speed) async {
     engineCalls.add(speed);
@@ -47,6 +50,7 @@ class _SpyAudioPlayer extends AudioPlayer {
     await _inFlight(() async {
       final pending = super.setSkipSilenceEnabled(enabled);
       await gate?.future;
+      await skipSilenceGate?.future;
       await pending;
     });
   }
@@ -187,6 +191,33 @@ void main() {
 
     await check(controller().applySpeed(1.5)).throws<StateError>();
   });
+
+  test(
+    'a later pass for another setting keeps reporting the failure',
+    () async {
+      player.gate = Completer<void>();
+      player.skipSilenceGate = Completer<void>();
+      player.failSpeeds.add(1.5);
+      const skipOn = PlaybackEffects(skipSilence: true, voiceBoost: false);
+
+      final first = controller().applyAudioSettings(
+        const AudioSettings(speed: 1.5, effects: skipOn),
+      );
+      await pumpEventQueue();
+      // The speed step fails; the silence step of the same pass starts.
+      player.gate!.complete();
+      await pumpEventQueue();
+      // A silence request made now needs a second pass, which succeeds.
+      final second = controller().applyAudioSettings(
+        const AudioSettings(speed: 1.5, effects: PlaybackEffects.off),
+      );
+      player.skipSilenceGate!.complete();
+
+      await check(first).throws<StateError>();
+      await check(second).throws<StateError>();
+      check(player.skipSilenceCalls).deepEquals([true, false]);
+    },
+  );
 
   test('an engine that ignores calls cannot make applySpeed spin', () async {
     player.ignoreCalls = true;

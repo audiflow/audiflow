@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:riverpod/riverpod.dart';
 
@@ -47,34 +48,31 @@ void main() {
       container.read(playbackEffectsSettingsControllerProvider.notifier);
 
   test('seeds state from the repository', () {
-    expect(
+    check(
       state(),
-      const PlaybackEffects(skipSilence: true, voiceBoost: false),
-    );
+    ).equals(const PlaybackEffects(skipSilence: true, voiceBoost: false));
   });
 
   test('save updates memory and persists each effect', () async {
     await notifier().save(PlaybackEffect.voiceBoost, enabled: true);
     await notifier().save(PlaybackEffect.skipSilence, enabled: false);
 
-    expect(
+    check(
       state(),
-      const PlaybackEffects(skipSilence: false, voiceBoost: true),
-    );
-    expect(repo.voiceBoost, isTrue);
-    expect(repo.skipSilence, isFalse);
+    ).equals(const PlaybackEffects(skipSilence: false, voiceBoost: true));
+    check(repo.voiceBoost).isTrue();
+    check(repo.skipSilence).isFalse();
   });
 
   test('a failed write restores the previous state', () async {
     container.dispose();
     container = createContainer(_FailingSettingsRepository());
 
-    await expectLater(
+    await check(
       notifier().save(PlaybackEffect.voiceBoost, enabled: true),
-      throwsA(isA<StateError>()),
-    );
+    ).throws<StateError>();
 
-    expect(state(), PlaybackEffects.off);
+    check(state()).equals(PlaybackEffects.off);
   });
 
   test('a failed write keeps the other effect toggled meanwhile', () async {
@@ -82,19 +80,17 @@ void main() {
     final slow = _SlowFailingSkipSilenceRepository();
     container = createContainer(slow);
 
-    final skip = expectLater(
+    final skip = check(
       notifier().save(PlaybackEffect.skipSilence, enabled: true),
-      throwsA(isA<StateError>()),
-    );
+    ).throws<StateError>();
     await notifier().save(PlaybackEffect.voiceBoost, enabled: true);
     slow.gate.complete();
     await skip;
 
     // Memory matches what a restart would read.
-    expect(
+    check(
       state(),
-      const PlaybackEffects(skipSilence: false, voiceBoost: true),
-    );
-    expect(slow.voiceBoost, isTrue);
+    ).equals(const PlaybackEffects(skipSilence: false, voiceBoost: true));
+    check(slow.voiceBoost).isTrue();
   });
 }
