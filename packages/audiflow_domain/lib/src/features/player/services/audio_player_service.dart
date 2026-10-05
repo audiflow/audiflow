@@ -363,11 +363,7 @@ class AudioPlayerController extends _$AudioPlayerController
 
           if (_suppressNextAutoAdvance) {
             _suppressNextAutoAdvance = false;
-            _log.i(
-              '[StateStream] Auto-advance suppressed by sleep timer; '
-              'pausing at episode end',
-            );
-            state = PlaybackState.paused(episodeUrl: url);
+            await _holdAtEpisodeEnd(url);
             return;
           }
 
@@ -408,6 +404,41 @@ class AudioPlayerController extends _$AudioPlayerController
       progress,
       speed: _player.speed,
     );
+  }
+
+  /// Stops at the end of the episode in place of the queue advance the sleep
+  /// timer suppressed.
+  ///
+  /// With a next episode queued, stays paused so tapping play continues with
+  /// it. With nothing queued there is nothing to continue, so the player
+  /// closes exactly as when the queue runs out on its own.
+  Future<void> _holdAtEpisodeEnd(String url) async {
+    if (await _hasQueuedEpisode()) {
+      _log.i('[StateStream] Sleep timer stop; pausing at episode end');
+      state = PlaybackState.paused(episodeUrl: url);
+      return;
+    }
+    _log.i('[StateStream] Sleep timer stop with empty queue; closing player');
+    _closePlayer();
+  }
+
+  // An unreadable queue keeps the player open: closing it cannot be undone
+  // by tapping play, while a paused player still can be.
+  Future<bool> _hasQueuedEpisode() async {
+    try {
+      final queue = await ref.read(queueServiceProvider).getQueue();
+      return queue.nextItem != null;
+    } catch (e, stack) {
+      _log.e('[StateStream] Queue lookup failed', error: e, stackTrace: stack);
+      return true;
+    }
+  }
+
+  void _closePlayer() {
+    state = const PlaybackState.idle();
+    _currentUrl = null;
+    _currentEpisodeId = null;
+    ref.read(nowPlayingControllerProvider.notifier).clear();
   }
 
   /// Handles playback completion by attempting to play the next episode.
@@ -459,11 +490,7 @@ class AudioPlayerController extends _$AudioPlayerController
         _log.i('[Complete] play() returned successfully');
       } else {
         _log.i('[Complete] No next episode, going idle');
-        // No more episodes in queue, go idle
-        state = const PlaybackState.idle();
-        _currentUrl = null;
-        _currentEpisodeId = null;
-        ref.read(nowPlayingControllerProvider.notifier).clear();
+        _closePlayer();
       }
     } catch (e, stack) {
       _log.e(

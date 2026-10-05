@@ -83,6 +83,22 @@ class _OneEpisodeQueueService extends FakeQueueService {
   Episode? _next;
 
   @override
+  Future<PlaybackQueue> getQueue() async {
+    final next = _next;
+    if (next == null) return const PlaybackQueue();
+    return PlaybackQueue(
+      manualItems: [
+        QueueItemWithEpisode(
+          queueItem: QueueItem()
+            ..episodeId = next.id
+            ..position = 0,
+          episode: next,
+        ),
+      ],
+    );
+  }
+
+  @override
   Future<Episode?> popNextEpisode() async {
     final next = _next;
     _next = null;
@@ -124,10 +140,12 @@ Episode _nextEpisode() => Episode()
 
 void main() {
   late _CompletingAudioPlayer player;
+  late _OneEpisodeQueueService queue;
   late ProviderContainer container;
 
   setUp(() {
     player = _CompletingAudioPlayer();
+    queue = _OneEpisodeQueueService(_nextEpisode());
     container = ProviderContainer(
       overrides: [
         appSettingsRepositoryProvider.overrideWithValue(
@@ -138,9 +156,7 @@ void main() {
         subscriptionRepositoryProvider.overrideWithValue(
           _EmptySubscriptionRepository(),
         ),
-        queueServiceProvider.overrideWithValue(
-          _OneEpisodeQueueService(_nextEpisode()),
-        ),
+        queueServiceProvider.overrideWithValue(queue),
         playbackHistoryServiceProvider.overrideWithValue(
           _QuietHistoryService(),
         ),
@@ -195,6 +211,19 @@ void main() {
 
       check(player.loadedUrls).deepEquals([_url, _nextUrl]);
       check(controller().currentUrl).equals(_nextUrl);
+    });
+  });
+
+  group('end-of-episode sleep stop with an empty queue', () {
+    setUp(() => queue._next = null);
+
+    test('closes the player as a natural queue end does', () async {
+      await stopAtEpisodeEndBySleepTimer();
+
+      check(player.loadedUrls).deepEquals([_url]);
+      check(controller().currentUrl).isNull();
+      check(container.read(audioPlayerControllerProvider)).isA<PlaybackIdle>();
+      check(container.read(nowPlayingControllerProvider)).isNull();
     });
   });
 }
