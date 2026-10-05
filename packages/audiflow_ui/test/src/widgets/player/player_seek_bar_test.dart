@@ -122,6 +122,30 @@ Finder get _track => find.byKey(PlayerSeekBar.trackKey);
 
 void main() {
   group('PlayerSeekBar', () {
+    testWidgets(
+      'labels sit close under the bar yet the full touch area drags',
+      (tester) async {
+        final recorder = _SeekRecorder();
+        await tester.pumpWidget(
+          _host(value: 0.5, recorder: recorder, withSheetArena: false),
+        );
+        final track = tester.getRect(_track);
+        final label = tester.getRect(find.text('01:00'));
+        // The bar is drawn mid-touch-area; the labels tuck under its bottom.
+        check(label.top - track.center.dy).isLessThan(16);
+
+        // A drag starting at the very bottom of the touch area, over the
+        // labels row, still scrubs.
+        final gesture = await tester.startGesture(
+          Offset(track.center.dx, track.bottom - 2),
+        );
+        await gesture.moveBy(const Offset(40, 0));
+        await gesture.up();
+        await tester.pump();
+        check(recorder.ends).length.equals(1);
+      },
+    );
+
     testWidgets('shows leading and trailing labels', (tester) async {
       await tester.pumpWidget(_host(value: 0.1, recorder: _SeekRecorder()));
 

@@ -142,6 +142,10 @@ class PlayerSeekBar extends StatefulWidget {
 
 class _PlayerSeekBarState extends State<PlayerSeekBar> {
   static const double _touchAreaHeight = 32.0;
+  // How far the time labels tuck under the bottom of the touch area. The
+  // track is drawn in the middle of the 32 pt touch area, so without this
+  // the labels sat about 17 pt below a 6 pt bar, which read as detached.
+  static const double _labelOverlap = 10.0;
   static const Duration _thicknessAnimation = Duration(milliseconds: 150);
 
   bool _isDragging = false;
@@ -157,11 +161,18 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
 
     return _buildSemantics(
       value: value,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+      // The track is stacked last so its whole touch area stays draggable
+      // where the labels tuck underneath it.
+      child: Stack(
+        clipBehavior: Clip.none,
         children: [
+          Padding(
+            padding: const EdgeInsets.only(
+              top: _touchAreaHeight - _labelOverlap,
+            ),
+            child: _buildLabels(theme, primary),
+          ),
           _withTooltip(value, _buildTrack(value, primary)),
-          _buildLabels(theme, primary),
         ],
       ),
     );
