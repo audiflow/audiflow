@@ -67,8 +67,14 @@ class _CompletingAudioPlayer extends AudioPlayer {
     _emit();
   }
 
+  int stopCalls = 0;
+
   @override
-  Future<void> stop() async {}
+  Future<void> stop() async {
+    stopCalls++;
+    _playing = false;
+    _processing = ProcessingState.idle;
+  }
 
   @override
   Future<void> dispose() async {
@@ -77,32 +83,36 @@ class _CompletingAudioPlayer extends AudioPlayer {
   }
 }
 
-class _OneEpisodeQueueService extends FakeQueueService {
-  _OneEpisodeQueueService(this._next);
+/// Queue of [episodes]; [queueGate] holds `getQueue()` open so a test can
+/// act while the completed-state handler is still looking at the queue.
+class _ListQueueService extends FakeQueueService {
+  _ListQueueService(this.episodes);
 
-  Episode? _next;
+  final List<Episode> episodes;
+  Completer<void>? queueGate;
+  int pops = 0;
 
   @override
   Future<PlaybackQueue> getQueue() async {
-    final next = _next;
-    if (next == null) return const PlaybackQueue();
+    await queueGate?.future;
     return PlaybackQueue(
       manualItems: [
-        QueueItemWithEpisode(
-          queueItem: QueueItem()
-            ..episodeId = next.id
-            ..position = 0,
-          episode: next,
-        ),
+        for (final (index, episode) in episodes.indexed)
+          QueueItemWithEpisode(
+            queueItem: QueueItem()
+              ..episodeId = episode.id
+              ..position = index,
+            episode: episode,
+          ),
       ],
     );
   }
 
   @override
   Future<Episode?> popNextEpisode() async {
-    final next = _next;
-    _next = null;
-    return next;
+    if (episodes.isEmpty) return null;
+    pops++;
+    return episodes.removeAt(0);
   }
 }
 
@@ -131,21 +141,23 @@ class _QuietHistoryService implements PlaybackHistoryService {
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }
 
-Episode _nextEpisode() => Episode()
-  ..id = 2
+const _thirdUrl = 'https://example.com/c.mp3';
+
+Episode _episode(int id, String url) => Episode()
+  ..id = id
   ..podcastId = 1
-  ..guid = 'b'
-  ..title = 'Next'
-  ..audioUrl = _nextUrl;
+  ..guid = url
+  ..title = url
+  ..audioUrl = url;
 
 void main() {
   late _CompletingAudioPlayer player;
-  late _OneEpisodeQueueService queue;
+  late _ListQueueService queue;
   late ProviderContainer container;
 
   setUp(() {
     player = _CompletingAudioPlayer();
-    queue = _OneEpisodeQueueService(_nextEpisode());
+    queue = _ListQueueService([_episode(2, _nextUrl), _episode(3, _thirdUrl)]);
     container = ProviderContainer(
       overrides: [
         appSettingsRepositoryProvider.overrideWithValue(
@@ -215,7 +227,7 @@ void main() {
   });
 
   group('end-of-episode sleep stop with an empty queue', () {
-    setUp(() => queue._next = null);
+    setUp(() => queue.episodes.clear());
 
     test('closes the player as a natural queue end does', () async {
       await stopAtEpisodeEndBySleepTimer();
@@ -224,6 +236,43 @@ void main() {
       check(controller().currentUrl).isNull();
       check(container.read(audioPlayerControllerProvider)).isA<PlaybackIdle>();
       check(container.read(nowPlayingControllerProvider)).isNull();
+      // The finished source would otherwise keep reporting playing to the
+      // lock screen after the player closed.
+      check(player.stopCalls).equals(1);
     });
+  });
+
+  group('overlapping play after an end-of-episode sleep stop', () {
+    test('a double tap advances the queue once', () async {
+      await stopAtEpisodeEndBySleepTimer();
+
+      await Future.wait([controller().resume(), controller().resume()]);
+      await pumpEventQueue();
+
+      check(queue.pops).equals(1);
+      check(player.loadedUrls).deepEquals([_url, _nextUrl]);
+    });
+
+    test(
+      'a tap while the stop reads the queue keeps the new episode',
+      () async {
+        queue.queueGate = Completer<void>();
+        await controller().play(_url);
+        await pumpEventQueue();
+        controller().suppressNextAutoAdvance();
+        player.completeSource();
+        await pumpEventQueue();
+
+        await controller().resume();
+        queue.queueGate!.complete();
+        await pumpEventQueue();
+
+        check(queue.pops).equals(1);
+        check(controller().currentUrl).equals(_nextUrl);
+        check(
+          container.read(audioPlayerControllerProvider),
+        ).not((it) => it.isA<PlaybackPaused>());
+      },
+    );
   });
 }

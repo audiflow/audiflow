@@ -152,6 +152,7 @@ class AudioPlayerController extends _$AudioPlayerController
   double? _preFadeVolume;
   Completer<void>? _fadeCompleter;
   bool _suppressNextAutoAdvance = false;
+  Future<void>? _queueAdvance;
   PlaySource? _nextPlaySource;
 
   /// Episode id for which `episode_complete` has already been emitted in
@@ -323,6 +324,7 @@ class AudioPlayerController extends _$AudioPlayerController
 
         if (processingState == ProcessingState.completed) {
           _log.i('[StateStream] COMPLETED detected, advancing queue...');
+          final attempt = _playAttempt;
           _closeListenSession(ListenEndReason.complete);
 
           // Emit `episode_complete` exactly once per episode load.
@@ -361,14 +363,19 @@ class AudioPlayerController extends _$AudioPlayerController
           // suppressNextAutoAdvance() before we decide whether to advance.
           await _saveProgressOnStop();
 
-          if (_suppressNextAutoAdvance) {
-            _suppressNextAutoAdvance = false;
-            await _holdAtEpisodeEnd(url);
+          final suppressed = _suppressNextAutoAdvance;
+          _suppressNextAutoAdvance = false;
+          // A play during the save (such as Play tapped right at the
+          // sleep stop) owns the player now.
+          if (_playAttempt != attempt) return;
+
+          if (suppressed) {
+            await _holdAtEpisodeEnd(url, attempt);
             return;
           }
 
           // Try to auto-play next from queue
-          await _handlePlaybackComplete();
+          await _advanceQueueOnce();
           _log.i('[StateStream] _handlePlaybackComplete finished');
         } else if (processingState == ProcessingState.loading ||
             processingState == ProcessingState.buffering) {
@@ -412,14 +419,18 @@ class AudioPlayerController extends _$AudioPlayerController
   /// With a next episode queued, stays paused so tapping play continues with
   /// it. With nothing queued there is nothing to continue, so the player
   /// closes exactly as when the queue runs out on its own.
-  Future<void> _holdAtEpisodeEnd(String url) async {
-    if (await _hasQueuedEpisode()) {
+  Future<void> _holdAtEpisodeEnd(String url, int attempt) async {
+    final hasNext = await _hasQueuedEpisode();
+    // Play tapped during the lookup already advanced; pausing or closing
+    // now would act on the episode it started.
+    if (_playAttempt != attempt) return;
+    if (hasNext) {
       _log.i('[StateStream] Sleep timer stop; pausing at episode end');
       state = PlaybackState.paused(episodeUrl: url);
       return;
     }
     _log.i('[StateStream] Sleep timer stop with empty queue; closing player');
-    _closePlayer();
+    await _closePlayer();
   }
 
   // An unreadable queue keeps the player open: closing it cannot be undone
@@ -434,12 +445,21 @@ class AudioPlayerController extends _$AudioPlayerController
     }
   }
 
-  void _closePlayer() {
+  // Stops the engine too: a completed source keeps just_audio's `playing`
+  // true, which the lock screen would still show as playing.
+  Future<void> _closePlayer() async {
     state = const PlaybackState.idle();
     _currentUrl = null;
     _currentEpisodeId = null;
     ref.read(nowPlayingControllerProvider.notifier).clear();
+    await _player.stop();
   }
+
+  // The completed-state handler and Play on a finished source both advance
+  // the queue; overlapping calls (a double tap, Play during the handler)
+  // join one advance so a single finish never pops two episodes.
+  Future<void> _advanceQueueOnce() => _queueAdvance ??=
+      _handlePlaybackComplete().whenComplete(() => _queueAdvance = null);
 
   /// Handles playback completion by attempting to play the next episode.
   ///
@@ -490,7 +510,7 @@ class AudioPlayerController extends _$AudioPlayerController
         _log.i('[Complete] play() returned successfully');
       } else {
         _log.i('[Complete] No next episode, going idle');
-        _closePlayer();
+        await _closePlayer();
       }
     } catch (e, stack) {
       _log.e(
@@ -906,7 +926,7 @@ class AudioPlayerController extends _$AudioPlayerController
   Future<void> resume() async {
     if (_currentUrl == null) return;
     if (_isParkedAtEnd) {
-      await _handlePlaybackComplete();
+      await _advanceQueueOnce();
       return;
     }
     ref.read(playbackHistoryServiceProvider).onPlaybackResumed();
