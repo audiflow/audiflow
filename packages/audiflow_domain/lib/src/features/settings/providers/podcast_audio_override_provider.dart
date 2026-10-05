@@ -23,9 +23,19 @@ part 'podcast_audio_override_provider.g.dart';
 /// a loading state could be overwritten by the pending load.
 @Riverpod(keepAlive: true)
 class PodcastAudioOverrideController extends _$PodcastAudioOverrideController {
+  // The override as last read from or written to the store, and the number
+  // of writes still running. Every write stores the whole row, so when the
+  // last pending write fails memory returns to this rather than to the
+  // state that write replaced, which an earlier failed write may have left.
+  AudioSettings? _persisted;
+  int _writesInFlight = 0;
+
   @override
-  Future<AudioSettings?> build(int podcastId) {
-    return ref.watch(podcastAudioPreferenceRepositoryProvider).get(podcastId);
+  Future<AudioSettings?> build(int podcastId) async {
+    final repo = ref.watch(podcastAudioPreferenceRepositoryProvider);
+    final stored = await repo.get(podcastId);
+    _persisted = stored;
+    return stored;
   }
 
   /// Whether the stored override has loaded and exists.
@@ -96,13 +106,21 @@ class PodcastAudioOverrideController extends _$PodcastAudioOverrideController {
   ) async {
     final previous = state;
     state = AsyncData(next);
+    _writesInFlight += 1;
     try {
       await write(ref.read(podcastAudioPreferenceRepositoryProvider));
+      _persisted = next;
     } catch (_) {
       // A newer edit (such as a slider preview) replaced the pending
       // state; rolling back would discard that input.
-      if (state is AsyncData && state.value == next) state = previous;
+      if (state is AsyncData && state.value == next) {
+        // An earlier write still running persists the state this one
+        // replaced; otherwise only the stored row is safe to show.
+        state = _writesInFlight == 1 ? AsyncData(_persisted) : previous;
+      }
       rethrow;
+    } finally {
+      _writesInFlight -= 1;
     }
   }
 }

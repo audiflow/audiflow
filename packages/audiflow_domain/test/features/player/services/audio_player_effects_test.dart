@@ -163,6 +163,29 @@ void main() {
       check(voiceBoostApplied()).equals(false);
     });
 
+    test('overlapping failed writes leave the stored effects', () async {
+      overrides.overrides[1] = const AudioSettings(
+        speed: 1.0,
+        effects: PlaybackEffects.off,
+      );
+      await playPodcast(1);
+      overrides.failWrites = true;
+      final notifier = container.read(
+        podcastAudioOverrideControllerProvider(1).notifier,
+      );
+
+      final boost = check(
+        notifier.saveEffect(PlaybackEffect.voiceBoost, enabled: true),
+      ).throws<StateError>();
+      final skip = check(
+        notifier.saveEffect(PlaybackEffect.skipSilence, enabled: true),
+      ).throws<StateError>();
+      await boost;
+      await skip;
+
+      check(overrideOf(1)!.effects).equals(PlaybackEffects.off);
+    });
+
     test('enable copies the global effects', () async {
       repo
         ..skipSilence = true
