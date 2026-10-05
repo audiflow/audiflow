@@ -3,7 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../models/audio_settings.dart';
 import '../repositories/podcast_audio_preference_repository.dart';
-import 'settings_providers.dart';
+import 'playback_speed_settings_provider.dart';
 
 part 'podcast_audio_override_provider.g.dart';
 
@@ -28,17 +28,17 @@ class PodcastAudioOverrideController extends _$PodcastAudioOverrideController {
   /// Whether the stored override has loaded and exists.
   bool get hasOverride => state is AsyncData && state.value != null;
 
-  /// Creates the override by copying the stored global settings, so
+  /// Creates the override by copying the committed global settings, so
   /// switching it on does not change what the listener hears.
   ///
-  /// Reads the stored value rather than the in-memory one: they differ
+  /// Copies the committed speed rather than the displayed one: they differ
   /// only during a global slider drag, and copying that uncommitted
   /// preview would persist a speed the listener never settled on.
   Future<void> enable() async {
     if (state is! AsyncData || hasOverride) return;
     final globalSpeed = ref
-        .read(appSettingsRepositoryProvider)
-        .getPlaybackSpeed();
+        .read(playbackSpeedSettingsControllerProvider.notifier)
+        .committedSpeed;
     final created = AudioSettings(speed: globalSpeed);
     await _update(created, (repo) => repo.set(podcastId, created));
   }

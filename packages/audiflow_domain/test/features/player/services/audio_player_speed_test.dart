@@ -206,6 +206,17 @@ void main() {
       expect(overrides.overrides[1], const AudioSettings(speed: 1.3));
     });
 
+    test('enable copies a commit whose write is still pending', () async {
+      repo.playbackSpeed = 1.3;
+      await container.read(podcastAudioOverrideControllerProvider(1).future);
+
+      final commit = controller().setSpeed(1.6, scope: _global);
+      await overrideOf(1).enable();
+      await commit;
+
+      expect(overrides.overrides[1], const AudioSettings(speed: 1.6));
+    });
+
     test('a failed write restores the previous state', () async {
       overrides.failWrites = true;
       await container.read(podcastAudioOverrideControllerProvider(1).future);

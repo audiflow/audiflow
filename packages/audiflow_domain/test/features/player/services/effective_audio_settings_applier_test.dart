@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:riverpod/riverpod.dart';
@@ -22,6 +23,9 @@ class _SpyAudioPlayer extends AudioPlayer {
   /// disposed player.
   bool ignoreCalls = false;
 
+  /// Speeds the engine rejects, after waiting on [gate].
+  final Set<double> failSpeeds = {};
+
   @override
   Future<void> setSpeed(double speed) async {
     engineCalls.add(speed);
@@ -31,6 +35,7 @@ class _SpyAudioPlayer extends AudioPlayer {
     try {
       final pending = super.setSpeed(speed);
       await gate?.future;
+      if (failSpeeds.contains(speed)) throw StateError('engine rejected');
       await pending;
     } finally {
       inFlight--;
@@ -101,8 +106,8 @@ void main() {
       restoreNowPlaying(1);
       await pumpEventQueue(times: 100);
 
-      expect(player.engineCalls, [1.8]);
-      expect(player.speed, 1.8);
+      check(player.engineCalls).deepEquals([1.8]);
+      check(player.speed).equals(1.8);
     },
   );
 
@@ -117,8 +122,8 @@ void main() {
       await controller().setSpeed(1.2, scope: global);
       await pumpEventQueue(times: 100);
 
-      expect(player.engineCalls, [1.1, 1.2, 1.3, 1.2]);
-      expect(player.speed, 1.2);
+      check(player.engineCalls).deepEquals([1.1, 1.2, 1.3, 1.2]);
+      check(player.speed).equals(1.2);
     },
   );
 
@@ -133,9 +138,31 @@ void main() {
     player.gate!.complete();
     await pumpEventQueue(times: 100);
 
-    expect(player.maxInFlight, 1);
-    expect(player.engineCalls, [1.1, 1.4]);
-    expect(player.speed, 1.4);
+    check(player.maxInFlight).equals(1);
+    check(player.engineCalls).deepEquals([1.1, 1.4]);
+    check(player.speed).equals(1.4);
+  });
+
+  test('an engine failure does not drop a newer pending speed', () async {
+    player.gate = Completer<void>();
+    player.failSpeeds.add(1.1);
+
+    final first = controller().applySpeed(1.1);
+    final second = controller().applySpeed(1.4);
+    await pumpEventQueue();
+    player.gate!.complete();
+
+    // Only the final speed's outcome is reported, and it succeeded.
+    await first;
+    await second;
+    check(player.engineCalls).deepEquals([1.1, 1.4]);
+    check(player.speed).equals(1.4);
+  });
+
+  test('an engine failure on the final speed is reported', () async {
+    player.failSpeeds.add(1.5);
+
+    await check(controller().applySpeed(1.5)).throws<StateError>();
   });
 
   test('an engine that ignores calls cannot make applySpeed spin', () async {
@@ -146,7 +173,7 @@ void main() {
 
     // The second request is not deduplicated (speed never changed) but
     // each request reaches the engine exactly once.
-    expect(player.engineCalls, [1.5, 1.5]);
+    check(player.engineCalls).deepEquals([1.5, 1.5]);
   });
 
   test(
@@ -156,7 +183,7 @@ void main() {
       await controller().applySpeed(1.5);
       await controller().applySpeed(1.48);
 
-      expect(player.engineCalls, [1.5]);
+      check(player.engineCalls).deepEquals([1.5]);
     },
   );
 }

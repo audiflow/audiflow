@@ -50,11 +50,20 @@ final class PlaybackSpeedSettings {
 @Riverpod(keepAlive: true)
 class PlaybackSpeedSettingsController
     extends _$PlaybackSpeedSettingsController {
+  // The last speed the listener settled on. It differs from `state.speed`
+  // only during a slider drag; it is updated before the write starts so it
+  // never lags a commit that is still being persisted.
+  late double _committedSpeed;
+
+  /// The current speed, ignoring any uncommitted drag preview.
+  double get committedSpeed => _committedSpeed;
+
   @override
   PlaybackSpeedSettings build() {
     final repo = ref.watch(appSettingsRepositoryProvider);
+    _committedSpeed = repo.getPlaybackSpeed();
     return PlaybackSpeedSettings(
-      speed: repo.getPlaybackSpeed(),
+      speed: _committedSpeed,
       recentSpeeds: repo.getRecentPlaybackSpeeds(),
     );
   }
@@ -75,6 +84,7 @@ class PlaybackSpeedSettingsController
     // on disk; persistence failures surface to the caller.
     state = PlaybackSpeedSettings(speed: snapped, recentSpeeds: recent);
     if (!commit) return;
+    _committedSpeed = snapped;
     await repo.setPlaybackSpeed(snapped);
     await repo.setRecentPlaybackSpeeds(recent);
   }
