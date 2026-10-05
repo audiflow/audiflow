@@ -83,6 +83,20 @@ void main() {
     });
   });
 
+  group('PlaybackEffects', () {
+    test('default to off', () {
+      expect(repository.getSkipSilence(), SettingsDefaults.skipSilence);
+      expect(repository.getVoiceBoost(), SettingsDefaults.voiceBoost);
+    });
+
+    test('persist and read each effect', () async {
+      await repository.setSkipSilence(true);
+      await repository.setVoiceBoost(true);
+      expect(repository.getSkipSilence(), isTrue);
+      expect(repository.getVoiceBoost(), isTrue);
+    });
+  });
+
   group('RecentPlaybackSpeeds', () {
     test('returns empty list when no value stored', () {
       expect(repository.getRecentPlaybackSpeeds(), isEmpty);

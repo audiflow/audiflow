@@ -92,6 +92,14 @@ class FakeAppSettingsRepository implements AppSettingsRepository {
   @override
   Future<void> setShowRemainingTime(bool enabled) async {}
   @override
+  bool getSkipSilence() => false;
+  @override
+  Future<void> setSkipSilence(bool enabled) async {}
+  @override
+  bool getVoiceBoost() => false;
+  @override
+  Future<void> setVoiceBoost(bool enabled) async {}
+  @override
   Future<void> setWifiOnlyDownload(bool enabled) async {}
   @override
   bool getAutoDeletePlayed() => false;

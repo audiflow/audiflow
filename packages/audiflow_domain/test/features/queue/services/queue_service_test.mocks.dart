@@ -557,6 +557,40 @@ class MockAppSettingsRepository extends _i1.Mock
           as _i4.Future<void>);
 
   @override
+  bool getSkipSilence() =>
+      (super.noSuchMethod(
+            Invocation.method(#getSkipSilence, []),
+            returnValue: false,
+          )
+          as bool);
+
+  @override
+  _i4.Future<void> setSkipSilence(bool? enabled) =>
+      (super.noSuchMethod(
+            Invocation.method(#setSkipSilence, [enabled]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
+  bool getVoiceBoost() =>
+      (super.noSuchMethod(
+            Invocation.method(#getVoiceBoost, []),
+            returnValue: false,
+          )
+          as bool);
+
+  @override
+  _i4.Future<void> setVoiceBoost(bool? enabled) =>
+      (super.noSuchMethod(
+            Invocation.method(#setVoiceBoost, [enabled]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
   bool getWifiOnlyDownload() =>
       (super.noSuchMethod(
             Invocation.method(#getWifiOnlyDownload, []),

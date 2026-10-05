@@ -145,6 +145,24 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
     await _ds.setBool(SettingsKeys.showRemainingTime, enabled);
   }
 
+  @override
+  bool getSkipSilence() =>
+      _ds.getBool(SettingsKeys.skipSilence) ?? SettingsDefaults.skipSilence;
+
+  @override
+  Future<void> setSkipSilence(bool enabled) async {
+    await _ds.setBool(SettingsKeys.skipSilence, enabled);
+  }
+
+  @override
+  bool getVoiceBoost() =>
+      _ds.getBool(SettingsKeys.voiceBoost) ?? SettingsDefaults.voiceBoost;
+
+  @override
+  Future<void> setVoiceBoost(bool enabled) async {
+    await _ds.setBool(SettingsKeys.voiceBoost, enabled);
+  }
+
   // -- Downloads --
 
   @override

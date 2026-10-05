@@ -24,7 +24,8 @@ class _MemoryOverrides implements PodcastAudioPreferenceRepository {
 
   @override
   Future<AudioSettings> resolveForPodcast(int podcastId) async =>
-      rows[podcastId] ?? const AudioSettings(speed: 1.0);
+      rows[podcastId] ??
+      const AudioSettings(speed: 1.0, effects: PlaybackEffects.off);
 }
 
 void main() {
@@ -56,9 +57,8 @@ void main() {
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       builder: (context, child) => MediaQuery(
-        data: MediaQuery.of(
-          context,
-        ).copyWith(textScaler: TextScaler.linear(textScale)),
+        data: MediaQuery.of(context)
+            .copyWith(textScaler: TextScaler.linear(textScale)),
         child: child!,
       ),
       home: Scaffold(
@@ -239,7 +239,10 @@ void main() {
     testWidgets('shows the override and turning it off deletes it', (
       tester,
     ) async {
-      overrides.rows[7] = const AudioSettings(speed: 1.5);
+      overrides.rows[7] = const AudioSettings(
+        speed: 1.5,
+        effects: PlaybackEffects.off,
+      );
       await open(tester);
 
       expect(find.text('This podcast only'), findsOneWidget);
@@ -271,7 +274,10 @@ void main() {
       await tester.tap(find.byType(Switch));
       await tester.pumpAndSettle();
 
-      expect(overrides.rows[7], const AudioSettings(speed: 1.0));
+      expect(
+        overrides.rows[7],
+        const AudioSettings(speed: 1.0, effects: PlaybackEffects.off),
+      );
       expect(find.text('This podcast only'), findsOneWidget);
     });
   });

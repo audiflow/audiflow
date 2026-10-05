@@ -26,17 +26,36 @@ class _SpyAudioPlayer extends AudioPlayer {
   /// Speeds the engine rejects, after waiting on [gate].
   final Set<double> failSpeeds = {};
 
+  /// Every silence skipping value that reaches the engine.
+  final List<bool> skipSilenceCalls = [];
+
   @override
   Future<void> setSpeed(double speed) async {
     engineCalls.add(speed);
     if (ignoreCalls) return;
-    inFlight++;
-    if (maxInFlight < inFlight) maxInFlight = inFlight;
-    try {
+    await _inFlight(() async {
       final pending = super.setSpeed(speed);
       await gate?.future;
       if (failSpeeds.contains(speed)) throw StateError('engine rejected');
       await pending;
+    });
+  }
+
+  @override
+  Future<void> setSkipSilenceEnabled(bool enabled) async {
+    skipSilenceCalls.add(enabled);
+    await _inFlight(() async {
+      final pending = super.setSkipSilenceEnabled(enabled);
+      await gate?.future;
+      await pending;
+    });
+  }
+
+  Future<void> _inFlight(Future<void> Function() call) async {
+    inFlight++;
+    if (maxInFlight < inFlight) maxInFlight = inFlight;
+    try {
+      await call();
     } finally {
       inFlight--;
     }
@@ -52,7 +71,7 @@ void main() {
   setUp(() {
     settingsRepo = FakeAppSettingsRepository();
     overrides = FakePodcastAudioPreferenceRepository(
-      () => settingsRepo.playbackSpeed,
+      () => settingsRepo.audioSettings,
     );
     player = _SpyAudioPlayer();
     container = ProviderContainer(
@@ -60,6 +79,7 @@ void main() {
         appSettingsRepositoryProvider.overrideWithValue(settingsRepo),
         podcastAudioPreferenceRepositoryProvider.overrideWithValue(overrides),
         analyticsServiceProvider.overrideWithValue(FakeAnalyticsService()),
+        audioEffectsSupportedProvider.overrideWithValue(true),
         audioPlayerProvider.overrideWith((ref) {
           ref.onDispose(player.dispose);
           return player;
@@ -100,7 +120,10 @@ void main() {
     () async {
       // Stored values that predate the step grid.
       settingsRepo.playbackSpeed = 1.25;
-      overrides.overrides[1] = const AudioSettings(speed: 1.75);
+      overrides.overrides[1] = const AudioSettings(
+        speed: 1.75,
+        effects: PlaybackEffects.off,
+      );
       startApplier();
 
       restoreNowPlaying(1);
@@ -186,4 +209,76 @@ void main() {
       check(player.engineCalls).deepEquals([1.5]);
     },
   );
+
+  group('effects', () {
+    const skipSilence = AudioSettings(
+      speed: 1.0,
+      effects: PlaybackEffects(skipSilence: true, voiceBoost: false),
+    );
+    const boosted = AudioSettings(
+      speed: 1.0,
+      effects: PlaybackEffects(skipSilence: false, voiceBoost: true),
+    );
+
+    AndroidLoudnessEnhancer voiceBoost() =>
+        container.read(voiceBoostEffectProvider)!;
+
+    test('follow the podcast override when the episode changes', () async {
+      overrides.overrides[1] = skipSilence;
+      overrides.overrides[2] = boosted;
+      startApplier();
+
+      restoreNowPlaying(1);
+      await pumpEventQueue(times: 100);
+      check(player.skipSilenceEnabled).isTrue();
+      check(voiceBoost().enabled).isFalse();
+
+      restoreNowPlaying(2);
+      await pumpEventQueue(times: 100);
+      check(player.skipSilenceEnabled).isFalse();
+      check(voiceBoost().enabled).isTrue();
+      check(player.skipSilenceCalls).deepEquals([true, false]);
+    });
+
+    test('share the serialized engine path with the speed', () async {
+      player.gate = Completer<void>();
+
+      final first = controller().applySpeed(1.5);
+      final second = controller().applyAudioSettings(skipSilence);
+      await pumpEventQueue();
+      player.gate!.complete();
+      await first;
+      await second;
+
+      check(player.maxInFlight).equals(1);
+      check(player.engineCalls).deepEquals([1.5, 1.0]);
+      check(player.skipSilenceCalls).deepEquals([true]);
+    });
+
+    test('are idempotent', () async {
+      await controller().applyAudioSettings(skipSilence);
+      await controller().applyAudioSettings(skipSilence);
+
+      check(player.skipSilenceCalls).deepEquals([true]);
+      check(player.engineCalls).isEmpty();
+    });
+
+    test(
+      'a scope switch with the same values does not reach the engine',
+      () async {
+        settingsRepo.skipSilence = true;
+        startApplier();
+        restoreNowPlaying(1);
+        await pumpEventQueue(times: 100);
+        check(player.skipSilenceCalls).deepEquals([true]);
+
+        await container
+            .read(podcastAudioOverrideControllerProvider(1).notifier)
+            .enable();
+        await pumpEventQueue(times: 100);
+
+        check(player.skipSilenceCalls).deepEquals([true]);
+      },
+    );
+  });
 }

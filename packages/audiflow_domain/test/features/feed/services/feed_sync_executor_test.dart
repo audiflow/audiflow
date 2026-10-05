@@ -320,6 +320,18 @@ class _FakeAppSettingsRepository implements AppSettingsRepository {
   Future<void> setShowRemainingTime(bool enabled) => throw UnimplementedError();
 
   @override
+  bool getSkipSilence() => throw UnimplementedError();
+
+  @override
+  Future<void> setSkipSilence(bool enabled) => throw UnimplementedError();
+
+  @override
+  bool getVoiceBoost() => throw UnimplementedError();
+
+  @override
+  Future<void> setVoiceBoost(bool enabled) => throw UnimplementedError();
+
+  @override
   bool getWifiOnlyDownload() => throw UnimplementedError();
 
   @override
