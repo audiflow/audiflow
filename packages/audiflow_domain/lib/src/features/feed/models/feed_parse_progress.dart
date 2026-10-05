@@ -1,5 +1,5 @@
 import 'package:audiflow_podcast/audiflow_podcast.dart'
-    show ParsedChapter, ParsedTranscript;
+    show ParsedChapter, ParsedTranscript, PodcastChapter;
 
 /// Progress events emitted during feed parsing with batched storage.
 sealed class FeedParseProgress {
@@ -15,6 +15,7 @@ final class ParsedEpisodeMediaMeta {
     required this.guid,
     this.transcripts,
     this.chapters,
+    this.descriptionChapters = const [],
   });
 
   /// Episode GUID used to resolve the database episode ID.
@@ -26,6 +27,13 @@ final class ParsedEpisodeMediaMeta {
   /// Parsed chapter metadata from RSS feed.
   final List<ParsedChapter>? chapters;
 
+  /// Chapters derived from the episode's show notes; empty when the feed
+  /// has its own chapters or the notes hold no timestamp list.
+  final List<PodcastChapter> descriptionChapters;
+
+  /// Whether chapters were derived from the show notes.
+  bool get hasDescriptionChapters => descriptionChapters.isNotEmpty;
+
   /// Whether this episode has any transcript data.
   bool get hasTranscripts => transcripts != null && transcripts!.isNotEmpty;
 
@@ -33,7 +41,7 @@ final class ParsedEpisodeMediaMeta {
   bool get hasChapters => chapters != null && chapters!.isNotEmpty;
 
   /// Whether this episode has any media metadata to store.
-  bool get hasData => hasTranscripts || hasChapters;
+  bool get hasData => hasTranscripts || hasChapters || hasDescriptionChapters;
 }
 
 /// Emitted when podcast metadata is ready.

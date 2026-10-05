@@ -765,6 +765,57 @@ void main() {
       check(chapters.first.source).equals(ChapterSource.podlove);
     });
 
+    test('stores description chapters with their source', () async {
+      await insertEpisode('ep-notes');
+
+      await repository.storeTranscriptAndChapterDataFromParsed(podcastId, [
+        const ParsedEpisodeMediaMeta(
+          guid: 'ep-notes',
+          descriptionChapters: [
+            PodcastChapter(title: 'Intro', startTime: Duration.zero),
+            PodcastChapter(title: 'Topic', startTime: Duration(minutes: 5)),
+          ],
+        ),
+      ]);
+
+      final episode = await episodeDatasource.getByPodcastIdAndGuid(
+        podcastId,
+        'ep-notes',
+      );
+      final chapters = await chapterDatasource.getByEpisodeId(episode!.id);
+      check(chapters.map((c) => c.title)).deepEquals(['Intro', 'Topic']);
+      check(
+        chapters.map((c) => c.source),
+      ).every((it) => it.equals(ChapterSource.description));
+    });
+
+    test('feed chapters replace description chapters', () async {
+      await insertEpisode('ep-upgrade');
+      await repository.storeTranscriptAndChapterDataFromParsed(podcastId, [
+        const ParsedEpisodeMediaMeta(
+          guid: 'ep-upgrade',
+          descriptionChapters: [
+            PodcastChapter(title: 'Derived', startTime: Duration.zero),
+          ],
+        ),
+      ]);
+
+      await repository.storeTranscriptAndChapterDataFromParsed(podcastId, [
+        const ParsedEpisodeMediaMeta(
+          guid: 'ep-upgrade',
+          chapters: [ParsedChapter(title: 'Feed', startTime: Duration.zero)],
+        ),
+      ]);
+
+      final episode = await episodeDatasource.getByPodcastIdAndGuid(
+        podcastId,
+        'ep-upgrade',
+      );
+      final chapters = await chapterDatasource.getByEpisodeId(episode!.id);
+      check(chapters.single.title).equals('Feed');
+      check(chapters.single.source).equals(ChapterSource.podlove);
+    });
+
     test('handles empty media metas list', () async {
       await repository.storeTranscriptAndChapterDataFromParsed(podcastId, []);
     });
@@ -804,6 +855,55 @@ void main() {
       );
       check(episode!.chaptersUrl).equals('https://example.com/chapters.json');
       check(episode.chaptersType).equals('application/json+chapters');
+    });
+  });
+
+  group('description chapters from feed items', () {
+    const derived = [
+      PodcastChapter(title: 'Intro', startTime: Duration.zero),
+      PodcastChapter(title: 'Middle', startTime: Duration(minutes: 4)),
+    ];
+
+    PodcastItem item(String guid) => PodcastItem.fromData(
+      parsedAt: DateTime.now(),
+      sourceUrl: '',
+      title: guid,
+      description: 'desc',
+      guid: guid,
+      enclosureUrl: 'https://example.com/$guid.mp3',
+      descriptionChapters: derived,
+    );
+
+    Future<int> episodeIdOf(String guid) async =>
+        (await episodeDatasource.getByPodcastIdAndGuid(podcastId, guid))!.id;
+
+    test('stores derived chapters with the description source', () async {
+      await repository.upsertFromFeedItems(podcastId, [item('ep-d')]);
+
+      final chapters = await chapterDatasource.getByEpisodeId(
+        await episodeIdOf('ep-d'),
+      );
+      check(chapters.map((c) => c.title)).deepEquals(['Intro', 'Middle']);
+      check(chapters.first.source).equals(ChapterSource.description);
+    });
+
+    test('leaves stored JSON chapters untouched', () async {
+      await repository.upsertFromFeedItems(podcastId, [item('ep-j')]);
+      final episodeId = await episodeIdOf('ep-j');
+      await chapterDatasource.replaceChapters({
+        episodeId: [
+          EpisodeChapter()
+            ..episodeId = episodeId
+            ..sortOrder = 0
+            ..title = 'From JSON'
+            ..startMs = 0,
+        ],
+      }, source: ChapterSource.podcastChaptersJson);
+
+      await repository.upsertFromFeedItems(podcastId, [item('ep-j')]);
+
+      final chapters = await chapterDatasource.getByEpisodeId(episodeId);
+      check(chapters.single.title).equals('From JSON');
     });
   });
 
