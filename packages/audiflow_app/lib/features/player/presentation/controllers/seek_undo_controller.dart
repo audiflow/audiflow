@@ -32,6 +32,9 @@ class SeekUndoController extends _$SeekUndoController {
   static const visibleDuration = Duration(seconds: 10);
 
   Timer? _hideTimer;
+  // Bumped whenever the offer is shown, restarted, or hidden, so an async
+  // seek can tell whether a later jump or dismissal has taken over since.
+  int _offerGeneration = 0;
 
   @override
   SeekUndoState? build() {
@@ -55,14 +58,17 @@ class SeekUndoController extends _$SeekUndoController {
   Future<void> seekWithUndo(Duration target) async {
     final previous = state;
     _recordOrigin();
+    final created = !identical(state, previous);
+    final generation = _offerGeneration;
     try {
       await ref
           .read(audioPlayerControllerProvider.notifier)
           .seekNowPlaying(target);
     } on Object {
-      // Only an offer this jump created is withdrawn; an earlier one still
+      // Only an offer this jump created, and nothing has touched since, is
+      // withdrawn: an earlier offer, or a later jump's restart, still
       // describes a jump that happened.
-      if (!identical(state, previous)) dismiss();
+      if (created && generation == _offerGeneration) dismiss();
       rethrow;
     }
   }
@@ -84,7 +90,10 @@ class SeekUndoController extends _$SeekUndoController {
           .read(audioPlayerControllerProvider.notifier)
           .seekNowPlaying(undo.origin);
     } on Object {
-      _offer(undo);
+      // Not restored over a newer offer or onto another episode.
+      final stillSameEpisode =
+          ref.read(nowPlayingControllerProvider)?.episodeUrl == undo.episodeUrl;
+      if (state == null && stillSameEpisode) _offer(undo);
       rethrow;
     }
   }
@@ -92,6 +101,7 @@ class SeekUndoController extends _$SeekUndoController {
   /// Hides the pill without seeking.
   void dismiss() {
     _cancelTimer();
+    _offerGeneration += 1;
     state = null;
   }
 
@@ -110,6 +120,7 @@ class SeekUndoController extends _$SeekUndoController {
   // Shows [undo] and (re)starts the countdown that hides it.
   void _offer(SeekUndoState undo) {
     _cancelTimer();
+    _offerGeneration += 1;
     state = undo;
     _hideTimer = Timer(visibleDuration, dismiss);
   }

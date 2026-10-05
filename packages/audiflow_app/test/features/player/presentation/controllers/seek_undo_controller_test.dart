@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audiflow_app/features/player/presentation/controllers/seek_undo_controller.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
@@ -32,11 +34,20 @@ class _RecordingAudioPlayerController extends AudioPlayerController {
   /// When true, the next seeks throw as a rejected player seek does.
   bool rejectSeeks = false;
 
+  /// When true, seeks wait until their completer in [held] is completed.
+  bool holdSeeks = false;
+  final List<Completer<void>> held = [];
+
   @override
   PlaybackState build() => const PlaybackState.idle();
 
   @override
   Future<void> seekNowPlaying(Duration position) async {
+    if (holdSeeks) {
+      final completer = Completer<void>();
+      held.add(completer);
+      await completer.future;
+    }
     if (rejectSeeks) throw StateError('seek rejected');
     seeks.add(position);
   }
@@ -105,6 +116,40 @@ void main() {
           .isNotNull()
           .has((s) => s.origin, 'origin')
           .equals(const Duration(minutes: 3));
+    });
+
+    test('an earlier jump failing keeps the offer of a later one', () async {
+      harness.player.holdSeeks = true;
+      final first = harness.controller.seekWithUndo(
+        const Duration(minutes: 20),
+      );
+      final second = harness.controller.seekWithUndo(
+        const Duration(minutes: 40),
+      );
+      harness.player.held[0].completeError(StateError('seek rejected'));
+      await check(first).throws<StateError>();
+      harness.player.held[1].complete();
+      await second;
+
+      check(harness.state)
+          .isNotNull()
+          .has((s) => s.origin, 'origin')
+          .equals(const Duration(minutes: 3));
+    });
+
+    test('a rejected go back after an episode change stays hidden', () async {
+      await harness.controller.seekWithUndo(const Duration(minutes: 20));
+      harness.player
+        ..holdSeeks = true
+        ..rejectSeeks = true;
+      final goBack = harness.controller.goBack();
+      harness.container
+          .read(nowPlayingControllerProvider.notifier)
+          .setNowPlaying(_episodeB);
+      harness.player.held.single.complete();
+
+      await check(goBack).throws<StateError>();
+      check(harness.state).isNull();
     });
 
     test('a rejected go back brings the pill back for a retry', () {
