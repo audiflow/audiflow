@@ -698,7 +698,7 @@ void main() {
       ]);
 
       final chapters = await chapterDatasource.getByEpisodeId(episode.id);
-      expect(chapters.single.title, 'From JSON');
+      check(chapters.single.title).equals('From JSON');
     });
 
     test(
@@ -730,8 +730,8 @@ void main() {
         ]);
 
         final chapters = await chapterDatasource.getByEpisodeId(episode.id);
-        expect(chapters.single.title, 'From psc');
-        expect(chapters.single.source, ChapterSource.podlove);
+        check(chapters.single.title).equals('From psc');
+        check(chapters.single.source).equals(ChapterSource.podlove);
       },
     );
 
@@ -761,8 +761,8 @@ void main() {
         'ep-resync',
       );
       final chapters = await chapterDatasource.getByEpisodeId(episode!.id);
-      expect(chapters.map((c) => c.title), ['X', 'Y']);
-      expect(chapters.first.source, ChapterSource.podlove);
+      check(chapters.map((c) => c.title)).deepEquals(['X', 'Y']);
+      check(chapters.first.source).equals(ChapterSource.podlove);
     });
 
     test('handles empty media metas list', () async {
