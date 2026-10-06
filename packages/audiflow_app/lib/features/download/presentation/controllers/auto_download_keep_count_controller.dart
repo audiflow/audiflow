@@ -7,7 +7,11 @@ part 'auto_download_keep_count_controller.g.dart';
 
 /// Changes how many unstarted auto-downloads are kept and applies the new
 /// limit right away instead of waiting for the next feed sync.
-@riverpod
+///
+/// Kept alive: callers fire these actions without listening, and an
+/// auto-disposed controller would be torn down mid-await, making the
+/// following `ref.read` throw.
+@Riverpod(keepAlive: true)
 class AutoDownloadKeepCountController
     extends _$AutoDownloadKeepCountController {
   @override
