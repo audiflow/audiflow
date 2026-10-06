@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../../../app/background/background_task_registrar.dart';
+import '../../../../app/notification/notification_permission.dart';
 import '../../../../l10n/app_localizations.dart';
 
 /// Screen for configuring feed sync settings: auto-sync,
@@ -122,7 +123,7 @@ class _FeedSyncSettingsScreenState extends ConsumerState<FeedSyncSettingsScreen>
     ++_permissionGeneration;
     final PermissionStatus status;
     try {
-      status = await _resolveNotificationPermission();
+      status = await resolveNotificationPermission();
     } on Exception catch (e, stack) {
       _logPermissionFailure(e, stack);
       return;
@@ -144,15 +145,6 @@ class _FeedSyncSettingsScreenState extends ConsumerState<FeedSyncSettingsScreen>
     if (status.isPermanentlyDenied && mounted) {
       await _showNotificationPermissionDialog();
     }
-  }
-
-  // Android reports a permanently denied permission as plain `denied` from
-  // `status`; only `request()` reveals it (and resolves instantly, without a
-  // dialog). So always request unless the status is already conclusive.
-  Future<PermissionStatus> _resolveNotificationPermission() async {
-    final status = await Permission.notification.status;
-    if (status.isGranted || status.isPermanentlyDenied) return status;
-    return Permission.notification.request();
   }
 
   Future<void> _showNotificationPermissionDialog() async {

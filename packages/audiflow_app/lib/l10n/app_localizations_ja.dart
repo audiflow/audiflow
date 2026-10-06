@@ -1328,6 +1328,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get developerTestNotificationsFailed => 'テスト通知の送信に失敗しました';
 
   @override
+  String get developerTestNotificationsPermissionDenied => '通知が許可されていません';
+
+  @override
   String get developerPatternsHeader => 'スマートプレイリストパターン';
 
   @override

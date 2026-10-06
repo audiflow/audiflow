@@ -874,6 +874,8 @@
   "@developerTestNotificationsNone": {"description": "Snackbar when no subscribed podcast has an episode to notify about"},
   "developerTestNotificationsFailed": "Failed to send test notifications",
   "@developerTestNotificationsFailed": {"description": "Snackbar when posting test notifications failed"},
+  "developerTestNotificationsPermissionDenied": "Notifications are not allowed for this app",
+  "@developerTestNotificationsPermissionDenied": {"description": "Snackbar when the test notifications cannot be posted because notification permission is not granted"},
   "developerPatternsHeader": "Smart Playlist Patterns",
   "@developerPatternsHeader": {"description": "Section header for the pattern list"},
   "developerSectionLabel": "Developer info",

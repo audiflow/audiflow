@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../../../../app/background/new_episode_notification_service_factory.dart';
-import '../../../../app/notification/test_notification_sender.dart';
+import '../../../../app/notification/notification_permission.dart';
 import '../../../../l10n/app_localizations.dart';
 
 /// Developer action that posts sample new-episode notifications through the
@@ -46,10 +47,7 @@ class _TestNotificationsTileState extends ConsumerState<TestNotificationsTile> {
     setState(() => _sending = true);
     String message;
     try {
-      final count = await _sender().send();
-      message = count == 0
-          ? l10n.developerTestNotificationsNone
-          : l10n.developerTestNotificationsSent(count);
+      message = await _send(l10n);
     } catch (e, stack) {
       ref
           .read(namedLoggerProvider('TestNotifications'))
@@ -59,6 +57,20 @@ class _TestNotificationsTileState extends ConsumerState<TestNotificationsTile> {
     if (!mounted) return;
     setState(() => _sending = false);
     messenger.showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  // A fresh install has not asked for notification permission yet (the app
+  // asks only when new-episode notifications are enabled), and posting
+  // without it would report notifications that never appear.
+  Future<String> _send(AppLocalizations l10n) async {
+    final permission = await resolveNotificationPermission();
+    if (!permission.isGranted) {
+      return l10n.developerTestNotificationsPermissionDenied;
+    }
+    final count = await _sender().send();
+    return count == 0
+        ? l10n.developerTestNotificationsNone
+        : l10n.developerTestNotificationsSent(count);
   }
 
   TestNotificationSender _sender() => TestNotificationSender(

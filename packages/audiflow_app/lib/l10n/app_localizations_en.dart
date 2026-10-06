@@ -1358,6 +1358,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Failed to send test notifications';
 
   @override
+  String get developerTestNotificationsPermissionDenied =>
+      'Notifications are not allowed for this app';
+
+  @override
   String get developerPatternsHeader => 'Smart Playlist Patterns';
 
   @override

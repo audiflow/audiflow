@@ -475,6 +475,7 @@
   "developerTestNotificationsSent": "テスト通知を{count}通送りました",
   "developerTestNotificationsNone": "通知できるエピソードがありません",
   "developerTestNotificationsFailed": "テスト通知の送信に失敗しました",
+  "developerTestNotificationsPermissionDenied": "通知が許可されていません",
   "developerPatternsHeader": "スマートプレイリストパターン",
   "developerSectionLabel": "開発者向け情報",
   "developerRssFeedUrl": "RSSフィードURL",

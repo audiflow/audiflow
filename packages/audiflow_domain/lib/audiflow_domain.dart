@@ -80,6 +80,7 @@ export 'src/features/feed/services/feed_parser_service.dart';
 export 'src/features/feed/services/background_notification_service.dart';
 export 'src/features/feed/services/notification_artwork_encoder.dart';
 export 'src/features/feed/services/notification_artwork_files.dart';
+export 'src/features/feed/services/test_notification_sender.dart';
 export 'src/features/feed/services/background_refresh_service.dart';
 export 'src/features/feed/services/feed_sync_diagnostic.dart';
 export 'src/features/feed/services/feed_sync_executor.dart';

@@ -2528,6 +2528,12 @@ abstract class AppLocalizations {
   /// **'Failed to send test notifications'**
   String get developerTestNotificationsFailed;
 
+  /// Snackbar when the test notifications cannot be posted because notification permission is not granted
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications are not allowed for this app'**
+  String get developerTestNotificationsPermissionDenied;
+
   /// Section header for the pattern list
   ///
   /// In en, this message translates to:

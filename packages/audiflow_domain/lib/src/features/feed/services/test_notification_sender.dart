@@ -1,4 +1,6 @@
-import 'package:audiflow_domain/audiflow_domain.dart';
+import '../../subscription/repositories/subscription_repository.dart';
+import '../models/new_episode_notification.dart';
+import '../repositories/episode_repository.dart';
 
 /// Posts [notifications] through the new-episode notification service.
 typedef NewEpisodeNotificationPoster =
