@@ -478,9 +478,8 @@ jobs:
       - name: Create Sentry release
         env:
           VERSION: ${{ needs.prepare.outputs.version_string }}
+        # Releases are named the way the Sentry SDK reports them, with the
+        # commits since the previous stg tag; see tools/sentry-release.sh.
         run: |
           npm install -g @sentry/cli
-          sentry-cli releases new "$VERSION"
-          sentry-cli releases set-commits "$VERSION" --auto
-          sentry-cli releases finalize "$VERSION"
-          sentry-cli releases deploys "$VERSION" new -e stg
+          tools/sentry-release.sh stg "$VERSION" --deploy
