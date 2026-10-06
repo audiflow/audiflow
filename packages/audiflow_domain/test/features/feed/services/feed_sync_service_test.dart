@@ -23,11 +23,15 @@ class _NoopAutoDownloadEnqueuer implements AutoDownloadEnqueuer {
   /// Number of download tasks every enqueue pass reports as created.
   int created = 0;
 
+  /// Podcast IDs of every enqueue pass, in call order.
+  final List<int> enqueuedPodcastIds = [];
+
   @override
   Future<AutoDownloadEnqueueResult> enqueueForSubscription(
     Subscription subscription, {
     required bool wifiOnly,
   }) async {
+    enqueuedPodcastIds.add(subscription.id);
     return AutoDownloadEnqueueResult(
       inspected: created,
       created: created,
@@ -89,6 +93,9 @@ Future<Response<String>> dioGet([String? url]) => mockDio.get<String>(
 
 Response<String> okResponse([String body = '<rss></rss>']) =>
     Response(data: body, statusCode: 200, requestOptions: RequestOptions());
+
+Response<String> notModifiedResponse() =>
+    Response(statusCode: 304, requestOptions: RequestOptions());
 
 void main() {
   late MockSubscriptionRepository mockSubscriptionRepo;
@@ -527,6 +534,22 @@ void main() {
 
         check(queueService.startCount).equals(1);
       });
+
+      test(
+        'enqueues and starts even when the feed is unchanged (304)',
+        () async {
+          // Episodes stored by another path (e.g. the podcast detail screen,
+          // which also saves the validators) are still pending here.
+          when(dioGet()).thenAnswer((_) async => notModifiedResponse());
+          enqueuer.created = 1;
+
+          final result = await service.syncFeed(sub);
+
+          check(result.success).isTrue();
+          check(enqueuer.enqueuedPodcastIds).deepEquals([sub.id]);
+          check(queueService.startCount).equals(1);
+        },
+      );
 
       test('keeps a queue failure from escaping the sync', () async {
         enqueuer.created = 1;
