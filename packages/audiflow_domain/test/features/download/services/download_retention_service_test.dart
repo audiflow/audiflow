@@ -6,9 +6,19 @@ import 'package:flutter_test/flutter_test.dart';
 class _FakeDownloadRepository implements DownloadRepository {
   final List<DownloadTask> tasks = [];
 
+  /// IDs promoted to manual after the sweep listed them.
+  final Set<int> promotedIds = {};
+
   @override
   Future<List<DownloadTask>> getByStatus(DownloadStatus status) async =>
       tasks.where((task) => task.downloadStatus == status).toList();
+
+  @override
+  Future<DownloadTask?> getById(int id) async {
+    final task = tasks.where((t) => t.id == id).firstOrNull;
+    if (task == null || !promotedIds.contains(id)) return task;
+    return _task(id: id, origin: DownloadOrigin.manual);
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -118,6 +128,15 @@ void main() {
     test('does nothing when auto-delete is disabled', () async {
       enabled = false;
       downloadRepository.tasks.add(_task(id: 1));
+      completeEpisode(1, _graceElapsed);
+
+      check(await service.sweepPlayed()).equals(0);
+      check(deletedTaskIds).isEmpty();
+    });
+
+    test('keeps a download promoted to manual after it was listed', () async {
+      downloadRepository.tasks.add(_task(id: 1));
+      downloadRepository.promotedIds.add(1);
       completeEpisode(1, _graceElapsed);
 
       check(await service.sweepPlayed()).equals(0);

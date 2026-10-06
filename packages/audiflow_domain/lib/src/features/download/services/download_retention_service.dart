@@ -63,7 +63,7 @@ class DownloadRetentionService {
     for (final task in completed) {
       if (task.downloadOrigin != DownloadOrigin.auto) continue;
       if (!await _isPastGracePeriod(task.episodeId)) continue;
-      if (await _tryDelete(task)) deleted++;
+      if (await _tryDeleteAuto(task)) deleted++;
     }
     if (0 < deleted) _logger?.i('Deleted $deleted played auto downloads');
     return deleted;
@@ -78,8 +78,15 @@ class DownloadRetentionService {
   }
 
   /// One undeletable file must not keep the rest of the sweep from running.
-  Future<bool> _tryDelete(DownloadTask task) async {
+  ///
+  /// The row is re-read first: a manual download request may have promoted
+  /// the task since it was listed, and the listener's choice wins.
+  Future<bool> _tryDeleteAuto(DownloadTask task) async {
     try {
+      final current = await _downloadRepository.getById(task.id);
+      if (current == null || current.downloadOrigin != DownloadOrigin.auto) {
+        return false;
+      }
       await _deleteDownload(task.id);
       return true;
     } on Exception catch (e, stack) {

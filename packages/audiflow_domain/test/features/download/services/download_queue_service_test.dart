@@ -77,9 +77,8 @@ void main() {
 
     // _init() triggers connectivity check -> _onConnectivityChanged
     // -> _processQueue -> getNextPending. Stub it before construction.
-    when(
-      mockRepository.getNextPending(isOnWifi: anyNamed('isOnWifi')),
-    ).thenAnswer((_) async => null);
+    when(mockRepository.getNextPending(isOnWifi: anyNamed('isOnWifi')))
+        .thenAnswer((_) async => null);
 
     service = DownloadQueueService(
       repository: mockRepository,
@@ -206,12 +205,11 @@ void main() {
         clearInteractions(mockRepository);
 
         var pendingCalls = 0;
-        when(
-          mockRepository.getNextPending(isOnWifi: anyNamed('isOnWifi')),
-        ).thenAnswer((_) async {
-          pendingCalls++;
-          return pendingCalls == 1 ? first : second;
-        });
+        when(mockRepository.getNextPending(isOnWifi: anyNamed('isOnWifi')))
+            .thenAnswer((_) async {
+              pendingCalls++;
+              return pendingCalls == 1 ? first : second;
+            });
         when(
           mockRepository.updateStatus(
             id: anyNamed('id'),
@@ -273,9 +271,8 @@ void main() {
       await Future<void>.delayed(Duration.zero);
       clearInteractions(mockRepository);
       final query = Completer<DownloadTask?>();
-      when(
-        mockRepository.getNextPending(isOnWifi: anyNamed('isOnWifi')),
-      ).thenAnswer((_) => query.future);
+      when(mockRepository.getNextPending(isOnWifi: anyNamed('isOnWifi')))
+          .thenAnswer((_) => query.future);
 
       final processing = service.startQueue();
       final cancelling = service.suspend();
@@ -296,9 +293,8 @@ void main() {
       await Future<void>.delayed(Duration.zero);
       clearInteractions(mockRepository);
       final query = Completer<DownloadTask?>();
-      when(
-        mockRepository.getNextPending(isOnWifi: anyNamed('isOnWifi')),
-      ).thenAnswer((_) => query.future);
+      when(mockRepository.getNextPending(isOnWifi: anyNamed('isOnWifi')))
+          .thenAnswer((_) => query.future);
 
       // The expectation is attached before the error fires so the drain's
       // failure reaches its caller instead of the zone's uncaught handler.
@@ -316,9 +312,8 @@ void main() {
       await Future<void>.delayed(Duration.zero);
       clearInteractions(mockRepository);
       var pendingCalls = 0;
-      when(
-        mockRepository.getNextPending(isOnWifi: anyNamed('isOnWifi')),
-      ).thenAnswer((_) async => ++pendingCalls == 1 ? task : null);
+      when(mockRepository.getNextPending(isOnWifi: anyNamed('isOnWifi')))
+          .thenAnswer((_) async => ++pendingCalls == 1 ? task : null);
       when(
         mockRepository.updateStatus(
           id: anyNamed('id'),
@@ -389,9 +384,8 @@ void main() {
 
       await service.startQueue();
 
-      verify(
-        mockRepository.getNextPending(isOnWifi: anyNamed('isOnWifi')),
-      ).called(1);
+      verify(mockRepository.getNextPending(isOnWifi: anyNamed('isOnWifi')))
+          .called(1);
     });
   });
 
@@ -522,9 +516,8 @@ void main() {
       await service.startQueue();
 
       // Assert - only getNextPending is called, no updateStatus
-      verify(
-        mockRepository.getNextPending(isOnWifi: anyNamed('isOnWifi')),
-      ).called(1);
+      verify(mockRepository.getNextPending(isOnWifi: anyNamed('isOnWifi')))
+          .called(1);
       verifyNever(
         mockRepository.updateStatus(
           id: anyNamed('id'),
@@ -585,9 +578,8 @@ void main() {
 
   /// Stubs a download of [task] that fails with a network error.
   void stubFailingDownload(DownloadTask task) {
-    when(
-      mockEpisodeRepo.getById(task.episodeId),
-    ).thenAnswer((_) async => _episode(id: task.episodeId));
+    when(mockEpisodeRepo.getById(task.episodeId))
+        .thenAnswer((_) async => _episode(id: task.episodeId));
     when(
       mockFileService.downloadFile(
         taskId: task.id,
@@ -604,9 +596,8 @@ void main() {
 
   /// Stubs a successful download of [task].
   void stubSucceedingDownload(DownloadTask task) {
-    when(
-      mockEpisodeRepo.getById(task.episodeId),
-    ).thenAnswer((_) async => _episode(id: task.episodeId));
+    when(mockEpisodeRepo.getById(task.episodeId))
+        .thenAnswer((_) async => _episode(id: task.episodeId));
     when(
       mockFileService.downloadFile(
         taskId: task.id,

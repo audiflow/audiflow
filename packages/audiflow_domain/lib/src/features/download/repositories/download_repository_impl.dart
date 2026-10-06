@@ -61,8 +61,7 @@ class DownloadRepositoryImpl implements DownloadRepository {
   ) async {
     if (requested != DownloadOrigin.manual) return;
     if (existing.downloadOrigin == DownloadOrigin.manual) return;
-    existing.origin = DownloadOrigin.manual.dbValue;
-    await _datasource.updateById(existing.id, existing);
+    await _datasource.markManual(existing.id);
   }
 
   @override

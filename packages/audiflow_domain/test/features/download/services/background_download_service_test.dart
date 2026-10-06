@@ -183,12 +183,10 @@ void main() {
 
       // Status should transition: downloading -> completed
       check(downloadRepo.statusUpdates.length).equals(2);
-      check(
-        downloadRepo.statusUpdates[0].status,
-      ).isA<DownloadStatusDownloading>();
-      check(
-        downloadRepo.statusUpdates[1].status,
-      ).isA<DownloadStatusCompleted>();
+      check(downloadRepo.statusUpdates[0].status)
+          .isA<DownloadStatusDownloading>();
+      check(downloadRepo.statusUpdates[1].status)
+          .isA<DownloadStatusCompleted>();
       check(downloadRepo.statusUpdates[1].localPath).isNotNull();
     });
 

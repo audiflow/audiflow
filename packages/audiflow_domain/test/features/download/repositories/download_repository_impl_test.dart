@@ -263,9 +263,10 @@ void main() {
       await repository.resetRetryCount(task.id);
 
       final updated = await repository.getById(task.id);
-      check(
-        updated,
-      ).isNotNull().has((t) => t.retryCount, 'retryCount').equals(0);
+      check(updated)
+          .isNotNull()
+          .has((t) => t.retryCount, 'retryCount')
+          .equals(0);
     });
   });
 
