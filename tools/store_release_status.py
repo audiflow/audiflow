@@ -64,10 +64,11 @@ LIVE_APP_VERSION_STATES = frozenset({"READY_FOR_DISTRIBUTION", "REPLACED_WITH_NE
 # is absent from the response.
 LIVE_APP_STORE_STATES = frozenset({"READY_FOR_SALE", "REPLACED_WITH_NEW_VERSION"})
 
-# Play track release statuses whose version codes reach users: `completed`
-# is fully rolled out, `inProgress` is a staged rollout. `halted` and
-# `draft` do not serve new installs or updates.
-LIVE_PLAY_RELEASE_STATUSES = frozenset({"completed", "inProgress"})
+# The only `tracks.releases.list` lifecycle state that reaches users: it
+# covers full and staged rollouts (and a resumable halted one). The older
+# edits API reports a release under review as `completed`, so it cannot tell
+# a submitted build from a published one.
+PUBLISHED_RELEASE_STATE = "RELEASE_LIFECYCLE_STATE_PUBLISHED"
 
 
 class StoreStatusError(Exception):
@@ -124,14 +125,14 @@ def is_ios_version_live(versions_response: JsonObject, build_number: str) -> boo
     return False
 
 
-def is_android_build_live(track: JsonObject, build_number: str) -> bool:
-    """Decides from a Play `edits.tracks.get` response for the production
-    track whether a rolled-out release contains this version code."""
-    for release in track.get("releases", []):
-        if release.get("status") not in LIVE_PLAY_RELEASE_STATUSES:
+def is_android_build_live(releases_response: JsonObject, build_number: str) -> bool:
+    """Decides from a Play `tracks.releases.list` response for the production
+    track whether a published release contains this version code."""
+    for release in releases_response.get("releases", []):
+        if release.get("releaseLifecycleState") != PUBLISHED_RELEASE_STATE:
             continue
-        # versionCodes are int64 values, serialized as JSON strings.
-        if build_number in (str(code) for code in release.get("versionCodes", [])):
+        codes = (str(artifact.get("versionCode")) for artifact in release.get("activeArtifacts", []))
+        if build_number in codes:
             return True
     return False
 
@@ -200,18 +201,8 @@ def _play_session() -> Any:
 def check_android(version: str) -> bool:
     _, build = split_version(version)
     session = _play_session()
-    edits_url = f"{PLAY_API}/{ANDROID_PACKAGE}/edits"
-    # Tracks can only be read inside an edit. The edit is never committed,
-    # and is deleted so it does not linger as the app's open edit.
-    response = session.post(edits_url, json={}, timeout=HTTP_TIMEOUT_SECONDS)
-    if not response.ok:
-        raise StoreStatusError(f"Creating a Play edit failed: {response.status_code} {response.text[:500]}")
-    edit_url = f"{edits_url}/{response.json()['id']}"
-    try:
-        track = _get_json(session, f"{edit_url}/tracks/production")
-    finally:
-        session.delete(edit_url, timeout=HTTP_TIMEOUT_SECONDS)
-    return is_android_build_live(track, build)
+    releases = _get_json(session, f"{PLAY_API}/{ANDROID_PACKAGE}/tracks/production/releases")
+    return is_android_build_live(releases, build)
 
 
 CHECKS: dict[str, Callable[[str], bool]] = {"ios": check_ios, "android": check_android}

@@ -130,39 +130,56 @@ class TestIosVersionLive:
 
 
 class TestAndroidBuildLive:
+    """Fixtures follow `tracks.releases.list`; the first is the real response
+    seen while 2.1.0 (58) was in review."""
+
     @staticmethod
-    def _track(*releases: dict[str, Any]) -> dict[str, Any]:
-        return {"track": "production", "releases": list(releases)}
+    def _releases(*releases: tuple[str, int]) -> dict[str, Any]:
+        return {
+            "releases": [
+                {
+                    "releaseName": f"{code}",
+                    "activeArtifacts": [{"versionCode": code}],
+                    "releaseLifecycleState": f"RELEASE_LIFECYCLE_STATE_{state}",
+                    "track": "production",
+                }
+                for state, code in releases
+            ]
+        }
 
-    def test_completed_release_is_live(self) -> None:
-        track = self._track({"status": "completed", "versionCodes": ["58"]})
-        assert status.is_android_build_live(track, "58")
+    def test_in_review_release_is_not_live(self) -> None:
+        response = self._releases(("IN_REVIEW", 58), ("PUBLISHED", 51))
+        assert not status.is_android_build_live(response, "58")
 
-    def test_staged_rollout_is_live(self) -> None:
-        track = self._track(
-            {"status": "inProgress", "versionCodes": ["58"], "userFraction": 0.1},
-            {"status": "completed", "versionCodes": ["57"]},
-        )
-        assert status.is_android_build_live(track, "58")
+    def test_published_release_is_live(self) -> None:
+        response = self._releases(("PUBLISHED", 58), ("PUBLISHED", 51))
+        assert status.is_android_build_live(response, "58")
 
     def test_wrong_build_is_not_live(self) -> None:
-        track = self._track({"status": "completed", "versionCodes": ["57"]})
-        assert not status.is_android_build_live(track, "58")
+        response = self._releases(("PUBLISHED", 57))
+        assert not status.is_android_build_live(response, "58")
 
-    @pytest.mark.parametrize("release_status", ["halted", "draft"])
-    def test_halted_or_draft_release_is_not_live(self, release_status: str) -> None:
-        track = self._track(
-            {"status": release_status, "versionCodes": ["58"]},
-            {"status": "completed", "versionCodes": ["57"]},
-        )
-        assert not status.is_android_build_live(track, "58")
+    @pytest.mark.parametrize(
+        "state",
+        ["DRAFT", "NOT_SENT_FOR_REVIEW", "APPROVED_NOT_PUBLISHED", "NOT_APPROVED", "UNSPECIFIED"],
+    )
+    def test_unpublished_states_are_not_live(self, state: str) -> None:
+        response = self._releases((state, 58), ("PUBLISHED", 57))
+        assert not status.is_android_build_live(response, "58")
 
-    def test_numeric_version_codes_are_accepted(self) -> None:
-        track = self._track({"status": "completed", "versionCodes": [58]})
-        assert status.is_android_build_live(track, "58")
+    def test_string_version_codes_are_accepted(self) -> None:
+        response = {
+            "releases": [
+                {
+                    "activeArtifacts": [{"versionCode": "58"}],
+                    "releaseLifecycleState": "RELEASE_LIFECYCLE_STATE_PUBLISHED",
+                }
+            ]
+        }
+        assert status.is_android_build_live(response, "58")
 
-    def test_empty_track_is_not_live(self) -> None:
-        assert not status.is_android_build_live({"track": "production"}, "58")
+    def test_empty_response_is_not_live(self) -> None:
+        assert not status.is_android_build_live({}, "58")
 
 
 class TestMain:

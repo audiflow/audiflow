@@ -154,9 +154,11 @@ needs to be run by hand:
   (`tools/sentry-release.sh prod "$VERSION+$BUILD" --deploy --platform <ios|android>`).
   So deploys appear in Sentry within about 6 hours of the build going live.
   A build counts as live on the App Store when its version is released to
-  customers (phased releases included), and on Google Play when a
-  production release containing its version code is completed or in staged
-  rollout. A platform whose store credentials are missing is skipped with a
+  customers (phased releases included), and on Google Play when the
+  production release containing its version code is published
+  (`releaseLifecycleState` `PUBLISHED` from `tracks.releases.list`, full or
+  staged rollout). A release still in review does not count: the older
+  edits API reports it as `completed`. A platform whose store credentials are missing is skipped with a
   notice (see [Automation secrets](#automation-secrets)).
 
 Manual fallback, for example to check an older build right away or when a
@@ -202,12 +204,8 @@ Setting up the Google Play service account:
 3. In Play Console, open **Users and permissions**, invite the service
    account's email address, and under **App permissions** add the audiflow app
    (`com.reedom.audiflow_app`) with **View app information (read-only)**.
-   The workflow reads the production track inside a Play edit that it never
-   commits and always deletes. Google does not document which Play Console
-   permission each API method needs; if the check fails with HTTP 403 on
-   creating the edit (`edits.insert`), additionally grant **Release to
-   production, exclude devices, and use Play App Signing** for the app. That
-   permission can publish releases, so try read-only first.
+   The workflow only reads the production track's release list
+   (`tracks.releases.list`); it creates no edit and changes nothing.
 4. Store the key as the repository secret, then delete the local file:
 
    ```bash
