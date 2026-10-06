@@ -542,6 +542,7 @@ void main() {
           // which also saves the validators) are still pending here.
           when(dioGet()).thenAnswer((_) async => notModifiedResponse());
           enqueuer.created = 1;
+          sub.autoDownload = true;
 
           final result = await service.syncFeed(sub);
 
@@ -632,6 +633,24 @@ void main() {
         ),
       );
       verifyNever(mockSubscriptionRepo.updateLastRefreshed(any, any));
+    });
+
+    test('skips auto-downloads when suspended during a 304 sync', () async {
+      final sub = _subscription(lastRefreshedAt: null)..autoDownload = true;
+      when(dioGet()).thenAnswer((_) async => notModifiedResponse());
+      late Future<void> cancelling;
+      when(mockSubscriptionRepo.updateLastRefreshed(any, any)).thenAnswer((
+        _,
+      ) async {
+        cancelling = service.suspend();
+      });
+
+      final result = await service.syncFeed(sub);
+      await cancelling;
+
+      check(result.skipped).isTrue();
+      check(enqueuer.enqueuedPodcastIds).isEmpty();
+      check(queueService.startCount).equals(0);
     });
 
     test('stops batch workers from starting the next feed', () async {

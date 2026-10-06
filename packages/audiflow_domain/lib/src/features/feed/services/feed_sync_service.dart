@@ -345,6 +345,8 @@ class FeedSyncService implements SuspendableWriter {
           sub.itunesId,
           DateTime.now(),
         );
+        // suspend() may have cancelled this sync during the writes above.
+        if (cancelToken.isCancelled) return _cancelledResult(sub);
         await _processAutoDownloads(sub);
         return SingleFeedSyncResult(
           podcastId: sub.id,
@@ -552,8 +554,6 @@ class FeedSyncService implements SuspendableWriter {
     }
   }
 
-  /// Starts the download queue without tying sync completion to the drain.
-  /// A failing drain is logged here, since nothing awaits it.
   /// Enqueues auto-downloads for every pending episode of [sub].
   ///
   /// Runs on unchanged (304) feeds too: the podcast detail screen stores
@@ -573,6 +573,8 @@ class FeedSyncService implements SuspendableWriter {
     if (0 < enqueued.created) unawaited(_startDownloadQueue());
   }
 
+  /// Starts the download queue without tying sync completion to the drain.
+  /// A failing drain is logged here, since nothing awaits it.
   Future<void> _startDownloadQueue() async {
     try {
       await _ref.read(downloadQueueServiceProvider).startQueue();
