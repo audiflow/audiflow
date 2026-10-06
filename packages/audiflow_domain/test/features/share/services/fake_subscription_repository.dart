@@ -105,12 +105,12 @@ class FakeSubscriptionRepository implements SubscriptionRepository {
       throw UnimplementedError();
 
   @override
-  Future<int> addAutoDownloadsSinceLastPlay(int id, int count) =>
-      throw UnimplementedError();
-
-  @override
-  Future<void> pauseAutoDownload(int id, DateTime at) =>
-      throw UnimplementedError();
+  Future<bool> recordAutoDownloads(
+    int id,
+    int count, {
+    required int pauseThreshold,
+    required DateTime at,
+  }) => throw UnimplementedError();
 
   @override
   Future<void> resetAutoDownloadActivity(int id) => throw UnimplementedError();

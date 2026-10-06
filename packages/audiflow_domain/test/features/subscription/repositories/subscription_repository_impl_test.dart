@@ -1,4 +1,5 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar_community/isar.dart';
 
@@ -269,46 +270,74 @@ void main() {
       );
     });
 
-    test('accumulates auto downloads since last play', () async {
-      expect(await repository.addAutoDownloadsSinceLastPlay(sub.id, 2), 2);
-      expect(await repository.addAutoDownloadsSinceLastPlay(sub.id, 3), 5);
+    final pausedAt = DateTime(2026, 10, 6);
+
+    Future<bool> record(int id, int count) => repository.recordAutoDownloads(
+      id,
+      count,
+      pauseThreshold: 5,
+      at: pausedAt,
+    );
+
+    Future<Subscription> stored() async => (await repository.getById(sub.id))!;
+
+    test('accumulates without pausing below the threshold', () async {
+      check(await record(sub.id, 2)).isFalse();
+      check(await record(sub.id, 2)).isFalse();
+
+      check((await stored()).autoDownloadsSinceLastPlay).equals(4);
+      check((await stored()).autoDownloadPausedAt).isNull();
     });
 
-    test('returns 0 for an unknown subscription', () async {
-      expect(await repository.addAutoDownloadsSinceLastPlay(999, 2), 0);
+    test('pauses once the threshold is reached', () async {
+      await record(sub.id, 4);
+
+      check(await record(sub.id, 1)).isTrue();
+      check((await stored()).autoDownloadPausedAt).equals(pausedAt);
+    });
+
+    test('does not re-pause an already paused subscription', () async {
+      await record(sub.id, 5);
+
+      check(await record(sub.id, 1)).isFalse();
+    });
+
+    test('ignores an unknown subscription', () async {
+      check(await record(999, 5)).isFalse();
     });
 
     test('reset clears the count and the pause', () async {
-      await repository.addAutoDownloadsSinceLastPlay(sub.id, 5);
-      await repository.pauseAutoDownload(sub.id, DateTime(2026, 10, 6));
+      await record(sub.id, 5);
 
       await repository.resetAutoDownloadActivity(sub.id);
 
-      final stored = (await repository.getById(sub.id))!;
-      expect(stored.autoDownloadsSinceLastPlay, 0);
-      expect(stored.autoDownloadPausedAt, isNull);
+      check((await stored()).autoDownloadsSinceLastPlay).equals(0);
+      check((await stored()).autoDownloadPausedAt).isNull();
+    });
+
+    test('a reset before the next record starts the count over', () async {
+      await record(sub.id, 4);
+      await repository.resetAutoDownloadActivity(sub.id);
+
+      check(await record(sub.id, 1)).isFalse();
+      check((await stored()).autoDownloadPausedAt).isNull();
     });
 
     test('turning auto-download on clears the pause', () async {
-      await repository.addAutoDownloadsSinceLastPlay(sub.id, 5);
-      await repository.pauseAutoDownload(sub.id, DateTime(2026, 10, 6));
+      await record(sub.id, 5);
 
       await repository.updateAutoDownload(sub.id, autoDownload: true);
 
-      final stored = (await repository.getById(sub.id))!;
-      expect(stored.autoDownloadsSinceLastPlay, 0);
-      expect(stored.autoDownloadPausedAt, isNull);
+      check((await stored()).autoDownloadsSinceLastPlay).equals(0);
+      check((await stored()).autoDownloadPausedAt).isNull();
     });
 
     test('turning auto-download off keeps the pause', () async {
-      await repository.pauseAutoDownload(sub.id, DateTime(2026, 10, 6));
+      await record(sub.id, 5);
 
       await repository.updateAutoDownload(sub.id, autoDownload: false);
 
-      expect(
-        (await repository.getById(sub.id))!.autoDownloadPausedAt,
-        DateTime(2026, 10, 6),
-      );
+      check((await stored()).autoDownloadPausedAt).equals(pausedAt);
     });
   });
 

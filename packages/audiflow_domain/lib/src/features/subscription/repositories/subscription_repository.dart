@@ -86,11 +86,16 @@ abstract class SubscriptionRepository {
   Future<void> updateAutoDownload(int id, {required bool autoDownload});
 
   /// Adds [count] to the auto-downloads created since the podcast was last
-  /// played and returns the new total (0 when [id] is unknown).
-  Future<int> addAutoDownloadsSinceLastPlay(int id, int count);
-
-  /// Pauses auto-download for inactivity as of [at].
-  Future<void> pauseAutoDownload(int id, DateTime at);
+  /// played and, once the total reaches [pauseThreshold], pauses its
+  /// auto-download as of [at]. Both happen atomically, so a concurrent
+  /// playback reset cannot be followed by a stale pause. Returns true when
+  /// this call paused it.
+  Future<bool> recordAutoDownloads(
+    int id,
+    int count, {
+    required int pauseThreshold,
+    required DateTime at,
+  });
 
   /// Clears the inactivity pause and count after the podcast is played.
   Future<void> resetAutoDownloadActivity(int id);

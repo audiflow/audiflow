@@ -240,13 +240,18 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
   }
 
   @override
-  Future<int> addAutoDownloadsSinceLastPlay(int id, int count) {
-    return _datasource.addAutoDownloadsSinceLastPlay(id, count);
-  }
-
-  @override
-  Future<void> pauseAutoDownload(int id, DateTime at) {
-    return _datasource.pauseAutoDownload(id, at);
+  Future<bool> recordAutoDownloads(
+    int id,
+    int count, {
+    required int pauseThreshold,
+    required DateTime at,
+  }) {
+    return _datasource.recordAutoDownloads(
+      id,
+      count,
+      pauseThreshold: pauseThreshold,
+      at: at,
+    );
   }
 
   @override

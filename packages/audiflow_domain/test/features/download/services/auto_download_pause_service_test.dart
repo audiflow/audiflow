@@ -9,12 +9,17 @@ class _FakeSubscriptionRepository implements SubscriptionRepository {
   final List<int> resetIds = [];
 
   @override
-  Future<int> addAutoDownloadsSinceLastPlay(int id, int count) async =>
-      sinceLastPlay[id] = (sinceLastPlay[id] ?? 0) + count;
-
-  @override
-  Future<void> pauseAutoDownload(int id, DateTime at) async =>
-      pausedAt[id] = at;
+  Future<bool> recordAutoDownloads(
+    int id,
+    int count, {
+    required int pauseThreshold,
+    required DateTime at,
+  }) async {
+    final total = sinceLastPlay[id] = (sinceLastPlay[id] ?? 0) + count;
+    if (pausedAt.containsKey(id) || total < pauseThreshold) return false;
+    pausedAt[id] = at;
+    return true;
+  }
 
   @override
   Future<void> resetAutoDownloadActivity(int id) async => resetIds.add(id);

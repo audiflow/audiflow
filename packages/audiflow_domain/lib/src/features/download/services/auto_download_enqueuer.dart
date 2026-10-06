@@ -88,7 +88,7 @@ class AutoDownloadEnqueuer {
       );
     }
 
-    final keepCount = subscription.effectiveKeepCount(defaultKeepCount);
+    final limit = _creationLimit(subscription, defaultKeepCount);
     var created = 0;
     var skipped = 0;
     final processedIds = <int>[];
@@ -106,7 +106,7 @@ class AutoDownloadEnqueuer {
         skipped++;
         continue;
       }
-      if (episode.audioUrl.isEmpty || keepCount <= created) {
+      if (episode.audioUrl.isEmpty || limit <= created) {
         skipped++;
         continue;
       }
@@ -156,6 +156,15 @@ class AutoDownloadEnqueuer {
       created: created,
       skipped: skipped,
     );
+  }
+
+  /// Tasks one pass may create: the keep count, further capped by what the
+  /// inactivity pause still allows.
+  int _creationLimit(Subscription subscription, int defaultKeepCount) {
+    final keepCount = subscription.effectiveKeepCount(defaultKeepCount);
+    final allowance = _pauseService?.remainingAllowance(subscription);
+    if (allowance == null || keepCount < allowance) return keepCount;
+    return allowance;
   }
 
   /// [episodes] most recently published first. Episodes without a publish

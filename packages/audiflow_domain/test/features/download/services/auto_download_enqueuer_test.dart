@@ -1,3 +1,4 @@
+import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -44,12 +45,17 @@ class _FakeSubscriptionRepository implements SubscriptionRepository {
   final Map<int, DateTime> pausedAt = {};
 
   @override
-  Future<int> addAutoDownloadsSinceLastPlay(int id, int count) async =>
-      sinceLastPlay[id] = (sinceLastPlay[id] ?? 0) + count;
-
-  @override
-  Future<void> pauseAutoDownload(int id, DateTime at) async =>
-      pausedAt[id] = at;
+  Future<bool> recordAutoDownloads(
+    int id,
+    int count, {
+    required int pauseThreshold,
+    required DateTime at,
+  }) async {
+    final total = sinceLastPlay[id] = (sinceLastPlay[id] ?? 0) + count;
+    if (pausedAt.containsKey(id) || total < pauseThreshold) return false;
+    pausedAt[id] = at;
+    return true;
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -173,6 +179,38 @@ void main() {
           ]);
         },
       );
+
+      test('creates no more than the pause threshold still allows', () async {
+        final episodeRepo = _FakeEpisodeRepository(
+          pendingByPodcastId: {
+            1: [
+              for (var day = 1; day <= 4; day++)
+                _episode(
+                  id: 100 + day,
+                  podcastId: 1,
+                  publishedAt: DateTime(2026, 1, day),
+                ),
+            ],
+          },
+        );
+        final downloadRepo = _FakeDownloadRepository();
+        final enqueuer = AutoDownloadEnqueuer(
+          episodeRepo: episodeRepo,
+          downloadRepo: downloadRepo,
+          pauseService: pauseService,
+        );
+        final twoShort = _sub(id: 1)
+          ..autoDownloadsSinceLastPlay =
+              AppConstants.autoDownloadPauseThreshold - 2;
+
+        await enqueuer.enqueueForSubscription(
+          twoShort,
+          wifiOnly: false,
+          defaultKeepCount: 10,
+        );
+
+        expect(downloadRepo.created.map((c) => c.episodeId), [104, 103]);
+      });
 
       test('records the downloads it created toward the pause', () async {
         final episodeRepo = _FakeEpisodeRepository(

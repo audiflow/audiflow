@@ -5,6 +5,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../common/providers/logger_provider.dart';
 import '../../feed/repositories/episode_repository.dart';
 import '../../feed/repositories/episode_repository_impl.dart';
+import '../../subscription/models/subscriptions.dart';
 import '../../subscription/repositories/subscription_repository.dart';
 import '../../subscription/repositories/subscription_repository_impl.dart';
 
@@ -43,18 +44,25 @@ class AutoDownloadPauseService {
   /// accumulate without a play.
   Future<void> recordAutoDownloads(int subscriptionId, int count) async {
     if (count < 1) return;
-    final total = await _subscriptionRepository.addAutoDownloadsSinceLastPlay(
+    final paused = await _subscriptionRepository.recordAutoDownloads(
       subscriptionId,
       count,
+      pauseThreshold: AppConstants.autoDownloadPauseThreshold,
+      at: _clock(),
     );
-    if (total < AppConstants.autoDownloadPauseThreshold) return;
-
-    await _subscriptionRepository.pauseAutoDownload(subscriptionId, _clock());
-    _logger?.i(
-      'Paused auto-download for podcast $subscriptionId after $total '
-      'unplayed auto downloads',
-    );
+    if (paused) {
+      _logger?.i(
+        'Paused auto-download for podcast $subscriptionId: '
+        '${AppConstants.autoDownloadPauseThreshold} unplayed auto downloads',
+      );
+    }
   }
+
+  /// Auto-downloads [subscription] may still receive before it pauses, so a
+  /// single sync cannot overshoot the threshold.
+  int remainingAllowance(Subscription subscription) =>
+      AppConstants.autoDownloadPauseThreshold -
+      subscription.autoDownloadsSinceLastPlay;
 
   /// Resumes auto-download for the podcast of [episodeId] and restarts its
   /// inactivity count.
