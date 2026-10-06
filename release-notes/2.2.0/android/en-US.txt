@@ -1,6 +1,6 @@
 • Auto-downloads no longer pile up: each podcast keeps its newest unplayed episodes (3 by default, adjustable)
 • Auto-download pauses for podcasts you haven't played lately and resumes when you play one
-• Auto-downloads are removed 24 hours after you finish them (on by default; your own downloads are kept)
-• Delete pending and paused downloads, or delete by status after a confirmation
+• Finished auto-downloads are removed on the next app launch after 24 hours (on by default; your own downloads are kept)
+• Delete pending/paused downloads, or bulk-delete by status
 • Fixed missed auto-downloads after refreshing a podcast page
 • Fixed missing download buttons on new episodes
