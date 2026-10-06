@@ -71,6 +71,7 @@ Audiflow is a mobile podcast player for iOS and Android, built with Flutter. It 
 - docs/architecture/playback-pipeline.md
 - docs/integration/preset.md
 - docs/development/change-workflow.md
+- docs/development/release-build.md
 
 ## When to update
 

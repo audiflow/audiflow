@@ -44,3 +44,6 @@ release-notes/<version>/android/ja-JP.txt
        print(f, n, 'OK' if n <= limits[f.parent.name] else 'TOO LONG')
    EOF
    ```
+
+The production build that ships these notes is described in
+`docs/development/release-build.md`.
