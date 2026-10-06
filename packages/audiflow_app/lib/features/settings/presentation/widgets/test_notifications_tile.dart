@@ -47,7 +47,12 @@ class _TestNotificationsTileState extends ConsumerState<TestNotificationsTile> {
     setState(() => _sending = true);
     String message;
     try {
-      message = await _send(l10n);
+      final count = await _sender().send();
+      message = count == 0
+          ? l10n.developerTestNotificationsNone
+          : l10n.developerTestNotificationsSent(count);
+    } on _PermissionDenied {
+      message = l10n.developerTestNotificationsPermissionDenied;
     } catch (e, stack) {
       ref
           .read(namedLoggerProvider('TestNotifications'))
@@ -59,27 +64,20 @@ class _TestNotificationsTileState extends ConsumerState<TestNotificationsTile> {
     messenger.showSnackBar(SnackBar(content: Text(message)));
   }
 
-  // A fresh install has not asked for notification permission yet (the app
-  // asks only when new-episode notifications are enabled), and posting
-  // without it would report notifications that never appear.
-  Future<String> _send(AppLocalizations l10n) async {
-    final permission = await resolveNotificationPermission();
-    if (!permission.isGranted) {
-      return l10n.developerTestNotificationsPermissionDenied;
-    }
-    final count = await _sender().send();
-    return count == 0
-        ? l10n.developerTestNotificationsNone
-        : l10n.developerTestNotificationsSent(count);
-  }
-
   TestNotificationSender _sender() => TestNotificationSender(
     subscriptionRepo: ref.read(subscriptionRepositoryProvider),
     episodeRepo: ref.read(episodeRepositoryProvider),
     post: _post,
   );
 
+  // Runs only when there is something to post, so the permission prompt
+  // never appears just to report that nothing could be sent. A fresh install
+  // has not been asked yet (the app asks when new-episode notifications are
+  // enabled), and posting without permission would report notifications
+  // that never appear.
   Future<void> _post(List<NewEpisodeNotification> notifications) async {
+    final permission = await resolveNotificationPermission();
+    if (!permission.isGranted) throw const _PermissionDenied();
     final service = await createNewEpisodeNotificationService(
       dio: ref.read(dioProvider),
       storedLocale: ref.read(appSettingsRepositoryProvider).getLocale(),
@@ -92,4 +90,8 @@ class _TestNotificationsTileState extends ConsumerState<TestNotificationsTile> {
       notifications,
     );
   }
+}
+
+class _PermissionDenied implements Exception {
+  const _PermissionDenied();
 }
