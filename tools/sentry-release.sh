@@ -113,14 +113,30 @@ has_deploy_to() {
 }
 
 # `releases info` exits 1 for a missing release.
+# sentry-cli exits 1 both for a missing release (silently) and for an API
+# failure (with an `error:` line). Only the silent case means "missing"; an
+# API failure aborts the script, since these helpers run inside `if`
+# conditions where `set -e` does not apply.
 release_exists() {
-  sentry-cli releases info "$1" >/dev/null 2>&1
+  local output
+  if output="$(sentry-cli releases info "$1" 2>&1)"; then
+    return 0
+  fi
+  if grep -q '^error:' <<<"$output"; then
+    printf '%s\n' "$output" >&2
+    echo "Looking up Sentry release $1 failed." >&2
+    exit 1
+  fi
+  return 1
 }
 
 # Succeeds when the existing release $1 has a deploy to $2.
 has_deploy() {
   local deploys
-  deploys="$(sentry-cli releases deploys "$1" list)"
+  if ! deploys="$(sentry-cli releases deploys "$1" list)"; then
+    echo "Listing deploys of Sentry release $1 failed." >&2
+    exit 1
+  fi
   has_deploy_to "$2" <<<"$deploys"
 }
 
