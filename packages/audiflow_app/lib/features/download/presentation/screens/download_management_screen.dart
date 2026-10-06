@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../controllers/download_management_controller.dart';
+import '../widgets/bulk_delete_button.dart';
 import '../widgets/download_task_tile.dart';
 
 /// Screen for managing all download tasks grouped by status.
@@ -20,7 +21,7 @@ class DownloadManagementScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.downloadScreenTitle),
-        actions: [_DeleteAllCompletedButton()],
+        actions: [_BulkDeleteAction()],
       ),
       body: allDownloads.when(
         data: (tasks) {
@@ -41,29 +42,17 @@ class DownloadManagementScreen extends ConsumerWidget {
   }
 }
 
-class _DeleteAllCompletedButton extends ConsumerWidget {
+class _BulkDeleteAction extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
-    final completed = ref.watch(completedDownloadsProvider);
-    final hasCompleted = completed.value?.isNotEmpty ?? false;
-
-    if (!hasCompleted) return const SizedBox.shrink();
-
-    return IconButton(
-      icon: const Icon(Icons.delete_sweep),
-      tooltip: l10n.downloadDeleteAllCompleted,
-      onPressed: () async {
-        final controller = ref.read(
-          downloadManagementControllerProvider.notifier,
-        );
-        await controller.deleteAllCompleted();
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.downloadCompletedDeleted)),
-          );
-        }
-      },
+    final tasks = ref.watch(allDownloadsProvider).value ?? const [];
+    // Read controller fresh on delete to avoid capturing a stale reference
+    // from an auto-dispose provider (see AUDIFLOW-3Q/3R).
+    return BulkDeleteButton(
+      tasks: tasks,
+      onDelete: (statuses) => ref
+          .read(downloadManagementControllerProvider.notifier)
+          .deleteByStatuses(statuses),
     );
   }
 }

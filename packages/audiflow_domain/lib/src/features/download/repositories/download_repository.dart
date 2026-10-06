@@ -77,7 +77,4 @@ abstract class DownloadRepository {
 
   /// Returns total storage used by completed downloads in bytes.
   Future<int> getTotalStorageUsed();
-
-  /// Deletes all completed downloads.
-  Future<int> deleteAllCompleted();
 }

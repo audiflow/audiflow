@@ -39,7 +39,8 @@ The queue exists for the complementary reason: once a listener finishes an episo
 - Downloads every episode of a season as a distinct operation.
 - Automatically enqueues downloads for new episodes of auto-download-enabled subscriptions during feed sync, idempotently and from both foreground and background sync paths.
 - Processes downloads sequentially through a queue that monitors network state, honors the Wi-Fi-only preference, throttles progress writes, and retries failures with exponential backoff without letting a backed-off task block the rest of the queue.
-- Pauses, resumes, cancels, retries, and deletes individual downloads, plus batch cancel/resume by episode and "delete all completed".
+- Pauses, resumes, cancels, retries, and deletes individual downloads (including pending and paused ones), plus batch cancel/resume by episode.
+- Bulk-deletes downloads by status group from the download management screen (completed; pending and paused; failed and cancelled; or all), after a confirmation dialog that states how many downloads will be removed. Active downloads in the group are cancelled before removal.
 - Presents a download management screen grouping tasks by status (downloading, pending, paused, completed, failed, cancelled) and reports total storage used.
 - Optionally auto-deletes a downloaded file when its episode is marked played.
 - Maintains a playback queue with two tiers: manually added items (Play Next / Play Later) take priority over adhoc items generated from an episode list; the next item is always drawn from manual items first.

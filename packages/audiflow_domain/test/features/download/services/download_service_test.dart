@@ -558,59 +558,82 @@ void main() {
     });
   });
 
-  group('deleteAllCompleted', () {
-    test('deletes files and records for all completed downloads', () async {
+  group('deleteByStatuses', () {
+    test(
+      'deletes files and records for every task in the given statuses',
+      () async {
+        // Arrange
+        // status=0 is pending, status=2 is paused (both active)
+        final pending = _task(id: 1, status: 0);
+        final paused = _task(id: 2, status: 2, localPath: '/downloads/ep2.mp3');
+        when(
+          mockRepository.getByStatus(const DownloadStatus.pending()),
+        ).thenAnswer((_) async => [pending]);
+        when(
+          mockRepository.getByStatus(const DownloadStatus.paused()),
+        ).thenAnswer((_) async => [paused]);
+        when(mockQueueService.cancelDownload(any)).thenAnswer((_) async {});
+        when(mockFileService.deleteFile(any)).thenAnswer((_) async {});
+        when(mockRepository.delete(any)).thenAnswer((_) async {});
+
+        // Act
+        final deleted = await service.deleteByStatuses({
+          const DownloadStatus.pending(),
+          const DownloadStatus.paused(),
+        });
+
+        // Assert
+        expect(deleted, 2);
+        verify(mockQueueService.cancelDownload(1)).called(1);
+        verify(mockQueueService.cancelDownload(2)).called(1);
+        verify(mockFileService.deleteFile('/downloads/ep2.mp3')).called(1);
+        verify(mockRepository.delete(1)).called(1);
+        verify(mockRepository.delete(2)).called(1);
+      },
+    );
+
+    test('does not cancel inactive tasks', () async {
       // Arrange
       final completed = [
         _task(id: 1, localPath: '/downloads/ep1.mp3', status: 3),
-        _task(id: 2, localPath: '/downloads/ep2.mp3', status: 3),
+        _task(id: 2, status: 3), // no localPath
       ];
       when(
         mockRepository.getByStatus(const DownloadStatus.completed()),
       ).thenAnswer((_) async => completed);
       when(mockFileService.deleteFile(any)).thenAnswer((_) async {});
-      when(mockRepository.deleteAllCompleted()).thenAnswer((_) async => 2);
+      when(mockRepository.delete(any)).thenAnswer((_) async {});
 
       // Act
-      await service.deleteAllCompleted();
+      final deleted = await service.deleteByStatuses({
+        const DownloadStatus.completed(),
+      });
 
       // Assert
-      verify(mockFileService.deleteFile('/downloads/ep1.mp3')).called(1);
-      verify(mockFileService.deleteFile('/downloads/ep2.mp3')).called(1);
-      verify(mockRepository.deleteAllCompleted()).called(1);
+      expect(deleted, 2);
+      verifyNever(mockQueueService.cancelDownload(any));
+      expect(verify(mockFileService.deleteFile(captureAny)).captured, [
+        '/downloads/ep1.mp3',
+      ]);
+      verify(mockRepository.delete(1)).called(1);
+      verify(mockRepository.delete(2)).called(1);
     });
 
-    test('skips file deletion when localPath is null', () async {
-      // Arrange
-      final completed = [
-        _task(id: 1, status: 3), // no localPath
-      ];
-      when(
-        mockRepository.getByStatus(const DownloadStatus.completed()),
-      ).thenAnswer((_) async => completed);
-      when(mockRepository.deleteAllCompleted()).thenAnswer((_) async => 1);
-
-      // Act
-      await service.deleteAllCompleted();
-
-      // Assert
-      verifyNever(mockFileService.deleteFile(any));
-      verify(mockRepository.deleteAllCompleted()).called(1);
-    });
-
-    test('handles empty completed list', () async {
+    test('does not touch statuses outside the given set', () async {
       // Arrange
       when(
-        mockRepository.getByStatus(const DownloadStatus.completed()),
+        mockRepository.getByStatus(const DownloadStatus.failed()),
       ).thenAnswer((_) async => []);
-      when(mockRepository.deleteAllCompleted()).thenAnswer((_) async => 0);
 
       // Act
-      await service.deleteAllCompleted();
+      final deleted = await service.deleteByStatuses({
+        const DownloadStatus.failed(),
+      });
 
       // Assert
-      verifyNever(mockFileService.deleteFile(any));
-      verify(mockRepository.deleteAllCompleted()).called(1);
+      expect(deleted, 0);
+      verifyNever(mockRepository.getByStatus(const DownloadStatus.pending()));
+      verifyNever(mockRepository.delete(any));
     });
   });
 

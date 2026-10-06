@@ -6,6 +6,8 @@
 
 import 'dart:async' as _i3;
 
+import 'package:audiflow_domain/src/features/download/models/download_status.dart'
+    as _i7;
 import 'package:audiflow_domain/src/features/download/models/download_task.dart'
     as _i6;
 import 'package:audiflow_domain/src/features/download/services/download_service.dart'
@@ -260,13 +262,12 @@ class MockDownloadService extends _i1.Mock implements _i5.DownloadService {
           as _i3.Future<void>);
 
   @override
-  _i3.Future<void> deleteAllCompleted() =>
+  _i3.Future<int> deleteByStatuses(Set<_i7.DownloadStatus>? statuses) =>
       (super.noSuchMethod(
-            Invocation.method(#deleteAllCompleted, []),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
+            Invocation.method(#deleteByStatuses, [statuses]),
+            returnValue: _i3.Future<int>.value(0),
           )
-          as _i3.Future<void>);
+          as _i3.Future<int>);
 
   @override
   _i3.Future<String?> getLocalPath(int? episodeId) =>
