@@ -84,9 +84,11 @@ Subscription _sub({
   required int id,
   String title = 'Podcast',
   bool autoDownload = true,
+  int? keepCount,
 }) {
   return Subscription()
     ..id = id
+    ..autoDownloadKeepCount = keepCount
     ..itunesId = 'itunes_$id'
     ..feedUrl = 'https://example.com/feed/$id'
     ..title = title
@@ -99,17 +101,73 @@ Episode _episode({
   required int id,
   required int podcastId,
   String audioUrl = 'https://example.com/audio.mp3',
+  DateTime? publishedAt,
 }) {
   return Episode()
     ..id = id
     ..podcastId = podcastId
     ..guid = 'guid_$id'
     ..title = 'Episode $id'
-    ..audioUrl = audioUrl;
+    ..audioUrl = audioUrl
+    ..publishedAt = publishedAt;
 }
 
 void main() {
   group('AutoDownloadEnqueuer', () {
+    group('keep count', () {
+      List<Episode> pendingNewestLast() => [
+        _episode(id: 101, podcastId: 1, publishedAt: DateTime(2026, 1, 1)),
+        _episode(id: 103, podcastId: 1, publishedAt: DateTime(2026, 1, 3)),
+        _episode(id: 102, podcastId: 1, publishedAt: DateTime(2026, 1, 2)),
+        _episode(id: 100, podcastId: 1),
+      ];
+
+      test('enqueues only the newest episodes up to the keep count, '
+          'but marks every pending episode processed', () async {
+        final episodeRepo = _FakeEpisodeRepository(
+          pendingByPodcastId: {1: pendingNewestLast()},
+        );
+        final downloadRepo = _FakeDownloadRepository();
+        final enqueuer = AutoDownloadEnqueuer(
+          episodeRepo: episodeRepo,
+          downloadRepo: downloadRepo,
+        );
+
+        final result = await enqueuer.enqueueForSubscription(
+          _sub(id: 1),
+          wifiOnly: false,
+          defaultKeepCount: 2,
+        );
+
+        expect(downloadRepo.created.map((c) => c.episodeId), [103, 102]);
+        expect(result.created, 2);
+        expect(result.skipped, 2);
+        expect(
+          episodeRepo.markCalls.single,
+          unorderedEquals([100, 101, 102, 103]),
+        );
+      });
+
+      test('per-podcast keep count overrides the default', () async {
+        final episodeRepo = _FakeEpisodeRepository(
+          pendingByPodcastId: {1: pendingNewestLast()},
+        );
+        final downloadRepo = _FakeDownloadRepository();
+        final enqueuer = AutoDownloadEnqueuer(
+          episodeRepo: episodeRepo,
+          downloadRepo: downloadRepo,
+        );
+
+        await enqueuer.enqueueForSubscription(
+          _sub(id: 1, keepCount: 1),
+          wifiOnly: false,
+          defaultKeepCount: 3,
+        );
+
+        expect(downloadRepo.created.map((c) => c.episodeId), [103]);
+      });
+    });
+
     test('returns empty result when no pending episodes', () async {
       final episodeRepo = _FakeEpisodeRepository();
       final downloadRepo = _FakeDownloadRepository();
@@ -121,6 +179,7 @@ void main() {
       final result = await enqueuer.enqueueForSubscription(
         _sub(id: 1),
         wifiOnly: false,
+        defaultKeepCount: 10,
       );
 
       expect(result.inspected, 0);
@@ -149,6 +208,7 @@ void main() {
         final result = await enqueuer.enqueueForSubscription(
           _sub(id: 1, autoDownload: true),
           wifiOnly: true,
+          defaultKeepCount: 10,
         );
 
         expect(result.inspected, 2);
@@ -182,6 +242,7 @@ void main() {
       final result = await enqueuer.enqueueForSubscription(
         _sub(id: 1, autoDownload: false),
         wifiOnly: false,
+        defaultKeepCount: 10,
       );
 
       expect(result.inspected, 2);
@@ -211,6 +272,7 @@ void main() {
       final result = await enqueuer.enqueueForSubscription(
         _sub(id: 1),
         wifiOnly: false,
+        defaultKeepCount: 10,
       );
 
       expect(result.inspected, 2);
@@ -242,6 +304,7 @@ void main() {
         final result = await enqueuer.enqueueForSubscription(
           _sub(id: 1),
           wifiOnly: false,
+          defaultKeepCount: 10,
         );
 
         expect(result.inspected, 2);
@@ -271,6 +334,7 @@ void main() {
         final result = await enqueuer.enqueueForSubscription(
           _sub(id: 1),
           wifiOnly: false,
+          defaultKeepCount: 10,
         );
 
         // 501 failed -> not marked. 502 succeeded.

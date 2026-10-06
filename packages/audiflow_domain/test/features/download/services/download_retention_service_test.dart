@@ -11,6 +11,9 @@ class _FakeDownloadRepository implements DownloadRepository {
       tasks.where((task) => task.downloadStatus == status).toList();
 
   @override
+  Future<List<DownloadTask>> getAll() async => List.of(tasks);
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
@@ -20,6 +23,21 @@ class _FakePlaybackHistoryRepository implements PlaybackHistoryRepository {
   @override
   Future<PlaybackHistory?> getByEpisodeId(int episodeId) async =>
       byEpisodeId[episodeId];
+
+  @override
+  Future<Map<int, PlaybackHistory>> getByPodcastId(int podcastId) async =>
+      Map.of(byEpisodeId);
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _FakeEpisodeRepository implements EpisodeRepository {
+  final List<Episode> episodes = [];
+
+  @override
+  Future<List<Episode>> getByPodcastId(int podcastId) async =>
+      episodes.where((episode) => episode.podcastId == podcastId).toList();
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -45,6 +63,7 @@ DownloadTask _task({
 void main() {
   late _FakeDownloadRepository downloadRepository;
   late _FakePlaybackHistoryRepository historyRepository;
+  late _FakeEpisodeRepository episodeRepository;
   late List<int> deletedTaskIds;
   late bool enabled;
   late DownloadRetentionService service;
@@ -58,13 +77,15 @@ void main() {
   setUp(() {
     downloadRepository = _FakeDownloadRepository();
     historyRepository = _FakePlaybackHistoryRepository();
+    episodeRepository = _FakeEpisodeRepository();
     deletedTaskIds = [];
     enabled = true;
     service = DownloadRetentionService(
       downloadRepository: downloadRepository,
+      episodeRepository: episodeRepository,
       playbackHistoryRepository: historyRepository,
       isAutoDeletePlayedEnabled: () => enabled,
-      deleteDownload: (taskId) async => deletedTaskIds.add(taskId),
+      deleteDownload: (task) async => deletedTaskIds.add(task.id),
       clock: () => _now,
     );
   });
@@ -130,17 +151,142 @@ void main() {
       completeEpisode(2, _graceElapsed);
       service = DownloadRetentionService(
         downloadRepository: downloadRepository,
+        episodeRepository: episodeRepository,
         playbackHistoryRepository: historyRepository,
         isAutoDeletePlayedEnabled: () => true,
-        deleteDownload: (taskId) async {
-          if (taskId == 1) throw Exception('file locked');
-          deletedTaskIds.add(taskId);
+        deleteDownload: (task) async {
+          if (task.id == 1) throw Exception('file locked');
+          deletedTaskIds.add(task.id);
         },
         clock: () => _now,
       );
 
       check(await service.sweepPlayed()).equals(1);
       check(deletedTaskIds).deepEquals([2]);
+    });
+  });
+
+  group('trimForSubscription', () {
+    final subscription = Subscription()
+      ..id = 7
+      ..itunesId = 'itunes_7'
+      ..feedUrl = 'https://example.com/feed/7'
+      ..title = 'Podcast'
+      ..artistName = 'Artist'
+      ..subscribedAt = DateTime(2026)
+      ..autoDownload = true;
+
+    /// Adds an auto download for episode [id] published on day [day].
+    void addEpisode(
+      int id, {
+      int? day,
+      DownloadOrigin origin = DownloadOrigin.auto,
+      DownloadStatus status = const DownloadStatus.completed(),
+    }) {
+      episodeRepository.episodes.add(
+        Episode()
+          ..id = id
+          ..podcastId = subscription.id
+          ..guid = 'guid_$id'
+          ..title = 'Episode $id'
+          ..audioUrl = 'https://example.com/$id.mp3'
+          ..publishedAt = day == null ? null : DateTime(2026, 1, day),
+      );
+      downloadRepository.tasks.add(
+        _task(id: id, origin: origin, status: status)
+          ..createdAt = DateTime(2026, 2, id),
+      );
+    }
+
+    test(
+      'deletes the oldest unstarted auto downloads beyond the keep count',
+      () async {
+        for (final day in [1, 2, 3, 4]) {
+          addEpisode(day, day: day);
+        }
+
+        final deleted = await service.trimForSubscription(
+          subscription,
+          defaultKeepCount: 2,
+        );
+
+        check(deleted).equals(2);
+        check(deletedTaskIds).unorderedEquals([1, 2]);
+      },
+    );
+
+    test(
+      'does not count or delete started, finished, or manual downloads',
+      () async {
+        addEpisode(1, day: 1);
+        addEpisode(2, day: 2);
+        addEpisode(3, day: 3, origin: DownloadOrigin.manual);
+        addEpisode(4, day: 4); // in progress
+        addEpisode(5, day: 5); // finished
+        historyRepository.byEpisodeId[4] = PlaybackHistory()
+          ..episodeId = 4
+          ..positionMs = 1000;
+        completeEpisode(5, _now);
+
+        final deleted = await service.trimForSubscription(
+          subscription,
+          defaultKeepCount: 1,
+        );
+
+        check(deletedTaskIds).deepEquals([1]);
+        check(deleted).equals(1);
+      },
+    );
+
+    test(
+      'counts queued downloads but ignores failed and cancelled ones',
+      () async {
+        addEpisode(1, day: 1);
+        addEpisode(2, day: 2, status: const DownloadStatus.pending());
+        addEpisode(3, day: 3, status: const DownloadStatus.failed());
+        addEpisode(4, day: 4, status: const DownloadStatus.cancelled());
+
+        await service.trimForSubscription(subscription, defaultKeepCount: 1);
+
+        check(deletedTaskIds).deepEquals([1]);
+      },
+    );
+
+    test(
+      'ranks episodes without a publish date by download creation time',
+      () async {
+        addEpisode(1);
+        addEpisode(2);
+
+        await service.trimForSubscription(subscription, defaultKeepCount: 1);
+
+        check(deletedTaskIds).deepEquals([1]);
+      },
+    );
+
+    test('per-podcast keep count overrides the default', () async {
+      for (final day in [1, 2, 3]) {
+        addEpisode(day, day: day);
+      }
+
+      await service.trimForSubscription(
+        Subscription()
+          ..id = subscription.id
+          ..autoDownloadKeepCount = 3,
+        defaultKeepCount: 1,
+      );
+
+      check(deletedTaskIds).isEmpty();
+    });
+
+    test('ignores downloads of other podcasts', () async {
+      addEpisode(1, day: 1);
+      addEpisode(2, day: 2);
+      downloadRepository.tasks.add(_task(id: 99));
+
+      await service.trimForSubscription(subscription, defaultKeepCount: 1);
+
+      check(deletedTaskIds).deepEquals([1]);
     });
   });
 }

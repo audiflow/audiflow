@@ -200,6 +200,23 @@ class AppLocalizationsJa extends AppLocalizations {
   String get downloadsAutoDeleteSubtitle => '自動ダウンロードしたエピソードを、再生が終わって24時間後に削除';
 
   @override
+  String get downloadsKeepCountTitle => '自動ダウンロードの保持件数';
+
+  @override
+  String get downloadsKeepCountSubtitle =>
+      '番組ごとに、まだ聴いていない自動ダウンロードをこの件数まで残し、古いものから削除します';
+
+  @override
+  String downloadsKeepCountOption(int count) {
+    return '$count件';
+  }
+
+  @override
+  String downloadsKeepCountFollowGlobal(int count) {
+    return '全体設定に従う（$count件）';
+  }
+
+  @override
   String get downloadsMaxConcurrent => '最大同時ダウンロード数';
 
   @override

@@ -65,6 +65,13 @@ void main() {
       expect(tiles[1].value, isTrue);
     });
 
+    testWidgets('shows auto-download keep count with default', (tester) async {
+      await tester.pumpWidget(buildTestWidget());
+
+      expect(find.text('Auto-Download Keep Count'), findsOneWidget);
+      expect(find.text('3 episodes'), findsOneWidget);
+    });
+
     testWidgets('shows max concurrent downloads with default 1', (
       tester,
     ) async {

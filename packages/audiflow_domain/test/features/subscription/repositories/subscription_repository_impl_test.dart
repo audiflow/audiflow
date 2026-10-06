@@ -239,6 +239,24 @@ void main() {
     });
   });
 
+  group('updateAutoDownloadKeepCount', () {
+    test('sets and clears the per-podcast override', () async {
+      final sub = await repository.subscribe(
+        itunesId: 'itunes-1',
+        feedUrl: 'https://example.com/feed.xml',
+        title: 'Test Podcast',
+        artistName: 'Test Artist',
+      );
+      expect(sub.autoDownloadKeepCount, isNull);
+
+      await repository.updateAutoDownloadKeepCount(sub.id, 5);
+      expect((await repository.getById(sub.id))!.autoDownloadKeepCount, 5);
+
+      await repository.updateAutoDownloadKeepCount(sub.id, null);
+      expect((await repository.getById(sub.id))!.autoDownloadKeepCount, isNull);
+    });
+  });
+
   group('watchSubscriptions', () {
     test('emits current subscriptions', () async {
       await repository.subscribe(

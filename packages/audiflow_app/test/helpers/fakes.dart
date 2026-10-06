@@ -87,6 +87,13 @@ class FakeSubscriptionRepository implements SubscriptionRepository {
       throw UnimplementedError();
 
   @override
+  Future<void> updateAutoDownloadKeepCount(int id, int? keepCount) async {
+    for (final subscription in subscriptions.where((s) => s.id == id)) {
+      subscription.autoDownloadKeepCount = keepCount;
+    }
+  }
+
+  @override
   Future<void> updateDescription(int id, String? description) =>
       throw UnimplementedError();
 

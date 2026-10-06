@@ -462,10 +462,26 @@ void backgroundCallback() {
         onDiagnostic: feedSyncDiagnostic,
       );
 
+      final reconciler = StationReconcilerService(isar: isar);
+      final downloadRetention = DownloadRetentionService(
+        downloadRepository: downloadRepo,
+        episodeRepository: episodeRepo,
+        playbackHistoryRepository: playbackHistoryRepo,
+        // Played cleanup runs in the foreground only; this isolate trims.
+        isAutoDeletePlayedEnabled: () => false,
+        deleteDownload: BackgroundDownloadDeleter(
+          downloadRepository: downloadRepo,
+          downloadsDir: '${dir.path}/downloads',
+          onDeleted: reconciler.onEpisodeChanged,
+        ).call,
+        logger: logger,
+      );
+
       final refreshService = BackgroundRefreshService(
         subscriptionRepo: subscriptionRepo,
         episodeRepo: episodeRepo,
         autoDownloadEnqueuer: autoDownloadEnqueuer,
+        downloadRetention: downloadRetention,
         playbackHistoryRepo: playbackHistoryRepo,
         settingsRepo: settingsRepo,
         syncFeed: (sub) async {

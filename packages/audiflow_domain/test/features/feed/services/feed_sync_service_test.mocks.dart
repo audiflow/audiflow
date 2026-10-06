@@ -329,6 +329,15 @@ class MockSubscriptionRepository extends _i1.Mock
           as _i11.Future<void>);
 
   @override
+  _i11.Future<void> updateAutoDownloadKeepCount(int? id, int? keepCount) =>
+      (super.noSuchMethod(
+            Invocation.method(#updateAutoDownloadKeepCount, [id, keepCount]),
+            returnValue: _i11.Future<void>.value(),
+            returnValueForMissingStub: _i11.Future<void>.value(),
+          )
+          as _i11.Future<void>);
+
+  @override
   _i11.Future<void> updateDescription(int? id, String? description) =>
       (super.noSuchMethod(
             Invocation.method(#updateDescription, [id, description]),
@@ -880,6 +889,23 @@ class MockAppSettingsRepository extends _i1.Mock
   _i11.Future<void> setBatchDownloadLimit(int? limit) =>
       (super.noSuchMethod(
             Invocation.method(#setBatchDownloadLimit, [limit]),
+            returnValue: _i11.Future<void>.value(),
+            returnValueForMissingStub: _i11.Future<void>.value(),
+          )
+          as _i11.Future<void>);
+
+  @override
+  int getAutoDownloadKeepCount() =>
+      (super.noSuchMethod(
+            Invocation.method(#getAutoDownloadKeepCount, []),
+            returnValue: 0,
+          )
+          as int);
+
+  @override
+  _i11.Future<void> setAutoDownloadKeepCount(int? count) =>
+      (super.noSuchMethod(
+            Invocation.method(#setAutoDownloadKeepCount, [count]),
             returnValue: _i11.Future<void>.value(),
             returnValueForMissingStub: _i11.Future<void>.value(),
           )

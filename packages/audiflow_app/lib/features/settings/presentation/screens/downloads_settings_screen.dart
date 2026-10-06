@@ -6,9 +6,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
+import '../../../download/presentation/controllers/auto_download_keep_count_controller.dart';
+import '../../../download/presentation/widgets/keep_count_dropdown.dart';
 
-/// Screen for configuring download settings: WiFi-only,
-/// auto-delete, and max concurrent downloads.
+/// Screen for configuring download settings: WiFi-only, auto-delete,
+/// auto-download keep count, and max concurrent downloads.
 class DownloadsSettingsScreen extends ConsumerWidget {
   const DownloadsSettingsScreen({super.key});
 
@@ -20,6 +22,7 @@ class DownloadsSettingsScreen extends ConsumerWidget {
     final autoDelete = repo.getAutoDeletePlayed();
     final maxConcurrent = repo.getMaxConcurrentDownloads();
     final batchLimit = repo.getBatchDownloadLimit();
+    final keepCount = repo.getAutoDownloadKeepCount();
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settingsDownloadsTitle)),
@@ -43,6 +46,19 @@ class DownloadsSettingsScreen extends ConsumerWidget {
             subtitle: Text(l10n.downloadsAutoDeleteSubtitle),
             value: autoDelete,
             onChanged: (v) => _update(ref, () => repo.setAutoDeletePlayed(v)),
+          ),
+          ListTile(
+            title: Text(l10n.downloadsKeepCountTitle),
+            subtitle: Text(l10n.downloadsKeepCountSubtitle),
+            trailing: KeepCountDropdown(
+              value: keepCount,
+              onChanged: (count) {
+                if (count == null) return;
+                ref
+                    .read(autoDownloadKeepCountControllerProvider.notifier)
+                    .setGlobal(count);
+              },
+            ),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

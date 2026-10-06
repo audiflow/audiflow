@@ -130,6 +130,10 @@ class _FakeSubscriptionRepository implements SubscriptionRepository {
       throw UnimplementedError();
 
   @override
+  Future<void> updateAutoDownloadKeepCount(int id, int? keepCount) =>
+      throw UnimplementedError();
+
+  @override
   Future<void> updateDescription(int id, String? description) =>
       throw UnimplementedError();
 }
@@ -361,6 +365,13 @@ class _FakeAppSettingsRepository implements AppSettingsRepository {
 
   @override
   int getBatchDownloadLimit() => throw UnimplementedError();
+
+  @override
+  int getAutoDownloadKeepCount() => throw UnimplementedError();
+
+  @override
+  Future<void> setAutoDownloadKeepCount(int count) =>
+      throw UnimplementedError();
 
   @override
   Future<void> setBatchDownloadLimit(int limit) => throw UnimplementedError();

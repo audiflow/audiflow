@@ -10,6 +10,7 @@ class BackgroundInputKeys {
   static const notifyNewEpisodes = 'notifyNewEpisodes';
   static const wifiOnlyDownload = 'wifiOnlyDownload';
   static const syncIntervalMinutes = 'syncIntervalMinutes';
+  static const autoDownloadKeepCount = 'autoDownloadKeepCount';
 
   /// Language setting for notification text; absent when following the
   /// system language.
@@ -31,6 +32,8 @@ class BackgroundTaskRegistrar {
       BackgroundInputKeys.notifyNewEpisodes: repo.getNotifyNewEpisodes(),
       BackgroundInputKeys.wifiOnlyDownload: repo.getWifiOnlyDownload(),
       BackgroundInputKeys.syncIntervalMinutes: repo.getSyncIntervalMinutes(),
+      BackgroundInputKeys.autoDownloadKeepCount: repo
+          .getAutoDownloadKeepCount(),
       // Omitted rather than null: Workmanager input data rejects nulls on
       // some platforms.
       BackgroundInputKeys.locale: ?locale,

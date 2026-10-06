@@ -1,5 +1,5 @@
 import 'package:audiflow_core/audiflow_core.dart'
-    show AutoPlayOrder, DuckInterruptionBehavior;
+    show AutoPlayOrder, DuckInterruptionBehavior, SettingsDefaults;
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter/material.dart' show ThemeMode;
@@ -111,6 +111,12 @@ class FakeAppSettingsRepository implements AppSettingsRepository {
   Future<void> setMaxConcurrentDownloads(int count) async {}
   @override
   int getBatchDownloadLimit() => 25;
+
+  @override
+  int getAutoDownloadKeepCount() => SettingsDefaults.autoDownloadKeepCount;
+
+  @override
+  Future<void> setAutoDownloadKeepCount(int count) async {}
   @override
   Future<void> setBatchDownloadLimit(int limit) async {}
   @override
@@ -219,6 +225,9 @@ class FakeSubscriptionRepository implements SubscriptionRepository {
   Future<void> updateAutoDownload(int id, {required bool autoDownload}) async {}
 
   @override
+  Future<void> updateAutoDownloadKeepCount(int id, int? keepCount) async {}
+
+  @override
   Future<void> updateDescription(int id, String? description) async {}
 
   @override
@@ -306,17 +315,22 @@ class FakeEpisodeRepository implements EpisodeRepository {
 }
 
 class FakeAutoDownloadEnqueuer implements AutoDownloadEnqueuer {
-  final List<({int podcastId, bool autoDownload, bool wifiOnly})> calls = [];
+  final List<
+    ({int podcastId, bool autoDownload, bool wifiOnly, int defaultKeepCount})
+  >
+  calls = [];
 
   @override
   Future<AutoDownloadEnqueueResult> enqueueForSubscription(
     Subscription subscription, {
     required bool wifiOnly,
+    required int defaultKeepCount,
   }) async {
     calls.add((
       podcastId: subscription.id,
       autoDownload: subscription.autoDownload,
       wifiOnly: wifiOnly,
+      defaultKeepCount: defaultKeepCount,
     ));
     return const AutoDownloadEnqueueResult(
       inspected: 0,
@@ -324,6 +338,25 @@ class FakeAutoDownloadEnqueuer implements AutoDownloadEnqueuer {
       skipped: 0,
     );
   }
+}
+
+class FakeDownloadRetentionService implements DownloadRetentionService {
+  final List<({int podcastId, int defaultKeepCount})> trimCalls = [];
+
+  @override
+  Future<int> trimForSubscription(
+    Subscription subscription, {
+    required int defaultKeepCount,
+  }) async {
+    trimCalls.add((
+      podcastId: subscription.id,
+      defaultKeepCount: defaultKeepCount,
+    ));
+    return 0;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class FakeDownloadRepository implements DownloadRepository {
@@ -490,6 +523,7 @@ void main() {
         subscriptionRepo: subscriptionRepo,
         episodeRepo: episodeRepo,
         autoDownloadEnqueuer: autoDownloadEnqueuer,
+        downloadRetention: FakeDownloadRetentionService(),
         playbackHistoryRepo: FakePlaybackHistoryRepository(),
         settingsRepo: settings,
         syncFeed: (sub) async {
@@ -551,6 +585,7 @@ void main() {
           subscriptionRepo: subscriptionRepo,
           episodeRepo: episodeRepo,
           autoDownloadEnqueuer: autoDownloadEnqueuer,
+          downloadRetention: FakeDownloadRetentionService(),
           playbackHistoryRepo: FakePlaybackHistoryRepository(),
           settingsRepo: settings,
           syncFeed: (sub) async {
@@ -595,6 +630,7 @@ void main() {
         subscriptionRepo: subscriptionRepo,
         episodeRepo: episodeRepo,
         autoDownloadEnqueuer: autoDownloadEnqueuer,
+        downloadRetention: FakeDownloadRetentionService(),
         playbackHistoryRepo: FakePlaybackHistoryRepository(),
         settingsRepo: settings,
         syncFeed: (sub) async => SingleFeedSyncResult(
@@ -641,6 +677,7 @@ void main() {
           },
         ),
         autoDownloadEnqueuer: FakeAutoDownloadEnqueuer(),
+        downloadRetention: FakeDownloadRetentionService(),
         playbackHistoryRepo: FakePlaybackHistoryRepository(),
         settingsRepo: FakeAppSettingsRepository(
           autoSync: true,
@@ -684,6 +721,7 @@ void main() {
           },
         ),
         autoDownloadEnqueuer: FakeAutoDownloadEnqueuer(),
+        downloadRetention: FakeDownloadRetentionService(),
         playbackHistoryRepo: FakePlaybackHistoryRepository(),
         settingsRepo: FakeAppSettingsRepository(
           autoSync: true,
@@ -744,6 +782,7 @@ void main() {
         subscriptionRepo: subscriptionRepo,
         episodeRepo: episodeRepo,
         autoDownloadEnqueuer: autoDownloadEnqueuer,
+        downloadRetention: FakeDownloadRetentionService(),
         playbackHistoryRepo: FakePlaybackHistoryRepository(),
         settingsRepo: settings,
         syncFeed: (sub) async => SingleFeedSyncResult(
@@ -785,6 +824,7 @@ void main() {
           subscriptionRepo: subscriptionRepo,
           episodeRepo: episodeRepo,
           autoDownloadEnqueuer: autoDownloadEnqueuer,
+          downloadRetention: FakeDownloadRetentionService(),
           playbackHistoryRepo: FakePlaybackHistoryRepository(),
           settingsRepo: settings,
           syncFeed: (sub) async {
@@ -848,6 +888,7 @@ void main() {
         subscriptionRepo: subscriptionRepo,
         episodeRepo: episodeRepo,
         autoDownloadEnqueuer: autoDownloadEnqueuer,
+        downloadRetention: FakeDownloadRetentionService(),
         playbackHistoryRepo: playbackHistoryRepo,
         settingsRepo: settings,
         syncFeed: (sub) async => SingleFeedSyncResult(
@@ -896,6 +937,7 @@ void main() {
         subscriptionRepo: subscriptionRepo,
         episodeRepo: episodeRepo,
         autoDownloadEnqueuer: autoDownloadEnqueuer,
+        downloadRetention: FakeDownloadRetentionService(),
         playbackHistoryRepo: playbackHistoryRepo,
         settingsRepo: settings,
         syncFeed: (sub) async => SingleFeedSyncResult(
@@ -937,6 +979,7 @@ void main() {
           subscriptionRepo: subscriptionRepo,
           episodeRepo: episodeRepo,
           autoDownloadEnqueuer: autoDownloadEnqueuer,
+          downloadRetention: FakeDownloadRetentionService(),
           playbackHistoryRepo: FakePlaybackHistoryRepository(),
           settingsRepo: settings,
           syncFeed: (sub) async => SingleFeedSyncResult(
@@ -967,6 +1010,54 @@ void main() {
       },
     );
 
+    test(
+      'trims each subscription to the global keep count after enqueueing',
+      () async {
+        final subs = [
+          _makeSubscription(id: 1, title: 'Podcast 1', autoDownload: true),
+          _makeSubscription(id: 2, title: 'Podcast 2', autoDownload: true),
+        ];
+        final autoDownloadEnqueuer = FakeAutoDownloadEnqueuer();
+        final retention = FakeDownloadRetentionService();
+
+        final service = BackgroundRefreshService(
+          subscriptionRepo: FakeSubscriptionRepository(subscriptions: subs),
+          episodeRepo: FakeEpisodeRepository(),
+          autoDownloadEnqueuer: autoDownloadEnqueuer,
+          downloadRetention: retention,
+          playbackHistoryRepo: FakePlaybackHistoryRepository(),
+          settingsRepo: FakeAppSettingsRepository(autoSync: true),
+          syncFeed: (sub) async => SingleFeedSyncResult(
+            podcastId: sub.id,
+            success: true,
+            skipped: false,
+            newEpisodeCount: 0,
+          ),
+          showNotification: (_) async {},
+          timeBudget: const Duration(seconds: 60),
+        );
+
+        await service.execute();
+
+        expect(
+          retention.trimCalls.map((c) => c.podcastId),
+          containsAll([1, 2]),
+        );
+        expect(
+          retention.trimCalls.every(
+            (c) => c.defaultKeepCount == SettingsDefaults.autoDownloadKeepCount,
+          ),
+          isTrue,
+        );
+        expect(
+          autoDownloadEnqueuer.calls.every(
+            (c) => c.defaultKeepCount == SettingsDefaults.autoDownloadKeepCount,
+          ),
+          isTrue,
+        );
+      },
+    );
+
     test('does not notify when setting is disabled', () async {
       final sub = _makeSubscription(id: 1, title: 'Podcast 1');
       final episodes = [_makeEpisode(id: 11, podcastId: 1, title: 'Episode 1')];
@@ -986,6 +1077,7 @@ void main() {
         subscriptionRepo: subscriptionRepo,
         episodeRepo: episodeRepo,
         autoDownloadEnqueuer: autoDownloadEnqueuer,
+        downloadRetention: FakeDownloadRetentionService(),
         playbackHistoryRepo: FakePlaybackHistoryRepository(),
         settingsRepo: settings,
         syncFeed: (sub) async => SingleFeedSyncResult(

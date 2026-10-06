@@ -69,6 +69,10 @@ class SettingsKeys {
   /// Maximum number of episodes to batch-download at once.
   static const String batchDownloadLimit = 'settings_batch_download_limit';
 
+  /// Unstarted auto-downloads to keep per podcast.
+  static const String autoDownloadKeepCount =
+      'settings_auto_download_keep_count';
+
   // -- Feed Sync --
 
   /// Enable automatic background feed sync.
@@ -164,6 +168,12 @@ class SettingsDefaults {
 
   /// Maximum allowed batch download limit.
   static const int batchDownloadLimitMax = 500;
+
+  /// Default number of unstarted auto-downloads kept per podcast.
+  static const int autoDownloadKeepCount = 3;
+
+  /// Choices offered for the auto-download keep count.
+  static const List<int> autoDownloadKeepCountOptions = [1, 2, 3, 5, 10];
 
   /// Default auto-sync setting.
   static const bool autoSync = true;

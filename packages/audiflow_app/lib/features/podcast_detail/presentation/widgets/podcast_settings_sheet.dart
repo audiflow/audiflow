@@ -1,5 +1,6 @@
 import 'package:audiflow_domain/audiflow_domain.dart'
     show
+        appSettingsRepositoryProvider,
         hideExplicitForPodcastProvider,
         isRestrictedModeOnProvider,
         isUnlockedProvider,
@@ -13,6 +14,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../download/presentation/controllers/auto_download_keep_count_controller.dart';
+import '../../../download/presentation/widgets/keep_count_dropdown.dart';
 
 Future<void> showPodcastSettingsSheet({
   required BuildContext context,
@@ -61,6 +64,7 @@ class _PodcastSettingsSheet extends ConsumerWidget {
             ),
             children: [
               if (feedUrl != null) _AutoDownloadTile(feedUrl: feedUrl),
+              if (feedUrl != null) _KeepCountTile(feedUrl: feedUrl),
               if (feedUrl != null) _HideExplicitTile(feedUrl: feedUrl),
             ],
           ),
@@ -96,6 +100,42 @@ class _AutoDownloadTile extends ConsumerWidget {
             .updateAutoDownload(subscription.id, autoDownload: value);
         ref.invalidate(subscriptionByFeedUrlProvider(feedUrl));
       },
+    );
+  }
+}
+
+class _KeepCountTile extends ConsumerWidget {
+  const _KeepCountTile({required this.feedUrl});
+
+  final String feedUrl;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final subscription = ref
+        .watch(subscriptionByFeedUrlProvider(feedUrl))
+        .value;
+    if (subscription == null ||
+        subscription.isCached ||
+        !subscription.autoDownload) {
+      return const SizedBox.shrink();
+    }
+
+    final l10n = AppLocalizations.of(context);
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(l10n.downloadsKeepCountTitle),
+      trailing: KeepCountDropdown(
+        value: subscription.autoDownloadKeepCount,
+        globalKeepCount: ref
+            .watch(appSettingsRepositoryProvider)
+            .getAutoDownloadKeepCount(),
+        onChanged: (count) async {
+          await ref
+              .read(autoDownloadKeepCountControllerProvider.notifier)
+              .setForPodcast(subscription.id, count);
+          ref.invalidate(subscriptionByFeedUrlProvider(feedUrl));
+        },
+      ),
     );
   }
 }

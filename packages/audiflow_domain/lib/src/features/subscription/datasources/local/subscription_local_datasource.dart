@@ -234,6 +234,16 @@ class SubscriptionLocalDatasource {
     await _isar.writeTxn(() => _isar.subscriptions.put(existing));
   }
 
+  /// Updates the per-podcast auto-download keep count; null follows the
+  /// global setting. Does nothing if no subscription is found for [id].
+  Future<void> updateAutoDownloadKeepCount(int id, int? keepCount) async {
+    final existing = await _isar.subscriptions.get(id);
+    if (existing == null) return;
+
+    existing.autoDownloadKeepCount = keepCount;
+    await _isar.writeTxn(() => _isar.subscriptions.put(existing));
+  }
+
   /// Updates HTTP cache headers for conditional requests.
   ///
   /// Does nothing if no subscription is found for the given [id].

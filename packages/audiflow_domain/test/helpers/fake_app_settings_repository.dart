@@ -32,6 +32,7 @@ class FakeAppSettingsRepository implements AppSettingsRepository {
   bool autoDeletePlayed = false;
   int maxConcurrentDownloads = 1;
   int batchDownloadLimit = 25;
+  int autoDownloadKeepCount = SettingsDefaults.autoDownloadKeepCount;
   bool autoSync = true;
   int syncIntervalMinutes = 60;
   bool wifiOnlySync = false;
@@ -161,6 +162,13 @@ class FakeAppSettingsRepository implements AppSettingsRepository {
   @override
   Future<void> setBatchDownloadLimit(int limit) async =>
       batchDownloadLimit = limit;
+
+  @override
+  int getAutoDownloadKeepCount() => autoDownloadKeepCount;
+
+  @override
+  Future<void> setAutoDownloadKeepCount(int count) async =>
+      autoDownloadKeepCount = count;
 
   @override
   bool getAutoSync() => autoSync;

@@ -17,6 +17,7 @@ void main() {
           BackgroundInputKeys.syncIntervalMinutes: 120,
           BackgroundInputKeys.notifyNewEpisodes: false,
           BackgroundInputKeys.wifiOnlyDownload: false,
+          BackgroundInputKeys.autoDownloadKeepCount: 5,
           BackgroundInputKeys.locale: 'ja',
         });
       });
@@ -43,6 +44,10 @@ void main() {
 
       test('getWifiOnlyDownload returns value from data', () {
         check(repository.getWifiOnlyDownload()).equals(false);
+      });
+
+      test('getAutoDownloadKeepCount returns value from data', () {
+        check(repository.getAutoDownloadKeepCount()).equals(5);
       });
     });
 
@@ -79,6 +84,12 @@ void main() {
         check(
           repository.getWifiOnlyDownload(),
         ).equals(SettingsDefaults.wifiOnlyDownload);
+      });
+
+      test('getAutoDownloadKeepCount returns default', () {
+        check(
+          repository.getAutoDownloadKeepCount(),
+        ).equals(SettingsDefaults.autoDownloadKeepCount);
       });
     });
 

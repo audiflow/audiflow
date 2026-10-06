@@ -1,0 +1,56 @@
+import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+import '../../../../app/background/background_task_registrar.dart';
+
+part 'auto_download_keep_count_controller.g.dart';
+
+/// Changes how many unstarted auto-downloads are kept and applies the new
+/// limit right away instead of waiting for the next feed sync.
+@riverpod
+class AutoDownloadKeepCountController
+    extends _$AutoDownloadKeepCountController {
+  @override
+  FutureOr<void> build() {}
+
+  /// Saves the global keep count and trims every podcast that follows it.
+  Future<void> setGlobal(int count) async {
+    final settings = ref.read(appSettingsRepositoryProvider);
+    await settings.setAutoDownloadKeepCount(count);
+    ref.invalidate(appSettingsRepositoryProvider);
+    // The background isolate reads a snapshot of the settings.
+    await BackgroundTaskRegistrar.syncWithSettings(
+      settings,
+      replaceExisting: true,
+    );
+
+    final subscriptions = await ref
+        .read(subscriptionRepositoryProvider)
+        .getSubscriptions();
+    final retention = ref.read(downloadRetentionServiceProvider);
+    for (final subscription in subscriptions) {
+      await retention.trimForSubscription(
+        subscription,
+        defaultKeepCount: count,
+      );
+    }
+  }
+
+  /// Saves a podcast's keep count override (null follows the global
+  /// setting) and trims that podcast.
+  Future<void> setForPodcast(int subscriptionId, int? count) async {
+    final subscriptions = ref.read(subscriptionRepositoryProvider);
+    await subscriptions.updateAutoDownloadKeepCount(subscriptionId, count);
+
+    final updated = await subscriptions.getById(subscriptionId);
+    if (updated == null) return;
+    await ref
+        .read(downloadRetentionServiceProvider)
+        .trimForSubscription(
+          updated,
+          defaultKeepCount: ref
+              .read(appSettingsRepositoryProvider)
+              .getAutoDownloadKeepCount(),
+        );
+  }
+}

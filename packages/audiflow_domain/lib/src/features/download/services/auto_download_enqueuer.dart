@@ -1,7 +1,9 @@
 import 'package:logger/logger.dart';
 
+import '../../feed/models/episode.dart';
 import '../../feed/repositories/episode_repository.dart';
 import '../../feed/services/feed_sync_diagnostic.dart';
+import '../../subscription/extensions/subscription_extensions.dart';
 import '../../subscription/models/subscriptions.dart';
 import '../models/download_origin.dart';
 import '../repositories/download_repository.dart';
@@ -20,8 +22,9 @@ class AutoDownloadEnqueueResult {
   /// New download tasks actually created.
   final int created;
 
-  /// Episodes skipped (duplicate active task, missing audio URL, or
-  /// auto-download disabled on the subscription).
+  /// Episodes skipped (duplicate active task, missing audio URL, older
+  /// than the keep count allows, or auto-download disabled on the
+  /// subscription).
   final int skipped;
 }
 
@@ -59,9 +62,15 @@ class AutoDownloadEnqueuer {
   ///
   /// [wifiOnly] is the global "Wi-Fi only download" preference applied to
   /// any newly created tasks.
+  ///
+  /// Only the newest pending episodes up to the podcast's keep count
+  /// (falling back to [defaultKeepCount]) are enqueued; older ones are just
+  /// marked processed, so a long-unsynced feed does not download episodes
+  /// that retention would immediately delete.
   Future<AutoDownloadEnqueueResult> enqueueForSubscription(
     Subscription subscription, {
     required bool wifiOnly,
+    required int defaultKeepCount,
   }) async {
     final pending = await _episodeRepo.getPendingAutoDownloadByPodcastId(
       subscription.id,
@@ -74,6 +83,10 @@ class AutoDownloadEnqueuer {
       );
     }
 
+    final selectedIds = _newestIds(
+      pending,
+      subscription.effectiveKeepCount(defaultKeepCount),
+    );
     var created = 0;
     var skipped = 0;
     final processedIds = <int>[];
@@ -85,7 +98,7 @@ class AutoDownloadEnqueuer {
         skipped++;
         continue;
       }
-      if (episode.audioUrl.isEmpty) {
+      if (episode.audioUrl.isEmpty || !selectedIds.contains(episode.id)) {
         skipped++;
         continue;
       }
@@ -133,5 +146,24 @@ class AutoDownloadEnqueuer {
       created: created,
       skipped: skipped,
     );
+  }
+
+  /// IDs of the [count] most recently published [episodes]. Episodes
+  /// without a publish date rank oldest; ties keep their original order.
+  static Set<int> _newestIds(List<Episode> episodes, int count) {
+    final indexed = episodes.indexed.toList()
+      ..sort((a, b) {
+        final byDate = _comparePublishedDescending(a.$2, b.$2);
+        return byDate != 0 ? byDate : a.$1.compareTo(b.$1);
+      });
+    return indexed.take(count).map((entry) => entry.$2.id).toSet();
+  }
+
+  static int _comparePublishedDescending(Episode a, Episode b) {
+    final aDate = a.publishedAt;
+    final bDate = b.publishedAt;
+    if (aDate == null) return bDate == null ? 0 : 1;
+    if (bDate == null) return -1;
+    return bDate.compareTo(aDate);
   }
 }
