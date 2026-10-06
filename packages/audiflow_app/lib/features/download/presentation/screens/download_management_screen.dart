@@ -50,9 +50,9 @@ class _BulkDeleteAction extends ConsumerWidget {
     // from an auto-dispose provider (see AUDIFLOW-3Q/3R).
     return BulkDeleteButton(
       tasks: tasks,
-      onDelete: (statuses) => ref
+      onDelete: (taskIds, statuses) => ref
           .read(downloadManagementControllerProvider.notifier)
-          .deleteByStatuses(statuses),
+          .deleteTasks(taskIds, statuses: statuses),
     );
   }
 }

@@ -21,7 +21,7 @@ void main() {
     _task(3, const DownloadStatus.completed()),
   ];
 
-  late List<Set<DownloadStatus>> deleteCalls;
+  late List<({List<int> taskIds, Set<DownloadStatus> statuses})> deleteCalls;
 
   setUp(() => deleteCalls = []);
 
@@ -34,8 +34,8 @@ void main() {
           actions: [
             BulkDeleteButton(
               tasks: tasks,
-              onDelete: (statuses) async {
-                deleteCalls.add(statuses);
+              onDelete: (taskIds, statuses) async {
+                deleteCalls.add((taskIds: taskIds, statuses: statuses));
                 return 2;
               },
             ),
@@ -86,8 +86,11 @@ void main() {
     await tester.tap(find.text('Delete'));
     await tester.pumpAndSettle();
 
-    check(deleteCalls).deepEquals([
-      {const DownloadStatus.pending(), const DownloadStatus.paused()},
+    check(deleteCalls).length.equals(1);
+    check(deleteCalls.single.taskIds).deepEquals([1, 2]);
+    check(deleteCalls.single.statuses).unorderedEquals([
+      const DownloadStatus.pending(),
+      const DownloadStatus.paused(),
     ]);
     expect(find.text('Deleted 2 downloads'), findsOneWidget);
   });

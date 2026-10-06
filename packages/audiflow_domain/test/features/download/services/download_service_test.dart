@@ -558,82 +558,67 @@ void main() {
     });
   });
 
-  group('deleteByStatuses', () {
-    test(
-      'deletes files and records for every task in the given statuses',
-      () async {
-        // Arrange
-        // status=0 is pending, status=2 is paused (both active)
-        final pending = _task(id: 1, status: 0);
-        final paused = _task(id: 2, status: 2, localPath: '/downloads/ep2.mp3');
-        when(
-          mockRepository.getByStatus(const DownloadStatus.pending()),
-        ).thenAnswer((_) async => [pending]);
-        when(
-          mockRepository.getByStatus(const DownloadStatus.paused()),
-        ).thenAnswer((_) async => [paused]);
-        when(mockQueueService.cancelDownload(any)).thenAnswer((_) async {});
-        when(mockFileService.deleteFile(any)).thenAnswer((_) async {});
-        when(mockRepository.delete(any)).thenAnswer((_) async {});
+  group('deleteTasks', () {
+    final queued = {
+      const DownloadStatus.pending(),
+      const DownloadStatus.paused(),
+    };
 
-        // Act
-        final deleted = await service.deleteByStatuses({
-          const DownloadStatus.pending(),
-          const DownloadStatus.paused(),
-        });
-
-        // Assert
-        expect(deleted, 2);
-        verify(mockQueueService.cancelDownload(1)).called(1);
-        verify(mockQueueService.cancelDownload(2)).called(1);
-        verify(mockFileService.deleteFile('/downloads/ep2.mp3')).called(1);
-        verify(mockRepository.delete(1)).called(1);
-        verify(mockRepository.delete(2)).called(1);
-      },
-    );
-
-    test('does not cancel inactive tasks', () async {
-      // Arrange
-      final completed = [
-        _task(id: 1, localPath: '/downloads/ep1.mp3', status: 3),
-        _task(id: 2, status: 3), // no localPath
-      ];
+    test('deletes the confirmed tasks, cancelling active ones', () async {
+      // status=0 is pending, status=2 is paused (both active)
       when(
-        mockRepository.getByStatus(const DownloadStatus.completed()),
-      ).thenAnswer((_) async => completed);
+        mockRepository.getById(1),
+      ).thenAnswer((_) async => _task(id: 1, status: 0));
+      when(mockRepository.getById(2)).thenAnswer(
+        (_) async => _task(id: 2, status: 2, localPath: '/downloads/ep2.mp3'),
+      );
+      when(mockQueueService.cancelDownload(any)).thenAnswer((_) async {});
       when(mockFileService.deleteFile(any)).thenAnswer((_) async {});
       when(mockRepository.delete(any)).thenAnswer((_) async {});
 
-      // Act
-      final deleted = await service.deleteByStatuses({
-        const DownloadStatus.completed(),
-      });
+      final deleted = await service.deleteTasks([1, 2], statuses: queued);
 
-      // Assert
       expect(deleted, 2);
-      verifyNever(mockQueueService.cancelDownload(any));
-      expect(verify(mockFileService.deleteFile(captureAny)).captured, [
-        '/downloads/ep1.mp3',
-      ]);
+      verify(mockQueueService.cancelDownload(1)).called(1);
+      verify(mockQueueService.cancelDownload(2)).called(1);
+      verify(mockFileService.deleteFile('/downloads/ep2.mp3')).called(1);
       verify(mockRepository.delete(1)).called(1);
       verify(mockRepository.delete(2)).called(1);
     });
 
-    test('does not touch statuses outside the given set', () async {
-      // Arrange
+    test('skips a task that left the confirmed statuses', () async {
+      // status=1 is downloading: it started after the listener confirmed.
       when(
-        mockRepository.getByStatus(const DownloadStatus.failed()),
-      ).thenAnswer((_) async => []);
+        mockRepository.getById(1),
+      ).thenAnswer((_) async => _task(id: 1, status: 1));
 
-      // Act
-      final deleted = await service.deleteByStatuses({
-        const DownloadStatus.failed(),
-      });
+      final deleted = await service.deleteTasks([1], statuses: queued);
 
-      // Assert
       expect(deleted, 0);
-      verifyNever(mockRepository.getByStatus(const DownloadStatus.pending()));
+      verifyNever(mockQueueService.cancelDownload(any));
       verifyNever(mockRepository.delete(any));
+    });
+
+    test('skips a task that no longer exists', () async {
+      when(mockRepository.getById(1)).thenAnswer((_) async => null);
+
+      expect(await service.deleteTasks([1], statuses: queued), 0);
+      verifyNever(mockRepository.delete(any));
+    });
+
+    test('deletes a repeated ID once', () async {
+      when(
+        mockRepository.getById(1),
+      ).thenAnswer((_) async => _task(id: 1, status: 3));
+      when(mockRepository.delete(any)).thenAnswer((_) async {});
+
+      final deleted = await service.deleteTasks(
+        [1, 1],
+        statuses: {const DownloadStatus.completed()},
+      );
+
+      expect(deleted, 1);
+      verify(mockRepository.delete(1)).called(1);
     });
   });
 

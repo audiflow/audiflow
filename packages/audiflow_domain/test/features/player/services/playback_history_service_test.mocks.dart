@@ -262,9 +262,12 @@ class MockDownloadService extends _i1.Mock implements _i5.DownloadService {
           as _i3.Future<void>);
 
   @override
-  _i3.Future<int> deleteByStatuses(Set<_i7.DownloadStatus>? statuses) =>
+  _i3.Future<int> deleteTasks(
+    Iterable<int>? taskIds, {
+    required Set<_i7.DownloadStatus>? statuses,
+  }) =>
       (super.noSuchMethod(
-            Invocation.method(#deleteByStatuses, [statuses]),
+            Invocation.method(#deleteTasks, [taskIds], {#statuses: statuses}),
             returnValue: _i3.Future<int>.value(0),
           )
           as _i3.Future<int>);

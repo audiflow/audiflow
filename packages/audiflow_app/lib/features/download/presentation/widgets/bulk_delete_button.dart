@@ -37,8 +37,11 @@ enum BulkDeleteScope {
     BulkDeleteScope.all => l10n.downloadBulkDeleteAll,
   };
 
-  int countIn(List<DownloadTask> tasks) =>
-      tasks.where((task) => statuses.contains(task.downloadStatus)).length;
+  /// IDs of the [tasks] this scope covers.
+  List<int> taskIdsIn(List<DownloadTask> tasks) => [
+    for (final task in tasks)
+      if (statuses.contains(task.downloadStatus)) task.id,
+  ];
 }
 
 /// App bar menu that deletes every download in a chosen status group,
@@ -52,9 +55,10 @@ class BulkDeleteButton extends StatelessWidget {
 
   final List<DownloadTask> tasks;
 
-  /// Deletes the downloads in the given statuses and returns how many were
-  /// deleted.
-  final Future<int> Function(Set<DownloadStatus> statuses) onDelete;
+  /// Deletes the confirmed [taskIds] that are still in [statuses] and
+  /// returns how many were deleted.
+  final Future<int> Function(List<int> taskIds, Set<DownloadStatus> statuses)
+  onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -69,11 +73,11 @@ class BulkDeleteButton extends StatelessWidget {
         for (final scope in BulkDeleteScope.values)
           PopupMenuItem(
             value: scope,
-            enabled: 0 < scope.countIn(tasks),
+            enabled: scope.taskIdsIn(tasks).isNotEmpty,
             child: Text(
               l10n.downloadSectionCount(
                 scope.label(l10n),
-                scope.countIn(tasks),
+                scope.taskIdsIn(tasks).length,
               ),
             ),
           ),
@@ -86,11 +90,13 @@ class BulkDeleteButton extends StatelessWidget {
     BulkDeleteScope scope,
   ) async {
     final l10n = AppLocalizations.of(context);
+    // Fix the set now so what gets deleted is what the dialog counted.
+    final taskIds = scope.taskIdsIn(tasks);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(scope.label(l10n)),
-        content: Text(l10n.downloadBulkDeleteConfirm(scope.countIn(tasks))),
+        content: Text(l10n.downloadBulkDeleteConfirm(taskIds.length)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
@@ -106,7 +112,7 @@ class BulkDeleteButton extends StatelessWidget {
     if (confirmed != true || !context.mounted) return;
 
     final messenger = ScaffoldMessenger.of(context);
-    final deleted = await onDelete(scope.statuses);
+    final deleted = await onDelete(taskIds, scope.statuses);
     messenger.showSnackBar(
       SnackBar(content: Text(l10n.downloadBulkDeleted(deleted))),
     );

@@ -308,17 +308,24 @@ class DownloadService {
     await _deleteTask(task);
   }
 
-  /// Deletes every download whose status is in [statuses], cancelling
-  /// active ones first. Returns the number of tasks deleted.
-  Future<int> deleteByStatuses(Set<DownloadStatus> statuses) async {
-    final tasks = [
-      for (final status in statuses) ...await _repository.getByStatus(status),
-    ];
-    for (final task in tasks) {
+  /// Deletes the downloads in [taskIds] that still exist and are still in
+  /// [statuses], cancelling active ones first. Returns the number deleted.
+  ///
+  /// Callers pass the IDs the listener confirmed; each row is re-read so a
+  /// task that started downloading or finished since then is left alone.
+  Future<int> deleteTasks(
+    Iterable<int> taskIds, {
+    required Set<DownloadStatus> statuses,
+  }) async {
+    var deleted = 0;
+    for (final id in taskIds.toSet()) {
+      final task = await _repository.getById(id);
+      if (task == null || !statuses.contains(task.downloadStatus)) continue;
       await _deleteTask(task);
+      deleted++;
     }
-    _logger.i('Deleted ${tasks.length} downloads in $statuses');
-    return tasks.length;
+    _logger.i('Deleted $deleted of ${taskIds.length} confirmed downloads');
+    return deleted;
   }
 
   Future<void> _deleteTask(DownloadTask task) async {
