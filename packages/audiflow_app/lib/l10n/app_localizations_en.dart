@@ -229,6 +229,16 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get podcastAutoDownloadPausedTitle => 'Auto-download paused';
+
+  @override
+  String get podcastAutoDownloadPausedSubtitle =>
+      'Paused because you haven\'t played this podcast lately. Playing an episode resumes it.';
+
+  @override
+  String get podcastAutoDownloadResume => 'Resume';
+
+  @override
   String get downloadsMaxConcurrent => 'Max Concurrent Downloads';
 
   @override

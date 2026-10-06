@@ -38,6 +38,13 @@ class Subscription {
   /// Null follows the global setting.
   int? autoDownloadKeepCount;
 
+  /// Auto-downloads created since the listener last played this podcast.
+  int autoDownloadsSinceLastPlay = 0;
+
+  /// When auto-download was paused because the listener stopped playing
+  /// this podcast; null while active.
+  DateTime? autoDownloadPausedAt;
+
   /// When the RSS channel metadata was last read into this subscription.
   ///
   /// Null means the feed has never been parsed under the backfill policy, so

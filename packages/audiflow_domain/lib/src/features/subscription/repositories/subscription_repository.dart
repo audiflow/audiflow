@@ -81,8 +81,24 @@ abstract class SubscriptionRepository {
   /// Deletes a subscription by its database ID.
   Future<bool> deleteById(int id);
 
-  /// Updates the auto-download setting for a subscription.
+  /// Updates the auto-download setting for a subscription. Turning it on
+  /// clears any inactivity pause and restarts the inactivity count.
   Future<void> updateAutoDownload(int id, {required bool autoDownload});
+
+  /// Adds [count] to the auto-downloads created since the podcast was last
+  /// played and, once the total reaches [pauseThreshold], pauses its
+  /// auto-download as of [at]. Both happen atomically, so a concurrent
+  /// playback reset cannot be followed by a stale pause. Returns true when
+  /// this call paused it.
+  Future<bool> recordAutoDownloads(
+    int id,
+    int count, {
+    required int pauseThreshold,
+    required DateTime at,
+  });
+
+  /// Clears the inactivity pause and count after the podcast is played.
+  Future<void> resetAutoDownloadActivity(int id);
 
   /// Sets the per-podcast auto-download keep count; null follows the
   /// global setting.

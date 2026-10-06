@@ -500,6 +500,24 @@ abstract class AppLocalizations {
   /// **'Default ({count})'**
   String downloadsKeepCountFollowGlobal(int count);
 
+  /// Podcast settings row shown while auto-download is paused for inactivity
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-download paused'**
+  String get podcastAutoDownloadPausedTitle;
+
+  /// Explains why auto-download paused and how it resumes
+  ///
+  /// In en, this message translates to:
+  /// **'Paused because you haven\'t played this podcast lately. Playing an episode resumes it.'**
+  String get podcastAutoDownloadPausedSubtitle;
+
+  /// Button that resumes paused auto-download
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get podcastAutoDownloadResume;
+
   /// Max concurrent downloads label
   ///
   /// In en, this message translates to:

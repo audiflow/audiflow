@@ -64,6 +64,7 @@ class _PodcastSettingsSheet extends ConsumerWidget {
             ),
             children: [
               if (feedUrl != null) _AutoDownloadTile(feedUrl: feedUrl),
+              if (feedUrl != null) _AutoDownloadPausedTile(feedUrl: feedUrl),
               if (feedUrl != null) _KeepCountTile(feedUrl: feedUrl),
               if (feedUrl != null) _HideExplicitTile(feedUrl: feedUrl),
             ],
@@ -100,6 +101,42 @@ class _AutoDownloadTile extends ConsumerWidget {
             .updateAutoDownload(subscription.id, autoDownload: value);
         ref.invalidate(subscriptionByFeedUrlProvider(feedUrl));
       },
+    );
+  }
+}
+
+class _AutoDownloadPausedTile extends ConsumerWidget {
+  const _AutoDownloadPausedTile({required this.feedUrl});
+
+  final String feedUrl;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final subscription = ref
+        .watch(subscriptionByFeedUrlProvider(feedUrl))
+        .value;
+    if (subscription == null ||
+        subscription.isCached ||
+        !subscription.autoDownload ||
+        subscription.autoDownloadPausedAt == null) {
+      return const SizedBox.shrink();
+    }
+
+    final l10n = AppLocalizations.of(context);
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: const Icon(Icons.pause_circle_outline),
+      title: Text(l10n.podcastAutoDownloadPausedTitle),
+      subtitle: Text(l10n.podcastAutoDownloadPausedSubtitle),
+      trailing: OutlinedButton(
+        onPressed: () async {
+          await ref
+              .read(subscriptionRepositoryProvider)
+              .resetAutoDownloadActivity(subscription.id);
+          ref.invalidate(subscriptionByFeedUrlProvider(feedUrl));
+        },
+        child: Text(l10n.podcastAutoDownloadResume),
+      ),
     );
   }
 }

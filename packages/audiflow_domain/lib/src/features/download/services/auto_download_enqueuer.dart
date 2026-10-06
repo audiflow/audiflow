@@ -7,6 +7,7 @@ import '../../subscription/extensions/subscription_extensions.dart';
 import '../../subscription/models/subscriptions.dart';
 import '../models/download_origin.dart';
 import '../repositories/download_repository.dart';
+import 'auto_download_pause_service.dart';
 
 /// Result of an auto-download enqueue pass over a single subscription.
 class AutoDownloadEnqueueResult {
@@ -42,12 +43,16 @@ class AutoDownloadEnqueuer {
   AutoDownloadEnqueuer({
     required this._episodeRepo,
     required this._downloadRepo,
+    this._pauseService,
     this._logger,
     FeedSyncDiagnosticSink? onDiagnostic,
   }) : _onDiagnostic = onDiagnostic ?? noopFeedSyncDiagnosticSink;
 
   final EpisodeRepository _episodeRepo;
   final DownloadRepository _downloadRepo;
+
+  /// Tracks inactivity; null disables the inactivity pause.
+  final AutoDownloadPauseService? _pauseService;
   final Logger? _logger;
   final FeedSyncDiagnosticSink _onDiagnostic;
 
@@ -83,21 +88,30 @@ class AutoDownloadEnqueuer {
       );
     }
 
-    final keepCount = subscription.effectiveKeepCount(defaultKeepCount);
+    final activity = await _pauseService?.currentActivity(subscription);
+    final limit = _creationLimit(
+      subscription.effectiveKeepCount(defaultKeepCount),
+      activity?.allowance,
+    );
     var created = 0;
     var skipped = 0;
     final processedIds = <int>[];
 
+    // A paused podcast is treated like one with auto-download off: its
+    // episodes are still marked processed so resuming does not backfill.
+    final isPaused =
+        activity?.isPaused ?? subscription.autoDownloadPausedAt != null;
+    final isActive = subscription.autoDownload && !isPaused;
     // Newest first, counting only tasks actually created, so an episode
     // without audio or with an existing download does not use up a slot.
     for (final episode in _newestFirst(pending)) {
       processedIds.add(episode.id);
 
-      if (!subscription.autoDownload) {
+      if (!isActive) {
         skipped++;
         continue;
       }
-      if (episode.audioUrl.isEmpty || keepCount <= created) {
+      if (episode.audioUrl.isEmpty || limit <= created) {
         skipped++;
         continue;
       }
@@ -130,11 +144,13 @@ class AutoDownloadEnqueuer {
     if (processedIds.isNotEmpty) {
       await _episodeRepo.markAutoDownloadEnqueued(processedIds);
     }
+    await _pauseService?.recordAutoDownloads(subscription.id, created);
 
     _onDiagnostic('feed-sync:auto-download', {
       'podcastId': subscription.id,
       'title': subscription.title,
       'autoDownloadEnabled': subscription.autoDownload,
+      'autoDownloadPaused': subscription.autoDownloadPausedAt != null,
       'inspected': pending.length,
       'created': created,
       'skipped': skipped,
@@ -145,6 +161,13 @@ class AutoDownloadEnqueuer {
       created: created,
       skipped: skipped,
     );
+  }
+
+  /// Tasks one pass may create: the keep count, further capped by what the
+  /// inactivity pause still allows.
+  static int _creationLimit(int keepCount, int? allowance) {
+    if (allowance == null || keepCount < allowance) return keepCount;
+    return allowance;
   }
 
   /// [episodes] most recently published first. Episodes without a publish

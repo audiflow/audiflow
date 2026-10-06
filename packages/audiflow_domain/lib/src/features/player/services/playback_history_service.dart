@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../download/services/auto_download_pause_service.dart';
 import '../../review_prompt/providers/review_prompt_providers.dart';
 import '../../review_prompt/repositories/review_prompt_repository.dart';
 import '../../review_prompt/services/review_prompt_trigger.dart';
@@ -25,6 +26,7 @@ PlaybackHistoryService playbackHistoryService(Ref ref) {
     reconcilerService: reconcilerService,
     reviewPromptRepository: reviewPromptRepository,
     reviewPromptTrigger: reviewPromptTrigger,
+    autoDownloadPause: ref.watch(autoDownloadPauseServiceProvider),
   );
 }
 
@@ -40,6 +42,7 @@ class PlaybackHistoryService {
     this._reconcilerService,
     this._reviewPromptRepository,
     this._reviewPromptTrigger,
+    this._autoDownloadPause,
     DateTime Function()? clock,
   }) : _clock = clock ?? DateTime.now;
 
@@ -48,6 +51,7 @@ class PlaybackHistoryService {
   final StationReconcilerService? _reconcilerService;
   final ReviewPromptRepository? _reviewPromptRepository;
   final ReviewPromptTrigger? _reviewPromptTrigger;
+  final AutoDownloadPauseService? _autoDownloadPause;
 
   /// Injectable clock for testing.
   final DateTime Function() _clock;
@@ -89,6 +93,17 @@ class PlaybackHistoryService {
     // Arm the review-prompt trigger; it fires after the configured delay
     // unless playback is paused or stopped first.
     _reviewPromptTrigger?.armForPlayback();
+
+    await _tryRecordPodcastPlayed(episodeId);
+  }
+
+  /// Best-effort: playing a podcast resumes its paused auto-download.
+  Future<void> _tryRecordPodcastPlayed(int episodeId) async {
+    try {
+      await _autoDownloadPause?.recordPlayback(episodeId);
+    } on Exception {
+      // Auto-download bookkeeping must never break playback.
+    }
   }
 
   /// Called on each progress update during playback.

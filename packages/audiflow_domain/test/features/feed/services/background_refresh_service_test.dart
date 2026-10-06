@@ -225,6 +225,17 @@ class FakeSubscriptionRepository implements SubscriptionRepository {
   Future<void> updateAutoDownload(int id, {required bool autoDownload}) async {}
 
   @override
+  Future<bool> recordAutoDownloads(
+    int id,
+    int count, {
+    required int pauseThreshold,
+    required DateTime at,
+  }) async => false;
+
+  @override
+  Future<void> resetAutoDownloadActivity(int id) async {}
+
+  @override
   Future<void> updateAutoDownloadKeepCount(int id, int? keepCount) async {}
 
   @override

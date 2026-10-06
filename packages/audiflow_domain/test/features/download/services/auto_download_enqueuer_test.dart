@@ -1,3 +1,4 @@
+import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -35,6 +36,33 @@ class _FakeEpisodeRepository implements EpisodeRepository {
   }
 
   // Unused
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _FakeSubscriptionRepository implements SubscriptionRepository {
+  final Map<int, int> sinceLastPlay = {};
+  final Map<int, DateTime> pausedAt = {};
+
+  /// Stored rows; a sync's [Subscription] snapshot can lag behind these.
+  final Map<int, Subscription> stored = {};
+
+  @override
+  Future<Subscription?> getById(int id) async => stored[id];
+
+  @override
+  Future<bool> recordAutoDownloads(
+    int id,
+    int count, {
+    required int pauseThreshold,
+    required DateTime at,
+  }) async {
+    final total = sinceLastPlay[id] = (sinceLastPlay[id] ?? 0) + count;
+    if (pausedAt.containsKey(id) || total < pauseThreshold) return false;
+    pausedAt[id] = at;
+    return true;
+  }
+
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
@@ -86,10 +114,12 @@ Subscription _sub({
   String title = 'Podcast',
   bool autoDownload = true,
   int? keepCount,
+  DateTime? pausedAt,
 }) {
   return Subscription()
     ..id = id
     ..autoDownloadKeepCount = keepCount
+    ..autoDownloadPausedAt = pausedAt
     ..itunesId = 'itunes_$id'
     ..feedUrl = 'https://example.com/feed/$id'
     ..title = title
@@ -115,6 +145,140 @@ Episode _episode({
 
 void main() {
   group('AutoDownloadEnqueuer', () {
+    group('inactivity pause', () {
+      late _FakeSubscriptionRepository subscriptions;
+      late AutoDownloadPauseService pauseService;
+
+      setUp(() {
+        subscriptions = _FakeSubscriptionRepository();
+        pauseService = AutoDownloadPauseService(
+          subscriptionRepository: subscriptions,
+          episodeRepository: _FakeEpisodeRepository(),
+        );
+      });
+
+      test(
+        'skips a paused podcast but still marks its episodes processed',
+        () async {
+          final episodeRepo = _FakeEpisodeRepository(
+            pendingByPodcastId: {
+              1: [_episode(id: 101, podcastId: 1)],
+            },
+          );
+          final downloadRepo = _FakeDownloadRepository();
+          final enqueuer = AutoDownloadEnqueuer(
+            episodeRepo: episodeRepo,
+            downloadRepo: downloadRepo,
+            pauseService: pauseService,
+          );
+
+          final result = await enqueuer.enqueueForSubscription(
+            _sub(id: 1, pausedAt: DateTime(2026, 10, 1)),
+            wifiOnly: false,
+            defaultKeepCount: 3,
+          );
+
+          expect(downloadRepo.created, isEmpty);
+          expect(result.skipped, 1);
+          expect(episodeRepo.markCalls, [
+            [101],
+          ]);
+        },
+      );
+
+      test('honours a playback reset that landed after the sync loaded the '
+          'subscription', () async {
+        final episodeRepo = _FakeEpisodeRepository(
+          pendingByPodcastId: {
+            1: [
+              for (var day = 1; day <= 3; day++)
+                _episode(
+                  id: 100 + day,
+                  podcastId: 1,
+                  publishedAt: DateTime(2026, 1, day),
+                ),
+            ],
+          },
+        );
+        final downloadRepo = _FakeDownloadRepository();
+        final enqueuer = AutoDownloadEnqueuer(
+          episodeRepo: episodeRepo,
+          downloadRepo: downloadRepo,
+          pauseService: pauseService,
+        );
+        // The sync loaded a paused snapshot; playback has since reset it.
+        final staleSnapshot = _sub(
+          id: 1,
+          pausedAt: DateTime(2026, 10, 1),
+        )..autoDownloadsSinceLastPlay = AppConstants.autoDownloadPauseThreshold;
+        subscriptions.stored[1] = _sub(id: 1);
+
+        await enqueuer.enqueueForSubscription(
+          staleSnapshot,
+          wifiOnly: false,
+          defaultKeepCount: 3,
+        );
+
+        expect(downloadRepo.created.map((c) => c.episodeId), [103, 102, 101]);
+      });
+
+      test('creates no more than the pause threshold still allows', () async {
+        final episodeRepo = _FakeEpisodeRepository(
+          pendingByPodcastId: {
+            1: [
+              for (var day = 1; day <= 4; day++)
+                _episode(
+                  id: 100 + day,
+                  podcastId: 1,
+                  publishedAt: DateTime(2026, 1, day),
+                ),
+            ],
+          },
+        );
+        final downloadRepo = _FakeDownloadRepository();
+        final enqueuer = AutoDownloadEnqueuer(
+          episodeRepo: episodeRepo,
+          downloadRepo: downloadRepo,
+          pauseService: pauseService,
+        );
+        final twoShort = _sub(id: 1)
+          ..autoDownloadsSinceLastPlay =
+              AppConstants.autoDownloadPauseThreshold - 2;
+
+        await enqueuer.enqueueForSubscription(
+          twoShort,
+          wifiOnly: false,
+          defaultKeepCount: 10,
+        );
+
+        expect(downloadRepo.created.map((c) => c.episodeId), [104, 103]);
+      });
+
+      test('records the downloads it created toward the pause', () async {
+        final episodeRepo = _FakeEpisodeRepository(
+          pendingByPodcastId: {
+            1: [
+              _episode(id: 101, podcastId: 1),
+              _episode(id: 102, podcastId: 1),
+            ],
+          },
+        );
+        final enqueuer = AutoDownloadEnqueuer(
+          episodeRepo: episodeRepo,
+          downloadRepo: _FakeDownloadRepository(),
+          pauseService: pauseService,
+        );
+
+        await enqueuer.enqueueForSubscription(
+          _sub(id: 1),
+          wifiOnly: false,
+          defaultKeepCount: 3,
+        );
+
+        expect(subscriptions.sinceLastPlay, {1: 2});
+      });
+    });
+
     group('keep count', () {
       List<Episode> pendingNewestLast() => [
         _episode(id: 101, podcastId: 1, publishedAt: DateTime(2026, 1, 1)),

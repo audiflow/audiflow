@@ -144,6 +144,12 @@
   "@downloadsKeepCountOption": { "description": "Keep count choice in the picker", "placeholders": { "count": { "type": "int" } } },
   "downloadsKeepCountFollowGlobal": "Default ({count})",
   "@downloadsKeepCountFollowGlobal": { "description": "Per-podcast keep count choice that follows the global setting", "placeholders": { "count": { "type": "int" } } },
+  "podcastAutoDownloadPausedTitle": "Auto-download paused",
+  "@podcastAutoDownloadPausedTitle": { "description": "Podcast settings row shown while auto-download is paused for inactivity" },
+  "podcastAutoDownloadPausedSubtitle": "Paused because you haven't played this podcast lately. Playing an episode resumes it.",
+  "@podcastAutoDownloadPausedSubtitle": { "description": "Explains why auto-download paused and how it resumes" },
+  "podcastAutoDownloadResume": "Resume",
+  "@podcastAutoDownloadResume": { "description": "Button that resumes paused auto-download" },
   "downloadsMaxConcurrent": "Max Concurrent Downloads",
   "@downloadsMaxConcurrent": { "description": "Max concurrent downloads label" },
 

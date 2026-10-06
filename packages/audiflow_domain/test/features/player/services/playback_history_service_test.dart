@@ -6,6 +6,20 @@ import 'package:mockito/mockito.dart';
 @GenerateMocks([PlaybackHistoryRepository])
 import 'playback_history_service_test.mocks.dart';
 
+class _FakeAutoDownloadPauseService implements AutoDownloadPauseService {
+  final List<int> playedEpisodeIds = [];
+  bool fail = false;
+
+  @override
+  Future<void> recordPlayback(int episodeId) async {
+    if (fail) throw Exception('db unavailable');
+    playedEpisodeIds.add(episodeId);
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
 void main() {
   late MockPlaybackHistoryRepository mockRepository;
   late PlaybackHistoryService service;
@@ -172,6 +186,34 @@ void main() {
   });
 
   group('onPlaybackStarted', () {
+    group('auto-download pause', () {
+      late _FakeAutoDownloadPauseService pause;
+
+      setUp(() {
+        pause = _FakeAutoDownloadPauseService();
+        service = PlaybackHistoryService(
+          mockRepository,
+          getCompletionThreshold: () => 0.95,
+          autoDownloadPause: pause,
+          clock: clock,
+        );
+        when(mockRepository.isCompleted(any)).thenAnswer((_) async => false);
+        when(mockRepository.incrementPlayCount(any)).thenAnswer((_) async {});
+      });
+
+      test('records the play so a paused podcast resumes', () async {
+        await service.onPlaybackStarted(7, 0);
+
+        expect(pause.playedEpisodeIds, [7]);
+      });
+
+      test('keeps a bookkeeping failure from breaking playback', () async {
+        pause.fail = true;
+
+        await expectLater(service.onPlaybackStarted(7, 0), completes);
+      });
+    });
+
     test('increments play count when starting from beginning', () async {
       const episodeId = 1;
       const positionMs = 1000; // 1 second (under threshold)

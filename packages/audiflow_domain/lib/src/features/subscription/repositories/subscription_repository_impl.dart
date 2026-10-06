@@ -240,6 +240,26 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
   }
 
   @override
+  Future<bool> recordAutoDownloads(
+    int id,
+    int count, {
+    required int pauseThreshold,
+    required DateTime at,
+  }) {
+    return _datasource.recordAutoDownloads(
+      id,
+      count,
+      pauseThreshold: pauseThreshold,
+      at: at,
+    );
+  }
+
+  @override
+  Future<void> resetAutoDownloadActivity(int id) {
+    return _datasource.resetAutoDownloadActivity(id);
+  }
+
+  @override
   Future<void> updateAutoDownloadKeepCount(int id, int? keepCount) {
     return _datasource.updateAutoDownloadKeepCount(id, keepCount);
   }
