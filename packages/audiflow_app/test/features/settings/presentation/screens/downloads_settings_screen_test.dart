@@ -53,7 +53,7 @@ void main() {
       expect(tiles[0].value, isTrue);
     });
 
-    testWidgets('shows auto-delete disabled by default', (tester) async {
+    testWidgets('shows auto-delete enabled by default', (tester) async {
       await tester.pumpWidget(buildTestWidget());
 
       expect(find.text('Auto-Delete After Played'), findsOneWidget);
@@ -62,7 +62,7 @@ void main() {
           .widgetList<SwitchListTile>(find.byType(SwitchListTile))
           .toList();
       // Second SwitchListTile is auto-delete
-      expect(tiles[1].value, isFalse);
+      check(tiles[1].value).isTrue();
     });
 
     testWidgets('shows max concurrent downloads with default 1', (

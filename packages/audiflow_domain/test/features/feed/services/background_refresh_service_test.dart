@@ -335,6 +335,7 @@ class FakeDownloadRepository implements DownloadRepository {
     required int episodeId,
     required String audioUrl,
     required bool wifiOnly,
+    DownloadOrigin origin = DownloadOrigin.manual,
   }) async {
     createdDownloads.add((
       episodeId: episodeId,

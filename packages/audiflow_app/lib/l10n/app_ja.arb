@@ -67,7 +67,7 @@
   "downloadsWifiOnlyTitle": "WiFiのみダウンロード",
   "downloadsWifiOnlySubtitle": "WiFi接続時のみダウンロード",
   "downloadsAutoDeleteTitle": "再生後に自動削除",
-  "downloadsAutoDeleteSubtitle": "再生済みエピソードのダウンロードを削除",
+  "downloadsAutoDeleteSubtitle": "自動ダウンロードしたエピソードを、再生が終わって24時間後に削除",
   "downloadsMaxConcurrent": "最大同時ダウンロード数",
 
   "feedSyncAutoSyncTitle": "自動同期",

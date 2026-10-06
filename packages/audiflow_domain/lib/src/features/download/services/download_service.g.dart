@@ -162,16 +162,14 @@ String _$batchDownloadLimitHash() =>
 
 /// Main service for managing episode downloads.
 ///
-/// Provides high-level API for downloading episodes, managing the queue,
-/// and integrating with playback history for auto-delete.
+/// Provides high-level API for downloading episodes and managing the queue.
 
 @ProviderFor(downloadService)
 final downloadServiceProvider = DownloadServiceProvider._();
 
 /// Main service for managing episode downloads.
 ///
-/// Provides high-level API for downloading episodes, managing the queue,
-/// and integrating with playback history for auto-delete.
+/// Provides high-level API for downloading episodes and managing the queue.
 
 final class DownloadServiceProvider
     extends
@@ -179,8 +177,7 @@ final class DownloadServiceProvider
     with $Provider<DownloadService> {
   /// Main service for managing episode downloads.
   ///
-  /// Provides high-level API for downloading episodes, managing the queue,
-  /// and integrating with playback history for auto-delete.
+  /// Provides high-level API for downloading episodes and managing the queue.
   DownloadServiceProvider._()
     : super(
         from: null,
@@ -214,4 +211,4 @@ final class DownloadServiceProvider
   }
 }
 
-String _$downloadServiceHash() => r'598c4f02bf414f3cdd81e350b80f9aebf681f077';
+String _$downloadServiceHash() => r'fd6cadc8212bc25f61b583792f1497676bd68cac';

@@ -134,7 +134,7 @@
   "@downloadsWifiOnlySubtitle": { "description": "WiFi-only downloads subtitle" },
   "downloadsAutoDeleteTitle": "Auto-Delete After Played",
   "@downloadsAutoDeleteTitle": { "description": "Auto-delete setting title" },
-  "downloadsAutoDeleteSubtitle": "Remove downloaded episodes after playback",
+  "downloadsAutoDeleteSubtitle": "Remove auto-downloaded episodes 24 hours after you finish them",
   "@downloadsAutoDeleteSubtitle": { "description": "Auto-delete subtitle" },
   "downloadsMaxConcurrent": "Max Concurrent Downloads",
   "@downloadsMaxConcurrent": { "description": "Max concurrent downloads label" },

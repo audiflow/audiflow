@@ -1,4 +1,5 @@
 import 'package:audiflow_core/audiflow_core.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -163,8 +164,8 @@ void main() {
       expect(SettingsDefaults.wifiOnlyDownload, isTrue);
     });
 
-    test('autoDeletePlayed defaults to false', () {
-      expect(SettingsDefaults.autoDeletePlayed, isFalse);
+    test('autoDeletePlayed defaults to true', () {
+      check(SettingsDefaults.autoDeletePlayed).isTrue();
     });
 
     test('maxConcurrentDownloads defaults to 1', () {

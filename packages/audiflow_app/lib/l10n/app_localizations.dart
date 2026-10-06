@@ -473,7 +473,7 @@ abstract class AppLocalizations {
   /// Auto-delete subtitle
   ///
   /// In en, this message translates to:
-  /// **'Remove downloaded episodes after playback'**
+  /// **'Remove auto-downloaded episodes 24 hours after you finish them'**
   String get downloadsAutoDeleteSubtitle;
 
   /// Max concurrent downloads label

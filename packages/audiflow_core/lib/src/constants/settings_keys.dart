@@ -149,8 +149,9 @@ class SettingsDefaults {
   /// Default Wi-Fi only download setting.
   static const bool wifiOnlyDownload = true;
 
-  /// Default auto-delete after playback setting.
-  static const bool autoDeletePlayed = false;
+  /// Default auto-delete after playback setting. Safe to enable by default
+  /// because it only ever removes auto-downloaded episodes.
+  static const bool autoDeletePlayed = true;
 
   /// Default maximum concurrent downloads.
   static const int maxConcurrentDownloads = 1;

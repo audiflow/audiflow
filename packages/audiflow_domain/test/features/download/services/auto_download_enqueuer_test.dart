@@ -1,4 +1,5 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class _FakeEpisodeRepository implements EpisodeRepository {
@@ -42,7 +43,10 @@ class _FakeDownloadRepository implements DownloadRepository {
   _FakeDownloadRepository({this.failOnEpisodeId});
 
   final int? failOnEpisodeId;
-  final List<({int episodeId, String audioUrl, bool wifiOnly})> created = [];
+  final List<
+    ({int episodeId, String audioUrl, bool wifiOnly, DownloadOrigin origin})
+  >
+  created = [];
   final Set<int> existingTaskFor = {};
 
   @override
@@ -50,6 +54,7 @@ class _FakeDownloadRepository implements DownloadRepository {
     required int episodeId,
     required String audioUrl,
     required bool wifiOnly,
+    DownloadOrigin origin = DownloadOrigin.manual,
   }) async {
     if (episodeId == failOnEpisodeId) {
       throw Exception('simulated download failure');
@@ -58,7 +63,12 @@ class _FakeDownloadRepository implements DownloadRepository {
       // Simulate dedup: existing active task returns null
       return null;
     }
-    created.add((episodeId: episodeId, audioUrl: audioUrl, wifiOnly: wifiOnly));
+    created.add((
+      episodeId: episodeId,
+      audioUrl: audioUrl,
+      wifiOnly: wifiOnly,
+      origin: origin,
+    ));
     final task = DownloadTask()
       ..episodeId = episodeId
       ..audioUrl = audioUrl
@@ -147,6 +157,9 @@ void main() {
         expect(result.skipped, 0);
         expect(downloadRepo.created.map((c) => c.episodeId), [101, 102]);
         expect(downloadRepo.created.every((c) => c.wifiOnly), isTrue);
+        check(
+          downloadRepo.created.map((c) => c.origin),
+        ).every((o) => o.equals(DownloadOrigin.auto));
         expect(episodeRepo.markCalls, [
           [101, 102],
         ]);

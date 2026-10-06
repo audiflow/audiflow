@@ -2,6 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/providers/database_provider.dart';
 import '../datasources/local/download_local_datasource.dart';
+import '../models/download_origin.dart';
 import '../models/download_status.dart';
 import '../models/download_task.dart';
 import 'download_repository.dart';
@@ -27,6 +28,7 @@ class DownloadRepositoryImpl implements DownloadRepository {
     required int episodeId,
     required String audioUrl,
     required bool wifiOnly,
+    DownloadOrigin origin = DownloadOrigin.manual,
   }) async {
     // Check if download already exists for this episode
     final existing = await _datasource.getByEpisodeId(episodeId);
@@ -35,6 +37,7 @@ class DownloadRepositoryImpl implements DownloadRepository {
       // Allow re-download only if cancelled or failed
       if (status is! DownloadStatusCancelled &&
           status is! DownloadStatusFailed) {
+        await _promoteToManualIfRequested(existing, origin);
         return null;
       }
       // Delete old record and create new
@@ -45,10 +48,20 @@ class DownloadRepositoryImpl implements DownloadRepository {
       ..episodeId = episodeId
       ..audioUrl = audioUrl
       ..wifiOnly = wifiOnly
+      ..origin = origin.dbValue
       ..createdAt = DateTime.now();
 
     final id = await _datasource.create(task);
     return _datasource.getById(id);
+  }
+
+  Future<void> _promoteToManualIfRequested(
+    DownloadTask existing,
+    DownloadOrigin requested,
+  ) async {
+    if (requested != DownloadOrigin.manual) return;
+    if (existing.downloadOrigin == DownloadOrigin.manual) return;
+    await _datasource.markManual(existing.id);
   }
 
   @override

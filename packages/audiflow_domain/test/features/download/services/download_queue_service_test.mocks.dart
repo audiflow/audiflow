@@ -6,26 +6,28 @@
 
 import 'dart:async' as _i3;
 
-import 'package:audiflow_domain/src/features/download/models/download_status.dart'
+import 'package:audiflow_domain/src/features/download/models/download_origin.dart'
     as _i5;
+import 'package:audiflow_domain/src/features/download/models/download_status.dart'
+    as _i6;
 import 'package:audiflow_domain/src/features/download/models/download_task.dart'
     as _i4;
 import 'package:audiflow_domain/src/features/download/repositories/download_repository.dart'
     as _i2;
 import 'package:audiflow_domain/src/features/download/services/download_file_service.dart'
-    as _i6;
-import 'package:audiflow_domain/src/features/feed/models/episode.dart' as _i9;
+    as _i7;
+import 'package:audiflow_domain/src/features/feed/models/episode.dart' as _i10;
 import 'package:audiflow_domain/src/features/feed/models/feed_parse_progress.dart'
-    as _i13;
+    as _i14;
 import 'package:audiflow_domain/src/features/feed/models/numbering_extractor.dart'
-    as _i11;
-import 'package:audiflow_domain/src/features/feed/models/preset_config.dart'
     as _i12;
+import 'package:audiflow_domain/src/features/feed/models/preset_config.dart'
+    as _i13;
 import 'package:audiflow_domain/src/features/feed/repositories/episode_repository.dart'
-    as _i8;
-import 'package:audiflow_podcast/audiflow_podcast.dart' as _i10;
+    as _i9;
+import 'package:audiflow_podcast/audiflow_podcast.dart' as _i11;
 import 'package:mockito/mockito.dart' as _i1;
-import 'package:mockito/src/dummies.dart' as _i7;
+import 'package:mockito/src/dummies.dart' as _i8;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -56,12 +58,14 @@ class MockDownloadRepository extends _i1.Mock
     required int? episodeId,
     required String? audioUrl,
     required bool? wifiOnly,
+    _i5.DownloadOrigin? origin = _i5.DownloadOrigin.manual,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#createDownload, [], {
               #episodeId: episodeId,
               #audioUrl: audioUrl,
               #wifiOnly: wifiOnly,
+              #origin: origin,
             }),
             returnValue: _i3.Future<_i4.DownloadTask?>.value(),
           )
@@ -110,7 +114,7 @@ class MockDownloadRepository extends _i1.Mock
           as _i3.Stream<List<_i4.DownloadTask>>);
 
   @override
-  _i3.Future<List<_i4.DownloadTask>> getByStatus(_i5.DownloadStatus? status) =>
+  _i3.Future<List<_i4.DownloadTask>> getByStatus(_i6.DownloadStatus? status) =>
       (super.noSuchMethod(
             Invocation.method(#getByStatus, [status]),
             returnValue: _i3.Future<List<_i4.DownloadTask>>.value(
@@ -121,7 +125,7 @@ class MockDownloadRepository extends _i1.Mock
 
   @override
   _i3.Stream<List<_i4.DownloadTask>> watchByStatus(
-    _i5.DownloadStatus? status,
+    _i6.DownloadStatus? status,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#watchByStatus, [status]),
@@ -171,7 +175,7 @@ class MockDownloadRepository extends _i1.Mock
   @override
   _i3.Future<void> updateStatus({
     required int? id,
-    required _i5.DownloadStatus? status,
+    required _i6.DownloadStatus? status,
     String? localPath,
     String? lastError,
   }) =>
@@ -235,7 +239,7 @@ class MockDownloadRepository extends _i1.Mock
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockDownloadFileService extends _i1.Mock
-    implements _i6.DownloadFileService {
+    implements _i7.DownloadFileService {
   MockDownloadFileService() {
     _i1.throwOnMissingStub(this);
   }
@@ -246,7 +250,7 @@ class MockDownloadFileService extends _i1.Mock
     required String? url,
     required int? episodeId,
     required String? episodeTitle,
-    required _i6.DownloadProgressCallback? onProgress,
+    required _i7.DownloadProgressCallback? onProgress,
     int? resumeFromBytes = 0,
   }) =>
       (super.noSuchMethod(
@@ -259,7 +263,7 @@ class MockDownloadFileService extends _i1.Mock
               #resumeFromBytes: resumeFromBytes,
             }),
             returnValue: _i3.Future<String>.value(
-              _i7.dummyValue<String>(
+              _i8.dummyValue<String>(
                 this,
                 Invocation.method(#downloadFile, [], {
                   #taskId: taskId,
@@ -310,7 +314,7 @@ class MockDownloadFileService extends _i1.Mock
       (super.noSuchMethod(
             Invocation.method(#getDownloadsDirectory, []),
             returnValue: _i3.Future<String>.value(
-              _i7.dummyValue<String>(
+              _i8.dummyValue<String>(
                 this,
                 Invocation.method(#getDownloadsDirectory, []),
               ),
@@ -322,56 +326,56 @@ class MockDownloadFileService extends _i1.Mock
 /// A class which mocks [EpisodeRepository].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockEpisodeRepository extends _i1.Mock implements _i8.EpisodeRepository {
+class MockEpisodeRepository extends _i1.Mock implements _i9.EpisodeRepository {
   MockEpisodeRepository() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i3.Future<List<_i9.Episode>> getByPodcastId(int? podcastId) =>
+  _i3.Future<List<_i10.Episode>> getByPodcastId(int? podcastId) =>
       (super.noSuchMethod(
             Invocation.method(#getByPodcastId, [podcastId]),
-            returnValue: _i3.Future<List<_i9.Episode>>.value(<_i9.Episode>[]),
+            returnValue: _i3.Future<List<_i10.Episode>>.value(<_i10.Episode>[]),
           )
-          as _i3.Future<List<_i9.Episode>>);
+          as _i3.Future<List<_i10.Episode>>);
 
   @override
-  _i3.Stream<List<_i9.Episode>> watchByPodcastId(int? podcastId) =>
+  _i3.Stream<List<_i10.Episode>> watchByPodcastId(int? podcastId) =>
       (super.noSuchMethod(
             Invocation.method(#watchByPodcastId, [podcastId]),
-            returnValue: _i3.Stream<List<_i9.Episode>>.empty(),
+            returnValue: _i3.Stream<List<_i10.Episode>>.empty(),
           )
-          as _i3.Stream<List<_i9.Episode>>);
+          as _i3.Stream<List<_i10.Episode>>);
 
   @override
-  _i3.Future<_i9.Episode?> getById(int? id) =>
+  _i3.Future<_i10.Episode?> getById(int? id) =>
       (super.noSuchMethod(
             Invocation.method(#getById, [id]),
-            returnValue: _i3.Future<_i9.Episode?>.value(),
+            returnValue: _i3.Future<_i10.Episode?>.value(),
           )
-          as _i3.Future<_i9.Episode?>);
+          as _i3.Future<_i10.Episode?>);
 
   @override
-  _i3.Future<_i9.Episode?> getByAudioUrl(String? audioUrl) =>
+  _i3.Future<_i10.Episode?> getByAudioUrl(String? audioUrl) =>
       (super.noSuchMethod(
             Invocation.method(#getByAudioUrl, [audioUrl]),
-            returnValue: _i3.Future<_i9.Episode?>.value(),
+            returnValue: _i3.Future<_i10.Episode?>.value(),
           )
-          as _i3.Future<_i9.Episode?>);
+          as _i3.Future<_i10.Episode?>);
 
   @override
-  _i3.Future<_i9.Episode?> getByPodcastIdAndGuid(
+  _i3.Future<_i10.Episode?> getByPodcastIdAndGuid(
     int? podcastId,
     String? guid,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#getByPodcastIdAndGuid, [podcastId, guid]),
-            returnValue: _i3.Future<_i9.Episode?>.value(),
+            returnValue: _i3.Future<_i10.Episode?>.value(),
           )
-          as _i3.Future<_i9.Episode?>);
+          as _i3.Future<_i10.Episode?>);
 
   @override
-  _i3.Future<void> upsertEpisodes(List<_i9.Episode>? episodes) =>
+  _i3.Future<void> upsertEpisodes(List<_i10.Episode>? episodes) =>
       (super.noSuchMethod(
             Invocation.method(#upsertEpisodes, [episodes]),
             returnValue: _i3.Future<void>.value(),
@@ -382,8 +386,8 @@ class MockEpisodeRepository extends _i1.Mock implements _i8.EpisodeRepository {
   @override
   _i3.Future<void> upsertFromFeedItems(
     int? podcastId,
-    List<_i10.PodcastItem>? items, {
-    _i11.NumberingExtractor? extractor,
+    List<_i11.PodcastItem>? items, {
+    _i12.NumberingExtractor? extractor,
   }) =>
       (super.noSuchMethod(
             Invocation.method(
@@ -399,8 +403,8 @@ class MockEpisodeRepository extends _i1.Mock implements _i8.EpisodeRepository {
   @override
   _i3.Future<void> upsertFromFeedItemsWithConfig(
     int? podcastId,
-    List<_i10.PodcastItem>? items, {
-    required _i12.PresetConfig? config,
+    List<_i11.PodcastItem>? items, {
+    required _i13.PresetConfig? config,
   }) =>
       (super.noSuchMethod(
             Invocation.method(
@@ -414,12 +418,12 @@ class MockEpisodeRepository extends _i1.Mock implements _i8.EpisodeRepository {
           as _i3.Future<void>);
 
   @override
-  _i3.Future<List<_i9.Episode>> getByIds(List<int>? ids) =>
+  _i3.Future<List<_i10.Episode>> getByIds(List<int>? ids) =>
       (super.noSuchMethod(
             Invocation.method(#getByIds, [ids]),
-            returnValue: _i3.Future<List<_i9.Episode>>.value(<_i9.Episode>[]),
+            returnValue: _i3.Future<List<_i10.Episode>>.value(<_i10.Episode>[]),
           )
-          as _i3.Future<List<_i9.Episode>>);
+          as _i3.Future<List<_i10.Episode>>);
 
   @override
   _i3.Future<Set<String>> getGuidsByPodcastId(int? podcastId) =>
@@ -430,17 +434,17 @@ class MockEpisodeRepository extends _i1.Mock implements _i8.EpisodeRepository {
           as _i3.Future<Set<String>>);
 
   @override
-  _i3.Future<_i9.Episode?> getNewestByPodcastId(int? podcastId) =>
+  _i3.Future<_i10.Episode?> getNewestByPodcastId(int? podcastId) =>
       (super.noSuchMethod(
             Invocation.method(#getNewestByPodcastId, [podcastId]),
-            returnValue: _i3.Future<_i9.Episode?>.value(),
+            returnValue: _i3.Future<_i10.Episode?>.value(),
           )
-          as _i3.Future<_i9.Episode?>);
+          as _i3.Future<_i10.Episode?>);
 
   @override
   _i3.Future<void> storeTranscriptAndChapterDataFromParsed(
     int? podcastId,
-    List<_i13.ParsedEpisodeMediaMeta>? mediaMetas,
+    List<_i14.ParsedEpisodeMediaMeta>? mediaMetas,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#storeTranscriptAndChapterDataFromParsed, [
@@ -464,14 +468,14 @@ class MockEpisodeRepository extends _i1.Mock implements _i8.EpisodeRepository {
           as _i3.Future<int>);
 
   @override
-  _i3.Future<List<_i9.Episode>> getPendingAutoDownloadByPodcastId(
+  _i3.Future<List<_i10.Episode>> getPendingAutoDownloadByPodcastId(
     int? podcastId,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#getPendingAutoDownloadByPodcastId, [podcastId]),
-            returnValue: _i3.Future<List<_i9.Episode>>.value(<_i9.Episode>[]),
+            returnValue: _i3.Future<List<_i10.Episode>>.value(<_i10.Episode>[]),
           )
-          as _i3.Future<List<_i9.Episode>>);
+          as _i3.Future<List<_i10.Episode>>);
 
   @override
   _i3.Future<void> markAutoDownloadEnqueued(Iterable<int>? ids) =>
@@ -483,7 +487,7 @@ class MockEpisodeRepository extends _i1.Mock implements _i8.EpisodeRepository {
           as _i3.Future<void>);
 
   @override
-  _i3.Future<List<_i9.Episode>> getSubsequentEpisodes({
+  _i3.Future<List<_i10.Episode>> getSubsequentEpisodes({
     required int? podcastId,
     required int? afterEpisodeNumber,
     required int? limit,
@@ -494,7 +498,7 @@ class MockEpisodeRepository extends _i1.Mock implements _i8.EpisodeRepository {
               #afterEpisodeNumber: afterEpisodeNumber,
               #limit: limit,
             }),
-            returnValue: _i3.Future<List<_i9.Episode>>.value(<_i9.Episode>[]),
+            returnValue: _i3.Future<List<_i10.Episode>>.value(<_i10.Episode>[]),
           )
-          as _i3.Future<List<_i9.Episode>>);
+          as _i3.Future<List<_i10.Episode>>);
 }

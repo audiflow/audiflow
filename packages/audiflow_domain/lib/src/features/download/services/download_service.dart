@@ -51,8 +51,7 @@ int batchDownloadLimit(Ref ref) {
 
 /// Main service for managing episode downloads.
 ///
-/// Provides high-level API for downloading episodes, managing the queue,
-/// and integrating with playback history for auto-delete.
+/// Provides high-level API for downloading episodes and managing the queue.
 @Riverpod(keepAlive: true)
 DownloadService downloadService(Ref ref) {
   final repository = ref.watch(downloadRepositoryProvider);
@@ -72,7 +71,6 @@ DownloadService downloadService(Ref ref) {
     subscriptionRepository: subscriptionRepo,
     logger: logger,
     getWifiOnly: () => ref.read(downloadWifiOnlyProvider),
-    getAutoDeletePlayed: () => ref.read(downloadAutoDeletePlayedProvider),
     getBatchDownloadLimit: () => ref.read(batchDownloadLimitProvider),
     reconcilerService: reconcilerService,
     analytics: analytics,
@@ -92,7 +90,6 @@ class DownloadService {
     required SubscriptionRepository subscriptionRepository,
     required this._logger,
     required this._getWifiOnly,
-    required this._getAutoDeletePlayed,
     required this._getBatchDownloadLimit,
     this._reconcilerService,
     this._analytics,
@@ -106,7 +103,6 @@ class DownloadService {
   final SubscriptionRepository _subscriptionRepo;
   final Logger _logger;
   final bool Function() _getWifiOnly;
-  final bool Function() _getAutoDeletePlayed;
   final int Function() _getBatchDownloadLimit;
   final StationReconcilerService? _reconcilerService;
   final AnalyticsService? _analytics;
@@ -461,19 +457,6 @@ class DownloadService {
     }
 
     _logger.i('Validation complete');
-  }
-
-  /// Handles auto-delete when episode is marked as played.
-  Future<void> onEpisodeCompleted(int episodeId) async {
-    if (!_getAutoDeletePlayed()) return;
-
-    final task = await _repository.getByEpisodeId(episodeId);
-    if (task == null) return;
-
-    if (task.downloadStatus is DownloadStatusCompleted) {
-      await delete(task.id);
-      _logger.i('Auto-deleted played episode: $episodeId');
-    }
   }
 
   /// Returns total storage used by downloads in bytes.

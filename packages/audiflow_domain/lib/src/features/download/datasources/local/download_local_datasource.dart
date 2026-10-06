@@ -1,5 +1,6 @@
 import 'package:isar_community/isar.dart';
 
+import '../../models/download_origin.dart';
 import '../../models/download_status.dart';
 import '../../models/download_task.dart';
 
@@ -28,6 +29,18 @@ class DownloadLocalDatasource {
   Future<int> delete(int id) async {
     final deleted = await _isar.writeTxn(() => _isar.downloadTasks.delete(id));
     return deleted ? 1 : 0;
+  }
+
+  /// Marks the task as a manual download. Reads the row inside the write
+  /// transaction so concurrent progress or status writes are not
+  /// overwritten with a stale copy. Does nothing if [id] is unknown.
+  Future<void> markManual(int id) {
+    return _isar.writeTxn(() async {
+      final task = await _isar.downloadTasks.get(id);
+      if (task == null) return;
+      task.origin = DownloadOrigin.manual.dbValue;
+      await _isar.downloadTasks.put(task);
+    });
   }
 
   /// Returns a download task by ID.

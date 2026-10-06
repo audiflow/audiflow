@@ -37,6 +37,64 @@ void main() {
       expect(task.downloadStatus, isA<DownloadStatusPending>());
     });
 
+    test('records manual origin by default', () async {
+      final task = await repository.createDownload(
+        episodeId: 1,
+        audioUrl: 'https://example.com/ep1.mp3',
+        wifiOnly: true,
+      );
+
+      check(task!.downloadOrigin).equals(DownloadOrigin.manual);
+    });
+
+    test('records auto origin when requested', () async {
+      final task = await repository.createDownload(
+        episodeId: 1,
+        audioUrl: 'https://example.com/ep1.mp3',
+        wifiOnly: true,
+        origin: DownloadOrigin.auto,
+      );
+
+      check(task!.downloadOrigin).equals(DownloadOrigin.auto);
+    });
+
+    test('promotes an existing auto download to manual', () async {
+      final auto = await repository.createDownload(
+        episodeId: 1,
+        audioUrl: 'https://example.com/ep1.mp3',
+        wifiOnly: true,
+        origin: DownloadOrigin.auto,
+      );
+
+      final duplicate = await repository.createDownload(
+        episodeId: 1,
+        audioUrl: 'https://example.com/ep1.mp3',
+        wifiOnly: true,
+      );
+
+      check(duplicate).isNull();
+      final stored = await repository.getById(auto!.id);
+      check(stored!.downloadOrigin).equals(DownloadOrigin.manual);
+    });
+
+    test('does not demote an existing manual download to auto', () async {
+      final manual = await repository.createDownload(
+        episodeId: 1,
+        audioUrl: 'https://example.com/ep1.mp3',
+        wifiOnly: true,
+      );
+
+      await repository.createDownload(
+        episodeId: 1,
+        audioUrl: 'https://example.com/ep1.mp3',
+        wifiOnly: true,
+        origin: DownloadOrigin.auto,
+      );
+
+      final stored = await repository.getById(manual!.id);
+      check(stored!.downloadOrigin).equals(DownloadOrigin.manual);
+    });
+
     test('returns null if episode already has active download', () async {
       await repository.createDownload(
         episodeId: 1,
