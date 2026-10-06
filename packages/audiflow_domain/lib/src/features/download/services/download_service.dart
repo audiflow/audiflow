@@ -305,56 +305,55 @@ class DownloadService {
   Future<void> delete(int taskId) async {
     final task = await _repository.getById(taskId);
     if (task == null) return;
-
-    // Cancel if active
-    if (task.downloadStatus.isActive) {
-      _queueService.cancelDownload(taskId);
-    }
-
-    // Delete file if exists
-    if (task.localPath != null) {
-      await _fileService.deleteFile(task.localPath!);
-    }
-
-    await _repository.delete(taskId);
-    _logger.i('Deleted download: $taskId');
-
-    // Best-effort station reconciliation.
-    try {
-      await _reconcilerService?.onEpisodeChanged(task.episodeId);
-    } on Exception catch (e) {
-      _logger.w(
-        'Station reconciliation failed for episode ${task.episodeId}',
-        error: e,
-      );
-    }
+    await _deleteTask(task);
   }
 
-  /// Deletes all completed downloads and their files.
-  Future<void> deleteAllCompleted() async {
-    final completed = await _repository.getByStatus(
-      const DownloadStatus.completed(),
-    );
+  /// Deletes the downloads in [taskIds] that still exist and are still in
+  /// [statuses], cancelling active ones first. Returns the number deleted.
+  ///
+  /// Callers pass the IDs the listener confirmed; each row is re-read so a
+  /// task that started downloading or finished since then is left alone.
+  Future<int> deleteTasks(
+    Iterable<int> taskIds, {
+    required Set<DownloadStatus> statuses,
+  }) async {
+    var deleted = 0;
+    for (final id in taskIds.toSet()) {
+      final task = await _repository.getById(id);
+      if (task == null || !statuses.contains(task.downloadStatus)) continue;
+      await _deleteTask(task);
+      deleted++;
+    }
+    _logger.i('Deleted $deleted of ${taskIds.length} confirmed downloads');
+    return deleted;
+  }
 
-    for (final task in completed) {
-      if (task.localPath != null) {
-        await _fileService.deleteFile(task.localPath!);
-      }
+  Future<void> _deleteTask(DownloadTask task) async {
+    // Awaited so the cancelled-status write cannot land after the record
+    // is gone.
+    if (task.downloadStatus.isActive) {
+      await _queueService.cancelDownload(task.id);
     }
 
-    final count = await _repository.deleteAllCompleted();
-    _logger.i('Deleted $count completed downloads');
+    final localPath = task.localPath;
+    if (localPath != null) {
+      await _fileService.deleteFile(localPath);
+    }
 
-    // Best-effort station reconciliation.
-    for (final task in completed) {
-      try {
-        await _reconcilerService?.onEpisodeChanged(task.episodeId);
-      } on Exception catch (e) {
-        _logger.w(
-          'Station reconciliation failed for episode ${task.episodeId}',
-          error: e,
-        );
-      }
+    await _repository.delete(task.id);
+    _logger.i('Deleted download: ${task.id}');
+    await _tryReconcile(task.episodeId);
+  }
+
+  /// Best-effort station reconciliation.
+  Future<void> _tryReconcile(int episodeId) async {
+    try {
+      await _reconcilerService?.onEpisodeChanged(episodeId);
+    } on Exception catch (e) {
+      _logger.w(
+        'Station reconciliation failed for episode $episodeId',
+        error: e,
+      );
     }
   }
 
