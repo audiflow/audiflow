@@ -133,6 +133,8 @@ class _KeepCountTile extends ConsumerWidget {
           await ref
               .read(autoDownloadKeepCountControllerProvider.notifier)
               .setForPodcast(subscription.id, count);
+          // The sheet may have closed while the trim ran.
+          if (!context.mounted) return;
           ref.invalidate(subscriptionByFeedUrlProvider(feedUrl));
         },
       ),

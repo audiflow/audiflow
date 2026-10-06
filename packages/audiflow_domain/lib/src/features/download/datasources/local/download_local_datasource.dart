@@ -68,7 +68,9 @@ class DownloadLocalDatasource {
   }
 
   /// Returns the download tasks of the given episodes.
-  Future<List<DownloadTask>> getByEpisodeIds(Iterable<int> episodeIds) {
+  Future<List<DownloadTask>> getByEpisodeIds(Iterable<int> episodeIds) async {
+    // An empty anyOf adds no where clause, which would match every task.
+    if (episodeIds.isEmpty) return [];
     return _isar.downloadTasks
         .where()
         .anyOf(episodeIds, (query, id) => query.episodeIdEqualTo(id))
