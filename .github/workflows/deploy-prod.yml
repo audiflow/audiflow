@@ -155,7 +155,8 @@ jobs:
         run: sudo xcode-select -s /Applications/Xcode_26.4.1.app
 
       - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+        # Pinned to a commit like the other third-party actions here.
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
@@ -509,7 +510,8 @@ jobs:
           persist-credentials: false
 
       - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+        # Pinned to a commit like the other third-party actions here.
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
@@ -590,10 +592,18 @@ jobs:
         env:
           GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
         run: |
+          code=0
           uv run .release-tools/tools/play_upload.py \
             packages/audiflow_app/build/app/outputs/bundle/prodRelease/app-prod-release.aab \
             "$VERSION_STRING" \
-            --release-notes-dir ".release-tools/release-notes/$MARKETING_VERSION/android"
+            --release-notes-dir ".release-tools/release-notes/$MARKETING_VERSION/android" \
+            || code=$?
+          # Exit 4: the commit got no response, so the draft may exist.
+          # A blind rerun would then fail on the used version code.
+          if [ "$code" = 4 ]; then
+            echo "::error title=Play upload outcome unknown::Check the production track in Play Console for $VERSION_STRING before rerunning the android platform"
+          fi
+          exit "$code"
 
       - name: Cleanup signing materials
         if: always()

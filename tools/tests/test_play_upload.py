@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+import requests
 
 import play_upload as upload
 from store_release_status import StoreStatusError
@@ -123,9 +124,16 @@ class FakeSession:
     """Answers Play edits calls from a script and records what was sent."""
 
     def __init__(
-        self, fail_on: str | None = None, version_code: int = 58, fail_delete: bool = False
+        self,
+        fail_on: str | None = None,
+        version_code: int = 58,
+        fail_delete: bool = False,
+        raise_on: str | None = None,
+        raise_error: Exception | None = None,
     ) -> None:
         self.calls: list[tuple[str, str, dict[str, Any]]] = []
+        self._raise_on = raise_on
+        self._raise_error = raise_error or requests.exceptions.ReadTimeout("timed out")
         self._fail_on = fail_on
         self._version_code = version_code
         self._fail_delete = fail_delete
@@ -133,6 +141,8 @@ class FakeSession:
     def request(self, method: str, url: str, **kwargs: Any) -> FakeResponse:
         self.calls.append((method, url, kwargs))
         step = self._step(method, url)
+        if step == self._raise_on:
+            raise self._raise_error
         if step == "delete" and self._fail_delete:
             return FakeResponse(500, {"error": "boom"})
         if step == self._fail_on:
@@ -202,6 +212,45 @@ class TestUploadDraft:
         with pytest.raises(upload.PlayUploadError, match="403"):
             upload.upload_draft(upload.PlayEditsClient(session), b"aab", self.RELEASE)
         assert "Could not delete edit edit-1" in capsys.readouterr().err
+
+
+class TestUncertainCommit:
+    RELEASE = upload.build_release("2.1.0+58", [])
+
+    @pytest.mark.parametrize(
+        "error",
+        [requests.exceptions.ReadTimeout("timed out"), requests.exceptions.ConnectionError("reset")],
+    )
+    def test_no_response_keeps_edit(self, error: Exception) -> None:
+        session = FakeSession(raise_on="commit", raise_error=error)
+        with pytest.raises(upload.CommitOutcomeUnknownError):
+            upload.upload_draft(upload.PlayEditsClient(session), b"aab", self.RELEASE)
+        assert session.steps() == ["insert", "upload", "get_track", "update_track", "commit"]
+
+    def test_http_error_from_commit_still_deletes_edit(self) -> None:
+        session = FakeSession(fail_on="commit")
+        with pytest.raises(upload.PlayUploadError) as caught:
+            upload.upload_draft(upload.PlayEditsClient(session), b"aab", self.RELEASE)
+        assert not isinstance(caught.value, upload.CommitOutcomeUnknownError)
+        assert session.steps()[-1] == "delete"
+
+    def test_no_response_before_commit_deletes_edit(self) -> None:
+        session = FakeSession(raise_on="upload")
+        with pytest.raises(requests.exceptions.ReadTimeout):
+            upload.upload_draft(upload.PlayEditsClient(session), b"aab", self.RELEASE)
+        assert session.steps() == ["insert", "upload", "delete"]
+
+    def test_main_exits_with_distinct_code_and_error_annotation(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        monkeypatch.setenv("GITHUB_ACTIONS", "true")
+        monkeypatch.setattr(upload, "play_session", lambda: FakeSession(raise_on="commit"))
+        bundle = tmp_path / "app.aab"
+        bundle.write_bytes(b"aab")
+        assert upload.main([str(bundle), "2.1.0+58"]) == upload.EXIT_COMMIT_UNKNOWN == 4
+        error = capsys.readouterr().err
+        assert error.startswith("::error::")
+        assert "Play Console" in error
 
 
 class TestMain:

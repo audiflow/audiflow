@@ -51,6 +51,17 @@ commit predates `deploy-prod.yml`, nothing starts; run it by hand instead
 gh workflow run deploy-prod.yml -f tag="v$VERSION+$BUILD"
 ```
 
+Such an older commit also predates `sentry-prod-release.yml`, and that
+workflow creates Sentry releases only on a tag push, so create them yourself,
+from the repository root on `main`:
+
+```bash
+tools/sentry-release.sh prod "$VERSION+$BUILD"
+```
+
+The scheduled run of `sentry-prod-release.yml` then records the production
+deploys once the stores serve the build ([step 4](#4-sentry-releases-and-deploys)).
+
 What Deploy Production does, per platform (the jobs run in parallel):
 
 - **iOS** (`macos-26`, Xcode 26.4.1): installs the Apple Distribution
@@ -89,6 +100,14 @@ gh workflow run deploy-prod.yml -f tag="v$VERSION+$BUILD" -f platform=android   
 
 If a store upload itself succeeded and only a later step failed, do not rerun
 that platform; finish by hand instead.
+
+When the Android upload step fails with exit code 4 ("Play upload outcome
+unknown"), the request committing the Play edit got no response (a timeout or
+dropped connection), so the draft release may already exist; the edit is kept
+rather than deleted. Check the production track in Play Console first: if the
+draft `$VERSION ($BUILD)` is there, the upload is done and must not be rerun.
+Rerun the `android` platform only if it is not. Any other failure deletes the
+Play edit, so the platform can be rerun as is.
 
 ## 3. Submit in the stores
 
@@ -222,10 +241,35 @@ uploaded build, cancel that run (`gh run list --workflow deploy-prod.yml`,
 then `gh run cancel <run id>`), or its store uploads fail on the duplicate
 build number. The Sentry workflow is separate and should still run.
 
+The build runs from the staging commit in a separate worktree, while the
+release tools and release notes come from your usual checkout on an
+up-to-date `main`: the build commit can predate `tools/play_upload.py`, and
+notes are often merged after it. Two directories are used below:
+
+- `$MAIN`: your usual checkout, on `main` (`git checkout main && git pull`).
+- `$BUILD_DIR`: a worktree of the build commit, next to it.
+
+Each command block says where it runs. From `$MAIN`, with `VERSION`, `BUILD`
+and `COMMIT` set as in [step 1](#1-choose-what-to-build):
+
+```bash
+# in $MAIN
+MAIN=$(git rev-parse --show-toplevel)
+BUILD_DIR="$MAIN/../audiflow-build"
+git worktree add --detach "$BUILD_DIR" "$COMMIT"
+FLUTTER="$MAIN/.fvm/flutter_sdk/bin/flutter"
+cat "$BUILD_DIR/.fvmrc"   # must name the same Flutter version as "$MAIN/.fvmrc"
+```
+
 ### Prerequisites
 
-- `.env.prod` at the repository root (decrypted secrets; see `tools/secrets.sh`).
-- Production Firebase configuration, decrypted the same way:
+The files below belong in `$BUILD_DIR`, the tree that is built. Decrypting
+there with `(cd "$BUILD_DIR" && mise run secrets:decrypt)` creates them all
+(see `tools/secrets.sh`; it finds audiflow-secrets next to the primary
+checkout).
+
+- `.env.prod` at the root of `$BUILD_DIR`.
+- Production Firebase configuration:
   `packages/audiflow_app/android/app/src/prod/google-services.json` (the
   Android build fails without it) and
   `packages/audiflow_app/ios/config/prod/GoogleService-Info.plist` (the iOS
@@ -233,25 +277,24 @@ build number. The Sentry workflow is separate and should still run.
   before building.
 - Android signing: `packages/audiflow_app/android/key.properties` and the
   upload keystore it points to.
+
+And on the machine:
+
 - Xcode signed in to the team account (team `R6HMM3C9D7`). The IPA export uses
   automatic signing with a cloud-managed distribution certificate, so no
   certificate lives in the local keychain.
 - `sentry-cli` with an organization auth token in `~/.sentryclirc`
   (org `reedom`, project `audiflow`).
-- Flutter from `.fvm/flutter_sdk/bin/flutter` (the SDK pinned for this repo).
-
-Check out the commit chosen in [step 1](#1-choose-what-to-build):
-
-```bash
-git checkout "$COMMIT"   # or a branch whose code is identical to it
-```
+- Flutter from `$MAIN/.fvm/flutter_sdk/bin/flutter` (`$FLUTTER` above; the
+  worktree has no `.fvm` of its own).
 
 ### Build the iOS IPA
 
 The export options are not committed; write them into the build directory:
 
 ```bash
-cd packages/audiflow_app
+# in $BUILD_DIR/packages/audiflow_app
+cd "$BUILD_DIR/packages/audiflow_app"
 mkdir -p build/ios
 cat > build/ios/ExportOptions.prod.plist <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
@@ -271,7 +314,7 @@ cat > build/ios/ExportOptions.prod.plist <<'PLIST'
 </plist>
 PLIST
 
-../../.fvm/flutter_sdk/bin/flutter build ipa --flavor prod -t lib/main_prod.dart \
+"$FLUTTER" build ipa --flavor prod -t lib/main_prod.dart \
   --dart-define-from-file=../../.env.prod \
   --build-name="$VERSION" --build-number="$BUILD" \
   --export-options-plist=build/ios/ExportOptions.prod.plist
@@ -280,6 +323,7 @@ PLIST
 Check the result before uploading:
 
 ```bash
+# in $BUILD_DIR/packages/audiflow_app
 unzip -q -o build/ios/ipa/audiflow.ipa 'Payload/*.app/Info.plist' -d /tmp/ipa-check
 /usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" \
   -c "Print :CFBundleShortVersionString" -c "Print :CFBundleVersion" \
@@ -290,10 +334,11 @@ unzip -q -o build/ios/ipa/audiflow.ipa 'Payload/*.app/Info.plist' -d /tmp/ipa-ch
 ### Build the Android App Bundle
 
 ```bash
-../../.fvm/flutter_sdk/bin/flutter build appbundle --flavor prod -t lib/main_prod.dart \
+# in $BUILD_DIR/packages/audiflow_app
+"$FLUTTER" build appbundle --flavor prod -t lib/main_prod.dart \
   --dart-define-from-file=../../.env.prod \
   --build-name="$VERSION" --build-number="$BUILD"
-# output: build/app/outputs/bundle/prodRelease/app-prod-release.aab
+# output: $BUILD_DIR/packages/audiflow_app/build/app/outputs/bundle/prodRelease/app-prod-release.aab
 ```
 
 ### Upload debug symbols to Sentry
@@ -303,6 +348,7 @@ the files of the builds above, as CI does; files Sentry already has are
 skipped.
 
 ```bash
+# in $BUILD_DIR/packages/audiflow_app
 # iOS: dSYMs from the archive the IPA was exported from
 sentry-cli debug-files upload --org reedom --project audiflow --include-sources \
   build/ios/archive/Runner.xcarchive/dSYMs
@@ -317,21 +363,45 @@ that is expected.
 
 ### Upload to the stores
 
-- iOS: drag `build/ios/ipa/audiflow.ipa` into the Transporter app, or use
-  `xcrun altool --upload-app` with an App Store Connect API key.
-- Android: upload `app-prod-release.aab` in the Google Play Console, or run
-  `uv run ../../tools/play_upload.py build/app/outputs/bundle/prodRelease/app-prod-release.aab "$VERSION+$BUILD" --release-notes-dir ../../release-notes/$VERSION/android`
-  with `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` set to a key that has the upload
-  permission.
+- iOS: drag `$BUILD_DIR/packages/audiflow_app/build/ios/ipa/audiflow.ipa` into
+  the Transporter app, or use `xcrun altool --upload-app` with an App Store
+  Connect API key. Paste the "What's New" text from
+  `$MAIN/release-notes/$VERSION/ios/` into App Store Connect.
+- Android: run the upload tool from `$MAIN`, so the tool exists and the
+  merged notes are used, with `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` set to a key
+  that has the upload permission:
 
-Paste the release notes from `release-notes/<version>/` into each store
-(the Play upload tool attaches the Android notes itself). Then go back to the
-repository root on `main` and continue with [step 2](#2-push-the-tag).
+  ```bash
+  # in $MAIN
+  cd "$MAIN"
+  uv run tools/play_upload.py \
+    "$BUILD_DIR/packages/audiflow_app/build/app/outputs/bundle/prodRelease/app-prod-release.aab" \
+    "$VERSION+$BUILD" \
+    --release-notes-dir "release-notes/$VERSION/android"
+  ```
+
+  It creates the same draft release as CI (exit code 4 means the outcome is
+  unknown; see [Retrying](#retrying)). The alternative is to upload
+  `app-prod-release.aab` by hand in Google Play Console and paste the notes
+  from `$MAIN/release-notes/$VERSION/android/`.
+
+Then remove the build worktree (`--force` because the decrypted secrets in it
+are untracked; this deletes them too) and continue with
+[step 2](#2-push-the-tag) from `$MAIN`:
+
+```bash
+# in $MAIN
+git worktree remove --force "$BUILD_DIR"
+```
 
 ## Troubleshooting
 
 - **Pushing the tag did not start Deploy Production**: the tagged commit
-  predates `deploy-prod.yml`. Run it by hand as shown in step 2.
+  predates `deploy-prod.yml`. Run it by hand and create the Sentry releases
+  with `tools/sentry-release.sh`, both as shown in step 2.
+- **The Play upload step exits with code 4**: committing the edit got no
+  response, so the draft may already exist. Check the production track in
+  Play Console before any retry; see [Retrying](#retrying).
 - **The Play upload fails with 403**: the service account lacks the
   production release permission, or it was granted recently and has not
   applied yet; see [Google Play service account](#google-play-service-account).

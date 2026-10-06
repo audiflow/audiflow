@@ -25,7 +25,10 @@ Environment:
     GOOGLE_PLAY_SERVICE_ACCOUNT_JSON  service account JSON key content; the
         account needs permission to release to production in Play Console.
 
-Exits 0 on success and 1 on any error. Tests (no network), from the
+Exits 0 on success and 1 on any error, except 4 when the commit request got
+no response (timeout, dropped connection): the draft may or may not exist,
+so the edit is kept and the production track must be checked in Play Console
+before any retry. Tests (no network), from the
 repository root:
     uv run --with pytest --with 'pyjwt[crypto]' --with google-auth \
         --with requests pytest -p no:cacheprovider tools/tests
@@ -55,16 +58,25 @@ HTTP_TIMEOUT_SECONDS = 60
 
 EXIT_OK = 0
 EXIT_ERROR = 1
+EXIT_COMMIT_UNKNOWN = 4
 
 
 class PlayUploadError(Exception):
     """A failure that should end the run with EXIT_ERROR."""
 
 
-def warn(message: str) -> None:
-    # The annotation form surfaces the warning on the Actions run summary.
-    prefix = "::warning::" if os.environ.get("GITHUB_ACTIONS") == "true" else "warning: "
+class CommitOutcomeUnknownError(PlayUploadError):
+    """The commit request got no response, so Play may have applied it."""
+
+
+def _annotate(level: str, message: str) -> None:
+    # The annotation form surfaces the message on the Actions run summary.
+    prefix = f"::{level}::" if os.environ.get("GITHUB_ACTIONS") == "true" else f"{level}: "
     print(f"{prefix}{message}", file=sys.stderr)
+
+
+def warn(message: str) -> None:
+    _annotate("warning", message)
 
 
 def _read_note(path: Path) -> str:
@@ -175,7 +187,17 @@ def _fill_edit(client: PlayEditsClient, edit_id: str, bundle: bytes, release: Js
     _check_version_code(uploaded, release["versionCodes"][0])
     track = build_track_payload(client.get_track(edit_id), release)
     client.update_track(edit_id, track)
-    client.commit_edit(edit_id)
+    try:
+        client.commit_edit(edit_id)
+    # requests' timeout and connection errors derive from OSError. With no
+    # response, Play may have committed the edit; an HTTP error response
+    # (PlayUploadError) means it did not.
+    except OSError as error:
+        raise CommitOutcomeUnknownError(
+            f"No response to committing edit {edit_id} ({error}); the draft release "
+            f"{release['name']} may already exist. Check the {TRACK} track in Play Console "
+            "before any retry."
+        ) from error
 
 
 def upload_draft(client: PlayEditsClient, bundle: bytes, release: JsonObject) -> None:
@@ -183,6 +205,9 @@ def upload_draft(client: PlayEditsClient, bundle: bytes, release: JsonObject) ->
     edit_id = client.insert_edit()
     try:
         _fill_edit(client, edit_id, bundle, release)
+    except CommitOutcomeUnknownError:
+        # Deleting would fail on a committed edit and could hide that it was.
+        raise
     except Exception:
         try:
             client.delete_edit(edit_id)
@@ -212,6 +237,9 @@ def main(arguments: Sequence[str]) -> int:
     options = _parse_arguments(arguments)
     try:
         _run(options)
+    except CommitOutcomeUnknownError as error:
+        _annotate("error", str(error))
+        return EXIT_COMMIT_UNKNOWN
     except (PlayUploadError, StoreStatusError) as error:
         print(f"error: {error}", file=sys.stderr)
         return EXIT_ERROR
