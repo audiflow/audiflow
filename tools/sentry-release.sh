@@ -7,15 +7,19 @@
 # differently named release would never meet an event.
 #
 # Usage:
-#   tools/sentry-release.sh <stg|prod> <version+build> [--deploy] [--platform ios|android]
+#   tools/sentry-release.sh <stg|prod> <version+build>
+#       [--deploy | --check-deployed] [--platform ios|android]
 #
 #   stg   tag stg-<version+build>, apps com.reedom.audiflow.stg and
 #         com.reedom.audiflow_app.stg, deploy environment `stg`
 #   prod  tag v<version+build>, apps com.reedom.audiflow and
 #         com.reedom.audiflow_app, deploy environment `prod`
 #   --deploy    also record a deploy to the channel's environment; for prod,
-#               pass it once the stores publish the build. A release that
-#               already has a deploy to that environment is left untouched.
+#               pass it once the stores publish the build. An existing
+#               release only gets the missing deploy; one that already has
+#               a deploy to that environment is left untouched.
+#   --check-deployed  change nothing; exit 0 when every selected release
+#               already has a deploy to the channel's environment, else 4
 #   --platform  only the iOS (ios) or the Android (android) release
 #
 # The build's tag must exist locally; the commit range starts at the
@@ -27,7 +31,7 @@ set -euo pipefail
 readonly SENTRY_REPO="audiflow/audiflow"
 
 usage() {
-  sed -n '9,19p' "$0" >&2
+  sed -n '9,23p' "$0" >&2
   exit 2
 }
 
@@ -56,13 +60,18 @@ select_app_ids() {
   esac
 }
 
-# Sets DEPLOY and PLATFORM from the options after <channel> <version>.
+readonly EXIT_NOT_DEPLOYED=4
+
+# Sets DEPLOY, CHECK_DEPLOYED and PLATFORM from the options after
+# <channel> <version>.
 parse_options() {
   DEPLOY=""
+  CHECK_DEPLOYED=""
   PLATFORM=""
   while [ "$#" -gt 0 ]; do
     case "$1" in
       --deploy) DEPLOY=1 ;;
+      --check-deployed) CHECK_DEPLOYED=1 ;;
       --platform)
         [ "$#" -ge 2 ] || usage
         PLATFORM="$2"
@@ -72,6 +81,7 @@ parse_options() {
     esac
     shift
   done
+  [ -z "$DEPLOY" ] || [ -z "$CHECK_DEPLOYED" ] || usage
 }
 
 # A `previous..current` range, or the single commit for a channel's first
@@ -102,29 +112,51 @@ has_deploy_to() {
   '
 }
 
-# Succeeds when the release exists and already has a deploy to $2. Listing
-# the deploys of a missing release is an API error, hence the check first.
-already_deployed() {
-  local release="$1" environment="$2" deploys
-  sentry-cli releases info "$release" >/dev/null 2>&1 || return 1
-  deploys="$(sentry-cli releases deploys "$release" list)"
-  has_deploy_to "$environment" <<<"$deploys"
+# `releases info` exits 1 for a missing release.
+release_exists() {
+  sentry-cli releases info "$1" >/dev/null 2>&1
 }
 
-publish_release() {
-  local release="$1" spec="$2" channel="$3"
-  # Skipping the whole release, not just the deploy, keeps `finalize` from
-  # moving the release date: it resets it to the current time on every call.
-  if [ -n "$DEPLOY" ] && already_deployed "$release" "$channel"; then
-    echo "$release already has a deploy to $channel; skipping."
-    return
-  fi
+# Succeeds when the existing release $1 has a deploy to $2.
+has_deploy() {
+  local deploys
+  deploys="$(sentry-cli releases deploys "$1" list)"
+  has_deploy_to "$2" <<<"$deploys"
+}
+
+create_release() {
+  local release="$1" spec="$2"
   sentry-cli releases new "$release"
   sentry-cli releases set-commits "$release" --commit "$spec"
   sentry-cli releases finalize "$release"
-  if [ -n "$DEPLOY" ]; then
-    sentry-cli releases deploys "$release" new -e "$channel"
+}
+
+# Creates a missing release, then records the deploy. An existing release
+# is not touched again: `finalize` resets the release date to the current
+# time on every call, which would move it to the day of the deploy.
+deploy_release() {
+  local release="$1" spec="$2" channel="$3"
+  if ! release_exists "$release"; then
+    create_release "$release" "$spec"
+  elif has_deploy "$release" "$channel"; then
+    echo "$release already has a deploy to $channel; skipping."
+    return
   fi
+  sentry-cli releases deploys "$release" new -e "$channel"
+}
+
+# Exits EXIT_NOT_DEPLOYED unless every release in APP_IDS has a deploy to $2.
+check_deployed() {
+  local version="$1" channel="$2" app_id release
+  for app_id in "${APP_IDS[@]}"; do
+    release="$app_id@$version"
+    if ! release_exists "$release" || ! has_deploy "$release" "$channel"; then
+      echo "$release has no deploy to $channel."
+      exit "$EXIT_NOT_DEPLOYED"
+    fi
+    echo "$release already has a deploy to $channel."
+  done
+  exit 0
 }
 
 main() {
@@ -138,6 +170,8 @@ main() {
   export SENTRY_ORG="${SENTRY_ORG:-reedom}"
   export SENTRY_PROJECT="${SENTRY_PROJECT:-audiflow}"
 
+  [ -z "$CHECK_DEPLOYED" ] || check_deployed "$version" "$channel"
+
   local tag="$TAG_PREFIX$version" spec
   if ! git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
     echo "Tag $tag not found; create or fetch it first." >&2
@@ -148,7 +182,11 @@ main() {
 
   local app_id
   for app_id in "${APP_IDS[@]}"; do
-    publish_release "$app_id@$version" "$spec" "$channel"
+    if [ -n "$DEPLOY" ]; then
+      deploy_release "$app_id@$version" "$spec" "$channel"
+    else
+      create_release "$app_id@$version" "$spec"
+    fi
   done
 }
 

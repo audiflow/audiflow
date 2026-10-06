@@ -148,11 +148,14 @@ needs to be run by hand:
 
 - Pushing the tag in step 6 creates both releases
   (`tools/sentry-release.sh prod "$VERSION+$BUILD"`).
-- Every 6 hours the workflow checks the build of the highest `v*` tag in each
-  store with `tools/store_release_status.py`. Once a store serves it, the
-  workflow records the production deploy for that platform
+- Every 6 hours the workflow looks at the builds of the 3 highest `v*` tags,
+  so an older build that goes live after a newer tag was pushed still gets
+  its deploy. For each build and platform without a `prod` deploy in Sentry
+  yet, it checks the store with `tools/store_release_status.py`; once the
+  store serves the build, it records the production deploy for that platform
   (`tools/sentry-release.sh prod "$VERSION+$BUILD" --deploy --platform <ios|android>`).
   So deploys appear in Sentry within about 6 hours of the build going live.
+  Builds older than the 3 highest tags are not checked.
   A build counts as live on the App Store when its version is released to
   customers (phased releases included), and on Google Play when the
   production release containing its version code is published
@@ -161,23 +164,27 @@ needs to be run by hand:
   edits API reports it as `completed`. A platform whose store credentials are missing is skipped with a
   notice (see [Automation secrets](#automation-secrets)).
 
-Manual fallback, for example to check an older build right away or when a
-store secret is not set up:
+To check one build right away, or one outside the 3-tag window, run the
+workflow for it. This only helps for platforms whose store credentials are
+configured:
 
 ```bash
 gh workflow run sentry-prod-release.yml -f version="$VERSION+$BUILD"
 ```
 
-or run the script directly from the repository root on `main` (step 6),
-once the stores publish the build:
+For a platform whose store secret is not set up, the workflow skips the
+check, so record the deploy with the script directly, from the repository
+root on `main` (step 6), once that store publishes the build:
 
 ```bash
-tools/sentry-release.sh prod "$VERSION+$BUILD"            # releases only
-tools/sentry-release.sh prod "$VERSION+$BUILD" --deploy   # plus the deploy
+tools/sentry-release.sh prod "$VERSION+$BUILD" --deploy --platform ios       # or android
+tools/sentry-release.sh prod "$VERSION+$BUILD"                               # releases only, both platforms
 ```
 
-Rerunning is safe: releases are updated in place, and `--deploy` leaves a
-release that already has a `prod` deploy untouched. The staging workflow runs
+Rerunning is safe. Without `--deploy`, releases are updated in place. With
+`--deploy`, a missing release is created first; an existing one only gets the
+missing `prod` deploy (it is not finalized again, which would move its
+release date), and one that already has a `prod` deploy is left untouched. The staging workflow runs
 the same script with `stg` on every `stg-*` tag. Debug symbols are matched by
 file id, not by release, so step 4 does not depend on these names.
 

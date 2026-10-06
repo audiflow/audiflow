@@ -87,9 +87,25 @@ def test_platform_restricts_to_one_release(workspace: Path, arguments: list[str]
     assert f"releases deploys {app_id}@2.1.0+58 new -e prod" in calls
 
 
-def test_records_deploy_when_release_has_none(workspace: Path) -> None:
+CREATE_CALLS = ("releases new", "releases set-commits", "releases finalize")
+
+
+def _created(calls: list[str]) -> list[str]:
+    return [call for call in calls if call.startswith(CREATE_CALLS)]
+
+
+def test_deploy_creates_missing_release_then_deploys(workspace: Path) -> None:
+    result, calls = _run(workspace, "prod", "2.1.0+58", "--deploy", "--platform", "ios")
+    assert result.returncode == 0, result.stderr
+    assert [call.split()[1] for call in _created(calls)] == ["new", "set-commits", "finalize"]
+    assert calls[-1] == "releases deploys com.reedom.audiflow@2.1.0+58 new -e prod"
+
+
+def test_deploy_to_existing_release_only_records_deploy(workspace: Path) -> None:
     result, calls = _run(workspace, "prod", "2.1.0+58", "--deploy", "--platform", "ios", exists=True)
     assert result.returncode == 0, result.stderr
+    # finalize would move the release date, so an existing release is left as is.
+    assert _created(calls) == []
     assert "releases deploys com.reedom.audiflow@2.1.0+58 new -e prod" in calls
 
 
@@ -105,13 +121,39 @@ def test_skips_release_already_deployed(workspace: Path) -> None:
                          exists=True, deploys=DEPLOY_TABLE.format(env="prod"))
     assert result.returncode == 0, result.stderr
     assert "already has a deploy to prod" in result.stdout
-    assert not any(call.startswith(("releases new", "releases finalize")) for call in calls)
+    assert _created(calls) == []
+    assert not any(call.endswith("new -e prod") for call in calls)
+
+
+def test_without_deploy_existing_release_is_updated(workspace: Path) -> None:
+    result, calls = _run(workspace, "prod", "2.1.0+58", "--platform", "ios", exists=True)
+    assert result.returncode == 0, result.stderr
+    assert [call.split()[1] for call in _created(calls)] == ["new", "set-commits", "finalize"]
+
+
+@pytest.mark.parametrize(
+    ("exists", "deploys", "code"),
+    [
+        (True, DEPLOY_TABLE.format(env="prod"), 0),
+        (True, DEPLOY_TABLE.format(env="production"), 4),
+        (True, "No deploys found\\n", 4),
+        (False, "No deploys found\\n", 4),
+    ],
+)
+def test_check_deployed_reports_without_changing_anything(
+    workspace: Path, exists: bool, deploys: str, code: int
+) -> None:
+    result, calls = _run(workspace, "prod", "2.1.0+58", "--check-deployed", "--platform", "android",
+                         exists=exists, deploys=deploys)
+    assert result.returncode == code, result.stderr
+    assert _created(calls) == []
     assert not any(call.endswith("new -e prod") for call in calls)
 
 
 @pytest.mark.parametrize(
     "arguments",
-    [["--platform"], ["--platform", "web"], ["--bogus"], ["--deploy", "extra"]],
+    [["--platform"], ["--platform", "web"], ["--bogus"], ["--deploy", "extra"],
+     ["--deploy", "--check-deployed"]],
 )
 def test_rejects_bad_options(workspace: Path, arguments: list[str]) -> None:
     result, calls = _run(workspace, "prod", "2.1.0+58", *arguments)

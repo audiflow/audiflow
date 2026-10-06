@@ -1,0 +1,47 @@
+name: Tools Tests
+
+# Tests for the release tooling in tools/, which the Flutter lint-and-test
+# workflow does not cover.
+
+on:
+  pull_request:
+    paths:
+      - 'tools/**'
+      - '.github/workflows/sentry-prod-release.yml'
+      - '.github/workflows/tools-tests.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'tools/**'
+      - '.github/workflows/sentry-prod-release.yml'
+      - '.github/workflows/tools-tests.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Tools tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+
+      - name: Check shell syntax
+        run: |
+          for script in tools/*.sh; do
+            bash -n "$script"
+          done
+
+      - name: Run tests
+        # Same command as in the tools/store_release_status.py docstring.
+        run: >-
+          uv run --with pytest --with 'pyjwt[crypto]' --with google-auth
+          --with requests pytest -p no:cacheprovider tools/tests
