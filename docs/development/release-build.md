@@ -119,6 +119,15 @@ Paste the release notes from `release-notes/<version>/` into each store.
 
 ## 6. Tag the release
 
+Go back to the repository root on `main`: the remaining steps run tools
+from the current tree (an older build commit may predate them) and find the
+build through its tag.
+
+```bash
+cd "$(git rev-parse --show-toplevel)"
+git checkout main
+```
+
 Tag the commit that was built and push the tag:
 
 ```bash
@@ -132,7 +141,8 @@ The Sentry SDK names each release `<app id>@<version>+<build>`, one per
 platform (`com.reedom.audiflow@...` for iOS, `com.reedom.audiflow_app@...` for
 Android). `tools/sentry-release.sh` creates those releases with the commits
 since the previous `v*` tag, so suspect commits and "resolved in release"
-work for production issues. It needs the tag from step 6:
+work for production issues. Run it from the repository root on `main`
+(step 6); it needs the tag from step 6:
 
 ```bash
 tools/sentry-release.sh prod "$VERSION+$BUILD"
