@@ -88,15 +88,20 @@ class AutoDownloadEnqueuer {
       );
     }
 
-    final limit = _creationLimit(subscription, defaultKeepCount);
+    final activity = await _pauseService?.currentActivity(subscription);
+    final limit = _creationLimit(
+      subscription.effectiveKeepCount(defaultKeepCount),
+      activity?.allowance,
+    );
     var created = 0;
     var skipped = 0;
     final processedIds = <int>[];
 
     // A paused podcast is treated like one with auto-download off: its
     // episodes are still marked processed so resuming does not backfill.
-    final isActive =
-        subscription.autoDownload && subscription.autoDownloadPausedAt == null;
+    final isPaused =
+        activity?.isPaused ?? subscription.autoDownloadPausedAt != null;
+    final isActive = subscription.autoDownload && !isPaused;
     // Newest first, counting only tasks actually created, so an episode
     // without audio or with an existing download does not use up a slot.
     for (final episode in _newestFirst(pending)) {
@@ -160,9 +165,7 @@ class AutoDownloadEnqueuer {
 
   /// Tasks one pass may create: the keep count, further capped by what the
   /// inactivity pause still allows.
-  int _creationLimit(Subscription subscription, int defaultKeepCount) {
-    final keepCount = subscription.effectiveKeepCount(defaultKeepCount);
-    final allowance = _pauseService?.remainingAllowance(subscription);
+  static int _creationLimit(int keepCount, int? allowance) {
     if (allowance == null || keepCount < allowance) return keepCount;
     return allowance;
   }

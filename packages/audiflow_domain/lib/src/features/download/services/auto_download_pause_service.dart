@@ -58,11 +58,24 @@ class AutoDownloadPauseService {
     }
   }
 
-  /// Auto-downloads [subscription] may still receive before it pauses, so a
-  /// single sync cannot overshoot the threshold.
-  int remainingAllowance(Subscription subscription) =>
-      AppConstants.autoDownloadPauseThreshold -
-      subscription.autoDownloadsSinceLastPlay;
+  /// Whether [subscription] is paused and how many auto-downloads it may
+  /// still receive before pausing.
+  ///
+  /// Re-reads the stored row: a sync holds a snapshot loaded before it
+  /// fetched the feed, and a playback reset may have landed since. Falls
+  /// back to [subscription] when the row is gone.
+  Future<({bool isPaused, int allowance})> currentActivity(
+    Subscription subscription,
+  ) async {
+    final current =
+        await _subscriptionRepository.getById(subscription.id) ?? subscription;
+    return (
+      isPaused: current.autoDownloadPausedAt != null,
+      allowance:
+          AppConstants.autoDownloadPauseThreshold -
+          current.autoDownloadsSinceLastPlay,
+    );
+  }
 
   /// Resumes auto-download for the podcast of [episodeId] and restarts its
   /// inactivity count.

@@ -44,6 +44,12 @@ class _FakeSubscriptionRepository implements SubscriptionRepository {
   final Map<int, int> sinceLastPlay = {};
   final Map<int, DateTime> pausedAt = {};
 
+  /// Stored rows; a sync's [Subscription] snapshot can lag behind these.
+  final Map<int, Subscription> stored = {};
+
+  @override
+  Future<Subscription?> getById(int id) async => stored[id];
+
   @override
   Future<bool> recordAutoDownloads(
     int id,
@@ -179,6 +185,42 @@ void main() {
           ]);
         },
       );
+
+      test('honours a playback reset that landed after the sync loaded the '
+          'subscription', () async {
+        final episodeRepo = _FakeEpisodeRepository(
+          pendingByPodcastId: {
+            1: [
+              for (var day = 1; day <= 3; day++)
+                _episode(
+                  id: 100 + day,
+                  podcastId: 1,
+                  publishedAt: DateTime(2026, 1, day),
+                ),
+            ],
+          },
+        );
+        final downloadRepo = _FakeDownloadRepository();
+        final enqueuer = AutoDownloadEnqueuer(
+          episodeRepo: episodeRepo,
+          downloadRepo: downloadRepo,
+          pauseService: pauseService,
+        );
+        // The sync loaded a paused snapshot; playback has since reset it.
+        final staleSnapshot = _sub(
+          id: 1,
+          pausedAt: DateTime(2026, 10, 1),
+        )..autoDownloadsSinceLastPlay = AppConstants.autoDownloadPauseThreshold;
+        subscriptions.stored[1] = _sub(id: 1);
+
+        await enqueuer.enqueueForSubscription(
+          staleSnapshot,
+          wifiOnly: false,
+          defaultKeepCount: 3,
+        );
+
+        expect(downloadRepo.created.map((c) => c.episodeId), [103, 102, 101]);
+      });
 
       test('creates no more than the pause threshold still allows', () async {
         final episodeRepo = _FakeEpisodeRepository(
