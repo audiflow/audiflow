@@ -388,6 +388,9 @@ class FakeDownloadRepository implements DownloadRepository {
   @override
   Future<List<DownloadTask>> getAll() async => [];
   @override
+  Future<List<DownloadTask>> getByEpisodeIds(Iterable<int> episodeIds) async =>
+      [];
+  @override
   Stream<List<DownloadTask>> watchAll() => const Stream.empty();
   @override
   Future<List<DownloadTask>> getByStatus(DownloadStatus status) async => [];

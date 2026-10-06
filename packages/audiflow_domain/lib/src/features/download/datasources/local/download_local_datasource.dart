@@ -67,6 +67,14 @@ class DownloadLocalDatasource {
     return _isar.downloadTasks.where().sortByCreatedAt().findAll();
   }
 
+  /// Returns the download tasks of the given episodes.
+  Future<List<DownloadTask>> getByEpisodeIds(Iterable<int> episodeIds) {
+    return _isar.downloadTasks
+        .where()
+        .anyOf(episodeIds, (query, id) => query.episodeIdEqualTo(id))
+        .findAll();
+  }
+
   /// Watches all download tasks ordered by creation date.
   Stream<List<DownloadTask>> watchAll() {
     return _isar.downloadTasks.where().sortByCreatedAt().watch(

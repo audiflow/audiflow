@@ -133,7 +133,9 @@ class DownloadRetentionService {
     };
     final history = await _playbackHistoryRepository.getByPodcastId(podcastId);
     final candidates = [
-      for (final task in await _downloadRepository.getAll())
+      for (final task in await _downloadRepository.getByEpisodeIds(
+        episodes.keys,
+      ))
         if (task.downloadOrigin == DownloadOrigin.auto &&
             _retainedStatuses.contains(task.downloadStatus) &&
             _isUnstarted(history[task.episodeId]))

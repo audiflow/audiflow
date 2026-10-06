@@ -149,6 +149,54 @@ void main() {
         );
       });
 
+      test(
+        'fills the keep count past episodes that cannot be enqueued',
+        () async {
+          final episodeRepo = _FakeEpisodeRepository(
+            pendingByPodcastId: {
+              1: [
+                _episode(
+                  id: 104,
+                  podcastId: 1,
+                  publishedAt: DateTime(2026, 1, 4),
+                )..audioUrl = '',
+                _episode(
+                  id: 103,
+                  podcastId: 1,
+                  publishedAt: DateTime(2026, 1, 3),
+                ),
+                _episode(
+                  id: 102,
+                  podcastId: 1,
+                  publishedAt: DateTime(2026, 1, 2),
+                ),
+                _episode(
+                  id: 101,
+                  podcastId: 1,
+                  publishedAt: DateTime(2026, 1, 1),
+                ),
+              ],
+            },
+          );
+          // Episode 103 already has a (manual) download, so it is skipped.
+          final downloadRepo = _FakeDownloadRepository()
+            ..existingTaskFor.add(103);
+          final enqueuer = AutoDownloadEnqueuer(
+            episodeRepo: episodeRepo,
+            downloadRepo: downloadRepo,
+          );
+
+          final result = await enqueuer.enqueueForSubscription(
+            _sub(id: 1),
+            wifiOnly: false,
+            defaultKeepCount: 2,
+          );
+
+          expect(downloadRepo.created.map((c) => c.episodeId), [102, 101]);
+          expect(result.created, 2);
+        },
+      );
+
       test('per-podcast keep count overrides the default', () async {
         final episodeRepo = _FakeEpisodeRepository(
           pendingByPodcastId: {1: pendingNewestLast()},

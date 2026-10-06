@@ -119,6 +119,18 @@ class MockDownloadRepository extends _i1.Mock
           as _i4.Future<List<_i5.DownloadTask>>);
 
   @override
+  _i4.Future<List<_i5.DownloadTask>> getByEpisodeIds(
+    Iterable<int>? episodeIds,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#getByEpisodeIds, [episodeIds]),
+            returnValue: _i4.Future<List<_i5.DownloadTask>>.value(
+              <_i5.DownloadTask>[],
+            ),
+          )
+          as _i4.Future<List<_i5.DownloadTask>>);
+
+  @override
   _i4.Stream<List<_i5.DownloadTask>> watchAll() =>
       (super.noSuchMethod(
             Invocation.method(#watchAll, []),

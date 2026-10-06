@@ -428,6 +428,22 @@ void main() {
     });
   });
 
+  group('getByEpisodeIds', () {
+    test('returns only the tasks of the given episodes', () async {
+      for (final episodeId in [1, 2, 3]) {
+        await repository.createDownload(
+          episodeId: episodeId,
+          audioUrl: 'https://example.com/ep$episodeId.mp3',
+          wifiOnly: false,
+        );
+      }
+
+      final tasks = await repository.getByEpisodeIds([1, 3, 99]);
+
+      check(tasks.map((t) => t.episodeId)).unorderedEquals([1, 3]);
+    });
+  });
+
   group('getAll', () {
     test('returns all tasks ordered by creation date', () async {
       await repository.createDownload(

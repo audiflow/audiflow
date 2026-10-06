@@ -83,22 +83,21 @@ class AutoDownloadEnqueuer {
       );
     }
 
-    final selectedIds = _newestIds(
-      pending,
-      subscription.effectiveKeepCount(defaultKeepCount),
-    );
+    final keepCount = subscription.effectiveKeepCount(defaultKeepCount);
     var created = 0;
     var skipped = 0;
     final processedIds = <int>[];
 
-    for (final episode in pending) {
+    // Newest first, counting only tasks actually created, so an episode
+    // without audio or with an existing download does not use up a slot.
+    for (final episode in _newestFirst(pending)) {
       processedIds.add(episode.id);
 
       if (!subscription.autoDownload) {
         skipped++;
         continue;
       }
-      if (episode.audioUrl.isEmpty || !selectedIds.contains(episode.id)) {
+      if (episode.audioUrl.isEmpty || keepCount <= created) {
         skipped++;
         continue;
       }
@@ -148,15 +147,15 @@ class AutoDownloadEnqueuer {
     );
   }
 
-  /// IDs of the [count] most recently published [episodes]. Episodes
-  /// without a publish date rank oldest; ties keep their original order.
-  static Set<int> _newestIds(List<Episode> episodes, int count) {
+  /// [episodes] most recently published first. Episodes without a publish
+  /// date rank oldest; ties keep their original order.
+  static List<Episode> _newestFirst(List<Episode> episodes) {
     final indexed = episodes.indexed.toList()
       ..sort((a, b) {
         final byDate = _comparePublishedDescending(a.$2, b.$2);
         return byDate != 0 ? byDate : a.$1.compareTo(b.$1);
       });
-    return indexed.take(count).map((entry) => entry.$2.id).toSet();
+    return [for (final entry in indexed) entry.$2];
   }
 
   static int _comparePublishedDescending(Episode a, Episode b) {

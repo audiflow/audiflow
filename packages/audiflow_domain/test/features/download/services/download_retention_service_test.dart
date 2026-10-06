@@ -9,18 +9,28 @@ class _FakeDownloadRepository implements DownloadRepository {
   /// IDs promoted to manual after the sweep listed them.
   final Set<int> promotedIds = {};
 
+  /// Statuses tasks moved to after they were listed.
+  final Map<int, DownloadStatus> statusNow = {};
+
   @override
   Future<List<DownloadTask>> getByStatus(DownloadStatus status) async =>
       tasks.where((task) => task.downloadStatus == status).toList();
 
   @override
-  Future<List<DownloadTask>> getAll() async => List.of(tasks);
+  Future<List<DownloadTask>> getByEpisodeIds(Iterable<int> episodeIds) async {
+    final ids = episodeIds.toSet();
+    return tasks.where((task) => ids.contains(task.episodeId)).toList();
+  }
 
   @override
   Future<DownloadTask?> getById(int id) async {
     final task = tasks.where((t) => t.id == id).firstOrNull;
-    if (task == null || !promotedIds.contains(id)) return task;
-    return _task(id: id, origin: DownloadOrigin.manual);
+    if (task == null) return null;
+    if (promotedIds.contains(id)) {
+      return _task(id: id, origin: DownloadOrigin.manual);
+    }
+    final status = statusNow[id];
+    return status == null ? task : _task(id: id, status: status);
   }
 
   @override
@@ -282,6 +292,27 @@ void main() {
         check(deletedTaskIds).deepEquals([1]);
       },
     );
+
+    test('hands the deleter the current row, not the listed one', () async {
+      // The background deleter skips active downloads by the status it is
+      // given, so it must see a download that started after listing.
+      addEpisode(1, day: 1, status: const DownloadStatus.pending());
+      addEpisode(2, day: 2);
+      downloadRepository.statusNow[1] = const DownloadStatus.downloading();
+      final handed = <DownloadStatus>[];
+      service = DownloadRetentionService(
+        downloadRepository: downloadRepository,
+        episodeRepository: episodeRepository,
+        playbackHistoryRepository: historyRepository,
+        isAutoDeletePlayedEnabled: () => true,
+        deleteDownload: (task) async => handed.add(task.downloadStatus),
+        clock: () => _now,
+      );
+
+      await service.trimForSubscription(subscription, defaultKeepCount: 1);
+
+      check(handed).deepEquals([const DownloadStatus.downloading()]);
+    });
 
     test('per-podcast keep count overrides the default', () async {
       for (final day in [1, 2, 3]) {

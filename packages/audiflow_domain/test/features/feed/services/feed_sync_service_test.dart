@@ -569,6 +569,7 @@ void main() {
 
           check(result.success).isTrue();
           check(enqueuer.enqueuedPodcastIds).deepEquals([sub.id]);
+          check(retention.trimmedPodcastIds).deepEquals([sub.id]);
           check(queueService.startCount).equals(1);
         },
       );
