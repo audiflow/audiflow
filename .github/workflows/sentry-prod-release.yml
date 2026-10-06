@@ -1,0 +1,164 @@
+name: Sentry Production Release
+
+# Production builds are uploaded to the stores by hand
+# (docs/development/release-build.md). This creates their Sentry releases
+# when the v* tag is pushed, and records the production deploy per platform
+# once the store actually serves the build.
+
+on:
+  push:
+    tags:
+      - 'v*'
+  schedule:
+    # Every 6 hours, off the top of the hour to avoid the scheduler rush.
+    - cron: '23 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Build to check, e.g. 2.1.0+58 (default: the 3 highest v* tags)'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  # Tag runs and deploy checks get separate groups: a queued scheduled run
+  # must not replace a pending tag run in the same group.
+  group: sentry-prod-release-${{ github.event_name == 'push' && github.ref_name || 'deploys' }}
+  cancel-in-progress: false
+
+jobs:
+  create-releases:
+    name: Create Sentry releases
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          # Run the default branch's tooling: a tag points at its build
+          # commit, which can predate tools/sentry-release.sh. The script
+          # finds the build by tag name, and the full history brings the
+          # tags for the commit range.
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Create Sentry releases
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+        run: |
+          npm install -g @sentry/cli
+          tools/sentry-release.sh prod "${GITHUB_REF_NAME#v}"
+
+  record-deploys:
+    name: Record production deploys
+    if: github.event_name != 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup uv
+        # Pinned to a commit like other third-party actions in this repo.
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+
+      - name: Install sentry-cli
+        run: npm install -g @sentry/cli
+
+      - name: Resolve versions
+        id: versions
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          if [ -n "$INPUT_VERSION" ]; then
+            VERSIONS="${INPUT_VERSION#v}"
+          else
+            # Several tags, not only the newest: an older build can go live
+            # after a newer tag was pushed, e.g. when one store reviews
+            # faster than the other.
+            VERSIONS="$(git tag --list 'v[0-9]*' --sort=-version:refname | head -n 3 | sed 's/^v//' | tr '\n' ' ')"
+          fi
+          if [ -z "${VERSIONS// /}" ]; then
+            echo "::error::No v* tag found"
+            exit 1
+          fi
+          for VERSION in $VERSIONS; do
+            if ! [[ "$VERSION" =~ ^[0-9]+(\.[0-9]+)*\+[0-9]+$ ]]; then
+              echo "::error::Version must look like 2.1.0+58, got '$VERSION'"
+              exit 1
+            fi
+            if ! git rev-parse -q --verify "refs/tags/v$VERSION" >/dev/null; then
+              echo "::error::Tag v$VERSION not found"
+              exit 1
+            fi
+          done
+          echo "versions=$VERSIONS" >> "$GITHUB_OUTPUT"
+          echo "Checking: $VERSIONS"
+
+      - name: Record deploys for live builds
+        env:
+          VERSIONS: ${{ steps.versions.outputs.versions }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          ASC_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          has_credentials() {
+            case "$1" in
+              ios) [ -n "$ASC_KEY_ID" ] && [ -n "$ASC_ISSUER_ID" ] && [ -n "$ASC_PRIVATE_KEY" ] ;;
+              android) [ -n "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" ] ;;
+            esac
+          }
+
+          # Sentry is asked first so builds already recorded skip the store
+          # call. Not deployed (exit 4) and not live (exit 3) are normal
+          # outcomes; any other exit is an error.
+          record_deploy() {
+            local version="$1" platform="$2" code=0
+            tools/sentry-release.sh prod "$version" --check-deployed --platform "$platform" || code=$?
+            case "$code" in
+              0) return 0 ;;
+              4) ;;
+              *)
+                echo "::error::Sentry deploy check failed for $platform v$version (exit $code)"
+                return 1
+                ;;
+            esac
+            code=0
+            uv run tools/store_release_status.py "$platform" "$version" || code=$?
+            case "$code" in
+              0) tools/sentry-release.sh prod "$version" --deploy --platform "$platform" ;;
+              3) echo "$platform: v$version is not live yet" ;;
+              *)
+                echo "::error::Store status check failed for $platform v$version (exit $code)"
+                return 1
+                ;;
+            esac
+          }
+
+          # A failure for one build or platform does not stop the others;
+          # the job fails at the end instead.
+          failed=0
+          for platform in ios android; do
+            if ! has_credentials "$platform"; then
+              echo "::notice::Skipping $platform: store credentials are not configured"
+              continue
+            fi
+            for version in $VERSIONS; do
+              record_deploy "$version" "$platform" || failed=1
+            done
+          done
+          exit "$failed"

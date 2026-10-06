@@ -141,22 +141,88 @@ The Sentry SDK names each release `<app id>@<version>+<build>`, one per
 platform (`com.reedom.audiflow@...` for iOS, `com.reedom.audiflow_app@...` for
 Android). `tools/sentry-release.sh` creates those releases with the commits
 since the previous `v*` tag, so suspect commits and "resolved in release"
-work for production issues. Run it from the repository root on `main`
-(step 6); it needs the tag from step 6:
+work for production issues.
+
+This is automated by `.github/workflows/sentry-prod-release.yml`; nothing
+needs to be run by hand:
+
+- Pushing the tag in step 6 creates both releases
+  (`tools/sentry-release.sh prod "$VERSION+$BUILD"`).
+- Every 6 hours the workflow looks at the builds of the 3 highest `v*` tags,
+  so an older build that goes live after a newer tag was pushed still gets
+  its deploy. For each build and platform without a `prod` deploy in Sentry
+  yet, it checks the store with `tools/store_release_status.py`; once the
+  store serves the build, it records the production deploy for that platform
+  (`tools/sentry-release.sh prod "$VERSION+$BUILD" --deploy --platform <ios|android>`).
+  So deploys appear in Sentry within about 6 hours of the build going live.
+  Builds older than the 3 highest tags are not checked.
+  A build counts as live on the App Store when its version is released to
+  customers (phased releases included), and on Google Play when the
+  production release containing its version code is published
+  (`releaseLifecycleState` `PUBLISHED` from `tracks.releases.list`, full or
+  staged rollout). A release still in review does not count: the older
+  edits API reports it as `completed`. A platform whose store credentials are missing is skipped with a
+  notice (see [Automation secrets](#automation-secrets)).
+
+To check one build right away, or one outside the 3-tag window, run the
+workflow for it. This only helps for platforms whose store credentials are
+configured:
 
 ```bash
-tools/sentry-release.sh prod "$VERSION+$BUILD"
+gh workflow run sentry-prod-release.yml -f version="$VERSION+$BUILD"
 ```
 
-Once the stores publish the build, record the production deploy:
+For a platform whose store secret is not set up, the workflow skips the
+check, so record the deploy with the script directly, from the repository
+root on `main` (step 6), once that store publishes the build:
 
 ```bash
-tools/sentry-release.sh prod "$VERSION+$BUILD" --deploy
+tools/sentry-release.sh prod "$VERSION+$BUILD" --deploy --platform ios       # or android
+tools/sentry-release.sh prod "$VERSION+$BUILD"                               # releases only, both platforms
 ```
 
-Rerunning is safe: it updates the same releases. The staging workflow runs
+Rerunning is safe. Without `--deploy`, releases are updated in place. With
+`--deploy`, a missing release is created first; an existing one only gets the
+missing `prod` deploy (it is not finalized again, which would move its
+release date), and one that already has a `prod` deploy is left untouched. The staging workflow runs
 the same script with `stg` on every `stg-*` tag. Debug symbols are matched by
 file id, not by release, so step 4 does not depend on these names.
+
+Google Play keeps only the current releases on the production track, so a
+manual check of a build that has since been replaced there reports it as not
+live; use the script directly for such a backfill.
+
+## Automation secrets
+
+`sentry-prod-release.yml` reads these repository secrets:
+
+| Secret | Used for |
+|--------|----------|
+| `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` | creating releases and deploys (shared with the staging workflow) |
+| `APP_STORE_CONNECT_KEY_ID`, `APP_STORE_CONNECT_ISSUER_ID`, `APP_STORE_CONNECT_PRIVATE_KEY` | reading App Store versions (shared with the staging workflow; the private key is the `.p8` content) |
+| `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` | reading the Google Play production track |
+
+Setting up the Google Play service account:
+
+1. In Google Cloud Console, pick or create a project and enable the
+   **Google Play Android Developer API** for it.
+2. Create a service account (IAM & Admin > Service accounts); it needs no
+   Google Cloud roles. Under its Keys tab, add a JSON key and download it.
+3. In Play Console, open **Users and permissions**, invite the service
+   account's email address, and under **App permissions** add the audiflow app
+   (`com.reedom.audiflow_app`) with **View app information (read-only)**.
+   The workflow only reads the production track's release list
+   (`tracks.releases.list`); it creates no edit and changes nothing.
+4. Store the key as the repository secret, then delete the local file:
+
+   ```bash
+   gh secret set GOOGLE_PLAY_SERVICE_ACCOUNT_JSON < key.json
+   rm key.json
+   ```
+
+Newly granted Play Console permissions can take a while (up to a day has
+been reported) to apply to API calls. Verify with
+`gh workflow run sentry-prod-release.yml` and check the run's log.
 
 ## Troubleshooting
 
