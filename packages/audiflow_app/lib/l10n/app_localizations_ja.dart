@@ -1311,6 +1311,26 @@ class AppLocalizationsJa extends AppLocalizations {
   String get developerShowInfoSubtitle => 'エピソード詳細にRSSフィードURLとパターンリンクを表示';
 
   @override
+  String get developerTestNotificationsTitle => 'テスト通知を送る';
+
+  @override
+  String get developerTestNotificationsSubtitle => '各ポッドキャストの最新エピソード、最大3通';
+
+  @override
+  String developerTestNotificationsSent(int count) {
+    return 'テスト通知を$count通送りました';
+  }
+
+  @override
+  String get developerTestNotificationsNone => '通知できるエピソードがありません';
+
+  @override
+  String get developerTestNotificationsFailed => 'テスト通知の送信に失敗しました';
+
+  @override
+  String get developerTestNotificationsPermissionDenied => '通知が許可されていません';
+
+  @override
   String get developerPatternsHeader => 'スマートプレイリストパターン';
 
   @override

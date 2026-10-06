@@ -30,6 +30,26 @@ void main() {
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
       prefs = await SharedPreferences.getInstance();
+      FlavorConfig.initialize(FlavorConfig.stg);
+    });
+
+    testWidgets('offers test notifications outside production', (tester) async {
+      await tester.pumpWidget(
+        _buildApp([sharedPreferencesProvider.overrideWithValue(prefs)]),
+      );
+      await tester.pumpAndSettle();
+
+      check(find.text('Send test notifications').evaluate()).isNotEmpty();
+    });
+
+    testWidgets('hides test notifications in production', (tester) async {
+      FlavorConfig.initialize(FlavorConfig.prod);
+      await tester.pumpWidget(
+        _buildApp([sharedPreferencesProvider.overrideWithValue(prefs)]),
+      );
+      await tester.pumpAndSettle();
+
+      check(find.text('Send test notifications').evaluate()).isEmpty();
     });
 
     testWidgets('renders contribute link', (tester) async {

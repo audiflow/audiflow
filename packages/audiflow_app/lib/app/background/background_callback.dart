@@ -21,7 +21,7 @@ import 'background_download_lock.dart';
 import 'background_settings_repository.dart';
 import 'background_task_registrar.dart';
 import 'refresh_download_budget.dart';
-import 'localized_notification_text_formatter.dart';
+import 'new_episode_notification_service_factory.dart';
 
 // Temporary diagnostic file logger for background refresh investigation.
 // Writes to <appDocDir>/bg_refresh_diag.log so it can be pulled from
@@ -446,25 +446,10 @@ void backgroundCallback() {
         onDiagnostic: feedSyncDiagnostic,
       );
 
-      final artworkFiles = NotificationArtworkFiles(
+      final notificationService = await createNewEpisodeNotificationService(
         dio: dio,
-        directory: () async => Directory(
-          '${(await getTemporaryDirectory()).path}/notification_artwork',
-        ),
-        // iOS disables the GPU for a backgrounded engine and Impeller then
-        // stalls dart:ui image decoding, so iOS attaches the original file
-        // (it scales attachments itself). Android needs a small large icon.
-        encoder: Platform.isIOS
-            ? const PassthroughArtworkEncoder()
-            : const DownscalingArtworkEncoder(),
-      );
-      final notificationService = BackgroundNotificationService(
-        textFormatter: await LocalizedNotificationTextFormatter.create(
-          storedLocale: settingsRepo.getLocale(),
-          platformLocale: Platform.localeName,
-        ),
+        storedLocale: settingsRepo.getLocale(),
         logger: logger,
-        artworkFileProvider: artworkFiles.fileFor,
         onArtworkFailure: sentryInitialized ? _artworkFailureBreadcrumb : null,
       );
 

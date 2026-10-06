@@ -3,6 +3,9 @@ import 'dart:convert';
 import 'package:audiflow_core/audiflow_core.dart';
 import 'package:characters/characters.dart';
 
+import '../../subscription/models/subscriptions.dart';
+import 'episode.dart';
+
 /// Lightweight DTO carrying per-episode data for local notifications.
 ///
 /// Created in the background isolate after feed sync detects new episodes.
@@ -19,6 +22,29 @@ class NewEpisodeNotification {
     this.duration,
     this.description,
   });
+
+  /// Notification for [episode] of [subscription], with [artworkUrl] as
+  /// its thumbnail.
+  factory NewEpisodeNotification.fromEpisode({
+    required Subscription subscription,
+    required Episode episode,
+    required String? artworkUrl,
+  }) {
+    final durationMs = episode.durationMs;
+    return NewEpisodeNotification(
+      episodeId: episode.id,
+      podcastId: subscription.id,
+      podcastTitle: subscription.title,
+      episodeTitle: episode.title,
+      artworkUrl: artworkUrl,
+      publishedAt: episode.publishedAt,
+      duration: durationMs == null ? null : Duration(milliseconds: durationMs),
+      description: plainTextDescription(
+        description: episode.description,
+        summary: episode.summary,
+      ),
+    );
+  }
 
   /// Longest description carried into a notification, ellipsis included.
   ///

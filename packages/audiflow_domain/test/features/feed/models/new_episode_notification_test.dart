@@ -36,6 +36,62 @@ void main() {
       expect(decoded['podcastId'], 7);
     });
 
+    test('fromEpisode carries the episode and podcast fields', () {
+      final subscription = Subscription()
+        ..id = 7
+        ..itunesId = '1'
+        ..title = 'The Daily';
+      final episode = Episode()
+        ..id = 42
+        ..podcastId = 7
+        ..guid = 'g'
+        ..title = 'Breaking News'
+        ..audioUrl = 'https://example.com/a.mp3'
+        ..publishedAt = DateTime.utc(2026, 10, 6)
+        ..durationMs = 90000
+        ..description = '<p>Notes</p>';
+
+      final notification = NewEpisodeNotification.fromEpisode(
+        subscription: subscription,
+        episode: episode,
+        artworkUrl: 'https://example.com/art.jpg',
+      );
+
+      check(notification)
+        ..has((n) => n.episodeId, 'episodeId').equals(42)
+        ..has((n) => n.podcastId, 'podcastId').equals(7)
+        ..has((n) => n.podcastTitle, 'podcastTitle').equals('The Daily')
+        ..has((n) => n.episodeTitle, 'episodeTitle').equals('Breaking News')
+        ..has(
+          (n) => n.artworkUrl,
+          'artworkUrl',
+        ).equals('https://example.com/art.jpg')
+        ..has(
+          (n) => n.publishedAt,
+          'publishedAt',
+        ).equals(DateTime.utc(2026, 10, 6))
+        ..has((n) => n.duration, 'duration').equals(const Duration(seconds: 90))
+        ..has((n) => n.description, 'description').equals('Notes');
+    });
+
+    test('fromEpisode leaves an unknown duration null', () {
+      final notification = NewEpisodeNotification.fromEpisode(
+        subscription: Subscription()
+          ..id = 7
+          ..itunesId = '1'
+          ..title = 'P',
+        episode: Episode()
+          ..id = 1
+          ..podcastId = 7
+          ..guid = 'g'
+          ..title = 'E'
+          ..audioUrl = 'https://example.com/a.mp3',
+        artworkUrl: null,
+      );
+
+      check(notification.duration).isNull();
+    });
+
     group('plainTextDescription', () {
       test('strips HTML from the description', () {
         check(
