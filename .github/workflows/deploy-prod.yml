@@ -1,0 +1,603 @@
+name: Deploy Production
+
+# Builds the production app from a v<version>+<build> tag and uploads it to
+# the stores: the IPA to App Store Connect (not submitted for review) and the
+# AAB to a draft release on the Google Play production track. A maintainer
+# then submits / publishes in each console; see
+# docs/development/release-build.md. Sentry releases and deploys are owned by
+# sentry-prod-release.yml, which runs on the same tags.
+#
+# A tag push runs this file as it is at the tagged commit, so a tag on a
+# commit older than this workflow does not trigger it; run it by hand
+# (workflow_dispatch from main) for such a tag, or to retry one platform.
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to build, e.g. v2.1.0+58'
+        required: true
+        type: string
+      platform:
+        description: 'Platforms to build and upload (pick one to retry it alone)'
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - ios
+          - android
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+env:
+  FLUTTER_VERSION: '3.47.6'
+  # Lets mise read the repo's mise.toml (sops/age versions, SOPS_AGE_KEY_FILE)
+  # without an interactive `mise trust`.
+  MISE_TRUSTED_CONFIG_PATHS: ${{ github.workspace }}
+
+jobs:
+  prepare:
+    name: Parse version
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      tag: ${{ steps.parse.outputs.tag }}
+      version_string: ${{ steps.parse.outputs.version_string }}
+      marketing_version: ${{ steps.parse.outputs.marketing_version }}
+      build_number: ${{ steps.parse.outputs.build_number }}
+      build_ios: ${{ steps.parse.outputs.build_ios }}
+      build_android: ${{ steps.parse.outputs.build_android }}
+    steps:
+      - name: Parse version from tag
+        id: parse
+        env:
+          GIT_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+          PLATFORM: ${{ inputs.platform || 'all' }}
+        run: |
+          set -euo pipefail
+          if ! [[ "$GIT_TAG" =~ ^v([0-9]+(\.[0-9]+)*)\+([0-9]+)$ ]]; then
+            echo "::error::Tag must look like v2.1.0+58, got '$GIT_TAG'"
+            exit 1
+          fi
+          MARKETING_VERSION="${BASH_REMATCH[1]}"
+          BUILD_NUMBER="${BASH_REMATCH[3]}"
+          {
+            echo "tag=$GIT_TAG"
+            echo "version_string=$MARKETING_VERSION+$BUILD_NUMBER"
+            echo "marketing_version=$MARKETING_VERSION"
+            echo "build_number=$BUILD_NUMBER"
+            echo "build_ios=$([[ "$PLATFORM" == all || "$PLATFORM" == ios ]] && echo true || echo false)"
+            echo "build_android=$([[ "$PLATFORM" == all || "$PLATFORM" == android ]] && echo true || echo false)"
+          } >> "$GITHUB_OUTPUT"
+          echo "Parsed version: $MARKETING_VERSION+$BUILD_NUMBER (platform: $PLATFORM)"
+
+      - name: Check the tag exists
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GIT_TAG: ${{ steps.parse.outputs.tag }}
+        run: |
+          # "+" is encoded so it cannot be read as a space in the path.
+          if ! gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/${GIT_TAG//+/%2B}" --silent; then
+            echo "::error::Tag $GIT_TAG not found; push it first"
+            exit 1
+          fi
+
+  deploy-ios:
+    name: iOS App Store Connect
+    needs: prepare
+    if: needs.prepare.outputs.build_ios == 'true'
+    runs-on: macos-26
+    timeout-minutes: 45
+    env:
+      VERSION_STRING: ${{ needs.prepare.outputs.version_string }}
+      MARKETING_VERSION: ${{ needs.prepare.outputs.marketing_version }}
+      BUILD_NUMBER: ${{ needs.prepare.outputs.build_number }}
+      BUNDLE_ID: com.reedom.audiflow
+    steps:
+      - name: Check required secrets
+        env:
+          APPLE_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          IOS_PROD_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROD_PROVISIONING_PROFILE_BASE64 }}
+          SECRETS_REPO_DEPLOY_KEY: ${{ secrets.SECRETS_REPO_DEPLOY_KEY }}
+          SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+        run: |
+          # Checked up front so a missing secret fails in seconds, not after
+          # a 20-minute build.
+          missing=()
+          for name in APPLE_CERTIFICATE_BASE64 APPLE_CERTIFICATE_PASSWORD \
+              IOS_PROD_PROVISIONING_PROFILE_BASE64 SECRETS_REPO_DEPLOY_KEY SOPS_AGE_KEY \
+              APP_STORE_CONNECT_KEY_ID APP_STORE_CONNECT_ISSUER_ID APP_STORE_CONNECT_PRIVATE_KEY \
+              SENTRY_AUTH_TOKEN SENTRY_ORG SENTRY_PROJECT; do
+            [ -n "${!name}" ] || missing+=("$name")
+          done
+          if [ "${#missing[@]}" != 0 ]; then
+            echo "::error::Missing required secrets: ${missing[*]}"
+            exit 1
+          fi
+
+      - name: Checkout release tag
+        uses: actions/checkout@v5
+        with:
+          ref: refs/tags/${{ needs.prepare.outputs.tag }}
+          persist-credentials: false
+
+      - name: Checkout release tooling
+        # The default branch's tools: the tagged build commit can predate
+        # them (same approach as sentry-prod-release.yml).
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          path: .release-tools
+          sparse-checkout: tools
+          persist-credentials: false
+
+      - name: Select Xcode 26.4.1
+        # Xcode 26.5 (default since runner image 20260630) has a SwiftPM
+        # regression: binary targets fail to resolve with "already exists
+        # in file system". Pin the last known-good Xcode.
+        run: sudo xcode-select -s /Applications/Xcode_26.4.1.app
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Install Apple certificate
+        env:
+          CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          CERTIFICATE_PATH=$RUNNER_TEMP/apple_distribution.p12
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          KEYCHAIN_PASSWORD=$(openssl rand -hex 16)
+
+          echo "$CERTIFICATE_BASE64" | base64 --decode -o "$CERTIFICATE_PATH"
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          security import "$CERTIFICATE_PATH" -P "$CERTIFICATE_PASSWORD" \
+            -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security set-key-partition-list -S apple-tool:,apple: \
+            -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security list-keychains -d user -s "$KEYCHAIN_PATH" login.keychain-db
+
+      - name: Install provisioning profile
+        id: pp
+        env:
+          PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROD_PROVISIONING_PROFILE_BASE64 }}
+        run: |
+          set -euo pipefail
+          PP_PATH=$RUNNER_TEMP/prod_profile.mobileprovision
+          echo "$PROVISIONING_PROFILE_BASE64" | base64 --decode -o "$PP_PATH"
+
+          PP_PLIST="$(/usr/bin/security cms -D -i "$PP_PATH")"
+          PP_UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" /dev/stdin <<< "$PP_PLIST")
+          PP_NAME=$(/usr/libexec/PlistBuddy -c "Print Name" /dev/stdin <<< "$PP_PLIST")
+          PP_APP_ID=$(/usr/libexec/PlistBuddy -c "Print Entitlements:application-identifier" /dev/stdin <<< "$PP_PLIST")
+          # <App ID prefix>.<bundle id>; the exact suffix rules out the
+          # staging profile, whose bundle id only extends this one.
+          if [[ "$PP_APP_ID" != *".$BUNDLE_ID" ]]; then
+            echo "::error::Provisioning profile '$PP_NAME' is for '$PP_APP_ID', not $BUNDLE_ID"
+            exit 1
+          fi
+          echo "uuid=$PP_UUID" >> "$GITHUB_OUTPUT"
+          echo "name=$PP_NAME" >> "$GITHUB_OUTPUT"
+
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp "$PP_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/"$PP_UUID".mobileprovision
+
+      - name: Checkout audiflow-secrets
+        # Pinned to a commit: this step receives the deploy key.
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          repository: audiflow/audiflow-secrets
+          ssh-key: ${{ secrets.SECRETS_REPO_DEPLOY_KEY }}
+          path: .audiflow-secrets
+          persist-credentials: false
+
+      - name: Setup sops
+        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        with:
+          install_args: sops age
+          cache: true
+
+      - name: Decrypt secrets
+        env:
+          SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+          AUDIFLOW_SECRETS_DIR: ${{ github.workspace }}/.audiflow-secrets
+        run: |
+          # mise.toml points SOPS_AGE_KEY_FILE here, matching local machines.
+          # The trap removes the key even when decryption fails.
+          trap 'rm -f ~/.config/mise/age.txt' EXIT
+          mkdir -p ~/.config/mise
+          (umask 077 && printf '%s\n' "$SOPS_AGE_KEY" > ~/.config/mise/age.txt)
+          mise run secrets:decrypt -- \
+            .env.prod \
+            packages/audiflow_app/ios/config/prod/GoogleService-Info.plist
+
+      - name: Bump version
+        run: |
+          cd packages/audiflow_app
+          sed -i '' "s/^version: .*/version: $VERSION_STRING/" pubspec.yaml
+          grep "^version:" pubspec.yaml
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Setup App Store Connect API key
+        env:
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.private_keys
+          (umask 077 && echo "$ASC_PRIVATE_KEY" > ~/.private_keys/"AuthKey_${ASC_KEY_ID}.p8")
+
+      - name: Override signing to manual
+        env:
+          PP_NAME: ${{ steps.pp.outputs.name }}
+        run: |
+          set -euo pipefail
+          if [ -z "$PP_NAME" ]; then
+            echo "::error::Provisioning profile name is empty — profile decode may have failed"
+            exit 1
+          fi
+
+          XCCONFIG_DIR=packages/audiflow_app/ios/Flutter
+          SIGNING_SNIPPET="$(printf '\nCODE_SIGN_STYLE=Manual\nCODE_SIGN_IDENTITY=Apple Distribution\nCODE_SIGN_IDENTITY[sdk=iphoneos*]=Apple Distribution\nPROVISIONING_PROFILE_SPECIFIER=%s\nPROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]=%s\n' \
+            "$PP_NAME" "$PP_NAME")"
+
+          for f in prodDebug.xcconfig prodRelease.xcconfig prodProfile.xcconfig; do
+            echo "$SIGNING_SNIPPET" >> "$XCCONFIG_DIR/$f"
+            echo "Patched $f"
+          done
+
+          PBXPROJ=packages/audiflow_app/ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/CODE_SIGN_STYLE = Automatic/CODE_SIGN_STYLE = Manual/g' "$PBXPROJ"
+
+          if grep -q 'CODE_SIGN_STYLE = Automatic' "$PBXPROJ"; then
+            echo "::error::pbxproj still contains CODE_SIGN_STYLE = Automatic after patching"
+            exit 1
+          fi
+          if ! grep -Fq 'CODE_SIGN_STYLE = Manual' "$PBXPROJ"; then
+            echo "::error::CODE_SIGN_STYLE = Manual not found in pbxproj after patching"
+            exit 1
+          fi
+          if ! grep -Fq 'CODE_SIGN_STYLE=Manual' "$XCCONFIG_DIR/prodRelease.xcconfig"; then
+            echo "::error::Failed to inject signing settings into prodRelease.xcconfig"
+            exit 1
+          fi
+          if ! grep -Fq "PROVISIONING_PROFILE_SPECIFIER=$PP_NAME" "$XCCONFIG_DIR/prodRelease.xcconfig"; then
+            echo "::error::Failed to inject provisioning profile into prodRelease.xcconfig"
+            exit 1
+          fi
+          echo "Signing overrides applied to prod xcconfigs and pbxproj"
+
+      - name: Write ExportOptions.plist
+        env:
+          PP_NAME: ${{ steps.pp.outputs.name }}
+        run: |
+          set -euo pipefail
+          # manageAppVersionAndBuildNumber is off (staging has it on): the
+          # uploaded build number must stay the tag's, which Sentry release
+          # names and the store status checks rely on.
+          cat > packages/audiflow_app/ios/ExportOptions.plist <<'PLIST'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store-connect</string>
+            <key>signingStyle</key>
+            <string>manual</string>
+            <key>teamID</key>
+            <string>R6HMM3C9D7</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>com.reedom.audiflow</key>
+              <string>PP_NAME_PLACEHOLDER</string>
+            </dict>
+            <key>uploadSymbols</key>
+            <true/>
+            <key>manageAppVersionAndBuildNumber</key>
+            <false/>
+          </dict>
+          </plist>
+          PLIST
+          if [ -z "$PP_NAME" ]; then
+            echo "::error::Provisioning profile name is empty"
+            exit 1
+          fi
+          PLIST_PATH=packages/audiflow_app/ios/ExportOptions.plist
+          /usr/libexec/PlistBuddy -c "Set :provisioningProfiles:$BUNDLE_ID \"$PP_NAME\"" "$PLIST_PATH"
+
+          ACTUAL=$(/usr/libexec/PlistBuddy -c "Print :provisioningProfiles:$BUNDLE_ID" "$PLIST_PATH")
+          if [ "$ACTUAL" != "$PP_NAME" ]; then
+            echo "::error::ExportOptions profile name mismatch: expected '$PP_NAME', got '$ACTUAL'"
+            exit 1
+          fi
+
+      - name: Clear SwiftPM caches
+        # Avoid Xcode SwiftPM bug where binary targets fail with
+        # "already exists in file system" when the artifact cache is
+        # partially populated across resolve passes.
+        run: |
+          rm -rf ~/Library/Caches/org.swift.swiftpm
+          rm -rf ~/Library/Developer/Xcode/DerivedData
+
+      - name: Pre-resolve SwiftPM packages
+        # SwiftPM kills binary-artifact downloads still in flight after
+        # ~60s, leaving partial state that makes the next resolve fail
+        # with "already exists in file system". Resolve up front with
+        # retries, deleting only the partial artifacts between attempts
+        # so completed downloads accumulate across retries.
+        run: |
+          set -o pipefail
+          cd packages/audiflow_app
+          # Generates xcconfig and the SwiftPM package; its own resolve
+          # may hit the timeout, which the retry loop below recovers from.
+          flutter build ios --config-only --flavor prod -t lib/main_prod.dart \
+            --dart-define-from-file=../../.env.prod \
+            || echo "config-only build failed (resolve timeout is recoverable); continuing"
+          cd ios
+          RESOLVE_LOG="$RUNNER_TEMP/spm-resolve.log"
+          for attempt in 1 2 3 4 5; do
+            if xcodebuild -resolvePackageDependencies \
+                -workspace Runner.xcworkspace -scheme prod 2>&1 | tee "$RESOLVE_LOG"; then
+              exit 0
+            fi
+            echo "Resolve attempt $attempt failed; removing partial artifacts before retry"
+            PARTIALS=$(sed -n 's/.*: \(\/[^ ]*\/org\.swift\.swiftpm\/artifacts\/[^ ]*\) already exists in file system.*/\1/p' "$RESOLVE_LOG" | sort -u)
+            if [ -n "$PARTIALS" ]; then
+              echo "$PARTIALS" | xargs rm -rf
+            else
+              rm -rf ~/Library/Caches/org.swift.swiftpm/artifacts
+            fi
+          done
+          echo "::error::SwiftPM package resolution failed after 5 attempts"
+          exit 1
+
+      - name: Build IPA
+        run: |
+          cd packages/audiflow_app
+          flutter build ipa --flavor prod -t lib/main_prod.dart \
+            --dart-define-from-file=../../.env.prod \
+            --export-options-plist=ios/ExportOptions.plist
+
+      - name: Verify IPA
+        id: ipa
+        run: |
+          # No -u: macOS bash 3.2 treats an empty array expansion as unset.
+          set -eo pipefail
+          shopt -s nullglob
+          IPAS=(packages/audiflow_app/build/ios/ipa/*.ipa)
+          if [ "${#IPAS[@]}" != 1 ]; then
+            echo "::error::Expected one IPA, found ${#IPAS[@]}: ${IPAS[*]}"
+            exit 1
+          fi
+          CHECK_DIR="$RUNNER_TEMP/ipa-check"
+          rm -rf "$CHECK_DIR"
+          unzip -q -o "${IPAS[0]}" 'Payload/*.app/Info.plist' -d "$CHECK_DIR"
+          INFO_PLISTS=("$CHECK_DIR"/Payload/*.app/Info.plist)
+          read_key() { /usr/libexec/PlistBuddy -c "Print :$1" "${INFO_PLISTS[0]}"; }
+          ACTUAL="$(read_key CFBundleIdentifier) $(read_key CFBundleShortVersionString) $(read_key CFBundleVersion)"
+          EXPECTED="$BUNDLE_ID $MARKETING_VERSION $BUILD_NUMBER"
+          if [ "$ACTUAL" != "$EXPECTED" ]; then
+            echo "::error::IPA is '$ACTUAL', expected '$EXPECTED'"
+            exit 1
+          fi
+          echo "path=${IPAS[0]}" >> "$GITHUB_OUTPUT"
+          echo "IPA verified: $ACTUAL"
+
+      - name: Upload iOS debug symbols to Sentry
+        # Before the store upload so a Sentry failure can be retried without
+        # re-uploading a build App Store Connect already has.
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+        run: |
+          brew install getsentry/tools/sentry-cli
+          sentry-cli debug-files upload \
+            --include-sources \
+            packages/audiflow_app/build/ios/archive/Runner.xcarchive/dSYMs
+
+      - name: Upload to App Store Connect
+        # Uploads the build only. Submitting it for review stays a manual
+        # step in App Store Connect.
+        env:
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          IPA_PATH: ${{ steps.ipa.outputs.path }}
+        run: |
+          # No -u: macOS bash 3.2 treats an empty EXTRA_ARGS expansion as unset.
+          set -eo pipefail
+          # altool may fail to resolve the app from overlapping bundle ids
+          # (com.reedom.audiflow vs .stg); pass the numeric Apple ID.
+          xcrun altool --list-apps --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID" \
+            --output-format json > "$RUNNER_TEMP/asc-apps.json" || true
+          APPLE_ID=$(python3 .release-tools/tools/asc_apple_id.py "$RUNNER_TEMP/asc-apps.json" "$BUNDLE_ID")
+          if [ -n "$APPLE_ID" ]; then
+            echo "Resolved Apple ID $APPLE_ID for $BUNDLE_ID"
+            EXTRA_ARGS=(--apple-id "$APPLE_ID")
+          else
+            echo "::warning::Could not resolve numeric Apple ID for $BUNDLE_ID; uploading without --apple-id"
+            EXTRA_ARGS=()
+          fi
+          xcrun altool --upload-app --type ios \
+            -f "$IPA_PATH" \
+            --apiKey "$ASC_KEY_ID" \
+            --apiIssuer "$ASC_ISSUER_ID" \
+            "${EXTRA_ARGS[@]}"
+
+      - name: Cleanup keychain and signing materials
+        if: always()
+        run: |
+          security delete-keychain "$RUNNER_TEMP/app-signing.keychain-db" 2>/dev/null || true
+          rm -f "$RUNNER_TEMP/apple_distribution.p12" "$RUNNER_TEMP/prod_profile.mobileprovision"
+          rm -f ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision
+          rm -rf ~/.private_keys
+          rm -f .env.prod packages/audiflow_app/ios/config/prod/GoogleService-Info.plist
+
+  deploy-android:
+    name: Android Google Play
+    needs: prepare
+    if: needs.prepare.outputs.build_android == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      VERSION_STRING: ${{ needs.prepare.outputs.version_string }}
+      MARKETING_VERSION: ${{ needs.prepare.outputs.marketing_version }}
+    steps:
+      - name: Check required secrets
+        env:
+          SECRETS_REPO_DEPLOY_KEY: ${{ secrets.SECRETS_REPO_DEPLOY_KEY }}
+          SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+        run: |
+          missing=()
+          for name in SECRETS_REPO_DEPLOY_KEY SOPS_AGE_KEY GOOGLE_PLAY_SERVICE_ACCOUNT_JSON \
+              SENTRY_AUTH_TOKEN SENTRY_ORG SENTRY_PROJECT; do
+            [ -n "${!name}" ] || missing+=("$name")
+          done
+          if [ "${#missing[@]}" != 0 ]; then
+            echo "::error::Missing required secrets: ${missing[*]}"
+            exit 1
+          fi
+
+      - name: Checkout release tag
+        uses: actions/checkout@v5
+        with:
+          ref: refs/tags/${{ needs.prepare.outputs.tag }}
+          persist-credentials: false
+
+      - name: Checkout release tooling
+        # The default branch's tools and release notes: the tagged build
+        # commit can predate both (notes are often merged after the build
+        # was verified on staging).
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          path: .release-tools
+          sparse-checkout: |
+            tools
+            release-notes
+          persist-credentials: false
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: zulu
+          java-version: '17'
+
+      - name: Checkout audiflow-secrets
+        # Pinned to a commit: this step receives the deploy key.
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          repository: audiflow/audiflow-secrets
+          ssh-key: ${{ secrets.SECRETS_REPO_DEPLOY_KEY }}
+          path: .audiflow-secrets
+          persist-credentials: false
+
+      - name: Setup sops
+        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        with:
+          install_args: sops age
+          cache: true
+
+      - name: Decrypt secrets
+        env:
+          SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+          AUDIFLOW_SECRETS_DIR: ${{ github.workspace }}/.audiflow-secrets
+        run: |
+          # mise.toml points SOPS_AGE_KEY_FILE here, matching local machines.
+          # The trap removes the key even when decryption fails.
+          trap 'rm -f ~/.config/mise/age.txt' EXIT
+          mkdir -p ~/.config/mise
+          (umask 077 && printf '%s\n' "$SOPS_AGE_KEY" > ~/.config/mise/age.txt)
+          mise run secrets:decrypt -- \
+            .env.prod \
+            packages/audiflow_app/android/app/src/prod/google-services.json \
+            packages/audiflow_app/android/key.properties \
+            packages/audiflow_app/android/app/upload-keystore.jks
+
+      - name: Bump version
+        run: |
+          cd packages/audiflow_app
+          sed -i "s/^version: .*/version: $VERSION_STRING/" pubspec.yaml
+          grep "^version:" pubspec.yaml
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Build App Bundle
+        run: |
+          cd packages/audiflow_app
+          flutter build appbundle --flavor prod -t lib/main_prod.dart \
+            --dart-define-from-file=../../.env.prod
+
+      - name: Upload Android debug symbols to Sentry
+        # Before the store upload so a Sentry failure can be retried without
+        # re-uploading a version code Google Play already has.
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+        run: |
+          npm install -g @sentry/cli
+          sentry-cli debug-files upload \
+            --include-sources \
+            packages/audiflow_app/build/app/intermediates/merged_native_libs/prodRelease
+
+      - name: Setup uv
+        # Pinned to a commit: the next step hands this toolchain the Play key.
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+
+      - name: Upload to Google Play
+        # A draft release on the production track; publishing it stays a
+        # manual step in Play Console.
+        env:
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          uv run .release-tools/tools/play_upload.py \
+            packages/audiflow_app/build/app/outputs/bundle/prodRelease/app-prod-release.aab \
+            "$VERSION_STRING" \
+            --release-notes-dir ".release-tools/release-notes/$MARKETING_VERSION/android"
+
+      - name: Cleanup signing materials
+        if: always()
+        run: |
+          rm -f packages/audiflow_app/android/app/upload-keystore.jks
+          rm -f packages/audiflow_app/android/key.properties
+          rm -f .env.prod packages/audiflow_app/android/app/src/prod/google-services.json
