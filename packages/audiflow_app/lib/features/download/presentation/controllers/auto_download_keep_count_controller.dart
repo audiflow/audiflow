@@ -22,9 +22,15 @@ class AutoDownloadKeepCountController
     final settings = ref.read(appSettingsRepositoryProvider);
     await settings.setAutoDownloadKeepCount(count);
     ref.invalidate(appSettingsRepositoryProvider);
+    // Re-register right after saving so the background isolate gets the new
+    // snapshot even if the immediate trim below fails. Registration swallows
+    // platform errors itself, so it cannot block the trim either.
+    await BackgroundTaskRegistrar.syncWithSettings(
+      settings,
+      replaceExisting: true,
+    );
 
-    // Trim first; each trim is best-effort, so one podcast cannot stop the
-    // rest.
+    // Each trim is best-effort, so one podcast cannot stop the rest.
     final subscriptions = await ref
         .read(subscriptionRepositoryProvider)
         .getSubscriptions();
@@ -35,13 +41,6 @@ class AutoDownloadKeepCountController
         defaultKeepCount: count,
       );
     }
-
-    // The background isolate reads a snapshot of the settings. Registration
-    // swallows platform errors itself.
-    await BackgroundTaskRegistrar.syncWithSettings(
-      settings,
-      replaceExisting: true,
-    );
   }
 
   /// Saves a podcast's keep count override (null follows the global
