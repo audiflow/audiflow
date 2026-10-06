@@ -61,8 +61,7 @@ class DownloadRepositoryImpl implements DownloadRepository {
   ) async {
     if (requested != DownloadOrigin.manual) return;
     if (existing.downloadOrigin == DownloadOrigin.manual) return;
-    existing.origin = DownloadOrigin.manual.dbValue;
-    await _datasource.updateById(existing.id, existing);
+    await _datasource.markManual(existing.id);
   }
 
   @override
@@ -170,7 +169,4 @@ class DownloadRepositoryImpl implements DownloadRepository {
 
   @override
   Future<int> getTotalStorageUsed() => _datasource.getTotalStorageUsed();
-
-  @override
-  Future<int> deleteAllCompleted() => _datasource.deleteAllCompleted();
 }

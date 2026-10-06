@@ -44,7 +44,7 @@ void main() {
         wifiOnly: true,
       );
 
-      expect(task!.downloadOrigin, DownloadOrigin.manual);
+      check(task!.downloadOrigin).equals(DownloadOrigin.manual);
     });
 
     test('records auto origin when requested', () async {
@@ -55,7 +55,7 @@ void main() {
         origin: DownloadOrigin.auto,
       );
 
-      expect(task!.downloadOrigin, DownloadOrigin.auto);
+      check(task!.downloadOrigin).equals(DownloadOrigin.auto);
     });
 
     test('promotes an existing auto download to manual', () async {
@@ -72,9 +72,9 @@ void main() {
         wifiOnly: true,
       );
 
-      expect(duplicate, isNull);
+      check(duplicate).isNull();
       final stored = await repository.getById(auto!.id);
-      expect(stored!.downloadOrigin, DownloadOrigin.manual);
+      check(stored!.downloadOrigin).equals(DownloadOrigin.manual);
     });
 
     test('does not demote an existing manual download to auto', () async {
@@ -92,7 +92,7 @@ void main() {
       );
 
       final stored = await repository.getById(manual!.id);
-      expect(stored!.downloadOrigin, DownloadOrigin.manual);
+      check(stored!.downloadOrigin).equals(DownloadOrigin.manual);
     });
 
     test('returns null if episode already has active download', () async {
@@ -425,33 +425,6 @@ void main() {
       );
 
       expect(await repository.getActiveCount(), 0);
-    });
-  });
-
-  group('deleteAllCompleted', () {
-    test('removes all completed downloads', () async {
-      final task1 = await repository.createDownload(
-        episodeId: 1,
-        audioUrl: 'https://example.com/ep1.mp3',
-        wifiOnly: false,
-      );
-      await repository.createDownload(
-        episodeId: 2,
-        audioUrl: 'https://example.com/ep2.mp3',
-        wifiOnly: false,
-      );
-
-      await repository.updateStatus(
-        id: task1!.id,
-        status: const DownloadStatus.completed(),
-        localPath: '/path/ep1.mp3',
-      );
-
-      expect(await repository.deleteAllCompleted(), 1);
-
-      final remaining = await repository.getAll();
-      expect(remaining, hasLength(1));
-      expect(remaining.first.episodeId, 2);
     });
   });
 

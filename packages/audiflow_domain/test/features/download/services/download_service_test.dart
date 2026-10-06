@@ -555,59 +555,67 @@ void main() {
     });
   });
 
-  group('deleteAllCompleted', () {
-    test('deletes files and records for all completed downloads', () async {
-      // Arrange
-      final completed = [
-        _task(id: 1, localPath: '/downloads/ep1.mp3', status: 3),
-        _task(id: 2, localPath: '/downloads/ep2.mp3', status: 3),
-      ];
+  group('deleteTasks', () {
+    final queued = {
+      const DownloadStatus.pending(),
+      const DownloadStatus.paused(),
+    };
+
+    test('deletes the confirmed tasks, cancelling active ones', () async {
+      // status=0 is pending, status=2 is paused (both active)
       when(
-        mockRepository.getByStatus(const DownloadStatus.completed()),
-      ).thenAnswer((_) async => completed);
+        mockRepository.getById(1),
+      ).thenAnswer((_) async => _task(id: 1, status: 0));
+      when(mockRepository.getById(2)).thenAnswer(
+        (_) async => _task(id: 2, status: 2, localPath: '/downloads/ep2.mp3'),
+      );
+      when(mockQueueService.cancelDownload(any)).thenAnswer((_) async {});
       when(mockFileService.deleteFile(any)).thenAnswer((_) async {});
-      when(mockRepository.deleteAllCompleted()).thenAnswer((_) async => 2);
+      when(mockRepository.delete(any)).thenAnswer((_) async {});
 
-      // Act
-      await service.deleteAllCompleted();
+      final deleted = await service.deleteTasks([1, 2], statuses: queued);
 
-      // Assert
-      verify(mockFileService.deleteFile('/downloads/ep1.mp3')).called(1);
+      expect(deleted, 2);
+      verify(mockQueueService.cancelDownload(1)).called(1);
+      verify(mockQueueService.cancelDownload(2)).called(1);
       verify(mockFileService.deleteFile('/downloads/ep2.mp3')).called(1);
-      verify(mockRepository.deleteAllCompleted()).called(1);
+      verify(mockRepository.delete(1)).called(1);
+      verify(mockRepository.delete(2)).called(1);
     });
 
-    test('skips file deletion when localPath is null', () async {
-      // Arrange
-      final completed = [
-        _task(id: 1, status: 3), // no localPath
-      ];
+    test('skips a task that left the confirmed statuses', () async {
+      // status=1 is downloading: it started after the listener confirmed.
       when(
-        mockRepository.getByStatus(const DownloadStatus.completed()),
-      ).thenAnswer((_) async => completed);
-      when(mockRepository.deleteAllCompleted()).thenAnswer((_) async => 1);
+        mockRepository.getById(1),
+      ).thenAnswer((_) async => _task(id: 1, status: 1));
 
-      // Act
-      await service.deleteAllCompleted();
+      final deleted = await service.deleteTasks([1], statuses: queued);
 
-      // Assert
-      verifyNever(mockFileService.deleteFile(any));
-      verify(mockRepository.deleteAllCompleted()).called(1);
+      expect(deleted, 0);
+      verifyNever(mockQueueService.cancelDownload(any));
+      verifyNever(mockRepository.delete(any));
     });
 
-    test('handles empty completed list', () async {
-      // Arrange
+    test('skips a task that no longer exists', () async {
+      when(mockRepository.getById(1)).thenAnswer((_) async => null);
+
+      expect(await service.deleteTasks([1], statuses: queued), 0);
+      verifyNever(mockRepository.delete(any));
+    });
+
+    test('deletes a repeated ID once', () async {
       when(
-        mockRepository.getByStatus(const DownloadStatus.completed()),
-      ).thenAnswer((_) async => []);
-      when(mockRepository.deleteAllCompleted()).thenAnswer((_) async => 0);
+        mockRepository.getById(1),
+      ).thenAnswer((_) async => _task(id: 1, status: 3));
+      when(mockRepository.delete(any)).thenAnswer((_) async {});
 
-      // Act
-      await service.deleteAllCompleted();
+      final deleted = await service.deleteTasks(
+        [1, 1],
+        statuses: {const DownloadStatus.completed()},
+      );
 
-      // Assert
-      verifyNever(mockFileService.deleteFile(any));
-      verify(mockRepository.deleteAllCompleted()).called(1);
+      expect(deleted, 1);
+      verify(mockRepository.delete(1)).called(1);
     });
   });
 

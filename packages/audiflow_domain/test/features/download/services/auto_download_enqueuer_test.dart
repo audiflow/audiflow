@@ -1,4 +1,5 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class _FakeEpisodeRepository implements EpisodeRepository {
@@ -216,10 +217,9 @@ void main() {
         expect(result.skipped, 0);
         expect(downloadRepo.created.map((c) => c.episodeId), [101, 102]);
         expect(downloadRepo.created.every((c) => c.wifiOnly), isTrue);
-        expect(
-          downloadRepo.created.every((c) => c.origin == DownloadOrigin.auto),
-          isTrue,
-        );
+        check(
+          downloadRepo.created.map((c) => c.origin),
+        ).every((o) => o.equals(DownloadOrigin.auto));
         expect(episodeRepo.markCalls, [
           [101, 102],
         ]);
