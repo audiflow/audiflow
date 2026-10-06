@@ -1,0 +1,138 @@
+name: Sentry Production Release
+
+# Production builds are uploaded to the stores by hand
+# (docs/development/release-build.md). This creates their Sentry releases
+# when the v* tag is pushed, and records the production deploy per platform
+# once the store actually serves the build.
+
+on:
+  push:
+    tags:
+      - 'v*'
+  schedule:
+    # Every 6 hours, off the top of the hour to avoid the scheduler rush.
+    - cron: '23 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Build to check, e.g. 2.1.0+58 (default: the highest v* tag)'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  # Tag runs and deploy checks get separate groups: a queued scheduled run
+  # must not replace a pending tag run in the same group.
+  group: sentry-prod-release-${{ github.event_name == 'push' && github.ref_name || 'deploys' }}
+  cancel-in-progress: false
+
+jobs:
+  create-releases:
+    name: Create Sentry releases
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          # The commit range starts at the previous v* tag.
+          fetch-depth: 0
+
+      - name: Create Sentry releases
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+        run: |
+          npm install -g @sentry/cli
+          tools/sentry-release.sh prod "${GITHUB_REF_NAME#v}"
+
+  record-deploys:
+    name: Record production deploys
+    if: github.event_name != 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup uv
+        # Pinned to a commit like other third-party actions in this repo.
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+
+      - name: Install sentry-cli
+        run: npm install -g @sentry/cli
+
+      - name: Resolve version
+        id: version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          VERSION="${INPUT_VERSION#v}"
+          if [ -z "$VERSION" ]; then
+            TAG="$(git tag --list 'v[0-9]*' --sort=-version:refname | head -n 1)"
+            if [ -z "$TAG" ]; then
+              echo "::error::No v* tag found"
+              exit 1
+            fi
+            VERSION="${TAG#v}"
+          fi
+          if ! [[ "$VERSION" =~ ^[0-9]+(\.[0-9]+)*\+[0-9]+$ ]]; then
+            echo "::error::Version must look like 2.1.0+58, got '$VERSION'"
+            exit 1
+          fi
+          if ! git rev-parse -q --verify "refs/tags/v$VERSION" >/dev/null; then
+            echo "::error::Tag v$VERSION not found"
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Checking v$VERSION"
+
+      - name: Record deploys for live builds
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          ASC_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          has_credentials() {
+            case "$1" in
+              ios) [ -n "$ASC_KEY_ID" ] && [ -n "$ASC_ISSUER_ID" ] && [ -n "$ASC_PRIVATE_KEY" ] ;;
+              android) [ -n "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" ] ;;
+            esac
+          }
+
+          # Not live is a normal outcome (exit 3); anything else but live
+          # (exit 0) is an error. One platform failing does not stop the
+          # other from being checked.
+          record_deploy() {
+            local platform="$1" code=0
+            if ! has_credentials "$platform"; then
+              echo "::notice::Skipping $platform: store credentials are not configured"
+              return 0
+            fi
+            uv run tools/store_release_status.py "$platform" "$VERSION" || code=$?
+            case "$code" in
+              0) tools/sentry-release.sh prod "$VERSION" --deploy --platform "$platform" ;;
+              3) echo "$platform: v$VERSION is not live yet" ;;
+              *)
+                echo "::error::Store status check failed for $platform (exit $code)"
+                return 1
+                ;;
+            esac
+          }
+
+          failed=0
+          for platform in ios android; do
+            record_deploy "$platform" || failed=1
+          done
+          exit "$failed"
