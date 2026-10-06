@@ -1,4 +1,5 @@
 import 'package:audiflow_core/audiflow_core.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -164,7 +165,7 @@ void main() {
     });
 
     test('autoDeletePlayed defaults to true', () {
-      expect(SettingsDefaults.autoDeletePlayed, isTrue);
+      check(SettingsDefaults.autoDeletePlayed).isTrue();
     });
 
     test('maxConcurrentDownloads defaults to 1', () {

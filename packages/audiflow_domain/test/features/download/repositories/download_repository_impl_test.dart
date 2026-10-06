@@ -44,7 +44,7 @@ void main() {
         wifiOnly: true,
       );
 
-      expect(task!.downloadOrigin, DownloadOrigin.manual);
+      check(task!.downloadOrigin).equals(DownloadOrigin.manual);
     });
 
     test('records auto origin when requested', () async {
@@ -55,7 +55,7 @@ void main() {
         origin: DownloadOrigin.auto,
       );
 
-      expect(task!.downloadOrigin, DownloadOrigin.auto);
+      check(task!.downloadOrigin).equals(DownloadOrigin.auto);
     });
 
     test('promotes an existing auto download to manual', () async {
@@ -72,9 +72,9 @@ void main() {
         wifiOnly: true,
       );
 
-      expect(duplicate, isNull);
+      check(duplicate).isNull();
       final stored = await repository.getById(auto!.id);
-      expect(stored!.downloadOrigin, DownloadOrigin.manual);
+      check(stored!.downloadOrigin).equals(DownloadOrigin.manual);
     });
 
     test('does not demote an existing manual download to auto', () async {
@@ -92,7 +92,7 @@ void main() {
       );
 
       final stored = await repository.getById(manual!.id);
-      expect(stored!.downloadOrigin, DownloadOrigin.manual);
+      check(stored!.downloadOrigin).equals(DownloadOrigin.manual);
     });
 
     test('returns null if episode already has active download', () async {

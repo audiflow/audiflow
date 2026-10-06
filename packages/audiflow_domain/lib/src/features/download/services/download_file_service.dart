@@ -17,10 +17,8 @@ bool isRangeNotSatisfiable(DioException error) =>
     error.response?.statusCode == 416;
 
 /// Callback for download progress updates.
-typedef DownloadProgressCallback = void Function(
-  int downloadedBytes,
-  int totalBytes,
-);
+typedef DownloadProgressCallback =
+    void Function(int downloadedBytes, int totalBytes);
 
 /// Service for file download operations.
 ///

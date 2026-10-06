@@ -62,7 +62,7 @@ void main() {
           .widgetList<SwitchListTile>(find.byType(SwitchListTile))
           .toList();
       // Second SwitchListTile is auto-delete
-      expect(tiles[1].value, isTrue);
+      check(tiles[1].value).isTrue();
     });
 
     testWidgets('shows max concurrent downloads with default 1', (
