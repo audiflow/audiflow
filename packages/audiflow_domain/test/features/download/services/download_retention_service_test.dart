@@ -16,8 +16,13 @@ class _FakeDownloadRepository implements DownloadRepository {
   Future<List<DownloadTask>> getByStatus(DownloadStatus status) async =>
       tasks.where((task) => task.downloadStatus == status).toList();
 
+  /// When set, task lookups by episode fail with this error.
+  Object? lookupError;
+
   @override
   Future<List<DownloadTask>> getByEpisodeIds(Iterable<int> episodeIds) async {
+    final error = lookupError;
+    if (error != null) throw error;
     final ids = episodeIds.toSet();
     return tasks.where((task) => ids.contains(task.episodeId)).toList();
   }
@@ -312,6 +317,26 @@ void main() {
       await service.trimForSubscription(subscription, defaultKeepCount: 1);
 
       check(handed).deepEquals([const DownloadStatus.downloading()]);
+    });
+
+    test('breaks equal dates by keeping the later task', () async {
+      addEpisode(1, day: 1);
+      addEpisode(2, day: 1);
+
+      await service.trimForSubscription(subscription, defaultKeepCount: 1);
+
+      check(deletedTaskIds).deepEquals([1]);
+    });
+
+    test('never throws, so a failed trim cannot fail the feed sync', () async {
+      addEpisode(1, day: 1);
+      addEpisode(2, day: 2);
+      // Isar reports storage failures as Error subclasses.
+      downloadRepository.lookupError = StateError('database closed');
+
+      check(
+        await service.trimForSubscription(subscription, defaultKeepCount: 1),
+      ).equals(0);
     });
 
     test('per-podcast keep count overrides the default', () async {

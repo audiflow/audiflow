@@ -106,10 +106,27 @@ class DownloadRetentionService {
   /// Episodes the listener has started or finished neither count toward
   /// the limit nor get deleted here; finished ones are left to
   /// [sweepPlayed].
+  ///
+  /// Best-effort: failures are logged and reported as 0 so a trim problem
+  /// never marks an otherwise successful feed sync as failed.
   Future<int> trimForSubscription(
     Subscription subscription, {
     required int defaultKeepCount,
   }) async {
+    try {
+      return await _trim(subscription, defaultKeepCount);
+    } catch (e, stack) {
+      // Isar reports storage failures as Error subclasses too.
+      _logger?.w(
+        'Failed to trim auto downloads of podcast ${subscription.id}',
+        error: e,
+        stackTrace: stack,
+      );
+      return 0;
+    }
+  }
+
+  Future<int> _trim(Subscription subscription, int defaultKeepCount) async {
     final keepCount = subscription.effectiveKeepCount(defaultKeepCount);
     final candidates = await _unstartedAutoDownloads(subscription.id);
     if (candidates.length <= keepCount) return 0;
@@ -142,7 +159,12 @@ class DownloadRetentionService {
           if (episodes[task.episodeId] case final episode?)
             _Candidate(task, episode),
     ];
-    return candidates..sort((a, b) => b.sortDate.compareTo(a.sortDate));
+    // Equal dates fall back to the task ID (later task is newer) so the
+    // same episodes are kept on every run.
+    return candidates..sort((a, b) {
+      final byDate = b.sortDate.compareTo(a.sortDate);
+      return byDate != 0 ? byDate : b.task.id.compareTo(a.task.id);
+    });
   }
 
   static bool _isUnstarted(PlaybackHistory? history) =>

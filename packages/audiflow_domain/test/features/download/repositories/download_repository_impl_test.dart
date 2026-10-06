@@ -442,6 +442,16 @@ void main() {
 
       check(tasks.map((t) => t.episodeId)).unorderedEquals([1, 3]);
     });
+
+    test('returns nothing for no episodes', () async {
+      await repository.createDownload(
+        episodeId: 1,
+        audioUrl: 'https://example.com/ep1.mp3',
+        wifiOnly: false,
+      );
+
+      check(await repository.getByEpisodeIds(const [])).isEmpty();
+    });
   });
 
   group('getAll', () {
