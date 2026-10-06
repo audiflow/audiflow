@@ -1,0 +1,6 @@
+• Auto-downloads no longer pile up: each podcast keeps only its newest unplayed episodes (3 by default). Change the number in Download settings, or for one podcast in its settings
+• Auto-download pauses for a podcast you haven't played in a while (after 5 of its episodes are auto-downloaded without you playing any) and resumes when you play one of its episodes, or when you tap Resume in the podcast's settings
+• Auto-downloaded episodes are removed the next time you open the app once 24 hours have passed since you finished them, so you can still replay one or undo an accidental "Mark as played". This is now on by default and never removes episodes you downloaded yourself
+• Pending and paused downloads can now be deleted, and the download manager can delete downloads by status (completed, pending and paused, failed and cancelled, or all) after confirming how many will be removed
+• Fixed new episodes sometimes not being auto-downloaded after refreshing a podcast's page
+• Fixed newly fetched episodes missing their download and queue buttons until the page was reopened
