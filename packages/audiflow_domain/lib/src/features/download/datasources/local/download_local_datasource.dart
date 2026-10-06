@@ -142,14 +142,4 @@ class DownloadLocalDatasource {
         .findAll();
     return completed.fold<int>(0, (sum, task) => sum + (task.totalBytes ?? 0));
   }
-
-  /// Deletes all completed downloads.
-  Future<int> deleteAllCompleted() {
-    return _isar.writeTxn(
-      () => _isar.downloadTasks
-          .filter()
-          .statusEqualTo(const DownloadStatus.completed().toDbValue())
-          .deleteAll(),
-    );
-  }
 }

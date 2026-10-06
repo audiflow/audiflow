@@ -73,8 +73,9 @@ void main() {
     batchDownloadLimit = 25;
 
     // Stub getDownloadsDirectory for path reconstruction fallback.
-    when(mockFileService.getDownloadsDirectory())
-        .thenAnswer((_) async => '/downloads');
+    when(
+      mockFileService.getDownloadsDirectory(),
+    ).thenAnswer((_) async => '/downloads');
     // Default: no subscription resolved -> analytics emits no-op.
     when(mockSubscriptionRepo.getById(any)).thenAnswer((_) async => null);
 
@@ -311,8 +312,9 @@ void main() {
         await Future<void>.delayed(Duration.zero);
 
         // Assert
-        check(fakeAnalytics.events.whereType<EpisodeDownloadStarted>().toList())
-            .isEmpty();
+        check(
+          fakeAnalytics.events.whereType<EpisodeDownloadStarted>().toList(),
+        ).isEmpty();
       },
     );
 
@@ -338,8 +340,9 @@ void main() {
         await Future<void>.delayed(Duration.zero);
 
         // Assert
-        check(fakeAnalytics.events.whereType<EpisodeDownloadStarted>().toList())
-            .isEmpty();
+        check(
+          fakeAnalytics.events.whereType<EpisodeDownloadStarted>().toList(),
+        ).isEmpty();
       },
     );
   });
@@ -353,8 +356,9 @@ void main() {
         _episode(id: 3, podcastId: 10, seasonNumber: 1),
       ];
 
-      when(mockEpisodeRepo.getByPodcastId(10))
-          .thenAnswer((_) async => episodes);
+      when(
+        mockEpisodeRepo.getByPodcastId(10),
+      ).thenAnswer((_) async => episodes);
 
       // Season 2 episodes: id 1 and 2
       for (final ep in episodes.where((e) => e.seasonNumber == 2)) {
@@ -379,8 +383,9 @@ void main() {
     test('returns zero when no episodes in season', () async {
       // Arrange
       final episodes = [_episode(id: 1, podcastId: 10, seasonNumber: 1)];
-      when(mockEpisodeRepo.getByPodcastId(10))
-          .thenAnswer((_) async => episodes);
+      when(
+        mockEpisodeRepo.getByPodcastId(10),
+      ).thenAnswer((_) async => episodes);
 
       // Act
       final queued = await service.downloadSeason(10, 5);
@@ -396,8 +401,9 @@ void main() {
         _episode(id: 2, podcastId: 10, seasonNumber: 2),
       ];
 
-      when(mockEpisodeRepo.getByPodcastId(10))
-          .thenAnswer((_) async => episodes);
+      when(
+        mockEpisodeRepo.getByPodcastId(10),
+      ).thenAnswer((_) async => episodes);
 
       // First episode creates task, second already exists
       when(mockEpisodeRepo.getById(1)).thenAnswer((_) async => episodes[0]);
@@ -500,8 +506,9 @@ void main() {
       final task = _task(id: 1, status: 1, localPath: '/downloads/ep.mp3');
       when(mockRepository.getById(1)).thenAnswer((_) async => task);
       when(mockQueueService.cancelDownload(1)).thenAnswer((_) async {});
-      when(mockFileService.deleteFile('/downloads/ep.mp3'))
-          .thenAnswer((_) async {});
+      when(
+        mockFileService.deleteFile('/downloads/ep.mp3'),
+      ).thenAnswer((_) async {});
       when(mockRepository.delete(1)).thenAnswer((_) async {});
 
       // Act
@@ -518,8 +525,9 @@ void main() {
       // status=3 is completed (not active)
       final task = _task(id: 1, status: 3, localPath: '/downloads/ep.mp3');
       when(mockRepository.getById(1)).thenAnswer((_) async => task);
-      when(mockFileService.deleteFile('/downloads/ep.mp3'))
-          .thenAnswer((_) async {});
+      when(
+        mockFileService.deleteFile('/downloads/ep.mp3'),
+      ).thenAnswer((_) async {});
       when(mockRepository.delete(1)).thenAnswer((_) async {});
 
       // Act
@@ -547,56 +555,67 @@ void main() {
     });
   });
 
-  group('deleteAllCompleted', () {
-    test('deletes files and records for all completed downloads', () async {
-      // Arrange
-      final completed = [
-        _task(id: 1, localPath: '/downloads/ep1.mp3', status: 3),
-        _task(id: 2, localPath: '/downloads/ep2.mp3', status: 3),
-      ];
-      when(mockRepository.getByStatus(const DownloadStatus.completed()))
-          .thenAnswer((_) async => completed);
+  group('deleteTasks', () {
+    final queued = {
+      const DownloadStatus.pending(),
+      const DownloadStatus.paused(),
+    };
+
+    test('deletes the confirmed tasks, cancelling active ones', () async {
+      // status=0 is pending, status=2 is paused (both active)
+      when(
+        mockRepository.getById(1),
+      ).thenAnswer((_) async => _task(id: 1, status: 0));
+      when(mockRepository.getById(2)).thenAnswer(
+        (_) async => _task(id: 2, status: 2, localPath: '/downloads/ep2.mp3'),
+      );
+      when(mockQueueService.cancelDownload(any)).thenAnswer((_) async {});
       when(mockFileService.deleteFile(any)).thenAnswer((_) async {});
-      when(mockRepository.deleteAllCompleted()).thenAnswer((_) async => 2);
+      when(mockRepository.delete(any)).thenAnswer((_) async {});
 
-      // Act
-      await service.deleteAllCompleted();
+      final deleted = await service.deleteTasks([1, 2], statuses: queued);
 
-      // Assert
-      verify(mockFileService.deleteFile('/downloads/ep1.mp3')).called(1);
+      expect(deleted, 2);
+      verify(mockQueueService.cancelDownload(1)).called(1);
+      verify(mockQueueService.cancelDownload(2)).called(1);
       verify(mockFileService.deleteFile('/downloads/ep2.mp3')).called(1);
-      verify(mockRepository.deleteAllCompleted()).called(1);
+      verify(mockRepository.delete(1)).called(1);
+      verify(mockRepository.delete(2)).called(1);
     });
 
-    test('skips file deletion when localPath is null', () async {
-      // Arrange
-      final completed = [
-        _task(id: 1, status: 3), // no localPath
-      ];
-      when(mockRepository.getByStatus(const DownloadStatus.completed()))
-          .thenAnswer((_) async => completed);
-      when(mockRepository.deleteAllCompleted()).thenAnswer((_) async => 1);
+    test('skips a task that left the confirmed statuses', () async {
+      // status=1 is downloading: it started after the listener confirmed.
+      when(
+        mockRepository.getById(1),
+      ).thenAnswer((_) async => _task(id: 1, status: 1));
 
-      // Act
-      await service.deleteAllCompleted();
+      final deleted = await service.deleteTasks([1], statuses: queued);
 
-      // Assert
-      verifyNever(mockFileService.deleteFile(any));
-      verify(mockRepository.deleteAllCompleted()).called(1);
+      expect(deleted, 0);
+      verifyNever(mockQueueService.cancelDownload(any));
+      verifyNever(mockRepository.delete(any));
     });
 
-    test('handles empty completed list', () async {
-      // Arrange
-      when(mockRepository.getByStatus(const DownloadStatus.completed()))
-          .thenAnswer((_) async => []);
-      when(mockRepository.deleteAllCompleted()).thenAnswer((_) async => 0);
+    test('skips a task that no longer exists', () async {
+      when(mockRepository.getById(1)).thenAnswer((_) async => null);
 
-      // Act
-      await service.deleteAllCompleted();
+      expect(await service.deleteTasks([1], statuses: queued), 0);
+      verifyNever(mockRepository.delete(any));
+    });
 
-      // Assert
-      verifyNever(mockFileService.deleteFile(any));
-      verify(mockRepository.deleteAllCompleted()).called(1);
+    test('deletes a repeated ID once', () async {
+      when(
+        mockRepository.getById(1),
+      ).thenAnswer((_) async => _task(id: 1, status: 3));
+      when(mockRepository.delete(any)).thenAnswer((_) async {});
+
+      final deleted = await service.deleteTasks(
+        [1, 1],
+        statuses: {const DownloadStatus.completed()},
+      );
+
+      expect(deleted, 1);
+      verify(mockRepository.delete(1)).called(1);
     });
   });
 
@@ -611,10 +630,12 @@ void main() {
           localPath: '/downloads/ep10.mp3',
           status: 3,
         );
-        when(mockRepository.getCompletedForEpisode(10))
-            .thenAnswer((_) async => task);
-        when(mockFileService.fileExists('/downloads/ep10.mp3'))
-            .thenAnswer((_) async => true);
+        when(
+          mockRepository.getCompletedForEpisode(10),
+        ).thenAnswer((_) async => task);
+        when(
+          mockFileService.fileExists('/downloads/ep10.mp3'),
+        ).thenAnswer((_) async => true);
 
         // Act
         final result = await service.getLocalPath(10);
@@ -626,8 +647,9 @@ void main() {
 
     test('returns null when no completed download', () async {
       // Arrange
-      when(mockRepository.getCompletedForEpisode(10))
-          .thenAnswer((_) async => null);
+      when(
+        mockRepository.getCompletedForEpisode(10),
+      ).thenAnswer((_) async => null);
 
       // Act
       final result = await service.getLocalPath(10);
@@ -644,13 +666,16 @@ void main() {
         localPath: '/old-container/downloads/ep10.mp3',
         status: 3,
       );
-      when(mockRepository.getCompletedForEpisode(10))
-          .thenAnswer((_) async => task);
+      when(
+        mockRepository.getCompletedForEpisode(10),
+      ).thenAnswer((_) async => task);
       // Both stored and reconstructed paths are missing.
-      when(mockFileService.fileExists('/old-container/downloads/ep10.mp3'))
-          .thenAnswer((_) async => false);
-      when(mockFileService.fileExists('/downloads/ep10.mp3'))
-          .thenAnswer((_) async => false);
+      when(
+        mockFileService.fileExists('/old-container/downloads/ep10.mp3'),
+      ).thenAnswer((_) async => false);
+      when(
+        mockFileService.fileExists('/downloads/ep10.mp3'),
+      ).thenAnswer((_) async => false);
       when(
         mockRepository.updateStatus(
           id: 1,
@@ -681,12 +706,15 @@ void main() {
         localPath: '/old-uuid/Documents/downloads/ep10.mp3',
         status: 3,
       );
-      when(mockRepository.getCompletedForEpisode(10))
-          .thenAnswer((_) async => task);
-      when(mockFileService.fileExists('/old-uuid/Documents/downloads/ep10.mp3'))
-          .thenAnswer((_) async => false);
-      when(mockFileService.fileExists('/downloads/ep10.mp3'))
-          .thenAnswer((_) async => true);
+      when(
+        mockRepository.getCompletedForEpisode(10),
+      ).thenAnswer((_) async => task);
+      when(
+        mockFileService.fileExists('/old-uuid/Documents/downloads/ep10.mp3'),
+      ).thenAnswer((_) async => false);
+      when(
+        mockFileService.fileExists('/downloads/ep10.mp3'),
+      ).thenAnswer((_) async => true);
       when(
         mockRepository.updateStatus(
           id: 1,
@@ -712,8 +740,9 @@ void main() {
     test('returns null when localPath is null', () async {
       // Arrange
       final task = _task(id: 1, episodeId: 10, status: 3);
-      when(mockRepository.getCompletedForEpisode(10))
-          .thenAnswer((_) async => task);
+      when(
+        mockRepository.getCompletedForEpisode(10),
+      ).thenAnswer((_) async => task);
 
       // Act
       final result = await service.getLocalPath(10);
@@ -734,18 +763,23 @@ void main() {
           status: 3,
         ),
       ];
-      when(mockRepository.getByStatus(const DownloadStatus.completed()))
-          .thenAnswer((_) async => completed);
-      when(mockFileService.fileExists('/downloads/exists.mp3'))
-          .thenAnswer((_) async => true);
+      when(
+        mockRepository.getByStatus(const DownloadStatus.completed()),
+      ).thenAnswer((_) async => completed);
+      when(
+        mockFileService.fileExists('/downloads/exists.mp3'),
+      ).thenAnswer((_) async => true);
       // Both stored and reconstructed paths are missing for task 2.
-      when(mockFileService.fileExists('/old-container/downloads/missing.mp3'))
-          .thenAnswer((_) async => false);
-      when(mockFileService.fileExists('/downloads/missing.mp3'))
-          .thenAnswer((_) async => false);
+      when(
+        mockFileService.fileExists('/old-container/downloads/missing.mp3'),
+      ).thenAnswer((_) async => false);
+      when(
+        mockFileService.fileExists('/downloads/missing.mp3'),
+      ).thenAnswer((_) async => false);
       when(mockRepository.delete(2)).thenAnswer((_) async {});
-      when(mockRepository.getByStatus(const DownloadStatus.downloading()))
-          .thenAnswer((_) async => []);
+      when(
+        mockRepository.getByStatus(const DownloadStatus.downloading()),
+      ).thenAnswer((_) async => []);
 
       // Act
       await service.validateDownloads();
@@ -760,11 +794,13 @@ void main() {
       final completed = [
         _task(id: 1, status: 3), // null localPath
       ];
-      when(mockRepository.getByStatus(const DownloadStatus.completed()))
-          .thenAnswer((_) async => completed);
+      when(
+        mockRepository.getByStatus(const DownloadStatus.completed()),
+      ).thenAnswer((_) async => completed);
       when(mockRepository.delete(1)).thenAnswer((_) async {});
-      when(mockRepository.getByStatus(const DownloadStatus.downloading()))
-          .thenAnswer((_) async => []);
+      when(
+        mockRepository.getByStatus(const DownloadStatus.downloading()),
+      ).thenAnswer((_) async => []);
 
       // Act
       await service.validateDownloads();
@@ -775,12 +811,14 @@ void main() {
 
     test('resets interrupted downloads to pending and starts queue', () async {
       // Arrange
-      when(mockRepository.getByStatus(const DownloadStatus.completed()))
-          .thenAnswer((_) async => []);
+      when(
+        mockRepository.getByStatus(const DownloadStatus.completed()),
+      ).thenAnswer((_) async => []);
 
       final downloading = [_task(id: 3, status: 1), _task(id: 4, status: 1)];
-      when(mockRepository.getByStatus(const DownloadStatus.downloading()))
-          .thenAnswer((_) async => downloading);
+      when(
+        mockRepository.getByStatus(const DownloadStatus.downloading()),
+      ).thenAnswer((_) async => downloading);
       when(
         mockRepository.updateStatus(
           id: anyNamed('id'),
@@ -820,13 +858,15 @@ void main() {
             status: 3,
           ),
         ];
-        when(mockRepository.getByStatus(const DownloadStatus.completed()))
-            .thenAnswer((_) async => completed);
+        when(
+          mockRepository.getByStatus(const DownloadStatus.completed()),
+        ).thenAnswer((_) async => completed);
         when(
           mockFileService.fileExists('/old-uuid/Documents/downloads/ep1.mp3'),
         ).thenAnswer((_) async => false);
-        when(mockFileService.fileExists('/downloads/ep1.mp3'))
-            .thenAnswer((_) async => true);
+        when(
+          mockFileService.fileExists('/downloads/ep1.mp3'),
+        ).thenAnswer((_) async => true);
         when(
           mockRepository.updateStatus(
             id: 1,
@@ -834,8 +874,9 @@ void main() {
             localPath: '/downloads/ep1.mp3',
           ),
         ).thenAnswer((_) async {});
-        when(mockRepository.getByStatus(const DownloadStatus.downloading()))
-            .thenAnswer((_) async => []);
+        when(
+          mockRepository.getByStatus(const DownloadStatus.downloading()),
+        ).thenAnswer((_) async => []);
 
         // Act
         await service.validateDownloads();
@@ -854,10 +895,12 @@ void main() {
 
     test('does not start queue when no interrupted downloads', () async {
       // Arrange
-      when(mockRepository.getByStatus(const DownloadStatus.completed()))
-          .thenAnswer((_) async => []);
-      when(mockRepository.getByStatus(const DownloadStatus.downloading()))
-          .thenAnswer((_) async => []);
+      when(
+        mockRepository.getByStatus(const DownloadStatus.completed()),
+      ).thenAnswer((_) async => []);
+      when(
+        mockRepository.getByStatus(const DownloadStatus.downloading()),
+      ).thenAnswer((_) async => []);
 
       // Act
       await service.validateDownloads();
@@ -870,8 +913,9 @@ void main() {
   group('getTotalStorageUsed', () {
     test('delegates to repository', () async {
       // Arrange
-      when(mockRepository.getTotalStorageUsed())
-          .thenAnswer((_) async => 1024000);
+      when(
+        mockRepository.getTotalStorageUsed(),
+      ).thenAnswer((_) async => 1024000);
 
       // Act
       final result = await service.getTotalStorageUsed();

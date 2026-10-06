@@ -77,8 +77,9 @@ void main() {
 
     // _init() triggers connectivity check -> _onConnectivityChanged
     // -> _processQueue -> getNextPending. Stub it before construction.
-    when(mockRepository.getNextPending(isOnWifi: anyNamed('isOnWifi')))
-        .thenAnswer((_) async => null);
+    when(
+      mockRepository.getNextPending(isOnWifi: anyNamed('isOnWifi')),
+    ).thenAnswer((_) async => null);
 
     service = DownloadQueueService(
       repository: mockRepository,
@@ -205,11 +206,12 @@ void main() {
         clearInteractions(mockRepository);
 
         var pendingCalls = 0;
-        when(mockRepository.getNextPending(isOnWifi: anyNamed('isOnWifi')))
-            .thenAnswer((_) async {
-              pendingCalls++;
-              return pendingCalls == 1 ? first : second;
-            });
+        when(
+          mockRepository.getNextPending(isOnWifi: anyNamed('isOnWifi')),
+        ).thenAnswer((_) async {
+          pendingCalls++;
+          return pendingCalls == 1 ? first : second;
+        });
         when(
           mockRepository.updateStatus(
             id: anyNamed('id'),
@@ -271,8 +273,9 @@ void main() {
       await Future<void>.delayed(Duration.zero);
       clearInteractions(mockRepository);
       final query = Completer<DownloadTask?>();
-      when(mockRepository.getNextPending(isOnWifi: anyNamed('isOnWifi')))
-          .thenAnswer((_) => query.future);
+      when(
+        mockRepository.getNextPending(isOnWifi: anyNamed('isOnWifi')),
+      ).thenAnswer((_) => query.future);
 
       final processing = service.startQueue();
       final cancelling = service.suspend();
@@ -293,8 +296,9 @@ void main() {
       await Future<void>.delayed(Duration.zero);
       clearInteractions(mockRepository);
       final query = Completer<DownloadTask?>();
-      when(mockRepository.getNextPending(isOnWifi: anyNamed('isOnWifi')))
-          .thenAnswer((_) => query.future);
+      when(
+        mockRepository.getNextPending(isOnWifi: anyNamed('isOnWifi')),
+      ).thenAnswer((_) => query.future);
 
       // The expectation is attached before the error fires so the drain's
       // failure reaches its caller instead of the zone's uncaught handler.
@@ -312,8 +316,9 @@ void main() {
       await Future<void>.delayed(Duration.zero);
       clearInteractions(mockRepository);
       var pendingCalls = 0;
-      when(mockRepository.getNextPending(isOnWifi: anyNamed('isOnWifi')))
-          .thenAnswer((_) async => ++pendingCalls == 1 ? task : null);
+      when(
+        mockRepository.getNextPending(isOnWifi: anyNamed('isOnWifi')),
+      ).thenAnswer((_) async => ++pendingCalls == 1 ? task : null);
       when(
         mockRepository.updateStatus(
           id: anyNamed('id'),
@@ -384,8 +389,9 @@ void main() {
 
       await service.startQueue();
 
-      verify(mockRepository.getNextPending(isOnWifi: anyNamed('isOnWifi')))
-          .called(1);
+      verify(
+        mockRepository.getNextPending(isOnWifi: anyNamed('isOnWifi')),
+      ).called(1);
     });
   });
 
@@ -506,6 +512,55 @@ void main() {
       ).called(1);
     });
 
+    test('removes the file when the task was deleted mid-download', () async {
+      // A bulk delete can remove the record after the queue picked the
+      // task up but before its file finished downloading.
+      final task = _task(id: 1, episodeId: 10);
+      final episode = _episode(id: 10, title: 'Test EP');
+      await Future<void>.delayed(Duration.zero);
+      clearInteractions(mockRepository);
+
+      var callCount = 0;
+      when(
+        mockRepository.getNextPending(
+          isOnWifi: anyNamed('isOnWifi'),
+          excludeIds: anyNamed('excludeIds'),
+        ),
+      ).thenAnswer((_) async => 1 < ++callCount ? null : task);
+      when(
+        mockRepository.updateStatus(
+          id: 1,
+          status: const DownloadStatus.downloading(),
+        ),
+      ).thenAnswer((_) async {});
+      when(mockEpisodeRepo.getById(10)).thenAnswer((_) async => episode);
+      when(
+        mockFileService.downloadFile(
+          taskId: 1,
+          url: task.audioUrl,
+          episodeId: task.episodeId,
+          episodeTitle: episode.title,
+          resumeFromBytes: task.downloadedBytes,
+          onProgress: anyNamed('onProgress'),
+        ),
+      ).thenAnswer((_) async => '/downloads/10_Test_EP.mp3');
+      when(mockRepository.getById(1)).thenAnswer((_) async => null);
+      when(
+        mockFileService.deleteFile('/downloads/10_Test_EP.mp3'),
+      ).thenAnswer((_) async {});
+
+      await service.startQueue();
+
+      verify(mockFileService.deleteFile('/downloads/10_Test_EP.mp3')).called(1);
+      verifyNever(
+        mockRepository.updateStatus(
+          id: 1,
+          status: const DownloadStatus.completed(),
+          localPath: anyNamed('localPath'),
+        ),
+      );
+    });
+
     test('does nothing when no pending downloads', () async {
       // Arrange - getNextPending already returns null from setUp
       // Allow _init() queue to finish first
@@ -516,8 +571,9 @@ void main() {
       await service.startQueue();
 
       // Assert - only getNextPending is called, no updateStatus
-      verify(mockRepository.getNextPending(isOnWifi: anyNamed('isOnWifi')))
-          .called(1);
+      verify(
+        mockRepository.getNextPending(isOnWifi: anyNamed('isOnWifi')),
+      ).called(1);
       verifyNever(
         mockRepository.updateStatus(
           id: anyNamed('id'),
@@ -578,8 +634,9 @@ void main() {
 
   /// Stubs a download of [task] that fails with a network error.
   void stubFailingDownload(DownloadTask task) {
-    when(mockEpisodeRepo.getById(task.episodeId))
-        .thenAnswer((_) async => _episode(id: task.episodeId));
+    when(
+      mockEpisodeRepo.getById(task.episodeId),
+    ).thenAnswer((_) async => _episode(id: task.episodeId));
     when(
       mockFileService.downloadFile(
         taskId: task.id,
@@ -596,8 +653,9 @@ void main() {
 
   /// Stubs a successful download of [task].
   void stubSucceedingDownload(DownloadTask task) {
-    when(mockEpisodeRepo.getById(task.episodeId))
-        .thenAnswer((_) async => _episode(id: task.episodeId));
+    when(
+      mockEpisodeRepo.getById(task.episodeId),
+    ).thenAnswer((_) async => _episode(id: task.episodeId));
     when(
       mockFileService.downloadFile(
         taskId: task.id,
@@ -645,7 +703,13 @@ void main() {
       return null;
     });
     when(mockRepository.incrementRetryCount(any)).thenAnswer((_) async {});
-    when(mockRepository.getById(any)).thenAnswer((_) async => null);
+    // Like the datasource, return the stored row; null would read as a
+    // task deleted mid-download.
+    when(mockRepository.getById(any)).thenAnswer(
+      (invocation) async => tasks
+          .where((task) => task.id == invocation.positionalArguments.first)
+          .firstOrNull,
+    );
     return lookups;
   }
 

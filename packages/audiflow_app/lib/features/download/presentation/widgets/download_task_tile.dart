@@ -100,11 +100,19 @@ class DownloadTaskTile extends StatelessWidget {
           icon: const Icon(Icons.close, size: 20),
           onPressed: onCancel,
         ),
+        IconButton(
+          icon: const Icon(Icons.delete_outline, size: 20),
+          onPressed: onDelete,
+        ),
       ],
       DownloadStatusPending() => [
         IconButton(
           icon: const Icon(Icons.close, size: 20),
           onPressed: onCancel,
+        ),
+        IconButton(
+          icon: const Icon(Icons.delete_outline, size: 20),
+          onPressed: onDelete,
         ),
       ],
       DownloadStatusFailed() || DownloadStatusCancelled() => [

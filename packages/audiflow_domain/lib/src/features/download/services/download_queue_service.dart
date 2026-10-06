@@ -257,6 +257,19 @@ class DownloadQueueService implements SuspendableWriter {
     );
   }
 
+  /// A delete can remove the record after the queue picked the task up but
+  /// before its file finished. Without this check the file would stay on
+  /// disk with no record left to remove it.
+  Future<bool> _wasDeletedDuringDownload(int taskId) async {
+    try {
+      return await _repository.getById(taskId) == null;
+    } catch (e) {
+      // An unreadable row is not proof of deletion; keep the download.
+      _logger.w('Could not re-read task $taskId after download', error: e);
+      return false;
+    }
+  }
+
   Future<void> _processDownload(DownloadTask task) async {
     _activeDownload = task;
     _activeDownloadController.add(task);
@@ -312,6 +325,12 @@ class DownloadQueueService implements SuspendableWriter {
           }
         },
       );
+
+      if (await _wasDeletedDuringDownload(task.id)) {
+        await _fileService.deleteFile(localPath);
+        _logger.i('Discarded download of deleted task ${task.id}');
+        return;
+      }
 
       // Download completed successfully
       await _repository.updateStatus(

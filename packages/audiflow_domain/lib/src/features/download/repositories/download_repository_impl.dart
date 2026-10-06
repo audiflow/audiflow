@@ -169,7 +169,4 @@ class DownloadRepositoryImpl implements DownloadRepository {
 
   @override
   Future<int> getTotalStorageUsed() => _datasource.getTotalStorageUsed();
-
-  @override
-  Future<int> deleteAllCompleted() => _datasource.deleteAllCompleted();
 }

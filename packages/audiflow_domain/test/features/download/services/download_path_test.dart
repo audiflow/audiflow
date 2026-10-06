@@ -16,8 +16,9 @@ void main() {
     );
 
     test('joins downloads dir, episode id, title, and extension', () {
-      check(build(title: 'Hello World'))
-          .equals(p.join('/docs/downloads', '42_Hello_World.mp3'));
+      check(
+        build(title: 'Hello World'),
+      ).equals(p.join('/docs/downloads', '42_Hello_World.mp3'));
     });
 
     test('strips filesystem-invalid characters', () {
@@ -53,8 +54,9 @@ void main() {
     });
 
     test('falls back to .mp3 when the URL path has no extension', () {
-      check(p.basename(build(url: 'https://example.com/stream')))
-          .equals('42_Episode.mp3');
+      check(
+        p.basename(build(url: 'https://example.com/stream')),
+      ).equals('42_Episode.mp3');
     });
 
     test('falls back to .mp3 when the URL cannot be parsed', () {
