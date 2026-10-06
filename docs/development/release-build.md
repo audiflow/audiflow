@@ -117,26 +117,7 @@ and Dart code is not obfuscated; revisit this step if either changes.
 
 Paste the release notes from `release-notes/<version>/` into each store.
 
-## 6. Record the deploy in Sentry
-
-The staging run for `stg-$VERSION+$BUILD` already created the Sentry release
-`$VERSION+$BUILD` with its commits. Once the stores publish the build, record
-the production deploy on it:
-
-```bash
-sentry-cli releases --org reedom deploys "$VERSION+$BUILD" new -e prod
-```
-
-If the build never went through a staging tag, create the release first, as
-the staging workflow does:
-
-```bash
-sentry-cli releases --org reedom --project audiflow new "$VERSION+$BUILD"
-sentry-cli releases --org reedom --project audiflow set-commits "$VERSION+$BUILD" --auto
-sentry-cli releases --org reedom --project audiflow finalize "$VERSION+$BUILD"
-```
-
-## 7. Tag the release
+## 6. Tag the release
 
 Tag the commit that was built and push the tag:
 
@@ -144,6 +125,28 @@ Tag the commit that was built and push the tag:
 git tag "v$VERSION+$BUILD" "$COMMIT"
 git push origin "v$VERSION+$BUILD"
 ```
+
+## 7. Record the release in Sentry
+
+The Sentry SDK names each release `<app id>@<version>+<build>`, one per
+platform (`com.reedom.audiflow@...` for iOS, `com.reedom.audiflow_app@...` for
+Android). `tools/sentry-release.sh` creates those releases with the commits
+since the previous `v*` tag, so suspect commits and "resolved in release"
+work for production issues. It needs the tag from step 6:
+
+```bash
+tools/sentry-release.sh prod "$VERSION+$BUILD"
+```
+
+Once the stores publish the build, record the production deploy:
+
+```bash
+tools/sentry-release.sh prod "$VERSION+$BUILD" --deploy
+```
+
+Rerunning is safe: it updates the same releases. The staging workflow runs
+the same script with `stg` on every `stg-*` tag. Debug symbols are matched by
+file id, not by release, so step 4 does not depend on these names.
 
 ## Troubleshooting
 
