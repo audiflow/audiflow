@@ -295,6 +295,10 @@ Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
       ref.invalidate(hasSmartPlaylistViewProvider(subscription.id));
       ref.invalidate(podcastSmartPlaylistsByFeedUrlProvider(feedUrl));
       ref.invalidate(hasSmartPlaylistViewByFeedUrlProvider(feedUrl));
+      // The progress map supplies episode IDs to the list tiles (download
+      // and queue actions). It may have loaded before these episodes were
+      // stored, which left newly fetched episodes without those actions.
+      ref.invalidate(podcastEpisodeProgressProvider(feedUrl));
 
       // The parser may have early-stopped after the newest known
       // pubDate, so result.episodes only contains the newly fetched
