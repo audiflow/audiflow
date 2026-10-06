@@ -30,6 +30,7 @@ class _NoopAutoDownloadEnqueuer implements AutoDownloadEnqueuer {
   Future<AutoDownloadEnqueueResult> enqueueForSubscription(
     Subscription subscription, {
     required bool wifiOnly,
+    required int defaultKeepCount,
   }) async {
     enqueuedPodcastIds.add(subscription.id);
     return AutoDownloadEnqueueResult(
@@ -38,6 +39,22 @@ class _NoopAutoDownloadEnqueuer implements AutoDownloadEnqueuer {
       skipped: 0,
     );
   }
+}
+
+class _FakeDownloadRetentionService implements DownloadRetentionService {
+  final List<int> trimmedPodcastIds = [];
+
+  @override
+  Future<int> trimForSubscription(
+    Subscription subscription, {
+    required int defaultKeepCount,
+  }) async {
+    trimmedPodcastIds.add(subscription.id);
+    return 0;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class _FakeDownloadQueueService implements DownloadQueueService {
@@ -105,6 +122,7 @@ void main() {
   late MockPresetConfigRepository mockConfigRepo;
   late MockStationPodcastRepository mockStationPodcastRepo;
   late _FakeDownloadQueueService queueService;
+  late _FakeDownloadRetentionService retention;
   late _NoopAutoDownloadEnqueuer enqueuer;
   late ProviderContainer container;
   late FeedSyncService service;
@@ -118,12 +136,14 @@ void main() {
     mockStationPodcastRepo = MockStationPodcastRepository();
     mockDio = MockDio();
     queueService = _FakeDownloadQueueService();
+    retention = _FakeDownloadRetentionService();
     enqueuer = _NoopAutoDownloadEnqueuer();
 
     // Default settings
     when(mockSettingsRepo.getAutoSync()).thenReturn(true);
     when(mockSettingsRepo.getSyncIntervalMinutes()).thenReturn(60);
     when(mockSettingsRepo.getWifiOnlyDownload()).thenReturn(false);
+    when(mockSettingsRepo.getAutoDownloadKeepCount()).thenReturn(3);
 
     // Smart playlist config: no pattern matches by default
     when(mockConfigRepo.findMatchingPreset(any, any)).thenReturn(null);
@@ -141,6 +161,7 @@ void main() {
         dioProvider.overrideWithValue(mockDio),
         autoDownloadEnqueuerProvider.overrideWithValue(enqueuer),
         downloadQueueServiceProvider.overrideWithValue(queueService),
+        downloadRetentionServiceProvider.overrideWithValue(retention),
       ],
     );
 
@@ -548,6 +569,7 @@ void main() {
 
           check(result.success).isTrue();
           check(enqueuer.enqueuedPodcastIds).deepEquals([sub.id]);
+          check(retention.trimmedPodcastIds).deepEquals([sub.id]);
           check(queueService.startCount).equals(1);
         },
       );
@@ -567,6 +589,12 @@ void main() {
         await service.syncFeed(sub);
 
         check(queueService.startCount).equals(0);
+      });
+
+      test('trims auto downloads after enqueueing', () async {
+        await service.syncFeed(sub);
+
+        check(retention.trimmedPodcastIds).deepEquals([sub.id]);
       });
     });
   });

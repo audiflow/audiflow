@@ -206,6 +206,29 @@ class AppLocalizationsEn extends AppLocalizations {
       'Remove auto-downloaded episodes 24 hours after you finish them';
 
   @override
+  String get downloadsKeepCountTitle => 'Auto-Download Keep Count';
+
+  @override
+  String get downloadsKeepCountSubtitle =>
+      'Unplayed auto-downloaded episodes to keep per podcast; older ones are removed';
+
+  @override
+  String downloadsKeepCountOption(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count episodes',
+      one: '1 episode',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String downloadsKeepCountFollowGlobal(int count) {
+    return 'Default ($count)';
+  }
+
+  @override
   String get downloadsMaxConcurrent => 'Max Concurrent Downloads';
 
   @override

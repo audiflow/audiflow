@@ -79,6 +79,10 @@ class DownloadRepositoryImpl implements DownloadRepository {
   Future<List<DownloadTask>> getAll() => _datasource.getAll();
 
   @override
+  Future<List<DownloadTask>> getByEpisodeIds(Iterable<int> episodeIds) =>
+      _datasource.getByEpisodeIds(episodeIds);
+
+  @override
   Stream<List<DownloadTask>> watchAll() => _datasource.watchAll();
 
   @override

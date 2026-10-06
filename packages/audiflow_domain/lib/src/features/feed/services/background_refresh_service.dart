@@ -1,6 +1,7 @@
 import 'package:logger/logger.dart';
 
 import '../../download/services/auto_download_enqueuer.dart';
+import '../../download/services/download_retention_service.dart';
 import '../../player/models/playback_history.dart';
 import '../../player/repositories/playback_history_repository.dart';
 import '../../settings/repositories/app_settings_repository.dart';
@@ -34,6 +35,7 @@ class BackgroundRefreshService {
     required this._subscriptionRepo,
     required this._episodeRepo,
     required this._autoDownloadEnqueuer,
+    required this._downloadRetention,
     required this._playbackHistoryRepo,
     required this._settingsRepo,
     required this._syncFeed,
@@ -45,6 +47,7 @@ class BackgroundRefreshService {
   final SubscriptionRepository _subscriptionRepo;
   final EpisodeRepository _episodeRepo;
   final AutoDownloadEnqueuer _autoDownloadEnqueuer;
+  final DownloadRetentionService _downloadRetention;
   final PlaybackHistoryRepository _playbackHistoryRepo;
   final AppSettingsRepository _settingsRepo;
   final SyncFeedCallback _syncFeed;
@@ -88,9 +91,15 @@ class BackgroundRefreshService {
         // from a foreground sync that ingested episodes without enqueueing
         // them get picked up here. The enqueuer is a no-op when there are
         // no pending episodes for the podcast.
+        final defaultKeepCount = _settingsRepo.getAutoDownloadKeepCount();
         await _autoDownloadEnqueuer.enqueueForSubscription(
           sub,
           wifiOnly: _settingsRepo.getWifiOnlyDownload(),
+          defaultKeepCount: defaultKeepCount,
+        );
+        await _downloadRetention.trimForSubscription(
+          sub,
+          defaultKeepCount: defaultKeepCount,
         );
 
         final newCount = result.newEpisodeCount ?? 0;

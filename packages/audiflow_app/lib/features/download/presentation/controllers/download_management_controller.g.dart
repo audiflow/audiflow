@@ -119,7 +119,7 @@ final class DownloadManagementControllerProvider
 }
 
 String _$downloadManagementControllerHash() =>
-    r'efea78cbd1211e69ee2a56000d0890ed1b6a849a';
+    r'd57567c36e11c1aeaddc4fdeaf316642a48fbf2a';
 
 /// Controller for download management actions.
 

@@ -215,6 +215,26 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
     await _ds.setInt(SettingsKeys.batchDownloadLimit, clamped);
   }
 
+  @override
+  int getAutoDownloadKeepCount() {
+    final stored = _ds.getInt(SettingsKeys.autoDownloadKeepCount);
+    // Fall back rather than clamp: an unknown value would otherwise show as
+    // no selection in the settings picker.
+    if (stored == null ||
+        !SettingsDefaults.autoDownloadKeepCountOptions.contains(stored)) {
+      return SettingsDefaults.autoDownloadKeepCount;
+    }
+    return stored;
+  }
+
+  @override
+  Future<void> setAutoDownloadKeepCount(int count) async {
+    if (!SettingsDefaults.autoDownloadKeepCountOptions.contains(count)) {
+      throw ArgumentError.value(count, 'count', 'not an offered keep count');
+    }
+    await _ds.setInt(SettingsKeys.autoDownloadKeepCount, count);
+  }
+
   // -- Feed Sync --
 
   @override

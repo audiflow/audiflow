@@ -33,6 +33,16 @@ void main() {
       check(data[BackgroundInputKeys.locale]).equals('ja');
     });
 
+    test('buildInputData snapshots the auto-download keep count', () {
+      final data = BackgroundTaskRegistrar.buildInputData(
+        BackgroundSettingsRepository({
+          BackgroundInputKeys.autoDownloadKeepCount: 10,
+        }),
+      );
+
+      check(data[BackgroundInputKeys.autoDownloadKeepCount]).equals(10);
+    });
+
     test('buildInputData omits the language when following the system', () {
       final data = BackgroundTaskRegistrar.buildInputData(
         BackgroundSettingsRepository(null),

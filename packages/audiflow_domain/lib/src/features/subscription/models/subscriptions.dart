@@ -34,6 +34,10 @@ class Subscription {
   /// Whether new episodes should be auto-downloaded during background refresh.
   bool autoDownload = false;
 
+  /// Per-podcast override of how many unstarted auto-downloads to keep.
+  /// Null follows the global setting.
+  int? autoDownloadKeepCount;
+
   /// When the RSS channel metadata was last read into this subscription.
   ///
   /// Null means the feed has never been parsed under the backfill policy, so

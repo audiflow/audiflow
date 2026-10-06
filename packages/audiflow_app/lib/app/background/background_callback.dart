@@ -132,6 +132,9 @@ class _DiagDownloadRepo implements DownloadRepository {
   @override
   Future<List<DownloadTask>> getAll() => _inner.getAll();
   @override
+  Future<List<DownloadTask>> getByEpisodeIds(Iterable<int> episodeIds) =>
+      _inner.getByEpisodeIds(episodeIds);
+  @override
   Future<DownloadTask?> getById(int id) => _inner.getById(id);
   @override
   Future<DownloadTask?> getByEpisodeId(int episodeId) =>
@@ -460,10 +463,26 @@ void backgroundCallback() {
         onDiagnostic: feedSyncDiagnostic,
       );
 
+      final reconciler = StationReconcilerService(isar: isar);
+      final downloadRetention = DownloadRetentionService(
+        downloadRepository: downloadRepo,
+        episodeRepository: episodeRepo,
+        playbackHistoryRepository: playbackHistoryRepo,
+        // Played cleanup runs in the foreground only; this isolate trims.
+        isAutoDeletePlayedEnabled: () => false,
+        deleteDownload: BackgroundDownloadDeleter(
+          downloadRepository: downloadRepo,
+          downloadsDir: '${dir.path}/downloads',
+          onDeleted: reconciler.onEpisodeChanged,
+        ).call,
+        logger: logger,
+      );
+
       final refreshService = BackgroundRefreshService(
         subscriptionRepo: subscriptionRepo,
         episodeRepo: episodeRepo,
         autoDownloadEnqueuer: autoDownloadEnqueuer,
+        downloadRetention: downloadRetention,
         playbackHistoryRepo: playbackHistoryRepo,
         settingsRepo: settingsRepo,
         syncFeed: (sub) async {

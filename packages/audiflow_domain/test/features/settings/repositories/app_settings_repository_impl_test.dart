@@ -297,6 +297,32 @@ void main() {
     });
   });
 
+  group('AutoDownloadKeepCount', () {
+    test('returns default when no value stored', () {
+      expect(
+        repository.getAutoDownloadKeepCount(),
+        SettingsDefaults.autoDownloadKeepCount,
+      );
+    });
+
+    test('persists and reads an offered keep count', () async {
+      await repository.setAutoDownloadKeepCount(5);
+      expect(repository.getAutoDownloadKeepCount(), 5);
+    });
+
+    test('falls back to default for a stored value not offered', () async {
+      await dataSource.setInt(SettingsKeys.autoDownloadKeepCount, 4);
+      expect(
+        repository.getAutoDownloadKeepCount(),
+        SettingsDefaults.autoDownloadKeepCount,
+      );
+    });
+
+    test('rejects a keep count that is not offered', () {
+      expect(() => repository.setAutoDownloadKeepCount(4), throwsArgumentError);
+    });
+  });
+
   group('AutoSync', () {
     test('returns default when no value stored', () {
       expect(repository.getAutoSync(), SettingsDefaults.autoSync);

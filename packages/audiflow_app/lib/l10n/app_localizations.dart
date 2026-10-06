@@ -476,6 +476,30 @@ abstract class AppLocalizations {
   /// **'Remove auto-downloaded episodes 24 hours after you finish them'**
   String get downloadsAutoDeleteSubtitle;
 
+  /// Setting title for how many unplayed auto-downloads to keep per podcast
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-Download Keep Count'**
+  String get downloadsKeepCountTitle;
+
+  /// Setting subtitle for the auto-download keep count
+  ///
+  /// In en, this message translates to:
+  /// **'Unplayed auto-downloaded episodes to keep per podcast; older ones are removed'**
+  String get downloadsKeepCountSubtitle;
+
+  /// Keep count choice in the picker
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 episode} other{{count} episodes}}'**
+  String downloadsKeepCountOption(int count);
+
+  /// Per-podcast keep count choice that follows the global setting
+  ///
+  /// In en, this message translates to:
+  /// **'Default ({count})'**
+  String downloadsKeepCountFollowGlobal(int count);
+
   /// Max concurrent downloads label
   ///
   /// In en, this message translates to:

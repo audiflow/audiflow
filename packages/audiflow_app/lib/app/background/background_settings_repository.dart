@@ -41,6 +41,11 @@ class BackgroundSettingsRepository implements AppSettingsRepository {
       _data[BackgroundInputKeys.wifiOnlyDownload] as bool? ??
       SettingsDefaults.wifiOnlyDownload;
 
+  @override
+  int getAutoDownloadKeepCount() =>
+      _data[BackgroundInputKeys.autoDownloadKeepCount] as int? ??
+      SettingsDefaults.autoDownloadKeepCount;
+
   /// Language for notification text.
   @override
   String? getLocale() => _data[BackgroundInputKeys.locale] as String?;
@@ -164,6 +169,9 @@ class BackgroundSettingsRepository implements AppSettingsRepository {
 
   @override
   Future<void> setBatchDownloadLimit(int limit) => _unsupported();
+
+  @override
+  Future<void> setAutoDownloadKeepCount(int count) => _unsupported();
 
   @override
   Future<void> setAutoSync(bool enabled) => _unsupported();

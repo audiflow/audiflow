@@ -21,3 +21,11 @@ extension SubscriptionToPodcast on Subscription {
     );
   }
 }
+
+/// Auto-download retention helpers for [Subscription].
+extension SubscriptionAutoDownloadRetention on Subscription {
+  /// Unstarted auto-downloads to keep for this podcast: its own override,
+  /// or [globalKeepCount] when it follows the global setting.
+  int effectiveKeepCount(int globalKeepCount) =>
+      autoDownloadKeepCount ?? globalKeepCount;
+}

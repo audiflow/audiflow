@@ -119,6 +119,18 @@ class MockDownloadRepository extends _i1.Mock
           as _i4.Future<List<_i5.DownloadTask>>);
 
   @override
+  _i4.Future<List<_i5.DownloadTask>> getByEpisodeIds(
+    Iterable<int>? episodeIds,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#getByEpisodeIds, [episodeIds]),
+            returnValue: _i4.Future<List<_i5.DownloadTask>>.value(
+              <_i5.DownloadTask>[],
+            ),
+          )
+          as _i4.Future<List<_i5.DownloadTask>>);
+
+  @override
   _i4.Stream<List<_i5.DownloadTask>> watchAll() =>
       (super.noSuchMethod(
             Invocation.method(#watchAll, []),
@@ -811,6 +823,15 @@ class MockSubscriptionRepository extends _i1.Mock
               [id],
               {#autoDownload: autoDownload},
             ),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
+  _i4.Future<void> updateAutoDownloadKeepCount(int? id, int? keepCount) =>
+      (super.noSuchMethod(
+            Invocation.method(#updateAutoDownloadKeepCount, [id, keepCount]),
             returnValue: _i4.Future<void>.value(),
             returnValueForMissingStub: _i4.Future<void>.value(),
           )

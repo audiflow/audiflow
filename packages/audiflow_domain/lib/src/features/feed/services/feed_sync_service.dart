@@ -14,6 +14,7 @@ import '../../../features/subscription/models/subscriptions.dart';
 import '../../../features/subscription/repositories/subscription_repository_impl.dart';
 import '../../download/providers/download_providers.dart';
 import '../../download/services/download_queue_service.dart';
+import '../../download/services/download_retention_service.dart';
 import '../../station/repositories/station_podcast_repository_impl.dart';
 import '../../station/services/station_reconciler_service.dart';
 import '../models/episode.dart';
@@ -554,7 +555,8 @@ class FeedSyncService implements SuspendableWriter {
     }
   }
 
-  /// Enqueues auto-downloads for every pending episode of [sub].
+  /// Enqueues auto-downloads for every pending episode of [sub], then trims
+  /// its unstarted auto downloads to the keep count.
   ///
   /// Runs on unchanged (304) feeds too: the podcast detail screen stores
   /// episodes and the feed validators on its own, so its new episodes are
@@ -563,10 +565,15 @@ class FeedSyncService implements SuspendableWriter {
   Future<void> _processAutoDownloads(Subscription sub) async {
     final settingsRepo = _ref.read(appSettingsRepositoryProvider);
     final enqueuer = _ref.read(autoDownloadEnqueuerProvider);
+    final defaultKeepCount = settingsRepo.getAutoDownloadKeepCount();
     final enqueued = await enqueuer.enqueueForSubscription(
       sub,
       wifiOnly: settingsRepo.getWifiOnlyDownload(),
+      defaultKeepCount: defaultKeepCount,
     );
+    await _ref
+        .read(downloadRetentionServiceProvider)
+        .trimForSubscription(sub, defaultKeepCount: defaultKeepCount);
     // The queue only wakes on network changes and explicit download
     // actions, so without this kick new episodes would sit pending on
     // an unchanged Wi-Fi connection.

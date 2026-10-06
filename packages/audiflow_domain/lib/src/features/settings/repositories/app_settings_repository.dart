@@ -128,6 +128,13 @@ abstract class AppSettingsRepository {
   /// Persists the batch download limit.
   Future<void> setBatchDownloadLimit(int limit);
 
+  /// Unstarted auto-downloads to keep per podcast, unless the podcast
+  /// overrides it.
+  int getAutoDownloadKeepCount();
+
+  /// Persists the auto-download keep count.
+  Future<void> setAutoDownloadKeepCount(int count);
+
   // -- Feed Sync --
 
   /// Whether automatic background sync is enabled.

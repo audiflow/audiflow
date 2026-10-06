@@ -659,6 +659,23 @@ class MockAppSettingsRepository extends _i1.Mock
           as _i4.Future<void>);
 
   @override
+  int getAutoDownloadKeepCount() =>
+      (super.noSuchMethod(
+            Invocation.method(#getAutoDownloadKeepCount, []),
+            returnValue: 0,
+          )
+          as int);
+
+  @override
+  _i4.Future<void> setAutoDownloadKeepCount(int? count) =>
+      (super.noSuchMethod(
+            Invocation.method(#setAutoDownloadKeepCount, [count]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
   bool getAutoSync() =>
       (super.noSuchMethod(
             Invocation.method(#getAutoSync, []),
