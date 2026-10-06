@@ -8,6 +8,12 @@ local procedure.
 ## Prerequisites
 
 - `.env.prod` at the repository root (decrypted secrets; see `tools/secrets.sh`).
+- Production Firebase configuration, decrypted the same way:
+  `packages/audiflow_app/android/app/src/prod/google-services.json` (the
+  Android build fails without it) and
+  `packages/audiflow_app/ios/config/prod/GoogleService-Info.plist` (the iOS
+  build succeeds without it but ships without Firebase). Check both exist
+  before building.
 - Android signing: `packages/audiflow_app/android/key.properties` and the
   upload keystore it points to.
 - Xcode signed in to the team account (team `R6HMM3C9D7`). The IPA export uses
@@ -83,22 +89,25 @@ unzip -q -o build/ios/ipa/audiflow.ipa 'Payload/*.app/Info.plist' -d /tmp/ipa-ch
 # output: build/app/outputs/bundle/prodRelease/app-prod-release.aab
 ```
 
-## 4. Upload iOS debug symbols to Sentry
+## 4. Upload debug symbols to Sentry
 
-Without the dSYMs, native iOS crash reports in Sentry cannot be symbolicated.
-Upload the ones from the archive the IPA was exported from:
+Without them, native crash frames in Sentry cannot be symbolicated. Upload
+the files of the builds above, as the staging workflow does; files Sentry
+already has are skipped.
 
 ```bash
+# iOS: dSYMs from the archive the IPA was exported from
 sentry-cli debug-files upload --org reedom --project audiflow --include-sources \
   build/ios/archive/Runner.xcarchive/dSYMs
+
+# Android: unstripped native libraries (libapp.so, libflutter.so, ...)
+sentry-cli debug-files upload --org reedom --project audiflow --include-sources \
+  build/app/intermediates/merged_native_libs/prodRelease
 ```
 
 `Flutter.framework.dSYM` carries the date of the Flutter SDK, not of the build;
-that is expected. Files Sentry already has are skipped.
-
-Android needs no symbol upload: release builds are not minified (no R8
-mapping) and Dart code is not obfuscated or split with `--split-debug-info`.
-Revisit this step if either changes.
+that is expected. Release builds are not minified (no R8 mapping to upload)
+and Dart code is not obfuscated; revisit this step if either changes.
 
 ## 5. Upload to the stores
 
@@ -108,7 +117,26 @@ Revisit this step if either changes.
 
 Paste the release notes from `release-notes/<version>/` into each store.
 
-## 6. Tag the release
+## 6. Record the deploy in Sentry
+
+The staging run for `stg-$VERSION+$BUILD` already created the Sentry release
+`$VERSION+$BUILD` with its commits. Once the stores publish the build, record
+the production deploy on it:
+
+```bash
+sentry-cli releases --org reedom deploys "$VERSION+$BUILD" new -e prod
+```
+
+If the build never went through a staging tag, create the release first, as
+the staging workflow does:
+
+```bash
+sentry-cli releases --org reedom --project audiflow new "$VERSION+$BUILD"
+sentry-cli releases --org reedom --project audiflow set-commits "$VERSION+$BUILD" --auto
+sentry-cli releases --org reedom --project audiflow finalize "$VERSION+$BUILD"
+```
+
+## 7. Tag the release
 
 Tag the commit that was built and push the tag:
 
