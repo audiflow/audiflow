@@ -185,7 +185,9 @@ def check_ios(version: str) -> bool:
     return is_ios_version_live(versions, build)
 
 
-def _play_session() -> Any:
+def play_session() -> Any:
+    """Returns a session authorized for the Play Developer API (shared with
+    tools/play_upload.py)."""
     from google.auth.transport.requests import AuthorizedSession
     from google.oauth2 import service_account
 
@@ -200,7 +202,7 @@ def _play_session() -> Any:
 
 def check_android(version: str) -> bool:
     _, build = split_version(version)
-    session = _play_session()
+    session = play_session()
     releases = _get_json(session, f"{PLAY_API}/{ANDROID_PACKAGE}/tracks/production/releases")
     return is_android_build_live(releases, build)
 

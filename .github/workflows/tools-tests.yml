@@ -8,6 +8,7 @@ on:
     paths:
       - 'tools/**'
       - '.github/workflows/sentry-prod-release.yml'
+      - '.github/workflows/deploy-prod.yml'
       - '.github/workflows/tools-tests.yml'
   push:
     branches:
@@ -15,6 +16,7 @@ on:
     paths:
       - 'tools/**'
       - '.github/workflows/sentry-prod-release.yml'
+      - '.github/workflows/deploy-prod.yml'
       - '.github/workflows/tools-tests.yml'
 
 permissions:

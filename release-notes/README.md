@@ -12,8 +12,10 @@ release-notes/<version>/android/ja-JP.txt
 
 - `<version>` is the version users see (`version:` in
   `packages/audiflow_app/pubspec.yaml` without the `+build` suffix, e.g. `2.0.1`).
-- File names are the store locale codes, so the text can be pasted, or later
-  uploaded, as is.
+- File names are the store locale codes, so the text can be used as is: the
+  production deploy workflow uploads the Android notes with the draft Play
+  release (reading them from `main`), and the iOS notes are pasted into App
+  Store Connect.
 - Each file is plain text. Google Play allows 500 characters per language, the
   App Store 4000.
 - The two platforms share most lines; keep platform-only changes (for example
