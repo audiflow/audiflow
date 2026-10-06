@@ -40,8 +40,11 @@ class DownloadManagementController extends _$DownloadManagementController {
     await service.delete(taskId);
   }
 
-  Future<void> deleteAllCompleted() async {
+  Future<int> deleteTasks(
+    Iterable<int> taskIds, {
+    required Set<DownloadStatus> statuses,
+  }) {
     final service = ref.read(downloadServiceProvider);
-    await service.deleteAllCompleted();
+    return service.deleteTasks(taskIds, statuses: statuses);
   }
 }

@@ -370,33 +370,6 @@ void main() {
     });
   });
 
-  group('deleteAllCompleted', () {
-    test('removes all completed downloads', () async {
-      final task1 = await repository.createDownload(
-        episodeId: 1,
-        audioUrl: 'https://example.com/ep1.mp3',
-        wifiOnly: false,
-      );
-      await repository.createDownload(
-        episodeId: 2,
-        audioUrl: 'https://example.com/ep2.mp3',
-        wifiOnly: false,
-      );
-
-      await repository.updateStatus(
-        id: task1!.id,
-        status: const DownloadStatus.completed(),
-        localPath: '/path/ep1.mp3',
-      );
-
-      expect(await repository.deleteAllCompleted(), 1);
-
-      final remaining = await repository.getAll();
-      expect(remaining, hasLength(1));
-      expect(remaining.first.episodeId, 2);
-    });
-  });
-
   group('getAll', () {
     test('returns all tasks ordered by creation date', () async {
       await repository.createDownload(

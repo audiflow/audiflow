@@ -305,24 +305,6 @@ void main() {
     });
   });
 
-  group('deleteAllCompleted', () {
-    test('removes all completed downloads', () async {
-      final id1 = await datasource.create(makeTask(episodeId: 1));
-      await datasource.create(makeTask(episodeId: 2)); // pending
-
-      final task1 = await datasource.getById(id1);
-      task1!.status = const DownloadStatus.completed().toDbValue();
-      await datasource.updateById(id1, task1);
-
-      final deleted = await datasource.deleteAllCompleted();
-
-      expect(deleted, 1);
-      final remaining = await datasource.getAll();
-      expect(remaining, hasLength(1));
-      expect(remaining.first.episodeId, 2);
-    });
-  });
-
   group('getTotalStorageUsed', () {
     test('returns 0 when no completed downloads', () async {
       final total = await datasource.getTotalStorageUsed();

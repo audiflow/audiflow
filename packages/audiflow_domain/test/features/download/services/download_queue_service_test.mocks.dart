@@ -229,14 +229,6 @@ class MockDownloadRepository extends _i1.Mock
             returnValue: _i3.Future<int>.value(0),
           )
           as _i3.Future<int>);
-
-  @override
-  _i3.Future<int> deleteAllCompleted() =>
-      (super.noSuchMethod(
-            Invocation.method(#deleteAllCompleted, []),
-            returnValue: _i3.Future<int>.value(0),
-          )
-          as _i3.Future<int>);
 }
 
 /// A class which mocks [DownloadFileService].
