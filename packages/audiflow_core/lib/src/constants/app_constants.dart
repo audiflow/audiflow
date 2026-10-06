@@ -24,4 +24,9 @@ class AppConstants {
   /// played-download cleanup removes it. Leaves room to replay or to undo
   /// an accidental "mark as played".
   static const Duration playedDownloadGracePeriod = Duration(hours: 24);
+
+  /// Auto-downloads a podcast may receive without being played before its
+  /// auto-download pauses. Counting downloads rather than days adapts to
+  /// each feed's release cadence.
+  static const int autoDownloadPauseThreshold = 5;
 }

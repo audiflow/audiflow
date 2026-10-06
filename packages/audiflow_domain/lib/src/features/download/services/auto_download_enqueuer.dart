@@ -7,6 +7,7 @@ import '../../subscription/extensions/subscription_extensions.dart';
 import '../../subscription/models/subscriptions.dart';
 import '../models/download_origin.dart';
 import '../repositories/download_repository.dart';
+import 'auto_download_pause_service.dart';
 
 /// Result of an auto-download enqueue pass over a single subscription.
 class AutoDownloadEnqueueResult {
@@ -42,12 +43,16 @@ class AutoDownloadEnqueuer {
   AutoDownloadEnqueuer({
     required this._episodeRepo,
     required this._downloadRepo,
+    this._pauseService,
     this._logger,
     FeedSyncDiagnosticSink? onDiagnostic,
   }) : _onDiagnostic = onDiagnostic ?? noopFeedSyncDiagnosticSink;
 
   final EpisodeRepository _episodeRepo;
   final DownloadRepository _downloadRepo;
+
+  /// Tracks inactivity; null disables the inactivity pause.
+  final AutoDownloadPauseService? _pauseService;
   final Logger? _logger;
   final FeedSyncDiagnosticSink _onDiagnostic;
 
@@ -91,10 +96,14 @@ class AutoDownloadEnqueuer {
     var skipped = 0;
     final processedIds = <int>[];
 
+    // A paused podcast is treated like one with auto-download off: its
+    // episodes are still marked processed so resuming does not backfill.
+    final isActive =
+        subscription.autoDownload && subscription.autoDownloadPausedAt == null;
     for (final episode in pending) {
       processedIds.add(episode.id);
 
-      if (!subscription.autoDownload) {
+      if (!isActive) {
         skipped++;
         continue;
       }
@@ -131,11 +140,13 @@ class AutoDownloadEnqueuer {
     if (processedIds.isNotEmpty) {
       await _episodeRepo.markAutoDownloadEnqueued(processedIds);
     }
+    await _pauseService?.recordAutoDownloads(subscription.id, created);
 
     _onDiagnostic('feed-sync:auto-download', {
       'podcastId': subscription.id,
       'title': subscription.title,
       'autoDownloadEnabled': subscription.autoDownload,
+      'autoDownloadPaused': subscription.autoDownloadPausedAt != null,
       'inspected': pending.length,
       'created': created,
       'skipped': skipped,

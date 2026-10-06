@@ -458,6 +458,11 @@ void backgroundCallback() {
       final autoDownloadEnqueuer = AutoDownloadEnqueuer(
         episodeRepo: episodeRepo,
         downloadRepo: downloadRepo,
+        pauseService: AutoDownloadPauseService(
+          subscriptionRepository: subscriptionRepo,
+          episodeRepository: episodeRepo,
+          logger: logger,
+        ),
         logger: logger,
         onDiagnostic: feedSyncDiagnostic,
       );

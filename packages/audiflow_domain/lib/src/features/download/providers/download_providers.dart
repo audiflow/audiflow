@@ -8,6 +8,7 @@ import '../models/download_status.dart';
 import '../models/download_task.dart';
 import '../repositories/download_repository_impl.dart';
 import '../services/auto_download_enqueuer.dart';
+import '../services/auto_download_pause_service.dart';
 import '../services/download_service.dart';
 
 part 'download_providers.g.dart';
@@ -19,6 +20,7 @@ AutoDownloadEnqueuer autoDownloadEnqueuer(Ref ref) {
   return AutoDownloadEnqueuer(
     episodeRepo: ref.watch(episodeRepositoryProvider),
     downloadRepo: ref.watch(downloadRepositoryProvider),
+    pauseService: ref.watch(autoDownloadPauseServiceProvider),
     logger: ref.watch(namedLoggerProvider('AutoDownloadEnqueuer')),
     onDiagnostic: ref.watch(feedSyncDiagnosticSinkProvider),
   );

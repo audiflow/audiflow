@@ -329,6 +329,32 @@ class MockSubscriptionRepository extends _i1.Mock
           as _i11.Future<void>);
 
   @override
+  _i11.Future<int> addAutoDownloadsSinceLastPlay(int? id, int? count) =>
+      (super.noSuchMethod(
+            Invocation.method(#addAutoDownloadsSinceLastPlay, [id, count]),
+            returnValue: _i11.Future<int>.value(0),
+          )
+          as _i11.Future<int>);
+
+  @override
+  _i11.Future<void> pauseAutoDownload(int? id, DateTime? at) =>
+      (super.noSuchMethod(
+            Invocation.method(#pauseAutoDownload, [id, at]),
+            returnValue: _i11.Future<void>.value(),
+            returnValueForMissingStub: _i11.Future<void>.value(),
+          )
+          as _i11.Future<void>);
+
+  @override
+  _i11.Future<void> resetAutoDownloadActivity(int? id) =>
+      (super.noSuchMethod(
+            Invocation.method(#resetAutoDownloadActivity, [id]),
+            returnValue: _i11.Future<void>.value(),
+            returnValueForMissingStub: _i11.Future<void>.value(),
+          )
+          as _i11.Future<void>);
+
+  @override
   _i11.Future<void> updateAutoDownloadKeepCount(int? id, int? keepCount) =>
       (super.noSuchMethod(
             Invocation.method(#updateAutoDownloadKeepCount, [id, keepCount]),

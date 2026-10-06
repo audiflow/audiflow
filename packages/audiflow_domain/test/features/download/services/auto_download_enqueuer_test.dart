@@ -38,6 +38,22 @@ class _FakeEpisodeRepository implements EpisodeRepository {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+class _FakeSubscriptionRepository implements SubscriptionRepository {
+  final Map<int, int> sinceLastPlay = {};
+  final Map<int, DateTime> pausedAt = {};
+
+  @override
+  Future<int> addAutoDownloadsSinceLastPlay(int id, int count) async =>
+      sinceLastPlay[id] = (sinceLastPlay[id] ?? 0) + count;
+
+  @override
+  Future<void> pauseAutoDownload(int id, DateTime at) async =>
+      pausedAt[id] = at;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
 class _FakeDownloadRepository implements DownloadRepository {
   _FakeDownloadRepository({this.failOnEpisodeId});
 
@@ -85,10 +101,12 @@ Subscription _sub({
   String title = 'Podcast',
   bool autoDownload = true,
   int? keepCount,
+  DateTime? pausedAt,
 }) {
   return Subscription()
     ..id = id
     ..autoDownloadKeepCount = keepCount
+    ..autoDownloadPausedAt = pausedAt
     ..itunesId = 'itunes_$id'
     ..feedUrl = 'https://example.com/feed/$id'
     ..title = title
@@ -114,6 +132,72 @@ Episode _episode({
 
 void main() {
   group('AutoDownloadEnqueuer', () {
+    group('inactivity pause', () {
+      late _FakeSubscriptionRepository subscriptions;
+      late AutoDownloadPauseService pauseService;
+
+      setUp(() {
+        subscriptions = _FakeSubscriptionRepository();
+        pauseService = AutoDownloadPauseService(
+          subscriptionRepository: subscriptions,
+          episodeRepository: _FakeEpisodeRepository(),
+        );
+      });
+
+      test(
+        'skips a paused podcast but still marks its episodes processed',
+        () async {
+          final episodeRepo = _FakeEpisodeRepository(
+            pendingByPodcastId: {
+              1: [_episode(id: 101, podcastId: 1)],
+            },
+          );
+          final downloadRepo = _FakeDownloadRepository();
+          final enqueuer = AutoDownloadEnqueuer(
+            episodeRepo: episodeRepo,
+            downloadRepo: downloadRepo,
+            pauseService: pauseService,
+          );
+
+          final result = await enqueuer.enqueueForSubscription(
+            _sub(id: 1, pausedAt: DateTime(2026, 10, 1)),
+            wifiOnly: false,
+            defaultKeepCount: 3,
+          );
+
+          expect(downloadRepo.created, isEmpty);
+          expect(result.skipped, 1);
+          expect(episodeRepo.markCalls, [
+            [101],
+          ]);
+        },
+      );
+
+      test('records the downloads it created toward the pause', () async {
+        final episodeRepo = _FakeEpisodeRepository(
+          pendingByPodcastId: {
+            1: [
+              _episode(id: 101, podcastId: 1),
+              _episode(id: 102, podcastId: 1),
+            ],
+          },
+        );
+        final enqueuer = AutoDownloadEnqueuer(
+          episodeRepo: episodeRepo,
+          downloadRepo: _FakeDownloadRepository(),
+          pauseService: pauseService,
+        );
+
+        await enqueuer.enqueueForSubscription(
+          _sub(id: 1),
+          wifiOnly: false,
+          defaultKeepCount: 3,
+        );
+
+        expect(subscriptions.sinceLastPlay, {1: 2});
+      });
+    });
+
     group('keep count', () {
       List<Episode> pendingNewestLast() => [
         _episode(id: 101, podcastId: 1, publishedAt: DateTime(2026, 1, 1)),

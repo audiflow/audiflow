@@ -217,6 +217,16 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get podcastAutoDownloadPausedTitle => '自動ダウンロードを一時停止中';
+
+  @override
+  String get podcastAutoDownloadPausedSubtitle =>
+      'しばらく再生していないため停止しました。エピソードを再生すると再開します。';
+
+  @override
+  String get podcastAutoDownloadResume => '再開';
+
+  @override
   String get downloadsMaxConcurrent => '最大同時ダウンロード数';
 
   @override

@@ -62,7 +62,7 @@ final class AutoDownloadEnqueuerProvider
 }
 
 String _$autoDownloadEnqueuerHash() =>
-    r'6ca4b31ddcf661f0d0b1bbc922de3c9ce423d6f9';
+    r'4c0f3dcbe5a5acaddd694b1449aae9fa9c32daca';
 
 /// Returns count of downloads needing attention (failed).
 

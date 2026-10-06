@@ -257,6 +257,61 @@ void main() {
     });
   });
 
+  group('auto-download activity', () {
+    late Subscription sub;
+
+    setUp(() async {
+      sub = await repository.subscribe(
+        itunesId: 'itunes-1',
+        feedUrl: 'https://example.com/feed.xml',
+        title: 'Test Podcast',
+        artistName: 'Test Artist',
+      );
+    });
+
+    test('accumulates auto downloads since last play', () async {
+      expect(await repository.addAutoDownloadsSinceLastPlay(sub.id, 2), 2);
+      expect(await repository.addAutoDownloadsSinceLastPlay(sub.id, 3), 5);
+    });
+
+    test('returns 0 for an unknown subscription', () async {
+      expect(await repository.addAutoDownloadsSinceLastPlay(999, 2), 0);
+    });
+
+    test('reset clears the count and the pause', () async {
+      await repository.addAutoDownloadsSinceLastPlay(sub.id, 5);
+      await repository.pauseAutoDownload(sub.id, DateTime(2026, 10, 6));
+
+      await repository.resetAutoDownloadActivity(sub.id);
+
+      final stored = (await repository.getById(sub.id))!;
+      expect(stored.autoDownloadsSinceLastPlay, 0);
+      expect(stored.autoDownloadPausedAt, isNull);
+    });
+
+    test('turning auto-download on clears the pause', () async {
+      await repository.addAutoDownloadsSinceLastPlay(sub.id, 5);
+      await repository.pauseAutoDownload(sub.id, DateTime(2026, 10, 6));
+
+      await repository.updateAutoDownload(sub.id, autoDownload: true);
+
+      final stored = (await repository.getById(sub.id))!;
+      expect(stored.autoDownloadsSinceLastPlay, 0);
+      expect(stored.autoDownloadPausedAt, isNull);
+    });
+
+    test('turning auto-download off keeps the pause', () async {
+      await repository.pauseAutoDownload(sub.id, DateTime(2026, 10, 6));
+
+      await repository.updateAutoDownload(sub.id, autoDownload: false);
+
+      expect(
+        (await repository.getById(sub.id))!.autoDownloadPausedAt,
+        DateTime(2026, 10, 6),
+      );
+    });
+  });
+
   group('watchSubscriptions', () {
     test('emits current subscriptions', () async {
       await repository.subscribe(

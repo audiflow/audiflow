@@ -1,0 +1,96 @@
+import 'package:audiflow_app/features/podcast_detail/presentation/widgets/podcast_settings_sheet.dart';
+import 'package:audiflow_app/l10n/app_localizations.dart';
+import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:checks/checks.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../../../helpers/fakes.dart';
+
+const _feedUrl = 'https://example.com/feed.xml';
+
+Subscription _subscription({DateTime? pausedAt}) {
+  return Subscription()
+    ..id = 1
+    ..itunesId = 'itunes_1'
+    ..feedUrl = _feedUrl
+    ..title = 'Podcast'
+    ..artistName = 'Artist'
+    ..subscribedAt = DateTime(2026)
+    ..autoDownload = true
+    ..autoDownloadsSinceLastPlay = pausedAt == null ? 0 : 5
+    ..autoDownloadPausedAt = pausedAt;
+}
+
+void main() {
+  late SharedPreferences prefs;
+
+  setUp(() async {
+    SharedPreferences.setMockInitialValues({});
+    prefs = await SharedPreferences.getInstance();
+  });
+
+  Future<void> openSheet(WidgetTester tester, Subscription subscription) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          subscriptionRepositoryProvider.overrideWithValue(
+            FakeSubscriptionRepository(subscriptions: [subscription]),
+          ),
+          subscriptionByFeedUrlProvider(
+            _feedUrl,
+          ).overrideWith((ref) async => subscription),
+          isRestrictedModeOnProvider.overrideWithValue(false),
+          isUnlockedProvider.overrideWithValue(true),
+          hideExplicitForPodcastProvider(
+            subscription.id,
+          ).overrideWith((ref) => Stream.value(false)),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Builder(
+            builder: (context) => TextButton(
+              onPressed: () => showPodcastSettingsSheet(
+                context: context,
+                podcast: const Podcast(
+                  id: 'itunes_1',
+                  name: 'Podcast',
+                  artistName: 'Artist',
+                  feedUrl: _feedUrl,
+                ),
+              ),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('hides the paused row while auto-download is active', (
+    tester,
+  ) async {
+    await openSheet(tester, _subscription());
+
+    expect(find.text('Auto-download paused'), findsNothing);
+  });
+
+  testWidgets('shows the paused row and resumes on tap', (tester) async {
+    final subscription = _subscription(pausedAt: DateTime(2026, 10, 1));
+    await openSheet(tester, subscription);
+
+    expect(find.text('Auto-download paused'), findsOneWidget);
+
+    await tester.tap(find.text('Resume'));
+    await tester.pumpAndSettle();
+
+    check(subscription.autoDownloadPausedAt).isNull();
+    check(subscription.autoDownloadsSinceLastPlay).equals(0);
+  });
+}

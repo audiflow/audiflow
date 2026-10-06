@@ -231,7 +231,51 @@ class SubscriptionLocalDatasource {
     if (existing == null) return;
 
     existing.autoDownload = autoDownload;
+    if (autoDownload) _clearAutoDownloadActivity(existing);
     await _isar.writeTxn(() => _isar.subscriptions.put(existing));
+  }
+
+  /// Adds [count] to the auto-downloads since last play inside one
+  /// transaction, so foreground and background syncs cannot lose updates.
+  /// Returns the new total, or 0 if no subscription is found for [id].
+  Future<int> addAutoDownloadsSinceLastPlay(int id, int count) {
+    return _isar.writeTxn(() async {
+      final existing = await _isar.subscriptions.get(id);
+      if (existing == null) return 0;
+      existing.autoDownloadsSinceLastPlay += count;
+      await _isar.subscriptions.put(existing);
+      return existing.autoDownloadsSinceLastPlay;
+    });
+  }
+
+  /// Marks auto-download paused for inactivity. Does nothing if no
+  /// subscription is found for [id].
+  Future<void> pauseAutoDownload(int id, DateTime at) async {
+    final existing = await _isar.subscriptions.get(id);
+    if (existing == null) return;
+
+    existing.autoDownloadPausedAt = at;
+    await _isar.writeTxn(() => _isar.subscriptions.put(existing));
+  }
+
+  /// Clears the inactivity pause and count. Skips the write when there is
+  /// nothing to clear, since this runs on every playback start.
+  Future<void> resetAutoDownloadActivity(int id) async {
+    final existing = await _isar.subscriptions.get(id);
+    if (existing == null) return;
+    if (existing.autoDownloadsSinceLastPlay == 0 &&
+        existing.autoDownloadPausedAt == null) {
+      return;
+    }
+
+    _clearAutoDownloadActivity(existing);
+    await _isar.writeTxn(() => _isar.subscriptions.put(existing));
+  }
+
+  static void _clearAutoDownloadActivity(Subscription subscription) {
+    subscription
+      ..autoDownloadsSinceLastPlay = 0
+      ..autoDownloadPausedAt = null;
   }
 
   /// Updates the per-podcast auto-download keep count; null follows the
