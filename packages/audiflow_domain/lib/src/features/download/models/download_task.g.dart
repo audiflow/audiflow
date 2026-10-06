@@ -52,18 +52,19 @@ const DownloadTaskSchema = CollectionSchema(
       name: r'localPath',
       type: IsarType.string,
     ),
+    r'origin': PropertySchema(id: 7, name: r'origin', type: IsarType.long),
     r'retryCount': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'retryCount',
       type: IsarType.long,
     ),
-    r'status': PropertySchema(id: 8, name: r'status', type: IsarType.long),
+    r'status': PropertySchema(id: 9, name: r'status', type: IsarType.long),
     r'totalBytes': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'totalBytes',
       type: IsarType.long,
     ),
-    r'wifiOnly': PropertySchema(id: 10, name: r'wifiOnly', type: IsarType.bool),
+    r'wifiOnly': PropertySchema(id: 11, name: r'wifiOnly', type: IsarType.bool),
   },
 
   estimateSize: _downloadTaskEstimateSize,
@@ -130,10 +131,11 @@ void _downloadTaskSerialize(
   writer.writeLong(offsets[4], object.episodeId);
   writer.writeString(offsets[5], object.lastError);
   writer.writeString(offsets[6], object.localPath);
-  writer.writeLong(offsets[7], object.retryCount);
-  writer.writeLong(offsets[8], object.status);
-  writer.writeLong(offsets[9], object.totalBytes);
-  writer.writeBool(offsets[10], object.wifiOnly);
+  writer.writeLong(offsets[7], object.origin);
+  writer.writeLong(offsets[8], object.retryCount);
+  writer.writeLong(offsets[9], object.status);
+  writer.writeLong(offsets[10], object.totalBytes);
+  writer.writeBool(offsets[11], object.wifiOnly);
 }
 
 DownloadTask _downloadTaskDeserialize(
@@ -151,10 +153,11 @@ DownloadTask _downloadTaskDeserialize(
   object.id = id;
   object.lastError = reader.readStringOrNull(offsets[5]);
   object.localPath = reader.readStringOrNull(offsets[6]);
-  object.retryCount = reader.readLong(offsets[7]);
-  object.status = reader.readLong(offsets[8]);
-  object.totalBytes = reader.readLongOrNull(offsets[9]);
-  object.wifiOnly = reader.readBool(offsets[10]);
+  object.origin = reader.readLong(offsets[7]);
+  object.retryCount = reader.readLong(offsets[8]);
+  object.status = reader.readLong(offsets[9]);
+  object.totalBytes = reader.readLongOrNull(offsets[10]);
+  object.wifiOnly = reader.readBool(offsets[11]);
   return object;
 }
 
@@ -184,8 +187,10 @@ P _downloadTaskDeserializeProp<P>(
     case 8:
       return (reader.readLong(offset)) as P;
     case 9:
-      return (reader.readLongOrNull(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 10:
+      return (reader.readLongOrNull(offset)) as P;
+    case 11:
       return (reader.readBool(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1215,6 +1220,61 @@ extension DownloadTaskQueryFilter
     });
   }
 
+  QueryBuilder<DownloadTask, DownloadTask, QAfterFilterCondition> originEqualTo(
+    int value,
+  ) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'origin', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<DownloadTask, DownloadTask, QAfterFilterCondition>
+  originGreaterThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'origin',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<DownloadTask, DownloadTask, QAfterFilterCondition>
+  originLessThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'origin',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<DownloadTask, DownloadTask, QAfterFilterCondition> originBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'origin',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
   QueryBuilder<DownloadTask, DownloadTask, QAfterFilterCondition>
   retryCountEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
@@ -1503,6 +1563,18 @@ extension DownloadTaskQuerySortBy
     });
   }
 
+  QueryBuilder<DownloadTask, DownloadTask, QAfterSortBy> sortByOrigin() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'origin', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DownloadTask, DownloadTask, QAfterSortBy> sortByOriginDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'origin', Sort.desc);
+    });
+  }
+
   QueryBuilder<DownloadTask, DownloadTask, QAfterSortBy> sortByRetryCount() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'retryCount', Sort.asc);
@@ -1655,6 +1727,18 @@ extension DownloadTaskQuerySortThenBy
     });
   }
 
+  QueryBuilder<DownloadTask, DownloadTask, QAfterSortBy> thenByOrigin() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'origin', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DownloadTask, DownloadTask, QAfterSortBy> thenByOriginDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'origin', Sort.desc);
+    });
+  }
+
   QueryBuilder<DownloadTask, DownloadTask, QAfterSortBy> thenByRetryCount() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'retryCount', Sort.asc);
@@ -1757,6 +1841,12 @@ extension DownloadTaskQueryWhereDistinct
     });
   }
 
+  QueryBuilder<DownloadTask, DownloadTask, QDistinct> distinctByOrigin() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'origin');
+    });
+  }
+
   QueryBuilder<DownloadTask, DownloadTask, QDistinct> distinctByRetryCount() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'retryCount');
@@ -1830,6 +1920,12 @@ extension DownloadTaskQueryProperty
   QueryBuilder<DownloadTask, String?, QQueryOperations> localPathProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'localPath');
+    });
+  }
+
+  QueryBuilder<DownloadTask, int, QQueryOperations> originProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'origin');
     });
   }
 

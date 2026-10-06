@@ -1,5 +1,6 @@
 import 'package:isar_community/isar.dart';
 
+import 'download_origin.dart';
 import 'download_status.dart';
 
 part 'download_task.g.dart';
@@ -21,6 +22,14 @@ class DownloadTask {
   String? lastError;
   late DateTime createdAt;
   DateTime? completedAt;
+
+  /// [DownloadOrigin] as stored. Defaults to manual so rows written before
+  /// this field existed are never removed by retention rules.
+  int origin = 0;
+
+  /// Converts the int [origin] to [DownloadOrigin].
+  @ignore
+  DownloadOrigin get downloadOrigin => DownloadOrigin.fromDbValue(origin);
 
   /// Converts the int [status] to the freezed [DownloadStatus].
   @ignore

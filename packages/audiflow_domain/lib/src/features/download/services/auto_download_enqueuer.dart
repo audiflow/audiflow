@@ -3,6 +3,7 @@ import 'package:logger/logger.dart';
 import '../../feed/repositories/episode_repository.dart';
 import '../../feed/services/feed_sync_diagnostic.dart';
 import '../../subscription/models/subscriptions.dart';
+import '../models/download_origin.dart';
 import '../repositories/download_repository.dart';
 
 /// Result of an auto-download enqueue pass over a single subscription.
@@ -94,6 +95,7 @@ class AutoDownloadEnqueuer {
           episodeId: episode.id,
           audioUrl: episode.audioUrl,
           wifiOnly: wifiOnly,
+          origin: DownloadOrigin.auto,
         );
         if (task == null) {
           skipped++;

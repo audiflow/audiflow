@@ -41,7 +41,8 @@ The queue exists for the complementary reason: once a listener finishes an episo
 - Processes downloads sequentially through a queue that monitors network state, honors the Wi-Fi-only preference, throttles progress writes, and retries failures with exponential backoff without letting a backed-off task block the rest of the queue.
 - Pauses, resumes, cancels, retries, and deletes individual downloads, plus batch cancel/resume by episode and "delete all completed".
 - Presents a download management screen grouping tasks by status (downloading, pending, paused, completed, failed, cancelled) and reports total storage used.
-- Optionally auto-deletes a downloaded file when its episode is marked played.
+- Records whether each download was requested by the listener (manual) or by auto-download (auto). Requesting a manual download for an episode that already has an auto download promotes it to manual. Downloads created before origin tracking existed count as manual.
+- Removes played auto downloads (on by default, toggleable): on app launch and resume, a completed auto download whose episode was finished at least 24 hours earlier is deleted. Manual downloads are never removed, and marking an episode unplayed within the 24 hours keeps its file.
 - Maintains a playback queue with two tiers: manually added items (Play Next / Play Later) take priority over adhoc items generated from an episode list; the next item is always drawn from manual items first.
 - Builds an adhoc queue from the episodes following a starting episode, respecting the effective play order (chronological or as-displayed) and excluding the starting episode itself; the adhoc tier is capped at 100 episodes, and creating a new adhoc queue replaces the previous one (prompting for confirmation only when manual items would be discarded).
 - Lets the listener reorder, remove, skip-to, and clear queue items, and pops the next episode for playback when the current one ends.

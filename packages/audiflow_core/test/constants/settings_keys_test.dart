@@ -163,8 +163,8 @@ void main() {
       expect(SettingsDefaults.wifiOnlyDownload, isTrue);
     });
 
-    test('autoDeletePlayed defaults to false', () {
-      expect(SettingsDefaults.autoDeletePlayed, isFalse);
+    test('autoDeletePlayed defaults to true', () {
+      expect(SettingsDefaults.autoDeletePlayed, isTrue);
     });
 
     test('maxConcurrentDownloads defaults to 1', () {

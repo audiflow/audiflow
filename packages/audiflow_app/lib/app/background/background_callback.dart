@@ -86,6 +86,7 @@ class _DiagDownloadRepo implements DownloadRepository {
     required int episodeId,
     required String audioUrl,
     required bool wifiOnly,
+    DownloadOrigin origin = DownloadOrigin.manual,
   }) async {
     _bgDebug(
       'auto-download: createDownload '
@@ -104,6 +105,7 @@ class _DiagDownloadRepo implements DownloadRepository {
       episodeId: episodeId,
       audioUrl: audioUrl,
       wifiOnly: wifiOnly,
+      origin: origin,
     );
     _bgDebug(
       'auto-download: createDownload result=${task != null ? "created" : "skipped (duplicate)"}',

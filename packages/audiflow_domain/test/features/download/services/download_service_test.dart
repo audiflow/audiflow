@@ -60,7 +60,6 @@ void main() {
   late FakeAnalyticsService fakeAnalytics;
   late DownloadService service;
   late bool wifiOnly;
-  late bool autoDeletePlayed;
   late int batchDownloadLimit;
 
   setUp(() {
@@ -71,7 +70,6 @@ void main() {
     mockSubscriptionRepo = MockSubscriptionRepository();
     fakeAnalytics = FakeAnalyticsService();
     wifiOnly = false;
-    autoDeletePlayed = false;
     batchDownloadLimit = 25;
 
     // Stub getDownloadsDirectory for path reconstruction fallback.
@@ -89,7 +87,6 @@ void main() {
       subscriptionRepository: mockSubscriptionRepo,
       logger: Logger(level: Level.off),
       getWifiOnly: () => wifiOnly,
-      getAutoDeletePlayed: () => autoDeletePlayed,
       getBatchDownloadLimit: () => batchDownloadLimit,
       analytics: fakeAnalytics,
     );
@@ -902,73 +899,6 @@ void main() {
 
       // Assert
       verifyNever(mockQueueService.startQueue());
-    });
-  });
-
-  group('onEpisodeCompleted', () {
-    test('does nothing when autoDeletePlayed is false', () async {
-      // Arrange
-      autoDeletePlayed = false;
-
-      // Act
-      await service.onEpisodeCompleted(1);
-
-      // Assert
-      verifyNever(mockRepository.getByEpisodeId(any));
-    });
-
-    test('does nothing when no download task exists', () async {
-      // Arrange
-      autoDeletePlayed = true;
-      when(mockRepository.getByEpisodeId(1)).thenAnswer((_) async => null);
-
-      // Act
-      await service.onEpisodeCompleted(1);
-
-      // Assert
-      verify(mockRepository.getByEpisodeId(1)).called(1);
-      verifyNever(mockRepository.getById(any));
-    });
-
-    test('deletes completed download when autoDeletePlayed is true', () async {
-      // Arrange
-      autoDeletePlayed = true;
-      // status=3 is DownloadStatusCompleted
-      final task = _task(
-        id: 5,
-        episodeId: 1,
-        status: 3,
-        localPath: '/downloads/ep1.mp3',
-      );
-      when(mockRepository.getByEpisodeId(1)).thenAnswer((_) async => task);
-      // delete() calls getById, cancelDownload, deleteFile, delete
-      when(mockRepository.getById(5)).thenAnswer((_) async => task);
-      when(
-        mockFileService.deleteFile('/downloads/ep1.mp3'),
-      ).thenAnswer((_) async {});
-      when(mockRepository.delete(5)).thenAnswer((_) async {});
-
-      // Act
-      await service.onEpisodeCompleted(1);
-
-      // Assert
-      verify(mockRepository.getByEpisodeId(1)).called(1);
-      verify(mockRepository.delete(5)).called(1);
-    });
-
-    test('does not delete non-completed download', () async {
-      // Arrange
-      autoDeletePlayed = true;
-      // status=0 is pending, not completed
-      final task = _task(id: 5, episodeId: 1, status: 0);
-      when(mockRepository.getByEpisodeId(1)).thenAnswer((_) async => task);
-
-      // Act
-      await service.onEpisodeCompleted(1);
-
-      // Assert
-      verify(mockRepository.getByEpisodeId(1)).called(1);
-      verifyNever(mockRepository.getById(any));
     });
   });
 

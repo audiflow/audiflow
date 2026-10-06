@@ -153,6 +153,7 @@ export 'src/features/player/repositories/playback_history_repository_impl.dart';
 export 'src/features/player/services/playback_history_service.dart';
 
 // Download feature
+export 'src/features/download/models/download_origin.dart';
 export 'src/features/download/models/download_status.dart';
 export 'src/features/download/datasources/local/download_local_datasource.dart';
 export 'src/features/download/providers/download_providers.dart';
@@ -162,6 +163,7 @@ export 'src/features/download/services/auto_download_enqueuer.dart';
 export 'src/features/download/services/download_file_service.dart';
 export 'src/features/download/services/download_queue_service.dart';
 export 'src/features/download/services/background_download_service.dart';
+export 'src/features/download/services/download_retention_service.dart';
 export 'src/features/download/services/download_service.dart';
 
 // Isar collection models (schemas for Isar.open)

@@ -1,3 +1,4 @@
+import '../models/download_origin.dart';
 import '../models/download_status.dart';
 import '../models/download_task.dart';
 
@@ -8,11 +9,14 @@ abstract class DownloadRepository {
   /// Creates a new download task for an episode.
   ///
   /// Returns the created task, or null if episode already has an active
-  /// download.
+  /// download. A [DownloadOrigin.manual] request for an episode whose
+  /// existing download is [DownloadOrigin.auto] promotes it to manual so
+  /// retention rules stop treating it as disposable.
   Future<DownloadTask?> createDownload({
     required int episodeId,
     required String audioUrl,
     required bool wifiOnly,
+    DownloadOrigin origin = DownloadOrigin.manual,
   });
 
   /// Returns a download task by ID.

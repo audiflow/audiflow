@@ -197,7 +197,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get downloadsAutoDeleteTitle => '再生後に自動削除';
 
   @override
-  String get downloadsAutoDeleteSubtitle => '再生済みエピソードのダウンロードを削除';
+  String get downloadsAutoDeleteSubtitle => '自動ダウンロードしたエピソードを、再生が終わって24時間後に削除';
 
   @override
   String get downloadsMaxConcurrent => '最大同時ダウンロード数';

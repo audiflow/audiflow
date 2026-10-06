@@ -11,6 +11,8 @@ import 'background/background_task_registrar.dart';
 ///
 /// - On launch: force syncs all subscribed feeds.
 /// - On resume: syncs feeds where 1+ hour has elapsed since last refresh.
+/// - On launch and resume: removes played auto downloads past their grace
+///   period.
 class AppLifecycleObserver extends ConsumerStatefulWidget {
   const AppLifecycleObserver({required this.child, super.key});
 
@@ -42,12 +44,14 @@ class _AppLifecycleObserverState extends ConsumerState<AppLifecycleObserver> {
 
   void _onLaunch() {
     _syncFeeds(forceRefresh: true);
+    _sweepPlayedDownloads();
   }
 
   void _onResume() {
     _syncFeeds(forceRefresh: false);
     _updateBackgroundRegistration();
     _processPendingDownloads();
+    _sweepPlayedDownloads();
   }
 
   /// Schedules a background download task when the app moves to background
@@ -56,19 +60,29 @@ class _AppLifecycleObserverState extends ConsumerState<AppLifecycleObserver> {
   /// protected the next time the user opens the app.
   void _onHide() {
     ref.read(parentalControlGateProvider.notifier).lock();
+    _runUnawaited(
+      _scheduleBackgroundDownloads(),
+      'while scheduling background downloads on app hide',
+    );
+  }
+
+  void _sweepPlayedDownloads() {
+    _runUnawaited(
+      ref.read(downloadRetentionServiceProvider).sweepPlayed(),
+      'while removing played auto downloads',
+    );
+  }
+
+  /// Fire-and-forget [task], reporting failures instead of dropping them.
+  void _runUnawaited(Future<void> task, String context) {
     unawaited(
-      _scheduleBackgroundDownloads().catchError((
-        Object error,
-        StackTrace stackTrace,
-      ) {
+      task.catchError((Object error, StackTrace stackTrace) {
         FlutterError.reportError(
           FlutterErrorDetails(
             exception: error,
             stack: stackTrace,
             library: 'app_lifecycle_observer',
-            context: ErrorDescription(
-              'while scheduling background downloads on app hide',
-            ),
+            context: ErrorDescription(context),
           ),
         );
       }),

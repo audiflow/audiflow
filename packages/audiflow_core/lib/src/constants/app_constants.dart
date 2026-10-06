@@ -19,4 +19,9 @@ class AppConstants {
   /// Only applies to the auto-detect path (no curated config). Explicit
   /// `year` definitions in pattern configs bypass this threshold.
   static const int autoYearGroupingMinEpisodes = 30;
+
+  /// How long a finished auto-downloaded episode keeps its file before the
+  /// played-download cleanup removes it. Leaves room to replay or to undo
+  /// an accidental "mark as played".
+  static const Duration playedDownloadGracePeriod = Duration(hours: 24);
 }

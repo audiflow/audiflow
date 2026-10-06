@@ -37,6 +37,64 @@ void main() {
       expect(task.downloadStatus, isA<DownloadStatusPending>());
     });
 
+    test('records manual origin by default', () async {
+      final task = await repository.createDownload(
+        episodeId: 1,
+        audioUrl: 'https://example.com/ep1.mp3',
+        wifiOnly: true,
+      );
+
+      expect(task!.downloadOrigin, DownloadOrigin.manual);
+    });
+
+    test('records auto origin when requested', () async {
+      final task = await repository.createDownload(
+        episodeId: 1,
+        audioUrl: 'https://example.com/ep1.mp3',
+        wifiOnly: true,
+        origin: DownloadOrigin.auto,
+      );
+
+      expect(task!.downloadOrigin, DownloadOrigin.auto);
+    });
+
+    test('promotes an existing auto download to manual', () async {
+      final auto = await repository.createDownload(
+        episodeId: 1,
+        audioUrl: 'https://example.com/ep1.mp3',
+        wifiOnly: true,
+        origin: DownloadOrigin.auto,
+      );
+
+      final duplicate = await repository.createDownload(
+        episodeId: 1,
+        audioUrl: 'https://example.com/ep1.mp3',
+        wifiOnly: true,
+      );
+
+      expect(duplicate, isNull);
+      final stored = await repository.getById(auto!.id);
+      expect(stored!.downloadOrigin, DownloadOrigin.manual);
+    });
+
+    test('does not demote an existing manual download to auto', () async {
+      final manual = await repository.createDownload(
+        episodeId: 1,
+        audioUrl: 'https://example.com/ep1.mp3',
+        wifiOnly: true,
+      );
+
+      await repository.createDownload(
+        episodeId: 1,
+        audioUrl: 'https://example.com/ep1.mp3',
+        wifiOnly: true,
+        origin: DownloadOrigin.auto,
+      );
+
+      final stored = await repository.getById(manual!.id);
+      expect(stored!.downloadOrigin, DownloadOrigin.manual);
+    });
+
     test('returns null if episode already has active download', () async {
       await repository.createDownload(
         episodeId: 1,

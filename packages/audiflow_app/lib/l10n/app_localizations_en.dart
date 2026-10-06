@@ -203,7 +203,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get downloadsAutoDeleteSubtitle =>
-      'Remove downloaded episodes after playback';
+      'Remove auto-downloaded episodes 24 hours after you finish them';
 
   @override
   String get downloadsMaxConcurrent => 'Max Concurrent Downloads';
