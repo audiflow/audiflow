@@ -9,19 +9,17 @@ import pytest
 
 SCRIPT = Path(__file__).resolve().parent.parent / "sentry-release.sh"
 
-# Logs each call and answers `releases info` / `deploys list` from env. With
-# FAKE_API_ERROR set, lookups fail the way sentry-cli reports an API error;
-# a missing release is a silent exit 1.
+# Logs each call and answers `releases info` / `deploys list` from env.
+# FAKE_API_ERROR fails the release lookup and FAKE_DEPLOYS_ERROR only the
+# deploy listing, the way sentry-cli reports an API error; a missing release
+# is a silent exit 1.
 FAKE_SENTRY_CLI = """#!/usr/bin/env bash
 echo "$*" >> "$FAKE_LOG"
-if [ -n "$FAKE_API_ERROR" ]; then
-  case "$*" in
-    "releases info "*|"releases deploys "*" list")
-      echo "error: API request failed" >&2
-      exit 1
-      ;;
-  esac
-fi
+api_error() { echo "error: API request failed" >&2; exit 1; }
+case "$*" in
+  "releases info "*) [ -z "$FAKE_API_ERROR" ] || api_error ;;
+  "releases deploys "*" list") [ -z "$FAKE_DEPLOYS_ERROR" ] || api_error ;;
+esac
 case "$*" in
   "releases info "*) [ -n "$FAKE_RELEASE_EXISTS" ] || exit 1 ;;
   "releases deploys "*" list") printf '%b' "$FAKE_DEPLOYS" ;;
@@ -63,6 +61,7 @@ def _run(
     exists: bool = False,
     deploys: str = "No deploys found\\n",
     api_error: bool = False,
+    deploys_error: bool = False,
 ):
     log = workspace / "calls.log"
     log.write_text("")
@@ -73,6 +72,7 @@ def _run(
         "FAKE_RELEASE_EXISTS": "1" if exists else "",
         "FAKE_DEPLOYS": deploys,
         "FAKE_API_ERROR": "1" if api_error else "",
+        "FAKE_DEPLOYS_ERROR": "1" if deploys_error else "",
     }
     result = subprocess.run(
         ["bash", str(SCRIPT), *arguments], cwd=workspace / "repo", env=env,
@@ -197,4 +197,23 @@ def test_deploy_stops_on_sentry_errors(workspace: Path) -> None:
     )
     assert result.returncode != 0
     assert not any(call.startswith("releases new") for call in calls)
+    assert not any(call.endswith("new -e prod") for call in calls)
+
+
+def test_check_deployed_fails_when_listing_deploys_fails(workspace: Path) -> None:
+    result, calls = _run(
+        workspace, "prod", "2.1.0+58", "--check-deployed", "--platform", "ios",
+        exists=True, deploys_error=True,
+    )
+    assert any(call.endswith(" list") for call in calls)
+    assert result.returncode not in (0, 4)
+
+
+def test_deploy_stops_when_listing_deploys_fails(workspace: Path) -> None:
+    result, calls = _run(
+        workspace, "prod", "2.1.0+58", "--deploy", "--platform", "ios",
+        exists=True, deploys_error=True,
+    )
+    assert any(call.endswith(" list") for call in calls)
+    assert result.returncode != 0
     assert not any(call.endswith("new -e prod") for call in calls)
