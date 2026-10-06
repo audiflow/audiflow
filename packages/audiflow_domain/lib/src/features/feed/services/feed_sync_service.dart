@@ -346,6 +346,9 @@ class FeedSyncService implements SuspendableWriter {
           sub.itunesId,
           DateTime.now(),
         );
+        // suspend() may have cancelled this sync during the writes above.
+        if (cancelToken.isCancelled) return _cancelledResult(sub);
+        await _processAutoDownloads(sub);
         return SingleFeedSyncResult(
           podcastId: sub.id,
           success: true,
@@ -524,24 +527,7 @@ class FeedSyncService implements SuspendableWriter {
       // Invalidate smart playlist providers to pick up new episodes
       _ref.invalidate(podcastSmartPlaylistsProvider(sub.id));
 
-      // Process auto-downloads for any pending episodes (covers both new
-      // episodes from this sync and any leftover from a previous sync that
-      // ran on a different code path).
-      final settingsRepo = _ref.read(appSettingsRepositoryProvider);
-      final enqueuer = _ref.read(autoDownloadEnqueuerProvider);
-      final defaultKeepCount = settingsRepo.getAutoDownloadKeepCount();
-      final enqueued = await enqueuer.enqueueForSubscription(
-        sub,
-        wifiOnly: settingsRepo.getWifiOnlyDownload(),
-        defaultKeepCount: defaultKeepCount,
-      );
-      await _ref
-          .read(downloadRetentionServiceProvider)
-          .trimForSubscription(sub, defaultKeepCount: defaultKeepCount);
-      // The queue only wakes on network changes and explicit download
-      // actions, so without this kick new episodes would sit pending on
-      // an unchanged Wi-Fi connection.
-      if (0 < enqueued.created) unawaited(_startDownloadQueue());
+      await _processAutoDownloads(sub);
 
       _logger.i('Synced "${sub.title}": $newEpisodeCount episodes processed');
 
@@ -567,6 +553,31 @@ class FeedSyncService implements SuspendableWriter {
         errorMessage: e.toString(),
       );
     }
+  }
+
+  /// Enqueues auto-downloads for every pending episode of [sub], then trims
+  /// its unstarted auto downloads to the keep count.
+  ///
+  /// Runs on unchanged (304) feeds too: the podcast detail screen stores
+  /// episodes and the feed validators on its own, so its new episodes are
+  /// still pending when this sync finds the feed unchanged. The enqueuer
+  /// is a no-op when nothing is pending.
+  Future<void> _processAutoDownloads(Subscription sub) async {
+    final settingsRepo = _ref.read(appSettingsRepositoryProvider);
+    final enqueuer = _ref.read(autoDownloadEnqueuerProvider);
+    final defaultKeepCount = settingsRepo.getAutoDownloadKeepCount();
+    final enqueued = await enqueuer.enqueueForSubscription(
+      sub,
+      wifiOnly: settingsRepo.getWifiOnlyDownload(),
+      defaultKeepCount: defaultKeepCount,
+    );
+    await _ref
+        .read(downloadRetentionServiceProvider)
+        .trimForSubscription(sub, defaultKeepCount: defaultKeepCount);
+    // The queue only wakes on network changes and explicit download
+    // actions, so without this kick new episodes would sit pending on
+    // an unchanged Wi-Fi connection.
+    if (0 < enqueued.created) unawaited(_startDownloadQueue());
   }
 
   /// Starts the download queue without tying sync completion to the drain.

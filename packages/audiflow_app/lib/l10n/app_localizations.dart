@@ -1532,17 +1532,47 @@ abstract class AppLocalizations {
   /// **'Failed to load downloads'**
   String get downloadLoadError;
 
-  /// Tooltip for delete all completed button
+  /// Tooltip for the bulk delete menu button on the download management screen
   ///
   /// In en, this message translates to:
-  /// **'Delete all completed'**
-  String get downloadDeleteAllCompleted;
+  /// **'Delete downloads'**
+  String get downloadBulkDeleteTooltip;
 
-  /// Snackbar after deleting all completed
+  /// Bulk delete menu item for completed downloads
   ///
   /// In en, this message translates to:
-  /// **'Completed downloads deleted'**
-  String get downloadCompletedDeleted;
+  /// **'Delete completed'**
+  String get downloadBulkDeleteCompleted;
+
+  /// Bulk delete menu item for pending and paused downloads
+  ///
+  /// In en, this message translates to:
+  /// **'Delete pending and paused'**
+  String get downloadBulkDeleteQueued;
+
+  /// Bulk delete menu item for failed and cancelled downloads
+  ///
+  /// In en, this message translates to:
+  /// **'Delete failed and cancelled'**
+  String get downloadBulkDeleteFailed;
+
+  /// Bulk delete menu item for every download regardless of status
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all'**
+  String get downloadBulkDeleteAll;
+
+  /// Confirmation dialog body before bulk deleting downloads
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 download will be deleted. This cannot be undone.} other{{count} downloads will be deleted. This cannot be undone.}}'**
+  String downloadBulkDeleteConfirm(int count);
+
+  /// Snackbar after bulk deleting downloads
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Deleted 1 download} other{Deleted {count} downloads}}'**
+  String downloadBulkDeleted(int count);
 
   /// Download status group header
   ///

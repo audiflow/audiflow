@@ -76,7 +76,7 @@ class DownloadRetentionService {
     for (final task in completed) {
       if (task.downloadOrigin != DownloadOrigin.auto) continue;
       if (!await _isPastGracePeriod(task.episodeId)) continue;
-      if (await _tryDelete(task)) deleted++;
+      if (await _tryDeleteAuto(task)) deleted++;
     }
     if (0 < deleted) _logger?.i('Deleted $deleted played auto downloads');
     return deleted;
@@ -116,7 +116,7 @@ class DownloadRetentionService {
 
     var deleted = 0;
     for (final candidate in candidates.skip(keepCount)) {
-      if (await _tryDelete(candidate.task)) deleted++;
+      if (await _tryDeleteAuto(candidate.task)) deleted++;
     }
     _logger?.i(
       'Trimmed $deleted auto downloads of podcast ${subscription.id} '
@@ -133,7 +133,9 @@ class DownloadRetentionService {
     };
     final history = await _playbackHistoryRepository.getByPodcastId(podcastId);
     final candidates = [
-      for (final task in await _downloadRepository.getAll())
+      for (final task in await _downloadRepository.getByEpisodeIds(
+        episodes.keys,
+      ))
         if (task.downloadOrigin == DownloadOrigin.auto &&
             _retainedStatuses.contains(task.downloadStatus) &&
             _isUnstarted(history[task.episodeId]))
@@ -148,9 +150,18 @@ class DownloadRetentionService {
       (history.positionMs == 0 && history.completedAt == null);
 
   /// One undeletable file must not keep the rest of the pass from running.
-  Future<bool> _tryDelete(DownloadTask task) async {
+  ///
+  /// The row is re-read first: a manual download request may have promoted
+  /// the task since it was listed, and the listener's choice wins. The
+  /// fresh row is what gets deleted, so its current status is what the
+  /// deleter sees.
+  Future<bool> _tryDeleteAuto(DownloadTask task) async {
     try {
-      await _deleteDownload(task);
+      final current = await _downloadRepository.getById(task.id);
+      if (current == null || current.downloadOrigin != DownloadOrigin.auto) {
+        return false;
+      }
+      await _deleteDownload(current);
       return true;
     } on Exception catch (e, stack) {
       _logger?.w(

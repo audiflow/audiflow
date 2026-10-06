@@ -774,10 +774,29 @@ class AppLocalizationsJa extends AppLocalizations {
   String get downloadLoadError => 'ダウンロードの読み込みに失敗しました';
 
   @override
-  String get downloadDeleteAllCompleted => '完了済みをすべて削除';
+  String get downloadBulkDeleteTooltip => 'ダウンロードを削除';
 
   @override
-  String get downloadCompletedDeleted => '完了済みのダウンロードを削除しました';
+  String get downloadBulkDeleteCompleted => '完了済みを削除';
+
+  @override
+  String get downloadBulkDeleteQueued => '待機中・一時停止中を削除';
+
+  @override
+  String get downloadBulkDeleteFailed => '失敗・キャンセル済みを削除';
+
+  @override
+  String get downloadBulkDeleteAll => 'すべて削除';
+
+  @override
+  String downloadBulkDeleteConfirm(int count) {
+    return '$count件のダウンロードを削除します。この操作は取り消せません。';
+  }
+
+  @override
+  String downloadBulkDeleted(int count) {
+    return '$count件のダウンロードを削除しました';
+  }
 
   @override
   String get downloadStatusDownloading => 'ダウンロード中';

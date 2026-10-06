@@ -119,6 +119,18 @@ class MockDownloadRepository extends _i1.Mock
           as _i4.Future<List<_i5.DownloadTask>>);
 
   @override
+  _i4.Future<List<_i5.DownloadTask>> getByEpisodeIds(
+    Iterable<int>? episodeIds,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#getByEpisodeIds, [episodeIds]),
+            returnValue: _i4.Future<List<_i5.DownloadTask>>.value(
+              <_i5.DownloadTask>[],
+            ),
+          )
+          as _i4.Future<List<_i5.DownloadTask>>);
+
+  @override
   _i4.Stream<List<_i5.DownloadTask>> watchAll() =>
       (super.noSuchMethod(
             Invocation.method(#watchAll, []),
@@ -243,14 +255,6 @@ class MockDownloadRepository extends _i1.Mock
   _i4.Future<int> getTotalStorageUsed() =>
       (super.noSuchMethod(
             Invocation.method(#getTotalStorageUsed, []),
-            returnValue: _i4.Future<int>.value(0),
-          )
-          as _i4.Future<int>);
-
-  @override
-  _i4.Future<int> deleteAllCompleted() =>
-      (super.noSuchMethod(
-            Invocation.method(#deleteAllCompleted, []),
             returnValue: _i4.Future<int>.value(0),
           )
           as _i4.Future<int>);

@@ -1,5 +1,6 @@
 import 'package:isar_community/isar.dart';
 
+import '../../models/download_origin.dart';
 import '../../models/download_status.dart';
 import '../../models/download_task.dart';
 
@@ -30,6 +31,18 @@ class DownloadLocalDatasource {
     return deleted ? 1 : 0;
   }
 
+  /// Marks the task as a manual download. Reads the row inside the write
+  /// transaction so concurrent progress or status writes are not
+  /// overwritten with a stale copy. Does nothing if [id] is unknown.
+  Future<void> markManual(int id) {
+    return _isar.writeTxn(() async {
+      final task = await _isar.downloadTasks.get(id);
+      if (task == null) return;
+      task.origin = DownloadOrigin.manual.dbValue;
+      await _isar.downloadTasks.put(task);
+    });
+  }
+
   /// Returns a download task by ID.
   Future<DownloadTask?> getById(int id) {
     return _isar.downloadTasks.get(id);
@@ -52,6 +65,14 @@ class DownloadLocalDatasource {
   /// Returns all download tasks ordered by creation date (oldest first).
   Future<List<DownloadTask>> getAll() {
     return _isar.downloadTasks.where().sortByCreatedAt().findAll();
+  }
+
+  /// Returns the download tasks of the given episodes.
+  Future<List<DownloadTask>> getByEpisodeIds(Iterable<int> episodeIds) {
+    return _isar.downloadTasks
+        .where()
+        .anyOf(episodeIds, (query, id) => query.episodeIdEqualTo(id))
+        .findAll();
   }
 
   /// Watches all download tasks ordered by creation date.
@@ -128,15 +149,5 @@ class DownloadLocalDatasource {
         .statusEqualTo(const DownloadStatus.completed().toDbValue())
         .findAll();
     return completed.fold<int>(0, (sum, task) => sum + (task.totalBytes ?? 0));
-  }
-
-  /// Deletes all completed downloads.
-  Future<int> deleteAllCompleted() {
-    return _isar.writeTxn(
-      () => _isar.downloadTasks
-          .filter()
-          .statusEqualTo(const DownloadStatus.completed().toDbValue())
-          .deleteAll(),
-    );
   }
 }

@@ -799,10 +799,41 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadLoadError => 'Failed to load downloads';
 
   @override
-  String get downloadDeleteAllCompleted => 'Delete all completed';
+  String get downloadBulkDeleteTooltip => 'Delete downloads';
 
   @override
-  String get downloadCompletedDeleted => 'Completed downloads deleted';
+  String get downloadBulkDeleteCompleted => 'Delete completed';
+
+  @override
+  String get downloadBulkDeleteQueued => 'Delete pending and paused';
+
+  @override
+  String get downloadBulkDeleteFailed => 'Delete failed and cancelled';
+
+  @override
+  String get downloadBulkDeleteAll => 'Delete all';
+
+  @override
+  String downloadBulkDeleteConfirm(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count downloads will be deleted. This cannot be undone.',
+      one: '1 download will be deleted. This cannot be undone.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String downloadBulkDeleted(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Deleted $count downloads',
+      one: 'Deleted 1 download',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get downloadStatusDownloading => 'Downloading';

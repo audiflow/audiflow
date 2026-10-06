@@ -31,6 +31,9 @@ abstract class DownloadRepository {
   /// Returns all download tasks.
   Future<List<DownloadTask>> getAll();
 
+  /// Returns the download tasks of the given episodes.
+  Future<List<DownloadTask>> getByEpisodeIds(Iterable<int> episodeIds);
+
   /// Watches all download tasks.
   Stream<List<DownloadTask>> watchAll();
 
@@ -81,7 +84,4 @@ abstract class DownloadRepository {
 
   /// Returns total storage used by completed downloads in bytes.
   Future<int> getTotalStorageUsed();
-
-  /// Deletes all completed downloads.
-  Future<int> deleteAllCompleted();
 }

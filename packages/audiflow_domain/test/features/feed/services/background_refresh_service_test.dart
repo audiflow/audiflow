@@ -397,6 +397,9 @@ class FakeDownloadRepository implements DownloadRepository {
   @override
   Future<List<DownloadTask>> getAll() async => [];
   @override
+  Future<List<DownloadTask>> getByEpisodeIds(Iterable<int> episodeIds) async =>
+      [];
+  @override
   Stream<List<DownloadTask>> watchAll() => const Stream.empty();
   @override
   Future<List<DownloadTask>> getByStatus(DownloadStatus status) async => [];
@@ -433,8 +436,6 @@ class FakeDownloadRepository implements DownloadRepository {
   Future<int> getActiveCount() async => 0;
   @override
   Future<int> getTotalStorageUsed() async => 0;
-  @override
-  Future<int> deleteAllCompleted() async => 0;
 }
 
 class FakePlaybackHistoryRepository implements PlaybackHistoryRepository {

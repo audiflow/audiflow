@@ -128,11 +128,12 @@ class _DiagDownloadRepo implements DownloadRepository {
   @override
   Future<void> delete(int id) => _inner.delete(id);
   @override
-  Future<int> deleteAllCompleted() => _inner.deleteAllCompleted();
-  @override
   Future<int> getActiveCount() => _inner.getActiveCount();
   @override
   Future<List<DownloadTask>> getAll() => _inner.getAll();
+  @override
+  Future<List<DownloadTask>> getByEpisodeIds(Iterable<int> episodeIds) =>
+      _inner.getByEpisodeIds(episodeIds);
   @override
   Future<DownloadTask?> getById(int id) => _inner.getById(id);
   @override
