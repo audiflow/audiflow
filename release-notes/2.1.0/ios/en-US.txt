@@ -1,0 +1,10 @@
+• Redesigned seek bar: chapter segments, remaining time, and finer scrubbing as you slide your finger away from the bar
+• Chapters for more podcasts, including Podcasting 2.0 chapters and timestamps in show notes, plus a chapter list on the player
+• A "Go back" button after a seek jump
+• New Audio sheet: speed slider up to 3.0x, recent speeds, and a speed for each podcast
+• Audio output picker for the speaker, Bluetooth, and AirPlay
+• Sleep timer: redesigned sheet and a countdown on the seek bar. End of chapter now stops right at the chapter boundary without a fade, and end-of-episode and end-of-chapter timers end when you move to another episode or chapter
+• After a sleep timer stops at the end of an episode, Play continues with the next episode in your queue
+• Podcast artwork now shows in new-episode notifications
+• The transcript keeps the current line in view
+• Fixed playback sometimes not starting after tapping Play

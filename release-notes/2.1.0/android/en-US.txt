@@ -1,0 +1,9 @@
+• New seek bar with chapters, remaining time, and fine scrubbing
+• Chapters for more podcasts, plus a chapter list
+• "Go back" button after a seek jump
+• Audio sheet: speed up to 3.0x, per-podcast speed, Shorten silences, Voice boost
+• Audio output picker (Android 11+)
+• Sleep timer: countdown on the seek bar; end of chapter stops without a fade
+• Play continues with the queue after a sleep timer stops at episode end
+• Transcript keeps the current line in view
+• Fixed Play sometimes not starting
