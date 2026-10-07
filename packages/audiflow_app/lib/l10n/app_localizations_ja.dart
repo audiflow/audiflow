@@ -1003,6 +1003,18 @@ class AppLocalizationsJa extends AppLocalizations {
   String get playerTabTranscript => '書き起こし';
 
   @override
+  String get playerPlayingFrom => '再生元';
+
+  @override
+  String get playerEpisodeDetails => 'エピソードの詳細';
+
+  @override
+  String get playerGoToPodcast => '番組を見る';
+
+  @override
+  String get playerMoreTooltip => 'その他';
+
+  @override
   String get playerTranscriptLoading => '書き起こしを読み込み中...';
 
   @override

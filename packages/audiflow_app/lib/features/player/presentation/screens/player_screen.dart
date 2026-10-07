@@ -16,6 +16,7 @@ import '../../../../routing/app_router.dart';
 import '../../helpers/chapter_seek_bar_segments.dart';
 import '../../helpers/playback_time_format.dart';
 import '../../helpers/podcast_lookup.dart';
+import '../../../queue/presentation/controllers/queue_controller.dart';
 import '../../services/audio_route_channel.dart';
 import '../controllers/seek_undo_controller.dart';
 import '../widgets/audio_output_picker_button.dart';
@@ -156,94 +157,161 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
     // Ensure tab controller exists (short-circuits if tab count unchanged)
     _ensureTabController(hasTranscript: hasTranscriptTab);
 
-    return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(
-              maxWidth: LayoutConstants.contentMaxWidth,
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Column(
-                children: [
-                  const _DragHandle(),
-                  _SheetHeaderWithTabs(
-                    tabController: _tabController!,
-                    hasTranscript: hasTranscriptTab,
-                    closeLabel: l10n.playerCloseLabel,
-                  ),
-                  Expanded(
-                    child: _PlayerTabBody(
-                      tabController: _tabController!,
-                      hasTranscript: hasTranscriptTab,
-                      episodeId: episodeId,
-                      artworkUrl: nowPlaying.artworkUrl,
-                      episodeTitle: nowPlaying.episodeTitle,
-                      podcastTitle: nowPlaying.podcastTitle,
-                      onEpisodeTitleTap: _canNavigateToEpisode(nowPlaying)
-                          ? () => _navigateToEpisode(nowPlaying)
-                          : null,
-                      onPodcastTitleTap: nowPlaying.episode != null
-                          ? () => _navigateToPodcast(
-                              nowPlaying.episode!,
-                              nowPlaying.podcastTitle,
-                            )
-                          : null,
-                      onChapterSelected: (position) => _handleSkip(
-                        () => ref
-                            .read(seekUndoControllerProvider.notifier)
-                            .seekWithUndo(position),
-                        isPlaying,
+    return ArtworkGround(
+      url: nowPlaying.artworkUrl,
+      builder: (context, ground) => Theme(
+        data: nowPlayingTheme(ground),
+        child: Scaffold(
+          backgroundColor: ground,
+          body: SafeArea(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxWidth: LayoutConstants.contentMaxWidth,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Column(
+                    children: [
+                      const _DragHandle(),
+                      _PlayerHeader(
+                        playingFrom:
+                            ref.watch(
+                              queueControllerProvider.select(
+                                (queue) => queue.value?.adhocSourceContext,
+                              ),
+                            ) ??
+                            nowPlaying.podcastTitle,
+                        onMore: () => _showMoreMenu(
+                          nowPlaying,
+                          hasTranscript: hasTranscriptTab,
+                        ),
                       ),
-                      onSeekUndo: () => _handleSkip(
-                        ref.read(seekUndoControllerProvider.notifier).goBack,
-                        isPlaying,
+                      Expanded(
+                        child: _PlayerTabBody(
+                          tabController: _tabController!,
+                          hasTranscript: hasTranscriptTab,
+                          episodeId: episodeId,
+                          artworkUrl: nowPlaying.artworkUrl,
+                          episodeTitle: nowPlaying.episodeTitle,
+                          podcastTitle: nowPlaying.podcastTitle,
+                          onEpisodeTitleTap: _canNavigateToEpisode(nowPlaying)
+                              ? () => _navigateToEpisode(nowPlaying)
+                              : null,
+                          onPodcastTitleTap: nowPlaying.episode != null
+                              ? () => _navigateToPodcast(
+                                  nowPlaying.episode!,
+                                  nowPlaying.podcastTitle,
+                                )
+                              : null,
+                          onChapterSelected: (position) => _handleSkip(
+                            () => ref
+                                .read(seekUndoControllerProvider.notifier)
+                                .seekWithUndo(position),
+                            isPlaying,
+                          ),
+                          onSeekUndo: () => _handleSkip(
+                            ref
+                                .read(seekUndoControllerProvider.notifier)
+                                .goBack,
+                            isPlaying,
+                          ),
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: 24),
+                      _PlayerProgressBar(
+                        progress: progress,
+                        onSeekStart: () => _beginSeek(isPlaying),
+                        onSeekEnd: _endSeek,
+                      ),
+                      const SizedBox(height: 16),
+                      _PlayerControls(
+                        isPlaying: displayIsPlaying,
+                        isLoading: displayIsLoading,
+                        skipForwardSeconds: appSettingsRepo
+                            .getSkipForwardSeconds(),
+                        skipBackwardSeconds: appSettingsRepo
+                            .getSkipBackwardSeconds(),
+                        onSkipBackward: () => _handleSkip(
+                          ref
+                              .read(audioPlayerControllerProvider.notifier)
+                              .skipBackward,
+                          isPlaying,
+                        ),
+                        onSkipForward: () => _handleSkip(
+                          ref
+                              .read(audioPlayerControllerProvider.notifier)
+                              .skipForward,
+                          isPlaying,
+                        ),
+                      ),
+                      // The action row's buttons carry their own inner padding,
+                      // so 8 pt here makes the visible gap below the play button
+                      // match the one above it, below the time labels.
+                      const SizedBox(height: 16),
+                      _TranslucentBar(
+                        child: PlayerActionRow(
+                          outputPicker: showOutputPicker
+                              ? const AudioOutputPickerButton()
+                              : null,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
                   ),
-                  const SizedBox(height: 24),
-                  _PlayerProgressBar(
-                    progress: progress,
-                    onSeekStart: () => _beginSeek(isPlaying),
-                    onSeekEnd: _endSeek,
-                  ),
-                  const SizedBox(height: 16),
-                  _PlayerControls(
-                    isPlaying: displayIsPlaying,
-                    isLoading: displayIsLoading,
-                    skipForwardSeconds: appSettingsRepo.getSkipForwardSeconds(),
-                    skipBackwardSeconds: appSettingsRepo
-                        .getSkipBackwardSeconds(),
-                    onSkipBackward: () => _handleSkip(
-                      ref
-                          .read(audioPlayerControllerProvider.notifier)
-                          .skipBackward,
-                      isPlaying,
-                    ),
-                    onSkipForward: () => _handleSkip(
-                      ref
-                          .read(audioPlayerControllerProvider.notifier)
-                          .skipForward,
-                      isPlaying,
-                    ),
-                  ),
-                  // The action row's buttons carry their own inner padding,
-                  // so 8 pt here makes the visible gap below the play button
-                  // match the one above it, below the time labels.
-                  const SizedBox(height: 8),
-                  PlayerActionRow(
-                    outputPicker: showOutputPicker
-                        ? const AudioOutputPickerButton()
-                        : null,
-                  ),
-                  const SizedBox(height: 16),
-                ],
+                ),
               ),
             ),
           ),
         ),
       ),
+    );
+  }
+
+  /// Player overflow: page switch (when there is a transcript) and links
+  /// out to the episode and podcast.
+  Future<void> _showMoreMenu(
+    NowPlayingInfo nowPlaying, {
+    required bool hasTranscript,
+  }) {
+    final l10n = AppLocalizations.of(context);
+    final tabs = _tabController;
+    final onTranscript = tabs != null && tabs.index == 1;
+    final episode = nowPlaying.episode;
+    return showActionMenu(
+      context: context,
+      top: MediaQuery.paddingOf(context).top + Spacing.minTouchTarget,
+      sections: [
+        [
+          if (hasTranscript && tabs != null)
+            onTranscript
+                ? ActionMenuEntry(
+                    icon: Symbols.album,
+                    label: l10n.playerTabNowPlaying,
+                    onSelected: () => tabs.animateTo(0),
+                  )
+                : ActionMenuEntry(
+                    icon: Symbols.subtitles,
+                    label: l10n.playerTabTranscript,
+                    onSelected: () => tabs.animateTo(1),
+                  ),
+        ],
+        [
+          if (_canNavigateToEpisode(nowPlaying))
+            ActionMenuEntry(
+              icon: Icons.info_outline,
+              label: l10n.playerEpisodeDetails,
+              onSelected: () => _navigateToEpisode(nowPlaying),
+            ),
+          if (episode != null)
+            ActionMenuEntry(
+              icon: Symbols.podcasts,
+              label: l10n.playerGoToPodcast,
+              onSelected: () =>
+                  _navigateToPodcast(episode, nowPlaying.podcastTitle),
+            ),
+        ],
+      ],
     );
   }
 
@@ -340,54 +408,75 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
   }
 }
 
-class _SheetHeaderWithTabs extends StatelessWidget {
-  const _SheetHeaderWithTabs({
-    required this.tabController,
-    required this.hasTranscript,
-    required this.closeLabel,
-  });
+/// Close chevron, the context the episode plays from, and the overflow.
+class _PlayerHeader extends StatelessWidget {
+  const _PlayerHeader({required this.playingFrom, required this.onMore});
 
-  final TabController tabController;
-  final bool hasTranscript;
-  final String closeLabel;
+  final String playingFrom;
+  final VoidCallback onMore;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
+    final colors = AppColors.of(context);
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: Spacing.sm),
       child: Row(
         children: [
-          const SizedBox(width: 48),
-          Expanded(
-            child: hasTranscript
-                ? TabBar(
-                    controller: tabController,
-                    tabs: [
-                      Tab(text: l10n.playerTabNowPlaying),
-                      Tab(text: l10n.playerTabTranscript),
-                    ],
-                    labelStyle: theme.textTheme.titleSmall,
-                    indicatorSize: TabBarIndicatorSize.label,
-                    dividerHeight: 0,
-                  )
-                : Text(
-                    l10n.playerNowPlaying,
-                    style: theme.textTheme.titleSmall,
-                    textAlign: TextAlign.center,
-                  ),
+          IconButton(
+            tooltip: l10n.playerCloseLabel,
+            icon: const Icon(Symbols.keyboard_arrow_down),
+            color: colors.ink,
+            onPressed: () => CupertinoSheetRoute.popSheet(context),
           ),
-          Semantics(
-            button: true,
-            label: closeLabel,
-            child: IconButton(
-              icon: const Icon(Symbols.keyboard_arrow_down),
-              onPressed: () => CupertinoSheetRoute.popSheet(context),
+          Expanded(
+            child: Column(
+              children: [
+                Text(
+                  l10n.playerPlayingFrom,
+                  style: AppTextStyles.caption.copyWith(
+                    color: colors.inkSecondary,
+                  ),
+                ),
+                Text(
+                  playingFrom,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.label.copyWith(color: colors.ink),
+                ),
+              ],
             ),
           ),
+          IconButton(
+            tooltip: l10n.playerMoreTooltip,
+            icon: const Icon(Icons.more_horiz_rounded),
+            color: colors.ink,
+            onPressed: onMore,
+          ),
         ],
+      ),
+    );
+  }
+}
+
+/// The translucent strip holding speed, output route, and sleep timer.
+class _TranslucentBar extends StatelessWidget {
+  const _TranslucentBar({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: NowPlayingColors.foreground.withValues(alpha: 0.1),
+        borderRadius: AppBorders.card,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: Spacing.xxs),
+        child: child,
       ),
     );
   }
@@ -503,6 +592,10 @@ class _DragHandle extends StatelessWidget {
 class _PlayerArtwork extends StatelessWidget {
   const _PlayerArtwork({required this.onSeekUndo, this.artworkUrl});
 
+  /// Artwork edge on a regular phone (redesign 4.5); smaller screens
+  /// shrink it to the space left.
+  static const double maxSize = 342;
+
   final String? artworkUrl;
   final VoidCallback onSeekUndo;
 
@@ -513,33 +606,42 @@ class _PlayerArtwork extends StatelessWidget {
 
     // The pill sits beside, not inside, the image semantics node so screen
     // readers reach its buttons.
-    return AspectRatio(
-      aspectRatio: 1,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Semantics(
-            image: true,
-            label: l10n.playerArtworkLabel,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: artworkUrl != null
-                  ? ArtworkImage(
-                      url: artworkUrl!,
-                      loading: const SizedBox.shrink(),
-                      placeholder: _Placeholder(colorScheme: colorScheme),
-                    )
-                  : _Placeholder(colorScheme: colorScheme),
-            ),
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: maxSize, maxHeight: maxSize),
+      child: AspectRatio(
+        aspectRatio: 1,
+        child: DecoratedBox(
+          decoration: const BoxDecoration(
+            borderRadius: AppBorders.artworkHero,
+            boxShadow: AppShadows.floating,
           ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Padding(
-              padding: const EdgeInsets.all(8),
-              child: SeekUndoOverlay(onGoBack: onSeekUndo),
-            ),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Semantics(
+                image: true,
+                label: l10n.playerArtworkLabel,
+                child: ClipRRect(
+                  borderRadius: AppBorders.artworkHero,
+                  child: artworkUrl != null
+                      ? ArtworkImage(
+                          url: artworkUrl!,
+                          loading: const SizedBox.shrink(),
+                          placeholder: _Placeholder(colorScheme: colorScheme),
+                        )
+                      : _Placeholder(colorScheme: colorScheme),
+                ),
+              ),
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: SeekUndoOverlay(onGoBack: onSeekUndo),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -592,8 +694,8 @@ class _PlayerInfo extends StatelessWidget {
                 onTap: onEpisodeTitleTap,
                 child: Text(
                   episodeTitle,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
+                  style: AppTextStyles.heroTitle.copyWith(
+                    color: colorScheme.onSurface,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -607,7 +709,7 @@ class _PlayerInfo extends StatelessWidget {
                 onTap: onPodcastTitleTap,
                 child: Text(
                   podcastTitle,
-                  style: theme.textTheme.bodyLarge?.copyWith(
+                  style: AppTextStyles.body.copyWith(
                     color: colorScheme.onSurfaceVariant,
                   ),
                   maxLines: 1,
@@ -887,6 +989,7 @@ class _PlayerControls extends StatelessWidget {
               isForward: false,
               size: 36,
             ),
+            color: Theme.of(context).colorScheme.onSurface,
             onPressed: onSkipBackward,
           ),
         ),
@@ -902,6 +1005,7 @@ class _PlayerControls extends StatelessWidget {
               isForward: true,
               size: 36,
             ),
+            color: Theme.of(context).colorScheme.onSurface,
             onPressed: onSkipForward,
           ),
         ),
@@ -916,6 +1020,9 @@ class _PlayerPlayPauseButton extends ConsumerWidget {
     required this.isLoading,
   });
 
+  /// White circle on the ground (redesign 2.2, 4.5).
+  static const double size = 80;
+
   final bool isPlaying;
   final bool isLoading;
 
@@ -928,10 +1035,10 @@ class _PlayerPlayPauseButton extends ConsumerWidget {
       return Semantics(
         label: l10n.playerLoadingLabel,
         child: const SizedBox(
-          width: 64,
-          height: 64,
+          width: size,
+          height: size,
           child: Padding(
-            padding: EdgeInsets.all(16),
+            padding: EdgeInsets.all(24),
             child: CircularProgressIndicator(strokeWidth: 3),
           ),
         ),
@@ -943,11 +1050,11 @@ class _PlayerPlayPauseButton extends ConsumerWidget {
       label: isPlaying ? l10n.playerPauseLabel : l10n.playerPlayLabel,
       child: IconButton.filled(
         icon: Icon(isPlaying ? Symbols.pause : Symbols.play_arrow, fill: 1),
-        iconSize: 40,
+        iconSize: 44,
         style: IconButton.styleFrom(
           backgroundColor: colorScheme.primary,
           foregroundColor: colorScheme.onPrimary,
-          minimumSize: const Size(64, 64),
+          minimumSize: const Size(size, size),
         ),
         onPressed: () {
           final controller = ref.read(audioPlayerControllerProvider.notifier);

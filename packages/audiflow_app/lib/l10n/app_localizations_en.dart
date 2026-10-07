@@ -1048,6 +1048,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playerTabTranscript => 'Transcript';
 
   @override
+  String get playerPlayingFrom => 'Playing from';
+
+  @override
+  String get playerEpisodeDetails => 'Episode details';
+
+  @override
+  String get playerGoToPodcast => 'Go to podcast';
+
+  @override
+  String get playerMoreTooltip => 'More';
+
+  @override
   String get playerTranscriptLoading => 'Loading transcript...';
 
   @override

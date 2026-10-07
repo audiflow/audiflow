@@ -354,6 +354,10 @@
 
   "playerTabNowPlaying": "再生中",
   "playerTabTranscript": "書き起こし",
+  "playerPlayingFrom": "再生元",
+  "playerEpisodeDetails": "エピソードの詳細",
+  "playerGoToPodcast": "番組を見る",
+  "playerMoreTooltip": "その他",
   "playerTranscriptLoading": "書き起こしを読み込み中...",
   "playerTranscriptEmpty": "書き起こしがありません",
   "playerChaptersTitle": "チャプター",

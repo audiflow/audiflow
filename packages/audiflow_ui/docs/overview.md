@@ -32,6 +32,7 @@ lib/
   src/
     themes/
       app_colors.dart           # AppColors ThemeExtension, NowPlayingColors
+      now_playing_theme.dart    # nowPlayingTheme(ground) -- white-on-ground theme for the full player
       app_theme.dart            # AppTheme.light() / AppTheme.dark()
       color_scheme.dart         # AppColorScheme -- explicit light/dark ColorScheme
       text_styles.dart          # AppTextStyles -- redesign type roles + textTheme
@@ -91,6 +92,7 @@ lib/
 | `ProgressLine` / `BottomEdgeProgress` | `widgets/indicators/` | fraction, fillColor | 3dp line (hairline track, accent fill; overridable, e.g. `brand`). `BottomEdgeProgress` overlays it on a child's bottom edge once fraction is above 0 (full at 1), without changing the child's size. |
 | `PodcastArtworkGridItem` | `widgets/cards/` | title, artworkUrl, onTap | Grid cell with artwork image + title label. Placeholder on load/error. |
 | `EpisodeProgressIndicator` | `widgets/indicators/` | isCompleted, isInProgress, remainingTimeFormatted | Shows "Played" checkmark, remaining time text, or nothing. |
+| `ArtworkGround` | `widgets/player/` | url, builder | Samples the artwork (24px decode, saturation-weighted average), mutes and darkens it into the player ground, cross-fades between episodes, caches by URL; `NowPlayingColors.fallbackBackground` until sampled. Pair with `nowPlayingTheme`. |
 | `MiniPlayerArtwork` | `widgets/player/` | imageUrl, size, borderRadius | Rounded artwork with podcast-icon placeholder fallback. |
 | `MiniPlayerCard` | `widgets/player/` | artwork, title, subtitle, actions, progress, onTap, semanticLabel | Floating `surface` card (radius 16, floating shadow) 64dp tall: 44dp artwork, one-line title and subtitle, caller-supplied action buttons, and a `brand` bottom-edge progress line once started. No remaining-time text. |
 | `LargeTitle` / `SectionHeader` | `widgets/headers/` | title, trailing | Left-aligned `displayTitle` for top-level tabs and 44dp `sectionTitle` rows, both with a 20dp gutter, header semantics, and an optional trailing control. |

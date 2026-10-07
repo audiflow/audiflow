@@ -5,6 +5,7 @@ library;
 export 'src/themes/app_colors.dart';
 export 'src/themes/app_theme.dart';
 export 'src/themes/color_scheme.dart';
+export 'src/themes/now_playing_theme.dart';
 export 'src/themes/text_styles.dart';
 
 // Styles
@@ -30,6 +31,7 @@ export 'src/widgets/indicators/episode_progress_indicator.dart';
 export 'src/widgets/indicators/progress_line.dart';
 
 // Widgets - Player
+export 'src/widgets/player/artwork_ground.dart';
 export 'src/widgets/player/mini_player_artwork.dart';
 export 'src/widgets/player/mini_player_card.dart';
 export 'src/widgets/player/playback_speed_slider.dart';

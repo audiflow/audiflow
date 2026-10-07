@@ -36,7 +36,12 @@ state and resume position stay coherent no matter where the listener touches it.
   slides up from above the bottom navigation bar showing artwork, episode title, podcast name,
   skip-forward and play/pause buttons, and a thin progress line along its bottom edge once
   playback has started. Playback starts within a moment, and tapping the mini player opens
-  the full player screen with artwork, a scrubbable seek bar, and skip controls. If the episode
+  the full player screen with artwork, a scrubbable seek bar, and skip controls. The full
+  player sits on a dark ground taken from the episode artwork (muted and darkened so white
+  controls stay readable; a default navy until the artwork is sampled), with white controls.
+  Its header shows a close chevron, "Playing from" with the queue's source (or the podcast),
+  and an overflow menu with the transcript page (when available), episode details, and the
+  podcast. If the episode
   was partly played before, it resumes from the saved position; if it was within two seconds of
   the end, it replays from the start. Playback continues when the app is backgrounded or the
   screen is locked.
@@ -63,7 +68,7 @@ state and resume position stay coherent no matter where the listener touches it.
   (together with any picker or dialog stacked on it) so the listener lands back on the screen
   underneath instead of a blank player. Stopping playback outright from the system controls
   clears the same state and dismisses the full player the same way.
-- **Playback speed**: The full player's bottom action row has three slots: Audio, an output
+- **Playback speed**: The full player's bottom action row, on a translucent strip, has three slots: Audio, an output
   picker (see Audio output below), and the sleep timer. The Audio button shows the
   current speed (e.g. `1.3x`) and opens the Audio sheet, which holds quick chips and a
   stepped slider. The slider has 21 positions — 0.5x to 2.0x in 0.1 steps, then 2.2x, 2.4x,

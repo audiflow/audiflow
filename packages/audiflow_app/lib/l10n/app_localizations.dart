@@ -1922,6 +1922,30 @@ abstract class AppLocalizations {
   /// **'Transcript'**
   String get playerTabTranscript;
 
+  /// Label above the context the current episode plays from, in the player header
+  ///
+  /// In en, this message translates to:
+  /// **'Playing from'**
+  String get playerPlayingFrom;
+
+  /// Player overflow menu item opening the episode detail screen
+  ///
+  /// In en, this message translates to:
+  /// **'Episode details'**
+  String get playerEpisodeDetails;
+
+  /// Player overflow menu item opening the podcast screen
+  ///
+  /// In en, this message translates to:
+  /// **'Go to podcast'**
+  String get playerGoToPodcast;
+
+  /// Tooltip of the player header overflow button
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get playerMoreTooltip;
+
   /// Transcript loading message
   ///
   /// In en, this message translates to:

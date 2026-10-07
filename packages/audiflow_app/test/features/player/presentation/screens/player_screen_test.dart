@@ -190,17 +190,37 @@ void main() {
           episodeHasTranscriptProvider(
             7,
           ).overrideWith((ref) => transcriptKnown.future),
+          transcriptServiceProvider.overrideWithValue(_NoTranscriptService()),
         ],
       );
       await tester.pumpWidget(_buildHost(container));
       await _openPlayerSheet(tester);
-      check(find.byType(Tab).evaluate()).isEmpty();
+      check(find.byType(TabBarView).evaluate()).isEmpty();
 
       transcriptKnown.complete(true);
       await tester.pumpAndSettle();
 
       check(tester.takeException()).isNull();
-      check(find.byType(Tab).evaluate().length).equals(2);
+      check(find.byType(TabBarView).evaluate().length).equals(1);
+
+      // The transcript page is reached from the header's overflow menu.
+      await tester.tap(find.byTooltip('More'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Transcript'));
+      await tester.pumpAndSettle();
+      check(
+        tester.widget<TabBarView>(find.byType(TabBarView)).controller!.index,
+      ).equals(1);
     });
   });
+}
+
+/// Answers "no transcript content" so the transcript page can build
+/// without a database.
+class _NoTranscriptService implements TranscriptService {
+  @override
+  Future<int?> ensureContent(int episodeId) async => null;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
