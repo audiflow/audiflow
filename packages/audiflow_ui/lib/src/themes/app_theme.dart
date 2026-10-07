@@ -38,7 +38,7 @@ class AppTheme {
       bottomSheetTheme: _bottomSheet(colors),
       dialogTheme: _dialog(colors),
       popupMenuTheme: _popupMenu(colors),
-      snackBarTheme: _snackBar(colors),
+      snackBarTheme: _snackBar(scheme, colors),
       inputDecorationTheme: _inputDecoration(colors),
       elevatedButtonTheme: _elevatedButton(colors),
       filledButtonTheme: _filledButton(colors),
@@ -155,11 +155,18 @@ class AppTheme {
     );
   }
 
-  static SnackBarThemeData _snackBar(AppColors colors) {
+  static SnackBarThemeData _snackBar(ColorScheme scheme, AppColors colors) {
+    // Light mode inverts to an ink fill, so the action takes the opposite
+    // mode's accent. Dark mode raises a sunken surface instead: the light
+    // accent on a light ink fill misses 4.5:1, and a bright block on a dark
+    // screen is glaring. `brand` is never text.
+    final isDark = scheme.brightness == Brightness.dark;
     return SnackBarThemeData(
-      backgroundColor: colors.ink,
-      contentTextStyle: AppTextStyles.body.copyWith(color: colors.bg),
-      actionTextColor: colors.brand,
+      backgroundColor: isDark ? colors.surfaceSunken : colors.ink,
+      contentTextStyle: AppTextStyles.body.copyWith(
+        color: isDark ? colors.ink : colors.bg,
+      ),
+      actionTextColor: isDark ? colors.accent : scheme.inversePrimary,
       shape: const RoundedRectangleBorder(borderRadius: AppBorders.md),
     );
   }

@@ -145,6 +145,16 @@ void main() {
             .has((shape) => shape.borderRadius, 'borderRadius')
             .equals(AppBorders.sheet);
       });
+
+      test('$name snackbar action text reaches 4.5:1 on its fill', () {
+        final snackBar = theme.snackBarTheme;
+        check(
+          snackBar.actionTextColor,
+        ).isNotNull().not((it) => it.equals(colors.brand));
+        check(
+          _contrastRatio(snackBar.actionTextColor!, snackBar.backgroundColor!),
+        ).isGreaterOrEqual(4.5);
+      });
     }
 
     testWidgets('AppColors.of resolves from the ambient theme', (tester) async {

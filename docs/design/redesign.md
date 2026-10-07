@@ -75,6 +75,15 @@ Material `ColorScheme` mapping (both modes):
 | `onSurface` | `ink` |
 | `onSurfaceVariant` | `inkSecondary` |
 | `outline` / `outlineVariant` | `outline` / `hairline` |
+| `secondary` / `tertiary` (and their `on*` / `*Container` roles) | Same as `primary` family (one accent; selected chips and segments read as the accent state) |
+| `surfaceContainerLow` / `surfaceBright` | `surface` |
+| `surfaceDim` | `bg` |
+| `surfaceContainerHighest` | `#E4DFD8` (light) / `#332E29` (dark), one step past `surfaceSunken` |
+| `inverseSurface` / `onInverseSurface` / `inversePrimary` | `ink` / `bg` / the other mode's `accent` |
+| `error` family | Material 3 baseline error tones |
+| `surfaceTint` | transparent (no elevation tinting) |
+
+Component colors that the mapping alone does not settle: switch and slider tracks use `outline` and `progressTrack`; snackbars use an `ink` fill with the dark-mode accent for the action in light mode, and a `surfaceSunken` fill with `accent` in dark mode.
 
 Replace the seed-based scheme with explicit values so the palette does not drift with the seed algorithm. In code, the full token set is the `AppColors` theme extension (`AppColors.of(context)`); `accentTint` is stored opaque so it renders the same over any ground.
 
