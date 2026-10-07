@@ -67,20 +67,17 @@ class _SmartPlaylistGroupEpisodesScreenState
     with SingleTickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
 
-  /// Measures the hero so the collapse spans exactly its height, and
-  /// finds where the list surface starts (the hero's bottom edge).
+  /// Measures the hero so the collapse spans exactly its height.
   final GlobalKey _heroKey = GlobalKey();
-  final GlobalKey _bodyKey = GlobalKey();
+
+  /// Marks where the list surface starts: right below the hero.
+  final GlobalKey _listStartKey = GlobalKey();
 
   /// Drives the floating navigation and hero collapse without rebuilding
   /// the sliver tree on every scroll frame.
   final ValueNotifier<FloatingNavScroll> _navScroll = ValueNotifier(
     FloatingNavScroll.at(offset: 0, heroExtent: 1),
   );
-
-  /// Screen y where the list surface starts. Infinite until first layout
-  /// so the texture never flashes over the hero.
-  final ValueNotifier<double> _listTop = ValueNotifier(double.infinity);
 
   late final AnimationController _searchTransition = AnimationController(
     vsync: this,
@@ -109,7 +106,6 @@ class _SmartPlaylistGroupEpisodesScreenState
             : SortOrder.descending);
     _resolvePlayOrder();
     _scrollController.addListener(_updateNavScroll);
-    _searchTransition.addListener(_updateListTop);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _updateNavScroll();
     });
@@ -121,7 +117,6 @@ class _SmartPlaylistGroupEpisodesScreenState
     _searchController.dispose();
     _scrollController.dispose();
     _navScroll.dispose();
-    _listTop.dispose();
     _searchTransition.dispose();
     super.dispose();
   }
@@ -133,19 +128,6 @@ class _SmartPlaylistGroupEpisodesScreenState
       offset: _scrollController.offset,
       heroExtent: heroHeight ?? 1,
     );
-    _updateListTop();
-  }
-
-  void _updateListTop() {
-    final body = _bodyKey.currentContext?.findRenderObject();
-    final hero = _heroKey.currentContext?.findRenderObject();
-    if (body is! RenderBox || hero is! RenderBox) return;
-    if (!body.hasSize || !hero.hasSize || !hero.attached) return;
-    final bottom = hero.localToGlobal(
-      Offset(0, hero.size.height),
-      ancestor: body,
-    );
-    _listTop.value = bottom.dy;
   }
 
   FloatingNavScroll get _effectiveNavScroll =>
@@ -295,17 +277,11 @@ class _SmartPlaylistGroupEpisodesScreenState
 
     return Scaffold(
       body: Stack(
-        key: _bodyKey,
         children: [
-          Positioned.fill(
-            child: ValueListenableBuilder<double>(
-              valueListenable: _listTop,
-              builder: (context, top, _) => ContentBackdrop(top: top),
-            ),
+          AnchoredContentBackdrop(
+            anchorKey: _listStartKey,
+            child: _buildScrollView(),
           ),
-          // Row ink draws on the nearest Material; without this one it
-          // would land on the Scaffold's, hidden under the backdrop.
-          Material(type: MaterialType.transparency, child: _buildScrollView()),
           Positioned(
             top: 0,
             left: 0,
@@ -478,6 +454,7 @@ class _SmartPlaylistGroupEpisodesScreenState
               ),
             ),
           ),
+          SliverToBoxAdapter(child: SizedBox(key: _listStartKey)),
           // Dedup only uses the shared thumbnail (never group.thumbnailUrl,
           // which may match only one episode and hide just that one).
           ..._buildEpisodeList(episodesAsync, sharedThumbnailUrl),
