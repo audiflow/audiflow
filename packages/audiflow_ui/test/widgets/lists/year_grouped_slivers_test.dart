@@ -184,6 +184,34 @@ void main() {
       check(find.byType(Divider).evaluate()).length.equals(1);
     });
 
+    testWidgets('passes the separator inset to each year', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: Scaffold(
+            body: CustomScrollView(
+              controller: scrollController,
+              slivers: buildYearGroupedSlivers<String>(
+                itemsByYear: {
+                  2025: ['A', 'B'],
+                  2024: ['C', 'D'],
+                },
+                sortedYears: [2025, 2024],
+                itemBuilder: (_, item) =>
+                    SizedBox(height: 60, child: Text(item)),
+                scrollController: scrollController,
+                yearGroupingEnabled: true,
+                grouped: true,
+                groupedSeparatorIndent: 88,
+              ),
+            ),
+          ),
+        ),
+      );
+      final dividers = tester.widgetList<Divider>(find.byType(Divider));
+      check(dividers.map((d) => d.indent)).deepEquals([88, 88]);
+    });
+
     testWidgets('a single year still gets the surface', (tester) async {
       await pump(tester, {
         2025: ['A', 'B', 'C'],

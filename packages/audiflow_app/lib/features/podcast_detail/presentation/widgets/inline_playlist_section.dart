@@ -441,6 +441,7 @@ List<Widget> _buildPerEpisodeInlineGroups({
       yearGroupingEnabled: true,
       itemExtent: null,
       grouped: true,
+      groupedSeparatorIndent: _seriesSeparatorIndent,
     ),
   ];
 }
@@ -608,6 +609,7 @@ List<Widget> _buildMixedYearInlineGroups({
       yearGroupingEnabled: true,
       itemExtent: null,
       grouped: true,
+      groupedSeparatorIndent: _seriesSeparatorIndent,
     ),
   ];
 }

@@ -1,4 +1,5 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
@@ -296,6 +297,50 @@ void main() {
           realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
         ),
       ).called(1);
+    });
+  });
+
+  group('progressSaved', () {
+    final progress = PlaybackProgress(
+      position: const Duration(seconds: 30),
+      duration: const Duration(minutes: 30),
+      bufferedPosition: const Duration(seconds: 35),
+    );
+
+    void stubSave() {
+      when(
+        mockRepository.saveProgress(
+          episodeId: anyNamed('episodeId'),
+          positionMs: anyNamed('positionMs'),
+          durationMs: anyNamed('durationMs'),
+          listenedDeltaMs: anyNamed('listenedDeltaMs'),
+          realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
+        ),
+      ).thenAnswer((_) async {});
+    }
+
+    test('announces the episode once a pause has been saved', () async {
+      stubSave();
+      final saved = <int>[];
+      final subscription = service.progressSaved.listen(saved.add);
+      addTearDown(subscription.cancel);
+
+      await service.onPlaybackPaused(7, progress);
+      await Future<void>.delayed(Duration.zero);
+
+      check(saved).deepEquals([7]);
+    });
+
+    test('announces the episode once a stop has been saved', () async {
+      stubSave();
+      final saved = <int>[];
+      final subscription = service.progressSaved.listen(saved.add);
+      addTearDown(subscription.cancel);
+
+      await service.onPlaybackStopped(8, progress);
+      await Future<void>.delayed(Duration.zero);
+
+      check(saved).deepEquals([8]);
     });
   });
 
