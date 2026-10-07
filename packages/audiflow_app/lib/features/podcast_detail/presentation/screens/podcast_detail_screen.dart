@@ -280,14 +280,23 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
     );
   }
 
-  /// Play order, audio, and downloads live in the settings sheet; the
-  /// play order may change there, so re-resolve it once the sheet closes.
-  Future<void> _openSettingsSheet() async {
-    await showPodcastSettingsSheet(context: context, podcast: podcast);
+  /// Play order and downloads live in the settings sheet. A new play
+  /// order is re-resolved once it is saved, which can land after the sheet
+  /// has closed.
+  Future<void> _openSettingsSheet() {
     final feedUrl = podcast.feedUrl;
-    if (!mounted || feedUrl == null) return;
-    final subscription = ref.read(subscriptionByFeedUrlProvider(feedUrl)).value;
-    if (subscription != null) _resolvePlayOrder(subscription.id);
+    final subscriptionId = feedUrl == null
+        ? null
+        : ref.read(subscriptionByFeedUrlProvider(feedUrl)).value?.id;
+    return showPodcastSettingsSheet(
+      context: context,
+      podcast: podcast,
+      onPlayOrderChanged: subscriptionId == null
+          ? null
+          : () {
+              if (mounted) _resolvePlayOrder(subscriptionId);
+            },
+    );
   }
 
   void _resolvePlayOrder(int subscriptionId) {
