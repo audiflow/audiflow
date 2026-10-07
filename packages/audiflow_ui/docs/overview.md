@@ -8,7 +8,7 @@
 
 - Reusable widgets for cards, player chrome, download indicators, list grouping, queue actions, and search
 - Material 3 theme configuration with light and dark color schemes
-- Design token constants (spacing scale, border radii)
+- Design token constants (colors, spacing, border radii, shadows)
 - Responsive grid calculation and search filtering utilities
 
 ## Non-responsibilities
@@ -20,8 +20,8 @@
 
 ## Main concepts
 
-- **Design tokens**: Static constant classes (`Spacing`, `AppBorders`) that define the spacing and border-radius scale. All widgets reference these instead of raw values.
-- **Theme system**: `AppTheme` assembles `ThemeData` from `AppColorScheme` and `AppTextStyles`. The app applies `AppTheme.light()` or `AppTheme.dark()` at the `MaterialApp` level.
+- **Design tokens**: Static constant classes (`Spacing`, `AppBorders`, `AppShadows`) and the `AppColors` theme extension. All widgets reference these instead of raw values.
+- **Theme system**: `AppTheme` assembles `ThemeData` from `AppColors`, `AppColorScheme`, and `AppTextStyles`. The app applies `AppTheme.light()` or `AppTheme.dark()` at the `MaterialApp` level.
 - **Widget placement rule**: A widget moves to `audiflow_ui` when it is consumed by two or more distinct features in `audiflow_app`. Until then, it stays in the feature directory.
 
 ## Directory structure
@@ -31,12 +31,14 @@ lib/
   audiflow_ui.dart              # Barrel export (all public API)
   src/
     themes/
+      app_colors.dart           # AppColors ThemeExtension, NowPlayingColors
       app_theme.dart            # AppTheme.light() / AppTheme.dark()
-      color_scheme.dart         # AppColorScheme -- light/dark ColorScheme
-      text_styles.dart          # AppTextStyles.textTheme (Material 3 type scale)
+      color_scheme.dart         # AppColorScheme -- explicit light/dark ColorScheme
+      text_styles.dart          # AppTextStyles -- redesign type roles + textTheme
     styles/
       spacing.dart              # Spacing.xxs..xxl (2..48 dp)
-      borders.dart              # AppBorders.xs..xl (4..24 radius)
+      borders.dart              # AppBorders -- radius scale + named radii
+      shadows.dart              # AppShadows -- grouped and floating shadows
     widgets/
       artwork_image.dart        # ArtworkImage -- network artwork decoded at its displayed size
       cards/
@@ -87,38 +89,39 @@ lib/
 
 ## Theme system
 
+Tokens and theme follow `docs/design/redesign.md` section 2 (the source of truth for values and roles).
+
 ### AppTheme
 
-`AppTheme.light()` and `AppTheme.dark()` return complete `ThemeData` instances. Both use:
-- `useMaterial3: true`
-- `AppColorScheme.light()` / `AppColorScheme.dark()`
-- `AppTextStyles.textTheme` (shared across both themes)
-- Centered app bar with zero elevation
-- Card with 12dp corner radius and elevation 2
-- Elevated button with 8dp corner radius
+`AppTheme.light()` and `AppTheme.dark()` return complete `ThemeData` instances built from `AppColors` tokens and `AppColorScheme`. Both:
+- register `AppColors` as a `ThemeExtension`
+- use `bg` for scaffold, app bar, and navigation bar backgrounds; `surface` for cards, sheets, dialogs, menus
+- give cards the grouped-surface radius (18) and a faint 1dp shadow; sheets get 28 top corners
+- render buttons, chips, and the FAB as fully rounded pills; filled actions use `accent`
+- color selected tabs and navigation destinations with `accent`, inactive ones with `inkTertiary`
+- fill text fields with `surfaceSunken`, borderless until focused
+
+### AppColors
+
+`ThemeExtension` carrying every token from redesign 2.1 (`bg`, `surface`, `surfaceSunken`, `surfaceMuted`, `ink`..`inkQuaternary`, `hairline`, `outline`, `progressTrack`, `accent`, `onAccent`, `accentTint`, `brand`). Read with `AppColors.of(context)`; it falls back to the palette matching the theme brightness when the extension is absent. `accentTint` is stored opaque (accent composited over `surface`). `progressTrack` is the second light `outline` value in the spec. `brand` is for non-text marks only.
+
+`NowPlayingColors` holds the full-screen player constants (fallback ground `#22304F`, white controls, translucent track and labels).
 
 ### AppColorScheme
 
-| Role | Light | Dark |
-|------|-------|------|
-| primary | `Colors.blue.shade700` | `Colors.blue.shade300` |
-| secondary | `Colors.teal.shade600` | `Colors.teal.shade300` |
-| tertiary | `Colors.purple.shade600` | `Colors.purple.shade300` |
-| error | `Colors.red.shade700` | `Colors.red.shade300` |
-| surface | `Colors.white` | `Colors.grey.shade900` |
-| surfaceContainerHighest | `Colors.grey.shade100` | `Colors.grey.shade800` |
-
-Note: The project also defines a palette in `.claude/rules/flutter/theming.md` (Primary #0D47A1, Secondary #1976D2, Accent #FFC107). The `AppColorScheme` values above are what the code actually uses.
+Explicit `ColorScheme` per mode (no seed). Mapped roles follow the spec table: `primary`=`accent`, `primaryContainer`=`accentTint`, `surface`=`bg`, `surfaceContainerLowest`=`surface`, `surfaceContainer`=`surfaceMuted`, `surfaceContainerHigh`=`surfaceSunken`, `onSurface`=`ink`, `onSurfaceVariant`=`inkSecondary`, `outline`=`outline`, `outlineVariant`=`hairline`. Unmapped roles: secondary and tertiary reuse the accent family (one-accent rule), error uses the M3 baseline reds, `surfaceTint` is transparent.
 
 ### AppTextStyles
 
-Full Material 3 type scale from `displayLarge` (57sp) through `labelSmall` (11sp). All use default font family. Weights are M3-standard (400 for body/display, 500 for title/label).
+Named redesign roles: `displayTitle` (34/700), `heroTitle` (22/700), `heroTitleLong` (19/700), `sectionTitle` (20/700), `rowTitle` (15/600), `body` (15/400), `meta` (13/400), `caption` (12/400), `overline` (12/600, tracked), `label` (14/600). `AppTextStyles.tabular(style)` adds tabular figures for changing numbers. `textTheme` maps the Material slots onto these roles (`displaySmall`=displayTitle, `headlineSmall`=heroTitle, `titleLarge`=sectionTitle, `titleMedium`=rowTitle, `bodyLarge`=body, `bodyMedium`=meta, `bodySmall`=caption, `labelLarge`=label, `labelSmall`=overline). Font family is the platform default.
 
 ### Design tokens
 
-**Spacing** (`Spacing` class): `xxs`=2, `xs`=4, `sm`=8, `md`=16, `lg`=24, `xl`=32, `xxl`=48
+**Spacing** (`Spacing` class): `xxs`=2, `xs`=4, `sm`=8, `md`=16, `lg`=24, `xl`=32, `xxl`=48; layout values `screenHorizontal`=20, `rowVertical`=12, `rowHorizontal`=16, `sectionGap`=24, `minTouchTarget`=44
 
-**Border radii** (`AppBorders` class): `xs`=4, `sm`=8, `md`=12, `lg`=16, `xl`=24
+**Border radii** (`AppBorders` class): `xs`=4, `sm`=8, `md`=12, `lg`=16, `xl`=24; named `groupedSurface`=18, `card`=16, `artworkList`=12, `artworkHero`=20, `sheet`=28 (top only), `pill`=fully rounded
+
+**Shadows** (`AppShadows` class): `groupedSurface` (single `0 1px 2px` at 5%), `floating` (two-layer neutral)
 
 ## Key dependencies
 

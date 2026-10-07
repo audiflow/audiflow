@@ -128,7 +128,7 @@ audiflow_cli -> audiflow_domain, audiflow_podcast
 
 #### Responsibilities
 - Reusable widgets: buttons, cards, indicators, dialogs, player components, layouts
-- App theme (Material 3, dynamic color, light/dark)
+- App theme (Material 3, explicit token palette, light/dark)
 - Color scheme, text styles, spacing, borders, shadows
 
 #### Non-responsibilities

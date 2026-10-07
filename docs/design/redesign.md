@@ -22,7 +22,7 @@ refs:
 
 Design canvas (interactive mockups): https://claude.ai/artifact/GVEvGZorPjsxCBjapZji2Q
 
-Status: **approved direction, not yet implemented.** Functional Requirements under `docs/fr/` describe current behavior and are updated in the same PR that ships each change, not before.
+Status: **approved direction; tokens and theme (section 7 step 1) implemented, components and screens pending.** Functional Requirements under `docs/fr/` describe current behavior and are updated in the same PR that ships each change, not before.
 
 ## 1. Principles
 
@@ -50,10 +50,11 @@ The palette is defined for both brightness modes. Only the light screens are des
 | `inkTertiary` | Captions, inactive tab labels, counts | `#6E6962` | `#9A938A` |
 | `inkQuaternary` | Chevrons, drag handles, and other non-text glyphs | `#A39D95` | `#6F6961` |
 | `hairline` | Row separators inside a surface | `#F0ECE6` | `#2A2622` |
-| `outline` | Borders on chips and dropdown buttons, progress track | `#DED9D2` / `#E9E5DF` | `#3A342E` |
+| `outline` | Borders on chips and dropdown buttons | `#DED9D2` | `#3A342E` |
+| `progressTrack` | Slider and standalone progress-bar track | `#E9E5DF` | `#3A342E` |
 | `accent` | Primary buttons, selected tab, links, progress fill | `#B5531C` | `#F0965A` |
 | `onAccent` | Text/icons on an accent fill | `#FFFFFF` | `#1A1714` |
-| `accentTint` | Tonal backgrounds (subscribed pill, icon tiles, playing pill) | `accent` at 10% | `accent` at 16% |
+| `accentTint` | Tonal backgrounds (subscribed pill, icon tiles, playing pill) | `accent` at 10% over `surface` (`#F8EEE8`) | `accent` at 16% over `surface` (`#403023`) |
 | `brand` | Non-text brand marks only (mini player progress line) | `#E8823A` | `#E8823A` |
 
 Contrast rules:
@@ -75,7 +76,7 @@ Material `ColorScheme` mapping (both modes):
 | `onSurfaceVariant` | `inkSecondary` |
 | `outline` / `outlineVariant` | `outline` / `hairline` |
 
-Replace the seed-based scheme with explicit values so the palette does not drift with the seed algorithm.
+Replace the seed-based scheme with explicit values so the palette does not drift with the seed algorithm. In code, the full token set is the `AppColors` theme extension (`AppColors.of(context)`); `accentTint` is stored opaque so it renders the same over any ground.
 
 ### 2.2 Now Playing color
 
