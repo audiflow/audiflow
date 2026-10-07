@@ -300,27 +300,45 @@ void main() {
   });
 
   group('CollapsingHero', () {
-    testWidgets('fully visible at rest, faded and slightly scaled later', (
-      tester,
-    ) async {
-      Widget hero(double progress) =>
-          host(CollapsingHero(progress: progress, child: const Text('hero')));
-
-      await tester.pumpWidget(hero(0));
-      check(tester.widget<Opacity>(find.byType(Opacity)).opacity).equals(1);
-
-      await tester.pumpWidget(hero(1));
-      check(tester.widget<Opacity>(find.byType(Opacity)).opacity).equals(0);
-      final transform = tester.widget<Transform>(
-        find.descendant(
-          of: find.byType(CollapsingHero),
-          matching: find.byType(Transform),
+    Widget hero(double progress) => host(
+      Align(
+        alignment: Alignment.topLeft,
+        child: SizedBox(
+          width: 200,
+          height: 300,
+          child: CollapsingHero(
+            progress: progress,
+            child: const SizedBox.expand(key: ValueKey('hero')),
+          ),
         ),
-      );
+      ),
+    );
+
+    double opacity(WidgetTester tester) =>
+        tester.widget<Opacity>(find.byType(Opacity)).opacity;
+
+    testWidgets('fully visible and unscaled at rest', (tester) async {
+      await tester.pumpWidget(hero(0));
+      check(opacity(tester)).equals(1);
       check(
-        // x-axis scale; z stays 1 so getMaxScaleOnAxis would hide it.
-        transform.transform.entry(0, 0),
-      ).isCloseTo(CollapsingHero.minScale, 1e-9);
+        tester.getRect(find.byKey(const ValueKey('hero'))),
+      ).equals(const Rect.fromLTWH(0, 0, 200, 300));
+    });
+
+    testWidgets('fades as it collapses', (tester) async {
+      await tester.pumpWidget(hero(0.5));
+      check(opacity(tester)).equals(0.5);
+      await tester.pumpWidget(hero(1));
+      check(opacity(tester)).equals(0);
+    });
+
+    testWidgets('shrinks toward its bottom center', (tester) async {
+      await tester.pumpWidget(hero(1));
+      final rect = tester.getRect(find.byKey(const ValueKey('hero')));
+      const scale = CollapsingHero.minScale;
+      check(rect.width).isCloseTo(200 * scale, 1e-6);
+      check(rect.center.dx).isCloseTo(100, 1e-6);
+      check(rect.bottom).isCloseTo(300, 1e-6);
     });
   });
 }

@@ -170,7 +170,7 @@ Top to bottom:
 ### 4.2 Podcast detail
 
 - **Hero** (centered): artwork 180, title, author and category, subscribe button. Subscribed state is a tonal pill "購読中" with a check; unsubscribed is an `accent` filled pill "＋ 購読する".
-- **Scroll behavior**: the hero fades and scales down slightly while scrolling under the floating navigation; the navigation title fades in afterwards.
+- **Scroll behavior**: while scrolling, the hero (artwork and text together) fades and shrinks toward its bottom edge (to about 85%), so it recedes as it goes up under the floating navigation; the navigation title fades in afterwards.
 - **Sticky bar** (stays under the navigation): segmented control "エピソード / シリーズ" plus a second row that depends on the tab.
 - **Series tab**: second row has the series-type dropdown (max ~58% width, ellipsized) and "N シリーズ · ↓新しい順". List grouped by the **start year** of each series. Row: artwork 60, name (2 lines, ellipsized), "N エピソード · 合計時間", and status text ("未再生" / "2/4 再生済み" / "再生済み" in `accent`). Started series get the bottom-edge line (full when every episode is played). Date ranges are not shown.
 - **Episodes tab**: second row has filter chips "すべて / 未再生 / 再生中" and "↓新しい順"; a count line above the list. Row: date (with an `accent` dot when new), title (3 lines), description (2 lines), artwork 56 on the right, and an action row (play pill, add to queue, download, more). Played episodes fade title and artwork. Downloaded episodes show the download icon in `accent`.
@@ -179,7 +179,7 @@ Top to bottom:
 
 ### 4.3 Series episodes
 
-- **Hero** (side by side): artwork 88, series name (up to 3 lines; one size smaller when long), podcast name (links back), "N エピソード · 合計時間", and a full-width "#n を続きから再生" button. Fades and scales slightly on scroll.
+- **Hero** (side by side): artwork 88, series name (up to 3 lines; one size smaller when long), podcast name (links back), "N エピソード · 合計時間", and a full-width "#n を続きから再生" button. Fades and shrinks on scroll, like the podcast hero.
 - **Navigation**: floating back button and [search | …] pill; series name fades into the center after the hero is gone.
 - **Sort**: a right-aligned text button "↑古い順" above the list, same style as on Podcast detail. Not sticky.
 - **Rows**: episode number (`inkTertiary`), title, description (2 lines), action row with play pill and date, bottom-edge progress line once started (full when played). The playing episode's title uses `accent`.

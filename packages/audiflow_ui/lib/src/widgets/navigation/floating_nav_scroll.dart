@@ -45,7 +45,9 @@ class FloatingNavScroll {
   }
 }
 
-/// Fades and slightly shrinks a hero as [progress] goes from 0 to 1.
+/// Fades and shrinks a hero toward its bottom edge as [progress] goes
+/// from 0 to 1, so the upper part (artwork, title) visibly recedes while
+/// the content below keeps scrolling at its normal pace.
 class CollapsingHero extends StatelessWidget {
   const CollapsingHero({
     super.key,
@@ -53,8 +55,8 @@ class CollapsingHero extends StatelessWidget {
     required this.child,
   });
 
-  /// Scale at full collapse; "scales down slightly" per the spec.
-  static const double minScale = 0.94;
+  /// Scale at full collapse.
+  static const double minScale = 0.85;
 
   final double progress;
   final Widget child;
