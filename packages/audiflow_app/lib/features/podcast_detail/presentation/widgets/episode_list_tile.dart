@@ -127,6 +127,7 @@ class EpisodeListTile extends ConsumerWidget {
       isPlaying: isPlaying,
       isLoading: isLoading,
       isNew: isNew,
+      newLabel: l10n.episodeNewLabel,
       isCompleted: isCompleted,
       isCurrentEpisode: isCurrentEpisode,
       hasTranscript: hasTranscript,

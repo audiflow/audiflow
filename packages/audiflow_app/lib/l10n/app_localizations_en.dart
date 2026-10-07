@@ -1060,6 +1060,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get episodeTranscriptAvailable => 'Transcript available';
 
   @override
+  String get episodeNewLabel => 'New episode';
+
+  @override
   String get episodePillCompleted => 'Completed';
 
   @override

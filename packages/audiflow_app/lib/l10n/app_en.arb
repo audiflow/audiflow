@@ -667,6 +667,8 @@
 
   "episodeTranscriptAvailable": "Transcript available",
   "@episodeTranscriptAvailable": { "description": "Accessibility label for transcript indicator icon" },
+  "episodeNewLabel": "New episode",
+  "@episodeNewLabel": { "description": "Screen-reader label for the dot marking a new episode" },
 
   "episodePillCompleted": "Completed",
   "@episodePillCompleted": { "description": "Pill label shown on a fully-played episode" },

@@ -23,6 +23,7 @@ void main() {
     List<Widget> actionButtons = const [],
   }) {
     return MaterialApp(
+      theme: AppTheme.light(),
       home: Scaffold(
         body: SizedBox(
           height: episodeCardExtent,
@@ -144,14 +145,57 @@ void main() {
       check(spinner.value).isNull();
     });
 
-    testWidgets('shows new badge when isNew is true', (tester) async {
+    testWidgets('new episodes get an accent dot before the date', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildSubject(isNew: true));
-      check(find.text('new').evaluate().length).equals(1);
+      final dot = find.byKey(EpisodeCard.newDotKey);
+      check(dot.evaluate().length).equals(1);
+      final decoration =
+          tester.widget<DecoratedBox>(dot).decoration as BoxDecoration;
+      check(decoration.color).equals(AppColors.light.accent);
+      check(
+        tester.getCenter(dot).dx,
+      ).isLessThan(tester.getTopLeft(find.text('Apr 29')).dx);
     });
 
-    testWidgets('does not show new badge when isNew is false', (tester) async {
+    testWidgets('no dot when the episode is not new', (tester) async {
       await tester.pumpWidget(buildSubject());
-      check(find.text('new').evaluate().length).equals(0);
+      check(find.byKey(EpisodeCard.newDotKey).evaluate()).isEmpty();
+    });
+
+    testWidgets('date sits above a three-line title', (tester) async {
+      await tester.pumpWidget(buildSubject(title: 'My Episode'));
+      check(
+        tester.getTopLeft(find.text('Apr 29')).dy,
+      ).isLessThan(tester.getTopLeft(find.text('My Episode')).dy);
+      final title = tester.widget<Text>(find.text('My Episode'));
+      check(title.maxLines).equals(3);
+      check(title.style?.color).equals(AppColors.light.ink);
+    });
+
+    testWidgets('played episodes fade the title and artwork', (tester) async {
+      await tester.pumpWidget(
+        buildSubject(
+          isCompleted: true,
+          thumbnailUrl: 'https://example.com/art.jpg',
+        ),
+      );
+      final title = tester.widget<Text>(find.text('Test Episode'));
+      check(title.style?.color).equals(AppColors.light.inkTertiary);
+      final artwork = tester.widget<Opacity>(
+        find.ancestor(
+          of: find.byType(ArtworkImage),
+          matching: find.byType(Opacity),
+        ),
+      );
+      check(artwork.opacity).isLessThan(1);
+    });
+
+    testWidgets('the playing episode title uses the accent', (tester) async {
+      await tester.pumpWidget(buildSubject(isCurrentEpisode: true));
+      final title = tester.widget<Text>(find.text('Test Episode'));
+      check(title.style?.color).equals(AppColors.light.accent);
     });
 
     testWidgets('fires onPlayPause when pill tapped', (tester) async {
@@ -193,7 +237,7 @@ void main() {
       );
 
       final image = tester.widget<ExtendedImage>(find.byType(ExtendedImage));
-      final expectedWidth = (76 * tester.view.devicePixelRatio).round();
+      final expectedWidth = (56 * tester.view.devicePixelRatio).round();
       check(image.image).isA<ExtendedResizeImage>()
         ..has((it) => it.width, 'width').equals(expectedWidth)
         // Height stays null so non-square artwork keeps its aspect ratio.

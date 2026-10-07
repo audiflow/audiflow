@@ -359,6 +359,7 @@
   "playerTranscriptJumpToCurrent": "現在位置へ",
 
   "episodeTranscriptAvailable": "書き起こしあり",
+  "episodeNewLabel": "新着エピソード",
 
   "episodePillCompleted": "再生済み",
   "episodePillRemaining": "残り {time}",

@@ -1946,6 +1946,12 @@ abstract class AppLocalizations {
   /// **'Transcript available'**
   String get episodeTranscriptAvailable;
 
+  /// Screen-reader label for the dot marking a new episode
+  ///
+  /// In en, this message translates to:
+  /// **'New episode'**
+  String get episodeNewLabel;
+
   /// Pill label shown on a fully-played episode
   ///
   /// In en, this message translates to:

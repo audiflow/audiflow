@@ -1015,6 +1015,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get episodeTranscriptAvailable => '書き起こしあり';
 
   @override
+  String get episodeNewLabel => '新着エピソード';
+
+  @override
   String get episodePillCompleted => '再生済み';
 
   @override
