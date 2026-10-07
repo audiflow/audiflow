@@ -191,6 +191,9 @@ void main() {
       when(
         mockRepository.getNextPending(isOnWifi: anyNamed('isOnWifi')),
       ).thenAnswer((_) async => pendingCalls++ == 0 ? task : null);
+      // The row reflects every status write, so the order of the pause's
+      // write and the cancelled transfer's read matters as it does live.
+      var storedStatus = 1;
       when(
         mockRepository.updateStatus(
           id: anyNamed('id'),
@@ -198,11 +201,15 @@ void main() {
           localPath: anyNamed('localPath'),
           lastError: anyNamed('lastError'),
         ),
-      ).thenAnswer((_) async {});
-      // The pause has landed by the time the cancelled transfer reports.
-      when(
-        mockRepository.getById(1),
-      ).thenAnswer((_) async => _task(id: 1, episodeId: 10, status: 2));
+      ).thenAnswer((invocation) async {
+        final status = invocation.namedArguments[#status] as DownloadStatus;
+        // A database write takes a moment, as it does live.
+        await Future<void>.delayed(const Duration(milliseconds: 5));
+        storedStatus = status.toDbValue();
+      });
+      when(mockRepository.getById(1)).thenAnswer(
+        (_) async => _task(id: 1, episodeId: 10, status: storedStatus),
+      );
       when(mockEpisodeRepo.getById(10)).thenAnswer((_) async => episode);
 
       final download = Completer<String>();
@@ -226,6 +233,7 @@ void main() {
       await service.pauseDownload(1);
       await processing;
 
+      check(storedStatus).equals(const DownloadStatus.paused().toDbValue());
       verify(
         mockRepository.updateStatus(
           id: 1,

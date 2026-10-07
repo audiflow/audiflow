@@ -443,11 +443,14 @@ class DownloadQueueService implements SuspendableWriter {
 
   /// Pauses an active download.
   Future<void> pauseDownload(int taskId) async {
-    _fileService.cancelDownload(taskId);
+    // Paused must be stored before the transfer stops: the stopped
+    // transfer's error handler reads the status to tell a pause from a
+    // cancel, and would otherwise record a cancel and drop the progress.
     await _repository.updateStatus(
       id: taskId,
       status: const DownloadStatus.paused(),
     );
+    _fileService.cancelDownload(taskId);
   }
 
   /// Resumes a paused download by moving it back to pending.
