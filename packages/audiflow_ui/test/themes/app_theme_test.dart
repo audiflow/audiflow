@@ -207,11 +207,12 @@ void main() {
 
   group('AppTextStyles', () {
     test('roles match the redesign spec', () {
-      check(AppTextStyles.displayTitle.fontSize).equals(34);
+      check(AppTextStyles.displayTitle.fontSize).equals(28);
       check(AppTextStyles.displayTitle.fontWeight).equals(FontWeight.w700);
       check(AppTextStyles.heroTitle.fontSize).equals(22);
       check(AppTextStyles.heroTitleLong.fontSize).equals(19);
-      check(AppTextStyles.sectionTitle.fontSize).equals(20);
+      check(AppTextStyles.sectionTitle.fontSize).equals(17);
+      check(AppTextStyles.sectionTitle.fontWeight).equals(FontWeight.w600);
       check(AppTextStyles.rowTitle.fontSize).equals(15);
       check(AppTextStyles.rowTitle.fontWeight).equals(FontWeight.w600);
       check(AppTextStyles.body.fontSize).equals(15);
@@ -221,7 +222,7 @@ void main() {
     });
 
     test('tracking is expressed in logical pixels from em', () {
-      check(AppTextStyles.displayTitle.letterSpacing).equals(34 * -0.02);
+      check(AppTextStyles.displayTitle.letterSpacing).equals(28 * -0.01);
       check(AppTextStyles.overline.letterSpacing).equals(12 * 0.06);
     });
 

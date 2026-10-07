@@ -12,10 +12,10 @@ class AppTextStyles {
 
   /// Tab titles (Library, Search, Queue, Settings).
   static const TextStyle displayTitle = TextStyle(
-    fontSize: 34,
-    height: 1.2,
+    fontSize: 28,
+    height: 1.25,
     fontWeight: FontWeight.w700,
-    letterSpacing: 34 * -0.02,
+    letterSpacing: 28 * -0.01,
   );
 
   /// Podcast and series hero titles.
@@ -34,9 +34,9 @@ class AppTextStyles {
 
   /// Section headings inside a tab.
   static const TextStyle sectionTitle = TextStyle(
-    fontSize: 20,
-    height: 1.3,
-    fontWeight: FontWeight.w700,
+    fontSize: 17,
+    height: 1.35,
+    fontWeight: FontWeight.w600,
   );
 
   /// Episode and series row titles.

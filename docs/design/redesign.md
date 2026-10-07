@@ -101,9 +101,9 @@ Latin text uses a geometric grotesque; Japanese uses a matching Gothic family. W
 
 | Style | Size / line-height | Weight | Use |
 |---|---|---|---|
-| `displayTitle` | 34 / 1.2, tracking -0.02em | 700 | Tab titles (Library, Search, Queue, Settings) |
+| `displayTitle` | 28 / 1.25, tracking -0.01em | 700 | Tab titles (Library, Search, Queue, Settings) |
 | `heroTitle` | 21–22 / 1.35 | 700 | Podcast and series hero titles (19 when the title is long) |
-| `sectionTitle` | 20 / 1.3 | 700 | Section headings inside a tab |
+| `sectionTitle` | 17 / 1.35 | 600 | Section headings inside a tab |
 | `rowTitle` | 15 / 1.4 | 600 | Episode and series row titles |
 | `body` | 15 / 1.4 | 400–500 | Settings rows, menu items |
 | `meta` | 13 / 1.5 | 400 | Durations, counts, descriptions |
