@@ -1,0 +1,326 @@
+import 'package:audiflow_ui/audiflow_ui.dart';
+import 'package:checks/checks.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+void main() {
+  Widget host(Widget child, {ThemeData? theme}) => MaterialApp(
+    theme: theme ?? AppTheme.light(),
+    home: Scaffold(body: Stack(children: [child])),
+  );
+
+  BoxDecoration decorationOf(WidgetTester tester, Key key) {
+    return tester.widget<DecoratedBox>(find.byKey(key)).decoration
+        as BoxDecoration;
+  }
+
+  group('FloatingNavScroll', () {
+    test('everything at rest at the top', () {
+      final p = FloatingNavScroll.at(offset: 0, heroExtent: 300);
+      check(p.title).equals(0);
+      check(p.background).equals(0);
+      check(p.hero).equals(0);
+    });
+
+    test('hero collapses across its own extent', () {
+      check(
+        FloatingNavScroll.at(offset: 150, heroExtent: 300).hero,
+      ).equals(0.5);
+      check(FloatingNavScroll.at(offset: 600, heroExtent: 300).hero).equals(1);
+    });
+
+    test('title and background fade in only after the hero is gone', () {
+      final before = FloatingNavScroll.at(offset: 250, heroExtent: 300);
+      check(before.title).equals(0);
+      final midway = FloatingNavScroll.at(
+        offset: 300 - FloatingNavScroll.fadeDistance / 2,
+        heroExtent: 300,
+      );
+      check(midway.title).equals(0.5);
+      check(midway.background).equals(0.5);
+      final after = FloatingNavScroll.at(offset: 400, heroExtent: 300);
+      check(after.title).equals(1);
+      check(after.background).equals(1);
+    });
+
+    test('negative offsets (overscroll) stay at rest', () {
+      final p = FloatingNavScroll.at(offset: -80, heroExtent: 300);
+      check(p.title).equals(0);
+      check(p.hero).equals(0);
+    });
+
+    test('zero hero extent shows the bar immediately', () {
+      final p = FloatingNavScroll.at(offset: 0, heroExtent: 0);
+      check(p.title).equals(1);
+      check(p.background).equals(1);
+    });
+  });
+
+  group('FloatingNavButton', () {
+    testWidgets('44px white circle with floating shadow', (tester) async {
+      await tester.pumpWidget(
+        host(
+          FloatingNavButton(
+            icon: Icons.arrow_back_ios_new_rounded,
+            tooltip: 'Back',
+            onPressed: () {},
+          ),
+        ),
+      );
+      check(
+        tester.getSize(find.byKey(FloatingNavButton.surfaceKey)),
+      ).equals(const Size(44, 44));
+      final decoration = decorationOf(tester, FloatingNavButton.surfaceKey);
+      check(decoration.color).equals(AppColors.light.surface);
+      check(decoration.shape).equals(BoxShape.circle);
+      check(decoration.boxShadow).isNotNull().deepEquals(AppShadows.floating);
+    });
+
+    testWidgets('fires onPressed and exposes its tooltip', (tester) async {
+      var taps = 0;
+      await tester.pumpWidget(
+        host(
+          FloatingNavButton(
+            icon: Icons.arrow_back_ios_new_rounded,
+            tooltip: 'Back',
+            onPressed: () => taps++,
+          ),
+        ),
+      );
+      await tester.tap(find.byTooltip('Back'));
+      check(taps).equals(1);
+    });
+  });
+
+  group('FloatingNavActions', () {
+    Widget actions({List<int>? log}) => host(
+      FloatingNavActions(
+        actions: [
+          FloatingNavAction(
+            icon: Icons.search,
+            tooltip: 'Search',
+            onPressed: () => log?.add(0),
+          ),
+          FloatingNavAction(
+            icon: Icons.tune,
+            tooltip: 'Settings',
+            onPressed: () => log?.add(1),
+          ),
+          FloatingNavAction(
+            icon: Icons.more_horiz,
+            tooltip: 'More',
+            onPressed: () => log?.add(2),
+          ),
+        ],
+      ),
+    );
+
+    testWidgets('groups buttons in one white pill, 44 tall', (tester) async {
+      await tester.pumpWidget(actions());
+      final decoration = decorationOf(tester, FloatingNavActions.surfaceKey);
+      check(decoration.color).equals(AppColors.light.surface);
+      check(decoration.borderRadius).equals(AppBorders.pill);
+      check(
+        tester.getSize(find.byKey(FloatingNavActions.surfaceKey)).height,
+      ).equals(44);
+    });
+
+    testWidgets('each action is a 44px target firing its callback', (
+      tester,
+    ) async {
+      final log = <int>[];
+      await tester.pumpWidget(actions(log: log));
+      for (final label in ['Search', 'Settings', 'More']) {
+        final size = tester.getSize(find.byTooltip(label));
+        check(size.width).isGreaterOrEqual(44);
+        await tester.tap(find.byTooltip(label));
+      }
+      check(log).deepEquals([0, 1, 2]);
+    });
+  });
+
+  group('FloatingNavigationBar', () {
+    Widget bar({
+      double titleOpacity = 0,
+      double backgroundOpacity = 0,
+      NavigationSearchField? search,
+      ThemeData? theme,
+    }) => host(
+      FloatingNavigationBar(
+        leading: FloatingNavButton(
+          icon: Icons.arrow_back_ios_new_rounded,
+          tooltip: 'Back',
+          onPressed: () {},
+        ),
+        title: 'Podcast title',
+        titleOpacity: titleOpacity,
+        backgroundOpacity: backgroundOpacity,
+        trailing: FloatingNavActions(
+          actions: [
+            FloatingNavAction(
+              icon: Icons.search,
+              tooltip: 'Search',
+              onPressed: () {},
+            ),
+          ],
+        ),
+        search: search,
+      ),
+      theme: theme,
+    );
+
+    double opacityOf(WidgetTester tester, Finder child) {
+      return tester
+          .widget<Opacity>(
+            find.ancestor(of: child, matching: find.byType(Opacity)).first,
+          )
+          .opacity;
+    }
+
+    testWidgets('hides the title at rest and fades it in', (tester) async {
+      await tester.pumpWidget(bar());
+      check(opacityOf(tester, find.text('Podcast title'))).equals(0);
+      await tester.pumpWidget(bar(titleOpacity: 0.6));
+      check(opacityOf(tester, find.text('Podcast title'))).equals(0.6);
+    });
+
+    testWidgets('title is excluded from semantics while hidden', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(bar());
+      check(find.bySemanticsLabel('Podcast title').evaluate().length).equals(0);
+      await tester.pumpWidget(bar(titleOpacity: 1));
+      check(find.bySemanticsLabel('Podcast title').evaluate().length).equals(1);
+      handle.dispose();
+    });
+
+    testWidgets('background is transparent at rest, bg with hairline later', (
+      tester,
+    ) async {
+      await tester.pumpWidget(bar());
+      var decoration = decorationOf(
+        tester,
+        FloatingNavigationBar.backgroundKey,
+      );
+      check(decoration.color!.a).equals(0);
+
+      await tester.pumpWidget(bar(backgroundOpacity: 1));
+      decoration = decorationOf(tester, FloatingNavigationBar.backgroundKey);
+      check(decoration.color).equals(AppColors.light.bg);
+      final border = decoration.border! as Border;
+      check(border.bottom.color).equals(AppColors.light.hairline);
+    });
+
+    testWidgets('sits below the status bar inset', (tester) async {
+      await tester.pumpWidget(
+        MediaQuery(
+          data: const MediaQueryData(padding: EdgeInsets.only(top: 47)),
+          child: bar(),
+        ),
+      );
+      check(tester.getTopLeft(find.byTooltip('Back')).dy).isGreaterOrEqual(47);
+    });
+
+    testWidgets('search mode replaces the whole row', (tester) async {
+      final controller = TextEditingController();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(
+        bar(
+          search: NavigationSearchField(
+            controller: controller,
+            hintText: 'Search episodes',
+            cancelLabel: 'Cancel',
+            onCancel: () {},
+          ),
+        ),
+      );
+      check(find.byTooltip('Back').evaluate().length).equals(0);
+      check(find.byTooltip('Search').evaluate().length).equals(0);
+      check(find.byType(TextField).evaluate().length).equals(1);
+      check(find.text('Cancel').evaluate().length).equals(1);
+    });
+  });
+
+  group('NavigationSearchField', () {
+    Widget field(TextEditingController controller, {VoidCallback? onCancel}) {
+      return host(
+        Align(
+          alignment: Alignment.topCenter,
+          child: NavigationSearchField(
+            controller: controller,
+            hintText: 'Search episodes',
+            cancelLabel: 'Cancel',
+            onCancel: onCancel ?? () {},
+          ),
+        ),
+      );
+    }
+
+    testWidgets('focuses on appear so the keyboard comes up', (tester) async {
+      final controller = TextEditingController();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(field(controller));
+      await tester.pump();
+      final editable = tester.widget<EditableText>(find.byType(EditableText));
+      check(editable.focusNode.hasFocus).isTrue();
+    });
+
+    testWidgets('cancel uses the accent color and clears the query', (
+      tester,
+    ) async {
+      final controller = TextEditingController(text: 'coten');
+      addTearDown(controller.dispose);
+      var cancelled = 0;
+      await tester.pumpWidget(field(controller, onCancel: () => cancelled++));
+      final cancel = tester.widget<Text>(find.text('Cancel'));
+      final buttonStyle = tester
+          .widget<TextButton>(find.byType(TextButton))
+          .style;
+      check(
+        buttonStyle?.foregroundColor?.resolve({}) ?? cancel.style?.color,
+      ).equals(AppColors.light.accent);
+      await tester.tap(find.text('Cancel'));
+      check(cancelled).equals(1);
+      check(controller.text).equals('');
+    });
+
+    testWidgets('uses the sunken search field fill', (tester) async {
+      final controller = TextEditingController();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(field(controller));
+      final textField = tester.widget<TextField>(find.byType(TextField));
+      check(textField.decoration!.hintText).equals('Search episodes');
+      check(
+        Theme.of(
+          tester.element(find.byType(TextField)),
+        ).inputDecorationTheme.fillColor,
+      ).equals(AppColors.light.surfaceSunken);
+    });
+  });
+
+  group('CollapsingHero', () {
+    testWidgets('fully visible at rest, faded and slightly scaled later', (
+      tester,
+    ) async {
+      Widget hero(double progress) =>
+          host(CollapsingHero(progress: progress, child: const Text('hero')));
+
+      await tester.pumpWidget(hero(0));
+      check(tester.widget<Opacity>(find.byType(Opacity)).opacity).equals(1);
+
+      await tester.pumpWidget(hero(1));
+      check(tester.widget<Opacity>(find.byType(Opacity)).opacity).equals(0);
+      final transform = tester.widget<Transform>(
+        find.descendant(
+          of: find.byType(CollapsingHero),
+          matching: find.byType(Transform),
+        ),
+      );
+      check(
+        // x-axis scale; z stays 1 so getMaxScaleOnAxis would hide it.
+        transform.transform.entry(0, 0),
+      ).isCloseTo(CollapsingHero.minScale, 1e-9);
+    });
+  });
+}

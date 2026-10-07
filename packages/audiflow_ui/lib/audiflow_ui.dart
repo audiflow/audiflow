@@ -51,6 +51,12 @@ export 'src/widgets/lists/year_divider.dart';
 export 'src/widgets/lists/year_grouped_slivers.dart';
 export 'src/widgets/lists/year_picker_bottom_sheet.dart';
 
+// Widgets - Navigation
+export 'src/widgets/navigation/floating_nav_button.dart';
+export 'src/widgets/navigation/floating_nav_scroll.dart';
+export 'src/widgets/navigation/floating_navigation_bar.dart';
+export 'src/widgets/navigation/navigation_search_field.dart';
+
 // Widgets - Search
 export 'src/widgets/search/searchable_app_bar.dart';
 
