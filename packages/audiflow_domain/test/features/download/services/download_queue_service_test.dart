@@ -234,20 +234,79 @@ void main() {
       await processing;
 
       check(storedStatus).equals(const DownloadStatus.paused().toDbValue());
-      verify(
+    });
+
+    test('a quick resume is not turned into a cancel', () async {
+      final task = _task(id: 1, episodeId: 10, downloadedBytes: 800);
+      final episode = _episode(id: 10);
+      await Future<void>.delayed(Duration.zero);
+      clearInteractions(mockRepository);
+
+      var pendingCalls = 0;
+      when(
+        mockRepository.getNextPending(isOnWifi: anyNamed('isOnWifi')),
+      ).thenAnswer((_) async => pendingCalls++ == 0 ? task : null);
+      final writes = <int>[];
+      when(
         mockRepository.updateStatus(
-          id: 1,
-          status: const DownloadStatus.paused(),
+          id: anyNamed('id'),
+          status: anyNamed('status'),
+          localPath: anyNamed('localPath'),
+          lastError: anyNamed('lastError'),
         ),
-      ).called(1);
+      ).thenAnswer((invocation) async {
+        final status = invocation.namedArguments[#status] as DownloadStatus;
+        writes.add(status.toDbValue());
+      });
+      when(
+        mockRepository.getById(1),
+      ).thenAnswer((_) async => _task(id: 1, episodeId: 10, status: 1));
+      when(mockEpisodeRepo.getById(10)).thenAnswer((_) async => episode);
+
+      // The stopped transfer reports only after the resume has landed.
+      final download = Completer<String>();
+      when(
+        mockFileService.downloadFile(
+          taskId: 1,
+          url: task.audioUrl,
+          episodeId: task.episodeId,
+          episodeTitle: episode.title,
+          resumeFromBytes: task.downloadedBytes,
+          onProgress: anyNamed('onProgress'),
+        ),
+      ).thenAnswer((_) => download.future);
+
+      final processing = service.startQueue();
+      await Future<void>.delayed(Duration.zero);
+      await service.pauseDownload(1);
+      await service.resumeDownload(1);
+      download.completeError(DownloadException.cancelled());
+      await processing;
+
+      check(
+        writes,
+      ).not((it) => it.contains(const DownloadStatus.cancelled().toDbValue()));
+      check(writes.last).equals(const DownloadStatus.pending().toDbValue());
+    });
+
+    test('pause and cancel leave a finished download alone', () async {
+      when(
+        mockRepository.getById(7),
+      ).thenAnswer((_) async => _task(id: 7, status: 3));
+      clearInteractions(mockRepository);
+
+      await service.pauseDownload(7);
+      await service.cancelDownload(7);
+
       verifyNever(
         mockRepository.updateStatus(
-          id: 1,
-          status: const DownloadStatus.cancelled(),
+          id: 7,
+          status: anyNamed('status'),
           localPath: anyNamed('localPath'),
           lastError: anyNamed('lastError'),
         ),
       );
+      verifyNever(mockFileService.cancelDownload(7));
     });
   });
 

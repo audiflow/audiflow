@@ -123,6 +123,12 @@ class DownloadQueueService implements SuspendableWriter {
   /// task neither retries back-to-back nor holds up the tasks behind it.
   final _backoffUntil = <int, DateTime>{};
 
+  /// Tasks whose transfer is being stopped by a pause. The stopped
+  /// transfer's error handler must not record a cancel for them, whatever
+  /// the stored status is by then (a quick resume may already have set it
+  /// back to pending).
+  final _pausing = <int>{};
+
   /// The running queue drain, so [suspend] can wait for it to settle.
   Future<void>? _processing;
 
@@ -271,6 +277,9 @@ class DownloadQueueService implements SuspendableWriter {
   }
 
   Future<void> _processDownload(DownloadTask task) async {
+    // A pause that arrived after an earlier transfer had already ended
+    // must not swallow this transfer's own cancel.
+    _pausing.remove(task.id);
     _activeDownload = task;
     _activeDownloadController.add(task);
 
@@ -400,11 +409,10 @@ class DownloadQueueService implements SuspendableWriter {
     _logger.e('Download error: ${error.message}', error: error);
 
     if (error.type == DownloadErrorType.cancelled) {
-      // A pause stops the transfer the same way a cancel does; keep the
-      // paused status (and the partial file) so a resume continues from
-      // where it stopped instead of starting over.
-      final current = await _repository.getById(task.id);
-      if (current?.downloadStatus is DownloadStatusPaused) return;
+      // A pause stops the transfer the same way a cancel does; leave the
+      // status to the pause (or a resume after it) and keep the partial
+      // file, so the download continues from where it stopped.
+      if (_pausing.remove(task.id)) return;
       await _repository.updateStatus(
         id: task.id,
         status: const DownloadStatus.cancelled(),
@@ -441,16 +449,22 @@ class DownloadQueueService implements SuspendableWriter {
     }
   }
 
-  /// Pauses an active download.
+  /// Pauses an active download. A task that already finished is left
+  /// alone, so a stale request cannot hide its saved file.
   Future<void> pauseDownload(int taskId) async {
-    // Paused must be stored before the transfer stops: the stopped
-    // transfer's error handler reads the status to tell a pause from a
-    // cancel, and would otherwise record a cancel and drop the progress.
+    if (await _isCompleted(taskId)) return;
     await _repository.updateStatus(
       id: taskId,
       status: const DownloadStatus.paused(),
     );
+    // Only a running transfer reports back; mark it before stopping it.
+    if (_activeDownload?.id == taskId) _pausing.add(taskId);
     _fileService.cancelDownload(taskId);
+  }
+
+  Future<bool> _isCompleted(int taskId) async {
+    final task = await _repository.getById(taskId);
+    return task?.downloadStatus is DownloadStatusCompleted;
   }
 
   /// Resumes a paused download by moving it back to pending.
@@ -464,8 +478,9 @@ class DownloadQueueService implements SuspendableWriter {
     unawaited(_processQueue());
   }
 
-  /// Cancels a download.
+  /// Cancels a download. A task that already finished is left alone.
   Future<void> cancelDownload(int taskId) async {
+    if (await _isCompleted(taskId)) return;
     _fileService.cancelDownload(taskId);
     await _repository.updateStatus(
       id: taskId,
