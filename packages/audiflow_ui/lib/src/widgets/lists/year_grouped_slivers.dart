@@ -1,7 +1,10 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 
 import '../../themes/app_colors.dart';
+import 'content_backdrop.dart';
 import 'year_divider.dart';
 import 'year_picker_bottom_sheet.dart';
 
@@ -256,22 +259,31 @@ class _StickyYearHeader extends StatelessWidget {
       valueListenable: currentYearNotifier,
       builder: (context, year, _) {
         final theme = Theme.of(context);
-        final colorScheme = theme.colorScheme;
+        final colors = AppColors.of(context);
 
-        return Material(
-          color: colorScheme.surface,
-          child: InkWell(
-            onTap: () => onTap(context, year),
-            child: SizedBox(
-              height: yearHeaderHeight,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    year == 0 ? 'Unknown' : '$year',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
+        // Frosted: rows sliding under the header stay faintly visible
+        // through it, matching the list's frosted backdrop.
+        return ClipRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+            child: Material(
+              color: ContentBackdrop.baseColorFor(
+                colors,
+              ).withValues(alpha: 0.8),
+              child: InkWell(
+                onTap: () => onTap(context, year),
+                child: SizedBox(
+                  height: yearHeaderHeight,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        year == 0 ? 'Unknown' : '$year',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
                 ),

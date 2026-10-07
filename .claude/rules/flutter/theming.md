@@ -5,7 +5,7 @@ paths: **/*.dart
 
 Source of truth: `docs/design/redesign.md`. Follow it for tokens, components, and screen layouts.
 
-* **Surfaces:** Warm neutral background, white grouped surfaces separated by hairlines. No background textures or gradient washes.
+* **Surfaces:** Warm neutral background, white grouped surfaces separated by hairlines. Long content lists sit on `ContentBackdrop`: a surface a touch lighter than the background with a very faint mottle (frosted glass); no other background textures or gradient washes.
 * **Shadows:** Grouped surfaces use a single soft 1px shadow. Floating elements (navigation buttons, mini player, menus) use a two-layer neutral shadow. Never colored or "glow" shadows.
 * **Accent:** One accent color, used for primary actions, selection, links, and progress. Everything else is neutral.
 * **Progress:** Show playback progress as a thin line on the bottom edge of a row or card. Do not change the shape of play controls to show progress.

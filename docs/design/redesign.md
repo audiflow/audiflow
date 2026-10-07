@@ -27,11 +27,11 @@ Status: **approved direction; tokens and theme (section 7 step 1) implemented, c
 ## 1. Principles
 
 - **Quiet surfaces, one accent.** Warm neutral ground, white content surfaces, a single burnt-orange accent. Color is reserved for state (selected, playing, progress) and primary actions.
-- **Grouped lists over cards.** Related rows share one rounded white surface separated by hairlines, instead of one floating card per row. This inset style is for settings and short groups of controls. Long content lists (episodes, series, podcasts) run full width on `bg`, with hairlines starting at the text, so narrow phones do not lose width to side margins.
+- **Grouped lists over cards.** Related rows share one rounded white surface separated by hairlines, instead of one floating card per row. This inset style is for settings and short groups of controls. Long content lists (episodes, series, podcasts) run full width on the content list backdrop, with hairlines starting at the text, so narrow phones do not lose width to side margins.
 - **Large, left-aligned titles** on top-level tabs. Detail screens use a centered or side-by-side hero that collapses on scroll.
 - **Progress lives on the bottom edge.** Anything with playback progress (rows, cards, mini player) shows it as a thin line along its bottom edge. Play controls never change shape to show progress.
 - **Operations vs. settings are separated.** A `…` menu holds actions; a settings sheet holds persistent per-podcast preferences.
-- **No decorative effects.** No background noise texture, no colored glow shadows, no gradient washes.
+- **No decorative effects.** No background noise texture, no colored glow shadows, no gradient washes. The one exception is the content list backdrop: below the sticky bar, long lists sit on a surface lifted from `bg` toward `surface` with very faint, soft patches of light and shade (frosted glass or still water), so the list reads as its own layer. It stays fixed while rows scroll over it, and pinned headers over it are frosted (translucent with a blur).
 
 ## 2. Design tokens
 

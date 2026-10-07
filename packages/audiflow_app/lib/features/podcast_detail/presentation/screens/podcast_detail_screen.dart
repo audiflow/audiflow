@@ -71,6 +71,14 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
   /// Measures the hero so the collapse spans exactly its height.
   final GlobalKey _heroKey = GlobalKey();
 
+  /// Locate the sticky bar's bottom edge, where the list surface starts.
+  final GlobalKey _bodyKey = GlobalKey();
+  final GlobalKey _stickyBarKey = GlobalKey();
+
+  /// Screen y where the list surface starts. Infinite until first layout
+  /// so the texture never flashes over the hero.
+  final ValueNotifier<double> _listTop = ValueNotifier(double.infinity);
+
   /// Drives the floating navigation and hero collapse without rebuilding
   /// the whole sliver tree on every scroll frame.
   final ValueNotifier<FloatingNavScroll> _navScroll = ValueNotifier(
@@ -177,9 +185,11 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
     }
 
     _scrollController.addListener(_updateNavScroll);
+    _searchTransition.addListener(_updateListTop);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _attachScrollLogger();
+      _updateListTop();
     });
   }
 
@@ -190,6 +200,19 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
       offset: _scrollController.offset,
       heroExtent: heroHeight ?? 1,
     );
+    _updateListTop();
+  }
+
+  void _updateListTop() {
+    final body = _bodyKey.currentContext?.findRenderObject();
+    final bar = _stickyBarKey.currentContext?.findRenderObject();
+    if (body is! RenderBox || bar is! RenderBox) return;
+    if (!body.hasSize || !bar.hasSize || !bar.attached) return;
+    final bottom = bar.localToGlobal(
+      Offset(0, bar.size.height),
+      ancestor: body,
+    );
+    _listTop.value = bottom.dy;
   }
 
   void _setSearching(bool searching) {
@@ -243,6 +266,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
     _searchController.dispose();
     _ownScrollController.dispose();
     _navScroll.dispose();
+    _listTop.dispose();
     _searchTransition.dispose();
     final feedUrl = podcast.feedUrl;
     if (feedUrl != null) {
@@ -296,7 +320,14 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
+        key: _bodyKey,
         children: [
+          Positioned.fill(
+            child: ValueListenableBuilder<double>(
+              valueListenable: _listTop,
+              builder: (context, top, _) => ContentBackdrop(top: top),
+            ),
+          ),
           _buildBody(),
           Positioned(
             top: 0,
@@ -746,6 +777,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
             ),
             PinnedHeaderSliver(
               child: PodcastDetailStickyBar(
+                key: _stickyBarKey,
                 showModeSwitch: showPlaylistToggle,
                 mode: effectiveViewMode,
                 onModeChanged: (mode) {
