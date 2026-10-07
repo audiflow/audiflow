@@ -9,6 +9,7 @@ void main() {
     String title = 'Test Episode',
     String pillLabel = '33m',
     String? dateLabel = 'Apr 29',
+    String? numberLabel,
     String? description,
     String? thumbnailUrl,
     bool isPlaying = false,
@@ -31,6 +32,7 @@ void main() {
             title: title,
             pillLabel: pillLabel,
             dateLabel: dateLabel,
+            numberLabel: numberLabel,
             description: description,
             thumbnailUrl: thumbnailUrl,
             isPlaying: isPlaying,
@@ -50,6 +52,22 @@ void main() {
   }
 
   group('EpisodeCard', () {
+    testWidgets('number label takes the top line; date joins the pill', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        buildSubject(numberLabel: '#12', dateLabel: 'Mar 22'),
+      );
+      final number = tester.getRect(find.text('#12'));
+      final date = tester.getRect(find.text('Mar 22'));
+      final pill = tester.getRect(find.text('33m'));
+      check(
+        number.top,
+      ).isLessThan(tester.getRect(find.text('Test Episode')).top);
+      check(date.center.dy).isCloseTo(pill.center.dy, 1);
+      check(pill.right).isLessThan(date.left);
+    });
+
     testWidgets('renders title, pill, and date separately', (tester) async {
       await tester.pumpWidget(
         buildSubject(

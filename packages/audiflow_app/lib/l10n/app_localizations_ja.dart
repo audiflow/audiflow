@@ -984,6 +984,16 @@ class AppLocalizationsJa extends AppLocalizations {
   String get seriesStatusPlayed => '再生済み';
 
   @override
+  String seriesResumeEpisode(int number) {
+    return '#$number を続きから再生';
+  }
+
+  @override
+  String seriesPlayEpisode(int number) {
+    return '#$number から再生';
+  }
+
+  @override
   String get playerTabNowPlaying => '再生中';
 
   @override

@@ -1892,6 +1892,18 @@ abstract class AppLocalizations {
   /// **'Played'**
   String get seriesStatusPlayed;
 
+  /// Series hero button resuming the in-progress episode
+  ///
+  /// In en, this message translates to:
+  /// **'Resume #{number}'**
+  String seriesResumeEpisode(int number);
+
+  /// Series hero button starting the next unplayed episode
+  ///
+  /// In en, this message translates to:
+  /// **'Play #{number}'**
+  String seriesPlayEpisode(int number);
+
   /// Now Playing tab label in player
   ///
   /// In en, this message translates to:

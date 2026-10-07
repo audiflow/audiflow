@@ -348,6 +348,8 @@
   "seriesStatusUnplayed": "未再生",
   "seriesStatusPartlyPlayed": "{played}/{total} 再生済み",
   "seriesStatusPlayed": "再生済み",
+  "seriesResumeEpisode": "#{number} を続きから再生",
+  "seriesPlayEpisode": "#{number} から再生",
 
   "playerTabNowPlaying": "再生中",
   "playerTabTranscript": "書き起こし",

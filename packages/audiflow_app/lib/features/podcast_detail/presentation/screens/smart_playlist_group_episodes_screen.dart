@@ -10,6 +10,10 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../download/presentation/helpers/batch_download_action_helper.dart';
 import '../utils/smart_playlist_def_resolver.dart';
 import '../widgets/play_order_bottom_sheet.dart';
+import '../utils/series_resume.dart';
+import '../widgets/episode_list_section.dart' show SortOrderButton;
+import '../widgets/inline_group_card.dart' show formatGroupDuration;
+import '../widgets/series_hero.dart';
 import '../widgets/smart_playlist_episode_list_tile.dart';
 
 /// Screen showing episodes within a smart playlist group.
@@ -49,14 +53,32 @@ class SmartPlaylistGroupEpisodesScreen extends ConsumerStatefulWidget {
 }
 
 class _SmartPlaylistGroupEpisodesScreenState
-    extends ConsumerState<SmartPlaylistGroupEpisodesScreen> {
-  ScrollController? _fallbackScrollController;
+    extends ConsumerState<SmartPlaylistGroupEpisodesScreen>
+    with SingleTickerProviderStateMixin {
+  final ScrollController _scrollController = ScrollController();
 
-  ScrollController get _scrollController =>
-      PrimaryScrollController.maybeOf(context) ??
-      (_fallbackScrollController ??= ScrollController());
+  /// Measures the hero so the collapse spans exactly its height, and
+  /// finds where the list surface starts (the hero's bottom edge).
+  final GlobalKey _heroKey = GlobalKey();
+  final GlobalKey _bodyKey = GlobalKey();
+
+  /// Drives the floating navigation and hero collapse without rebuilding
+  /// the sliver tree on every scroll frame.
+  final ValueNotifier<FloatingNavScroll> _navScroll = ValueNotifier(
+    FloatingNavScroll.at(offset: 0, heroExtent: 1),
+  );
+
+  /// Screen y where the list surface starts. Infinite until first layout
+  /// so the texture never flashes over the hero.
+  final ValueNotifier<double> _listTop = ValueNotifier(double.infinity);
+
+  late final AnimationController _searchTransition = AnimationController(
+    vsync: this,
+    duration: FloatingNavigationBar.switchDuration,
+  );
 
   late SortOrder _sortOrder;
+  bool _searching = false;
   String _searchQuery = '';
   final _searchController = TextEditingController();
   Timer? _searchDebounce;
@@ -76,14 +98,68 @@ class _SmartPlaylistGroupEpisodesScreenState
             ? widget.parentPlaylist.groupSort!.order
             : SortOrder.descending);
     _resolvePlayOrder();
+    _scrollController.addListener(_updateNavScroll);
+    _searchTransition.addListener(_updateListTop);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _updateNavScroll();
+    });
   }
 
   @override
   void dispose() {
     _searchDebounce?.cancel();
     _searchController.dispose();
-    _fallbackScrollController?.dispose();
+    _scrollController.dispose();
+    _navScroll.dispose();
+    _listTop.dispose();
+    _searchTransition.dispose();
     super.dispose();
+  }
+
+  void _updateNavScroll() {
+    if (!_scrollController.hasClients) return;
+    final heroHeight = _heroKey.currentContext?.size?.height;
+    _navScroll.value = FloatingNavScroll.at(
+      offset: _scrollController.offset,
+      heroExtent: heroHeight ?? 1,
+    );
+    _updateListTop();
+  }
+
+  void _updateListTop() {
+    final body = _bodyKey.currentContext?.findRenderObject();
+    final hero = _heroKey.currentContext?.findRenderObject();
+    if (body is! RenderBox || hero is! RenderBox) return;
+    if (!body.hasSize || !hero.hasSize || !hero.attached) return;
+    final bottom = hero.localToGlobal(
+      Offset(0, hero.size.height),
+      ancestor: body,
+    );
+    _listTop.value = bottom.dy;
+  }
+
+  FloatingNavScroll get _effectiveNavScroll =>
+      _navScroll.value.withSearch(_searchTransition.value);
+
+  void _setSearching(bool searching) {
+    _searchDebounce?.cancel();
+    setState(() {
+      _searching = searching;
+      _searchQuery = '';
+    });
+    if (!searching) _searchController.clear();
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0,
+        duration: FloatingNavigationBar.switchDuration,
+        curve: Curves.easeOutCubic,
+      );
+    }
+    if (searching) {
+      _searchTransition.animateTo(1, curve: Curves.easeOutCubic);
+    } else {
+      _searchTransition.animateBack(0, curve: Curves.easeOutCubic);
+    }
   }
 
   List<int> get _episodeIds =>
@@ -188,9 +264,6 @@ class _SmartPlaylistGroupEpisodesScreenState
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context);
-
     // Re-resolve play order when subscription finishes loading.
     // initState reads synchronously and may miss a still-loading provider.
     // Listen to whichever provider is available (itunesId preferred).
@@ -211,111 +284,139 @@ class _SmartPlaylistGroupEpisodesScreenState
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_formatGroupTitle()),
-        actions: [
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              final allTasks = ref.read(allDownloadsProvider).value ?? [];
-              final dlState = computeBatchDownloadState(
-                episodeIds: _episodeIds,
-                allTasks: allTasks,
-              );
-              switch (value) {
-                case 'play_order':
-                  _showPlayOrderSheet();
-                case 'download_all':
-                  if (dlState.hasDownloadable) {
-                    unawaited(
-                      handleBatchDownload(
-                        context: context,
-                        ref: ref,
-                        episodeIds: _episodeIds,
-                        downloadableCount: dlState.downloadableCount,
-                      ),
-                    );
-                  }
-                case 'cancel_all':
-                  unawaited(
-                    handleBatchCancel(
-                      context: context,
-                      ref: ref,
-                      episodeIds: _episodeIds,
-                    ),
-                  );
-                case 'resume_all':
-                  unawaited(
-                    handleBatchResume(
-                      context: context,
-                      ref: ref,
-                      episodeIds: _episodeIds,
-                    ),
-                  );
-              }
-            },
-            itemBuilder: (context) {
-              final allTasks = ref.read(allDownloadsProvider).value ?? [];
-              final dlState = computeBatchDownloadState(
-                episodeIds: _episodeIds,
-                allTasks: allTasks,
-              );
-              return [
-                PopupMenuItem(
-                  value: 'play_order',
-                  child: Text(l10n.playOrderMenuTitle),
-                ),
-                const PopupMenuDivider(),
-                PopupMenuItem(
-                  enabled: dlState.hasDownloadable,
-                  value: 'download_all',
-                  child: ListTile(
-                    leading: const Icon(Icons.download),
-                    title: Text(l10n.downloadAllEpisodes),
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-                if (dlState.hasCancelable)
-                  PopupMenuItem(
-                    value: 'cancel_all',
-                    child: ListTile(
-                      leading: const Icon(Icons.cancel_outlined),
-                      title: Text(l10n.downloadCancelAll),
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                  ),
-                if (dlState.hasPaused)
-                  PopupMenuItem(
-                    value: 'resume_all',
-                    child: ListTile(
-                      leading: const Icon(Icons.play_arrow),
-                      title: Text(l10n.downloadResumeAll),
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                  ),
-              ];
-            },
+      body: Stack(
+        key: _bodyKey,
+        children: [
+          Positioned.fill(
+            child: ValueListenableBuilder<double>(
+              valueListenable: _listTop,
+              builder: (context, top, _) => ContentBackdrop(top: top),
+            ),
+          ),
+          _buildScrollView(),
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: ListenableBuilder(
+              listenable: Listenable.merge([_navScroll, _searchTransition]),
+              builder: (context, _) => _buildNavigation(_effectiveNavScroll),
+            ),
           ),
         ],
-      ),
-      body: CustomScrollView(
-        controller: _scrollController,
-        slivers: _buildBody(theme),
       ),
     );
   }
 
-  List<Widget> _buildBody(ThemeData theme) {
+  Widget _buildNavigation(FloatingNavScroll scroll) {
+    final l10n = AppLocalizations.of(context);
+    return FloatingNavigationBar(
+      leading: FloatingNavButton(
+        icon: Icons.arrow_back_ios_new_rounded,
+        tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+        onPressed: () => Navigator.of(context).maybePop(),
+      ),
+      title: _formatGroupTitle(),
+      titleOpacity: scroll.title,
+      backgroundOpacity: scroll.background,
+      trailing: FloatingNavActions(
+        actions: [
+          FloatingNavAction(
+            icon: Icons.search_rounded,
+            tooltip: l10n.podcastDetailSearchTooltip,
+            onPressed: () => _setSearching(true),
+          ),
+          FloatingNavAction(
+            icon: Icons.more_horiz_rounded,
+            tooltip: l10n.podcastDetailMoreTooltip,
+            onPressed: _showMoreMenu,
+          ),
+        ],
+      ),
+      search: _searching
+          ? NavigationSearchField(
+              controller: _searchController,
+              hintText: l10n.podcastDetailSearchHint,
+              cancelLabel: l10n.commonCancel,
+              onChanged: _onSearchChanged,
+              onCancel: () => _setSearching(false),
+            )
+          : null,
+    );
+  }
+
+  /// Overflow popover: downloads as tiles, play order below.
+  Future<void> _showMoreMenu() {
+    final l10n = AppLocalizations.of(context);
+    final allTasks = ref.read(allDownloadsProvider).value ?? [];
+    final dlState = computeBatchDownloadState(
+      episodeIds: _episodeIds,
+      allTasks: allTasks,
+    );
+    return showActionMenu(
+      context: context,
+      top: FloatingNavigationBar.heightOf(context),
+      tiles: [
+        if (dlState.hasDownloadable)
+          ActionMenuEntry(
+            icon: Icons.download_rounded,
+            label: l10n.downloadAllEpisodes,
+            onSelected: () => unawaited(
+              handleBatchDownload(
+                context: context,
+                ref: ref,
+                episodeIds: _episodeIds,
+                downloadableCount: dlState.downloadableCount,
+              ),
+            ),
+          ),
+        if (dlState.hasCancelable)
+          ActionMenuEntry(
+            icon: Icons.cancel_outlined,
+            label: l10n.downloadCancelAll,
+            onSelected: () => unawaited(
+              handleBatchCancel(
+                context: context,
+                ref: ref,
+                episodeIds: _episodeIds,
+              ),
+            ),
+          ),
+        if (dlState.hasPaused)
+          ActionMenuEntry(
+            icon: Icons.play_arrow_rounded,
+            label: l10n.downloadResumeAll,
+            onSelected: () => unawaited(
+              handleBatchResume(
+                context: context,
+                ref: ref,
+                episodeIds: _episodeIds,
+              ),
+            ),
+          ),
+      ],
+      sections: [
+        [
+          ActionMenuEntry(
+            icon: Icons.swap_vert,
+            label: l10n.playOrderMenuTitle,
+            onSelected: _showPlayOrderSheet,
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildScrollView() {
     final episodesAsync = ref.watch(smartPlaylistEpisodesProvider(_episodeIds));
+    final episodes = episodesAsync.value;
 
     // Resolve shared thumbnail from episodes. Non-null when the group
     // has a single episode, or when the first two episodes share the
     // same image (indicating ALL episodes likely use the same thumbnail).
-    final sharedThumbnailUrl = episodesAsync
-        .whenData(_resolveSharedThumbnail)
-        .value;
+    final sharedThumbnailUrl = episodes == null
+        ? null
+        : _resolveSharedThumbnail(episodes);
 
     // Header shows group.thumbnailUrl, then the shared thumbnail,
     // then podcast-level artwork. Page header artwork always
@@ -327,51 +428,99 @@ class _SmartPlaylistGroupEpisodesScreenState
         widget.podcastArtworkUrl ??
         widget.feedImageUrl;
 
-    // Dedup only uses the shared thumbnail (never group.thumbnailUrl,
-    // which may match only one episode and hide just that one).
-    return [
-      SliverToBoxAdapter(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: TextField(
-            controller: _searchController,
-            onChanged: _onSearchChanged,
-            decoration: InputDecoration(
-              hintText: MaterialLocalizations.of(context).searchFieldLabel,
-              prefixIcon: const Icon(Icons.search),
-              suffixIcon: ValueListenableBuilder<TextEditingValue>(
-                valueListenable: _searchController,
-                builder: (context, value, child) {
-                  if (value.text.isEmpty) return const SizedBox.shrink();
-                  return IconButton(
-                    icon: const Icon(Icons.clear),
-                    onPressed: () {
-                      _searchController.clear();
-                      _searchDebounce?.cancel();
-                      setState(() => _searchQuery = '');
-                    },
-                  );
-                },
+    // Content swaps (search, sort) can clamp the offset without a scroll
+    // event; resync the hero and backdrop after layout.
+    return NotificationListener<ScrollMetricsNotification>(
+      onNotification: (_) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _updateNavScroll();
+        });
+        return false;
+      },
+      child: CustomScrollView(
+        controller: _scrollController,
+        slivers: [
+          // Reserves the floating navigation's height; pinned so the year
+          // header stops under the bar instead of behind it.
+          PinnedHeaderSliver(
+            child: SizedBox(height: FloatingNavigationBar.heightOf(context)),
+          ),
+          SliverToBoxAdapter(
+            // Kept mounted in search: its height animates to zero instead
+            // of popping out.
+            child: SizeTransition(
+              sizeFactor: ReverseAnimation(_searchTransition),
+              alignment: Alignment.bottomCenter,
+              child: ListenableBuilder(
+                listenable: Listenable.merge([_navScroll, _searchTransition]),
+                builder: (context, child) => CollapsingHero(
+                  progress: _effectiveNavScroll.hero,
+                  child: child!,
+                ),
+                child: KeyedSubtree(
+                  key: _heroKey,
+                  child: _buildHero(episodes, headerThumbnailUrl),
+                ),
               ),
-              filled: true,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(28),
-                borderSide: BorderSide.none,
-              ),
-              contentPadding: const EdgeInsets.symmetric(vertical: 0),
             ),
           ),
-        ),
+          // Dedup only uses the shared thumbnail (never group.thumbnailUrl,
+          // which may match only one episode and hide just that one).
+          ..._buildEpisodeList(episodesAsync, sharedThumbnailUrl),
+        ],
       ),
-      SliverToBoxAdapter(
-        child: _GroupHeader(
-          title: _formatGroupTitle(),
-          podcastTitle: widget.podcastTitle,
-          thumbnailUrl: headerThumbnailUrl,
-        ),
+    );
+  }
+
+  Widget _buildHero(
+    List<SmartPlaylistEpisodeData>? episodes,
+    String? thumbnailUrl,
+  ) {
+    final l10n = AppLocalizations.of(context);
+    final totalMs = episodes == null
+        ? widget.group.totalDurationMs
+        : episodes.fold<int>(0, (sum, d) => sum + (d.episode.durationMs ?? 0));
+    final count = l10n.groupEpisodeCount(_episodeIds.length);
+    final duration = formatGroupDuration(totalMs, l10n);
+    final target = episodes == null
+        ? null
+        : seriesResumeTarget(episodes, field: _effectiveSortField);
+    return SeriesHero(
+      title: _formatGroupTitle(),
+      podcastTitle: widget.podcastTitle,
+      meta: duration == null ? count : '$count · $duration',
+      thumbnailUrl: thumbnailUrl,
+      onArtworkTap: thumbnailUrl == null
+          ? null
+          : () => _showArtworkOverlay(thumbnailUrl),
+      onPodcastTap: () => Navigator.of(context).maybePop(),
+      resumeLabel: target == null
+          ? null
+          : target.resuming
+          ? l10n.seriesResumeEpisode(target.number)
+          : l10n.seriesPlayEpisode(target.number),
+      onResume: target == null
+          ? null
+          : () => _tileFor(target.data).togglePlayback(context, ref),
+    );
+  }
+
+  void _showArtworkOverlay(String artworkUrl) {
+    Navigator.of(context).push(
+      PageRouteBuilder<void>(
+        opaque: false,
+        barrierDismissible: true,
+        barrierColor: Colors.black87,
+        transitionDuration: const Duration(milliseconds: 300),
+        reverseTransitionDuration: const Duration(milliseconds: 250),
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return ArtworkOverlay(
+            imageUrl: artworkUrl,
+            heroTag: 'group_artwork_$artworkUrl',
+          );
+        },
       ),
-      ..._buildEpisodeList(theme, headerThumbnailUrl: sharedThumbnailUrl),
-    ];
+    );
   }
 
   /// Returns the first episode's imageUrl when the group has a single
@@ -386,68 +535,59 @@ class _SmartPlaylistGroupEpisodesScreenState
     return firstUrl == episodes[1].episode.imageUrl ? firstUrl : null;
   }
 
-  Widget _buildSortHeader(
-    ThemeData theme, {
-    required bool showSortSwitch,
-    int? episodeCount,
+  EpisodeSortField get _effectiveSortField =>
+      (widget.group.episodeSort ?? widget.parentPlaylist.episodeSort)?.field ??
+      EpisodeSortField.publishedAt;
+
+  /// The row for [data]; also used to start playback from the hero the
+  /// same way the row's play pill would.
+  SmartPlaylistEpisodeListTile _tileFor(
+    SmartPlaylistEpisodeData data, {
+    String? feedImageUrl,
   }) {
-    final colorScheme = theme.colorScheme;
-    final l10n = AppLocalizations.of(context);
-    return Row(
-      children: [
-        Text(
-          l10n.podcastDetailEpisodeCount(episodeCount ?? _episodeIds.length),
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: colorScheme.onSurfaceVariant,
-          ),
+    final number = data.episode.episodeNumber;
+    return SmartPlaylistEpisodeListTile(
+      key: ValueKey(data.episode.id),
+      episode: data.episode,
+      podcastTitle: widget.podcastTitle,
+      artworkUrl: widget.podcastArtworkUrl,
+      feedImageUrl: feedImageUrl ?? widget.feedImageUrl,
+      showThumbnail: _resolveEpisodeRowThumbnail(),
+      lastRefreshedAt: widget.lastRefreshedAt,
+      progress: data.progress,
+      siblingEpisodeIds: _episodeIds,
+      itunesId: widget.itunesId,
+      feedUrl: widget.feedUrl,
+      effectiveOrder: _resolvedPlayOrder,
+      displayTitle: EffectiveEpisodeTitle.forPlaylist(
+        playlist: _resolvePlaylistDef(),
+        episode: data.episode,
+      ),
+      playlistId: widget.parentPlaylist.id,
+      numberLabel: number == null ? null : '#$number',
+    );
+  }
+
+  /// Right-aligned sort toggle above the list; scrolls with the content.
+  Widget _buildSortRow() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: Spacing.sm),
+      child: Align(
+        alignment: AlignmentDirectional.centerEnd,
+        child: SortOrderButton(
+          sortOrder: _sortOrder,
+          onPressed: _toggleSortOrder,
         ),
-        if (showSortSwitch) ...[
-          const Spacer(),
-          InkWell(
-            borderRadius: BorderRadius.circular(16),
-            onTap: _toggleSortOrder,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: Spacing.sm,
-                vertical: Spacing.xxs,
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    _sortOrder == SortOrder.ascending
-                        ? Icons.arrow_upward
-                        : Icons.arrow_downward,
-                    size: 16,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    _sortOrder == SortOrder.ascending
-                        ? l10n.podcastDetailOldestFirst
-                        : l10n.podcastDetailNewestFirst,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ],
+      ),
     );
   }
 
   List<Widget> _buildEpisodeList(
-    ThemeData theme, {
-    String? headerThumbnailUrl,
-  }) {
-    final episodesAsync = ref.watch(smartPlaylistEpisodesProvider(_episodeIds));
-
-    final effectiveFeedImageUrl = headerThumbnailUrl ?? widget.feedImageUrl;
-
-    final showThumbnail = _resolveEpisodeRowThumbnail();
+    AsyncValue<List<SmartPlaylistEpisodeData>> episodesAsync,
+    String? sharedThumbnailUrl,
+  ) {
+    final theme = Theme.of(context);
+    final feedImageUrl = sharedThumbnailUrl ?? widget.feedImageUrl;
 
     return episodesAsync.when(
       data: (episodes) {
@@ -458,23 +598,19 @@ class _SmartPlaylistGroupEpisodesScreenState
           getDescription: (e) => e.episode.description,
         );
 
-        final sortHeaderSliver = SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: Spacing.md),
-            child: _buildSortHeader(
-              theme,
-              showSortSwitch:
-                  _showYearHeaders || widget.parentPlaylist.userSortable,
-              episodeCount: displayEpisodes.length,
-            ),
-          ),
+        final showSortSwitch =
+            _showYearHeaders || widget.parentPlaylist.userSortable;
+        final sortRow = SliverToBoxAdapter(
+          child: showSortSwitch
+              ? _buildSortRow()
+              : const SizedBox(height: Spacing.sm),
         );
 
         if (displayEpisodes.isEmpty) {
           if (2 <= _searchQuery.length) {
             return [
-              sortHeaderSliver,
               SliverFillRemaining(
+                hasScrollBody: false,
                 child: Center(
                   child: Text(
                     AppLocalizations.of(context).podcastDetailNoResults,
@@ -483,58 +619,39 @@ class _SmartPlaylistGroupEpisodesScreenState
               ),
             ];
           }
-          return [SliverFillRemaining(child: _buildEmptyState(theme))];
-        }
-
-        if (_showYearHeaders) {
           return [
-            sortHeaderSliver,
-            ..._buildYearGroupedSlivers(
-              displayEpisodes,
-              theme,
-              feedImageUrl: effectiveFeedImageUrl,
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: _buildEmptyState(theme),
             ),
           ];
         }
 
-        final effectiveSort =
-            widget.group.episodeSort ?? widget.parentPlaylist.episodeSort;
+        if (_showYearHeaders) {
+          return [
+            sortRow,
+            ..._buildYearGroupedSlivers(
+              displayEpisodes,
+              feedImageUrl: feedImageUrl,
+            ),
+          ];
+        }
+
         final effectiveRule = EpisodeSortRule(
-          field: effectiveSort?.field ?? EpisodeSortField.publishedAt,
+          field: _effectiveSortField,
           order: _sortOrder,
         );
         final sorted = List.of(displayEpisodes);
         sortEpisodeData(sorted, effectiveRule);
 
-        final playlistDef = _resolvePlaylistDef();
-
         return [
-          sortHeaderSliver,
+          sortRow,
           SliverList.builder(
             itemCount: sorted.length,
-            itemBuilder: (context, index) {
-              final data = sorted[index];
-              return SmartPlaylistEpisodeListTile(
-                key: ValueKey(data.episode.id),
-                episode: data.episode,
-                podcastTitle: widget.podcastTitle,
-                artworkUrl: widget.podcastArtworkUrl,
-                feedImageUrl: effectiveFeedImageUrl,
-                showThumbnail: showThumbnail,
-                lastRefreshedAt: widget.lastRefreshedAt,
-                progress: data.progress,
-                siblingEpisodeIds: _episodeIds,
-                itunesId: widget.itunesId,
-                feedUrl: widget.feedUrl,
-                effectiveOrder: _resolvedPlayOrder,
-                displayTitle: EffectiveEpisodeTitle.forPlaylist(
-                  playlist: playlistDef,
-                  episode: data.episode,
-                ),
-                playlistId: widget.parentPlaylist.id,
-              );
-            },
+            itemBuilder: (context, index) =>
+                _tileFor(sorted[index], feedImageUrl: feedImageUrl),
           ),
+          const SliverToBoxAdapter(child: SizedBox(height: Spacing.xl)),
         ];
       },
       loading: () => [
@@ -562,8 +679,7 @@ class _SmartPlaylistGroupEpisodesScreenState
   }
 
   List<Widget> _buildYearGroupedSlivers(
-    List<SmartPlaylistEpisodeData> episodes,
-    ThemeData theme, {
+    List<SmartPlaylistEpisodeData> episodes, {
     String? feedImageUrl,
   }) {
     final byYear = <int, List<SmartPlaylistEpisodeData>>{};
@@ -585,30 +701,11 @@ class _SmartPlaylistGroupEpisodesScreenState
             : (a, b) => a.compareTo(b),
       );
 
-    final showThumbnail = _resolveEpisodeRowThumbnail();
-    final playlistDef = _resolvePlaylistDef();
-
     return buildYearGroupedSlivers<SmartPlaylistEpisodeData>(
       itemsByYear: byYear,
       sortedYears: sortedYears,
-      itemBuilder: (context, data) => SmartPlaylistEpisodeListTile(
-        key: ValueKey(data.episode.id),
-        episode: data.episode,
-        podcastTitle: widget.podcastTitle,
-        artworkUrl: widget.podcastArtworkUrl,
-        feedImageUrl: feedImageUrl,
-        showThumbnail: showThumbnail,
-        progress: data.progress,
-        siblingEpisodeIds: _episodeIds,
-        itunesId: widget.itunesId,
-        feedUrl: widget.feedUrl,
-        effectiveOrder: _resolvedPlayOrder,
-        displayTitle: EffectiveEpisodeTitle.forPlaylist(
-          playlist: playlistDef,
-          episode: data.episode,
-        ),
-        playlistId: widget.parentPlaylist.id,
-      ),
+      itemBuilder: (context, data) =>
+          _tileFor(data, feedImageUrl: feedImageUrl),
       scrollController: _scrollController,
       yearGroupingEnabled: true,
     );
@@ -665,132 +762,4 @@ class _SmartPlaylistGroupEpisodesScreenState
     feedUrl: widget.feedUrl,
     playlistId: widget.parentPlaylist.id,
   );
-}
-
-/// Header with artwork + title, mirroring podcast detail layout.
-class _GroupHeader extends StatelessWidget {
-  const _GroupHeader({
-    required this.title,
-    required this.podcastTitle,
-    this.thumbnailUrl,
-  });
-
-  final String title;
-  final String podcastTitle;
-  final String? thumbnailUrl;
-
-  void _showArtworkOverlay(BuildContext context, String artworkUrl) {
-    Navigator.of(context).push(
-      PageRouteBuilder<void>(
-        opaque: false,
-        barrierDismissible: true,
-        barrierColor: Colors.black87,
-        transitionDuration: const Duration(milliseconds: 300),
-        reverseTransitionDuration: const Duration(milliseconds: 250),
-        pageBuilder: (context, animation, secondaryAnimation) {
-          return ArtworkOverlay(
-            imageUrl: artworkUrl,
-            heroTag: 'group_artwork_$artworkUrl',
-          );
-        },
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final url = thumbnailUrl;
-
-    final artwork = ClipRRect(
-      borderRadius: BorderRadius.circular(8),
-      child: _buildArtwork(colorScheme),
-    );
-
-    return Padding(
-      padding: const EdgeInsets.all(Spacing.md),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (url != null)
-            Semantics(
-              label: 'View group artwork',
-              button: true,
-              child: Material(
-                type: MaterialType.transparency,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(8),
-                  onTap: () => _showArtworkOverlay(context, url),
-                  child: Hero(tag: 'group_artwork_$url', child: artwork),
-                ),
-              ),
-            )
-          else
-            artwork,
-          const SizedBox(width: Spacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: Spacing.xs),
-                Text(
-                  podcastTitle,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  static const _size = 100.0;
-
-  Widget _buildArtwork(ColorScheme colorScheme) {
-    if (thumbnailUrl == null) {
-      return Container(
-        width: _size,
-        height: _size,
-        alignment: Alignment.center,
-        color: colorScheme.surfaceContainerHighest,
-        child: Icon(
-          Icons.folder_outlined,
-          size: 48,
-          color: colorScheme.onSurfaceVariant,
-        ),
-      );
-    }
-
-    return ArtworkImage(
-      url: thumbnailUrl!,
-      width: _size,
-      height: _size,
-      loading: const ArtworkLoadingIndicator(),
-      placeholder: Container(
-        width: _size,
-        height: _size,
-        alignment: Alignment.center,
-        color: colorScheme.surfaceContainerHighest,
-        child: Icon(
-          Icons.broken_image,
-          size: 48,
-          color: colorScheme.onSurfaceVariant,
-        ),
-      ),
-    );
-  }
 }

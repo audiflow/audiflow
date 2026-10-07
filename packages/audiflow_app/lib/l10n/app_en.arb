@@ -647,6 +647,10 @@
   "@seriesStatusPartlyPlayed": { "description": "Series row status with played and total episode counts", "placeholders": { "played": { "type": "int" }, "total": { "type": "int" } } },
   "seriesStatusPlayed": "Played",
   "@seriesStatusPlayed": { "description": "Series row status when every episode is played" },
+  "seriesResumeEpisode": "Resume #{number}",
+  "@seriesResumeEpisode": { "description": "Series hero button resuming the in-progress episode", "placeholders": { "number": { "type": "int" } } },
+  "seriesPlayEpisode": "Play #{number}",
+  "@seriesPlayEpisode": { "description": "Series hero button starting the next unplayed episode", "placeholders": { "number": { "type": "int" } } },
 
   "playerTabNowPlaying": "Now Playing",
   "@playerTabNowPlaying": { "description": "Now Playing tab label in player" },

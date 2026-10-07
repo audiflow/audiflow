@@ -26,6 +26,7 @@ class EpisodeCard extends StatelessWidget {
     required this.title,
     required this.pillLabel,
     this.dateLabel,
+    this.numberLabel,
     this.description,
     this.thumbnailUrl,
     this.fallbackThumbnailUrl,
@@ -58,6 +59,11 @@ class EpisodeCard extends StatelessWidget {
 
   /// Pre-formatted publish date shown above the title. Null hides it.
   final String? dateLabel;
+
+  /// Episode number label (e.g. "#12") for series lists, where order
+  /// matters more than recency: it takes the date's place above the
+  /// title and the date moves next to the play pill.
+  final String? numberLabel;
 
   /// Episode description snippet, shown in the space the title leaves.
   final String? description;
@@ -158,7 +164,7 @@ class EpisodeCard extends StatelessWidget {
                   child: _mainArea(colors),
                 ),
                 const SizedBox(height: Spacing.xs),
-                SizedBox(height: _actionRowHeight, child: _actionRow()),
+                SizedBox(height: _actionRowHeight, child: _actionRow(colors)),
               ],
             ),
           ),
@@ -217,10 +223,10 @@ class EpisodeCard extends StatelessWidget {
           ),
           const SizedBox(width: Spacing.xs + Spacing.xxs),
         ],
-        if (dateLabel != null)
+        if (numberLabel ?? dateLabel case final label?)
           Flexible(
             child: Text(
-              dateLabel!,
+              label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: AppTextStyles.caption.copyWith(color: colors.inkTertiary),
@@ -272,7 +278,8 @@ class EpisodeCard extends StatelessWidget {
     );
   }
 
-  Widget _actionRow() {
+  Widget _actionRow(AppColors colors) {
+    final date = numberLabel == null ? null : dateLabel;
     return Row(
       children: [
         EpisodePlayPill(
@@ -282,6 +289,17 @@ class EpisodeCard extends StatelessWidget {
           isCompleted: isCompleted,
           onPressed: onPlayPause,
         ),
+        if (date != null) ...[
+          const SizedBox(width: Spacing.sm),
+          Flexible(
+            child: Text(
+              date,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTextStyles.caption.copyWith(color: colors.inkTertiary),
+            ),
+          ),
+        ],
         const Spacer(),
         ...actionButtons,
       ],

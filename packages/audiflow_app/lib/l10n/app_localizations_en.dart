@@ -1029,6 +1029,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get seriesStatusPlayed => 'Played';
 
   @override
+  String seriesResumeEpisode(int number) {
+    return 'Resume #$number';
+  }
+
+  @override
+  String seriesPlayEpisode(int number) {
+    return 'Play #$number';
+  }
+
+  @override
   String get playerTabNowPlaying => 'Now Playing';
 
   @override

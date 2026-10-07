@@ -36,7 +36,11 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
     this.displayTitle,
     this.playlistId,
     this.stationName,
+    this.numberLabel,
   });
+
+  /// Episode number shown above the title in series lists.
+  final String? numberLabel;
 
   final Episode episode;
   final String podcastTitle;
@@ -119,6 +123,7 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
         liveRemaining,
       ),
       dateLabel: _buildDateLabel(l10n),
+      numberLabel: numberLabel,
       isInProgress: (progress?.isInProgress ?? false) || (liveFraction != null),
       progressFraction: liveFraction ?? _buildProgressFraction(progress),
       description: episode.description,
@@ -136,7 +141,7 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
       hasTranscript: hasTranscript,
       transcriptLabel: l10n.episodeTranscriptAvailable,
       onTap: () => _navigateToDetail(context),
-      onPlayPause: () => _onPlayPausePressed(context, ref, audioUrl, isPlaying),
+      onPlayPause: () => togglePlayback(context, ref),
       onLongPress: () =>
           _showContextMenu(context, ref, audioUrl, progress, downloadTask),
       actionButtons: [
@@ -480,12 +485,12 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
     );
   }
 
-  Future<void> _onPlayPausePressed(
-    BuildContext context,
-    WidgetRef ref,
-    String url,
-    bool isPlaying,
-  ) async {
+  /// Plays this episode (building the sibling queue) or pauses it when it
+  /// is already playing. Public so a screen can start an episode the same
+  /// way its row would, e.g. from a "resume" button.
+  Future<void> togglePlayback(BuildContext context, WidgetRef ref) async {
+    final url = episode.audioUrl;
+    final isPlaying = ref.read(isEpisodePlayingProvider(url));
     final controller = ref.read(audioPlayerControllerProvider.notifier);
 
     if (isPlaying) {
