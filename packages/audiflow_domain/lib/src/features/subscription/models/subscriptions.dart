@@ -14,6 +14,9 @@ class Subscription {
   late String artistName;
   String? artworkUrl;
   String? description;
+
+  /// The show's website (channel `<link>`), for "Open website".
+  String? websiteUrl;
   String genres = '';
   bool explicit = false;
   late DateTime subscribedAt;

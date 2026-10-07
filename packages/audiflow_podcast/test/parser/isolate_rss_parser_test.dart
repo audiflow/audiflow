@@ -101,6 +101,32 @@ void main() {
       final meta = progress.first as ParsedPodcastMeta;
       expect(meta.title, 'Test Podcast');
       expect(meta.author, 'Test Author');
+      expect(meta.link, isNull);
+    });
+
+    test('reads the channel website, not atom:link', () async {
+      const xml = '''
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Show</title>
+    <atom:link href="https://example.com/feed.xml" rel="self"/>
+    <link>https://example.com/show</link>
+    <description>About</description>
+    <item>
+      <guid>e1</guid>
+      <title>E1</title>
+      <link>https://example.com/show/e1</link>
+    </item>
+  </channel>
+</rss>
+''';
+      final meta = await IsolateRssParser.parse(
+        feedXml: xml,
+        knownGuids: {},
+      ).firstWhere((event) => event is ParsedPodcastMeta);
+
+      expect((meta as ParsedPodcastMeta).link, 'https://example.com/show');
     });
   });
 }

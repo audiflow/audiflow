@@ -225,7 +225,7 @@ Grouped list instead of a card grid. Groups: [Appearance, Playback, Downloads, F
 
 These are not implemented today and need their own FR updates and PRs:
 
-- Podcast `…` menu: mark all played / unplayed, hide played episodes, open website.
+- Podcast `…` menu: mark all played / unplayed, open website. (Hiding played episodes was dropped: the "未再生" filter chip covers it.)
 - Series-level progress status in the series list.
 - Library: station tiles limited to 4 with a "show all" route; podcast grid/list toggle; podcast filter field; unplayed-count badges on podcasts.
 - In-navigation search on Podcast detail (both tabs) and Series episodes.

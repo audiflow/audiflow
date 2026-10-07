@@ -228,6 +228,7 @@ class FeedParserService {
           :final description,
           :final imageUrl,
           :final author,
+          :final link,
         ):
           _logger?.d('Parsed metadata: $title');
           yield FeedMetaReady(
@@ -235,6 +236,7 @@ class FeedParserService {
             description: description,
             imageUrl: imageUrl,
             author: author,
+            link: link,
           );
 
         case ParsedEpisode(

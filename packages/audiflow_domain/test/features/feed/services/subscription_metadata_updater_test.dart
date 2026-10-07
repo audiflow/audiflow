@@ -10,6 +10,14 @@ class _FakeSubscriptionRepository implements SubscriptionRepository {
   String? lastArtistName;
   String? lastDescription;
   DateTime? lastSyncedAt;
+  String? storedWebsite;
+  int websiteWrites = 0;
+
+  @override
+  Future<void> updateWebsiteUrl(int id, String websiteUrl) async {
+    websiteWrites++;
+    storedWebsite = websiteUrl;
+  }
 
   @override
   Future<void> updateFeedMetadata(
@@ -37,6 +45,7 @@ Subscription _subscription({
   String? artworkUrl,
   String? description,
   DateTime? feedMetadataSyncedAt,
+  String? websiteUrl,
 }) {
   return Subscription()
     ..id = id
@@ -47,6 +56,7 @@ Subscription _subscription({
     ..artworkUrl = artworkUrl
     ..description = description
     ..feedMetadataSyncedAt = feedMetadataSyncedAt
+    ..websiteUrl = websiteUrl
     ..genres = ''
     ..explicit = false
     ..subscribedAt = DateTime.now();
@@ -220,6 +230,29 @@ void main() {
       check(repository.lastArtworkUrl).isNull();
       check(repository.lastArtistName).equals('Jane Doe');
       check(repository.lastDescription).equals('Show notes');
+    });
+  });
+
+  group('SubscriptionMetadataUpdater website', () {
+    test('stores the channel website', () async {
+      await updater.apply(_subscription(), link: ' https://example.com/show ');
+      check(repository.storedWebsite).equals('https://example.com/show');
+    });
+
+    test('a channel without a link keeps the stored website', () async {
+      await updater.apply(
+        _subscription(websiteUrl: 'https://example.com/show'),
+        link: null,
+      );
+      check(repository.websiteWrites).equals(0);
+    });
+
+    test('an unchanged website is not written again', () async {
+      await updater.apply(
+        _subscription(websiteUrl: 'https://example.com/show'),
+        link: 'https://example.com/show',
+      );
+      check(repository.websiteWrites).equals(0);
     });
   });
 

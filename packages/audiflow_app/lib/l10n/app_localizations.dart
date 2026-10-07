@@ -1922,6 +1922,18 @@ abstract class AppLocalizations {
   /// **'Mark as played'**
   String get markAsPlayed;
 
+  /// Podcast menu item opening the show's website in the browser
+  ///
+  /// In en, this message translates to:
+  /// **'Open website'**
+  String get podcastOpenWebsite;
+
+  /// Snackbar when the show's website cannot be opened
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open the website'**
+  String get podcastOpenWebsiteFailed;
+
   /// Podcast menu item marking every episode played
   ///
   /// In en, this message translates to:

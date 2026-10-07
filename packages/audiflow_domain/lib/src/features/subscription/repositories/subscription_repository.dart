@@ -108,6 +108,10 @@ abstract class SubscriptionRepository {
   /// RSS-parsed descriptions so they survive 304 Not Modified cache hits.
   Future<void> updateDescription(int id, String? description);
 
+  /// Stores the show's website (channel `<link>`) so it survives 304 Not
+  /// Modified cache hits.
+  Future<void> updateWebsiteUrl(int id, String websiteUrl);
+
   /// Updates the podcast metadata a feed refresh parsed from the RSS channel.
   ///
   /// Only non-null arguments are written; a null argument leaves the stored

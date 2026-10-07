@@ -24,6 +24,7 @@ import 'package:audiflow_search/audiflow_search.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../l10n/app_localizations.dart';
@@ -386,9 +387,16 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
   Future<void> _showMoreMenu() {
     final l10n = AppLocalizations.of(context);
     final feedUrl = podcast.feedUrl;
-    final subscriptionId = feedUrl == null
+    final subscription = feedUrl == null
         ? null
-        : ref.read(subscriptionByFeedUrlProvider(feedUrl)).value?.id;
+        : ref.read(subscriptionByFeedUrlProvider(feedUrl)).value;
+    final subscriptionId = subscription?.id;
+    final website = websiteUri(
+      (feedUrl == null
+              ? null
+              : ref.read(podcastDetailProvider(feedUrl)).value?.podcast.link) ??
+          subscription?.websiteUrl,
+    );
     // Null until known: the tile is left out rather than guessing, since a
     // wrong "Subscribe" label would toggle an existing subscription off.
     final isSubscribed = ref
@@ -428,6 +436,14 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
         ),
       ],
       sections: [
+        if (website != null)
+          [
+            ActionMenuEntry(
+              icon: Icons.open_in_new_rounded,
+              label: l10n.podcastOpenWebsite,
+              onSelected: () => _openWebsite(website),
+            ),
+          ],
         if (subscriptionId != null)
           [
             ActionMenuEntry(
@@ -443,6 +459,20 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
           ],
       ],
     );
+  }
+
+  Future<void> _openWebsite(Uri website) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final failed = AppLocalizations.of(context).podcastOpenWebsiteFailed;
+    var opened = false;
+    try {
+      opened = await launchUrl(website, mode: LaunchMode.externalApplication);
+    } on Exception catch (e, stack) {
+      ref
+          .read(namedLoggerProvider('PodcastDetail'))
+          .w('Failed to open website: $website', error: e, stackTrace: stack);
+    }
+    if (!opened) messenger.showSnackBar(SnackBar(content: Text(failed)));
   }
 
   /// Marks the whole podcast played or unplayed after a confirmation that
@@ -1032,4 +1062,15 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
       },
     );
   }
+}
+
+/// The show's website as an openable web address, or null when the feed
+/// gives none or something other than http(s).
+@visibleForTesting
+Uri? websiteUri(String? link) {
+  final trimmed = link?.trim();
+  if (trimmed == null || trimmed.isEmpty) return null;
+  final uri = Uri.tryParse(trimmed);
+  if (uri == null || !uri.hasAuthority) return null;
+  return uri.scheme == 'http' || uri.scheme == 'https' ? uri : null;
 }

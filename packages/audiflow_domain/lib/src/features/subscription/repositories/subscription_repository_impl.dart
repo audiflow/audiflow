@@ -270,6 +270,11 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
   }
 
   @override
+  Future<void> updateWebsiteUrl(int id, String websiteUrl) {
+    return _datasource.updateWebsiteUrl(id, websiteUrl);
+  }
+
+  @override
   Future<void> updateFeedMetadata(
     int id, {
     String? artworkUrl,

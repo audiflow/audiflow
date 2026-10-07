@@ -147,6 +147,10 @@ class _FakeSubscriptionRepository implements SubscriptionRepository {
   @override
   Future<void> updateDescription(int id, String? description) =>
       throw UnimplementedError();
+
+  @override
+  Future<void> updateWebsiteUrl(int id, String websiteUrl) =>
+      throw UnimplementedError();
 }
 
 class _FakeEpisodeRepository implements EpisodeRepository {

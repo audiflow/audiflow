@@ -176,6 +176,7 @@ Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
           title: subscription.title,
           description: subscription.description ?? '',
           author: subscription.artistName,
+          link: subscription.websiteUrl,
         ),
         episodes: podcastItems,
       );
@@ -253,6 +254,7 @@ Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
         imageUrl: result.podcast.primaryImage?.url,
         author: result.podcast.author,
         description: result.podcast.description,
+        link: result.podcast.link,
       );
 
       final episodeRepo = ref.read(episodeRepositoryProvider);

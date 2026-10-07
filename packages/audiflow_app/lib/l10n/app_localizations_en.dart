@@ -1038,6 +1038,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get markAsPlayed => 'Mark as played';
 
   @override
+  String get podcastOpenWebsite => 'Open website';
+
+  @override
+  String get podcastOpenWebsiteFailed => 'Couldn\'t open the website';
+
+  @override
   String get podcastMarkAllPlayed => 'Mark all played';
 
   @override

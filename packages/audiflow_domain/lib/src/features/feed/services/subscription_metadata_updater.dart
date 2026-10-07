@@ -48,6 +48,7 @@ class SubscriptionMetadataUpdater {
       imageUrl: meta.imageUrl,
       author: meta.author,
       description: meta.description,
+      link: meta.link,
     );
   }
 
@@ -57,7 +58,14 @@ class SubscriptionMetadataUpdater {
     String? imageUrl,
     String? author,
     String? description,
+    String? link,
   }) async {
+    // Kept apart from the other fields: older rows have no website, and a
+    // channel that drops its <link> must not erase a stored one.
+    final website = _changedValue(link, sub.websiteUrl);
+    if (website != null) {
+      await _repository.updateWebsiteUrl(sub.id, website);
+    }
     final update = diff(
       sub,
       imageUrl: imageUrl,

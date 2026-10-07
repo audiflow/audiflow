@@ -353,6 +353,8 @@
   "episodeDetails": "エピソード詳細",
   "shareEpisode": "エピソードを共有",
   "markAsPlayed": "再生済みにする",
+  "podcastOpenWebsite": "ウェブサイトを開く",
+  "podcastOpenWebsiteFailed": "ウェブサイトを開けませんでした",
   "podcastMarkAllPlayed": "すべて再生済みにする",
   "podcastMarkAllUnplayed": "すべて未再生にする",
   "podcastMarkAllPlayedConfirm": "この番組の{count}件のエピソードをすべて再生済みにしますか？",

@@ -306,6 +306,9 @@ class IsolateRssParser {
       author: _extractTagText(headerXml, 'itunes:author'),
       imageUrl: _nullIfBlank(itunesImageMatch?.group(1)),
       language: _extractTagText(headerXml, 'language'),
+      // The channel <link> precedes <image> (whose own <link> repeats it)
+      // in the header; `atom:link` is not matched by this tag name.
+      link: _nullIfBlank(_extractTagText(headerXml, 'link')),
     );
   }
 

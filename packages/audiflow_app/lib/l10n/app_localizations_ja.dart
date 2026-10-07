@@ -993,6 +993,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get markAsPlayed => '再生済みにする';
 
   @override
+  String get podcastOpenWebsite => 'ウェブサイトを開く';
+
+  @override
+  String get podcastOpenWebsiteFailed => 'ウェブサイトを開けませんでした';
+
+  @override
   String get podcastMarkAllPlayed => 'すべて再生済みにする';
 
   @override
