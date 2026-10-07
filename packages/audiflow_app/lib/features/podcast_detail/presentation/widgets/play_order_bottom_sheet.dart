@@ -55,7 +55,9 @@ class _PlayOrderSheet extends StatelessWidget {
             ),
             RadioListTile<AutoPlayOrder>(
               title: Text(
-                l10n.playOrderDefault(_orderLabel(l10n, resolvedParentOrder)),
+                l10n.playOrderDefault(
+                  playOrderLabel(l10n, resolvedParentOrder),
+                ),
               ),
               value: AutoPlayOrder.defaultOrder,
             ),
@@ -79,7 +81,7 @@ class _PlayOrderSheet extends StatelessWidget {
 ///
 /// For [AutoPlayOrder.defaultOrder], falls back to the "oldest first" label
 /// since that is the base default when no parent override exists.
-String _orderLabel(AppLocalizations l10n, AutoPlayOrder order) {
+String playOrderLabel(AppLocalizations l10n, AutoPlayOrder order) {
   return switch (order) {
     AutoPlayOrder.defaultOrder => l10n.playOrderOldestFirst,
     AutoPlayOrder.oldestFirst => l10n.playOrderOldestFirst,

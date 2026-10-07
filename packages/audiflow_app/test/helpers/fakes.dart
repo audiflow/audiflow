@@ -1,3 +1,4 @@
+import 'package:audiflow_core/audiflow_core.dart' show AutoPlayOrder;
 import 'package:audiflow_domain/audiflow_domain.dart';
 
 /// Fake [SubscriptionRepository] backed by an in-memory list.
@@ -132,4 +133,22 @@ class FakeSubscriptionRepository implements SubscriptionRepository {
 
   @override
   Future<void> clearAllHttpCacheHeaders() => throw UnimplementedError();
+}
+
+/// Play order preferences held in memory; unset podcasts follow the
+/// default order.
+class FakePlayOrderPreferenceRepository
+    implements PlayOrderPreferenceRepository {
+  final Map<int, AutoPlayOrder?> podcastOrders = {};
+
+  @override
+  Future<AutoPlayOrder?> getPodcastPlayOrder(int podcastId) async =>
+      podcastOrders[podcastId];
+
+  @override
+  Future<void> setPodcastPlayOrder(int podcastId, AutoPlayOrder? order) async =>
+      podcastOrders[podcastId] = order;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

@@ -22,7 +22,7 @@ It also serves a secondary audience: audiflow contributors and podcast creators.
 
 ## User-visible Behavior
 
-- Normal case: The user opens the Settings tab and sees a responsive grid of category cards (Appearance, Playback, Downloads, Feed Sync, Storage & Data, About, Getting Started, Privacy, Developer). Tapping a card drills into a detail screen with the relevant controls. Each control applies its change immediately — there is no save button — and the new value persists across app restarts.
+- Normal case: The user opens the Settings tab and sees a large title over three grouped sections of rows, each with an icon tile, title, one-line subtitle, and chevron: [Appearance, Playback, Downloads, Feed Sync], [Storage & Data, Privacy, Parental Control], and [Getting Started, Developer, About]. Tapping a card drills into a detail screen with the relevant controls. Each control applies its change immediately — there is no save button — and the new value persists across app restarts.
 - Appearance, Playback, Downloads, and Feed Sync detail screens present toggles, dropdowns, sliders, and segmented buttons. Changing theme mode, language, or text size updates the app immediately, without a restart; a language change also switches date and number formatting. The System language option follows the device locale.
 - The Playback screen's speed control is the same stepped slider as the full player's Audio sheet (FR 04). It always edits the global default speed, even while the now-playing podcast has its own override; the Audio sheet shows the global speed whenever its per-podcast switch is off.
 - The Storage & Data screen reports cache and database size, offers cache and search-history clearing with confirmation dialogs, exposes OPML import/export, and gates a destructive "reset all data" action behind a double confirmation. When Restricted Mode (FR 18) is on, the reset action is additionally PIN-gated, since the reset would otherwise wipe the parental PIN hash and provide a bypass.
@@ -32,7 +32,7 @@ It also serves a secondary audience: audiflow contributors and podcast creators.
 
 ## Capabilities
 
-- Presents all preferences as a navigable grid of category cards drilling into per-category detail screens, adapting column count to available width.
+- Presents all preferences as grouped category rows drilling into per-category detail screens, centered at a readable width on wide screens.
 - Persists every preference through a single `AppSettingsRepository` backed by SharedPreferences, with synchronous getters that return the stored value or a defined default and asynchronous setters that persist changes.
 - Acts as the source of truth that feature services read instead of hard-coded constants (sync interval, completion threshold, skip durations, download concurrency, Wi-Fi policy, and similar).
 - Persists the recently used playback speeds (a JSON list, newest first) next to the playback speed, and exposes both through `PlaybackSpeedSettingsController` so every speed control reads one source. The recent list is shared by the global speed and per-podcast overrides.

@@ -92,8 +92,9 @@ state and resume position stay coherent no matter where the listener touches it.
   podcast changes, the player re-resolves override -> global and applies the result, so
   playing podcast A (override 1.5x) and then podcast B (no override, global 1.0x) switches
   between the two speeds automatically. The Audio button's label shows the speed in effect.
-  The same sheet opens from the podcast detail menu ("Audio settings"), so an override can
-  be set while nothing is playing. The recent-speed chips are one shared history: a speed
+  The podcast settings sheet (FR 17) also has the "Custom for this podcast" switch and,
+  while it is on, the two effects, so an override can be turned on while nothing is
+  playing; its speed is set from the player. The recent-speed chips are one shared history: a speed
   committed under an override is recorded there too, so it is one tap away for any podcast.
   The speed and both effects below follow the switch.
 - **Silence skipping and voice boost (Android only)**: On Android the Audio sheet has an

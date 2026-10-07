@@ -8,12 +8,10 @@ import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
-import '../widgets/settings_category_card.dart';
 
-/// Main settings screen with category cards.
-///
-/// Displays a grid of setting categories that navigate
-/// to their respective detail screens.
+/// Main settings screen (redesign 4.8): a large title over three grouped
+/// sections of category rows, each with an icon tile, title, one-line
+/// subtitle, and a chevron.
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
@@ -24,92 +22,107 @@ class SettingsScreen extends ConsumerWidget {
     final unlocked = ref.watch(isUnlockedProvider);
     final hideDeveloper = restricted && !unlocked;
 
+    SettingsRow row(IconData icon, String title, String subtitle, String path) {
+      return SettingsRow(
+        icon: icon,
+        title: title,
+        subtitle: subtitle,
+        trailing: const SettingsTrailing.chevron(),
+        onTap: () => context.go(path),
+      );
+    }
+
+    GroupedSection group(List<Widget> rows) => GroupedSection(
+      separatorIndent: SettingsRow.separatorIndentWithIcon,
+      children: rows,
+    );
+
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.settingsTitle)),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final columnCount = ResponsiveGrid.columnCount(
-            availableWidth: constraints.maxWidth,
-            itemWidth: 180,
-          );
-          return Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(
-                maxWidth: LayoutConstants.contentMaxWidth * 1.5,
-              ),
-              child: GridView.count(
-                crossAxisCount: columnCount,
-                padding: const EdgeInsets.all(Spacing.md),
-                mainAxisSpacing: Spacing.sm,
-                crossAxisSpacing: Spacing.sm,
-                childAspectRatio: 0.95,
-                children: [
-                  SettingsCategoryCard(
-                    icon: Symbols.palette,
-                    title: l10n.settingsAppearanceTitle,
-                    subtitle: l10n.settingsAppearanceSubtitle,
-                    onTap: () => context.go(AppRoutes.settingsAppearance),
+      body: SafeArea(
+        bottom: false,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              maxWidth: LayoutConstants.contentMaxWidth,
+            ),
+            child: ListView(
+              padding: const EdgeInsets.only(bottom: Spacing.xl),
+              children: [
+                LargeTitle(l10n.settingsTitle),
+                const SizedBox(height: Spacing.xs),
+                group([
+                  row(
+                    Symbols.palette,
+                    l10n.settingsAppearanceTitle,
+                    l10n.settingsAppearanceSubtitle,
+                    AppRoutes.settingsAppearance,
                   ),
-                  SettingsCategoryCard(
-                    icon: Symbols.play_circle,
-                    title: l10n.settingsPlaybackTitle,
-                    subtitle: l10n.settingsPlaybackSubtitle,
-                    onTap: () => context.go(AppRoutes.settingsPlayback),
+                  row(
+                    Symbols.play_circle,
+                    l10n.settingsPlaybackTitle,
+                    l10n.settingsPlaybackSubtitle,
+                    AppRoutes.settingsPlayback,
                   ),
-                  SettingsCategoryCard(
-                    icon: Symbols.download,
-                    title: l10n.settingsDownloadsTitle,
-                    subtitle: l10n.settingsDownloadsSubtitle,
-                    onTap: () => context.go(AppRoutes.settingsDownloads),
+                  row(
+                    Symbols.download,
+                    l10n.settingsDownloadsTitle,
+                    l10n.settingsDownloadsSubtitle,
+                    AppRoutes.settingsDownloads,
                   ),
-                  SettingsCategoryCard(
-                    icon: Symbols.sync,
-                    title: l10n.settingsFeedSyncTitle,
-                    subtitle: l10n.settingsFeedSyncSubtitle,
-                    onTap: () => context.go(AppRoutes.settingsFeedSync),
+                  row(
+                    Symbols.sync,
+                    l10n.settingsFeedSyncTitle,
+                    l10n.settingsFeedSyncSubtitle,
+                    AppRoutes.settingsFeedSync,
                   ),
-                  SettingsCategoryCard(
-                    icon: Symbols.storage,
-                    title: l10n.settingsStorageTitle,
-                    subtitle: l10n.settingsStorageSubtitle,
-                    onTap: () => context.go(AppRoutes.settingsStorage),
+                ]),
+                const SizedBox(height: Spacing.lg),
+                group([
+                  row(
+                    Symbols.storage,
+                    l10n.settingsStorageTitle,
+                    l10n.settingsStorageSubtitle,
+                    AppRoutes.settingsStorage,
                   ),
-                  SettingsCategoryCard(
-                    icon: Symbols.shield,
-                    title: l10n.settingsPrivacyTitle,
-                    subtitle: l10n.settingsPrivacySubtitle,
-                    onTap: () => context.go(AppRoutes.settingsPrivacy),
+                  row(
+                    Symbols.shield,
+                    l10n.settingsPrivacyTitle,
+                    l10n.settingsPrivacySubtitle,
+                    AppRoutes.settingsPrivacy,
                   ),
-                  SettingsCategoryCard(
-                    icon: Symbols.lock,
-                    title: l10n.settingsParentalControlTitle,
-                    subtitle: l10n.settingsParentalControlSubtitle,
-                    onTap: () => context.go(AppRoutes.settingsParentalControl),
+                  row(
+                    Symbols.lock,
+                    l10n.settingsParentalControlTitle,
+                    l10n.settingsParentalControlSubtitle,
+                    AppRoutes.settingsParentalControl,
+                  ),
+                ]),
+                const SizedBox(height: Spacing.lg),
+                group([
+                  row(
+                    Symbols.school,
+                    l10n.settingsGettingStartedTitle,
+                    l10n.settingsGettingStartedSubtitle,
+                    AppRoutes.settingsGettingStarted,
                   ),
                   if (!hideDeveloper)
-                    SettingsCategoryCard(
-                      icon: Symbols.code,
-                      title: l10n.settingsDeveloperTitle,
-                      subtitle: l10n.settingsDeveloperSubtitle,
-                      onTap: () => context.go(AppRoutes.settingsDeveloper),
+                    row(
+                      Symbols.code,
+                      l10n.settingsDeveloperTitle,
+                      l10n.settingsDeveloperSubtitle,
+                      AppRoutes.settingsDeveloper,
                     ),
-                  SettingsCategoryCard(
-                    icon: Symbols.school,
-                    title: l10n.settingsGettingStartedTitle,
-                    subtitle: l10n.settingsGettingStartedSubtitle,
-                    onTap: () => context.go(AppRoutes.settingsGettingStarted),
+                  row(
+                    Symbols.info,
+                    l10n.settingsAboutTitle,
+                    l10n.settingsAboutSubtitle,
+                    AppRoutes.settingsAbout,
                   ),
-                  SettingsCategoryCard(
-                    icon: Symbols.info,
-                    title: l10n.settingsAboutTitle,
-                    subtitle: l10n.settingsAboutSubtitle,
-                    onTap: () => context.go(AppRoutes.settingsAbout),
-                  ),
-                ],
-              ),
+                ]),
+              ],
             ),
-          );
-        },
+          ),
+        ),
       ),
     );
   }

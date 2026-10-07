@@ -55,7 +55,8 @@ class _AudioSheetHost extends ConsumerWidget {
           : scope is PodcastAudioSettingsScope,
       onPodcastOverrideChanged: targetId == null
           ? null
-          : (enabled) => _setOverride(ref, targetId, enabled: enabled),
+          : (enabled) =>
+                setPodcastAudioOverride(ref, targetId, enabled: enabled),
       speed: effective.settings.speed,
       chipSpeeds: chipSpeeds,
       onSpeedPreview: (speed) =>
@@ -63,49 +64,8 @@ class _AudioSheetHost extends ConsumerWidget {
       onSpeedCommit: (speed) => player.setSpeed(speed, scope: scope),
       effects: effectsSupported ? effective.settings.effects : null,
       onEffectChanged: (effect, enabled) =>
-          _setEffect(ref, effect, enabled: enabled, scope: scope),
+          setAudioEffect(ref, effect, enabled: enabled, scope: scope),
     );
-  }
-
-  Future<void> _setEffect(
-    WidgetRef ref,
-    PlaybackEffect effect, {
-    required bool enabled,
-    required AudioSettingsScope scope,
-  }) async {
-    final player = ref.read(audioPlayerControllerProvider.notifier);
-    try {
-      await player.setEffect(effect, enabled: enabled, scope: scope);
-    } catch (error, stackTrace) {
-      // The settings controller has already rolled the toggle back; log
-      // rather than leave an unhandled error from a switch callback.
-      ref
-          .read(namedLoggerProvider('AudioSheet'))
-          .e('Failed to set $effect', error: error, stackTrace: stackTrace);
-    }
-  }
-
-  Future<void> _setOverride(
-    WidgetRef ref,
-    int podcastId, {
-    required bool enabled,
-  }) async {
-    final controller = ref.read(
-      podcastAudioOverrideControllerProvider(podcastId).notifier,
-    );
-    try {
-      await (enabled ? controller.enable() : controller.disable());
-    } catch (error, stackTrace) {
-      // The controller has already rolled the switch back; log rather
-      // than leave an unhandled error from a switch callback.
-      ref
-          .read(namedLoggerProvider('AudioSheet'))
-          .e(
-            'Failed to toggle podcast override',
-            error: error,
-            stackTrace: stackTrace,
-          );
-    }
   }
 }
 
@@ -324,5 +284,50 @@ class _SpeedChips extends StatelessWidget {
           ),
       ],
     );
+  }
+}
+
+/// Switches [effect] for [scope], logging a failed write (the settings
+/// controller has already rolled the toggle back).
+Future<void> setAudioEffect(
+  WidgetRef ref,
+  PlaybackEffect effect, {
+  required bool enabled,
+  required AudioSettingsScope scope,
+}) async {
+  final player = ref.read(audioPlayerControllerProvider.notifier);
+  try {
+    await player.setEffect(effect, enabled: enabled, scope: scope);
+  } catch (error, stackTrace) {
+    // The settings controller has already rolled the toggle back; log
+    // rather than leave an unhandled error from a switch callback.
+    ref
+        .read(namedLoggerProvider('AudioSheet'))
+        .e('Failed to set $effect', error: error, stackTrace: stackTrace);
+  }
+}
+
+/// Turns [podcastId]'s audio override on or off, logging a failed write
+/// (the controller has already rolled the switch back).
+Future<void> setPodcastAudioOverride(
+  WidgetRef ref,
+  int podcastId, {
+  required bool enabled,
+}) async {
+  final controller = ref.read(
+    podcastAudioOverrideControllerProvider(podcastId).notifier,
+  );
+  try {
+    await (enabled ? controller.enable() : controller.disable());
+  } catch (error, stackTrace) {
+    // The controller has already rolled the switch back; log rather
+    // than leave an unhandled error from a switch callback.
+    ref
+        .read(namedLoggerProvider('AudioSheet'))
+        .e(
+          'Failed to toggle podcast override',
+          error: error,
+          stackTrace: stackTrace,
+        );
   }
 }

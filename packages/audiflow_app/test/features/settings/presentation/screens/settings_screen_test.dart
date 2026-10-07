@@ -1,7 +1,8 @@
 import 'package:audiflow_app/features/settings/presentation/screens/settings_screen.dart';
-import 'package:audiflow_app/features/settings/presentation/widgets/settings_category_card.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:audiflow_ui/audiflow_ui.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -40,25 +41,50 @@ void main() {
       expect(find.byType(SettingsScreen), findsOneWidget);
     });
 
-    testWidgets('displays AppBar with Settings title', (tester) async {
+    testWidgets('shows a large Settings title', (tester) async {
       await tester.pumpWidget(buildTestWidget());
 
-      expect(find.byType(AppBar), findsOneWidget);
-
-      final appBar = tester.widget<AppBar>(find.byType(AppBar));
-      final titleWidget = appBar.title! as Text;
-      expect(titleWidget.data, equals('Settings'));
+      expect(find.byType(AppBar), findsNothing);
+      check(
+        tester.widget<LargeTitle>(find.byType(LargeTitle)).title,
+      ).equals('Settings');
     });
 
-    testWidgets('renders 10 category cards', (tester) async {
+    testWidgets('renders 10 rows in three groups', (tester) async {
       await withTallSurface(tester, () async {
         await tester.pumpWidget(buildTestWidget());
 
-        expect(find.byType(SettingsCategoryCard), findsNWidgets(10));
+        expect(find.byType(SettingsRow), findsNWidgets(10));
+        expect(find.byType(GroupedSection), findsNWidgets(3));
       });
     });
 
-    testWidgets('each card has correct title text', (tester) async {
+    testWidgets('groups follow the redesign order', (tester) async {
+      await withTallSurface(tester, () async {
+        await tester.pumpWidget(buildTestWidget());
+
+        List<String> titlesIn(int group) => tester
+            .widgetList<SettingsRow>(
+              find.descendant(
+                of: find.byType(GroupedSection).at(group),
+                matching: find.byType(SettingsRow),
+              ),
+            )
+            .map((row) => row.title)
+            .toList();
+        check(
+          titlesIn(0),
+        ).deepEquals(['Appearance', 'Playback', 'Downloads', 'Feed Sync']);
+        check(
+          titlesIn(1),
+        ).deepEquals(['Storage & Data', 'Privacy', 'Parental Control']);
+        check(
+          titlesIn(2),
+        ).deepEquals(['Getting Started', 'Developer', 'About']);
+      });
+    });
+
+    testWidgets('each row has correct title text', (tester) async {
       await withTallSurface(tester, () async {
         await tester.pumpWidget(buildTestWidget());
 
@@ -75,13 +101,14 @@ void main() {
       });
     });
 
-    testWidgets('uses GridView layout', (tester) async {
+    testWidgets('uses a list, not a grid', (tester) async {
       await tester.pumpWidget(buildTestWidget());
 
-      expect(find.byType(GridView), findsOneWidget);
+      expect(find.byType(GridView), findsNothing);
+      expect(find.byType(ListView), findsOneWidget);
     });
 
-    testWidgets('each card has subtitle text', (tester) async {
+    testWidgets('each row has subtitle text', (tester) async {
       await withTallSurface(tester, () async {
         await tester.pumpWidget(buildTestWidget());
 

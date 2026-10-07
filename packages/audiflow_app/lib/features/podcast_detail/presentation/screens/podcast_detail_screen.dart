@@ -12,7 +12,6 @@ import 'package:audiflow_domain/audiflow_domain.dart'
         SmartPlaylistGroup,
         SortOrder,
         SubscribeSource,
-        appSettingsRepositoryProvider,
         hideExplicitForPodcastProvider,
         namedLoggerProvider,
         playOrderPreferenceRepositoryProvider,
@@ -28,13 +27,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
-import '../../../player/presentation/widgets/audio_sheet.dart';
 import '../../../share/presentation/helpers/share_helper.dart';
 import '../../../subscription/presentation/controllers/subscription_controller.dart';
 import '../controllers/podcast_detail_controller.dart';
 import '../widgets/episode_list_section.dart';
 import '../widgets/inline_playlist_section.dart';
-import '../widgets/play_order_bottom_sheet.dart';
 import '../widgets/podcast_description_sheet.dart';
 import '../widgets/podcast_detail_empty_states.dart';
 import '../widgets/podcast_detail_header.dart';
@@ -283,29 +280,14 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
     );
   }
 
-  void _showPlayOrderSheet() {
+  /// Play order, audio, and downloads live in the settings sheet; the
+  /// play order may change there, so re-resolve it once the sheet closes.
+  Future<void> _openSettingsSheet() async {
+    await showPodcastSettingsSheet(context: context, podcast: podcast);
     final feedUrl = podcast.feedUrl;
-    if (feedUrl == null) return;
+    if (!mounted || feedUrl == null) return;
     final subscription = ref.read(subscriptionByFeedUrlProvider(feedUrl)).value;
-    if (subscription == null) return;
-
-    final repo = ref.read(playOrderPreferenceRepositoryProvider);
-    repo.getPodcastPlayOrder(subscription.id).then((currentOrder) {
-      if (!mounted) return;
-      showPlayOrderBottomSheet(
-        context: context,
-        currentOrder: currentOrder ?? AutoPlayOrder.defaultOrder,
-        resolvedParentOrder: ref
-            .read(appSettingsRepositoryProvider)
-            .getAutoPlayOrder(),
-        onOrderSelected: (order) {
-          // Await the write before re-resolving to avoid reading stale data.
-          repo.setPodcastPlayOrder(subscription.id, order).then((_) {
-            _resolvePlayOrder(subscription.id);
-          });
-        },
-      );
-    });
+    if (subscription != null) _resolvePlayOrder(subscription.id);
   }
 
   void _resolvePlayOrder(int subscriptionId) {
@@ -375,8 +357,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
             FloatingNavAction(
               icon: Icons.tune_rounded,
               tooltip: l10n.podcastDetailSettingsTooltip,
-              onPressed: () =>
-                  showPodcastSettingsSheet(context: context, podcast: podcast),
+              onPressed: _openSettingsSheet,
             ),
           FloatingNavAction(
             icon: Icons.more_horiz_rounded,
@@ -398,13 +379,10 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
   }
 
   /// Overflow popover under the navigation's trailing pill: primary
-  /// actions as tiles, then the podcast's play settings.
+  /// actions as tiles. Play order and audio live in the settings sheet.
   Future<void> _showMoreMenu() {
     final l10n = AppLocalizations.of(context);
     final feedUrl = podcast.feedUrl;
-    final subscriptionId = feedUrl == null
-        ? null
-        : ref.read(subscriptionByFeedUrlProvider(feedUrl)).value?.id;
     // Null until known: the tile is left out rather than guessing, since a
     // wrong "Subscribe" label would toggle an existing subscription off.
     final isSubscribed = ref
@@ -442,23 +420,6 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
           onSelected: () =>
               showPodcastDescriptionSheet(context: context, podcast: podcast),
         ),
-      ],
-      sections: [
-        [
-          ActionMenuEntry(
-            icon: Icons.swap_vert,
-            label: l10n.playOrderMenuTitle,
-            onSelected: _showPlayOrderSheet,
-          ),
-          if (subscriptionId != null)
-            ActionMenuEntry(
-              icon: Icons.graphic_eq,
-              label: l10n.podcastDetailAudioSettingsMenuTitle,
-              // Lets the override be edited while nothing is playing.
-              onSelected: () =>
-                  showAudioSheet(context, podcastId: subscriptionId),
-            ),
-        ],
       ],
     );
   }

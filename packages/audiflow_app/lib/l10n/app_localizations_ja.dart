@@ -678,6 +678,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get audioSheetTitle => 'オーディオ';
 
   @override
+  String get podcastSettingsDisplaySection => '表示';
+
+  @override
   String get audioSheetSpeedSection => '再生速度';
 
   @override

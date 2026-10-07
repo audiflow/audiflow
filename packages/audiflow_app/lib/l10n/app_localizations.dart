@@ -1358,6 +1358,12 @@ abstract class AppLocalizations {
   /// **'Audio'**
   String get audioSheetTitle;
 
+  /// Podcast settings sheet section holding display options (hide explicit)
+  ///
+  /// In en, this message translates to:
+  /// **'Display'**
+  String get podcastSettingsDisplaySection;
+
   /// Section heading for playback speed in the audio sheet
   ///
   /// In en, this message translates to:

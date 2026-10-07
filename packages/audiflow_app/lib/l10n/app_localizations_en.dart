@@ -709,6 +709,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get audioSheetTitle => 'Audio';
 
   @override
+  String get podcastSettingsDisplaySection => 'Display';
+
+  @override
   String get audioSheetSpeedSection => 'Playback speed';
 
   @override

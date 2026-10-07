@@ -1,5 +1,6 @@
 import 'package:audiflow_app/features/podcast_detail/presentation/widgets/podcast_settings_sheet.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
+import 'package:audiflow_core/audiflow_core.dart' show AutoPlayOrder;
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
@@ -48,6 +49,11 @@ void main() {
           hideExplicitForPodcastProvider(
             subscription.id,
           ).overrideWith((ref) => Stream.value(false)),
+          // The sheet's play order and audio rows read these from the database.
+          playOrderPreferenceRepositoryProvider.overrideWithValue(
+            FakePlayOrderPreferenceRepository(),
+          ),
+          effectiveAudioSettingsProvider(1).overrideWithValue(null),
         ],
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -92,5 +98,32 @@ void main() {
 
     check(subscription.autoDownloadPausedAt).isNull();
     check(subscription.autoDownloadsSinceLastPlay).equals(0);
+  });
+
+  testWidgets('groups play order, downloads, and display', (tester) async {
+    await openSheet(tester, _subscription());
+
+    for (final header in ['playback', 'downloads', 'display']) {
+      final found = find.byWidgetPredicate(
+        (widget) => widget is Text && widget.data?.toLowerCase() == header,
+      );
+      check(found.evaluate()).isNotEmpty();
+    }
+    check(find.text('Play order').evaluate()).length.equals(1);
+  });
+
+  testWidgets('play order row shows the default and opens the picker', (
+    tester,
+  ) async {
+    await openSheet(tester, _subscription());
+
+    check(
+      find.textContaining('Default', findRichText: true).evaluate(),
+    ).isNotEmpty();
+    await tester.tap(find.text('Play order'));
+    await tester.pumpAndSettle();
+    check(
+      find.byType(RadioListTile<AutoPlayOrder>).evaluate(),
+    ).length.equals(3);
   });
 }

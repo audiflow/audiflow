@@ -437,6 +437,8 @@
   "playerAudioOutputUnavailable": "Couldn't open audio output settings",
   "@playerAudioOutputUnavailable": { "description": "Snackbar shown when neither the system output picker nor Bluetooth settings could be opened" },
   "audioSheetTitle": "Audio",
+  "podcastSettingsDisplaySection": "Display",
+  "@podcastSettingsDisplaySection": { "description": "Podcast settings sheet section holding display options (hide explicit)" },
   "@audioSheetTitle": { "description": "Title of the player's audio settings sheet" },
   "audioSheetSpeedSection": "Playback speed",
   "@audioSheetSpeedSection": { "description": "Section heading for playback speed in the audio sheet" },

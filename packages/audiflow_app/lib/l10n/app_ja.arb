@@ -228,6 +228,7 @@
   "playerAudioOutputLabel": "出力先",
   "playerAudioOutputUnavailable": "出力先の設定を開けませんでした",
   "audioSheetTitle": "オーディオ",
+  "podcastSettingsDisplaySection": "表示",
   "audioSheetSpeedSection": "再生速度",
   "audioSheetPodcastOverride": "この番組専用の設定",
   "audioSheetScopePodcast": "この番組だけに適用",
