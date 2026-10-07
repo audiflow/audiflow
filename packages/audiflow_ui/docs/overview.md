@@ -42,7 +42,7 @@ lib/
     widgets/
       artwork_image.dart        # ArtworkImage -- network artwork decoded at its displayed size
       cards/
-        episode_card.dart       # EpisodeCard -- fixed-height episode row for sliver lists
+        episode_card.dart       # EpisodeCard -- full-width episode row for sliver lists
         podcast_artwork_grid_item.dart  # PodcastArtworkGridItem -- artwork card for grids
       indicators/
         episode_progress_indicator.dart # EpisodeProgressIndicator -- played/in-progress/unplayed
@@ -65,7 +65,7 @@ lib/
       queue/
         add_to_queue_button.dart       # AddToQueueButton -- tap=Play Later, long-press=Play Next
       lists/
-        grouped_section.dart           # GroupedSection, SliverGroupedSection -- rounded surface with hairline-separated rows
+        grouped_section.dart           # GroupedSection -- rounded surface with hairline-separated rows
         settings_row.dart              # SettingsRow -- icon tile, title/subtitle, trailing control
         settings_trailing.dart         # SettingsTrailing -- chevron / picker / toggle / stepper
         year_grouped_slivers.dart      # buildYearGroupedSlivers() -- sticky year headers + jump-to-year (measured offsets, pinned-header aware); separatorIndent: full-width rows with hairlines
@@ -84,7 +84,7 @@ lib/
 | Widget | Location | Inputs | Behavior |
 |--------|----------|--------|----------|
 | `ArtworkImage` | `widgets/` | url, width, height, fit, placeholder, loading | Every network artwork goes through this. Decodes at `width` (or the layout constraint's max width) times the device pixel ratio, so 1400-3000 px channel artwork never lands in the image cache at full size; downloaded bytes are disk-cached once per URL. Pass `width` explicitly inside a `Hero`, whose flight animates constraints. A failed load shows `placeholder`, or ExtendedImage's tap-to-retry message when none is given. |
-| `EpisodeCard` | `widgets/cards/` | title, pillLabel, dateLabel, description, thumbnailUrl, play/new/completed/current flags, newLabel, progressFraction, actionButtons | Fixed-height row (`episodeCardExtent`) per redesign 4.2: date line in `inkTertiary` (accent dot when new, transcript icon after), `rowTitle` up to three lines with the description filling the rest (up to two lines), 56dp artwork on the right (hidden when same as podcast art), then the play pill and caller actions. Played rows fade title and artwork; the playing episode's title is `accent`. Started rows get a `BottomEdgeProgress` line over a `hairline`; completed rows show it full. |
+| `EpisodeCard` | `widgets/cards/` | title, pillLabel, dateLabel, description, thumbnailUrl, play/new/completed/current flags, newLabel, progressFraction, actionButtons | Full-width row per redesign 4.2 whose height follows the content: date line in `inkTertiary` (accent dot when new, transcript icon after), `rowTitle` up to three lines and the description up to two, 56dp artwork on the right (hidden when same as podcast art), then the play pill and caller actions. Played rows fade title and artwork; the playing episode's title is `accent`. Started rows get a `BottomEdgeProgress` line over a `hairline`; completed rows show it full. |
 | `AppSegmentedControl` | `widgets/buttons/` | segments (value, label), selected, onChanged | 36dp pill track in `surfaceSunken` with equal segments; the selected one sits on a sliding `surface` thumb (`AppShadows.raised`) with `ink` w600 label, others `inkSecondary`. Segments are selectable buttons for screen readers. |
 | `EpisodePlayPill` | `widgets/buttons/` | label, isPlaying, isLoading, isCompleted, onPressed | 32dp pill (44dp touch target) with state glyph and tabular time label: play on `surfaceMuted`, pause on `accentTint` in `accent`, check in `inkTertiary`, spinner while loading. Never shows progress. |
 | `ProgressLine` / `BottomEdgeProgress` | `widgets/indicators/` | fraction, fillColor | 3dp line (hairline track, accent fill; overridable, e.g. `brand`). `BottomEdgeProgress` overlays it on a child's bottom edge once fraction is above 0 (full at 1), without changing the child's size. |
@@ -102,7 +102,6 @@ lib/
 | `DownloadStatusIcon` | `widgets/downloads/` | DownloadTask?, size, onTap | Icon per state: download, pending, progress ring, paused, completed, failed, cancelled. Depends on `audiflow_domain.DownloadTask`. |
 | `AddToQueueButton` | `widgets/queue/` | onPlayLater, onPlayNext | Tap adds to end of queue; long-press adds to front with haptic feedback. |
 | `GroupedSection` | `widgets/lists/` | children, header, footer, separatorIndent, margin | Rows on one rounded `surface` (radius 18, grouped shadow) separated by `hairline` dividers; overline header (semantics header) and meta footer in `inkTertiary`; 20dp screen gutter by default. |
-| `SliverGroupedSection` | `widgets/lists/` | itemCount, itemBuilder, separatorIndent, margin | Sliver form of `GroupedSection` for long lists: rows build lazily as they scroll in, on the same surface (a `DecoratedSliver`) with the same separators; each row gets its own transparent `Material` so ink splashes show above the surface. |
 | `SettingsRow` | `widgets/lists/` | title, subtitle, icon, trailing, onTap | Row of min height 54 (60 with subtitle): optional 32dp `accentTint` icon tile, title, one-line subtitle, optional `SettingsTrailing`. Use `separatorIndentWithIcon` on the section when rows carry icons. |
 | `SettingsTrailing` | `widgets/lists/` | `.chevron()`, `.picker(value)`, `.toggle(value, onChanged)`, `.stepper(valueLabel, decrementLabel, incrementLabel, onDecrement, onIncrement)` | Sealed trailing control. Toggle makes the whole row flip the switch and merges semantics; stepper buttons are 44dp with accessible names. |
 | `SearchableAppBar` | `widgets/search/` | title, onSearchChanged, debounceDuration | AppBar that toggles between title and debounced search field (default 300ms). |

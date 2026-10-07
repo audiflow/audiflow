@@ -30,7 +30,7 @@ class SubscriptionListTile extends ConsumerWidget {
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(
-          horizontal: Spacing.rowHorizontal - Spacing.xs,
+          horizontal: Spacing.screenHorizontal,
           vertical: Spacing.sm + Spacing.xxs,
         ),
         child: Row(

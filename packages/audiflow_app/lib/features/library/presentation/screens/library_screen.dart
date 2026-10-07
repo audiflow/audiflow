@@ -225,9 +225,14 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     AsyncValue<List<Subscription>> sortedSubscriptionsAsync,
   ) {
     return sortedSubscriptionsAsync.when(
-      data: (sorted) => SliverGroupedSection(
-        // Aligns separators with the text, past the 52px artwork.
-        separatorIndent: 76,
+      data: (sorted) => SliverList.separated(
+        separatorBuilder: (context, _) => Divider(
+          height: 1,
+          thickness: 1,
+          color: AppColors.of(context).hairline,
+          // Starts at the text, past the 52dp artwork.
+          indent: Spacing.screenHorizontal + 52 + Spacing.sm + Spacing.xs,
+        ),
         itemCount: sorted.length,
         itemBuilder: (context, index) {
           final subscription = sorted[index];

@@ -182,7 +182,6 @@ void main() {
         2025: ['A', 'B'],
         2024: ['C'],
       });
-      check(find.byType(SliverGroupedSection).evaluate()).isEmpty();
       check(find.byType(Divider).evaluate()).length.equals(1);
       check(tester.getSize(find.text('A')).width).equals(800);
     });

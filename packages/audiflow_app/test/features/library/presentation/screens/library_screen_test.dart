@@ -8,6 +8,7 @@ import 'package:audiflow_app/features/station/presentation/widgets/station_grid_
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
+import 'package:audiflow_app/features/library/presentation/widgets/subscription_list_tile.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -341,6 +342,15 @@ void main() {
     testWidgets('podcasts header shows the subscription count', (tester) async {
       await pump(tester);
       check(find.text('2 podcasts').evaluate()).length.equals(1);
+    });
+
+    testWidgets('podcast rows run full width, not on an inset surface', (
+      tester,
+    ) async {
+      await pump(tester);
+      final row = tester.getRect(find.byType(SubscriptionListTile).first);
+      check(row.left).equals(0);
+      check(row.width).equals(800);
     });
 
     testWidgets('continue listening is hidden without in-progress episodes', (
