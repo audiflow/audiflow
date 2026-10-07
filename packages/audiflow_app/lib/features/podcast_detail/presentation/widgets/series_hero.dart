@@ -12,6 +12,7 @@ class SeriesHero extends StatelessWidget {
     required this.meta,
     this.thumbnailUrl,
     this.onArtworkTap,
+    this.artworkLabel,
     this.onPodcastTap,
     this.resumeLabel,
     this.onResume,
@@ -33,6 +34,9 @@ class SeriesHero extends StatelessWidget {
   final String meta;
   final String? thumbnailUrl;
   final VoidCallback? onArtworkTap;
+
+  /// Accessibility label of the artwork button.
+  final String? artworkLabel;
   final VoidCallback? onPodcastTap;
 
   /// Label of the resume button; null hides it (e.g. every episode played).
@@ -103,9 +107,17 @@ class SeriesHero extends StatelessWidget {
       child: image,
     );
     if (url == null || onArtworkTap == null) return artwork;
-    return GestureDetector(
-      onTap: onArtworkTap,
-      child: Hero(tag: 'group_artwork_$url', child: artwork),
+    return Semantics(
+      button: true,
+      label: artworkLabel,
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          borderRadius: AppBorders.card,
+          onTap: onArtworkTap,
+          child: Hero(tag: 'group_artwork_$url', child: artwork),
+        ),
+      ),
     );
   }
 
@@ -123,20 +135,28 @@ class SeriesHero extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: titleStyle.copyWith(color: colors.ink),
         ),
-        const SizedBox(height: Spacing.xxs),
+        // Full-height touch target; the text stays where a plain line of
+        // meta would sit.
         Semantics(
-          button: onPodcastTap != null,
-          child: GestureDetector(
+          link: onPodcastTap != null,
+          child: InkWell(
             onTap: onPodcastTap,
-            child: Text(
-              podcastTitle,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppTextStyles.meta.copyWith(color: colors.accent),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                minHeight: Spacing.minTouchTarget,
+              ),
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: Text(
+                  podcastTitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.meta.copyWith(color: colors.accent),
+                ),
+              ),
             ),
           ),
         ),
-        const SizedBox(height: Spacing.xxs),
         Text(
           meta,
           maxLines: 1,

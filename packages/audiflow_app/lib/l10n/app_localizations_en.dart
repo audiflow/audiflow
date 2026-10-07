@@ -1029,6 +1029,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get seriesStatusPlayed => 'Played';
 
   @override
+  String get seriesViewArtwork => 'View series artwork';
+
+  @override
   String seriesResumeEpisode(int number) {
     return 'Resume #$number';
   }

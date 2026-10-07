@@ -984,6 +984,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get seriesStatusPlayed => '再生済み';
 
   @override
+  String get seriesViewArtwork => 'シリーズのアートワークを表示';
+
+  @override
   String seriesResumeEpisode(int number) {
     return '#$number を続きから再生';
   }

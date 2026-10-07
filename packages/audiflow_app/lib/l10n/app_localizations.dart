@@ -1892,6 +1892,12 @@ abstract class AppLocalizations {
   /// **'Played'**
   String get seriesStatusPlayed;
 
+  /// Accessibility label of the series hero artwork, which opens it full screen
+  ///
+  /// In en, this message translates to:
+  /// **'View series artwork'**
+  String get seriesViewArtwork;
+
   /// Series hero button resuming the in-progress episode
   ///
   /// In en, this message translates to:

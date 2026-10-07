@@ -50,11 +50,43 @@ void main() {
     check(find.byType(FilledButton).evaluate()).isEmpty();
   });
 
-  testWidgets('podcast name links back', (tester) async {
+  testWidgets('podcast name links back with a full-size target', (
+    tester,
+  ) async {
     var tapped = 0;
     await pump(tester, onPodcastTap: () => tapped++);
+    final target = find.ancestor(
+      of: find.text('COTEN RADIO'),
+      matching: find.byType(InkWell),
+    );
+    check(
+      tester.getSize(target).height,
+    ).isGreaterOrEqual(Spacing.minTouchTarget);
     await tester.tap(find.text('COTEN RADIO'));
     check(tapped).equals(1);
+  });
+
+  testWidgets('artwork is a labeled button', (tester) async {
+    final handle = tester.ensureSemantics();
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: Scaffold(
+          body: SeriesHero(
+            title: 'Series',
+            podcastTitle: 'Podcast',
+            meta: 'meta',
+            thumbnailUrl: 'https://example.com/a.jpg',
+            artworkLabel: 'View series artwork',
+            onArtworkTap: () {},
+          ),
+        ),
+      ),
+    );
+    check(
+      tester.getSemantics(find.bySemanticsLabel('View series artwork')),
+    ).has((node) => node.flagsCollection.isButton, 'isButton').isTrue();
+    handle.dispose();
   });
 
   testWidgets('long titles use the smaller hero style', (tester) async {
