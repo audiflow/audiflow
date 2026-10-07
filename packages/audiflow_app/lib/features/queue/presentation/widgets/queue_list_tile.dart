@@ -44,7 +44,13 @@ class QueueListTile extends ConsumerWidget {
     final colors = AppColors.of(context);
     final episodeId = item.episode.id;
     final downloadTask = ref.watch(episodeDownloadProvider(episodeId)).value;
-    final downloaded = downloadTask?.downloadStatus is DownloadStatusCompleted;
+    final downloadAction = _DownloadSwipeAction.of(
+      downloadTask,
+      l10n,
+      colors,
+      error: Theme.of(context).colorScheme.error,
+      onError: Theme.of(context).colorScheme.onError,
+    );
     Future<void> download() async {
       final messenger = ScaffoldMessenger.of(context);
       await handleDownloadTap(
@@ -69,22 +75,26 @@ class QueueListTile extends ConsumerWidget {
         unawaited(download());
         return false;
       },
+      // Shows what this swipe will do now, which follows the download
+      // state (the same step as tapping a download button).
       background: _SwipeBackground(
-        color: colors.accent,
-        foreground: colors.onAccent,
-        icon: downloaded ? Symbols.delete : Symbols.download,
+        color: downloadAction.color,
+        foreground: downloadAction.foreground,
+        icon: downloadAction.icon,
+        label: downloadAction.label,
         alignment: AlignmentDirectional.centerStart,
       ),
       secondaryBackground: _SwipeBackground(
         color: Theme.of(context).colorScheme.error,
         foreground: Theme.of(context).colorScheme.onError,
         icon: Symbols.playlist_remove,
+        label: l10n.queueRemove,
         alignment: AlignmentDirectional.centerEnd,
       ),
       child: Semantics(
         customSemanticsActions: {
           CustomSemanticsAction(label: l10n.queueRemove): onRemove,
-          CustomSemanticsAction(label: l10n.downloadEpisode): () =>
+          CustomSemanticsAction(label: downloadAction.label): () =>
               unawaited(download()),
         },
         child: Column(
@@ -141,7 +151,7 @@ class QueueListTile extends ConsumerWidget {
                 const SizedBox(height: Spacing.xxs),
                 Row(
                   children: [
-                    Flexible(
+                    Expanded(
                       child: Text(
                         _metaText(l10n),
                         maxLines: 1,
@@ -291,17 +301,85 @@ class QueueListTile extends ConsumerWidget {
   }
 }
 
+/// The step a right swipe takes for the current download state, matching
+/// what `handleDownloadTap` does for it.
+class _DownloadSwipeAction {
+  const _DownloadSwipeAction(
+    this.icon,
+    this.label,
+    this.color,
+    this.foreground,
+  );
+
+  factory _DownloadSwipeAction.of(
+    DownloadTask? task,
+    AppLocalizations l10n,
+    AppColors colors, {
+    required Color error,
+    required Color onError,
+  }) {
+    final status = task?.downloadStatus;
+    final neutral = colors.inkSecondary;
+    final onNeutral = colors.surface;
+    return switch (status) {
+      null || DownloadStatusCancelled() => _DownloadSwipeAction(
+        Symbols.download,
+        l10n.queueSwipeDownload,
+        colors.accent,
+        colors.onAccent,
+      ),
+      DownloadStatusPending() => _DownloadSwipeAction(
+        Symbols.close,
+        l10n.queueSwipeCancel,
+        neutral,
+        onNeutral,
+      ),
+      DownloadStatusDownloading() => _DownloadSwipeAction(
+        Symbols.pause,
+        l10n.queueSwipePause,
+        neutral,
+        onNeutral,
+      ),
+      DownloadStatusPaused() => _DownloadSwipeAction(
+        Symbols.play_arrow,
+        l10n.queueSwipeResume,
+        colors.accent,
+        colors.onAccent,
+      ),
+      DownloadStatusFailed() => _DownloadSwipeAction(
+        Symbols.refresh,
+        l10n.queueSwipeRetry,
+        colors.accent,
+        colors.onAccent,
+      ),
+      DownloadStatusCompleted() => _DownloadSwipeAction(
+        Symbols.delete,
+        l10n.queueSwipeDelete,
+        error,
+        onError,
+      ),
+    };
+  }
+
+  final IconData icon;
+  final String label;
+  final Color color;
+  final Color foreground;
+}
+
 class _SwipeBackground extends StatelessWidget {
   const _SwipeBackground({
     required this.color,
     required this.foreground,
     required this.icon,
+    required this.label,
     required this.alignment,
   });
 
   final Color color;
   final Color foreground;
   final IconData icon;
+  final String label;
   final AlignmentGeometry alignment;
 
   @override
@@ -314,7 +392,17 @@ class _SwipeBackground extends StatelessWidget {
           padding: const EdgeInsets.symmetric(
             horizontal: Spacing.screenHorizontal,
           ),
-          child: Icon(icon, color: foreground),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: foreground),
+              const SizedBox(height: Spacing.xxs),
+              Text(
+                label,
+                style: AppTextStyles.caption.copyWith(color: foreground),
+              ),
+            ],
+          ),
         ),
       ),
     );

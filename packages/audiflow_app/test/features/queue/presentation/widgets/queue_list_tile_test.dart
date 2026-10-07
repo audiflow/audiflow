@@ -40,6 +40,8 @@ void main() {
   }) async {
     await tester.pumpWidget(
       ProviderScope(
+        // Fresh scope per pump: overrides are fixed once a scope exists.
+        key: UniqueKey(),
         overrides: [
           episodeDownloadProvider(9).overrideWith((ref) => Stream.value(task)),
           downloadServiceProvider.overrideWithValue(_FakeDownloadService()),
@@ -114,6 +116,49 @@ void main() {
     check(find.text('Download started').evaluate()).length.equals(1);
     // The row springs back instead of leaving the list.
     check(find.text('Queued Episode').evaluate()).length.equals(1);
+  });
+
+  testWidgets('the swipe action follows the download state', (tester) async {
+    Future<String> actionFor(DownloadTask? task) async {
+      await pump(tester, task: task);
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.text('Queued Episode')),
+      );
+      // Past the drag slop first, then far enough to reveal the background.
+      await gesture.moveBy(const Offset(30, 0));
+      await tester.pump();
+      await gesture.moveBy(const Offset(120, 0));
+      await tester.pump();
+      final labels = [
+        'Download',
+        'Pause',
+        'Resume',
+        'Cancel',
+        'Retry',
+        'Delete',
+      ].where((label) => find.text(label).evaluate().isNotEmpty).toList();
+      await gesture.up();
+      await tester.pumpAndSettle();
+      return labels.single;
+    }
+
+    check(await actionFor(null)).equals('Download');
+    // A known size keeps the ring determinate, so the test can settle.
+    final downloading = _task(1)
+      ..downloadedBytes = 1
+      ..totalBytes = 2;
+    check(await actionFor(downloading)).equals('Pause');
+    check(await actionFor(_task(2))).equals('Resume');
+    check(await actionFor(_task(0))).equals('Cancel');
+    check(await actionFor(_task(4))).equals('Retry');
+    check(await actionFor(_task(3))).equals('Delete');
+  });
+
+  testWidgets('download state sits at the row end', (tester) async {
+    await pump(tester, task: _task(0));
+    final mark = tester.getRect(find.text('Pending'));
+    final handle = tester.getRect(find.byType(ReorderableDragStartListener));
+    check(handle.left - mark.right).isLessOrEqual(Spacing.sm);
   });
 
   testWidgets('swiping left removes the episode', (tester) async {

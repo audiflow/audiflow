@@ -567,6 +567,24 @@ class AppLocalizationsJa extends AppLocalizations {
   String get queueDownloadedLabel => 'ダウンロード済み';
 
   @override
+  String get queueSwipeDownload => 'ダウンロード';
+
+  @override
+  String get queueSwipePause => '一時停止';
+
+  @override
+  String get queueSwipeResume => '再開';
+
+  @override
+  String get queueSwipeCancel => 'キャンセル';
+
+  @override
+  String get queueSwipeRetry => '再試行';
+
+  @override
+  String get queueSwipeDelete => '削除';
+
+  @override
   String get queueEmpty => 'キューは空です';
 
   @override

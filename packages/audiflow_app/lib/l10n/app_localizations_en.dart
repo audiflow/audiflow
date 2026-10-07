@@ -595,6 +595,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get queueDownloadedLabel => 'Downloaded';
 
   @override
+  String get queueSwipeDownload => 'Download';
+
+  @override
+  String get queueSwipePause => 'Pause';
+
+  @override
+  String get queueSwipeResume => 'Resume';
+
+  @override
+  String get queueSwipeCancel => 'Cancel';
+
+  @override
+  String get queueSwipeRetry => 'Retry';
+
+  @override
+  String get queueSwipeDelete => 'Delete';
+
+  @override
   String get queueEmpty => 'Queue is empty';
 
   @override
