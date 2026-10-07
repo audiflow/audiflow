@@ -126,4 +126,53 @@ void main() {
       check(surfaceDecoration(tester).color).equals(AppColors.dark.surface);
     });
   });
+
+  group('SliverGroupedSection', () {
+    Widget sliverHost(int count, {List<int>? built}) => MaterialApp(
+      theme: AppTheme.light(),
+      home: Scaffold(
+        body: CustomScrollView(
+          slivers: [
+            SliverGroupedSection(
+              itemCount: count,
+              itemBuilder: (context, index) {
+                built?.add(index);
+                return SizedBox(height: 60, child: Text('row $index'));
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+
+    testWidgets('builds only the rows on screen', (tester) async {
+      final built = <int>[];
+      await tester.pumpWidget(sliverHost(500, built: built));
+      check(built).isNotEmpty();
+      check(built.length).isLessThan(50);
+      check(find.text('row 0').evaluate()).length.equals(1);
+      check(find.text('row 499').evaluate()).isEmpty();
+    });
+
+    testWidgets('paints the grouped surface behind the rows', (tester) async {
+      await tester.pumpWidget(sliverHost(3));
+      final sliver = tester.widget<DecoratedSliver>(
+        find.byType(DecoratedSliver),
+      );
+      final decoration = sliver.decoration as BoxDecoration;
+      check(decoration.color).equals(AppColors.light.surface);
+      check(decoration.borderRadius).equals(AppBorders.groupedSurface);
+      check(
+        decoration.boxShadow,
+      ).isNotNull().deepEquals(AppShadows.groupedSurface);
+    });
+
+    testWidgets('separates rows with indented hairlines', (tester) async {
+      await tester.pumpWidget(sliverHost(3));
+      final dividers = tester.widgetList<Divider>(find.byType(Divider));
+      check(dividers.length).equals(2);
+      check(dividers.first.indent).equals(Spacing.rowHorizontal);
+      check(dividers.first.color).equals(AppColors.light.hairline);
+    });
+  });
 }

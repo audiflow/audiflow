@@ -279,10 +279,28 @@ void main() {
       prefs = await SharedPreferences.getInstance();
     });
 
+    EpisodeWithProgress inProgressEpisode({
+      int podcastId = 1,
+      String title = 'Halfway episode',
+    }) {
+      final episode = Episode()
+        ..id = 10
+        ..podcastId = podcastId
+        ..guid = 'g10'
+        ..title = title
+        ..audioUrl = 'https://example.com/10.mp3';
+      final history = PlaybackHistory()
+        ..episodeId = 10
+        ..positionMs = 30 * 60000
+        ..durationMs = 48 * 60000;
+      return EpisodeWithProgress(episode: episode, history: history);
+    }
+
     Future<void> pump(
       WidgetTester tester, {
       List<EpisodeWithProgress> inProgress = const [],
       List<Station> stations = const [],
+      double textScale = 1,
     }) async {
       final container = ProviderContainer(
         overrides: [
@@ -307,6 +325,12 @@ void main() {
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(
+                context,
+              ).copyWith(textScaler: TextScaler.linear(textScale)),
+              child: child!,
+            ),
             home: const LibraryScreen(),
           ),
         ),
@@ -329,20 +353,7 @@ void main() {
     testWidgets('continue listening shows a card with remaining time', (
       tester,
     ) async {
-      final episode = Episode()
-        ..id = 10
-        ..podcastId = 1
-        ..guid = 'g10'
-        ..title = 'Halfway episode'
-        ..audioUrl = 'https://example.com/10.mp3';
-      final history = PlaybackHistory()
-        ..episodeId = 10
-        ..positionMs = 30 * 60000
-        ..durationMs = 48 * 60000;
-      await pump(
-        tester,
-        inProgress: [EpisodeWithProgress(episode: episode, history: history)],
-      );
+      await pump(tester, inProgress: [inProgressEpisode()]);
       check(find.text('Continue listening').evaluate()).length.equals(1);
       check(find.text('Halfway episode').evaluate()).length.equals(1);
       final line = tester.widget<BottomEdgeProgress>(
@@ -352,6 +363,27 @@ void main() {
         ),
       );
       check(line.fraction).isNotNull().isCloseTo(30 / 48, 1e-9);
+    });
+
+    testWidgets('continue listening skips episodes of unsubscribed podcasts', (
+      tester,
+    ) async {
+      await pump(tester, inProgress: [inProgressEpisode(podcastId: 99)]);
+      check(find.text('Continue listening').evaluate()).isEmpty();
+      check(find.text('Halfway episode').evaluate()).isEmpty();
+    });
+
+    testWidgets('continue listening cards grow with large text', (
+      tester,
+    ) async {
+      final longTitle = List.filled(12, 'Long title').join(' ');
+      await pump(
+        tester,
+        inProgress: [inProgressEpisode(title: longTitle)],
+        textScale: 1.15,
+      );
+      check(tester.takeException()).isNull();
+      check(find.text(longTitle).evaluate()).length.equals(1);
     });
 
     testWidgets('stations are laid out two per row', (tester) async {

@@ -12,17 +12,31 @@ import '../controllers/continue_listening_controller.dart';
 /// Collapses to nothing when there are no in-progress episodes, while
 /// loading, and on error, so the Library never shows an empty section.
 class ContinueListeningSection extends ConsumerWidget {
-  const ContinueListeningSection({required this.onEpisodeTap, super.key});
+  const ContinueListeningSection({
+    required this.onEpisodeTap,
+    required this.podcastIds,
+    super.key,
+  });
 
   final void Function(EpisodeWithProgress episode) onEpisodeTap;
+
+  /// Podcasts the Library can open. Playback history outlives an
+  /// unsubscribe, so episodes of other podcasts are left out rather than
+  /// shown as cards that cannot open.
+  final Set<int> podcastIds;
 
   static const double _cardWidth = 280;
   static const double _cardHeight = 80;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final episodes = ref.watch(continueListeningEpisodesProvider).value ?? [];
+    final episodes = (ref.watch(continueListeningEpisodesProvider).value ?? [])
+        .where((item) => podcastIds.contains(item.episode.podcastId))
+        .toList();
     if (episodes.isEmpty) return const SizedBox.shrink();
+    // Two title lines plus the remaining time outgrow the base height at
+    // larger text sizes, so the card grows with the text scale.
+    final cardHeight = MediaQuery.textScalerOf(context).scale(_cardHeight);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -33,7 +47,7 @@ class ContinueListeningSection extends ConsumerWidget {
         const SizedBox(height: Spacing.xs),
         SizedBox(
           // Room for the cards' shadow below them.
-          height: _cardHeight + Spacing.sm,
+          height: cardHeight + Spacing.sm,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(
@@ -45,7 +59,7 @@ class ContinueListeningSection extends ConsumerWidget {
               alignment: Alignment.topCenter,
               child: SizedBox(
                 width: _cardWidth,
-                height: _cardHeight,
+                height: cardHeight,
                 child: _ContinueListeningCard(
                   episode: episodes[index],
                   onTap: () => onEpisodeTap(episodes[index]),

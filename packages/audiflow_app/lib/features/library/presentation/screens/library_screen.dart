@@ -145,6 +145,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
           SliverToBoxAdapter(
             child: ContinueListeningSection(
               onEpisodeTap: (item) => _openEpisode(item, subscriptions),
+              podcastIds: {for (final s in subscriptions) s.id},
             ),
           ),
           ..._stationSlivers(context, stations),
@@ -224,25 +225,24 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     AsyncValue<List<Subscription>> sortedSubscriptionsAsync,
   ) {
     return sortedSubscriptionsAsync.when(
-      data: (sorted) => SliverToBoxAdapter(
-        child: GroupedSection(
-          // Aligns separators with the text, past the 52px artwork.
-          separatorIndent: 76,
-          children: [
-            for (final subscription in sorted)
-              SubscriptionListTile(
-                key: ValueKey(subscription.itunesId),
-                subscription: subscription,
-                onTap: () {
-                  final podcast = subscription.toPodcast();
-                  context.push(
-                    '${AppRoutes.library}/podcast/${podcast.id}',
-                    extra: podcast,
-                  );
-                },
-              ),
-          ],
-        ),
+      data: (sorted) => SliverGroupedSection(
+        // Aligns separators with the text, past the 52px artwork.
+        separatorIndent: 76,
+        itemCount: sorted.length,
+        itemBuilder: (context, index) {
+          final subscription = sorted[index];
+          return SubscriptionListTile(
+            key: ValueKey(subscription.itunesId),
+            subscription: subscription,
+            onTap: () {
+              final podcast = subscription.toPodcast();
+              context.push(
+                '${AppRoutes.library}/podcast/${podcast.id}',
+                extra: podcast,
+              );
+            },
+          );
+        },
       ),
       loading: () => const SliverToBoxAdapter(
         child: Padding(

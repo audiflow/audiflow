@@ -93,6 +93,67 @@ class GroupedSection extends StatelessWidget {
   }
 }
 
+/// Lazily built [GroupedSection] for long lists: rows are created as they
+/// scroll into view, on the same rounded surface with hairline separators.
+class SliverGroupedSection extends StatelessWidget {
+  const SliverGroupedSection({
+    super.key,
+    required this.itemCount,
+    required this.itemBuilder,
+    this.separatorIndent = Spacing.rowHorizontal,
+    this.margin = const EdgeInsets.symmetric(
+      horizontal: Spacing.screenHorizontal,
+    ),
+  });
+
+  final int itemCount;
+  final IndexedWidgetBuilder itemBuilder;
+  final double separatorIndent;
+  final EdgeInsetsGeometry margin;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return SliverPadding(
+      padding: margin,
+      sliver: DecoratedSliver(
+        decoration: BoxDecoration(
+          color: colors.surface,
+          borderRadius: AppBorders.groupedSurface,
+          boxShadow: AppShadows.groupedSurface,
+        ),
+        sliver: SliverList.separated(
+          itemCount: itemCount,
+          separatorBuilder: (_, _) => Divider(
+            height: 1,
+            thickness: 1,
+            color: colors.hairline,
+            indent: separatorIndent,
+          ),
+          itemBuilder: (context, index) => _row(context, index),
+        ),
+      ),
+    );
+  }
+
+  // Each row gets its own transparent Material so ink splashes paint above
+  // the decoration, clipped to the surface's corners at either end.
+  Widget _row(BuildContext context, int index) {
+    final radius = AppBorders.groupedSurface.topLeft;
+    final first = index == 0;
+    final last = index == itemCount - 1;
+    return Material(
+      type: MaterialType.transparency,
+      clipBehavior: Clip.antiAlias,
+      borderRadius: BorderRadius.vertical(
+        top: first ? radius : Radius.zero,
+        bottom: last ? radius : Radius.zero,
+      ),
+      child: itemBuilder(context, index),
+    );
+  }
+}
+
 class _Header extends StatelessWidget {
   const _Header({required this.text, required this.color});
 
