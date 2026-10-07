@@ -189,7 +189,7 @@ Top to bottom:
 A full-height sheet (top radius 28) with a close button and the podcast name. Groups:
 
 1. **再生** — play order (picker).
-2. **オーディオ** — "この番組専用の設定" switch; when on: playback speed stepper, skip silence, voice boost.
+2. **オーディオ** — "この番組専用の設定" switch; when on: skip silence, voice boost. Playback speed is not set here; it is edited only from the player's audio controls (4.5).
 3. **ダウンロード** — auto-download switch; when paused, an inline `accentTint` notice with a "再開" button; keep count (picker).
 4. **表示** — hide explicit episodes.
 

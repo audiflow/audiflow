@@ -60,11 +60,7 @@ class _SettingsGroupsPreview extends StatefulWidget {
 class _SettingsGroupsPreviewState extends State<_SettingsGroupsPreview> {
   bool _perPodcast = true;
   bool _skipSilence = false;
-  double _speed = 1.2;
-
-  void _stepSpeed(double delta) {
-    setState(() => _speed = ((_speed + delta) * 10).round() / 10);
-  }
+  int _stepperValue = 3;
 
   @override
   Widget build(BuildContext context) {
@@ -84,6 +80,8 @@ class _SettingsGroupsPreviewState extends State<_SettingsGroupsPreview> {
         _audioGroup(),
         const SizedBox(height: Spacing.sectionGap),
         const _AppSettingsGroup(),
+        const SizedBox(height: Spacing.sectionGap),
+        _stepperGroup(),
       ],
     );
   }
@@ -101,16 +99,6 @@ class _SettingsGroupsPreviewState extends State<_SettingsGroupsPreview> {
           ),
         ),
         SettingsRow(
-          title: '再生速度',
-          trailing: SettingsTrailing.stepper(
-            valueLabel: '${_speed.toStringAsFixed(1)}x',
-            decrementLabel: '遅く',
-            incrementLabel: '速く',
-            onDecrement: _speed <= 0.5 ? null : () => _stepSpeed(-0.1),
-            onIncrement: 3.0 <= _speed ? null : () => _stepSpeed(0.1),
-          ),
-        ),
-        SettingsRow(
           title: '無音をスキップ',
           trailing: SettingsTrailing.toggle(
             value: _skipSilence,
@@ -120,6 +108,30 @@ class _SettingsGroupsPreviewState extends State<_SettingsGroupsPreview> {
         const SettingsRow(
           title: 'ボイスブースト（無効）',
           trailing: SettingsTrailing.toggle(value: false, onChanged: null),
+        ),
+      ],
+    );
+  }
+
+  // Generic sample: the component exists in spec 3.7 but no settings row
+  // uses it yet now that playback speed lives only in the player.
+  Widget _stepperGroup() {
+    return GroupedSection(
+      header: 'STEPPER',
+      children: [
+        SettingsRow(
+          title: 'ステッパー（サンプル）',
+          trailing: SettingsTrailing.stepper(
+            valueLabel: '$_stepperValue',
+            decrementLabel: '減らす',
+            incrementLabel: '増やす',
+            onDecrement: _stepperValue <= 1
+                ? null
+                : () => setState(() => _stepperValue--),
+            onIncrement: 10 <= _stepperValue
+                ? null
+                : () => setState(() => _stepperValue++),
+          ),
         ),
       ],
     );
