@@ -611,7 +611,6 @@ class _SmartPlaylistGroupEpisodesScreenState
       ),
       scrollController: _scrollController,
       yearGroupingEnabled: true,
-      itemExtent: episodeCardExtent,
     );
   }
 

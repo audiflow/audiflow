@@ -444,7 +444,6 @@ List<Widget> _buildPerEpisodeInlineGroups({
       ),
       scrollController: scrollController,
       yearGroupingEnabled: true,
-      itemExtent: null,
       separatorIndent: _seriesSeparatorIndent,
     ),
   ];
@@ -513,7 +512,6 @@ List<Widget> _buildYearGroupedPlaylistSlivers({
     ),
     scrollController: scrollController,
     yearGroupingEnabled: true,
-    itemExtent: episodeCardExtent,
   );
 }
 
@@ -611,7 +609,6 @@ List<Widget> _buildMixedYearInlineGroups({
       ),
       scrollController: scrollController,
       yearGroupingEnabled: true,
-      itemExtent: null,
       separatorIndent: _seriesSeparatorIndent,
     ),
   ];

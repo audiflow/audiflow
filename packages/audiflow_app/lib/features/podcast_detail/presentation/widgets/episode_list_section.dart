@@ -350,7 +350,6 @@ List<Widget> _buildYearGroupedEpisodeSlivers({
     },
     scrollController: scrollController,
     yearGroupingEnabled: true,
-    itemExtent: episodeCardExtent,
   );
 }
 

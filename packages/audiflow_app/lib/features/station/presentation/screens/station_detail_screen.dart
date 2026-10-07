@@ -265,7 +265,6 @@ class _StationDetailContentState extends ConsumerState<_StationDetailContent> {
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
         itemCount: stationEpisodes.length,
-        itemExtent: episodeCardExtent,
         itemBuilder: (context, index) {
           return _StationEpisodeTile(
             key: ValueKey(stationEpisodes[index].id),
@@ -362,8 +361,11 @@ class _StationEpisodeTile extends ConsumerWidget {
           stationName: stationName,
         );
       },
-      loading: () => const SizedBox(height: episodeCardExtent),
+      // Roughly one row tall, so the list does not jump when it resolves.
+      loading: () => const SizedBox(height: _loadingRowHeight),
       error: (_, _) => const SizedBox.shrink(),
     );
   }
 }
+
+const double _loadingRowHeight = 160;

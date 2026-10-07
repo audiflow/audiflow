@@ -11,32 +11,15 @@ import '../buttons/episode_play_pill.dart';
 import '../indicators/progress_line.dart';
 
 const double _thumbnailSize = 56.0;
-const double _paddingTop = 12.0;
-const double _dateRowHeight = 18.0;
-const double _textGap = 4.0;
-
-/// Title and description share this block: the title takes up to three
-/// lines and the description fills what is left, up to two lines.
-const double _textBlockHeight = 84.0;
 const double _actionRowHeight = 44.0;
-const double _paddingBottom = 4.0;
-
-/// Fixed height of an episode row, used as `itemExtent` in sliver lists so
-/// long back catalogues scroll without measuring every row.
-const double episodeCardExtent =
-    _paddingTop +
-    _dateRowHeight +
-    _textGap +
-    _textBlockHeight +
-    _textGap +
-    _actionRowHeight +
-    _paddingBottom +
-    1;
 
 /// Episode row (redesign 4.2): date line (accent dot when new), title,
 /// description, artwork on the right, then the action row with the play
 /// pill and the caller's actions. Played episodes fade their title and
 /// artwork; a bottom-edge line shows progress once playback has started.
+///
+/// Height follows the content, so a short title leaves no gap between the
+/// text and the action row; rows run full width and end in a hairline.
 class EpisodeCard extends StatelessWidget {
   const EpisodeCard({
     super.key,
@@ -153,70 +136,64 @@ class EpisodeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    return SizedBox(
-      height: episodeCardExtent,
-      child: BottomEdgeProgress(
-        fraction: _edgeProgress,
-        child: Column(
-          children: [
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  Spacing.rowHorizontal,
-                  _paddingTop,
-                  Spacing.rowHorizontal,
-                  _paddingBottom,
-                ),
-                child: Column(
-                  children: [
-                    InkWell(
-                      onTap: onTap,
-                      onLongPress: onLongPress,
-                      child: _mainArea(colors),
-                    ),
-                    const SizedBox(height: _textGap),
-                    SizedBox(height: _actionRowHeight, child: _actionRow()),
-                  ],
-                ),
-              ),
+    return BottomEdgeProgress(
+      fraction: _edgeProgress,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              Spacing.screenHorizontal,
+              Spacing.md - Spacing.xxs,
+              Spacing.screenHorizontal,
+              Spacing.xs,
             ),
-            Divider(
-              height: 1,
-              thickness: 1,
-              color: colors.hairline,
-              indent: Spacing.rowHorizontal,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                InkWell(
+                  onTap: onTap,
+                  onLongPress: onLongPress,
+                  child: _mainArea(colors),
+                ),
+                const SizedBox(height: Spacing.xs),
+                SizedBox(height: _actionRowHeight, child: _actionRow()),
+              ],
             ),
-          ],
-        ),
+          ),
+          Divider(
+            height: 1,
+            thickness: 1,
+            color: colors.hairline,
+            indent: Spacing.screenHorizontal,
+          ),
+        ],
       ),
     );
   }
 
   Widget _mainArea(AppColors colors) {
-    return SizedBox(
-      height: _dateRowHeight + _textGap + _textBlockHeight,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(height: _dateRowHeight, child: _dateRow(colors)),
-                const SizedBox(height: _textGap),
-                SizedBox(height: _textBlockHeight, child: _textBlock(colors)),
-              ],
-            ),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _dateRow(colors),
+              const SizedBox(height: Spacing.xs),
+              _textBlock(colors),
+            ],
           ),
-          if (_showThumbnail) ...[
-            const SizedBox(width: Spacing.sm + Spacing.xs),
-            Opacity(
-              opacity: isCompleted ? 0.5 : 1,
-              child: _Thumbnail(url: _displayThumbnailUrl!),
-            ),
-          ],
+        ),
+        if (_showThumbnail) ...[
+          const SizedBox(width: Spacing.sm + Spacing.xs),
+          Opacity(
+            opacity: isCompleted ? 0.5 : 1,
+            child: _Thumbnail(url: _displayThumbnailUrl!),
+          ),
         ],
-      ),
+      ],
     );
   }
 
@@ -269,73 +246,29 @@ class EpisodeCard extends StatelessWidget {
         : isCompleted
         ? colors.inkTertiary
         : colors.ink;
-    final titleStyle = AppTextStyles.rowTitle.copyWith(color: titleColor);
-    final descriptionStyle = AppTextStyles.meta.copyWith(
-      color: isCompleted ? colors.inkTertiary : colors.inkSecondary,
-    );
     final text = description?.htmlToPlainText.trim() ?? '';
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final titleText = title.htmlEntityDecode;
-        final titleHeight = _measure(
-          titleText,
-          titleStyle,
-          3,
-          constraints.maxWidth,
-          context,
-        );
-        final lineHeight = _measure(
-          'A',
-          descriptionStyle,
-          1,
-          constraints.maxWidth,
-          context,
-        );
-        // Whole description lines that fit under the title, at most two.
-        final room = constraints.maxHeight - titleHeight - Spacing.xxs;
-        final descriptionLines = text.isEmpty || lineHeight <= 0
-            ? 0
-            : (room / lineHeight).floor().clamp(0, 2);
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              titleText,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-              style: titleStyle,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title.htmlEntityDecode,
+          maxLines: 3,
+          overflow: TextOverflow.ellipsis,
+          style: AppTextStyles.rowTitle.copyWith(color: titleColor),
+        ),
+        if (text.isNotEmpty) ...[
+          const SizedBox(height: Spacing.xxs),
+          Text(
+            text,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: AppTextStyles.meta.copyWith(
+              color: isCompleted ? colors.inkTertiary : colors.inkSecondary,
             ),
-            if (0 < descriptionLines) ...[
-              const SizedBox(height: Spacing.xxs),
-              Text(
-                text,
-                maxLines: descriptionLines,
-                overflow: TextOverflow.ellipsis,
-                style: descriptionStyle,
-              ),
-            ],
-          ],
-        );
-      },
+          ),
+        ],
+      ],
     );
-  }
-
-  static double _measure(
-    String text,
-    TextStyle style,
-    int maxLines,
-    double width,
-    BuildContext context,
-  ) {
-    final painter = TextPainter(
-      text: TextSpan(text: text, style: style),
-      maxLines: maxLines,
-      textDirection: Directionality.of(context),
-      textScaler: MediaQuery.textScalerOf(context),
-    )..layout(maxWidth: width);
-    final height = painter.height;
-    painter.dispose();
-    return height;
   }
 
   Widget _actionRow() {

@@ -25,8 +25,8 @@ void main() {
     return MaterialApp(
       theme: AppTheme.light(),
       home: Scaffold(
-        body: SizedBox(
-          height: episodeCardExtent,
+        body: Align(
+          alignment: Alignment.topCenter,
           child: EpisodeCard(
             title: title,
             pillLabel: pillLabel,
@@ -128,13 +128,22 @@ void main() {
       check(find.byType(ProgressLine).evaluate().length).equals(1);
     });
 
-    testWidgets('progress line keeps the fixed card extent', (tester) async {
+    testWidgets('height follows the content, leaving no gap', (tester) async {
+      await tester.pumpWidget(buildSubject(title: 'Short'));
+      final shortHeight = tester.getSize(find.byType(EpisodeCard)).height;
       await tester.pumpWidget(
-        buildSubject(isInProgress: true, progressFraction: 0.4),
+        buildSubject(
+          title: 'Short',
+          description: 'A description that takes up a line of its own',
+        ),
       );
-      check(
-        tester.getSize(find.byType(EpisodeCard)).height,
-      ).equals(episodeCardExtent);
+      final withDescription = tester.getSize(find.byType(EpisodeCard)).height;
+      check(shortHeight).isLessThan(withDescription);
+
+      // The action row follows the text directly.
+      final titleBottom = tester.getBottomLeft(find.text('Short')).dy;
+      final pillTop = tester.getTopLeft(find.byType(EpisodePlayPill)).dy;
+      check(pillTop - titleBottom).isLessThan(48);
     });
 
     testWidgets('loading pill: indeterminate spinner', (tester) async {
@@ -221,12 +230,14 @@ void main() {
       ).equals(1);
     });
 
-    testWidgets('episodeCardExtent matches actual rendered height', (
-      tester,
-    ) async {
+    testWidgets('rows end in a hairline starting at the text', (tester) async {
       await tester.pumpWidget(buildSubject());
-      final cardSize = tester.getSize(find.byType(EpisodeCard));
-      check(cardSize.height).equals(episodeCardExtent);
+      final divider = tester.widget<Divider>(find.byType(Divider));
+      check(divider.color).equals(AppColors.light.hairline);
+      check(divider.indent).equals(Spacing.screenHorizontal);
+      check(
+        tester.getTopLeft(find.text('Test Episode')).dx,
+      ).equals(Spacing.screenHorizontal);
     });
 
     testWidgets('decodes thumbnail at display size to stay in memory cache', (
