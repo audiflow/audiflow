@@ -67,22 +67,31 @@ void main() {
       check(find.text('Apr 29').evaluate().length).equals(0);
     });
 
-    testWidgets('not played pill: filled play icon', (tester) async {
+    testWidgets('not played pill: play glyph, no progress line', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildSubject());
-      check(find.byIcon(Icons.play_circle_filled).evaluate().length).equals(1);
+      check(find.byIcon(Icons.play_arrow_rounded).evaluate().length).equals(1);
+      check(find.byType(ProgressLine).evaluate().length).equals(0);
     });
 
-    testWidgets('completed pill: check icon', (tester) async {
+    testWidgets('completed pill: check glyph, no progress line', (
+      tester,
+    ) async {
       await tester.pumpWidget(
-        buildSubject(pillLabel: 'Completed', isCompleted: true),
+        buildSubject(
+          pillLabel: 'Completed',
+          isCompleted: true,
+          isInProgress: true,
+          progressFraction: 0.99,
+        ),
       );
-      check(
-        find.byIcon(Icons.check_circle_outline).evaluate().length,
-      ).equals(1);
+      check(find.byIcon(Icons.check_rounded).evaluate().length).equals(1);
       check(find.text('Completed').evaluate().length).equals(1);
+      check(find.byType(ProgressLine).evaluate().length).equals(0);
     });
 
-    testWidgets('playing pill: ring with pause and progress value', (
+    testWidgets('playing: pause glyph, progress on the bottom edge', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -93,14 +102,19 @@ void main() {
           progressFraction: 0.4,
         ),
       );
-      check(find.byIcon(Icons.pause).evaluate().length).equals(1);
-      final ring = tester.widget<CircularProgressIndicator>(
-        find.byType(CircularProgressIndicator),
-      );
-      check(ring.value).isNotNull().equals(0.4);
+      check(find.byIcon(Icons.pause_rounded).evaluate().length).equals(1);
+      check(find.byType(CircularProgressIndicator).evaluate().length).equals(0);
+      final line = tester.widget<ProgressLine>(find.byType(ProgressLine));
+      check(line.fraction).equals(0.4);
+      final cardRect = tester.getRect(find.byType(EpisodeCard));
+      check(
+        tester.getRect(find.byType(ProgressLine)).bottom,
+      ).equals(cardRect.bottom);
     });
 
-    testWidgets('in-progress paused pill: ring with play', (tester) async {
+    testWidgets('in-progress paused: play glyph and progress line', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         buildSubject(
           pillLabel: '12m left',
@@ -108,7 +122,17 @@ void main() {
           progressFraction: 0.4,
         ),
       );
-      check(find.byIcon(Icons.play_arrow).evaluate().length).equals(1);
+      check(find.byIcon(Icons.play_arrow_rounded).evaluate().length).equals(1);
+      check(find.byType(ProgressLine).evaluate().length).equals(1);
+    });
+
+    testWidgets('progress line keeps the fixed card extent', (tester) async {
+      await tester.pumpWidget(
+        buildSubject(isInProgress: true, progressFraction: 0.4),
+      );
+      check(
+        tester.getSize(find.byType(EpisodeCard)).height,
+      ).equals(episodeCardExtent);
     });
 
     testWidgets('loading pill: indeterminate spinner', (tester) async {

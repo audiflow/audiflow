@@ -26,6 +26,7 @@ export 'src/widgets/cards/podcast_artwork_grid_item.dart';
 
 // Widgets - Indicators
 export 'src/widgets/indicators/episode_progress_indicator.dart';
+export 'src/widgets/indicators/progress_line.dart';
 
 // Widgets - Player
 export 'src/widgets/player/mini_player_artwork.dart';

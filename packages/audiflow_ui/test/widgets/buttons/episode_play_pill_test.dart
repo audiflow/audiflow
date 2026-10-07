@@ -4,102 +4,87 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  Widget host(Widget child) => MaterialApp(
+  Widget host(Widget child, {ThemeData? theme}) => MaterialApp(
+    theme: theme ?? AppTheme.light(),
     home: Scaffold(body: Center(child: child)),
   );
 
+  Color pillFill(WidgetTester tester) {
+    final material = tester.widget<Material>(
+      find.descendant(
+        of: find.byKey(EpisodePlayPill.surfaceKey),
+        matching: find.byType(Material),
+      ),
+    );
+    return material.color!;
+  }
+
+  Color labelColor(WidgetTester tester, String label) {
+    return tester.widget<Text>(find.text(label)).style!.color!;
+  }
+
   group('EpisodePlayPill', () {
-    testWidgets('not played: filled play icon, no ring', (tester) async {
+    testWidgets('idle: play glyph on muted surface, ink label', (tester) async {
       await tester.pumpWidget(
         host(
           const EpisodePlayPill(
-            label: '33m',
+            label: '48m',
             isPlaying: false,
             isLoading: false,
             isCompleted: false,
-            isInProgress: false,
           ),
         ),
       );
-      check(find.byIcon(Icons.play_circle_filled).evaluate().length).equals(1);
-      check(find.byType(CircularProgressIndicator).evaluate().length).equals(0);
-      check(
-        find.byIcon(Icons.check_circle_outline).evaluate().length,
-      ).equals(0);
-      check(find.text('33m').evaluate().length).equals(1);
+      check(find.byIcon(Icons.play_arrow_rounded).evaluate().length).equals(1);
+      check(pillFill(tester)).equals(AppColors.light.surfaceMuted);
+      check(labelColor(tester, '48m')).equals(AppColors.light.ink);
     });
 
-    testWidgets('completed: check_circle_outline, no ring', (tester) async {
+    testWidgets('playing: pause glyph on accent tint, accent label', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         host(
           const EpisodePlayPill(
-            label: 'Completed',
-            isPlaying: false,
-            isLoading: false,
-            isCompleted: true,
-            isInProgress: false,
-          ),
-        ),
-      );
-      check(
-        find.byIcon(Icons.check_circle_outline).evaluate().length,
-      ).equals(1);
-      check(find.byType(CircularProgressIndicator).evaluate().length).equals(0);
-      check(find.byIcon(Icons.play_circle_filled).evaluate().length).equals(0);
-      check(find.text('Completed').evaluate().length).equals(1);
-    });
-
-    testWidgets('in-progress paused: ring + play icon', (tester) async {
-      await tester.pumpWidget(
-        host(
-          const EpisodePlayPill(
-            label: '12m left',
-            isPlaying: false,
-            isLoading: false,
-            isCompleted: false,
-            isInProgress: true,
-            progressFraction: 0.5,
-          ),
-        ),
-      );
-      final ring = tester.widget<CircularProgressIndicator>(
-        find.byType(CircularProgressIndicator),
-      );
-      check(ring.value).isNotNull().equals(0.5);
-      check(find.byIcon(Icons.play_arrow).evaluate().length).equals(1);
-      check(find.byIcon(Icons.pause).evaluate().length).equals(0);
-    });
-
-    testWidgets('playing: ring + pause icon', (tester) async {
-      await tester.pumpWidget(
-        host(
-          const EpisodePlayPill(
-            label: '12m left',
+            label: '17m left',
             isPlaying: true,
             isLoading: false,
             isCompleted: false,
-            isInProgress: true,
-            progressFraction: 0.7,
           ),
         ),
       );
-      final ring = tester.widget<CircularProgressIndicator>(
-        find.byType(CircularProgressIndicator),
-      );
-      check(ring.value).isNotNull().equals(0.7);
-      check(find.byIcon(Icons.pause).evaluate().length).equals(1);
-      check(find.byIcon(Icons.play_arrow).evaluate().length).equals(0);
+      check(find.byIcon(Icons.pause_rounded).evaluate().length).equals(1);
+      check(find.byIcon(Icons.play_arrow_rounded).evaluate().length).equals(0);
+      check(pillFill(tester)).equals(AppColors.light.accentTint);
+      check(labelColor(tester, '17m left')).equals(AppColors.light.accent);
     });
 
-    testWidgets('loading: indeterminate spinner', (tester) async {
+    testWidgets('completed: check glyph in tertiary ink', (tester) async {
       await tester.pumpWidget(
         host(
           const EpisodePlayPill(
-            label: '33m',
+            label: 'Played',
+            isPlaying: false,
+            isLoading: false,
+            isCompleted: true,
+          ),
+        ),
+      );
+      check(find.byIcon(Icons.check_rounded).evaluate().length).equals(1);
+      check(pillFill(tester)).equals(AppColors.light.surfaceMuted);
+      check(labelColor(tester, 'Played')).equals(AppColors.light.inkTertiary);
+    });
+
+    testWidgets('loading: indeterminate spinner, no progress ring', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        host(
+          const EpisodePlayPill(
+            label: '48m',
             isPlaying: false,
             isLoading: true,
             isCompleted: false,
-            isInProgress: false,
           ),
         ),
       );
@@ -109,26 +94,104 @@ void main() {
       check(spinner.value).isNull();
     });
 
-    testWidgets('progress fraction clamps above 1.0', (tester) async {
+    testWidgets('loading wins over playing and completed', (tester) async {
       await tester.pumpWidget(
         host(
           const EpisodePlayPill(
-            label: '0m left',
-            isPlaying: false,
-            isLoading: false,
-            isCompleted: false,
-            isInProgress: true,
-            progressFraction: 1.5,
+            label: '48m',
+            isPlaying: true,
+            isLoading: true,
+            isCompleted: true,
           ),
         ),
       );
-      final ring = tester.widget<CircularProgressIndicator>(
-        find.byType(CircularProgressIndicator),
-      );
-      check(ring.value).isNotNull().equals(1.0);
+      check(find.byType(CircularProgressIndicator).evaluate().length).equals(1);
+      check(find.byIcon(Icons.pause_rounded).evaluate().length).equals(0);
+      check(find.byIcon(Icons.check_rounded).evaluate().length).equals(0);
     });
 
-    testWidgets('empty label: hides text', (tester) async {
+    testWidgets('never draws a determinate progress ring', (tester) async {
+      for (final playing in [true, false]) {
+        await tester.pumpWidget(
+          host(
+            EpisodePlayPill(
+              label: '17m left',
+              isPlaying: playing,
+              isLoading: false,
+              isCompleted: false,
+            ),
+          ),
+        );
+        check(
+          find.byType(CircularProgressIndicator).evaluate().length,
+        ).equals(0);
+      }
+    });
+
+    testWidgets('visual pill is 32 tall and fully rounded', (tester) async {
+      await tester.pumpWidget(
+        host(
+          const EpisodePlayPill(
+            label: '48m',
+            isPlaying: false,
+            isLoading: false,
+            isCompleted: false,
+          ),
+        ),
+      );
+      check(
+        tester.getSize(find.byKey(EpisodePlayPill.surfaceKey)).height,
+      ).equals(32);
+      final material = tester.widget<Material>(
+        find.descendant(
+          of: find.byKey(EpisodePlayPill.surfaceKey),
+          matching: find.byType(Material),
+        ),
+      );
+      check(material.shape).isA<StadiumBorder>();
+    });
+
+    testWidgets('tap target is at least 44 tall', (tester) async {
+      await tester.pumpWidget(
+        host(
+          const EpisodePlayPill(
+            label: '48m',
+            isPlaying: false,
+            isLoading: false,
+            isCompleted: false,
+          ),
+        ),
+      );
+      check(
+        tester.getSize(find.byType(EpisodePlayPill)).height,
+      ).isGreaterOrEqual(44);
+    });
+
+    testWidgets('tapping the pill or its margin fires onPressed', (
+      tester,
+    ) async {
+      var tapped = 0;
+      await tester.pumpWidget(
+        host(
+          EpisodePlayPill(
+            label: '48m',
+            isPlaying: false,
+            isLoading: false,
+            isCompleted: false,
+            onPressed: () => tapped++,
+          ),
+        ),
+      );
+      await tester.tap(find.byKey(EpisodePlayPill.surfaceKey));
+      check(tapped).equals(1);
+
+      // Just above the 32px visual, still inside the 44px target.
+      final pillRect = tester.getRect(find.byKey(EpisodePlayPill.surfaceKey));
+      await tester.tapAt(Offset(pillRect.center.dx, pillRect.top - 4));
+      check(tapped).equals(2);
+    });
+
+    testWidgets('empty label: glyph only', (tester) async {
       await tester.pumpWidget(
         host(
           const EpisodePlayPill(
@@ -136,32 +199,43 @@ void main() {
             isPlaying: false,
             isLoading: false,
             isCompleted: false,
-            isInProgress: false,
           ),
         ),
       );
-      // No Text widget for the (empty) label.
       check(find.byType(Text).evaluate().length).equals(0);
-      // Leading icon still rendered.
-      check(find.byIcon(Icons.play_circle_filled).evaluate().length).equals(1);
+      check(find.byIcon(Icons.play_arrow_rounded).evaluate().length).equals(1);
     });
 
-    testWidgets('tap fires onPressed', (tester) async {
-      var tapped = 0;
+    testWidgets('label uses tabular figures', (tester) async {
       await tester.pumpWidget(
         host(
-          EpisodePlayPill(
-            label: '33m',
+          const EpisodePlayPill(
+            label: '48m',
             isPlaying: false,
             isLoading: false,
             isCompleted: false,
-            isInProgress: false,
-            onPressed: () => tapped++,
           ),
         ),
       );
-      await tester.tap(find.byType(EpisodePlayPill));
-      check(tapped).equals(1);
+      check(
+        tester.widget<Text>(find.text('48m')).style!.fontFeatures,
+      ).isNotNull().contains(const FontFeature.tabularFigures());
+    });
+
+    testWidgets('dark theme resolves dark tokens', (tester) async {
+      await tester.pumpWidget(
+        host(
+          const EpisodePlayPill(
+            label: '17m left',
+            isPlaying: true,
+            isLoading: false,
+            isCompleted: false,
+          ),
+          theme: AppTheme.dark(),
+        ),
+      );
+      check(pillFill(tester)).equals(AppColors.dark.accentTint);
+      check(labelColor(tester, '17m left')).equals(AppColors.dark.accent);
     });
   });
 }

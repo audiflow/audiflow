@@ -1,0 +1,112 @@
+import 'package:audiflow_ui/audiflow_ui.dart';
+import 'package:checks/checks.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+void main() {
+  Widget host(Widget child, {ThemeData? theme}) => MaterialApp(
+    theme: theme ?? AppTheme.light(),
+    home: Scaffold(
+      body: Center(child: SizedBox(width: 200, child: child)),
+    ),
+  );
+
+  Finder fillFinder() => find.byKey(ProgressLine.fillKey);
+
+  group('ProgressLine', () {
+    testWidgets('is 3px tall and fills by fraction', (tester) async {
+      await tester.pumpWidget(host(const ProgressLine(fraction: 0.25)));
+      check(tester.getSize(find.byType(ProgressLine)).height).equals(3);
+      check(tester.getSize(fillFinder()).width).equals(50);
+    });
+
+    testWidgets('uses hairline track and accent fill by default', (
+      tester,
+    ) async {
+      await tester.pumpWidget(host(const ProgressLine(fraction: 0.5)));
+      final track = tester.widget<ColoredBox>(
+        find.byKey(ProgressLine.trackKey),
+      );
+      final fill = tester.widget<ColoredBox>(fillFinder());
+      check(track.color).equals(AppColors.light.hairline);
+      check(fill.color).equals(AppColors.light.accent);
+    });
+
+    testWidgets('accepts a fill override such as brand', (tester) async {
+      await tester.pumpWidget(
+        host(ProgressLine(fraction: 0.5, fillColor: AppColors.light.brand)),
+      );
+      check(
+        tester.widget<ColoredBox>(fillFinder()).color,
+      ).equals(AppColors.light.brand);
+    });
+
+    testWidgets('clamps out-of-range fractions', (tester) async {
+      await tester.pumpWidget(host(const ProgressLine(fraction: 1.7)));
+      check(tester.getSize(fillFinder()).width).equals(200);
+      await tester.pumpWidget(host(const ProgressLine(fraction: -0.3)));
+      check(tester.getSize(fillFinder()).width).equals(0);
+    });
+
+    testWidgets('treats NaN as empty', (tester) async {
+      await tester.pumpWidget(host(const ProgressLine(fraction: double.nan)));
+      check(tester.getSize(fillFinder()).width).equals(0);
+    });
+
+    testWidgets('resolves dark tokens in dark theme', (tester) async {
+      await tester.pumpWidget(
+        host(const ProgressLine(fraction: 0.5), theme: AppTheme.dark()),
+      );
+      check(
+        tester.widget<ColoredBox>(fillFinder()).color,
+      ).equals(AppColors.dark.accent);
+    });
+  });
+
+  group('ProgressLine.isPartial', () {
+    test('true only strictly between 0 and 1', () {
+      check(ProgressLine.isPartial(0.5)).isTrue();
+      check(ProgressLine.isPartial(0.001)).isTrue();
+      check(ProgressLine.isPartial(null)).isFalse();
+      check(ProgressLine.isPartial(0)).isFalse();
+      check(ProgressLine.isPartial(1)).isFalse();
+      check(ProgressLine.isPartial(1.2)).isFalse();
+      check(ProgressLine.isPartial(-0.1)).isFalse();
+      check(ProgressLine.isPartial(double.nan)).isFalse();
+    });
+  });
+
+  group('BottomEdgeProgress', () {
+    Widget card(double? fraction) => host(
+      BottomEdgeProgress(
+        fraction: fraction,
+        child: const SizedBox(height: 80, child: Text('row')),
+      ),
+    );
+
+    testWidgets('pins the line to the bottom edge while partial', (
+      tester,
+    ) async {
+      await tester.pumpWidget(card(0.4));
+      final line = find.byType(ProgressLine);
+      check(line.evaluate().length).equals(1);
+      final cardRect = tester.getRect(find.byType(BottomEdgeProgress));
+      final lineRect = tester.getRect(line);
+      check(lineRect.bottom).equals(cardRect.bottom);
+      check(lineRect.width).equals(cardRect.width);
+    });
+
+    testWidgets('does not change the child size', (tester) async {
+      await tester.pumpWidget(card(0.4));
+      check(tester.getSize(find.byType(BottomEdgeProgress)).height).equals(80);
+    });
+
+    for (final fraction in <double?>[null, 0, 1]) {
+      testWidgets('hides the line for fraction $fraction', (tester) async {
+        await tester.pumpWidget(card(fraction));
+        check(find.byType(ProgressLine).evaluate().length).equals(0);
+        check(find.text('row').evaluate().length).equals(1);
+      });
+    }
+  });
+}

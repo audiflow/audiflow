@@ -46,6 +46,7 @@ lib/
         podcast_artwork_grid_item.dart  # PodcastArtworkGridItem -- artwork card for grids
       indicators/
         episode_progress_indicator.dart # EpisodeProgressIndicator -- played/in-progress/unplayed
+        progress_line.dart             # ProgressLine, BottomEdgeProgress -- bottom-edge progress
       player/
         mini_player_artwork.dart       # MiniPlayerArtwork -- artwork with placeholder fallback
         mini_player_progress_bar.dart  # MiniPlayerProgressBar -- thin playback + buffer bar
@@ -70,7 +71,9 @@ lib/
 | Widget | Location | Inputs | Behavior |
 |--------|----------|--------|----------|
 | `ArtworkImage` | `widgets/` | url, width, height, fit, placeholder, loading | Every network artwork goes through this. Decodes at `width` (or the layout constraint's max width) times the device pixel ratio, so 1400-3000 px channel artwork never lands in the image cache at full size; downloaded bytes are disk-cached once per URL. Pass `width` explicitly inside a `Hero`, whose flight animates constraints. A failed load shows `placeholder`, or ExtendedImage's tap-to-retry message when none is given. |
-| `EpisodeCard` | `widgets/cards/` | title, subtitle, description, thumbnailUrl, play/new/completed flags, action buttons | Fixed-height row with standardized 44dp touch targets: thumbnail (hidden when same as podcast art), title, metadata, play button, action row. Thumbnail via `ArtworkImage`. |
+| `EpisodeCard` | `widgets/cards/` | title, subtitle, description, thumbnailUrl, play/new/completed flags, progressFraction, action buttons | Fixed-height row with standardized 44dp touch targets: thumbnail (hidden when same as podcast art), title, metadata, play pill, action row. Thumbnail via `ArtworkImage`. Partially played rows get a `BottomEdgeProgress` line. |
+| `EpisodePlayPill` | `widgets/buttons/` | label, isPlaying, isLoading, isCompleted, onPressed | 32dp pill (44dp touch target) with state glyph and tabular time label: play on `surfaceMuted`, pause on `accentTint` in `accent`, check in `inkTertiary`, spinner while loading. Never shows progress. |
+| `ProgressLine` / `BottomEdgeProgress` | `widgets/indicators/` | fraction, fillColor | 3dp line (hairline track, accent fill; overridable, e.g. `brand`). `BottomEdgeProgress` overlays it on a child's bottom edge only while 0 < fraction < 1, without changing the child's size. |
 | `PodcastArtworkGridItem` | `widgets/cards/` | title, artworkUrl, onTap | Grid cell with artwork image + title label. Placeholder on load/error. |
 | `EpisodeProgressIndicator` | `widgets/indicators/` | isCompleted, isInProgress, remainingTimeFormatted | Shows "Played" checkmark, remaining time text, or nothing. |
 | `MiniPlayerArtwork` | `widgets/player/` | imageUrl, size, borderRadius | Rounded artwork with podcast-icon placeholder fallback. |
