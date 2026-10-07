@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
@@ -43,12 +45,20 @@ class QueueListTile extends ConsumerWidget {
     final episodeId = item.episode.id;
     final downloadTask = ref.watch(episodeDownloadProvider(episodeId)).value;
     final downloaded = downloadTask?.downloadStatus is DownloadStatusCompleted;
-    void download() => handleDownloadTap(
-      context: context,
-      ref: ref,
-      episodeId: episodeId,
-      task: downloadTask,
-    );
+    Future<void> download() async {
+      final messenger = ScaffoldMessenger.of(context);
+      await handleDownloadTap(
+        context: context,
+        ref: ref,
+        episodeId: episodeId,
+        task: downloadTask,
+      );
+      // A first download is otherwise silent; the swipe springs back, so
+      // confirm that it started (the row then shows its progress).
+      if (downloadTask == null) {
+        messenger.showSnackBar(SnackBar(content: Text(l10n.downloadStarted)));
+      }
+    }
 
     return Dismissible(
       key: ValueKey(item.queueItem.id),
@@ -56,7 +66,7 @@ class QueueListTile extends ConsumerWidget {
       // A download swipe acts and springs back; only remove dismisses.
       confirmDismiss: (direction) async {
         if (direction == DismissDirection.endToStart) return true;
-        download();
+        unawaited(download());
         return false;
       },
       background: _SwipeBackground(
@@ -74,7 +84,8 @@ class QueueListTile extends ConsumerWidget {
       child: Semantics(
         customSemanticsActions: {
           CustomSemanticsAction(label: l10n.queueRemove): onRemove,
-          CustomSemanticsAction(label: l10n.downloadEpisode): download,
+          CustomSemanticsAction(label: l10n.downloadEpisode): () =>
+              unawaited(download()),
         },
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -82,7 +93,7 @@ class QueueListTile extends ConsumerWidget {
             InkWell(
               onTap: onTap,
               onLongPress: () => _showContextMenu(context, ref),
-              child: _row(context, colors, downloaded: downloaded),
+              child: _row(context, colors, downloadTask),
             ),
             Divider(
               height: 1,
@@ -98,9 +109,9 @@ class QueueListTile extends ConsumerWidget {
 
   Widget _row(
     BuildContext context,
-    AppColors colors, {
-    required bool downloaded,
-  }) {
+    AppColors colors,
+    DownloadTask? downloadTask,
+  ) {
     final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsetsDirectional.only(
@@ -140,15 +151,8 @@ class QueueListTile extends ConsumerWidget {
                         ),
                       ),
                     ),
-                    if (downloaded) ...[
-                      const SizedBox(width: Spacing.xs),
-                      Icon(
-                        Symbols.download_done,
-                        size: 14,
-                        color: colors.inkTertiary,
-                        semanticLabel: l10n.queueDownloadedLabel,
-                      ),
-                    ],
+                    if (downloadTask != null)
+                      QueueDownloadMark(task: downloadTask),
                   ],
                 ),
               ],
@@ -311,6 +315,86 @@ class _SwipeBackground extends StatelessWidget {
             horizontal: Spacing.screenHorizontal,
           ),
           child: Icon(icon, color: foreground),
+        ),
+      ),
+    );
+  }
+}
+
+/// Download state after the row's meta text: a check once downloaded, a
+/// progress ring with the percentage while downloading, and a labeled
+/// icon while waiting, paused, or failed. Nothing before a download or
+/// after a cancel.
+class QueueDownloadMark extends StatelessWidget {
+  const QueueDownloadMark({super.key, required this.task});
+
+  final DownloadTask task;
+
+  static const double _iconSize = 14;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final colors = AppColors.of(context);
+    final error = Theme.of(context).colorScheme.error;
+    return switch (task.downloadStatus) {
+      DownloadStatusCompleted() => _mark(
+        Icon(Symbols.download_done, size: _iconSize, color: colors.inkTertiary),
+        null,
+        colors.inkTertiary,
+        semantics: l10n.queueDownloadedLabel,
+      ),
+      DownloadStatusDownloading() => _mark(
+        SizedBox.square(
+          dimension: _iconSize - 2,
+          child: CircularProgressIndicator(
+            value: task.progress,
+            strokeWidth: 2,
+            color: colors.accent,
+            backgroundColor: colors.progressTrack,
+          ),
+        ),
+        _percent(task.progress) ?? l10n.downloadStatusDownloading,
+        colors.accent,
+        semantics: l10n.downloadStatusDownloading,
+      ),
+      DownloadStatusPending() => _mark(
+        Icon(Symbols.schedule, size: _iconSize, color: colors.inkTertiary),
+        l10n.downloadStatusPending,
+        colors.inkTertiary,
+      ),
+      DownloadStatusPaused() => _mark(
+        Icon(Symbols.pause_circle, size: _iconSize, color: colors.inkTertiary),
+        l10n.downloadStatusPaused,
+        colors.inkTertiary,
+      ),
+      DownloadStatusFailed() => _mark(
+        Icon(Symbols.error, size: _iconSize, color: error),
+        l10n.downloadStatusFailed,
+        error,
+      ),
+      DownloadStatusCancelled() => const SizedBox.shrink(),
+    };
+  }
+
+  static String? _percent(double? progress) =>
+      progress == null ? null : '${(progress * 100).round()}%';
+
+  Widget _mark(Widget icon, String? label, Color color, {String? semantics}) {
+    return Semantics(
+      label: semantics ?? label,
+      excludeSemantics: true,
+      child: Padding(
+        padding: const EdgeInsetsDirectional.only(start: Spacing.xs),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            icon,
+            if (label != null) ...[
+              const SizedBox(width: Spacing.xxs),
+              Text(label, style: AppTextStyles.caption.copyWith(color: color)),
+            ],
+          ],
         ),
       ),
     );
