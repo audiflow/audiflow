@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
@@ -35,8 +37,12 @@ class ContinueListeningSection extends ConsumerWidget {
         .toList();
     if (episodes.isEmpty) return const SizedBox.shrink();
     // Two title lines plus the remaining time outgrow the base height at
-    // larger text sizes, so the card grows with the text scale.
-    final cardHeight = MediaQuery.textScalerOf(context).scale(_cardHeight);
+    // larger text sizes, so the card grows with the text scale. The base
+    // stays the minimum: the padding and artwork do not shrink with text.
+    final cardHeight = math.max(
+      _cardHeight,
+      MediaQuery.textScalerOf(context).scale(_cardHeight),
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

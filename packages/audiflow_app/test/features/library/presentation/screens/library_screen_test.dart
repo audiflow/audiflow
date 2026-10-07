@@ -373,18 +373,20 @@ void main() {
       check(find.text('Halfway episode').evaluate()).isEmpty();
     });
 
-    testWidgets('continue listening cards grow with large text', (
-      tester,
-    ) async {
-      final longTitle = List.filled(12, 'Long title').join(' ');
-      await pump(
+    for (final textScale in [0.85, 1.15]) {
+      testWidgets('continue listening cards fit text at scale $textScale', (
         tester,
-        inProgress: [inProgressEpisode(title: longTitle)],
-        textScale: 1.15,
-      );
-      check(tester.takeException()).isNull();
-      check(find.text(longTitle).evaluate()).length.equals(1);
-    });
+      ) async {
+        final longTitle = List.filled(12, 'Long title').join(' ');
+        await pump(
+          tester,
+          inProgress: [inProgressEpisode(title: longTitle)],
+          textScale: textScale,
+        );
+        check(tester.takeException()).isNull();
+        check(find.text(longTitle).evaluate()).length.equals(1);
+      });
+    }
 
     testWidgets('stations are laid out two per row', (tester) async {
       Station station(int id) => Station()
