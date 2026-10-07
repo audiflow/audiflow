@@ -43,6 +43,9 @@ export 'src/widgets/downloads/download_status_icon.dart';
 export 'src/widgets/queue/add_to_queue_button.dart';
 
 // Widgets - Lists
+export 'src/widgets/lists/grouped_section.dart';
+export 'src/widgets/lists/settings_row.dart';
+export 'src/widgets/lists/settings_trailing.dart';
 export 'src/widgets/lists/sub_category_slivers.dart';
 export 'src/widgets/lists/year_divider.dart';
 export 'src/widgets/lists/year_grouped_slivers.dart';

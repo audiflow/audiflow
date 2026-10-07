@@ -55,6 +55,9 @@ lib/
       queue/
         add_to_queue_button.dart       # AddToQueueButton -- tap=Play Later, long-press=Play Next
       lists/
+        grouped_section.dart           # GroupedSection -- rounded surface with hairline-separated rows
+        settings_row.dart              # SettingsRow -- icon tile, title/subtitle, trailing control
+        settings_trailing.dart         # SettingsTrailing -- chevron / picker / toggle / stepper
         year_grouped_slivers.dart      # buildYearGroupedSlivers() -- sticky year headers + jump-to-year
         sub_category_slivers.dart      # buildSubCategorySlivers() -- two-level grouped slivers
         year_divider.dart              # YearDivider -- inline year separator
@@ -80,6 +83,9 @@ lib/
 | `MiniPlayerProgressBar` | `widgets/player/` | progress, bufferedProgress, height | Three-layer bar: background track, buffered overlay, playback fill. |
 | `DownloadStatusIcon` | `widgets/downloads/` | DownloadTask?, size, onTap | Icon per state: download, pending, progress ring, paused, completed, failed, cancelled. Depends on `audiflow_domain.DownloadTask`. |
 | `AddToQueueButton` | `widgets/queue/` | onPlayLater, onPlayNext | Tap adds to end of queue; long-press adds to front with haptic feedback. |
+| `GroupedSection` | `widgets/lists/` | children, header, footer, separatorIndent, margin | Rows on one rounded `surface` (radius 18, grouped shadow) separated by `hairline` dividers; overline header (semantics header) and meta footer in `inkTertiary`; 20dp screen gutter by default. |
+| `SettingsRow` | `widgets/lists/` | title, subtitle, icon, trailing, onTap | Row of min height 54 (60 with subtitle): optional 32dp `accentTint` icon tile, title, one-line subtitle, optional `SettingsTrailing`. Use `separatorIndentWithIcon` on the section when rows carry icons. |
+| `SettingsTrailing` | `widgets/lists/` | `.chevron()`, `.picker(value)`, `.toggle(value, onChanged)`, `.stepper(valueLabel, decrementLabel, incrementLabel, onDecrement, onIncrement)` | Sealed trailing control. Toggle makes the whole row flip the switch and merges semantics; stepper buttons are 44dp with accessible names. |
 | `SearchableAppBar` | `widgets/search/` | title, onSearchChanged, debounceDuration | AppBar that toggles between title and debounced search field (default 300ms). |
 
 ## List grouping functions
