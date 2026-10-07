@@ -328,7 +328,9 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
               builder: (context, top, _) => ContentBackdrop(top: top),
             ),
           ),
-          _buildBody(),
+          // Row ink draws on the nearest Material; without this one it
+          // would land on the Scaffold's, hidden under the backdrop.
+          Material(type: MaterialType.transparency, child: _buildBody()),
           Positioned(
             top: 0,
             left: 0,
