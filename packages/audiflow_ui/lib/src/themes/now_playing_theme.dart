@@ -39,6 +39,31 @@ ThemeData nowPlayingTheme(Color ground) {
     ),
     iconTheme: const IconThemeData(color: white),
     textTheme: base.textTheme.apply(bodyColor: white, displayColor: white),
+    // The dark theme's component styles bake in the accent; restate the
+    // ones the player uses so every control is white.
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(foregroundColor: white, iconColor: white),
+    ),
+    iconButtonTheme: IconButtonThemeData(
+      style: IconButton.styleFrom(foregroundColor: white),
+    ),
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(
+        backgroundColor: white,
+        foregroundColor: ground,
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: white,
+        side: const BorderSide(color: NowPlayingColors.trackInactive),
+      ),
+    ),
+    progressIndicatorTheme: const ProgressIndicatorThemeData(
+      color: white,
+      linearTrackColor: NowPlayingColors.trackInactive,
+      circularTrackColor: Colors.transparent,
+    ),
     extensions: [colors],
   );
 }

@@ -59,6 +59,10 @@ class ArtworkGround extends StatefulWidget {
   static final LinkedHashMap<String, Color> _cache = LinkedHashMap();
   static const int _cacheSize = 32;
 
+  /// Seeds the cache so tests need no network image.
+  @visibleForTesting
+  static void debugSeed(String url, Color ground) => _cache[url] = ground;
+
   @override
   State<ArtworkGround> createState() => _ArtworkGroundState();
 }
@@ -105,6 +109,9 @@ class _ArtworkGroundState extends State<ArtworkGround> {
       _ground = cached;
       return;
     }
+    // Never carry the previous episode's color onto an unsampled one; a
+    // failed load simply stays on the fallback.
+    _ground = NowPlayingColors.fallbackBackground;
     // A tiny decode is plenty for an average and costs almost nothing.
     final provider = ResizeImage(
       ExtendedNetworkImageProvider(url, cache: true),

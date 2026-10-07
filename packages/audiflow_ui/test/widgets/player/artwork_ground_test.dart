@@ -65,5 +65,38 @@ void main() {
     check(
       theme.extension<AppColors>()!.ink,
     ).equals(NowPlayingColors.foreground);
+    // Component styles must not keep the app accent.
+    check(
+      theme.textButtonTheme.style!.foregroundColor!.resolve({}),
+    ).equals(NowPlayingColors.foreground);
+    check(
+      theme.textButtonTheme.style!.iconColor!.resolve({}),
+    ).equals(NowPlayingColors.foreground);
+    check(
+      theme.progressIndicatorTheme.color,
+    ).equals(NowPlayingColors.foreground);
+  });
+
+  testWidgets('a new unsampled artwork drops the previous color', (
+    tester,
+  ) async {
+    Color? seen;
+    Widget host(String? url) => ArtworkGround(
+      url: url,
+      builder: (_, ground) {
+        seen = ground;
+        return const SizedBox();
+      },
+    );
+    ArtworkGround.debugSeed(
+      'https://example.com/a.jpg',
+      const Color(0xFF553322),
+    );
+    await tester.pumpWidget(host('https://example.com/a.jpg'));
+    check(seen).equals(const Color(0xFF553322));
+
+    await tester.pumpWidget(host('https://example.com/never-loads.jpg'));
+    await tester.pump(const Duration(seconds: 1));
+    check(seen).equals(NowPlayingColors.fallbackBackground);
   });
 }
