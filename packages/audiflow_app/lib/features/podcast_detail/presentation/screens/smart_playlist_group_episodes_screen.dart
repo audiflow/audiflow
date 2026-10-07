@@ -293,7 +293,9 @@ class _SmartPlaylistGroupEpisodesScreenState
               builder: (context, top, _) => ContentBackdrop(top: top),
             ),
           ),
-          _buildScrollView(),
+          // Row ink draws on the nearest Material; without this one it
+          // would land on the Scaffold's, hidden under the backdrop.
+          Material(type: MaterialType.transparency, child: _buildScrollView()),
           Positioned(
             top: 0,
             left: 0,
@@ -345,7 +347,9 @@ class _SmartPlaylistGroupEpisodesScreenState
     );
   }
 
-  /// Overflow popover: downloads as tiles, play order below.
+  /// Overflow popover: plain rows only. Tiles are for a row of two or
+  /// three primary actions; a lone download tile reads as a highlighted
+  /// button it is not.
   Future<void> _showMoreMenu() {
     final l10n = AppLocalizations.of(context);
     final allTasks = ref.read(allDownloadsProvider).value ?? [];
@@ -356,46 +360,46 @@ class _SmartPlaylistGroupEpisodesScreenState
     return showActionMenu(
       context: context,
       top: FloatingNavigationBar.heightOf(context),
-      tiles: [
-        if (dlState.hasDownloadable)
-          ActionMenuEntry(
-            icon: Icons.download_rounded,
-            label: l10n.downloadAllEpisodes,
-            onSelected: () => unawaited(
-              handleBatchDownload(
-                context: context,
-                ref: ref,
-                episodeIds: _episodeIds,
-                downloadableCount: dlState.downloadableCount,
-              ),
-            ),
-          ),
-        if (dlState.hasCancelable)
-          ActionMenuEntry(
-            icon: Icons.cancel_outlined,
-            label: l10n.downloadCancelAll,
-            onSelected: () => unawaited(
-              handleBatchCancel(
-                context: context,
-                ref: ref,
-                episodeIds: _episodeIds,
-              ),
-            ),
-          ),
-        if (dlState.hasPaused)
-          ActionMenuEntry(
-            icon: Icons.play_arrow_rounded,
-            label: l10n.downloadResumeAll,
-            onSelected: () => unawaited(
-              handleBatchResume(
-                context: context,
-                ref: ref,
-                episodeIds: _episodeIds,
-              ),
-            ),
-          ),
-      ],
       sections: [
+        [
+          if (dlState.hasDownloadable)
+            ActionMenuEntry(
+              icon: Icons.download_rounded,
+              label: l10n.downloadAllEpisodes,
+              onSelected: () => unawaited(
+                handleBatchDownload(
+                  context: context,
+                  ref: ref,
+                  episodeIds: _episodeIds,
+                  downloadableCount: dlState.downloadableCount,
+                ),
+              ),
+            ),
+          if (dlState.hasCancelable)
+            ActionMenuEntry(
+              icon: Icons.cancel_outlined,
+              label: l10n.downloadCancelAll,
+              onSelected: () => unawaited(
+                handleBatchCancel(
+                  context: context,
+                  ref: ref,
+                  episodeIds: _episodeIds,
+                ),
+              ),
+            ),
+          if (dlState.hasPaused)
+            ActionMenuEntry(
+              icon: Icons.play_arrow_rounded,
+              label: l10n.downloadResumeAll,
+              onSelected: () => unawaited(
+                handleBatchResume(
+                  context: context,
+                  ref: ref,
+                  episodeIds: _episodeIds,
+                ),
+              ),
+            ),
+        ],
         [
           ActionMenuEntry(
             icon: Icons.swap_vert,
