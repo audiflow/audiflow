@@ -50,6 +50,8 @@ lib/
       player/
         mini_player_artwork.dart       # MiniPlayerArtwork -- artwork with placeholder fallback
         mini_player_card.dart          # MiniPlayerCard -- floating mini player card
+      headers/
+        screen_headers.dart            # LargeTitle, SectionHeader -- top-level title and section rows
       navigation/
         app_tab_bar.dart               # AppTabBar, AppTabBarItem -- bottom tab bar
         floating_nav_button.dart       # FloatingNavButton, FloatingNavActions -- floating nav controls
@@ -87,6 +89,7 @@ lib/
 | `EpisodeProgressIndicator` | `widgets/indicators/` | isCompleted, isInProgress, remainingTimeFormatted | Shows "Played" checkmark, remaining time text, or nothing. |
 | `MiniPlayerArtwork` | `widgets/player/` | imageUrl, size, borderRadius | Rounded artwork with podcast-icon placeholder fallback. |
 | `MiniPlayerCard` | `widgets/player/` | artwork, title, subtitle, actions, progress, onTap, semanticLabel | Floating `surface` card (radius 16, floating shadow) 64dp tall: 44dp artwork, one-line title and subtitle, caller-supplied action buttons, and a `brand` bottom-edge progress line once started. No remaining-time text. |
+| `LargeTitle` / `SectionHeader` | `widgets/headers/` | title, trailing | Left-aligned `displayTitle` for top-level tabs and 44dp `sectionTitle` rows, both with a 20dp gutter, header semantics, and an optional trailing control. |
 | `AppTabBar` | `widgets/navigation/` | items (`AppTabBarItem`: icon, label, selected, onTap) | `bg` bar with a top hairline, 56dp plus the bottom inset. Active tab: `accent`, filled icon, 600 label; inactive: `inkTertiary`. Callers pass only visible tabs. |
 | `FloatingNavigationBar` | `widgets/navigation/` | leading, title, titleOpacity, backgroundOpacity, trailing, search | Overlay bar for detail screens. Title and `bg` + hairline background fade in by opacity; a `NavigationSearchField` replaces the whole row. Use `heightOf(context)` to inset content. |
 | `FloatingNavButton` / `FloatingNavActions` | `widgets/navigation/` | icon, tooltip, onPressed / actions | 44dp white circle, or a white pill of 44dp icon buttons, both with the floating shadow. |
