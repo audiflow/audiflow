@@ -325,6 +325,55 @@ void main() {
     });
   });
 
+  group('buildYearGroupedSlivers with mixed row heights', () {
+    late ScrollController scrollController;
+
+    setUp(() => scrollController = ScrollController());
+    tearDown(() => scrollController.dispose());
+
+    testWidgets('a long jump lands on the chosen year after measuring', (
+      tester,
+    ) async {
+      const topInset = 100.0;
+      final years = [for (var y = 2025; 2021 <= y; y--) y];
+      final itemsByYear = {
+        for (final y in years) y: [for (var i = 0; i < 40; i++) '$y-$i'],
+      };
+      // Heights far from the estimate and uneven, like rows whose titles
+      // and descriptions wrap differently.
+      double heightOf(String item) => 60.0 + (item.hashCode % 5) * 45.0;
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: Scaffold(
+            body: CustomScrollView(
+              controller: scrollController,
+              slivers: [
+                const PinnedHeaderSliver(child: SizedBox(height: topInset)),
+                ...buildYearGroupedSlivers<String>(
+                  itemsByYear: itemsByYear,
+                  sortedYears: years,
+                  itemBuilder: (_, item) =>
+                      SizedBox(height: heightOf(item), child: Text(item)),
+                  scrollController: scrollController,
+                  yearGroupingEnabled: true,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('2025').first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('2021').last);
+      await tester.pumpAndSettle();
+
+      final firstRow = tester.getTopLeft(find.text('2021-0')).dy;
+      check(firstRow).isCloseTo(topInset + yearHeaderHeight, 1);
+    });
+  });
+
   group('showYearPickerBottomSheet', () {
     testWidgets('shows all years and returns selected', (tester) async {
       int? selected;

@@ -145,15 +145,21 @@ List<Widget> buildYearGroupedSlivers<T>({
   }
 
   void jumpToYear(int selected) {
-    final insetBefore = topInset;
     final target = targetFor(selected);
     final distance = (target - scrollController.offset).abs();
 
-    // The pinned inset is only known once content has scrolled under it,
-    // so a jump from the top may need one correction afterwards.
-    void correct() {
-      if (topInset == insetBefore || !scrollController.hasClients) return;
-      scrollController.jumpTo(targetFor(selected));
+    // A long jump lands on rows that were never laid out, so the year's
+    // start (and the pinned inset) are estimates until that frame lays
+    // them out. Re-aim after each frame until the target holds still.
+    void correct([int attemptsLeft = 4]) {
+      if (!scrollController.hasClients) return;
+      final settled = targetFor(selected);
+      if ((settled - scrollController.offset).abs() < 1) return;
+      scrollController.jumpTo(settled);
+      if (attemptsLeft <= 1) return;
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => correct(attemptsLeft - 1),
+      );
     }
 
     if (500.0 < distance) {
