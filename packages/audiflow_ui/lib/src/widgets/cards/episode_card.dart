@@ -20,8 +20,8 @@ const double _actionRowHeight = 44.0;
 /// - Main row (80dp): optional thumbnail, title (up to 2 lines), description
 /// - Action row (44dp): play pill, date label, action buttons
 /// - Vertical padding: 8dp (4dp top + 4dp bottom)
-/// - Divider: 1dp, overlaid by a bottom-edge progress line while partially
-///   played
+/// - Divider: 1dp, overlaid by a bottom-edge progress line once playback
+///   has started (full when completed)
 ///
 /// Total fixed extent: 140dp (80 + 44 + 8 + 1 padding/divider + 7 flex).
 class EpisodeCard extends StatelessWidget {
@@ -93,7 +93,7 @@ class EpisodeCard extends StatelessWidget {
   final bool isCurrentEpisode;
 
   /// Progress through the episode in `[0.0, 1.0]`. Drawn as a bottom-edge
-  /// line while [isInProgress] and not [isCompleted]; hidden at 0 and 1.
+  /// line while [isInProgress]; [isCompleted] always draws it full.
   final double? progressFraction;
 
   /// Whether the episode has a transcript available.
@@ -126,8 +126,10 @@ class EpisodeCard extends StatelessWidget {
 
   bool get _showThumbnail => showThumbnail && _displayThumbnailUrl != null;
 
-  double? get _edgeProgress =>
-      isInProgress && !isCompleted ? progressFraction : null;
+  double? get _edgeProgress {
+    if (isCompleted) return 1;
+    return isInProgress ? progressFraction : null;
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -85,16 +85,16 @@ void main() {
     });
   });
 
-  group('ProgressLine.isPartial', () {
-    test('true only strictly between 0 and 1', () {
-      check(ProgressLine.isPartial(0.5)).isTrue();
-      check(ProgressLine.isPartial(0.001)).isTrue();
-      check(ProgressLine.isPartial(null)).isFalse();
-      check(ProgressLine.isPartial(0)).isFalse();
-      check(ProgressLine.isPartial(1)).isFalse();
-      check(ProgressLine.isPartial(1.2)).isFalse();
-      check(ProgressLine.isPartial(-0.1)).isFalse();
-      check(ProgressLine.isPartial(double.nan)).isFalse();
+  group('ProgressLine.isStarted', () {
+    test('true once fraction is above 0, including finished', () {
+      check(ProgressLine.isStarted(0.5)).isTrue();
+      check(ProgressLine.isStarted(0.001)).isTrue();
+      check(ProgressLine.isStarted(1)).isTrue();
+      check(ProgressLine.isStarted(1.2)).isTrue();
+      check(ProgressLine.isStarted(null)).isFalse();
+      check(ProgressLine.isStarted(0)).isFalse();
+      check(ProgressLine.isStarted(-0.1)).isFalse();
+      check(ProgressLine.isStarted(double.nan)).isFalse();
     });
   });
 
@@ -106,7 +106,7 @@ void main() {
       ),
     );
 
-    testWidgets('pins the line to the bottom edge while partial', (
+    testWidgets('pins the line to the bottom edge once started', (
       tester,
     ) async {
       await tester.pumpWidget(card(0.4));
@@ -138,12 +138,21 @@ void main() {
       check(find.byType(ProgressLine).evaluate().length).equals(1);
       check(find.text('count 1').evaluate().length).equals(1);
 
-      await tester.pumpWidget(withFraction(1));
+      await tester.pumpWidget(withFraction(0));
       check(find.byType(ProgressLine).evaluate().length).equals(0);
       check(find.text('count 1').evaluate().length).equals(1);
     });
 
-    for (final fraction in <double?>[null, 0, 1]) {
+    testWidgets('shows a full line when finished', (tester) async {
+      await tester.pumpWidget(card(1));
+      final line = find.byType(ProgressLine);
+      check(line.evaluate().length).equals(1);
+      check(
+        tester.getSize(find.byKey(ProgressLine.fillKey)).width,
+      ).equals(tester.getSize(line).width);
+    });
+
+    for (final fraction in <double?>[null, 0]) {
       testWidgets('hides the line for fraction $fraction', (tester) async {
         await tester.pumpWidget(card(fraction));
         check(find.byType(ProgressLine).evaluate().length).equals(0);

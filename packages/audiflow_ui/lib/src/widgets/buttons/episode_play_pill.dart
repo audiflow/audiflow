@@ -13,7 +13,7 @@ import '../../themes/text_styles.dart';
 /// 3. `isPlaying` -> pause glyph, `accent` on `accentTint`.
 /// 4. otherwise -> play glyph, `ink` on `surfaceMuted`.
 ///
-/// The pill never shows progress; partially played rows show it with a
+/// The pill never shows progress; started and played rows show it with a
 /// bottom-edge line instead (see `BottomEdgeProgress`). The tappable
 /// area is at least 44x44 around the 32px visual, even with no label.
 class EpisodePlayPill extends StatelessWidget {

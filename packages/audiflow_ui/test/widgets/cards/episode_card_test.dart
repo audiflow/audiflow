@@ -75,20 +75,21 @@ void main() {
       check(find.byType(ProgressLine).evaluate().length).equals(0);
     });
 
-    testWidgets('completed pill: check glyph, no progress line', (
+    testWidgets('completed: check glyph and a full progress line', (
       tester,
     ) async {
       await tester.pumpWidget(
         buildSubject(
           pillLabel: 'Completed',
           isCompleted: true,
-          isInProgress: true,
+          isInProgress: false,
           progressFraction: 0.99,
         ),
       );
       check(find.byIcon(Icons.check_rounded).evaluate().length).equals(1);
       check(find.text('Completed').evaluate().length).equals(1);
-      check(find.byType(ProgressLine).evaluate().length).equals(0);
+      final line = tester.widget<ProgressLine>(find.byType(ProgressLine));
+      check(line.fraction).equals(1);
     });
 
     testWidgets('playing: pause glyph, progress on the bottom edge', (

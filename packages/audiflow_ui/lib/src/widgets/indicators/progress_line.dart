@@ -30,12 +30,12 @@ class ProgressLine extends StatelessWidget {
   final Color? fillColor;
   final Color? trackColor;
 
-  /// Whether [fraction] represents a partially played item, the only
-  /// state in which the spec shows the line. Unplayed (0, null) and
-  /// finished (1 or more) items show no line.
-  static bool isPartial(double? fraction) {
+  /// Whether [fraction] represents an item whose playback has started,
+  /// the only state in which the spec shows the line. Unplayed items
+  /// (0, null) show none; finished items (1 or more) show it full.
+  static bool isStarted(double? fraction) {
     if (fraction == null || fraction.isNaN) return false;
-    return 0 < fraction && fraction < 1;
+    return 0 < fraction;
   }
 
   double get _clamped => fraction.isNaN ? 0 : fraction.clamp(0.0, 1.0);
@@ -68,7 +68,8 @@ class ProgressLine extends StatelessWidget {
 }
 
 /// Overlays a [ProgressLine] on the bottom edge of [child] while
-/// [fraction] is partial, without changing the child's size.
+/// playback has started (full once finished), without changing the
+/// child's size.
 ///
 /// Rounded parents clip the line themselves (e.g. via the card's shape).
 class BottomEdgeProgress extends StatelessWidget {
@@ -92,7 +93,7 @@ class BottomEdgeProgress extends StatelessWidget {
     return Stack(
       children: [
         child,
-        if (ProgressLine.isPartial(value))
+        if (ProgressLine.isStarted(value))
           PositionedDirectional(
             start: 0,
             end: 0,
