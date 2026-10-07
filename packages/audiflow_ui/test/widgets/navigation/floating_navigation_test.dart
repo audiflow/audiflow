@@ -30,10 +30,12 @@ void main() {
     });
 
     test('title and background fade in only after the hero is gone', () {
-      final before = FloatingNavScroll.at(offset: 250, heroExtent: 300);
+      final before = FloatingNavScroll.at(offset: 300, heroExtent: 300);
+      check(before.hero).equals(1);
       check(before.title).equals(0);
+      check(before.background).equals(0);
       final midway = FloatingNavScroll.at(
-        offset: 300 - FloatingNavScroll.fadeDistance / 2,
+        offset: 300 + FloatingNavScroll.fadeDistance / 2,
         heroExtent: 300,
       );
       check(midway.title).equals(0.5);

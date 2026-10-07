@@ -17,9 +17,9 @@ class _DesignGalleryFloatingNavDemoState
     extends State<DesignGalleryFloatingNavDemo> {
   static const double _heroExtent = 330;
 
-  // The hero is gone once its bottom passes under the navigation bar.
-  static const double _collapseExtent =
-      _heroExtent - FloatingNavigationBar.barHeight;
+  // _DemoHero sits below the navigation inset, so its bottom passes under
+  // the navigation bar after exactly its own height of scrolling.
+  static const double _collapseExtent = _heroExtent;
   static const _title = '歴史を面白く学ぶコテンラジオ（COTEN RADIO）';
   static final _episodes = [
     for (var number = 1; number <= 40; number++)
@@ -89,19 +89,34 @@ class _DesignGalleryFloatingNavDemoState
                   ),
                 ),
               if (_searching) SliverToBoxAdapter(child: _countLine()),
-              SliverToBoxAdapter(
-                child: GroupedSection(
-                  children: [
-                    for (final title in _visibleEpisodes)
-                      SettingsRow(title: title, onTap: () {}),
-                  ],
+              if (_visibleEpisodes.isEmpty)
+                SliverToBoxAdapter(child: _emptyState())
+              else
+                SliverToBoxAdapter(
+                  child: GroupedSection(
+                    children: [
+                      for (final title in _visibleEpisodes)
+                        SettingsRow(title: title, onTap: () {}),
+                    ],
+                  ),
                 ),
-              ),
               const SliverToBoxAdapter(child: SizedBox(height: 40)),
             ],
           ),
           Positioned(top: 0, left: 0, right: 0, child: _navigation(context)),
         ],
+      ),
+    );
+  }
+
+  Widget _emptyState() {
+    final colors = AppColors.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 48),
+      child: Text(
+        '「$_query」に一致するエピソードはありません',
+        textAlign: TextAlign.center,
+        style: AppTextStyles.body.copyWith(color: colors.inkSecondary),
       ),
     );
   }

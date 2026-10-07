@@ -6,8 +6,8 @@ import 'package:flutter/widgets.dart';
 /// floating navigation bar (redesign sections 3.3, 4.2, 4.3).
 ///
 /// All values are in `[0, 1]`. The hero collapses across its own height;
-/// the navigation title and background fade in over the last
-/// [fadeDistance] pixels before the hero has fully scrolled away.
+/// the navigation title and background fade in over the [fadeDistance]
+/// pixels after the hero has fully scrolled away.
 @immutable
 class FloatingNavScroll {
   const FloatingNavScroll._({
@@ -35,8 +35,10 @@ class FloatingNavScroll {
     final heroProgress = heroExtent <= 0
         ? 1.0
         : (offset / heroExtent).clamp(0.0, 1.0);
-    final fadeStart = heroExtent - fadeDistance;
-    final barProgress = ((offset - fadeStart) / fadeDistance).clamp(0.0, 1.0);
+    // Without a hero there is nothing to wait for: the bar shows at once.
+    final barProgress = heroExtent <= 0
+        ? 1.0
+        : ((offset - heroExtent) / fadeDistance).clamp(0.0, 1.0);
     return FloatingNavScroll._(
       hero: heroProgress,
       title: barProgress,
