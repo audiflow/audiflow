@@ -1,6 +1,7 @@
 import 'package:audiflow_app/features/podcast_detail/presentation/widgets/episode_list_section.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_domain/audiflow_domain.dart' show SortOrder;
+import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -27,8 +28,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('10 episodes'), findsOneWidget);
-      expect(find.byType(SortOrderButton), findsNothing);
+      check(find.text('10 episodes').evaluate()).length.equals(1);
+      check(find.byType(SortOrderButton).evaluate()).isEmpty();
     });
 
     testWidgets('shows the label text', (tester) async {

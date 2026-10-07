@@ -3,6 +3,7 @@ import 'dart:ui' show Tristate;
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -69,6 +70,17 @@ void main() {
       final log = <String>[];
       await tester.pumpWidget(host(selected: 'episodes', onChanged: log.add));
       await tester.tap(find.text('Series'));
+      check(log).deepEquals(['series']);
+    });
+
+    testWidgets('keyboard can focus and switch segments', (tester) async {
+      final log = <String>[];
+      await tester.pumpWidget(host(selected: 'episodes', onChanged: log.add));
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.space);
+      await tester.pump();
       check(log).deepEquals(['series']);
     });
 

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:audiflow_app/features/podcast_detail/presentation/widgets/podcast_detail_header.dart';
 import 'package:audiflow_app/features/subscription/presentation/controllers/subscription_controller.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
+import 'package:audiflow_domain/audiflow_domain.dart' show SubscribeSource;
 import 'package:audiflow_search/audiflow_search.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:checks/checks.dart';
@@ -97,7 +98,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Test Artist · Technology'), findsOneWidget);
+      check(find.text('Test Artist · Technology').evaluate()).length.equals(1);
     });
 
     testWidgets('hides genres when empty', (tester) async {
@@ -119,7 +120,7 @@ void main() {
           .widgetList<Text>(find.byType(Text))
           .map((t) => t.data)
           .toList();
-      expect(textWidgets.any((t) => t != null && t.contains(' · ')), isFalse);
+      check(textWidgets.any((t) => t != null && t.contains(' · '))).isFalse();
     });
 
     testWidgets('shows podcast icon placeholder when no artwork', (
@@ -171,8 +172,8 @@ void main() {
       await tester.pumpAndSettle();
 
       // Unsubscribing lives in the more menu, so the hero shows nothing.
-      expect(find.text('Subscribed'), findsNothing);
-      expect(find.byType(FilledButton), findsNothing);
+      check(find.text('Subscribed').evaluate()).isEmpty();
+      check(find.byType(FilledButton).evaluate()).isEmpty();
     });
 
     testWidgets('shows no pill while subscription state loads', (tester) async {
@@ -192,7 +193,7 @@ void main() {
 
       // Nothing until the state is known, so a subscribed podcast does not
       // flash a pill that then disappears.
-      expect(find.byType(FilledButton), findsNothing);
+      check(find.byType(FilledButton).evaluate()).isEmpty();
     });
 
     testWidgets('shows Retry button on error state', (tester) async {
@@ -278,6 +279,85 @@ void main() {
       expect(titleFinder, findsOneWidget);
     });
   });
+
+  _toggleTests();
+}
+
+void _toggleTests() {
+  group('togglePodcastSubscription', () {
+    const podcast = Podcast(
+      id: 'test-id',
+      name: 'Test Podcast',
+      artistName: 'Test Artist',
+      feedUrl: 'https://example.com/feed.xml',
+    );
+
+    Future<_CountingController> run(
+      WidgetTester tester, {
+      required bool actual,
+      required bool expected,
+    }) async {
+      final controller = _CountingController(actual);
+      final container = ProviderContainer(
+        overrides: [
+          subscriptionControllerProvider(
+            'test-id',
+          ).overrideWith(() => controller),
+        ],
+      );
+      addTearDown(container.dispose);
+      // Listened, not read: a bare read of the auto-disposed provider
+      // leaves a disposal timer pending past the test.
+      final subscription = container.listen(
+        subscriptionControllerProvider('test-id'),
+        (_, _) {},
+      );
+      addTearDown(subscription.close);
+      await container.read(subscriptionControllerProvider('test-id').future);
+      late BuildContext context;
+      late WidgetRef widgetRef;
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Consumer(
+              builder: (c, ref, _) {
+                context = c;
+                widgetRef = ref;
+                return const SizedBox();
+              },
+            ),
+          ),
+        ),
+      );
+      await togglePodcastSubscription(
+        context: context,
+        ref: widgetRef,
+        podcast: podcast,
+        source: SubscribeSource.discovery,
+        expectSubscribed: expected,
+      );
+      return controller;
+    }
+
+    testWidgets('toggles when the state matches what was offered', (
+      tester,
+    ) async {
+      final controller = await run(tester, actual: true, expected: true);
+      check(controller.toggles).equals(1);
+    });
+
+    testWidgets('does nothing when the state changed underneath', (
+      tester,
+    ) async {
+      // "Subscribe" was offered, but the podcast turned out subscribed:
+      // a toggle would unsubscribe it.
+      final controller = await run(tester, actual: true, expected: false);
+      check(controller.toggles).equals(0);
+    });
+  });
 }
 
 /// Fake controller that immediately returns a value.
@@ -287,6 +367,26 @@ class _FakeSubscriptionController extends SubscriptionController {
 
   @override
   Future<bool> build(String itunesId) async => _isSubscribed;
+}
+
+/// Records toggles instead of touching the repository.
+class _CountingController extends SubscriptionController {
+  _CountingController(this._isSubscribed);
+  final bool _isSubscribed;
+  var toggles = 0;
+
+  @override
+  Future<bool> build(String itunesId) async => _isSubscribed;
+
+  @override
+  Future<bool> toggleSubscription(
+    BuildContext context,
+    Podcast podcast, {
+    SubscribeSource source = SubscribeSource.discovery,
+  }) async {
+    toggles++;
+    return true;
+  }
 }
 
 /// Fake controller that never completes to keep loading.

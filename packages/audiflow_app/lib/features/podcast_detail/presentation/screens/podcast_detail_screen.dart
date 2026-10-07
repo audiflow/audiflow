@@ -91,7 +91,11 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
   String? _heldFromViewKey;
   String? _currentViewKey;
   double _holdSpacerExtent = 0;
-  bool _releasingHold = false;
+
+  /// Identifies the current hold, so a release still animating for an
+  /// earlier switch does not end a hold started by a later one.
+  int _holdGeneration = 0;
+  int? _releasingGeneration;
 
   /// 0 while browsing, 1 while searching. Collapses the hero and fills
   /// the navigation in step with the bar's switch to the search field,
@@ -315,6 +319,9 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
         ? null
         : ref.watch(subscriptionByFeedUrlProvider(feedUrl)).value;
     final isSubscribed = subscription != null && !subscription.isCached;
+    // Keeps the subscribe state loaded for the `…` menu, which may open
+    // before the hero (its other listener) has mounted.
+    ref.watch(subscriptionControllerProvider(podcast.id));
     return FloatingNavigationBar(
       leading: FloatingNavButton(
         icon: Icons.arrow_back_ios_new_rounded,
@@ -365,13 +372,16 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
     final subscriptionId = feedUrl == null
         ? null
         : ref.read(subscriptionByFeedUrlProvider(feedUrl)).value?.id;
-    final isSubscribed =
-        ref.read(subscriptionControllerProvider(podcast.id)).value ?? false;
+    // Null until known: the tile is left out rather than guessing, since a
+    // wrong "Subscribe" label would toggle an existing subscription off.
+    final isSubscribed = ref
+        .read(subscriptionControllerProvider(podcast.id))
+        .value;
     return showActionMenu(
       context: context,
       top: FloatingNavigationBar.heightOf(context),
       tiles: [
-        if (feedUrl != null)
+        if (feedUrl != null && isSubscribed != null)
           ActionMenuEntry(
             icon: isSubscribed
                 ? Icons.remove_circle_outline
@@ -384,6 +394,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
               ref: ref,
               podcast: podcast,
               source: widget.subscribeSource,
+              expectSubscribed: isSubscribed,
             ),
           ),
         ActionMenuEntry(
@@ -772,7 +783,11 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
 
   void _holdScrollPosition() {
     if (!_scrollController.hasClients) return;
+    // Stops an earlier release still animating, so the hold starts from
+    // where the list is now.
+    _scrollController.jumpTo(_scrollController.offset);
     setState(() {
+      _holdGeneration++;
       _heldOffset = _scrollController.offset;
       _heldFromViewKey = _currentViewKey;
     });
@@ -781,8 +796,10 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
   /// Ends the hold: stays put when the new list is long enough, otherwise
   /// animates up to the list's real end before removing the spacer.
   Future<void> _releaseScrollHold() async {
-    if (_releasingHold || _heldOffset == null || !mounted) return;
-    _releasingHold = true;
+    final generation = _holdGeneration;
+    if (_releasingGeneration == generation || _heldOffset == null) return;
+    if (!mounted) return;
+    _releasingGeneration = generation;
     if (_scrollController.hasClients) {
       final position = _scrollController.position;
       final naturalMax = math.max(
@@ -797,8 +814,9 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
         );
       }
     }
-    _releasingHold = false;
-    if (!mounted) return;
+    // A newer switch took over while this one animated; its own release
+    // will end its hold.
+    if (!mounted || generation != _holdGeneration) return;
     setState(() {
       _heldOffset = null;
       _heldFromViewKey = null;

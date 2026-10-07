@@ -235,20 +235,30 @@ class _SubscribeButton extends ConsumerWidget {
       ref: ref,
       podcast: podcast,
       source: subscribeSource,
+      // The pill is only offered while not subscribed.
+      expectSubscribed: false,
     );
   }
 }
 
 /// Subscribes or unsubscribes [podcast], telling the user when parental
 /// controls block the change. Shared by the hero pill and the `…` menu.
+///
+/// [expectSubscribed] is the state the caller offered the action for
+/// ("Unsubscribe" when true). If the state has since changed or is not
+/// known yet, nothing happens: toggling would do the opposite of the
+/// label the listener tapped.
 Future<void> togglePodcastSubscription({
   required BuildContext context,
   required WidgetRef ref,
   required Podcast podcast,
   required SubscribeSource source,
+  required bool expectSubscribed,
 }) async {
+  final provider = subscriptionControllerProvider(podcast.id);
+  if (ref.read(provider).value != expectSubscribed) return;
   final allowed = await ref
-      .read(subscriptionControllerProvider(podcast.id).notifier)
+      .read(provider.notifier)
       .toggleSubscription(context, podcast, source: source);
   if (allowed || !context.mounted) return;
   ScaffoldMessenger.of(context).showSnackBar(

@@ -48,11 +48,14 @@ class AppSegmentedControl<T> extends StatelessWidget {
           child: Stack(
             children: [
               if (0 <= index) _thumb(colors, index),
-              Row(
-                children: [
-                  for (final (value, label) in segments)
-                    Expanded(child: _segment(colors, value, label)),
-                ],
+              Material(
+                type: MaterialType.transparency,
+                child: Row(
+                  children: [
+                    for (final (value, label) in segments)
+                      Expanded(child: _segment(colors, value, label)),
+                  ],
+                ),
               ),
             ],
           ),
@@ -87,12 +90,17 @@ class AppSegmentedControl<T> extends StatelessWidget {
 
   Widget _segment(AppColors colors, T value, String label) {
     final isSelected = value == selected;
+    // InkWell rather than a bare gesture detector so the segment takes
+    // keyboard focus and activates with Enter or Space.
     return Semantics(
       button: true,
       selected: isSelected,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
+      child: InkWell(
         onTap: () => onChanged(value),
+        borderRadius: AppBorders.pill,
+        splashFactory: NoSplash.splashFactory,
+        highlightColor: Colors.transparent,
+        focusColor: colors.hairline,
         child: Center(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: Spacing.sm),
