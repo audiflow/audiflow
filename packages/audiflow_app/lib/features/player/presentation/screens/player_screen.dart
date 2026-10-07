@@ -178,7 +178,10 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
                         playingFrom:
                             ref.watch(
                               queueControllerProvider.select(
-                                (queue) => queue.value?.adhocSourceContext,
+                                (queue) => playingFromContext(
+                                  queue.value,
+                                  nowPlaying.episodeUrl,
+                                ),
                               ),
                             ) ??
                             nowPlaying.podcastTitle,
@@ -268,6 +271,15 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
     );
   }
 
+  /// Switches pages on the controller current at selection time: the
+  /// episode may have advanced (and the controller been replaced, or the
+  /// transcript page dropped) while the menu was open.
+  void _showPage(int index) {
+    final tabs = _tabController;
+    if (!mounted || tabs == null || tabs.length <= index) return;
+    tabs.animateTo(index);
+  }
+
   /// Player overflow: page switch (when there is a transcript) and links
   /// out to the episode and podcast.
   Future<void> _showMoreMenu(
@@ -288,12 +300,12 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
                 ? ActionMenuEntry(
                     icon: Symbols.album,
                     label: l10n.playerTabNowPlaying,
-                    onSelected: () => tabs.animateTo(0),
+                    onSelected: () => _showPage(0),
                   )
                 : ActionMenuEntry(
                     icon: Symbols.subtitles,
                     label: l10n.playerTabTranscript,
-                    onSelected: () => tabs.animateTo(1),
+                    onSelected: () => _showPage(1),
                   ),
         ],
         [
@@ -1076,4 +1088,18 @@ class _PlayerPlayPauseButton extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Where the episode at [episodeUrl] plays from: the source of its own
+/// ad hoc queue entry (e.g. a season), or null when it was not started
+/// from one (manually queued, or already taken off the queue), in which
+/// case the header falls back to the podcast.
+@visibleForTesting
+String? playingFromContext(PlaybackQueue? queue, String episodeUrl) {
+  if (queue == null) return null;
+  for (final item in queue.allItems) {
+    if (item.episode.audioUrl != episodeUrl) continue;
+    return item.queueItem.isAdhoc ? item.queueItem.sourceContext : null;
+  }
+  return null;
 }
