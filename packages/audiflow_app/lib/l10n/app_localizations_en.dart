@@ -589,6 +589,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get queueUpNext => 'UP NEXT';
 
   @override
+  String get queueRemove => 'Remove from queue';
+
+  @override
+  String get queueDownloadedLabel => 'Downloaded';
+
+  @override
   String get queueEmpty => 'Queue is empty';
 
   @override

@@ -46,6 +46,7 @@ export 'src/widgets/downloads/download_status_icon.dart';
 export 'src/widgets/queue/add_to_queue_button.dart';
 
 // Widgets - Lists
+export 'src/widgets/lists/anchored_content_backdrop.dart';
 export 'src/widgets/lists/content_backdrop.dart';
 export 'src/widgets/lists/grouped_section.dart';
 export 'src/widgets/lists/settings_row.dart';

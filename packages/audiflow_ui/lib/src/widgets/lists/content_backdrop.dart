@@ -11,10 +11,24 @@ import '../../themes/app_colors.dart';
 /// the part below [top] shows the texture; above it the plain `bg`
 /// shows, so headers sitting above the list keep the screen color.
 class ContentBackdrop extends StatelessWidget {
-  const ContentBackdrop({super.key, this.top = 0});
+  const ContentBackdrop({super.key, this.top = 0})
+    : topGetter = null,
+      reclip = null;
+
+  /// Reads the list's top edge at paint time, after layout, whenever
+  /// [reclip] fires; scrolling moves the edge in the same frame without
+  /// rebuilding.
+  const ContentBackdrop.tracking({
+    super.key,
+    required ValueGetter<double> this.topGetter,
+    required Listenable this.reclip,
+  }) : top = 0;
 
   /// Distance from the top of the backdrop where the list surface starts.
   final double top;
+
+  final ValueGetter<double>? topGetter;
+  final Listenable? reclip;
 
   @visibleForTesting
   static const Key textureKey = ValueKey('contentBackdropTexture');
@@ -25,7 +39,7 @@ class ContentBackdrop extends StatelessWidget {
     return ColoredBox(
       color: colors.bg,
       child: ClipRect(
-        clipper: _BelowClipper(top),
+        clipper: _BelowClipper(top, topGetter, reclip),
         // The texture never changes while scrolling; only the clip moves.
         child: RepaintBoundary(
           child: CustomPaint(
@@ -50,16 +64,26 @@ class ContentBackdrop extends StatelessWidget {
 }
 
 class _BelowClipper extends CustomClipper<Rect> {
-  const _BelowClipper(this.top);
+  _BelowClipper(this.top, this.topGetter, Listenable? reclip)
+    : super(reclip: reclip);
 
   final double top;
+  final ValueGetter<double>? topGetter;
 
   @override
-  Rect getClip(Size size) =>
-      Rect.fromLTRB(0, top.clamp(0.0, size.height), size.width, size.height);
+  Rect getClip(Size size) {
+    final edge = topGetter?.call() ?? top;
+    return Rect.fromLTRB(
+      0,
+      edge.clamp(0.0, size.height),
+      size.width,
+      size.height,
+    );
+  }
 
   @override
-  bool shouldReclip(_BelowClipper oldClipper) => oldClipper.top != top;
+  bool shouldReclip(_BelowClipper oldClipper) =>
+      oldClipper.top != top || oldClipper.topGetter != topGetter;
 }
 
 /// Soft, large blobs of light and shade over the base color. Positions

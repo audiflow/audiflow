@@ -188,6 +188,8 @@
 
   "queueTitle": "キュー",
   "queueUpNext": "次に再生",
+  "queueRemove": "キューから削除",
+  "queueDownloadedLabel": "ダウンロード済み",
   "queueEmpty": "キューは空です",
   "queueEmptySubtitle": "ライブラリやポッドキャストページからエピソードを追加",
   "queueLoadError": "キューの読み込みに失敗しました",

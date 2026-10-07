@@ -80,12 +80,17 @@ class BottomEdgeProgress extends StatelessWidget {
     required this.fraction,
     required this.child,
     this.fillColor,
+    this.trackColor,
     this.inset = 0,
   });
 
   final double? fraction;
   final Widget child;
   final Color? fillColor;
+
+  /// Unplayed part of the line; `hairline` unless set (e.g. translucent
+  /// white on a dark ground).
+  final Color? trackColor;
 
   /// Horizontal margin on both sides of the line.
   final double inset;
@@ -111,7 +116,11 @@ class BottomEdgeProgress extends StatelessWidget {
   }
 
   Widget _line(double value) {
-    final line = ProgressLine(fraction: value, fillColor: fillColor);
+    final line = ProgressLine(
+      fraction: value,
+      fillColor: fillColor,
+      trackColor: trackColor,
+    );
     if (inset == 0) return line;
     return ClipRRect(
       borderRadius: BorderRadius.circular(ProgressLine.thickness / 2),

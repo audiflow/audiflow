@@ -1136,6 +1136,18 @@ abstract class AppLocalizations {
   /// **'UP NEXT'**
   String get queueUpNext;
 
+  /// Swipe and accessibility action removing an episode from the queue
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from queue'**
+  String get queueRemove;
+
+  /// Accessibility label of the downloaded indicator on a queue row
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded'**
+  String get queueDownloadedLabel;
+
   /// Empty queue title
   ///
   /// In en, this message translates to:

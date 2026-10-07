@@ -561,6 +561,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get queueUpNext => '次に再生';
 
   @override
+  String get queueRemove => 'キューから削除';
+
+  @override
+  String get queueDownloadedLabel => 'ダウンロード済み';
+
+  @override
   String get queueEmpty => 'キューは空です';
 
   @override
