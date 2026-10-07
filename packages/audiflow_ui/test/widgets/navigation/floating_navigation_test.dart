@@ -51,6 +51,21 @@ void main() {
       check(p.hero).equals(0);
     });
 
+    test('search progress collapses the hero and fills the bar', () {
+      final rest = FloatingNavScroll.at(offset: 0, heroExtent: 300);
+      final half = rest.withSearch(0.5);
+      check(half.hero).equals(0.5);
+      check(half.background).equals(0.5);
+      check(half.title).equals(0);
+      final full = rest.withSearch(1);
+      check(full.hero).equals(1);
+      check(full.background).equals(1);
+      final scrolled = FloatingNavScroll.at(offset: 400, heroExtent: 300);
+      check(scrolled.withSearch(0).title).equals(1);
+      check(scrolled.withSearch(0.25).title).equals(0.75);
+      check(scrolled.withSearch(0.25).background).equals(1);
+    });
+
     test('zero hero extent shows the bar immediately', () {
       final p = FloatingNavScroll.at(offset: 0, heroExtent: 0);
       check(p.title).equals(1);
@@ -241,6 +256,48 @@ void main() {
       check(find.byTooltip('Search').evaluate().length).equals(0);
       check(find.byType(TextField).evaluate().length).equals(1);
       check(find.text('Cancel').evaluate().length).equals(1);
+    });
+  });
+
+  group('FloatingNavigationBar search transition', () {
+    testWidgets('cross-fades from the toolbar to the search field', (
+      tester,
+    ) async {
+      final controller = TextEditingController();
+      addTearDown(controller.dispose);
+      Widget bar({required bool searching}) => MaterialApp(
+        theme: AppTheme.light(),
+        home: Scaffold(
+          body: Stack(
+            children: [
+              FloatingNavigationBar(
+                leading: FloatingNavButton(
+                  icon: Icons.arrow_back_ios_new_rounded,
+                  tooltip: 'Back',
+                  onPressed: () {},
+                ),
+                search: searching
+                    ? NavigationSearchField(
+                        controller: controller,
+                        hintText: 'Search episodes',
+                        cancelLabel: 'Cancel',
+                        onCancel: () {},
+                      )
+                    : null,
+              ),
+            ],
+          ),
+        ),
+      );
+      await tester.pumpWidget(bar(searching: false));
+      await tester.pumpWidget(bar(searching: true));
+      await tester.pump(FloatingNavigationBar.switchDuration ~/ 2);
+      // Both rows are on screen mid-transition.
+      check(find.byTooltip('Back').evaluate()).length.equals(1);
+      check(find.byType(TextField).evaluate()).length.equals(1);
+      await tester.pumpAndSettle();
+      check(find.byTooltip('Back').evaluate()).isEmpty();
+      check(find.byType(TextField).evaluate()).length.equals(1);
     });
   });
 

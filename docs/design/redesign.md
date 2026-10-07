@@ -140,7 +140,7 @@ Detail screens overlay the content with:
 
 ### 3.4 In-navigation search
 
-Tapping search replaces the whole navigation row with a search field (keyboard up) and a "cancel" text button in `accent`. The hero is hidden so results start right under the navigation. The list filters as the user types; the count line reads `「query」 N 件`, and an empty state reads `「query」に一致する…はありません`. Cancel clears the query and restores the hero.
+Tapping search replaces the whole navigation row with a search field (keyboard up) and a "cancel" text button in `accent`. The hero is hidden so results start right under the navigation. The change is one motion of about 260ms: the row cross-fades with a slight horizontal drift while the hero collapses (as if scrolled away) and the bar fills; cancel plays it in reverse. The list filters as the user types; the count line reads `「query」 N 件`, and an empty state reads `「query」に一致する…はありません`. Cancel clears the query and restores the hero.
 
 Scope follows the context: series names on the Series tab, episode titles and descriptions on the Episodes tab and on a series screen. Active filter chips still apply.
 

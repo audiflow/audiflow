@@ -26,6 +26,9 @@ class FloatingNavigationBar extends StatelessWidget {
   /// Height of the bar below the status bar inset.
   static const double barHeight = 60;
 
+  /// Duration of the cross-fade between the toolbar and [search].
+  static const Duration switchDuration = Duration(milliseconds: 260);
+
   @visibleForTesting
   static const Key backgroundKey = ValueKey('floatingNavigationBackground');
 
@@ -59,9 +62,39 @@ class FloatingNavigationBar extends StatelessWidget {
           height: barHeight,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: Spacing.md),
-            child: search ?? _toolbar(colors),
+            child: AnimatedSwitcher(
+              duration: switchDuration,
+              switchInCurve: Curves.easeOutCubic,
+              switchOutCurve: Curves.easeInCubic,
+              layoutBuilder: (current, previous) => Stack(
+                fit: StackFit.expand,
+                children: [...previous, ?current],
+              ),
+              transitionBuilder: _crossSlide,
+              child: search == null
+                  ? KeyedSubtree(
+                      key: const ValueKey('toolbar'),
+                      child: _toolbar(colors),
+                    )
+                  : KeyedSubtree(key: const ValueKey('search'), child: search!),
+            ),
           ),
         ),
+      ),
+    );
+  }
+
+  // A short horizontal drift with the fade, so the search field reads as
+  // arriving rather than the row blinking into something else.
+  static Widget _crossSlide(Widget child, Animation<double> animation) {
+    return FadeTransition(
+      opacity: animation,
+      child: SlideTransition(
+        position: Tween(
+          begin: const Offset(0.04, 0),
+          end: Offset.zero,
+        ).animate(animation),
+        child: child,
       ),
     );
   }

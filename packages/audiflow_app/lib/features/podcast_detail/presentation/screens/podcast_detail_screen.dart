@@ -62,7 +62,8 @@ class PodcastDetailScreen extends ConsumerStatefulWidget {
       _PodcastDetailScreenState();
 }
 
-class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
+class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
+    with SingleTickerProviderStateMixin {
   late final ScrollController _ownScrollController = ScrollController();
 
   ScrollController get _scrollController => _ownScrollController;
@@ -78,6 +79,18 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
 
   /// Whether episode search has replaced the navigation row.
   bool _searching = false;
+
+  /// 0 while browsing, 1 while searching. Collapses the hero and fills
+  /// the navigation in step with the bar's switch to the search field,
+  /// so entering search reads as one motion rather than a jump.
+  late final AnimationController _searchTransition = AnimationController(
+    vsync: this,
+    duration: _kSearchTransitionDuration,
+  );
+
+  static const Duration _kSearchTransitionDuration = Duration(
+    milliseconds: 260,
+  );
 
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
@@ -155,7 +168,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
 
   void _updateNavScroll() {
     if (!_scrollController.hasClients) return;
-    final heroHeight = _searching ? 0.0 : _heroKey.currentContext?.size?.height;
+    final heroHeight = _heroKey.currentContext?.size?.height;
     _navScroll.value = FloatingNavScroll.at(
       offset: _scrollController.offset,
       heroExtent: heroHeight ?? 1,
@@ -169,12 +182,22 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
       _searchQuery = '';
     });
     if (!searching) _searchController.clear();
-    if (_scrollController.hasClients) _scrollController.jumpTo(0);
-    _navScroll.value = FloatingNavScroll.at(
-      offset: 0,
-      heroExtent: searching ? 0 : 1,
-    );
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0,
+        duration: _kSearchTransitionDuration,
+        curve: Curves.easeOutCubic,
+      );
+    }
+    if (searching) {
+      _searchTransition.animateTo(1, curve: Curves.easeOutCubic);
+    } else {
+      _searchTransition.animateBack(0, curve: Curves.easeOutCubic);
+    }
   }
+
+  FloatingNavScroll get _effectiveNavScroll =>
+      _navScroll.value.withSearch(_searchTransition.value);
 
   void _attachScrollLogger() {
     if (_scrollListenerAttached) return;
@@ -203,6 +226,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
     _searchController.dispose();
     _ownScrollController.dispose();
     _navScroll.dispose();
+    _searchTransition.dispose();
     final feedUrl = podcast.feedUrl;
     if (feedUrl != null) {
       PodcastMetadataHints.remove(feedUrl);
@@ -261,9 +285,9 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
             top: 0,
             left: 0,
             right: 0,
-            child: ValueListenableBuilder<FloatingNavScroll>(
-              valueListenable: _navScroll,
-              builder: (context, scroll, _) => _buildNavigation(scroll),
+            child: ListenableBuilder(
+              listenable: Listenable.merge([_navScroll, _searchTransition]),
+              builder: (context, _) => _buildNavigation(_effectiveNavScroll),
             ),
           ),
         ],
@@ -623,12 +647,18 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
           PinnedHeaderSliver(
             child: SizedBox(height: FloatingNavigationBar.heightOf(context)),
           ),
-          if (!_searching)
-            SliverToBoxAdapter(
-              child: ValueListenableBuilder<FloatingNavScroll>(
-                valueListenable: _navScroll,
-                builder: (context, scroll, child) =>
-                    CollapsingHero(progress: scroll.hero, child: child!),
+          SliverToBoxAdapter(
+            // Kept mounted in search: its height animates to zero (bottom
+            // edge fixed, like scrolling up) instead of popping out.
+            child: SizeTransition(
+              sizeFactor: ReverseAnimation(_searchTransition),
+              alignment: Alignment.bottomCenter,
+              child: ListenableBuilder(
+                listenable: Listenable.merge([_navScroll, _searchTransition]),
+                builder: (context, child) => CollapsingHero(
+                  progress: _effectiveNavScroll.hero,
+                  child: child!,
+                ),
                 child: KeyedSubtree(
                   key: _heroKey,
                   child: PodcastDetailHeader(
@@ -638,6 +668,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
                 ),
               ),
             ),
+          ),
           if (showPlaylistToggle)
             SliverToBoxAdapter(
               child: Padding(

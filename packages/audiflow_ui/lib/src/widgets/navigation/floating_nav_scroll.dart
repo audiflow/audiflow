@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/widgets.dart';
@@ -43,6 +44,18 @@ class FloatingNavScroll {
       hero: heroProgress,
       title: barProgress,
       background: barProgress,
+    );
+  }
+
+  /// This state with an in-navigation search [progress] (0 to 1) folded
+  /// in: as search takes over, the hero collapses, the bar fills, and the
+  /// title gives way to the search field.
+  FloatingNavScroll withSearch(double progress) {
+    final t = progress.clamp(0.0, 1.0);
+    return FloatingNavScroll._(
+      hero: math.max(hero, t),
+      title: title * (1 - t),
+      background: math.max(background, t),
     );
   }
 }
