@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:audiflow_core/audiflow_core.dart' show AutoPlayOrder;
 import 'package:audiflow_domain/audiflow_domain.dart'
@@ -78,6 +79,19 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
 
   /// Whether episode search has replaced the navigation row.
   bool _searching = false;
+
+  /// Scroll offset held across a view switch (mode, series type, filter,
+  /// sort). The new list may still be loading, and its first frames are
+  /// shorter than the old one; a spacer below the content keeps this
+  /// offset reachable until the new list is ready.
+  double? _heldOffset;
+
+  /// View the hold started from; the hold ends once the view has changed
+  /// and its content has loaded.
+  String? _heldFromViewKey;
+  String? _currentViewKey;
+  double _holdSpacerExtent = 0;
+  bool _releasingHold = false;
 
   /// 0 while browsing, 1 while searching. Collapses the hero and fills
   /// the navigation in step with the bar's switch to the search field,
@@ -629,6 +643,22 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
           displayPlaylists.first;
     }
 
+    final contentLoading = effectiveViewMode == PodcastViewMode.episodes
+        ? filteredAsync.isLoading
+        : activePlaylist != null &&
+              ref
+                  .watch(
+                    smartPlaylistEpisodesProvider(activePlaylist.episodeIds),
+                  )
+                  .isLoading;
+    _currentViewKey =
+        '$effectiveViewMode|${activePlaylist?.id}|$filter|$sortOrder';
+    if (_heldOffset != null &&
+        _currentViewKey != _heldFromViewKey &&
+        !contentLoading) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _releaseScrollHold());
+    }
+
     return RefreshIndicator(
       edgeOffset: FloatingNavigationBar.heightOf(context),
       onRefresh: () async {
@@ -683,6 +713,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
                 showModeSwitch: showPlaylistToggle,
                 mode: effectiveViewMode,
                 onModeChanged: (mode) {
+                  if (mode == effectiveViewMode) return;
                   if (mode == PodcastViewMode.episodes) {
                     _onEpisodesViewSelected(subscription?.id);
                     return;
@@ -697,10 +728,15 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
                 },
                 playlists: displayPlaylists,
                 selectedPlaylist: activePlaylist,
-                onPlaylistSelected: (playlist) =>
-                    _onPlaylistSelected(subscription?.id, playlist),
+                onPlaylistSelected: (playlist) {
+                  if (playlist.id == activePlaylist?.id) return;
+                  _onPlaylistSelected(subscription?.id, playlist);
+                },
                 filter: filter,
-                onFilterSelected: (f) => _onFilterSelected(subscription?.id, f),
+                onFilterSelected: (f) {
+                  if (f == filter) return;
+                  _onFilterSelected(subscription?.id, f);
+                },
                 sortOrder: sortOrder,
                 onToggleSortOrder: _toggleSortOrder,
               ),
@@ -727,23 +763,96 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
                 activePlaylist: activePlaylist,
                 sortOrder: sortOrder,
               ),
+            _scrollHoldSpacer(loading: contentLoading),
           ],
         ),
       ),
     );
   }
 
-  /// When the sticky bar is pinned, a view switch should keep it pinned
-  /// and show the new list from its top, not wherever the old list was.
-  void _keepBarPinnedOnSwitch() {
+  void _holdScrollPosition() {
     if (!_scrollController.hasClients) return;
-    final heroHeight = _heroKey.currentContext?.size?.height;
-    if (heroHeight == null || _scrollController.offset <= heroHeight) return;
-    _scrollController.jumpTo(heroHeight);
+    setState(() {
+      _heldOffset = _scrollController.offset;
+      _heldFromViewKey = _currentViewKey;
+    });
   }
 
+  /// Ends the hold: stays put when the new list is long enough, otherwise
+  /// animates up to the list's real end before removing the spacer.
+  Future<void> _releaseScrollHold() async {
+    if (_releasingHold || _heldOffset == null || !mounted) return;
+    _releasingHold = true;
+    if (_scrollController.hasClients) {
+      final position = _scrollController.position;
+      final naturalMax = math.max(
+        0.0,
+        position.maxScrollExtent - _holdSpacerExtent,
+      );
+      if (naturalMax < position.pixels) {
+        await _scrollController.animateTo(
+          naturalMax,
+          duration: const Duration(milliseconds: 320),
+          curve: Curves.easeOutCubic,
+        );
+      }
+    }
+    _releasingHold = false;
+    if (!mounted) return;
+    setState(() {
+      _heldOffset = null;
+      _heldFromViewKey = null;
+    });
+  }
+
+  /// Bottom spacer that keeps [_heldOffset] reachable while it is set,
+  /// with a spinner where the list will appear if it is still loading.
+  Widget _scrollHoldSpacer({required bool loading}) {
+    return SliverLayoutBuilder(
+      builder: (context, constraints) {
+        final held = _heldOffset;
+        final extent = held == null
+            ? 0.0
+            : math.max(
+                0.0,
+                held +
+                    constraints.viewportMainAxisExtent -
+                    constraints.precedingScrollExtent,
+              );
+        _holdSpacerExtent = extent;
+        if (extent <= 0) {
+          return const SliverToBoxAdapter(child: SizedBox.shrink());
+        }
+        // Puts the spinner in view: past any part of the spacer that sits
+        // above the viewport, and below the pinned navigation and bar.
+        final hiddenAbove = math.max(
+          0.0,
+          held! - constraints.precedingScrollExtent,
+        );
+        return SliverToBoxAdapter(
+          child: SizedBox(
+            height: extent,
+            child: loading
+                ? Align(
+                    alignment: Alignment.topCenter,
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        top: hiddenAbove + _kHoldSpinnerTop,
+                      ),
+                      child: const CircularProgressIndicator(),
+                    ),
+                  )
+                : null,
+          ),
+        );
+      },
+    );
+  }
+
+  static const double _kHoldSpinnerTop = 200;
+
   void _onEpisodesViewSelected(int? subscriptionId) {
-    _keepBarPinnedOnSwitch();
+    _holdScrollPosition();
     if (subscriptionId != null) {
       ref
           .read(
@@ -758,7 +867,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
   }
 
   void _onFilterSelected(int? subscriptionId, EpisodeFilter filter) {
-    _keepBarPinnedOnSwitch();
+    _holdScrollPosition();
     if (subscriptionId == null) {
       setState(() => _localEpisodeFilter = filter);
       return;
@@ -769,7 +878,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
   }
 
   void _onPlaylistSelected(int? subscriptionId, SmartPlaylist playlist) {
-    _keepBarPinnedOnSwitch();
+    _holdScrollPosition();
     if (subscriptionId != null) {
       ref
           .read(
@@ -817,7 +926,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
   }
 
   void _toggleSortOrder() {
-    _keepBarPinnedOnSwitch();
+    _holdScrollPosition();
     final feedUrl = podcast.feedUrl;
     if (feedUrl == null) return;
     final subscriptionAsync = ref.read(subscriptionByFeedUrlProvider(feedUrl));
