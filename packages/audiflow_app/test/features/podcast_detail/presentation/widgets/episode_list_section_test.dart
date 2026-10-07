@@ -14,6 +14,23 @@ void main() {
   }
 
   group('SortHeader', () {
+    testWidgets('shows only the count when sorting lives elsewhere', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        buildTestWidget(
+          const SortHeader(
+            label: '10 episodes',
+            sortOrder: SortOrder.descending,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('10 episodes'), findsOneWidget);
+      expect(find.byType(SortOrderButton), findsNothing);
+    });
+
     testWidgets('shows the label text', (tester) async {
       await tester.pumpWidget(
         buildTestWidget(

@@ -928,6 +928,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get episodesLabel => 'エピソード';
 
   @override
+  String get podcastDetailSeriesTab => 'シリーズ';
+
+  @override
   String get smartPlaylistsLabel => 'スマートプレイリスト';
 
   @override

@@ -31,7 +31,6 @@ import '../../../player/presentation/widgets/audio_sheet.dart';
 import '../../../share/presentation/helpers/share_helper.dart';
 import '../../../subscription/presentation/controllers/subscription_controller.dart';
 import '../controllers/podcast_detail_controller.dart';
-import '../widgets/episode_filter_chips.dart';
 import '../widgets/episode_list_section.dart';
 import '../widgets/inline_playlist_section.dart';
 import '../widgets/play_order_bottom_sheet.dart';
@@ -39,7 +38,7 @@ import '../widgets/podcast_description_sheet.dart';
 import '../widgets/podcast_detail_empty_states.dart';
 import '../widgets/podcast_detail_header.dart';
 import '../widgets/podcast_settings_sheet.dart';
-import '../widgets/smart_playlist_view_toggle.dart';
+import '../widgets/podcast_detail_sticky_bar.dart';
 
 /// Displays podcast details and episode list with
 /// playback controls.
@@ -669,50 +668,33 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
               ),
             ),
           ),
-          if (showPlaylistToggle)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: Spacing.md,
-                  vertical: Spacing.sm,
-                ),
-                child: SmartPlaylistViewToggle(
-                  playlists: displayPlaylists,
-                  selectedMode: effectiveViewMode,
-                  selectedPlaylistId: activePlaylist?.id ?? selectedPlaylistId,
-                  onEpisodesSelected: () {
-                    _onEpisodesViewSelected(subscription?.id);
-                  },
-                  onPlaylistSelected: (playlist) {
-                    _onPlaylistSelected(subscription?.id, playlist);
-                  },
-                ),
-              ),
+          PinnedHeaderSliver(
+            child: PodcastDetailStickyBar(
+              showModeSwitch: showPlaylistToggle,
+              mode: effectiveViewMode,
+              onModeChanged: (mode) {
+                if (mode == PodcastViewMode.episodes) {
+                  _onEpisodesViewSelected(subscription?.id);
+                  return;
+                }
+                final playlist =
+                    displayPlaylists
+                        .where((p) => p.id == selectedPlaylistId)
+                        .firstOrNull ??
+                    displayPlaylists.firstOrNull;
+                if (playlist == null) return;
+                _onPlaylistSelected(subscription?.id, playlist);
+              },
+              playlists: displayPlaylists,
+              selectedPlaylist: activePlaylist,
+              onPlaylistSelected: (playlist) =>
+                  _onPlaylistSelected(subscription?.id, playlist),
+              filter: filter,
+              onFilterSelected: (f) => _onFilterSelected(subscription?.id, f),
+              sortOrder: sortOrder,
+              onToggleSortOrder: _toggleSortOrder,
             ),
-          if (effectiveViewMode == PodcastViewMode.episodes)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: Spacing.sm),
-                child: EpisodeFilterChips(
-                  selected: filter,
-                  onSelected: (f) {
-                    if (subscription != null) {
-                      ref
-                          .read(
-                            podcastViewPreferenceControllerProvider(
-                              subscription.id,
-                            ).notifier,
-                          )
-                          .setEpisodeFilter(f);
-                    } else {
-                      setState(() {
-                        _localEpisodeFilter = f;
-                      });
-                    }
-                  },
-                ),
-              ),
-            ),
+          ),
           if (effectiveViewMode == PodcastViewMode.episodes)
             ...buildEpisodeListSlivers(
               ref: ref,
@@ -726,7 +708,6 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
               feedImageUrl: _feedImageUrl,
               lastRefreshedAt: _lastRefreshedAt,
               scrollController: _scrollController,
-              onToggleSortOrder: _toggleSortOrder,
               fallbackEpisodes: _lastFilteredEpisodes,
               itunesId: podcast.id,
               effectiveOrder: _resolvedPlayOrder,
@@ -753,6 +734,16 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
         _localViewMode = PodcastViewMode.episodes;
       });
     }
+  }
+
+  void _onFilterSelected(int? subscriptionId, EpisodeFilter filter) {
+    if (subscriptionId == null) {
+      setState(() => _localEpisodeFilter = filter);
+      return;
+    }
+    ref
+        .read(podcastViewPreferenceControllerProvider(subscriptionId).notifier)
+        .setEpisodeFilter(filter);
   }
 
   void _onPlaylistSelected(int? subscriptionId, SmartPlaylist playlist) {
@@ -795,7 +786,6 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
       feedImageUrl: _feedImageUrl,
       lastRefreshedAt: _lastRefreshedAt,
       scrollController: _scrollController,
-      onToggleSortOrder: _toggleSortOrder,
       onNavigateToGroup: _navigateToGroupEpisodes,
       itunesId: podcast.id,
       effectiveOrder: _resolvedPlayOrder,

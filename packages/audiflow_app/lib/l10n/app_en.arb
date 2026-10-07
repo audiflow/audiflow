@@ -615,6 +615,8 @@
   "@smartPlaylistSectionTitle": { "description": "Section header for smart playlists in podcast detail" },
   "episodesLabel": "Episodes",
   "@episodesLabel": { "description": "Label for episodes view tab" },
+  "podcastDetailSeriesTab": "Series",
+  "@podcastDetailSeriesTab": { "description": "Podcast detail segment that shows the series (smart playlist) view" },
   "smartPlaylistsLabel": "Smart Playlists",
   "@smartPlaylistsLabel": { "description": "Label for smart playlists view tab" },
   "episodeDetails": "Episode details",

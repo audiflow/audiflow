@@ -39,7 +39,7 @@ List<Widget> buildInlinePlaylistSlivers({
   required String? feedImageUrl,
   required DateTime? lastRefreshedAt,
   required ScrollController scrollController,
-  required VoidCallback onToggleSortOrder,
+  VoidCallback? onToggleSortOrder,
   required void Function(
     SmartPlaylist playlist,
     SmartPlaylistGroup group, {
@@ -170,7 +170,7 @@ List<Widget> _buildPlaylistData({
   required String? feedImageUrl,
   required DateTime? lastRefreshedAt,
   required ScrollController scrollController,
-  required VoidCallback onToggleSortOrder,
+  VoidCallback? onToggleSortOrder,
   required bool showEpisodeRowThumbnail,
   required void Function(
     SmartPlaylist playlist,
@@ -288,7 +288,7 @@ List<Widget> _buildInlineGroupList({
   required String searchQuery,
   required SortOrder sortOrder,
   required ScrollController scrollController,
-  required VoidCallback onToggleSortOrder,
+  VoidCallback? onToggleSortOrder,
   required void Function(
     SmartPlaylist playlist,
     SmartPlaylistGroup group, {
@@ -385,7 +385,7 @@ List<Widget> _buildPerEpisodeInlineGroups({
   required SmartPlaylist playlist,
   required SortOrder sortOrder,
   required ScrollController scrollController,
-  required VoidCallback onToggleSortOrder,
+  VoidCallback? onToggleSortOrder,
   required void Function(
     SmartPlaylist playlist,
     SmartPlaylistGroup group, {
@@ -545,7 +545,7 @@ List<Widget> _buildMixedYearInlineGroups({
   required YearBinding defaultMode,
   required SortOrder sortOrder,
   required ScrollController scrollController,
-  required VoidCallback onToggleSortOrder,
+  VoidCallback? onToggleSortOrder,
   required void Function(
     SmartPlaylist playlist,
     SmartPlaylistGroup group, {

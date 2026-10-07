@@ -28,8 +28,9 @@ A podcast catalogue is not a uniform thing. Some shows publish a flat stream of 
 ## User-visible Behavior
 
 - **Normal case**: Opening a podcast shows a centered hero (artwork, title, author and category, plus a subscribe pill while not yet subscribed) followed by its episode list. The hero fades and shrinks as the list scrolls up, and the podcast title then fades into the floating navigation. The navigation's search button replaces the navigation row with a search field that narrows the list by text; cancelling it restores the hero. Tapping an episode opens it; tapping play starts playback. The list is ordered by the podcast's remembered sort order.
-- **View modes**: When a podcast has detectable smart-playlist groupings, a toggle appears above the list offering an "Episodes" flat-list view and one entry per playlist (season, series, year, and so on). Switching to a playlist shows just that grouping's episodes inline. The chosen mode is remembered for that podcast. When no usable grouping exists, the toggle is hidden and only the flat episode list is shown.
-- **Filter chips**: In the flat-episode view, a row of chips — All, Unplayed, In Progress — filters the list by playback status. Selecting a chip re-filters the list immediately, and the choice persists per podcast across app restarts.
+- **View modes**: When a podcast has detectable smart-playlist groupings, a bar pinned under the navigation shows an "Episodes / Series" segmented control. On Series, the row below it holds a dropdown of the series types (one entry per playlist: season, series, year, and so on); switching shows that grouping's entries inline. The chosen mode and series type are remembered for that podcast. When no usable grouping exists, the segmented control is hidden and only the flat episode list is shown.
+- **Sort**: The sort toggle (newest or oldest first) sits at the right end of the pinned bar's second row in both modes; the count line above the list shows only the count.
+- **Filter chips**: In the flat-episode view, the pinned bar's second row holds chips — All, Unplayed, In Progress — filters the list by playback status. Selecting a chip re-filters the list immediately, and the choice persists per podcast across app restarts.
 - **Sort order**: The episode list can be sorted oldest-first or newest-first. The current order is remembered per podcast; toggling it reorders the list in place.
 - **Persistence**: For a subscribed podcast, every view-mode, filter, and sort change is written immediately — there is no save step — and the screen reactively reflects the stored value. Reopening the podcast restores the last-used view mode, filter, and sort.
 - **Non-subscribed podcasts**: A podcast the listener has not subscribed to (opened from search or a deep link) still supports all the same controls, but the choices are held only for the duration of that visit and start from defaults — there is nothing yet to persist them against.
@@ -68,6 +69,7 @@ A podcast catalogue is not a uniform thing. Some shows publish a flat stream of 
   - `packages/audiflow_app/lib/features/podcast_detail/presentation/screens/podcast_detail_screen.dart`
   - `packages/audiflow_app/lib/features/podcast_detail/presentation/controllers/podcast_view_mode_controller.dart`
   - `packages/audiflow_app/lib/features/podcast_detail/presentation/widgets/episode_filter_chips.dart`
+  - `packages/audiflow_app/lib/features/podcast_detail/presentation/widgets/podcast_detail_sticky_bar.dart`
   - `packages/audiflow_app/lib/features/podcast_detail/presentation/widgets/episode_sort_sheet.dart`
   - `packages/audiflow_domain/lib/src/features/feed/models/podcast_view_preference.dart`
   - `packages/audiflow_domain/lib/src/features/feed/repositories/podcast_view_preference_repository.dart`

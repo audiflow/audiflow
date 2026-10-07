@@ -18,4 +18,9 @@ class AppShadows {
     BoxShadow(color: Color(0x14000000), offset: Offset(0, 1), blurRadius: 3),
     BoxShadow(color: Color(0x1A000000), offset: Offset(0, 6), blurRadius: 16),
   ];
+
+  /// Raised controls on a sunken track (segmented control thumb).
+  static const List<BoxShadow> raised = [
+    BoxShadow(color: Color(0x1F000000), offset: Offset(0, 1), blurRadius: 4),
+  ];
 }

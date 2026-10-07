@@ -1796,6 +1796,12 @@ abstract class AppLocalizations {
   /// **'Episodes'**
   String get episodesLabel;
 
+  /// Podcast detail segment that shows the series (smart playlist) view
+  ///
+  /// In en, this message translates to:
+  /// **'Series'**
+  String get podcastDetailSeriesTab;
+
   /// Label for smart playlists view tab
   ///
   /// In en, this message translates to:

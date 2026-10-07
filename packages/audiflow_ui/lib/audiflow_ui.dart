@@ -17,6 +17,7 @@ export 'src/widgets/artwork_image.dart';
 export 'src/widgets/artwork_overlay.dart';
 
 // Widgets - Buttons
+export 'src/widgets/buttons/app_segmented_control.dart';
 export 'src/widgets/buttons/episode_play_pill.dart';
 export 'src/widgets/buttons/overlay_action_button.dart';
 
