@@ -157,9 +157,7 @@ void main() {
       expect(find.byIcon(Icons.add), findsOneWidget);
     });
 
-    testWidgets('shows Subscribed with check icon when subscribed', (
-      tester,
-    ) async {
+    testWidgets('hides the subscribe pill when subscribed', (tester) async {
       final container = ProviderContainer(
         overrides: [
           subscriptionControllerProvider(
@@ -172,11 +170,12 @@ void main() {
       await tester.pumpWidget(buildTestWidget(container, testPodcast));
       await tester.pumpAndSettle();
 
-      expect(find.text('Subscribed'), findsOneWidget);
-      expect(find.byIcon(Icons.check), findsOneWidget);
+      // Unsubscribing lives in the more menu, so the hero shows nothing.
+      expect(find.text('Subscribed'), findsNothing);
+      expect(find.byType(FilledButton), findsNothing);
     });
 
-    testWidgets('shows loading state for subscription button', (tester) async {
+    testWidgets('shows no pill while subscription state loads', (tester) async {
       final container = ProviderContainer(
         overrides: [
           subscriptionControllerProvider(
@@ -191,12 +190,15 @@ void main() {
       await tester.pump();
       await tester.pump();
 
-      expect(find.text('Loading...'), findsOneWidget);
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      // Nothing until the state is known, so a subscribed podcast does not
+      // flash a pill that then disappears.
+      expect(find.byType(FilledButton), findsNothing);
     });
 
     testWidgets('shows Retry button on error state', (tester) async {
       final container = ProviderContainer(
+        // No automatic retry, so no timer outlives the test.
+        retry: (_, _) => null,
         overrides: [
           subscriptionControllerProvider(
             'test-id',
@@ -253,31 +255,6 @@ void main() {
           .style!;
       check(style.backgroundColor!.resolve({})).equals(AppColors.light.accent);
       check(style.shape!.resolve({})).isA<StadiumBorder>();
-    });
-
-    testWidgets('subscribed is a tonal pill without a share button', (
-      tester,
-    ) async {
-      final container = ProviderContainer(
-        overrides: [
-          subscriptionControllerProvider(
-            'test-id',
-          ).overrideWith(() => _FakeSubscriptionController(true)),
-        ],
-      );
-      addTearDown(container.dispose);
-
-      await tester.pumpWidget(buildTestWidget(container, testPodcast));
-      await tester.pumpAndSettle();
-
-      final style = tester
-          .widget<FilledButton>(find.byType(FilledButton))
-          .style!;
-      check(
-        style.backgroundColor!.resolve({}),
-      ).equals(AppColors.light.accentTint);
-      check(style.foregroundColor!.resolve({})).equals(AppColors.light.accent);
-      check(find.byIcon(Icons.share_outlined).evaluate()).isEmpty();
     });
 
     testWidgets('podcast title is selectable', (tester) async {

@@ -169,7 +169,7 @@ Top to bottom:
 
 ### 4.2 Podcast detail
 
-- **Hero** (centered): artwork 180, title, author and category, subscribe button. Subscribed state is a tonal pill "購読中" with a check; unsubscribed is an `accent` filled pill "＋ 購読する".
+- **Hero** (centered): artwork 180, title, author and category. An `accent` filled pill "＋ 購読する" appears only while the podcast is not subscribed; a subscribed podcast shows no button, because unsubscribing lives in the `…` menu.
 - **Scroll behavior**: while scrolling, the hero (artwork and text together) fades and shrinks toward its bottom edge (to about 85%), so it recedes as it goes up under the floating navigation; the navigation title fades in afterwards.
 - **Sticky bar** (stays under the navigation): segmented control "エピソード / シリーズ" plus a second row that depends on the tab.
 - **Series tab**: second row has the series-type dropdown (max ~58% width, ellipsized) and "N シリーズ · ↓新しい順". List grouped by the **start year** of each series. Row: artwork 60, name (2 lines, ellipsized), "N エピソード · 合計時間", and status text ("未再生" / "2/4 再生済み" / "再生済み" in `accent`). Started series get the bottom-edge line (full when every episode is played). Date ranges are not shown.

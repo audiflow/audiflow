@@ -7,8 +7,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../subscription/presentation/controllers/subscription_controller.dart';
 
-/// Centered podcast hero: artwork, title, meta line, and subscribe pill
-/// (redesign 4.2).
+/// Centered podcast hero: artwork, title, meta line, and a subscribe pill
+/// when not yet subscribed (redesign 4.2).
 class PodcastDetailHeader extends ConsumerWidget {
   const PodcastDetailHeader({
     super.key,
@@ -78,7 +78,6 @@ class PodcastDetailHeader extends ConsumerWidget {
           ),
           const SizedBox(height: Spacing.md),
           _PodcastMetadata(podcast: podcast, longTitle: _isLongTitle),
-          const SizedBox(height: Spacing.md),
           _SubscribeButton(podcast: podcast, subscribeSource: subscribeSource),
         ],
       ),
@@ -162,8 +161,9 @@ class _PodcastArtwork extends StatelessWidget {
   }
 }
 
-/// Subscribe pill: accent filled when not subscribed, tonal when
-/// subscribed. Sharing and unsubscribing also live in the `…` menu.
+/// Accent "subscribe" pill, shown only while the podcast is not
+/// subscribed. Unsubscribing lives in the `…` menu, so a subscribed
+/// podcast's hero carries no button.
 class _SubscribeButton extends ConsumerWidget {
   const _SubscribeButton({
     required this.podcast,
@@ -180,58 +180,51 @@ class _SubscribeButton extends ConsumerWidget {
       subscriptionControllerProvider(podcast.id),
     );
 
-    return subscriptionState.when(
-      data: (isSubscribed) => _pill(
+    // Checked before the value: Riverpod keeps retrying a failed build,
+    // so the error arrives wrapped in a loading state.
+    if (subscriptionState.hasError && !subscriptionState.hasValue) {
+      return _pill(
         context,
-        tonal: isSubscribed,
-        icon: Icon(isSubscribed ? Icons.check : Icons.add, size: 18),
-        label: isSubscribed
-            ? l10n.podcastDetailSubscribed
-            : l10n.podcastDetailSubscribe,
-        onPressed: podcast.feedUrl == null
-            ? null
-            : () => _toggleSubscription(context, ref),
-      ),
-      loading: () => _pill(
-        context,
-        tonal: true,
-        icon: const SizedBox.square(
-          dimension: 16,
-          child: CircularProgressIndicator(strokeWidth: 2),
-        ),
-        label: l10n.commonLoading,
-        onPressed: null,
-      ),
-      error: (error, stack) => _pill(
-        context,
-        tonal: true,
-        icon: const Icon(Icons.refresh, size: 18),
+        icon: Icons.refresh,
         label: l10n.commonRetry,
         onPressed: () =>
             ref.invalidate(subscriptionControllerProvider(podcast.id)),
-      ),
+      );
+    }
+    // Nothing until the state is known, so a subscribed podcast does not
+    // flash a pill that then disappears.
+    if (subscriptionState.value ?? true) return const SizedBox.shrink();
+    return _pill(
+      context,
+      icon: Icons.add,
+      label: l10n.podcastDetailSubscribe,
+      onPressed: podcast.feedUrl == null
+          ? null
+          : () => _toggleSubscription(context, ref),
     );
   }
 
   Widget _pill(
     BuildContext context, {
-    required bool tonal,
-    required Widget icon,
+    required IconData icon,
     required String label,
     required VoidCallback? onPressed,
   }) {
     final colors = AppColors.of(context);
-    return FilledButton.icon(
-      onPressed: onPressed,
-      icon: icon,
-      label: Text(label),
-      style: FilledButton.styleFrom(
-        backgroundColor: tonal ? colors.accentTint : colors.accent,
-        foregroundColor: tonal ? colors.accent : colors.onAccent,
-        textStyle: AppTextStyles.label,
-        shape: const StadiumBorder(),
-        minimumSize: const Size(0, Spacing.minTouchTarget),
-        padding: const EdgeInsets.symmetric(horizontal: Spacing.lg),
+    return Padding(
+      padding: const EdgeInsets.only(top: Spacing.md),
+      child: FilledButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icon, size: 18),
+        label: Text(label),
+        style: FilledButton.styleFrom(
+          backgroundColor: colors.accent,
+          foregroundColor: colors.onAccent,
+          textStyle: AppTextStyles.label,
+          shape: const StadiumBorder(),
+          minimumSize: const Size(0, Spacing.minTouchTarget),
+          padding: const EdgeInsets.symmetric(horizontal: Spacing.lg),
+        ),
       ),
     );
   }
