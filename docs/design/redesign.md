@@ -48,7 +48,7 @@ The palette is defined for both brightness modes. Only the light screens are des
 | `ink` | Primary text and icons | `#1A1714` | `#F3EFEA` |
 | `inkSecondary` | Secondary text (author, metadata) | `#5E5952` | `#B8B1A8` |
 | `inkTertiary` | Captions, inactive tab labels, counts | `#6E6962` | `#9A938A` |
-| `inkQuaternary` | Chevrons, episode numbers | `#A39D95` | `#6F6961` |
+| `inkQuaternary` | Chevrons, drag handles, and other non-text glyphs | `#A39D95` | `#6F6961` |
 | `hairline` | Row separators inside a surface | `#F0ECE6` | `#2A2622` |
 | `outline` | Borders on chips and dropdown buttons, progress track | `#DED9D2` / `#E9E5DF` | `#3A342E` |
 | `accent` | Primary buttons, selected tab, links, progress fill | `#B5531C` | `#F0965A` |
@@ -172,7 +172,7 @@ Top to bottom:
 - **Hero** (side by side): artwork 88, series name (up to 3 lines; one size smaller when long), podcast name (links back), "N エピソード · 合計時間", and a full-width "#n を続きから再生" button. Fades and scales slightly on scroll.
 - **Navigation**: floating back button and [search | …] pill; series name fades into the center after the hero is gone.
 - **Sort**: a right-aligned text button "↑古い順" above the list, same style as on Podcast detail. Not sticky.
-- **Rows**: episode number, title, description (2 lines), action row with play pill and date, bottom-edge progress line when partially played. The playing episode's title uses `accent`.
+- **Rows**: episode number (`inkTertiary`), title, description (2 lines), action row with play pill and date, bottom-edge progress line when partially played. The playing episode's title uses `accent`.
 
 ### 4.4 Podcast settings sheet
 
@@ -195,7 +195,12 @@ Title "キュー" with a "clear" action. A now-playing card on the artwork-deriv
 
 ### 4.7 Search
 
-Title, search field with clear button and a store-region button beside it, a "番組 / エピソード" scope toggle, and a grouped results list (artwork 60, title, author, category, a tonal "+" subscribe button).
+Title, search field with clear button and a store-region button beside it, a "番組 / エピソード" scope toggle, and a grouped results list.
+
+- **番組 scope** (current behavior): artwork 60, title, author, category, a tonal "+" subscribe button. Tap opens Podcast detail.
+- **エピソード scope** (new, see section 6): artwork 60, episode title (2 lines), podcast name, date and duration; the trailing control is a play pill instead of a subscribe button. Tap opens the episode detail.
+
+Until episode search ships, the scope toggle is hidden and the screen shows podcast results only.
 
 ### 4.8 Settings
 
@@ -216,10 +221,11 @@ These are not implemented today and need their own FR updates and PRs:
 - Library: station tiles limited to 4 with a "show all" route; podcast grid/list toggle; podcast filter field.
 - In-navigation search on Podcast detail (both tabs) and Series episodes.
 - Artwork-derived Now Playing background.
+- Episode search scope on the Search tab. Current discovery returns podcast metadata only, so this needs an episode-level search source before the "番組 / エピソード" toggle is shown.
 
 ## 7. Implementation order
 
 1. Tokens and theme: `packages/audiflow_ui/lib/src/themes/` (`color_scheme.dart`, `text_styles.dart`, `app_theme.dart`) and `packages/audiflow_ui/lib/src/styles/` (`spacing.dart`, `borders.dart`).
 2. Shared components in `packages/audiflow_ui/lib/src/widgets/`: progress line, play pill, floating navigation, mini player, grouped list section and settings row.
-3. Screens: Library → Podcast detail (sliver-based collapsing header, sticky bar, in-nav search) → Series episodes → Now Playing → Queue → Settings and the podcast settings sheet.
+3. Screens: Library → Podcast detail (sliver-based collapsing header, sticky bar, in-nav search) → Series episodes → Now Playing → Queue → Search (podcast scope only) → Settings and the podcast settings sheet.
 4. New behavior from section 6, each as a separate PR with its FR update.
