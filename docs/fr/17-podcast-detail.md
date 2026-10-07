@@ -27,19 +27,20 @@ A podcast catalogue is not a uniform thing. Some shows publish a flat stream of 
 
 ## User-visible Behavior
 
-- **Normal case**: Opening a podcast shows its header (artwork, title, subscribe affordance) followed by its episode list. A search field at the top lets the listener narrow the list by text. Tapping an episode opens it; tapping play starts playback. The list is ordered by the podcast's remembered sort order.
+- **Normal case**: Opening a podcast shows a centered hero (artwork, title, author and category, subscribe pill) followed by its episode list. The hero fades and shrinks as the list scrolls up, and the podcast title then fades into the floating navigation. The navigation's search button replaces the navigation row with a search field that narrows the list by text; cancelling it restores the hero. Tapping an episode opens it; tapping play starts playback. The list is ordered by the podcast's remembered sort order.
 - **View modes**: When a podcast has detectable smart-playlist groupings, a toggle appears above the list offering an "Episodes" flat-list view and one entry per playlist (season, series, year, and so on). Switching to a playlist shows just that grouping's episodes inline. The chosen mode is remembered for that podcast. When no usable grouping exists, the toggle is hidden and only the flat episode list is shown.
 - **Filter chips**: In the flat-episode view, a row of chips — All, Unplayed, In Progress — filters the list by playback status. Selecting a chip re-filters the list immediately, and the choice persists per podcast across app restarts.
 - **Sort order**: The episode list can be sorted oldest-first or newest-first. The current order is remembered per podcast; toggling it reorders the list in place.
 - **Persistence**: For a subscribed podcast, every view-mode, filter, and sort change is written immediately — there is no save step — and the screen reactively reflects the stored value. Reopening the podcast restores the last-used view mode, filter, and sort.
 - **Non-subscribed podcasts**: A podcast the listener has not subscribed to (opened from search or a deep link) still supports all the same controls, but the choices are held only for the duration of that visit and start from defaults — there is nothing yet to persist them against.
 - **View-mode self-correction**: If a podcast's stored preference says "show a playlist" but the grouping that playlist belonged to is no longer available, the screen falls back to the flat episode list and rewrites the stored preference to match, so the view does not silently flip back later.
-- **Audio settings**: The app bar menu has an "Audio settings" entry (once the podcast has a local record) that opens the player's Audio sheet for this podcast, so its per-podcast speed override can be switched on, edited, or removed while nothing is playing. Edits made here reach the player immediately when this podcast is the one playing.
+- **More menu**: The navigation's `…` menu offers subscribe or unsubscribe (so it stays reachable after the hero scrolls away), share, podcast info, and play order.
+- **Audio settings**: The `…` menu has an "Audio settings" entry (once the podcast has a local record) that opens the player's Audio sheet for this podcast, so its per-podcast speed override can be switched on, edited, or removed while nothing is playing. Edits made here reach the player immediately when this podcast is the one playing.
 - **Empty and error cases**: A podcast with no feed URL, or whose feed fails to load, shows a dedicated empty or error state with a retry affordance rather than a blank list. A filter that matches nothing shows an empty list under the still-visible chips.
 
 ## Capabilities
 
-- Presents one podcast's episode list as the primary browsing surface, with a header, an in-list text search field, and per-episode rows that open the episode or start playback.
+- Presents one podcast's episode list as the primary browsing surface, with a collapsing hero, a text search field in the navigation, and per-episode rows that open the episode or start playback.
 - Offers two view modes — a flat episode list and a smart-playlist grouped view — surfacing the playlist toggle only when the podcast actually has a usable grouping, and hiding it otherwise.
 - Provides playback-status filter chips (All / Unplayed / In Progress) over the flat episode list so the listener can focus on unfinished or untouched episodes.
 - Supports an oldest-first / newest-first sort order over the episode list.
