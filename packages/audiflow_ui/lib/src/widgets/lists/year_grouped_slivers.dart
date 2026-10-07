@@ -117,6 +117,13 @@ List<Widget> buildYearGroupedSlivers<T>({
 
   scrollController.addListener(onScroll);
 
+  // Rebuilds (e.g. returning to the screen) start the header at the first
+  // year with no scroll event to correct it; resync once layout has
+  // measured the year offsets.
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (scrollController.hasClients) onScroll();
+  });
+
   // Lands the year's rows right under the sticky header. The first year
   // has no inline divider; its rows start below the sticky header itself.
   double targetFor(int year) {

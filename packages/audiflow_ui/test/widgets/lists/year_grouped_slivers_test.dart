@@ -274,6 +274,20 @@ void main() {
       check(stickyYear(tester)).equals('2024');
     });
 
+    testWidgets('a rebuild at a scrolled position shows the right year', (
+      tester,
+    ) async {
+      await pump(tester);
+      await scrollDividerTo(tester, '2024', topInset - 1);
+      check(stickyYear(tester)).equals('2024');
+
+      // Coming back to the screen rebuilds the slivers with no scroll
+      // event; the header must not fall back to the first year.
+      await pump(tester);
+      await tester.pump();
+      check(stickyYear(tester)).equals('2024');
+    });
+
     testWidgets('jumping to a year lands its rows under the header', (
       tester,
     ) async {
