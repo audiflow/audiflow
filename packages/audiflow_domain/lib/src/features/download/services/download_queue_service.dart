@@ -400,6 +400,11 @@ class DownloadQueueService implements SuspendableWriter {
     _logger.e('Download error: ${error.message}', error: error);
 
     if (error.type == DownloadErrorType.cancelled) {
+      // A pause stops the transfer the same way a cancel does; keep the
+      // paused status (and the partial file) so a resume continues from
+      // where it stopped instead of starting over.
+      final current = await _repository.getById(task.id);
+      if (current?.downloadStatus is DownloadStatusPaused) return;
       await _repository.updateStatus(
         id: task.id,
         status: const DownloadStatus.cancelled(),
