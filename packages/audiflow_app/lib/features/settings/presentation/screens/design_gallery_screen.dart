@@ -2,6 +2,7 @@ import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import 'design_gallery_floating_nav_demo.dart';
 
 /// Non-production preview of the redesign's shared components, used to
 /// review them on a device before the screens that use them exist.
@@ -38,6 +39,8 @@ class _DesignGalleryScreenState extends State<DesignGalleryScreen> {
         body: ListView(
           padding: const EdgeInsets.symmetric(vertical: Spacing.lg),
           children: const [
+            _NavigationDemoEntry(),
+            SizedBox(height: Spacing.sectionGap),
             _SettingsGroupsPreview(),
             SizedBox(height: Spacing.sectionGap),
             _PlayPillPreview(),
@@ -46,6 +49,37 @@ class _DesignGalleryScreenState extends State<DesignGalleryScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _NavigationDemoEntry extends StatelessWidget {
+  const _NavigationDemoEntry();
+
+  // Carries the gallery's light/dark choice into the pushed demo, which
+  // would otherwise take the app theme.
+  void _open(BuildContext context) {
+    final theme = Theme.of(context);
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) =>
+            Theme(data: theme, child: const DesignGalleryFloatingNavDemo()),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GroupedSection(
+      header: 'NAVIGATION',
+      children: [
+        SettingsRow(
+          title: 'フローティングナビゲーション（デモ）',
+          subtitle: 'スクロールでヒーローが縮み、タイトルが現れる。検索も試せます',
+          trailing: const SettingsTrailing.chevron(),
+          onTap: () => _open(context),
+        ),
+      ],
     );
   }
 }
