@@ -57,6 +57,10 @@ class AppRoutes {
   static const String queue = '/queue';
   static const String settings = '/settings';
   static const String podcastDetail = '/search/podcast';
+
+  /// Relative path of the podcast detail route in each tab branch; also
+  /// its page name, so screens below it can pop back to it.
+  static const String podcastDetailChild = 'podcast/:id';
   static const String smartPlaylistEpisodes = 'smart-playlist/:playlistId';
   static const String episodeDetail = 'episode/:episodeGuid';
   static const String smartPlaylistGroupEpisodesPath = 'group/:groupId';
@@ -252,7 +256,7 @@ GoRouter createAppRouter({
                 builder: (context, state) => const SearchScreen(),
                 routes: [
                   materialRoute(
-                    path: 'podcast/:id',
+                    path: AppRoutes.podcastDetailChild,
                     builder: (context, state) =>
                         _buildPodcastDetailScreen(state),
                     routes: [
@@ -292,7 +296,7 @@ GoRouter createAppRouter({
                 builder: (context, state) => const LibraryScreen(),
                 routes: [
                   materialRoute(
-                    path: 'podcast/:id',
+                    path: AppRoutes.podcastDetailChild,
                     builder: (context, state) =>
                         _buildPodcastDetailScreen(state),
                     routes: [

@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../../routing/app_router.dart' show AppRoutes;
 import '../../../download/presentation/helpers/batch_download_action_helper.dart';
 import '../utils/smart_playlist_def_resolver.dart';
 import '../widgets/play_order_bottom_sheet.dart';
@@ -15,6 +16,15 @@ import '../widgets/episode_list_section.dart' show SortOrderButton;
 import '../widgets/inline_group_card.dart' show formatGroupDuration;
 import '../widgets/series_hero.dart';
 import '../widgets/smart_playlist_episode_list_tile.dart';
+
+/// Pops back to the nearest podcast detail route (by its page name),
+/// stopping at the first route if there is none.
+void popToPodcastRoute(NavigatorState navigator) {
+  navigator.popUntil(
+    (route) =>
+        route.isFirst || route.settings.name == AppRoutes.podcastDetailChild,
+  );
+}
 
 /// Screen showing episodes within a smart playlist group.
 class SmartPlaylistGroupEpisodesScreen extends ConsumerStatefulWidget {
@@ -497,7 +507,8 @@ class _SmartPlaylistGroupEpisodesScreenState
       onArtworkTap: thumbnailUrl == null
           ? null
           : () => _showArtworkOverlay(thumbnailUrl),
-      onPodcastTap: () => Navigator.of(context).maybePop(),
+      onPodcastTap: _openPodcast,
+      artworkLabel: l10n.seriesViewArtwork,
       resumeLabel: target == null
           ? null
           : target.resuming
@@ -505,9 +516,13 @@ class _SmartPlaylistGroupEpisodesScreenState
           : l10n.seriesPlayEpisode(target.number),
       onResume: target == null
           ? null
-          : () => _tileFor(target.data).togglePlayback(context, ref),
+          : () => _tileFor(target.data).startPlayback(context, ref),
     );
   }
+
+  /// Returns to the podcast screen this series sits under; a series opened
+  /// through a playlist screen has that screen in between.
+  void _openPodcast() => popToPodcastRoute(Navigator.of(context));
 
   void _showArtworkOverlay(String artworkUrl) {
     Navigator.of(context).push(
