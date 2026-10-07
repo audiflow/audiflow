@@ -469,9 +469,9 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text(
-              played ? l10n.podcastMarkAllPlayed : l10n.podcastMarkAllUnplayed,
-            ),
+            // Short label: the dialog already says "all", and a long one
+            // pushes the actions onto separate lines.
+            child: Text(played ? l10n.markAsPlayed : l10n.markAsUnplayed),
           ),
         ],
       ),
