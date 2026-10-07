@@ -428,6 +428,12 @@ abstract class AppLocalizations {
   /// **'As displayed'**
   String get playOrderAsDisplayed;
 
+  /// Note under the As displayed play order option explaining it follows the list sort
+  ///
+  /// In en, this message translates to:
+  /// **'Follows the list order (newest or oldest first)'**
+  String get playOrderAsDisplayedSubtitle;
+
   /// Title for the notification interruption behavior setting
   ///
   /// In en, this message translates to:

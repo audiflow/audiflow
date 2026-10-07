@@ -48,6 +48,10 @@ void main() {
       check(
         find.byType(RadioListTile<AutoPlayOrder>),
       ).has((f) => f.evaluate().length, 'radio count').equals(3);
+      // Newest-first playback comes from the list's sort, so say so.
+      check(
+        find.text('Follows the list order (newest or oldest first)'),
+      ).has((f) => f.evaluate().length, 'widget count').equals(1);
     });
 
     testWidgets('pre-selects current order', (tester) async {

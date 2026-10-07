@@ -65,6 +65,7 @@ class _PlayOrderSheet extends StatelessWidget {
             ),
             RadioListTile<AutoPlayOrder>(
               title: Text(l10n.playOrderAsDisplayed),
+              subtitle: Text(l10n.playOrderAsDisplayedSubtitle),
               value: AutoPlayOrder.asDisplayed,
             ),
           ],

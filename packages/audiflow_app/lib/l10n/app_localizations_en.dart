@@ -179,6 +179,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playOrderAsDisplayed => 'As displayed';
 
   @override
+  String get playOrderAsDisplayedSubtitle =>
+      'Follows the list order (newest or oldest first)';
+
+  @override
   String get playbackDuckInterruptionBehaviorTitle =>
       'Notification Interruption';
 

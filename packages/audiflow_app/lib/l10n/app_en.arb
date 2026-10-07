@@ -119,6 +119,8 @@
   "@playOrderOldestFirst": { "description": "Play order: chronological" },
   "playOrderAsDisplayed": "As displayed",
   "@playOrderAsDisplayed": { "description": "Play order: screen order" },
+  "playOrderAsDisplayedSubtitle": "Follows the list order (newest or oldest first)",
+  "@playOrderAsDisplayedSubtitle": { "description": "Note under the As displayed play order option explaining it follows the list sort" },
   "playbackDuckInterruptionBehaviorTitle": "Notification Interruption",
   "@playbackDuckInterruptionBehaviorTitle": { "description": "Title for the notification interruption behavior setting" },
   "playbackDuckInterruptionBehaviorSubtitle": "How to react when a short sound (like a notification) plays",

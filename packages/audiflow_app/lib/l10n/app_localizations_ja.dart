@@ -138,7 +138,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get playbackAutoPlayOrderSubtitle => 'エピソードリストからの自動キュー追加時の順序';
 
   @override
-  String get playbackAutoPlayOrderOldestFirst => '配信順';
+  String get playbackAutoPlayOrderOldestFirst => '古い順';
 
   @override
   String get playbackAutoPlayOrderAsDisplayed => '表示順';
@@ -174,6 +174,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get playOrderAsDisplayed => '表示順';
+
+  @override
+  String get playOrderAsDisplayedSubtitle => 'リストの並び順（新しい順・古い順）に従います';
 
   @override
   String get playbackDuckInterruptionBehaviorTitle => '通知音での挙動';
