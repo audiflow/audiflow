@@ -5,13 +5,21 @@ import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:logger/logger.dart';
 
 class _FakeHistoryService extends Fake implements PlaybackHistoryService {
+  _FakeHistoryService({this.failAfter});
+
+  /// Throws after this many episodes, like a write failing partway.
+  final int? failAfter;
   final completed = <int>[];
 
   @override
   Future<int> markAllCompleted(Iterable<int> episodeIds) async {
-    completed.addAll(episodeIds);
+    for (final id in episodeIds) {
+      if (completed.length == failAfter) throw StateError('disk full');
+      completed.add(id);
+    }
     return episodeIds.length;
   }
 }
@@ -19,11 +27,16 @@ class _FakeHistoryService extends Fake implements PlaybackHistoryService {
 void main() {
   late _FakeHistoryService history;
 
-  Future<void> open(WidgetTester tester) async {
-    history = _FakeHistoryService();
+  Future<void> open(WidgetTester tester, {int? failAfter}) async {
+    history = _FakeHistoryService(failAfter: failAfter);
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [playbackHistoryServiceProvider.overrideWithValue(history)],
+        overrides: [
+          playbackHistoryServiceProvider.overrideWithValue(history),
+          namedLoggerProvider.overrideWith(
+            (ref, name) => Logger(level: Level.off),
+          ),
+        ],
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
@@ -61,5 +74,15 @@ void main() {
     await tester.pumpAndSettle();
     check(history.completed).deepEquals([1, 2]);
     check(find.text('Marked 2 episodes as played').evaluate()).length.equals(1);
+  });
+
+  testWidgets('a failure partway is reported, not swallowed', (tester) async {
+    await open(tester, failAfter: 1);
+    await tester.tap(find.text('Mark as played'));
+    await tester.pumpAndSettle();
+    check(history.completed).deepEquals([1]);
+    check(
+      find.text("Some episodes couldn't be updated").evaluate(),
+    ).length.equals(1);
   });
 }

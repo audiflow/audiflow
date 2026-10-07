@@ -1019,6 +1019,9 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get podcastMarkAllFailed => '一部のエピソードを更新できませんでした';
+
+  @override
   String podcastMarkAllPlayedDone(int count) {
     return '$count件を再生済みにしました';
   }

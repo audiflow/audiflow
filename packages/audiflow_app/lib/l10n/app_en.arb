@@ -673,6 +673,8 @@
   "@seriesMarkAllPlayedConfirm": { "description": "Confirmation before marking every episode of a series played", "placeholders": { "count": { "type": "int" } } },
   "seriesMarkAllUnplayedConfirm": "Mark all {count} episodes of this series as unplayed?",
   "@seriesMarkAllUnplayedConfirm": { "description": "Confirmation before marking every episode of a series not played", "placeholders": { "count": { "type": "int" } } },
+  "podcastMarkAllFailed": "Some episodes couldn't be updated",
+  "@podcastMarkAllFailed": { "description": "Snackbar when marking all episodes stops partway" },
   "podcastMarkAllPlayedDone": "Marked {count} episodes as played",
   "@podcastMarkAllPlayedDone": { "description": "Snackbar after marking every episode played", "placeholders": { "count": { "type": "int" } } },
   "podcastMarkAllUnplayedDone": "Marked {count} episodes as unplayed",

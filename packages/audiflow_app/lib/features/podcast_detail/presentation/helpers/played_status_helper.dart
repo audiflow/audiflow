@@ -44,14 +44,18 @@ Future<int> setEpisodesPlayedStatus(
   required bool played,
 }) async {
   final historyService = container.read(playbackHistoryServiceProvider);
-  final count = played
-      ? await historyService.markAllCompleted(episodeIds)
-      : await historyService.markAllIncomplete(episodeIds);
-  container
-    ..invalidate(episodeProgressProvider)
-    ..invalidate(podcastEpisodeProgressProvider)
-    ..invalidate(smartPlaylistEpisodesProvider);
-  return count;
+  try {
+    return played
+        ? await historyService.markAllCompleted(episodeIds)
+        : await historyService.markAllIncomplete(episodeIds);
+  } finally {
+    // A batch that fails partway has still changed some episodes; refresh
+    // so open lists show what was actually written.
+    container
+      ..invalidate(episodeProgressProvider)
+      ..invalidate(podcastEpisodeProgressProvider)
+      ..invalidate(smartPlaylistEpisodesProvider);
+  }
 }
 
 /// [setEpisodesPlayedStatus] for every stored episode of [podcastId].

@@ -1958,6 +1958,12 @@ abstract class AppLocalizations {
   /// **'Mark all {count} episodes of this series as unplayed?'**
   String seriesMarkAllUnplayedConfirm(int count);
 
+  /// Snackbar when marking all episodes stops partway
+  ///
+  /// In en, this message translates to:
+  /// **'Some episodes couldn\'t be updated'**
+  String get podcastMarkAllFailed;
+
   /// Snackbar after marking every episode played
   ///
   /// In en, this message translates to:

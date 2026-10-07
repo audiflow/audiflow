@@ -1,3 +1,4 @@
+import 'package:audiflow_domain/audiflow_domain.dart' show namedLoggerProvider;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -36,11 +37,20 @@ Future<void> confirmAndMarkAllPlayed({
     ),
   );
   if (confirmed != true) return;
-  final count = await setEpisodesPlayedStatus(
-    container,
-    episodeIds: episodeIds,
-    played: played,
-  );
+  final int count;
+  try {
+    count = await setEpisodesPlayedStatus(
+      container,
+      episodeIds: episodeIds,
+      played: played,
+    );
+  } on Object catch (e, stack) {
+    container
+        .read(namedLoggerProvider('MarkAllPlayed'))
+        .e('Marking all episodes failed', error: e, stackTrace: stack);
+    messenger.showSnackBar(SnackBar(content: Text(l10n.podcastMarkAllFailed)));
+    return;
+  }
   messenger.showSnackBar(
     SnackBar(
       content: Text(
