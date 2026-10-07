@@ -66,7 +66,8 @@ List<Widget> buildYearGroupedSlivers<T>({
     return [list(allItems)];
   }
 
-  // Estimate year scroll offsets for jump-to-year navigation.
+  // Estimated year offsets, used only until layout has measured the real
+  // ones (see yearStarts).
   final yearOffsets = <int, double>{};
   double runningOffset = 0.0;
   for (final year in sortedYears) {
@@ -81,12 +82,24 @@ List<Widget> buildYearGroupedSlivers<T>({
   // Captured during layout — height of all slivers preceding our content.
   double precedingExtent = 0.0;
 
+  // Measured during layout: the scroll offset where each later year's
+  // inline divider starts. Row heights vary (grouped surfaces, multi-line
+  // rows), so estimates drift; these are exact.
+  final yearStarts = <int, double>{};
+
+  // Height of headers pinned above the sticky year header (e.g. a
+  // floating navigation and a sticky bar). Content under them is hidden,
+  // so a year counts as reached when its divider slides under them. Only
+  // observable once content has scrolled beneath them, hence the max.
+  double topInset = 0.0;
+
+  double startOf(int year) =>
+      yearStarts[year] ?? precedingExtent + (yearOffsets[year] ?? 0.0);
+
   int resolveYear(double offset) {
-    // Subtract preceding extent to get offset relative to our content.
-    final relative = offset - precedingExtent;
     int resolved = firstYear;
-    for (final year in sortedYears) {
-      if (yearOffsets[year]! <= relative) {
+    for (final year in sortedYears.skip(1)) {
+      if (startOf(year) <= offset + topInset) {
         resolved = year;
       } else {
         break;
@@ -104,21 +117,38 @@ List<Widget> buildYearGroupedSlivers<T>({
 
   scrollController.addListener(onScroll);
 
+  // Lands the year's rows right under the sticky header. The first year
+  // has no inline divider; its rows start below the sticky header itself.
+  double targetFor(int year) {
+    final target = year == firstYear
+        ? precedingExtent - yearHeaderHeight - topInset
+        : startOf(year) - topInset;
+    return target.clamp(0.0, scrollController.position.maxScrollExtent);
+  }
+
   void jumpToYear(int selected) {
-    final base = precedingExtent;
-    final target = base + (yearOffsets[selected] ?? 0.0);
-    final max = scrollController.position.maxScrollExtent;
-    final clamped = target.clamp(0.0, max);
-    final distance = (clamped - scrollController.offset).abs();
+    final insetBefore = topInset;
+    final target = targetFor(selected);
+    final distance = (target - scrollController.offset).abs();
+
+    // The pinned inset is only known once content has scrolled under it,
+    // so a jump from the top may need one correction afterwards.
+    void correct() {
+      if (topInset == insetBefore || !scrollController.hasClients) return;
+      scrollController.jumpTo(targetFor(selected));
+    }
 
     if (500.0 < distance) {
-      scrollController.jumpTo(clamped);
+      scrollController.jumpTo(target);
+      WidgetsBinding.instance.addPostFrameCallback((_) => correct());
     } else {
-      scrollController.animateTo(
-        clamped,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
+      scrollController
+          .animateTo(
+            target,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          )
+          .then((_) => correct());
     }
   }
 
@@ -133,6 +163,12 @@ List<Widget> buildYearGroupedSlivers<T>({
   }
 
   final slivers = <Widget>[
+    SliverLayoutBuilder(
+      builder: (context, constraints) {
+        if (topInset < constraints.overlap) topInset = constraints.overlap;
+        return const SliverToBoxAdapter(child: SizedBox.shrink());
+      },
+    ),
     SliverPinnedHeader(
       child: _StickyYearHeader(
         currentYearNotifier: currentYearNotifier,
@@ -152,11 +188,20 @@ List<Widget> buildYearGroupedSlivers<T>({
     final items = itemsByYear[year]!;
 
     if (year != firstYear) {
-      slivers.add(
-        SliverToBoxAdapter(
-          child: _InlineYearDivider(year: year, onTap: onYearHeaderTap),
-        ),
-      );
+      slivers
+        ..add(
+          SliverLayoutBuilder(
+            builder: (context, constraints) {
+              yearStarts[year] = constraints.precedingScrollExtent;
+              return const SliverToBoxAdapter(child: SizedBox.shrink());
+            },
+          ),
+        )
+        ..add(
+          SliverToBoxAdapter(
+            child: _InlineYearDivider(year: year, onTap: onYearHeaderTap),
+          ),
+        );
     }
 
     slivers.add(list(items));
