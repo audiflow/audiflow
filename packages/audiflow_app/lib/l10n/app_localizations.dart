@@ -1991,13 +1991,13 @@ abstract class AppLocalizations {
   /// Option to sort episodes newest first
   ///
   /// In en, this message translates to:
-  /// **'Newest First'**
+  /// **'Newest first'**
   String get stationNewest;
 
   /// Option to sort episodes oldest first
   ///
   /// In en, this message translates to:
-  /// **'Oldest First'**
+  /// **'Oldest first'**
   String get stationOldest;
 
   /// Filter option for all episodes

@@ -1081,10 +1081,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stationPlaybackOrder => 'Playback Order';
 
   @override
-  String get stationNewest => 'Newest First';
+  String get stationNewest => 'Newest first';
 
   @override
-  String get stationOldest => 'Oldest First';
+  String get stationOldest => 'Oldest first';
 
   @override
   String get stationFilterAll => 'All Episodes';

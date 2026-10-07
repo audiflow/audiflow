@@ -166,11 +166,11 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String playOrderDefault(String resolvedOrder) {
-    return 'デフォルト ($resolvedOrder)';
+    return 'デフォルト（$resolvedOrder）';
   }
 
   @override
-  String get playOrderOldestFirst => '公開日順（古→新）';
+  String get playOrderOldestFirst => '古い順';
 
   @override
   String get playOrderAsDisplayed => '表示順';
@@ -740,10 +740,10 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get podcastDetailOldestFirst => '公開日順（古→新）';
+  String get podcastDetailOldestFirst => '古い順';
 
   @override
-  String get podcastDetailNewestFirst => '公開日順（新→古）';
+  String get podcastDetailNewestFirst => '新しい順';
 
   @override
   String episodePillDurationMinutes(int minutes) {
@@ -1036,10 +1036,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get stationPlaybackOrder => '再生順';
 
   @override
-  String get stationNewest => '公開日順（新→古）';
+  String get stationNewest => '新しい順';
 
   @override
-  String get stationOldest => '公開日順（古→新）';
+  String get stationOldest => '古い順';
 
   @override
   String get stationFilterAll => '全エピソード';
@@ -1158,10 +1158,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get stationEpisodeOrder => 'エピソードの順序';
 
   @override
-  String get stationNewestFirst => '公開日順（新→古）';
+  String get stationNewestFirst => '新しい順';
 
   @override
-  String get stationOldestFirst => '公開日順（古→新）';
+  String get stationOldestFirst => '古い順';
 
   @override
   String get stationEditTooltip => 'ステーションを編集';
@@ -1199,10 +1199,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get stationPodcastOrder => '番組の並び順';
 
   @override
-  String get stationPodcastSortSubscribeOld => '購読日順（古→新）';
+  String get stationPodcastSortSubscribeOld => '購読が古い順';
 
   @override
-  String get stationPodcastSortSubscribeNew => '購読日順（新→古）';
+  String get stationPodcastSortSubscribeNew => '購読が新しい順';
 
   @override
   String get stationPodcastSortNameAz => '名前順（A-Z）';
