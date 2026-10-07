@@ -40,7 +40,6 @@ List<Widget> buildInlinePlaylistSlivers({
   required DateTime? lastRefreshedAt,
   required ScrollController scrollController,
   VoidCallback? onToggleSortOrder,
-  ValueChanged<int>? onSeriesCount,
   required void Function(
     SmartPlaylist playlist,
     SmartPlaylistGroup group, {
@@ -86,7 +85,6 @@ List<Widget> buildInlinePlaylistSlivers({
         lastRefreshedAt: lastRefreshedAt,
         scrollController: scrollController,
         onToggleSortOrder: onToggleSortOrder,
-        onSeriesCount: onSeriesCount,
         onNavigateToGroup: onNavigateToGroup,
         itunesId: itunesId,
         feedUrl: feedUrl,
@@ -109,7 +107,6 @@ List<Widget> buildInlinePlaylistSlivers({
       lastRefreshedAt: lastRefreshedAt,
       scrollController: scrollController,
       onToggleSortOrder: onToggleSortOrder,
-      onSeriesCount: onSeriesCount,
       onNavigateToGroup: onNavigateToGroup,
       itunesId: itunesId,
       feedUrl: feedUrl,
@@ -174,7 +171,6 @@ List<Widget> _buildPlaylistData({
   required DateTime? lastRefreshedAt,
   required ScrollController scrollController,
   VoidCallback? onToggleSortOrder,
-  ValueChanged<int>? onSeriesCount,
   required bool showEpisodeRowThumbnail,
   required void Function(
     SmartPlaylist playlist,
@@ -202,7 +198,6 @@ List<Widget> _buildPlaylistData({
       sortOrder: sortOrder,
       scrollController: scrollController,
       onToggleSortOrder: onToggleSortOrder,
-      onSeriesCount: onSeriesCount,
       onNavigateToGroup: onNavigateToGroup,
       feedUrl: feedUrl,
     );
@@ -294,7 +289,6 @@ List<Widget> _buildInlineGroupList({
   required SortOrder sortOrder,
   required ScrollController scrollController,
   VoidCallback? onToggleSortOrder,
-  ValueChanged<int>? onSeriesCount,
   required void Function(
     SmartPlaylist playlist,
     SmartPlaylistGroup group, {
@@ -327,13 +321,6 @@ List<Widget> _buildInlineGroupList({
     );
 
     return [
-      ..._seriesCountSlivers(
-        count: sorted.length,
-        sortOrder: sortOrder,
-        onToggleSortOrder: onToggleSortOrder,
-        onSeriesCount: onSeriesCount,
-        show: playlist.userSortable,
-      ),
       SliverGroupedSection(
         separatorIndent: _seriesSeparatorIndent,
         itemCount: sorted.length,
@@ -364,7 +351,6 @@ List<Widget> _buildInlineGroupList({
       sortOrder: sortOrder,
       scrollController: scrollController,
       onToggleSortOrder: onToggleSortOrder,
-      onSeriesCount: onSeriesCount,
       onNavigateToGroup: onNavigateToGroup,
       feedUrl: feedUrl,
     );
@@ -378,7 +364,6 @@ List<Widget> _buildInlineGroupList({
     sortOrder: sortOrder,
     scrollController: scrollController,
     onToggleSortOrder: onToggleSortOrder,
-    onSeriesCount: onSeriesCount,
     onNavigateToGroup: onNavigateToGroup,
     feedUrl: feedUrl,
   );
@@ -391,7 +376,6 @@ List<Widget> _buildPerEpisodeInlineGroups({
   required SortOrder sortOrder,
   required ScrollController scrollController,
   VoidCallback? onToggleSortOrder,
-  ValueChanged<int>? onSeriesCount,
   required void Function(
     SmartPlaylist playlist,
     SmartPlaylistGroup group, {
@@ -435,18 +419,7 @@ List<Widget> _buildPerEpisodeInlineGroups({
     sortFilteredGroupsInPlace(items, playlist.groupSort, sortOrder);
   }
 
-  var totalCards = 0;
-  for (final items in byYear.values) {
-    totalCards += items.length;
-  }
-
   return [
-    ..._seriesCountSlivers(
-      count: totalCards,
-      sortOrder: sortOrder,
-      onToggleSortOrder: onToggleSortOrder,
-      onSeriesCount: onSeriesCount,
-    ),
     ...buildYearGroupedSlivers<YearFilteredInlineGroup>(
       itemsByYear: {for (final y in sortedYears) y: byYear[y]!},
       sortedYears: sortedYears,
@@ -547,7 +520,6 @@ List<Widget> _buildMixedYearInlineGroups({
   required SortOrder sortOrder,
   required ScrollController scrollController,
   VoidCallback? onToggleSortOrder,
-  ValueChanged<int>? onSeriesCount,
   required void Function(
     SmartPlaylist playlist,
     SmartPlaylistGroup group, {
@@ -611,18 +583,7 @@ List<Widget> _buildMixedYearInlineGroups({
     sortFilteredGroupsInPlace(items, playlist.groupSort, sortOrder);
   }
 
-  var totalCards = 0;
-  for (final items in byYear.values) {
-    totalCards += items.length;
-  }
-
   return [
-    ..._seriesCountSlivers(
-      count: totalCards,
-      sortOrder: sortOrder,
-      onToggleSortOrder: onToggleSortOrder,
-      onSeriesCount: onSeriesCount,
-    ),
     ...buildYearGroupedSlivers<YearFilteredInlineGroup>(
       itemsByYear: {for (final y in sortedYears) y: byYear[y]!},
       sortedYears: sortedYears,
@@ -653,34 +614,6 @@ List<Widget> _buildMixedYearInlineGroups({
 
 /// Aligns series-row separators with the text, past the 60dp artwork.
 const double _seriesSeparatorIndent = 88;
-
-/// The series count line, unless the screen shows the count itself
-/// ([onSeriesCount], podcast detail's pinned bar), in which case it is
-/// reported there instead.
-List<Widget> _seriesCountSlivers({
-  required int count,
-  required SortOrder sortOrder,
-  required VoidCallback? onToggleSortOrder,
-  required ValueChanged<int>? onSeriesCount,
-  bool show = true,
-}) {
-  if (onSeriesCount != null) {
-    onSeriesCount(count);
-    return const [];
-  }
-  if (!show) return const [];
-  return [
-    SliverToBoxAdapter(
-      child: Builder(
-        builder: (context) => SortHeader(
-          label: AppLocalizations.of(context).podcastDetailGroupCount(count),
-          sortOrder: sortOrder,
-          onToggleSortOrder: onToggleSortOrder,
-        ),
-      ),
-    ),
-  ];
-}
 
 /// Computes (earliest, latest, totalDurationMs) for a
 /// filtered subset of episode IDs.
