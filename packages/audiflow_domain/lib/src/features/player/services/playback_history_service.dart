@@ -271,24 +271,40 @@ class PlaybackHistoryService {
 
   /// Marks every episode in [episodeIds] as completed (e.g. a whole
   /// podcast at once). Returns how many were marked.
-  Future<int> markAllCompleted(Iterable<int> episodeIds) async {
+  ///
+  /// Stations are reconciled once for the batch, also when a write fails
+  /// partway, so they match the episodes that did change.
+  Future<int> markAllCompleted(Iterable<int> episodeIds) =>
+      _markAll(episodeIds, _repository.markCompleted);
+
+  /// Marks every episode in [episodeIds] as not played. Returns how many
+  /// were marked.
+  Future<int> markAllIncomplete(Iterable<int> episodeIds) =>
+      _markAll(episodeIds, _repository.markIncomplete);
+
+  Future<int> _markAll(
+    Iterable<int> episodeIds,
+    Future<void> Function(int episodeId) mark,
+  ) async {
+    final ids = episodeIds.toList();
     var count = 0;
-    for (final id in episodeIds) {
-      await markCompleted(id);
-      count++;
+    try {
+      for (final id in ids) {
+        await mark(id);
+        count++;
+      }
+    } finally {
+      if (0 < count) await _tryReconcileAll(ids.take(count));
     }
     return count;
   }
 
-  /// Marks every episode in [episodeIds] as not played. Returns how many
-  /// were marked.
-  Future<int> markAllIncomplete(Iterable<int> episodeIds) async {
-    var count = 0;
-    for (final id in episodeIds) {
-      await markIncomplete(id);
-      count++;
+  Future<void> _tryReconcileAll(Iterable<int> episodeIds) async {
+    try {
+      await _reconcilerService?.onEpisodesChanged(episodeIds);
+    } on Exception {
+      // Station reconciliation is best-effort; do not break the batch.
     }
-    return count;
   }
 
   /// Best-effort station reconciliation — never breaks the calling flow.

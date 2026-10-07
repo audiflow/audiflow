@@ -422,6 +422,47 @@ void main() {
       verify(mockRepository.markIncomplete(4)).called(1);
       verify(mockRepository.markIncomplete(5)).called(1);
     });
+
+    test('reconciles stations once for the whole batch', () async {
+      final reconciler = _RecordingReconciler();
+      service = PlaybackHistoryService(
+        mockRepository,
+        getCompletionThreshold: () => 0.95,
+        reconcilerService: reconciler,
+      );
+      when(mockRepository.markCompleted(any)).thenAnswer((_) async {});
+
+      await service.markAllCompleted([1, 2, 3]);
+
+      check(reconciler.batches).deepEquals([
+        [1, 2, 3],
+      ]);
+      check(reconciler.single).isEmpty();
+    });
+
+    test(
+      'a failing write still reconciles what changed, then throws',
+      () async {
+        final reconciler = _RecordingReconciler();
+        service = PlaybackHistoryService(
+          mockRepository,
+          getCompletionThreshold: () => 0.95,
+          reconcilerService: reconciler,
+        );
+        when(mockRepository.markCompleted(any)).thenAnswer((invocation) async {
+          if (invocation.positionalArguments.first == 3) {
+            throw StateError('disk full');
+          }
+        });
+
+        await check(
+          service.markAllCompleted([1, 2, 3, 4]),
+        ).throws<StateError>();
+        check(reconciler.batches).deepEquals([
+          [1, 2],
+        ]);
+      },
+    );
   });
 
   group('reset', () {
@@ -876,4 +917,20 @@ void main() {
       ).called(1);
     });
   });
+}
+
+/// Records which episodes were reconciled, singly or as a batch.
+class _RecordingReconciler implements StationReconcilerService {
+  final single = <int>[];
+  final batches = <List<int>>[];
+
+  @override
+  Future<void> onEpisodeChanged(int episodeId) async => single.add(episodeId);
+
+  @override
+  Future<void> onEpisodesChanged(Iterable<int> episodeIds) async =>
+      batches.add(episodeIds.toList());
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
