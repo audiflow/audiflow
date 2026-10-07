@@ -15,7 +15,7 @@ import '../../themes/text_styles.dart';
 ///
 /// The pill never shows progress; partially played rows show it with a
 /// bottom-edge line instead (see `BottomEdgeProgress`). The tappable
-/// area extends to 44px tall around the 32px visual.
+/// area is at least 44x44 around the 32px visual, even with no label.
 class EpisodePlayPill extends StatelessWidget {
   const EpisodePlayPill({
     super.key,
@@ -50,7 +50,10 @@ class EpisodePlayPill extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       onTap: onPressed,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: Spacing.minTouchTarget),
+        constraints: const BoxConstraints(
+          minWidth: Spacing.minTouchTarget,
+          minHeight: Spacing.minTouchTarget,
+        ),
         child: Center(
           widthFactor: 1,
           child: SizedBox(

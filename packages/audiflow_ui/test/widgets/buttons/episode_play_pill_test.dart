@@ -191,6 +191,29 @@ void main() {
       check(tapped).equals(2);
     });
 
+    testWidgets('empty label still gets a 44x44 tap target', (tester) async {
+      var tapped = 0;
+      await tester.pumpWidget(
+        host(
+          EpisodePlayPill(
+            label: '',
+            isPlaying: false,
+            isLoading: false,
+            isCompleted: false,
+            onPressed: () => tapped++,
+          ),
+        ),
+      );
+      final size = tester.getSize(find.byType(EpisodePlayPill));
+      check(size.width).isGreaterOrEqual(44);
+      check(size.height).isGreaterOrEqual(44);
+
+      // Just left of the narrow visual, still inside the 44px target.
+      final pillRect = tester.getRect(find.byKey(EpisodePlayPill.surfaceKey));
+      await tester.tapAt(Offset(pillRect.left - 3, pillRect.center.dy));
+      check(tapped).equals(1);
+    });
+
     testWidgets('empty label: glyph only', (tester) async {
       await tester.pumpWidget(
         host(

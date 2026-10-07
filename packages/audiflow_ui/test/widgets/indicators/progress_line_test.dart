@@ -3,6 +3,28 @@ import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+class _TapCounter extends StatefulWidget {
+  const _TapCounter();
+
+  @override
+  State<_TapCounter> createState() => _TapCounterState();
+}
+
+class _TapCounterState extends State<_TapCounter> {
+  var _count = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 80,
+      child: TextButton(
+        onPressed: () => setState(() => _count++),
+        child: Text('count $_count'),
+      ),
+    );
+  }
+}
+
 void main() {
   Widget host(Widget child, {ThemeData? theme}) => MaterialApp(
     theme: theme ?? AppTheme.light(),
@@ -99,6 +121,26 @@ void main() {
     testWidgets('does not change the child size', (tester) async {
       await tester.pumpWidget(card(0.4));
       check(tester.getSize(find.byType(BottomEdgeProgress)).height).equals(80);
+    });
+
+    testWidgets('child state survives the line appearing and leaving', (
+      tester,
+    ) async {
+      Widget withFraction(double? fraction) => host(
+        BottomEdgeProgress(fraction: fraction, child: const _TapCounter()),
+      );
+      await tester.pumpWidget(withFraction(0));
+      await tester.tap(find.text('count 0'));
+      await tester.pump();
+      check(find.text('count 1').evaluate().length).equals(1);
+
+      await tester.pumpWidget(withFraction(0.5));
+      check(find.byType(ProgressLine).evaluate().length).equals(1);
+      check(find.text('count 1').evaluate().length).equals(1);
+
+      await tester.pumpWidget(withFraction(1));
+      check(find.byType(ProgressLine).evaluate().length).equals(0);
+      check(find.text('count 1').evaluate().length).equals(1);
     });
 
     for (final fraction in <double?>[null, 0, 1]) {

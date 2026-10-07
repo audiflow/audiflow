@@ -86,16 +86,19 @@ class BottomEdgeProgress extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final value = fraction;
-    if (!ProgressLine.isPartial(value)) return child;
+    // The Stack stays in the tree whether or not the line shows, so
+    // crossing a progress boundary does not rebuild the child and reset
+    // its state.
     return Stack(
       children: [
         child,
-        PositionedDirectional(
-          start: 0,
-          end: 0,
-          bottom: 0,
-          child: ProgressLine(fraction: value!, fillColor: fillColor),
-        ),
+        if (ProgressLine.isPartial(value))
+          PositionedDirectional(
+            start: 0,
+            end: 0,
+            bottom: 0,
+            child: ProgressLine(fraction: value!, fillColor: fillColor),
+          ),
       ],
     );
   }
