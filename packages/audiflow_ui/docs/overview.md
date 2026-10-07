@@ -49,7 +49,13 @@ lib/
         progress_line.dart             # ProgressLine, BottomEdgeProgress -- bottom-edge progress
       player/
         mini_player_artwork.dart       # MiniPlayerArtwork -- artwork with placeholder fallback
-        mini_player_progress_bar.dart  # MiniPlayerProgressBar -- thin playback + buffer bar
+        mini_player_card.dart          # MiniPlayerCard -- floating mini player card
+      navigation/
+        app_tab_bar.dart               # AppTabBar, AppTabBarItem -- bottom tab bar
+        floating_nav_button.dart       # FloatingNavButton, FloatingNavActions -- floating nav controls
+        floating_nav_scroll.dart       # FloatingNavScroll, CollapsingHero -- scroll-driven hero/bar state
+        floating_navigation_bar.dart   # FloatingNavigationBar -- overlay bar for detail screens
+        navigation_search_field.dart   # NavigationSearchField -- in-navigation search row
       downloads/
         download_status_icon.dart      # DownloadStatusIcon -- icon per DownloadTask state
       queue/
@@ -80,7 +86,12 @@ lib/
 | `PodcastArtworkGridItem` | `widgets/cards/` | title, artworkUrl, onTap | Grid cell with artwork image + title label. Placeholder on load/error. |
 | `EpisodeProgressIndicator` | `widgets/indicators/` | isCompleted, isInProgress, remainingTimeFormatted | Shows "Played" checkmark, remaining time text, or nothing. |
 | `MiniPlayerArtwork` | `widgets/player/` | imageUrl, size, borderRadius | Rounded artwork with podcast-icon placeholder fallback. |
-| `MiniPlayerProgressBar` | `widgets/player/` | progress, bufferedProgress, height | Three-layer bar: background track, buffered overlay, playback fill. |
+| `MiniPlayerCard` | `widgets/player/` | artwork, title, subtitle, actions, progress, onTap, semanticLabel | Floating `surface` card (radius 16, floating shadow) 64dp tall: 44dp artwork, one-line title and subtitle, caller-supplied action buttons, and a `brand` bottom-edge progress line once started. No remaining-time text. |
+| `AppTabBar` | `widgets/navigation/` | items (`AppTabBarItem`: icon, label, selected, onTap) | `bg` bar with a top hairline, 56dp plus the bottom inset. Active tab: `accent`, filled icon, 600 label; inactive: `inkTertiary`. Callers pass only visible tabs. |
+| `FloatingNavigationBar` | `widgets/navigation/` | leading, title, titleOpacity, backgroundOpacity, trailing, search | Overlay bar for detail screens. Title and `bg` + hairline background fade in by opacity; a `NavigationSearchField` replaces the whole row. Use `heightOf(context)` to inset content. |
+| `FloatingNavButton` / `FloatingNavActions` | `widgets/navigation/` | icon, tooltip, onPressed / actions | 44dp white circle, or a white pill of 44dp icon buttons, both with the floating shadow. |
+| `FloatingNavScroll` / `CollapsingHero` | `widgets/navigation/` | offset, heroExtent / progress, child | Maps scroll offset to hero, title and background progress (title fades in over the last 24dp). The hero fades and shrinks to 85% toward its bottom edge. |
+| `NavigationSearchField` | `widgets/navigation/` | controller, hintText, cancelLabel, onCancel, onChanged | Autofocused search field with an `accent` cancel button that clears the query. |
 | `DownloadStatusIcon` | `widgets/downloads/` | DownloadTask?, size, onTap | Icon per state: download, pending, progress ring, paused, completed, failed, cancelled. Depends on `audiflow_domain.DownloadTask`. |
 | `AddToQueueButton` | `widgets/queue/` | onPlayLater, onPlayNext | Tap adds to end of queue; long-press adds to front with haptic feedback. |
 | `GroupedSection` | `widgets/lists/` | children, header, footer, separatorIndent, margin | Rows on one rounded `surface` (radius 18, grouped shadow) separated by `hairline` dividers; overline header (semantics header) and meta footer in `inkTertiary`; 20dp screen gutter by default. |

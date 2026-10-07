@@ -30,7 +30,7 @@ export 'src/widgets/indicators/progress_line.dart';
 
 // Widgets - Player
 export 'src/widgets/player/mini_player_artwork.dart';
-export 'src/widgets/player/mini_player_progress_bar.dart';
+export 'src/widgets/player/mini_player_card.dart';
 export 'src/widgets/player/playback_speed_slider.dart';
 export 'src/widgets/player/player_seek_bar.dart';
 export 'src/widgets/player/scrub_speed.dart';
@@ -52,6 +52,7 @@ export 'src/widgets/lists/year_grouped_slivers.dart';
 export 'src/widgets/lists/year_picker_bottom_sheet.dart';
 
 // Widgets - Navigation
+export 'src/widgets/navigation/app_tab_bar.dart';
 export 'src/widgets/navigation/floating_nav_button.dart';
 export 'src/widgets/navigation/floating_nav_scroll.dart';
 export 'src/widgets/navigation/floating_navigation_bar.dart';
