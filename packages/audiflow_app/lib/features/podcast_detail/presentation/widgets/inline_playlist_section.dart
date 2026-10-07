@@ -321,8 +321,13 @@ List<Widget> _buildInlineGroupList({
     );
 
     return [
-      SliverGroupedSection(
-        separatorIndent: _seriesSeparatorIndent,
+      SliverList.separated(
+        separatorBuilder: (context, _) => Divider(
+          height: 1,
+          thickness: 1,
+          color: AppColors.of(context).hairline,
+          indent: _seriesSeparatorIndent,
+        ),
         itemCount: sorted.length,
         itemBuilder: (context, index) {
           final group = sorted[index];
@@ -440,8 +445,7 @@ List<Widget> _buildPerEpisodeInlineGroups({
       scrollController: scrollController,
       yearGroupingEnabled: true,
       itemExtent: null,
-      grouped: true,
-      groupedSeparatorIndent: _seriesSeparatorIndent,
+      separatorIndent: _seriesSeparatorIndent,
     ),
   ];
 }
@@ -608,14 +612,14 @@ List<Widget> _buildMixedYearInlineGroups({
       scrollController: scrollController,
       yearGroupingEnabled: true,
       itemExtent: null,
-      grouped: true,
-      groupedSeparatorIndent: _seriesSeparatorIndent,
+      separatorIndent: _seriesSeparatorIndent,
     ),
   ];
 }
 
 /// Aligns series-row separators with the text, past the 60dp artwork.
-const double _seriesSeparatorIndent = 88;
+const double _seriesSeparatorIndent =
+    Spacing.screenHorizontal + 60 + Spacing.sm + Spacing.xs;
 
 /// Computes (earliest, latest, totalDurationMs) for a
 /// filtered subset of episode IDs.

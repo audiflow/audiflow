@@ -68,7 +68,7 @@ lib/
         grouped_section.dart           # GroupedSection, SliverGroupedSection -- rounded surface with hairline-separated rows
         settings_row.dart              # SettingsRow -- icon tile, title/subtitle, trailing control
         settings_trailing.dart         # SettingsTrailing -- chevron / picker / toggle / stepper
-        year_grouped_slivers.dart      # buildYearGroupedSlivers() -- sticky year headers + jump-to-year (measured offsets, pinned-header aware); grouped: rows on a surface per year
+        year_grouped_slivers.dart      # buildYearGroupedSlivers() -- sticky year headers + jump-to-year (measured offsets, pinned-header aware); separatorIndent: full-width rows with hairlines
         sub_category_slivers.dart      # buildSubCategorySlivers() -- two-level grouped slivers
         year_divider.dart              # YearDivider -- inline year separator
         year_picker_bottom_sheet.dart  # showYearPickerBottomSheet() -- modal year picker

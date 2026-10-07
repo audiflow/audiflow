@@ -144,7 +144,7 @@ void main() {
     });
   });
 
-  group('buildYearGroupedSlivers grouped', () {
+  group('buildYearGroupedSlivers separated', () {
     late ScrollController scrollController;
 
     setUp(() => scrollController = ScrollController());
@@ -167,7 +167,7 @@ void main() {
                     SizedBox(height: 60, child: Text(item)),
                 scrollController: scrollController,
                 yearGroupingEnabled: true,
-                grouped: true,
+                separatorIndent: 0,
               ),
             ),
           ),
@@ -175,13 +175,16 @@ void main() {
       );
     }
 
-    testWidgets('each year sits on its own grouped surface', (tester) async {
+    testWidgets('rows run full width with hairlines between them', (
+      tester,
+    ) async {
       await pump(tester, {
         2025: ['A', 'B'],
         2024: ['C'],
       });
-      check(find.byType(SliverGroupedSection).evaluate()).length.equals(2);
+      check(find.byType(SliverGroupedSection).evaluate()).isEmpty();
       check(find.byType(Divider).evaluate()).length.equals(1);
+      check(tester.getSize(find.text('A')).width).equals(800);
     });
 
     testWidgets('passes the separator inset to each year', (tester) async {
@@ -201,8 +204,7 @@ void main() {
                     SizedBox(height: 60, child: Text(item)),
                 scrollController: scrollController,
                 yearGroupingEnabled: true,
-                grouped: true,
-                groupedSeparatorIndent: 88,
+                separatorIndent: 88,
               ),
             ),
           ),
@@ -210,13 +212,6 @@ void main() {
       );
       final dividers = tester.widgetList<Divider>(find.byType(Divider));
       check(dividers.map((d) => d.indent)).deepEquals([88, 88]);
-    });
-
-    testWidgets('a single year still gets the surface', (tester) async {
-      await pump(tester, {
-        2025: ['A', 'B', 'C'],
-      });
-      check(find.byType(SliverGroupedSection).evaluate()).length.equals(1);
     });
   });
 
@@ -252,7 +247,7 @@ void main() {
                       SizedBox(height: rowHeight, child: Text(item)),
                   scrollController: scrollController,
                   yearGroupingEnabled: true,
-                  grouped: true,
+                  separatorIndent: 0,
                 ),
               ],
             ),

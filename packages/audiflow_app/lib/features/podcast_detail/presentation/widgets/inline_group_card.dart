@@ -68,7 +68,8 @@ class SeriesPlayback {
 
 /// Series row on the podcast's Series tab (redesign 4.2): artwork, name,
 /// "N episodes · total time", played status, and a bottom-edge line once
-/// the series has been started. Sits on a grouped surface.
+/// the series has been started. Runs full width in a hairline-separated
+/// list.
 class InlineGroupCard extends ConsumerWidget {
   const InlineGroupCard({
     super.key,
@@ -131,7 +132,7 @@ class InlineGroupCard extends ConsumerWidget {
             : null,
         child: Padding(
           padding: const EdgeInsets.symmetric(
-            horizontal: Spacing.rowHorizontal,
+            horizontal: Spacing.screenHorizontal,
             vertical: Spacing.rowVertical,
           ),
           child: Row(

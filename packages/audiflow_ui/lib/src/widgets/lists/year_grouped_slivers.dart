@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 
-import '../../styles/spacing.dart';
-import 'grouped_section.dart';
+import '../../themes/app_colors.dart';
 import 'year_divider.dart';
 import 'year_picker_bottom_sheet.dart';
 
@@ -39,16 +38,22 @@ List<Widget> buildYearGroupedSlivers<T>({
   required ScrollController scrollController,
   required bool yearGroupingEnabled,
   double? itemExtent,
-  bool grouped = false,
-  double groupedSeparatorIndent = Spacing.rowHorizontal,
+  double? separatorIndent,
 }) {
-  // Grouped rows sit on one rounded surface per year (redesign "grouped
-  // lists over cards"); row heights then come from the rows themselves.
+  // With a separator inset, rows are separated by hairlines starting at
+  // that inset (full-width content lists); row heights then come from
+  // the rows themselves.
   Widget list(List<T> items) {
-    if (grouped) {
-      return SliverGroupedSection(
-        separatorIndent: groupedSeparatorIndent,
+    final indent = separatorIndent;
+    if (indent != null) {
+      return SliverList.separated(
         itemCount: items.length,
+        separatorBuilder: (context, _) => Divider(
+          height: 1,
+          thickness: 1,
+          color: AppColors.of(context).hairline,
+          indent: indent,
+        ),
         itemBuilder: (context, index) => itemBuilder(context, items[index]),
       );
     }
