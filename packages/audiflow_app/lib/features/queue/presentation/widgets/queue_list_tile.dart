@@ -51,17 +51,26 @@ class QueueListTile extends ConsumerWidget {
       error: Theme.of(context).colorScheme.error,
       onError: Theme.of(context).colorScheme.onError,
     );
+    // Acts on the task as it is now, not as it was when the row (or its
+    // menu) was built: the download may have moved on since.
     Future<void> download() async {
+      final current = ref.read(episodeDownloadProvider(episodeId)).value;
+      if (current != null) {
+        await handleDownloadTap(
+          context: context,
+          ref: ref,
+          episodeId: episodeId,
+          task: current,
+        );
+        return;
+      }
       final messenger = ScaffoldMessenger.of(context);
-      await handleDownloadTap(
-        context: context,
-        ref: ref,
-        episodeId: episodeId,
-        task: downloadTask,
-      );
-      // A first download is otherwise silent; the swipe springs back, so
-      // confirm that it started (the row then shows its progress).
-      if (downloadTask == null) {
+      final created = await ref
+          .read(downloadServiceProvider)
+          .downloadEpisode(episodeId);
+      // The swipe springs back, so confirm a download that really started;
+      // none is created when one already exists.
+      if (created != null) {
         messenger.showSnackBar(SnackBar(content: Text(l10n.downloadStarted)));
       }
     }

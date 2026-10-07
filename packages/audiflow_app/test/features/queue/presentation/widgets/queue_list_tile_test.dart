@@ -38,6 +38,7 @@ void main() {
     WidgetTester tester, {
     DownloadTask? task,
     VoidCallback? onRemove,
+    bool downloadCreates = true,
   }) async {
     await tester.pumpWidget(
       ProviderScope(
@@ -45,7 +46,9 @@ void main() {
         key: UniqueKey(),
         overrides: [
           episodeDownloadProvider(9).overrideWith((ref) => Stream.value(task)),
-          downloadServiceProvider.overrideWithValue(_FakeDownloadService()),
+          downloadServiceProvider.overrideWithValue(
+            _FakeDownloadService(creates: downloadCreates),
+          ),
         ],
         child: MaterialApp(
           theme: AppTheme.light(),
@@ -177,6 +180,15 @@ void main() {
     check(find.text('Download').evaluate()).length.equals(1);
   });
 
+  testWidgets('no success message when no download was created', (
+    tester,
+  ) async {
+    await pump(tester, downloadCreates: false);
+    await tester.drag(find.text('Queued Episode'), const Offset(600, 0));
+    await tester.pumpAndSettle();
+    check(find.text('Download started').evaluate()).isEmpty();
+  });
+
   testWidgets('swiping left removes the episode', (tester) async {
     var removed = 0;
     await pump(tester, onRemove: () => removed++);
@@ -201,11 +213,16 @@ void main() {
 }
 
 class _FakeDownloadService implements DownloadService {
+  _FakeDownloadService({this.creates = true});
+
+  /// False mimics a task that already exists: nothing new is created.
+  final bool creates;
+
   @override
   Future<DownloadTask?> downloadEpisode(
     int episodeId, {
     bool? wifiOnly,
-  }) async => null;
+  }) async => creates ? _task(0) : null;
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

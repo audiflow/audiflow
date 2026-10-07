@@ -100,9 +100,20 @@ class NowPlayingCard extends ConsumerWidget {
     );
   }
 
-  /// Live position while audio is loaded, else the saved position.
+  /// Live position while this episode's audio is loaded, else the saved
+  /// position. While a new episode loads, the live progress still belongs
+  /// to the previous audio, so it only counts once the player reports
+  /// this episode.
   double? _fraction(WidgetRef ref, NowPlayingInfo nowPlaying) {
-    final live = ref.watch(playbackProgressProvider);
+    final playback = ref.watch(audioPlayerControllerProvider);
+    final playerUrl = switch (playback) {
+      PlaybackPlaying(:final episodeUrl) => episodeUrl,
+      PlaybackPaused(:final episodeUrl) => episodeUrl,
+      _ => null,
+    };
+    final live = playerUrl == nowPlaying.episodeUrl
+        ? ref.watch(playbackProgressProvider)
+        : null;
     if (live != null && 0 < live.duration.inMilliseconds) {
       return live.position.inMilliseconds / live.duration.inMilliseconds;
     }
