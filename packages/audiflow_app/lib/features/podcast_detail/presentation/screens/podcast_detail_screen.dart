@@ -31,7 +31,7 @@ import '../../../../routing/app_router.dart';
 import '../../../share/presentation/helpers/share_helper.dart';
 import '../../../subscription/presentation/controllers/subscription_controller.dart';
 import '../controllers/podcast_detail_controller.dart';
-import '../helpers/played_status_helper.dart';
+import '../helpers/mark_all_played.dart';
 import '../widgets/episode_list_section.dart';
 import '../widgets/inline_playlist_section.dart';
 import '../widgets/podcast_description_sheet.dart';
@@ -449,48 +449,17 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
   /// states how many episodes it touches.
   Future<void> _markAll(int podcastId, {required bool played}) async {
     final l10n = AppLocalizations.of(context);
-    final container = ProviderScope.containerOf(context, listen: false);
-    final episodes = await container
+    final episodes = await ref
         .read(episodeRepositoryProvider)
         .getByPodcastId(podcastId);
-    if (!mounted || episodes.isEmpty) return;
-    final confirmed = await showDialog<bool>(
+    if (!mounted) return;
+    await confirmAndMarkAllPlayed(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        content: Text(
-          played
-              ? l10n.podcastMarkAllPlayedConfirm(episodes.length)
-              : l10n.podcastMarkAllUnplayedConfirm(episodes.length),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(l10n.commonCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            // Short label: the dialog already says "all", and a long one
-            // pushes the actions onto separate lines.
-            child: Text(played ? l10n.markAsPlayed : l10n.markAsUnplayed),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !mounted) return;
-    final messenger = ScaffoldMessenger.of(context);
-    final count = await setPodcastPlayedStatus(
-      container,
-      podcastId: podcastId,
+      episodeIds: [for (final episode in episodes) episode.id],
       played: played,
-    );
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(
-          played
-              ? l10n.podcastMarkAllPlayedDone(count)
-              : l10n.podcastMarkAllUnplayedDone(count),
-        ),
-      ),
+      confirmText: played
+          ? l10n.podcastMarkAllPlayedConfirm(episodes.length)
+          : l10n.podcastMarkAllUnplayedConfirm(episodes.length),
     );
   }
 

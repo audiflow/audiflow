@@ -1009,6 +1009,16 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String seriesMarkAllPlayedConfirm(int count) {
+    return 'このシリーズの$count件のエピソードをすべて再生済みにしますか？';
+  }
+
+  @override
+  String seriesMarkAllUnplayedConfirm(int count) {
+    return 'このシリーズの$count件のエピソードをすべて未再生にしますか？';
+  }
+
+  @override
   String podcastMarkAllPlayedDone(int count) {
     return '$count件を再生済みにしました';
   }

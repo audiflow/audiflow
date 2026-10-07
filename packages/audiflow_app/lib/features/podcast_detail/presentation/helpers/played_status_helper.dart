@@ -33,11 +33,28 @@ Future<void> togglePlayedStatus(
     ..invalidate(smartPlaylistEpisodesProvider);
 }
 
-/// Marks every stored episode of [podcastId] played (or not played) and
+/// Marks every episode in [episodeIds] played (or not played) and
 /// refreshes cached progress. Returns how many episodes were marked.
 ///
 /// Takes a [ProviderContainer] for the same reason as
 /// [togglePlayedStatus]: the list rebuilds while the writes run.
+Future<int> setEpisodesPlayedStatus(
+  ProviderContainer container, {
+  required Iterable<int> episodeIds,
+  required bool played,
+}) async {
+  final historyService = container.read(playbackHistoryServiceProvider);
+  final count = played
+      ? await historyService.markAllCompleted(episodeIds)
+      : await historyService.markAllIncomplete(episodeIds);
+  container
+    ..invalidate(episodeProgressProvider)
+    ..invalidate(podcastEpisodeProgressProvider)
+    ..invalidate(smartPlaylistEpisodesProvider);
+  return count;
+}
+
+/// [setEpisodesPlayedStatus] for every stored episode of [podcastId].
 Future<int> setPodcastPlayedStatus(
   ProviderContainer container, {
   required int podcastId,
@@ -46,14 +63,9 @@ Future<int> setPodcastPlayedStatus(
   final episodes = await container
       .read(episodeRepositoryProvider)
       .getByPodcastId(podcastId);
-  final ids = episodes.map((episode) => episode.id);
-  final historyService = container.read(playbackHistoryServiceProvider);
-  final count = played
-      ? await historyService.markAllCompleted(ids)
-      : await historyService.markAllIncomplete(ids);
-  container
-    ..invalidate(episodeProgressProvider)
-    ..invalidate(podcastEpisodeProgressProvider)
-    ..invalidate(smartPlaylistEpisodesProvider);
-  return count;
+  return setEpisodesPlayedStatus(
+    container,
+    episodeIds: episodes.map((episode) => episode.id),
+    played: played,
+  );
 }

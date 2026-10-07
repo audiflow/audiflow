@@ -11,6 +11,7 @@ import '../../../../routing/app_router.dart' show AppRoutes;
 import '../../../download/presentation/helpers/batch_download_action_helper.dart';
 import '../utils/smart_playlist_def_resolver.dart';
 import '../widgets/play_order_bottom_sheet.dart';
+import '../helpers/mark_all_played.dart';
 import '../utils/series_resume.dart';
 import '../widgets/episode_list_section.dart' show SortOrderButton;
 import '../widgets/inline_group_card.dart' show formatGroupDuration;
@@ -333,9 +334,9 @@ class _SmartPlaylistGroupEpisodesScreenState
     );
   }
 
-  /// Overflow popover: plain rows only. Tiles are for a row of two or
-  /// three primary actions; a lone download tile reads as a highlighted
-  /// button it is not.
+  /// Overflow popover: plain rows only (batch downloads, played status,
+  /// play order). Tiles are for a row of two or three primary actions; a
+  /// lone download tile reads as a highlighted button it is not.
   Future<void> _showMoreMenu() {
     final l10n = AppLocalizations.of(context);
     final allTasks = ref.read(allDownloadsProvider).value ?? [];
@@ -388,12 +389,37 @@ class _SmartPlaylistGroupEpisodesScreenState
         ],
         [
           ActionMenuEntry(
+            icon: Icons.done_all_rounded,
+            label: l10n.podcastMarkAllPlayed,
+            onSelected: () => _markAll(played: true),
+          ),
+          ActionMenuEntry(
+            icon: Icons.remove_done_rounded,
+            label: l10n.podcastMarkAllUnplayed,
+            onSelected: () => _markAll(played: false),
+          ),
+        ],
+        [
+          ActionMenuEntry(
             icon: Icons.swap_vert,
             label: l10n.playOrderMenuTitle,
             onSelected: _showPlayOrderSheet,
           ),
         ],
       ],
+    );
+  }
+
+  Future<void> _markAll({required bool played}) {
+    final l10n = AppLocalizations.of(context);
+    final ids = _episodeIds;
+    return confirmAndMarkAllPlayed(
+      context: context,
+      episodeIds: ids,
+      played: played,
+      confirmText: played
+          ? l10n.seriesMarkAllPlayedConfirm(ids.length)
+          : l10n.seriesMarkAllUnplayedConfirm(ids.length),
     );
   }
 

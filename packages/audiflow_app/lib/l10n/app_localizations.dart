@@ -1946,6 +1946,18 @@ abstract class AppLocalizations {
   /// **'Mark all {count} episodes of this podcast as unplayed?'**
   String podcastMarkAllUnplayedConfirm(int count);
 
+  /// Confirmation before marking every episode of a series played
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all {count} episodes of this series as played?'**
+  String seriesMarkAllPlayedConfirm(int count);
+
+  /// Confirmation before marking every episode of a series not played
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all {count} episodes of this series as unplayed?'**
+  String seriesMarkAllUnplayedConfirm(int count);
+
   /// Snackbar after marking every episode played
   ///
   /// In en, this message translates to:
