@@ -96,7 +96,10 @@ class MiniPlayerCard extends StatelessWidget {
   }
 
   Widget _labels(AppColors colors) {
+    // The labels only duplicate [semanticLabel]; without one they are the
+    // card's sole accessible name and must stay readable.
     return ExcludeSemantics(
+      excluding: semanticLabel != null,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.start,

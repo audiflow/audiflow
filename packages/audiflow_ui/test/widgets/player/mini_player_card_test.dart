@@ -72,4 +72,40 @@ void main() {
     await tester.tap(find.byTooltip('Play'));
     check(taps).equals(1);
   });
+
+  testWidgets('labels stay readable without a semantic label', (tester) async {
+    final handle = tester.ensureSemantics();
+    await tester.pumpWidget(host(card()));
+    // The tappable card merges both labels into one node.
+    check(
+      find
+          .bySemanticsLabel(RegExp('Episode title.*Podcast name', dotAll: true))
+          .evaluate(),
+    ).length.equals(1);
+    handle.dispose();
+  });
+
+  testWidgets('semantic label replaces the visible labels', (tester) async {
+    final handle = tester.ensureSemantics();
+    await tester.pumpWidget(
+      host(
+        MiniPlayerCard(
+          artwork: const SizedBox.expand(),
+          title: 'Episode title',
+          subtitle: 'Podcast name',
+          semanticLabel: 'Now playing: Episode title, Podcast name',
+          actions: const [],
+        ),
+      ),
+    );
+    check(
+      find
+          .bySemanticsLabel('Now playing: Episode title, Podcast name')
+          .evaluate(),
+    ).length.equals(1);
+    check(
+      find.bySemanticsLabel(RegExp(r'^Episode title')).evaluate(),
+    ).isEmpty();
+    handle.dispose();
+  });
 }
