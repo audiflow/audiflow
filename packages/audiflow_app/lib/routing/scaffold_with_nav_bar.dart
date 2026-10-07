@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -146,7 +147,7 @@ class _PhoneShell extends StatelessWidget {
   }
 }
 
-/// Custom bottom nav bar with 4 nav destinations.
+/// Bottom tab bar with the 4 nav destinations.
 class _CustomNavBar extends StatelessWidget {
   const _CustomNavBar({
     required this.currentIndex,
@@ -157,105 +158,27 @@ class _CustomNavBar extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onDestinationSelected;
 
-  /// When true the Search tab (index 0) is rendered disabled.
+  /// When true the Search tab (index 0) is left out.
   /// Indices are kept stable so [StatefulShellRoute.indexedStack] is unaffected.
   final bool hideSearch;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final navBarTheme = theme.navigationBarTheme;
-    final colorScheme = theme.colorScheme;
-
-    final backgroundColor =
-        navBarTheme.backgroundColor ?? colorScheme.surfaceContainer;
-
-    final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
-
-    return Material(
-      color: backgroundColor,
-      child: SizedBox(
-        height: 80 + bottomInset,
-        child: Padding(
-          padding: EdgeInsets.only(bottom: bottomInset),
-          child: Row(
-            children: [
-              for (var i = 0; i < ScaffoldWithNavBar._destinations.length; i++)
-                // Hide Search tab entirely when restricted and locked. Branch
-                // indices in the StatefulShellRoute stay stable; only the
-                // visible nav item is dropped.
-                if (!(hideSearch && i == 0))
-                  Expanded(
-                    child: _NavItem(
-                      destination: ScaffoldWithNavBar._destinations[i],
-                      isSelected: currentIndex == i,
-                      onTap: () => onDestinationSelected(i),
-                    ),
-                  ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// A single nav item: icon + label, both colored by selected state.
-///
-/// When [onTap] is null the item is rendered disabled (restricted mode).
-class _NavItem extends StatelessWidget {
-  const _NavItem({
-    required this.destination,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  final _NavDestination destination;
-  final bool isSelected;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context);
-    final label = destination.resolveLabel(l10n);
-    final disabled = onTap == null;
-    final foreground = disabled
-        ? colorScheme.onSurface.withValues(alpha: 0.38)
-        : isSelected
-        ? colorScheme.primary
-        : colorScheme.onSurfaceVariant;
-
-    return Semantics(
-      button: true,
-      selected: isSelected,
-      enabled: !disabled,
-      label: label,
-      child: InkWell(
-        onTap: onTap,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(
-              height: 32,
-              child: Icon(
-                isSelected ? destination.selectedIcon : destination.icon,
-                fill: isSelected ? 1 : 0,
-                size: 24,
-                color: foreground,
-              ),
+    return AppTabBar(
+      items: [
+        for (var i = 0; i < ScaffoldWithNavBar._destinations.length; i++)
+          // Hide Search tab entirely when restricted and locked. Branch
+          // indices in the StatefulShellRoute stay stable; only the
+          // visible nav item is dropped.
+          if (!(hideSearch && i == 0))
+            AppTabBarItem(
+              icon: ScaffoldWithNavBar._destinations[i].icon,
+              label: ScaffoldWithNavBar._destinations[i].resolveLabel(l10n),
+              selected: currentIndex == i,
+              onTap: () => onDestinationSelected(i),
             ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: foreground,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-              ),
-            ),
-          ],
-        ),
-      ),
+      ],
     );
   }
 }

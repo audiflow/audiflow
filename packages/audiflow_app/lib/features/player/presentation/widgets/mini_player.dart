@@ -8,16 +8,14 @@ import '../../../../l10n/app_localizations.dart';
 
 /// A compact player widget displayed at the bottom of the screen.
 ///
-/// Shows episode artwork, title, podcast name, play/pause button, and
-/// a progress bar at the top. Tapping the widget expands to the full
-/// player screen.
+/// Binds playback state to [MiniPlayerCard]: artwork, title, podcast
+/// name, skip-forward and play/pause buttons, and the bottom-edge
+/// progress line. Tapping the card expands to the full player screen.
 class MiniPlayer extends ConsumerStatefulWidget {
   const MiniPlayer({super.key, this.onTap});
 
   /// Callback when the mini player is tapped.
   final VoidCallback? onTap;
-
-  static const double height = 64.0;
 
   /// Computes progress from saved position when live progress is unavailable.
   static double _savedProgress(NowPlayingInfo info) {
@@ -67,109 +65,29 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
       return const SizedBox.shrink();
     }
 
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
     final isPlaying = _isSeeking
         ? _wasPlayingBeforeSeek
         : playbackState is PlaybackPlaying;
     final isLoading = _isSeeking ? false : playbackState is PlaybackLoading;
 
-    return Semantics(
-      container: true,
-      label: l10n.playerNowPlayingLabel(
+    return MiniPlayerCard(
+      semanticLabel: l10n.playerNowPlayingLabel(
         nowPlaying.episodeTitle,
         nowPlaying.podcastTitle,
       ),
-      child: Material(
-        elevation: 8,
-        color: colorScheme.surfaceContainer,
-        child: InkWell(
-          onTap: widget.onTap,
-          child: SizedBox(
-            height: MiniPlayer.height,
-            child: Column(
-              children: [
-                MiniPlayerProgressBar(
-                  progress:
-                      progress?.progress ??
-                      MiniPlayer._savedProgress(nowPlaying),
-                  bufferedProgress: progress?.bufferedProgress ?? 0.0,
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: Spacing.sm),
-                    child: Row(
-                      children: [
-                        MiniPlayerArtwork(
-                          imageUrl: nowPlaying.artworkUrl,
-                          size: 48,
-                        ),
-                        const SizedBox(width: Spacing.sm),
-                        _MiniPlayerInfo(
-                          episodeTitle: nowPlaying.episodeTitle,
-                          podcastTitle: nowPlaying.podcastTitle,
-                        ),
-                        _MiniPlayerSkipForwardButton(
-                          onPressed: _handleSkipForward,
-                        ),
-                        _MiniPlayerPlayPauseButton(
-                          isPlaying: isPlaying,
-                          isLoading: isLoading,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+      onTap: widget.onTap,
+      artwork: MiniPlayerArtwork(
+        imageUrl: nowPlaying.artworkUrl,
+        size: MiniPlayerCard.artworkSize,
+        borderRadius: 0,
       ),
-    );
-  }
-}
-
-class _MiniPlayerInfo extends StatelessWidget {
-  const _MiniPlayerInfo({
-    required this.episodeTitle,
-    required this.podcastTitle,
-  });
-
-  final String episodeTitle;
-  final String podcastTitle;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Expanded(
-      child: ExcludeSemantics(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              episodeTitle,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w500,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 2),
-            Text(
-              podcastTitle,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
-      ),
+      title: nowPlaying.episodeTitle,
+      subtitle: nowPlaying.podcastTitle,
+      progress: progress?.progress ?? MiniPlayer._savedProgress(nowPlaying),
+      actions: [
+        _MiniPlayerSkipForwardButton(onPressed: _handleSkipForward),
+        _MiniPlayerPlayPauseButton(isPlaying: isPlaying, isLoading: isLoading),
+      ],
     );
   }
 }
@@ -189,6 +107,7 @@ class _MiniPlayerSkipForwardButton extends ConsumerWidget {
       button: true,
       label: l10n.playerForwardLabel(skipSeconds),
       child: IconButton(
+        color: AppColors.of(context).ink,
         icon: SkipDurationIcon(seconds: skipSeconds, isForward: true, size: 24),
         onPressed: onPressed,
       ),
@@ -208,7 +127,7 @@ class _MiniPlayerPlayPauseButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final colorScheme = Theme.of(context).colorScheme;
+    final colors = AppColors.of(context);
 
     if (isLoading) {
       return Semantics(
@@ -233,7 +152,7 @@ class _MiniPlayerPlayPauseButton extends ConsumerWidget {
           fill: 1,
           size: 32,
         ),
-        color: colorScheme.primary,
+        color: colors.ink,
         onPressed: () {
           final controller = ref.read(audioPlayerControllerProvider.notifier);
           if (isPlaying) {

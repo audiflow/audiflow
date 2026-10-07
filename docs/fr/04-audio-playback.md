@@ -32,9 +32,10 @@ state and resume position stay coherent no matter where the listener touches it.
 
 ## User-visible Behavior
 
-- **Normal case**: The listener taps play on an episode. The mini player slides up from above
-  the bottom navigation bar showing artwork, episode title, podcast name, a thin progress bar,
-  and a play/pause button. Playback starts within a moment, and tapping the mini player opens
+- **Normal case**: The listener taps play on an episode. The mini player, a floating card,
+  slides up from above the bottom navigation bar showing artwork, episode title, podcast name,
+  skip-forward and play/pause buttons, and a thin progress line along its bottom edge once
+  playback has started. Playback starts within a moment, and tapping the mini player opens
   the full player screen with artwork, a scrubbable seek bar, and skip controls. If the episode
   was partly played before, it resumes from the saved position; if it was within two seconds of
   the end, it replays from the start. Playback continues when the app is backgrounded or the
