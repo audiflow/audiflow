@@ -47,7 +47,9 @@ class SettingsRow extends StatelessWidget {
     final row = ConstrainedBox(
       constraints: BoxConstraints(minHeight: subtitle == null ? 54 : 60),
       child: InkWell(
-        onTap: trailing?.rowTap(onTap) ?? onTap,
+        // The trailing decides the row tap; a disabled toggle must not
+        // fall back to onTap.
+        onTap: trailing == null ? onTap : trailing!.rowTap(onTap),
         child: Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: Spacing.rowHorizontal,

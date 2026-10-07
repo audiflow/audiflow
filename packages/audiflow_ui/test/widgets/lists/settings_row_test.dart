@@ -168,6 +168,24 @@ void main() {
       check(tester.takeException()).isNull();
     });
 
+    testWidgets('disabled toggle ignores onTap too', (tester) async {
+      var taps = 0;
+      await tester.pumpWidget(
+        host(
+          SettingsRow(
+            title: 'Locked',
+            trailing: const SettingsTrailing.toggle(
+              value: false,
+              onChanged: null,
+            ),
+            onTap: () => taps++,
+          ),
+        ),
+      );
+      await tester.tap(find.text('Locked'));
+      check(taps).equals(0);
+    });
+
     testWidgets('row and switch merge into one semantics node', (tester) async {
       final handle = tester.ensureSemantics();
       await tester.pumpWidget(
