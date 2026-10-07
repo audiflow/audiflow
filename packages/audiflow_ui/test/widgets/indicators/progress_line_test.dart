@@ -118,6 +118,23 @@ void main() {
       check(lineRect.width).equals(cardRect.width);
     });
 
+    testWidgets('keeps an inset on both sides when given one', (tester) async {
+      await tester.pumpWidget(
+        host(
+          BottomEdgeProgress(
+            fraction: 0.4,
+            inset: 20,
+            child: const SizedBox(height: 80, child: Text('row')),
+          ),
+        ),
+      );
+      final cardRect = tester.getRect(find.byType(BottomEdgeProgress));
+      final lineRect = tester.getRect(find.byType(ProgressLine));
+      check(lineRect.left).equals(cardRect.left + 20);
+      check(lineRect.right).equals(cardRect.right - 20);
+      check(lineRect.bottom).equals(cardRect.bottom);
+    });
+
     testWidgets('does not change the child size', (tester) async {
       await tester.pumpWidget(card(0.4));
       check(tester.getSize(find.byType(BottomEdgeProgress)).height).equals(80);

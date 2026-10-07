@@ -130,6 +130,7 @@ class InlineGroupCard extends ConsumerWidget {
         fraction: playback != null && playback.started
             ? playback.fraction
             : null,
+        inset: Spacing.screenHorizontal,
         child: Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: Spacing.screenHorizontal,

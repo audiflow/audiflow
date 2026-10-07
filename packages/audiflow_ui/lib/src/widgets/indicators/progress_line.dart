@@ -72,17 +72,23 @@ class ProgressLine extends StatelessWidget {
 /// child's size.
 ///
 /// Rounded parents clip the line themselves (e.g. via the card's shape).
+/// Full-width list rows pass [inset] so the line lines up with the row
+/// text instead of running edge to edge; an inset line gets rounded ends.
 class BottomEdgeProgress extends StatelessWidget {
   const BottomEdgeProgress({
     super.key,
     required this.fraction,
     required this.child,
     this.fillColor,
+    this.inset = 0,
   });
 
   final double? fraction;
   final Widget child;
   final Color? fillColor;
+
+  /// Horizontal margin on both sides of the line.
+  final double inset;
 
   @override
   Widget build(BuildContext context) {
@@ -95,12 +101,21 @@ class BottomEdgeProgress extends StatelessWidget {
         child,
         if (ProgressLine.isStarted(value))
           PositionedDirectional(
-            start: 0,
-            end: 0,
+            start: inset,
+            end: inset,
             bottom: 0,
-            child: ProgressLine(fraction: value!, fillColor: fillColor),
+            child: _line(value!),
           ),
       ],
+    );
+  }
+
+  Widget _line(double value) {
+    final line = ProgressLine(fraction: value, fillColor: fillColor);
+    if (inset == 0) return line;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(ProgressLine.thickness / 2),
+      child: line,
     );
   }
 }
