@@ -450,6 +450,8 @@
   "podcastDetailSubscribe": "Subscribe",
   "@podcastDetailSubscribe": { "description": "Subscribe button label" },
   "podcastDetailUnsubscribe": "Unsubscribe",
+  "podcastDetailShareShort": "Share",
+  "@podcastDetailShareShort": { "description": "Short share label for the podcast detail menu tile" },
   "@podcastDetailUnsubscribe": { "description": "Podcast detail menu entry that unsubscribes" },
   "podcastDetailSearchTooltip": "Search episodes",
   "@podcastDetailSearchTooltip": { "description": "Tooltip for the search button in the podcast detail navigation" },

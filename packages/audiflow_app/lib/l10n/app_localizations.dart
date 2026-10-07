@@ -1394,6 +1394,12 @@ abstract class AppLocalizations {
   /// **'Unsubscribe'**
   String get podcastDetailUnsubscribe;
 
+  /// Short share label for the podcast detail menu tile
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get podcastDetailShareShort;
+
   /// Tooltip for the search button in the podcast detail navigation
   ///
   /// In en, this message translates to:

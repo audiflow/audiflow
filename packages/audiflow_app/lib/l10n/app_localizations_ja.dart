@@ -698,6 +698,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get podcastDetailUnsubscribe => '購読解除';
 
   @override
+  String get podcastDetailShareShort => '共有';
+
+  @override
   String get podcastDetailSearchTooltip => 'エピソードを検索';
 
   @override

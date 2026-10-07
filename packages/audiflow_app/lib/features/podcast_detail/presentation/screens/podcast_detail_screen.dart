@@ -320,73 +320,66 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
     );
   }
 
-  /// Overflow menu, anchored under the navigation's trailing pill.
-  Future<void> _showMoreMenu() async {
+  /// Overflow popover under the navigation's trailing pill: primary
+  /// actions as tiles, then the podcast's play settings.
+  Future<void> _showMoreMenu() {
     final l10n = AppLocalizations.of(context);
     final feedUrl = podcast.feedUrl;
-    final subscription = feedUrl == null
+    final subscriptionId = feedUrl == null
         ? null
-        : ref.read(subscriptionByFeedUrlProvider(feedUrl)).value;
+        : ref.read(subscriptionByFeedUrlProvider(feedUrl)).value?.id;
     final isSubscribed =
         ref.read(subscriptionControllerProvider(podcast.id)).value ?? false;
-    final width = MediaQuery.sizeOf(context).width;
-    final top = FloatingNavigationBar.heightOf(context);
-    final selected = await showMenu<_MoreMenuAction>(
+    return showActionMenu(
       context: context,
-      position: RelativeRect.fromLTRB(width, top, Spacing.md, 0),
-      items: [
+      top: FloatingNavigationBar.heightOf(context),
+      tiles: [
         if (feedUrl != null)
-          PopupMenuItem(
-            value: _MoreMenuAction.subscription,
-            child: Text(
-              isSubscribed
-                  ? l10n.podcastDetailUnsubscribe
-                  : l10n.podcastDetailSubscribe,
+          ActionMenuEntry(
+            icon: isSubscribed
+                ? Icons.remove_circle_outline
+                : Icons.add_circle_outline,
+            label: isSubscribed
+                ? l10n.podcastDetailUnsubscribe
+                : l10n.podcastDetailSubscribe,
+            onSelected: () => togglePodcastSubscription(
+              context: context,
+              ref: ref,
+              podcast: podcast,
+              source: widget.subscribeSource,
             ),
           ),
-        PopupMenuItem(
-          value: _MoreMenuAction.share,
-          child: Text(l10n.sharePodcast),
+        ActionMenuEntry(
+          icon: Icons.ios_share,
+          label: l10n.podcastDetailShareShort,
+          onSelected: () =>
+              sharePodcast(context: context, ref: ref, itunesId: podcast.id),
         ),
-        PopupMenuItem(
-          value: _MoreMenuAction.description,
-          child: Text(l10n.podcastDetailDescriptionMenuTitle),
+        ActionMenuEntry(
+          icon: Icons.info_outline,
+          label: l10n.podcastDetailDescriptionMenuTitle,
+          onSelected: () =>
+              showPodcastDescriptionSheet(context: context, podcast: podcast),
         ),
-        PopupMenuItem(
-          value: _MoreMenuAction.playOrder,
-          child: Text(l10n.playOrderMenuTitle),
-        ),
-        if (subscription != null)
-          PopupMenuItem(
-            value: _MoreMenuAction.audioSettings,
-            child: Text(l10n.podcastDetailAudioSettingsMenuTitle),
+      ],
+      sections: [
+        [
+          ActionMenuEntry(
+            icon: Icons.swap_vert,
+            label: l10n.playOrderMenuTitle,
+            onSelected: _showPlayOrderSheet,
           ),
+          if (subscriptionId != null)
+            ActionMenuEntry(
+              icon: Icons.graphic_eq,
+              label: l10n.podcastDetailAudioSettingsMenuTitle,
+              // Lets the override be edited while nothing is playing.
+              onSelected: () =>
+                  showAudioSheet(context, podcastId: subscriptionId),
+            ),
+        ],
       ],
     );
-    if (selected == null || !mounted) return;
-    _onMoreMenuSelected(selected, subscriptionId: subscription?.id);
-  }
-
-  void _onMoreMenuSelected(_MoreMenuAction action, {int? subscriptionId}) {
-    switch (action) {
-      case _MoreMenuAction.subscription:
-        togglePodcastSubscription(
-          context: context,
-          ref: ref,
-          podcast: podcast,
-          source: widget.subscribeSource,
-        );
-      case _MoreMenuAction.share:
-        sharePodcast(context: context, ref: ref, itunesId: podcast.id);
-      case _MoreMenuAction.description:
-        showPodcastDescriptionSheet(context: context, podcast: podcast);
-      case _MoreMenuAction.playOrder:
-        _showPlayOrderSheet();
-      case _MoreMenuAction.audioSettings:
-        // Lets the override be edited while nothing is playing.
-        if (subscriptionId == null) return;
-        showAudioSheet(context, podcastId: subscriptionId);
-    }
   }
 
   Widget _buildBody() {
@@ -829,12 +822,4 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
       },
     );
   }
-}
-
-enum _MoreMenuAction {
-  subscription,
-  share,
-  description,
-  playOrder,
-  audioSettings,
 }

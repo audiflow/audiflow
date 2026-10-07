@@ -729,6 +729,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get podcastDetailUnsubscribe => 'Unsubscribe';
 
   @override
+  String get podcastDetailShareShort => 'Share';
+
+  @override
   String get podcastDetailSearchTooltip => 'Search episodes';
 
   @override
