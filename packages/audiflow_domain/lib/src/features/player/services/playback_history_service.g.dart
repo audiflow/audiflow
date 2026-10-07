@@ -59,4 +59,4 @@ final class PlaybackHistoryServiceProvider
 }
 
 String _$playbackHistoryServiceHash() =>
-    r'ed23d4a0c650ef6c462b33406511680ec3810adf';
+    r'323a993961f552f31132fcbd344e103fad65c6bc';
