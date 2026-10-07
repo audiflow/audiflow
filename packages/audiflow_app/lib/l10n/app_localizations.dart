@@ -962,11 +962,17 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{1 podcast} other{{count} podcasts}}'**
   String libraryPodcastCount(int count);
 
-  /// Your podcasts section header
+  /// Library section title for subscribed podcasts
   ///
   /// In en, this message translates to:
-  /// **'Your Podcasts'**
-  String get libraryYourPodcasts;
+  /// **'Podcasts'**
+  String get libraryPodcastsSection;
+
+  /// When the podcast last got a new episode
+  ///
+  /// In en, this message translates to:
+  /// **'Updated {date}'**
+  String libraryUpdatedOn(String date);
 
   /// Empty library title
   ///

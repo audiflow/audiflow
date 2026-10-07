@@ -3,6 +3,7 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../controllers/library_controller.dart';
@@ -66,16 +67,24 @@ class SubscriptionListTile extends ConsumerWidget {
     );
   }
 
+  // A bare weekday ("Mon") reads oddly without a list of dated rows around
+  // it, so anything older than yesterday shows the calendar date.
+  static String _formatUpdated(DateTime date, AppLocalizations l10n) {
+    if (date.isToday) return l10n.dateToday;
+    if (date.isYesterday) return l10n.dateYesterday;
+    final pattern = date.year == DateTime.now().year
+        ? DateFormat.MMMd(l10n.localeName)
+        : DateFormat.yMMMd(l10n.localeName);
+    return pattern.format(date);
+  }
+
   Widget _labels(BuildContext context, AppColors colors, DateTime? newest) {
     final l10n = AppLocalizations.of(context);
     // Falls back to the artist until the newest episode date is known, so
     // the row never shows an empty second line.
     final meta = newest == null
         ? subscription.artistName
-        : newest.toLocal().formatEpisodeDate(
-            todayLabel: l10n.dateToday,
-            yesterdayLabel: l10n.dateYesterday,
-          );
+        : l10n.libraryUpdatedOn(_formatUpdated(newest.toLocal(), l10n));
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,

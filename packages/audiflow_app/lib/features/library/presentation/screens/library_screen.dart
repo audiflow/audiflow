@@ -300,7 +300,7 @@ class _PodcastsHeader extends ConsumerWidget {
         ref.watch(podcastSortOrderControllerProvider).value ??
         PodcastSortOrder.latestEpisode;
     return SectionHeader(
-      title: l10n.libraryYourPodcasts,
+      title: l10n.libraryPodcastsSection,
       trailing: podcastCount == 0
           ? null
           : Row(

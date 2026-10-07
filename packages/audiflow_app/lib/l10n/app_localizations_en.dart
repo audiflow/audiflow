@@ -494,7 +494,12 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get libraryYourPodcasts => 'Your Podcasts';
+  String get libraryPodcastsSection => 'Podcasts';
+
+  @override
+  String libraryUpdatedOn(String date) {
+    return 'Updated $date';
+  }
 
   @override
   String get libraryEmpty => 'No subscriptions yet';

@@ -470,7 +470,12 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get libraryYourPodcasts => 'あなたのポッドキャスト';
+  String get libraryPodcastsSection => 'ポッドキャスト';
+
+  @override
+  String libraryUpdatedOn(String date) {
+    return '$date更新';
+  }
 
   @override
   String get libraryEmpty => '購読がありません';
