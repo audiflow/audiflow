@@ -228,7 +228,7 @@ These are not implemented today and need their own FR updates and PRs:
 
 - Podcast `…` menu: mark all played / unplayed, hide played episodes, open website.
 - Series-level progress status in the series list.
-- Library: station tiles limited to 4 with a "show all" route; podcast grid/list toggle; podcast filter field.
+- Library: station tiles limited to 4 with a "show all" route; podcast grid/list toggle; podcast filter field; unplayed-count badges on podcasts.
 - In-navigation search on Podcast detail (both tabs) and Series episodes.
 - Artwork-derived Now Playing background.
 - Episode search scope on the Search tab. Current discovery returns podcast metadata only, so this needs an episode-level search source before the "番組 / エピソード" toggle is shown.

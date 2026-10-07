@@ -950,6 +950,18 @@ abstract class AppLocalizations {
   /// **'Synced {count} feeds'**
   String librarySyncSuccess(int count);
 
+  /// Library section title for in-progress episodes
+  ///
+  /// In en, this message translates to:
+  /// **'Continue listening'**
+  String get libraryContinueListening;
+
+  /// Number of subscribed podcasts in the Library header
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 podcast} other{{count} podcasts}}'**
+  String libraryPodcastCount(int count);
+
   /// Your podcasts section header
   ///
   /// In en, this message translates to:

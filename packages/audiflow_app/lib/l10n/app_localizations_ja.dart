@@ -462,6 +462,14 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get libraryContinueListening => '続きから再生';
+
+  @override
+  String libraryPodcastCount(int count) {
+    return '$count番組';
+  }
+
+  @override
   String get libraryYourPodcasts => 'あなたのポッドキャスト';
 
   @override

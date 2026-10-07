@@ -152,6 +152,8 @@
   "libraryTitle": "ライブラリ",
   "librarySyncResult": "{successCount}件のフィードを同期、{errorCount}件が失敗",
   "librarySyncSuccess": "{count}件のフィードを同期しました",
+  "libraryContinueListening": "続きから再生",
+  "libraryPodcastCount": "{count}番組",
   "libraryYourPodcasts": "あなたのポッドキャスト",
   "libraryEmpty": "購読がありません",
   "libraryEmptySubtitle": "ポッドキャストを検索して購読しましょう",

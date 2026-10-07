@@ -1,102 +1,97 @@
+import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Displays a subscribed podcast with artwork and metadata.
-///
-/// This tile shows the podcast artwork, title, and artist name.
-/// It handles tap gestures to navigate to the podcast detail screen.
-class SubscriptionListTile extends StatelessWidget {
+import '../../../../l10n/app_localizations.dart';
+import '../controllers/library_controller.dart';
+
+/// Row for a subscribed podcast inside the Library's grouped list:
+/// artwork 52, title, and the date of its newest episode (redesign 4.1).
+class SubscriptionListTile extends ConsumerWidget {
   const SubscriptionListTile({
     required this.subscription,
     required this.onTap,
     super.key,
   });
 
-  /// Subscription data to display.
   final Subscription subscription;
-
-  /// Callback when tile is tapped.
   final VoidCallback onTap;
 
-  static const double _artworkSize = 64.0;
+  static const double _artworkSize = 52;
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final textTheme = theme.textTheme;
-    final colorScheme = theme.colorScheme;
-
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = AppColors.of(context);
+    final newest = ref.watch(newestEpisodeDateProvider(subscription.id)).value;
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: Spacing.sm),
+        padding: const EdgeInsets.symmetric(
+          horizontal: Spacing.rowHorizontal - Spacing.xs,
+          vertical: Spacing.sm + Spacing.xxs,
+        ),
         child: Row(
           children: [
-            _buildArtwork(colorScheme),
-            const SizedBox(width: Spacing.md),
-            Expanded(child: _buildContent(textTheme, colorScheme)),
-            Icon(
-              Icons.chevron_right,
-              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-            ),
+            _artwork(colors),
+            const SizedBox(width: Spacing.sm + Spacing.xs),
+            Expanded(child: _labels(context, colors, newest)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildArtwork(ColorScheme colorScheme) {
-    final artworkUrl = subscription.artworkUrl;
-
+  Widget _artwork(AppColors colors) {
+    final url = subscription.artworkUrl;
+    final placeholder = ColoredBox(
+      color: colors.surfaceSunken,
+      child: Icon(Icons.podcasts, color: colors.inkQuaternary),
+    );
     return ClipRRect(
-      borderRadius: AppBorders.sm,
-      child: SizedBox(
-        width: _artworkSize,
-        height: _artworkSize,
-        child: artworkUrl != null
-            ? ArtworkImage(
-                url: artworkUrl,
+      borderRadius: const BorderRadius.all(Radius.circular(10)),
+      child: SizedBox.square(
+        dimension: _artworkSize,
+        child: url == null
+            ? placeholder
+            : ArtworkImage(
+                url: url,
                 width: _artworkSize,
                 height: _artworkSize,
                 loading: const SizedBox.shrink(),
-                placeholder: _buildPlaceholder(colorScheme),
-              )
-            : _buildPlaceholder(colorScheme),
+                placeholder: placeholder,
+              ),
       ),
     );
   }
 
-  Widget _buildPlaceholder(ColorScheme colorScheme) {
-    return Container(
-      color: colorScheme.surfaceContainerHighest,
-      child: Icon(
-        Icons.podcasts,
-        size: 28,
-        color: colorScheme.onSurfaceVariant,
-      ),
-    );
-  }
-
-  Widget _buildContent(TextTheme textTheme, ColorScheme colorScheme) {
+  Widget _labels(BuildContext context, AppColors colors, DateTime? newest) {
+    final l10n = AppLocalizations.of(context);
+    // Falls back to the artist until the newest episode date is known, so
+    // the row never shows an empty second line.
+    final meta = newest == null
+        ? subscription.artistName
+        : newest.toLocal().formatEpisodeDate(
+            todayLabel: l10n.dateToday,
+            yesterdayLabel: l10n.dateYesterday,
+          );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           subscription.title,
-          style: textTheme.titleMedium,
-          maxLines: 1,
+          maxLines: 2,
           overflow: TextOverflow.ellipsis,
+          style: AppTextStyles.rowTitle.copyWith(color: colors.ink),
         ),
         const SizedBox(height: Spacing.xxs),
         Text(
-          subscription.artistName,
-          style: textTheme.bodyMedium?.copyWith(
-            color: colorScheme.onSurfaceVariant,
-          ),
+          meta,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
+          style: AppTextStyles.meta.copyWith(color: colors.inkTertiary),
         ),
       ],
     );

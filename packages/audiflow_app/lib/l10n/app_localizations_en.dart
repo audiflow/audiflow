@@ -480,6 +480,20 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get libraryContinueListening => 'Continue listening';
+
+  @override
+  String libraryPodcastCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count podcasts',
+      one: '1 podcast',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get libraryYourPodcasts => 'Your Podcasts';
 
   @override

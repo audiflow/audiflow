@@ -1,10 +1,13 @@
 import 'dart:async';
 
+import 'package:audiflow_app/features/library/presentation/controllers/continue_listening_controller.dart';
 import 'package:audiflow_app/features/library/presentation/controllers/library_controller.dart';
 import 'package:audiflow_app/features/library/presentation/screens/library_screen.dart';
 import 'package:audiflow_app/features/station/presentation/controllers/station_list_controller.dart';
+import 'package:audiflow_app/features/station/presentation/widgets/station_grid_tile.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -53,7 +56,9 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
-    testWidgets('displays AppBar with Library title', (tester) async {
+    testWidgets('shows a large Library title instead of an AppBar', (
+      tester,
+    ) async {
       final container = ProviderContainer(
         overrides: [
           librarySubscriptionsProvider.overrideWith(
@@ -66,11 +71,10 @@ void main() {
       await tester.pumpWidget(buildTestWidget(container));
       await tester.pumpAndSettle();
 
-      expect(find.byType(AppBar), findsOneWidget);
-
-      final appBar = tester.widget<AppBar>(find.byType(AppBar));
-      final titleWidget = appBar.title as Text;
-      expect(titleWidget.data, equals('Library'));
+      check(find.byType(AppBar).evaluate()).isEmpty();
+      check(
+        find.widgetWithText(LargeTitle, 'Library').evaluate(),
+      ).length.equals(1);
     });
 
     testWidgets('displays empty state icon when no subscriptions', (
@@ -263,6 +267,106 @@ void main() {
       );
       expect(latestItem, findsOneWidget);
       expect(find.byIcon(Icons.check), findsOneWidget);
+    });
+  });
+
+  group('LibraryScreen redesign sections', () {
+    late SharedPreferences prefs;
+    final fixtures = [_sub(1, 'Alpha'), _sub(2, 'Beta')];
+
+    setUp(() async {
+      SharedPreferences.setMockInitialValues({});
+      prefs = await SharedPreferences.getInstance();
+    });
+
+    Future<void> pump(
+      WidgetTester tester, {
+      List<EpisodeWithProgress> inProgress = const [],
+      List<Station> stations = const [],
+    }) async {
+      final container = ProviderContainer(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          librarySubscriptionsProvider.overrideWith(
+            (ref) => Stream.value(fixtures),
+          ),
+          sortedSubscriptionsProvider.overrideWith((ref) async => fixtures),
+          newestEpisodeDateProvider.overrideWith(
+            (ref, podcastId) => Stream.value(null),
+          ),
+          continueListeningEpisodesProvider.overrideWith(
+            (ref) => Stream.value(inProgress),
+          ),
+          stationListProvider.overrideWith((ref) => Stream.value(stations)),
+        ],
+      );
+      addTearDown(container.dispose);
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const LibraryScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('podcasts header shows the subscription count', (tester) async {
+      await pump(tester);
+      check(find.text('2 podcasts').evaluate()).length.equals(1);
+    });
+
+    testWidgets('continue listening is hidden without in-progress episodes', (
+      tester,
+    ) async {
+      await pump(tester);
+      check(find.text('Continue listening').evaluate()).isEmpty();
+    });
+
+    testWidgets('continue listening shows a card with remaining time', (
+      tester,
+    ) async {
+      final episode = Episode()
+        ..id = 10
+        ..podcastId = 1
+        ..guid = 'g10'
+        ..title = 'Halfway episode'
+        ..audioUrl = 'https://example.com/10.mp3';
+      final history = PlaybackHistory()
+        ..episodeId = 10
+        ..positionMs = 30 * 60000
+        ..durationMs = 48 * 60000;
+      await pump(
+        tester,
+        inProgress: [EpisodeWithProgress(episode: episode, history: history)],
+      );
+      check(find.text('Continue listening').evaluate()).length.equals(1);
+      check(find.text('Halfway episode').evaluate()).length.equals(1);
+      final line = tester.widget<BottomEdgeProgress>(
+        find.ancestor(
+          of: find.text('Halfway episode'),
+          matching: find.byType(BottomEdgeProgress),
+        ),
+      );
+      check(line.fraction).isNotNull().isCloseTo(30 / 48, 1e-9);
+    });
+
+    testWidgets('stations are laid out two per row', (tester) async {
+      Station station(int id) => Station()
+        ..id = id
+        ..name = 'Station $id';
+      await pump(tester, stations: [station(1), station(2), station(3)]);
+      final tiles = find.byType(StationGridTile);
+      check(tiles.evaluate()).length.equals(3);
+      final first = tester.getTopLeft(tiles.at(0));
+      final second = tester.getTopLeft(tiles.at(1));
+      final third = tester.getTopLeft(tiles.at(2));
+      check(second.dy).equals(first.dy);
+      check(first.dx).isLessThan(second.dx);
+      check(first.dy).isLessThan(third.dy);
     });
   });
 }

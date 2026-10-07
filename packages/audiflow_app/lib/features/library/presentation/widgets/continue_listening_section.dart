@@ -3,163 +3,158 @@ import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../l10n/app_localizations.dart';
+import '../../../podcast_detail/presentation/widgets/episode_pill_duration_label.dart';
 import '../controllers/continue_listening_controller.dart';
 
-/// Horizontal scrolling section showing episodes in progress.
+/// Horizontal cards for in-progress episodes (redesign 4.1).
 ///
-/// Hidden when there are no in-progress episodes.
+/// Collapses to nothing when there are no in-progress episodes, while
+/// loading, and on error, so the Library never shows an empty section.
 class ContinueListeningSection extends ConsumerWidget {
-  const ContinueListeningSection({super.key, this.onEpisodeTap});
+  const ContinueListeningSection({required this.onEpisodeTap, super.key});
 
-  final void Function(EpisodeWithProgress episode)? onEpisodeTap;
+  final void Function(EpisodeWithProgress episode) onEpisodeTap;
+
+  static const double _cardWidth = 280;
+  static const double _cardHeight = 80;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final episodesAsync = ref.watch(continueListeningEpisodesProvider);
-
-    return episodesAsync.when(
-      data: (episodes) {
-        if (episodes.isEmpty) return const SizedBox.shrink();
-        return _buildSection(context, episodes);
-      },
-      loading: () => const SizedBox.shrink(),
-      error: (_, _) => const SizedBox.shrink(),
-    );
-  }
-
-  Widget _buildSection(
-    BuildContext context,
-    List<EpisodeWithProgress> episodes,
-  ) {
-    final theme = Theme.of(context);
+    final episodes = ref.watch(continueListeningEpisodesProvider).value ?? [];
+    if (episodes.isEmpty) return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(
-            Spacing.md,
-            Spacing.md,
-            Spacing.md,
-            Spacing.sm,
-          ),
-          child: Text(
-            'Continue Listening',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
+        SectionHeader(
+          title: AppLocalizations.of(context).libraryContinueListening,
+        ),
+        const SizedBox(height: Spacing.xs),
+        SizedBox(
+          // Room for the cards' shadow below them.
+          height: _cardHeight + Spacing.sm,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(
+              horizontal: Spacing.screenHorizontal,
+            ),
+            itemCount: episodes.length,
+            separatorBuilder: (_, _) => const SizedBox(width: Spacing.sm + 4),
+            itemBuilder: (context, index) => Align(
+              alignment: Alignment.topCenter,
+              child: SizedBox(
+                width: _cardWidth,
+                height: _cardHeight,
+                child: _ContinueListeningCard(
+                  episode: episodes[index],
+                  onTap: () => onEpisodeTap(episodes[index]),
+                ),
+              ),
             ),
           ),
         ),
-        SizedBox(
-          height: 150,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: Spacing.md),
-            itemCount: episodes.length,
-            separatorBuilder: (_, _) => const SizedBox(width: Spacing.sm),
-            itemBuilder: (context, index) {
-              final episode = episodes[index];
-              return _ContinueListeningCard(
-                episode: episode,
-                onTap: () => onEpisodeTap?.call(episode),
-              );
-            },
-          ),
-        ),
         const SizedBox(height: Spacing.md),
-        const Divider(height: 1),
       ],
     );
   }
 }
 
 class _ContinueListeningCard extends StatelessWidget {
-  const _ContinueListeningCard({required this.episode, this.onTap});
+  const _ContinueListeningCard({required this.episode, required this.onTap});
 
   final EpisodeWithProgress episode;
-  final VoidCallback? onTap;
+  final VoidCallback onTap;
 
-  static const double _cardWidth = 100.0;
-  static const double _artworkSize = 100.0;
+  static const double _artworkSize = 56;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Semantics(
-      label:
-          'Continue listening to ${episode.episode.title}. '
-          '${episode.remainingTimeFormatted ?? ""}',
-      button: true,
-      child: GestureDetector(
-        onTap: onTap,
-        child: SizedBox(
-          width: _cardWidth,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildArtwork(colorScheme),
-              const SizedBox(height: Spacing.xs),
-              _buildTitle(theme),
-              _buildRemainingTime(theme, colorScheme),
-            ],
+    final colors = AppColors.of(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: AppBorders.card,
+        boxShadow: AppShadows.groupedSurface,
+      ),
+      child: Material(
+        type: MaterialType.transparency,
+        borderRadius: AppBorders.card,
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: BottomEdgeProgress(
+            fraction: episode.progressPercent,
+            child: SizedBox.expand(
+              child: Padding(
+                padding: const EdgeInsets.all(Spacing.sm + Spacing.xxs),
+                child: Row(
+                  children: [
+                    _artwork(colors),
+                    const SizedBox(width: Spacing.sm + Spacing.xs),
+                    Expanded(child: _labels(context, colors)),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildArtwork(ColorScheme colorScheme) {
+  Widget _artwork(AppColors colors) {
+    final url = episode.episode.imageUrl;
+    final placeholder = ColoredBox(
+      color: colors.surfaceSunken,
+      child: Icon(Icons.podcasts, color: colors.inkQuaternary),
+    );
     return ClipRRect(
       borderRadius: AppBorders.sm,
-      child: SizedBox(
-        width: _artworkSize,
-        height: _artworkSize,
-        child: episode.episode.imageUrl != null
-            ? ArtworkImage(
-                url: episode.episode.imageUrl!,
+      child: SizedBox.square(
+        dimension: _artworkSize,
+        child: url == null
+            ? placeholder
+            : ArtworkImage(
+                url: url,
                 width: _artworkSize,
                 height: _artworkSize,
-                loading: const ArtworkLoadingIndicator(),
-                placeholder: _buildPlaceholder(colorScheme),
-              )
-            : _buildPlaceholder(colorScheme),
+                loading: const SizedBox.shrink(),
+                placeholder: placeholder,
+              ),
       ),
     );
   }
 
-  Widget _buildTitle(ThemeData theme) {
-    return Text(
-      episode.episode.title,
-      style: theme.textTheme.bodySmall,
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-    );
-  }
-
-  Widget _buildRemainingTime(ThemeData theme, ColorScheme colorScheme) {
-    final remainingText = episode.remainingTimeFormatted;
-    if (remainingText == null) return const SizedBox.shrink();
-
-    return Text(
-      remainingText,
-      style: theme.textTheme.labelSmall?.copyWith(
-        color: colorScheme.onSurfaceVariant,
-      ),
-    );
-  }
-
-  Widget _buildPlaceholder(ColorScheme colorScheme) {
-    return Container(
-      color: colorScheme.surfaceContainerHighest,
-      child: Center(
-        child: Icon(
-          Icons.podcasts,
-          size: 40,
-          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+  Widget _labels(BuildContext context, AppColors colors) {
+    final l10n = AppLocalizations.of(context);
+    final remaining = episode.remainingDuration;
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          episode.episode.title,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: AppTextStyles.meta.copyWith(
+            color: colors.ink,
+            fontWeight: FontWeight.w600,
+          ),
         ),
-      ),
+        if (remaining != null)
+          Padding(
+            padding: const EdgeInsets.only(top: Spacing.xxs),
+            child: Text(
+              l10n.episodePillRemaining(
+                episodePillDurationLabel(remaining, l10n),
+              ),
+              style: AppTextStyles.tabular(
+                AppTextStyles.caption.copyWith(color: colors.inkTertiary),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
