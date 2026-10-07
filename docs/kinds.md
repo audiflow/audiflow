@@ -30,6 +30,10 @@ kinds:
     path_globs: ["docs/integration/*.md"]
     id_pattern: "integration:{slug}"
 
+  - name: design
+    path_globs: ["docs/design/*.md"]
+    id_pattern: "design:{slug}"
+
   - name: package
     path_globs: ["packages/*/CLAUDE.md"]
     id_pattern: "pkg:{name}"
