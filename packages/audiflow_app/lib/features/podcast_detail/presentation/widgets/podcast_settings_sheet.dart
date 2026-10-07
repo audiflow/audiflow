@@ -2,13 +2,8 @@ import 'package:audiflow_core/audiflow_core.dart'
     show AutoPlayOrder, SettingsDefaults;
 import 'package:audiflow_domain/audiflow_domain.dart'
     show
-        AudioSettingsScope,
-        PlaybackEffect,
-        PodcastAudioSettingsScope,
         Subscription,
         appSettingsRepositoryProvider,
-        audioEffectsSupportedProvider,
-        effectiveAudioSettingsProvider,
         hideExplicitForPodcastProvider,
         isRestrictedModeOnProvider,
         isUnlockedProvider,
@@ -24,13 +19,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../download/presentation/controllers/auto_download_keep_count_controller.dart';
-import '../../../player/presentation/widgets/audio_sheet.dart'
-    show setAudioEffect, setPodcastAudioOverride;
 import 'play_order_bottom_sheet.dart';
 
-/// Opens the podcast settings sheet (redesign 4.4): play order, the
-/// podcast's own audio settings, auto-download, and display options in
-/// one place.
+/// Opens the podcast settings sheet (redesign 4.4): play order,
+/// auto-download, and display options in one place. Audio settings stay
+/// in the player's Audio sheet.
 Future<void> showPodcastSettingsSheet({
   required BuildContext context,
   required Podcast podcast,
@@ -145,8 +138,6 @@ class _Sections extends ConsumerWidget {
           children: [_PlayOrderRow(subscriptionId: subscription.id)],
         ),
         const SizedBox(height: Spacing.lg),
-        _AudioSection(podcastId: subscription.id),
-        const SizedBox(height: Spacing.lg),
         _DownloadSection(subscription: subscription, feedUrl: feedUrl),
         if (showDisplay) ...[
           const SizedBox(height: Spacing.lg),
@@ -214,60 +205,13 @@ class _PlayOrderRowState extends ConsumerState<_PlayOrderRow> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final order = _order;
+    // The value goes under the title: "Default (oldest first)" is too
+    // long for the trailing slot and would be cut off.
     return SettingsRow(
       title: l10n.playOrderMenuTitle,
-      trailing: order == null
-          ? null
-          : SettingsTrailing.picker(value: _label(l10n, order)),
+      subtitle: order == null ? null : _label(l10n, order),
+      trailing: const SettingsTrailing.chevron(),
       onTap: _pick,
-    );
-  }
-}
-
-/// The podcast's own audio settings: a switch for the override, and the
-/// effects while it is on. Speed is edited from the player only.
-class _AudioSection extends ConsumerWidget {
-  const _AudioSection({required this.podcastId});
-
-  final int podcastId;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
-    final effective = ref.watch(effectiveAudioSettingsProvider(podcastId));
-    final supported = ref.watch(audioEffectsSupportedProvider);
-    if (effective == null) return const SizedBox.shrink();
-    final AudioSettingsScope scope = effective.scope;
-    final overridden = scope is PodcastAudioSettingsScope;
-
-    SettingsRow effectRow(PlaybackEffect effect, String title) => SettingsRow(
-      title: title,
-      trailing: SettingsTrailing.toggle(
-        value: effective.settings.effects.isEnabled(effect),
-        onChanged: (enabled) =>
-            setAudioEffect(ref, effect, enabled: enabled, scope: scope),
-      ),
-    );
-
-    return GroupedSection(
-      header: l10n.audioSheetTitle,
-      children: [
-        SettingsRow(
-          title: l10n.audioSheetPodcastOverride,
-          subtitle: overridden
-              ? l10n.audioSheetScopePodcast
-              : l10n.audioSheetScopeGlobal,
-          trailing: SettingsTrailing.toggle(
-            value: overridden,
-            onChanged: (enabled) =>
-                setPodcastAudioOverride(ref, podcastId, enabled: enabled),
-          ),
-        ),
-        if (overridden && supported) ...[
-          effectRow(PlaybackEffect.skipSilence, l10n.audioSheetSkipSilence),
-          effectRow(PlaybackEffect.voiceBoost, l10n.audioSheetVoiceBoost),
-        ],
-      ],
     );
   }
 }
@@ -316,11 +260,10 @@ class _DownloadSection extends ConsumerWidget {
         if (subscription.autoDownload)
           SettingsRow(
             title: l10n.downloadsKeepCountTitle,
-            trailing: SettingsTrailing.picker(
-              value: keepCount == null
-                  ? l10n.downloadsKeepCountFollowGlobal(globalKeepCount)
-                  : l10n.downloadsKeepCountOption(keepCount),
-            ),
+            subtitle: keepCount == null
+                ? l10n.downloadsKeepCountFollowGlobal(globalKeepCount)
+                : l10n.downloadsKeepCountOption(keepCount),
+            trailing: const SettingsTrailing.chevron(),
             onTap: () => _pickKeepCount(context, ref, globalKeepCount),
           ),
       ],
