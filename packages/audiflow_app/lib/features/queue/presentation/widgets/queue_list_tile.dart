@@ -94,7 +94,7 @@ class QueueListTile extends ConsumerWidget {
       child: Semantics(
         customSemanticsActions: {
           CustomSemanticsAction(label: l10n.queueRemove): onRemove,
-          CustomSemanticsAction(label: downloadAction.label): () =>
+          CustomSemanticsAction(label: downloadAction.menuLabel): () =>
               unawaited(download()),
         },
         child: Column(
@@ -102,7 +102,8 @@ class QueueListTile extends ConsumerWidget {
           children: [
             InkWell(
               onTap: onTap,
-              onLongPress: () => _showContextMenu(context, ref),
+              onLongPress: () =>
+                  _showContextMenu(context, ref, downloadAction, download),
               child: _row(context, colors, downloadTask),
             ),
             Divider(
@@ -194,7 +195,14 @@ class QueueListTile extends ConsumerWidget {
     ].join(' · ');
   }
 
-  void _showContextMenu(BuildContext context, WidgetRef ref) {
+  /// Long-press sheet: go to the episode, the same next download step as
+  /// the right swipe, and share.
+  void _showContextMenu(
+    BuildContext context,
+    WidgetRef ref,
+    _DownloadSwipeAction downloadAction,
+    Future<void> Function() download,
+  ) {
     final l10n = AppLocalizations.of(context);
 
     showModalBottomSheet<void>(
@@ -202,7 +210,7 @@ class QueueListTile extends ConsumerWidget {
       isScrollControlled: true,
       builder: (_) => DraggableScrollableSheet(
         expand: false,
-        initialChildSize: 0.3,
+        initialChildSize: 0.4,
         minChildSize: 0.2,
         maxChildSize: 0.5,
         builder: (sheetContext, scrollController) => SafeArea(
@@ -245,6 +253,14 @@ class QueueListTile extends ConsumerWidget {
                       onTap: () {
                         Navigator.pop(sheetContext);
                         _navigateToEpisodeDetail(context, ref);
+                      },
+                    ),
+                    ListTile(
+                      leading: Icon(downloadAction.icon),
+                      title: Text(downloadAction.menuLabel),
+                      onTap: () {
+                        Navigator.pop(sheetContext);
+                        unawaited(download());
                       },
                     ),
                     if (item.itunesId != null && item.episode.guid.isNotEmpty)
@@ -307,6 +323,7 @@ class _DownloadSwipeAction {
   const _DownloadSwipeAction(
     this.icon,
     this.label,
+    this.menuLabel,
     this.color,
     this.foreground,
   );
@@ -325,36 +342,42 @@ class _DownloadSwipeAction {
       null || DownloadStatusCancelled() => _DownloadSwipeAction(
         Symbols.download,
         l10n.queueSwipeDownload,
+        l10n.queueMenuDownload,
         colors.accent,
         colors.onAccent,
       ),
       DownloadStatusPending() => _DownloadSwipeAction(
         Symbols.close,
         l10n.queueSwipeCancel,
+        l10n.queueMenuCancelDownload,
         neutral,
         onNeutral,
       ),
       DownloadStatusDownloading() => _DownloadSwipeAction(
         Symbols.pause,
         l10n.queueSwipePause,
+        l10n.queueMenuPauseDownload,
         neutral,
         onNeutral,
       ),
       DownloadStatusPaused() => _DownloadSwipeAction(
         Symbols.play_arrow,
         l10n.queueSwipeResume,
+        l10n.queueMenuResumeDownload,
         colors.accent,
         colors.onAccent,
       ),
       DownloadStatusFailed() => _DownloadSwipeAction(
         Symbols.refresh,
         l10n.queueSwipeRetry,
+        l10n.queueMenuRetryDownload,
         colors.accent,
         colors.onAccent,
       ),
       DownloadStatusCompleted() => _DownloadSwipeAction(
         Symbols.delete,
         l10n.queueSwipeDelete,
+        l10n.queueMenuDeleteDownload,
         error,
         onError,
       ),
@@ -362,7 +385,13 @@ class _DownloadSwipeAction {
   }
 
   final IconData icon;
+
+  /// Short label under the swipe icon.
   final String label;
+
+  /// Self-explanatory label for menus and assistive technologies, where
+  /// "Pause" alone could read as pausing playback.
+  final String menuLabel;
   final Color color;
   final Color foreground;
 }

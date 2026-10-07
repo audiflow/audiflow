@@ -22,6 +22,7 @@ QueueItemWithEpisode _item() => QueueItemWithEpisode(
     ..title = 'Queued Episode'
     ..audioUrl = 'https://example.com/9.mp3'
     ..durationMs = 45 * 60 * 1000,
+  itunesId: '123',
 );
 
 DownloadTask _task(int status) => DownloadTask()
@@ -159,6 +160,21 @@ void main() {
     final mark = tester.getRect(find.text('Pending'));
     final handle = tester.getRect(find.byType(ReorderableDragStartListener));
     check(handle.left - mark.right).isLessOrEqual(Spacing.sm);
+  });
+
+  testWidgets('long press offers the download step and share', (tester) async {
+    await pump(tester, task: _completed());
+    await tester.longPress(find.text('Queued Episode'));
+    await tester.pumpAndSettle();
+    check(find.text('Delete download').evaluate()).length.equals(1);
+    check(find.text('Share episode').evaluate()).length.equals(1);
+  });
+
+  testWidgets('long press offers download before one exists', (tester) async {
+    await pump(tester);
+    await tester.longPress(find.text('Queued Episode'));
+    await tester.pumpAndSettle();
+    check(find.text('Download').evaluate()).length.equals(1);
   });
 
   testWidgets('swiping left removes the episode', (tester) async {

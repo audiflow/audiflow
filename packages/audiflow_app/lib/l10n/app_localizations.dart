@@ -1148,6 +1148,42 @@ abstract class AppLocalizations {
   /// **'Downloaded'**
   String get queueDownloadedLabel;
 
+  /// Queue row long-press menu item: start a download
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get queueMenuDownload;
+
+  /// Queue row long-press menu item: pause the running download
+  ///
+  /// In en, this message translates to:
+  /// **'Pause download'**
+  String get queueMenuPauseDownload;
+
+  /// Queue row long-press menu item: resume a paused download
+  ///
+  /// In en, this message translates to:
+  /// **'Resume download'**
+  String get queueMenuResumeDownload;
+
+  /// Queue row long-press menu item: cancel a waiting download
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel download'**
+  String get queueMenuCancelDownload;
+
+  /// Queue row long-press menu item: retry a failed download
+  ///
+  /// In en, this message translates to:
+  /// **'Retry download'**
+  String get queueMenuRetryDownload;
+
+  /// Queue row long-press menu item: delete the downloaded file
+  ///
+  /// In en, this message translates to:
+  /// **'Delete download'**
+  String get queueMenuDeleteDownload;
+
   /// Queue row swipe action: start a download
   ///
   /// In en, this message translates to:
