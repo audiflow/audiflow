@@ -1038,6 +1038,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get markAsPlayed => 'Mark as played';
 
   @override
+  String get podcastMarkAllPlayed => 'Mark all played';
+
+  @override
+  String get podcastMarkAllUnplayed => 'Mark all unplayed';
+
+  @override
+  String podcastMarkAllPlayedConfirm(int count) {
+    return 'Mark all $count episodes of this podcast as played?';
+  }
+
+  @override
+  String podcastMarkAllUnplayedConfirm(int count) {
+    return 'Mark all $count episodes of this podcast as unplayed?';
+  }
+
+  @override
+  String podcastMarkAllPlayedDone(int count) {
+    return 'Marked $count episodes as played';
+  }
+
+  @override
+  String podcastMarkAllUnplayedDone(int count) {
+    return 'Marked $count episodes as unplayed';
+  }
+
+  @override
   String get markAsUnplayed => 'Mark as unplayed';
 
   @override

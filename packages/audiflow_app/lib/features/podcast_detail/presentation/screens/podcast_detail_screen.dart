@@ -12,6 +12,7 @@ import 'package:audiflow_domain/audiflow_domain.dart'
         SmartPlaylistGroup,
         SortOrder,
         SubscribeSource,
+        episodeRepositoryProvider,
         hideExplicitForPodcastProvider,
         namedLoggerProvider,
         playOrderPreferenceRepositoryProvider,
@@ -30,6 +31,7 @@ import '../../../../routing/app_router.dart';
 import '../../../share/presentation/helpers/share_helper.dart';
 import '../../../subscription/presentation/controllers/subscription_controller.dart';
 import '../controllers/podcast_detail_controller.dart';
+import '../helpers/played_status_helper.dart';
 import '../widgets/episode_list_section.dart';
 import '../widgets/inline_playlist_section.dart';
 import '../widgets/podcast_description_sheet.dart';
@@ -379,10 +381,14 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
   }
 
   /// Overflow popover under the navigation's trailing pill: primary
-  /// actions as tiles. Play order and audio live in the settings sheet.
+  /// actions as tiles, then whole-podcast played status. Play order and
+  /// audio live in the settings sheet.
   Future<void> _showMoreMenu() {
     final l10n = AppLocalizations.of(context);
     final feedUrl = podcast.feedUrl;
+    final subscriptionId = feedUrl == null
+        ? null
+        : ref.read(subscriptionByFeedUrlProvider(feedUrl)).value?.id;
     // Null until known: the tile is left out rather than guessing, since a
     // wrong "Subscribe" label would toggle an existing subscription off.
     final isSubscribed = ref
@@ -421,6 +427,70 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
               showPodcastDescriptionSheet(context: context, podcast: podcast),
         ),
       ],
+      sections: [
+        if (subscriptionId != null)
+          [
+            ActionMenuEntry(
+              icon: Icons.done_all_rounded,
+              label: l10n.podcastMarkAllPlayed,
+              onSelected: () => _markAll(subscriptionId, played: true),
+            ),
+            ActionMenuEntry(
+              icon: Icons.remove_done_rounded,
+              label: l10n.podcastMarkAllUnplayed,
+              onSelected: () => _markAll(subscriptionId, played: false),
+            ),
+          ],
+      ],
+    );
+  }
+
+  /// Marks the whole podcast played or unplayed after a confirmation that
+  /// states how many episodes it touches.
+  Future<void> _markAll(int podcastId, {required bool played}) async {
+    final l10n = AppLocalizations.of(context);
+    final container = ProviderScope.containerOf(context, listen: false);
+    final episodes = await container
+        .read(episodeRepositoryProvider)
+        .getByPodcastId(podcastId);
+    if (!mounted || episodes.isEmpty) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        content: Text(
+          played
+              ? l10n.podcastMarkAllPlayedConfirm(episodes.length)
+              : l10n.podcastMarkAllUnplayedConfirm(episodes.length),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(l10n.commonCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(
+              played ? l10n.podcastMarkAllPlayed : l10n.podcastMarkAllUnplayed,
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    final count = await setPodcastPlayedStatus(
+      container,
+      podcastId: podcastId,
+      played: played,
+    );
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          played
+              ? l10n.podcastMarkAllPlayedDone(count)
+              : l10n.podcastMarkAllUnplayedDone(count),
+        ),
+      ),
     );
   }
 

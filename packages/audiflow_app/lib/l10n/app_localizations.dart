@@ -1922,6 +1922,42 @@ abstract class AppLocalizations {
   /// **'Mark as played'**
   String get markAsPlayed;
 
+  /// Podcast menu item marking every episode played
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all played'**
+  String get podcastMarkAllPlayed;
+
+  /// Podcast menu item marking every episode not played
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all unplayed'**
+  String get podcastMarkAllUnplayed;
+
+  /// Confirmation before marking every episode played
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all {count} episodes of this podcast as played?'**
+  String podcastMarkAllPlayedConfirm(int count);
+
+  /// Confirmation before marking every episode not played
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all {count} episodes of this podcast as unplayed?'**
+  String podcastMarkAllUnplayedConfirm(int count);
+
+  /// Snackbar after marking every episode played
+  ///
+  /// In en, this message translates to:
+  /// **'Marked {count} episodes as played'**
+  String podcastMarkAllPlayedDone(int count);
+
+  /// Snackbar after marking every episode not played
+  ///
+  /// In en, this message translates to:
+  /// **'Marked {count} episodes as unplayed'**
+  String podcastMarkAllUnplayedDone(int count);
+
   /// Action to mark episode as unplayed
   ///
   /// In en, this message translates to:

@@ -993,6 +993,32 @@ class AppLocalizationsJa extends AppLocalizations {
   String get markAsPlayed => '再生済みにする';
 
   @override
+  String get podcastMarkAllPlayed => 'すべて再生済みにする';
+
+  @override
+  String get podcastMarkAllUnplayed => 'すべて未再生にする';
+
+  @override
+  String podcastMarkAllPlayedConfirm(int count) {
+    return 'この番組の$count件のエピソードをすべて再生済みにしますか？';
+  }
+
+  @override
+  String podcastMarkAllUnplayedConfirm(int count) {
+    return 'この番組の$count件のエピソードをすべて未再生にしますか？';
+  }
+
+  @override
+  String podcastMarkAllPlayedDone(int count) {
+    return '$count件を再生済みにしました';
+  }
+
+  @override
+  String podcastMarkAllUnplayedDone(int count) {
+    return '$count件を未再生にしました';
+  }
+
+  @override
   String get markAsUnplayed => '未再生にする';
 
   @override

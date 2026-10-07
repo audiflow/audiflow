@@ -269,6 +269,28 @@ class PlaybackHistoryService {
     await _tryReconcile(episodeId);
   }
 
+  /// Marks every episode in [episodeIds] as completed (e.g. a whole
+  /// podcast at once). Returns how many were marked.
+  Future<int> markAllCompleted(Iterable<int> episodeIds) async {
+    var count = 0;
+    for (final id in episodeIds) {
+      await markCompleted(id);
+      count++;
+    }
+    return count;
+  }
+
+  /// Marks every episode in [episodeIds] as not played. Returns how many
+  /// were marked.
+  Future<int> markAllIncomplete(Iterable<int> episodeIds) async {
+    var count = 0;
+    for (final id in episodeIds) {
+      await markIncomplete(id);
+      count++;
+    }
+    return count;
+  }
+
   /// Best-effort station reconciliation — never breaks the calling flow.
   Future<void> _tryReconcile(int episodeId) async {
     try {

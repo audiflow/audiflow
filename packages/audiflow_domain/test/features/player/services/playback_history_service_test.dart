@@ -401,6 +401,29 @@ void main() {
     });
   });
 
+  group('markAll', () {
+    test('marks each episode completed and counts them', () async {
+      when(mockRepository.markCompleted(any)).thenAnswer((_) async {});
+
+      final count = await service.markAllCompleted([1, 2, 3]);
+
+      check(count).equals(3);
+      for (final id in [1, 2, 3]) {
+        verify(mockRepository.markCompleted(id)).called(1);
+      }
+    });
+
+    test('marks each episode not played and counts them', () async {
+      when(mockRepository.markIncomplete(any)).thenAnswer((_) async {});
+
+      final count = await service.markAllIncomplete([4, 5]);
+
+      check(count).equals(2);
+      verify(mockRepository.markIncomplete(4)).called(1);
+      verify(mockRepository.markIncomplete(5)).called(1);
+    });
+  });
+
   group('reset', () {
     test('resets tracking state allowing immediate save', () async {
       const episodeId = 1;
