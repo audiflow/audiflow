@@ -33,6 +33,7 @@ Discovery exists to make finding a podcast feel immediate and exploratory rather
 - **Out-of-order responses**: If the user keeps typing while a request is in flight, a slow response for an old query is discarded — only the result matching the most recent query is shown.
 - **Clearing**: Clearing the search field (or dropping below two characters) cancels any in-flight request and returns the screen to its initial prompt state.
 - **Opening a result**: Tapping a result navigates to that podcast's detail screen, where the user can inspect it and decide whether to subscribe.
+- **Result rows**: Each result shows artwork, title (two lines), author, and first category; descriptions are left to the podcast screen. A tonal "+" beside each result subscribes in place; once subscribed it shows a check and does nothing, so unsubscribing stays on the podcast screen. The search field is a pill with a clear button, and the store region is a separate pill button beside it.
 
 ## Capabilities
 

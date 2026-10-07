@@ -93,10 +93,18 @@ void main() {
         await tester.pumpWidget(buildTestApp());
         await tester.pumpAndSettle();
 
-        expect(find.text('Search'), findsOneWidget);
-        expect(find.text('Library'), findsOneWidget);
-        expect(find.text('Queue'), findsOneWidget);
-        expect(find.text('Settings'), findsOneWidget);
+        // Scoped to the bar: the Search tab's own large title also reads
+        // "Search".
+        Finder inBar(String label) => find.descendant(
+          of: find.byWidgetPredicate(
+            (widget) => widget.runtimeType.toString() == '_CustomNavBar',
+          ),
+          matching: find.text(label),
+        );
+        expect(inBar('Search'), findsOneWidget);
+        expect(inBar('Library'), findsOneWidget);
+        expect(inBar('Queue'), findsOneWidget);
+        expect(inBar('Settings'), findsOneWidget);
       });
 
       testWidgets('navigation to Library tab works correctly', (tester) async {

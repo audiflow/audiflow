@@ -2,17 +2,15 @@ import 'package:audiflow_search/audiflow_search.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 
-/// Displays a single podcast search result with artwork and metadata.
-///
-/// This tile shows the podcast artwork, title, author, first genre,
-/// and a truncated description. It handles tap gestures to notify the parent.
-///
-/// Requirements covered:
-/// - 2.1: Display result item info (artwork, title, author, genre, summary)
+/// A podcast search result row (redesign 4.7): artwork, title, author,
+/// and first category, with an optional [trailing] control (the subscribe
+/// button). Rows run full width and end in a hairline that starts at the
+/// text.
 class PodcastSearchResultTile extends StatelessWidget {
   const PodcastSearchResultTile({
     required this.podcast,
     required this.onTap,
+    this.trailing,
     super.key,
   });
 
@@ -22,108 +20,102 @@ class PodcastSearchResultTile extends StatelessWidget {
   /// Callback when tile is tapped.
   final VoidCallback onTap;
 
-  static const double _artworkSize = 72.0;
-  static const int _maxDescriptionLines = 2;
+  /// Control after the text, e.g. the subscribe button.
+  final Widget? trailing;
+
+  static const double artworkSize = 60.0;
+
+  /// Hairline inset so separators start at the text.
+  static const double separatorIndent =
+      Spacing.screenHorizontal + artworkSize + Spacing.sm + Spacing.xs;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final textTheme = theme.textTheme;
-    final colorScheme = theme.colorScheme;
-
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: Spacing.md,
-          vertical: Spacing.sm,
+    final colors = AppColors.of(context);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsetsDirectional.only(
+              start: Spacing.screenHorizontal,
+              top: Spacing.rowVertical,
+              bottom: Spacing.rowVertical,
+              end: Spacing.xs,
+            ),
+            child: Row(
+              children: [
+                _buildArtwork(colors),
+                const SizedBox(width: Spacing.sm + Spacing.xs),
+                Expanded(child: _buildContent(colors)),
+                ?trailing,
+              ],
+            ),
+          ),
         ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildArtwork(colorScheme),
-            const SizedBox(width: Spacing.md),
-            Expanded(child: _buildContent(textTheme, colorScheme)),
-          ],
+        Divider(
+          height: 1,
+          thickness: 1,
+          color: colors.hairline,
+          indent: separatorIndent,
         ),
-      ),
+      ],
     );
   }
 
-  Widget _buildArtwork(ColorScheme colorScheme) {
+  Widget _buildArtwork(AppColors colors) {
+    final url = podcast.artworkUrl;
     return ClipRRect(
-      borderRadius: AppBorders.sm,
-      child: SizedBox(
-        width: _artworkSize,
-        height: _artworkSize,
-        child: podcast.artworkUrl != null
+      borderRadius: AppBorders.artworkList,
+      child: SizedBox.square(
+        dimension: artworkSize,
+        child: url != null
             ? ArtworkImage(
-                url: podcast.artworkUrl!,
-                width: _artworkSize,
-                height: _artworkSize,
+                url: url,
+                width: artworkSize,
+                height: artworkSize,
                 loading: const SizedBox.shrink(),
-                placeholder: _buildPlaceholder(colorScheme),
+                placeholder: _buildPlaceholder(colors),
               )
-            : _buildPlaceholder(colorScheme),
+            : _buildPlaceholder(colors),
       ),
     );
   }
 
-  Widget _buildPlaceholder(ColorScheme colorScheme) {
-    return Container(
-      color: colorScheme.surfaceContainerHighest,
-      child: Icon(
-        Icons.podcasts,
-        size: 32,
-        color: colorScheme.onSurfaceVariant,
-      ),
+  Widget _buildPlaceholder(AppColors colors) {
+    return ColoredBox(
+      color: colors.surfaceSunken,
+      child: Icon(Icons.podcasts, size: 28, color: colors.inkTertiary),
     );
   }
 
-  Widget _buildContent(TextTheme textTheme, ColorScheme colorScheme) {
+  Widget _buildContent(AppColors colors) {
+    final genre = podcast.genres.firstOrNull;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Title
         Text(
           podcast.name,
-          style: textTheme.titleMedium,
-          maxLines: 1,
+          style: AppTextStyles.rowTitle.copyWith(color: colors.ink),
+          maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
         const SizedBox(height: Spacing.xxs),
-        // Author name
         Text(
           podcast.artistName,
-          style: textTheme.bodyMedium?.copyWith(
-            color: colorScheme.onSurfaceVariant,
-          ),
+          style: AppTextStyles.meta.copyWith(color: colors.inkSecondary),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        // First genre
-        if (podcast.genres.isNotEmpty) ...[
-          const SizedBox(height: Spacing.xxs),
+        if (genre != null)
           Text(
-            podcast.genres.first,
-            style: textTheme.labelSmall?.copyWith(color: colorScheme.primary),
+            genre,
+            style: AppTextStyles.caption.copyWith(color: colors.inkTertiary),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-        ],
-        // Description
-        if (podcast.description != null && podcast.description!.isNotEmpty) ...[
-          const SizedBox(height: Spacing.xs),
-          Text(
-            podcast.description!,
-            style: textTheme.bodySmall?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-            ),
-            maxLines: _maxDescriptionLines,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
       ],
     );
   }

@@ -51,13 +51,13 @@ void main() {
       expect(find.byType(TextField), findsOneWidget);
     });
 
-    testWidgets('renders country chip prefix in text field', (tester) async {
+    testWidgets('renders the region button beside the field', (tester) async {
       await tester.pumpWidget(buildTestWidget());
 
-      final textField = tester.widget<TextField>(find.byType(TextField));
-      final prefixIcon = textField.decoration?.prefixIcon;
-      expect(prefixIcon, isNotNull);
-      expect(prefixIcon, isA<SearchCountryChip>());
+      final field = tester.getRect(find.byType(TextField));
+      final region = tester.getRect(find.byType(SearchCountryChip));
+      expect(field.right < region.left, isTrue);
+      expect(region.height, greaterThanOrEqualTo(44));
     });
 
     testWidgets('keyboard submit action calls controller search method', (

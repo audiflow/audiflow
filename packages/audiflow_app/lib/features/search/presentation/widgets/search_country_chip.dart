@@ -1,9 +1,11 @@
 import 'package:audiflow_core/audiflow_core.dart';
+import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../l10n/app_localizations.dart';
 
-/// Compact tappable country code indicator sized for TextField prefixIcon.
+/// Store-region button beside the search field (redesign 4.7): an
+/// outlined pill with the region code, as tall as the field.
 class SearchCountryChip extends StatelessWidget {
   const SearchCountryChip({
     required this.countryCode,
@@ -16,8 +18,7 @@ class SearchCountryChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colors = AppColors.of(context);
     final l10n = AppLocalizations.of(context);
     final displayName =
         PodcastCountries.all[countryCode] ?? countryCode.toUpperCase();
@@ -25,29 +26,39 @@ class SearchCountryChip extends StatelessWidget {
     return Semantics(
       button: true,
       label: l10n.searchRegionCurrent(displayName),
+      excludeSemantics: true,
       child: Tooltip(
         message: l10n.searchRegionLabel,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(8),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  countryCode.toUpperCase(),
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: colorScheme.primary,
-                  ),
+        child: Material(
+          color: colors.surface,
+          shape: StadiumBorder(side: BorderSide(color: colors.outline)),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                minHeight: Spacing.minTouchTarget,
+              ),
+              child: Padding(
+                padding: const EdgeInsetsDirectional.only(
+                  start: Spacing.md - Spacing.xxs,
+                  end: Spacing.sm,
                 ),
-                Icon(
-                  Icons.arrow_drop_down,
-                  size: 18,
-                  color: colorScheme.primary,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      countryCode.toUpperCase(),
+                      style: AppTextStyles.label.copyWith(color: colors.ink),
+                    ),
+                    Icon(
+                      Icons.expand_more_rounded,
+                      size: 18,
+                      color: colors.inkSecondary,
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),
