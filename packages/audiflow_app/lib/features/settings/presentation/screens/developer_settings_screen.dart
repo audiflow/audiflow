@@ -4,9 +4,11 @@ import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../../routing/app_router.dart';
 import '../utils/open_preset_url.dart';
 import '../widgets/test_notifications_tile.dart';
 
@@ -14,7 +16,8 @@ import '../widgets/test_notifications_tile.dart';
 ///
 /// Shows a contribute link to the contribute guide, a toggle for
 /// developer info in episode detail, a test-notification action outside
-/// production, and a browsable list of all presets.
+/// production, a design components preview outside production, and a
+/// browsable list of all presets.
 class DeveloperSettingsScreen extends ConsumerWidget {
   const DeveloperSettingsScreen({super.key});
 
@@ -75,6 +78,13 @@ class DeveloperSettingsScreen extends ConsumerWidget {
             // Debug aid for notification changes; not offered in production.
             if (FlavorConfig.current.flavor != Flavor.prod) ...[
               const TestNotificationsTile(),
+              const Divider(height: 1),
+              ListTile(
+                title: Text(l10n.developerDesignGalleryTitle),
+                subtitle: Text(l10n.developerDesignGallerySubtitle),
+                trailing: const Icon(Symbols.chevron_right),
+                onTap: () => context.push(AppRoutes.settingsDesignGallery),
+              ),
               const Divider(height: 1),
             ],
 

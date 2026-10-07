@@ -1409,6 +1409,15 @@ class AppLocalizationsEn extends AppLocalizations {
       'Newest episode of each podcast, up to 3';
 
   @override
+  String get developerDesignGalleryTitle => 'Design components';
+
+  @override
+  String get developerDesignGallerySubtitle => 'Preview redesign components';
+
+  @override
+  String get developerDesignGalleryToggleBrightness => 'Toggle light and dark';
+
+  @override
   String developerTestNotificationsSent(int count) {
     return 'Sent $count test notifications';
   }

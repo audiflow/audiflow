@@ -36,6 +36,7 @@ import '../features/parental_control/presentation/screens/pin_change_screen.dart
 import '../features/parental_control/presentation/screens/pin_setup_screen.dart';
 import '../features/settings/presentation/screens/settings_screen.dart';
 import '../features/settings/presentation/screens/storage_settings_screen.dart';
+import '../features/settings/presentation/screens/design_gallery_screen.dart';
 import '../features/settings/presentation/screens/developer_settings_screen.dart';
 import 'material_route.dart';
 import 'scaffold_with_nav_bar.dart';
@@ -69,6 +70,8 @@ class AppRoutes {
   static const String settingsStorage = '/settings/storage';
   static const String settingsAbout = '/settings/about';
   static const String settingsDeveloper = '/settings/developer';
+  static const String settingsDesignGallery =
+      '/settings/developer/design-gallery';
   static const String settingsDownloadManagement =
       '/settings/downloads/management';
   static const String settingsGettingStarted = '/settings/getting-started';
@@ -394,6 +397,13 @@ GoRouter createAppRouter({
                     path: 'developer',
                     builder: (context, state) =>
                         const DeveloperSettingsScreen(),
+                    routes: [
+                      materialRoute(
+                        path: 'design-gallery',
+                        builder: (context, state) =>
+                            const DesignGalleryScreen(),
+                      ),
+                    ],
                   ),
                   materialRoute(
                     path: 'getting-started',

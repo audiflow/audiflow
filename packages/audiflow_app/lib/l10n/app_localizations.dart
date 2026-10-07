@@ -2582,6 +2582,24 @@ abstract class AppLocalizations {
   /// **'Newest episode of each podcast, up to 3'**
   String get developerTestNotificationsSubtitle;
 
+  /// Developer settings entry and screen title for the non-production preview of redesign components
+  ///
+  /// In en, this message translates to:
+  /// **'Design components'**
+  String get developerDesignGalleryTitle;
+
+  /// Subtitle of the design components entry in developer settings
+  ///
+  /// In en, this message translates to:
+  /// **'Preview redesign components'**
+  String get developerDesignGallerySubtitle;
+
+  /// Tooltip for the button that switches the design components preview between light and dark themes
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle light and dark'**
+  String get developerDesignGalleryToggleBrightness;
+
   /// Snackbar after test notifications were posted
   ///
   /// In en, this message translates to:

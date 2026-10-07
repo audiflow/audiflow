@@ -1363,6 +1363,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get developerTestNotificationsSubtitle => '各ポッドキャストの最新エピソード、最大3通';
 
   @override
+  String get developerDesignGalleryTitle => 'デザインコンポーネント';
+
+  @override
+  String get developerDesignGallerySubtitle => 'リデザインの部品をプレビュー';
+
+  @override
+  String get developerDesignGalleryToggleBrightness => 'ライトとダークを切り替え';
+
+  @override
   String developerTestNotificationsSent(int count) {
     return 'テスト通知を$count通送りました';
   }
