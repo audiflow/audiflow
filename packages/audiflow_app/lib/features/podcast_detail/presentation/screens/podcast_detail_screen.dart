@@ -636,93 +636,114 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
         ref.invalidate(podcastEpisodeProgressProvider(feedUrl));
         await ref.read(podcastDetailProvider(feedUrl).future);
       },
-      child: CustomScrollView(
-        controller: _scrollController,
-        slivers: [
-          // Reserves the floating navigation's height. Pinned so sticky
-          // headers below (e.g. the year header) stop under the bar
-          // instead of behind it; transparent so the hero shows through
-          // while it scrolls up.
-          PinnedHeaderSliver(
-            child: SizedBox(height: FloatingNavigationBar.heightOf(context)),
-          ),
-          SliverToBoxAdapter(
-            // Kept mounted in search: its height animates to zero (bottom
-            // edge fixed, like scrolling up) instead of popping out.
-            child: SizeTransition(
-              sizeFactor: ReverseAnimation(_searchTransition),
-              alignment: Alignment.bottomCenter,
-              child: ListenableBuilder(
-                listenable: Listenable.merge([_navScroll, _searchTransition]),
-                builder: (context, child) => CollapsingHero(
-                  progress: _effectiveNavScroll.hero,
-                  child: child!,
-                ),
-                child: KeyedSubtree(
-                  key: _heroKey,
-                  child: PodcastDetailHeader(
-                    podcast: podcast,
-                    subscribeSource: widget.subscribeSource,
+      // Content swaps (view mode, filter) can clamp the offset without a
+      // scroll event; resync the hero so it never stays faded while still
+      // taking up its space.
+      child: NotificationListener<ScrollMetricsNotification>(
+        onNotification: (_) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) _updateNavScroll();
+          });
+          return false;
+        },
+        child: CustomScrollView(
+          controller: _scrollController,
+          slivers: [
+            // Reserves the floating navigation's height. Pinned so sticky
+            // headers below (e.g. the year header) stop under the bar
+            // instead of behind it; transparent so the hero shows through
+            // while it scrolls up.
+            PinnedHeaderSliver(
+              child: SizedBox(height: FloatingNavigationBar.heightOf(context)),
+            ),
+            SliverToBoxAdapter(
+              // Kept mounted in search: its height animates to zero (bottom
+              // edge fixed, like scrolling up) instead of popping out.
+              child: SizeTransition(
+                sizeFactor: ReverseAnimation(_searchTransition),
+                alignment: Alignment.bottomCenter,
+                child: ListenableBuilder(
+                  listenable: Listenable.merge([_navScroll, _searchTransition]),
+                  builder: (context, child) => CollapsingHero(
+                    progress: _effectiveNavScroll.hero,
+                    child: child!,
+                  ),
+                  child: KeyedSubtree(
+                    key: _heroKey,
+                    child: PodcastDetailHeader(
+                      podcast: podcast,
+                      subscribeSource: widget.subscribeSource,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-          PinnedHeaderSliver(
-            child: PodcastDetailStickyBar(
-              showModeSwitch: showPlaylistToggle,
-              mode: effectiveViewMode,
-              onModeChanged: (mode) {
-                if (mode == PodcastViewMode.episodes) {
-                  _onEpisodesViewSelected(subscription?.id);
-                  return;
-                }
-                final playlist =
-                    displayPlaylists
-                        .where((p) => p.id == selectedPlaylistId)
-                        .firstOrNull ??
-                    displayPlaylists.firstOrNull;
-                if (playlist == null) return;
-                _onPlaylistSelected(subscription?.id, playlist);
-              },
-              playlists: displayPlaylists,
-              selectedPlaylist: activePlaylist,
-              onPlaylistSelected: (playlist) =>
-                  _onPlaylistSelected(subscription?.id, playlist),
-              filter: filter,
-              onFilterSelected: (f) => _onFilterSelected(subscription?.id, f),
-              sortOrder: sortOrder,
-              onToggleSortOrder: _toggleSortOrder,
+            PinnedHeaderSliver(
+              child: PodcastDetailStickyBar(
+                showModeSwitch: showPlaylistToggle,
+                mode: effectiveViewMode,
+                onModeChanged: (mode) {
+                  if (mode == PodcastViewMode.episodes) {
+                    _onEpisodesViewSelected(subscription?.id);
+                    return;
+                  }
+                  final playlist =
+                      displayPlaylists
+                          .where((p) => p.id == selectedPlaylistId)
+                          .firstOrNull ??
+                      displayPlaylists.firstOrNull;
+                  if (playlist == null) return;
+                  _onPlaylistSelected(subscription?.id, playlist);
+                },
+                playlists: displayPlaylists,
+                selectedPlaylist: activePlaylist,
+                onPlaylistSelected: (playlist) =>
+                    _onPlaylistSelected(subscription?.id, playlist),
+                filter: filter,
+                onFilterSelected: (f) => _onFilterSelected(subscription?.id, f),
+                sortOrder: sortOrder,
+                onToggleSortOrder: _toggleSortOrder,
+              ),
             ),
-          ),
-          if (effectiveViewMode == PodcastViewMode.episodes)
-            ...buildEpisodeListSlivers(
-              ref: ref,
-              feedUrl: feedUrl,
-              episodesAsync: filteredAsync,
-              progressMapAsync: progressMapAsync,
-              sortOrder: sortOrder,
-              searchQuery: _searchQuery,
-              podcastTitle: podcast.name,
-              artworkUrl: podcast.artworkUrl,
-              feedImageUrl: _feedImageUrl,
-              lastRefreshedAt: _lastRefreshedAt,
-              scrollController: _scrollController,
-              fallbackEpisodes: _lastFilteredEpisodes,
-              itunesId: podcast.id,
-              effectiveOrder: _resolvedPlayOrder,
-            )
-          else if (activePlaylist != null)
-            ..._buildInlinePlaylistSliversWithFallback(
-              activePlaylist: activePlaylist,
-              sortOrder: sortOrder,
-            ),
-        ],
+            if (effectiveViewMode == PodcastViewMode.episodes)
+              ...buildEpisodeListSlivers(
+                ref: ref,
+                feedUrl: feedUrl,
+                episodesAsync: filteredAsync,
+                progressMapAsync: progressMapAsync,
+                sortOrder: sortOrder,
+                searchQuery: _searchQuery,
+                podcastTitle: podcast.name,
+                artworkUrl: podcast.artworkUrl,
+                feedImageUrl: _feedImageUrl,
+                lastRefreshedAt: _lastRefreshedAt,
+                scrollController: _scrollController,
+                fallbackEpisodes: _lastFilteredEpisodes,
+                itunesId: podcast.id,
+                effectiveOrder: _resolvedPlayOrder,
+              )
+            else if (activePlaylist != null)
+              ..._buildInlinePlaylistSliversWithFallback(
+                activePlaylist: activePlaylist,
+                sortOrder: sortOrder,
+              ),
+          ],
+        ),
       ),
     );
   }
 
+  /// When the sticky bar is pinned, a view switch should keep it pinned
+  /// and show the new list from its top, not wherever the old list was.
+  void _keepBarPinnedOnSwitch() {
+    if (!_scrollController.hasClients) return;
+    final heroHeight = _heroKey.currentContext?.size?.height;
+    if (heroHeight == null || _scrollController.offset <= heroHeight) return;
+    _scrollController.jumpTo(heroHeight);
+  }
+
   void _onEpisodesViewSelected(int? subscriptionId) {
+    _keepBarPinnedOnSwitch();
     if (subscriptionId != null) {
       ref
           .read(
@@ -737,6 +758,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
   }
 
   void _onFilterSelected(int? subscriptionId, EpisodeFilter filter) {
+    _keepBarPinnedOnSwitch();
     if (subscriptionId == null) {
       setState(() => _localEpisodeFilter = filter);
       return;
@@ -747,6 +769,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
   }
 
   void _onPlaylistSelected(int? subscriptionId, SmartPlaylist playlist) {
+    _keepBarPinnedOnSwitch();
     if (subscriptionId != null) {
       ref
           .read(
@@ -794,6 +817,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
   }
 
   void _toggleSortOrder() {
+    _keepBarPinnedOnSwitch();
     final feedUrl = podcast.feedUrl;
     if (feedUrl == null) return;
     final subscriptionAsync = ref.read(subscriptionByFeedUrlProvider(feedUrl));
