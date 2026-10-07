@@ -2,6 +2,7 @@
 library;
 
 // Themes
+export 'src/themes/app_colors.dart';
 export 'src/themes/app_theme.dart';
 export 'src/themes/color_scheme.dart';
 export 'src/themes/text_styles.dart';
@@ -9,6 +10,7 @@ export 'src/themes/text_styles.dart';
 // Styles
 export 'src/styles/spacing.dart';
 export 'src/styles/borders.dart';
+export 'src/styles/shadows.dart';
 
 // Widgets - Artwork
 export 'src/widgets/artwork_image.dart';
