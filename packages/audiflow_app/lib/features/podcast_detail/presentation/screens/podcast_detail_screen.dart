@@ -28,6 +28,8 @@ import 'package:go_router/go_router.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
 import '../../../player/presentation/widgets/audio_sheet.dart';
+import '../../../share/presentation/helpers/share_helper.dart';
+import '../../../subscription/presentation/controllers/subscription_controller.dart';
 import '../controllers/podcast_detail_controller.dart';
 import '../widgets/episode_filter_chips.dart';
 import '../widgets/episode_list_section.dart';
@@ -61,11 +63,21 @@ class PodcastDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
-  late final ScrollController _ownScrollController = ScrollController(
-    initialScrollOffset: _kSearchBarHeight,
-  );
+  late final ScrollController _ownScrollController = ScrollController();
 
   ScrollController get _scrollController => _ownScrollController;
+
+  /// Measures the hero so the collapse spans exactly its height.
+  final GlobalKey _heroKey = GlobalKey();
+
+  /// Drives the floating navigation and hero collapse without rebuilding
+  /// the whole sliver tree on every scroll frame.
+  final ValueNotifier<FloatingNavScroll> _navScroll = ValueNotifier(
+    FloatingNavScroll.at(offset: 0, heroExtent: 1),
+  );
+
+  /// Whether episode search has replaced the navigation row.
+  bool _searching = false;
 
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
@@ -112,7 +124,6 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
   // an ancestor PrimaryScrollController) is resolvable. Remove once the
   // root cause is confirmed.
   static const double _kJumpThresholdPx = 200;
-  static const double _kSearchBarHeight = 64;
   double? _lastScrollOffset;
   bool _scrollListenerAttached = false;
   EpisodeFilter? _previouslyLoggedFilter;
@@ -135,10 +146,34 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
       PodcastMetadataHints.set(feedUrl, podcast);
     }
 
+    _scrollController.addListener(_updateNavScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _attachScrollLogger();
     });
+  }
+
+  void _updateNavScroll() {
+    if (!_scrollController.hasClients) return;
+    final heroHeight = _searching ? 0.0 : _heroKey.currentContext?.size?.height;
+    _navScroll.value = FloatingNavScroll.at(
+      offset: _scrollController.offset,
+      heroExtent: heroHeight ?? 1,
+    );
+  }
+
+  void _setSearching(bool searching) {
+    _searchDebounce?.cancel();
+    setState(() {
+      _searching = searching;
+      _searchQuery = '';
+    });
+    if (!searching) _searchController.clear();
+    if (_scrollController.hasClients) _scrollController.jumpTo(0);
+    _navScroll.value = FloatingNavScroll.at(
+      offset: 0,
+      heroExtent: searching ? 0 : 1,
+    );
   }
 
   void _attachScrollLogger() {
@@ -167,6 +202,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
     _searchDebounce?.cancel();
     _searchController.dispose();
     _ownScrollController.dispose();
+    _navScroll.dispose();
     final feedUrl = podcast.feedUrl;
     if (feedUrl != null) {
       PodcastMetadataHints.remove(feedUrl);
@@ -217,59 +253,140 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    return Scaffold(
+      body: Stack(
+        children: [
+          _buildBody(),
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: ValueListenableBuilder<FloatingNavScroll>(
+              valueListenable: _navScroll,
+              builder: (context, scroll, _) => _buildNavigation(scroll),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNavigation(FloatingNavScroll scroll) {
     final l10n = AppLocalizations.of(context);
     final feedUrl = podcast.feedUrl;
     final subscription = feedUrl == null
         ? null
         : ref.watch(subscriptionByFeedUrlProvider(feedUrl)).value;
     final isSubscribed = subscription != null && !subscription.isCached;
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(podcast.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+    return FloatingNavigationBar(
+      leading: FloatingNavButton(
+        icon: Icons.arrow_back_ios_new_rounded,
+        tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+        onPressed: () => Navigator.of(context).maybePop(),
+      ),
+      title: podcast.name,
+      titleOpacity: scroll.title,
+      backgroundOpacity: scroll.background,
+      trailing: FloatingNavActions(
         actions: [
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              switch (value) {
-                case 'description':
-                  showPodcastDescriptionSheet(
-                    context: context,
-                    podcast: podcast,
-                  );
-                case 'play_order':
-                  _showPlayOrderSheet();
-                case 'audio_settings':
-                  // Lets the override be edited while nothing is playing.
-                  if (subscription == null) return;
-                  showAudioSheet(context, podcastId: subscription.id);
-              }
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'description',
-                child: Text(l10n.podcastDetailDescriptionMenuTitle),
-              ),
-              PopupMenuItem(
-                value: 'play_order',
-                child: Text(l10n.playOrderMenuTitle),
-              ),
-              if (subscription != null)
-                PopupMenuItem(
-                  value: 'audio_settings',
-                  child: Text(l10n.podcastDetailAudioSettingsMenuTitle),
-                ),
-            ],
+          FloatingNavAction(
+            icon: Icons.search_rounded,
+            tooltip: l10n.podcastDetailSearchTooltip,
+            onPressed: feedUrl == null ? null : () => _setSearching(true),
           ),
           if (isSubscribed)
-            IconButton(
-              icon: const Icon(Icons.settings_outlined),
+            FloatingNavAction(
+              icon: Icons.tune_rounded,
               tooltip: l10n.podcastDetailSettingsTooltip,
               onPressed: () =>
                   showPodcastSettingsSheet(context: context, podcast: podcast),
             ),
+          FloatingNavAction(
+            icon: Icons.more_horiz_rounded,
+            tooltip: l10n.podcastDetailMoreTooltip,
+            onPressed: _showMoreMenu,
+          ),
         ],
       ),
-      body: _buildBody(),
+      search: _searching
+          ? NavigationSearchField(
+              controller: _searchController,
+              hintText: l10n.podcastDetailSearchHint,
+              cancelLabel: l10n.commonCancel,
+              onChanged: _onSearchChanged,
+              onCancel: () => _setSearching(false),
+            )
+          : null,
     );
+  }
+
+  /// Overflow menu, anchored under the navigation's trailing pill.
+  Future<void> _showMoreMenu() async {
+    final l10n = AppLocalizations.of(context);
+    final feedUrl = podcast.feedUrl;
+    final subscription = feedUrl == null
+        ? null
+        : ref.read(subscriptionByFeedUrlProvider(feedUrl)).value;
+    final isSubscribed =
+        ref.read(subscriptionControllerProvider(podcast.id)).value ?? false;
+    final width = MediaQuery.sizeOf(context).width;
+    final top = FloatingNavigationBar.heightOf(context);
+    final selected = await showMenu<_MoreMenuAction>(
+      context: context,
+      position: RelativeRect.fromLTRB(width, top, Spacing.md, 0),
+      items: [
+        if (feedUrl != null)
+          PopupMenuItem(
+            value: _MoreMenuAction.subscription,
+            child: Text(
+              isSubscribed
+                  ? l10n.podcastDetailUnsubscribe
+                  : l10n.podcastDetailSubscribe,
+            ),
+          ),
+        PopupMenuItem(
+          value: _MoreMenuAction.share,
+          child: Text(l10n.sharePodcast),
+        ),
+        PopupMenuItem(
+          value: _MoreMenuAction.description,
+          child: Text(l10n.podcastDetailDescriptionMenuTitle),
+        ),
+        PopupMenuItem(
+          value: _MoreMenuAction.playOrder,
+          child: Text(l10n.playOrderMenuTitle),
+        ),
+        if (subscription != null)
+          PopupMenuItem(
+            value: _MoreMenuAction.audioSettings,
+            child: Text(l10n.podcastDetailAudioSettingsMenuTitle),
+          ),
+      ],
+    );
+    if (selected == null || !mounted) return;
+    _onMoreMenuSelected(selected, subscriptionId: subscription?.id);
+  }
+
+  void _onMoreMenuSelected(_MoreMenuAction action, {int? subscriptionId}) {
+    switch (action) {
+      case _MoreMenuAction.subscription:
+        togglePodcastSubscription(
+          context: context,
+          ref: ref,
+          podcast: podcast,
+          source: widget.subscribeSource,
+        );
+      case _MoreMenuAction.share:
+        sharePodcast(context: context, ref: ref, itunesId: podcast.id);
+      case _MoreMenuAction.description:
+        showPodcastDescriptionSheet(context: context, podcast: podcast);
+      case _MoreMenuAction.playOrder:
+        _showPlayOrderSheet();
+      case _MoreMenuAction.audioSettings:
+        // Lets the override be edited while nothing is playing.
+        if (subscriptionId == null) return;
+        showAudioSheet(context, podcastId: subscriptionId);
+    }
   }
 
   Widget _buildBody() {
@@ -497,6 +614,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
     }
 
     return RefreshIndicator(
+      edgeOffset: FloatingNavigationBar.heightOf(context),
       onRefresh: () async {
         ref.invalidate(podcastDetailProvider(feedUrl));
         ref.invalidate(podcastEpisodeProgressProvider(feedUrl));
@@ -505,55 +623,28 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
       child: CustomScrollView(
         controller: _scrollController,
         slivers: [
-          SliverToBoxAdapter(
-            child: SizedBox(
-              height: _kSearchBarHeight,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                child: TextField(
-                  controller: _searchController,
-                  onChanged: _onSearchChanged,
-                  decoration: InputDecoration(
-                    hintText: MaterialLocalizations.of(
-                      context,
-                    ).searchFieldLabel,
-                    prefixIcon: const Icon(Icons.search),
-                    suffixIcon: ValueListenableBuilder<TextEditingValue>(
-                      valueListenable: _searchController,
-                      builder: (context, value, child) {
-                        if (value.text.isEmpty) {
-                          return const SizedBox.shrink();
-                        }
-                        return IconButton(
-                          icon: const Icon(Icons.clear),
-                          onPressed: () {
-                            _searchController.clear();
-                            _searchDebounce?.cancel();
-                            setState(() => _searchQuery = '');
-                          },
-                        );
-                      },
-                    ),
-                    filled: true,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(28),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(vertical: 0),
+          // Reserves the floating navigation's height. Pinned so sticky
+          // headers below (e.g. the year header) stop under the bar
+          // instead of behind it; transparent so the hero shows through
+          // while it scrolls up.
+          PinnedHeaderSliver(
+            child: SizedBox(height: FloatingNavigationBar.heightOf(context)),
+          ),
+          if (!_searching)
+            SliverToBoxAdapter(
+              child: ValueListenableBuilder<FloatingNavScroll>(
+                valueListenable: _navScroll,
+                builder: (context, scroll, child) =>
+                    CollapsingHero(progress: scroll.hero, child: child!),
+                child: KeyedSubtree(
+                  key: _heroKey,
+                  child: PodcastDetailHeader(
+                    podcast: podcast,
+                    subscribeSource: widget.subscribeSource,
                   ),
                 ),
               ),
             ),
-          ),
-          SliverToBoxAdapter(
-            child: PodcastDetailHeader(
-              podcast: podcast,
-              subscribeSource: widget.subscribeSource,
-            ),
-          ),
           if (showPlaylistToggle)
             SliverToBoxAdapter(
               child: Padding(
@@ -621,17 +712,6 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
               activePlaylist: activePlaylist,
               sortOrder: sortOrder,
             ),
-          // Trailing slack so the scroll extent is large enough to keep
-          // the search bar hidden by the initial jumpTo offset, even when
-          // the list is empty or shorter than the viewport.
-          // SliverFillRemaining pads only the gap between content and
-          // viewport (zero when content already exceeds viewport); the
-          // fixed tail adds just enough room to scroll the search bar off.
-          const SliverFillRemaining(
-            hasScrollBody: false,
-            child: SizedBox.shrink(),
-          ),
-          const SliverToBoxAdapter(child: SizedBox(height: _kSearchBarHeight)),
         ],
       ),
     );
@@ -749,4 +829,12 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
       },
     );
   }
+}
+
+enum _MoreMenuAction {
+  subscription,
+  share,
+  description,
+  playOrder,
+  audioSettings,
 }

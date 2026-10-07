@@ -150,7 +150,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playOrderMenuTitle => 'Play order';
 
   @override
-  String get podcastDetailDescriptionMenuTitle => 'Description';
+  String get podcastDetailDescriptionMenuTitle => 'Podcast info';
 
   @override
   String get podcastDetailAudioSettingsMenuTitle => 'Audio settings';
@@ -724,6 +724,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get podcastDetailSubscribe => 'Subscribe';
+
+  @override
+  String get podcastDetailUnsubscribe => 'Unsubscribe';
+
+  @override
+  String get podcastDetailSearchTooltip => 'Search episodes';
+
+  @override
+  String get podcastDetailSearchHint => 'Search episodes';
+
+  @override
+  String get podcastDetailMoreTooltip => 'More';
 
   @override
   String get podcastDetailNoResults => 'No results found';

@@ -377,7 +377,7 @@ abstract class AppLocalizations {
   /// Menu entry for showing the podcast description
   ///
   /// In en, this message translates to:
-  /// **'Description'**
+  /// **'Podcast info'**
   String get podcastDetailDescriptionMenuTitle;
 
   /// Menu entry that opens the audio sheet for this podcast
@@ -1387,6 +1387,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Subscribe'**
   String get podcastDetailSubscribe;
+
+  /// Podcast detail menu entry that unsubscribes
+  ///
+  /// In en, this message translates to:
+  /// **'Unsubscribe'**
+  String get podcastDetailUnsubscribe;
+
+  /// Tooltip for the search button in the podcast detail navigation
+  ///
+  /// In en, this message translates to:
+  /// **'Search episodes'**
+  String get podcastDetailSearchTooltip;
+
+  /// Hint text for the episode search field in the podcast detail navigation
+  ///
+  /// In en, this message translates to:
+  /// **'Search episodes'**
+  String get podcastDetailSearchHint;
+
+  /// Tooltip for the overflow menu button in the podcast detail navigation
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get podcastDetailMoreTooltip;
 
   /// Search no results
   ///

@@ -147,7 +147,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get playOrderMenuTitle => '再生順序';
 
   @override
-  String get podcastDetailDescriptionMenuTitle => '概要';
+  String get podcastDetailDescriptionMenuTitle => '番組情報';
 
   @override
   String get podcastDetailAudioSettingsMenuTitle => 'オーディオ設定';
@@ -693,6 +693,18 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get podcastDetailSubscribe => '購読する';
+
+  @override
+  String get podcastDetailUnsubscribe => '購読解除';
+
+  @override
+  String get podcastDetailSearchTooltip => 'エピソードを検索';
+
+  @override
+  String get podcastDetailSearchHint => 'エピソードを検索';
+
+  @override
+  String get podcastDetailMoreTooltip => 'その他';
 
   @override
   String get podcastDetailNoResults => '結果が見つかりません';

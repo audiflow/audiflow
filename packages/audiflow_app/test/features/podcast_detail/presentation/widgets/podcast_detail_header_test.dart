@@ -4,6 +4,8 @@ import 'package:audiflow_app/features/podcast_detail/presentation/widgets/podcas
 import 'package:audiflow_app/features/subscription/presentation/controllers/subscription_controller.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_search/audiflow_search.dart';
+import 'package:audiflow_ui/audiflow_ui.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -35,6 +37,7 @@ void main() {
     return UncontrolledProviderScope(
       container: container,
       child: MaterialApp(
+        theme: AppTheme.light(),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
@@ -94,7 +97,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Technology, Science'), findsOneWidget);
+      expect(find.text('Test Artist · Technology'), findsOneWidget);
     });
 
     testWidgets('hides genres when empty', (tester) async {
@@ -116,7 +119,7 @@ void main() {
           .widgetList<Text>(find.byType(Text))
           .map((t) => t.data)
           .toList();
-      expect(textWidgets.any((t) => t != null && t.contains(', ')), isFalse);
+      expect(textWidgets.any((t) => t != null && t.contains(' · ')), isFalse);
     });
 
     testWidgets('shows podcast icon placeholder when no artwork', (
@@ -207,6 +210,74 @@ void main() {
 
       expect(find.text('Retry'), findsOneWidget);
       expect(find.byIcon(Icons.refresh), findsOneWidget);
+    });
+
+    testWidgets('hero artwork is 180 and the title is centered', (
+      tester,
+    ) async {
+      final container = ProviderContainer(
+        overrides: [
+          subscriptionControllerProvider(
+            'test-id',
+          ).overrideWith(() => _FakeSubscriptionController(false)),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(buildTestWidget(container, testPodcastNoArtwork));
+      await tester.pumpAndSettle();
+
+      check(
+        tester.getSize(find.byKey(PodcastDetailHeader.artworkKey)),
+      ).equals(const Size(180, 180));
+      final title = tester.widget<Text>(find.text('Test Podcast'));
+      check(title.textAlign).equals(TextAlign.center);
+      check(title.style?.fontSize).equals(AppTextStyles.heroTitle.fontSize);
+    });
+
+    testWidgets('subscribe is an accent filled pill', (tester) async {
+      final container = ProviderContainer(
+        overrides: [
+          subscriptionControllerProvider(
+            'test-id',
+          ).overrideWith(() => _FakeSubscriptionController(false)),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(buildTestWidget(container, testPodcast));
+      await tester.pumpAndSettle();
+
+      final style = tester
+          .widget<FilledButton>(find.byType(FilledButton))
+          .style!;
+      check(style.backgroundColor!.resolve({})).equals(AppColors.light.accent);
+      check(style.shape!.resolve({})).isA<StadiumBorder>();
+    });
+
+    testWidgets('subscribed is a tonal pill without a share button', (
+      tester,
+    ) async {
+      final container = ProviderContainer(
+        overrides: [
+          subscriptionControllerProvider(
+            'test-id',
+          ).overrideWith(() => _FakeSubscriptionController(true)),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(buildTestWidget(container, testPodcast));
+      await tester.pumpAndSettle();
+
+      final style = tester
+          .widget<FilledButton>(find.byType(FilledButton))
+          .style!;
+      check(
+        style.backgroundColor!.resolve({}),
+      ).equals(AppColors.light.accentTint);
+      check(style.foregroundColor!.resolve({})).equals(AppColors.light.accent);
+      check(find.byIcon(Icons.share_outlined).evaluate()).isEmpty();
     });
 
     testWidgets('podcast title is selectable', (tester) async {
