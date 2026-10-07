@@ -182,7 +182,7 @@ class _PlayOrderRowState extends ConsumerState<_PlayOrderRow> {
 
   String _label(AppLocalizations l10n, AutoPlayOrder order) =>
       order == AutoPlayOrder.defaultOrder
-      ? l10n.playOrderDefault(playOrderLabel(l10n, _globalOrder))
+      ? playOrderInheritLabel(l10n, _globalOrder, parentIsGlobal: true)
       : playOrderLabel(l10n, order);
 
   void _pick() {
@@ -192,6 +192,7 @@ class _PlayOrderRowState extends ConsumerState<_PlayOrderRow> {
       context: context,
       currentOrder: current,
       resolvedParentOrder: _globalOrder,
+      parentIsGlobal: true,
       onOrderSelected: (order) async {
         await ref
             .read(playOrderPreferenceRepositoryProvider)

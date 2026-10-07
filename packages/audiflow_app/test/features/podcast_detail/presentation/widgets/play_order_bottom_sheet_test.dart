@@ -37,7 +37,7 @@ void main() {
         find.text('Play order'),
       ).has((f) => f.evaluate().length, 'widget count').equals(1);
       check(
-        find.text('Default (Oldest first)'),
+        find.text('Follow parent setting (Oldest first)'),
       ).has((f) => f.evaluate().length, 'widget count').equals(1);
       check(
         find.text('Oldest first'),
@@ -52,6 +52,32 @@ void main() {
       check(
         find.text('Follows the list order (newest or oldest first)'),
       ).has((f) => f.evaluate().length, 'widget count').equals(1);
+    });
+
+    testWidgets('a podcast inherits from the global setting', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          Builder(
+            builder: (context) => ElevatedButton(
+              onPressed: () => showPlayOrderBottomSheet(
+                context: context,
+                currentOrder: AutoPlayOrder.defaultOrder,
+                resolvedParentOrder: AutoPlayOrder.oldestFirst,
+                onOrderSelected: (_) {},
+                parentIsGlobal: true,
+              ),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      check(
+        find.text('Follow global setting (Oldest first)').evaluate(),
+      ).length.equals(1);
     });
 
     testWidgets('pre-selects current order', (tester) async {

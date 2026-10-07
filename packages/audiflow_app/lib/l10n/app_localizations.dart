@@ -410,11 +410,17 @@ abstract class AppLocalizations {
   /// **'Settings'**
   String get podcastDetailSettingsSheetTitle;
 
-  /// Default play order option showing resolved parent value
+  /// Podcast play order option inheriting the app-wide setting, showing the value it resolves to
   ///
   /// In en, this message translates to:
-  /// **'Default ({resolvedOrder})'**
-  String playOrderDefault(String resolvedOrder);
+  /// **'Follow global setting ({resolvedOrder})'**
+  String playOrderFollowGlobal(String resolvedOrder);
+
+  /// Playlist or series play order option inheriting from the level above, showing the value it resolves to
+  ///
+  /// In en, this message translates to:
+  /// **'Follow parent setting ({resolvedOrder})'**
+  String playOrderFollowParent(String resolvedOrder);
 
   /// Play order: chronological
   ///

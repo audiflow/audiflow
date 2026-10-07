@@ -165,8 +165,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get podcastDetailSettingsSheetTitle => '設定';
 
   @override
-  String playOrderDefault(String resolvedOrder) {
-    return 'デフォルト（$resolvedOrder）';
+  String playOrderFollowGlobal(String resolvedOrder) {
+    return '全体設定に従う（$resolvedOrder）';
+  }
+
+  @override
+  String playOrderFollowParent(String resolvedOrder) {
+    return '上位の設定に従う（$resolvedOrder）';
   }
 
   @override

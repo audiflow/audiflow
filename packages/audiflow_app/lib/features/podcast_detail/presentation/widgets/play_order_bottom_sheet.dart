@@ -8,12 +8,14 @@ Future<void> showPlayOrderBottomSheet({
   required AutoPlayOrder currentOrder,
   required AutoPlayOrder resolvedParentOrder,
   required ValueChanged<AutoPlayOrder> onOrderSelected,
+  bool parentIsGlobal = false,
 }) {
   return showModalBottomSheet<void>(
     context: context,
     builder: (sheetContext) => _PlayOrderSheet(
       currentOrder: currentOrder,
       resolvedParentOrder: resolvedParentOrder,
+      parentIsGlobal: parentIsGlobal,
       onOrderSelected: (order) {
         Navigator.of(sheetContext).pop();
         onOrderSelected(order);
@@ -27,10 +29,12 @@ class _PlayOrderSheet extends StatelessWidget {
     required this.currentOrder,
     required this.resolvedParentOrder,
     required this.onOrderSelected,
+    required this.parentIsGlobal,
   });
 
   final AutoPlayOrder currentOrder;
   final AutoPlayOrder resolvedParentOrder;
+  final bool parentIsGlobal;
   final ValueChanged<AutoPlayOrder> onOrderSelected;
 
   @override
@@ -55,8 +59,10 @@ class _PlayOrderSheet extends StatelessWidget {
             ),
             RadioListTile<AutoPlayOrder>(
               title: Text(
-                l10n.playOrderDefault(
-                  playOrderLabel(l10n, resolvedParentOrder),
+                playOrderInheritLabel(
+                  l10n,
+                  resolvedParentOrder,
+                  parentIsGlobal: parentIsGlobal,
                 ),
               ),
               value: AutoPlayOrder.defaultOrder,
@@ -87,4 +93,18 @@ String playOrderLabel(AppLocalizations l10n, AutoPlayOrder order) {
     AutoPlayOrder.oldestFirst => l10n.playOrderOldestFirst,
     AutoPlayOrder.asDisplayed => l10n.playOrderAsDisplayed,
   };
+}
+
+/// Label of the "inherit" choice: a podcast follows the app-wide setting,
+/// a playlist or series follows the level above it. Shows the order it
+/// currently resolves to.
+String playOrderInheritLabel(
+  AppLocalizations l10n,
+  AutoPlayOrder resolved, {
+  required bool parentIsGlobal,
+}) {
+  final value = playOrderLabel(l10n, resolved);
+  return parentIsGlobal
+      ? l10n.playOrderFollowGlobal(value)
+      : l10n.playOrderFollowParent(value);
 }

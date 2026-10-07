@@ -168,8 +168,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get podcastDetailSettingsSheetTitle => 'Settings';
 
   @override
-  String playOrderDefault(String resolvedOrder) {
-    return 'Default ($resolvedOrder)';
+  String playOrderFollowGlobal(String resolvedOrder) {
+    return 'Follow global setting ($resolvedOrder)';
+  }
+
+  @override
+  String playOrderFollowParent(String resolvedOrder) {
+    return 'Follow parent setting ($resolvedOrder)';
   }
 
   @override

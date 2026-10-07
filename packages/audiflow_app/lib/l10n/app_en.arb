@@ -108,9 +108,16 @@
   "@podcastDetailSettingsTooltip": { "description": "Tooltip for the podcast settings icon button" },
   "podcastDetailSettingsSheetTitle": "Settings",
   "@podcastDetailSettingsSheetTitle": { "description": "Title for the podcast settings modal sheet" },
-  "playOrderDefault": "Default ({resolvedOrder})",
-  "@playOrderDefault": {
-    "description": "Default play order option showing resolved parent value",
+  "playOrderFollowGlobal": "Follow global setting ({resolvedOrder})",
+  "@playOrderFollowGlobal": {
+    "description": "Podcast play order option inheriting the app-wide setting, showing the value it resolves to",
+    "placeholders": {
+      "resolvedOrder": { "type": "String" }
+    }
+  },
+  "playOrderFollowParent": "Follow parent setting ({resolvedOrder})",
+  "@playOrderFollowParent": {
+    "description": "Playlist or series play order option inheriting from the level above, showing the value it resolves to",
     "placeholders": {
       "resolvedOrder": { "type": "String" }
     }

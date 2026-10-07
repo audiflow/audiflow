@@ -118,7 +118,7 @@ void main() {
     await openSheet(tester, _subscription());
 
     check(
-      find.textContaining('Default', findRichText: true).evaluate(),
+      find.text('Follow global setting (Oldest first)').evaluate(),
     ).isNotEmpty();
     await tester.tap(find.text('Play order'));
     await tester.pumpAndSettle();
