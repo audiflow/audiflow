@@ -485,18 +485,22 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
     );
   }
 
-  /// Plays this episode (building the sibling queue) or pauses it when it
-  /// is already playing. Public so a screen can start an episode the same
-  /// way its row would, e.g. from a "resume" button.
+  /// Pauses this episode when it is playing, otherwise starts it.
   Future<void> togglePlayback(BuildContext context, WidgetRef ref) async {
-    final url = episode.audioUrl;
-    final isPlaying = ref.read(isEpisodePlayingProvider(url));
-    final controller = ref.read(audioPlayerControllerProvider.notifier);
-
-    if (isPlaying) {
-      controller.pause();
+    if (ref.read(isEpisodePlayingProvider(episode.audioUrl))) {
+      ref.read(audioPlayerControllerProvider.notifier).pause();
       return;
     }
+    await startPlayback(context, ref);
+  }
+
+  /// Starts or resumes this episode (building the sibling queue), leaving
+  /// it alone when it is already playing. Public so a screen can start an
+  /// episode the same way its row would, e.g. from a "resume" button.
+  Future<void> startPlayback(BuildContext context, WidgetRef ref) async {
+    final url = episode.audioUrl;
+    if (ref.read(isEpisodePlayingProvider(url))) return;
+    final controller = ref.read(audioPlayerControllerProvider.notifier);
 
     if (controller.isLoaded(url)) {
       controller.resume();
