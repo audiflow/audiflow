@@ -109,9 +109,11 @@ void main() {
       final line = tester.widget<ProgressLine>(find.byType(ProgressLine));
       check(line.fraction).equals(0.4);
       final cardRect = tester.getRect(find.byType(EpisodeCard));
-      check(
-        tester.getRect(find.byType(ProgressLine)).bottom,
-      ).equals(cardRect.bottom);
+      final lineRect = tester.getRect(find.byType(ProgressLine));
+      check(lineRect.bottom).equals(cardRect.bottom);
+      // Inset like the row text rather than running edge to edge.
+      check(lineRect.left).equals(cardRect.left + Spacing.screenHorizontal);
+      check(lineRect.right).equals(cardRect.right - Spacing.screenHorizontal);
     });
 
     testWidgets('in-progress paused: play glyph and progress line', (

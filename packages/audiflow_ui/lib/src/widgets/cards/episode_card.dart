@@ -138,6 +138,7 @@ class EpisodeCard extends StatelessWidget {
     final colors = AppColors.of(context);
     return BottomEdgeProgress(
       fraction: _edgeProgress,
+      inset: Spacing.screenHorizontal,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
