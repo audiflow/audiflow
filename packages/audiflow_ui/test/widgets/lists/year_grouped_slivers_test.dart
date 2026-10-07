@@ -1,4 +1,5 @@
-import 'package:audiflow_ui/src/widgets/lists/year_grouped_slivers.dart';
+import 'package:audiflow_ui/audiflow_ui.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -140,6 +141,54 @@ void main() {
       expect(find.text('Jump to year'), findsOneWidget);
       expect(find.text('2024'), findsWidgets);
       expect(find.text('2023'), findsWidgets);
+    });
+  });
+
+  group('buildYearGroupedSlivers grouped', () {
+    late ScrollController scrollController;
+
+    setUp(() => scrollController = ScrollController());
+    tearDown(() => scrollController.dispose());
+
+    Future<void> pump(
+      WidgetTester tester,
+      Map<int, List<String>> itemsByYear,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: Scaffold(
+            body: CustomScrollView(
+              controller: scrollController,
+              slivers: buildYearGroupedSlivers<String>(
+                itemsByYear: itemsByYear,
+                sortedYears: itemsByYear.keys.toList(),
+                itemBuilder: (_, item) =>
+                    SizedBox(height: 60, child: Text(item)),
+                scrollController: scrollController,
+                yearGroupingEnabled: true,
+                grouped: true,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    testWidgets('each year sits on its own grouped surface', (tester) async {
+      await pump(tester, {
+        2025: ['A', 'B'],
+        2024: ['C'],
+      });
+      check(find.byType(SliverGroupedSection).evaluate()).length.equals(2);
+      check(find.byType(Divider).evaluate()).length.equals(1);
+    });
+
+    testWidgets('a single year still gets the surface', (tester) async {
+      await pump(tester, {
+        2025: ['A', 'B', 'C'],
+      });
+      check(find.byType(SliverGroupedSection).evaluate()).length.equals(1);
     });
   });
 

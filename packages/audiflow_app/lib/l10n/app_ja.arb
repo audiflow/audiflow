@@ -247,7 +247,7 @@
   "podcastDetailPlaylistEmpty": "このプレイリストにはエピソードがありません",
   "podcastDetailEpisodeLoadError": "エピソード読み込みエラー: {error}",
   "podcastDetailEpisodeCount": "{count}エピソード",
-  "podcastDetailGroupCount": "{count}グループ",
+  "podcastDetailGroupCount": "{count}シリーズ",
   "podcastDetailOldestFirst": "古い順",
   "podcastDetailNewestFirst": "新しい順",
   "episodePillDurationMinutes": "{minutes}分",
@@ -345,6 +345,9 @@
   "groupEpisodeCount": "{count}エピソード",
   "groupDurationHoursMinutes": "{hours}時間{minutes}分",
   "groupDurationMinutes": "{minutes}分",
+  "seriesStatusUnplayed": "未再生",
+  "seriesStatusPartlyPlayed": "{played}/{total} 再生済み",
+  "seriesStatusPlayed": "再生済み",
 
   "playerTabNowPlaying": "再生中",
   "playerTabTranscript": "書き起こし",

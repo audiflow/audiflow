@@ -20,6 +20,7 @@ void main() {
     bool showModeSwitch = true,
     PodcastViewMode mode = PodcastViewMode.episodes,
     List<SmartPlaylist>? playlists,
+    int? seriesCount,
   }) async {
     final log = _Log();
     await tester.pumpWidget(
@@ -39,6 +40,7 @@ void main() {
             onFilterSelected: log.filters.add,
             sortOrder: SortOrder.descending,
             onToggleSortOrder: () => log.sortToggles++,
+            seriesCount: seriesCount,
           ),
         ),
       ),
@@ -85,6 +87,15 @@ void main() {
       await tester.tap(find.text('Short series').last);
       await tester.pumpAndSettle();
       check(log.playlists.map((p) => p.id)).deepEquals(['short']);
+    });
+
+    testWidgets('series row shows the count before the sort toggle', (
+      tester,
+    ) async {
+      await pump(tester, mode: PodcastViewMode.smartPlaylists, seriesCount: 50);
+      final count = tester.getCenter(find.text('50 series ·'));
+      final sort = tester.getCenter(find.byType(SortOrderButton));
+      check(count.dx).isLessThan(sort.dx);
     });
 
     testWidgets('a single series type shows as a plain label', (tester) async {

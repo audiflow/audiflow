@@ -1469,7 +1469,7 @@ abstract class AppLocalizations {
   /// Group count label
   ///
   /// In en, this message translates to:
-  /// **'{count} groups'**
+  /// **'{count} series'**
   String podcastDetailGroupCount(int count);
 
   /// Sort order oldest first
@@ -1873,6 +1873,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{minutes}m'**
   String groupDurationMinutes(int minutes);
+
+  /// Series row status when no episode has been started
+  ///
+  /// In en, this message translates to:
+  /// **'Unplayed'**
+  String get seriesStatusUnplayed;
+
+  /// Series row status with played and total episode counts
+  ///
+  /// In en, this message translates to:
+  /// **'{played}/{total} played'**
+  String seriesStatusPartlyPlayed(int played, int total);
+
+  /// Series row status when every episode is played
+  ///
+  /// In en, this message translates to:
+  /// **'Played'**
+  String get seriesStatusPlayed;
 
   /// Now Playing tab label in player
   ///

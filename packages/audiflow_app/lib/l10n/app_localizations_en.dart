@@ -771,7 +771,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String podcastDetailGroupCount(int count) {
-    return '$count groups';
+    return '$count series';
   }
 
   @override
@@ -1016,6 +1016,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String groupDurationMinutes(int minutes) {
     return '${minutes}m';
   }
+
+  @override
+  String get seriesStatusUnplayed => 'Unplayed';
+
+  @override
+  String seriesStatusPartlyPlayed(int played, int total) {
+    return '$played/$total played';
+  }
+
+  @override
+  String get seriesStatusPlayed => 'Played';
 
   @override
   String get playerTabNowPlaying => 'Now Playing';

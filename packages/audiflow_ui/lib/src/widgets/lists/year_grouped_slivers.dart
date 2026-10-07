@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 
+import 'grouped_section.dart';
 import 'year_divider.dart';
 import 'year_picker_bottom_sheet.dart';
 
@@ -37,22 +38,32 @@ List<Widget> buildYearGroupedSlivers<T>({
   required ScrollController scrollController,
   required bool yearGroupingEnabled,
   double? itemExtent,
+  bool grouped = false,
 }) {
+  // Grouped rows sit on one rounded surface per year (redesign "grouped
+  // lists over cards"); row heights then come from the rows themselves.
+  Widget list(List<T> items) {
+    if (grouped) {
+      return SliverGroupedSection(
+        itemCount: items.length,
+        itemBuilder: (context, index) => itemBuilder(context, items[index]),
+      );
+    }
+    final delegate = SliverChildBuilderDelegate(
+      (context, index) => itemBuilder(context, items[index]),
+      childCount: items.length,
+    );
+    return itemExtent != null
+        ? SliverFixedExtentList(itemExtent: itemExtent, delegate: delegate)
+        : SliverList(delegate: delegate);
+  }
+
   if (!yearGroupingEnabled || sortedYears.length < 2) {
     final allItems = <T>[];
     for (final year in sortedYears) {
       allItems.addAll(itemsByYear[year] ?? []);
     }
-    final delegate = SliverChildBuilderDelegate(
-      (context, index) => itemBuilder(context, allItems[index]),
-      childCount: allItems.length,
-    );
-    return [
-      if (itemExtent != null)
-        SliverFixedExtentList(itemExtent: itemExtent, delegate: delegate)
-      else
-        SliverList(delegate: delegate),
-    ];
+    return [list(allItems)];
   }
 
   // Estimate year scroll offsets for jump-to-year navigation.
@@ -148,15 +159,7 @@ List<Widget> buildYearGroupedSlivers<T>({
       );
     }
 
-    final delegate = SliverChildBuilderDelegate(
-      (context, index) => itemBuilder(context, items[index]),
-      childCount: items.length,
-    );
-    slivers.add(
-      itemExtent != null
-          ? SliverFixedExtentList(itemExtent: itemExtent, delegate: delegate)
-          : SliverList(delegate: delegate),
-    );
+    slivers.add(list(items));
   }
 
   return slivers;

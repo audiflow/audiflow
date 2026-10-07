@@ -24,6 +24,7 @@ class PodcastDetailStickyBar extends StatelessWidget {
     required this.onFilterSelected,
     required this.sortOrder,
     required this.onToggleSortOrder,
+    this.seriesCount,
   });
 
   /// Off for podcasts without series: only the episodes row shows.
@@ -37,6 +38,9 @@ class PodcastDetailStickyBar extends StatelessWidget {
   final ValueChanged<EpisodeFilter> onFilterSelected;
   final SortOrder sortOrder;
   final VoidCallback onToggleSortOrder;
+
+  /// Shown as "N series ·" before the sort toggle on the Series view.
+  final int? seriesCount;
 
   static const double _rowHeight = 52;
 
@@ -72,6 +76,13 @@ class PodcastDetailStickyBar extends StatelessWidget {
             child: Row(
               children: [
                 Expanded(child: series ? _seriesType() : _filterChips()),
+                if (series && seriesCount != null)
+                  Text(
+                    '${l10n.podcastDetailGroupCount(seriesCount!)} ·',
+                    style: AppTextStyles.tabular(
+                      AppTextStyles.meta.copyWith(color: colors.inkTertiary),
+                    ),
+                  ),
                 SortOrderButton(
                   sortOrder: sortOrder,
                   onPressed: onToggleSortOrder,

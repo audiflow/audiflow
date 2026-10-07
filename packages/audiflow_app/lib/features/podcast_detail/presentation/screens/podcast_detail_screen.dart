@@ -97,6 +97,9 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
   int _holdGeneration = 0;
   int? _releasingGeneration;
 
+  /// Series count reported by the list, shown in the pinned bar.
+  final ValueNotifier<int?> _seriesCount = ValueNotifier(null);
+
   /// 0 while browsing, 1 while searching. Collapses the hero and fills
   /// the navigation in step with the bar's switch to the search field,
   /// so entering search reads as one motion rather than a jump.
@@ -244,6 +247,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
     _ownScrollController.dispose();
     _navScroll.dispose();
     _searchTransition.dispose();
+    _seriesCount.dispose();
     final feedUrl = podcast.feedUrl;
     if (feedUrl != null) {
       PodcastMetadataHints.remove(feedUrl);
@@ -654,6 +658,40 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
           displayPlaylists.first;
     }
 
+    int? reportedSeriesCount;
+    final listSlivers = <Widget>[
+      if (effectiveViewMode == PodcastViewMode.episodes)
+        ...buildEpisodeListSlivers(
+          ref: ref,
+          feedUrl: feedUrl,
+          episodesAsync: filteredAsync,
+          progressMapAsync: progressMapAsync,
+          sortOrder: sortOrder,
+          searchQuery: _searchQuery,
+          podcastTitle: podcast.name,
+          artworkUrl: podcast.artworkUrl,
+          feedImageUrl: _feedImageUrl,
+          lastRefreshedAt: _lastRefreshedAt,
+          scrollController: _scrollController,
+          fallbackEpisodes: _lastFilteredEpisodes,
+          itunesId: podcast.id,
+          effectiveOrder: _resolvedPlayOrder,
+        )
+      else if (activePlaylist != null)
+        ..._buildInlinePlaylistSliversWithFallback(
+          activePlaylist: activePlaylist,
+          sortOrder: sortOrder,
+          onSeriesCount: (count) => reportedSeriesCount = count,
+        ),
+    ];
+    // The count is known only once the list is built; the pinned bar
+    // above it picks it up on the next frame.
+    if (_seriesCount.value != reportedSeriesCount) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _seriesCount.value = reportedSeriesCount;
+      });
+    }
+
     final contentLoading = effectiveViewMode == PodcastViewMode.episodes
         ? filteredAsync.isLoading
         : activePlaylist != null &&
@@ -720,60 +758,43 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
               ),
             ),
             PinnedHeaderSliver(
-              child: PodcastDetailStickyBar(
-                showModeSwitch: showPlaylistToggle,
-                mode: effectiveViewMode,
-                onModeChanged: (mode) {
-                  if (mode == effectiveViewMode) return;
-                  if (mode == PodcastViewMode.episodes) {
-                    _onEpisodesViewSelected(subscription?.id);
-                    return;
-                  }
-                  final playlist =
-                      displayPlaylists
-                          .where((p) => p.id == selectedPlaylistId)
-                          .firstOrNull ??
-                      displayPlaylists.firstOrNull;
-                  if (playlist == null) return;
-                  _onPlaylistSelected(subscription?.id, playlist);
-                },
-                playlists: displayPlaylists,
-                selectedPlaylist: activePlaylist,
-                onPlaylistSelected: (playlist) {
-                  if (playlist.id == activePlaylist?.id) return;
-                  _onPlaylistSelected(subscription?.id, playlist);
-                },
-                filter: filter,
-                onFilterSelected: (f) {
-                  if (f == filter) return;
-                  _onFilterSelected(subscription?.id, f);
-                },
-                sortOrder: sortOrder,
-                onToggleSortOrder: _toggleSortOrder,
+              child: ValueListenableBuilder<int?>(
+                valueListenable: _seriesCount,
+                builder: (context, seriesCount, _) => PodcastDetailStickyBar(
+                  seriesCount: seriesCount,
+                  showModeSwitch: showPlaylistToggle,
+                  mode: effectiveViewMode,
+                  onModeChanged: (mode) {
+                    if (mode == effectiveViewMode) return;
+                    if (mode == PodcastViewMode.episodes) {
+                      _onEpisodesViewSelected(subscription?.id);
+                      return;
+                    }
+                    final playlist =
+                        displayPlaylists
+                            .where((p) => p.id == selectedPlaylistId)
+                            .firstOrNull ??
+                        displayPlaylists.firstOrNull;
+                    if (playlist == null) return;
+                    _onPlaylistSelected(subscription?.id, playlist);
+                  },
+                  playlists: displayPlaylists,
+                  selectedPlaylist: activePlaylist,
+                  onPlaylistSelected: (playlist) {
+                    if (playlist.id == activePlaylist?.id) return;
+                    _onPlaylistSelected(subscription?.id, playlist);
+                  },
+                  filter: filter,
+                  onFilterSelected: (f) {
+                    if (f == filter) return;
+                    _onFilterSelected(subscription?.id, f);
+                  },
+                  sortOrder: sortOrder,
+                  onToggleSortOrder: _toggleSortOrder,
+                ),
               ),
             ),
-            if (effectiveViewMode == PodcastViewMode.episodes)
-              ...buildEpisodeListSlivers(
-                ref: ref,
-                feedUrl: feedUrl,
-                episodesAsync: filteredAsync,
-                progressMapAsync: progressMapAsync,
-                sortOrder: sortOrder,
-                searchQuery: _searchQuery,
-                podcastTitle: podcast.name,
-                artworkUrl: podcast.artworkUrl,
-                feedImageUrl: _feedImageUrl,
-                lastRefreshedAt: _lastRefreshedAt,
-                scrollController: _scrollController,
-                fallbackEpisodes: _lastFilteredEpisodes,
-                itunesId: podcast.id,
-                effectiveOrder: _resolvedPlayOrder,
-              )
-            else if (activePlaylist != null)
-              ..._buildInlinePlaylistSliversWithFallback(
-                activePlaylist: activePlaylist,
-                sortOrder: sortOrder,
-              ),
+            ...listSlivers,
             _scrollHoldSpacer(loading: contentLoading),
           ],
         ),
@@ -917,6 +938,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
   List<Widget> _buildInlinePlaylistSliversWithFallback({
     required SmartPlaylist activePlaylist,
     required SortOrder sortOrder,
+    ValueChanged<int>? onSeriesCount,
   }) {
     final episodeIds = activePlaylist.episodeIds;
     ref.listen(smartPlaylistEpisodesProvider(episodeIds), (prev, next) {
@@ -936,6 +958,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
       feedImageUrl: _feedImageUrl,
       lastRefreshedAt: _lastRefreshedAt,
       scrollController: _scrollController,
+      onSeriesCount: onSeriesCount,
       onNavigateToGroup: _navigateToGroupEpisodes,
       itunesId: podcast.id,
       effectiveOrder: _resolvedPlayOrder,

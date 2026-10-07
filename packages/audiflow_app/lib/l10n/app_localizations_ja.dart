@@ -739,7 +739,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String podcastDetailGroupCount(int count) {
-    return '$countグループ';
+    return '$countシリーズ';
   }
 
   @override
@@ -971,6 +971,17 @@ class AppLocalizationsJa extends AppLocalizations {
   String groupDurationMinutes(int minutes) {
     return '$minutes分';
   }
+
+  @override
+  String get seriesStatusUnplayed => '未再生';
+
+  @override
+  String seriesStatusPartlyPlayed(int played, int total) {
+    return '$played/$total 再生済み';
+  }
+
+  @override
+  String get seriesStatusPlayed => '再生済み';
 
   @override
   String get playerTabNowPlaying => '再生中';
