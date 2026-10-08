@@ -43,6 +43,53 @@ String? _parseCodePoint(String digits, {int radix = 10}) {
   return String.fromCharCode(value);
 }
 
+const _ruleCharacters = r'[:=\-_*~#+・─━―＝＊]';
+final _separatorRun = RegExp('($_ruleCharacters)\\1{4,}');
+
+// Spacing and inline formatting allowed around a rule on its own line.
+const _ruleDecoration = r'(?:\s|&nbsp;|</?(?:strong|b|em|i|u|span)\b[^>]*>)*';
+
+/// A run that fills a whole line or paragraph: it marks a section break.
+final _standaloneRun = RegExp(
+  '(^|<p>|<br\\s*/?>|\\n)$_ruleDecoration'
+  '(?<rule>$_ruleCharacters)\\k<rule>{4,}'
+  '$_ruleDecoration(?=</p>|<br\\s*/?>|\\n|\$)',
+  caseSensitive: false,
+);
+final _ruleInParagraph = RegExp(r'<p>\s*<hr>\s*</p>', caseSensitive: false);
+final _breaksAroundRule = RegExp(
+  r'(?:<br\s*/?>\s*)*<hr>(?:\s*<br\s*/?>)*',
+  caseSensitive: false,
+);
+final _ruleRun = RegExp(r'<hr>(?:\s*<hr>)+');
+final _edgeRules = RegExp(r'^(?:\s*<hr>)+|(?:<hr>\s*)+$');
+final _emptyParagraph = RegExp(
+  r'<p>(?:\s|&nbsp;|<br\s*/?>)*</p>',
+  caseSensitive: false,
+);
+final _blankLine = RegExp(r'^[ \t　]+$', multiLine: true);
+final _breakRun = RegExp(r'(?:<br\s*/?>\s*){3,}', caseSensitive: false);
+final _newlineRun = RegExp(r'\n{3,}');
+// Whitespace, `&nbsp;`, and zero-width characters (ZWSP, ZWNJ, ZWJ, word
+// joiner, BOM) that render nothing but still carry a link underline, both
+// literal and as named, decimal or hex entities.
+const _invisibleText =
+    r'(?:\s|[\u200B-\u200D\u2060\uFEFF]'
+    r'|&(?:nbsp|zwsp|zwnj|zwj|NoBreak);'
+    r'|&#(?:0*(?:160|820[3-5]|8288|65279));'
+    r'|&#[xX]0*(?:[aA]0|200[bBcCdD]|2060|[fF][eE][fF][fF]);)';
+final _invisibleLink = RegExp(
+  '<a\\b[^>]*>$_invisibleText*</a>',
+  caseSensitive: false,
+);
+// Tags and URLs: separator cleanup leaves them untouched so attributes,
+// link addresses and URL text (e.g. `/a-----b`) keep their characters,
+// while decorations in link labels are still removed.
+final _markupOrUrl = RegExp(
+  r'<[^>]*>|(?:https?://|ftp://|www\.)[^\s<>"]+',
+  caseSensitive: false,
+);
+
 /// Extensions for String class
 extension StringExtensions on String {
   /// Decodes HTML entities (named, numeric, and hex) to their characters.
@@ -95,6 +142,47 @@ extension StringExtensions on String {
   String toTitleCase() {
     if (isEmpty) return this;
     return split(' ').map((word) => word.capitalize()).join(' ');
+  }
+
+  /// Removes decorative separator runs (redesign section 5): five or more
+  /// of the same rule character in a row, such as `:::::`, `=====`,
+  /// `-----` or `・・・・・`. Lines and HTML paragraphs left empty by the
+  /// removal are dropped. Tags and URLs are left as they are, so link
+  /// addresses keep their characters.
+  String get withoutSeparatorRuns {
+    if (isEmpty) return this;
+    return splitMapJoin(
+          _markupOrUrl,
+          onMatch: (match) => match[0]!,
+          onNonMatch: (text) => text.replaceAll(_separatorRun, ''),
+        )
+        .replaceAll(_emptyParagraph, '')
+        .replaceAll(_blankLine, '')
+        .replaceAll(_breakRun, '<br><br>')
+        .replaceAll(_newlineRun, '\n\n')
+        .trim();
+  }
+
+  /// Like [withoutSeparatorRuns], but a run standing alone on its line or
+  /// in its paragraph becomes an `<hr>`, keeping the publisher's section
+  /// break while dropping the characters. Runs that decorate text (such
+  /// as `::::: Guests :::::`) are removed. Apply to HTML, i.e. after
+  /// [plainTextToHtml]; rules at the start or end are dropped.
+  String get separatorRunsAsRules {
+    if (isEmpty) return this;
+    final ruled = replaceAllMapped(_standaloneRun, (m) => '${m[1]}<hr>')
+        .replaceAll(_ruleInParagraph, '<hr>')
+        .replaceAll(_breaksAroundRule, '<hr>')
+        .replaceAll(_ruleRun, '<hr>');
+    return ruled.withoutSeparatorRuns.replaceAll(_edgeRules, '').trim();
+  }
+
+  /// Removes links whose text is empty or only invisible characters
+  /// (e.g. word joiners left by a feed's editor). They show nothing but
+  /// their underline, which reads as a stray mark.
+  String get withoutInvisibleLinks {
+    if (isEmpty) return this;
+    return replaceAll(_invisibleLink, '');
   }
 
   /// Converts plain text to HTML with paragraph breaks.
