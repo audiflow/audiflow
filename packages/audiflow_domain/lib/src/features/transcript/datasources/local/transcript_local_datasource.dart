@@ -38,7 +38,8 @@ class TranscriptLocalDatasource {
 
         meta
           ..id = existing.id
-          ..fetchedAt ??= existing.fetchedAt;
+          ..fetchedAt ??= existing.fetchedAt
+          ..unusableAt ??= existing.unusableAt;
       }
       await _isar.episodeTranscripts.putAll(metas);
     });
@@ -85,6 +86,15 @@ class TranscriptLocalDatasource {
     if (transcript == null) return;
 
     transcript.fetchedAt = DateTime.now();
+    await _isar.writeTxn(() => _isar.episodeTranscripts.put(transcript));
+  }
+
+  /// Marks a transcript file as holding no usable transcript.
+  Future<void> markAsUnusable(int transcriptId) async {
+    final transcript = await _isar.episodeTranscripts.get(transcriptId);
+    if (transcript == null) return;
+
+    transcript.unusableAt = DateTime.now();
     await _isar.writeTxn(() => _isar.episodeTranscripts.put(transcript));
   }
 

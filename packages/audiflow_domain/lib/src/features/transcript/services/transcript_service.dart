@@ -1,4 +1,7 @@
 import 'package:audiflow_podcast/audiflow_podcast.dart' hide TranscriptSegment;
+import 'package:audiflow_podcast/audiflow_podcast.dart'
+    as podcast
+    show TranscriptSegment;
 import 'package:dio/dio.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -36,60 +39,83 @@ class TranscriptService {
 
   /// Ensures transcript content is available. Fetches if not already stored.
   ///
-  /// Returns the transcriptId of the best available transcript, or null
-  /// if no supported transcript exists.
+  /// Tries the declared files in order of preference (VTT first, for its
+  /// speaker labels) and returns the id of the first one whose content is
+  /// stored, or null when none yields a transcript. A file that downloads
+  /// but holds no transcript is marked unusable so it is not offered or
+  /// fetched again; a network or HTTP failure is left to a later try.
   Future<int?> ensureContent(int episodeId) async {
     final metas = await _repository.getMetasByEpisodeId(episodeId);
+    final candidates = _byPreference(metas.where((m) => m.isCandidate));
 
-    final supported = metas
-        .where((m) => TranscriptFileParser.isSupported(m.type))
-        .toList();
-    if (supported.isEmpty) return null;
+    for (final candidate in candidates) {
+      if (candidate.fetchedAt != null) return candidate.id;
 
-    // Prefer VTT for speaker support
-    final chosen = supported.firstWhere(
-      (m) => m.type == 'text/vtt',
-      orElse: () => supported.first,
-    );
-
-    // Already fetched?
-    if (chosen.fetchedAt != null) return chosen.id;
-
-    return _fetchAndStore(episodeId, chosen);
+      final stored = await _fetchAndStore(episodeId, candidate);
+      if (stored) return candidate.id;
+    }
+    return null;
   }
 
-  Future<int?> _fetchAndStore(int episodeId, EpisodeTranscript chosen) async {
+  List<EpisodeTranscript> _byPreference(Iterable<EpisodeTranscript> metas) {
+    final vtt = metas.where((m) => m.type == 'text/vtt');
+    final others = metas.where((m) => m.type != 'text/vtt');
+    return [...vtt, ...others];
+  }
+
+  /// Returns whether the file's segments are now stored.
+  Future<bool> _fetchAndStore(int episodeId, EpisodeTranscript chosen) async {
+    final String? content;
     try {
       final response = await _dio.get<String>(chosen.url);
-      final content = response.data;
-      if (content == null || content.isEmpty) return null;
-
-      final segments = _parser.parse(content, mimeType: chosen.type);
-      if (segments.isEmpty) return null;
-
-      final segmentObjects = segments
-          .map(
-            (s) => TranscriptSegment()
-              ..transcriptId = chosen.id
-              ..startMs = s.startMs
-              ..endMs = s.endMs
-              ..body = s.text
-              ..speaker = s.speaker,
-          )
-          .toList();
-
-      await _repository.insertSegments(segmentObjects);
-      await _repository.markAsFetched(chosen.id);
-
-      _logger.i(
-        'Fetched transcript for episode $episodeId: '
-        '${segments.length} segments',
-      );
-
-      return chosen.id;
+      content = response.data;
     } on DioException catch (e) {
       _logger.w('Failed to fetch transcript for episode $episodeId', error: e);
-      return null;
+      return false;
     }
+
+    final segments = _parse(content, chosen.type);
+    if (segments.isEmpty) {
+      _logger.w(
+        'Transcript for episode $episodeId has no segments: ${chosen.url}',
+      );
+      await _repository.markAsUnusable(chosen.id);
+      return false;
+    }
+
+    await _repository.insertSegments(_toRows(chosen.id, segments));
+    await _repository.markAsFetched(chosen.id);
+    _logger.i(
+      'Fetched transcript for episode $episodeId: '
+      '${segments.length} segments',
+    );
+    return true;
+  }
+
+  /// Parses [content]; empty content and malformed files yield no segments.
+  List<podcast.TranscriptSegment> _parse(String? content, String mimeType) {
+    if (content == null || content.isEmpty) return const [];
+    try {
+      return _parser.parse(content, mimeType: mimeType);
+    } on FormatException catch (e) {
+      _logger.w('Malformed $mimeType transcript', error: e);
+      return const [];
+    }
+  }
+
+  List<TranscriptSegment> _toRows(
+    int transcriptId,
+    List<podcast.TranscriptSegment> segments,
+  ) {
+    return segments
+        .map(
+          (s) => TranscriptSegment()
+            ..transcriptId = transcriptId
+            ..startMs = s.startMs
+            ..endMs = s.endMs
+            ..body = s.text
+            ..speaker = s.speaker,
+        )
+        .toList();
   }
 }

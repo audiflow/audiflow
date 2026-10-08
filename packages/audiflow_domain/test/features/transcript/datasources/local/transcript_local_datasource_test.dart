@@ -94,6 +94,17 @@ void main() {
       final result = (await datasource.getMetasByEpisodeId(episodeId)).single;
       check(result.fetchedAt).isNotNull();
     });
+
+    test('keeps unusableAt when the feed re-declares the same file', () async {
+      await datasource.upsertMetas([_vttMeta(episodeId)]);
+      final stored = (await datasource.getMetasByEpisodeId(episodeId)).first;
+      await datasource.markAsUnusable(stored.id);
+
+      await datasource.upsertMetas([_vttMeta(episodeId)]);
+
+      final result = (await datasource.getMetasByEpisodeId(episodeId)).single;
+      check(result.unusableAt).isNotNull();
+    });
   });
 
   group('insertSegments / getSegments', () {
