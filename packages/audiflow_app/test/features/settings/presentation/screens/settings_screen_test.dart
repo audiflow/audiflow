@@ -38,13 +38,13 @@ void main() {
     testWidgets('renders without errors', (tester) async {
       await tester.pumpWidget(buildTestWidget());
 
-      expect(find.byType(SettingsScreen), findsOneWidget);
+      check(find.byType(SettingsScreen).evaluate()).length.equals(1);
     });
 
     testWidgets('shows a large Settings title', (tester) async {
       await tester.pumpWidget(buildTestWidget());
 
-      expect(find.byType(AppBar), findsNothing);
+      check(find.byType(AppBar).evaluate()).isEmpty();
       check(
         tester.widget<LargeTitle>(find.byType(LargeTitle)).title,
       ).equals('Settings');
@@ -54,8 +54,8 @@ void main() {
       await withTallSurface(tester, () async {
         await tester.pumpWidget(buildTestWidget());
 
-        expect(find.byType(SettingsRow), findsNWidgets(10));
-        expect(find.byType(GroupedSection), findsNWidgets(3));
+        check(find.byType(SettingsRow).evaluate()).length.equals(10);
+        check(find.byType(GroupedSection).evaluate()).length.equals(3);
       });
     });
 
@@ -88,48 +88,57 @@ void main() {
       await withTallSurface(tester, () async {
         await tester.pumpWidget(buildTestWidget());
 
-        expect(find.text('Appearance'), findsOneWidget);
-        expect(find.text('Playback'), findsOneWidget);
-        expect(find.text('Downloads'), findsOneWidget);
-        expect(find.text('Feed Sync'), findsOneWidget);
-        expect(find.text('Storage & Data'), findsOneWidget);
-        expect(find.text('About'), findsOneWidget);
-        expect(find.text('Getting Started'), findsOneWidget);
-        expect(find.text('Privacy'), findsOneWidget);
-        expect(find.text('Parental Control'), findsOneWidget);
-        expect(find.text('Developer'), findsOneWidget);
+        check(find.text('Appearance').evaluate()).length.equals(1);
+        check(find.text('Playback').evaluate()).length.equals(1);
+        check(find.text('Downloads').evaluate()).length.equals(1);
+        check(find.text('Feed Sync').evaluate()).length.equals(1);
+        check(find.text('Storage & Data').evaluate()).length.equals(1);
+        check(find.text('About').evaluate()).length.equals(1);
+        check(find.text('Getting Started').evaluate()).length.equals(1);
+        check(find.text('Privacy').evaluate()).length.equals(1);
+        check(find.text('Parental Control').evaluate()).length.equals(1);
+        check(find.text('Developer').evaluate()).length.equals(1);
       });
     });
 
     testWidgets('uses a list, not a grid', (tester) async {
       await tester.pumpWidget(buildTestWidget());
 
-      expect(find.byType(GridView), findsNothing);
-      expect(find.byType(ListView), findsOneWidget);
+      check(find.byType(GridView).evaluate()).isEmpty();
+      check(find.byType(ListView).evaluate()).length.equals(1);
     });
 
     testWidgets('each row has subtitle text', (tester) async {
       await withTallSurface(tester, () async {
         await tester.pumpWidget(buildTestWidget());
 
-        expect(find.text('Theme, language, text size'), findsOneWidget);
-        expect(find.text('Speed, skipping, auto-complete'), findsOneWidget);
-        expect(find.text('WiFi, auto-delete, concurrency'), findsOneWidget);
-        expect(find.text('Refresh interval, background sync'), findsOneWidget);
-        expect(find.text('Cache, OPML, data management'), findsOneWidget);
-        expect(find.text('Version, licenses, support'), findsOneWidget);
-        expect(
-          find.text('Control what data audiflow collects'),
-          findsOneWidget,
-        );
-        expect(
-          find.text('PIN, restricted mode, re-lock timer'),
-          findsOneWidget,
-        );
-        expect(
-          find.text('Smart playlist patterns and debug info'),
-          findsOneWidget,
-        );
+        check(
+          find.text('Theme, language, text size').evaluate(),
+        ).length.equals(1);
+        check(
+          find.text('Speed, skipping, auto-complete').evaluate(),
+        ).length.equals(1);
+        check(
+          find.text('WiFi, auto-delete, concurrency').evaluate(),
+        ).length.equals(1);
+        check(
+          find.text('Refresh interval, background sync').evaluate(),
+        ).length.equals(1);
+        check(
+          find.text('Cache, OPML, data management').evaluate(),
+        ).length.equals(1);
+        check(
+          find.text('Version, licenses, support').evaluate(),
+        ).length.equals(1);
+        check(
+          find.text('Control what data audiflow collects').evaluate(),
+        ).length.equals(1);
+        check(
+          find.text('PIN, restricted mode, re-lock timer').evaluate(),
+        ).length.equals(1);
+        check(
+          find.text('Smart playlist patterns and debug info').evaluate(),
+        ).length.equals(1);
       });
     });
   });
