@@ -85,6 +85,9 @@ abstract class EpisodeRepository {
   /// No protection is applied — favorited, downloaded, and played episodes
   /// are deleted unconditionally. RSS is the source of truth.
   ///
+  /// Leaves the episodes' downloads behind; feed sync goes through
+  /// `DroppedEpisodeRemover`, which removes those first.
+  ///
   /// Returns the number of deleted rows.
   Future<int> deleteByPodcastIdAndGuids(int podcastId, Set<String> guids);
 

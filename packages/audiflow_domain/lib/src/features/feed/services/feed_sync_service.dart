@@ -23,6 +23,7 @@ import '../models/feed_sync_result.dart';
 import '../../settings/providers/settings_providers.dart';
 import '../providers/preset_providers.dart';
 import '../repositories/episode_repository_impl.dart';
+import 'dropped_episode_remover.dart';
 import 'episode_extractor_resolver.dart';
 import 'feed_parser_service.dart';
 import 'feed_sync_diagnostic.dart';
@@ -497,10 +498,9 @@ class FeedSyncService implements SuspendableWriter {
         });
 
         if (droppedGuids.isNotEmpty) {
-          final deleted = await episodeRepo.deleteByPodcastIdAndGuids(
-            sub.id,
-            droppedGuids,
-          );
+          final deleted = await _ref
+              .read(droppedEpisodeRemoverProvider)
+              .remove(sub.id, droppedGuids);
           _logger.i('Removed $deleted dropped episodes from "${sub.title}"');
           _onDiagnostic('feed-sync:drop-result', {
             'path': 'foreground',
