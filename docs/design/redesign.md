@@ -142,7 +142,7 @@ Detail screens overlay the content with:
 
 Tapping search replaces the whole navigation row with a search field (keyboard up) and a "cancel" text button in `accent`. The hero is hidden so results start right under the navigation. The change is one motion of about 260ms: the row cross-fades with a slight horizontal drift while the hero collapses (as if scrolled away) and the bar fills; cancel plays it in reverse. The list filters as the user types; the count line reads `「query」 N 件`, and an empty state reads `「query」に一致する…はありません`. Cancel clears the query and restores the hero.
 
-Scope follows the context: series names on the Series tab, episode titles and descriptions on the Episodes tab and on a series screen. Active filter chips still apply.
+Scope follows the context: series names on the Series tab, episode titles and descriptions on the Episodes tab and on a series screen. The active episode filter still applies.
 
 ### 3.5 Mini player
 
@@ -173,7 +173,7 @@ Top to bottom:
 - **Scroll behavior**: while scrolling, the hero (artwork and text together) fades and shrinks toward its bottom edge (to about 85%), so it recedes as it goes up under the floating navigation; the navigation title fades in afterwards.
 - **Sticky bar** (stays under the navigation): segmented control "エピソード / シリーズ" plus a second row that depends on the tab.
 - **Series tab**: second row has the series-type dropdown (max ~58% width, ellipsized) and "↓新しい順". No series count: it crowded the dropdown into truncation. List grouped by the **start year** of each series. Row: artwork 60, name (2 lines, ellipsized), "N エピソード · 合計時間", and status text ("未再生" / "2/4 再生済み" / "再生済み" in `accent`). Started series get the bottom-edge line (full when every episode is played). Date ranges are not shown.
-- **Episodes tab**: second row has filter chips "すべて / 未再生 / 再生中" and "↓新しい順"; a count line above the list. Row: date (with an `accent` dot when new), title (3 lines), description (2 lines), artwork 56 on the right, and an action row (play pill, add to queue, download, more). Played episodes fade title and artwork. Downloaded episodes show the download icon in `accent`.
+- **Episodes tab**: second row has the episode filter button and "↓新しい順"; a count line above the list. The filter button is the same outlined pill as the series-type dropdown (leading filter icon, current filter name, chevron, max ~58% width) and opens an anchored menu of five filters, the current one in `accent`: "すべて / 未再生 / 再生途中 / 再生済み / ダウンロード済み". A menu replaced the earlier chip row because five chips do not fit the row. ダウンロード済み lists episodes with a completed download and updates as downloads finish or are removed. Row: date (with an `accent` dot when new), title (3 lines), description (2 lines), artwork 56 on the right, and an action row (play pill, add to queue, download, more). Played episodes fade title and artwork. Downloaded episodes show the download icon in `accent`.
 - **`…` menu** (popover): top tiles "購読解除/購読する", "共有", "番組情報"; then "すべて再生済みにする", "すべて未再生にする", "再生済みを非表示"; then "ウェブサイトを開く". Subscribe/unsubscribe is reachable here so it stays available after the hero scrolls away.
 - **Settings button** opens the podcast settings sheet (4.4).
 
@@ -225,7 +225,7 @@ Grouped list instead of a card grid. Groups: [Appearance, Playback, Downloads, F
 
 These are not implemented today and need their own FR updates and PRs:
 
-- Podcast `…` menu: mark all played / unplayed, open website. (Hiding played episodes was dropped: the "未再生" filter chip covers it.)
+- Podcast `…` menu: mark all played / unplayed, open website. (Hiding played episodes was dropped: the "未再生" filter covers it.)
 - Series-level progress status in the series list.
 - Library: station tiles limited to 4 with a "show all" route; podcast filter field; a new-since-last-visit dot on podcasts (instead of unplayed counts). (A grid/list toggle was dropped.)
 - In-navigation search on Podcast detail (both tabs) and Series episodes.

@@ -17,7 +17,7 @@ refs:
 ---
 # FR 17: Podcast detail
 
-> The single-podcast browsing surface — its episode list, episodes-vs-playlists view modes, playback-status filter chips, and a sort order — together with the per-podcast view preferences that remember how each listener last looked at each podcast.
+> The single-podcast browsing surface — its episode list, episodes-vs-playlists view modes, an episode filter menu, and a sort order — together with the per-podcast view preferences that remember how each listener last looked at each podcast.
 
 ## Purpose
 
@@ -32,7 +32,7 @@ A podcast catalogue is not a uniform thing. Some shows publish a flat stream of 
 - **Sort**: The sort toggle (newest or oldest first) sits at the right end of the pinned bar's second row in both modes. On Episodes a count line sits above the list; on Series no count is shown, leaving the series-type dropdown its room.
 - **Series rows**: Each series shows its artwork, name (two lines), "N episodes · total time", and a played status ("Unplayed", "2/4 played", or "Played", the last two in the accent color). A started series gets a thin progress line along its bottom edge, full once every episode is played. Rows run full width with hairlines starting at the text; date ranges are not shown.
 - **Series episodes**: Opening a series shows a side-by-side hero (artwork, series name, the podcast name linking back, "N episodes · total time") with a full-width button that resumes the started episode ("Resume #n") or starts the first unplayed one in series order ("Play #n"); it is hidden once every episode is played. The same floating navigation as the podcast screen holds back, search, and a `…` menu (batch downloads, play order). A right-aligned sort toggle sits above the list, and rows show the episode number above the title with the date beside the play pill.
-- **Filter chips**: In the flat-episode view, the pinned bar's second row holds chips — All, Unplayed, In Progress — filters the list by playback status. Selecting a chip re-filters the list immediately, and the choice persists per podcast across app restarts.
+- **Episode filter**: In the flat-episode view, the pinned bar's second row starts with a filter button: the same outlined pill as the series-type dropdown, naming the current filter. Tapping it opens a menu anchored under the pill with five choices — All, Unplayed, In Progress, Played, Downloaded — the current one in the accent color. Unplayed lists episodes never started (including ones not yet stored locally); In Progress lists started, unfinished episodes; Played lists episodes marked played; Downloaded lists episodes with a completed download. Choosing a filter re-filters the list immediately, and the choice persists per podcast across app restarts. While Played or Downloaded is active the list updates live: finishing an episode, or a download completing or being removed, adds or drops the episode without reopening the screen.
 - **Sort order**: The episode list can be sorted oldest-first or newest-first. The current order is remembered per podcast; toggling it reorders the list in place.
 - **Persistence**: For a subscribed podcast, every view-mode, filter, and sort change is written immediately — there is no save step — and the screen reactively reflects the stored value. Reopening the podcast restores the last-used view mode, filter, and sort.
 - **Non-subscribed podcasts**: A podcast the listener has not subscribed to (opened from search or a deep link) still supports all the same controls, but the choices are held only for the duration of that visit and start from defaults — there is nothing yet to persist them against.
@@ -41,13 +41,13 @@ A podcast catalogue is not a uniform thing. Some shows publish a flat stream of 
 - **Podcast settings sheet**: For a subscribed podcast, the navigation's settings button opens a full-height sheet (top radius 28) with a close button and the podcast name, grouped as Playback (play order, its current value shown under the title), Downloads (auto-download switch, an inline accent-tinted notice with "Resume" while auto-download is paused, and the keep-count picker), and Display (hide explicit episodes, hidden while parental control is locked). Play order and audio are no longer in the `…` menu; the podcast's own audio settings (speed and effects override) are edited from the player's Audio sheet while one of its episodes plays.
 - **Open website**: When the feed names a website (the channel `<link>`, http or https only), the `…` menu has "Open website", which opens it in the external browser; a failure shows a snackbar. The address is stored on the podcast's local record so it is still offered when the feed has not changed since the last fetch.
 - **Mark all played / unplayed**: For a podcast with a local record, the `…` menu has "Mark all played" and "Mark all unplayed" below its tiles. Each asks for confirmation stating how many episodes it affects, then marks every stored episode of the podcast, refreshes progress on open screens (rows, series status, Continue Listening), and reports the count in a snackbar. Marking unplayed clears the played mark only; listening positions are kept. The series episodes screen's `…` menu offers the same two actions for that series' episodes, between its download actions and play order.
-- **Empty and error cases**: A podcast with no feed URL, or whose feed fails to load, shows a dedicated empty or error state with a retry affordance rather than a blank list. A filter that matches nothing shows an empty list under the still-visible chips.
+- **Empty and error cases**: A podcast with no feed URL, or whose feed fails to load, shows a dedicated empty or error state with a retry affordance rather than a blank list. A filter that matches nothing shows an empty list under the still-visible filter button.
 
 ## Capabilities
 
 - Presents one podcast's episode list as the primary browsing surface, with a collapsing hero, a text search field in the navigation, and per-episode rows that open the episode or start playback.
 - Offers two view modes — a flat episode list and a smart-playlist grouped view — surfacing the playlist toggle only when the podcast actually has a usable grouping, and hiding it otherwise.
-- Provides playback-status filter chips (All / Unplayed / In Progress) over the flat episode list so the listener can focus on unfinished or untouched episodes.
+- Provides an episode filter menu (All / Unplayed / In Progress / Played / Downloaded) over the flat episode list so the listener can focus on untouched, unfinished, finished, or offline-ready episodes.
 - Supports an oldest-first / newest-first sort order over the episode list.
 - Persists view mode, episode filter, episode sort order, smart-playlist sort, and the selected playlist as per-podcast view preferences, keyed by subscription, written immediately on each change and restored on the next visit.
 - Reactively reflects stored preferences: the screen watches the per-podcast preference and re-renders when it changes, with sensible defaults (flat episodes, All filter, newest-first) when no preference has been stored yet.
@@ -58,11 +58,11 @@ A podcast catalogue is not a uniform thing. Some shows publish a flat stream of 
 ## Boundaries
 
 - Does not subscribe to or unsubscribe from podcasts, parse RSS feeds, or define how a feed syncs — that is FR 03 (Podcast subscription and feeds). The detail screen hosts a subscribe affordance and can trigger an existing refresh, but the subscription and feed mechanics belong to FR 03.
-- Does not play episodes or define playback-completion semantics. Starting, pausing, resuming, and the played / in-progress / unplayed status that the filter chips key on all belong to FR 04 (Audio playback); this screen only reads that status to filter and only hands episodes off to be played.
+- Does not play episodes or define playback-completion semantics. Starting, pausing, resuming, and the played / in-progress / unplayed status that the filter keys on all belong to FR 04 (Audio playback); this screen only reads that status to filter and only hands episodes off to be played.
 - Does not display transcripts or chapters — that is FR 08 (Transcript and chapters). The detail screen routes into an episode; transcript and chapter rendering is owned there.
 - Does not own the play-order cascade or the play-order bottom sheet. The group → playlist → podcast → global resolution and the sheet that edits a podcast's order are FR 11 (Play order); the detail screen only opens that sheet and consumes the resolved order.
 - Does not own audio settings or their per-podcast override. The Audio sheet, the override switch, and override -> global resolution are FR 04 (Audio playback); the detail screen does not edit them.
-- Does not download episodes or manage the download queue — that is FR 05 (Download and queue).
+- Does not download episodes or manage the download queue — that is FR 05 (Download and queue). The Downloaded filter only reads which episodes have a completed download.
 - Does not author, host, or resolve smart-playlist configuration, and does not decide whether a low-value auto-detected grouping should be suppressed; it consumes the resolved groupings and the visibility decision made upstream.
 
 ## Traceability
@@ -72,7 +72,8 @@ A podcast catalogue is not a uniform thing. Some shows publish a flat stream of 
 - **Source files**:
   - `packages/audiflow_app/lib/features/podcast_detail/presentation/screens/podcast_detail_screen.dart`
   - `packages/audiflow_app/lib/features/podcast_detail/presentation/controllers/podcast_view_mode_controller.dart`
-  - `packages/audiflow_app/lib/features/podcast_detail/presentation/widgets/episode_filter_chips.dart`
+  - `packages/audiflow_app/lib/features/podcast_detail/presentation/widgets/episode_filter_button.dart`
+  - `packages/audiflow_app/lib/features/podcast_detail/presentation/widgets/menu_selector_button.dart`
   - `packages/audiflow_app/lib/features/podcast_detail/presentation/widgets/podcast_detail_sticky_bar.dart`
   - `packages/audiflow_app/lib/features/podcast_detail/presentation/widgets/episode_sort_sheet.dart`
   - `packages/audiflow_domain/lib/src/features/feed/models/podcast_view_preference.dart`
