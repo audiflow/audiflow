@@ -443,6 +443,8 @@ void backgroundCallback() {
       final deleteDownload = BackgroundDownloadDeleter(
         downloadRepository: downloadRepo,
         downloadsDir: '${dir.path}/downloads',
+        // Shared with the download workers, which run in other engines.
+        lock: BackgroundDownloadLock(directory: dir.path),
         onDeleted: reconciler.onEpisodeChanged,
       ).call;
 

@@ -22,26 +22,13 @@ DroppedEpisodeRemover droppedEpisodeRemover(Ref ref) {
   );
 }
 
-/// Outcome of [DroppedEpisodeRemover.remove].
-final class DroppedEpisodeRemoval {
-  const DroppedEpisodeRemoval({
-    required this.deletedCount,
-    required this.keptCount,
-  });
-
-  static const none = DroppedEpisodeRemoval(deletedCount: 0, keptCount: 0);
-
-  /// Episodes deleted together with their downloads.
-  final int deletedCount;
-
-  /// Dropped episodes kept because their download could not be removed yet.
-  final int keptCount;
-
-  /// Whether every dropped episode is gone. While it is not, the caller
-  /// must not store the feed's cache validators: a later 304 would skip
-  /// the parse that finds the kept episodes again.
-  bool get isComplete => keptCount == 0;
-}
+/// Outcome of [DroppedEpisodeRemover.remove]: episodes `deleted` together
+/// with their downloads, and dropped episodes `kept` because their download
+/// could not be removed yet.
+///
+/// While any are kept the caller must not store the feed's cache
+/// validators: a later 304 would skip the parse that finds them again.
+typedef DroppedEpisodeRemoval = ({int deleted, int kept});
 
 /// Removes episodes a feed no longer lists, together with their downloads.
 ///
@@ -72,7 +59,7 @@ class DroppedEpisodeRemover {
   /// sync, which still sees its GUID missing from the feed, retries it
   /// instead of leaving an unreachable download behind.
   Future<DroppedEpisodeRemoval> remove(int podcastId, Set<String> guids) async {
-    if (guids.isEmpty) return DroppedEpisodeRemoval.none;
+    if (guids.isEmpty) return (deleted: 0, kept: 0);
     final episodeIdsByGuid = await _resolveEpisodeIds(podcastId, guids);
     final keptEpisodeIds = await _deleteDownloads(episodeIdsByGuid.values);
     final keptGuids = {
@@ -86,14 +73,11 @@ class DroppedEpisodeRemover {
         'until their downloads can be removed',
       );
     }
-    final deletedCount = await _episodeRepository.deleteByPodcastIdAndGuids(
+    final deleted = await _episodeRepository.deleteByPodcastIdAndGuids(
       podcastId,
       guids.difference(keptGuids),
     );
-    return DroppedEpisodeRemoval(
-      deletedCount: deletedCount,
-      keptCount: keptGuids.length,
-    );
+    return (deleted: deleted, kept: keptGuids.length);
   }
 
   /// Resolved before the episode rows are deleted, since downloads are

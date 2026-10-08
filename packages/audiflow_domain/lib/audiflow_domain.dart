@@ -166,6 +166,7 @@ export 'src/features/download/services/download_queue_service.dart';
 export 'src/features/download/services/auto_download_pause_service.dart';
 export 'src/features/download/services/background_download_deleter.dart';
 export 'src/features/download/services/background_download_service.dart';
+export 'src/features/download/services/background_download_worker_lock.dart';
 export 'src/features/download/services/download_retention_service.dart';
 export 'src/features/download/services/download_service.dart';
 

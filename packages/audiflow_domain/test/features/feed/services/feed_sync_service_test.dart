@@ -66,10 +66,7 @@ class _FakeDroppedEpisodeRemover implements DroppedEpisodeRemover {
   @override
   Future<DroppedEpisodeRemoval> remove(int podcastId, Set<String> guids) async {
     calls.add((podcastId: podcastId, guids: Set.of(guids)));
-    return DroppedEpisodeRemoval(
-      deletedCount: guids.length - keptCount,
-      keptCount: keptCount,
-    );
+    return (deleted: guids.length - keptCount, kept: keptCount);
   }
 }
 

@@ -263,9 +263,9 @@ class FeedSyncExecutor {
             sub.id,
             droppedGuids,
           );
-          isDropCleanupComplete = removal.isComplete;
+          isDropCleanupComplete = removal.kept == 0;
           _logger?.i(
-            'Removed ${removal.deletedCount} dropped episodes from '
+            'Removed ${removal.deleted} dropped episodes from '
             '"${sub.title}"',
           );
           _onDiagnostic('feed-sync:drop-result', {
@@ -273,8 +273,8 @@ class FeedSyncExecutor {
             'podcastId': sub.id,
             'title': sub.title,
             'requested': droppedGuids.length,
-            'deleted': removal.deletedCount,
-            'kept': removal.keptCount,
+            'deleted': removal.deleted,
+            'kept': removal.kept,
           });
         }
       }

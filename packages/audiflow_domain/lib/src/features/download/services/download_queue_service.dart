@@ -291,6 +291,21 @@ class DownloadQueueService implements SuspendableWriter {
     }
   }
 
+  Future<void> _discardFilesOfDeletedTask(DownloadTask task) async {
+    try {
+      await _fileService.deleteEpisodeFiles(task.episodeId);
+      _logger.i('Discarded partial download of deleted task ${task.id}');
+    } catch (e, stack) {
+      // Runs inside the drain's error handling; a failed sweep must not
+      // stop the queue.
+      _logger.w(
+        'Could not discard files of deleted task ${task.id}',
+        error: e,
+        stackTrace: stack,
+      );
+    }
+  }
+
   Future<void> _processDownload(DownloadTask task) async {
     // A pause that arrived after an earlier transfer had already ended
     // must not swallow this transfer's own cancel.
@@ -437,6 +452,16 @@ class DownloadQueueService implements SuspendableWriter {
         status: const DownloadStatus.cancelled(),
         lastError: error.message,
       );
+      return;
+    }
+
+    // A background cleanup can delete the task between the queue's lookup
+    // and the transfer, outside the cancel that guards foreground deletes
+    // (a cancel is handled above: its caller sweeps the files). Status
+    // writes to the missing record are no-ops, so the partial file would
+    // otherwise stay on disk with nothing left to remove it.
+    if (await _wasDeletedDuringDownload(task.id)) {
+      await _discardFilesOfDeletedTask(task);
       return;
     }
 

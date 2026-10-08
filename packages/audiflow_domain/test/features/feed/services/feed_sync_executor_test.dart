@@ -9,6 +9,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart' show ThemeMode;
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../helpers/fake_background_download_worker_lock.dart';
 import '../../../helpers/fake_download_repository.dart';
 
 // ---------------------------------------------------------------------------
@@ -1326,6 +1327,7 @@ void main() {
         deleteDownload = BackgroundDownloadDeleter(
           downloadRepository: fakeDownloadRepo,
           downloadsDir: downloadsDir.path,
+          lock: FakeBackgroundDownloadWorkerLock(),
           onDeleted: (episodeId) async => reconciledEpisodeIds.add(episodeId),
         ).call;
       });

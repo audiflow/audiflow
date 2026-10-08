@@ -85,8 +85,8 @@ void main() {
 
     final removal = await remover.remove(1, {'manual', 'auto'});
 
-    check(removal.deletedCount).equals(2);
-    check(removal.isComplete).isTrue();
+    check(removal.deleted).equals(2);
+    check(removal.kept).equals(0);
     check(downloadRepository.tasks.map((task) => task.id)).deepEquals([3]);
     check(episodeRepository.deletedGuidSets).deepEquals([
       {'manual', 'auto'},
@@ -126,7 +126,7 @@ void main() {
       'paused',
     });
 
-    check(removal.deletedCount).equals(3);
+    check(removal.deleted).equals(3);
     check(deletedTaskStatuses).unorderedEquals([
       const DownloadStatus.downloading(),
       const DownloadStatus.pending(),
@@ -148,10 +148,9 @@ void main() {
 
     final removal = await remover.remove(1, {'stuck', 'gone'});
 
-    check(removal.deletedCount).equals(1);
+    check(removal.deleted).equals(1);
     // Reported so the sync withholds cache validators and retries.
-    check(removal.keptCount).equals(1);
-    check(removal.isComplete).isFalse();
+    check(removal.kept).equals(1);
     check(downloadRepository.tasks.map((task) => task.id)).deepEquals([1]);
     check(episodeRepository.deletedGuidSets).deepEquals([
       {'gone'},
@@ -163,8 +162,8 @@ void main() {
 
     final removal = await remover.remove(1, {'plain', 'unknown'});
 
-    check(removal.deletedCount).equals(1);
-    check(removal.isComplete).isTrue();
+    check(removal.deleted).equals(1);
+    check(removal.kept).equals(0);
     check(events).not((it) => it.any((e) => e.startsWith('delete download')));
     check(episodeRepository.deletedGuidSets).deepEquals([
       {'plain', 'unknown'},
@@ -173,8 +172,8 @@ void main() {
 
   test('does nothing for an empty GUID set', () async {
     final removal = await remover.remove(1, const {});
-    check(removal.deletedCount).equals(0);
-    check(removal.isComplete).isTrue();
+    check(removal.deleted).equals(0);
+    check(removal.kept).equals(0);
     check(events).isEmpty();
   });
 }
