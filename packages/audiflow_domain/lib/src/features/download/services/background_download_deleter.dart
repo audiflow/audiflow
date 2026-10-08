@@ -21,21 +21,27 @@ class BackgroundDownloadDeleter {
   /// Follow-up work once the record is gone, such as station reconciliation.
   final Future<void> Function(int episodeId)? _onDeleted;
 
-  /// Removes [task]'s file and record.
+  /// Removes [task]'s record and file if it is still an auto download.
+  /// Returns whether it did.
   ///
   /// A task another isolate is actively downloading is left alone: there
   /// is no way to stop that writer from here, so deleting the record would
   /// orphan the file it finishes. The next foreground trim removes it.
-  Future<void> call(DownloadTask task) async {
-    if (task.downloadStatus is DownloadStatusDownloading) return;
+  ///
+  /// The record goes first, checked and deleted atomically, so a keep
+  /// request that lands after the caller's check still keeps the file.
+  Future<bool> call(DownloadTask task) async {
+    if (task.downloadStatus is DownloadStatusDownloading) return false;
 
-    final path = _currentPath(task.localPath);
+    final deleted = await _downloadRepository.deleteIfAuto(task.id);
+    if (deleted == null) return false;
+    final path = _currentPath(deleted.localPath);
     if (path != null) {
       final file = File(path);
       if (await file.exists()) await file.delete();
     }
-    await _downloadRepository.delete(task.id);
-    await _onDeleted?.call(task.episodeId);
+    await _onDeleted?.call(deleted.episodeId);
+    return true;
   }
 
   /// The stored absolute path goes stale when iOS rotates the app container,

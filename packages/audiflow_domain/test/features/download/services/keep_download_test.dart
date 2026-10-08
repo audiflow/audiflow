@@ -7,14 +7,42 @@ import 'package:logger/logger.dart';
 
 import '../../../helpers/isar_test_helper.dart';
 
-class _UnusedQueueService implements DownloadQueueService {
+class _FakeQueueService implements DownloadQueueService {
+  final List<int> cancelledIds = [];
+
+  @override
+  Future<void> cancelDownload(int taskId) async => cancelledIds.add(taskId);
+
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-class _UnusedFileService implements DownloadFileService {
+class _FakeFileService implements DownloadFileService {
+  final List<String> deletedPaths = [];
+
+  @override
+  Future<void> deleteFile(String localPath) async =>
+      deletedPaths.add(localPath);
+
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+/// Runs [afterNextRead] once, right after the next [getById] returns, to
+/// land a competing operation between a caller's read and its write.
+class _InterleavingRepository extends DownloadRepositoryImpl {
+  _InterleavingRepository({required super.datasource});
+
+  Future<void> Function()? afterNextRead;
+
+  @override
+  Future<DownloadTask?> getById(int id) async {
+    final task = await super.getById(id);
+    final hook = afterNextRead;
+    afterNextRead = null;
+    await hook?.call();
+    return task;
+  }
 }
 
 class _UnusedSubscriptionRepository implements SubscriptionRepository {
@@ -53,7 +81,9 @@ const _podcastId = 7;
 
 void main() {
   late Isar isar;
-  late DownloadRepositoryImpl repository;
+  late _InterleavingRepository repository;
+  late _FakeQueueService queueService;
+  late _FakeFileService fileService;
   late _FakeEpisodeRepository episodeRepository;
   late _FakePlaybackHistoryRepository historyRepository;
   late List<int> deletedTaskIds;
@@ -66,16 +96,18 @@ void main() {
 
   setUp(() async {
     isar = await openTestIsar([DownloadTaskSchema]);
-    repository = DownloadRepositoryImpl(
+    repository = _InterleavingRepository(
       datasource: DownloadLocalDatasource(isar),
     );
+    queueService = _FakeQueueService();
+    fileService = _FakeFileService();
     episodeRepository = _FakeEpisodeRepository();
     historyRepository = _FakePlaybackHistoryRepository();
     deletedTaskIds = [];
     downloadService = DownloadService(
       repository: repository,
-      queueService: _UnusedQueueService(),
-      fileService: _UnusedFileService(),
+      queueService: queueService,
+      fileService: fileService,
       episodeRepository: episodeRepository,
       subscriptionRepository: _UnusedSubscriptionRepository(),
       logger: Logger(level: Level.off),
@@ -88,8 +120,9 @@ void main() {
       playbackHistoryRepository: historyRepository,
       isAutoDeletePlayedEnabled: () => true,
       deleteDownload: (task) async {
-        deletedTaskIds.add(task.id);
-        await repository.delete(task.id);
+        final deleted = await downloadService.deleteAuto(task.id);
+        if (deleted) deletedTaskIds.add(task.id);
+        return deleted;
       },
       clock: () => _now,
     );
@@ -200,6 +233,58 @@ void main() {
       check(deletedTaskIds).deepEquals([newer.id]);
       check(await repository.getById(kept.id)).isNotNull();
       check(await repository.getById(newest.id)).isNotNull();
+    });
+  });
+  group('keep racing retention', () {
+    test('cleanup that checked before a keep leaves the file', () async {
+      final task = await createTask(1);
+      historyRepository.byEpisodeId[1] = PlaybackHistory()
+        ..episodeId = 1
+        ..completedAt = _now.subtract(AppConstants.playedDownloadGracePeriod);
+      // Lands right after the sweep re-reads the task as auto.
+      repository.afterNextRead = () async {
+        check(await downloadService.keep(task.id)).isTrue();
+      };
+
+      check(await retentionService.sweepPlayed()).equals(0);
+
+      final stored = await repository.getById(task.id);
+      check(stored!.downloadOrigin).equals(DownloadOrigin.manual);
+      check(fileService.deletedPaths).isEmpty();
+    });
+
+    test('a keep that read before cleanup deleted reports no change', () async {
+      final task = await createTask(1);
+      // Lands right after keep reads the task as auto.
+      repository.afterNextRead = () async {
+        check(await downloadService.deleteAuto(task.id)).isTrue();
+      };
+
+      check(await downloadService.keep(task.id)).isFalse();
+
+      check(await repository.getById(task.id)).isNull();
+      check(fileService.deletedPaths).deepEquals(['/downloads/1.mp3']);
+    });
+
+    test('deleteAuto cancels an active auto download', () async {
+      final task = await createTask(
+        1,
+        status: const DownloadStatus.downloading(),
+      );
+
+      check(await downloadService.deleteAuto(task.id)).isTrue();
+
+      check(queueService.cancelledIds).deepEquals([task.id]);
+      check(await repository.getById(task.id)).isNull();
+    });
+
+    test('deleteAuto leaves a manual download alone', () async {
+      final task = await createTask(1, origin: DownloadOrigin.manual);
+
+      check(await downloadService.deleteAuto(task.id)).isFalse();
+
+      check(await repository.getById(task.id)).isNotNull();
+      check(fileService.deletedPaths).isEmpty();
     });
   });
 }

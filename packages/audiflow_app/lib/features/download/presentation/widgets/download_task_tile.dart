@@ -62,9 +62,18 @@ class DownloadTaskTile extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 2),
-                if (status is DownloadStatusDownloading)
-                  LinearProgressIndicator(value: _progress, minHeight: 3)
-                else
+                if (status is DownloadStatusDownloading) ...[
+                  LinearProgressIndicator(value: _progress, minHeight: 3),
+                  // The bar replaces the status line, so the auto mark
+                  // moves below it rather than disappearing mid-download.
+                  if (task.isRemovableByRetention)
+                    Text(
+                      AppLocalizations.of(context).downloadOriginAuto,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                ] else
                   Text(
                     _subtitle(status, AppLocalizations.of(context)),
                     style: theme.textTheme.bodySmall?.copyWith(

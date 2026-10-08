@@ -19,9 +19,20 @@ abstract class DownloadRepository {
     DownloadOrigin origin = DownloadOrigin.manual,
   });
 
-  /// Marks the task as a [DownloadOrigin.manual] download so retention
-  /// rules never remove it. Does nothing if [id] is unknown.
-  Future<void> markManual(int id);
+  /// Promotes an [DownloadOrigin.auto] task to [DownloadOrigin.manual] so
+  /// retention rules never remove it.
+  ///
+  /// Returns true only if the task still existed and was auto when the
+  /// change was made; false if it is unknown, was deleted, or is already
+  /// manual.
+  Future<bool> markManual(int id);
+
+  /// Deletes the task's record only if it is still [DownloadOrigin.auto],
+  /// checking and deleting atomically so a concurrent [markManual] wins.
+  ///
+  /// Returns the deleted task, whose file the caller then removes, or null
+  /// if the task is gone or was kept.
+  Future<DownloadTask?> deleteIfAuto(int id);
 
   /// Returns a download task by ID.
   Future<DownloadTask?> getById(int id);

@@ -18,7 +18,10 @@ class DownloadLocalDatasource {
     return task.id;
   }
 
-  /// Updates a download task by ID.
+  /// Replaces the stored task with [task].
+  ///
+  /// Writes the whole row, so a copy read earlier overwrites fields other
+  /// writers changed since. Use [modify] to change fields of a live task.
   Future<int> updateById(int id, DownloadTask task) async {
     task.id = id;
     await _isar.writeTxn(() => _isar.downloadTasks.put(task));
@@ -31,15 +34,51 @@ class DownloadLocalDatasource {
     return deleted ? 1 : 0;
   }
 
-  /// Marks the task as a manual download. Reads the row inside the write
-  /// transaction so concurrent progress or status writes are not
-  /// overwritten with a stale copy. Does nothing if [id] is unknown.
-  Future<void> markManual(int id) {
+  /// Applies [change] to the stored task and saves it. Returns false if
+  /// [id] is unknown.
+  ///
+  /// The read happens inside the write transaction: a copy read before it
+  /// would put back fields that a concurrent writer changed in between,
+  /// such as the origin a keep request just promoted.
+  Future<bool> modify(int id, void Function(DownloadTask task) change) {
     return _isar.writeTxn(() async {
       final task = await _isar.downloadTasks.get(id);
-      if (task == null) return;
+      if (task == null) return false;
+      change(task);
+      await _isar.downloadTasks.put(task);
+      return true;
+    });
+  }
+
+  /// Promotes an auto download to manual. Returns true only if the task
+  /// still exists and was auto, so a caller can tell a real promotion
+  /// from a task that was deleted or already manual in the meantime.
+  Future<bool> markManual(int id) {
+    return _isar.writeTxn(() async {
+      final task = await _isar.downloadTasks.get(id);
+      if (task == null || task.downloadOrigin != DownloadOrigin.auto) {
+        return false;
+      }
       task.origin = DownloadOrigin.manual.dbValue;
       await _isar.downloadTasks.put(task);
+      return true;
+    });
+  }
+
+  /// Deletes the task only if it is still an auto download, and returns
+  /// the deleted row (so the caller can remove its file), or null if it
+  /// is gone or was kept.
+  ///
+  /// The origin check and the delete share one transaction, so a keep
+  /// request cannot land between retention's check and its delete.
+  Future<DownloadTask?> deleteIfAuto(int id) {
+    return _isar.writeTxn(() async {
+      final task = await _isar.downloadTasks.get(id);
+      if (task == null || task.downloadOrigin != DownloadOrigin.auto) {
+        return null;
+      }
+      await _isar.downloadTasks.delete(id);
+      return task;
     });
   }
 

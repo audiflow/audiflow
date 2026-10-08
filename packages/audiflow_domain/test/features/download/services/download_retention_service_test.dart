@@ -110,7 +110,10 @@ void main() {
       episodeRepository: episodeRepository,
       playbackHistoryRepository: historyRepository,
       isAutoDeletePlayedEnabled: () => enabled,
-      deleteDownload: (task) async => deletedTaskIds.add(task.id),
+      deleteDownload: (task) async {
+        deletedTaskIds.add(task.id);
+        return true;
+      },
       clock: () => _now,
     );
   });
@@ -179,6 +182,24 @@ void main() {
       check(deletedTaskIds).isEmpty();
     });
 
+    test('does not count a task the deleter found kept', () async {
+      // The deleter re-checks the origin atomically; a keep that lands
+      // after the sweep's re-read makes it decline.
+      downloadRepository.tasks.addAll([_task(id: 1), _task(id: 2)]);
+      completeEpisode(1, _graceElapsed);
+      completeEpisode(2, _graceElapsed);
+      service = DownloadRetentionService(
+        downloadRepository: downloadRepository,
+        episodeRepository: episodeRepository,
+        playbackHistoryRepository: historyRepository,
+        isAutoDeletePlayedEnabled: () => true,
+        deleteDownload: (task) async => task.id != 1,
+        clock: () => _now,
+      );
+
+      check(await service.sweepPlayed()).equals(1);
+    });
+
     test('continues past a failed delete', () async {
       downloadRepository.tasks.addAll([_task(id: 1), _task(id: 2)]);
       completeEpisode(1, _graceElapsed);
@@ -191,6 +212,7 @@ void main() {
         deleteDownload: (task) async {
           if (task.id == 1) throw Exception('file locked');
           deletedTaskIds.add(task.id);
+          return true;
         },
         clock: () => _now,
       );
@@ -310,7 +332,10 @@ void main() {
         episodeRepository: episodeRepository,
         playbackHistoryRepository: historyRepository,
         isAutoDeletePlayedEnabled: () => true,
-        deleteDownload: (task) async => handed.add(task.downloadStatus),
+        deleteDownload: (task) async {
+          handed.add(task.downloadStatus);
+          return true;
+        },
         clock: () => _now,
       );
 

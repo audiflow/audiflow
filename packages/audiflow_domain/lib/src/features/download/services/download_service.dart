@@ -306,8 +306,30 @@ class DownloadService {
   Future<bool> keep(int taskId) async {
     final task = await _repository.getById(taskId);
     if (task == null || !task.isRemovableByRetention) return false;
-    await _repository.markManual(taskId);
-    _logger.i('Kept auto download: $taskId');
+    // Retention may delete the task after the read above; markManual
+    // reports whether a still-existing auto task was promoted.
+    final promoted = await _repository.markManual(taskId);
+    if (promoted) _logger.i('Kept auto download: $taskId');
+    return promoted;
+  }
+
+  /// Deletes an auto download for retention rules. Returns false, leaving
+  /// everything in place, if the task is gone or was kept in the meantime.
+  ///
+  /// The record is removed first, in the same transaction as the origin
+  /// check, so a keep request either lands before (and the file stays) or
+  /// finds nothing to keep. A late status write from the cancelled
+  /// transfer cannot recreate the record because writers skip missing rows.
+  Future<bool> deleteAuto(int taskId) async {
+    final task = await _repository.deleteIfAuto(taskId);
+    if (task == null) return false;
+    if (task.downloadStatus.isActive) {
+      await _queueService.cancelDownload(task.id);
+    }
+    final localPath = task.localPath;
+    if (localPath != null) await _fileService.deleteFile(localPath);
+    _logger.i('Deleted auto download: ${task.id}');
+    await _tryReconcile(task.episodeId);
     return true;
   }
 

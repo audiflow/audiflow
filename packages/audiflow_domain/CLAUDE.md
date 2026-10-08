@@ -21,6 +21,7 @@ Sub-package of the `audiflow` Flutter monorepo. Depends on `audiflow_core`, `aud
 - Business services (feed sync, playback, download queue, station reconciliation, full local-data reset via `DataResetService`)
 - Smart playlist config consumption, caching, and resolver pipeline
 - Background refresh and new-episode notification orchestration
+- Download origin and retention: `DownloadTask.origin` marks a download `auto` (enqueued by auto-download, removable by `DownloadRetentionService`) or `manual` (removed only by the listener). `DownloadService.keep` promotes an auto download to manual via `DownloadRepository.markManual`, which returns true only when a still-existing auto task was promoted; retention deletes through `DownloadRepository.deleteIfAuto`, which checks the origin and deletes in one Isar write transaction so a concurrent keep always wins
 - Parental control: PIN-gated Restricted Mode (`ParentalControlRepository`, `PinHasher`, `UnlockState`, Riverpod providers)
 
 ## Non-responsibilities
@@ -48,3 +49,4 @@ dart run build_runner build --delete-conflicting-outputs
 - New Isar collection: register in `database_provider.dart`, run codegen
 - Smart playlist model changes: coordinate with `preset_core`/`preset_shared`, update vendored schema, run conformance tests
 - New feature module: add exports to `audiflow_domain.dart`, mirror existing directory structure
+- Download task writes: change fields through `DownloadLocalDatasource.modify` (read and write in one transaction), never by saving a copy read earlier, or a concurrent keep can lose its origin change

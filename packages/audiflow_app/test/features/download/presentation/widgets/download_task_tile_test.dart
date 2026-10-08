@@ -77,6 +77,25 @@ void main() {
       check(keepTaps).equals(1);
     });
 
+    testWidgets('stay labeled while downloading', (tester) async {
+      await tester.pumpWidget(
+        _app(
+          DownloadTaskTile(
+            task: _task(
+              const DownloadStatus.downloading(),
+              origin: DownloadOrigin.auto,
+            ),
+            episodeTitle: 'Episode',
+            onKeep: () {},
+          ),
+        ),
+      );
+
+      check(find.byType(LinearProgressIndicator).evaluate()).length.equals(1);
+      check(find.text('Auto-downloaded').evaluate()).length.equals(1);
+      check(find.byTooltip('Keep download').evaluate()).length.equals(1);
+    });
+
     testWidgets('that failed carry no label or keep', (tester) async {
       await tester.pumpWidget(
         _app(

@@ -358,25 +358,133 @@ void main() {
     });
   });
 
+  Future<DownloadTask> createAuto({
+    DownloadStatus status = const DownloadStatus.downloading(),
+  }) async {
+    final task = await repository.createDownload(
+      episodeId: 1,
+      audioUrl: 'https://example.com/ep1.mp3',
+      wifiOnly: true,
+      origin: DownloadOrigin.auto,
+    );
+    await repository.updateStatus(id: task!.id, status: status);
+    return task;
+  }
+
   group('markManual', () {
     test('promotes an auto download to manual', () async {
-      final task = await repository.createDownload(
-        episodeId: 1,
-        audioUrl: 'https://example.com/ep1.mp3',
-        wifiOnly: true,
-        origin: DownloadOrigin.auto,
-      );
+      final task = await createAuto();
 
-      await repository.markManual(task!.id);
+      check(await repository.markManual(task.id)).isTrue();
 
       final stored = await repository.getById(task.id);
       check(stored!.downloadOrigin).equals(DownloadOrigin.manual);
     });
 
-    test('does nothing for an unknown task', () async {
-      await repository.markManual(999);
+    test('reports no promotion for a manual download', () async {
+      final task = await repository.createDownload(
+        episodeId: 1,
+        audioUrl: 'https://example.com/ep1.mp3',
+        wifiOnly: true,
+      );
+
+      check(await repository.markManual(task!.id)).isFalse();
+    });
+
+    test('reports no promotion for an unknown task', () async {
+      check(await repository.markManual(999)).isFalse();
 
       check(await repository.getAll()).isEmpty();
+    });
+  });
+
+  // Each writer is started first and markManual right after, without
+  // awaiting in between. A writer that read the task before its write
+  // transaction would save that stale copy after the promotion and put
+  // the auto origin back.
+  group('writers racing markManual keep the promotion', () {
+    final writers = <String, Future<void> Function(int id)>{
+      'updateProgress': (id) =>
+          repository.updateProgress(id: id, downloadedBytes: 10),
+      'updateStatus': (id) => repository.updateStatus(
+        id: id,
+        status: const DownloadStatus.completed(),
+        localPath: '/downloads/1.mp3',
+      ),
+      'incrementRetryCount': (id) => repository.incrementRetryCount(id),
+      'resetRetryCount': (id) => repository.resetRetryCount(id),
+    };
+
+    for (final MapEntry(key: name, value: write) in writers.entries) {
+      test(name, () async {
+        final task = await createAuto();
+
+        await Future.wait([write(task.id), repository.markManual(task.id)]);
+
+        final stored = await repository.getById(task.id);
+        check(stored!.downloadOrigin).equals(DownloadOrigin.manual);
+      });
+    }
+
+    test('writers still apply their own fields', () async {
+      final task = await createAuto();
+
+      await Future.wait([
+        repository.updateProgress(
+          id: task.id,
+          downloadedBytes: 10,
+          totalBytes: 20,
+        ),
+        repository.markManual(task.id),
+        repository.incrementRetryCount(task.id),
+      ]);
+
+      final stored = await repository.getById(task.id);
+      check(stored!.downloadedBytes).equals(10);
+      check(stored.totalBytes).equals(20);
+      check(stored.retryCount).equals(1);
+    });
+
+    test('writers do not recreate a deleted task', () async {
+      final task = await createAuto();
+      await repository.delete(task.id);
+
+      await repository.updateStatus(
+        id: task.id,
+        status: const DownloadStatus.cancelled(),
+      );
+
+      check(await repository.getById(task.id)).isNull();
+    });
+  });
+
+  group('deleteIfAuto', () {
+    test('deletes an auto download and returns it', () async {
+      final task = await createAuto(status: const DownloadStatus.completed());
+
+      final deleted = await repository.deleteIfAuto(task.id);
+
+      check(deleted).isNotNull().has((t) => t.id, 'id').equals(task.id);
+      check(await repository.getById(task.id)).isNull();
+    });
+
+    test('leaves a task kept before the delete in place', () async {
+      final task = await createAuto(status: const DownloadStatus.completed());
+      await repository.markManual(task.id);
+
+      check(await repository.deleteIfAuto(task.id)).isNull();
+      check(await repository.getById(task.id)).isNotNull();
+    });
+
+    test('a keep after the delete reports no promotion', () async {
+      final task = await createAuto(status: const DownloadStatus.completed());
+      await repository.deleteIfAuto(task.id);
+
+      check(await repository.markManual(task.id)).isFalse();
+    });
+
+    test('returns null for an unknown task', () async {
+      check(await repository.deleteIfAuto(999)).isNull();
     });
   });
 
