@@ -2240,6 +2240,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not save the change. Please try again.';
 
   @override
+  String get podcastSettingsSaveFailed => 'Couldn\'t save the setting.';
+
+  @override
   String get parentalControlToggleFailed =>
       'Could not change the setting. Please try again.';
 
