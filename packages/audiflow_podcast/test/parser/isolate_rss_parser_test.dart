@@ -209,6 +209,19 @@ void main() {
       );
     });
 
+    test('a malformed reference in the link does not fail the feed', () async {
+      final events = await IsolateRssParser.parse(
+        feedXml:
+            '<?xml version="1.0" encoding="UTF-8"?>'
+            '<rss version="2.0"><channel><title>Show</title>'
+            '<link>https://example.com/&#x110000;</link>'
+            '<item><guid>e1</guid><title>E1</title></item>'
+            '</channel></rss>',
+        knownGuids: {},
+      ).toList();
+      expect(events.whereType<ParsedEpisode>(), hasLength(1));
+    });
+
     test('drops a channel link that is not an http(s) address', () async {
       // Such a link only hides "Open website"; it must not fail the feed.
       expect(await channelLink('example.com/show'), isNull);
