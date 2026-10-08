@@ -45,6 +45,12 @@ void main() {
                         label: 'Website',
                         onSelected: () => log.add('web'),
                       ),
+                      ActionMenuEntry(
+                        icon: Icons.delete_outline,
+                        label: 'Remove',
+                        destructive: true,
+                        onSelected: () => log.add('remove'),
+                      ),
                     ],
                   ],
                 ),
@@ -100,6 +106,20 @@ void main() {
       await tester.tap(find.text('Share'));
       await tester.pumpAndSettle();
       check(log).deepEquals(['order', 'share']);
+    });
+
+    testWidgets('a destructive entry is drawn in the error color', (
+      tester,
+    ) async {
+      await open(tester, log: []);
+      final error = AppTheme.light().colorScheme.error;
+      final remove = tester.widget<Text>(find.text('Remove'));
+      final website = tester.widget<Text>(find.text('Website'));
+      check(remove.style?.color).equals(error);
+      check(website.style?.color).equals(AppColors.light.ink);
+      check(
+        tester.widget<Icon>(find.byIcon(Icons.delete_outline)).color,
+      ).equals(error);
     });
 
     testWidgets('tapping outside dismisses without running anything', (
