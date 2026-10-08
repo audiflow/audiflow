@@ -84,8 +84,10 @@ class DownloadRetentionService {
 
   Future<bool> _isPastGracePeriod(int episodeId) async {
     final history = await _playbackHistoryRepository.getByEpisodeId(episodeId);
-    final completedAt = history?.completedAt;
-    if (completedAt == null) return false;
+    // A replay is still using the file; finishing it restarts the grace
+    // period from the new completedAt.
+    if (history == null || !history.isListenFinished) return false;
+    final completedAt = history.completedAt!;
     final deadline = completedAt.add(AppConstants.playedDownloadGracePeriod);
     return !_clock().isBefore(deadline);
   }

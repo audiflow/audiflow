@@ -152,6 +152,17 @@ void main() {
       check(await service.sweepPlayed()).equals(0);
     });
 
+    test('keeps the download of a played episode being replayed', () async {
+      downloadRepository.tasks.add(_task(id: 1));
+      completeEpisode(1, _graceElapsed);
+      historyRepository.byEpisodeId[1]!
+        ..isReplaying = true
+        ..positionMs = 60000;
+
+      check(await service.sweepPlayed()).equals(0);
+      check(deletedTaskIds).isEmpty();
+    });
+
     test('ignores downloads that have not finished downloading', () async {
       downloadRepository.tasks.add(
         _task(id: 1, status: const DownloadStatus.paused()),
