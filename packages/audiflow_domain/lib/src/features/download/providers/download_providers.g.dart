@@ -64,6 +64,56 @@ final class AutoDownloadEnqueuerProvider
 String _$autoDownloadEnqueuerHash() =>
     r'4c0f3dcbe5a5acaddd694b1449aae9fa9c32daca';
 
+/// Watches the ids of episodes that have a completed download.
+///
+/// Emits only when the set changes, so progress writes on in-flight tasks
+/// do not rebuild lists that filter by downloaded state.
+
+@ProviderFor(completedDownloadEpisodeIds)
+final completedDownloadEpisodeIdsProvider =
+    CompletedDownloadEpisodeIdsProvider._();
+
+/// Watches the ids of episodes that have a completed download.
+///
+/// Emits only when the set changes, so progress writes on in-flight tasks
+/// do not rebuild lists that filter by downloaded state.
+
+final class CompletedDownloadEpisodeIdsProvider
+    extends
+        $FunctionalProvider<AsyncValue<Set<int>>, Set<int>, Stream<Set<int>>>
+    with $FutureModifier<Set<int>>, $StreamProvider<Set<int>> {
+  /// Watches the ids of episodes that have a completed download.
+  ///
+  /// Emits only when the set changes, so progress writes on in-flight tasks
+  /// do not rebuild lists that filter by downloaded state.
+  CompletedDownloadEpisodeIdsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'completedDownloadEpisodeIdsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$completedDownloadEpisodeIdsHash();
+
+  @$internal
+  @override
+  $StreamProviderElement<Set<int>> $createElement($ProviderPointer pointer) =>
+      $StreamProviderElement(pointer);
+
+  @override
+  Stream<Set<int>> create(Ref ref) {
+    return completedDownloadEpisodeIds(ref);
+  }
+}
+
+String _$completedDownloadEpisodeIdsHash() =>
+    r'1e7421ae72132d16d87e668cc6ff53e6847ddf17';
+
 /// Returns count of downloads needing attention (failed).
 
 @ProviderFor(downloadsNeedingAttention)
