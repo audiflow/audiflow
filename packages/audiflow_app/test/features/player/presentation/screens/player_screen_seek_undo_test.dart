@@ -79,7 +79,7 @@ Future<Widget> _buildPlayer(_RecordingAudioPlayerController player) async {
       ),
       playbackProgressProvider.overrideWith((ref) => _progress),
       playbackSpeedProvider.overrideWith((ref) => Stream.value(1.0)),
-      episodeHasTranscriptProvider.overrideWith((ref, id) async => false),
+      transcriptServiceProvider.overrideWithValue(StubTranscriptService()),
       currentEpisodeChaptersProvider.overrideWith(
         (ref) => Stream.value(_chapters),
       ),

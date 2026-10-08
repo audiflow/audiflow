@@ -406,6 +406,13 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                 knownEpisodeId: view.episodeId,
               ),
             ),
+          if (task != null && task.isRemovableByRetention)
+            ActionMenuEntry(
+              icon: Icons.push_pin_outlined,
+              label: l10n.downloadKeep,
+              onSelected: () =>
+                  keepDownload(context: context, ref: ref, task: task),
+            ),
           if (downloaded)
             ActionMenuEntry(
               icon: Icons.delete_outline_rounded,

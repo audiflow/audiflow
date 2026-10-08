@@ -850,6 +850,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get downloadDeleted => 'ダウンロードを削除しました';
 
   @override
+  String get downloadKeep => 'ダウンロードを保持';
+
+  @override
+  String get downloadKept => 'ダウンロードを保持しました。自動では削除されません';
+
+  @override
+  String get downloadOriginAuto => '自動ダウンロード';
+
+  @override
   String get downloadManageTitle => 'ダウンロード管理';
 
   @override

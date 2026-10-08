@@ -164,7 +164,7 @@ Top to bottom:
 
 1. **Title** "ライブラリ" (`displayTitle`), no trailing button. Adding podcasts is the Search tab's job.
 2. **Continue listening** — horizontal cards for in-progress episodes (up to 10, from playback history). Card: artwork 56, title (2 lines), remaining time, bottom-edge progress line. Section hidden when empty.
-3. **Stations** — a 2-column grid showing at most 4 stations (default: most recently played). Header: the station count beside the title, then "+" (create) and "すべて表示 ›" (opens the station list, shown only beyond 4). The section never grows beyond 4 tiles regardless of station count.
+3. **Stations** — a 2-column grid showing at most 4 stations (default: most recently played). Header: the station count beside the title, then "+" (create) and "すべて表示 ›" (opens the station list, shown only beyond 4). The section never grows beyond 4 tiles regardless of station count. Each tile's artwork shows the station's podcasts as stacked cards, never cropped: one podcast fills the square; two or three are smaller cards with a `floating` shadow, overlapping from top-left to bottom-right over a blur of the first podcast's artwork; beyond three, only the first three show. A station with no podcasts shows four dashed slots on `surfaceSunken` with an `accent` "+" button that opens the station editor with podcast selection already open.
 4. **Podcasts** — sticky header row with the count beside the title and the sort (latest episode / subscribed date / name) on the right. A filter field sits under it, always shown. List only: artwork 52, title, last-updated, and an `accent` dot when an episode arrived since the podcast was last opened (a presence mark rather than an unplayed count, which a long back catalog would inflate). A grid layout was tried and dropped: at typical library sizes it only trades the last-updated date and full titles for density.
 
 ### 4.2 Podcast detail
@@ -200,7 +200,7 @@ Artwork-derived background (2.2). From top: grabber, close chevron, "Playing fro
 
 ### 4.6 Queue
 
-Title "キュー" with a "clear" action. A now-playing card on the artwork-derived color with a white bottom-edge progress line. "Up next" grouped list: artwork 48, title (2 lines), duration and date with a downloaded indicator, and a drag handle as the only trailing control. Remove and download move to swipe actions.
+Title "キュー" with a "clear" action. A now-playing card on the artwork-derived color with a white bottom-edge progress line. "Up next" grouped list: artwork 48, title (2 lines), duration and date with a downloaded indicator, and a drag handle as the only trailing control. Remove and download move to swipe actions. The long-press sheet adds "ダウンロードを保持" for an auto download that retention may remove.
 
 ### 4.7 Search
 
@@ -230,7 +230,7 @@ Reached from any episode row (Podcast detail, Series episodes, Queue, Library). 
 - **Progress line**: under the action row, a full-width 3px line with the status on its right ("残り17分", or "✓ 再生済み" in `accent` with the line full). Hidden while unplayed. This is the standalone form of the bottom-edge line (3.1); the play pill itself never shows progress.
 - **Description**: one `surface` card titled "エピソードについて". Show notes render as rich text with `accent` underlined links, clamped to about 6 lines with a "さらに表示 / 閉じる" toggle. Separator runs follow section 5 (rule lines become a hairline, decorations are stripped), and links whose text is only invisible characters are removed (they would show a stray underline).
 - **Playback record** ("再生の記録"): a grouped list of label / value rows: times completed, times started, total listened, real time, first played, last played (values "—" or "未再生" before the first play). Title, podcast, duration and publish date are not repeated here because the hero already shows them. Long-press a row to copy its value.
-- **`…` menu**: "再生済みにする / 未再生にする", "ダウンロードを削除" (only when downloaded, in the `error` color), then "番組を開く". Queue, download and share are on screen, so they are not repeated in the menu.
+- **`…` menu**: "再生済みにする / 未再生にする", "ダウンロードを保持" (only for an auto download that retention may still remove; neutral, no accent), "ダウンロードを削除" (only when downloaded, in the `error` color), then "番組を開く". Queue, download and share are on screen, so they are not repeated in the menu.
 - **Developer info** (feed URL and similar) appears as an extra grouped section at the bottom only when developer mode is on.
 
 ## 5. Content rules

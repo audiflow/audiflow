@@ -128,6 +128,25 @@ class _DiagDownloadRepo implements DownloadRepository {
   @override
   Future<void> delete(int id) => _inner.delete(id);
   @override
+  Future<bool> markManual(int id) => _inner.markManual(id);
+  @override
+  Future<DeletedAutoDownload?> deleteIfAuto(int id) => _inner.deleteIfAuto(id);
+  @override
+  Future<List<DownloadFileRemoval>> getPendingFileRemovals() =>
+      _inner.getPendingFileRemovals();
+  @override
+  Future<bool> removeEpisodeFiles({
+    required int episodeId,
+    required Future<void> Function() removeFiles,
+    int? taskId,
+    int? fileRemovalId,
+  }) => _inner.removeEpisodeFiles(
+    episodeId: episodeId,
+    removeFiles: removeFiles,
+    taskId: taskId,
+    fileRemovalId: fileRemovalId,
+  );
+  @override
   Future<int> getActiveCount() => _inner.getActiveCount();
   @override
   Future<List<DownloadTask>> getAll() => _inner.getAll();
@@ -439,9 +458,24 @@ void backgroundCallback() {
         };
       }
 
+      final reconciler = StationReconcilerService(isar: isar);
+      final downloadDeleter = BackgroundDownloadDeleter(
+        downloadRepository: downloadRepo,
+        downloadsDir: '${dir.path}/downloads',
+        // Shared with the download workers, which run in other engines.
+        lock: BackgroundDownloadLock(directory: dir.path),
+        onDeleted: reconciler.onEpisodeChanged,
+      );
+
       final executor = FeedSyncExecutor(
         subscriptionRepo: subscriptionRepo,
         episodeRepo: episodeRepo,
+        droppedEpisodeRemover: DroppedEpisodeRemover(
+          episodeRepository: episodeRepo,
+          downloadRepository: downloadRepo,
+          deleteDownload: downloadDeleter.call,
+          logger: logger,
+        ),
         settingsRepo: settingsRepo,
         feedParser: feedParser,
         dio: dio,
@@ -468,18 +502,14 @@ void backgroundCallback() {
         onDiagnostic: feedSyncDiagnostic,
       );
 
-      final reconciler = StationReconcilerService(isar: isar);
       final downloadRetention = DownloadRetentionService(
         downloadRepository: downloadRepo,
         episodeRepository: episodeRepo,
         playbackHistoryRepository: playbackHistoryRepo,
         // Played cleanup runs in the foreground only; this isolate trims.
         isAutoDeletePlayedEnabled: () => false,
-        deleteDownload: BackgroundDownloadDeleter(
-          downloadRepository: downloadRepo,
-          downloadsDir: '${dir.path}/downloads',
-          onDeleted: reconciler.onEpisodeChanged,
-        ).call,
+        deleteDownload: downloadDeleter.deleteAuto,
+        retryFileRemovals: downloadDeleter.retryFileRemovals,
         logger: logger,
       );
 

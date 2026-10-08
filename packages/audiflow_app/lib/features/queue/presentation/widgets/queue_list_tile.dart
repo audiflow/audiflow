@@ -11,6 +11,7 @@ import 'package:material_symbols_icons/symbols.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/duration_label.dart';
 import '../../../download/presentation/helpers/download_action_helper.dart';
+import '../../../download/presentation/widgets/keep_download_menu_tile.dart';
 import '../../../podcast_detail/presentation/screens/episode_detail_screen.dart';
 import '../../../share/presentation/helpers/share_helper.dart';
 
@@ -111,8 +112,13 @@ class QueueListTile extends ConsumerWidget {
           children: [
             InkWell(
               onTap: onTap,
-              onLongPress: () =>
-                  _showContextMenu(context, ref, downloadAction, download),
+              onLongPress: () => _showContextMenu(
+                context,
+                ref,
+                downloadAction,
+                download,
+                downloadTask,
+              ),
               child: _row(context, colors, downloadTask),
             ),
             Divider(
@@ -204,13 +210,14 @@ class QueueListTile extends ConsumerWidget {
     ].join(' · ');
   }
 
-  /// Long-press sheet: go to the episode, the same next download step as
-  /// the right swipe, and share.
+  /// Long-press sheet: go to the episode, keep an auto download, the same
+  /// next download step as the right swipe, and share.
   void _showContextMenu(
     BuildContext context,
     WidgetRef ref,
     _DownloadSwipeAction downloadAction,
     Future<void> Function() download,
+    DownloadTask? downloadTask,
   ) {
     final l10n = AppLocalizations.of(context);
 
@@ -264,6 +271,20 @@ class QueueListTile extends ConsumerWidget {
                         _navigateToEpisodeDetail(context, ref);
                       },
                     ),
+                    if (downloadTask case final task?
+                        when task.isRemovableByRetention)
+                      KeepDownloadMenuTile(
+                        onTap: () {
+                          Navigator.pop(sheetContext);
+                          unawaited(
+                            keepDownload(
+                              context: context,
+                              ref: ref,
+                              task: task,
+                            ),
+                          );
+                        },
+                      ),
                     ListTile(
                       leading: Icon(downloadAction.icon),
                       title: Text(downloadAction.menuLabel),

@@ -34,7 +34,12 @@ const EpisodeTranscriptSchema = CollectionSchema(
     ),
     r'rel': PropertySchema(id: 3, name: r'rel', type: IsarType.string),
     r'type': PropertySchema(id: 4, name: r'type', type: IsarType.string),
-    r'url': PropertySchema(id: 5, name: r'url', type: IsarType.string),
+    r'unusableAt': PropertySchema(
+      id: 5,
+      name: r'unusableAt',
+      type: IsarType.dateTime,
+    ),
+    r'url': PropertySchema(id: 6, name: r'url', type: IsarType.string),
   },
 
   estimateSize: _episodeTranscriptEstimateSize,
@@ -105,7 +110,8 @@ void _episodeTranscriptSerialize(
   writer.writeString(offsets[2], object.language);
   writer.writeString(offsets[3], object.rel);
   writer.writeString(offsets[4], object.type);
-  writer.writeString(offsets[5], object.url);
+  writer.writeDateTime(offsets[5], object.unusableAt);
+  writer.writeString(offsets[6], object.url);
 }
 
 EpisodeTranscript _episodeTranscriptDeserialize(
@@ -121,7 +127,8 @@ EpisodeTranscript _episodeTranscriptDeserialize(
   object.language = reader.readStringOrNull(offsets[2]);
   object.rel = reader.readStringOrNull(offsets[3]);
   object.type = reader.readString(offsets[4]);
-  object.url = reader.readString(offsets[5]);
+  object.unusableAt = reader.readDateTimeOrNull(offsets[5]);
+  object.url = reader.readString(offsets[6]);
   return object;
 }
 
@@ -143,6 +150,8 @@ P _episodeTranscriptDeserializeProp<P>(
     case 4:
       return (reader.readString(offset)) as P;
     case 5:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 6:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1154,6 +1163,79 @@ extension EpisodeTranscriptQueryFilter
   }
 
   QueryBuilder<EpisodeTranscript, EpisodeTranscript, QAfterFilterCondition>
+  unusableAtIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'unusableAt'),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeTranscript, EpisodeTranscript, QAfterFilterCondition>
+  unusableAtIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'unusableAt'),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeTranscript, EpisodeTranscript, QAfterFilterCondition>
+  unusableAtEqualTo(DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'unusableAt', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeTranscript, EpisodeTranscript, QAfterFilterCondition>
+  unusableAtGreaterThan(DateTime? value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'unusableAt',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeTranscript, EpisodeTranscript, QAfterFilterCondition>
+  unusableAtLessThan(DateTime? value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'unusableAt',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeTranscript, EpisodeTranscript, QAfterFilterCondition>
+  unusableAtBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'unusableAt',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeTranscript, EpisodeTranscript, QAfterFilterCondition>
   urlEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -1368,6 +1450,20 @@ extension EpisodeTranscriptQuerySortBy
     });
   }
 
+  QueryBuilder<EpisodeTranscript, EpisodeTranscript, QAfterSortBy>
+  sortByUnusableAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'unusableAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<EpisodeTranscript, EpisodeTranscript, QAfterSortBy>
+  sortByUnusableAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'unusableAt', Sort.desc);
+    });
+  }
+
   QueryBuilder<EpisodeTranscript, EpisodeTranscript, QAfterSortBy> sortByUrl() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'url', Sort.asc);
@@ -1466,6 +1562,20 @@ extension EpisodeTranscriptQuerySortThenBy
     });
   }
 
+  QueryBuilder<EpisodeTranscript, EpisodeTranscript, QAfterSortBy>
+  thenByUnusableAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'unusableAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<EpisodeTranscript, EpisodeTranscript, QAfterSortBy>
+  thenByUnusableAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'unusableAt', Sort.desc);
+    });
+  }
+
   QueryBuilder<EpisodeTranscript, EpisodeTranscript, QAfterSortBy> thenByUrl() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'url', Sort.asc);
@@ -1519,6 +1629,13 @@ extension EpisodeTranscriptQueryWhereDistinct
     });
   }
 
+  QueryBuilder<EpisodeTranscript, EpisodeTranscript, QDistinct>
+  distinctByUnusableAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'unusableAt');
+    });
+  }
+
   QueryBuilder<EpisodeTranscript, EpisodeTranscript, QDistinct> distinctByUrl({
     bool caseSensitive = true,
   }) {
@@ -1565,6 +1682,13 @@ extension EpisodeTranscriptQueryProperty
   QueryBuilder<EpisodeTranscript, String, QQueryOperations> typeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'type');
+    });
+  }
+
+  QueryBuilder<EpisodeTranscript, DateTime?, QQueryOperations>
+  unusableAtProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'unusableAt');
     });
   }
 

@@ -2,6 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/providers/database_provider.dart';
 import '../datasources/local/download_local_datasource.dart';
+import '../models/download_file_removal.dart';
 import '../models/download_origin.dart';
 import '../models/download_status.dart';
 import '../models/download_task.dart';
@@ -65,6 +66,30 @@ class DownloadRepositoryImpl implements DownloadRepository {
   }
 
   @override
+  Future<bool> markManual(int id) => _datasource.markManual(id);
+
+  @override
+  Future<DeletedAutoDownload?> deleteIfAuto(int id) =>
+      _datasource.deleteIfAuto(id);
+
+  @override
+  Future<List<DownloadFileRemoval>> getPendingFileRemovals() =>
+      _datasource.getFileRemovals();
+
+  @override
+  Future<bool> removeEpisodeFiles({
+    required int episodeId,
+    required Future<void> Function() removeFiles,
+    int? taskId,
+    int? fileRemovalId,
+  }) => _datasource.removeEpisodeFiles(
+    episodeId: episodeId,
+    removeFiles: removeFiles,
+    taskId: taskId,
+    fileRemovalId: fileRemovalId,
+  );
+
+  @override
   Future<DownloadTask?> getById(int id) => _datasource.getById(id);
 
   @override
@@ -103,20 +128,20 @@ class DownloadRepositoryImpl implements DownloadRepository {
     Set<int> excludeIds = const {},
   }) => _datasource.getNextPending(isOnWifi: isOnWifi, excludeIds: excludeIds);
 
+  // Every writer below changes its fields inside one write transaction
+  // (see DownloadLocalDatasource.modify), so a progress or status write
+  // racing a keep request cannot restore the old origin.
+
   @override
   Future<void> updateProgress({
     required int id,
     required int downloadedBytes,
     int? totalBytes,
   }) async {
-    final task = await _datasource.getById(id);
-    if (task == null) return;
-
-    task.downloadedBytes = downloadedBytes;
-    if (totalBytes != null) {
-      task.totalBytes = totalBytes;
-    }
-    await _datasource.updateById(id, task);
+    await _datasource.modify(id, (task) {
+      task.downloadedBytes = downloadedBytes;
+      if (totalBytes != null) task.totalBytes = totalBytes;
+    });
   }
 
   @override
@@ -126,43 +151,28 @@ class DownloadRepositoryImpl implements DownloadRepository {
     String? localPath,
     String? lastError,
   }) async {
-    final task = await _datasource.getById(id);
-    if (task == null) return;
-
-    // Only set completedAt when transitioning to completed, not when
-    // the task is already completed (e.g. path migration updates).
-    final wasAlreadyCompleted =
-        DownloadStatus.fromDbValue(task.status) is DownloadStatusCompleted;
-
-    task.status = status.toDbValue();
-    if (localPath != null) {
-      task.localPath = localPath;
-    }
-    if (lastError != null) {
-      task.lastError = lastError;
-    }
-    if (status is DownloadStatusCompleted && !wasAlreadyCompleted) {
-      task.completedAt = DateTime.now();
-    }
-    await _datasource.updateById(id, task);
+    await _datasource.modify(id, (task) {
+      // Only set completedAt when transitioning to completed, not when
+      // the task is already completed (e.g. path migration updates).
+      final wasAlreadyCompleted =
+          task.downloadStatus is DownloadStatusCompleted;
+      task.status = status.toDbValue();
+      if (localPath != null) task.localPath = localPath;
+      if (lastError != null) task.lastError = lastError;
+      if (status is DownloadStatusCompleted && !wasAlreadyCompleted) {
+        task.completedAt = DateTime.now();
+      }
+    });
   }
 
   @override
   Future<void> incrementRetryCount(int id) async {
-    final task = await _datasource.getById(id);
-    if (task == null) return;
-
-    task.retryCount = task.retryCount + 1;
-    await _datasource.updateById(id, task);
+    await _datasource.modify(id, (task) => task.retryCount++);
   }
 
   @override
   Future<void> resetRetryCount(int id) async {
-    final task = await _datasource.getById(id);
-    if (task == null) return;
-
-    task.retryCount = 0;
-    await _datasource.updateById(id, task);
+    await _datasource.modify(id, (task) => task.retryCount = 0);
   }
 
   @override

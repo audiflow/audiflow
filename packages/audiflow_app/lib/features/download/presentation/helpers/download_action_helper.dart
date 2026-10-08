@@ -45,6 +45,23 @@ Future<void> handleDownloadTap({
   }
 }
 
+/// Keeps an auto download so retention never removes it, and confirms with
+/// a snackbar when it actually changed.
+///
+/// Captures [ScaffoldMessenger] before the await so the confirmation still
+/// shows if the menu that offered the action has closed meanwhile.
+Future<void> keepDownload({
+  required BuildContext context,
+  required WidgetRef ref,
+  required DownloadTask task,
+}) async {
+  final messenger = ScaffoldMessenger.of(context);
+  final message = AppLocalizations.of(context).downloadKept;
+  final kept = await ref.read(downloadServiceProvider).keep(task.id);
+  if (!kept) return;
+  messenger.showSnackBar(SnackBar(content: Text(message)));
+}
+
 /// Shows a confirmation dialog before deleting a completed download.
 ///
 /// Captures [ScaffoldMessenger] before opening the dialog to avoid

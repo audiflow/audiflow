@@ -35,6 +35,16 @@ class DownloadTask {
   @ignore
   DownloadStatus get downloadStatus => DownloadStatus.fromDbValue(status);
 
+  /// Whether retention rules may remove this download: an auto download
+  /// that holds, or will hold, a file. Failed and cancelled tasks take no
+  /// space, so there is nothing to keep.
+  @ignore
+  bool get isRemovableByRetention {
+    if (downloadOrigin != DownloadOrigin.auto) return false;
+    final status = downloadStatus;
+    return status.isActive || status is DownloadStatusCompleted;
+  }
+
   /// Download progress as a value from 0.0 to 1.0, or null if total is unknown.
   @ignore
   double? get progress {

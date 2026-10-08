@@ -88,7 +88,7 @@ Future<Widget> _buildPlayer({
         (ref) => _progressAt(ref.watch(_positionProvider)),
       ),
       playbackSpeedProvider.overrideWith((ref) => Stream.value(1.0)),
-      episodeHasTranscriptProvider.overrideWith((ref, id) async => false),
+      transcriptServiceProvider.overrideWithValue(StubTranscriptService()),
       currentEpisodeChaptersProvider.overrideWith(
         (ref) => Stream.value(chapters),
       ),

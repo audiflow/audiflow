@@ -154,6 +154,9 @@ class BackgroundDownloadService {
     });
 
     String? localPath;
+    // Set once the success path has run its own deleted-task check, so the
+    // finally block covers only failed or cut-off transfers.
+    var isSettled = false;
     try {
       final episode = await _episodeRepo.getById(task.episodeId);
       if (episode == null) {
@@ -268,6 +271,10 @@ class BackgroundDownloadService {
         status: const DownloadStatus.completed(),
         localPath: localPath,
       );
+      // Checked after the write, not before: a delete landing after the
+      // check then finds the completed record and removes the file itself.
+      isSettled = true;
+      if (await _discardIfTaskDeleted(task, localPath)) return false;
 
       _logger?.i(
         'BackgroundDownloadService: completed episodeId=${task.episodeId}',
@@ -343,6 +350,53 @@ class BackgroundDownloadService {
       Error.throwWithStackTrace(error, stackTrace);
     } finally {
       budgetTimer.cancel();
+      if (!isSettled && localPath != null) {
+        await _discardIfTaskDeleted(task, localPath);
+      }
+    }
+  }
+
+  /// A cleanup in another isolate can delete the task while this worker
+  /// transfers it (it only skips tasks already marked downloading when it
+  /// looks). Status writes to a missing record are no-ops, so without this
+  /// check the file would stay on disk with no record left to remove it.
+  ///
+  /// Returns whether the task was gone and its file discarded. Never
+  /// throws: it also runs while an error is propagating.
+  Future<bool> _discardIfTaskDeleted(
+    DownloadTask task,
+    String localPath,
+  ) async {
+    try {
+      // The common case, a task still there, needs no write transaction.
+      if (await _downloadRepo.getById(task.id) != null) return false;
+      // A replacement download of the same episode writes the same path;
+      // its file is not this worker's to remove. The repository checks for
+      // one atomically with the delete, so a replacement requested in the
+      // foreground meanwhile keeps its file.
+      final discarded = await _downloadRepo.removeEpisodeFiles(
+        episodeId: task.episodeId,
+        removeFiles: () async {
+          final file = File(localPath);
+          if (await file.exists()) await file.delete();
+        },
+      );
+      if (discarded) {
+        _logger?.i(
+          'BackgroundDownloadService: discarded download of deleted task '
+          '${task.id}',
+        );
+      }
+      return discarded;
+    } catch (e, stack) {
+      // An unreadable row is not proof of deletion; keep the file.
+      _logger?.w(
+        'BackgroundDownloadService: could not check task ${task.id} after '
+        'transfer',
+        error: e,
+        stackTrace: stack,
+      );
+      return false;
     }
   }
 

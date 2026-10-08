@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../download/presentation/helpers/download_action_helper.dart';
+import '../../../download/presentation/widgets/keep_download_menu_tile.dart';
 import '../../../queue/presentation/controllers/queue_controller.dart';
 import '../../../share/presentation/helpers/share_helper.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -379,6 +380,20 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
                         );
                       },
                     ),
+                    if (downloadTask case final task?
+                        when task.isRemovableByRetention)
+                      KeepDownloadMenuTile(
+                        onTap: () {
+                          Navigator.pop(sheetContext);
+                          unawaited(
+                            keepDownload(
+                              context: context,
+                              ref: ref,
+                              task: task,
+                            ),
+                          );
+                        },
+                      ),
                     _buildDownloadMenuTile(
                       context,
                       sheetContext,

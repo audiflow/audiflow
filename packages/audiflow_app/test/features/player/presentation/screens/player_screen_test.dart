@@ -170,57 +170,111 @@ void main() {
     });
   });
 
-  group('PlayerScreen tabs', () {
-    testWidgets('adds the transcript tab when availability resolves late', (
+  group('PlayerScreen transcript page', () {
+    final episode = Episode()
+      ..id = 7
+      ..podcastId = 1
+      ..guid = 'guid-7'
+      ..title = 'Transcribed Episode'
+      ..audioUrl = 'https://example.com/first.mp3';
+
+    // Unless told otherwise the feed declares a VTT file, so the page can
+    // only be gated on what loads, never on the declaration alone.
+    Future<ProviderContainer> containerWith(
+      Future<int?> transcript, {
+      bool declared = true,
+    }) => _container(
+      nowPlaying: _firstEpisode.copyWith(episode: episode),
+      extra: [
+        episodeTranscriptMetasProvider.overrideWith(
+          (ref, _) async => [
+            if (declared)
+              EpisodeTranscript()
+                ..episodeId = 7
+                ..url = 'https://example.com/7.vtt'
+                ..type = 'text/vtt',
+          ],
+        ),
+        transcriptServiceProvider.overrideWithValue(
+          StubTranscriptService(transcript),
+        ),
+        transcriptSegmentsProvider.overrideWith((ref, _) async => []),
+        episodeChaptersProvider.overrideWith((ref, _) async => []),
+      ],
+    );
+
+    Future<void> openMenu(WidgetTester tester) async {
+      await tester.tap(find.byTooltip('More'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('adds the page and menu entry once the transcript loads', (
       tester,
     ) async {
-      // Transcript availability is async: the first frame builds one tab,
-      // then the controller is rebuilt with two. Recreating it must not
-      // exceed the State's ticker budget.
-      final transcriptKnown = Completer<bool>();
-      final episode = Episode()
-        ..id = 7
-        ..podcastId = 1
-        ..guid = 'guid-7'
-        ..title = 'Transcribed Episode'
-        ..audioUrl = 'https://example.com/first.mp3';
-      final container = await _container(
-        nowPlaying: _firstEpisode.copyWith(episode: episode),
-        extra: [
-          episodeHasTranscriptProvider(
-            7,
-          ).overrideWith((ref) => transcriptKnown.future),
-          transcriptServiceProvider.overrideWithValue(_NoTranscriptService()),
-        ],
-      );
+      // Availability is async: the first frame builds one page, then the
+      // controller is rebuilt with two. Recreating it must not exceed the
+      // State's ticker budget.
+      final loaded = Completer<int?>();
+      final container = await containerWith(loaded.future);
       await tester.pumpWidget(_buildHost(container));
       await _openPlayerSheet(tester);
       check(find.byType(TabBarView).evaluate()).isEmpty();
 
-      transcriptKnown.complete(true);
+      loaded.complete(3);
       await tester.pumpAndSettle();
 
       check(tester.takeException()).isNull();
       check(find.byType(TabBarView).evaluate().length).equals(1);
 
-      // The transcript page is reached from the header's overflow menu.
-      await tester.tap(find.byTooltip('More'));
-      await tester.pumpAndSettle();
+      await openMenu(tester);
       await tester.tap(find.text('Transcript'));
       await tester.pumpAndSettle();
       check(
         tester.widget<TabBarView>(find.byType(TabBarView)).controller!.index,
       ).equals(1);
     });
+
+    testWidgets('offers no page or menu entry while the transcript loads', (
+      tester,
+    ) async {
+      final container = await containerWith(Completer<int?>().future);
+      await tester.pumpWidget(_buildHost(container));
+      await _openPlayerSheet(tester);
+
+      check(find.byType(TabBarView).evaluate()).isEmpty();
+      await openMenu(tester);
+      check(find.text('Transcript').evaluate()).isEmpty();
+    });
+
+    testWidgets('offers no page or menu entry without a transcript', (
+      tester,
+    ) async {
+      final container = await containerWith(Future.value(), declared: false);
+      await tester.pumpWidget(_buildHost(container));
+      await _openPlayerSheet(tester);
+
+      check(find.byType(TabBarView).evaluate()).isEmpty();
+      await openMenu(tester);
+      check(find.text('Transcript').evaluate()).isEmpty();
+      check(find.text('Episode details').evaluate()).isNotEmpty();
+    });
+
+    testWidgets('a declared transcript that fails to load counts as none', (
+      tester,
+    ) async {
+      // The service answers null when the file is unreachable, empty, or
+      // holds no cues.
+      final container = await containerWith(Future.value());
+      await tester.pumpWidget(_buildHost(container));
+      await _openPlayerSheet(tester);
+
+      check(find.byType(TabBarView).evaluate()).isEmpty();
+      await openMenu(tester);
+      check(find.text('Transcript').evaluate()).isEmpty();
+      // The episode rows' CC badge follows the player's answer.
+      check(
+        await container.read(episodeHasTranscriptProvider(7).future),
+      ).isFalse();
+    });
   });
-}
-
-/// Answers "no transcript content" so the transcript page can build
-/// without a database.
-class _NoTranscriptService implements TranscriptService {
-  @override
-  Future<int?> ensureContent(int episodeId) async => null;
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

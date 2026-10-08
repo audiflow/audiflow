@@ -1,6 +1,14 @@
+import '../models/download_file_removal.dart';
 import '../models/download_origin.dart';
 import '../models/download_status.dart';
 import '../models/download_task.dart';
+
+/// An auto download whose record [DownloadRepository.deleteIfAuto] deleted,
+/// with the record of its files still to be removed.
+typedef DeletedAutoDownload = ({
+  DownloadTask task,
+  DownloadFileRemoval fileRemoval,
+});
 
 /// Repository interface for download task operations.
 ///
@@ -17,6 +25,44 @@ abstract class DownloadRepository {
     required String audioUrl,
     required bool wifiOnly,
     DownloadOrigin origin = DownloadOrigin.manual,
+  });
+
+  /// Promotes an [DownloadOrigin.auto] task to [DownloadOrigin.manual] so
+  /// retention rules never remove it.
+  ///
+  /// Returns true only if the task still existed and was auto when the
+  /// change was made; false if it is unknown, was deleted, or is already
+  /// manual.
+  Future<bool> markManual(int id);
+
+  /// Deletes the task's record only if it is still [DownloadOrigin.auto],
+  /// checking and deleting atomically so a concurrent [markManual] wins.
+  ///
+  /// The same transaction records a [DownloadFileRemoval] for the task's
+  /// files, which stays until [removeEpisodeFiles] drops it, so a failed or
+  /// interrupted file delete is retried. Returns the deleted task and that
+  /// record, or null if the task is gone or was kept.
+  Future<DeletedAutoDownload?> deleteIfAuto(int id);
+
+  /// Returns the file removals [deleteIfAuto] recorded that have not been
+  /// completed yet.
+  Future<List<DownloadFileRemoval>> getPendingFileRemovals();
+
+  /// Removes download files of [episodeId] with [removeFiles], unless the
+  /// episode has a download task. Deletes the task [taskId] and drops the
+  /// file removal record [fileRemovalId] first, when given. Returns whether
+  /// [removeFiles] ran.
+  ///
+  /// Every download of an episode writes the same file name, so this is
+  /// the only safe way to delete them: the task check and [removeFiles]
+  /// run atomically with respect to task creation in every isolate, so a
+  /// download requested meanwhile cannot start writing a file that is
+  /// about to be deleted. If [removeFiles] throws, nothing changes.
+  Future<bool> removeEpisodeFiles({
+    required int episodeId,
+    required Future<void> Function() removeFiles,
+    int? taskId,
+    int? fileRemovalId,
   });
 
   /// Returns a download task by ID.

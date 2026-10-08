@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
 import '../../../download/presentation/helpers/download_action_helper.dart';
+import '../../../download/presentation/widgets/keep_download_menu_tile.dart';
 import '../../../queue/presentation/controllers/queue_controller.dart';
 import '../../../share/presentation/helpers/share_helper.dart';
 import '../controllers/podcast_detail_controller.dart';
@@ -367,6 +368,20 @@ class EpisodeListTile extends ConsumerWidget {
                               container,
                               audioUrl: audioUrl,
                               isCurrentlyCompleted: isCompleted,
+                            ),
+                          );
+                        },
+                      ),
+                    if (downloadTask case final task?
+                        when task.isRemovableByRetention)
+                      KeepDownloadMenuTile(
+                        onTap: () {
+                          Navigator.pop(sheetContext);
+                          unawaited(
+                            keepDownload(
+                              context: context,
+                              ref: ref,
+                              task: task,
                             ),
                           );
                         },
