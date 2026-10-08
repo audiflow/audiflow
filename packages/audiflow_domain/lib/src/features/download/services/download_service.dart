@@ -19,6 +19,7 @@ import '../../subscription/repositories/subscription_repository.dart';
 import '../../subscription/repositories/subscription_repository_impl.dart';
 import '../repositories/download_repository.dart';
 import '../repositories/download_repository_impl.dart';
+import 'download_file_remover.dart';
 import 'download_file_service.dart';
 import 'download_queue_service.dart';
 
@@ -106,6 +107,13 @@ class DownloadService {
   final int Function() _getBatchDownloadLimit;
   final StationReconcilerService? _reconcilerService;
   final AnalyticsService? _analytics;
+
+  late final _fileRemover = DownloadFileRemover(
+    repository: _repository,
+    deleteEpisodeFiles: (episodeId, storedPath) =>
+        _fileService.deleteEpisodeFiles(episodeId, storedPath: storedPath),
+    logger: _logger,
+  );
 
   /// Resolves the analytics IDs and titles for [episodeId]. Returns null
   /// when the episode, its feed URL, or its GUID is missing so emitters
@@ -320,20 +328,26 @@ class DownloadService {
   /// check, so a keep request either lands before (and the file stays) or
   /// finds nothing to keep. A late status write from the cancelled
   /// transfer cannot recreate the record because writers skip missing rows.
+  /// Files that fail to delete stay recorded for [retryFileRemovals]; the
+  /// download is gone either way, so this still returns true.
   Future<bool> deleteAuto(int taskId) async {
-    final task = await _repository.deleteIfAuto(taskId);
-    if (task == null) return false;
+    final deleted = await _repository.deleteIfAuto(taskId);
+    if (deleted == null) return false;
+    final task = deleted.task;
+    // Awaited until the transfer has stopped, so its file writes do not
+    // land after the sweep below.
     if (task.downloadStatus.isActive) {
       await _queueService.cancelDownload(task.id);
     }
-    await _fileService.deleteEpisodeFiles(
-      task.episodeId,
-      storedPath: task.localPath,
-    );
+    await _fileRemover.remove(deleted.fileRemoval);
     _logger.i('Deleted auto download: ${task.id}');
     await _tryReconcile(task.episodeId);
     return true;
   }
+
+  /// Retries removing the files of auto downloads whose records are already
+  /// gone. Returns the number of removals completed.
+  Future<int> retryFileRemovals() => _fileRemover.retryPending();
 
   /// Deletes a download and its file.
   Future<void> delete(int taskId) async {

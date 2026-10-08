@@ -1,5 +1,6 @@
 import 'package:isar_community/isar.dart';
 
+import '../../models/download_file_removal.dart';
 import '../../models/download_origin.dart';
 import '../../models/download_status.dart';
 import '../../models/download_task.dart';
@@ -65,21 +66,39 @@ class DownloadLocalDatasource {
     });
   }
 
-  /// Deletes the task only if it is still an auto download, and returns
-  /// the deleted row (so the caller can remove its file), or null if it
-  /// is gone or was kept.
+  /// Deletes the task only if it is still an auto download, recording a
+  /// [DownloadFileRemoval] for its files. Returns the deleted row and that
+  /// record, or null if the task is gone or was kept.
   ///
-  /// The origin check and the delete share one transaction, so a keep
-  /// request cannot land between retention's check and its delete.
-  Future<DownloadTask?> deleteIfAuto(int id) {
+  /// The origin check, the delete, and the removal record share one
+  /// transaction, so a keep request cannot land between retention's check
+  /// and its delete, and the files are never left with nothing pointing at
+  /// them.
+  Future<({DownloadTask task, DownloadFileRemoval fileRemoval})?> deleteIfAuto(
+    int id,
+  ) {
     return _isar.writeTxn(() async {
       final task = await _isar.downloadTasks.get(id);
       if (task == null || task.downloadOrigin != DownloadOrigin.auto) {
         return null;
       }
       await _isar.downloadTasks.delete(id);
-      return task;
+      final fileRemoval = DownloadFileRemoval()
+        ..episodeId = task.episodeId
+        ..storedPath = task.localPath;
+      await _isar.downloadFileRemovals.put(fileRemoval);
+      return (task: task, fileRemoval: fileRemoval);
     });
+  }
+
+  /// Returns the file removals still pending, oldest first.
+  Future<List<DownloadFileRemoval>> getFileRemovals() {
+    return _isar.downloadFileRemovals.where().findAll();
+  }
+
+  /// Drops the file removal record [id] once its files are gone.
+  Future<void> deleteFileRemoval(int id) {
+    return _isar.writeTxn(() => _isar.downloadFileRemovals.delete(id));
   }
 
   /// Returns a download task by ID.

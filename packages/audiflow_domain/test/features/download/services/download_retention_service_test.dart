@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
@@ -387,6 +389,61 @@ void main() {
       await service.trimForSubscription(subscription, defaultKeepCount: 1);
 
       check(deletedTaskIds).deepEquals([1]);
+    });
+
+    group('file removal retry', () {
+      late int retries;
+
+      setUp(() {
+        retries = 0;
+        service = DownloadRetentionService(
+          downloadRepository: downloadRepository,
+          episodeRepository: episodeRepository,
+          playbackHistoryRepository: historyRepository,
+          isAutoDeletePlayedEnabled: () => enabled,
+          deleteDownload: (task) async => true,
+          retryFileRemovals: () async => ++retries,
+          clock: () => _now,
+        );
+      });
+
+      test('runs on played cleanup even when it is turned off', () async {
+        enabled = false;
+
+        await service.sweepPlayed();
+
+        check(retries).equals(1);
+      });
+
+      test('runs on a keep-count trim', () async {
+        await service.trimForSubscription(subscription, defaultKeepCount: 3);
+
+        check(retries).equals(1);
+      });
+
+      test('a retry failure does not stop the pass', () async {
+        addEpisode(1, day: 1);
+        addEpisode(2, day: 2);
+        final deleted = <int>[];
+        service = DownloadRetentionService(
+          downloadRepository: downloadRepository,
+          episodeRepository: episodeRepository,
+          playbackHistoryRepository: historyRepository,
+          isAutoDeletePlayedEnabled: () => enabled,
+          deleteDownload: (task) async {
+            deleted.add(task.id);
+            return true;
+          },
+          retryFileRemovals: () =>
+              throw const FileSystemException('Operation not permitted'),
+          clock: () => _now,
+        );
+
+        check(
+          await service.trimForSubscription(subscription, defaultKeepCount: 1),
+        ).equals(1);
+        check(deleted).length.equals(1);
+      });
     });
   });
 }

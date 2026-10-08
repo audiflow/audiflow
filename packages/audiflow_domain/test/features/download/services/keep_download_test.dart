@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
@@ -20,8 +22,15 @@ class _FakeQueueService implements DownloadQueueService {
 class _FakeFileService implements DownloadFileService {
   final List<String> deletedPaths = [];
 
+  /// Number of upcoming deletes that fail, as an undeletable file would.
+  int failuresLeft = 0;
+
   @override
   Future<void> deleteEpisodeFiles(int episodeId, {String? storedPath}) async {
+    if (0 < failuresLeft) {
+      failuresLeft--;
+      throw const FileSystemException('Operation not permitted');
+    }
     if (storedPath != null) deletedPaths.add(storedPath);
   }
 
@@ -96,7 +105,7 @@ void main() {
   });
 
   setUp(() async {
-    isar = await openTestIsar([DownloadTaskSchema]);
+    isar = await openTestIsar([DownloadTaskSchema, DownloadFileRemovalSchema]);
     repository = _InterleavingRepository(
       datasource: DownloadLocalDatasource(isar),
     );
@@ -125,6 +134,7 @@ void main() {
         if (deleted) deletedTaskIds.add(task.id);
         return deleted;
       },
+      retryFileRemovals: downloadService.retryFileRemovals,
       clock: () => _now,
     );
   });
@@ -252,6 +262,7 @@ void main() {
       final stored = await repository.getById(task.id);
       check(stored!.downloadOrigin).equals(DownloadOrigin.manual);
       check(fileService.deletedPaths).isEmpty();
+      check(await repository.getPendingFileRemovals()).isEmpty();
     });
 
     test('a keep that read before cleanup deleted reports no change', () async {
@@ -262,6 +273,20 @@ void main() {
       };
 
       check(await downloadService.keep(task.id)).isFalse();
+
+      check(await repository.getById(task.id)).isNull();
+      check(fileService.deletedPaths).deepEquals(['/downloads/1.mp3']);
+      check(await repository.getPendingFileRemovals()).isEmpty();
+    });
+
+    test('a keep while the file removal is failing reports no change, and '
+        'the file goes on retry', () async {
+      final task = await createTask(1);
+      fileService.failuresLeft = 1;
+
+      check(await downloadService.deleteAuto(task.id)).isTrue();
+      check(await downloadService.keep(task.id)).isFalse();
+      await retentionService.sweepPlayed();
 
       check(await repository.getById(task.id)).isNull();
       check(fileService.deletedPaths).deepEquals(['/downloads/1.mp3']);
@@ -286,6 +311,70 @@ void main() {
 
       check(await repository.getById(task.id)).isNotNull();
       check(fileService.deletedPaths).isEmpty();
+    });
+  });
+
+  group('file removal retry', () {
+    test(
+      'a failed file delete is retried by the next retention pass',
+      () async {
+        final task = await createTask(1);
+        fileService.failuresLeft = 1;
+
+        check(await downloadService.deleteAuto(task.id)).isTrue();
+
+        // The task is gone from every list, but its files are still owed.
+        check(await repository.getById(task.id)).isNull();
+        check(fileService.deletedPaths).isEmpty();
+        check(await repository.getPendingFileRemovals()).length.equals(1);
+
+        await retentionService.sweepPlayed();
+
+        check(fileService.deletedPaths).deepEquals(['/downloads/1.mp3']);
+        check(await repository.getPendingFileRemovals()).isEmpty();
+      },
+    );
+
+    test('a removal that keeps failing stays pending', () async {
+      final task = await createTask(1);
+      fileService.failuresLeft = 2;
+
+      await downloadService.deleteAuto(task.id);
+      await retentionService.sweepPlayed();
+
+      check(await repository.getPendingFileRemovals()).length.equals(1);
+    });
+
+    test('files of a record deleted before a crash are removed by the next '
+        'trim', () async {
+      final task = await createTask(1);
+      // The app died after the record went but before the files did.
+      await repository.deleteIfAuto(task.id);
+
+      await retentionService.trimForSubscription(
+        Subscription()..id = _podcastId,
+        defaultKeepCount: 3,
+      );
+
+      check(fileService.deletedPaths).deepEquals(['/downloads/1.mp3']);
+      check(await repository.getPendingFileRemovals()).isEmpty();
+    });
+
+    test('a new download of the episode keeps its files on retry', () async {
+      final task = await createTask(1);
+      fileService.failuresLeft = 1;
+      await downloadService.deleteAuto(task.id);
+      // The listener downloads the episode again before the retry.
+      await repository.createDownload(
+        episodeId: 1,
+        audioUrl: 'https://example.com/1.mp3',
+        wifiOnly: true,
+      );
+
+      await retentionService.sweepPlayed();
+
+      check(fileService.deletedPaths).isEmpty();
+      check(await repository.getPendingFileRemovals()).isEmpty();
     });
   });
 }

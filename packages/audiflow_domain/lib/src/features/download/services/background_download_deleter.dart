@@ -2,6 +2,7 @@ import '../models/download_status.dart';
 import '../models/download_task.dart';
 import '../repositories/download_repository.dart';
 import 'background_download_worker_lock.dart';
+import 'download_file_remover.dart';
 import 'episode_download_files.dart';
 
 /// Deletes a download from the background isolate, which has no download
@@ -23,6 +24,15 @@ class BackgroundDownloadDeleter {
   /// Follow-up work once the record is gone, such as station reconciliation.
   final Future<void> Function(int episodeId)? _onDeleted;
 
+  late final _fileRemover = DownloadFileRemover(
+    repository: _downloadRepository,
+    deleteEpisodeFiles: (episodeId, storedPath) => deleteEpisodeDownloadFiles(
+      downloadsDir: _downloadsDir,
+      episodeId: episodeId,
+      storedPath: storedPath,
+    ),
+  );
+
   /// Removes [task]'s files, including a partial one, and its record.
   ///
   /// Leaves the task alone while a background download worker holds the
@@ -39,19 +49,33 @@ class BackgroundDownloadDeleter {
   }
 
   /// Removes [task]'s record and files if it is still an auto download.
-  /// Returns whether it did. Skips the same busy tasks as [call].
+  /// Returns whether the record was removed. Skips the same busy tasks as
+  /// [call].
   ///
   /// The record goes first, checked and deleted atomically, so a keep
   /// request that lands after the caller's check still keeps the file.
+  /// Files that fail to delete stay recorded for [retryFileRemovals].
   Future<bool> deleteAuto(DownloadTask task) async {
     final deleted = await _withIdleTask(task, (current) async {
       final removed = await _downloadRepository.deleteIfAuto(current.id);
       if (removed == null) return false;
-      await _deleteFiles(removed);
+      await _fileRemover.remove(removed.fileRemoval);
       return true;
     });
     if (deleted) await _onDeleted?.call(task.episodeId);
     return deleted;
+  }
+
+  /// Retries removing the files of auto downloads whose records are already
+  /// gone. Returns the number completed, or 0 while a background download
+  /// worker holds the lock.
+  Future<int> retryFileRemovals() async {
+    if (!await _lock.tryAcquire()) return 0;
+    try {
+      return await _fileRemover.retryPending();
+    } finally {
+      await _lock.release();
+    }
   }
 
   /// Runs [action] on the task's current record while holding the worker

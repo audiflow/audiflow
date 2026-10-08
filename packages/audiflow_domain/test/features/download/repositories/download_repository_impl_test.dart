@@ -14,7 +14,7 @@ void main() {
   });
 
   setUp(() async {
-    isar = await openTestIsar([DownloadTaskSchema]);
+    isar = await openTestIsar([DownloadTaskSchema, DownloadFileRemovalSchema]);
     final datasource = DownloadLocalDatasource(isar);
     repository = DownloadRepositoryImpl(datasource: datasource);
   });
@@ -459,13 +459,33 @@ void main() {
   });
 
   group('deleteIfAuto', () {
-    test('deletes an auto download and returns it', () async {
+    test('deletes an auto download and records its files for '
+        'removal', () async {
       final task = await createAuto(status: const DownloadStatus.completed());
+      await repository.updateStatus(
+        id: task.id,
+        status: const DownloadStatus.completed(),
+        localPath: '/downloads/1_episode.mp3',
+      );
 
       final deleted = await repository.deleteIfAuto(task.id);
 
-      check(deleted).isNotNull().has((t) => t.id, 'id').equals(task.id);
+      check(deleted).isNotNull()
+        ..has((d) => d.task.id, 'task.id').equals(task.id)
+        ..has((d) => d.fileRemoval.episodeId, 'episodeId').equals(1);
       check(await repository.getById(task.id)).isNull();
+      final pending = await repository.getPendingFileRemovals();
+      check(pending).length.equals(1);
+      check(pending.single.storedPath).equals('/downloads/1_episode.mp3');
+    });
+
+    test('records no file removal for a kept task', () async {
+      final task = await createAuto(status: const DownloadStatus.completed());
+      await repository.markManual(task.id);
+
+      await repository.deleteIfAuto(task.id);
+
+      check(await repository.getPendingFileRemovals()).isEmpty();
     });
 
     test('leaves a task kept before the delete in place', () async {
@@ -485,6 +505,15 @@ void main() {
 
     test('returns null for an unknown task', () async {
       check(await repository.deleteIfAuto(999)).isNull();
+    });
+
+    test('completeFileRemoval drops the record', () async {
+      final task = await createAuto(status: const DownloadStatus.completed());
+      final deleted = await repository.deleteIfAuto(task.id);
+
+      await repository.completeFileRemoval(deleted!.fileRemoval.id);
+
+      check(await repository.getPendingFileRemovals()).isEmpty();
     });
   });
 

@@ -1,6 +1,14 @@
+import '../models/download_file_removal.dart';
 import '../models/download_origin.dart';
 import '../models/download_status.dart';
 import '../models/download_task.dart';
+
+/// An auto download whose record [DownloadRepository.deleteIfAuto] deleted,
+/// with the record of its files still to be removed.
+typedef DeletedAutoDownload = ({
+  DownloadTask task,
+  DownloadFileRemoval fileRemoval,
+});
 
 /// Repository interface for download task operations.
 ///
@@ -30,9 +38,18 @@ abstract class DownloadRepository {
   /// Deletes the task's record only if it is still [DownloadOrigin.auto],
   /// checking and deleting atomically so a concurrent [markManual] wins.
   ///
-  /// Returns the deleted task, whose file the caller then removes, or null
-  /// if the task is gone or was kept.
-  Future<DownloadTask?> deleteIfAuto(int id);
+  /// The same transaction records a [DownloadFileRemoval] for the task's
+  /// files, which stays until [completeFileRemoval] so a failed or
+  /// interrupted file delete is retried. Returns the deleted task and that
+  /// record, or null if the task is gone or was kept.
+  Future<DeletedAutoDownload?> deleteIfAuto(int id);
+
+  /// Returns the file removals [deleteIfAuto] recorded that have not been
+  /// completed yet.
+  Future<List<DownloadFileRemoval>> getPendingFileRemovals();
+
+  /// Drops the file removal record [id] once its files are gone.
+  Future<void> completeFileRemoval(int id);
 
   /// Returns a download task by ID.
   Future<DownloadTask?> getById(int id);

@@ -167,10 +167,12 @@ export 'src/features/download/services/auto_download_pause_service.dart';
 export 'src/features/download/services/background_download_deleter.dart';
 export 'src/features/download/services/background_download_service.dart';
 export 'src/features/download/services/background_download_worker_lock.dart';
+export 'src/features/download/services/download_file_remover.dart';
 export 'src/features/download/services/download_retention_service.dart';
 export 'src/features/download/services/download_service.dart';
 
 // Isar collection models (schemas for Isar.open)
+export 'src/features/download/models/download_file_removal.dart';
 export 'src/features/download/models/download_task.dart';
 export 'src/features/feed/models/smart_playlist_groups.dart';
 export 'src/features/queue/models/queue_item.dart';

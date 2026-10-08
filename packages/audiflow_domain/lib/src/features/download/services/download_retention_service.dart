@@ -29,6 +29,7 @@ DownloadRetentionService downloadRetentionService(Ref ref) {
     playbackHistoryRepository: ref.watch(playbackHistoryRepositoryProvider),
     isAutoDeletePlayedEnabled: () => ref.read(downloadAutoDeletePlayedProvider),
     deleteDownload: (task) => downloadService.deleteAuto(task.id),
+    retryFileRemovals: downloadService.retryFileRemovals,
     logger: ref.watch(namedLoggerProvider('DownloadRetention')),
   );
 }
@@ -44,6 +45,7 @@ class DownloadRetentionService {
     required this._playbackHistoryRepository,
     required this._isAutoDeletePlayedEnabled,
     required this._deleteDownload,
+    this._retryFileRemovals,
     this._logger,
     DateTime Function()? clock,
   }) : _clock = clock ?? DateTime.now;
@@ -58,6 +60,11 @@ class DownloadRetentionService {
   /// background isolate, which has no download queue, can supply its own
   /// implementation.
   final Future<bool> Function(DownloadTask task) _deleteDownload;
+
+  /// Retries removing files left behind by earlier deletions whose file
+  /// delete failed or was interrupted; their records are already gone, so
+  /// nothing else would find them.
+  final Future<int> Function()? _retryFileRemovals;
   final Logger? _logger;
   final DateTime Function() _clock;
 
@@ -68,6 +75,7 @@ class DownloadRetentionService {
   /// The grace period is checked against the episode's current completion
   /// time, so marking an episode unplayed within the window keeps its file.
   Future<int> sweepPlayed() async {
+    await _tryRetryFileRemovals();
     if (!_isAutoDeletePlayedEnabled()) return 0;
 
     final completed = await _downloadRepository.getByStatus(
@@ -128,6 +136,7 @@ class DownloadRetentionService {
   }
 
   Future<int> _trim(Subscription subscription, int defaultKeepCount) async {
+    await _tryRetryFileRemovals();
     final keepCount = subscription.effectiveKeepCount(defaultKeepCount);
     final candidates = await _unstartedAutoDownloads(subscription.id);
     if (candidates.length <= keepCount) return 0;
@@ -171,6 +180,15 @@ class DownloadRetentionService {
   static bool _isUnstarted(PlaybackHistory? history) =>
       history == null ||
       (history.positionMs == 0 && history.completedAt == null);
+
+  /// A file that still cannot be removed must not stop the pass.
+  Future<void> _tryRetryFileRemovals() async {
+    try {
+      await _retryFileRemovals?.call();
+    } on Exception catch (e, stack) {
+      _logger?.w('Failed to retry file removals', error: e, stackTrace: stack);
+    }
+  }
 
   /// One undeletable file must not keep the rest of the pass from running.
   ///

@@ -19,15 +19,36 @@ class FakeDownloadRepository implements DownloadRepository {
   Future<void> delete(int id) async =>
       tasks.removeWhere((task) => task.id == id);
 
+  /// File removals recorded by [deleteIfAuto] and not yet completed.
+  final List<DownloadFileRemoval> fileRemovals = [];
+
   @override
-  Future<DownloadTask?> deleteIfAuto(int id) async {
+  Future<DownloadTask?> getByEpisodeId(int episodeId) async =>
+      tasks.where((task) => task.episodeId == episodeId).firstOrNull;
+
+  @override
+  Future<DeletedAutoDownload?> deleteIfAuto(int id) async {
     final task = await getById(id);
     if (task == null || task.downloadOrigin != DownloadOrigin.auto) {
       return null;
     }
     tasks.remove(task);
-    return task;
+    fileRemovals.removeWhere((r) => r.episodeId == task.episodeId);
+    final fileRemoval = DownloadFileRemoval()
+      ..id = task.id
+      ..episodeId = task.episodeId
+      ..storedPath = task.localPath;
+    fileRemovals.add(fileRemoval);
+    return (task: task, fileRemoval: fileRemoval);
   }
+
+  @override
+  Future<List<DownloadFileRemoval>> getPendingFileRemovals() async =>
+      List.of(fileRemovals);
+
+  @override
+  Future<void> completeFileRemoval(int id) async =>
+      fileRemovals.removeWhere((removal) => removal.id == id);
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

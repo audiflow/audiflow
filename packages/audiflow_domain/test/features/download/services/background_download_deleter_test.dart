@@ -196,5 +196,53 @@ void main() {
       check(repository.tasks).length.equals(1);
       check(changedEpisodeIds).isEmpty();
     });
+
+    group('when the file cannot be deleted', () {
+      late File file;
+
+      setUp(() {
+        file = File('${downloadsDir.path}/10_episode.mp3')
+          ..writeAsStringSync('audio');
+        // A read-only directory refuses to unlink its files.
+        Process.runSync('chmod', ['555', downloadsDir.path]);
+      });
+
+      tearDown(() => Process.runSync('chmod', ['755', downloadsDir.path]));
+
+      test('still removes the record and keeps the file owed', () async {
+        final deleted = await deleter.deleteAuto(
+          storeAuto(localPath: file.path),
+        );
+
+        check(deleted).isTrue();
+        check(repository.tasks).isEmpty();
+        check(file.existsSync()).isTrue();
+        check(repository.fileRemovals).length.equals(1);
+        check(changedEpisodeIds).deepEquals([10]);
+        check(lock.isHeld).isFalse();
+      });
+
+      test('a later retry removes the file', () async {
+        await deleter.deleteAuto(storeAuto(localPath: file.path));
+        Process.runSync('chmod', ['755', downloadsDir.path]);
+
+        check(await deleter.retryFileRemovals()).equals(1);
+
+        check(file.existsSync()).isFalse();
+        check(repository.fileRemovals).isEmpty();
+        check(lock.isHeld).isFalse();
+      });
+
+      test('the retry waits while a download worker holds the lock', () async {
+        await deleter.deleteAuto(storeAuto(localPath: file.path));
+        Process.runSync('chmod', ['755', downloadsDir.path]);
+        lock.isHeldElsewhere = true;
+
+        check(await deleter.retryFileRemovals()).equals(0);
+
+        check(file.existsSync()).isTrue();
+        check(repository.fileRemovals).length.equals(1);
+      });
+    });
   });
 }

@@ -5,6 +5,7 @@ import 'package:logger/logger.dart';
 import 'package:path/path.dart' as p;
 import 'package:riverpod/riverpod.dart';
 
+import '../../features/download/models/download_file_removal.dart';
 import '../../features/download/models/download_task.dart';
 import '../../features/feed/models/episode.dart';
 import '../../features/feed/models/podcast_view_preference.dart';
@@ -33,6 +34,7 @@ const List<CollectionSchema<dynamic>> isarSchemas = [
   SubscriptionSchema,
   EpisodeSchema,
   DownloadTaskSchema,
+  DownloadFileRemovalSchema,
   PlaybackHistorySchema,
   SmartPlaylistEntitySchema,
   SmartPlaylistGroupEntitySchema,

@@ -130,7 +130,12 @@ class _DiagDownloadRepo implements DownloadRepository {
   @override
   Future<bool> markManual(int id) => _inner.markManual(id);
   @override
-  Future<DownloadTask?> deleteIfAuto(int id) => _inner.deleteIfAuto(id);
+  Future<DeletedAutoDownload?> deleteIfAuto(int id) => _inner.deleteIfAuto(id);
+  @override
+  Future<List<DownloadFileRemoval>> getPendingFileRemovals() =>
+      _inner.getPendingFileRemovals();
+  @override
+  Future<void> completeFileRemoval(int id) => _inner.completeFileRemoval(id);
   @override
   Future<int> getActiveCount() => _inner.getActiveCount();
   @override
@@ -494,6 +499,7 @@ void backgroundCallback() {
         // Played cleanup runs in the foreground only; this isolate trims.
         isAutoDeletePlayedEnabled: () => false,
         deleteDownload: downloadDeleter.deleteAuto,
+        retryFileRemovals: downloadDeleter.retryFileRemovals,
         logger: logger,
       );
 

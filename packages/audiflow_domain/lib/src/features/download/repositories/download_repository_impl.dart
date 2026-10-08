@@ -2,6 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/providers/database_provider.dart';
 import '../datasources/local/download_local_datasource.dart';
+import '../models/download_file_removal.dart';
 import '../models/download_origin.dart';
 import '../models/download_status.dart';
 import '../models/download_task.dart';
@@ -68,7 +69,15 @@ class DownloadRepositoryImpl implements DownloadRepository {
   Future<bool> markManual(int id) => _datasource.markManual(id);
 
   @override
-  Future<DownloadTask?> deleteIfAuto(int id) => _datasource.deleteIfAuto(id);
+  Future<DeletedAutoDownload?> deleteIfAuto(int id) =>
+      _datasource.deleteIfAuto(id);
+
+  @override
+  Future<List<DownloadFileRemoval>> getPendingFileRemovals() =>
+      _datasource.getFileRemovals();
+
+  @override
+  Future<void> completeFileRemoval(int id) => _datasource.deleteFileRemoval(id);
 
   @override
   Future<DownloadTask?> getById(int id) => _datasource.getById(id);

@@ -445,7 +445,11 @@ class FakeDownloadRepository implements DownloadRepository {
   Future<bool> markManual(int id) async => false;
 
   @override
-  Future<DownloadTask?> deleteIfAuto(int id) async => null;
+  Future<DeletedAutoDownload?> deleteIfAuto(int id) async => null;
+  @override
+  Future<List<DownloadFileRemoval>> getPendingFileRemovals() async => [];
+  @override
+  Future<void> completeFileRemoval(int id) async {}
   @override
   Future<int> getActiveCount() async => 0;
   @override
