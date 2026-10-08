@@ -23,7 +23,11 @@ void main() {
 
   setUp(() => stations = FakeStationRepository());
 
-  Future<void> pump(WidgetTester tester, {int? stationId}) async {
+  Future<void> pump(
+    WidgetTester tester, {
+    int? stationId,
+    bool settle = true,
+  }) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -49,7 +53,7 @@ void main() {
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    if (settle) await tester.pumpAndSettle();
   }
 
   EditableText nameField(WidgetTester tester) =>
@@ -89,5 +93,19 @@ void main() {
     stations.listGate!.complete();
     await tester.pumpAndSettle();
     check(nameField(tester).controller.text).equals('Commute');
+  });
+
+  testWidgets('an existing station cannot be edited until it loads', (
+    tester,
+  ) async {
+    await stations.create(_station(0, 'Morning'));
+    stations.findGate = Completer<void>();
+    await pump(tester, stationId: 1, settle: false);
+    check(find.byType(TextField).evaluate()).isEmpty();
+    check(find.byType(CircularProgressIndicator).evaluate()).length.equals(1);
+
+    stations.findGate!.complete();
+    await tester.pumpAndSettle();
+    check(nameField(tester).controller.text).equals('Morning');
   });
 }

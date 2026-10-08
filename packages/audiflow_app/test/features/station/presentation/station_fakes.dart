@@ -39,8 +39,12 @@ class FakeStationRepository implements StationRepository {
     stations[station.id] = _copy(station);
   }
 
+  /// When set, [findById] waits for it, to hold a load mid-way.
+  Completer<void>? findGate;
+
   @override
   Future<Station?> findById(int id) async {
+    await findGate?.future;
     final stored = stations[id];
     return stored == null ? null : _copy(stored);
   }

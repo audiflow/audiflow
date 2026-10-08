@@ -144,7 +144,7 @@ final class StationEditControllerProvider
 }
 
 String _$stationEditControllerHash() =>
-    r'8bbedb6014c55f11b4a78127365deeeb535ecf51';
+    r'c854d4670aa22d6305f39f9c77966a7deba56357';
 
 /// Edits a station and saves every change as it happens; there is no save
 /// button to forget.

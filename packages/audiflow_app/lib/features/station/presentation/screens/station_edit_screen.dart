@@ -140,31 +140,35 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
         // No save button: every change is saved as it is made.
         title: Text(isEditMode ? l10n.stationEditTitle : l10n.stationNew),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(Spacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (editState.error != null)
-              _ErrorBanner(message: _resolveError(l10n, editState.error!)),
-            _buildNameField(controller),
-            const SizedBox(height: Spacing.lg),
-            _buildAttributeFilters(editState, controller),
-            const SizedBox(height: Spacing.sm),
-            _buildEpisodeLimitRow(editState, controller),
-            _buildDurationFilter(context, editState, controller),
-            _buildGroupByPodcast(editState, controller),
-            _buildSortOrder(context, editState, controller),
-            const SizedBox(height: Spacing.lg),
-            _buildPodcastsSection(context, editState, controller),
-            if (isEditMode) ...[
-              const SizedBox(height: Spacing.xl),
-              _buildDeleteButton(context, controller),
-            ],
-            const SizedBox(height: Spacing.xl),
-          ],
-        ),
-      ),
+      body: editState.isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(Spacing.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (editState.error != null)
+                    _ErrorBanner(
+                      message: _resolveError(l10n, editState.error!),
+                    ),
+                  _buildNameField(controller),
+                  const SizedBox(height: Spacing.lg),
+                  _buildAttributeFilters(editState, controller),
+                  const SizedBox(height: Spacing.sm),
+                  _buildEpisodeLimitRow(editState, controller),
+                  _buildDurationFilter(context, editState, controller),
+                  _buildGroupByPodcast(editState, controller),
+                  _buildSortOrder(context, editState, controller),
+                  const SizedBox(height: Spacing.lg),
+                  _buildPodcastsSection(context, editState, controller),
+                  if (isEditMode) ...[
+                    const SizedBox(height: Spacing.xl),
+                    _buildDeleteButton(context, controller),
+                  ],
+                  const SizedBox(height: Spacing.xl),
+                ],
+              ),
+            ),
     );
   }
 

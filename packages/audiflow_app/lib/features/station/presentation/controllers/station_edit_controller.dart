@@ -48,6 +48,9 @@ sealed class StationEditState with _$StationEditState {
     /// Ordered list of selected podcast IDs for manual sort.
     @Default([]) List<int> podcastSortOrder,
 
+    /// True until an existing station has loaded; the editor accepts no
+    /// changes meanwhile, since the load would replace them.
+    @Default(false) bool isLoading,
     String? error,
   }) = _StationEditState;
 }
@@ -149,14 +152,19 @@ class StationEditController extends _$StationEditController {
     if (stationId == null) {
       _markLoaded();
     } else {
-      unawaited(_loadExistingStation(stationId).whenComplete(_markLoaded));
+      unawaited(_loadExistingStation(stationId).whenComplete(_finishLoading));
     }
-    return const StationEditState();
+    return StationEditState(isLoading: stationId != null);
   }
 
   void _markLoaded() {
     _loaded = true;
     if (!_loadCompleter.isCompleted) _loadCompleter.complete();
+  }
+
+  void _finishLoading() {
+    _markLoaded();
+    if (ref.mounted) state = state.copyWith(isLoading: false);
   }
 
   /// Sets a new station's default [name], used whenever the field is left
