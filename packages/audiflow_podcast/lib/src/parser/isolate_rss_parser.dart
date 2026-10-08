@@ -308,7 +308,7 @@ class IsolateRssParser {
       language: _extractTagText(headerXml, 'language'),
       // The channel <link> precedes <image> (whose own <link> repeats it)
       // in the header; `atom:link` is not matched by this tag name.
-      link: _nullIfBlank(_extractTagText(headerXml, 'link')),
+      link: _webLink(_extractXmlText(headerXml, 'link')),
     );
   }
 
@@ -330,6 +330,32 @@ class IsolateRssParser {
     );
     final match = re.firstMatch(xml);
     return _nullIfBlank(match?.group(1));
+  }
+
+  /// Like [_extractTagText], but returns the text an XML parser would:
+  /// character references decoded, CDATA content kept verbatim.
+  static String? _extractXmlText(String xml, String tagName) {
+    final match = RegExp(
+      '<$tagName(?:\\s[^>]*)?>([\\s\\S]*?)</$tagName>',
+      caseSensitive: false,
+    ).firstMatch(xml);
+    final raw = match?.group(1)?.trim();
+    if (raw == null) return null;
+    final cdata = _cdataRe.firstMatch(raw);
+    return _nullIfBlank(cdata?.group(1) ?? _decodeXmlEntities(raw));
+  }
+
+  static final _cdataRe = RegExp(r'^<!\[CDATA\[([\s\S]*?)\]\]>$');
+
+  /// [value] when it is an http(s) address with a host, otherwise null.
+  ///
+  /// Anything else would make `PodcastFeed` reject the whole feed over a
+  /// link that only backs "Open website".
+  static String? _webLink(String? value) {
+    if (value == null) return null;
+    final uri = Uri.tryParse(value);
+    if (uri == null || !uri.hasAuthority || uri.host.isEmpty) return null;
+    return uri.scheme == 'http' || uri.scheme == 'https' ? value : null;
   }
 
   /// Extracts the `url` attribute from the first `<enclosure>` tag via regex.

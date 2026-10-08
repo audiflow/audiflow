@@ -241,6 +241,14 @@ void main() {
       check(result.podcast.link).equals('https://example.com/show');
     });
 
+    test('an unsupported channel link still loads the episodes', () async {
+      final result = await service.parseFromString(
+        testXml.replaceFirst('https://example.com/show', 'example.com/show'),
+      );
+      check(result.podcast.link).isNull();
+      check(result.episodes).isNotEmpty();
+    });
+
     test('parseWithProgress carries the link on FeedMetaReady', () async {
       final events = await service
           .parseWithProgress(

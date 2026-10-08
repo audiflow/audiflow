@@ -306,10 +306,7 @@ void main() {
     test('is false once both have been read', () {
       check(
         SubscriptionMetadataUpdater.needsChannelBackfill(
-          _subscription(
-            feedMetadataSyncedAt: synced,
-            websiteSyncedAt: synced,
-          ),
+          _subscription(feedMetadataSyncedAt: synced, websiteSyncedAt: synced),
         ),
       ).isFalse();
     });

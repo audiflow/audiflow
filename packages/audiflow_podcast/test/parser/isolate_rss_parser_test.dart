@@ -128,5 +128,39 @@ void main() {
 
       expect((meta as ParsedPodcastMeta).link, 'https://example.com/show');
     });
+
+    Future<String?> channelLink(String link) async {
+      final xml =
+          '<?xml version="1.0" encoding="UTF-8"?>'
+          '<rss version="2.0"><channel><title>Show</title>'
+          '<link>$link</link>'
+          '<item><guid>e1</guid><title>E1</title></item>'
+          '</channel></rss>';
+      final meta = await IsolateRssParser.parse(
+        feedXml: xml,
+        knownGuids: {},
+      ).firstWhere((event) => event is ParsedPodcastMeta);
+      return (meta as ParsedPodcastMeta).link;
+    }
+
+    test('decodes character references in the channel link', () async {
+      expect(
+        await channelLink('https://example.com/show?a=1&amp;b=2&#38;c=3'),
+        'https://example.com/show?a=1&b=2&c=3',
+      );
+    });
+
+    test('keeps a CDATA channel link verbatim', () async {
+      expect(
+        await channelLink('<![CDATA[https://example.com/show?a=1&amp;b]]>'),
+        'https://example.com/show?a=1&amp;b',
+      );
+    });
+
+    test('drops a channel link that is not an http(s) address', () async {
+      // Such a link only hides "Open website"; it must not fail the feed.
+      expect(await channelLink('example.com/show'), isNull);
+      expect(await channelLink('mailto:host@example.com'), isNull);
+    });
   });
 }
