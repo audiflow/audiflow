@@ -56,13 +56,16 @@ class SearchSubscribeButton extends ConsumerWidget {
     }
     return IconButton(
       tooltip: l10n.podcastDetailSubscribe,
-      onPressed: () => togglePodcastSubscription(
-        context: context,
-        ref: ref,
-        podcast: podcast,
-        source: SubscribeSource.search,
-        expectSubscribed: false,
-      ),
+      // Subscribing needs the feed, as on the podcast screen.
+      onPressed: podcast.feedUrl == null
+          ? null
+          : () => togglePodcastSubscription(
+              context: context,
+              ref: ref,
+              podcast: podcast,
+              source: SubscribeSource.search,
+              expectSubscribed: false,
+            ),
       icon: circle,
       padding: EdgeInsets.zero,
       constraints: const BoxConstraints.tightFor(
