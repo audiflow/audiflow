@@ -1332,7 +1332,7 @@ void main() {
 
       tearDown(() => downloadsDir.delete(recursive: true));
 
-      Future<void> syncDropping(Subscription sub) async {
+      Future<void> syncDropping(Subscription sub, {Dio? dio}) async {
         fakeEpisodeRepo.storedGuids = {'kept', 'gone-1', 'gone-2'};
         final parser = _FakeFeedParserService(
           (xml, id, guids, onBatch) => _progressWithBatches(
@@ -1344,12 +1344,15 @@ void main() {
           ),
         );
         final executor = buildExecutor(
-          dio: _FakeDio((_) => _xmlResponse('<rss></rss>')),
+          dio: dio ?? _FakeDio((_) => _xmlResponse('<rss></rss>')),
           feedParser: parser,
         );
         final result = await executor.syncFeed(sub);
         check(result.success).isTrue();
       }
+
+      _HeaderCapturingDio validatorDio() =>
+          _HeaderCapturingDio(responseEtag: '"v2"', responseLastModified: 'T');
 
       void storeEpisode(String guid, int id) {
         fakeEpisodeRepo.storedEpisodesByGuid[guid] = _ep(1, guid)..id = id;
@@ -1373,7 +1376,10 @@ void main() {
           ),
         ]);
 
-        await syncDropping(_subscription(lastRefreshedAt: null));
+        await syncDropping(
+          _subscription(lastRefreshedAt: null),
+          dio: validatorDio(),
+        );
 
         check(manualFile.existsSync()).isFalse();
         check(autoFile.existsSync()).isFalse();
@@ -1384,6 +1390,25 @@ void main() {
         check(
           fakeEpisodeRepo.deleteCalls.single.guids,
         ).deepEquals({'gone-1', 'gone-2'});
+        check(fakeSubscriptionRepo.lastCacheEtag).equals('"v2"');
+        check(fakeSubscriptionRepo.lastCacheLastModified).equals('T');
+      });
+
+      test('removes the partial file of a paused download', () async {
+        storeEpisode('gone-1', 11);
+        final partial = File('${downloadsDir.path}/11_Episode.mp3')
+          ..writeAsStringSync('partial');
+        fakeDownloadRepo.tasks.add(
+          fakeDownloadTask(
+            episodeId: 11,
+            status: const DownloadStatus.paused(),
+          ),
+        );
+
+        await syncDropping(_subscription(lastRefreshedAt: null));
+
+        check(partial.existsSync()).isFalse();
+        check(fakeDownloadRepo.tasks).isEmpty();
       });
 
       test('keeps an episode another isolate is still downloading', () async {
@@ -1397,13 +1422,21 @@ void main() {
           fakeDownloadTask(episodeId: 12),
         ]);
 
-        await syncDropping(_subscription(lastRefreshedAt: null));
+        await syncDropping(
+          _subscription(lastRefreshedAt: null, httpEtag: '"v1"'),
+          dio: validatorDio(),
+        );
 
         // The next sync, still missing gone-1, retries it.
         check(
           fakeDownloadRepo.tasks.map((task) => task.episodeId),
         ).deepEquals([11]);
         check(fakeEpisodeRepo.deleteCalls.single.guids).deepEquals({'gone-2'});
+        // No validators are kept, so an unchanged feed cannot answer 304
+        // and skip that retry.
+        check(fakeSubscriptionRepo.lastCacheHeadersId).equals(1);
+        check(fakeSubscriptionRepo.lastCacheEtag).isNull();
+        check(fakeSubscriptionRepo.lastCacheLastModified).isNull();
       });
     });
   });

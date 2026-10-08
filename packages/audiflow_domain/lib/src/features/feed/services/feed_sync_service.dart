@@ -478,6 +478,7 @@ class FeedSyncService implements SuspendableWriter {
       // stay consistent. RSS is the source of truth; no protection is
       // applied. Synthetic IDs are skipped when parsing stopped early
       // because the tail scan cannot match them.
+      var isDropCleanupComplete = true;
       if (observedGuids.isNotEmpty) {
         final droppedBefore = knownGuids.difference(observedGuids);
         var droppedGuids = droppedBefore;
@@ -498,27 +499,34 @@ class FeedSyncService implements SuspendableWriter {
         });
 
         if (droppedGuids.isNotEmpty) {
-          final deleted = await _ref
+          final removal = await _ref
               .read(droppedEpisodeRemoverProvider)
               .remove(sub.id, droppedGuids);
-          _logger.i('Removed $deleted dropped episodes from "${sub.title}"');
+          isDropCleanupComplete = removal.isComplete;
+          _logger.i(
+            'Removed ${removal.deletedCount} dropped episodes from '
+            '"${sub.title}"',
+          );
           _onDiagnostic('feed-sync:drop-result', {
             'path': 'foreground',
             'podcastId': sub.id,
             'title': sub.title,
             'requested': droppedGuids.length,
-            'deleted': deleted,
+            'deleted': removal.deletedCount,
+            'kept': removal.keptCount,
           });
         }
       }
 
       // Persist HTTP cache headers only after successful parse + upsert.
       // Always update so previously stored values are cleared when headers
-      // are no longer sent by the server.
+      // are no longer sent by the server. While dropped episodes are still
+      // waiting on their downloads, clear them instead: an unchanged feed
+      // would answer 304 and skip the parse that retries the removal.
       await subscriptionRepo.updateHttpCacheHeaders(
         sub.id,
-        etag: etag,
-        lastModified: lastModified,
+        etag: isDropCleanupComplete ? etag : null,
+        lastModified: isDropCleanupComplete ? lastModified : null,
       );
 
       // Update lastRefreshedAt

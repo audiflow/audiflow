@@ -180,6 +180,99 @@ void main() {
     });
   });
 
+  group('cancel during a download', () {
+    late DownloadTask task;
+    late Episode episode;
+    late List<String> events;
+
+    setUp(() async {
+      task = _task(id: 1, episodeId: 10);
+      episode = _episode(id: 10);
+      events = [];
+      await Future<void>.delayed(Duration.zero);
+      clearInteractions(mockRepository);
+
+      var pendingCalls = 0;
+      when(
+        mockRepository.getNextPending(isOnWifi: anyNamed('isOnWifi')),
+      ).thenAnswer((_) async => pendingCalls++ == 0 ? task : null);
+      when(
+        mockRepository.updateStatus(
+          id: anyNamed('id'),
+          status: anyNamed('status'),
+          localPath: anyNamed('localPath'),
+          lastError: anyNamed('lastError'),
+        ),
+      ).thenAnswer((invocation) async {
+        final status = invocation.namedArguments[#status] as DownloadStatus;
+        final lastError = invocation.namedArguments[#lastError];
+        events.add('status ${status.toDbValue()} error=${lastError != null}');
+      });
+      when(
+        mockRepository.getById(1),
+      ).thenAnswer((_) async => _task(id: 1, episodeId: 10, status: 1));
+    });
+
+    test('returns only after the running transfer has stopped', () async {
+      when(mockEpisodeRepo.getById(10)).thenAnswer((_) async => episode);
+      final download = Completer<String>();
+      when(
+        mockFileService.downloadFile(
+          taskId: 1,
+          url: task.audioUrl,
+          episodeId: task.episodeId,
+          episodeTitle: episode.title,
+          resumeFromBytes: task.downloadedBytes,
+          onProgress: anyNamed('onProgress'),
+        ),
+      ).thenAnswer((_) => download.future);
+
+      final processing = service.startQueue();
+      await Future<void>.delayed(Duration.zero);
+
+      var cancelled = false;
+      final cancel = service.cancelDownload(1).then((_) => cancelled = true);
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      // The writer has not reported back yet, so its file may still grow.
+      check(cancelled).isFalse();
+
+      download.completeError(DownloadException.cancelled());
+      await cancel;
+      await processing;
+
+      // The transfer's own cancelled write (with its error) landed before
+      // the cancel returned, so a following delete cannot be overtaken.
+      check(events.last).equals(
+        'status ${const DownloadStatus.cancelled().toDbValue()} error=true',
+      );
+    });
+
+    test('stops a transfer that had not registered its token yet', () async {
+      final episodeLookup = Completer<Episode?>();
+      when(mockEpisodeRepo.getById(10)).thenAnswer((_) => episodeLookup.future);
+
+      final processing = service.startQueue();
+      await Future<void>.delayed(Duration.zero);
+
+      final cancel = service.cancelDownload(1);
+      await Future<void>.delayed(Duration.zero);
+      episodeLookup.complete(episode);
+      await cancel;
+      await processing;
+
+      verifyNever(
+        mockFileService.downloadFile(
+          taskId: anyNamed('taskId'),
+          url: anyNamed('url'),
+          episodeId: anyNamed('episodeId'),
+          episodeTitle: anyNamed('episodeTitle'),
+          resumeFromBytes: anyNamed('resumeFromBytes'),
+          onProgress: anyNamed('onProgress'),
+        ),
+      );
+    });
+  });
+
   group('pause during a download', () {
     test('stays paused instead of turning into a cancel', () async {
       final task = _task(id: 1, episodeId: 10, downloadedBytes: 800);

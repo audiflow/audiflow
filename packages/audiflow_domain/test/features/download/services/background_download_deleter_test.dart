@@ -60,6 +60,18 @@ void main() {
     check(changedEpisodeIds).deepEquals([10]);
   });
 
+  test('removes the partial file of a task that recorded no path', () async {
+    // A paused or cancelled task has no localPath; its partial file is
+    // still named after the episode.
+    final partial = File('${downloadsDir.path}/10_Episode_Title.mp3')
+      ..writeAsStringSync('partial');
+
+    await deleter(_task(status: const DownloadStatus.paused()));
+
+    check(partial.existsSync()).isFalse();
+    check(repository.deletedIds).deepEquals([1]);
+  });
+
   test('removes the record when there is no file', () async {
     await deleter(_task(status: const DownloadStatus.pending()));
 

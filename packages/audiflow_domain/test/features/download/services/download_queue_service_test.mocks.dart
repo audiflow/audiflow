@@ -306,6 +306,19 @@ class MockDownloadFileService extends _i1.Mock
           as _i3.Future<void>);
 
   @override
+  _i3.Future<void> deleteEpisodeFiles(int? episodeId, {String? storedPath}) =>
+      (super.noSuchMethod(
+            Invocation.method(
+              #deleteEpisodeFiles,
+              [episodeId],
+              {#storedPath: storedPath},
+            ),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
+
+  @override
   _i3.Future<int> getFileSize(String? localPath) =>
       (super.noSuchMethod(
             Invocation.method(#getFileSize, [localPath]),
