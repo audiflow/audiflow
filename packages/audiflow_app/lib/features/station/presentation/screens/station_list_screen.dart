@@ -16,7 +16,7 @@ class StationListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final stations = ref.watch(stationListProvider).value ?? const [];
+    final stationsAsync = ref.watch(stationListProvider);
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.stationSectionTitle),
@@ -28,11 +28,52 @@ class StationListScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: CustomScrollView(
-        slivers: [
-          StationGridSliver(stations: stations),
-          const SliverToBoxAdapter(child: SizedBox(height: Spacing.xl)),
-        ],
+      body: stationsAsync.when(
+        data: (stations) => stations.isEmpty
+            ? _Message(text: l10n.stationNoStationsYet)
+            : CustomScrollView(
+                slivers: [
+                  StationGridSliver(stations: stations),
+                  const SliverToBoxAdapter(child: SizedBox(height: Spacing.xl)),
+                ],
+              ),
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (_, _) => _Message(
+          text: l10n.stationListLoadError,
+          action: TextButton(
+            onPressed: () => ref.invalidate(stationListProvider),
+            child: Text(l10n.commonRetry),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Message extends StatelessWidget {
+  const _Message({required this.text, this.action});
+
+  final String text;
+  final Widget? action;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(Spacing.lg),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              text,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.body.copyWith(
+                color: AppColors.of(context).inkSecondary,
+              ),
+            ),
+            ?action,
+          ],
+        ),
       ),
     );
   }
