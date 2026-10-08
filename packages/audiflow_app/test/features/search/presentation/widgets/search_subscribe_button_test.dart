@@ -20,19 +20,34 @@ void main() {
     WidgetTester tester, {
     required bool subscribed,
     Podcast podcast = _podcast,
+    _RecordingFeedSync? feedSync,
+    VoidCallback? onRowTap,
+    bool fails = false,
   }) async {
-    final controller = _CountingController(subscribed);
+    final controller = _CountingController(subscribed, fails: fails);
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           subscriptionControllerProvider('42').overrideWith(() => controller),
+          feedSyncServiceProvider.overrideWithValue(
+            feedSync ?? _RecordingFeedSync(),
+          ),
         ],
         child: MaterialApp(
           theme: AppTheme.light(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
-            body: Center(child: SearchSubscribeButton(podcast: podcast)),
+            // Inside a tappable row, as in the search results.
+            body: Center(
+              child: InkWell(
+                onTap: onRowTap,
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: SearchSubscribeButton(podcast: podcast),
+                ),
+              ),
+            ),
           ),
         ),
       ),
@@ -76,15 +91,49 @@ void main() {
     await tester.tap(find.byType(SearchSubscribeButton));
     check(controller.toggles).equals(0);
   });
+
+  testWidgets('subscribing fetches the episodes right away', (tester) async {
+    // Search never opens the podcast screen, whose fetch would store them.
+    final feedSync = _RecordingFeedSync();
+    await pump(tester, subscribed: false, feedSync: feedSync);
+    await tester.tap(find.byType(SearchSubscribeButton));
+    await tester.pumpAndSettle();
+    check(feedSync.synced).deepEquals([
+      ['https://example.com/feed.xml'],
+    ]);
+  });
+
+  testWidgets('tapping the check does not open the podcast', (tester) async {
+    var rowTaps = 0;
+    await pump(tester, subscribed: true, onRowTap: () => rowTaps++);
+    await tester.tap(find.byIcon(Icons.check_rounded));
+    await tester.pumpAndSettle();
+    check(rowTaps).equals(0);
+  });
+
+  testWidgets('a failed state offers a retry', (tester) async {
+    final controller = await pump(tester, subscribed: false, fails: true);
+    check(find.byTooltip('Retry').evaluate()).length.equals(1);
+    final builds = controller.builds;
+    await tester.tap(find.byTooltip('Retry'));
+    await tester.pumpAndSettle();
+    check(controller.builds).isGreaterThan(builds);
+  });
 }
 
 class _CountingController extends SubscriptionController {
-  _CountingController(this._isSubscribed);
+  _CountingController(this._isSubscribed, {this.fails = false});
   final bool _isSubscribed;
+  final bool fails;
   var toggles = 0;
+  var builds = 0;
 
   @override
-  Future<bool> build(String itunesId) async => _isSubscribed;
+  Future<bool> build(String itunesId) async {
+    builds++;
+    if (fails) throw Exception('read failed');
+    return _isSubscribed;
+  }
 
   @override
   Future<bool> toggleSubscription(
@@ -93,6 +142,22 @@ class _CountingController extends SubscriptionController {
     SubscribeSource source = SubscribeSource.discovery,
   }) async {
     toggles++;
+    state = const AsyncData(true);
     return true;
+  }
+}
+
+class _RecordingFeedSync extends Fake implements FeedSyncService {
+  final synced = <List<String>>[];
+
+  @override
+  Future<FeedSyncResult> syncFeedsByUrls(List<String> feedUrls) async {
+    synced.add(feedUrls);
+    return const FeedSyncResult(
+      totalCount: 1,
+      successCount: 1,
+      skipCount: 0,
+      errorCount: 0,
+    );
   }
 }
