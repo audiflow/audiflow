@@ -603,6 +603,10 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
     context.push('${AppRoutes.library}/podcast/${podcast.id}', extra: podcast);
   }
 
+  void _recordStationPlay() {
+    if (widget.stationId case final id?) recordStationPlay(ref, id);
+  }
+
   Future<void> _onPlayPausePressed(
     BuildContext context,
     String url,
@@ -614,7 +618,6 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
       controller.pause();
       return;
     }
-    if (widget.stationId case final id?) recordStationPlay(ref, id);
 
     if (controller.isLoaded(url)) {
       // Honour a pending `?t=` deep-link timestamp even when the episode is
@@ -639,6 +642,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
           _pendingStartAt = null;
         }
       }
+      _recordStationPlay();
       controller.resume();
       return;
     }
@@ -659,6 +663,10 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
         sourceContext: widget.podcastTitle,
       );
     }
+
+    // Only now, past the replace-queue confirmation: a cancelled play must
+    // not move the station up the Library.
+    _recordStationPlay();
 
     // Kick off playback without awaiting: just_audio's play() future only
     // completes when the session pauses/ends, so awaiting would leave the
