@@ -72,4 +72,48 @@ void main() {
     );
     check(fraction).isNull();
   });
+
+  testWidgets('keeps the line while its own episode buffers', (tester) async {
+    final player = _SwitchablePlayer(
+      const PlaybackState.playing(episodeUrl: _url),
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          nowPlayingControllerProvider.overrideWith(
+            () => StubNowPlayingController(_nowPlaying),
+          ),
+          audioPlayerControllerProvider.overrideWith(() => player),
+          playbackProgressProvider.overrideWith(
+            (ref) => const PlaybackProgress(
+              position: Duration(minutes: 9),
+              duration: Duration(minutes: 10),
+              bufferedPosition: Duration.zero,
+            ),
+          ),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const Scaffold(body: NowPlayingCard()),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    player.set(const PlaybackState.loading(episodeUrl: _url));
+    await tester.pump();
+
+    final fraction = tester
+        .widget<BottomEdgeProgress>(find.byType(BottomEdgeProgress))
+        .fraction;
+    check(fraction).isNotNull().isCloseTo(0.9, 0.001);
+  });
+}
+
+class _SwitchablePlayer extends StubAudioPlayerController {
+  _SwitchablePlayer(super.initial);
+
+  void set(PlaybackState next) => state = next;
 }
