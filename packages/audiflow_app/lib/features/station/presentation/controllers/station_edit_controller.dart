@@ -70,7 +70,9 @@ class StationEditController extends _$StationEditController {
   /// sort modes so it can be restored when switching back to manual.
   List<int>? _savedManualOrder;
 
-  static const _reconcileDelay = Duration(milliseconds: 800);
+  /// How long edits must settle before the feed is rebuilt.
+  @visibleForTesting
+  static Duration reconcileDelay = const Duration(milliseconds: 800);
 
   // Captured in build: writes and the final reconcile outlive the provider.
   late StationRepository _stations;
@@ -87,6 +89,10 @@ class StationEditController extends _$StationEditController {
   Future<void> _writes = Future.value();
   final _loadCompleter = Completer<void>();
   Timer? _reconcileTimer;
+
+  /// Feed rebuilds run one at a time, so an older one can never finish
+  /// after a newer one (or after a delete) and restore stale rows.
+  Future<void> _rebuilds = Future.value();
 
   /// Set when the editor closes: later writes leave the reconcile to the
   /// final flush instead of a timer.
@@ -123,11 +129,12 @@ class StationEditController extends _$StationEditController {
     if (!_loadCompleter.isCompleted) _loadCompleter.complete();
   }
 
-  /// Prefills a new station's [name], which is also used whenever the
-  /// field is left blank. Not a change, so nothing is written.
+  /// Sets a new station's default [name], used whenever the field is left
+  /// blank, and prefills it unless a name was already typed. Not a change,
+  /// so nothing is written.
   void useDefaultName(String name) {
     _defaultName = name;
-    state = state.copyWith(name: name);
+    if (state.name.trim().isEmpty) state = state.copyWith(name: name);
   }
 
   Future<void> _loadExistingStation(int id) async {
@@ -220,8 +227,12 @@ class StationEditController extends _$StationEditController {
       _scheduleSave();
       return;
     }
+    // Queued before the await: a write resolves the order from its own
+    // snapshot, and closing the editor during the await must not drop it.
+    _scheduleSave();
     final resolved = await _resolvedPodcastOrder();
-    _edit(state.copyWith(podcastSortOrder: resolved));
+    // The resolved order is only for display; the write derives it too.
+    if (ref.mounted) state = state.copyWith(podcastSortOrder: resolved);
   }
 
   /// Sets a per-podcast episode limit override.
@@ -269,18 +280,20 @@ class StationEditController extends _$StationEditController {
       }
     }
 
-    state = state.copyWith(
-      selectedPodcastIds: newSelection,
-      podcastSortOrder: currentOrder,
+    // Queued before any await, so closing the editor cannot drop it.
+    _edit(
+      state.copyWith(
+        selectedPodcastIds: newSelection,
+        podcastSortOrder: currentOrder,
+      ),
     );
 
     // Recompute order for automatic sort modes so the editor list matches
     // the selected sort immediately.
     if (state.podcastSort != StationPodcastSort.manual) {
       final resolved = await _resolvedPodcastOrder();
-      state = state.copyWith(podcastSortOrder: resolved);
+      if (ref.mounted) state = state.copyWith(podcastSortOrder: resolved);
     }
-    _scheduleSave();
   }
 
   /// Computes the podcast order based on [state.podcastSort].
@@ -469,9 +482,9 @@ class StationEditController extends _$StationEditController {
     _reconcileTimer?.cancel();
     _pendingReconcileId = stationId;
     if (_closing) return;
-    _reconcileTimer = Timer(_reconcileDelay, () {
+    _reconcileTimer = Timer(reconcileDelay, () {
       _pendingReconcileId = null;
-      unawaited(_reconcile(stationId));
+      _enqueueRebuild(stationId);
     });
   }
 
@@ -483,16 +496,22 @@ class StationEditController extends _$StationEditController {
     unawaited(
       _writes.then((_) {
         final id = _pendingReconcileId;
-        if (id == null || _deleted) return null;
-        return _reconcile(id);
+        if (id != null) _enqueueRebuild(id);
       }),
     );
+  }
+
+  void _enqueueRebuild(int stationId) {
+    _rebuilds = _rebuilds.then((_) {
+      if (!_deleted) return _reconcile(stationId);
+    });
   }
 
   Future<void> _reconcile(int stationId) async {
     try {
       await _reconciler.onStationConfigChanged(stationId);
-    } on Exception catch (e) {
+    } on Object catch (e) {
+      // Any failure: the rebuild chain must go on.
       _setError(e.toString());
     }
   }
@@ -504,8 +523,10 @@ class StationEditController extends _$StationEditController {
     _deleted = true;
     _reconcileTimer?.cancel();
     try {
-      // Let a write already in flight finish so it cannot recreate links.
+      // Let a write or rebuild already in flight finish, so neither can
+      // recreate links or feed rows after the delete.
       await _writes;
+      await _rebuilds;
       await _episodes.removeAllForStation(id);
       await _links.removeAllForStation(id);
       await _stations.delete(id);

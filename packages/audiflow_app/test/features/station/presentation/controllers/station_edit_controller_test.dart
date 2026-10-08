@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audiflow_app/features/station/presentation/controllers/station_edit_controller.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
@@ -177,6 +179,71 @@ void main() {
       await writes;
       await pumpEventQueue();
       check(reconciler.reconciled).deepEquals([station.id]);
+    });
+  });
+
+  group('closing the editor', () {
+    test('keeps a sort change made just before it', () async {
+      final station = await existingStation();
+      final controller = controllerFor(station.id);
+      await controller.loaded;
+      // Automatic sorts read subscriptions before updating the display.
+      unawaited(controller.setPodcastSort(StationPodcastSort.nameAsc));
+      final writes = controller.pendingWrites;
+      container.dispose();
+      await writes;
+      check(
+        stations.stations[station.id]!.podcastSort,
+      ).equals(StationPodcastSort.nameAsc);
+    });
+  });
+
+  group('rebuilds', () {
+    setUp(() => StationEditController.reconcileDelay = Duration.zero);
+    tearDown(
+      () => StationEditController.reconcileDelay = const Duration(
+        milliseconds: 800,
+      ),
+    );
+
+    test('a delete waits for a running rebuild', () async {
+      final station = await existingStation();
+      final controller = controllerFor(station.id);
+      await controller.loaded;
+      reconciler.gate = Completer<void>();
+      controller.setHideCompleted(true);
+      await controller.pendingWrites;
+      await pumpEventQueue();
+      check(reconciler.started).deepEquals([station.id]);
+
+      final deleted = controller.delete();
+      await pumpEventQueue();
+      // Still there: deleting now would let the rebuild write rows after.
+      check(stations.stations).containsKey(station.id);
+
+      reconciler.gate!.complete();
+      check(await deleted).isTrue();
+      check(reconciler.reconciled).deepEquals([station.id]);
+      check(stations.stations).isEmpty();
+    });
+
+    test('run one at a time', () async {
+      final station = await existingStation();
+      final controller = controllerFor(station.id);
+      await controller.loaded;
+      reconciler.gate = Completer<void>();
+      controller.setHideCompleted(true);
+      await controller.pendingWrites;
+      await pumpEventQueue();
+      controller.setHideCompleted(false);
+      await controller.pendingWrites;
+      await pumpEventQueue();
+      // The second waits for the first.
+      check(reconciler.started).deepEquals([station.id]);
+
+      reconciler.gate!.complete();
+      await pumpEventQueue();
+      check(reconciler.reconciled).deepEquals([station.id, station.id]);
     });
   });
 }

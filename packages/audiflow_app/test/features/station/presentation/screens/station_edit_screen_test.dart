@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audiflow_app/features/library/presentation/controllers/library_controller.dart';
 import 'package:audiflow_app/features/station/presentation/screens/station_edit_screen.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
@@ -78,5 +80,14 @@ void main() {
   testWidgets('has no save button', (tester) async {
     await pump(tester);
     check(find.text('Save').evaluate()).isEmpty();
+  });
+
+  testWidgets('a name typed while stations load is kept', (tester) async {
+    stations.listGate = Completer<void>();
+    await pump(tester);
+    await tester.enterText(find.byType(TextField).first, 'Commute');
+    stations.listGate!.complete();
+    await tester.pumpAndSettle();
+    check(nameField(tester).controller.text).equals('Commute');
   });
 }

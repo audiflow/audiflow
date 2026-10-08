@@ -67,6 +67,8 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
     ref
         .read(stationEditControllerProvider(widget.stationId).notifier)
         .useDefaultName(name);
+    // The field is usable while the stations load; keep anything typed.
+    if (_nameController.text.isNotEmpty) return;
     _nameController.value = TextEditingValue(
       text: name,
       selection: TextSelection(baseOffset: 0, extentOffset: name.length),

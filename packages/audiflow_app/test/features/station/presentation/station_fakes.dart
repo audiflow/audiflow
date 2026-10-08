@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audiflow_domain/audiflow_domain.dart';
 
 /// In-memory station storage for the station editor tests.
@@ -20,8 +22,14 @@ class FakeStationRepository implements StationRepository {
   @override
   Future<Station?> findById(int id) async => stations[id];
 
+  /// When set, [watchAll] waits for it, to hold the list mid-load.
+  Completer<void>? listGate;
+
   @override
-  Stream<List<Station>> watchAll() => Stream.value(stations.values.toList());
+  Stream<List<Station>> watchAll() async* {
+    await listGate?.future;
+    yield stations.values.toList();
+  }
 
   @override
   Future<void> update(Station station) async => stations[station.id] = station;
@@ -83,9 +91,16 @@ class FakeStationPodcastRepository implements StationPodcastRepository {
 class FakeReconciler implements StationReconcilerService {
   final reconciled = <int>[];
 
+  /// Rebuilds that have started; one finishes when [gate] completes.
+  final started = <int>[];
+  Completer<void>? gate;
+
   @override
-  Future<void> onStationConfigChanged(int stationId) async =>
-      reconciled.add(stationId);
+  Future<void> onStationConfigChanged(int stationId) async {
+    started.add(stationId);
+    await gate?.future;
+    reconciled.add(stationId);
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
