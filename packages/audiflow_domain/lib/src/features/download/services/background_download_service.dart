@@ -369,6 +369,11 @@ class BackgroundDownloadService {
   ) async {
     try {
       if (await _downloadRepo.getById(task.id) != null) return false;
+      // A replacement download of the same episode writes the same path;
+      // its file is not this worker's to remove.
+      if (await _downloadRepo.getByEpisodeId(task.episodeId) != null) {
+        return false;
+      }
       final file = File(localPath);
       if (await file.exists()) await file.delete();
       _logger?.i(

@@ -291,7 +291,20 @@ class DownloadQueueService implements SuspendableWriter {
     }
   }
 
+  /// A replacement download of the same episode writes the same path; its
+  /// file is not the deleted task's to remove. An unreadable lookup counts
+  /// as a replacement so the file is kept.
+  Future<bool> _hasReplacement(DownloadTask task) async {
+    try {
+      return await _repository.getByEpisodeId(task.episodeId) != null;
+    } catch (e) {
+      _logger.w('Could not look up a replacement of task ${task.id}', error: e);
+      return true;
+    }
+  }
+
   Future<void> _discardFilesOfDeletedTask(DownloadTask task) async {
+    if (await _hasReplacement(task)) return;
     try {
       await _fileService.deleteEpisodeFiles(task.episodeId);
       _logger.i('Discarded partial download of deleted task ${task.id}');
@@ -370,8 +383,10 @@ class DownloadQueueService implements SuspendableWriter {
       );
 
       if (await _wasDeletedDuringDownload(task.id)) {
-        await _fileService.deleteFile(localPath);
-        _logger.i('Discarded download of deleted task ${task.id}');
+        if (!await _hasReplacement(task)) {
+          await _fileService.deleteFile(localPath);
+          _logger.i('Discarded download of deleted task ${task.id}');
+        }
         return;
       }
 

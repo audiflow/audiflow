@@ -84,6 +84,7 @@ void main() {
     // and a failed one to tell whether it was deleted meanwhile; tests that
     // care stub the row themselves.
     when(mockRepository.getById(any)).thenAnswer((_) async => null);
+    when(mockRepository.getByEpisodeId(any)).thenAnswer((_) async => null);
 
     service = DownloadQueueService(
       repository: mockRepository,
@@ -779,6 +780,59 @@ void main() {
       await service.startQueue();
 
       verify(mockFileService.deleteFile('/downloads/10_Test_EP.mp3')).called(1);
+      verifyNever(
+        mockRepository.updateStatus(
+          id: 1,
+          status: const DownloadStatus.completed(),
+          localPath: anyNamed('localPath'),
+        ),
+      );
+    });
+
+    test('keeps the file when a replacement download exists', () async {
+      // A bulk delete can remove the record after the queue picked the
+      // task up but before its file finished downloading.
+      final task = _task(id: 1, episodeId: 10);
+      final episode = _episode(id: 10, title: 'Test EP');
+      await Future<void>.delayed(Duration.zero);
+      clearInteractions(mockRepository);
+
+      var callCount = 0;
+      when(
+        mockRepository.getNextPending(
+          isOnWifi: anyNamed('isOnWifi'),
+          excludeIds: anyNamed('excludeIds'),
+        ),
+      ).thenAnswer((_) async => 1 < ++callCount ? null : task);
+      when(
+        mockRepository.updateStatus(
+          id: 1,
+          status: const DownloadStatus.downloading(),
+        ),
+      ).thenAnswer((_) async {});
+      when(mockEpisodeRepo.getById(10)).thenAnswer((_) async => episode);
+      when(
+        mockFileService.downloadFile(
+          taskId: 1,
+          url: task.audioUrl,
+          episodeId: task.episodeId,
+          episodeTitle: episode.title,
+          resumeFromBytes: task.downloadedBytes,
+          onProgress: anyNamed('onProgress'),
+        ),
+      ).thenAnswer((_) async => '/downloads/10_Test_EP.mp3');
+      when(mockRepository.getById(1)).thenAnswer((_) async => null);
+      // The listener downloaded the episode again under a new task.
+      when(
+        mockRepository.getByEpisodeId(10),
+      ).thenAnswer((_) async => _task(id: 2, episodeId: 10));
+      when(
+        mockFileService.deleteFile('/downloads/10_Test_EP.mp3'),
+      ).thenAnswer((_) async {});
+
+      await service.startQueue();
+
+      verifyNever(mockFileService.deleteFile('/downloads/10_Test_EP.mp3'));
       verifyNever(
         mockRepository.updateStatus(
           id: 1,

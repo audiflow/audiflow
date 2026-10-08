@@ -23,10 +23,22 @@ class _FakeDownloadRepository implements DownloadRepository {
   final Set<int> deleteWhenStarted = {};
   final Set<int> deletedIds = {};
 
+  /// Tasks created for an episode after its earlier task was deleted.
+  final Map<int, DownloadTask> replacements = {};
+
   @override
   Future<DownloadTask?> getById(int id) async {
     if (deletedIds.contains(id)) return null;
     return pending.where((t) => t.id == id).firstOrNull;
+  }
+
+  @override
+  Future<DownloadTask?> getByEpisodeId(int episodeId) async {
+    final replacement = replacements[episodeId];
+    if (replacement != null) return replacement;
+    return pending
+        .where((t) => t.episodeId == episodeId && !deletedIds.contains(t.id))
+        .firstOrNull;
   }
 
   @override
@@ -358,6 +370,22 @@ void main() {
 
       check(count).equals(0);
       check(File('$downloadsDir/10_Ep.mp3').existsSync()).isFalse();
+    });
+
+    test('keeps the file when a replacement download exists', () async {
+      downloadRepo.pending.add(_task(id: 1, episodeId: 10));
+      downloadRepo.deleteWhenStarted.add(1);
+      // The listener downloads the episode again while the old worker runs.
+      downloadRepo.replacements[10] = _task(id: 2, episodeId: 10);
+      episodeRepo.episodes[10] = _episode(id: 10, title: 'Ep');
+      dioAdapter.onGet(
+        'https://example.com/ep.mp3',
+        (server) => server.reply(200, 'audio'),
+      );
+
+      await createService().execute();
+
+      check(File('$downloadsDir/10_Ep.mp3').existsSync()).isTrue();
     });
 
     test('discards the partial file of a deleted task whose transfer '
