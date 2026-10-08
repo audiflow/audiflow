@@ -24,8 +24,16 @@ class LibraryScreen extends ConsumerStatefulWidget {
 }
 
 class _LibraryScreenState extends ConsumerState<LibraryScreen> {
-  /// Narrows the podcast list by title or author; never persisted.
-  String _filter = '';
+  /// Narrows the podcast list by title or author; never persisted. Owned
+  /// here, not by the field, so the query and the field cannot disagree
+  /// when the field leaves the tree (an emptied library) and comes back.
+  final _filterController = TextEditingController();
+
+  @override
+  void dispose() {
+    _filterController.dispose();
+    super.dispose();
+  }
 
   Future<void> _onRefresh() async {
     final syncService = ref.read(feedSyncServiceProvider);
@@ -167,7 +175,8 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
           else ...[
             SliverToBoxAdapter(
               child: _PodcastFilterField(
-                onChanged: (value) => setState(() => _filter = value),
+                controller: _filterController,
+                onChanged: (_) => setState(() {}),
               ),
             ),
             _podcastsSliver(sortedSubscriptionsAsync),
@@ -206,7 +215,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   ) {
     return sortedSubscriptionsAsync.when(
       data: (all) {
-        final sorted = filterPodcasts(all, _filter);
+        final sorted = filterPodcasts(all, _filterController.text);
         if (sorted.isEmpty) {
           return SliverToBoxAdapter(
             child: _InlinePlaceholder(
@@ -547,27 +556,18 @@ List<Subscription> filterPodcasts(List<Subscription> podcasts, String query) {
 }
 
 /// Pill-shaped field under the Podcasts header that filters the list.
-class _PodcastFilterField extends StatefulWidget {
-  const _PodcastFilterField({required this.onChanged});
+class _PodcastFilterField extends StatelessWidget {
+  const _PodcastFilterField({
+    required this.controller,
+    required this.onChanged,
+  });
 
+  final TextEditingController controller;
   final ValueChanged<String> onChanged;
 
-  @override
-  State<_PodcastFilterField> createState() => _PodcastFilterFieldState();
-}
-
-class _PodcastFilterFieldState extends State<_PodcastFilterField> {
-  final _controller = TextEditingController();
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
   void _clear() {
-    _controller.clear();
-    widget.onChanged('');
+    controller.clear();
+    onChanged('');
   }
 
   @override
@@ -581,8 +581,8 @@ class _PodcastFilterFieldState extends State<_PodcastFilterField> {
         Spacing.sm,
       ),
       child: TextField(
-        controller: _controller,
-        onChanged: widget.onChanged,
+        controller: controller,
+        onChanged: onChanged,
         // Touching anything else ends the filtering and hides the keyboard.
         onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
         textInputAction: TextInputAction.search,
@@ -592,8 +592,8 @@ class _PodcastFilterFieldState extends State<_PodcastFilterField> {
           hintStyle: AppTextStyles.body.copyWith(color: colors.inkTertiary),
           prefixIcon: Icon(Icons.search, color: colors.inkTertiary),
           suffixIcon: ListenableBuilder(
-            listenable: _controller,
-            builder: (context, _) => _controller.text.isEmpty
+            listenable: controller,
+            builder: (context, _) => controller.text.isEmpty
                 ? const SizedBox.shrink()
                 : IconButton(
                     tooltip: MaterialLocalizations.of(

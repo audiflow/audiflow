@@ -519,5 +519,59 @@ void main() {
       await tester.pump();
       check(field.focusNode.hasFocus).isFalse();
     });
+
+    testWidgets('the filter survives the library emptying and refilling', (
+      tester,
+    ) async {
+      final subscriptions = StreamController<List<Subscription>>.broadcast();
+      addTearDown(subscriptions.close);
+      final container = ProviderContainer(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          librarySubscriptionsProvider.overrideWith(
+            (ref) => subscriptions.stream,
+          ),
+          sortedSubscriptionsProvider.overrideWith(
+            (ref) => ref.watch(librarySubscriptionsProvider.future),
+          ),
+          newestEpisodeDateProvider.overrideWith(
+            (ref, podcastId) => Stream.value(null),
+          ),
+          continueListeningEpisodesProvider.overrideWith(
+            (ref) => Stream.value(const []),
+          ),
+          stationListProvider.overrideWith(
+            (ref) => Stream.value(const <Station>[]),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const LibraryScreen(),
+          ),
+        ),
+      );
+      subscriptions.add(fixtures);
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'alp');
+      await tester.pumpAndSettle();
+
+      // Emptied: the field leaves the tree with the podcast section.
+      subscriptions.add(const []);
+      await tester.pumpAndSettle();
+      check(find.byType(TextField).evaluate()).isEmpty();
+
+      subscriptions.add(fixtures);
+      await tester.pumpAndSettle();
+      final field = tester.widget<TextField>(find.byType(TextField));
+      // The field shows the query that is actually applied.
+      check(field.controller!.text).equals('alp');
+      check(find.byType(SubscriptionListTile).evaluate()).length.equals(1);
+    });
   });
 }
