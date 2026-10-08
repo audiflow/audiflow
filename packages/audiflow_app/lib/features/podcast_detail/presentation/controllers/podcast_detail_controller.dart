@@ -429,50 +429,78 @@ Future<List<PodcastItem>> filteredSortedEpisodes(
   SortOrder sortOrder,
 ) async {
   final feed = await ref.watch(podcastDetailProvider(feedUrl).future);
-  var episodes = feed.episodes;
+  final episodes = filter == EpisodeFilter.all
+      ? feed.episodes
+      : await _filterByStatus(ref, feedUrl, feed.episodes, filter);
+  return _sortByPublishDate(episodes, sortOrder);
+}
 
-  // Apply filter
-  if (filter != EpisodeFilter.all) {
-    final episodeRepo = ref.watch(episodeRepositoryProvider);
-    final historyRepo = ref.watch(playbackHistoryRepositoryProvider);
+/// Narrows [items] to [filter] using batch-fetched progress and downloads.
+///
+/// Watching the progress map and the completed-download ids makes the list
+/// rebuild when either changes, so a download finishing or being removed
+/// shows up while the Downloaded filter is active.
+Future<List<PodcastItem>> _filterByStatus(
+  Ref ref,
+  String feedUrl,
+  List<PodcastItem> items,
+  EpisodeFilter filter,
+) async {
+  final progressByUrl = await ref.watch(
+    podcastEpisodeProgressProvider(feedUrl).future,
+  );
+  final downloadedEpisodeIds = filter == EpisodeFilter.downloaded
+      ? await ref.watch(completedDownloadEpisodeIdsProvider.future)
+      : const <int>{};
+  return [
+    for (final item in items)
+      if (item.enclosureUrl case final audioUrl?)
+        if (matchesEpisodeFilter(
+          filter,
+          progress: progressByUrl[audioUrl],
+          downloadedEpisodeIds: downloadedEpisodeIds,
+        ))
+          item,
+  ];
+}
 
-    final filtered = <PodcastItem>[];
-    for (final item in episodes) {
-      if (item.enclosureUrl == null) continue;
+/// Whether an episode with [progress] belongs in the list under [filter].
+///
+/// [progress] is null for an episode not yet stored locally, which counts
+/// as unplayed and not downloaded.
+bool matchesEpisodeFilter(
+  EpisodeFilter filter, {
+  required EpisodeWithProgress? progress,
+  required Set<int> downloadedEpisodeIds,
+}) {
+  // Played keys on completedAt, regardless of any saved position. When
+  // PlaybackHistory gains isPlayed / isInProgress (#600), read those here
+  // so an episode being replayed stays under Played.
+  final isPlayed = progress?.isCompleted ?? false;
+  final isInProgress = progress?.isInProgress ?? false;
+  return switch (filter) {
+    EpisodeFilter.all => true,
+    EpisodeFilter.unplayed => !isPlayed && !isInProgress,
+    EpisodeFilter.inProgress => isInProgress,
+    EpisodeFilter.played => isPlayed,
+    EpisodeFilter.downloaded =>
+      progress != null && downloadedEpisodeIds.contains(progress.episode.id),
+  };
+}
 
-      final episode = await episodeRepo.getByAudioUrl(item.enclosureUrl!);
-
-      if (episode == null) {
-        if (filter == EpisodeFilter.unplayed) {
-          filtered.add(item);
-        }
-        continue;
-      }
-
-      final history = await historyRepo.getByEpisodeId(episode.id);
-      final isCompleted = history?.completedAt != null;
-      final isInProgress =
-          history != null && 0 < history.positionMs && !isCompleted;
-
-      if (filter == EpisodeFilter.unplayed && !isCompleted && !isInProgress) {
-        filtered.add(item);
-      } else if (filter == EpisodeFilter.inProgress && isInProgress) {
-        filtered.add(item);
-      }
-    }
-    episodes = filtered;
-  }
-
-  // Sort by publish date
+List<PodcastItem> _sortByPublishDate(
+  List<PodcastItem> episodes,
+  SortOrder sortOrder,
+) {
+  final fallback = DateTime(1970);
   final sorted = List<PodcastItem>.from(episodes);
   sorted.sort((a, b) {
-    final aDate = a.publishDate ?? DateTime(1970);
-    final bDate = b.publishDate ?? DateTime(1970);
+    final aDate = a.publishDate ?? fallback;
+    final bDate = b.publishDate ?? fallback;
     return sortOrder == SortOrder.ascending
         ? aDate.compareTo(bDate)
         : bDate.compareTo(aDate);
   });
-
   return sorted;
 }
 
