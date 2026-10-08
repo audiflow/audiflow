@@ -3,6 +3,7 @@ import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -81,6 +82,16 @@ void main() {
       await pump(tester, 0, onAdd: () => added++, dimension: 100);
       final center = tester.getCenter(find.byKey(StationArtwork.addButtonKey));
       await tester.tapAt(center + const Offset(20, 0));
+      check(added).equals(1);
+    });
+
+    testWidgets('the add button works from a keyboard', (tester) async {
+      var added = 0;
+      await pump(tester, 0, onAdd: () => added++);
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pump();
       check(added).equals(1);
     });
 

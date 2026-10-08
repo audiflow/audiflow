@@ -196,17 +196,21 @@ class _AddButton extends StatelessWidget {
         ? Spacing.minTouchTarget
         : size;
     // The whole target takes the tap, not only the visible circle, so a
-    // near miss on a small tile does not open the station instead.
+    // near miss on a small tile does not open the station instead. An
+    // InkWell keeps it reachable and activatable from a keyboard.
     return Semantics(
       button: true,
       label: label,
-      child: GestureDetector(
-        key: StationArtwork.addButtonKey,
-        behavior: HitTestBehavior.opaque,
-        onTap: onPressed,
-        child: SizedBox.square(
-          dimension: target,
-          child: Center(child: _circle(colors)),
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          key: StationArtwork.addButtonKey,
+          onTap: onPressed,
+          customBorder: const CircleBorder(),
+          child: SizedBox.square(
+            dimension: target,
+            child: Center(child: _circle(colors)),
+          ),
         ),
       ),
     );
