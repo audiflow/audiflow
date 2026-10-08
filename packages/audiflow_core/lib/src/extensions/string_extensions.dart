@@ -71,9 +71,21 @@ final _blankLine = RegExp(r'^[ \t　]+$', multiLine: true);
 final _breakRun = RegExp(r'(?:<br\s*/?>\s*){3,}', caseSensitive: false);
 final _newlineRun = RegExp(r'\n{3,}');
 // Whitespace, `&nbsp;`, and zero-width characters (ZWSP, ZWNJ, ZWJ, word
-// joiner, BOM) that render nothing but still carry a link underline.
+// joiner, BOM) that render nothing but still carry a link underline, both
+// literal and as named, decimal or hex entities.
+const _invisibleText =
+    r'(?:\s|[\u200B-\u200D\u2060\uFEFF]'
+    r'|&(?:nbsp|zwsp|zwnj|zwj|NoBreak);'
+    r'|&#(?:0*(?:160|820[3-5]|8288|65279));'
+    r'|&#[xX]0*(?:[aA]0|200[bBcCdD]|2060|[fF][eE][fF][fF]);)';
 final _invisibleLink = RegExp(
-  r'<a\b[^>]*>(?:\s|&nbsp;|[\u200B-\u200D\u2060\uFEFF])*</a>',
+  '<a\\b[^>]*>$_invisibleText*</a>',
+  caseSensitive: false,
+);
+// Tags and whole links: separator cleanup leaves them untouched so that
+// attributes and link addresses (e.g. `/a-----b`) keep their characters.
+final _markupOrLink = RegExp(
+  r'<a\b[^>]*>[\s\S]*?</a>|<[^>]*>',
   caseSensitive: false,
 );
 
@@ -134,11 +146,15 @@ extension StringExtensions on String {
   /// Removes decorative separator runs (redesign section 5): five or more
   /// of the same rule character in a row, such as `:::::`, `=====`,
   /// `-----` or `・・・・・`. Lines and HTML paragraphs left empty by the
-  /// removal are dropped. URLs and ordinary punctuation never repeat a
-  /// rule character that often, so they are untouched.
+  /// removal are dropped. Tags and links are left as they are, so link
+  /// addresses keep their characters.
   String get withoutSeparatorRuns {
     if (isEmpty) return this;
-    return replaceAll(_separatorRun, '')
+    return splitMapJoin(
+          _markupOrLink,
+          onMatch: (match) => match[0]!,
+          onNonMatch: (text) => text.replaceAll(_separatorRun, ''),
+        )
         .replaceAll(_emptyParagraph, '')
         .replaceAll(_blankLine, '')
         .replaceAll(_breakRun, '<br><br>')

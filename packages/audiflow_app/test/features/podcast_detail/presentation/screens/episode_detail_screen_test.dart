@@ -139,6 +139,36 @@ void main() {
       check(stations.played).isEmpty();
     });
 
+    testWidgets('play again restarts a loaded played episode', (tester) async {
+      _LoadedAudioPlayerController.calls.clear();
+      await tester.pumpWidget(
+        buildTestWidget(progress: testCompletedProgress, loaded: true),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text(l10n.episodeDetailPlayAgain));
+      await tester.pumpAndSettle();
+
+      check(
+        _LoadedAudioPlayerController.calls,
+      ).deepEquals(['seek 0', 'resume']);
+    });
+
+    testWidgets('resume keeps the position of an unfinished episode', (
+      tester,
+    ) async {
+      _LoadedAudioPlayerController.calls.clear();
+      await tester.pumpWidget(
+        buildTestWidget(progress: testInProgressProgress, loaded: true),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text(l10n.episodeDetailResume));
+      await tester.pumpAndSettle();
+
+      check(_LoadedAudioPlayerController.calls).deepEquals(['resume']);
+    });
+
     testWidgets('playing an episode opened from a station records it', (
       tester,
     ) async {
@@ -412,8 +442,18 @@ class _RecordingStationRepository extends Fake implements StationRepository {
 }
 
 class _LoadedAudioPlayerController extends _FakeAudioPlayerController {
+  /// Seek and resume calls in order, shared across instances of a test.
+  static final calls = <String>[];
+
   @override
   bool isLoaded(String url) => true;
+
+  @override
+  Future<void> seek(Duration position) async =>
+      calls.add('seek ${position.inSeconds}');
+
+  @override
+  Future<void> resume() async => calls.add('resume');
 }
 
 /// Asks to confirm replacing the queue, so the test can cancel.

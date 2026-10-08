@@ -317,6 +317,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                     context,
                     enclosureUrl,
                     view.isPlaying,
+                    restart: view.playState == EpisodePlayState.played,
                   ),
           ),
         ),
@@ -458,11 +459,14 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
     if (widget.stationId case final id?) recordStationPlay(ref, id);
   }
 
+  /// [restart] plays a played episode again from the start ("Play
+  /// again"); a shared timestamp still wins.
   Future<void> _onPlayPausePressed(
     BuildContext context,
     String url,
-    bool isPlaying,
-  ) async {
+    bool isPlaying, {
+    bool restart = false,
+  }) async {
     final controller = ref.read(audioPlayerControllerProvider.notifier);
 
     if (isPlaying) {
@@ -492,6 +496,10 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
         if (seekCommitted) {
           _pendingStartAt = null;
         }
+      } else if (restart) {
+        // A player parked at the end would advance to the next queued
+        // episode on resume; seeking back replays this one instead.
+        await controller.seek(Duration.zero);
       }
       _recordStationPlay();
       controller.resume();

@@ -292,6 +292,25 @@ void main() {
     });
 
     group('withoutInvisibleLinks', () {
+      test('removes links holding only invisible decimal entities', () {
+        check(
+          'A<a href="x">&#8288;</a>B<a href="y">&#8203;&#160;</a>C'
+              .withoutInvisibleLinks,
+        ).equals('ABC');
+      });
+
+      test('removes links holding only invisible hex entities', () {
+        check(
+          'A<a href="x">&#x2060;</a>B<a href="y">&#xFEFF;&#x200b;</a>C'
+              .withoutInvisibleLinks,
+        ).equals('ABC');
+      });
+
+      test('keeps links whose entities render text', () {
+        const html = '<a href="x">&#65;</a>';
+        check(html.withoutInvisibleLinks).equals(html);
+      });
+
       test('removes a link holding only word joiners', () {
         const html =
             '<p><a href="https://example.com">\u2060\u2060</a><b>Intro</b></p>';
@@ -311,6 +330,23 @@ void main() {
     });
 
     group('withoutSeparatorRuns', () {
+      test('keeps link addresses and link text intact', () {
+        const html =
+            '<p>-----</p><p><a href="https://example.com/a-----b">'
+            'https://example.com/a-----b</a></p>';
+        check(html.withoutSeparatorRuns).equals(
+          '<p><a href="https://example.com/a-----b">'
+          'https://example.com/a-----b</a></p>',
+        );
+      });
+
+      test('keeps tag attributes intact', () {
+        const html = '<img alt="=====" src="x.png">=====';
+        check(
+          html.withoutSeparatorRuns,
+        ).equals('<img alt="=====" src="x.png">');
+      });
+
       test('removes runs of five or more rule characters', () {
         const text = 'Intro\n::::::::::\nGuests\n==========\nLinks';
         check(text.withoutSeparatorRuns).equals('Intro\n\nGuests\n\nLinks');
