@@ -110,12 +110,17 @@ class SubscriptionLocalDatasource {
   }
 
   /// Updates the [lastAccessedAt] timestamp for a subscription.
-  Future<void> updateLastAccessed(int id, DateTime timestamp) async {
-    final existing = await _isar.subscriptions.get(id);
-    if (existing == null) return;
-
-    existing.lastAccessedAt = timestamp;
-    await _isar.writeTxn(() => _isar.subscriptions.put(existing));
+  ///
+  /// Reads inside the transaction: a read taken before it could be stale
+  /// by the time the whole object is put back, undoing a feed refresh
+  /// that committed in between.
+  Future<void> updateLastAccessed(int id, DateTime timestamp) {
+    return _isar.writeTxn(() async {
+      final existing = await _isar.subscriptions.get(id);
+      if (existing == null) return;
+      existing.lastAccessedAt = timestamp;
+      await _isar.subscriptions.put(existing);
+    });
   }
 
   /// Returns all cached subscriptions ordered by lastAccessedAt
@@ -174,24 +179,28 @@ class SubscriptionLocalDatasource {
   /// Updates a subscription's lastRefreshedAt timestamp.
   ///
   /// Returns 1 if updated, 0 if not found.
-  Future<int> updateLastRefreshed(String itunesId, DateTime timestamp) async {
-    final existing = await _isar.subscriptions.getByItunesId(itunesId);
-    if (existing == null) return 0;
-
-    existing.lastRefreshedAt = timestamp;
-    await _isar.writeTxn(() => _isar.subscriptions.put(existing));
-    return 1;
+  Future<int> updateLastRefreshed(String itunesId, DateTime timestamp) {
+    // Read inside the transaction, as in [updateLastAccessed].
+    return _isar.writeTxn(() async {
+      final existing = await _isar.subscriptions.getByItunesId(itunesId);
+      if (existing == null) return 0;
+      existing.lastRefreshedAt = timestamp;
+      await _isar.subscriptions.put(existing);
+      return 1;
+    });
   }
 
   /// Updates the description for a subscription.
   ///
   /// Does nothing if no subscription is found for the given [id].
-  Future<void> updateDescription(int id, String? description) async {
-    final existing = await _isar.subscriptions.get(id);
-    if (existing == null) return;
-
-    existing.description = description;
-    await _isar.writeTxn(() => _isar.subscriptions.put(existing));
+  Future<void> updateDescription(int id, String? description) {
+    // Read inside the transaction, as in [updateLastAccessed].
+    return _isar.writeTxn(() async {
+      final existing = await _isar.subscriptions.get(id);
+      if (existing == null) return;
+      existing.description = description;
+      await _isar.subscriptions.put(existing);
+    });
   }
 
   /// Records a read of the channel `<link>`, storing [websiteUrl] unless

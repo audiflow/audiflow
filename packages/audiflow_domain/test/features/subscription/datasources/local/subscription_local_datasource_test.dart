@@ -253,4 +253,38 @@ void main() {
       expect(other!.lastRefreshedAt, isNull);
     });
   });
+
+  group('updateLastAccessed', () {
+    test('records the visit and keeps fields a refresh wrote', () async {
+      final inserted = await datasource.insert(makeSubscription());
+      await datasource.updateLastRefreshed('itunes-1', DateTime(2024, 6, 15));
+      final visit = DateTime(2024, 6, 16);
+
+      await datasource.updateLastAccessed(inserted.id, visit);
+
+      final result = await datasource.getById(inserted.id);
+      expect(result!.lastAccessedAt, visit);
+      expect(result.lastRefreshedAt, DateTime(2024, 6, 15));
+    });
+
+    test('a visit and a refresh started together both land', () async {
+      final inserted = await datasource.insert(makeSubscription());
+      final visit = DateTime(2024, 6, 16);
+      final refreshed = DateTime(2024, 6, 17);
+
+      await Future.wait([
+        datasource.updateLastAccessed(inserted.id, visit),
+        datasource.updateLastRefreshed('itunes-1', refreshed),
+      ]);
+
+      final result = await datasource.getById(inserted.id);
+      expect(result!.lastAccessedAt, visit);
+      expect(result.lastRefreshedAt, refreshed);
+    });
+
+    test('ignores an unknown subscription', () async {
+      await datasource.updateLastAccessed(999, DateTime(2024, 6, 16));
+      expect(await datasource.getById(999), isNull);
+    });
+  });
 }
