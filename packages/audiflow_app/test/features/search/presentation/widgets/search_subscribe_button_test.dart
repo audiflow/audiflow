@@ -8,12 +8,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-const _podcast = Podcast(id: '42', name: 'Show', artistName: 'Host');
+const _podcast = Podcast(
+  id: '42',
+  name: 'Show',
+  artistName: 'Host',
+  feedUrl: 'https://example.com/feed.xml',
+);
 
 void main() {
   Future<_CountingController> pump(
     WidgetTester tester, {
     required bool subscribed,
+    Podcast podcast = _podcast,
   }) async {
     final controller = _CountingController(subscribed);
     await tester.pumpWidget(
@@ -25,8 +31,8 @@ void main() {
           theme: AppTheme.light(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: const Scaffold(
-            body: Center(child: SearchSubscribeButton(podcast: _podcast)),
+          home: Scaffold(
+            body: Center(child: SearchSubscribeButton(podcast: podcast)),
           ),
         ),
       ),
@@ -56,6 +62,19 @@ void main() {
     final size = tester.getSize(find.byType(SearchSubscribeButton));
     check(size.width).isGreaterOrEqual(Spacing.minTouchTarget);
     check(size.height).isGreaterOrEqual(Spacing.minTouchTarget);
+  });
+
+  testWidgets('a result without a feed cannot be subscribed', (tester) async {
+    // Subscribing needs the feed; the podcast screen disables it too.
+    final controller = await pump(
+      tester,
+      subscribed: false,
+      podcast: const Podcast(id: '42', name: 'Show', artistName: 'Host'),
+    );
+    final button = tester.widget<IconButton>(find.byType(IconButton));
+    check(button.onPressed).isNull();
+    await tester.tap(find.byType(SearchSubscribeButton));
+    check(controller.toggles).equals(0);
   });
 }
 
