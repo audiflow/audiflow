@@ -311,9 +311,7 @@ class StationEditController extends _$StationEditController {
     // Queued before the await: a write resolves the order from its own
     // snapshot, and closing the editor during the await must not drop it.
     _scheduleSave();
-    final resolved = await _resolvedPodcastOrder();
-    // The resolved order is only for display; the write derives it too.
-    if (ref.mounted) state = state.copyWith(podcastSortOrder: resolved);
+    await _showResolvedOrder();
   }
 
   /// Sets a per-podcast episode limit override.
@@ -372,9 +370,23 @@ class StationEditController extends _$StationEditController {
     // Recompute order for automatic sort modes so the editor list matches
     // the selected sort immediately.
     if (state.podcastSort != StationPodcastSort.manual) {
-      final resolved = await _resolvedPodcastOrder();
-      if (ref.mounted) state = state.copyWith(podcastSortOrder: resolved);
+      await _showResolvedOrder();
     }
+  }
+
+  /// Shows the automatic order once resolved. It is only for display (each
+  /// write derives its own), and is dropped if the sort or the selection
+  /// changed meanwhile: applied late, it would replace a restored manual
+  /// order that the next edit then saves.
+  Future<void> _showResolvedOrder() async {
+    final from = state;
+    final resolved = await _resolvedPodcastOrder(from);
+    if (!ref.mounted) return;
+    if (state.podcastSort != from.podcastSort ||
+        !setEquals(state.selectedPodcastIds, from.selectedPodcastIds)) {
+      return;
+    }
+    state = state.copyWith(podcastSortOrder: resolved);
   }
 
   /// Computes the podcast order based on [state.podcastSort].
