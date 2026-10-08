@@ -346,6 +346,16 @@ void main() {
         ).equals('<a href="x"> Guests </a>');
       });
 
+      test('keeps linkified FTP addresses intact', () {
+        final html = 'Files: ftp://files.example.com/a-----b'
+            .plainTextToHtml
+            .linkifyUrls
+            .separatorRunsAsRules;
+        check(html)
+          ..contains('href="ftp://files.example.com/a-----b"')
+          ..contains('>ftp://files.example.com/a-----b</a>');
+      });
+
       test('keeps plain-text URLs intact', () {
         const text = 'See https://example.com/a-----b for more';
         check(text.withoutSeparatorRuns).equals(text);

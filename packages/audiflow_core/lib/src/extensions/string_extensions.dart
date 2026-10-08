@@ -86,7 +86,7 @@ final _invisibleLink = RegExp(
 // link addresses and URL text (e.g. `/a-----b`) keep their characters,
 // while decorations in link labels are still removed.
 final _markupOrUrl = RegExp(
-  r'<[^>]*>|(?:https?://|www\.)[^\s<>"]+',
+  r'<[^>]*>|(?:https?://|ftp://|www\.)[^\s<>"]+',
   caseSensitive: false,
 );
 
