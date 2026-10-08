@@ -253,7 +253,8 @@ class EpisodeCard extends StatelessWidget {
         : isCompleted
         ? colors.inkTertiary
         : colors.ink;
-    final text = description?.htmlToPlainText.trim() ?? '';
+    // A two-line preview has no room for decorative rules (section 5).
+    final text = description?.withoutSeparatorRuns.htmlToPlainText.trim() ?? '';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
