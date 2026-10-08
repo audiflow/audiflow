@@ -33,7 +33,90 @@ class _GatedHistoryService extends Fake implements PlaybackHistoryService {
   }
 }
 
+class _KeepRecordingDownloadService extends Fake implements DownloadService {
+  final keptIds = <int>[];
+
+  @override
+  Future<bool> keep(int taskId) async {
+    keptIds.add(taskId);
+    return true;
+  }
+}
+
 void main() {
+  group('row menu keep download', () {
+    final episode = Episode()
+      ..id = 7
+      ..podcastId = 1
+      ..guid = 'guid-7'
+      ..title = 'Episode 7'
+      ..audioUrl = _audioUrl;
+
+    Future<_KeepRecordingDownloadService> openMenu(
+      WidgetTester tester,
+      DownloadOrigin origin,
+    ) async {
+      final downloads = _KeepRecordingDownloadService();
+      final task = DownloadTask()
+        ..id = 3
+        ..episodeId = 7
+        ..audioUrl = _audioUrl
+        ..status = const DownloadStatus.completed().toDbValue()
+        ..origin = origin.dbValue
+        ..createdAt = DateTime(2026);
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            downloadServiceProvider.overrideWithValue(downloads),
+            currentPlayingEpisodeUrlProvider.overrideWithValue(null),
+            isEpisodePlayingProvider.overrideWith((ref, _) => false),
+            isEpisodeLoadingProvider.overrideWith((ref, _) => false),
+            episodeDownloadProvider.overrideWith(
+              (ref, _) => Stream.value(task),
+            ),
+            episodeHasTranscriptProvider.overrideWith((ref, _) async => false),
+          ],
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: SmartPlaylistEpisodeListTile(
+                episode: episode,
+                podcastTitle: 'Podcast',
+                showThumbnail: false,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.longPress(find.text('Episode 7'));
+      await tester.pumpAndSettle();
+      return downloads;
+    }
+
+    testWidgets('keeps an auto download and says so', (tester) async {
+      final downloads = await openMenu(tester, DownloadOrigin.auto);
+
+      await tester.tap(find.text('Keep download'));
+      await tester.pumpAndSettle();
+
+      check(downloads.keptIds).deepEquals([3]);
+      check(
+        find
+            .text("Download kept. It won't be removed automatically.")
+            .evaluate(),
+      ).length.equals(1);
+    });
+
+    testWidgets('is not offered for a manual download', (tester) async {
+      await openMenu(tester, DownloadOrigin.manual);
+
+      check(find.text('Keep download').evaluate()).isEmpty();
+      check(find.text('Remove download').evaluate()).length.equals(1);
+    });
+  });
+
   testWidgets('mark as played completes after the tile is unmounted mid-save', (
     tester,
   ) async {

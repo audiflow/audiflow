@@ -88,10 +88,18 @@ void main() {
     StationRepository? stations,
     bool loaded = false,
     QueueService? queue,
+    DownloadTask? download,
+    DownloadService? downloads,
   }) {
     return ProviderScope(
       overrides: [
         sharedPreferencesProvider.overrideWithValue(prefs),
+        if (download != null)
+          episodeDownloadProvider.overrideWith(
+            (ref, episodeId) => Stream.value(download),
+          ),
+        if (downloads != null)
+          downloadServiceProvider.overrideWithValue(downloads),
         if (queue != null) queueServiceProvider.overrideWithValue(queue),
         if (stations != null)
           stationRepositoryProvider.overrideWithValue(stations),
@@ -371,6 +379,85 @@ void main() {
     });
   });
 
+  group('EpisodeDetailScreen keep download', () {
+    DownloadTask downloadTask(DownloadStatus status, DownloadOrigin origin) {
+      return DownloadTask()
+        ..id = 9
+        ..episodeId = 1
+        ..audioUrl = testAudioUrl
+        ..status = status.toDbValue()
+        ..origin = origin.dbValue
+        ..createdAt = DateTime(2026);
+    }
+
+    Future<_KeepRecordingDownloadService> openMenu(
+      WidgetTester tester,
+      DownloadTask task,
+    ) async {
+      final downloads = _KeepRecordingDownloadService();
+      await tester.pumpWidget(
+        buildTestWidget(
+          progress: testEpisodeWithProgress,
+          download: task,
+          downloads: downloads,
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip(l10n.episodeMoreActions));
+      await tester.pumpAndSettle();
+      return downloads;
+    }
+
+    Finder inMenu(String label) => find.descendant(
+      of: find.byType(ActionMenu),
+      matching: find.text(label),
+    );
+
+    testWidgets('keeps a completed auto download and confirms', (tester) async {
+      final downloads = await openMenu(
+        tester,
+        downloadTask(const DownloadStatus.completed(), DownloadOrigin.auto),
+      );
+
+      check(inMenu(l10n.removeDownload).evaluate()).length.equals(1);
+      await tester.tap(inMenu(l10n.downloadKeep));
+      await tester.pumpAndSettle();
+
+      check(downloads.keptIds).deepEquals([9]);
+      check(find.text(l10n.downloadKept).evaluate()).length.equals(1);
+    });
+
+    testWidgets('offers keep for a pending auto download', (tester) async {
+      await openMenu(
+        tester,
+        downloadTask(const DownloadStatus.pending(), DownloadOrigin.auto),
+      );
+
+      check(inMenu(l10n.downloadKeep).evaluate()).length.equals(1);
+    });
+
+    testWidgets('does not offer keep for a manual download', (tester) async {
+      await openMenu(
+        tester,
+        downloadTask(const DownloadStatus.completed(), DownloadOrigin.manual),
+      );
+
+      check(inMenu(l10n.removeDownload).evaluate()).length.equals(1);
+      check(inMenu(l10n.downloadKeep).evaluate()).isEmpty();
+    });
+
+    testWidgets('does not offer keep for a failed auto download', (
+      tester,
+    ) async {
+      await openMenu(
+        tester,
+        downloadTask(const DownloadStatus.failed(), DownloadOrigin.auto),
+      );
+
+      check(inMenu(l10n.downloadKeep).evaluate()).isEmpty();
+    });
+  });
+
   group('EpisodeDetailScreen sections', () {
     testWidgets('shows the show notes card', (tester) async {
       await tester.pumpWidget(buildTestWidget());
@@ -460,4 +547,17 @@ class _LoadedAudioPlayerController extends _FakeAudioPlayerController {
 class _ConfirmingQueueService extends Fake implements QueueService {
   @override
   Future<bool> shouldConfirmAdhocReplace() async => true;
+}
+
+class _KeepRecordingDownloadService implements DownloadService {
+  final List<int> keptIds = [];
+
+  @override
+  Future<bool> keep(int taskId) async {
+    keptIds.add(taskId);
+    return true;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
