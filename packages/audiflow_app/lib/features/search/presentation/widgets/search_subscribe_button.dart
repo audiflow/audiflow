@@ -12,7 +12,8 @@ import '../../../podcast_detail/presentation/widgets/podcast_detail_header.dart'
 ///
 /// Once subscribed it turns into a check and does nothing: unsubscribing
 /// stays on the podcast's own screen, so a stray tap in a result list
-/// cannot drop a subscription. Hidden while the state is unknown.
+/// cannot drop a subscription. Hidden while the state is unknown; a state
+/// that failed to load offers a retry, as on the podcast screen.
 class SearchSubscribeButton extends ConsumerWidget {
   const SearchSubscribeButton({super.key, required this.podcast});
 
@@ -24,9 +25,18 @@ class SearchSubscribeButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final colors = AppColors.of(context);
-    final subscribed = ref
-        .watch(subscriptionControllerProvider(podcast.id))
-        .value;
+    final provider = subscriptionControllerProvider(podcast.id);
+    final subscription = ref.watch(provider);
+    // Checked before the value: Riverpod keeps retrying a failed build,
+    // so the error arrives wrapped in a loading state.
+    if (subscription.hasError && !subscription.hasValue) {
+      return IconButton(
+        tooltip: l10n.commonRetry,
+        icon: Icon(Icons.refresh_rounded, color: colors.accent),
+        onPressed: () => ref.invalidate(provider),
+      );
+    }
+    final subscribed = subscription.value;
     if (subscribed == null) {
       return const SizedBox.square(dimension: Spacing.minTouchTarget);
     }
@@ -48,9 +58,15 @@ class SearchSubscribeButton extends ConsumerWidget {
     if (subscribed) {
       return Semantics(
         label: l10n.podcastDetailSubscribed,
-        child: SizedBox.square(
-          dimension: Spacing.minTouchTarget,
-          child: Center(child: ExcludeSemantics(child: circle)),
+        // Swallows the tap: inside a result row it would open the podcast.
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () {},
+          excludeFromSemantics: true,
+          child: SizedBox.square(
+            dimension: Spacing.minTouchTarget,
+            child: Center(child: ExcludeSemantics(child: circle)),
+          ),
         ),
       );
     }
@@ -59,13 +75,7 @@ class SearchSubscribeButton extends ConsumerWidget {
       // Subscribing needs the feed, as on the podcast screen.
       onPressed: podcast.feedUrl == null
           ? null
-          : () => togglePodcastSubscription(
-              context: context,
-              ref: ref,
-              podcast: podcast,
-              source: SubscribeSource.search,
-              expectSubscribed: false,
-            ),
+          : () => _subscribe(context, ref),
       icon: circle,
       padding: EdgeInsets.zero,
       constraints: const BoxConstraints.tightFor(
@@ -73,5 +83,36 @@ class SearchSubscribeButton extends ConsumerWidget {
         height: Spacing.minTouchTarget,
       ),
     );
+  }
+
+  /// Subscribes, then fetches the episodes: Search never opens the podcast
+  /// screen, whose own fetch would otherwise store them.
+  Future<void> _subscribe(BuildContext context, WidgetRef ref) async {
+    // Read before awaiting: the row may rebuild away meanwhile.
+    final container = ProviderScope.containerOf(context, listen: false);
+    final feedSync = ref.read(feedSyncServiceProvider);
+    final logger = ref.read(namedLoggerProvider('SearchSubscribe'));
+    await togglePodcastSubscription(
+      context: context,
+      ref: ref,
+      podcast: podcast,
+      source: SubscribeSource.search,
+      expectSubscribed: false,
+    );
+    final feedUrl = podcast.feedUrl;
+    final subscribed = container
+        .read(subscriptionControllerProvider(podcast.id))
+        .value;
+    if (feedUrl == null || subscribed != true) return;
+    try {
+      await feedSync.syncFeedsByUrls([feedUrl]);
+    } catch (error, stackTrace) {
+      // Not fatal: the next refresh or opening the podcast fetches them.
+      logger.w(
+        'Failed to fetch a new subscription',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
   }
 }
