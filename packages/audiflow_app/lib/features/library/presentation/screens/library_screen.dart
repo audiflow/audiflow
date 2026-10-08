@@ -606,9 +606,19 @@ class _PodcastFilterField extends StatelessWidget {
           filled: true,
           fillColor: colors.surfaceSunken,
           isDense: true,
+          // All three: the theme's enabled and focused borders would
+          // otherwise replace the pill with its rounded rectangle.
           border: const OutlineInputBorder(
             borderRadius: AppBorders.pill,
             borderSide: BorderSide.none,
+          ),
+          enabledBorder: const OutlineInputBorder(
+            borderRadius: AppBorders.pill,
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: AppBorders.pill,
+            borderSide: BorderSide(color: colors.accent, width: 1.5),
           ),
         ),
       ),
