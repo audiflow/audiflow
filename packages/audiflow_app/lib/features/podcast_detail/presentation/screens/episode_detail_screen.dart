@@ -115,8 +115,13 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
     // fall back to the constructor-provided snapshot otherwise.
     if (enclosureUrl != null) {
       ref.listen(episodeProgressProvider(enclosureUrl), (_, next) {
-        if (_localProgress == null || next.isLoading) return;
-        if (next.value != null) setState(() => _localProgress = null);
+        final local = _localProgress;
+        if (local == null || next.isLoading) return;
+        // The URL lookup may resolve to another episode sharing the audio
+        // URL; only this episode's own row replaces the override.
+        if (next.value?.episode.id == local.episode.id) {
+          setState(() => _localProgress = null);
+        }
       });
     }
     final reactiveProgress = enclosureUrl != null

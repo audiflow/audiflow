@@ -162,4 +162,53 @@ void main() {
       check(await repository.getLastPlayed()).isNull();
     });
   });
+
+  group('resuming past the completion threshold', () {
+    test('continues the finished listen instead of replaying', () async {
+      await service.onPlaybackStarted(episodeId, 0);
+      for (final minute in [10, 20, 29]) {
+        now = now.add(const Duration(minutes: 10));
+        await service.onProgressUpdate(
+          episodeId,
+          progressAt(Duration(minutes: minute)),
+        );
+      }
+      await service.onPlaybackPaused(
+        episodeId,
+        progressAt(const Duration(minutes: 29)),
+      );
+
+      final resumeAt = const Duration(minutes: 29, seconds: 10);
+      await service.onPlaybackStarted(episodeId, resumeAt.inMilliseconds);
+      now = now.add(const Duration(seconds: 10));
+      await service.onProgressUpdate(
+        episodeId,
+        progressAt(const Duration(minutes: 29, seconds: 20)),
+      );
+
+      final history = await repository.getByEpisodeId(episodeId);
+      check(history!.isReplaying).isFalse();
+      check(history.completedCount).equals(1);
+    });
+  });
+
+  group('refresh notifications', () {
+    test('passing the completion threshold notifies once', () async {
+      final saved = <int>[];
+      final subscription = service.progressSaved.listen(saved.add);
+      addTearDown(subscription.cancel);
+
+      await service.onPlaybackStarted(episodeId, 0);
+      for (final minute in [10, 20, 29]) {
+        now = now.add(const Duration(minutes: 10));
+        await service.onProgressUpdate(
+          episodeId,
+          progressAt(Duration(minutes: minute)),
+        );
+      }
+      await Future<void>.delayed(Duration.zero);
+
+      check(saved).deepEquals([episodeId]);
+    });
+  });
 }

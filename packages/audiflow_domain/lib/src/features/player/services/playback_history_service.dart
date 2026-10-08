@@ -73,9 +73,10 @@ class PlaybackHistoryService {
 
   final _progressSaved = StreamController<int>.broadcast();
 
-  /// Episode IDs whose position was just saved on pause or stop. Lists
-  /// that show played state refresh on it: partial progress otherwise
-  /// changes nothing they listen to (completion has its own event).
+  /// Episode IDs whose position was just saved on pause or stop, or that
+  /// just passed the completion threshold. Views that show played state
+  /// refresh on it: neither changes anything else they listen to (the
+  /// completion lifecycle event fires only at the track's end).
   Stream<int> get progressSaved => _progressSaved.stream;
 
   void dispose() => _progressSaved.close();
@@ -94,8 +95,12 @@ class PlaybackHistoryService {
     _lastSaveTime = _clock();
     _notifiedInProgressThisSession = false;
 
-    // No-op unless the last listen finished.
-    await _repository.startReplay(episodeId, positionMs: positionMs);
+    // No-op unless the last listen finished. Resuming past the completion
+    // threshold continues the finished listen rather than starting a new
+    // one, which would otherwise count a second completion.
+    if (!await _isPastCompletion(episodeId, positionMs)) {
+      await _repository.startReplay(episodeId, positionMs: positionMs);
+    }
 
     // Increment play count if starting from beginning
     if (positionMs < fromBeginningThresholdMs) {
@@ -107,6 +112,13 @@ class PlaybackHistoryService {
     _reviewPromptTrigger?.armForPlayback();
 
     await _tryRecordPodcastPlayed(episodeId);
+  }
+
+  Future<bool> _isPastCompletion(int episodeId, int positionMs) async {
+    final history = await _repository.getByEpisodeId(episodeId);
+    final durationMs = history?.durationMs;
+    if (durationMs == null || durationMs <= 0) return false;
+    return _getCompletionThreshold() <= positionMs / durationMs;
   }
 
   /// Best-effort: playing a podcast resumes its paused auto-download.
@@ -178,6 +190,7 @@ class PlaybackHistoryService {
         final history = await _repository.getByEpisodeId(episodeId);
         if (!(history?.isListenFinished ?? false)) {
           await _repository.markCompleted(episodeId);
+          if (!_progressSaved.isClosed) _progressSaved.add(episodeId);
           await _tryReconcile(episodeId);
         }
       }
