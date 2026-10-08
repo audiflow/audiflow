@@ -2198,6 +2198,12 @@ abstract class AppLocalizations {
   /// **'Add station'**
   String get stationAdd;
 
+  /// Shown on the station list screen when stations fail to load
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load your stations.'**
+  String get stationListLoadError;
+
   /// Stations section header link opening the full station list; count is the number of stations
   ///
   /// In en, this message translates to:

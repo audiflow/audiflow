@@ -404,6 +404,7 @@
   "stationSectionTitle": "ステーション",
   "stationNew": "新規ステーション",
   "stationAdd": "ステーションを追加",
+  "stationListLoadError": "ステーションを読み込めませんでした。",
   "stationShowAll": "すべて表示({count})",
   "stationName": "ステーション名",
   "stationNameHint": "例: ニュース、テック、お笑い",

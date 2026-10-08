@@ -1161,6 +1161,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get stationAdd => 'ステーションを追加';
 
   @override
+  String get stationListLoadError => 'ステーションを読み込めませんでした。';
+
+  @override
   String stationShowAll(int count) {
     return 'すべて表示($count)';
   }

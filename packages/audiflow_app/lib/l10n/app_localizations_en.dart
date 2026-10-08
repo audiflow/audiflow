@@ -1207,6 +1207,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stationAdd => 'Add station';
 
   @override
+  String get stationListLoadError => 'Couldn\'t load your stations.';
+
+  @override
   String stationShowAll(int count) {
     return 'Show all ($count)';
   }

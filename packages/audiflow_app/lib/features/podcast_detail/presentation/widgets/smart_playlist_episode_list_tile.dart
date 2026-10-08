@@ -90,6 +90,10 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
   /// Library shows recently played stations first.
   final int? stationId;
 
+  void _recordStationPlayIfAny(WidgetRef ref) {
+    if (stationId case final id?) unawaited(_recordStationPlay(ref, id));
+  }
+
   /// Best effort: a failed write only leaves the Library order stale.
   static Future<void> _recordStationPlay(WidgetRef ref, int stationId) async {
     try {
@@ -525,6 +529,8 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
     final controller = ref.read(audioPlayerControllerProvider.notifier);
 
     if (controller.isLoaded(url)) {
+      // Resuming from a station is a play from it too.
+      _recordStationPlayIfAny(ref);
       controller.resume();
       return;
     }
@@ -566,9 +572,7 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
         ),
       );
 
-    if (stationId case final id?) {
-      unawaited(_recordStationPlay(ref, id));
-    }
+    _recordStationPlayIfAny(ref);
 
     final analytics = ref.read(analyticsServiceProvider);
     if (isStation) {
