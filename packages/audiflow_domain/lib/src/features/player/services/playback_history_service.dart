@@ -122,14 +122,16 @@ class PlaybackHistoryService {
   }
 
   /// A finished listen resumed past the threshold is not a replay until
-  /// playback moves back below it (e.g. a seek backward); from then on the
-  /// listen is resumable like any replay.
+  /// the listener seeks back below it; from then on the listen is
+  /// resumable like any replay. Only a backward move counts: playing on
+  /// after "mark as played" keeps the listen finished.
   Future<void> _startReplayIfRewound(
     int episodeId,
+    int previousMs,
     int positionMs,
     int durationMs,
   ) async {
-    if (durationMs <= 0) return;
+    if (previousMs <= positionMs || durationMs <= 0) return;
     if (_getCompletionThreshold() <= positionMs / durationMs) return;
     // No-op unless the last listen finished.
     await _repository.startReplay(episodeId, positionMs: positionMs);
@@ -172,10 +174,11 @@ class PlaybackHistoryService {
       speed: speed,
     );
 
+    final previousMs = _lastSavedPositionMs;
     _lastSavedPositionMs = positionMs;
     _lastSaveTime = now;
 
-    await _startReplayIfRewound(episodeId, positionMs, durationMs);
+    await _startReplayIfRewound(episodeId, previousMs, positionMs, durationMs);
     await _repository.saveProgress(
       episodeId: episodeId,
       positionMs: positionMs,
@@ -227,11 +230,13 @@ class PlaybackHistoryService {
       speed: speed,
     );
 
+    final previousMs = _lastSavedPositionMs;
     _lastSavedPositionMs = progress.position.inMilliseconds;
     _lastSaveTime = now;
 
     await _startReplayIfRewound(
       episodeId,
+      previousMs,
       progress.position.inMilliseconds,
       progress.duration.inMilliseconds,
     );

@@ -212,6 +212,27 @@ void main() {
     });
   });
 
+  group('marking played mid-listen', () {
+    test('playing on keeps the listen finished', () async {
+      await service.onPlaybackStarted(episodeId, 0);
+      now = now.add(const Duration(minutes: 10));
+      await service.onProgressUpdate(
+        episodeId,
+        progressAt(const Duration(minutes: 10)),
+      );
+      await service.markCompleted(episodeId);
+
+      now = now.add(const Duration(minutes: 1));
+      const later = Duration(minutes: 11);
+      await service.onProgressUpdate(episodeId, progressAt(later));
+      await service.onPlaybackPaused(episodeId, progressAt(later));
+
+      final history = await repository.getByEpisodeId(episodeId);
+      check(history!.isReplaying).isFalse();
+      check(await repository.getLastPlayed()).isNull();
+    });
+  });
+
   group('refresh notifications', () {
     test('passing the completion threshold notifies once', () async {
       final saved = <int>[];
