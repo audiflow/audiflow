@@ -340,6 +340,17 @@ void main() {
         );
       });
 
+      test('strips decorations from link labels', () {
+        check(
+          '<a href="x">::::: Guests :::::</a>'.withoutSeparatorRuns,
+        ).equals('<a href="x"> Guests </a>');
+      });
+
+      test('keeps plain-text URLs intact', () {
+        const text = 'See https://example.com/a-----b for more';
+        check(text.withoutSeparatorRuns).equals(text);
+      });
+
       test('keeps tag attributes intact', () {
         const html = '<img alt="=====" src="x.png">=====';
         check(

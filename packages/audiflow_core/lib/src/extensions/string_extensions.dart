@@ -82,10 +82,11 @@ final _invisibleLink = RegExp(
   '<a\\b[^>]*>$_invisibleText*</a>',
   caseSensitive: false,
 );
-// Tags and whole links: separator cleanup leaves them untouched so that
-// attributes and link addresses (e.g. `/a-----b`) keep their characters.
-final _markupOrLink = RegExp(
-  r'<a\b[^>]*>[\s\S]*?</a>|<[^>]*>',
+// Tags and URLs: separator cleanup leaves them untouched so attributes,
+// link addresses and URL text (e.g. `/a-----b`) keep their characters,
+// while decorations in link labels are still removed.
+final _markupOrUrl = RegExp(
+  r'<[^>]*>|(?:https?://|www\.)[^\s<>"]+',
   caseSensitive: false,
 );
 
@@ -146,12 +147,12 @@ extension StringExtensions on String {
   /// Removes decorative separator runs (redesign section 5): five or more
   /// of the same rule character in a row, such as `:::::`, `=====`,
   /// `-----` or `・・・・・`. Lines and HTML paragraphs left empty by the
-  /// removal are dropped. Tags and links are left as they are, so link
+  /// removal are dropped. Tags and URLs are left as they are, so link
   /// addresses keep their characters.
   String get withoutSeparatorRuns {
     if (isEmpty) return this;
     return splitMapJoin(
-          _markupOrLink,
+          _markupOrUrl,
           onMatch: (match) => match[0]!,
           onNonMatch: (text) => text.replaceAll(_separatorRun, ''),
         )
