@@ -27,6 +27,8 @@ class SearchCountryChip extends StatelessWidget {
       button: true,
       label: l10n.searchRegionCurrent(displayName),
       excludeSemantics: true,
+      // The excluded InkWell's tap must be offered here instead.
+      onTap: onTap,
       child: Tooltip(
         message: l10n.searchRegionLabel,
         child: Material(
