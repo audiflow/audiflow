@@ -1,4 +1,5 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:dio/dio.dart' show CancelToken;
 
 /// [NowPlayingController] seeded with a fixed value instead of null.
 class StubNowPlayingController extends NowPlayingController {
@@ -81,5 +82,6 @@ class StubTranscriptService implements TranscriptService {
   final Future<int?> _result;
 
   @override
-  Future<int?> ensureContent(int episodeId) => _result;
+  Future<int?> ensureContent(int episodeId, {CancelToken? cancelToken}) =>
+      _result;
 }

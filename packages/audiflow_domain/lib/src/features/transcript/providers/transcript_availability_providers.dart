@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../services/transcript_service.dart';
@@ -27,12 +28,21 @@ class TranscriptFetchOutcomes extends _$TranscriptFetchOutcomes {
 /// it if needed; null when the episode has no transcript that loads.
 ///
 /// Watching this costs a download the first time, so it is meant for the
-/// now-playing episode, not for every row of a list.
+/// now-playing episode, not for every row of a list. A fetch that already
+/// failed this session is not retried (the player is reopened often, and
+/// each reopen recreates this provider), and leaving the player abandons a
+/// download still in flight.
 @riverpod
 Future<int?> usableTranscriptId(Ref ref, int episodeId) async {
+  final knownOutcome = ref.read(transcriptFetchOutcomesProvider)[episodeId];
+  if (knownOutcome == false) return null;
+
+  final cancelToken = CancelToken();
+  ref.onDispose(cancelToken.cancel);
+
   final transcriptId = await ref
       .watch(transcriptServiceProvider)
-      .ensureContent(episodeId);
+      .ensureContent(episodeId, cancelToken: cancelToken);
   if (ref.mounted) {
     ref
         .read(transcriptFetchOutcomesProvider.notifier)

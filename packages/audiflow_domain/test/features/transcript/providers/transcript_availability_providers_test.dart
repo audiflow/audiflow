@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
+import 'package:dio/dio.dart' show CancelToken;
 import 'package:flutter_test/flutter_test.dart' hide expect;
 import 'package:riverpod/riverpod.dart';
 
@@ -17,8 +20,9 @@ EpisodeTranscript _declared({
 ProviderContainer _container({
   List<EpisodeTranscript> metas = const [],
   int? loadedTranscriptId,
+  _FakeTranscriptService? service,
 }) {
-  final service = _FakeTranscriptService(loadedTranscriptId);
+  service ??= _FakeTranscriptService(Future.value(loadedTranscriptId));
   final container = ProviderContainer(
     overrides: [
       episodeTranscriptMetasProvider.overrideWith((ref, _) async => metas),
@@ -82,15 +86,56 @@ void main() {
       check(id).isNull();
       check(await _badge(container)).isFalse();
     });
+
+    test('does not fetch again after a failure this session', () async {
+      final service = _FakeTranscriptService(Future.value());
+      final container = _container(metas: [_declared()], service: service);
+      container
+          .read(transcriptFetchOutcomesProvider.notifier)
+          .record(_episodeId, usable: false);
+
+      final id = await container.read(
+        usableTranscriptIdProvider(_episodeId).future,
+      );
+
+      check(id).isNull();
+      check(service.calls).equals(0);
+    });
+
+    test('cancels the download when no longer watched', () async {
+      final pending = Completer<int?>();
+      final service = _FakeTranscriptService(pending.future);
+      final container = _container(metas: [_declared()], service: service);
+      final subscription = container.listen(
+        usableTranscriptIdProvider(_episodeId),
+        (_, _) {},
+      );
+      await pumpEventQueue();
+      check(service.lastCancelToken!.isCancelled).isFalse();
+
+      subscription.close();
+      await pumpEventQueue();
+      pending.complete(null);
+      await pumpEventQueue();
+
+      check(service.lastCancelToken!.isCancelled).isTrue();
+      check(container.read(transcriptFetchOutcomesProvider)).isEmpty();
+    });
   });
 }
 
-/// Answers a fixed load result instead of fetching.
+/// Answers a given load result instead of fetching, recording each call.
 class _FakeTranscriptService implements TranscriptService {
-  _FakeTranscriptService(this._transcriptId);
+  _FakeTranscriptService(this._result);
 
-  final int? _transcriptId;
+  final Future<int?> _result;
+  int calls = 0;
+  CancelToken? lastCancelToken;
 
   @override
-  Future<int?> ensureContent(int episodeId) async => _transcriptId;
+  Future<int?> ensureContent(int episodeId, {CancelToken? cancelToken}) {
+    calls++;
+    lastCancelToken = cancelToken;
+    return _result;
+  }
 }

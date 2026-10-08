@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:audiflow_domain/audiflow_domain.dart';
@@ -200,6 +201,36 @@ void main() {
       },
     );
   });
+
+  group('ensureContent when cancelled', () {
+    test('mid-download returns null without marking the file', () async {
+      await declare(_srtUrl, 'application/srt');
+      final vttId = await declare(_vttUrl, 'text/vtt');
+      http.hang(_vttUrl);
+      final cancelToken = CancelToken();
+
+      final result = service.ensureContent(episodeId, cancelToken: cancelToken);
+      await http.firstRequest;
+      cancelToken.cancel();
+
+      check(await result).isNull();
+      check((await stored(vttId)).unusableAt).isNull();
+      check(http.requested).deepEquals([_vttUrl]);
+    });
+
+    test('before it starts fetches nothing', () async {
+      await declare(_vttUrl, 'text/vtt');
+      final cancelToken = CancelToken()..cancel();
+
+      final result = await service.ensureContent(
+        episodeId,
+        cancelToken: cancelToken,
+      );
+
+      check(result).isNull();
+      check(http.requested).isEmpty();
+    });
+  });
 }
 
 /// Serves canned bodies per URL and records each request, standing in for
@@ -207,12 +238,20 @@ void main() {
 class _FakeHttpAdapter implements HttpClientAdapter {
   final _responses = <String, ({String body, int statusCode})>{};
   final _connectionErrors = <String>{};
+  final _hanging = <String>{};
+  final _firstRequest = Completer<void>();
   final requested = <String>[];
+
+  /// Completes once any request reaches the adapter.
+  Future<void> get firstRequest => _firstRequest.future;
 
   void respond(String url, String body, {int statusCode = 200}) =>
       _responses[url] = (body: body, statusCode: statusCode);
 
   void failWithConnectionError(String url) => _connectionErrors.add(url);
+
+  /// Never answers [url], like a stalled download, so a test can cancel it.
+  void hang(String url) => _hanging.add(url);
 
   @override
   Future<ResponseBody> fetch(
@@ -222,6 +261,8 @@ class _FakeHttpAdapter implements HttpClientAdapter {
   ) async {
     final url = options.uri.toString();
     requested.add(url);
+    if (!_firstRequest.isCompleted) _firstRequest.complete();
+    if (_hanging.contains(url)) return Completer<ResponseBody>().future;
     if (_connectionErrors.contains(url)) {
       throw DioException.connectionError(
         requestOptions: options,

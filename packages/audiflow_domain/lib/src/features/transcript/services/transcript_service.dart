@@ -44,14 +44,19 @@ class TranscriptService {
   /// stored, or null when none yields a transcript. A file that downloads
   /// but holds no transcript is marked unusable so it is not offered or
   /// fetched again; a network or HTTP failure is left to a later try.
-  Future<int?> ensureContent(int episodeId) async {
+  ///
+  /// Cancelling [cancelToken] abandons the download and answers null
+  /// without marking anything: the caller no longer wants the answer, which
+  /// says nothing about whether the file is usable.
+  Future<int?> ensureContent(int episodeId, {CancelToken? cancelToken}) async {
     final metas = await _repository.getMetasByEpisodeId(episodeId);
     final candidates = _byPreference(metas.where((m) => m.isCandidate));
 
     for (final candidate in candidates) {
       if (candidate.fetchedAt != null) return candidate.id;
+      if (cancelToken?.isCancelled ?? false) return null;
 
-      final stored = await _fetchAndStore(episodeId, candidate);
+      final stored = await _fetchAndStore(episodeId, candidate, cancelToken);
       if (stored) return candidate.id;
     }
     return null;
@@ -64,12 +69,23 @@ class TranscriptService {
   }
 
   /// Returns whether the file's segments are now stored.
-  Future<bool> _fetchAndStore(int episodeId, EpisodeTranscript chosen) async {
+  Future<bool> _fetchAndStore(
+    int episodeId,
+    EpisodeTranscript chosen,
+    CancelToken? cancelToken,
+  ) async {
     final String? content;
     try {
-      final response = await _dio.get<String>(chosen.url);
+      final response = await _dio.get<String>(
+        chosen.url,
+        cancelToken: cancelToken,
+      );
       content = response.data;
     } on DioException catch (e) {
+      if (CancelToken.isCancel(e)) {
+        _logger.d('Transcript fetch for episode $episodeId cancelled');
+        return false;
+      }
       _logger.w('Failed to fetch transcript for episode $episodeId', error: e);
       return false;
     }
