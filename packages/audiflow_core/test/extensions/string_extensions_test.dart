@@ -257,6 +257,89 @@ void main() {
       });
     });
 
+    group('separatorRunsAsRules', () {
+      test('turns a rule paragraph into a horizontal rule', () {
+        const html = '<p>Intro</p><p>==========</p><p>Links</p>';
+        check(html.separatorRunsAsRules).equals('<p>Intro</p><hr><p>Links</p>');
+      });
+
+      test('turns a rule line between breaks into one rule', () {
+        const html = 'Intro<br>----------<br>Links';
+        check(html.separatorRunsAsRules).equals('Intro<hr>Links');
+      });
+
+      test('keeps a formatted rule paragraph as a rule', () {
+        const html = '<p>A</p><p><strong> ::::::::: </strong></p><p>B</p>';
+        check(html.separatorRunsAsRules).equals('<p>A</p><hr><p>B</p>');
+      });
+
+      test('strips runs that decorate a heading', () {
+        const html = '<p><strong>::::::: Guests :::::::</strong></p><p>A</p>';
+        check(
+          html.separatorRunsAsRules,
+        ).equals('<p><strong> Guests </strong></p><p>A</p>');
+      });
+
+      test('drops rules at the start and end', () {
+        const html = '<p>=======</p><p>A</p><p>-------</p>';
+        check(html.separatorRunsAsRules).equals('<p>A</p>');
+      });
+
+      test('merges consecutive rules', () {
+        const html = '<p>A</p><p>=====</p><p>-----</p><p>B</p>';
+        check(html.separatorRunsAsRules).equals('<p>A</p><hr><p>B</p>');
+      });
+    });
+
+    group('withoutInvisibleLinks', () {
+      test('removes a link holding only word joiners', () {
+        const html =
+            '<p><a href="https://example.com">\u2060\u2060</a><b>Intro</b></p>';
+        check(html.withoutInvisibleLinks).equals('<p><b>Intro</b></p>');
+      });
+
+      test('removes empty and whitespace-only links', () {
+        check(
+          'A<a href="x"></a>B<a href="y"> &nbsp; </a>C'.withoutInvisibleLinks,
+        ).equals('ABC');
+      });
+
+      test('keeps links with visible text', () {
+        const html = '<a href="https://example.com">\u2060here</a>';
+        check(html.withoutInvisibleLinks).equals(html);
+      });
+    });
+
+    group('withoutSeparatorRuns', () {
+      test('removes runs of five or more rule characters', () {
+        const text = 'Intro\n::::::::::\nGuests\n==========\nLinks';
+        check(text.withoutSeparatorRuns).equals('Intro\n\nGuests\n\nLinks');
+      });
+
+      test('removes full-width and middle-dot runs', () {
+        check('A・・・・・・B＝＝＝＝＝C'.withoutSeparatorRuns).equals('ABC');
+      });
+
+      test('keeps short runs and URLs', () {
+        const text = 'Q&A -- see https://example.com/a_b?x=1 ... ok';
+        check(text.withoutSeparatorRuns).equals(text);
+      });
+
+      test('drops HTML paragraphs left empty', () {
+        const html = '<p>Intro</p><p>-----------</p><p>Links</p>';
+        check(html.withoutSeparatorRuns).equals('<p>Intro</p><p>Links</p>');
+      });
+
+      test('collapses the line breaks around a removed run', () {
+        const html = 'Intro<br>*****<br><br>Links';
+        check(html.withoutSeparatorRuns).equals('Intro<br><br>Links');
+      });
+
+      test('returns an empty string unchanged', () {
+        check(''.withoutSeparatorRuns).equals('');
+      });
+    });
+
     group('plainTextToHtml', () {
       test('returns empty string unchanged', () {
         expect(''.plainTextToHtml, '');
