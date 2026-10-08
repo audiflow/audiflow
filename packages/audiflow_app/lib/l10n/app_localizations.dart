@@ -2201,7 +2201,7 @@ abstract class AppLocalizations {
   /// Stations section header link opening the full station list; count is the number of stations
   ///
   /// In en, this message translates to:
-  /// **'Show all {count}'**
+  /// **'Show all ({count})'**
   String stationShowAll(int count);
 
   /// Label for station name input field

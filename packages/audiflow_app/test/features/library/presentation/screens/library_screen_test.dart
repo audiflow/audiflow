@@ -441,7 +441,7 @@ void main() {
         tester,
         stations: [for (var i = 1; i <= 5; i++) playedStation(i)],
       );
-      check(find.text('Show all 5').evaluate()).length.equals(1);
+      check(find.text('Show all (5)').evaluate()).length.equals(1);
     });
 
     testWidgets('has no show-all link while every station fits', (

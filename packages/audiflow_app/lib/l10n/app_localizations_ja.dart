@@ -1162,7 +1162,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String stationShowAll(int count) {
-    return 'すべて表示 $count';
+    return 'すべて表示($count)';
   }
 
   @override

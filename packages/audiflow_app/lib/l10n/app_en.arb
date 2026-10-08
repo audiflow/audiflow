@@ -763,7 +763,7 @@
   "stationNew": "New Station",
   "@stationNew": { "description": "Button label for creating a new station" },
   "stationAdd": "Add station",
-  "stationShowAll": "Show all {count}",
+  "stationShowAll": "Show all ({count})",
   "@stationShowAll": {
     "description": "Stations section header link opening the full station list; count is the number of stations",
     "placeholders": {

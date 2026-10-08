@@ -1208,7 +1208,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String stationShowAll(int count) {
-    return 'Show all $count';
+    return 'Show all ($count)';
   }
 
   @override
