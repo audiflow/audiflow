@@ -85,6 +85,12 @@ class PlaybackHistoryService {
   DateTime? _lastSaveTime;
   bool _notifiedInProgressThisSession = false;
 
+  /// Last position reported by any update, saved or not, and whether
+  /// playback moved backward since the last save. Saves are throttled, so
+  /// a short rewind between two saves is only visible here.
+  int _lastSeenPositionMs = 0;
+  bool _movedBackSinceSave = false;
+
   /// Called when playback starts for an episode.
   ///
   /// Starts a replay when the episode is played, so the new listen shows
@@ -94,6 +100,8 @@ class PlaybackHistoryService {
     _lastSavedPositionMs = positionMs;
     _lastSaveTime = _clock();
     _notifiedInProgressThisSession = false;
+    _lastSeenPositionMs = positionMs;
+    _movedBackSinceSave = false;
 
     // No-op unless the last listen finished. Resuming past the completion
     // threshold continues the finished listen rather than starting a new
@@ -127,14 +135,20 @@ class PlaybackHistoryService {
   /// after "mark as played" keeps the listen finished.
   Future<void> _startReplayIfRewound(
     int episodeId,
-    int previousMs,
     int positionMs,
     int durationMs,
   ) async {
-    if (previousMs <= positionMs || durationMs <= 0) return;
+    final movedBack = _movedBackSinceSave;
+    _movedBackSinceSave = false;
+    if (!movedBack || durationMs <= 0) return;
     if (_getCompletionThreshold() <= positionMs / durationMs) return;
     // No-op unless the last listen finished.
     await _repository.startReplay(episodeId, positionMs: positionMs);
+  }
+
+  void _trackPosition(int positionMs) {
+    if (positionMs < _lastSeenPositionMs) _movedBackSinceSave = true;
+    _lastSeenPositionMs = positionMs;
   }
 
   /// Best-effort: playing a podcast resumes its paused auto-download.
@@ -162,6 +176,7 @@ class PlaybackHistoryService {
     // Skip when source hasn't loaded yet — position data is stale from
     // the previous episode during track transitions.
     if (durationMs == 0) return;
+    _trackPosition(positionMs);
 
     // Throttle saves to every 5 seconds
     final delta = (positionMs - _lastSavedPositionMs).abs();
@@ -174,11 +189,10 @@ class PlaybackHistoryService {
       speed: speed,
     );
 
-    final previousMs = _lastSavedPositionMs;
     _lastSavedPositionMs = positionMs;
     _lastSaveTime = now;
 
-    await _startReplayIfRewound(episodeId, previousMs, positionMs, durationMs);
+    await _startReplayIfRewound(episodeId, positionMs, durationMs);
     await _repository.saveProgress(
       episodeId: episodeId,
       positionMs: positionMs,
@@ -230,13 +244,12 @@ class PlaybackHistoryService {
       speed: speed,
     );
 
-    final previousMs = _lastSavedPositionMs;
     _lastSavedPositionMs = progress.position.inMilliseconds;
     _lastSaveTime = now;
 
+    _trackPosition(progress.position.inMilliseconds);
     await _startReplayIfRewound(
       episodeId,
-      previousMs,
       progress.position.inMilliseconds,
       progress.duration.inMilliseconds,
     );

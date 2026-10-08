@@ -233,6 +233,37 @@ void main() {
     });
   });
 
+  group('short rewinds', () {
+    test('a rewind between two saves still starts a replay', () async {
+      await service.onPlaybackStarted(episodeId, 0);
+      now = now.add(const Duration(seconds: 60));
+      await service.onProgressUpdate(
+        episodeId,
+        progressAt(const Duration(seconds: 60)),
+      );
+      await service.markCompleted(episodeId);
+
+      // Plays on to 64s (no save), seeks back to 62s, then pauses.
+      now = now.add(const Duration(seconds: 4));
+      await service.onProgressUpdate(
+        episodeId,
+        progressAt(const Duration(seconds: 64)),
+      );
+      await service.onProgressUpdate(
+        episodeId,
+        progressAt(const Duration(seconds: 62)),
+      );
+      await service.onPlaybackPaused(
+        episodeId,
+        progressAt(const Duration(seconds: 62)),
+      );
+
+      final history = await repository.getByEpisodeId(episodeId);
+      check(history!.isReplaying).isTrue();
+      check(history.completedAt).isNotNull();
+    });
+  });
+
   group('refresh notifications', () {
     test('passing the completion threshold notifies once', () async {
       final saved = <int>[];
