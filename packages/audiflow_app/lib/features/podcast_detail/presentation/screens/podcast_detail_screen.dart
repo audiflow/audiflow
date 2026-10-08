@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:audiflow_core/audiflow_core.dart' show AutoPlayOrder;
 import 'package:audiflow_domain/audiflow_domain.dart'
@@ -11,33 +12,36 @@ import 'package:audiflow_domain/audiflow_domain.dart'
         SmartPlaylistGroup,
         SortOrder,
         SubscribeSource,
-        appSettingsRepositoryProvider,
+        episodeRepositoryProvider,
         hideExplicitForPodcastProvider,
         namedLoggerProvider,
         playOrderPreferenceRepositoryProvider,
         podcastViewPreferenceControllerProvider,
         smartPlaylistEpisodesProvider,
         presetByFeedUrlProvider,
-        subscriptionByFeedUrlProvider;
+        subscriptionByFeedUrlProvider,
+        subscriptionRepositoryProvider;
 import 'package:audiflow_search/audiflow_search.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
-import '../../../player/presentation/widgets/audio_sheet.dart';
+import '../../../share/presentation/helpers/share_helper.dart';
+import '../../../subscription/presentation/controllers/subscription_controller.dart';
 import '../controllers/podcast_detail_controller.dart';
-import '../widgets/episode_filter_chips.dart';
+import '../helpers/mark_all_played.dart';
+import '../helpers/podcast_visit.dart';
 import '../widgets/episode_list_section.dart';
 import '../widgets/inline_playlist_section.dart';
-import '../widgets/play_order_bottom_sheet.dart';
 import '../widgets/podcast_description_sheet.dart';
 import '../widgets/podcast_detail_empty_states.dart';
 import '../widgets/podcast_detail_header.dart';
 import '../widgets/podcast_settings_sheet.dart';
-import '../widgets/smart_playlist_view_toggle.dart';
+import '../widgets/podcast_detail_sticky_bar.dart';
 
 /// Displays podcast details and episode list with
 /// playback controls.
@@ -60,12 +64,60 @@ class PodcastDetailScreen extends ConsumerStatefulWidget {
       _PodcastDetailScreenState();
 }
 
-class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
-  late final ScrollController _ownScrollController = ScrollController(
-    initialScrollOffset: _kSearchBarHeight,
-  );
+class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
+    with SingleTickerProviderStateMixin {
+  late final ScrollController _ownScrollController = ScrollController();
 
   ScrollController get _scrollController => _ownScrollController;
+
+  /// Measures the hero so the collapse spans exactly its height.
+  final GlobalKey _heroKey = GlobalKey();
+
+  /// Locate the sticky bar's bottom edge, where the list surface starts.
+  final GlobalKey _bodyKey = GlobalKey();
+  final GlobalKey _stickyBarKey = GlobalKey();
+
+  /// Screen y where the list surface starts. Infinite until first layout
+  /// so the texture never flashes over the hero.
+  final ValueNotifier<double> _listTop = ValueNotifier(double.infinity);
+
+  /// Drives the floating navigation and hero collapse without rebuilding
+  /// the whole sliver tree on every scroll frame.
+  final ValueNotifier<FloatingNavScroll> _navScroll = ValueNotifier(
+    FloatingNavScroll.at(offset: 0, heroExtent: 1),
+  );
+
+  /// Whether episode search has replaced the navigation row.
+  bool _searching = false;
+
+  /// Scroll offset held across a view switch (mode, series type, filter,
+  /// sort). The new list may still be loading, and its first frames are
+  /// shorter than the old one; a spacer below the content keeps this
+  /// offset reachable until the new list is ready.
+  double? _heldOffset;
+
+  /// View the hold started from; the hold ends once the view has changed
+  /// and its content has loaded.
+  String? _heldFromViewKey;
+  String? _currentViewKey;
+  double _holdSpacerExtent = 0;
+
+  /// Identifies the current hold, so a release still animating for an
+  /// earlier switch does not end a hold started by a later one.
+  int _holdGeneration = 0;
+  int? _releasingGeneration;
+
+  /// 0 while browsing, 1 while searching. Collapses the hero and fills
+  /// the navigation in step with the bar's switch to the search field,
+  /// so entering search reads as one motion rather than a jump.
+  late final AnimationController _searchTransition = AnimationController(
+    vsync: this,
+    duration: _kSearchTransitionDuration,
+  );
+
+  static const Duration _kSearchTransitionDuration = Duration(
+    milliseconds: 260,
+  );
 
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
@@ -112,7 +164,6 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
   // an ancestor PrimaryScrollController) is resolvable. Remove once the
   // root cause is confirmed.
   static const double _kJumpThresholdPx = 200;
-  static const double _kSearchBarHeight = 64;
   double? _lastScrollOffset;
   bool _scrollListenerAttached = false;
   EpisodeFilter? _previouslyLoggedFilter;
@@ -125,6 +176,18 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
   /// scroll offset to `initialScrollOffset` on remount).
   bool _contentEverRendered = false;
 
+  /// Best effort: a failed write only leaves the Library dot on.
+  Future<void> _recordVisit(String feedUrl) async {
+    // Read before awaiting: the screen may be gone when the write fails.
+    final repository = ref.read(subscriptionRepositoryProvider);
+    final logger = ref.read(namedLoggerProvider('PodcastDetail'));
+    try {
+      await recordPodcastVisit(repository, feedUrl);
+    } catch (error, stackTrace) {
+      logger.w('Failed to record visit', error: error, stackTrace: stackTrace);
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -133,13 +196,63 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
     final feedUrl = podcast.feedUrl;
     if (feedUrl != null) {
       PodcastMetadataHints.set(feedUrl, podcast);
+      unawaited(_recordVisit(feedUrl));
     }
 
+    _scrollController.addListener(_updateNavScroll);
+    _searchTransition.addListener(_updateListTop);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _attachScrollLogger();
+      _updateListTop();
     });
   }
+
+  void _updateNavScroll() {
+    if (!_scrollController.hasClients) return;
+    final heroHeight = _heroKey.currentContext?.size?.height;
+    _navScroll.value = FloatingNavScroll.at(
+      offset: _scrollController.offset,
+      heroExtent: heroHeight ?? 1,
+    );
+    _updateListTop();
+  }
+
+  void _updateListTop() {
+    final body = _bodyKey.currentContext?.findRenderObject();
+    final bar = _stickyBarKey.currentContext?.findRenderObject();
+    if (body is! RenderBox || bar is! RenderBox) return;
+    if (!body.hasSize || !bar.hasSize || !bar.attached) return;
+    final bottom = bar.localToGlobal(
+      Offset(0, bar.size.height),
+      ancestor: body,
+    );
+    _listTop.value = bottom.dy;
+  }
+
+  void _setSearching(bool searching) {
+    _searchDebounce?.cancel();
+    setState(() {
+      _searching = searching;
+      _searchQuery = '';
+    });
+    if (!searching) _searchController.clear();
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0,
+        duration: _kSearchTransitionDuration,
+        curve: Curves.easeOutCubic,
+      );
+    }
+    if (searching) {
+      _searchTransition.animateTo(1, curve: Curves.easeOutCubic);
+    } else {
+      _searchTransition.animateBack(0, curve: Curves.easeOutCubic);
+    }
+  }
+
+  FloatingNavScroll get _effectiveNavScroll =>
+      _navScroll.value.withSearch(_searchTransition.value);
 
   void _attachScrollLogger() {
     if (_scrollListenerAttached) return;
@@ -167,6 +280,9 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
     _searchDebounce?.cancel();
     _searchController.dispose();
     _ownScrollController.dispose();
+    _navScroll.dispose();
+    _listTop.dispose();
+    _searchTransition.dispose();
     final feedUrl = podcast.feedUrl;
     if (feedUrl != null) {
       PodcastMetadataHints.remove(feedUrl);
@@ -182,29 +298,23 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
     );
   }
 
-  void _showPlayOrderSheet() {
+  /// Play order and downloads live in the settings sheet. A new play
+  /// order is re-resolved once it is saved, which can land after the sheet
+  /// has closed.
+  Future<void> _openSettingsSheet() {
     final feedUrl = podcast.feedUrl;
-    if (feedUrl == null) return;
-    final subscription = ref.read(subscriptionByFeedUrlProvider(feedUrl)).value;
-    if (subscription == null) return;
-
-    final repo = ref.read(playOrderPreferenceRepositoryProvider);
-    repo.getPodcastPlayOrder(subscription.id).then((currentOrder) {
-      if (!mounted) return;
-      showPlayOrderBottomSheet(
-        context: context,
-        currentOrder: currentOrder ?? AutoPlayOrder.defaultOrder,
-        resolvedParentOrder: ref
-            .read(appSettingsRepositoryProvider)
-            .getAutoPlayOrder(),
-        onOrderSelected: (order) {
-          // Await the write before re-resolving to avoid reading stale data.
-          repo.setPodcastPlayOrder(subscription.id, order).then((_) {
-            _resolvePlayOrder(subscription.id);
-          });
-        },
-      );
-    });
+    final subscriptionId = feedUrl == null
+        ? null
+        : ref.read(subscriptionByFeedUrlProvider(feedUrl)).value?.id;
+    return showPodcastSettingsSheet(
+      context: context,
+      podcast: podcast,
+      onPlayOrderChanged: subscriptionId == null
+          ? null
+          : () {
+              if (mounted) _resolvePlayOrder(subscriptionId);
+            },
+    );
   }
 
   void _resolvePlayOrder(int subscriptionId) {
@@ -217,58 +327,195 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    return Scaffold(
+      body: Stack(
+        key: _bodyKey,
+        children: [
+          Positioned.fill(
+            child: ValueListenableBuilder<double>(
+              valueListenable: _listTop,
+              builder: (context, top, _) => ContentBackdrop(top: top),
+            ),
+          ),
+          // Row ink draws on the nearest Material; without this one it
+          // would land on the Scaffold's, hidden under the backdrop.
+          Material(type: MaterialType.transparency, child: _buildBody()),
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: ListenableBuilder(
+              listenable: Listenable.merge([_navScroll, _searchTransition]),
+              builder: (context, _) => _buildNavigation(_effectiveNavScroll),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNavigation(FloatingNavScroll scroll) {
     final l10n = AppLocalizations.of(context);
     final feedUrl = podcast.feedUrl;
     final subscription = feedUrl == null
         ? null
         : ref.watch(subscriptionByFeedUrlProvider(feedUrl)).value;
     final isSubscribed = subscription != null && !subscription.isCached;
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(podcast.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+    // Keeps the subscribe state loaded for the `…` menu, which may open
+    // before the hero (its other listener) has mounted.
+    ref.watch(subscriptionControllerProvider(podcast.id));
+    return FloatingNavigationBar(
+      leading: FloatingNavButton(
+        icon: Icons.arrow_back_ios_new_rounded,
+        tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+        onPressed: () => Navigator.of(context).maybePop(),
+      ),
+      title: podcast.name,
+      titleOpacity: scroll.title,
+      backgroundOpacity: scroll.background,
+      trailing: FloatingNavActions(
         actions: [
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              switch (value) {
-                case 'description':
-                  showPodcastDescriptionSheet(
-                    context: context,
-                    podcast: podcast,
-                  );
-                case 'play_order':
-                  _showPlayOrderSheet();
-                case 'audio_settings':
-                  // Lets the override be edited while nothing is playing.
-                  if (subscription == null) return;
-                  showAudioSheet(context, podcastId: subscription.id);
-              }
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'description',
-                child: Text(l10n.podcastDetailDescriptionMenuTitle),
-              ),
-              PopupMenuItem(
-                value: 'play_order',
-                child: Text(l10n.playOrderMenuTitle),
-              ),
-              if (subscription != null)
-                PopupMenuItem(
-                  value: 'audio_settings',
-                  child: Text(l10n.podcastDetailAudioSettingsMenuTitle),
-                ),
-            ],
+          FloatingNavAction(
+            icon: Icons.search_rounded,
+            tooltip: l10n.podcastDetailSearchTooltip,
+            onPressed: feedUrl == null ? null : () => _setSearching(true),
           ),
           if (isSubscribed)
-            IconButton(
-              icon: const Icon(Icons.settings_outlined),
+            FloatingNavAction(
+              icon: Icons.tune_rounded,
               tooltip: l10n.podcastDetailSettingsTooltip,
-              onPressed: () =>
-                  showPodcastSettingsSheet(context: context, podcast: podcast),
+              onPressed: _openSettingsSheet,
             ),
+          FloatingNavAction(
+            icon: Icons.more_horiz_rounded,
+            tooltip: l10n.podcastDetailMoreTooltip,
+            onPressed: _showMoreMenu,
+          ),
         ],
       ),
-      body: _buildBody(),
+      search: _searching
+          ? NavigationSearchField(
+              controller: _searchController,
+              hintText: l10n.podcastDetailSearchHint,
+              cancelLabel: l10n.commonCancel,
+              onChanged: _onSearchChanged,
+              onCancel: () => _setSearching(false),
+            )
+          : null,
+    );
+  }
+
+  /// Overflow popover under the navigation's trailing pill: primary
+  /// actions as tiles, then whole-podcast played status. Play order and
+  /// audio live in the settings sheet.
+  Future<void> _showMoreMenu() {
+    final l10n = AppLocalizations.of(context);
+    final feedUrl = podcast.feedUrl;
+    final subscription = feedUrl == null
+        ? null
+        : ref.read(subscriptionByFeedUrlProvider(feedUrl)).value;
+    final subscriptionId = subscription?.id;
+    final website = websiteUri(
+      (feedUrl == null
+              ? null
+              : ref.read(podcastDetailProvider(feedUrl)).value?.podcast.link) ??
+          subscription?.websiteUrl,
+    );
+    // Null until known: the tile is left out rather than guessing, since a
+    // wrong "Subscribe" label would toggle an existing subscription off.
+    final isSubscribed = ref
+        .read(subscriptionControllerProvider(podcast.id))
+        .value;
+    return showActionMenu(
+      context: context,
+      top: FloatingNavigationBar.heightOf(context),
+      tiles: [
+        if (feedUrl != null && isSubscribed != null)
+          ActionMenuEntry(
+            icon: isSubscribed
+                ? Icons.remove_circle_outline
+                : Icons.add_circle_outline,
+            label: isSubscribed
+                ? l10n.podcastDetailUnsubscribe
+                : l10n.podcastDetailSubscribe,
+            onSelected: () => togglePodcastSubscription(
+              context: context,
+              ref: ref,
+              podcast: podcast,
+              source: widget.subscribeSource,
+              expectSubscribed: isSubscribed,
+            ),
+          ),
+        ActionMenuEntry(
+          icon: Icons.ios_share,
+          label: l10n.podcastDetailShareShort,
+          onSelected: () =>
+              sharePodcast(context: context, ref: ref, itunesId: podcast.id),
+        ),
+        ActionMenuEntry(
+          icon: Icons.info_outline,
+          label: l10n.podcastDetailDescriptionMenuTitle,
+          onSelected: () =>
+              showPodcastDescriptionSheet(context: context, podcast: podcast),
+        ),
+      ],
+      sections: [
+        if (website != null)
+          [
+            ActionMenuEntry(
+              icon: Icons.open_in_new_rounded,
+              label: l10n.podcastOpenWebsite,
+              onSelected: () => _openWebsite(website),
+            ),
+          ],
+        if (subscriptionId != null)
+          [
+            ActionMenuEntry(
+              icon: Icons.done_all_rounded,
+              label: l10n.podcastMarkAllPlayed,
+              onSelected: () => _markAll(subscriptionId, played: true),
+            ),
+            ActionMenuEntry(
+              icon: Icons.remove_done_rounded,
+              label: l10n.podcastMarkAllUnplayed,
+              onSelected: () => _markAll(subscriptionId, played: false),
+            ),
+          ],
+      ],
+    );
+  }
+
+  Future<void> _openWebsite(Uri website) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final failed = AppLocalizations.of(context).podcastOpenWebsiteFailed;
+    // Read before awaiting: the page may be gone when the launch fails.
+    final logger = ref.read(namedLoggerProvider('PodcastDetail'));
+    var opened = false;
+    try {
+      opened = await launchUrl(website, mode: LaunchMode.externalApplication);
+    } on Exception catch (e, stack) {
+      logger.w('Failed to open website: $website', error: e, stackTrace: stack);
+    }
+    if (!opened && mounted) {
+      messenger.showSnackBar(SnackBar(content: Text(failed)));
+    }
+  }
+
+  /// Marks the whole podcast played or unplayed after a confirmation that
+  /// states how many episodes it touches.
+  Future<void> _markAll(int podcastId, {required bool played}) async {
+    final l10n = AppLocalizations.of(context);
+    final episodes = await ref
+        .read(episodeRepositoryProvider)
+        .getByPodcastId(podcastId);
+    if (!mounted) return;
+    await confirmAndMarkAllPlayed(
+      context: context,
+      episodeIds: [for (final episode in episodes) episode.id],
+      played: played,
+      confirmText: played
+          ? l10n.podcastMarkAllPlayedConfirm(episodes.length)
+          : l10n.podcastMarkAllUnplayedConfirm(episodes.length),
     );
   }
 
@@ -496,148 +743,228 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
           displayPlaylists.first;
     }
 
+    final listSlivers = <Widget>[
+      if (effectiveViewMode == PodcastViewMode.episodes)
+        ...buildEpisodeListSlivers(
+          ref: ref,
+          feedUrl: feedUrl,
+          episodesAsync: filteredAsync,
+          progressMapAsync: progressMapAsync,
+          sortOrder: sortOrder,
+          searchQuery: _searchQuery,
+          podcastTitle: podcast.name,
+          artworkUrl: podcast.artworkUrl,
+          feedImageUrl: _feedImageUrl,
+          lastRefreshedAt: _lastRefreshedAt,
+          scrollController: _scrollController,
+          fallbackEpisodes: _lastFilteredEpisodes,
+          itunesId: podcast.id,
+          effectiveOrder: _resolvedPlayOrder,
+        )
+      else if (activePlaylist != null)
+        ..._buildInlinePlaylistSliversWithFallback(
+          activePlaylist: activePlaylist,
+          sortOrder: sortOrder,
+        ),
+    ];
+
+    final contentLoading = effectiveViewMode == PodcastViewMode.episodes
+        ? filteredAsync.isLoading
+        : activePlaylist != null &&
+              ref
+                  .watch(
+                    smartPlaylistEpisodesProvider(activePlaylist.episodeIds),
+                  )
+                  .isLoading;
+    _currentViewKey =
+        '$effectiveViewMode|${activePlaylist?.id}|$filter|$sortOrder';
+    if (_heldOffset != null &&
+        _currentViewKey != _heldFromViewKey &&
+        !contentLoading) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _releaseScrollHold());
+    }
+
     return RefreshIndicator(
+      edgeOffset: FloatingNavigationBar.heightOf(context),
       onRefresh: () async {
         ref.invalidate(podcastDetailProvider(feedUrl));
         ref.invalidate(podcastEpisodeProgressProvider(feedUrl));
         await ref.read(podcastDetailProvider(feedUrl).future);
       },
-      child: CustomScrollView(
-        controller: _scrollController,
-        slivers: [
-          SliverToBoxAdapter(
-            child: SizedBox(
-              height: _kSearchBarHeight,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                child: TextField(
-                  controller: _searchController,
-                  onChanged: _onSearchChanged,
-                  decoration: InputDecoration(
-                    hintText: MaterialLocalizations.of(
-                      context,
-                    ).searchFieldLabel,
-                    prefixIcon: const Icon(Icons.search),
-                    suffixIcon: ValueListenableBuilder<TextEditingValue>(
-                      valueListenable: _searchController,
-                      builder: (context, value, child) {
-                        if (value.text.isEmpty) {
-                          return const SizedBox.shrink();
-                        }
-                        return IconButton(
-                          icon: const Icon(Icons.clear),
-                          onPressed: () {
-                            _searchController.clear();
-                            _searchDebounce?.cancel();
-                            setState(() => _searchQuery = '');
-                          },
-                        );
-                      },
+      // Content swaps (view mode, filter) can clamp the offset without a
+      // scroll event; resync the hero so it never stays faded while still
+      // taking up its space.
+      child: NotificationListener<ScrollMetricsNotification>(
+        onNotification: (_) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) _updateNavScroll();
+          });
+          return false;
+        },
+        child: CustomScrollView(
+          controller: _scrollController,
+          slivers: [
+            // Reserves the floating navigation's height. Pinned so sticky
+            // headers below (e.g. the year header) stop under the bar
+            // instead of behind it; transparent so the hero shows through
+            // while it scrolls up.
+            PinnedHeaderSliver(
+              child: SizedBox(height: FloatingNavigationBar.heightOf(context)),
+            ),
+            SliverToBoxAdapter(
+              // Kept mounted in search: its height animates to zero (bottom
+              // edge fixed, like scrolling up) instead of popping out.
+              child: SizeTransition(
+                sizeFactor: ReverseAnimation(_searchTransition),
+                alignment: Alignment.bottomCenter,
+                child: ListenableBuilder(
+                  listenable: Listenable.merge([_navScroll, _searchTransition]),
+                  builder: (context, child) => CollapsingHero(
+                    progress: _effectiveNavScroll.hero,
+                    child: child!,
+                  ),
+                  child: KeyedSubtree(
+                    key: _heroKey,
+                    child: PodcastDetailHeader(
+                      podcast: podcast,
+                      subscribeSource: widget.subscribeSource,
                     ),
-                    filled: true,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(28),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(vertical: 0),
                   ),
                 ),
               ),
             ),
-          ),
-          SliverToBoxAdapter(
-            child: PodcastDetailHeader(
-              podcast: podcast,
-              subscribeSource: widget.subscribeSource,
-            ),
-          ),
-          if (showPlaylistToggle)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: Spacing.md,
-                  vertical: Spacing.sm,
-                ),
-                child: SmartPlaylistViewToggle(
-                  playlists: displayPlaylists,
-                  selectedMode: effectiveViewMode,
-                  selectedPlaylistId: activePlaylist?.id ?? selectedPlaylistId,
-                  onEpisodesSelected: () {
+            PinnedHeaderSliver(
+              child: PodcastDetailStickyBar(
+                key: _stickyBarKey,
+                showModeSwitch: showPlaylistToggle,
+                mode: effectiveViewMode,
+                onModeChanged: (mode) {
+                  if (mode == effectiveViewMode) return;
+                  if (mode == PodcastViewMode.episodes) {
                     _onEpisodesViewSelected(subscription?.id);
-                  },
-                  onPlaylistSelected: (playlist) {
-                    _onPlaylistSelected(subscription?.id, playlist);
-                  },
-                ),
+                    return;
+                  }
+                  final playlist =
+                      displayPlaylists
+                          .where((p) => p.id == selectedPlaylistId)
+                          .firstOrNull ??
+                      displayPlaylists.firstOrNull;
+                  if (playlist == null) return;
+                  _onPlaylistSelected(subscription?.id, playlist);
+                },
+                playlists: displayPlaylists,
+                selectedPlaylist: activePlaylist,
+                onPlaylistSelected: (playlist) {
+                  if (playlist.id == activePlaylist?.id) return;
+                  _onPlaylistSelected(subscription?.id, playlist);
+                },
+                filter: filter,
+                onFilterSelected: (f) {
+                  if (f == filter) return;
+                  _onFilterSelected(subscription?.id, f);
+                },
+                sortOrder: sortOrder,
+                onToggleSortOrder: _toggleSortOrder,
               ),
             ),
-          if (effectiveViewMode == PodcastViewMode.episodes)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: Spacing.sm),
-                child: EpisodeFilterChips(
-                  selected: filter,
-                  onSelected: (f) {
-                    if (subscription != null) {
-                      ref
-                          .read(
-                            podcastViewPreferenceControllerProvider(
-                              subscription.id,
-                            ).notifier,
-                          )
-                          .setEpisodeFilter(f);
-                    } else {
-                      setState(() {
-                        _localEpisodeFilter = f;
-                      });
-                    }
-                  },
-                ),
-              ),
-            ),
-          if (effectiveViewMode == PodcastViewMode.episodes)
-            ...buildEpisodeListSlivers(
-              ref: ref,
-              feedUrl: feedUrl,
-              episodesAsync: filteredAsync,
-              progressMapAsync: progressMapAsync,
-              sortOrder: sortOrder,
-              searchQuery: _searchQuery,
-              podcastTitle: podcast.name,
-              artworkUrl: podcast.artworkUrl,
-              feedImageUrl: _feedImageUrl,
-              lastRefreshedAt: _lastRefreshedAt,
-              scrollController: _scrollController,
-              onToggleSortOrder: _toggleSortOrder,
-              fallbackEpisodes: _lastFilteredEpisodes,
-              itunesId: podcast.id,
-              effectiveOrder: _resolvedPlayOrder,
-            )
-          else if (activePlaylist != null)
-            ..._buildInlinePlaylistSliversWithFallback(
-              activePlaylist: activePlaylist,
-              sortOrder: sortOrder,
-            ),
-          // Trailing slack so the scroll extent is large enough to keep
-          // the search bar hidden by the initial jumpTo offset, even when
-          // the list is empty or shorter than the viewport.
-          // SliverFillRemaining pads only the gap between content and
-          // viewport (zero when content already exceeds viewport); the
-          // fixed tail adds just enough room to scroll the search bar off.
-          const SliverFillRemaining(
-            hasScrollBody: false,
-            child: SizedBox.shrink(),
-          ),
-          const SliverToBoxAdapter(child: SizedBox(height: _kSearchBarHeight)),
-        ],
+            ...listSlivers,
+            _scrollHoldSpacer(loading: contentLoading),
+          ],
+        ),
       ),
     );
   }
 
+  void _holdScrollPosition() {
+    if (!_scrollController.hasClients) return;
+    // Stops an earlier release still animating, so the hold starts from
+    // where the list is now.
+    _scrollController.jumpTo(_scrollController.offset);
+    setState(() {
+      _holdGeneration++;
+      _heldOffset = _scrollController.offset;
+      _heldFromViewKey = _currentViewKey;
+    });
+  }
+
+  /// Ends the hold: stays put when the new list is long enough, otherwise
+  /// animates up to the list's real end before removing the spacer.
+  Future<void> _releaseScrollHold() async {
+    final generation = _holdGeneration;
+    if (_releasingGeneration == generation || _heldOffset == null) return;
+    if (!mounted) return;
+    _releasingGeneration = generation;
+    if (_scrollController.hasClients) {
+      final position = _scrollController.position;
+      final naturalMax = math.max(
+        0.0,
+        position.maxScrollExtent - _holdSpacerExtent,
+      );
+      if (naturalMax < position.pixels) {
+        await _scrollController.animateTo(
+          naturalMax,
+          duration: const Duration(milliseconds: 320),
+          curve: Curves.easeOutCubic,
+        );
+      }
+    }
+    // A newer switch took over while this one animated; its own release
+    // will end its hold.
+    if (!mounted || generation != _holdGeneration) return;
+    setState(() {
+      _heldOffset = null;
+      _heldFromViewKey = null;
+    });
+  }
+
+  /// Bottom spacer that keeps [_heldOffset] reachable while it is set,
+  /// with a spinner where the list will appear if it is still loading.
+  Widget _scrollHoldSpacer({required bool loading}) {
+    return SliverLayoutBuilder(
+      builder: (context, constraints) {
+        final held = _heldOffset;
+        final extent = held == null
+            ? 0.0
+            : math.max(
+                0.0,
+                held +
+                    constraints.viewportMainAxisExtent -
+                    constraints.precedingScrollExtent,
+              );
+        _holdSpacerExtent = extent;
+        if (extent <= 0) {
+          return const SliverToBoxAdapter(child: SizedBox.shrink());
+        }
+        // Puts the spinner in view: past any part of the spacer that sits
+        // above the viewport, and below the pinned navigation and bar.
+        final hiddenAbove = math.max(
+          0.0,
+          held! - constraints.precedingScrollExtent,
+        );
+        return SliverToBoxAdapter(
+          child: SizedBox(
+            height: extent,
+            child: loading
+                ? Align(
+                    alignment: Alignment.topCenter,
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        top: hiddenAbove + _kHoldSpinnerTop,
+                      ),
+                      child: const CircularProgressIndicator(),
+                    ),
+                  )
+                : null,
+          ),
+        );
+      },
+    );
+  }
+
+  static const double _kHoldSpinnerTop = 200;
+
   void _onEpisodesViewSelected(int? subscriptionId) {
+    _holdScrollPosition();
     if (subscriptionId != null) {
       ref
           .read(
@@ -651,7 +978,19 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
     }
   }
 
+  void _onFilterSelected(int? subscriptionId, EpisodeFilter filter) {
+    _holdScrollPosition();
+    if (subscriptionId == null) {
+      setState(() => _localEpisodeFilter = filter);
+      return;
+    }
+    ref
+        .read(podcastViewPreferenceControllerProvider(subscriptionId).notifier)
+        .setEpisodeFilter(filter);
+  }
+
   void _onPlaylistSelected(int? subscriptionId, SmartPlaylist playlist) {
+    _holdScrollPosition();
     if (subscriptionId != null) {
       ref
           .read(
@@ -691,7 +1030,6 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
       feedImageUrl: _feedImageUrl,
       lastRefreshedAt: _lastRefreshedAt,
       scrollController: _scrollController,
-      onToggleSortOrder: _toggleSortOrder,
       onNavigateToGroup: _navigateToGroupEpisodes,
       itunesId: podcast.id,
       effectiveOrder: _resolvedPlayOrder,
@@ -700,6 +1038,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
   }
 
   void _toggleSortOrder() {
+    _holdScrollPosition();
     final feedUrl = podcast.feedUrl;
     if (feedUrl == null) return;
     final subscriptionAsync = ref.read(subscriptionByFeedUrlProvider(feedUrl));
@@ -749,4 +1088,15 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
       },
     );
   }
+}
+
+/// The show's website as an openable web address, or null when the feed
+/// gives none or something other than http(s).
+@visibleForTesting
+Uri? websiteUri(String? link) {
+  final trimmed = link?.trim();
+  if (trimmed == null || trimmed.isEmpty) return null;
+  final uri = Uri.tryParse(trimmed);
+  if (uri == null || !uri.hasAuthority) return null;
+  return uri.scheme == 'http' || uri.scheme == 'https' ? uri : null;
 }

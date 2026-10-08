@@ -52,4 +52,24 @@ void main() {
       ).throws<StationLimitExceededException>();
     });
   });
+
+  group('markPlayed', () {
+    test('records when the station was last played', () async {
+      final station = await repository.create(_buildStation('Morning'));
+      final updatedAt = station.updatedAt;
+      final at = DateTime(2026, 10, 8, 9);
+
+      await repository.markPlayed(station.id, at: at);
+
+      final stored = await repository.findById(station.id);
+      check(stored!.lastPlayedAt).equals(at);
+      // Playing is not an edit.
+      check(stored.updatedAt).equals(updatedAt);
+    });
+
+    test('ignores a station that no longer exists', () async {
+      await repository.markPlayed(999, at: DateTime(2026));
+      check(await repository.count()).equals(0);
+    });
+  });
 }

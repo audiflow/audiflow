@@ -2,32 +2,31 @@ import 'package:audiflow_core/audiflow_core.dart';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
+import '../../styles/borders.dart';
 import '../../styles/spacing.dart';
+import '../../themes/app_colors.dart';
+import '../../themes/text_styles.dart';
 import '../artwork_image.dart';
 import '../buttons/episode_play_pill.dart';
+import '../indicators/progress_line.dart';
 
-/// Fixed height for the episode card, used as itemExtent in sliver lists.
-const double episodeCardExtent = 140.0;
-
-const double _thumbnailSize = 76.0;
-const double _mainRowHeight = 80.0;
+const double _thumbnailSize = 56.0;
 const double _actionRowHeight = 44.0;
 
-/// Reusable episode card with fixed-height layout for use in sliver lists.
+/// Episode row (redesign 4.2): date line (accent dot when new), title,
+/// description, artwork on the right, then the action row with the play
+/// pill and the caller's actions. Played episodes fade their title and
+/// artwork; a bottom-edge line shows progress once playback has started.
 ///
-/// Layout:
-/// - Main row (80dp): optional thumbnail, title (up to 2 lines), description
-/// - Action row (44dp): play pill, date label, action buttons
-/// - Vertical padding: 8dp (4dp top + 4dp bottom)
-/// - Divider: 1dp
-///
-/// Total fixed extent: 140dp (80 + 44 + 8 + 1 padding/divider + 7 flex).
+/// Height follows the content, so a short title leaves no gap between the
+/// text and the action row; rows run full width and end in a hairline.
 class EpisodeCard extends StatelessWidget {
   const EpisodeCard({
     super.key,
     required this.title,
     required this.pillLabel,
     this.dateLabel,
+    this.numberLabel,
     this.description,
     this.thumbnailUrl,
     this.fallbackThumbnailUrl,
@@ -37,6 +36,7 @@ class EpisodeCard extends StatelessWidget {
     this.isPlaying = false,
     this.isLoading = false,
     this.isNew = false,
+    this.newLabel,
     this.isCompleted = false,
     this.isInProgress = false,
     this.isCurrentEpisode = false,
@@ -49,16 +49,23 @@ class EpisodeCard extends StatelessWidget {
     this.actionButtons = const [],
   });
 
+  @visibleForTesting
+  static const Key newDotKey = ValueKey('episodeCardNewDot');
+
   final String title;
 
   /// Pre-formatted state label rendered inside the play pill.
   final String pillLabel;
 
-  /// Pre-formatted publish date rendered next to the pill. Null hides it.
+  /// Pre-formatted publish date shown above the title. Null hides it.
   final String? dateLabel;
 
-  /// Episode description snippet. Shown only when there is vertical space
-  /// remaining after the title (similar to Apple Podcasts).
+  /// Episode number label (e.g. "#12") for series lists, where order
+  /// matters more than recency: it takes the date's place above the
+  /// title and the date moves next to the play pill.
+  final String? numberLabel;
+
+  /// Episode description snippet, shown in the space the title leaves.
   final String? description;
 
   /// Episode-specific thumbnail URL.
@@ -84,14 +91,17 @@ class EpisodeCard extends StatelessWidget {
   final bool isPlaying;
   final bool isLoading;
 
-  /// Show "new" badge for unplayed episodes.
+  /// Marks an unplayed episode published since the last refresh.
   final bool isNew;
+
+  /// Screen-reader label for the new-episode dot.
+  final String? newLabel;
   final bool isCompleted;
   final bool isInProgress;
   final bool isCurrentEpisode;
 
-  /// Progress through the episode in `[0.0, 1.0]`. Drives the pill ring
-  /// when [isPlaying] or [isInProgress] is true. Null is treated as 0.
+  /// Progress through the episode in `[0.0, 1.0]`. Drawn as a bottom-edge
+  /// line while [isInProgress]; [isCompleted] always draws it full.
   final double? progressFraction;
 
   /// Whether the episode has a transcript available.
@@ -104,7 +114,7 @@ class EpisodeCard extends StatelessWidget {
   final VoidCallback? onPlayPause;
   final VoidCallback? onLongPress;
 
-  /// Action buttons (queue, download, share) shown in the bottom row.
+  /// Action buttons (queue, download, more) at the end of the action row.
   final List<Widget> actionButtons;
 
   /// Resolved thumbnail URL, accounting for deduplication against podcast
@@ -124,112 +134,152 @@ class EpisodeCard extends StatelessWidget {
 
   bool get _showThumbnail => showThumbnail && _displayThumbnailUrl != null;
 
+  double? get _edgeProgress {
+    if (isCompleted) return 1;
+    return isInProgress ? progressFraction : null;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: episodeCardExtent,
+    final colors = AppColors.of(context);
+    return BottomEdgeProgress(
+      fraction: _edgeProgress,
+      inset: Spacing.screenHorizontal,
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: Spacing.md,
-                vertical: Spacing.xs,
-              ),
-              child: Column(
-                children: [
-                  SizedBox(
-                    height: _mainRowHeight,
-                    child: InkWell(
-                      onTap: onTap,
-                      onLongPress: onLongPress,
-                      child: _buildMainRow(context),
-                    ),
-                  ),
-                  SizedBox(
-                    height: _actionRowHeight,
-                    child: _buildActionRow(context),
-                  ),
-                ],
-              ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              Spacing.screenHorizontal,
+              Spacing.md - Spacing.xxs,
+              Spacing.screenHorizontal,
+              Spacing.xs,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                InkWell(
+                  onTap: onTap,
+                  onLongPress: onLongPress,
+                  child: _mainArea(colors),
+                ),
+                const SizedBox(height: Spacing.xs),
+                SizedBox(height: _actionRowHeight, child: _actionRow(colors)),
+              ],
             ),
           ),
           Divider(
             height: 1,
-            thickness: 0.5,
-            color: Theme.of(
-              context,
-            ).colorScheme.outlineVariant.withValues(alpha: 0.5),
-            indent: Spacing.md,
-            endIndent: Spacing.md,
+            thickness: 1,
+            color: colors.hairline,
+            indent: Spacing.screenHorizontal,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildMainRow(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
+  Widget _mainArea(AppColors colors) {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(child: _buildCenter(theme, colorScheme)),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _dateRow(colors),
+              const SizedBox(height: Spacing.xs),
+              _textBlock(colors),
+            ],
+          ),
+        ),
         if (_showThumbnail) ...[
-          const SizedBox(width: Spacing.sm),
-          _Thumbnail(url: _displayThumbnailUrl!),
+          const SizedBox(width: Spacing.sm + Spacing.xs),
+          Opacity(
+            opacity: isCompleted ? 0.5 : 1,
+            child: _Thumbnail(url: _displayThumbnailUrl!),
+          ),
         ],
       ],
     );
   }
 
-  Widget _buildCenter(ThemeData theme, ColorScheme colorScheme) {
-    final descColor = colorScheme.onSurfaceVariant.withValues(alpha: 0.7);
-
-    return ClipRect(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title.htmlEntityDecode,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: isCurrentEpisode
-                  ? FontWeight.bold
-                  : FontWeight.normal,
-              color: isCurrentEpisode
-                  ? colorScheme.primary
-                  : isCompleted
-                  ? colorScheme.onSurfaceVariant.withValues(alpha: 0.6)
-                  : null,
+  Widget _dateRow(AppColors colors) {
+    return Row(
+      children: [
+        if (isNew) ...[
+          Semantics(
+            label: newLabel,
+            child: SizedBox.square(
+              dimension: 6,
+              child: DecoratedBox(
+                key: newDotKey,
+                decoration: BoxDecoration(
+                  color: colors.accent,
+                  shape: BoxShape.circle,
+                ),
+              ),
             ),
           ),
-          Expanded(
-            child: description != null && description!.isNotEmpty
-                ? Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: Text(
-                      description!.htmlToPlainText,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: descColor,
-                      ),
-                    ),
-                  )
-                : const SizedBox.shrink(),
+          const SizedBox(width: Spacing.xs + Spacing.xxs),
+        ],
+        if (numberLabel ?? dateLabel case final label?)
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTextStyles.caption.copyWith(color: colors.inkTertiary),
+            ),
+          ),
+        if (hasTranscript) ...[
+          const SizedBox(width: Spacing.xs),
+          Semantics(
+            label: transcriptLabel,
+            child: Icon(
+              Symbols.closed_caption,
+              size: 16,
+              color: colors.inkTertiary,
+            ),
           ),
         ],
-      ),
+      ],
     );
   }
 
-  Widget _buildActionRow(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+  Widget _textBlock(AppColors colors) {
+    final titleColor = isCurrentEpisode
+        ? colors.accent
+        : isCompleted
+        ? colors.inkTertiary
+        : colors.ink;
+    final text = description?.htmlToPlainText.trim() ?? '';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title.htmlEntityDecode,
+          maxLines: 3,
+          overflow: TextOverflow.ellipsis,
+          style: AppTextStyles.rowTitle.copyWith(color: titleColor),
+        ),
+        if (text.isNotEmpty) ...[
+          const SizedBox(height: Spacing.xxs),
+          Text(
+            text,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: AppTextStyles.meta.copyWith(
+              color: isCompleted ? colors.inkTertiary : colors.inkSecondary,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
 
+  Widget _actionRow(AppColors colors) {
+    final date = numberLabel == null ? null : dateLabel;
     return Row(
       children: [
         EpisodePlayPill(
@@ -237,40 +287,20 @@ class EpisodeCard extends StatelessWidget {
           isPlaying: isPlaying,
           isLoading: isLoading,
           isCompleted: isCompleted,
-          isInProgress: isInProgress,
-          progressFraction: progressFraction,
           onPressed: onPlayPause,
         ),
-        if (dateLabel != null) const SizedBox(width: Spacing.sm),
-        Expanded(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (dateLabel != null)
-                Flexible(
-                  child: Text(
-                    dateLabel!,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-              if (hasTranscript) ...[
-                const SizedBox(width: Spacing.xs),
-                _TranscriptBadge(
-                  color: colorScheme.onSurfaceVariant,
-                  label: transcriptLabel,
-                ),
-              ],
-              if (isNew) ...[
-                const SizedBox(width: Spacing.xs),
-                _NewBadge(color: colorScheme.primary),
-              ],
-            ],
+        if (date != null) ...[
+          const SizedBox(width: Spacing.sm),
+          Flexible(
+            child: Text(
+              date,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTextStyles.caption.copyWith(color: colors.inkTertiary),
+            ),
           ),
-        ),
+        ],
+        const Spacer(),
         ...actionButtons,
       ],
     );
@@ -295,10 +325,10 @@ class _Thumbnail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final colors = AppColors.of(context);
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(6),
+      borderRadius: AppBorders.artworkList,
       child: ArtworkImage(
         url: url,
         width: _thumbnailSize,
@@ -307,52 +337,8 @@ class _Thumbnail extends StatelessWidget {
         placeholder: Container(
           width: _thumbnailSize,
           height: _thumbnailSize,
-          color: colorScheme.surfaceContainerHighest,
-          child: Icon(
-            Icons.podcasts,
-            size: 32,
-            color: colorScheme.onSurfaceVariant,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _TranscriptBadge extends StatelessWidget {
-  const _TranscriptBadge({required this.color, this.label});
-
-  final Color color;
-  final String? label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      label: label,
-      child: Icon(Symbols.closed_caption, size: 16, color: color),
-    );
-  }
-}
-
-class _NewBadge extends StatelessWidget {
-  const _NewBadge({required this.color});
-
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Text(
-        'new',
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: color,
-          fontWeight: FontWeight.w600,
-          fontSize: 10,
+          color: colors.surfaceSunken,
+          child: Icon(Icons.podcasts, size: 24, color: colors.inkQuaternary),
         ),
       ),
     );

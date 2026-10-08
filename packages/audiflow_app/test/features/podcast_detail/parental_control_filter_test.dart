@@ -5,6 +5,9 @@ import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../helpers/fakes.dart';
 
 // ---------------------------------------------------------------------------
 // Test data
@@ -29,6 +32,9 @@ const _podcast = Podcast(
 // Helpers
 // ---------------------------------------------------------------------------
 
+/// Set in [main]'s setUp; the sheet's download rows read settings.
+late SharedPreferences _prefs;
+
 Widget _wrap({
   required bool restricted,
   required bool unlocked,
@@ -36,6 +42,7 @@ Widget _wrap({
 }) {
   return ProviderScope(
     overrides: [
+      sharedPreferencesProvider.overrideWithValue(_prefs),
       subscriptionByFeedUrlProvider(
         _feedUrl,
       ).overrideWith((ref) async => _subscription),
@@ -44,6 +51,11 @@ Widget _wrap({
       hideExplicitForPodcastProvider(
         _subscription.id,
       ).overrideWith((ref) => Stream.value(false)),
+      // The sheet's play order and audio rows read these from the database.
+      playOrderPreferenceRepositoryProvider.overrideWithValue(
+        FakePlayOrderPreferenceRepository(),
+      ),
+      effectiveAudioSettingsProvider(_subscription.id).overrideWithValue(null),
       ...extraOverrides.cast(),
     ],
     child: MaterialApp(
@@ -65,6 +77,11 @@ Widget _wrap({
 // ---------------------------------------------------------------------------
 
 void main() {
+  setUp(() async {
+    SharedPreferences.setMockInitialValues({});
+    _prefs = await SharedPreferences.getInstance();
+  });
+
   group('_HideExplicitTile gate behavior', () {
     testWidgets('tile hidden when restricted and locked', (tester) async {
       await tester.pumpWidget(

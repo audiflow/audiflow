@@ -51,12 +51,16 @@ final class FeedMetaReady extends FeedParseProgress {
     required this.description,
     this.imageUrl,
     this.author,
+    this.link,
   });
 
   final String title;
   final String description;
   final String? imageUrl;
   final String? author;
+
+  /// The show's website from the channel `<link>`.
+  final String? link;
 }
 
 /// Emitted when a batch of episodes has been stored.

@@ -59,24 +59,29 @@ const StationSchema = CollectionSchema(
       name: r'hideCompleted',
       type: IsarType.bool,
     ),
-    r'name': PropertySchema(id: 8, name: r'name', type: IsarType.string),
+    r'lastPlayedAt': PropertySchema(
+      id: 8,
+      name: r'lastPlayedAt',
+      type: IsarType.dateTime,
+    ),
+    r'name': PropertySchema(id: 9, name: r'name', type: IsarType.string),
     r'podcastSortType': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'podcastSortType',
       type: IsarType.string,
     ),
     r'publishedWithinDays': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'publishedWithinDays',
       type: IsarType.long,
     ),
     r'sortOrder': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'sortOrder',
       type: IsarType.long,
     ),
     r'updatedAt': PropertySchema(
-      id: 12,
+      id: 13,
       name: r'updatedAt',
       type: IsarType.dateTime,
     ),
@@ -140,11 +145,12 @@ void _stationSerialize(
   writer.writeBool(offsets[5], object.filterFavorited);
   writer.writeBool(offsets[6], object.groupByPodcast);
   writer.writeBool(offsets[7], object.hideCompleted);
-  writer.writeString(offsets[8], object.name);
-  writer.writeString(offsets[9], object.podcastSortType);
-  writer.writeLong(offsets[10], object.publishedWithinDays);
-  writer.writeLong(offsets[11], object.sortOrder);
-  writer.writeDateTime(offsets[12], object.updatedAt);
+  writer.writeDateTime(offsets[8], object.lastPlayedAt);
+  writer.writeString(offsets[9], object.name);
+  writer.writeString(offsets[10], object.podcastSortType);
+  writer.writeLong(offsets[11], object.publishedWithinDays);
+  writer.writeLong(offsets[12], object.sortOrder);
+  writer.writeDateTime(offsets[13], object.updatedAt);
 }
 
 Station _stationDeserialize(
@@ -167,11 +173,12 @@ Station _stationDeserialize(
   object.groupByPodcast = reader.readBool(offsets[6]);
   object.hideCompleted = reader.readBool(offsets[7]);
   object.id = id;
-  object.name = reader.readString(offsets[8]);
-  object.podcastSortType = reader.readString(offsets[9]);
-  object.publishedWithinDays = reader.readLongOrNull(offsets[10]);
-  object.sortOrder = reader.readLong(offsets[11]);
-  object.updatedAt = reader.readDateTime(offsets[12]);
+  object.lastPlayedAt = reader.readDateTimeOrNull(offsets[8]);
+  object.name = reader.readString(offsets[9]);
+  object.podcastSortType = reader.readString(offsets[10]);
+  object.publishedWithinDays = reader.readLongOrNull(offsets[11]);
+  object.sortOrder = reader.readLong(offsets[12]);
+  object.updatedAt = reader.readDateTime(offsets[13]);
   return object;
 }
 
@@ -204,14 +211,16 @@ P _stationDeserializeProp<P>(
     case 7:
       return (reader.readBool(offset)) as P;
     case 8:
-      return (reader.readString(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 9:
       return (reader.readString(offset)) as P;
     case 10:
-      return (reader.readLongOrNull(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 11:
-      return (reader.readLong(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 12:
+      return (reader.readLong(offset)) as P;
+    case 13:
       return (reader.readDateTime(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -694,6 +703,82 @@ extension StationQueryFilter
       return query.addFilterCondition(
         FilterCondition.between(
           property: r'id',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Station, Station, QAfterFilterCondition> lastPlayedAtIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'lastPlayedAt'),
+      );
+    });
+  }
+
+  QueryBuilder<Station, Station, QAfterFilterCondition>
+  lastPlayedAtIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'lastPlayedAt'),
+      );
+    });
+  }
+
+  QueryBuilder<Station, Station, QAfterFilterCondition> lastPlayedAtEqualTo(
+    DateTime? value,
+  ) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'lastPlayedAt', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<Station, Station, QAfterFilterCondition> lastPlayedAtGreaterThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'lastPlayedAt',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Station, Station, QAfterFilterCondition> lastPlayedAtLessThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'lastPlayedAt',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Station, Station, QAfterFilterCondition> lastPlayedAtBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'lastPlayedAt',
           lower: lower,
           includeLower: includeLower,
           upper: upper,
@@ -1287,6 +1372,18 @@ extension StationQuerySortBy on QueryBuilder<Station, Station, QSortBy> {
     });
   }
 
+  QueryBuilder<Station, Station, QAfterSortBy> sortByLastPlayedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastPlayedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Station, Station, QAfterSortBy> sortByLastPlayedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastPlayedAt', Sort.desc);
+    });
+  }
+
   QueryBuilder<Station, Station, QAfterSortBy> sortByName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'name', Sort.asc);
@@ -1446,6 +1543,18 @@ extension StationQuerySortThenBy
     });
   }
 
+  QueryBuilder<Station, Station, QAfterSortBy> thenByLastPlayedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastPlayedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Station, Station, QAfterSortBy> thenByLastPlayedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastPlayedAt', Sort.desc);
+    });
+  }
+
   QueryBuilder<Station, Station, QAfterSortBy> thenByName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'name', Sort.asc);
@@ -1556,6 +1665,12 @@ extension StationQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Station, Station, QDistinct> distinctByLastPlayedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'lastPlayedAt');
+    });
+  }
+
   QueryBuilder<Station, Station, QDistinct> distinctByName({
     bool caseSensitive = true,
   }) {
@@ -1648,6 +1763,12 @@ extension StationQueryProperty
   QueryBuilder<Station, bool, QQueryOperations> hideCompletedProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'hideCompleted');
+    });
+  }
+
+  QueryBuilder<Station, DateTime?, QQueryOperations> lastPlayedAtProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'lastPlayedAt');
     });
   }
 

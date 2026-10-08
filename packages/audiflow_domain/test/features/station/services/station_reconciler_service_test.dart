@@ -97,6 +97,27 @@ void main() {
   // Tests
   // ---------------------------------------------------------------------------
 
+  group('onEpisodesChanged', () {
+    test('reconciles only stations holding the changed podcasts', () async {
+      final affected = await putStation();
+      await linkPodcast(affected, 1);
+      final untouched = await putStation();
+      await linkPodcast(untouched, 2);
+      final a = await putEpisode(podcastId: 1, guid: 'a');
+      final b = await putEpisode(podcastId: 1, guid: 'b');
+      await putEpisode(podcastId: 2, guid: 'c');
+
+      await service.onEpisodesChanged([a, b]);
+
+      check(await stationEpisodeIds(affected)).deepEquals([a, b]..sort());
+      check(await stationEpisodeIds(untouched)).isEmpty();
+    });
+
+    test('unknown episodes are a no-op', () async {
+      await service.onEpisodesChanged([999]);
+    });
+  });
+
   group('onEpisodeChanged triggers differential reconciliation', () {
     test(
       'unfavorited episode not added when station filters by favorited',

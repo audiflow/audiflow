@@ -1,24 +1,14 @@
 import 'package:audiflow_domain/audiflow_domain.dart'
-    show EffectiveThumbnails, SmartPlaylistGroup, presetByFeedUrlProvider;
+    show
+        EffectiveThumbnails,
+        SmartPlaylistEpisodeData,
+        SmartPlaylistGroup,
+        presetByFeedUrlProvider;
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../l10n/app_localizations.dart';
-
-/// Formats a date range in Apple Podcasts style.
-String? formatDateRange(DateTime? earliest, DateTime? latest, {DateTime? now}) {
-  if (earliest == null || latest == null) return null;
-  final now0 = now ?? DateTime.now();
-  final bothCurrentYear =
-      earliest.year == now0.year && latest.year == now0.year;
-  final startFmt = bothCurrentYear ? DateFormat.Md() : DateFormat.yMd();
-  if (DateUtils.isSameDay(earliest, latest)) return startFmt.format(earliest);
-  final sameYear = earliest.year == latest.year;
-  final endFmt = bothCurrentYear || !sameYear ? startFmt : DateFormat.Md();
-  return '${startFmt.format(earliest)}\u301c${endFmt.format(latest)}';
-}
 
 /// Formats duration in ms using localized strings.
 String? formatGroupDuration(int? totalMs, AppLocalizations l10n) {
@@ -32,27 +22,76 @@ String? formatGroupDuration(int? totalMs, AppLocalizations l10n) {
   return l10n.groupDurationMinutes(minutes);
 }
 
-/// Card widget for displaying a smart playlist group inline.
+/// Played state of a series row: how many episodes are finished and the
+/// overall progress (finished episodes count 1, started ones their part).
+class SeriesPlayback {
+  const SeriesPlayback({
+    required this.played,
+    required this.total,
+    required this.fraction,
+  });
+
+  factory SeriesPlayback.of(
+    Iterable<int> episodeIds,
+    Map<int, SmartPlaylistEpisodeData> episodes,
+  ) {
+    var played = 0;
+    var total = 0;
+    var progress = 0.0;
+    for (final id in episodeIds) {
+      total++;
+      final state = episodes[id]?.progress;
+      if (state == null) continue;
+      if (state.isCompleted) {
+        played++;
+        progress += 1;
+      } else if (state.isInProgress) {
+        progress += (state.progressPercent ?? 0).clamp(0.0, 1.0);
+      }
+    }
+    return SeriesPlayback(
+      played: played,
+      total: total,
+      fraction: total == 0 ? 0 : progress / total,
+    );
+  }
+
+  final int played;
+  final int total;
+
+  /// 0 when nothing has been started, 1 when every episode is played.
+  final double fraction;
+
+  bool get started => 0 < fraction;
+  bool get finished => 0 < total && total <= played;
+}
+
+/// Series row on the podcast's Series tab (redesign 4.2): artwork, name,
+/// "N episodes · total time", played status, and a bottom-edge line once
+/// the series has been started. Runs full width in a hairline-separated
+/// list.
 class InlineGroupCard extends ConsumerWidget {
   const InlineGroupCard({
     super.key,
     required this.group,
     required this.onTap,
+    this.playback,
     this.prependSeasonNumber = false,
     this.feedUrl,
     this.playlistId,
     this.episodeCountOverride,
-    this.earliestDateOverride,
-    this.latestDateOverride,
     this.totalDurationMsOverride,
   });
 
   final SmartPlaylistGroup group;
   final VoidCallback onTap;
+
+  /// Played state; no status line when null.
+  final SeriesPlayback? playback;
   final bool prependSeasonNumber;
 
   /// Feed URL of the parent podcast. When set together with
-  /// [playlistId], the card resolves the `showThumbnail` flag
+  /// [playlistId], the row resolves the `showThumbnail` flag
   /// from the matched smart playlist config.
   final String? feedUrl;
 
@@ -63,139 +102,112 @@ class InlineGroupCard extends ConsumerWidget {
   /// episode count display (used in perEpisode year mode).
   final int? episodeCountOverride;
 
-  /// When set, overrides `group.earliestDate`/`group.latestDate`
-  /// for the date range display (used in split-by-year mode).
-  final DateTime? earliestDateOverride;
-
-  /// See [earliestDateOverride].
-  final DateTime? latestDateOverride;
-
   /// When set, overrides `group.totalDurationMs` for the
   /// duration display (used in split-by-year mode).
   final int? totalDurationMsOverride;
 
+  static const _thumbnailSize = 60.0;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colors = AppColors.of(context);
     final l10n = AppLocalizations.of(context);
-    final dateRange = group.showDateRange
-        ? formatDateRange(
-            earliestDateOverride ?? group.earliestDate,
-            latestDateOverride ?? group.latestDate,
-          )
-        : null;
-    final duration = group.showDateRange
-        ? formatGroupDuration(
-            totalDurationMsOverride ?? group.totalDurationMs,
-            l10n,
-          )
-        : null;
-
-    final metaLine = StringBuffer(
-      l10n.groupEpisodeCount(episodeCountOverride ?? group.episodeIds.length),
+    final duration = formatGroupDuration(
+      totalDurationMsOverride ?? group.totalDurationMs,
+      l10n,
     );
-    if (duration != null) {
-      metaLine.write('  $duration');
-    }
+    final count = l10n.groupEpisodeCount(
+      episodeCountOverride ?? group.episodeIds.length,
+    );
+    final meta = duration == null ? count : '$count · $duration';
+    final hasThumbnail =
+        _resolveShowThumbnail(ref) && group.thumbnailUrl != null;
+    final playback = this.playback;
 
-    final showThumbnail = _resolveShowThumbnail(ref);
-    final hasThumbnail = showThumbnail && group.thumbnailUrl != null;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: Spacing.md,
-        vertical: Spacing.xxs,
-      ),
-      child: Card(
-        elevation: 0,
-        color: colorScheme.surfaceContainerLow,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: Spacing.md,
-              vertical: Spacing.md,
-            ),
-            child: Row(
-              crossAxisAlignment: hasThumbnail
-                  ? CrossAxisAlignment.start
-                  : CrossAxisAlignment.center,
-              children: [
-                if (hasThumbnail) ...[
-                  _buildThumbnail(colorScheme),
-                  const SizedBox(width: Spacing.sm),
-                ],
-                Expanded(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        group.formattedDisplayName(
-                          parentPrependSeasonNumber: prependSeasonNumber,
-                        ),
-                        style: theme.textTheme.titleSmall,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        metaLine.toString(),
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      if (dateRange != null) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          dateRange,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
+    return InkWell(
+      onTap: onTap,
+      child: BottomEdgeProgress(
+        fraction: playback != null && playback.started
+            ? playback.fraction
+            : null,
+        inset: Spacing.screenHorizontal,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: Spacing.screenHorizontal,
+            vertical: Spacing.rowVertical,
+          ),
+          child: Row(
+            children: [
+              if (hasThumbnail) ...[
+                _thumbnail(colors),
+                const SizedBox(width: Spacing.sm + Spacing.xs),
               ],
-            ),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      group.formattedDisplayName(
+                        parentPrependSeasonNumber: prependSeasonNumber,
+                      ),
+                      style: AppTextStyles.rowTitle.copyWith(color: colors.ink),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: Spacing.xxs),
+                    Text(
+                      meta,
+                      style: AppTextStyles.tabular(
+                        AppTextStyles.meta.copyWith(color: colors.inkSecondary),
+                      ),
+                    ),
+                    if (playback != null)
+                      Text(
+                        _status(playback, l10n),
+                        style: AppTextStyles.caption.copyWith(
+                          color: playback.started
+                              ? colors.accent
+                              : colors.inkTertiary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: Spacing.sm),
+              Icon(Icons.chevron_right, color: colors.inkTertiary),
+            ],
           ),
         ),
       ),
     );
   }
 
-  static const _thumbnailSize = 56.0;
+  String _status(SeriesPlayback playback, AppLocalizations l10n) {
+    if (playback.finished) return l10n.seriesStatusPlayed;
+    if (!playback.started) return l10n.seriesStatusUnplayed;
+    return l10n.seriesStatusPartlyPlayed(playback.played, playback.total);
+  }
 
-  Widget _buildThumbnail(ColorScheme colorScheme) {
+  Widget _thumbnail(AppColors colors) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: AppBorders.artworkList,
       child: ArtworkImage(
         url: group.thumbnailUrl!,
         width: _thumbnailSize,
         height: _thumbnailSize,
         loading: const ArtworkLoadingIndicator(),
-        placeholder: _buildPlaceholder(colorScheme),
-      ),
-    );
-  }
-
-  Widget _buildPlaceholder(ColorScheme colorScheme) {
-    return Container(
-      width: _thumbnailSize,
-      height: _thumbnailSize,
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Icon(
-        Icons.folder_outlined,
-        size: 24,
-        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+        placeholder: Container(
+          width: _thumbnailSize,
+          height: _thumbnailSize,
+          color: colors.surfaceSunken,
+          child: Icon(
+            Icons.folder_outlined,
+            size: 24,
+            color: colors.inkQuaternary,
+          ),
+        ),
       ),
     );
   }

@@ -292,20 +292,20 @@ class FeedSyncService implements SuspendableWriter {
       final subscriptionRepo = _ref.read(subscriptionRepositoryProvider);
       final metadataUpdater = SubscriptionMetadataUpdater(subscriptionRepo);
 
-      // Build conditional request headers. A subscription still missing its
-      // artwork has to parse the feed to get it, so it asks unconditionally:
-      // a 304 skips the parse, and a show that never publishes again would
-      // stay blank forever.
-      final needsArtwork = SubscriptionMetadataUpdater.needsArtworkBackfill(
+      // Build conditional request headers. A subscription still missing
+      // channel metadata (artwork, website) has to parse the feed to get it,
+      // so it asks unconditionally: a 304 skips the parse, and a show that
+      // never publishes again would stay blank forever.
+      final needsChannel = SubscriptionMetadataUpdater.needsChannelBackfill(
         sub,
       );
       final conditionalHeaders = <String, String>{
         'Accept': 'application/rss+xml, application/xml, text/xml',
       };
-      if (!needsArtwork && sub.httpEtag != null) {
+      if (!needsChannel && sub.httpEtag != null) {
         conditionalHeaders['If-None-Match'] = sub.httpEtag!;
       }
-      if (!needsArtwork && sub.httpLastModified != null) {
+      if (!needsChannel && sub.httpLastModified != null) {
         conditionalHeaders['If-Modified-Since'] = sub.httpLastModified!;
       }
 

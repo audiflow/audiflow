@@ -5,16 +5,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/app_localizations.dart';
-import '../../../share/presentation/helpers/share_helper.dart';
 import '../../../subscription/presentation/controllers/subscription_controller.dart';
 
-/// Displays podcast artwork, metadata, and subscribe button.
+/// Centered podcast hero: artwork, title, meta line, and a subscribe pill
+/// when not yet subscribed (redesign 4.2).
 class PodcastDetailHeader extends ConsumerWidget {
   const PodcastDetailHeader({
     super.key,
     required this.podcast,
     this.subscribeSource = SubscribeSource.discovery,
   });
+
+  static const double artworkSize = 180;
+  static const Key artworkKey = ValueKey('podcast-detail-hero-artwork');
+
+  /// Titles at or past this length use the smaller hero style so they
+  /// stay within three lines.
+  static const int _longTitleLength = 28;
 
   final Podcast podcast;
 
@@ -42,92 +49,79 @@ class PodcastDetailHeader extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Container(
-      padding: const EdgeInsets.all(Spacing.md),
+    final artworkUrl = podcast.artworkUrl;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        Spacing.xl,
+        Spacing.sm,
+        Spacing.xl,
+        Spacing.lg,
+      ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Semantics(
-                label: 'View podcast artwork',
-                button: true,
-                child: Material(
-                  type: MaterialType.transparency,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(8),
-                    onTap: podcast.artworkUrl != null
-                        ? () =>
-                              _showArtworkOverlay(context, podcast.artworkUrl!)
-                        : null,
-                    child: Hero(
-                      tag: 'podcast_artwork_${podcast.id}',
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: _PodcastArtwork(artworkUrl: podcast.artworkUrl),
-                      ),
-                    ),
-                  ),
+          Semantics(
+            label: 'View podcast artwork',
+            button: true,
+            child: GestureDetector(
+              onTap: artworkUrl == null
+                  ? null
+                  : () => _showArtworkOverlay(context, artworkUrl),
+              child: Hero(
+                tag: 'podcast_artwork_${podcast.id}',
+                child: ClipRRect(
+                  key: artworkKey,
+                  borderRadius: AppBorders.artworkHero,
+                  child: _PodcastArtwork(artworkUrl: artworkUrl),
                 ),
               ),
-              const SizedBox(width: Spacing.md),
-              Expanded(child: _PodcastMetadata(podcast: podcast)),
-            ],
+            ),
           ),
           const SizedBox(height: Spacing.md),
-          _SubscribeButtonRow(
-            podcast: podcast,
-            subscribeSource: subscribeSource,
-          ),
+          _PodcastMetadata(podcast: podcast, longTitle: _isLongTitle),
+          _SubscribeButton(podcast: podcast, subscribeSource: subscribeSource),
         ],
       ),
     );
   }
+
+  bool get _isLongTitle => _longTitleLength <= podcast.name.length;
 }
 
 class _PodcastMetadata extends StatelessWidget {
-  const _PodcastMetadata({required this.podcast});
+  const _PodcastMetadata({required this.podcast, required this.longTitle});
 
   final Podcast podcast;
+  final bool longTitle;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colors = AppColors.of(context);
+    final titleStyle = longTitle
+        ? AppTextStyles.heroTitleLong
+        : AppTextStyles.heroTitle;
+    final category = podcast.genres.firstOrNull;
+    final meta = category == null
+        ? podcast.artistName
+        : '${podcast.artistName} · $category';
 
     return SelectionArea(
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             podcast.name,
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-            maxLines: 2,
+            textAlign: TextAlign.center,
+            style: titleStyle.copyWith(color: colors.ink),
+            maxLines: 3,
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: Spacing.xs),
           Text(
-            podcast.artistName,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-            ),
+            meta,
+            textAlign: TextAlign.center,
+            style: AppTextStyles.meta.copyWith(color: colors.inkSecondary),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-          if (podcast.genres.isNotEmpty) ...[
-            const SizedBox(height: Spacing.xs),
-            Text(
-              podcast.genres.join(', '),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
         ],
       ),
     );
@@ -141,49 +135,37 @@ class _PodcastArtwork extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    const size = PodcastDetailHeader.artworkSize;
+    final colors = AppColors.of(context);
+    Widget fallback(IconData icon, {Widget? child}) => Container(
+      width: size,
+      height: size,
+      alignment: Alignment.center,
+      color: colors.surfaceSunken,
+      child: child ?? Icon(icon, size: 64, color: colors.inkTertiary),
+    );
 
-    if (artworkUrl == null) {
-      return Container(
-        width: 100,
-        height: 100,
-        alignment: Alignment.center,
-        color: colorScheme.surfaceContainerHighest,
-        child: Icon(
-          Icons.podcasts,
-          size: 48,
-          color: colorScheme.onSurfaceVariant,
-        ),
-      );
-    }
+    final url = artworkUrl;
+    if (url == null) return fallback(Icons.podcasts);
 
     return ArtworkImage(
-      url: artworkUrl!,
-      width: 100,
-      height: 100,
-      loading: Container(
-        width: 100,
-        height: 100,
-        color: colorScheme.surfaceContainerHighest,
-        child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+      url: url,
+      width: size,
+      height: size,
+      loading: fallback(
+        Icons.podcasts,
+        child: const CircularProgressIndicator(strokeWidth: 2),
       ),
-      placeholder: Container(
-        width: 100,
-        height: 100,
-        alignment: Alignment.center,
-        color: colorScheme.surfaceContainerHighest,
-        child: Icon(
-          Icons.broken_image,
-          size: 48,
-          color: colorScheme.onSurfaceVariant,
-        ),
-      ),
+      placeholder: fallback(Icons.broken_image),
     );
   }
 }
 
-class _SubscribeButtonRow extends ConsumerWidget {
-  const _SubscribeButtonRow({
+/// Accent "subscribe" pill, shown only while the podcast is not
+/// subscribed. Unsubscribing lives in the `…` menu, so a subscribed
+/// podcast's hero carries no button.
+class _SubscribeButton extends ConsumerWidget {
+  const _SubscribeButton({
     required this.podcast,
     required this.subscribeSource,
   });
@@ -193,80 +175,95 @@ class _SubscribeButtonRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     final subscriptionState = ref.watch(
       subscriptionControllerProvider(podcast.id),
     );
 
-    return subscriptionState.when(
-      data: (isSubscribed) {
-        final l10n = AppLocalizations.of(context);
-        if (isSubscribed) {
-          return Row(
-            children: [
-              OutlinedButton.icon(
-                onPressed: () => _toggleSubscription(context, ref),
-                icon: const Icon(Icons.check),
-                label: Text(l10n.podcastDetailSubscribed),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: colorScheme.primary,
-                  side: BorderSide(color: colorScheme.primary),
-                ),
-              ),
-              const SizedBox(width: Spacing.sm),
-              Builder(
-                builder: (iconContext) => IconButton(
-                  onPressed: () => sharePodcast(
-                    context: iconContext,
-                    ref: ref,
-                    itunesId: podcast.id,
-                  ),
-                  icon: const Icon(Icons.share_outlined),
-                  tooltip: l10n.sharePodcast,
-                ),
-              ),
-            ],
-          );
-        }
-
-        return FilledButton.icon(
-          onPressed: podcast.feedUrl != null
-              ? () => _toggleSubscription(context, ref)
-              : null,
-          icon: const Icon(Icons.add),
-          label: Text(l10n.podcastDetailSubscribe),
-        );
-      },
-      loading: () => FilledButton.icon(
-        onPressed: null,
-        icon: const SizedBox(
-          width: 16,
-          height: 16,
-          child: CircularProgressIndicator(strokeWidth: 2),
-        ),
-        label: Text(AppLocalizations.of(context).commonLoading),
-      ),
-      error: (error, stack) => FilledButton.icon(
+    // Checked before the value: Riverpod keeps retrying a failed build,
+    // so the error arrives wrapped in a loading state.
+    if (subscriptionState.hasError && !subscriptionState.hasValue) {
+      return _pill(
+        context,
+        icon: Icons.refresh,
+        label: l10n.commonRetry,
         onPressed: () =>
             ref.invalidate(subscriptionControllerProvider(podcast.id)),
-        icon: const Icon(Icons.refresh),
-        label: Text(AppLocalizations.of(context).commonRetry),
+      );
+    }
+    // Nothing until the state is known, so a subscribed podcast does not
+    // flash a pill that then disappears.
+    if (subscriptionState.value ?? true) return const SizedBox.shrink();
+    return _pill(
+      context,
+      icon: Icons.add,
+      label: l10n.podcastDetailSubscribe,
+      onPressed: podcast.feedUrl == null
+          ? null
+          : () => _toggleSubscription(context, ref),
+    );
+  }
+
+  Widget _pill(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required VoidCallback? onPressed,
+  }) {
+    final colors = AppColors.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(top: Spacing.md),
+      child: FilledButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icon, size: 18),
+        label: Text(label),
+        style: FilledButton.styleFrom(
+          backgroundColor: colors.accent,
+          foregroundColor: colors.onAccent,
+          textStyle: AppTextStyles.label,
+          shape: const StadiumBorder(),
+          minimumSize: const Size(0, Spacing.minTouchTarget),
+          padding: const EdgeInsets.symmetric(horizontal: Spacing.lg),
+        ),
       ),
     );
   }
 
-  Future<void> _toggleSubscription(BuildContext context, WidgetRef ref) async {
-    final allowed = await ref
-        .read(subscriptionControllerProvider(podcast.id).notifier)
-        .toggleSubscription(context, podcast, source: subscribeSource);
-    if (!allowed && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            AppLocalizations.of(context).parentalControlAccessDenied,
-          ),
-        ),
-      );
-    }
+  Future<void> _toggleSubscription(BuildContext context, WidgetRef ref) {
+    return togglePodcastSubscription(
+      context: context,
+      ref: ref,
+      podcast: podcast,
+      source: subscribeSource,
+      // The pill is only offered while not subscribed.
+      expectSubscribed: false,
+    );
   }
+}
+
+/// Subscribes or unsubscribes [podcast], telling the user when parental
+/// controls block the change. Shared by the hero pill and the `…` menu.
+///
+/// [expectSubscribed] is the state the caller offered the action for
+/// ("Unsubscribe" when true). If the state has since changed or is not
+/// known yet, nothing happens: toggling would do the opposite of the
+/// label the listener tapped.
+Future<void> togglePodcastSubscription({
+  required BuildContext context,
+  required WidgetRef ref,
+  required Podcast podcast,
+  required SubscribeSource source,
+  required bool expectSubscribed,
+}) async {
+  final provider = subscriptionControllerProvider(podcast.id);
+  if (ref.read(provider).value != expectSubscribed) return;
+  final allowed = await ref
+      .read(provider.notifier)
+      .toggleSubscription(context, podcast, source: source);
+  if (allowed || !context.mounted) return;
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(AppLocalizations.of(context).parentalControlAccessDenied),
+    ),
+  );
 }

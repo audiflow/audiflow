@@ -1,6 +1,10 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 
+import '../../themes/app_colors.dart';
+import 'content_backdrop.dart';
 import 'year_divider.dart';
 import 'year_picker_bottom_sheet.dart';
 
@@ -37,25 +41,44 @@ List<Widget> buildYearGroupedSlivers<T>({
   required ScrollController scrollController,
   required bool yearGroupingEnabled,
   double? itemExtent,
+  double? separatorIndent,
 }) {
+  // With a separator inset, rows are separated by hairlines starting at
+  // that inset (full-width content lists); row heights then come from
+  // the rows themselves.
+  Widget list(List<T> items) {
+    final indent = separatorIndent;
+    if (indent != null) {
+      return SliverList.separated(
+        itemCount: items.length,
+        separatorBuilder: (context, _) => Divider(
+          height: 1,
+          thickness: 1,
+          color: AppColors.of(context).hairline,
+          indent: indent,
+        ),
+        itemBuilder: (context, index) => itemBuilder(context, items[index]),
+      );
+    }
+    final delegate = SliverChildBuilderDelegate(
+      (context, index) => itemBuilder(context, items[index]),
+      childCount: items.length,
+    );
+    return itemExtent != null
+        ? SliverFixedExtentList(itemExtent: itemExtent, delegate: delegate)
+        : SliverList(delegate: delegate);
+  }
+
   if (!yearGroupingEnabled || sortedYears.length < 2) {
     final allItems = <T>[];
     for (final year in sortedYears) {
       allItems.addAll(itemsByYear[year] ?? []);
     }
-    final delegate = SliverChildBuilderDelegate(
-      (context, index) => itemBuilder(context, allItems[index]),
-      childCount: allItems.length,
-    );
-    return [
-      if (itemExtent != null)
-        SliverFixedExtentList(itemExtent: itemExtent, delegate: delegate)
-      else
-        SliverList(delegate: delegate),
-    ];
+    return [list(allItems)];
   }
 
-  // Estimate year scroll offsets for jump-to-year navigation.
+  // Estimated year offsets, used only until layout has measured the real
+  // ones (see yearStarts).
   final yearOffsets = <int, double>{};
   double runningOffset = 0.0;
   for (final year in sortedYears) {
@@ -70,12 +93,24 @@ List<Widget> buildYearGroupedSlivers<T>({
   // Captured during layout — height of all slivers preceding our content.
   double precedingExtent = 0.0;
 
+  // Measured during layout: the scroll offset where each later year's
+  // inline divider starts. Row heights vary (grouped surfaces, multi-line
+  // rows), so estimates drift; these are exact.
+  final yearStarts = <int, double>{};
+
+  // Height of headers pinned above the sticky year header (e.g. a
+  // floating navigation and a sticky bar). Content under them is hidden,
+  // so a year counts as reached when its divider slides under them. Only
+  // observable once content has scrolled beneath them, hence the max.
+  double topInset = 0.0;
+
+  double startOf(int year) =>
+      yearStarts[year] ?? precedingExtent + (yearOffsets[year] ?? 0.0);
+
   int resolveYear(double offset) {
-    // Subtract preceding extent to get offset relative to our content.
-    final relative = offset - precedingExtent;
     int resolved = firstYear;
-    for (final year in sortedYears) {
-      if (yearOffsets[year]! <= relative) {
+    for (final year in sortedYears.skip(1)) {
+      if (startOf(year) <= offset + topInset) {
         resolved = year;
       } else {
         break;
@@ -93,21 +128,51 @@ List<Widget> buildYearGroupedSlivers<T>({
 
   scrollController.addListener(onScroll);
 
+  // Rebuilds (e.g. returning to the screen) start the header at the first
+  // year with no scroll event to correct it; resync once layout has
+  // measured the year offsets.
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (scrollController.hasClients) onScroll();
+  });
+
+  // Lands the year's rows right under the sticky header. The first year
+  // has no inline divider; its rows start below the sticky header itself.
+  double targetFor(int year) {
+    final target = year == firstYear
+        ? precedingExtent - yearHeaderHeight - topInset
+        : startOf(year) - topInset;
+    return target.clamp(0.0, scrollController.position.maxScrollExtent);
+  }
+
   void jumpToYear(int selected) {
-    final base = precedingExtent;
-    final target = base + (yearOffsets[selected] ?? 0.0);
-    final max = scrollController.position.maxScrollExtent;
-    final clamped = target.clamp(0.0, max);
-    final distance = (clamped - scrollController.offset).abs();
+    final target = targetFor(selected);
+    final distance = (target - scrollController.offset).abs();
+
+    // A long jump lands on rows that were never laid out, so the year's
+    // start (and the pinned inset) are estimates until that frame lays
+    // them out. Re-aim after each frame until the target holds still.
+    void correct([int attemptsLeft = 4]) {
+      if (!scrollController.hasClients) return;
+      final settled = targetFor(selected);
+      if ((settled - scrollController.offset).abs() < 1) return;
+      scrollController.jumpTo(settled);
+      if (attemptsLeft <= 1) return;
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => correct(attemptsLeft - 1),
+      );
+    }
 
     if (500.0 < distance) {
-      scrollController.jumpTo(clamped);
+      scrollController.jumpTo(target);
+      WidgetsBinding.instance.addPostFrameCallback((_) => correct());
     } else {
-      scrollController.animateTo(
-        clamped,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
+      scrollController
+          .animateTo(
+            target,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          )
+          .then((_) => correct());
     }
   }
 
@@ -122,6 +187,12 @@ List<Widget> buildYearGroupedSlivers<T>({
   }
 
   final slivers = <Widget>[
+    SliverLayoutBuilder(
+      builder: (context, constraints) {
+        if (topInset < constraints.overlap) topInset = constraints.overlap;
+        return const SliverToBoxAdapter(child: SizedBox.shrink());
+      },
+    ),
     SliverPinnedHeader(
       child: _StickyYearHeader(
         currentYearNotifier: currentYearNotifier,
@@ -141,22 +212,23 @@ List<Widget> buildYearGroupedSlivers<T>({
     final items = itemsByYear[year]!;
 
     if (year != firstYear) {
-      slivers.add(
-        SliverToBoxAdapter(
-          child: _InlineYearDivider(year: year, onTap: onYearHeaderTap),
-        ),
-      );
+      slivers
+        ..add(
+          SliverLayoutBuilder(
+            builder: (context, constraints) {
+              yearStarts[year] = constraints.precedingScrollExtent;
+              return const SliverToBoxAdapter(child: SizedBox.shrink());
+            },
+          ),
+        )
+        ..add(
+          SliverToBoxAdapter(
+            child: _InlineYearDivider(year: year, onTap: onYearHeaderTap),
+          ),
+        );
     }
 
-    final delegate = SliverChildBuilderDelegate(
-      (context, index) => itemBuilder(context, items[index]),
-      childCount: items.length,
-    );
-    slivers.add(
-      itemExtent != null
-          ? SliverFixedExtentList(itemExtent: itemExtent, delegate: delegate)
-          : SliverList(delegate: delegate),
-    );
+    slivers.add(list(items));
   }
 
   return slivers;
@@ -193,22 +265,31 @@ class _StickyYearHeader extends StatelessWidget {
       valueListenable: currentYearNotifier,
       builder: (context, year, _) {
         final theme = Theme.of(context);
-        final colorScheme = theme.colorScheme;
+        final colors = AppColors.of(context);
 
-        return Material(
-          color: colorScheme.surface,
-          child: InkWell(
-            onTap: () => onTap(context, year),
-            child: SizedBox(
-              height: yearHeaderHeight,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    year == 0 ? 'Unknown' : '$year',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
+        // Frosted: rows sliding under the header stay faintly visible
+        // through it, matching the list's frosted backdrop.
+        return ClipRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+            child: Material(
+              color: ContentBackdrop.baseColorFor(
+                colors,
+              ).withValues(alpha: 0.8),
+              child: InkWell(
+                onTap: () => onTap(context, year),
+                child: SizedBox(
+                  height: yearHeaderHeight,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        year == 0 ? 'Unknown' : '$year',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
                 ),

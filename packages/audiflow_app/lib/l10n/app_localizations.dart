@@ -377,7 +377,7 @@ abstract class AppLocalizations {
   /// Menu entry for showing the podcast description
   ///
   /// In en, this message translates to:
-  /// **'Description'**
+  /// **'Podcast info'**
   String get podcastDetailDescriptionMenuTitle;
 
   /// Menu entry that opens the audio sheet for this podcast
@@ -410,11 +410,17 @@ abstract class AppLocalizations {
   /// **'Settings'**
   String get podcastDetailSettingsSheetTitle;
 
-  /// Default play order option showing resolved parent value
+  /// Podcast play order option inheriting the app-wide setting, showing the value it resolves to
   ///
   /// In en, this message translates to:
-  /// **'Default ({resolvedOrder})'**
-  String playOrderDefault(String resolvedOrder);
+  /// **'Follow global setting ({resolvedOrder})'**
+  String playOrderFollowGlobal(String resolvedOrder);
+
+  /// Playlist or series play order option inheriting from the level above, showing the value it resolves to
+  ///
+  /// In en, this message translates to:
+  /// **'Follow parent setting ({resolvedOrder})'**
+  String playOrderFollowParent(String resolvedOrder);
 
   /// Play order: chronological
   ///
@@ -427,6 +433,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'As displayed'**
   String get playOrderAsDisplayed;
+
+  /// Note under the As displayed play order option explaining it follows the list sort
+  ///
+  /// In en, this message translates to:
+  /// **'Follows the list order (newest or oldest first)'**
+  String get playOrderAsDisplayedSubtitle;
 
   /// Title for the notification interruption behavior setting
   ///
@@ -950,11 +962,41 @@ abstract class AppLocalizations {
   /// **'Synced {count} feeds'**
   String librarySyncSuccess(int count);
 
-  /// Your podcasts section header
+  /// Library section title for in-progress episodes
   ///
   /// In en, this message translates to:
-  /// **'Your Podcasts'**
-  String get libraryYourPodcasts;
+  /// **'Continue listening'**
+  String get libraryContinueListening;
+
+  /// Accessibility label of the dot on a Library row with episodes since the last visit
+  ///
+  /// In en, this message translates to:
+  /// **'New episodes'**
+  String get libraryNewEpisodes;
+
+  /// Hint of the field that filters the Library's podcasts by title or author
+  ///
+  /// In en, this message translates to:
+  /// **'Filter podcasts'**
+  String get libraryFilterHint;
+
+  /// Shown when the Library filter matches no podcast
+  ///
+  /// In en, this message translates to:
+  /// **'No podcasts match'**
+  String get libraryFilterNoMatch;
+
+  /// Library section title for subscribed podcasts
+  ///
+  /// In en, this message translates to:
+  /// **'Podcasts'**
+  String get libraryPodcastsSection;
+
+  /// When the podcast last got a new episode
+  ///
+  /// In en, this message translates to:
+  /// **'Updated {date}'**
+  String libraryUpdatedOn(String date);
 
   /// Empty library title
   ///
@@ -1112,6 +1154,90 @@ abstract class AppLocalizations {
   /// **'UP NEXT'**
   String get queueUpNext;
 
+  /// Swipe and accessibility action removing an episode from the queue
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from queue'**
+  String get queueRemove;
+
+  /// Accessibility label of the downloaded indicator on a queue row
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded'**
+  String get queueDownloadedLabel;
+
+  /// Queue row long-press menu item: start a download
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get queueMenuDownload;
+
+  /// Queue row long-press menu item: pause the running download
+  ///
+  /// In en, this message translates to:
+  /// **'Pause download'**
+  String get queueMenuPauseDownload;
+
+  /// Queue row long-press menu item: resume a paused download
+  ///
+  /// In en, this message translates to:
+  /// **'Resume download'**
+  String get queueMenuResumeDownload;
+
+  /// Queue row long-press menu item: cancel a waiting download
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel download'**
+  String get queueMenuCancelDownload;
+
+  /// Queue row long-press menu item: retry a failed download
+  ///
+  /// In en, this message translates to:
+  /// **'Retry download'**
+  String get queueMenuRetryDownload;
+
+  /// Queue row long-press menu item: delete the downloaded file
+  ///
+  /// In en, this message translates to:
+  /// **'Delete download'**
+  String get queueMenuDeleteDownload;
+
+  /// Queue row swipe action: start a download
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get queueSwipeDownload;
+
+  /// Queue row swipe action: pause the running download
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get queueSwipePause;
+
+  /// Queue row swipe action: resume a paused download
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get queueSwipeResume;
+
+  /// Queue row swipe action: cancel a waiting download
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get queueSwipeCancel;
+
+  /// Queue row swipe action: retry a failed download
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get queueSwipeRetry;
+
+  /// Queue row swipe action: delete the downloaded file
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get queueSwipeDelete;
+
   /// Empty queue title
   ///
   /// In en, this message translates to:
@@ -1250,6 +1376,12 @@ abstract class AppLocalizations {
   /// **'Audio'**
   String get audioSheetTitle;
 
+  /// Podcast settings sheet section holding display options (hide explicit)
+  ///
+  /// In en, this message translates to:
+  /// **'Display'**
+  String get podcastSettingsDisplaySection;
+
   /// Section heading for playback speed in the audio sheet
   ///
   /// In en, this message translates to:
@@ -1370,6 +1502,36 @@ abstract class AppLocalizations {
   /// **'Subscribe'**
   String get podcastDetailSubscribe;
 
+  /// Podcast detail menu entry that unsubscribes
+  ///
+  /// In en, this message translates to:
+  /// **'Unsubscribe'**
+  String get podcastDetailUnsubscribe;
+
+  /// Short share label for the podcast detail menu tile
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get podcastDetailShareShort;
+
+  /// Tooltip for the search button in the podcast detail navigation
+  ///
+  /// In en, this message translates to:
+  /// **'Search episodes'**
+  String get podcastDetailSearchTooltip;
+
+  /// Hint text for the episode search field in the podcast detail navigation
+  ///
+  /// In en, this message translates to:
+  /// **'Search episodes'**
+  String get podcastDetailSearchHint;
+
+  /// Tooltip for the overflow menu button in the podcast detail navigation
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get podcastDetailMoreTooltip;
+
   /// Search no results
   ///
   /// In en, this message translates to:
@@ -1415,7 +1577,7 @@ abstract class AppLocalizations {
   /// Group count label
   ///
   /// In en, this message translates to:
-  /// **'{count} groups'**
+  /// **'{count} series'**
   String podcastDetailGroupCount(int count);
 
   /// Sort order oldest first
@@ -1742,6 +1904,12 @@ abstract class AppLocalizations {
   /// **'Episodes'**
   String get episodesLabel;
 
+  /// Podcast detail segment that shows the series (smart playlist) view
+  ///
+  /// In en, this message translates to:
+  /// **'Series'**
+  String get podcastDetailSeriesTab;
+
   /// Label for smart playlists view tab
   ///
   /// In en, this message translates to:
@@ -1765,6 +1933,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Mark as played'**
   String get markAsPlayed;
+
+  /// Podcast menu item opening the show's website in the browser
+  ///
+  /// In en, this message translates to:
+  /// **'Open website'**
+  String get podcastOpenWebsite;
+
+  /// Snackbar when the show's website cannot be opened
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open the website'**
+  String get podcastOpenWebsiteFailed;
+
+  /// Podcast menu item marking every episode played
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all played'**
+  String get podcastMarkAllPlayed;
+
+  /// Podcast menu item marking every episode not played
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all unplayed'**
+  String get podcastMarkAllUnplayed;
+
+  /// Confirmation before marking every episode played
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all {count} episodes of this podcast as played?'**
+  String podcastMarkAllPlayedConfirm(int count);
+
+  /// Confirmation before marking every episode not played
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all {count} episodes of this podcast as unplayed?'**
+  String podcastMarkAllUnplayedConfirm(int count);
+
+  /// Confirmation before marking every episode of a series played
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all {count} episodes of this series as played?'**
+  String seriesMarkAllPlayedConfirm(int count);
+
+  /// Confirmation before marking every episode of a series not played
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all {count} episodes of this series as unplayed?'**
+  String seriesMarkAllUnplayedConfirm(int count);
+
+  /// Snackbar when marking all episodes stops partway
+  ///
+  /// In en, this message translates to:
+  /// **'Some episodes couldn\'t be updated'**
+  String get podcastMarkAllFailed;
+
+  /// Snackbar after marking every episode played
+  ///
+  /// In en, this message translates to:
+  /// **'Marked {count} episodes as played'**
+  String podcastMarkAllPlayedDone(int count);
+
+  /// Snackbar after marking every episode not played
+  ///
+  /// In en, this message translates to:
+  /// **'Marked {count} episodes as unplayed'**
+  String podcastMarkAllUnplayedDone(int count);
 
   /// Action to mark episode as unplayed
   ///
@@ -1814,6 +2048,42 @@ abstract class AppLocalizations {
   /// **'{minutes}m'**
   String groupDurationMinutes(int minutes);
 
+  /// Series row status when no episode has been started
+  ///
+  /// In en, this message translates to:
+  /// **'Unplayed'**
+  String get seriesStatusUnplayed;
+
+  /// Series row status with played and total episode counts
+  ///
+  /// In en, this message translates to:
+  /// **'{played}/{total} played'**
+  String seriesStatusPartlyPlayed(int played, int total);
+
+  /// Series row status when every episode is played
+  ///
+  /// In en, this message translates to:
+  /// **'Played'**
+  String get seriesStatusPlayed;
+
+  /// Accessibility label of the series hero artwork, which opens it full screen
+  ///
+  /// In en, this message translates to:
+  /// **'View series artwork'**
+  String get seriesViewArtwork;
+
+  /// Series hero button resuming the in-progress episode
+  ///
+  /// In en, this message translates to:
+  /// **'Resume #{number}'**
+  String seriesResumeEpisode(int number);
+
+  /// Series hero button starting the next unplayed episode
+  ///
+  /// In en, this message translates to:
+  /// **'Play #{number}'**
+  String seriesPlayEpisode(int number);
+
   /// Now Playing tab label in player
   ///
   /// In en, this message translates to:
@@ -1825,6 +2095,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Transcript'**
   String get playerTabTranscript;
+
+  /// Label above the context the current episode plays from, in the player header
+  ///
+  /// In en, this message translates to:
+  /// **'Playing from'**
+  String get playerPlayingFrom;
+
+  /// Player overflow menu item opening the episode detail screen
+  ///
+  /// In en, this message translates to:
+  /// **'Episode details'**
+  String get playerEpisodeDetails;
+
+  /// Player overflow menu item opening the podcast screen
+  ///
+  /// In en, this message translates to:
+  /// **'Go to podcast'**
+  String get playerGoToPodcast;
+
+  /// Tooltip of the player header overflow button
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get playerMoreTooltip;
 
   /// Transcript loading message
   ///
@@ -1868,6 +2162,12 @@ abstract class AppLocalizations {
   /// **'Transcript available'**
   String get episodeTranscriptAvailable;
 
+  /// Screen-reader label for the dot marking a new episode
+  ///
+  /// In en, this message translates to:
+  /// **'New episode'**
+  String get episodeNewLabel;
+
   /// Pill label shown on a fully-played episode
   ///
   /// In en, this message translates to:
@@ -1910,6 +2210,18 @@ abstract class AppLocalizations {
   /// **'Add station'**
   String get stationAdd;
 
+  /// Shown on the station list screen when stations fail to load
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load your stations.'**
+  String get stationListLoadError;
+
+  /// Stations section header link opening the full station list
+  ///
+  /// In en, this message translates to:
+  /// **'Show all'**
+  String get stationShowAll;
+
   /// Label for station name input field
   ///
   /// In en, this message translates to:
@@ -1943,13 +2255,13 @@ abstract class AppLocalizations {
   /// Option to sort episodes newest first
   ///
   /// In en, this message translates to:
-  /// **'Newest First'**
+  /// **'Newest first'**
   String get stationNewest;
 
   /// Option to sort episodes oldest first
   ///
   /// In en, this message translates to:
-  /// **'Oldest First'**
+  /// **'Oldest first'**
   String get stationOldest;
 
   /// Filter option for all episodes
@@ -2066,11 +2378,17 @@ abstract class AppLocalizations {
   /// **'Edit Station'**
   String get stationEditTitle;
 
-  /// Save button label
+  /// Shown in the station editor when the station fails to load
   ///
   /// In en, this message translates to:
-  /// **'Save'**
-  String get stationSave;
+  /// **'Couldn\'t load this station.'**
+  String get stationLoadError;
+
+  /// Name a new station starts with; number is the smallest one no station uses
+  ///
+  /// In en, this message translates to:
+  /// **'Station {number}'**
+  String stationDefaultName(int number);
 
   /// Delete station button label
   ///
@@ -2167,18 +2485,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Station data not available'**
   String get stationNotFoundMessage;
-
-  /// Validation error when station name is empty
-  ///
-  /// In en, this message translates to:
-  /// **'Station name is required'**
-  String get stationNameRequired;
-
-  /// Validation error when no podcast is selected
-  ///
-  /// In en, this message translates to:
-  /// **'Select at least one podcast'**
-  String get stationPodcastRequired;
 
   /// Label for episodes in station
   ///
@@ -2581,6 +2887,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Newest episode of each podcast, up to 3'**
   String get developerTestNotificationsSubtitle;
+
+  /// Developer settings entry and screen title for the non-production preview of redesign components
+  ///
+  /// In en, this message translates to:
+  /// **'Design components'**
+  String get developerDesignGalleryTitle;
+
+  /// Subtitle of the design components entry in developer settings
+  ///
+  /// In en, this message translates to:
+  /// **'Preview redesign components'**
+  String get developerDesignGallerySubtitle;
+
+  /// Tooltip for the button that switches the design components preview between light and dark themes
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle light and dark'**
+  String get developerDesignGalleryToggleBrightness;
 
   /// Snackbar after test notifications were posted
   ///
@@ -3601,6 +3925,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not save the change. Please try again.'**
   String get parentalControlSettingsSaveError;
+
+  /// Snackbar when a podcast setting fails to save
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the setting.'**
+  String get podcastSettingsSaveFailed;
 
   /// Snackbar shown when toggling hide-explicit fails.
   ///

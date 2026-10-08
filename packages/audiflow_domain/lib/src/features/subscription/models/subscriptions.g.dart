@@ -92,6 +92,16 @@ const SubscriptionSchema = CollectionSchema(
       type: IsarType.dateTime,
     ),
     r'title': PropertySchema(id: 18, name: r'title', type: IsarType.string),
+    r'websiteSyncedAt': PropertySchema(
+      id: 19,
+      name: r'websiteSyncedAt',
+      type: IsarType.dateTime,
+    ),
+    r'websiteUrl': PropertySchema(
+      id: 20,
+      name: r'websiteUrl',
+      type: IsarType.string,
+    ),
   },
 
   estimateSize: _subscriptionEstimateSize,
@@ -158,6 +168,12 @@ int _subscriptionEstimateSize(
   }
   bytesCount += 3 + object.itunesId.length * 3;
   bytesCount += 3 + object.title.length * 3;
+  {
+    final value = object.websiteUrl;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   return bytesCount;
 }
 
@@ -186,6 +202,8 @@ void _subscriptionSerialize(
   writer.writeDateTime(offsets[16], object.lastRefreshedAt);
   writer.writeDateTime(offsets[17], object.subscribedAt);
   writer.writeString(offsets[18], object.title);
+  writer.writeDateTime(offsets[19], object.websiteSyncedAt);
+  writer.writeString(offsets[20], object.websiteUrl);
 }
 
 Subscription _subscriptionDeserialize(
@@ -215,6 +233,8 @@ Subscription _subscriptionDeserialize(
   object.lastRefreshedAt = reader.readDateTimeOrNull(offsets[16]);
   object.subscribedAt = reader.readDateTime(offsets[17]);
   object.title = reader.readString(offsets[18]);
+  object.websiteSyncedAt = reader.readDateTimeOrNull(offsets[19]);
+  object.websiteUrl = reader.readStringOrNull(offsets[20]);
   return object;
 }
 
@@ -263,6 +283,10 @@ P _subscriptionDeserializeProp<P>(
       return (reader.readDateTime(offset)) as P;
     case 18:
       return (reader.readString(offset)) as P;
+    case 19:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 20:
+      return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -2400,6 +2424,238 @@ extension SubscriptionQueryFilter
       );
     });
   }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  websiteSyncedAtIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'websiteSyncedAt'),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  websiteSyncedAtIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'websiteSyncedAt'),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  websiteSyncedAtEqualTo(DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'websiteSyncedAt', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  websiteSyncedAtGreaterThan(DateTime? value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'websiteSyncedAt',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  websiteSyncedAtLessThan(DateTime? value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'websiteSyncedAt',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  websiteSyncedAtBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'websiteSyncedAt',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  websiteUrlIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'websiteUrl'),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  websiteUrlIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'websiteUrl'),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  websiteUrlEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'websiteUrl',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  websiteUrlGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'websiteUrl',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  websiteUrlLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'websiteUrl',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  websiteUrlBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'websiteUrl',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  websiteUrlStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'websiteUrl',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  websiteUrlEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'websiteUrl',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  websiteUrlContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'websiteUrl',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  websiteUrlMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'websiteUrl',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  websiteUrlIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'websiteUrl', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  websiteUrlIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'websiteUrl', value: ''),
+      );
+    });
+  }
 }
 
 extension SubscriptionQueryObject
@@ -2654,6 +2910,33 @@ extension SubscriptionQuerySortBy
   QueryBuilder<Subscription, Subscription, QAfterSortBy> sortByTitleDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'title', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterSortBy>
+  sortByWebsiteSyncedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'websiteSyncedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterSortBy>
+  sortByWebsiteSyncedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'websiteSyncedAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterSortBy> sortByWebsiteUrl() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'websiteUrl', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterSortBy>
+  sortByWebsiteUrlDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'websiteUrl', Sort.desc);
     });
   }
 }
@@ -2918,6 +3201,33 @@ extension SubscriptionQuerySortThenBy
       return query.addSortBy(r'title', Sort.desc);
     });
   }
+
+  QueryBuilder<Subscription, Subscription, QAfterSortBy>
+  thenByWebsiteSyncedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'websiteSyncedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterSortBy>
+  thenByWebsiteSyncedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'websiteSyncedAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterSortBy> thenByWebsiteUrl() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'websiteUrl', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterSortBy>
+  thenByWebsiteUrlDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'websiteUrl', Sort.desc);
+    });
+  }
 }
 
 extension SubscriptionQueryWhereDistinct
@@ -3061,6 +3371,21 @@ extension SubscriptionQueryWhereDistinct
       return query.addDistinctBy(r'title', caseSensitive: caseSensitive);
     });
   }
+
+  QueryBuilder<Subscription, Subscription, QDistinct>
+  distinctByWebsiteSyncedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'websiteSyncedAt');
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QDistinct> distinctByWebsiteUrl({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'websiteUrl', caseSensitive: caseSensitive);
+    });
+  }
 }
 
 extension SubscriptionQueryProperty
@@ -3190,6 +3515,19 @@ extension SubscriptionQueryProperty
   QueryBuilder<Subscription, String, QQueryOperations> titleProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'title');
+    });
+  }
+
+  QueryBuilder<Subscription, DateTime?, QQueryOperations>
+  websiteSyncedAtProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'websiteSyncedAt');
+    });
+  }
+
+  QueryBuilder<Subscription, String?, QQueryOperations> websiteUrlProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'websiteUrl');
     });
   }
 }

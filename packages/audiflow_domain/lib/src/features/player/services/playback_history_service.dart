@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../download/services/auto_download_pause_service.dart';
@@ -20,7 +22,7 @@ PlaybackHistoryService playbackHistoryService(Ref ref) {
   final reconcilerService = ref.watch(stationReconcilerServiceProvider);
   final reviewPromptRepository = ref.watch(reviewPromptRepositoryProvider);
   final reviewPromptTrigger = ref.watch(reviewPromptTriggerProvider);
-  return PlaybackHistoryService(
+  final service = PlaybackHistoryService(
     repository,
     getCompletionThreshold: settingsRepo.getAutoCompleteThreshold,
     reconcilerService: reconcilerService,
@@ -28,6 +30,8 @@ PlaybackHistoryService playbackHistoryService(Ref ref) {
     reviewPromptTrigger: reviewPromptTrigger,
     autoDownloadPause: ref.watch(autoDownloadPauseServiceProvider),
   );
+  ref.onDispose(service.dispose);
+  return service;
 }
 
 /// Service for managing playback history with auto-completion logic.
@@ -65,6 +69,15 @@ class PlaybackHistoryService {
   /// Maximum ratio of content delta to expected content delta before
   /// treating the update as a seek (and discarding time accumulation).
   static const double seekDetectionMultiplier = 3.0;
+
+  final _progressSaved = StreamController<int>.broadcast();
+
+  /// Episode IDs whose position was just saved on pause or stop. Lists
+  /// that show played state refresh on it: partial progress otherwise
+  /// changes nothing they listen to (completion has its own event).
+  Stream<int> get progressSaved => _progressSaved.stream;
+
+  void dispose() => _progressSaved.close();
 
   int _lastSavedPositionMs = 0;
   DateTime? _lastSaveTime;
@@ -196,6 +209,7 @@ class PlaybackHistoryService {
       listenedDeltaMs: durations.listenedMs,
       realtimeDeltaMs: durations.realtimeMs,
     );
+    if (!_progressSaved.isClosed) _progressSaved.add(episodeId);
 
     if (0 < durations.listenedMs) {
       await _reviewPromptRepository?.addListened(
@@ -229,6 +243,7 @@ class PlaybackHistoryService {
       listenedDeltaMs: durations.listenedMs,
       realtimeDeltaMs: durations.realtimeMs,
     );
+    if (!_progressSaved.isClosed) _progressSaved.add(episodeId);
 
     if (0 < durations.listenedMs) {
       await _reviewPromptRepository?.addListened(
@@ -252,6 +267,44 @@ class PlaybackHistoryService {
   Future<void> markIncomplete(int episodeId) async {
     await _repository.markIncomplete(episodeId);
     await _tryReconcile(episodeId);
+  }
+
+  /// Marks every episode in [episodeIds] as completed (e.g. a whole
+  /// podcast at once). Returns how many were marked.
+  ///
+  /// Stations are reconciled once for the batch, also when a write fails
+  /// partway, so they match the episodes that did change.
+  Future<int> markAllCompleted(Iterable<int> episodeIds) =>
+      _markAll(episodeIds, _repository.markCompleted);
+
+  /// Marks every episode in [episodeIds] as not played. Returns how many
+  /// were marked.
+  Future<int> markAllIncomplete(Iterable<int> episodeIds) =>
+      _markAll(episodeIds, _repository.markIncomplete);
+
+  Future<int> _markAll(
+    Iterable<int> episodeIds,
+    Future<void> Function(int episodeId) mark,
+  ) async {
+    final ids = episodeIds.toList();
+    var count = 0;
+    try {
+      for (final id in ids) {
+        await mark(id);
+        count++;
+      }
+    } finally {
+      if (0 < count) await _tryReconcileAll(ids.take(count));
+    }
+    return count;
+  }
+
+  Future<void> _tryReconcileAll(Iterable<int> episodeIds) async {
+    try {
+      await _reconcilerService?.onEpisodesChanged(episodeIds);
+    } on Exception {
+      // Station reconciliation is best-effort; do not break the batch.
+    }
   }
 
   /// Best-effort station reconciliation — never breaks the calling flow.

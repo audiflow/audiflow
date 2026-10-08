@@ -32,10 +32,16 @@ state and resume position stay coherent no matter where the listener touches it.
 
 ## User-visible Behavior
 
-- **Normal case**: The listener taps play on an episode. The mini player slides up from above
-  the bottom navigation bar showing artwork, episode title, podcast name, a thin progress bar,
-  and a play/pause button. Playback starts within a moment, and tapping the mini player opens
-  the full player screen with artwork, a scrubbable seek bar, and skip controls. If the episode
+- **Normal case**: The listener taps play on an episode. The mini player, a floating card,
+  slides up from above the bottom navigation bar showing artwork, episode title, podcast name,
+  skip-forward and play/pause buttons, and a thin progress line along its bottom edge once
+  playback has started. Playback starts within a moment, and tapping the mini player opens
+  the full player screen with artwork, a scrubbable seek bar, and skip controls. The full
+  player sits on a dark ground taken from the episode artwork (muted and darkened so white
+  controls stay readable; a default navy until the artwork is sampled), with white controls.
+  Its header shows a close chevron, "Playing from" with the queue's source (or the podcast),
+  and an overflow menu with the transcript page (when available), episode details, and the
+  podcast. If the episode
   was partly played before, it resumes from the saved position; if it was within two seconds of
   the end, it replays from the start. Playback continues when the app is backgrounded or the
   screen is locked.
@@ -62,7 +68,7 @@ state and resume position stay coherent no matter where the listener touches it.
   (together with any picker or dialog stacked on it) so the listener lands back on the screen
   underneath instead of a blank player. Stopping playback outright from the system controls
   clears the same state and dismisses the full player the same way.
-- **Playback speed**: The full player's bottom action row has three slots: Audio, an output
+- **Playback speed**: The full player's bottom action row, on a translucent strip, has three slots: Audio, an output
   picker (see Audio output below), and the sleep timer. The Audio button shows the
   current speed (e.g. `1.3x`) and opens the Audio sheet, which holds quick chips and a
   stepped slider. The slider has 21 positions — 0.5x to 2.0x in 0.1 steps, then 2.2x, 2.4x,
@@ -86,8 +92,8 @@ state and resume position stay coherent no matter where the listener touches it.
   podcast changes, the player re-resolves override -> global and applies the result, so
   playing podcast A (override 1.5x) and then podcast B (no override, global 1.0x) switches
   between the two speeds automatically. The Audio button's label shows the speed in effect.
-  The same sheet opens from the podcast detail menu ("Audio settings"), so an override can
-  be set while nothing is playing. The recent-speed chips are one shared history: a speed
+  The override is edited only here, while one of the podcast's episodes is playing. The
+  recent-speed chips are one shared history: a speed
   committed under an override is recorded there too, so it is one tap away for any podcast.
   The speed and both effects below follow the switch.
 - **Silence skipping and voice boost (Android only)**: On Android the Audio sheet has an
@@ -164,16 +170,19 @@ state and resume position stay coherent no matter where the listener touches it.
 
 ### Play affordance refinements
 
-- Episode rows present playback state through an outlined **play pill** rather than a bare
-  icon. The pill conveys playback state and duration only; the publish date renders as a
-  separate text element in the same row, never inside the pill.
-- The pill has five mutually exclusive states resolved by precedence: loading (indeterminate
-  spinner), completed (check icon, muted color, "Completed" label), playing (determinate
-  progress ring around a pause icon, "{time} left" label), in-progress paused (progress ring
-  around a play icon, same label), and not-played (filled play icon, total-duration label).
-- The progress ring reflects the latest known progress fraction for in-progress episodes,
-  clamped to a valid range; it is not animated and simply redraws as the row rebuilds on
-  playback ticks.
+- Episode rows present playback state through a filled, fully rounded **play pill** rather
+  than a bare icon. The pill conveys playback state and duration only; the publish date
+  renders as a separate text element in the same row, never inside the pill. The pill is
+  32 pt tall with a 44 pt touch target.
+- The pill has four mutually exclusive states resolved by precedence: loading (indeterminate
+  spinner), completed (check glyph in a muted color, "Completed" label), playing (pause glyph,
+  accent-colored label on a tinted accent fill, "{time} left" label), and idle (play glyph on a
+  neutral fill; "{time} left" when partially played, total duration otherwise).
+- The pill never changes shape to show progress. A row whose playback has started instead
+  shows a 3 pt progress line along its bottom edge (accent fill on a hairline track),
+  reflecting the latest known progress fraction clamped to a valid range. Completed episodes
+  show the line full; unplayed episodes show none. The line is not animated and simply
+  redraws as the row rebuilds on playback ticks.
 - Durations on episode rows use a single compact format shared app-wide: `{minutes}m` at one
   minute or longer, `0:ss` below one minute. Pill state labels are localized for English and
   Japanese.

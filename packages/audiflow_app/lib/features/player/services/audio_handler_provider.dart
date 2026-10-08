@@ -84,6 +84,19 @@ Future<AudiflowAudioHandler> audioHandler(Ref ref) async {
   });
   ref.onDispose(lifecycleSub.cancel);
 
+  // Partial playback saves history without a lifecycle event; refresh the
+  // views that show played state (series progress, in-progress filters)
+  // once a pause or stop has been written.
+  final savedSub = ref
+      .read(playbackHistoryServiceProvider)
+      .progressSaved
+      .listen((_) {
+        ref.invalidate(podcastEpisodeProgressProvider);
+        ref.invalidate(filteredSortedEpisodesProvider);
+        ref.invalidate(smartPlaylistEpisodesProvider);
+      });
+  ref.onDispose(savedSub.cancel);
+
   // Fetch on-demand chapters (e.g. <podcast:chapters> JSON) whenever an
   // episode becomes the now-playing one.
   ref.read(nowPlayingChapterLoaderProvider);

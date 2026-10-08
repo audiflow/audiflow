@@ -138,7 +138,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get playbackAutoPlayOrderSubtitle => 'エピソードリストからの自動キュー追加時の順序';
 
   @override
-  String get playbackAutoPlayOrderOldestFirst => '配信順';
+  String get playbackAutoPlayOrderOldestFirst => '古い順';
 
   @override
   String get playbackAutoPlayOrderAsDisplayed => '表示順';
@@ -147,7 +147,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get playOrderMenuTitle => '再生順序';
 
   @override
-  String get podcastDetailDescriptionMenuTitle => '概要';
+  String get podcastDetailDescriptionMenuTitle => '番組情報';
 
   @override
   String get podcastDetailAudioSettingsMenuTitle => 'オーディオ設定';
@@ -165,15 +165,23 @@ class AppLocalizationsJa extends AppLocalizations {
   String get podcastDetailSettingsSheetTitle => '設定';
 
   @override
-  String playOrderDefault(String resolvedOrder) {
-    return 'デフォルト ($resolvedOrder)';
+  String playOrderFollowGlobal(String resolvedOrder) {
+    return '全体設定に従う（$resolvedOrder）';
   }
 
   @override
-  String get playOrderOldestFirst => '公開日順（古→新）';
+  String playOrderFollowParent(String resolvedOrder) {
+    return '上位の設定に従う（$resolvedOrder）';
+  }
+
+  @override
+  String get playOrderOldestFirst => '古い順';
 
   @override
   String get playOrderAsDisplayed => '表示順';
+
+  @override
+  String get playOrderAsDisplayedSubtitle => 'リストの並び順（新しい順・古い順）に従います';
 
   @override
   String get playbackDuckInterruptionBehaviorTitle => '通知音での挙動';
@@ -462,7 +470,24 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get libraryYourPodcasts => 'あなたのポッドキャスト';
+  String get libraryContinueListening => '続きから再生';
+
+  @override
+  String get libraryNewEpisodes => '新着エピソードあり';
+
+  @override
+  String get libraryFilterHint => '番組を絞り込む';
+
+  @override
+  String get libraryFilterNoMatch => '一致する番組はありません';
+
+  @override
+  String get libraryPodcastsSection => 'ポッドキャスト';
+
+  @override
+  String libraryUpdatedOn(String date) {
+    return '$date更新';
+  }
 
   @override
   String get libraryEmpty => '購読がありません';
@@ -545,6 +570,48 @@ class AppLocalizationsJa extends AppLocalizations {
   String get queueUpNext => '次に再生';
 
   @override
+  String get queueRemove => 'キューから削除';
+
+  @override
+  String get queueDownloadedLabel => 'ダウンロード済み';
+
+  @override
+  String get queueMenuDownload => 'ダウンロード';
+
+  @override
+  String get queueMenuPauseDownload => 'ダウンロードを一時停止';
+
+  @override
+  String get queueMenuResumeDownload => 'ダウンロードを再開';
+
+  @override
+  String get queueMenuCancelDownload => 'ダウンロードをキャンセル';
+
+  @override
+  String get queueMenuRetryDownload => 'ダウンロードを再試行';
+
+  @override
+  String get queueMenuDeleteDownload => 'ダウンロードを削除';
+
+  @override
+  String get queueSwipeDownload => 'ダウンロード';
+
+  @override
+  String get queueSwipePause => '一時停止';
+
+  @override
+  String get queueSwipeResume => '再開';
+
+  @override
+  String get queueSwipeCancel => 'キャンセル';
+
+  @override
+  String get queueSwipeRetry => '再試行';
+
+  @override
+  String get queueSwipeDelete => '削除';
+
+  @override
   String get queueEmpty => 'キューは空です';
 
   @override
@@ -620,6 +687,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get audioSheetTitle => 'オーディオ';
 
   @override
+  String get podcastSettingsDisplaySection => '表示';
+
+  @override
   String get audioSheetSpeedSection => '再生速度';
 
   @override
@@ -682,6 +752,21 @@ class AppLocalizationsJa extends AppLocalizations {
   String get podcastDetailSubscribe => '購読する';
 
   @override
+  String get podcastDetailUnsubscribe => '購読解除';
+
+  @override
+  String get podcastDetailShareShort => '共有';
+
+  @override
+  String get podcastDetailSearchTooltip => 'エピソードを検索';
+
+  @override
+  String get podcastDetailSearchHint => 'エピソードを検索';
+
+  @override
+  String get podcastDetailMoreTooltip => 'その他';
+
+  @override
   String get podcastDetailNoResults => '結果が見つかりません';
 
   @override
@@ -708,14 +793,14 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String podcastDetailGroupCount(int count) {
-    return '$countグループ';
+    return '$countシリーズ';
   }
 
   @override
-  String get podcastDetailOldestFirst => '公開日順（古→新）';
+  String get podcastDetailOldestFirst => '古い順';
 
   @override
-  String get podcastDetailNewestFirst => '公開日順（新→古）';
+  String get podcastDetailNewestFirst => '新しい順';
 
   @override
   String episodePillDurationMinutes(int minutes) {
@@ -897,6 +982,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get episodesLabel => 'エピソード';
 
   @override
+  String get podcastDetailSeriesTab => 'シリーズ';
+
+  @override
   String get smartPlaylistsLabel => 'スマートプレイリスト';
 
   @override
@@ -907,6 +995,51 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get markAsPlayed => '再生済みにする';
+
+  @override
+  String get podcastOpenWebsite => 'ウェブサイトを開く';
+
+  @override
+  String get podcastOpenWebsiteFailed => 'ウェブサイトを開けませんでした';
+
+  @override
+  String get podcastMarkAllPlayed => 'すべて再生済みにする';
+
+  @override
+  String get podcastMarkAllUnplayed => 'すべて未再生にする';
+
+  @override
+  String podcastMarkAllPlayedConfirm(int count) {
+    return 'この番組の$count件のエピソードをすべて再生済みにしますか？';
+  }
+
+  @override
+  String podcastMarkAllUnplayedConfirm(int count) {
+    return 'この番組の$count件のエピソードをすべて未再生にしますか？';
+  }
+
+  @override
+  String seriesMarkAllPlayedConfirm(int count) {
+    return 'このシリーズの$count件のエピソードをすべて再生済みにしますか？';
+  }
+
+  @override
+  String seriesMarkAllUnplayedConfirm(int count) {
+    return 'このシリーズの$count件のエピソードをすべて未再生にしますか？';
+  }
+
+  @override
+  String get podcastMarkAllFailed => '一部のエピソードを更新できませんでした';
+
+  @override
+  String podcastMarkAllPlayedDone(int count) {
+    return '$count件を再生済みにしました';
+  }
+
+  @override
+  String podcastMarkAllUnplayedDone(int count) {
+    return '$count件を未再生にしました';
+  }
 
   @override
   String get markAsUnplayed => '未再生にする';
@@ -939,10 +1072,46 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get seriesStatusUnplayed => '未再生';
+
+  @override
+  String seriesStatusPartlyPlayed(int played, int total) {
+    return '$played/$total 再生済み';
+  }
+
+  @override
+  String get seriesStatusPlayed => '再生済み';
+
+  @override
+  String get seriesViewArtwork => 'シリーズのアートワークを表示';
+
+  @override
+  String seriesResumeEpisode(int number) {
+    return '#$number を続きから再生';
+  }
+
+  @override
+  String seriesPlayEpisode(int number) {
+    return '#$number から再生';
+  }
+
+  @override
   String get playerTabNowPlaying => '再生中';
 
   @override
   String get playerTabTranscript => '書き起こし';
+
+  @override
+  String get playerPlayingFrom => '再生元';
+
+  @override
+  String get playerEpisodeDetails => 'エピソードの詳細';
+
+  @override
+  String get playerGoToPodcast => '番組を見る';
+
+  @override
+  String get playerMoreTooltip => 'その他';
 
   @override
   String get playerTranscriptLoading => '書き起こしを読み込み中...';
@@ -970,6 +1139,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get episodeTranscriptAvailable => '書き起こしあり';
 
   @override
+  String get episodeNewLabel => '新着エピソード';
+
+  @override
   String get episodePillCompleted => '再生済み';
 
   @override
@@ -993,6 +1165,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get stationAdd => 'ステーションを追加';
 
   @override
+  String get stationListLoadError => 'ステーションを読み込めませんでした。';
+
+  @override
+  String get stationShowAll => 'すべて表示';
+
+  @override
   String get stationName => 'ステーション名';
 
   @override
@@ -1008,10 +1186,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get stationPlaybackOrder => '再生順';
 
   @override
-  String get stationNewest => '公開日順（新→古）';
+  String get stationNewest => '新しい順';
 
   @override
-  String get stationOldest => '公開日順（古→新）';
+  String get stationOldest => '古い順';
 
   @override
   String get stationFilterAll => '全エピソード';
@@ -1094,7 +1272,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get stationEditTitle => 'ステーションを編集';
 
   @override
-  String get stationSave => '保存';
+  String get stationLoadError => 'ステーションを読み込めませんでした。';
+
+  @override
+  String stationDefaultName(int number) {
+    return 'ステーション $number';
+  }
 
   @override
   String get stationDelete => 'ステーションを削除';
@@ -1130,10 +1313,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get stationEpisodeOrder => 'エピソードの順序';
 
   @override
-  String get stationNewestFirst => '公開日順（新→古）';
+  String get stationNewestFirst => '新しい順';
 
   @override
-  String get stationOldestFirst => '公開日順（古→新）';
+  String get stationOldestFirst => '古い順';
 
   @override
   String get stationEditTooltip => 'ステーションを編集';
@@ -1143,12 +1326,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get stationNotFoundMessage => 'ステーションのデータが利用できません';
-
-  @override
-  String get stationNameRequired => 'ステーション名を入力してください';
-
-  @override
-  String get stationPodcastRequired => 'ポッドキャストを1つ以上選択してください';
 
   @override
   String get stationEpisodes => 'エピソード';
@@ -1171,10 +1348,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get stationPodcastOrder => '番組の並び順';
 
   @override
-  String get stationPodcastSortSubscribeOld => '購読日順（古→新）';
+  String get stationPodcastSortSubscribeOld => '購読が古い順';
 
   @override
-  String get stationPodcastSortSubscribeNew => '購読日順（新→古）';
+  String get stationPodcastSortSubscribeNew => '購読が新しい順';
 
   @override
   String get stationPodcastSortNameAz => '名前順（A-Z）';
@@ -1361,6 +1538,15 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get developerTestNotificationsSubtitle => '各ポッドキャストの最新エピソード、最大3通';
+
+  @override
+  String get developerDesignGalleryTitle => 'デザインコンポーネント';
+
+  @override
+  String get developerDesignGallerySubtitle => 'リデザインの部品をプレビュー';
+
+  @override
+  String get developerDesignGalleryToggleBrightness => 'ライトとダークを切り替え';
 
   @override
   String developerTestNotificationsSent(int count) {
@@ -1935,6 +2121,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get parentalControlSettingsSaveError => '設定を保存できませんでした。もう一度お試しください。';
+
+  @override
+  String get podcastSettingsSaveFailed => '設定を保存できませんでした。';
 
   @override
   String get parentalControlToggleFailed => '設定を変更できませんでした。もう一度お試しください。';

@@ -9,9 +9,11 @@ import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
-import '../controllers/library_controller.dart';
 import '../../../station/presentation/controllers/station_list_controller.dart';
-import '../../../station/presentation/widgets/station_list_tile.dart';
+import '../../../station/presentation/utils/station_recency.dart';
+import '../../../station/presentation/widgets/station_grid_sliver.dart';
+import '../controllers/library_controller.dart';
+import '../widgets/continue_listening_section.dart';
 import '../widgets/subscription_list_tile.dart';
 
 class LibraryScreen extends ConsumerStatefulWidget {
@@ -22,6 +24,17 @@ class LibraryScreen extends ConsumerStatefulWidget {
 }
 
 class _LibraryScreenState extends ConsumerState<LibraryScreen> {
+  /// Narrows the podcast list by title or author; never persisted. Owned
+  /// here, not by the field, so the query and the field cannot disagree
+  /// when the field leaves the tree (an emptied library) and comes back.
+  final _filterController = TextEditingController();
+
+  @override
+  void dispose() {
+    _filterController.dispose();
+    super.dispose();
+  }
+
   Future<void> _onRefresh() async {
     final syncService = ref.read(feedSyncServiceProvider);
     final result = await syncService.syncAllSubscriptions(forceRefresh: true);
@@ -46,6 +59,33 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     }
   }
 
+  /// Opens the episode detail on top of its podcast, so back leads to the
+  /// podcast rather than straight to the Library.
+  void _openEpisode(
+    EpisodeWithProgress item,
+    List<Subscription> subscriptions,
+  ) {
+    final episode = item.episode;
+    final subscription = subscriptions
+        .where((s) => s.id == episode.podcastId)
+        .firstOrNull;
+    if (subscription == null) return;
+    final path =
+        '${AppRoutes.library}/podcast/${subscription.itunesId}/'
+                '${AppRoutes.episodeDetail}'
+            .replaceAll(':episodeGuid', Uri.encodeComponent(episode.guid));
+    context.go(
+      path,
+      extra: <String, dynamic>{
+        'episode': episode.toPodcastItem(feedUrl: subscription.feedUrl),
+        'podcastTitle': subscription.title,
+        'artworkUrl': subscription.artworkUrl,
+        'itunesId': subscription.itunesId,
+        'progress': item,
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // Watch order matters: sortedSubscriptionsProvider depends on
@@ -60,21 +100,38 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.libraryTitle)),
-      body: subscriptionsAsync.when(
-        data: (subscriptions) => _buildContent(
-          context,
-          subscriptions,
-          sortedSubscriptionsAsync,
-          stationsAsync,
-        ),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => _buildErrorState(
-          context,
-          error.toString(),
-          () => ref.invalidate(librarySubscriptionsProvider),
+      body: SafeArea(
+        bottom: false,
+        child: subscriptionsAsync.when(
+          data: (subscriptions) => _buildContent(
+            context,
+            subscriptions,
+            sortedSubscriptionsAsync,
+            stationsAsync,
+          ),
+          loading: () => _withTitle(
+            l10n,
+            const Center(child: CircularProgressIndicator()),
+          ),
+          error: (error, stack) => _withTitle(
+            l10n,
+            _ErrorState(
+              error: error.toString(),
+              onRetry: () => ref.invalidate(librarySubscriptionsProvider),
+            ),
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _withTitle(AppLocalizations l10n, Widget body) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        LargeTitle(l10n.libraryTitle),
+        Expanded(child: body),
+      ],
     );
   }
 
@@ -84,190 +141,233 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     AsyncValue<List<Subscription>> sortedSubscriptionsAsync,
     AsyncValue<List<Station>> stationsAsync,
   ) {
-    final stations = stationsAsync.value ?? [];
-    final hasSubscriptions = subscriptions.where((s) => !s.isCached).isNotEmpty;
-
-    if (!hasSubscriptions && stations.isEmpty) {
-      return _buildEmptyState(context);
-    }
-
-    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
-    final sortOrderAsync = ref.watch(podcastSortOrderControllerProvider);
+    final stations = stationsAsync.value ?? [];
+    final owned = subscriptions.where((s) => !s.isCached).toList();
+
+    if (owned.isEmpty && stations.isEmpty) {
+      return _withTitle(l10n, const _EmptyState());
+    }
 
     return RefreshIndicator(
       onRefresh: _onRefresh,
       child: CustomScrollView(
         slivers: [
+          SliverToBoxAdapter(child: LargeTitle(l10n.libraryTitle)),
           SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                Spacing.md,
-                Spacing.md,
-                Spacing.md,
-                Spacing.sm,
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    l10n.stationSectionTitle,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  _AddStationAction(
-                    onTap: () => context.push(AppRoutes.stationNew),
-                  ),
-                ],
-              ),
+            child: ContinueListeningSection(
+              onEpisodeTap: (item) => _openEpisode(item, subscriptions),
+              podcastIds: {for (final s in subscriptions) s.id},
             ),
           ),
-          if (stations.isEmpty)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: Spacing.md,
-                  vertical: Spacing.sm,
-                ),
-                child: Text(
-                  l10n.stationNoStationsYet,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-            )
-          else
-            SliverList(
-              delegate: SliverChildBuilderDelegate((context, index) {
-                final station = stations[index];
-                return StationListTile(
-                  key: ValueKey(station.id),
-                  station: station,
-                  onTap: () => context.push(
-                    '${AppRoutes.library}/station/${station.id}',
-                  ),
-                );
-              }, childCount: stations.length),
-            ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                Spacing.md,
-                Spacing.md,
-                Spacing.md,
-                Spacing.sm,
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    l10n.libraryYourPodcasts,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  if (hasSubscriptions)
-                    _SortMenuButton(
-                      currentOrder:
-                          sortOrderAsync.value ??
-                          PodcastSortOrder.latestEpisode,
-                      onSelected: (order) {
-                        unawaited(
-                          ref
-                              .read(podcastSortOrderControllerProvider.notifier)
-                              .setSortOrder(order),
-                        );
-                      },
-                    ),
-                ],
-              ),
+          ..._stationSlivers(context, stations),
+          const SliverToBoxAdapter(child: SizedBox(height: Spacing.sectionGap)),
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: _PodcastsHeaderDelegate(
+              child: _PodcastsHeader(podcastCount: owned.length),
             ),
           ),
-          if (!hasSubscriptions)
+          if (owned.isEmpty)
             SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: Spacing.md,
-                  vertical: Spacing.sm,
-                ),
-                child: Text(
-                  l10n.stationNoSubscriptionsYet,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
+              child: _InlinePlaceholder(l10n.stationNoSubscriptionsYet),
             )
-          else
-            ..._buildSubscriptionsSlivers(context, sortedSubscriptionsAsync),
+          else ...[
+            SliverToBoxAdapter(
+              child: _PodcastFilterField(
+                controller: _filterController,
+                onChanged: (_) => setState(() {}),
+              ),
+            ),
+            _podcastsSliver(sortedSubscriptionsAsync),
+          ],
           const SliverToBoxAdapter(child: SizedBox(height: Spacing.xl)),
         ],
       ),
     );
   }
 
-  List<Widget> _buildSubscriptionsSlivers(
-    BuildContext context,
-    AsyncValue<List<Subscription>> sortedSubscriptionsAsync,
-  ) {
+  /// The Stations section caps the grid so it never pushes the podcasts
+  /// far down; the rest are a "Show all" tap away.
+  static const int _maxStationTiles = 4;
+
+  List<Widget> _stationSlivers(BuildContext context, List<Station> stations) {
+    final l10n = AppLocalizations.of(context);
     return [
-      sortedSubscriptionsAsync.when(
-        data: (sorted) => SliverPadding(
-          padding: const EdgeInsets.symmetric(horizontal: Spacing.md),
-          sliver: SliverList(
-            delegate: SliverChildBuilderDelegate((context, index) {
-              final subscription = sorted[index];
-              return SubscriptionListTile(
-                key: ValueKey(subscription.itunesId),
-                subscription: subscription,
-                onTap: () {
-                  final podcast = subscription.toPodcast();
-                  context.push(
-                    '${AppRoutes.library}/podcast/${podcast.id}',
-                    extra: podcast,
-                  );
-                },
-              );
-            }, childCount: sorted.length),
-          ),
+      SliverToBoxAdapter(
+        child: SectionHeader(
+          title: l10n.stationSectionTitle,
+          count: stations.isEmpty ? null : stations.length,
+          trailing: _StationsHeaderActions(stationCount: stations.length),
         ),
-        loading: () => const SliverToBoxAdapter(
-          child: Padding(
-            padding: EdgeInsets.symmetric(vertical: Spacing.md),
-            child: Center(child: CircularProgressIndicator()),
-          ),
-        ),
-        error: (_, _) => const SliverToBoxAdapter(child: SizedBox.shrink()),
       ),
+      if (stations.isEmpty)
+        SliverToBoxAdapter(child: _InlinePlaceholder(l10n.stationNoStationsYet))
+      else
+        StationGridSliver(
+          stations: recentlyPlayedStations(stations, limit: _maxStationTiles),
+        ),
     ];
   }
 
-  Widget _buildEmptyState(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final l10n = AppLocalizations.of(context);
+  Widget _podcastsSliver(
+    AsyncValue<List<Subscription>> sortedSubscriptionsAsync,
+  ) {
+    return sortedSubscriptionsAsync.when(
+      data: (all) {
+        final sorted = filterPodcasts(all, _filterController.text);
+        if (sorted.isEmpty) {
+          return SliverToBoxAdapter(
+            child: _InlinePlaceholder(
+              AppLocalizations.of(context).libraryFilterNoMatch,
+            ),
+          );
+        }
+        return _podcastList(sorted);
+      },
+      loading: () => const SliverToBoxAdapter(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: Spacing.md),
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      ),
+      error: (_, _) => const SliverToBoxAdapter(child: SizedBox.shrink()),
+    );
+  }
 
+  Widget _podcastList(List<Subscription> sorted) {
+    return SliverList.separated(
+      separatorBuilder: (context, _) => Divider(
+        height: 1,
+        thickness: 1,
+        color: AppColors.of(context).hairline,
+        // Starts at the text, past the 52dp artwork.
+        indent: Spacing.screenHorizontal + 52 + Spacing.sm + Spacing.xs,
+      ),
+      itemCount: sorted.length,
+      itemBuilder: (context, index) {
+        final subscription = sorted[index];
+        return SubscriptionListTile(
+          key: ValueKey(subscription.itunesId),
+          subscription: subscription,
+          onTap: () {
+            final podcast = subscription.toPodcast();
+            context.push(
+              '${AppRoutes.library}/podcast/${podcast.id}',
+              extra: podcast,
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+/// Keeps the podcasts header row pinned under the status bar while the
+/// list scrolls beneath it.
+class _PodcastsHeaderDelegate extends SliverPersistentHeaderDelegate {
+  const _PodcastsHeaderDelegate({required this.child});
+
+  final Widget child;
+
+  static const double _extent = Spacing.minTouchTarget + Spacing.sm;
+
+  @override
+  double get minExtent => _extent;
+
+  @override
+  double get maxExtent => _extent;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return ColoredBox(
+      color: AppColors.of(context).bg,
+      child: Align(alignment: Alignment.topCenter, child: child),
+    );
+  }
+
+  @override
+  bool shouldRebuild(_PodcastsHeaderDelegate oldDelegate) =>
+      child != oldDelegate.child;
+}
+
+class _PodcastsHeader extends ConsumerWidget {
+  const _PodcastsHeader({required this.podcastCount});
+
+  final int podcastCount;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final sortOrder =
+        ref.watch(podcastSortOrderControllerProvider).value ??
+        PodcastSortOrder.latestEpisode;
+    return SectionHeader(
+      title: l10n.libraryPodcastsSection,
+      count: podcastCount == 0 ? null : podcastCount,
+      trailing: podcastCount == 0
+          ? null
+          : _SortMenuButton(
+              currentOrder: sortOrder,
+              onSelected: (order) => unawaited(
+                ref
+                    .read(podcastSortOrderControllerProvider.notifier)
+                    .setSortOrder(order),
+              ),
+            ),
+    );
+  }
+}
+
+class _InlinePlaceholder extends StatelessWidget {
+  const _InlinePlaceholder(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: Spacing.screenHorizontal,
+        vertical: Spacing.sm,
+      ),
+      child: Text(
+        text,
+        style: AppTextStyles.meta.copyWith(
+          color: AppColors.of(context).inkTertiary,
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  const _EmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(Spacing.lg),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Symbols.library_music,
-              size: 64,
-              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-            ),
+            Icon(Symbols.library_music, size: 64, color: colors.inkQuaternary),
             const SizedBox(height: Spacing.md),
-            Text(l10n.libraryEmpty, style: theme.textTheme.headlineSmall),
+            Text(
+              l10n.libraryEmpty,
+              style: AppTextStyles.sectionTitle.copyWith(color: colors.ink),
+            ),
             const SizedBox(height: Spacing.sm),
             Text(
               l10n.libraryEmptySubtitle,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
+              style: AppTextStyles.body.copyWith(color: colors.inkSecondary),
               textAlign: TextAlign.center,
             ),
           ],
@@ -275,16 +375,18 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
       ),
     );
   }
+}
 
-  Widget _buildErrorState(
-    BuildContext context,
-    String error,
-    VoidCallback onRetry,
-  ) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+class _ErrorState extends StatelessWidget {
+  const _ErrorState({required this.error, required this.onRetry});
+
+  final String error;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     final l10n = AppLocalizations.of(context);
-
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(Spacing.lg),
@@ -294,21 +396,17 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
             Icon(
               Icons.error_outline,
               size: 64,
-              color: colorScheme.error.withValues(alpha: 0.7),
+              color: Theme.of(context).colorScheme.error,
             ),
             const SizedBox(height: Spacing.md),
             Text(
               l10n.libraryLoadError,
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: colorScheme.onSurface,
-              ),
+              style: AppTextStyles.rowTitle.copyWith(color: colors.ink),
             ),
             const SizedBox(height: Spacing.sm),
             Text(
               error,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
+              style: AppTextStyles.meta.copyWith(color: colors.inkSecondary),
               textAlign: TextAlign.center,
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
@@ -326,43 +424,6 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   }
 }
 
-class _AddStationAction extends StatelessWidget {
-  const _AddStationAction({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final l10n = AppLocalizations.of(context);
-
-    return InkWell(
-      borderRadius: BorderRadius.circular(16),
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: Spacing.sm,
-          vertical: Spacing.xxs,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.add, size: 16, color: colorScheme.primary),
-            const SizedBox(width: 4),
-            Text(
-              l10n.stationAdd,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: colorScheme.primary,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _SortMenuButton extends StatelessWidget {
   const _SortMenuButton({required this.currentOrder, required this.onSelected});
 
@@ -370,53 +431,44 @@ class _SortMenuButton extends StatelessWidget {
   final ValueChanged<PodcastSortOrder> onSelected;
 
   String _labelFor(AppLocalizations l10n, PodcastSortOrder order) {
-    switch (order) {
-      case PodcastSortOrder.latestEpisode:
-        return l10n.librarySortByLatestEpisode;
-      case PodcastSortOrder.subscribedAt:
-        return l10n.librarySortBySubscribedAt;
-      case PodcastSortOrder.alphabetical:
-        return l10n.librarySortByAlphabetical;
-    }
+    return switch (order) {
+      PodcastSortOrder.latestEpisode => l10n.librarySortByLatestEpisode,
+      PodcastSortOrder.subscribedAt => l10n.librarySortBySubscribedAt,
+      PodcastSortOrder.alphabetical => l10n.librarySortByAlphabetical,
+    };
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colors = AppColors.of(context);
     final l10n = AppLocalizations.of(context);
+    final style = AppTextStyles.meta.copyWith(
+      color: colors.accent,
+      fontWeight: FontWeight.w600,
+    );
 
     return PopupMenuButton<PodcastSortOrder>(
       tooltip: l10n.librarySortTooltip,
       onSelected: onSelected,
       itemBuilder: (context) => [
-        _buildItem(
-          PodcastSortOrder.latestEpisode,
-          l10n.librarySortByLatestEpisode,
-        ),
-        _buildItem(
-          PodcastSortOrder.subscribedAt,
-          l10n.librarySortBySubscribedAt,
-        ),
-        _buildItem(
-          PodcastSortOrder.alphabetical,
-          l10n.librarySortByAlphabetical,
-        ),
+        for (final order in PodcastSortOrder.values)
+          _buildItem(order, _labelFor(l10n, order)),
       ],
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: Spacing.sm,
-          vertical: Spacing.xxs,
-        ),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: Spacing.minTouchTarget),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.sort, size: 16, color: colorScheme.onSurfaceVariant),
-            const SizedBox(width: 4),
-            Text(
-              _labelFor(l10n, currentOrder),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurfaceVariant,
+            Icon(Icons.sort, size: 16, color: colors.accent),
+            const SizedBox(width: Spacing.xs),
+            // Shortens only at extreme text sizes, when even the full
+            // trailing share cannot fit it.
+            Flexible(
+              child: Text(
+                _labelFor(l10n, currentOrder),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: style,
               ),
             ),
           ],
@@ -442,6 +494,133 @@ class _SortMenuButton extends StatelessWidget {
             const SizedBox(width: 28),
           Flexible(child: Text(label, overflow: TextOverflow.ellipsis)),
         ],
+      ),
+    );
+  }
+}
+
+/// "+" and, once the grid is capped, "Show all" for the Stations header.
+class _StationsHeaderActions extends StatelessWidget {
+  const _StationsHeaderActions({required this.stationCount});
+
+  final int stationCount;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final colors = AppColors.of(context);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          tooltip: l10n.stationAdd,
+          icon: Icon(Icons.add_rounded, color: colors.accent),
+          onPressed: () => context.push(AppRoutes.stationNew),
+        ),
+        if (_LibraryScreenState._maxStationTiles < stationCount)
+          Flexible(
+            child: TextButton(
+              onPressed: () => context.push(AppRoutes.stationList),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: Text(
+                      l10n.stationShowAll,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right_rounded, size: 18),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// The podcasts whose title or author contains [query], ignoring case and
+/// surrounding spaces; all of them when [query] is blank.
+@visibleForTesting
+List<Subscription> filterPodcasts(List<Subscription> podcasts, String query) {
+  final needle = query.trim().toLowerCase();
+  if (needle.isEmpty) return podcasts;
+  return [
+    for (final podcast in podcasts)
+      if (podcast.title.toLowerCase().contains(needle) ||
+          podcast.artistName.toLowerCase().contains(needle))
+        podcast,
+  ];
+}
+
+/// Pill-shaped field under the Podcasts header that filters the list.
+class _PodcastFilterField extends StatelessWidget {
+  const _PodcastFilterField({
+    required this.controller,
+    required this.onChanged,
+  });
+
+  final TextEditingController controller;
+  final ValueChanged<String> onChanged;
+
+  void _clear() {
+    controller.clear();
+    onChanged('');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        Spacing.screenHorizontal,
+        0,
+        Spacing.screenHorizontal,
+        Spacing.sm,
+      ),
+      child: TextField(
+        controller: controller,
+        onChanged: onChanged,
+        // Touching anything else ends the filtering and hides the keyboard.
+        onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
+        textInputAction: TextInputAction.search,
+        style: AppTextStyles.body.copyWith(color: colors.ink),
+        decoration: InputDecoration(
+          hintText: AppLocalizations.of(context).libraryFilterHint,
+          hintStyle: AppTextStyles.body.copyWith(color: colors.inkTertiary),
+          prefixIcon: Icon(Icons.search, color: colors.inkTertiary),
+          suffixIcon: ListenableBuilder(
+            listenable: controller,
+            builder: (context, _) => controller.text.isEmpty
+                ? const SizedBox.shrink()
+                : IconButton(
+                    tooltip: MaterialLocalizations.of(
+                      context,
+                    ).deleteButtonTooltip,
+                    icon: Icon(Icons.cancel, color: colors.inkTertiary),
+                    onPressed: _clear,
+                  ),
+          ),
+          filled: true,
+          fillColor: colors.surfaceSunken,
+          isDense: true,
+          // All three: the theme's enabled and focused borders would
+          // otherwise replace the pill with its rounded rectangle.
+          border: const OutlineInputBorder(
+            borderRadius: AppBorders.pill,
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: const OutlineInputBorder(
+            borderRadius: AppBorders.pill,
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: AppBorders.pill,
+            borderSide: BorderSide(color: colors.accent, width: 1.5),
+          ),
+        ),
       ),
     );
   }

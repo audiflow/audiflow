@@ -10,71 +10,88 @@ import '../controllers/podcast_detail_controller.dart';
 import 'episode_list_tile.dart';
 import 'podcast_detail_empty_states.dart';
 
-/// Sort header row with episode count and sort toggle.
+/// Count line above a list, with the sort toggle unless the screen shows
+/// it elsewhere (podcast detail keeps it in its sticky bar).
 class SortHeader extends StatelessWidget {
   const SortHeader({
     super.key,
     required this.label,
     required this.sortOrder,
-    required this.onToggleSortOrder,
+    this.onToggleSortOrder,
   });
 
   final String label;
   final SortOrder sortOrder;
-  final VoidCallback onToggleSortOrder;
+  final VoidCallback? onToggleSortOrder;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final l10n = AppLocalizations.of(context);
-
+    final colors = AppColors.of(context);
+    final onToggle = onToggleSortOrder;
     return Padding(
       padding: const EdgeInsets.symmetric(
-        horizontal: Spacing.md,
+        horizontal: Spacing.screenHorizontal,
         vertical: Spacing.xs,
       ),
       child: Row(
         children: [
           Text(
             label,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-            ),
+            style: AppTextStyles.meta.copyWith(color: colors.inkTertiary),
           ),
           const Spacer(),
-          InkWell(
-            borderRadius: BorderRadius.circular(16),
-            onTap: onToggleSortOrder,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: Spacing.sm,
-                vertical: Spacing.xxs,
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    sortOrder == SortOrder.ascending
-                        ? Icons.arrow_upward
-                        : Icons.arrow_downward,
-                    size: 16,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    sortOrder == SortOrder.ascending
-                        ? l10n.podcastDetailOldestFirst
-                        : l10n.podcastDetailNewestFirst,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+          if (onToggle != null)
+            SortOrderButton(sortOrder: sortOrder, onPressed: onToggle),
         ],
+      ),
+    );
+  }
+}
+
+/// "↓ Newest first" / "↑ Oldest first" text button that flips the order.
+class SortOrderButton extends StatelessWidget {
+  const SortOrderButton({
+    super.key,
+    required this.sortOrder,
+    required this.onPressed,
+  });
+
+  final SortOrder sortOrder;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context);
+    final ascending = sortOrder == SortOrder.ascending;
+    return InkWell(
+      borderRadius: AppBorders.pill,
+      onTap: onPressed,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: Spacing.minTouchTarget),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: Spacing.sm),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                ascending ? Icons.arrow_upward : Icons.arrow_downward,
+                size: 16,
+                color: colors.ink,
+              ),
+              const SizedBox(width: Spacing.xs),
+              Text(
+                ascending
+                    ? l10n.podcastDetailOldestFirst
+                    : l10n.podcastDetailNewestFirst,
+                style: AppTextStyles.meta.copyWith(
+                  color: colors.ink,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -93,7 +110,7 @@ List<Widget> buildEpisodeListSlivers({
   required String? feedImageUrl,
   required DateTime? lastRefreshedAt,
   required ScrollController scrollController,
-  required VoidCallback onToggleSortOrder,
+  VoidCallback? onToggleSortOrder,
   String? itunesId,
   AutoPlayOrder? effectiveOrder,
   List<PodcastItem>? fallbackEpisodes,
@@ -187,7 +204,7 @@ List<Widget> _buildEpisodeData({
   required String? feedImageUrl,
   required DateTime? lastRefreshedAt,
   required ScrollController scrollController,
-  required VoidCallback onToggleSortOrder,
+  VoidCallback? onToggleSortOrder,
   required bool yearGrouped,
   required bool showThumbnail,
   String? itunesId,
@@ -333,7 +350,6 @@ List<Widget> _buildYearGroupedEpisodeSlivers({
     },
     scrollController: scrollController,
     yearGroupingEnabled: true,
-    itemExtent: episodeCardExtent,
   );
 }
 

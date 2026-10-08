@@ -150,7 +150,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playOrderMenuTitle => 'Play order';
 
   @override
-  String get podcastDetailDescriptionMenuTitle => 'Description';
+  String get podcastDetailDescriptionMenuTitle => 'Podcast info';
 
   @override
   String get podcastDetailAudioSettingsMenuTitle => 'Audio settings';
@@ -168,8 +168,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get podcastDetailSettingsSheetTitle => 'Settings';
 
   @override
-  String playOrderDefault(String resolvedOrder) {
-    return 'Default ($resolvedOrder)';
+  String playOrderFollowGlobal(String resolvedOrder) {
+    return 'Follow global setting ($resolvedOrder)';
+  }
+
+  @override
+  String playOrderFollowParent(String resolvedOrder) {
+    return 'Follow parent setting ($resolvedOrder)';
   }
 
   @override
@@ -177,6 +182,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get playOrderAsDisplayed => 'As displayed';
+
+  @override
+  String get playOrderAsDisplayedSubtitle =>
+      'Follows the list order (newest or oldest first)';
 
   @override
   String get playbackDuckInterruptionBehaviorTitle =>
@@ -480,7 +489,24 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get libraryYourPodcasts => 'Your Podcasts';
+  String get libraryContinueListening => 'Continue listening';
+
+  @override
+  String get libraryNewEpisodes => 'New episodes';
+
+  @override
+  String get libraryFilterHint => 'Filter podcasts';
+
+  @override
+  String get libraryFilterNoMatch => 'No podcasts match';
+
+  @override
+  String get libraryPodcastsSection => 'Podcasts';
+
+  @override
+  String libraryUpdatedOn(String date) {
+    return 'Updated $date';
+  }
 
   @override
   String get libraryEmpty => 'No subscriptions yet';
@@ -566,6 +592,48 @@ class AppLocalizationsEn extends AppLocalizations {
   String get queueUpNext => 'UP NEXT';
 
   @override
+  String get queueRemove => 'Remove from queue';
+
+  @override
+  String get queueDownloadedLabel => 'Downloaded';
+
+  @override
+  String get queueMenuDownload => 'Download';
+
+  @override
+  String get queueMenuPauseDownload => 'Pause download';
+
+  @override
+  String get queueMenuResumeDownload => 'Resume download';
+
+  @override
+  String get queueMenuCancelDownload => 'Cancel download';
+
+  @override
+  String get queueMenuRetryDownload => 'Retry download';
+
+  @override
+  String get queueMenuDeleteDownload => 'Delete download';
+
+  @override
+  String get queueSwipeDownload => 'Download';
+
+  @override
+  String get queueSwipePause => 'Pause';
+
+  @override
+  String get queueSwipeResume => 'Resume';
+
+  @override
+  String get queueSwipeCancel => 'Cancel';
+
+  @override
+  String get queueSwipeRetry => 'Retry';
+
+  @override
+  String get queueSwipeDelete => 'Delete';
+
+  @override
   String get queueEmpty => 'Queue is empty';
 
   @override
@@ -644,6 +712,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get audioSheetTitle => 'Audio';
 
   @override
+  String get podcastSettingsDisplaySection => 'Display';
+
+  @override
   String get audioSheetSpeedSection => 'Playback speed';
 
   @override
@@ -707,6 +778,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get podcastDetailSubscribe => 'Subscribe';
 
   @override
+  String get podcastDetailUnsubscribe => 'Unsubscribe';
+
+  @override
+  String get podcastDetailShareShort => 'Share';
+
+  @override
+  String get podcastDetailSearchTooltip => 'Search episodes';
+
+  @override
+  String get podcastDetailSearchHint => 'Search episodes';
+
+  @override
+  String get podcastDetailMoreTooltip => 'More';
+
+  @override
   String get podcastDetailNoResults => 'No results found';
 
   @override
@@ -733,7 +819,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String podcastDetailGroupCount(int count) {
-    return '$count groups';
+    return '$count series';
   }
 
   @override
@@ -935,6 +1021,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get episodesLabel => 'Episodes';
 
   @override
+  String get podcastDetailSeriesTab => 'Series';
+
+  @override
   String get smartPlaylistsLabel => 'Smart Playlists';
 
   @override
@@ -945,6 +1034,51 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get markAsPlayed => 'Mark as played';
+
+  @override
+  String get podcastOpenWebsite => 'Open website';
+
+  @override
+  String get podcastOpenWebsiteFailed => 'Couldn\'t open the website';
+
+  @override
+  String get podcastMarkAllPlayed => 'Mark all played';
+
+  @override
+  String get podcastMarkAllUnplayed => 'Mark all unplayed';
+
+  @override
+  String podcastMarkAllPlayedConfirm(int count) {
+    return 'Mark all $count episodes of this podcast as played?';
+  }
+
+  @override
+  String podcastMarkAllUnplayedConfirm(int count) {
+    return 'Mark all $count episodes of this podcast as unplayed?';
+  }
+
+  @override
+  String seriesMarkAllPlayedConfirm(int count) {
+    return 'Mark all $count episodes of this series as played?';
+  }
+
+  @override
+  String seriesMarkAllUnplayedConfirm(int count) {
+    return 'Mark all $count episodes of this series as unplayed?';
+  }
+
+  @override
+  String get podcastMarkAllFailed => 'Some episodes couldn\'t be updated';
+
+  @override
+  String podcastMarkAllPlayedDone(int count) {
+    return 'Marked $count episodes as played';
+  }
+
+  @override
+  String podcastMarkAllUnplayedDone(int count) {
+    return 'Marked $count episodes as unplayed';
+  }
 
   @override
   String get markAsUnplayed => 'Mark as unplayed';
@@ -977,10 +1111,46 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get seriesStatusUnplayed => 'Unplayed';
+
+  @override
+  String seriesStatusPartlyPlayed(int played, int total) {
+    return '$played/$total played';
+  }
+
+  @override
+  String get seriesStatusPlayed => 'Played';
+
+  @override
+  String get seriesViewArtwork => 'View series artwork';
+
+  @override
+  String seriesResumeEpisode(int number) {
+    return 'Resume #$number';
+  }
+
+  @override
+  String seriesPlayEpisode(int number) {
+    return 'Play #$number';
+  }
+
+  @override
   String get playerTabNowPlaying => 'Now Playing';
 
   @override
   String get playerTabTranscript => 'Transcript';
+
+  @override
+  String get playerPlayingFrom => 'Playing from';
+
+  @override
+  String get playerEpisodeDetails => 'Episode details';
+
+  @override
+  String get playerGoToPodcast => 'Go to podcast';
+
+  @override
+  String get playerMoreTooltip => 'More';
 
   @override
   String get playerTranscriptLoading => 'Loading transcript...';
@@ -1008,6 +1178,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get episodeTranscriptAvailable => 'Transcript available';
 
   @override
+  String get episodeNewLabel => 'New episode';
+
+  @override
   String get episodePillCompleted => 'Completed';
 
   @override
@@ -1032,6 +1205,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stationAdd => 'Add station';
 
   @override
+  String get stationListLoadError => 'Couldn\'t load your stations.';
+
+  @override
+  String get stationShowAll => 'Show all';
+
+  @override
   String get stationName => 'Station Name';
 
   @override
@@ -1047,10 +1226,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stationPlaybackOrder => 'Playback Order';
 
   @override
-  String get stationNewest => 'Newest First';
+  String get stationNewest => 'Newest first';
 
   @override
-  String get stationOldest => 'Oldest First';
+  String get stationOldest => 'Oldest first';
 
   @override
   String get stationFilterAll => 'All Episodes';
@@ -1136,7 +1315,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stationEditTitle => 'Edit Station';
 
   @override
-  String get stationSave => 'Save';
+  String get stationLoadError => 'Couldn\'t load this station.';
+
+  @override
+  String stationDefaultName(int number) {
+    return 'Station $number';
+  }
 
   @override
   String get stationDelete => 'Delete Station';
@@ -1186,12 +1370,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get stationNotFoundMessage => 'Station data not available';
-
-  @override
-  String get stationNameRequired => 'Station name is required';
-
-  @override
-  String get stationPodcastRequired => 'Select at least one podcast';
 
   @override
   String get stationEpisodes => 'Episodes';
@@ -1407,6 +1585,15 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get developerTestNotificationsSubtitle =>
       'Newest episode of each podcast, up to 3';
+
+  @override
+  String get developerDesignGalleryTitle => 'Design components';
+
+  @override
+  String get developerDesignGallerySubtitle => 'Preview redesign components';
+
+  @override
+  String get developerDesignGalleryToggleBrightness => 'Toggle light and dark';
 
   @override
   String developerTestNotificationsSent(int count) {
@@ -2051,6 +2238,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get parentalControlSettingsSaveError =>
       'Could not save the change. Please try again.';
+
+  @override
+  String get podcastSettingsSaveFailed => 'Couldn\'t save the setting.';
 
   @override
   String get parentalControlToggleFailed =>

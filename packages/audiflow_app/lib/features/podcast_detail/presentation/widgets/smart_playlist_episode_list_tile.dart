@@ -10,6 +10,7 @@ import '../../../download/presentation/helpers/download_action_helper.dart';
 import '../../../queue/presentation/controllers/queue_controller.dart';
 import '../../../share/presentation/helpers/share_helper.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../station/presentation/helpers/record_station_play.dart';
 import '../controllers/podcast_detail_controller.dart';
 import '../helpers/played_status_helper.dart';
 import '../screens/episode_detail_screen.dart';
@@ -36,7 +37,12 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
     this.displayTitle,
     this.playlistId,
     this.stationName,
+    this.stationId,
+    this.numberLabel,
   });
+
+  /// Episode number shown above the title in series lists.
+  final String? numberLabel;
 
   final Episode episode;
   final String podcastTitle;
@@ -81,6 +87,14 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
   /// instead of [SmartPlaylistPlayed].
   final String? stationName;
 
+  /// The station this tile plays from, recorded as its last play so the
+  /// Library shows recently played stations first.
+  final int? stationId;
+
+  void _recordStationPlayIfAny(WidgetRef ref) {
+    if (stationId case final id?) recordStationPlay(ref, id);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final audioUrl = episode.audioUrl;
@@ -119,6 +133,7 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
         liveRemaining,
       ),
       dateLabel: _buildDateLabel(l10n),
+      numberLabel: numberLabel,
       isInProgress: (progress?.isInProgress ?? false) || (liveFraction != null),
       progressFraction: liveFraction ?? _buildProgressFraction(progress),
       description: episode.description,
@@ -130,12 +145,13 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
       isPlaying: isPlaying,
       isLoading: isLoading,
       isNew: isNew,
+      newLabel: l10n.episodeNewLabel,
       isCompleted: isCompleted,
       isCurrentEpisode: isCurrentEpisode,
       hasTranscript: hasTranscript,
       transcriptLabel: l10n.episodeTranscriptAvailable,
       onTap: () => _navigateToDetail(context),
-      onPlayPause: () => _onPlayPausePressed(context, ref, audioUrl, isPlaying),
+      onPlayPause: () => togglePlayback(context, ref),
       onLongPress: () =>
           _showContextMenu(context, ref, audioUrl, progress, downloadTask),
       actionButtons: [
@@ -248,6 +264,7 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
           artworkUrl: artworkUrl,
           progress: progress,
           itunesId: itunesId,
+          stationId: stationId,
         ),
       ),
     );
@@ -479,20 +496,26 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
     );
   }
 
-  Future<void> _onPlayPausePressed(
-    BuildContext context,
-    WidgetRef ref,
-    String url,
-    bool isPlaying,
-  ) async {
-    final controller = ref.read(audioPlayerControllerProvider.notifier);
-
-    if (isPlaying) {
-      controller.pause();
+  /// Pauses this episode when it is playing, otherwise starts it.
+  Future<void> togglePlayback(BuildContext context, WidgetRef ref) async {
+    if (ref.read(isEpisodePlayingProvider(episode.audioUrl))) {
+      ref.read(audioPlayerControllerProvider.notifier).pause();
       return;
     }
+    await startPlayback(context, ref);
+  }
+
+  /// Starts or resumes this episode (building the sibling queue), leaving
+  /// it alone when it is already playing. Public so a screen can start an
+  /// episode the same way its row would, e.g. from a "resume" button.
+  Future<void> startPlayback(BuildContext context, WidgetRef ref) async {
+    final url = episode.audioUrl;
+    if (ref.read(isEpisodePlayingProvider(url))) return;
+    final controller = ref.read(audioPlayerControllerProvider.notifier);
 
     if (controller.isLoaded(url)) {
+      // Resuming from a station is a play from it too.
+      _recordStationPlayIfAny(ref);
       controller.resume();
       return;
     }
@@ -533,6 +556,8 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
           feedUrl: feedUrl,
         ),
       );
+
+    _recordStationPlayIfAny(ref);
 
     final analytics = ref.read(analyticsServiceProvider);
     if (isStation) {

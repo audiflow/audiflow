@@ -14,6 +14,9 @@ class Subscription {
   late String artistName;
   String? artworkUrl;
   String? description;
+
+  /// The show's website (channel `<link>`), for "Open website".
+  String? websiteUrl;
   String genres = '';
   bool explicit = false;
   late DateTime subscribedAt;
@@ -52,6 +55,13 @@ class Subscription {
   /// successful parse, including one whose channel carried no image, so a
   /// feed without artwork does not disable conditional requests forever.
   DateTime? feedMetadataSyncedAt;
+
+  /// When the channel `<link>` was last read into [websiteUrl].
+  ///
+  /// Null means it never was: the subscription predates the website, so
+  /// the next refresh asks unconditionally rather than take a 304 that
+  /// skips the parse. Set even when the channel has no link.
+  DateTime? websiteSyncedAt;
 
   /// HTTP ETag header from the last successful feed fetch.
   ///

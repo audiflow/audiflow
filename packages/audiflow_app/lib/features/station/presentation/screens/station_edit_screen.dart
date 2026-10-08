@@ -9,6 +9,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
 import '../../../library/presentation/controllers/library_controller.dart';
 import '../controllers/station_edit_controller.dart';
+import '../utils/default_station_name.dart';
 import 'station_podcast_picker_screen.dart';
 
 /// Screen for creating or editing a [Station].
@@ -46,12 +47,38 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
     _minutesController = TextEditingController();
     _nameFocusNode.addListener(_guardNameFocus);
     if (widget.stationId == null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _nameFocusNode.requestFocus();
-      });
+      WidgetsBinding.instance.addPostFrameCallback((_) => _prefillName());
     } else {
       _autoFocusConsumed = true;
     }
+  }
+
+  /// Starts a new station as "Station N", selected with the keyboard up,
+  /// so typing replaces it and leaving it keeps a usable name.
+  Future<void> _prefillName() async {
+    final l10n = AppLocalizations.of(context);
+    // Before the lookup: creation can then name the station by itself if
+    // the editor closes before this finishes.
+    ref
+        .read(stationEditControllerProvider(widget.stationId).notifier)
+        .useDefaultNameLabel(l10n.stationDefaultName);
+    final stations = await ref.read(stationRepositoryProvider).watchAll().first;
+    if (!mounted) return;
+    final name = defaultStationName(
+      stations.map((station) => station.name),
+      l10n.stationDefaultName,
+    );
+    _nameInitialized = true;
+    ref
+        .read(stationEditControllerProvider(widget.stationId).notifier)
+        .useDefaultName(name);
+    // The field is usable while the stations load; keep anything typed.
+    if (_nameController.text.isNotEmpty) return;
+    _nameController.value = TextEditingValue(
+      text: name,
+      selection: TextSelection(baseOffset: 0, extentOffset: name.length),
+    );
+    _nameFocusNode.requestFocus();
   }
 
   void _guardNameFocus() {
@@ -83,12 +110,6 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
   }
 
   String _resolveError(AppLocalizations l10n, String errorKey) {
-    if (errorKey == StationEditError.nameRequired) {
-      return l10n.stationNameRequired;
-    }
-    if (errorKey == StationEditError.podcastRequired) {
-      return l10n.stationPodcastRequired;
-    }
     if (errorKey == StationEditError.notFound) {
       return l10n.stationNotFoundTitle;
     }
@@ -121,59 +142,50 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        // No save button: every change is saved as it is made.
         title: Text(isEditMode ? l10n.stationEditTitle : l10n.stationNew),
-        actions: [
-          if (editState.isSaving)
-            const Padding(
-              padding: EdgeInsets.all(12),
-              child: CircularProgressIndicator.adaptive(),
+      ),
+      body: editState.isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : editState.loadFailed
+          ? _LoadFailed(
+              onRetry: () => ref.invalidate(
+                stationEditControllerProvider(widget.stationId),
+              ),
             )
-          else
-            TextButton(
-              onPressed: () => _onSave(controller),
-              child: Text(l10n.stationSave),
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(Spacing.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (editState.error != null)
+                    _ErrorBanner(
+                      message: _resolveError(l10n, editState.error!),
+                    ),
+                  _buildNameField(controller),
+                  const SizedBox(height: Spacing.lg),
+                  _buildAttributeFilters(editState, controller),
+                  const SizedBox(height: Spacing.sm),
+                  _buildEpisodeLimitRow(editState, controller),
+                  _buildDurationFilter(context, editState, controller),
+                  _buildGroupByPodcast(editState, controller),
+                  _buildSortOrder(context, editState, controller),
+                  const SizedBox(height: Spacing.lg),
+                  _buildPodcastsSection(context, editState, controller),
+                  // A new station can be deleted once autosave has created it.
+                  if (editState.savedStationId != null) ...[
+                    const SizedBox(height: Spacing.xl),
+                    _buildDeleteButton(context, controller),
+                  ],
+                  const SizedBox(height: Spacing.xl),
+                ],
+              ),
             ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(Spacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (editState.error != null)
-              _ErrorBanner(message: _resolveError(l10n, editState.error!)),
-            _buildNameField(controller),
-            const SizedBox(height: Spacing.lg),
-            _buildAttributeFilters(editState, controller),
-            const SizedBox(height: Spacing.sm),
-            _buildEpisodeLimitRow(editState, controller),
-            _buildDurationFilter(context, editState, controller),
-            _buildGroupByPodcast(editState, controller),
-            _buildSortOrder(context, editState, controller),
-            const SizedBox(height: Spacing.lg),
-            _buildPodcastsSection(context, editState, controller),
-            if (isEditMode) ...[
-              const SizedBox(height: Spacing.xl),
-              _buildDeleteButton(context, controller),
-            ],
-            const SizedBox(height: Spacing.xl),
-          ],
-        ),
-      ),
     );
   }
 
   String _episodeLimitLabel(AppLocalizations l10n, int count) =>
       count == 1 ? l10n.stationLatestOnly : l10n.stationLatestN(count);
-
-  Future<void> _onSave(StationEditController controller) async {
-    controller.setName(_nameController.text);
-    final saved = await controller.save();
-    if (!mounted) return;
-    if (saved != null) {
-      context.pop();
-    }
-  }
 
   Widget _buildNameField(StationEditController controller) {
     return Column(
@@ -912,6 +924,37 @@ class _ErrorBanner extends StatelessWidget {
       child: Text(
         message,
         style: TextStyle(color: colorScheme.onErrorContainer),
+      ),
+    );
+  }
+}
+
+/// Shown instead of the form when the station cannot be loaded, so an
+/// edit can never be saved over it.
+class _LoadFailed extends StatelessWidget {
+  const _LoadFailed({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(Spacing.lg),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              l10n.stationLoadError,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.body.copyWith(
+                color: AppColors.of(context).inkSecondary,
+              ),
+            ),
+            TextButton(onPressed: onRetry, child: Text(l10n.commonRetry)),
+          ],
+        ),
       ),
     );
   }

@@ -1,61 +1,115 @@
 import 'package:flutter/material.dart';
 
-/// Application text styles
+/// Application text styles (redesign section 2.3).
+///
+/// Styles carry size, weight, line height, and tracking only; color comes
+/// from the ambient theme so each style works in both brightness modes.
+/// Font family is left to the platform default (SF Pro / Hiragino Sans on
+/// iOS, Roboto / Noto Sans CJK on Android), which supplies the geometric
+/// grotesque plus matching Gothic pairing without bundling font assets.
 class AppTextStyles {
   AppTextStyles._();
 
-  /// Base text theme
-  static const TextTheme textTheme = TextTheme(
-    displayLarge: TextStyle(
-      fontSize: 57,
-      fontWeight: FontWeight.w400,
-      letterSpacing: -0.25,
-    ),
-    displayMedium: TextStyle(fontSize: 45, fontWeight: FontWeight.w400),
-    displaySmall: TextStyle(fontSize: 36, fontWeight: FontWeight.w400),
-    headlineLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.w400),
-    headlineMedium: TextStyle(fontSize: 28, fontWeight: FontWeight.w400),
-    headlineSmall: TextStyle(fontSize: 24, fontWeight: FontWeight.w400),
-    titleLarge: TextStyle(fontSize: 22, fontWeight: FontWeight.w500),
-    titleMedium: TextStyle(
-      fontSize: 16,
-      fontWeight: FontWeight.w500,
-      letterSpacing: 0.15,
-    ),
-    titleSmall: TextStyle(
-      fontSize: 14,
-      fontWeight: FontWeight.w500,
-      letterSpacing: 0.1,
-    ),
-    bodyLarge: TextStyle(
-      fontSize: 16,
-      fontWeight: FontWeight.w400,
-      letterSpacing: 0.5,
-    ),
-    bodyMedium: TextStyle(
-      fontSize: 14,
-      fontWeight: FontWeight.w400,
-      letterSpacing: 0.25,
-    ),
-    bodySmall: TextStyle(
-      fontSize: 12,
-      fontWeight: FontWeight.w400,
-      letterSpacing: 0.4,
-    ),
-    labelLarge: TextStyle(
-      fontSize: 14,
-      fontWeight: FontWeight.w500,
-      letterSpacing: 0.1,
-    ),
-    labelMedium: TextStyle(
-      fontSize: 12,
-      fontWeight: FontWeight.w500,
-      letterSpacing: 0.5,
-    ),
-    labelSmall: TextStyle(
-      fontSize: 11,
-      fontWeight: FontWeight.w500,
-      letterSpacing: 0.5,
-    ),
+  /// Tab titles (Library, Search, Queue, Settings).
+  static const TextStyle displayTitle = TextStyle(
+    fontSize: 28,
+    height: 1.25,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 28 * -0.01,
+  );
+
+  /// Podcast and series hero titles.
+  static const TextStyle heroTitle = TextStyle(
+    fontSize: 22,
+    height: 1.35,
+    fontWeight: FontWeight.w700,
+  );
+
+  /// [heroTitle] variant for long titles.
+  static const TextStyle heroTitleLong = TextStyle(
+    fontSize: 19,
+    height: 1.35,
+    fontWeight: FontWeight.w700,
+  );
+
+  /// Section headings inside a tab.
+  static const TextStyle sectionTitle = TextStyle(
+    fontSize: 17,
+    height: 1.35,
+    fontWeight: FontWeight.w600,
+  );
+
+  /// Episode and series row titles.
+  static const TextStyle rowTitle = TextStyle(
+    fontSize: 15,
+    height: 1.4,
+    fontWeight: FontWeight.w600,
+  );
+
+  /// Settings rows, menu items.
+  static const TextStyle body = TextStyle(
+    fontSize: 15,
+    height: 1.4,
+    fontWeight: FontWeight.w400,
+  );
+
+  /// Durations, counts, descriptions.
+  static const TextStyle meta = TextStyle(
+    fontSize: 13,
+    height: 1.5,
+    fontWeight: FontWeight.w400,
+  );
+
+  /// Dates, status labels.
+  static const TextStyle caption = TextStyle(
+    fontSize: 12,
+    height: 1.4,
+    fontWeight: FontWeight.w400,
+  );
+
+  /// Year headers, settings group headers.
+  static const TextStyle overline = TextStyle(
+    fontSize: 12,
+    height: 1.4,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 12 * 0.06,
+  );
+
+  /// Button and pill labels.
+  static const TextStyle label = TextStyle(
+    fontSize: 14,
+    height: 1.3,
+    fontWeight: FontWeight.w600,
+  );
+
+  /// Returns [style] with tabular figures, for numbers that change in
+  /// place (durations, counts, times) so digits do not shift width.
+  static TextStyle tabular(TextStyle style) {
+    return style.copyWith(
+      fontFeatures: [
+        ...?style.fontFeatures,
+        const FontFeature.tabularFigures(),
+      ],
+    );
+  }
+
+  /// Material text theme mapped onto the redesign roles so stock widgets
+  /// (ListTile, AppBar, dialogs) pick up the new scale.
+  static final TextTheme textTheme = TextTheme(
+    displayLarge: displayTitle.copyWith(fontSize: 57, letterSpacing: -1.14),
+    displayMedium: displayTitle.copyWith(fontSize: 45, letterSpacing: -0.9),
+    displaySmall: displayTitle,
+    headlineLarge: displayTitle.copyWith(fontSize: 30, letterSpacing: -0.6),
+    headlineMedium: heroTitle.copyWith(fontSize: 26),
+    headlineSmall: heroTitle,
+    titleLarge: sectionTitle,
+    titleMedium: rowTitle,
+    titleSmall: rowTitle.copyWith(fontSize: 14),
+    bodyLarge: body,
+    bodyMedium: meta,
+    bodySmall: caption,
+    labelLarge: label,
+    labelMedium: caption.copyWith(fontWeight: FontWeight.w600),
+    labelSmall: overline,
   );
 }

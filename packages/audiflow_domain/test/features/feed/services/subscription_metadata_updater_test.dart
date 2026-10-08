@@ -10,6 +10,20 @@ class _FakeSubscriptionRepository implements SubscriptionRepository {
   String? lastArtistName;
   String? lastDescription;
   DateTime? lastSyncedAt;
+  String? storedWebsite;
+  DateTime? websiteSyncedAt;
+  int websiteWrites = 0;
+
+  @override
+  Future<void> updateWebsiteUrl(
+    int id,
+    String? websiteUrl, {
+    required DateTime syncedAt,
+  }) async {
+    websiteWrites++;
+    storedWebsite = websiteUrl ?? storedWebsite;
+    websiteSyncedAt = syncedAt;
+  }
 
   @override
   Future<void> updateFeedMetadata(
@@ -37,6 +51,8 @@ Subscription _subscription({
   String? artworkUrl,
   String? description,
   DateTime? feedMetadataSyncedAt,
+  String? websiteUrl,
+  DateTime? websiteSyncedAt,
 }) {
   return Subscription()
     ..id = id
@@ -47,6 +63,8 @@ Subscription _subscription({
     ..artworkUrl = artworkUrl
     ..description = description
     ..feedMetadataSyncedAt = feedMetadataSyncedAt
+    ..websiteUrl = websiteUrl
+    ..websiteSyncedAt = websiteSyncedAt
     ..genres = ''
     ..explicit = false
     ..subscribedAt = DateTime.now();
@@ -220,6 +238,77 @@ void main() {
       check(repository.lastArtworkUrl).isNull();
       check(repository.lastArtistName).equals('Jane Doe');
       check(repository.lastDescription).equals('Show notes');
+    });
+  });
+
+  group('SubscriptionMetadataUpdater website', () {
+    test('stores the channel website', () async {
+      await updater.apply(_subscription(), link: ' https://example.com/show ');
+      check(repository.storedWebsite).equals('https://example.com/show');
+    });
+
+    test('a channel without a link keeps the stored website', () async {
+      await updater.apply(
+        _subscription(
+          websiteUrl: 'https://example.com/show',
+          websiteSyncedAt: DateTime(2026),
+        ),
+        link: null,
+      );
+      check(repository.websiteWrites).equals(0);
+    });
+
+    test('an unchanged website is not written again', () async {
+      await updater.apply(
+        _subscription(
+          websiteUrl: 'https://example.com/show',
+          websiteSyncedAt: DateTime(2026),
+        ),
+        link: 'https://example.com/show',
+      );
+      check(repository.websiteWrites).equals(0);
+    });
+
+    test('the first read is recorded even without a link', () async {
+      // Stops the backfill: a feed with no <link> would otherwise be
+      // fetched unconditionally on every refresh.
+      await updater.apply(_subscription(), link: null);
+      check(repository.websiteWrites).equals(1);
+      check(repository.storedWebsite).isNull();
+      check(repository.websiteSyncedAt).isNotNull();
+    });
+  });
+
+  group('SubscriptionMetadataUpdater.needsChannelBackfill', () {
+    final synced = DateTime(2026);
+
+    test('is true until the website has been read', () {
+      // Subscriptions made before the website was stored only 304 on
+      // refresh, so they never parse the channel <link> otherwise.
+      check(
+        SubscriptionMetadataUpdater.needsChannelBackfill(
+          _subscription(
+            artworkUrl: 'https://example.com/art.jpg',
+            feedMetadataSyncedAt: synced,
+          ),
+        ),
+      ).isTrue();
+    });
+
+    test('is true while artwork needs a backfill', () {
+      check(
+        SubscriptionMetadataUpdater.needsChannelBackfill(
+          _subscription(websiteSyncedAt: synced),
+        ),
+      ).isTrue();
+    });
+
+    test('is false once both have been read', () {
+      check(
+        SubscriptionMetadataUpdater.needsChannelBackfill(
+          _subscription(feedMetadataSyncedAt: synced, websiteSyncedAt: synced),
+        ),
+      ).isFalse();
     });
   });
 

@@ -81,12 +81,21 @@ void main() {
     PodcastItem? episode,
     EpisodeWithProgress? progress,
     String? itunesId,
+    int? stationId,
+    StationRepository? stations,
+    bool loaded = false,
+    QueueService? queue,
   }) {
     return ProviderScope(
       overrides: [
         sharedPreferencesProvider.overrideWithValue(prefs),
+        if (queue != null) queueServiceProvider.overrideWithValue(queue),
+        if (stations != null)
+          stationRepositoryProvider.overrideWithValue(stations),
         audioPlayerControllerProvider.overrideWith(
-          () => _FakeAudioPlayerController(),
+          () => loaded
+              ? _LoadedAudioPlayerController()
+              : _FakeAudioPlayerController(),
         ),
         episodeProgressProvider.overrideWith((ref, url) async => progress),
       ],
@@ -98,12 +107,51 @@ void main() {
           podcastTitle: testPodcastTitle,
           progress: progress,
           itunesId: itunesId,
+          stationId: stationId,
         ),
       ),
     );
   }
 
   group('EpisodeDetailScreen', () {
+    testWidgets('cancelling the queue replacement records no station play', (
+      tester,
+    ) async {
+      final stations = _RecordingStationRepository();
+      await tester.pumpWidget(
+        buildTestWidget(
+          progress: testEpisodeWithProgress,
+          stationId: 3,
+          stations: stations,
+          queue: _ConfirmingQueueService(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.play_arrow_rounded));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+
+      check(stations.played).isEmpty();
+    });
+
+    testWidgets('playing an episode opened from a station records it', (
+      tester,
+    ) async {
+      final stations = _RecordingStationRepository();
+      await tester.pumpWidget(
+        // Already loaded: a tap resumes, without the fresh-play timers.
+        buildTestWidget(stationId: 3, stations: stations, loaded: true),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.play_arrow_rounded));
+      await tester.pumpAndSettle();
+
+      check(stations.played).deepEquals([3]);
+    });
+
     testWidgets('renders episode title', (tester) async {
       await tester.pumpWidget(buildTestWidget());
       await tester.pumpAndSettle();
@@ -354,4 +402,23 @@ class _FakeAudioPlayerController extends AudioPlayerController {
 
   @override
   bool isLoaded(String url) => false;
+}
+
+class _RecordingStationRepository extends Fake implements StationRepository {
+  final played = <int>[];
+
+  @override
+  Future<void> markPlayed(int id, {required DateTime at}) async =>
+      played.add(id);
+}
+
+class _LoadedAudioPlayerController extends _FakeAudioPlayerController {
+  @override
+  bool isLoaded(String url) => true;
+}
+
+/// Asks to confirm replacing the queue, so the test can cancel.
+class _ConfirmingQueueService extends Fake implements QueueService {
+  @override
+  Future<bool> shouldConfirmAdhocReplace() async => true;
 }

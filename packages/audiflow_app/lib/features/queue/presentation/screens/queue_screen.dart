@@ -10,53 +10,71 @@ import '../widgets/clear_queue_button.dart';
 import '../widgets/now_playing_card.dart';
 import '../widgets/queue_list_tile.dart';
 
-class QueueScreen extends ConsumerWidget {
+class QueueScreen extends ConsumerStatefulWidget {
   const QueueScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<QueueScreen> createState() => _QueueScreenState();
+}
+
+class _QueueScreenState extends ConsumerState<QueueScreen> {
+  /// Marks where the up-next list (and its backdrop) starts.
+  final GlobalKey _listStartKey = GlobalKey();
+
+  @override
+  Widget build(BuildContext context) {
     final queueAsync = ref.watch(queueControllerProvider);
     final l10n = AppLocalizations.of(context);
+    final title = LargeTitle(
+      l10n.queueTitle,
+      trailing: ClearQueueButton(
+        enabled: queueAsync.value?.hasItems ?? false,
+        onClear: () => ref.read(queueControllerProvider.notifier).clearQueue(),
+      ),
+    );
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.queueTitle),
-        actions: [
-          queueAsync.when(
-            data: (queue) => ClearQueueButton(
-              enabled: queue.hasItems,
-              onClear: () =>
-                  ref.read(queueControllerProvider.notifier).clearQueue(),
-            ),
-            loading: () =>
-                const ClearQueueButton(enabled: false, onClear: _noOp),
-            error: (_, _) =>
-                const ClearQueueButton(enabled: false, onClear: _noOp),
+      body: SafeArea(
+        bottom: false,
+        child: queueAsync.when(
+          data: (queue) => _buildContent(context, queue, title),
+          loading: () => _withTitle(
+            title,
+            const Center(child: CircularProgressIndicator()),
           ),
-        ],
-      ),
-      body: queueAsync.when(
-        data: (queue) => _buildContent(context, ref, queue),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => _buildErrorState(
-          context,
-          error.toString(),
-          () => ref.invalidate(queueControllerProvider),
+          error: (error, stack) => _withTitle(
+            title,
+            _buildErrorState(
+              context,
+              error.toString(),
+              () => ref.invalidate(queueControllerProvider),
+            ),
+          ),
         ),
       ),
     );
   }
 
+  Widget _withTitle(Widget title, Widget body) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        title,
+        Expanded(child: body),
+      ],
+    );
+  }
+
   Widget _buildContent(
     BuildContext context,
-    WidgetRef ref,
     PlaybackQueue queue,
+    Widget title,
   ) {
     final nowPlaying = ref.watch(nowPlayingControllerProvider);
     final hasNowPlaying = nowPlaying != null;
 
     if (!queue.hasItems && !hasNowPlaying) {
-      return _buildEmptyState(context);
+      return _withTitle(title, _buildEmptyState(context));
     }
 
     final upNextItems = queue.upNextItems(
@@ -67,61 +85,45 @@ class QueueScreen extends ConsumerWidget {
     final reorderIndexOffset = queue.allItems.length - upNextItems.length;
     final l10n = AppLocalizations.of(context);
 
-    return CustomScrollView(
-      slivers: [
-        // Now Playing section
-        if (hasNowPlaying) const SliverToBoxAdapter(child: NowPlayingCard()),
-
-        // Up Next header
-        if (upNextItems.isNotEmpty)
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                Spacing.md,
-                Spacing.md,
-                Spacing.md,
-                Spacing.sm,
-              ),
-              child: Text(
-                l10n.queueUpNext,
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.2,
-                ),
-              ),
+    return AnchoredContentBackdrop(
+      anchorKey: _listStartKey,
+      child: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(child: title),
+          if (hasNowPlaying) const SliverToBoxAdapter(child: NowPlayingCard()),
+          if (upNextItems.isNotEmpty) ...[
+            SliverToBoxAdapter(child: SectionHeader(title: l10n.queueUpNext)),
+            SliverToBoxAdapter(child: SizedBox(key: _listStartKey)),
+            SliverReorderableList(
+              itemCount: upNextItems.length,
+              onReorderItem: (oldIndex, newIndex) {
+                final item = upNextItems[oldIndex];
+                ref
+                    .read(queueControllerProvider.notifier)
+                    .reorderItem(
+                      item.queueItem.id,
+                      newIndex + reorderIndexOffset,
+                    );
+              },
+              itemBuilder: (context, index) {
+                final item = upNextItems[index];
+                return QueueListTile(
+                  key: ValueKey(item.queueItem.id),
+                  item: item,
+                  index: index,
+                  onRemove: () => ref
+                      .read(queueControllerProvider.notifier)
+                      .removeItem(item.queueItem.id),
+                  onTap: () => ref
+                      .read(queueControllerProvider.notifier)
+                      .skipToItem(item.queueItem.id),
+                );
+              },
             ),
-          ),
-
-        // Queue items list
-        if (upNextItems.isNotEmpty)
-          SliverReorderableList(
-            itemCount: upNextItems.length,
-            onReorderItem: (oldIndex, newIndex) {
-              final item = upNextItems[oldIndex];
-              ref
-                  .read(queueControllerProvider.notifier)
-                  .reorderItem(
-                    item.queueItem.id,
-                    newIndex + reorderIndexOffset,
-                  );
-            },
-            itemBuilder: (context, index) {
-              final item = upNextItems[index];
-              return QueueListTile(
-                key: ValueKey(item.queueItem.id),
-                item: item,
-                index: index,
-                onRemove: () => ref
-                    .read(queueControllerProvider.notifier)
-                    .removeItem(item.queueItem.id),
-                onTap: () => ref
-                    .read(queueControllerProvider.notifier)
-                    .skipToItem(item.queueItem.id),
-              );
-            },
-          ),
-      ],
+          ],
+          const SliverToBoxAdapter(child: SizedBox(height: Spacing.xl)),
+        ],
+      ),
     );
   }
 
@@ -206,5 +208,3 @@ class QueueScreen extends ConsumerWidget {
     );
   }
 }
-
-void _noOp() {}

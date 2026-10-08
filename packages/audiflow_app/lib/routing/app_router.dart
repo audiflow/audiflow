@@ -17,6 +17,7 @@ import '../features/onboarding/presentation/screens/onboarding_carousel_screen.d
 import '../features/podcast_detail/presentation/screens/episode_detail_screen.dart';
 import '../features/station/presentation/screens/station_detail_screen.dart';
 import '../features/station/presentation/screens/station_edit_screen.dart';
+import '../features/station/presentation/screens/station_list_screen.dart';
 import '../features/podcast_detail/presentation/screens/podcast_detail_screen.dart';
 import '../features/podcast_detail/presentation/screens/smart_playlist_episodes_screen.dart';
 import '../features/podcast_detail/presentation/screens/smart_playlist_group_episodes_screen.dart';
@@ -36,6 +37,7 @@ import '../features/parental_control/presentation/screens/pin_change_screen.dart
 import '../features/parental_control/presentation/screens/pin_setup_screen.dart';
 import '../features/settings/presentation/screens/settings_screen.dart';
 import '../features/settings/presentation/screens/storage_settings_screen.dart';
+import '../features/settings/presentation/screens/design_gallery_screen.dart';
 import '../features/settings/presentation/screens/developer_settings_screen.dart';
 import 'material_route.dart';
 import 'scaffold_with_nav_bar.dart';
@@ -56,12 +58,17 @@ class AppRoutes {
   static const String queue = '/queue';
   static const String settings = '/settings';
   static const String podcastDetail = '/search/podcast';
+
+  /// Relative path of the podcast detail route in each tab branch; also
+  /// its page name, so screens below it can pop back to it.
+  static const String podcastDetailChild = 'podcast/:id';
   static const String smartPlaylistEpisodes = 'smart-playlist/:playlistId';
   static const String episodeDetail = 'episode/:episodeGuid';
   static const String smartPlaylistGroupEpisodesPath = 'group/:groupId';
   static const String smartPlaylistDirectGroup =
       'smart-playlist/:playlistId/group/:groupId';
   static const String stationNew = '/library/station/new';
+  static const String stationList = '/library/stations';
   static const String settingsAppearance = '/settings/appearance';
   static const String settingsPlayback = '/settings/playback';
   static const String settingsDownloads = '/settings/downloads';
@@ -69,6 +76,8 @@ class AppRoutes {
   static const String settingsStorage = '/settings/storage';
   static const String settingsAbout = '/settings/about';
   static const String settingsDeveloper = '/settings/developer';
+  static const String settingsDesignGallery =
+      '/settings/developer/design-gallery';
   static const String settingsDownloadManagement =
       '/settings/downloads/management';
   static const String settingsGettingStarted = '/settings/getting-started';
@@ -249,7 +258,7 @@ GoRouter createAppRouter({
                 builder: (context, state) => const SearchScreen(),
                 routes: [
                   materialRoute(
-                    path: 'podcast/:id',
+                    path: AppRoutes.podcastDetailChild,
                     builder: (context, state) =>
                         _buildPodcastDetailScreen(state),
                     routes: [
@@ -289,7 +298,7 @@ GoRouter createAppRouter({
                 builder: (context, state) => const LibraryScreen(),
                 routes: [
                   materialRoute(
-                    path: 'podcast/:id',
+                    path: AppRoutes.podcastDetailChild,
                     builder: (context, state) =>
                         _buildPodcastDetailScreen(state),
                     routes: [
@@ -316,6 +325,10 @@ GoRouter createAppRouter({
                             _buildEpisodeDetailScreen(state),
                       ),
                     ],
+                  ),
+                  materialRoute(
+                    path: 'stations',
+                    builder: (context, state) => const StationListScreen(),
                   ),
                   materialRoute(
                     path: 'station/new',
@@ -394,6 +407,13 @@ GoRouter createAppRouter({
                     path: 'developer',
                     builder: (context, state) =>
                         const DeveloperSettingsScreen(),
+                    routes: [
+                      materialRoute(
+                        path: 'design-gallery',
+                        builder: (context, state) =>
+                            const DesignGalleryScreen(),
+                      ),
+                    ],
                   ),
                   materialRoute(
                     path: 'getting-started',

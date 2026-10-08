@@ -136,6 +136,8 @@ class _StationPodcastPickerScreenState
     );
   }
 
+  static const double _cancelWidth = 104;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -143,9 +145,14 @@ class _StationPodcastPickerScreenState
 
     return Scaffold(
       appBar: AppBar(
+        // The default 56pt leading slot wraps "キャンセル" onto three lines.
+        leadingWidth: _cancelWidth,
         leading: TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text(l10n.commonCancel),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(l10n.commonCancel, maxLines: 1),
+          ),
         ),
         title: Text(l10n.stationPickerTitle),
         actions: [

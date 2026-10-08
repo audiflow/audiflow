@@ -265,12 +265,12 @@ class _StationDetailContentState extends ConsumerState<_StationDetailContent> {
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
         itemCount: stationEpisodes.length,
-        itemExtent: episodeCardExtent,
         itemBuilder: (context, index) {
           return _StationEpisodeTile(
             key: ValueKey(stationEpisodes[index].id),
             stationEpisode: stationEpisodes[index],
             stationName: widget.station.name,
+            stationId: widget.station.id,
             siblingEpisodeIds: siblingEpisodeIds,
           );
         },
@@ -321,12 +321,14 @@ class _StationEpisodeTile extends ConsumerWidget {
   const _StationEpisodeTile({
     required this.stationEpisode,
     required this.stationName,
+    required this.stationId,
     required this.siblingEpisodeIds,
     super.key,
   });
 
   final StationEpisode stationEpisode;
   final String stationName;
+  final int stationId;
   final List<int> siblingEpisodeIds;
 
   @override
@@ -360,10 +362,14 @@ class _StationEpisodeTile extends ConsumerWidget {
           itunesId: subscription?.itunesId,
           feedUrl: subscription?.feedUrl,
           stationName: stationName,
+          stationId: stationId,
         );
       },
-      loading: () => const SizedBox(height: episodeCardExtent),
+      // Roughly one row tall, so the list does not jump when it resolves.
+      loading: () => const SizedBox(height: _loadingRowHeight),
       error: (_, _) => const SizedBox.shrink(),
     );
   }
 }
+
+const double _loadingRowHeight = 160;

@@ -373,6 +373,23 @@ class MockSubscriptionRepository extends _i1.Mock
           as _i11.Future<void>);
 
   @override
+  _i11.Future<void> updateWebsiteUrl(
+    int? id,
+    String? websiteUrl, {
+    required DateTime? syncedAt,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(
+              #updateWebsiteUrl,
+              [id, websiteUrl],
+              {#syncedAt: syncedAt},
+            ),
+            returnValue: _i11.Future<void>.value(),
+            returnValueForMissingStub: _i11.Future<void>.value(),
+          )
+          as _i11.Future<void>);
+
+  @override
   _i11.Future<void> updateFeedMetadata(
     int? id, {
     String? artworkUrl,

@@ -1,5 +1,7 @@
 import 'package:audiflow_app/features/podcast_detail/presentation/widgets/podcast_settings_sheet.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
+import 'package:audiflow_core/audiflow_core.dart'
+    show AutoPlayOrder, SettingsDefaults;
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
@@ -32,7 +34,12 @@ void main() {
     prefs = await SharedPreferences.getInstance();
   });
 
-  Future<void> openSheet(WidgetTester tester, Subscription subscription) async {
+  Future<void> openSheet(
+    WidgetTester tester,
+    Subscription subscription, {
+    VoidCallback? onPlayOrderChanged,
+    PlayOrderPreferenceRepository? playOrders,
+  }) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -48,6 +55,11 @@ void main() {
           hideExplicitForPodcastProvider(
             subscription.id,
           ).overrideWith((ref) => Stream.value(false)),
+          // The sheet's play order and audio rows read these from the database.
+          playOrderPreferenceRepositoryProvider.overrideWithValue(
+            playOrders ?? FakePlayOrderPreferenceRepository(),
+          ),
+          effectiveAudioSettingsProvider(1).overrideWithValue(null),
         ],
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -62,6 +74,7 @@ void main() {
                   artistName: 'Artist',
                   feedUrl: _feedUrl,
                 ),
+                onPlayOrderChanged: onPlayOrderChanged,
               ),
               child: const Text('open'),
             ),
@@ -93,4 +106,108 @@ void main() {
     check(subscription.autoDownloadPausedAt).isNull();
     check(subscription.autoDownloadsSinceLastPlay).equals(0);
   });
+
+  testWidgets('groups play order, downloads, and display', (tester) async {
+    await openSheet(tester, _subscription());
+
+    for (final header in ['playback', 'downloads', 'display']) {
+      final found = find.byWidgetPredicate(
+        (widget) => widget is Text && widget.data?.toLowerCase() == header,
+      );
+      check(found.evaluate()).isNotEmpty();
+    }
+    check(find.text('Play order').evaluate()).length.equals(1);
+  });
+
+  testWidgets('play order row shows the default and opens the picker', (
+    tester,
+  ) async {
+    await openSheet(tester, _subscription());
+
+    check(
+      find.text('Follow global setting (Oldest first)').evaluate(),
+    ).isNotEmpty();
+    await tester.tap(find.text('Play order'));
+    await tester.pumpAndSettle();
+    check(
+      find.byType(RadioListTile<AutoPlayOrder>).evaluate(),
+    ).length.equals(3);
+  });
+
+  testWidgets('reports a saved play order to the podcast screen', (
+    tester,
+  ) async {
+    var changes = 0;
+    await openSheet(
+      tester,
+      _subscription(),
+      onPlayOrderChanged: () => changes++,
+    );
+
+    await tester.tap(find.text('Play order'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Oldest first'));
+    await tester.pumpAndSettle();
+
+    check(changes).equals(1);
+  });
+
+  testWidgets('a failed play order save is reported, not applied', (
+    tester,
+  ) async {
+    var changes = 0;
+    await openSheet(
+      tester,
+      _subscription(),
+      onPlayOrderChanged: () => changes++,
+      playOrders: _FailingPlayOrders(),
+    );
+
+    await tester.tap(find.text('Play order'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Oldest first'));
+    await tester.pumpAndSettle();
+
+    check(changes).equals(0);
+    check(find.text("Couldn't save the setting.").evaluate()).length.equals(1);
+  });
+
+  testWidgets('every keep-count choice is reachable on a short screen', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 420);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await openSheet(tester, _subscription());
+
+    await tester.tap(find.text('Auto-Download Keep Count'));
+    await tester.pumpAndSettle();
+    final last = find.text(
+      '${SettingsDefaults.autoDownloadKeepCountOptions.last} episodes',
+    );
+    await tester.scrollUntilVisible(
+      last,
+      50,
+      scrollable: find.byType(Scrollable).last,
+    );
+    check(last.evaluate()).length.equals(1);
+  });
+
+  testWidgets('the sheet hosts its own snackbars', (tester) async {
+    await openSheet(tester, _subscription());
+    check(
+      find
+          .descendant(
+            of: find.byType(PodcastSettingsSheet),
+            matching: find.byType(Scaffold),
+          )
+          .evaluate(),
+    ).length.equals(1);
+  });
+}
+
+class _FailingPlayOrders extends FakePlayOrderPreferenceRepository {
+  @override
+  Future<void> setPodcastPlayOrder(int podcastId, AutoPlayOrder? order) =>
+      Future.error(Exception('write failed'));
 }

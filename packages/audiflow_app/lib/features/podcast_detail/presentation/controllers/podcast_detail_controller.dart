@@ -128,7 +128,10 @@ Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
 
     // Build conditional request headers from cached HTTP metadata
     final conditionalHeaders = <String, String>{};
-    if (subscription != null) {
+    // A subscription missing channel metadata parses the feed in full: a
+    // 304 would rebuild from Isar and never read the channel.
+    if (subscription != null &&
+        !SubscriptionMetadataUpdater.needsChannelBackfill(subscription)) {
       if (subscription.httpEtag != null) {
         conditionalHeaders['If-None-Match'] = subscription.httpEtag!;
       }
@@ -176,6 +179,7 @@ Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
           title: subscription.title,
           description: subscription.description ?? '',
           author: subscription.artistName,
+          link: subscription.websiteUrl,
         ),
         episodes: podcastItems,
       );
@@ -253,6 +257,7 @@ Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
         imageUrl: result.podcast.primaryImage?.url,
         author: result.podcast.author,
         description: result.podcast.description,
+        link: result.podcast.link,
       );
 
       final episodeRepo = ref.read(episodeRepositoryProvider);

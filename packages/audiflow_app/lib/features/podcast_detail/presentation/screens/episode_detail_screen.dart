@@ -18,6 +18,7 @@ import '../../../download/presentation/helpers/download_action_helper.dart';
 import '../../../player/helpers/podcast_lookup.dart';
 import '../../../queue/presentation/controllers/queue_controller.dart';
 import '../../../share/presentation/helpers/share_helper.dart';
+import '../../../station/presentation/helpers/record_station_play.dart';
 import '../controllers/podcast_detail_controller.dart';
 import '../widgets/episode_dev_info_widget.dart';
 
@@ -32,6 +33,7 @@ class EpisodeDetailScreen extends ConsumerStatefulWidget {
     this.progress,
     this.itunesId,
     this.startAt,
+    this.stationId,
   });
 
   final PodcastItem episode;
@@ -46,6 +48,10 @@ class EpisodeDetailScreen extends ConsumerStatefulWidget {
   /// a `?t=<seconds>` query param on an incoming universal link. One-shot:
   /// consumed the first time playback starts, then ignored.
   final Duration? startAt;
+
+  /// The station this episode was opened from, so playing it here counts
+  /// as a play from that station.
+  final int? stationId;
 
   @override
   ConsumerState<EpisodeDetailScreen> createState() =>
@@ -597,6 +603,10 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
     context.push('${AppRoutes.library}/podcast/${podcast.id}', extra: podcast);
   }
 
+  void _recordStationPlay() {
+    if (widget.stationId case final id?) recordStationPlay(ref, id);
+  }
+
   Future<void> _onPlayPausePressed(
     BuildContext context,
     String url,
@@ -632,6 +642,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
           _pendingStartAt = null;
         }
       }
+      _recordStationPlay();
       controller.resume();
       return;
     }
@@ -652,6 +663,10 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
         sourceContext: widget.podcastTitle,
       );
     }
+
+    // Only now, past the replace-queue confirmation: a cancelled play must
+    // not move the station up the Library.
+    _recordStationPlay();
 
     // Kick off playback without awaiting: just_audio's play() future only
     // completes when the session pauses/ends, so awaiting would leave the

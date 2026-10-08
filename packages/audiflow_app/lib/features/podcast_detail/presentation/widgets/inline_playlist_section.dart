@@ -39,7 +39,7 @@ List<Widget> buildInlinePlaylistSlivers({
   required String? feedImageUrl,
   required DateTime? lastRefreshedAt,
   required ScrollController scrollController,
-  required VoidCallback onToggleSortOrder,
+  VoidCallback? onToggleSortOrder,
   required void Function(
     SmartPlaylist playlist,
     SmartPlaylistGroup group, {
@@ -170,7 +170,7 @@ List<Widget> _buildPlaylistData({
   required String? feedImageUrl,
   required DateTime? lastRefreshedAt,
   required ScrollController scrollController,
-  required VoidCallback onToggleSortOrder,
+  VoidCallback? onToggleSortOrder,
   required bool showEpisodeRowThumbnail,
   required void Function(
     SmartPlaylist playlist,
@@ -288,7 +288,7 @@ List<Widget> _buildInlineGroupList({
   required String searchQuery,
   required SortOrder sortOrder,
   required ScrollController scrollController,
-  required VoidCallback onToggleSortOrder,
+  VoidCallback? onToggleSortOrder,
   required void Function(
     SmartPlaylist playlist,
     SmartPlaylistGroup group, {
@@ -321,24 +321,19 @@ List<Widget> _buildInlineGroupList({
     );
 
     return [
-      if (playlist.userSortable)
-        SliverToBoxAdapter(
-          child: Builder(
-            builder: (context) => SortHeader(
-              label: AppLocalizations.of(
-                context,
-              ).podcastDetailGroupCount(sorted.length),
-              sortOrder: sortOrder,
-              onToggleSortOrder: onToggleSortOrder,
-            ),
-          ),
+      SliverList.separated(
+        separatorBuilder: (context, _) => Divider(
+          height: 1,
+          thickness: 1,
+          color: AppColors.of(context).hairline,
+          indent: _seriesSeparatorIndent,
         ),
-      SliverList.builder(
         itemCount: sorted.length,
         itemBuilder: (context, index) {
           final group = sorted[index];
           return InlineGroupCard(
             group: group,
+            playback: SeriesPlayback.of(group.episodeIds, episodeMap),
             prependSeasonNumber: playlist.prependSeasonNumber,
             feedUrl: feedUrl,
             playlistId: playlist.id,
@@ -385,7 +380,7 @@ List<Widget> _buildPerEpisodeInlineGroups({
   required SmartPlaylist playlist,
   required SortOrder sortOrder,
   required ScrollController scrollController,
-  required VoidCallback onToggleSortOrder,
+  VoidCallback? onToggleSortOrder,
   required void Function(
     SmartPlaylist playlist,
     SmartPlaylistGroup group, {
@@ -429,23 +424,7 @@ List<Widget> _buildPerEpisodeInlineGroups({
     sortFilteredGroupsInPlace(items, playlist.groupSort, sortOrder);
   }
 
-  var totalCards = 0;
-  for (final items in byYear.values) {
-    totalCards += items.length;
-  }
-
   return [
-    SliverToBoxAdapter(
-      child: Builder(
-        builder: (context) => SortHeader(
-          label: AppLocalizations.of(
-            context,
-          ).podcastDetailGroupCount(totalCards),
-          sortOrder: sortOrder,
-          onToggleSortOrder: onToggleSortOrder,
-        ),
-      ),
-    ),
     ...buildYearGroupedSlivers<YearFilteredInlineGroup>(
       itemsByYear: {for (final y in sortedYears) y: byYear[y]!},
       sortedYears: sortedYears,
@@ -455,9 +434,8 @@ List<Widget> _buildPerEpisodeInlineGroups({
         feedUrl: feedUrl,
         playlistId: playlist.id,
         episodeCountOverride: item.filteredEpisodeIds.length,
-        earliestDateOverride: item.earliestDate,
-        latestDateOverride: item.latestDate,
         totalDurationMsOverride: item.totalDurationMs,
+        playback: SeriesPlayback.of(item.filteredEpisodeIds, episodeMap),
         onTap: () => onNavigateToGroup(
           playlist,
           item.group,
@@ -466,7 +444,7 @@ List<Widget> _buildPerEpisodeInlineGroups({
       ),
       scrollController: scrollController,
       yearGroupingEnabled: true,
-      itemExtent: null,
+      separatorIndent: _seriesSeparatorIndent,
     ),
   ];
 }
@@ -534,7 +512,6 @@ List<Widget> _buildYearGroupedPlaylistSlivers({
     ),
     scrollController: scrollController,
     yearGroupingEnabled: true,
-    itemExtent: episodeCardExtent,
   );
 }
 
@@ -545,7 +522,7 @@ List<Widget> _buildMixedYearInlineGroups({
   required YearBinding defaultMode,
   required SortOrder sortOrder,
   required ScrollController scrollController,
-  required VoidCallback onToggleSortOrder,
+  VoidCallback? onToggleSortOrder,
   required void Function(
     SmartPlaylist playlist,
     SmartPlaylistGroup group, {
@@ -609,23 +586,7 @@ List<Widget> _buildMixedYearInlineGroups({
     sortFilteredGroupsInPlace(items, playlist.groupSort, sortOrder);
   }
 
-  var totalCards = 0;
-  for (final items in byYear.values) {
-    totalCards += items.length;
-  }
-
   return [
-    SliverToBoxAdapter(
-      child: Builder(
-        builder: (context) => SortHeader(
-          label: AppLocalizations.of(
-            context,
-          ).podcastDetailGroupCount(totalCards),
-          sortOrder: sortOrder,
-          onToggleSortOrder: onToggleSortOrder,
-        ),
-      ),
-    ),
     ...buildYearGroupedSlivers<YearFilteredInlineGroup>(
       itemsByYear: {for (final y in sortedYears) y: byYear[y]!},
       sortedYears: sortedYears,
@@ -635,9 +596,8 @@ List<Widget> _buildMixedYearInlineGroups({
         feedUrl: feedUrl,
         playlistId: playlist.id,
         episodeCountOverride: item.filteredEpisodeIds.length,
-        earliestDateOverride: item.earliestDate,
-        latestDateOverride: item.latestDate,
         totalDurationMsOverride: item.totalDurationMs,
+        playback: SeriesPlayback.of(item.filteredEpisodeIds, episodeMap),
         onTap: () => onNavigateToGroup(
           playlist,
           item.group,
@@ -649,10 +609,14 @@ List<Widget> _buildMixedYearInlineGroups({
       ),
       scrollController: scrollController,
       yearGroupingEnabled: true,
-      itemExtent: null,
+      separatorIndent: _seriesSeparatorIndent,
     ),
   ];
 }
+
+/// Aligns series-row separators with the text, past the 60dp artwork.
+const double _seriesSeparatorIndent =
+    Spacing.screenHorizontal + 60 + Spacing.sm + Spacing.xs;
 
 /// Computes (earliest, latest, totalDurationMs) for a
 /// filtered subset of episode IDs.

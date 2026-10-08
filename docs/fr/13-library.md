@@ -21,20 +21,24 @@ Two design decisions shape this feature. First, the subscribed-podcast list is s
 
 ## User-visible Behavior
 
-- Normal case: Opening the Library tab shows two stacked sections — "Stations" first, then "Your Podcasts". The podcast section lists every subscribed podcast inline as a tile with artwork, title, and artist. Tapping a tile opens that podcast's detail screen.
-- Sorting: The "Your Podcasts" header carries a sort control on the right. Tapping it offers three options — by latest episode, by subscription date, or alphabetically. The current choice is marked, the list reorders immediately, and the choice persists across app restarts. When sorting by latest episode, podcasts that have no episodes yet sort last.
+- Normal case: Opening the Library tab shows a large "Library" title, then up to three stacked sections: "Continue listening", "Stations", and "Podcasts". "Continue listening" is a horizontal row of cards for up to 10 in-progress episodes from playback history (artwork, title, remaining time, and a progress line along the card's bottom edge); it is hidden when nothing is in progress, and tapping a card opens that episode's detail screen on top of its podcast. Stations appear as a two-column grid of cards with an artwork mosaic, name, and podcast and episode counts. The podcast section lists every subscribed podcast inline in one full-width list with hairline separators; each row shows artwork, title, and the date of the podcast's newest episode ("Updated Oct 5"; the artist until that date is known), plus an accent dot when an episode was published after the listener last opened that podcast (or after subscribing, if never opened). The dot marks presence, not a count, so a long back catalog never inflates it; opening the podcast clears it. Tapping a row opens that podcast's detail screen. Section headers show their item count beside the title ("Podcasts 18", "Stations 6"), leaving the right side to controls.
+- Filtering: A field under the "Podcasts" header (always shown) narrows the list to podcasts whose title or author contains the typed text, ignoring case; a clear button empties it, and a filter matching nothing says so. The filter is not persisted.
+- Sorting: The "Podcasts" header stays pinned at the top while the list scrolls, and shows the podcast count beside its title and a sort control on the right. Tapping it offers three options — by latest episode, by subscription date, or alphabetically. The current choice is marked, the list reorders immediately, and the choice persists across app restarts. When sorting by latest episode, podcasts that have no episodes yet sort last.
 - Reactive ordering: With the latest-episode sort active, the list reorders on its own when a background feed refresh brings in newer episodes — the listener does not need to re-trigger the sort.
 - Pull to refresh: Pulling down on the Library forces a sync of all subscriptions. A snackbar reports the outcome — how many feeds synced successfully, or how many failed.
-- Empty cases: With no subscriptions and no stations, the Library shows a full-screen empty state inviting the listener to subscribe. With stations present but no subscriptions, the "Your Podcasts" section keeps its header and shows a short "no subscriptions yet" placeholder; the same holds for the stations section when no stations exist.
+- Empty cases: With no subscriptions and no stations, the Library shows a full-screen empty state inviting the listener to subscribe. With stations present but no subscriptions, the "Podcasts" section keeps its header and shows a short "no subscriptions yet" placeholder; the same holds for the stations section when no stations exist.
 - Edge case (load failure): If the subscription list fails to load, the Library shows an error state with the error text and a retry button. If only the persisted sort preference fails to load, the list still renders, falling back to the latest-episode order.
 - Year-grouping suppression: When the listener opens a podcast with fewer than 30 episodes whose only auto-detected grouping is by year, no smart-playlist toggle appears on the detail screen — the podcast shows its episode list only. Once that feed grows past the threshold, the year-grouped view becomes available on the next read. Podcasts with a curated (preset-authored) year grouping are unaffected and always show the tab.
 
 ## Capabilities
 
 - Presents the subscribed-podcast list inline within the Library tab as artwork-and-metadata tiles, each opening the podcast detail screen on tap.
-- Provides a sort selector in the "Your Podcasts" header offering latest-episode, subscription-date, and alphabetical orders, with the active choice marked and persisted across restarts.
+- Marks podcasts with episodes since the last visit by a dot on their row.
+- Provides an always-visible filter field that narrows the podcast list by title or author.
+- Provides a sort selector in the "Podcasts" header offering latest-episode, subscription-date, and alphabetical orders, with the active choice marked and persisted across restarts.
 - Keeps the latest-episode sort reactive, recomputing the order when background feed refreshes deliver new episodes, and placing episode-less podcasts last for that sort.
-- Renders the "Stations" section above the podcast list and offers an entry point to create a new station.
+- Shows in-progress episodes in a "Continue listening" row above the stations, hidden when there are none.
+- Renders the "Stations" section as a two-column grid above the podcast list and offers a "+" entry point to create a new station.
 - Supports pull-to-refresh that force-syncs all subscriptions and reports the success and failure counts.
 - Handles empty and error states distinctly: a full-screen empty state when nothing is owned, inline placeholders when one section is empty, and a retry-able error state when the subscription list fails to load.
 - Suppresses the auto-detected year-grouping smart-playlist tab for small feeds (below a 30-episode threshold) so the smart-playlist toggle stays hidden when the year view would only duplicate the episode list, while leaving curated year configs and all other groupings untouched.
@@ -60,4 +64,5 @@ Two design decisions shape this feature. First, the subscribed-podcast list is s
   - `packages/audiflow_app/lib/features/library/presentation/controllers/continue_listening_controller.dart`
   - `packages/audiflow_app/lib/features/library/presentation/widgets/subscription_list_tile.dart`
   - `packages/audiflow_app/lib/features/library/presentation/widgets/continue_listening_section.dart`
+  - `packages/audiflow_app/lib/features/station/presentation/widgets/station_grid_tile.dart`
 - **Related FR**: `03-subscription-feeds.md`, `11-play-order.md`

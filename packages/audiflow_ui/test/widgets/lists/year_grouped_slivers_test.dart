@@ -1,4 +1,5 @@
-import 'package:audiflow_ui/src/widgets/lists/year_grouped_slivers.dart';
+import 'package:audiflow_ui/audiflow_ui.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -140,6 +141,236 @@ void main() {
       expect(find.text('Jump to year'), findsOneWidget);
       expect(find.text('2024'), findsWidgets);
       expect(find.text('2023'), findsWidgets);
+    });
+  });
+
+  group('buildYearGroupedSlivers separated', () {
+    late ScrollController scrollController;
+
+    setUp(() => scrollController = ScrollController());
+    tearDown(() => scrollController.dispose());
+
+    Future<void> pump(
+      WidgetTester tester,
+      Map<int, List<String>> itemsByYear,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: Scaffold(
+            body: CustomScrollView(
+              controller: scrollController,
+              slivers: buildYearGroupedSlivers<String>(
+                itemsByYear: itemsByYear,
+                sortedYears: itemsByYear.keys.toList(),
+                itemBuilder: (_, item) =>
+                    SizedBox(height: 60, child: Text(item)),
+                scrollController: scrollController,
+                yearGroupingEnabled: true,
+                separatorIndent: 0,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    testWidgets('rows run full width with hairlines between them', (
+      tester,
+    ) async {
+      await pump(tester, {
+        2025: ['A', 'B'],
+        2024: ['C'],
+      });
+      check(find.byType(Divider).evaluate()).length.equals(1);
+      check(tester.getSize(find.text('A')).width).equals(800);
+    });
+
+    testWidgets('passes the separator inset to each year', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: Scaffold(
+            body: CustomScrollView(
+              controller: scrollController,
+              slivers: buildYearGroupedSlivers<String>(
+                itemsByYear: {
+                  2025: ['A', 'B'],
+                  2024: ['C', 'D'],
+                },
+                sortedYears: [2025, 2024],
+                itemBuilder: (_, item) =>
+                    SizedBox(height: 60, child: Text(item)),
+                scrollController: scrollController,
+                yearGroupingEnabled: true,
+                separatorIndent: 88,
+              ),
+            ),
+          ),
+        ),
+      );
+      final dividers = tester.widgetList<Divider>(find.byType(Divider));
+      check(dividers.map((d) => d.indent)).deepEquals([88, 88]);
+    });
+  });
+
+  group('buildYearGroupedSlivers under pinned headers', () {
+    late ScrollController scrollController;
+
+    setUp(() => scrollController = ScrollController());
+    tearDown(() => scrollController.dispose());
+
+    const topInset = 100.0;
+    const rowHeight = 120.0;
+
+    Future<void> pump(WidgetTester tester) async {
+      final itemsByYear = {
+        2025: [for (var i = 0; i < 5; i++) 'a$i'],
+        2024: [for (var i = 0; i < 5; i++) 'b$i'],
+        2023: [for (var i = 0; i < 5; i++) 'c$i'],
+      };
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: Scaffold(
+            body: CustomScrollView(
+              controller: scrollController,
+              slivers: [
+                // Stands in for the floating navigation and sticky bar.
+                const PinnedHeaderSliver(child: SizedBox(height: topInset)),
+                ...buildYearGroupedSlivers<String>(
+                  itemsByYear: itemsByYear,
+                  sortedYears: itemsByYear.keys.toList(),
+                  // Rows far from the 88px estimate, as series rows are.
+                  itemBuilder: (_, item) =>
+                      SizedBox(height: rowHeight, child: Text(item)),
+                  scrollController: scrollController,
+                  yearGroupingEnabled: true,
+                  separatorIndent: 0,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    /// Year shown in the sticky header, which pins right under the inset.
+    String stickyYear(WidgetTester tester) {
+      for (final year in ['2025', '2024', '2023']) {
+        for (final element in find.text(year).evaluate()) {
+          final top = tester.getTopLeft(find.byWidget(element.widget)).dy;
+          if (topInset <= top && top < topInset + yearHeaderHeight) {
+            return year;
+          }
+        }
+      }
+      return 'none';
+    }
+
+    Future<void> scrollDividerTo(
+      WidgetTester tester,
+      String year,
+      double screenY,
+    ) async {
+      // Lazy lists build only what shows: scroll near first, then read
+      // the divider's position as a scroll offset.
+      scrollController.jumpTo(400);
+      await tester.pump();
+      final dividerOffset =
+          scrollController.offset + tester.getTopLeft(find.text(year).last).dy;
+      scrollController.jumpTo(dividerOffset - screenY);
+      await tester.pump();
+    }
+
+    testWidgets('switches when the next divider reaches the pinned bar', (
+      tester,
+    ) async {
+      await pump(tester);
+      check(stickyYear(tester)).equals('2025');
+
+      await scrollDividerTo(tester, '2024', topInset + 30);
+      check(stickyYear(tester)).equals('2025');
+
+      await scrollDividerTo(tester, '2024', topInset - 1);
+      check(stickyYear(tester)).equals('2024');
+    });
+
+    testWidgets('a rebuild at a scrolled position shows the right year', (
+      tester,
+    ) async {
+      await pump(tester);
+      await scrollDividerTo(tester, '2024', topInset - 1);
+      check(stickyYear(tester)).equals('2024');
+
+      // Coming back to the screen rebuilds the slivers with no scroll
+      // event; the header must not fall back to the first year.
+      await pump(tester);
+      await tester.pump();
+      check(stickyYear(tester)).equals('2024');
+    });
+
+    testWidgets('jumping to a year lands its rows under the header', (
+      tester,
+    ) async {
+      await pump(tester);
+      await tester.tap(find.text('2025').first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('2023').last);
+      await tester.pumpAndSettle();
+
+      check(stickyYear(tester)).equals('2023');
+      final firstRow = tester.getTopLeft(find.text('c0')).dy;
+      check(firstRow).isCloseTo(topInset + yearHeaderHeight, yearHeaderHeight);
+    });
+  });
+
+  group('buildYearGroupedSlivers with mixed row heights', () {
+    late ScrollController scrollController;
+
+    setUp(() => scrollController = ScrollController());
+    tearDown(() => scrollController.dispose());
+
+    testWidgets('a long jump lands on the chosen year after measuring', (
+      tester,
+    ) async {
+      const topInset = 100.0;
+      final years = [for (var y = 2025; 2021 <= y; y--) y];
+      final itemsByYear = {
+        for (final y in years) y: [for (var i = 0; i < 40; i++) '$y-$i'],
+      };
+      // Heights far from the estimate and uneven, like rows whose titles
+      // and descriptions wrap differently.
+      double heightOf(String item) => 60.0 + (item.hashCode % 5) * 45.0;
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: Scaffold(
+            body: CustomScrollView(
+              controller: scrollController,
+              slivers: [
+                const PinnedHeaderSliver(child: SizedBox(height: topInset)),
+                ...buildYearGroupedSlivers<String>(
+                  itemsByYear: itemsByYear,
+                  sortedYears: years,
+                  itemBuilder: (_, item) =>
+                      SizedBox(height: heightOf(item), child: Text(item)),
+                  scrollController: scrollController,
+                  yearGroupingEnabled: true,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('2025').first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('2021').last);
+      await tester.pumpAndSettle();
+
+      final firstRow = tester.getTopLeft(find.text('2021-0')).dy;
+      check(firstRow).isCloseTo(topInset + yearHeaderHeight, 1);
     });
   });
 

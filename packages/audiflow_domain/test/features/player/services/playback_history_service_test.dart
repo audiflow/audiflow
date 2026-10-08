@@ -1,4 +1,5 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
@@ -299,6 +300,50 @@ void main() {
     });
   });
 
+  group('progressSaved', () {
+    final progress = PlaybackProgress(
+      position: const Duration(seconds: 30),
+      duration: const Duration(minutes: 30),
+      bufferedPosition: const Duration(seconds: 35),
+    );
+
+    void stubSave() {
+      when(
+        mockRepository.saveProgress(
+          episodeId: anyNamed('episodeId'),
+          positionMs: anyNamed('positionMs'),
+          durationMs: anyNamed('durationMs'),
+          listenedDeltaMs: anyNamed('listenedDeltaMs'),
+          realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
+        ),
+      ).thenAnswer((_) async {});
+    }
+
+    test('announces the episode once a pause has been saved', () async {
+      stubSave();
+      final saved = <int>[];
+      final subscription = service.progressSaved.listen(saved.add);
+      addTearDown(subscription.cancel);
+
+      await service.onPlaybackPaused(7, progress);
+      await Future<void>.delayed(Duration.zero);
+
+      check(saved).deepEquals([7]);
+    });
+
+    test('announces the episode once a stop has been saved', () async {
+      stubSave();
+      final saved = <int>[];
+      final subscription = service.progressSaved.listen(saved.add);
+      addTearDown(subscription.cancel);
+
+      await service.onPlaybackStopped(8, progress);
+      await Future<void>.delayed(Duration.zero);
+
+      check(saved).deepEquals([8]);
+    });
+  });
+
   group('onPlaybackStopped', () {
     test('saves progress and resets tracking state', () async {
       const episodeId = 1;
@@ -354,6 +399,70 @@ void main() {
 
       verify(mockRepository.markIncomplete(episodeId)).called(1);
     });
+  });
+
+  group('markAll', () {
+    test('marks each episode completed and counts them', () async {
+      when(mockRepository.markCompleted(any)).thenAnswer((_) async {});
+
+      final count = await service.markAllCompleted([1, 2, 3]);
+
+      check(count).equals(3);
+      for (final id in [1, 2, 3]) {
+        verify(mockRepository.markCompleted(id)).called(1);
+      }
+    });
+
+    test('marks each episode not played and counts them', () async {
+      when(mockRepository.markIncomplete(any)).thenAnswer((_) async {});
+
+      final count = await service.markAllIncomplete([4, 5]);
+
+      check(count).equals(2);
+      verify(mockRepository.markIncomplete(4)).called(1);
+      verify(mockRepository.markIncomplete(5)).called(1);
+    });
+
+    test('reconciles stations once for the whole batch', () async {
+      final reconciler = _RecordingReconciler();
+      service = PlaybackHistoryService(
+        mockRepository,
+        getCompletionThreshold: () => 0.95,
+        reconcilerService: reconciler,
+      );
+      when(mockRepository.markCompleted(any)).thenAnswer((_) async {});
+
+      await service.markAllCompleted([1, 2, 3]);
+
+      check(reconciler.batches).deepEquals([
+        [1, 2, 3],
+      ]);
+      check(reconciler.single).isEmpty();
+    });
+
+    test(
+      'a failing write still reconciles what changed, then throws',
+      () async {
+        final reconciler = _RecordingReconciler();
+        service = PlaybackHistoryService(
+          mockRepository,
+          getCompletionThreshold: () => 0.95,
+          reconcilerService: reconciler,
+        );
+        when(mockRepository.markCompleted(any)).thenAnswer((invocation) async {
+          if (invocation.positionalArguments.first == 3) {
+            throw StateError('disk full');
+          }
+        });
+
+        await check(
+          service.markAllCompleted([1, 2, 3, 4]),
+        ).throws<StateError>();
+        check(reconciler.batches).deepEquals([
+          [1, 2],
+        ]);
+      },
+    );
   });
 
   group('reset', () {
@@ -808,4 +917,20 @@ void main() {
       ).called(1);
     });
   });
+}
+
+/// Records which episodes were reconciled, singly or as a batch.
+class _RecordingReconciler implements StationReconcilerService {
+  final single = <int>[];
+  final batches = <List<int>>[];
+
+  @override
+  Future<void> onEpisodeChanged(int episodeId) async => single.add(episodeId);
+
+  @override
+  Future<void> onEpisodesChanged(Iterable<int> episodeIds) async =>
+      batches.add(episodeIds.toList());
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

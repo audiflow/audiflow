@@ -101,6 +101,131 @@ void main() {
       final meta = progress.first as ParsedPodcastMeta;
       expect(meta.title, 'Test Podcast');
       expect(meta.author, 'Test Author');
+      expect(meta.link, isNull);
+    });
+
+    test('reads the channel website, not atom:link', () async {
+      const xml = '''
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Show</title>
+    <atom:link href="https://example.com/feed.xml" rel="self"/>
+    <link>https://example.com/show</link>
+    <description>About</description>
+    <item>
+      <guid>e1</guid>
+      <title>E1</title>
+      <link>https://example.com/show/e1</link>
+    </item>
+  </channel>
+</rss>
+''';
+      final meta = await IsolateRssParser.parse(
+        feedXml: xml,
+        knownGuids: {},
+      ).firstWhere((event) => event is ParsedPodcastMeta);
+
+      expect((meta as ParsedPodcastMeta).link, 'https://example.com/show');
+    });
+
+    Future<String?> channelLink(String link) async {
+      final xml =
+          '<?xml version="1.0" encoding="UTF-8"?>'
+          '<rss version="2.0"><channel><title>Show</title>'
+          '<link>$link</link>'
+          '<item><guid>e1</guid><title>E1</title></item>'
+          '</channel></rss>';
+      final meta = await IsolateRssParser.parse(
+        feedXml: xml,
+        knownGuids: {},
+      ).firstWhere((event) => event is ParsedPodcastMeta);
+      return (meta as ParsedPodcastMeta).link;
+    }
+
+    test('decodes character references in the channel link', () async {
+      expect(
+        await channelLink('https://example.com/show?a=1&amp;b=2&#38;c=3'),
+        'https://example.com/show?a=1&b=2&c=3',
+      );
+    });
+
+    test('keeps a CDATA channel link verbatim', () async {
+      expect(
+        await channelLink('<![CDATA[https://example.com/show?a=1&amp;b]]>'),
+        'https://example.com/show?a=1&amp;b',
+      );
+    });
+
+    test('reads a channel link placed after the items', () async {
+      const xml =
+          '<?xml version="1.0" encoding="UTF-8"?>'
+          '<rss version="2.0"><channel><title>Show</title>'
+          '<item><guid>e1</guid><title>E1</title>'
+          '<link>https://example.com/show/e1</link></item>'
+          '<link>https://example.com/show</link>'
+          '</channel></rss>';
+      final meta = await IsolateRssParser.parse(
+        feedXml: xml,
+        knownGuids: {},
+      ).firstWhere((event) => event is ParsedPodcastMeta);
+      // The channel's own link, not the item's.
+      expect((meta as ParsedPodcastMeta).link, 'https://example.com/show');
+    });
+
+    Future<String?> linkOf(String channelBody) async {
+      final xml =
+          '<?xml version="1.0" encoding="UTF-8"?>'
+          '<rss version="2.0"><channel><title>Show</title>'
+          '$channelBody'
+          '</channel></rss>';
+      final meta = await IsolateRssParser.parse(
+        feedXml: xml,
+        knownGuids: {},
+      ).firstWhere((event) => event is ParsedPodcastMeta);
+      return (meta as ParsedPodcastMeta).link;
+    }
+
+    test('ignores textInput and image links after the items', () async {
+      expect(
+        await linkOf(
+          '<item><guid>e1</guid></item>'
+          '<textInput><title>Search</title>'
+          '<link>https://example.com/search</link></textInput>'
+          '<link>https://example.com/show</link>',
+        ),
+        'https://example.com/show',
+      );
+    });
+
+    test('ignores a link inside a comment', () async {
+      expect(
+        await linkOf(
+          '<!-- <link>https://example.com/old</link> -->'
+          '<link>https://example.com/show</link>'
+          '<item><guid>e1</guid></item>',
+        ),
+        'https://example.com/show',
+      );
+    });
+
+    test('a malformed reference in the link does not fail the feed', () async {
+      final events = await IsolateRssParser.parse(
+        feedXml:
+            '<?xml version="1.0" encoding="UTF-8"?>'
+            '<rss version="2.0"><channel><title>Show</title>'
+            '<link>https://example.com/&#x110000;</link>'
+            '<item><guid>e1</guid><title>E1</title></item>'
+            '</channel></rss>',
+        knownGuids: {},
+      ).toList();
+      expect(events.whereType<ParsedEpisode>(), hasLength(1));
+    });
+
+    test('drops a channel link that is not an http(s) address', () async {
+      // Such a link only hides "Open website"; it must not fail the feed.
+      expect(await channelLink('example.com/show'), isNull);
+      expect(await channelLink('mailto:host@example.com'), isNull);
     });
   });
 }

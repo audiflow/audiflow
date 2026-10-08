@@ -15,6 +15,13 @@ class _FakeEpisodeRepository extends Fake implements EpisodeRepository {
   @override
   Future<Episode?> getByAudioUrl(String audioUrl) async =>
       audioUrl == _audioUrl ? episode : null;
+
+  @override
+  Future<List<Episode>> getByPodcastId(int podcastId) async => podcastId == 3
+      ? [
+          for (final id in [11, 12, 13]) Episode()..id = id,
+        ]
+      : [];
 }
 
 class _FakeHistoryService extends Fake implements PlaybackHistoryService {
@@ -27,6 +34,18 @@ class _FakeHistoryService extends Fake implements PlaybackHistoryService {
   @override
   Future<void> markIncomplete(int episodeId) async =>
       incompleted.add(episodeId);
+
+  @override
+  Future<int> markAllCompleted(Iterable<int> episodeIds) async {
+    completed.addAll(episodeIds);
+    return episodeIds.length;
+  }
+
+  @override
+  Future<int> markAllIncomplete(Iterable<int> episodeIds) async {
+    incompleted.addAll(episodeIds);
+    return episodeIds.length;
+  }
 }
 
 void main() {
@@ -109,6 +128,62 @@ void main() {
       audioUrl: _audioUrl,
       isCurrentlyCompleted: false,
     );
+    await probe.read(keyed.future);
+
+    check(builds).equals(2);
+  });
+
+  test('marks every episode of a podcast played', () async {
+    final container = createContainer(null);
+
+    final count = await setPodcastPlayedStatus(
+      container,
+      podcastId: 3,
+      played: true,
+    );
+
+    check(count).equals(3);
+    check(historyService.completed).deepEquals([11, 12, 13]);
+  });
+
+  test('marks every episode of a podcast unplayed', () async {
+    final container = createContainer(null);
+
+    final count = await setPodcastPlayedStatus(
+      container,
+      podcastId: 3,
+      played: false,
+    );
+
+    check(count).equals(3);
+    check(historyService.incompleted).deepEquals([11, 12, 13]);
+  });
+
+  test('marking all refreshes the filtered episode list', () async {
+    // An Unplayed filter must drop episodes that were just marked played.
+    final container = createContainer(null);
+    var builds = 0;
+    final keyed = filteredSortedEpisodesProvider(
+      'https://example.com/feed',
+      EpisodeFilter.unplayed,
+      SortOrder.descending,
+    );
+    final probe = ProviderContainer(
+      parent: container,
+      overrides: [
+        filteredSortedEpisodesProvider.overrideWith((ref, _) async {
+          builds++;
+          return const [];
+        }),
+      ],
+    );
+    addTearDown(probe.dispose);
+    final subscription = probe.listen(keyed, (_, _) {});
+    addTearDown(subscription.close);
+    await probe.read(keyed.future);
+    check(builds).equals(1);
+
+    await setPodcastPlayedStatus(probe, podcastId: 3, played: true);
     await probe.read(keyed.future);
 
     check(builds).equals(2);

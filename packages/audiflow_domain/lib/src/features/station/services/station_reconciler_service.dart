@@ -2,6 +2,7 @@ import 'package:isar_community/isar.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/providers/database_provider.dart';
+import '../../feed/models/episode.dart';
 import '../models/station_podcast.dart';
 import 'station_reconciler.dart';
 
@@ -26,6 +27,26 @@ class StationReconcilerService {
   /// Called when an episode's state changes (playback, download, favorite).
   Future<void> onEpisodeChanged(int episodeId) async {
     await _reconciler.reconcileEpisode(episodeId);
+  }
+
+  /// Called after many episodes changed at once (e.g. a whole podcast
+  /// marked played). Fully reconciles each station that holds one of their
+  /// podcasts once, instead of a differential pass per episode, which for
+  /// a large podcast would re-read the podcast's episodes every time.
+  Future<void> onEpisodesChanged(Iterable<int> episodeIds) async {
+    final episodes = await _isar.episodes.getAll(episodeIds.toList());
+    final podcastIds = {
+      for (final episode in episodes)
+        if (episode != null) episode.podcastId,
+    };
+    if (podcastIds.isEmpty) return;
+    final links = await _isar.stationPodcasts
+        .filter()
+        .anyOf(podcastIds, (q, podcastId) => q.podcastIdEqualTo(podcastId))
+        .findAll();
+    for (final stationId in {for (final link in links) link.stationId}) {
+      await _reconciler.reconcileFull(stationId);
+    }
   }
 
   /// Called when a station's config changes (filters, podcasts added/removed).

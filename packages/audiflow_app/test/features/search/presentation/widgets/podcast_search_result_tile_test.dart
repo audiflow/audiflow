@@ -70,7 +70,9 @@ void main() {
         expect(find.text('Science'), findsOneWidget);
       });
 
-      testWidgets('displays truncated description', (tester) async {
+      testWidgets('leaves the description to the podcast screen', (
+        tester,
+      ) async {
         final podcast = createTestPodcast(
           description: 'A short podcast description.',
         );
@@ -79,33 +81,7 @@ void main() {
           buildTestWidget(podcast: podcast, onTap: () {}),
         );
 
-        expect(find.text('A short podcast description.'), findsOneWidget);
-      });
-
-      testWidgets('truncates long description with ellipsis', (tester) async {
-        final longDescription =
-            'This is a very long description that should be truncated because '
-            'it exceeds the maximum number of lines allowed for display. '
-            'The widget should show an ellipsis at the end to indicate there '
-            'is more content available. This helps keep the UI clean.';
-        final podcast = createTestPodcast(description: longDescription);
-
-        await tester.pumpWidget(
-          buildTestWidget(podcast: podcast, onTap: () {}),
-        );
-
-        // Find a Text widget that contains the beginning of the description
-        final descriptionFinder = find.byWidgetPredicate(
-          (widget) =>
-              widget is Text &&
-              widget.data != null &&
-              widget.data!.contains('This is a very long description'),
-        );
-        expect(descriptionFinder, findsOneWidget);
-
-        // Verify overflow is set to ellipsis
-        final textWidget = tester.widget<Text>(descriptionFinder);
-        expect(textWidget.overflow, equals(TextOverflow.ellipsis));
+        expect(find.text('A short podcast description.'), findsNothing);
       });
     });
 

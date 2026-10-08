@@ -190,7 +190,12 @@ class IsolateRssParser {
       }
 
       final header = xml.substring(0, firstItemIdx);
-      params.sendPort.send(_parseMetadataFromString(header));
+      // RSS lets channel elements follow the items; only the website is
+      // looked for there, since the header holds everything else in
+      // practice and the items are never scanned for it.
+      final lastItemEnd = xml.lastIndexOf('</item>');
+      final trailer = lastItemEnd == -1 ? '' : xml.substring(lastItemEnd);
+      params.sendPort.send(_parseMetadataFromString(header, trailer: trailer));
 
       // --- Episodes: scan for <item>...</item> blocks incrementally ---
       var parsedCount = 0;
@@ -292,7 +297,10 @@ class IsolateRssParser {
   /// Extracts channel metadata from the header portion of the XML
   /// (everything before the first <item>) using lightweight regex.
   /// No DOM allocation needed for the header.
-  static ParsedPodcastMeta _parseMetadataFromString(String headerXml) {
+  static ParsedPodcastMeta _parseMetadataFromString(
+    String headerXml, {
+    String trailer = '',
+  }) {
     final title = _extractTagText(headerXml, 'title') ?? 'Untitled Podcast';
 
     // itunes:image uses an href attribute, not text content
@@ -306,6 +314,9 @@ class IsolateRssParser {
       author: _extractTagText(headerXml, 'itunes:author'),
       imageUrl: _nullIfBlank(itunesImageMatch?.group(1)),
       language: _extractTagText(headerXml, 'language'),
+      // The channel <link> precedes <image> (whose own <link> repeats it)
+      // in the header; `atom:link` is not matched by this tag name.
+      link: _channelLink(headerXml) ?? _channelLink(trailer),
     );
   }
 
@@ -329,6 +340,49 @@ class IsolateRssParser {
     return _nullIfBlank(match?.group(1));
   }
 
+  /// Like [_extractTagText], but returns the text an XML parser would:
+  /// character references decoded, CDATA content kept verbatim.
+  static String? _extractXmlText(String xml, String tagName) {
+    final match = RegExp(
+      '<$tagName(?:\\s[^>]*)?>([\\s\\S]*?)</$tagName>',
+      caseSensitive: false,
+    ).firstMatch(xml);
+    final raw = match?.group(1)?.trim();
+    if (raw == null) return null;
+    final cdata = _cdataRe.firstMatch(raw);
+    return _nullIfBlank(cdata?.group(1) ?? _decodeXmlEntities(raw));
+  }
+
+  static final _cdataRe = RegExp(r'^<!\[CDATA\[([\s\S]*?)\]\]>$');
+
+  /// The channel's own website in a stretch of channel-level XML: comments
+  /// and the elements that carry their own `<link>` (`<image>`,
+  /// `<textInput>`) are removed first, so neither can stand in for it.
+  static String? _channelLink(String xml) {
+    if (xml.isEmpty) return null;
+    final channelOnly = xml
+        .replaceAll(_commentRe, '')
+        .replaceAll(_nestedLinkOwnerRe, '');
+    return _webLink(_extractXmlText(channelOnly, 'link'));
+  }
+
+  static final _commentRe = RegExp(r'<!--[\s\S]*?-->');
+  static final _nestedLinkOwnerRe = RegExp(
+    r'<(image|textInput)\b[\s\S]*?</\1>',
+    caseSensitive: false,
+  );
+
+  /// [value] when it is an http(s) address with a host, otherwise null.
+  ///
+  /// Anything else would make `PodcastFeed` reject the whole feed over a
+  /// link that only backs "Open website".
+  static String? _webLink(String? value) {
+    if (value == null) return null;
+    final uri = Uri.tryParse(value);
+    if (uri == null || !uri.hasAuthority || uri.host.isEmpty) return null;
+    return uri.scheme == 'http' || uri.scheme == 'https' ? value : null;
+  }
+
   /// Extracts the `url` attribute from the first `<enclosure>` tag via regex.
   /// Handles both self-closing (`<enclosure ... />`) and open/close forms.
   static final _enclosureUrlRe = RegExp(
@@ -347,6 +401,12 @@ class IsolateRssParser {
     r'&(?:(amp|lt|gt|quot|apos)|#(\d+)|#x([0-9a-fA-F]+));',
   );
 
+  static bool _isCodePoint(int? code) =>
+      code != null &&
+      0 <= code &&
+      code <= 0x10FFFF &&
+      !(0xD800 <= code && code <= 0xDFFF);
+
   static String _decodeXmlEntities(String value) {
     if (!value.contains('&')) return value;
     return value.replaceAllMapped(_xmlEntityRe, (m) {
@@ -362,14 +422,15 @@ class IsolateRssParser {
         };
       }
       final decimal = m.group(2);
-      if (decimal != null) {
-        return String.fromCharCode(int.parse(decimal));
-      }
       final hex = m.group(3);
-      if (hex != null) {
-        return String.fromCharCode(int.parse(hex, radix: 16));
-      }
-      return m.group(0)!;
+      final code = decimal != null
+          ? int.tryParse(decimal)
+          : hex != null
+          ? int.tryParse(hex, radix: 16)
+          : null;
+      // An out-of-range or surrogate reference is left as written: a
+      // malformed value must not fail the whole feed.
+      return _isCodePoint(code) ? String.fromCharCode(code!) : m.group(0)!;
     });
   }
 

@@ -1,6 +1,11 @@
+import 'dart:async';
+
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+import '../utils/default_station_name.dart';
 
 part 'station_edit_controller.freezed.dart';
 part 'station_edit_controller.g.dart';
@@ -12,8 +17,6 @@ const int allEpisodesSentinel = 0;
 
 /// Error keys for localization in the UI layer.
 abstract final class StationEditError {
-  static const nameRequired = 'name_required';
-  static const podcastRequired = 'podcast_required';
   static const notFound = 'not_found';
   static const _limitReachedPrefix = 'limit_reached:';
   static String limitReached(int max) => '$_limitReachedPrefix$max';
@@ -47,32 +50,178 @@ sealed class StationEditState with _$StationEditState {
     /// Ordered list of selected podcast IDs for manual sort.
     @Default([]) List<int> podcastSortOrder,
 
-    @Default(false) bool isSaving,
+    /// True until an existing station has loaded; the editor accepts no
+    /// changes meanwhile, since the load would replace them.
+    @Default(false) bool isLoading,
+
+    /// True when an existing station could not be loaded (or no longer
+    /// exists). Autosave stays off: saving the empty form would overwrite
+    /// the station.
+    @Default(false) bool loadFailed,
+
+    /// The persisted station's id: the edited one, or a new one once it has
+    /// been created. Null while a new station exists only in the form.
+    int? savedStationId,
     String? error,
   }) = _StationEditState;
 }
 
+/// Saves and feed rebuilds still running per station, shared by every
+/// editor instance: an editor keeps saving after it closes, so one opened
+/// again for the same station must wait for them before loading.
+@Riverpod(keepAlive: true)
+class StationEditActivity extends _$StationEditActivity {
+  final _pending = <int, Future<void>>{};
+
+  /// No state to expose; the notifier only holds the pending work.
+  @override
+  void build() {}
+
+  /// Adds [work] to what [settled] waits for on [stationId].
+  void track(int stationId, Future<void> work) {
+    final all = Future.wait([
+      _pending[stationId] ?? Future<void>.value(),
+      work.catchError((Object _) {}),
+    ]).then((_) {});
+    _pending[stationId] = all;
+    unawaited(
+      all.whenComplete(() {
+        if (identical(_pending[stationId], all)) _pending.remove(stationId);
+      }),
+    );
+  }
+
+  /// Completes once all tracked work for [stationId] has finished.
+  Future<void> settled(int stationId) =>
+      _pending[stationId] ?? Future<void>.value();
+}
+
+/// Edits a station and saves every change as it happens; there is no save
+/// button to forget.
+///
+/// A new station is created once its first podcast is selected (leaving
+/// before that discards it) and is saved in place from then on. An existing
+/// station may be left with no podcasts; only an explicit delete removes
+/// it. A blank name never reaches the database: a new station falls back to
+/// its default name and an existing one keeps its saved name.
+///
+/// Settings are written immediately, one write at a time. The episode
+/// reconcile is costlier, so it waits for the edits to settle and runs at
+/// the latest when the editor closes.
 @riverpod
 class StationEditController extends _$StationEditController {
   /// Saved manual podcast order, preserved when switching to automatic
   /// sort modes so it can be restored when switching back to manual.
   List<int>? _savedManualOrder;
 
+  /// How long edits must settle before the feed is rebuilt.
+  @visibleForTesting
+  static Duration reconcileDelay = const Duration(milliseconds: 800);
+
+  // Captured in build: writes and the final reconcile outlive the provider.
+  late StationRepository _stations;
+  late StationPodcastRepository _links;
+  late StationEpisodeRepository _episodes;
+  late StationReconcilerService _reconciler;
+  late SubscriptionRepository _subscriptions;
+  late StationEditActivity _activity;
+
+  /// The persisted station; null until a new station is created.
+  int? _savedId;
+  String _defaultName = '';
+
+  /// Formats a default name from its number; lets a new station be named
+  /// even if the editor closes before the screen's own lookup finishes.
+  String Function(int number)? _defaultNameLabel;
+  bool _loaded = false;
+  bool _deleted = false;
+  Future<void> _writes = Future.value();
+  final _loadCompleter = Completer<void>();
+  Timer? _reconcileTimer;
+
+  /// Feed rebuilds run one at a time, so an older one can never finish
+  /// after a newer one (or after a delete) and restore stale rows.
+  Future<void> _rebuilds = Future.value();
+
+  /// Set when the editor closes: later writes leave the reconcile to the
+  /// final flush instead of a timer.
+  bool _closing = false;
+  int? _pendingReconcileId;
+
+  /// Completes once every change made so far has been written.
+  @visibleForTesting
+  Future<void> get pendingWrites => _writes;
+
+  /// Completes once an existing station has loaded (immediately for new).
+  @visibleForTesting
+  Future<void> get loaded => _loadCompleter.future;
+
   @override
   StationEditState build(int? stationId) {
-    if (stationId != null) {
-      _loadExistingStation(stationId);
+    _stations = ref.read(stationRepositoryProvider);
+    _links = ref.read(stationPodcastRepositoryProvider);
+    _episodes = ref.read(stationEpisodeRepositoryProvider);
+    _reconciler = ref.read(stationReconcilerServiceProvider);
+    _subscriptions = ref.read(subscriptionRepositoryProvider);
+    _activity = ref.read(stationEditActivityProvider.notifier);
+    _savedId = stationId;
+    ref.onDispose(_flushReconcile);
+    if (stationId == null) {
+      _markLoaded();
+    } else {
+      unawaited(_load(stationId));
     }
-    return const StationEditState();
+    return StationEditState(
+      isLoading: stationId != null,
+      savedStationId: stationId,
+    );
   }
 
-  Future<void> _loadExistingStation(int id) async {
-    final station = await ref.read(stationRepositoryProvider).findById(id);
-    if (station == null) return;
+  /// Loads an existing station; only a full load turns autosave on.
+  Future<void> _load(int id) async {
+    var loaded = false;
+    try {
+      loaded = await _loadExistingStation(id);
+    } on Object catch (_) {
+      loaded = false;
+    }
+    if (loaded) {
+      _markLoaded();
+    } else if (!_loadCompleter.isCompleted) {
+      _loadCompleter.complete();
+    }
+    if (ref.mounted) {
+      state = state.copyWith(isLoading: false, loadFailed: !loaded);
+    }
+  }
 
-    final podcasts = await ref
-        .read(stationPodcastRepositoryProvider)
-        .getByStation(id);
+  void _markLoaded() {
+    _loaded = true;
+    if (!_loadCompleter.isCompleted) _loadCompleter.complete();
+  }
+
+  /// Sets how default names read ("Station N"), so creation can compute one
+  /// itself. Call it before any edit.
+  void useDefaultNameLabel(String Function(int number) label) {
+    _defaultNameLabel = label;
+  }
+
+  /// Sets a new station's default [name], used whenever the field is left
+  /// blank, and prefills it unless a name was already typed. Not a change,
+  /// so nothing is written.
+  void useDefaultName(String name) {
+    _defaultName = name;
+    if (state.name.trim().isEmpty) state = state.copyWith(name: name);
+  }
+
+  /// Fills the form from the stored station; false when it is gone.
+  Future<bool> _loadExistingStation(int id) async {
+    // A previous editor for this station may still be saving.
+    await _activity.settled(id);
+    final station = await _stations.findById(id);
+    if (station == null) return false;
+
+    final podcasts = await _links.getByStation(id);
 
     final podcastIds = podcasts.map((p) => p.podcastId).toSet();
     final limits = <int, int?>{};
@@ -104,30 +253,31 @@ class StationEditController extends _$StationEditController {
       podcastEpisodeLimits: limits,
       podcastSortOrder: orderedIds,
     );
+    return true;
   }
 
-  void setName(String name) => state = state.copyWith(name: name);
+  void setName(String name) => _edit(state.copyWith(name: name));
 
   void setFilterDownloaded(bool value) =>
-      state = state.copyWith(filterDownloaded: value);
+      _edit(state.copyWith(filterDownloaded: value));
 
   void setFilterFavorited(bool value) =>
-      state = state.copyWith(filterFavorited: value);
+      _edit(state.copyWith(filterFavorited: value));
 
   void setHideCompleted(bool value) =>
-      state = state.copyWith(hideCompleted: value);
+      _edit(state.copyWith(hideCompleted: value));
 
   void setDurationFilter(StationDurationFilter? value) =>
-      state = state.copyWith(durationFilter: value);
+      _edit(state.copyWith(durationFilter: value));
 
   void setEpisodeSort(StationEpisodeSort value) =>
-      state = state.copyWith(episodeSort: value);
+      _edit(state.copyWith(episodeSort: value));
 
   void setDefaultEpisodeLimit(int? value) =>
-      state = state.copyWith(defaultEpisodeLimit: value);
+      _edit(state.copyWith(defaultEpisodeLimit: value));
 
   void setGroupByPodcast(bool value) =>
-      state = state.copyWith(groupByPodcast: value);
+      _edit(state.copyWith(groupByPodcast: value));
 
   /// Updates the podcast sort mode and recomputes [podcastSortOrder] to
   /// reflect the new mode immediately, so the edit screen shows the correct
@@ -155,10 +305,13 @@ class StationEditController extends _$StationEditController {
         state = state.copyWith(podcastSortOrder: restored);
         _savedManualOrder = null;
       }
+      _scheduleSave();
       return;
     }
-    final resolved = await _resolvedPodcastOrder();
-    state = state.copyWith(podcastSortOrder: resolved);
+    // Queued before the await: a write resolves the order from its own
+    // snapshot, and closing the editor during the await must not drop it.
+    _scheduleSave();
+    await _showResolvedOrder();
   }
 
   /// Sets a per-podcast episode limit override.
@@ -172,11 +325,11 @@ class StationEditController extends _$StationEditController {
     } else {
       limits[podcastId] = limit;
     }
-    state = state.copyWith(podcastEpisodeLimits: limits);
+    _edit(state.copyWith(podcastEpisodeLimits: limits));
   }
 
   void reorderPodcasts(List<int> newOrder) =>
-      state = state.copyWith(podcastSortOrder: newOrder);
+      _edit(state.copyWith(podcastSortOrder: newOrder));
 
   /// Replaces [selectedPodcastIds] from a multi-selection picker.
   ///
@@ -206,17 +359,34 @@ class StationEditController extends _$StationEditController {
       }
     }
 
-    state = state.copyWith(
-      selectedPodcastIds: newSelection,
-      podcastSortOrder: currentOrder,
+    // Queued before any await, so closing the editor cannot drop it.
+    _edit(
+      state.copyWith(
+        selectedPodcastIds: newSelection,
+        podcastSortOrder: currentOrder,
+      ),
     );
 
     // Recompute order for automatic sort modes so the editor list matches
     // the selected sort immediately.
     if (state.podcastSort != StationPodcastSort.manual) {
-      final resolved = await _resolvedPodcastOrder();
-      state = state.copyWith(podcastSortOrder: resolved);
+      await _showResolvedOrder();
     }
+  }
+
+  /// Shows the automatic order once resolved. It is only for display (each
+  /// write derives its own), and is dropped if the sort or the selection
+  /// changed meanwhile: applied late, it would replace a restored manual
+  /// order that the next edit then saves.
+  Future<void> _showResolvedOrder() async {
+    final from = state;
+    final resolved = await _resolvedPodcastOrder(from);
+    if (!ref.mounted) return;
+    if (state.podcastSort != from.podcastSort ||
+        !setEquals(state.selectedPodcastIds, from.selectedPodcastIds)) {
+      return;
+    }
+    state = state.copyWith(podcastSortOrder: resolved);
   }
 
   /// Computes the podcast order based on [state.podcastSort].
@@ -224,15 +394,14 @@ class StationEditController extends _$StationEditController {
   /// For [StationPodcastSort.manual], returns the existing
   /// [state.podcastSortOrder]. For automatic modes, fetches subscription
   /// metadata and sorts accordingly.
-  Future<List<int>> _resolvedPodcastOrder() async {
-    final selected = state.selectedPodcastIds;
-    final manualOrder = state.podcastSortOrder
-        .where(selected.contains)
-        .toList();
+  Future<List<int>> _resolvedPodcastOrder([StationEditState? from]) async {
+    final edit = from ?? state;
+    final selected = edit.selectedPodcastIds;
+    final manualOrder = edit.podcastSortOrder.where(selected.contains).toList();
 
-    if (state.podcastSort == StationPodcastSort.manual) return manualOrder;
+    if (edit.podcastSort == StationPodcastSort.manual) return manualOrder;
 
-    final subRepo = ref.read(subscriptionRepositoryProvider);
+    final subRepo = _subscriptions;
     final entries = await Future.wait(
       selected.map((id) async => MapEntry(id, await subRepo.getById(id))),
     );
@@ -249,7 +418,7 @@ class StationEditController extends _$StationEditController {
       if (subA == null && subB == null) return a.compareTo(b);
       if (subA == null) return 1;
       if (subB == null) return -1;
-      final result = switch (state.podcastSort) {
+      final result = switch (edit.podcastSort) {
         StationPodcastSort.nameAsc => subA.title.toLowerCase().compareTo(
           subB.title.toLowerCase(),
         ),
@@ -270,148 +439,221 @@ class StationEditController extends _$StationEditController {
     return ids;
   }
 
-  /// Persists the station and reconciles podcast membership.
+  void _edit(StationEditState next) {
+    state = next;
+    _scheduleSave();
+  }
+
+  /// Queues a write of the current state behind the ones already queued,
+  /// so a new station is never created twice.
   ///
-  /// Returns the saved [Station] on success, null on failure.
-  Future<Station?> save() async {
-    final trimmedName = state.name.trim();
-    if (trimmedName.isEmpty) {
-      state = state.copyWith(error: StationEditError.nameRequired);
-      return null;
-    }
+  /// Each write uses the state as it was when queued: the editor may have
+  /// closed (and the notifier been disposed) by the time it runs.
+  void _scheduleSave() {
+    final snapshot = state;
+    _writes = _writes.then((_) => _persist(snapshot));
+    if (_savedId case final id?) _activity.track(id, _writes);
+  }
 
-    if (state.selectedPodcastIds.isEmpty) {
-      state = state.copyWith(error: StationEditError.podcastRequired);
-      return null;
-    }
-
-    state = state.copyWith(isSaving: true, error: null);
-
+  Future<void> _persist(StationEditState edit) async {
+    if (_deleted || !_loaded) return;
+    final id = _savedId;
+    // A new station exists only once it has a podcast.
+    if (id == null && edit.selectedPodcastIds.isEmpty) return;
     try {
-      final stationRepo = ref.read(stationRepositoryProvider);
-      final podcastRepo = ref.read(stationPodcastRepositoryProvider);
-      final reconciler = ref.read(stationReconcilerServiceProvider);
-
-      final now = DateTime.now();
-      Station saved;
-
-      if (stationId == null) {
-        final station = Station()
-          ..name = trimmedName
-          ..hideCompleted = state.hideCompleted
-          ..filterDownloaded = state.filterDownloaded
-          ..filterFavorited = state.filterFavorited
-          ..durationFilter = state.durationFilter
-          ..defaultEpisodeLimit = state.defaultEpisodeLimit
-          ..episodeSort = state.episodeSort
-          ..groupByPodcast = state.groupByPodcast
-          ..podcastSort = state.podcastSort
-          ..createdAt = now
-          ..updatedAt = now;
-        saved = await stationRepo.create(station);
-      } else {
-        final existing = await stationRepo.findById(stationId!);
-        if (existing == null) {
-          state = state.copyWith(
-            isSaving: false,
-            error: StationEditError.notFound,
-          );
-          return null;
-        }
-        existing
-          ..name = trimmedName
-          ..hideCompleted = state.hideCompleted
-          ..filterDownloaded = state.filterDownloaded
-          ..filterFavorited = state.filterFavorited
-          ..durationFilter = state.durationFilter
-          ..defaultEpisodeLimit = state.defaultEpisodeLimit
-          ..episodeSort = state.episodeSort
-          ..groupByPodcast = state.groupByPodcast
-          ..podcastSort = state.podcastSort
-          ..publishedWithinDays = null
-          ..updatedAt = now;
-        await stationRepo.update(existing);
-        saved = existing;
-      }
-
-      // Diff-based sync: compare desired state with current DB state to
-      // preserve addedAt and reduce unnecessary writes.
-      final resolvedOrder = await _resolvedPodcastOrder();
-      final currentLinks = await podcastRepo.getByStation(saved.id);
-      final currentMap = {for (final sp in currentLinks) sp.podcastId: sp};
-      final desiredPodcastIds = <int>{};
-
-      for (var i = 0; i < resolvedOrder.length; i++) {
-        final podcastId = resolvedOrder[i];
-        if (!state.selectedPodcastIds.contains(podcastId)) continue;
-        desiredPodcastIds.add(podcastId);
-        final limitOverride = state.podcastEpisodeLimits[podcastId];
-
-        final existing = currentMap[podcastId];
-        if (existing != null) {
-          // Update in place if sortOrder or episodeLimit changed.
-          if (existing.sortOrder != i ||
-              existing.episodeLimit != limitOverride) {
-            existing
-              ..sortOrder = i
-              ..episodeLimit = limitOverride;
-            await podcastRepo.update(existing);
-          }
-        } else {
-          // Insert new link.
-          await podcastRepo.add(
-            saved.id,
-            podcastId,
-            sortOrder: i,
-            episodeLimit: limitOverride,
-          );
-        }
-      }
-
-      // Remove links no longer in the selection.
-      for (final existing in currentLinks) {
-        if (!desiredPodcastIds.contains(existing.podcastId)) {
-          await podcastRepo.remove(saved.id, existing.podcastId);
-        }
-      }
-
-      await reconciler.onStationConfigChanged(saved.id);
-
-      state = state.copyWith(isSaving: false);
-      return saved;
+      final saved = id == null ? await _create(edit) : await _update(id, edit);
+      if (saved == null) return;
+      await _syncPodcastLinks(saved.id, edit);
+      _scheduleReconcile(saved.id);
+      _setError(null);
     } on StationLimitExceededException {
-      state = state.copyWith(
-        isSaving: false,
-        error: StationEditError.limitReached(
+      _setError(
+        StationEditError.limitReached(
           StationLimitExceededException.maxStations,
         ),
       );
+    } on Object catch (e) {
+      // Any failure, not only an Exception: the write chain must go on.
+      _setError(e.toString());
+    }
+  }
+
+  void _setError(String? error) {
+    if (!ref.mounted || state.error == error) return;
+    state = state.copyWith(error: error);
+  }
+
+  Future<Station> _create(StationEditState edit) async {
+    if (_nameOr(edit, _defaultName).isEmpty) {
+      _defaultName = await _computeDefaultName();
+    }
+    final now = DateTime.now();
+    final station = Station()
+      ..name = _nameOr(edit, _defaultName)
+      ..createdAt = now
+      ..updatedAt = now;
+    _applySettings(station, edit);
+    final created = await _stations.create(station);
+    _savedId = created.id;
+    _activity.track(created.id, _writes);
+    if (ref.mounted) state = state.copyWith(savedStationId: created.id);
+    return created;
+  }
+
+  Future<Station?> _update(int id, StationEditState edit) async {
+    final existing = await _stations.findById(id);
+    if (existing == null) {
+      _setError(StationEditError.notFound);
       return null;
-    } on Exception catch (e) {
-      state = state.copyWith(isSaving: false, error: e.toString());
-      return null;
+    }
+    _applySettings(existing, edit);
+    existing
+      ..name = _nameOr(edit, existing.name)
+      ..publishedWithinDays = null
+      ..updatedAt = DateTime.now();
+    await _stations.update(existing);
+    return existing;
+  }
+
+  /// "Station N" for the smallest unused N, computed here when the screen
+  /// has not supplied it yet (it may have closed first).
+  Future<String> _computeDefaultName() async {
+    final label = _defaultNameLabel ?? (number) => 'Station $number';
+    final existing = await _stations.watchAll().first;
+    return defaultStationName(existing.map((s) => s.name), label);
+  }
+
+  /// The trimmed name, or [fallback] while the field is blank.
+  String _nameOr(StationEditState edit, String fallback) {
+    final trimmed = edit.name.trim();
+    return trimmed.isEmpty ? fallback : trimmed;
+  }
+
+  static void _applySettings(Station station, StationEditState edit) {
+    station
+      ..hideCompleted = edit.hideCompleted
+      ..filterDownloaded = edit.filterDownloaded
+      ..filterFavorited = edit.filterFavorited
+      ..durationFilter = edit.durationFilter
+      ..defaultEpisodeLimit = edit.defaultEpisodeLimit
+      ..episodeSort = edit.episodeSort
+      ..groupByPodcast = edit.groupByPodcast
+      ..podcastSort = edit.podcastSort;
+  }
+
+  /// Diff-based sync: compares the selection with the stored links to
+  /// preserve addedAt and skip unchanged rows.
+  Future<void> _syncPodcastLinks(int stationId, StationEditState edit) async {
+    final resolvedOrder = await _resolvedPodcastOrder(edit);
+    final currentLinks = await _links.getByStation(stationId);
+    final currentMap = {for (final sp in currentLinks) sp.podcastId: sp};
+    final selected = edit.selectedPodcastIds;
+    for (var i = 0; i < resolvedOrder.length; i++) {
+      final podcastId = resolvedOrder[i];
+      if (!selected.contains(podcastId)) continue;
+      final limit = edit.podcastEpisodeLimits[podcastId];
+      await _writeLink(stationId, podcastId, i, limit, currentMap[podcastId]);
+    }
+    for (final link in currentLinks) {
+      if (selected.contains(link.podcastId)) continue;
+      await _links.remove(stationId, link.podcastId);
+    }
+  }
+
+  Future<void> _writeLink(
+    int stationId,
+    int podcastId,
+    int sortOrder,
+    int? limit,
+    StationPodcast? existing,
+  ) async {
+    if (existing == null) {
+      await _links.add(
+        stationId,
+        podcastId,
+        sortOrder: sortOrder,
+        episodeLimit: limit,
+      );
+      return;
+    }
+    if (existing.sortOrder == sortOrder && existing.episodeLimit == limit) {
+      return;
+    }
+    existing
+      ..sortOrder = sortOrder
+      ..episodeLimit = limit;
+    await _links.update(existing);
+  }
+
+  void _scheduleReconcile(int stationId) {
+    _reconcileTimer?.cancel();
+    _pendingReconcileId = stationId;
+    if (_closing) return;
+    _reconcileTimer = Timer(reconcileDelay, () {
+      _pendingReconcileId = null;
+      _enqueueRebuild(stationId);
+    });
+  }
+
+  /// Runs a pending reconcile once the queued writes finish, so the
+  /// station feed is current when the editor closes.
+  void _flushReconcile() {
+    _closing = true;
+    _reconcileTimer?.cancel();
+    final flush = _writes.then((_) {
+      final id = _pendingReconcileId;
+      if (id == null) return null;
+      _enqueueRebuild(id);
+      return _rebuilds;
+    });
+    // Tracked as a whole: the final rebuild is only queued once the writes
+    // finish, and a reopened editor must not load in between.
+    if (_savedId case final id?) _activity.track(id, flush);
+    unawaited(flush);
+  }
+
+  void _enqueueRebuild(int stationId) {
+    _rebuilds = _rebuilds.then((_) {
+      if (!_deleted) return _reconcile(stationId);
+    });
+    _activity.track(stationId, _rebuilds);
+  }
+
+  Future<void> _reconcile(int stationId) async {
+    try {
+      await _reconciler.onStationConfigChanged(stationId);
+    } on Object catch (e) {
+      // Any failure: the rebuild chain must go on.
+      _setError(e.toString());
     }
   }
 
   /// Deletes the station and all associated data.
-  Future<bool> delete() async {
-    if (stationId == null) return false;
+  Future<bool> delete() {
+    final id = _savedId;
+    if (id == null) return Future.value(false);
+    _deleted = true;
+    _reconcileTimer?.cancel();
+    final deletion = _deleteStation(id);
+    // Tracked before any await: an editor reopened meanwhile must wait for
+    // the removals too, not only for the writes and rebuilds before them.
+    _activity.track(id, deletion);
+    return deletion;
+  }
 
-    state = state.copyWith(isSaving: true, error: null);
-
+  Future<bool> _deleteStation(int id) async {
     try {
-      final stationRepo = ref.read(stationRepositoryProvider);
-      final podcastRepo = ref.read(stationPodcastRepositoryProvider);
-      final episodeRepo = ref.read(stationEpisodeRepositoryProvider);
-
-      await episodeRepo.removeAllForStation(stationId!);
-      await podcastRepo.removeAllForStation(stationId!);
-      await stationRepo.delete(stationId!);
-
-      state = state.copyWith(isSaving: false);
+      // Let a write or rebuild already in flight finish, so neither can
+      // recreate links or feed rows after the delete.
+      await _writes;
+      await _rebuilds;
+      await _episodes.removeAllForStation(id);
+      await _links.removeAllForStation(id);
+      await _stations.delete(id);
       return true;
     } on Exception catch (e) {
-      state = state.copyWith(isSaving: false, error: e.toString());
+      _deleted = false;
+      _setError(e.toString());
       return false;
     }
   }

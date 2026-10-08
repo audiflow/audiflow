@@ -11,6 +11,7 @@ import '../controllers/search_state.dart';
 import '../widgets/country_picker_sheet.dart';
 import '../widgets/podcast_search_result_tile.dart';
 import '../widgets/search_country_chip.dart';
+import '../widgets/search_subscribe_button.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});
@@ -79,57 +80,95 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       behavior: HitTestBehavior.opaque,
       onTap: () => _focusNode.unfocus(),
       child: Scaffold(
-        appBar: AppBar(title: Text(l10n.searchTitle)),
-        body: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(Spacing.md),
-              child: TextField(
-                controller: _textController,
-                focusNode: _focusNode,
-                textCapitalization: TextCapitalization.none,
-                autocorrect: false,
-                keyboardType: TextInputType.text,
-                decoration: InputDecoration(
-                  hintText: l10n.searchHint,
-                  border: const OutlineInputBorder(),
-                  prefixIcon: SearchCountryChip(
-                    countryCode: ref
-                        .read(podcastSearchControllerProvider.notifier)
-                        .currentCountry,
-                    onTap: _onCountryTap,
-                  ),
-                  suffixIcon: ValueListenableBuilder<TextEditingValue>(
-                    valueListenable: _textController,
-                    builder: (context, value, child) {
-                      if (value.text.isEmpty) {
-                        return const SizedBox.shrink();
-                      }
-                      return IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _textController.clear();
-                          ref
-                              .read(podcastSearchControllerProvider.notifier)
-                              .clear();
-                        },
-                      );
-                    },
-                  ),
+        body: SafeArea(
+          bottom: false,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              LargeTitle(l10n.navSearch),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  Spacing.screenHorizontal,
+                  0,
+                  Spacing.screenHorizontal,
+                  Spacing.sm,
                 ),
-                textInputAction: TextInputAction.search,
-                onSubmitted: (_) => _onSearch(),
+                child: Row(
+                  children: [
+                    Expanded(child: _buildSearchField(l10n)),
+                    const SizedBox(width: Spacing.sm),
+                    SearchCountryChip(
+                      countryCode: ref
+                          .read(podcastSearchControllerProvider.notifier)
+                          .currentCountry,
+                      onTap: _onCountryTap,
+                    ),
+                  ],
+                ),
               ),
-            ),
-            Expanded(
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                child: _buildContent(state),
+              Expanded(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  child: _buildContent(state),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
+    );
+  }
+
+  /// Pill-shaped field on a sunken fill, with a clear button once typed.
+  Widget _buildSearchField(AppLocalizations l10n) {
+    final colors = AppColors.of(context);
+    return TextField(
+      // Touching anything else hides the keyboard.
+      onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
+      controller: _textController,
+      focusNode: _focusNode,
+      textCapitalization: TextCapitalization.none,
+      autocorrect: false,
+      keyboardType: TextInputType.text,
+      style: AppTextStyles.body.copyWith(color: colors.ink),
+      decoration: InputDecoration(
+        hintText: l10n.searchHint,
+        filled: true,
+        fillColor: colors.surfaceSunken,
+        isDense: true,
+        contentPadding: const EdgeInsets.symmetric(vertical: Spacing.sm),
+        // All three: the theme's enabled and focused borders would
+        // otherwise replace the pill with its rounded rectangle.
+        border: const OutlineInputBorder(
+          borderRadius: AppBorders.pill,
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: const OutlineInputBorder(
+          borderRadius: AppBorders.pill,
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: AppBorders.pill,
+          borderSide: BorderSide(color: colors.accent, width: 1.5),
+        ),
+        prefixIcon: Icon(Icons.search_rounded, color: colors.inkTertiary),
+        suffixIcon: ValueListenableBuilder<TextEditingValue>(
+          valueListenable: _textController,
+          builder: (context, value, child) {
+            if (value.text.isEmpty) return const SizedBox.shrink();
+            return IconButton(
+              tooltip: MaterialLocalizations.of(context).deleteButtonTooltip,
+              icon: Icon(Icons.cancel_rounded, color: colors.inkTertiary),
+              onPressed: () {
+                _textController.clear();
+                ref.read(podcastSearchControllerProvider.notifier).clear();
+              },
+            );
+          },
+        ),
+      ),
+      textInputAction: TextInputAction.search,
+      onSubmitted: (_) => _onSearch(),
     );
   }
 
@@ -276,40 +315,55 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         );
         // Phone: keep list layout
         if (columnCount <= 3) {
-          return ListView.builder(
-            key: const Key('search_results_list'),
-            itemCount: result.podcasts.length,
-            itemBuilder: (context, index) {
-              final podcast = result.podcasts[index];
-              return PodcastSearchResultTile(
-                key: Key('search_result_tile_$index'),
-                podcast: podcast,
-                onTap: () => _openResult(result, index),
-              );
-            },
+          return _onBackdrop(
+            ListView.builder(
+              key: const Key('search_results_list'),
+              itemCount: result.podcasts.length,
+              itemBuilder: (context, index) {
+                final podcast = result.podcasts[index];
+                return PodcastSearchResultTile(
+                  key: Key('search_result_tile_$index'),
+                  podcast: podcast,
+                  onTap: () => _openResult(result, index),
+                  trailing: SearchSubscribeButton(podcast: podcast),
+                );
+              },
+            ),
           );
         }
         // Tablet: grid layout
-        return GridView.builder(
-          key: const Key('search_results_grid'),
-          padding: const EdgeInsets.all(Spacing.md),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: columnCount,
-            mainAxisSpacing: Spacing.sm,
-            crossAxisSpacing: Spacing.sm,
-            childAspectRatio: 0.8,
+        return _onBackdrop(
+          GridView.builder(
+            key: const Key('search_results_grid'),
+            padding: const EdgeInsets.all(Spacing.md),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: columnCount,
+              mainAxisSpacing: Spacing.sm,
+              crossAxisSpacing: Spacing.sm,
+              childAspectRatio: 0.8,
+            ),
+            itemCount: result.podcasts.length,
+            itemBuilder: (context, index) {
+              final podcast = result.podcasts[index];
+              return PodcastArtworkGridItem(
+                artworkUrl: podcast.artworkUrl,
+                title: podcast.name,
+                onTap: () => _openResult(result, index),
+              );
+            },
           ),
-          itemCount: result.podcasts.length,
-          itemBuilder: (context, index) {
-            final podcast = result.podcasts[index];
-            return PodcastArtworkGridItem(
-              artworkUrl: podcast.artworkUrl,
-              title: podcast.name,
-              onTap: () => _openResult(result, index),
-            );
-          },
         );
       },
+    );
+  }
+
+  /// Results sit on the content backdrop, with ink drawn above it.
+  Widget _onBackdrop(Widget list) {
+    return Stack(
+      children: [
+        const Positioned.fill(child: ContentBackdrop()),
+        Material(type: MaterialType.transparency, child: list),
+      ],
     );
   }
 
