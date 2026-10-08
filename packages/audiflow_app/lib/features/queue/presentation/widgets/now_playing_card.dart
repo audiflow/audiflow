@@ -9,13 +9,23 @@ import '../../../podcast_detail/presentation/screens/episode_detail_screen.dart'
 /// The playing episode at the top of the queue (redesign 4.6): a card on
 /// the artwork-derived player ground, white text, and a white bottom-edge
 /// progress line. Tapping opens the episode's detail screen.
-class NowPlayingCard extends ConsumerWidget {
+class NowPlayingCard extends ConsumerStatefulWidget {
   const NowPlayingCard({super.key});
 
+  @override
+  ConsumerState<NowPlayingCard> createState() => _NowPlayingCardState();
+}
+
+class _NowPlayingCardState extends ConsumerState<NowPlayingCard> {
   static const double _artworkSize = 56;
 
+  /// Last live progress seen and the episode it belonged to, kept so a
+  /// mid-episode buffer (reported as loading) does not drop the line.
+  String? _liveUrl;
+  double? _liveFraction;
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final nowPlaying = ref.watch(nowPlayingControllerProvider);
     if (nowPlaying == null) return const SizedBox.shrink();
 
@@ -39,7 +49,7 @@ class NowPlayingCard extends ConsumerWidget {
               child: InkWell(
                 onTap: () => _navigateToEpisodeDetail(context, nowPlaying),
                 child: BottomEdgeProgress(
-                  fraction: _fraction(ref, nowPlaying),
+                  fraction: _fraction(nowPlaying),
                   fillColor: NowPlayingColors.foreground,
                   trackColor: NowPlayingColors.trackInactive,
                   child: _content(context, nowPlaying),
@@ -100,23 +110,29 @@ class NowPlayingCard extends ConsumerWidget {
     );
   }
 
-  /// Live position while this episode's audio is loaded, else the saved
+  /// Live position while this episode plays or is paused, else the saved
   /// position. While a new episode loads, the live progress still belongs
   /// to the previous audio, so it only counts once the player reports
-  /// this episode.
-  double? _fraction(WidgetRef ref, NowPlayingInfo nowPlaying) {
+  /// this episode; a buffer within the same episode keeps the last value.
+  double? _fraction(NowPlayingInfo nowPlaying) {
+    final url = nowPlaying.episodeUrl;
     final playback = ref.watch(audioPlayerControllerProvider);
-    final playerUrl = switch (playback) {
-      PlaybackPlaying(:final episodeUrl) => episodeUrl,
-      PlaybackPaused(:final episodeUrl) => episodeUrl,
-      _ => null,
+    final live = ref.watch(playbackProgressProvider);
+    final reportsThisEpisode = switch (playback) {
+      PlaybackPlaying(:final episodeUrl) => episodeUrl == url,
+      PlaybackPaused(:final episodeUrl) => episodeUrl == url,
+      _ => false,
     };
-    final live = playerUrl == nowPlaying.episodeUrl
-        ? ref.watch(playbackProgressProvider)
-        : null;
-    if (live != null && 0 < live.duration.inMilliseconds) {
-      return live.position.inMilliseconds / live.duration.inMilliseconds;
+    if (reportsThisEpisode &&
+        live != null &&
+        0 < live.duration.inMilliseconds) {
+      _liveUrl = url;
+      _liveFraction =
+          live.position.inMilliseconds / live.duration.inMilliseconds;
+      return _liveFraction;
     }
+    final buffering = playback is PlaybackLoading && playback.episodeUrl == url;
+    if (buffering && _liveUrl == url) return _liveFraction;
     final saved = nowPlaying.savedPosition;
     final total = nowPlaying.totalDuration;
     if (saved == null || total == null || total == Duration.zero) return null;
