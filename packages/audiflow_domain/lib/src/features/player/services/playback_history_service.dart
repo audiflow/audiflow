@@ -81,34 +81,29 @@ class PlaybackHistoryService {
 
   void dispose() => _progressSaved.close();
 
-  int _lastSavedPositionMs = 0;
-  DateTime? _lastSaveTime;
-  bool _notifiedInProgressThisSession = false;
-
-  /// Last position reported by any update, saved or not, and whether
-  /// playback moved backward since the last save. Saves are throttled, so
-  /// a short rewind between two saves is only visible here.
-  int _lastSeenPositionMs = 0;
-  bool _movedBackSinceSave = false;
+  /// The listen being tracked, from [onPlaybackStarted] to
+  /// [onPlaybackStopped]. Only save throttling lives here; whether the
+  /// listen is open or finished is persisted on [PlaybackHistory] so a
+  /// restart and other episodes' changes cannot lose it (FR 04).
+  _ListenSession _session = const _ListenSession.none();
 
   /// Called when playback starts for an episode.
   ///
-  /// Starts a replay when the episode is played, so the new listen shows
-  /// in "last played" queries while the episode stays played, and
-  /// increments play count if starting from the beginning.
+  /// Reopens a finished listen as a replay when it starts below the
+  /// completion threshold, and increments play count if starting from
+  /// the beginning.
   Future<void> onPlaybackStarted(int episodeId, int positionMs) async {
-    _lastSavedPositionMs = positionMs;
-    _lastSaveTime = _clock();
-    _notifiedInProgressThisSession = false;
-    _lastSeenPositionMs = positionMs;
-    _movedBackSinceSave = false;
+    _session = _ListenSession(
+      lastSavedPositionMs: positionMs,
+      lastSaveTime: _clock(),
+    );
 
-    // No-op unless the last listen finished. Resuming past the completion
-    // threshold continues the finished listen rather than starting a new
-    // one, which would otherwise count a second completion.
-    if (!await _isPastCompletion(episodeId, positionMs)) {
-      await _repository.startReplay(episodeId, positionMs: positionMs);
-    }
+    final history = await _repository.getByEpisodeId(episodeId);
+    await _reopenListenBelowThreshold(
+      episodeId,
+      positionMs: positionMs,
+      durationMs: history?.durationMs ?? 0,
+    );
 
     // Increment play count if starting from beginning
     if (positionMs < fromBeginningThresholdMs) {
@@ -122,33 +117,46 @@ class PlaybackHistoryService {
     await _tryRecordPodcastPlayed(episodeId);
   }
 
-  Future<bool> _isPastCompletion(int episodeId, int positionMs) async {
-    final history = await _repository.getByEpisodeId(episodeId);
-    final durationMs = history?.durationMs;
-    if (durationMs == null || durationMs <= 0) return false;
-    return _getCompletionThreshold() <= positionMs / durationMs;
+  /// Called when the listener seeks the playing episode from [from] to
+  /// [to]. Seeks the player makes on its own account (interruption
+  /// rewinds, the end-of-chapter sleep timer) are not reported.
+  ///
+  /// A rewind below the completion threshold reopens a finished listen as
+  /// a replay, so the rewound position is resumable. Playing on, or
+  /// skipping forward, after "mark as played" keeps the listen finished.
+  Future<void> onSeeked(
+    int episodeId, {
+    required Duration from,
+    required Duration to,
+    required Duration duration,
+  }) async {
+    if (to < from) {
+      await _reopenListenBelowThreshold(
+        episodeId,
+        positionMs: to.inMilliseconds,
+        durationMs: duration.inMilliseconds,
+      );
+    }
   }
 
-  /// A finished listen resumed past the threshold is not a replay until
-  /// the listener seeks back below it; from then on the listen is
-  /// resumable like any replay. Only a backward move counts: playing on
-  /// after "mark as played" keeps the listen finished.
-  Future<void> _startReplayIfRewound(
-    int episodeId,
-    int positionMs,
-    int durationMs,
-  ) async {
-    final movedBack = _movedBackSinceSave;
-    _movedBackSinceSave = false;
-    if (!movedBack || durationMs <= 0) return;
-    if (_getCompletionThreshold() <= positionMs / durationMs) return;
-    // No-op unless the last listen finished.
+  /// A finished listen taken up again below the threshold is a new
+  /// listen (a replay); past the threshold it is the finished listen's
+  /// tail, which must not count a second completion. [durationMs] of zero
+  /// means unknown, which counts as below. No-op unless the listen is
+  /// finished and the episode played, see
+  /// [PlaybackHistoryRepository.startReplay].
+  Future<void> _reopenListenBelowThreshold(
+    int episodeId, {
+    required int positionMs,
+    required int durationMs,
+  }) async {
+    if (_isPastThreshold(positionMs, durationMs)) return;
     await _repository.startReplay(episodeId, positionMs: positionMs);
   }
 
-  void _trackPosition(int positionMs) {
-    if (positionMs < _lastSeenPositionMs) _movedBackSinceSave = true;
-    _lastSeenPositionMs = positionMs;
+  bool _isPastThreshold(int positionMs, int durationMs) {
+    if (durationMs <= 0) return false;
+    return _getCompletionThreshold() <= positionMs / durationMs;
   }
 
   /// Best-effort: playing a podcast resumes its paused auto-download.
@@ -176,10 +184,9 @@ class PlaybackHistoryService {
     // Skip when source hasn't loaded yet — position data is stale from
     // the previous episode during track transitions.
     if (durationMs == 0) return;
-    _trackPosition(positionMs);
 
     // Throttle saves to every 5 seconds
-    final delta = (positionMs - _lastSavedPositionMs).abs();
+    final delta = (positionMs - _session.lastSavedPositionMs).abs();
     if (delta < saveIntervalMs) return;
 
     final now = _clock();
@@ -189,10 +196,8 @@ class PlaybackHistoryService {
       speed: speed,
     );
 
-    _lastSavedPositionMs = positionMs;
-    _lastSaveTime = now;
+    _session = _session.saved(positionMs: positionMs, at: now);
 
-    await _startReplayIfRewound(episodeId, positionMs, durationMs);
     await _repository.saveProgress(
       episodeId: episodeId,
       positionMs: positionMs,
@@ -209,24 +214,25 @@ class PlaybackHistoryService {
     }
 
     // Notify stations once per session when episode transitions to in-progress.
-    if (!_notifiedInProgressThisSession && 0 < positionMs) {
-      _notifiedInProgressThisSession = true;
+    if (!_session.notifiedInProgress && 0 < positionMs) {
+      _session = _session.inProgressNotified();
       await _tryReconcile(episodeId);
     }
 
-    // Auto-complete check
-    if (0 < durationMs) {
-      final progressPercent = positionMs / durationMs;
-      if (_getCompletionThreshold() <= progressPercent) {
-        // A replay completes again even though the episode is played.
-        final history = await _repository.getByEpisodeId(episodeId);
-        if (!(history?.isListenFinished ?? false)) {
-          await _repository.markCompleted(episodeId);
-          if (!_progressSaved.isClosed) _progressSaved.add(episodeId);
-          await _tryReconcile(episodeId);
-        }
-      }
+    if (_isPastThreshold(positionMs, durationMs)) {
+      await _finishListen(episodeId);
     }
+  }
+
+  /// Auto-completion: finishes the current listen once. A finished listen
+  /// playing out its tail is left alone; a replay completes again even
+  /// though the episode is already played.
+  Future<void> _finishListen(int episodeId) async {
+    final history = await _repository.getByEpisodeId(episodeId);
+    if (history?.isListenFinished ?? false) return;
+    await _repository.markCompleted(episodeId);
+    if (!_progressSaved.isClosed) _progressSaved.add(episodeId);
+    await _tryReconcile(episodeId);
   }
 
   /// Called when playback is paused.
@@ -244,15 +250,11 @@ class PlaybackHistoryService {
       speed: speed,
     );
 
-    _lastSavedPositionMs = progress.position.inMilliseconds;
-    _lastSaveTime = now;
-
-    _trackPosition(progress.position.inMilliseconds);
-    await _startReplayIfRewound(
-      episodeId,
-      progress.position.inMilliseconds,
-      progress.duration.inMilliseconds,
+    _session = _session.saved(
+      positionMs: progress.position.inMilliseconds,
+      at: now,
     );
+
     await _repository.saveProgress(
       episodeId: episodeId,
       positionMs: progress.position.inMilliseconds,
@@ -304,14 +306,11 @@ class PlaybackHistoryService {
 
     _reviewPromptTrigger?.cancel();
 
-    _lastSavedPositionMs = 0;
-    _lastSaveTime = null;
+    _session = const _ListenSession.none();
   }
 
-  /// Manually marks an episode as completed.
+  /// Manually marks an episode as completed, which finishes its listen.
   Future<void> markCompleted(int episodeId) async {
-    // Marking played ends the listen: an unsaved rewind must not reopen it.
-    _movedBackSinceSave = false;
     await _repository.markCompleted(episodeId);
     await _tryReconcile(episodeId);
   }
@@ -327,10 +326,8 @@ class PlaybackHistoryService {
   ///
   /// Stations are reconciled once for the batch, also when a write fails
   /// partway, so they match the episodes that did change.
-  Future<int> markAllCompleted(Iterable<int> episodeIds) {
-    _movedBackSinceSave = false;
-    return _markAll(episodeIds, _repository.markCompleted);
-  }
+  Future<int> markAllCompleted(Iterable<int> episodeIds) =>
+      _markAll(episodeIds, _repository.markCompleted);
 
   /// Marks every episode in [episodeIds] as not played. Returns how many
   /// were marked.
@@ -373,16 +370,15 @@ class PlaybackHistoryService {
 
   /// Called when playback resumes after a pause.
   ///
-  /// Rebaselines [_lastSaveTime] so that the pause duration is not
-  /// counted as real-time in the next [onProgressUpdate].
+  /// Rebaselines the session's last save time so that the pause duration
+  /// is not counted as real-time in the next [onProgressUpdate].
   void onPlaybackResumed() {
-    _lastSaveTime = _clock();
+    _session = _session.resumedAt(_clock());
   }
 
   /// Resets tracking state (e.g., when app goes to background).
   void reset() {
-    _lastSavedPositionMs = 0;
-    _lastSaveTime = null;
+    _session = const _ListenSession.none();
   }
 
   /// Computes incremental listen durations since the last save.
@@ -395,12 +391,13 @@ class PlaybackHistoryService {
     required DateTime now,
     required double speed,
   }) {
-    if (_lastSaveTime == null) {
+    final lastSaveTime = _session.lastSaveTime;
+    if (lastSaveTime == null) {
       return const _ListenDurations(listenedMs: 0, realtimeMs: 0);
     }
 
-    final contentDeltaMs = positionMs - _lastSavedPositionMs;
-    final wallClockDeltaMs = now.difference(_lastSaveTime!).inMilliseconds;
+    final contentDeltaMs = positionMs - _session.lastSavedPositionMs;
+    final wallClockDeltaMs = now.difference(lastSaveTime).inMilliseconds;
 
     // Only accumulate for positive deltas (not backwards seeks)
     if (contentDeltaMs <= 0 || wallClockDeltaMs <= 0) {
@@ -427,4 +424,40 @@ class _ListenDurations {
 
   final int listenedMs;
   final int realtimeMs;
+}
+
+/// Save-throttling state of the listen being tracked. Immutable so every
+/// event replaces it as a whole and no flag can outlive the listen.
+class _ListenSession {
+  const _ListenSession({
+    required this.lastSavedPositionMs,
+    required this.lastSaveTime,
+    this.notifiedInProgress = false,
+  });
+
+  const _ListenSession.none()
+    : lastSavedPositionMs = 0,
+      lastSaveTime = null,
+      notifiedInProgress = false;
+
+  final int lastSavedPositionMs;
+  final DateTime? lastSaveTime;
+  final bool notifiedInProgress;
+
+  _ListenSession saved({required int positionMs, required DateTime at}) =>
+      _copyWith(lastSavedPositionMs: positionMs, lastSaveTime: at);
+
+  _ListenSession resumedAt(DateTime at) => _copyWith(lastSaveTime: at);
+
+  _ListenSession inProgressNotified() => _copyWith(notifiedInProgress: true);
+
+  _ListenSession _copyWith({
+    int? lastSavedPositionMs,
+    DateTime? lastSaveTime,
+    bool? notifiedInProgress,
+  }) => _ListenSession(
+    lastSavedPositionMs: lastSavedPositionMs ?? this.lastSavedPositionMs,
+    lastSaveTime: lastSaveTime ?? this.lastSaveTime,
+    notifiedInProgress: notifiedInProgress ?? this.notifiedInProgress,
+  );
 }

@@ -1217,6 +1217,22 @@ class AudioPlayerController extends _$AudioPlayerController
     _lifecycleEvents.add(
       SeekLifecycle(Duration(milliseconds: clampedMs), seekId: seekId),
     );
+    // Only the listener's own seeks can reopen a finished listen; the
+    // player's automatic ones (interruption rewind, chapter-end pause)
+    // are not a decision to listen again.
+    final episodeId = _currentEpisodeId;
+    if (!automatic && episodeId != null) {
+      unawaited(
+        ref
+            .read(playbackHistoryServiceProvider)
+            .onSeeked(
+              episodeId,
+              from: fromPosition,
+              to: Duration(milliseconds: clampedMs),
+              duration: duration,
+            ),
+      );
+    }
 
     final ids = _currentAnalyticsIds();
     if (ids != null) {
