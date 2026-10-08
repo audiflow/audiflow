@@ -357,5 +357,40 @@ void main() {
       final newest = await container.read(newestEpisodeDateProvider(7).future);
       check(newest).equals(released);
     });
+
+    test('picks up a scheduled episode once its date arrives', () async {
+      final released = DateTime.now().subtract(const Duration(hours: 1));
+      final scheduled = DateTime.now().add(const Duration(milliseconds: 300));
+      // A fresh stream per watch, as the database gives on a rebuild.
+      final repo = _StaticEpisodeRepository([
+        _episode(8, released, id: 801, guid: 'out'),
+        _episode(8, scheduled, id: 802, guid: 'scheduled'),
+      ]);
+      final container = ProviderContainer(
+        overrides: [episodeRepositoryProvider.overrideWithValue(repo)],
+      );
+      addTearDown(container.dispose);
+      final sub = container.listen(newestEpisodeDateProvider(8), (_, _) {});
+      addTearDown(sub.close);
+      check(
+        await container.read(newestEpisodeDateProvider(8).future),
+      ).equals(released);
+
+      // No new episode write: the provider recomputes on its own.
+      await Future<void>.delayed(const Duration(milliseconds: 500));
+      check(
+        await container.read(newestEpisodeDateProvider(8).future),
+      ).equals(scheduled);
+    });
   });
+}
+
+class _StaticEpisodeRepository extends Fake implements EpisodeRepository {
+  _StaticEpisodeRepository(this.episodes);
+
+  final List<Episode> episodes;
+
+  @override
+  Stream<List<Episode>> watchByPodcastId(int podcastId) =>
+      Stream.value(episodes);
 }

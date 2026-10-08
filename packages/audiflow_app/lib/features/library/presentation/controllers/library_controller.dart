@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -52,9 +54,18 @@ class PodcastSortOrderController extends _$PodcastSortOrderController {
 @riverpod
 Stream<DateTime?> newestEpisodeDate(Ref ref, int podcastId) {
   final episodeRepo = ref.watch(episodeRepositoryProvider);
+  Timer? release;
+  ref.onDispose(() => release?.cancel());
   return episodeRepo.watchByPodcastId(podcastId).map((episodes) {
     if (episodes.isEmpty) return null;
     final now = DateTime.now();
+    // Recompute when the next scheduled episode comes out: an unchanged
+    // feed may never write its episodes again to trigger this stream.
+    release?.cancel();
+    final next = _nextRelease(episodes, now);
+    if (next != null) {
+      release = Timer(next.difference(now), ref.invalidateSelf);
+    }
     // Compute max publishedAt explicitly -- the interface does not
     // guarantee any ordering for watchByPodcastId. An episode a feed lists
     // ahead of its date is skipped: it would show "Updated" in the future
@@ -66,6 +77,17 @@ Stream<DateTime?> newestEpisodeDate(Ref ref, int podcastId) {
       return latest;
     });
   });
+}
+
+/// The earliest publication date after [now], if any episode has one.
+DateTime? _nextRelease(List<Episode> episodes, DateTime now) {
+  DateTime? next;
+  for (final episode in episodes) {
+    final pub = episode.publishedAt;
+    if (pub == null || !now.isBefore(pub)) continue;
+    if (next == null || pub.isBefore(next)) next = pub;
+  }
+  return next;
 }
 
 /// Provides subscriptions sorted by the user's selected sort order.
