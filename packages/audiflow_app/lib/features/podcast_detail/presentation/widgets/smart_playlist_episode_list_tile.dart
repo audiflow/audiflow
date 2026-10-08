@@ -14,6 +14,7 @@ import '../../../station/presentation/helpers/record_station_play.dart';
 import '../controllers/podcast_detail_controller.dart';
 import '../helpers/played_status_helper.dart';
 import '../screens/episode_detail_screen.dart';
+import '../utils/played_display.dart';
 import 'episode_pill_duration_label.dart';
 
 /// Displays a single episode from the database (Episode model) with playback.
@@ -104,6 +105,7 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
     final isPlaying = ref.watch(isEpisodePlayingProvider(audioUrl));
     final isLoading = ref.watch(isEpisodeLoadingProvider(audioUrl));
     final isCompleted = progress?.isCompleted ?? false;
+    final showsPlayed = showsPlayedState(progress, isPlaying: isPlaying);
     final isNew =
         !isCompleted &&
         !(progress?.isInProgress ?? false) &&
@@ -127,7 +129,7 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
       title: displayTitle ?? episode.title,
       pillLabel: _buildPillLabel(
         progress,
-        isCompleted,
+        showsPlayed,
         isPlaying,
         l10n,
         liveRemaining,
@@ -146,7 +148,7 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
       isLoading: isLoading,
       isNew: isNew,
       newLabel: l10n.episodeNewLabel,
-      isCompleted: isCompleted,
+      isCompleted: showsPlayed,
       isCurrentEpisode: isCurrentEpisode,
       hasTranscript: hasTranscript,
       transcriptLabel: l10n.episodeTranscriptAvailable,
@@ -192,12 +194,12 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
 
   String _buildPillLabel(
     EpisodeWithProgress? p,
-    bool isCompleted,
+    bool showsPlayed,
     bool isPlaying,
     AppLocalizations l10n,
     Duration? liveRemaining,
   ) {
-    if (isCompleted) return l10n.episodePillCompleted;
+    if (showsPlayed) return l10n.episodePillCompleted;
 
     final inProgress =
         isPlaying || (p?.isInProgress ?? false) || liveRemaining != null;

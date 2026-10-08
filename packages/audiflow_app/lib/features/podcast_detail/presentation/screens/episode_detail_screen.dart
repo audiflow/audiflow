@@ -20,6 +20,7 @@ import '../../../queue/presentation/controllers/queue_controller.dart';
 import '../../../share/presentation/helpers/share_helper.dart';
 import '../../../station/presentation/helpers/record_station_play.dart';
 import '../controllers/podcast_detail_controller.dart';
+import '../utils/played_display.dart';
 import '../widgets/episode_dev_info_widget.dart';
 
 /// Displays full episode details with playback, download,
@@ -137,6 +138,10 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
     final isCompleted = effectiveProgress?.isCompleted ?? false;
     final isInProgress =
         isLoadedInPlayer || (effectiveProgress?.isInProgress ?? false);
+    final showsPlayed = showsPlayedState(
+      effectiveProgress,
+      isPlaying: isPlaying,
+    );
 
     final imageUrl = widget.episode.primaryImage?.url ?? widget.artworkUrl;
     final heroTag =
@@ -278,13 +283,13 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                     // Progress indicator -- only render the wrapper Padding
                     // when the indicator will actually display content to
                     // avoid a blank gap while progress data loads.
-                    if (isCompleted ||
+                    if (showsPlayed ||
                         (isInProgress &&
                             effectiveProgress?.remainingTimeFormatted != null))
                       Padding(
                         padding: const EdgeInsets.only(bottom: Spacing.md),
                         child: EpisodeProgressIndicator(
-                          isCompleted: isCompleted,
+                          isCompleted: showsPlayed,
                           isInProgress: isInProgress,
                           remainingTimeFormatted:
                               effectiveProgress?.remainingTimeFormatted,

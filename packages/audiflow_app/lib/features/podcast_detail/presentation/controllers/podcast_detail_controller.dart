@@ -450,9 +450,9 @@ Future<List<PodcastItem>> filteredSortedEpisodes(
       }
 
       final history = await historyRepo.getByEpisodeId(episode.id);
-      final isCompleted = history?.completedAt != null;
-      final isInProgress =
-          history != null && 0 < history.positionMs && !isCompleted;
+      final isCompleted = history?.isPlayed ?? false;
+      // A replay of a played episode is in progress, not unplayed.
+      final isInProgress = history?.isInProgress ?? false;
 
       if (filter == EpisodeFilter.unplayed && !isCompleted && !isInProgress) {
         filtered.add(item);
