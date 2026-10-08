@@ -17,6 +17,7 @@ import '../features/onboarding/presentation/screens/onboarding_carousel_screen.d
 import '../features/podcast_detail/presentation/screens/episode_detail_screen.dart';
 import '../features/station/presentation/screens/station_detail_screen.dart';
 import '../features/station/presentation/screens/station_edit_screen.dart';
+import '../features/station/presentation/screens/station_list_screen.dart';
 import '../features/podcast_detail/presentation/screens/podcast_detail_screen.dart';
 import '../features/podcast_detail/presentation/screens/smart_playlist_episodes_screen.dart';
 import '../features/podcast_detail/presentation/screens/smart_playlist_group_episodes_screen.dart';
@@ -67,6 +68,7 @@ class AppRoutes {
   static const String smartPlaylistDirectGroup =
       'smart-playlist/:playlistId/group/:groupId';
   static const String stationNew = '/library/station/new';
+  static const String stationList = '/library/stations';
   static const String settingsAppearance = '/settings/appearance';
   static const String settingsPlayback = '/settings/playback';
   static const String settingsDownloads = '/settings/downloads';
@@ -323,6 +325,10 @@ GoRouter createAppRouter({
                             _buildEpisodeDetailScreen(state),
                       ),
                     ],
+                  ),
+                  materialRoute(
+                    path: 'stations',
+                    builder: (context, state) => const StationListScreen(),
                   ),
                   materialRoute(
                     path: 'station/new',

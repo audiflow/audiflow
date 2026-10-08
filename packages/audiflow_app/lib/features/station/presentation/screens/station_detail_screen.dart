@@ -270,6 +270,7 @@ class _StationDetailContentState extends ConsumerState<_StationDetailContent> {
             key: ValueKey(stationEpisodes[index].id),
             stationEpisode: stationEpisodes[index],
             stationName: widget.station.name,
+            stationId: widget.station.id,
             siblingEpisodeIds: siblingEpisodeIds,
           );
         },
@@ -320,12 +321,14 @@ class _StationEpisodeTile extends ConsumerWidget {
   const _StationEpisodeTile({
     required this.stationEpisode,
     required this.stationName,
+    required this.stationId,
     required this.siblingEpisodeIds,
     super.key,
   });
 
   final StationEpisode stationEpisode;
   final String stationName;
+  final int stationId;
   final List<int> siblingEpisodeIds;
 
   @override
@@ -359,6 +362,7 @@ class _StationEpisodeTile extends ConsumerWidget {
           itunesId: subscription?.itunesId,
           feedUrl: subscription?.feedUrl,
           stationName: stationName,
+          stationId: stationId,
         );
       },
       // Roughly one row tall, so the list does not jump when it resolves.

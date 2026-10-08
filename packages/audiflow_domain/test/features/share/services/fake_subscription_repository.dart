@@ -128,8 +128,7 @@ class FakeSubscriptionRepository implements SubscriptionRepository {
     int id,
     String? websiteUrl, {
     required DateTime syncedAt,
-  }) =>
-      throw UnimplementedError();
+  }) => throw UnimplementedError();
 
   @override
   Future<void> updateFeedMetadata(

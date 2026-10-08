@@ -1161,6 +1161,11 @@ class AppLocalizationsJa extends AppLocalizations {
   String get stationAdd => 'ステーションを追加';
 
   @override
+  String stationShowAll(int count) {
+    return 'すべて表示 $count';
+  }
+
+  @override
   String get stationName => 'ステーション名';
 
   @override

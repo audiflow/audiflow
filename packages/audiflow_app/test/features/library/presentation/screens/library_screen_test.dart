@@ -412,5 +412,46 @@ void main() {
       check(first.dx).isLessThan(second.dx);
       check(first.dy).isLessThan(third.dy);
     });
+
+    Station playedStation(int id, {DateTime? lastPlayedAt}) => Station()
+      ..id = id
+      ..name = 'Station $id'
+      ..sortOrder = id
+      ..lastPlayedAt = lastPlayedAt;
+
+    testWidgets('shows at most four stations, most recently played first', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        stations: [
+          for (var i = 1; i <= 5; i++) playedStation(i),
+          playedStation(6, lastPlayedAt: DateTime(2026, 10)),
+        ],
+      );
+      final tiles = find.byType(StationGridTile);
+      check(tiles.evaluate()).length.equals(4);
+      check(tester.widget<StationGridTile>(tiles.first).station.id).equals(6);
+    });
+
+    testWidgets('links to every station once there are more than four', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        stations: [for (var i = 1; i <= 5; i++) playedStation(i)],
+      );
+      check(find.text('Show all 5').evaluate()).length.equals(1);
+    });
+
+    testWidgets('has no show-all link while every station fits', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        stations: [for (var i = 1; i <= 4; i++) playedStation(i)],
+      );
+      check(find.textContaining('Show all').evaluate()).isEmpty();
+    });
   });
 }

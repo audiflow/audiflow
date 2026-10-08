@@ -41,6 +41,10 @@ class Station {
   late DateTime createdAt;
   late DateTime updatedAt;
 
+  /// When an episode was last played from this station; null if never.
+  /// Orders the Library's station tiles.
+  DateTime? lastPlayedAt;
+
   // -- Convenience getters (not persisted) --
 
   @ignore

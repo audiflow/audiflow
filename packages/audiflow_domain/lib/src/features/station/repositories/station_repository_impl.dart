@@ -52,5 +52,9 @@ class StationRepositoryImpl implements StationRepository {
   Future<void> reorder(List<int> stationIds) => _datasource.reorder(stationIds);
 
   @override
+  Future<void> markPlayed(int id, {required DateTime at}) =>
+      _datasource.markPlayed(id, at: at);
+
+  @override
   Future<int> count() => _datasource.count();
 }

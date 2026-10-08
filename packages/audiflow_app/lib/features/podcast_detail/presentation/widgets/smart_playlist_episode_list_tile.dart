@@ -36,6 +36,7 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
     this.displayTitle,
     this.playlistId,
     this.stationName,
+    this.stationId,
     this.numberLabel,
   });
 
@@ -84,6 +85,27 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
   /// Overrides play source to [PlaySource.station] and emits [StationPlayed]
   /// instead of [SmartPlaylistPlayed].
   final String? stationName;
+
+  /// The station this tile plays from, recorded as its last play so the
+  /// Library shows recently played stations first.
+  final int? stationId;
+
+  /// Best effort: a failed write only leaves the Library order stale.
+  static Future<void> _recordStationPlay(WidgetRef ref, int stationId) async {
+    try {
+      await ref
+          .read(stationRepositoryProvider)
+          .markPlayed(stationId, at: DateTime.now());
+    } catch (error, stackTrace) {
+      ref
+          .read(namedLoggerProvider('StationPlay'))
+          .w(
+            'Failed to record station play',
+            error: error,
+            stackTrace: stackTrace,
+          );
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -543,6 +565,10 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
           feedUrl: feedUrl,
         ),
       );
+
+    if (stationId case final id?) {
+      unawaited(_recordStationPlay(ref, id));
+    }
 
     final analytics = ref.read(analyticsServiceProvider);
     if (isStation) {

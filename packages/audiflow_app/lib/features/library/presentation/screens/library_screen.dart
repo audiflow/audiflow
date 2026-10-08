@@ -10,7 +10,8 @@ import 'package:material_symbols_icons/symbols.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
 import '../../../station/presentation/controllers/station_list_controller.dart';
-import '../../../station/presentation/widgets/station_grid_tile.dart';
+import '../../../station/presentation/utils/station_recency.dart';
+import '../../../station/presentation/widgets/station_grid_sliver.dart';
 import '../controllers/library_controller.dart';
 import '../widgets/continue_listening_section.dart';
 import '../widgets/subscription_list_tile.dart';
@@ -168,57 +169,26 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     );
   }
 
+  /// The Stations section caps the grid so it never pushes the podcasts
+  /// far down; the rest are a "Show all" tap away.
+  static const int _maxStationTiles = 4;
+
   List<Widget> _stationSlivers(BuildContext context, List<Station> stations) {
     final l10n = AppLocalizations.of(context);
     return [
       SliverToBoxAdapter(
         child: SectionHeader(
           title: l10n.stationSectionTitle,
-          trailing: IconButton(
-            tooltip: l10n.stationAdd,
-            icon: Icon(Icons.add_rounded, color: AppColors.of(context).accent),
-            onPressed: () => context.push(AppRoutes.stationNew),
-          ),
+          trailing: _StationsHeaderActions(stationCount: stations.length),
         ),
       ),
       if (stations.isEmpty)
         SliverToBoxAdapter(child: _InlinePlaceholder(l10n.stationNoStationsYet))
       else
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(
-            Spacing.screenHorizontal,
-            Spacing.xs,
-            Spacing.screenHorizontal,
-            0,
-          ),
-          sliver: SliverList.separated(
-            itemCount: (stations.length + 1) ~/ 2,
-            separatorBuilder: (_, _) => const SizedBox(height: _gridGap),
-            itemBuilder: (context, row) =>
-                _stationRow(context, stations.skip(row * 2).take(2).toList()),
-          ),
+        StationGridSliver(
+          stations: recentlyPlayedStations(stations, limit: _maxStationTiles),
         ),
     ];
-  }
-
-  static const double _gridGap = 12;
-
-  // Rows of two instead of a SliverGrid so each tile sizes to its content
-  // and large text never overflows a fixed aspect ratio.
-  Widget _stationRow(BuildContext context, List<Station> pair) {
-    Widget tile(Station station) => StationGridTile(
-      key: ValueKey(station.id),
-      station: station,
-      onTap: () => context.push('${AppRoutes.library}/station/${station.id}'),
-    );
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(child: tile(pair.first)),
-        const SizedBox(width: _gridGap),
-        Expanded(child: 1 < pair.length ? tile(pair[1]) : const SizedBox()),
-      ],
-    );
   }
 
   Widget _podcastsSliver(
@@ -496,6 +466,34 @@ class _SortMenuButton extends StatelessWidget {
           Flexible(child: Text(label, overflow: TextOverflow.ellipsis)),
         ],
       ),
+    );
+  }
+}
+
+/// "Show all N" (once the grid is capped) and "+" for the Stations header.
+class _StationsHeaderActions extends StatelessWidget {
+  const _StationsHeaderActions({required this.stationCount});
+
+  final int stationCount;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final colors = AppColors.of(context);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (_LibraryScreenState._maxStationTiles < stationCount)
+          TextButton(
+            onPressed: () => context.push(AppRoutes.stationList),
+            child: Text(l10n.stationShowAll(stationCount)),
+          ),
+        IconButton(
+          tooltip: l10n.stationAdd,
+          icon: Icon(Icons.add_rounded, color: colors.accent),
+          onPressed: () => context.push(AppRoutes.stationNew),
+        ),
+      ],
     );
   }
 }

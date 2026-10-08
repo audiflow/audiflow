@@ -41,6 +41,17 @@ class StationLocalDatasource {
   /// Returns the total number of stations.
   Future<int> count() => _isar.stations.count();
 
+  /// Sets [Station.lastPlayedAt] without touching [Station.updatedAt]:
+  /// playing is not an edit. Does nothing for an unknown [id].
+  Future<void> markPlayed(int id, {required DateTime at}) async {
+    await _isar.writeTxn(() async {
+      final station = await _isar.stations.get(id);
+      if (station == null) return;
+      station.lastPlayedAt = at;
+      await _isar.stations.put(station);
+    });
+  }
+
   /// Reassigns [sortOrder] for each station according to [stationIds] order.
   ///
   /// All updates run in a single transaction to avoid partial state.

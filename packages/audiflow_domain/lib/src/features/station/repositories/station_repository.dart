@@ -8,6 +8,9 @@ abstract class StationRepository {
   Future<void> update(Station station);
   Future<void> delete(int id);
   Future<void> reorder(List<int> stationIds);
+
+  /// Records that an episode was played from station [id] at [at].
+  Future<void> markPlayed(int id, {required DateTime at});
   Future<int> count();
 }
 

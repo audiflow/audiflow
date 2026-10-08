@@ -1207,6 +1207,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stationAdd => 'Add station';
 
   @override
+  String stationShowAll(int count) {
+    return 'Show all $count';
+  }
+
+  @override
   String get stationName => 'Station Name';
 
   @override
