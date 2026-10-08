@@ -23,7 +23,10 @@ class TranscriptLocalDatasource {
 
   /// Upserts transcript metadata records.
   ///
-  /// On conflict (same episodeId + url), updates the existing row.
+  /// On conflict (same episodeId + url), updates the existing row while
+  /// keeping what earlier fetches learned about the file: the feed only
+  /// re-declares the link, and forgetting `fetchedAt` would fetch it again
+  /// and store its segments twice.
   Future<void> upsertMetas(List<EpisodeTranscript> metas) async {
     await _isar.writeTxn(() async {
       for (final meta in metas) {
@@ -31,9 +34,11 @@ class TranscriptLocalDatasource {
           meta.episodeId,
           meta.url,
         );
-        if (existing != null) {
-          meta.id = existing.id;
-        }
+        if (existing == null) continue;
+
+        meta
+          ..id = existing.id
+          ..fetchedAt ??= existing.fetchedAt;
       }
       await _isar.episodeTranscripts.putAll(metas);
     });
