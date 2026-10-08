@@ -192,6 +192,26 @@ void main() {
     });
   });
 
+  group('rewinding a finished listen', () {
+    test('below the threshold starts a resumable replay', () async {
+      await playToEnd();
+
+      final resumeAt = const Duration(minutes: 29, seconds: 10);
+      await service.onPlaybackStarted(episodeId, resumeAt.inMilliseconds);
+      // Seek back to 10 minutes, then pause there.
+      now = now.add(const Duration(seconds: 10));
+      const rewound = Duration(minutes: 10);
+      await service.onProgressUpdate(episodeId, progressAt(rewound));
+      await service.onPlaybackPaused(episodeId, progressAt(rewound));
+
+      final history = await repository.getByEpisodeId(episodeId);
+      check(history!.isReplaying).isTrue();
+      check(history.completedAt).isNotNull();
+      final lastPlayed = await repository.getLastPlayed();
+      check(lastPlayed?.positionMs).equals(rewound.inMilliseconds);
+    });
+  });
+
   group('refresh notifications', () {
     test('passing the completion threshold notifies once', () async {
       final saved = <int>[];

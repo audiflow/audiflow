@@ -121,6 +121,20 @@ class PlaybackHistoryService {
     return _getCompletionThreshold() <= positionMs / durationMs;
   }
 
+  /// A finished listen resumed past the threshold is not a replay until
+  /// playback moves back below it (e.g. a seek backward); from then on the
+  /// listen is resumable like any replay.
+  Future<void> _startReplayIfRewound(
+    int episodeId,
+    int positionMs,
+    int durationMs,
+  ) async {
+    if (durationMs <= 0) return;
+    if (_getCompletionThreshold() <= positionMs / durationMs) return;
+    // No-op unless the last listen finished.
+    await _repository.startReplay(episodeId, positionMs: positionMs);
+  }
+
   /// Best-effort: playing a podcast resumes its paused auto-download.
   Future<void> _tryRecordPodcastPlayed(int episodeId) async {
     try {
@@ -161,6 +175,7 @@ class PlaybackHistoryService {
     _lastSavedPositionMs = positionMs;
     _lastSaveTime = now;
 
+    await _startReplayIfRewound(episodeId, positionMs, durationMs);
     await _repository.saveProgress(
       episodeId: episodeId,
       positionMs: positionMs,
@@ -215,6 +230,11 @@ class PlaybackHistoryService {
     _lastSavedPositionMs = progress.position.inMilliseconds;
     _lastSaveTime = now;
 
+    await _startReplayIfRewound(
+      episodeId,
+      progress.position.inMilliseconds,
+      progress.duration.inMilliseconds,
+    );
     await _repository.saveProgress(
       episodeId: episodeId,
       positionMs: progress.position.inMilliseconds,
