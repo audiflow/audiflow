@@ -1,22 +1,38 @@
+import 'dart:async';
+import 'dart:typed_data';
+
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:checks/checks.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_test/flutter_test.dart' hide expect;
 import 'package:isar_community/isar.dart';
 import 'package:logger/logger.dart';
 
 import '../../../helpers/isar_test_helper.dart';
-import 'package:mockito/annotations.dart';
-import 'package:mockito/mockito.dart';
 
-@GenerateMocks([Dio])
-import 'transcript_service_test.mocks.dart';
+const _vttUrl = 'https://example.com/ep1.vtt';
+const _srtUrl = 'https://example.com/ep1.srt';
+
+const _vttContent =
+    'WEBVTT\n'
+    '\n'
+    '00:00:01.000 --> 00:00:05.000\n'
+    'Hello world\n'
+    '\n'
+    '00:00:05.000 --> 00:00:10.000\n'
+    'Second line\n';
+
+const _srtContent =
+    '1\n'
+    '00:00:01,000 --> 00:00:05,000\n'
+    'Hello from SRT\n';
 
 void main() {
   late Isar isar;
   late TranscriptRepository repository;
-  late MockDio mockDio;
+  late _FakeHttpAdapter http;
   late TranscriptService service;
-  late int episodeId;
+  const episodeId = 1;
 
   setUpAll(() async {
     await Isar.initializeIsarCore(download: true);
@@ -27,253 +43,242 @@ void main() {
       EpisodeTranscriptSchema,
       TranscriptSegmentSchema,
     ]);
-    final datasource = TranscriptLocalDatasource(isar);
-    repository = TranscriptRepositoryImpl(datasource: datasource);
-    mockDio = MockDio();
+    repository = TranscriptRepositoryImpl(
+      datasource: TranscriptLocalDatasource(isar),
+    );
+    http = _FakeHttpAdapter();
     service = TranscriptService(
       repository: repository,
-      dio: mockDio,
+      dio: Dio()..httpClientAdapter = http,
       logger: Logger(level: Level.off),
     );
-
-    // Use a fixed episodeId (no FK constraints in Isar)
-    episodeId = 1;
   });
 
   tearDown(() async {
     await isar.close(deleteFromDisk: true);
   });
 
+  Future<int> declare(String url, String type) async {
+    await repository.upsertMetas([
+      EpisodeTranscript()
+        ..episodeId = episodeId
+        ..url = url
+        ..type = type,
+    ]);
+    final metas = await repository.getMetasByEpisodeId(episodeId);
+    return metas.firstWhere((m) => m.url == url).id;
+  }
+
+  Future<EpisodeTranscript> stored(int transcriptId) async {
+    final metas = await repository.getMetasByEpisodeId(episodeId);
+    return metas.firstWhere((m) => m.id == transcriptId);
+  }
+
   group('ensureContent', () {
     test('returns null when no transcript metadata exists', () async {
-      final result = await service.ensureContent(episodeId);
-      expect(result, isNull);
+      check(await service.ensureContent(episodeId)).isNull();
     });
 
     test('returns null when no supported types exist', () async {
-      await repository.upsertMetas([
-        EpisodeTranscript()
-          ..episodeId = episodeId
-          ..url = 'https://example.com/ep1.json'
-          ..type = 'application/json',
-      ]);
+      await declare('https://example.com/ep1.json', 'application/json');
 
-      final result = await service.ensureContent(episodeId);
-      expect(result, isNull);
+      check(await service.ensureContent(episodeId)).isNull();
+      check(http.requested).isEmpty();
     });
 
     test('returns transcriptId when content already fetched', () async {
-      final transcript = EpisodeTranscript()
-        ..episodeId = episodeId
-        ..url = 'https://example.com/ep1.vtt'
-        ..type = 'text/vtt'
-        ..fetchedAt = DateTime.now();
-      await repository.upsertMetas([transcript]);
+      final transcriptId = await declare(_vttUrl, 'text/vtt');
+      await repository.markAsFetched(transcriptId);
 
-      final metas = await repository.getMetasByEpisodeId(episodeId);
-      final transcriptId = metas.first.id;
-
-      final result = await service.ensureContent(episodeId);
-      expect(result, equals(transcriptId));
-
-      verifyNever(mockDio.get<String>(any));
+      check(await service.ensureContent(episodeId)).equals(transcriptId);
+      check(http.requested).isEmpty();
     });
 
     test('fetches, parses, stores segments, and marks as fetched', () async {
-      final transcript = EpisodeTranscript()
-        ..episodeId = episodeId
-        ..url = 'https://example.com/ep1.vtt'
-        ..type = 'text/vtt';
-      await repository.upsertMetas([transcript]);
-      final metas = await repository.getMetasByEpisodeId(episodeId);
-      final transcriptId = metas.first.id;
+      final transcriptId = await declare(_vttUrl, 'text/vtt');
+      http.respond(_vttUrl, _vttContent);
 
-      const vttContent =
-          'WEBVTT\n'
-          '\n'
-          '00:00:01.000 --> 00:00:05.000\n'
-          'Hello world\n'
-          '\n'
-          '00:00:05.000 --> 00:00:10.000\n'
-          'Second line\n';
-
-      when(mockDio.get<String>(any)).thenAnswer(
-        (_) async => Response(
-          data: vttContent,
-          statusCode: 200,
-          requestOptions: RequestOptions(path: 'https://example.com/ep1.vtt'),
-        ),
-      );
-
-      final result = await service.ensureContent(episodeId);
-      expect(result, equals(transcriptId));
+      check(await service.ensureContent(episodeId)).equals(transcriptId);
 
       final segments = await repository.getAllSegments(transcriptId);
-      expect(segments.length, equals(2));
-      expect(segments[0].body, equals('Hello world'));
-      expect(segments[0].startMs, equals(1000));
-      expect(segments[0].endMs, equals(5000));
-      expect(segments[1].body, equals('Second line'));
-
-      expect(await repository.isContentFetched(transcriptId), isTrue);
+      check(
+        segments.map((s) => s.body),
+      ).deepEquals(['Hello world', 'Second line']);
+      check(segments.first.startMs).equals(1000);
+      check(segments.first.endMs).equals(5000);
+      check(await repository.isContentFetched(transcriptId)).isTrue();
     });
 
     test('prefers VTT over SRT', () async {
-      await repository.upsertMetas([
-        EpisodeTranscript()
-          ..episodeId = episodeId
-          ..url = 'https://example.com/ep1.srt'
-          ..type = 'application/srt',
-      ]);
-      await repository.upsertMetas([
-        EpisodeTranscript()
-          ..episodeId = episodeId
-          ..url = 'https://example.com/ep1.vtt'
-          ..type = 'text/vtt',
-      ]);
+      await declare(_srtUrl, 'application/srt');
+      final vttId = await declare(_vttUrl, 'text/vtt');
+      http
+        ..respond(_vttUrl, _vttContent)
+        ..respond(_srtUrl, _srtContent);
 
-      final metas = await repository.getMetasByEpisodeId(episodeId);
-      final vttId = metas.firstWhere((m) => m.type == 'text/vtt').id;
-
-      const vttContent =
-          'WEBVTT\n'
-          '\n'
-          '00:00:01.000 --> 00:00:05.000\n'
-          'Hello\n';
-
-      when(mockDio.get<String>(any)).thenAnswer(
-        (_) async => Response(
-          data: vttContent,
-          statusCode: 200,
-          requestOptions: RequestOptions(path: 'https://example.com/ep1.vtt'),
-        ),
-      );
-
-      final result = await service.ensureContent(episodeId);
-      expect(result, equals(vttId));
-
-      verify(mockDio.get<String>('https://example.com/ep1.vtt')).called(1);
-    });
-
-    test('returns null on DioException', () async {
-      await repository.upsertMetas([
-        EpisodeTranscript()
-          ..episodeId = episodeId
-          ..url = 'https://example.com/ep1.vtt'
-          ..type = 'text/vtt',
-      ]);
-
-      when(mockDio.get<String>(any)).thenThrow(
-        DioException(
-          requestOptions: RequestOptions(path: 'https://example.com/ep1.vtt'),
-          type: DioExceptionType.connectionTimeout,
-        ),
-      );
-
-      final result = await service.ensureContent(episodeId);
-      expect(result, isNull);
-    });
-
-    test('returns null when fetch returns empty content', () async {
-      await repository.upsertMetas([
-        EpisodeTranscript()
-          ..episodeId = episodeId
-          ..url = 'https://example.com/ep1.vtt'
-          ..type = 'text/vtt',
-      ]);
-
-      when(mockDio.get<String>(any)).thenAnswer(
-        (_) async => Response(
-          data: '',
-          statusCode: 200,
-          requestOptions: RequestOptions(path: 'https://example.com/ep1.vtt'),
-        ),
-      );
-
-      final result = await service.ensureContent(episodeId);
-      expect(result, isNull);
-    });
-
-    test('returns null when fetch returns null data', () async {
-      await repository.upsertMetas([
-        EpisodeTranscript()
-          ..episodeId = episodeId
-          ..url = 'https://example.com/ep1.vtt'
-          ..type = 'text/vtt',
-      ]);
-
-      when(mockDio.get<String>(any)).thenAnswer(
-        (_) async => Response<String>(
-          data: null,
-          statusCode: 200,
-          requestOptions: RequestOptions(path: 'https://example.com/ep1.vtt'),
-        ),
-      );
-
-      final result = await service.ensureContent(episodeId);
-      expect(result, isNull);
+      check(await service.ensureContent(episodeId)).equals(vttId);
+      check(http.requested).deepEquals([_vttUrl]);
     });
 
     test('stores speaker information from VTT', () async {
-      final transcript = EpisodeTranscript()
-        ..episodeId = episodeId
-        ..url = 'https://example.com/ep1.vtt'
-        ..type = 'text/vtt';
-      await repository.upsertMetas([transcript]);
-      final metas = await repository.getMetasByEpisodeId(episodeId);
-      final transcriptId = metas.first.id;
-
-      const vttContent =
-          'WEBVTT\n'
-          '\n'
-          '00:00:01.000 --> 00:00:05.000\n'
-          '<v Alice>Hello from Alice\n';
-
-      when(mockDio.get<String>(any)).thenAnswer(
-        (_) async => Response(
-          data: vttContent,
-          statusCode: 200,
-          requestOptions: RequestOptions(path: 'https://example.com/ep1.vtt'),
-        ),
+      final transcriptId = await declare(_vttUrl, 'text/vtt');
+      http.respond(
+        _vttUrl,
+        'WEBVTT\n\n00:00:01.000 --> 00:00:05.000\n<v Alice>Hello from Alice\n',
       );
 
       await service.ensureContent(episodeId);
 
       final segments = await repository.getAllSegments(transcriptId);
-      expect(segments.length, equals(1));
-      expect(segments[0].speaker, equals('Alice'));
-      expect(segments[0].body, equals('Hello from Alice'));
+      check(segments).length.equals(1);
+      check(segments.single.speaker).equals('Alice');
+      check(segments.single.body).equals('Hello from Alice');
     });
 
     test('falls back to SRT when VTT not available', () async {
-      await repository.upsertMetas([
-        EpisodeTranscript()
-          ..episodeId = episodeId
-          ..url = 'https://example.com/ep1.srt'
-          ..type = 'application/srt',
-      ]);
-      final metas = await repository.getMetasByEpisodeId(episodeId);
-      final srtId = metas.first.id;
+      final srtId = await declare(_srtUrl, 'application/srt');
+      http.respond(_srtUrl, _srtContent);
 
-      const srtContent =
-          '1\n'
-          '00:00:01,000 --> 00:00:05,000\n'
-          'Hello from SRT\n';
-
-      when(mockDio.get<String>(any)).thenAnswer(
-        (_) async => Response(
-          data: srtContent,
-          statusCode: 200,
-          requestOptions: RequestOptions(path: 'https://example.com/ep1.srt'),
-        ),
-      );
-
-      final result = await service.ensureContent(episodeId);
-      expect(result, equals(srtId));
-
+      check(await service.ensureContent(episodeId)).equals(srtId);
       final segments = await repository.getAllSegments(srtId);
-      expect(segments.length, equals(1));
-      expect(segments[0].body, equals('Hello from SRT'));
+      check(segments.single.body).equals('Hello from SRT');
     });
   });
+
+  group('ensureContent with an unusable file', () {
+    test('a network failure returns null without marking the file', () async {
+      final transcriptId = await declare(_vttUrl, 'text/vtt');
+      http.failWithConnectionError(_vttUrl);
+
+      check(await service.ensureContent(episodeId)).isNull();
+      check((await stored(transcriptId)).unusableAt).isNull();
+    });
+
+    test('an HTTP error returns null without marking the file', () async {
+      final transcriptId = await declare(_vttUrl, 'text/vtt');
+      http.respond(_vttUrl, 'Not Found', statusCode: 404);
+
+      check(await service.ensureContent(episodeId)).isNull();
+      check((await stored(transcriptId)).unusableAt).isNull();
+    });
+
+    test('empty content returns null and marks the file unusable', () async {
+      final transcriptId = await declare(_vttUrl, 'text/vtt');
+      http.respond(_vttUrl, '');
+
+      check(await service.ensureContent(episodeId)).isNull();
+      check((await stored(transcriptId)).unusableAt).isNotNull();
+    });
+
+    test('content without cues returns null and marks the file', () async {
+      final transcriptId = await declare(_vttUrl, 'text/vtt');
+      http.respond(_vttUrl, '<html><body>Moved</body></html>');
+
+      check(await service.ensureContent(episodeId)).isNull();
+      check((await stored(transcriptId)).unusableAt).isNotNull();
+      check(await repository.getAllSegments(transcriptId)).isEmpty();
+    });
+
+    test('a file marked unusable is not fetched again', () async {
+      final transcriptId = await declare(_vttUrl, 'text/vtt');
+      await repository.markAsUnusable(transcriptId);
+
+      check(await service.ensureContent(episodeId)).isNull();
+      check(http.requested).isEmpty();
+    });
+
+    test(
+      'falls through to the next file when the preferred one is unusable',
+      () async {
+        final srtId = await declare(_srtUrl, 'application/srt');
+        await declare(_vttUrl, 'text/vtt');
+        http
+          ..respond(_vttUrl, '')
+          ..respond(_srtUrl, _srtContent);
+
+        check(await service.ensureContent(episodeId)).equals(srtId);
+        check(http.requested).deepEquals([_vttUrl, _srtUrl]);
+      },
+    );
+  });
+
+  group('ensureContent when cancelled', () {
+    test('mid-download returns null without marking the file', () async {
+      await declare(_srtUrl, 'application/srt');
+      final vttId = await declare(_vttUrl, 'text/vtt');
+      http.hang(_vttUrl);
+      final cancelToken = CancelToken();
+
+      final result = service.ensureContent(episodeId, cancelToken: cancelToken);
+      await http.firstRequest;
+      cancelToken.cancel();
+
+      check(await result).isNull();
+      check((await stored(vttId)).unusableAt).isNull();
+      check(http.requested).deepEquals([_vttUrl]);
+    });
+
+    test('before it starts fetches nothing', () async {
+      await declare(_vttUrl, 'text/vtt');
+      final cancelToken = CancelToken()..cancel();
+
+      final result = await service.ensureContent(
+        episodeId,
+        cancelToken: cancelToken,
+      );
+
+      check(result).isNull();
+      check(http.requested).isEmpty();
+    });
+  });
+}
+
+/// Serves canned bodies per URL and records each request, standing in for
+/// the network.
+class _FakeHttpAdapter implements HttpClientAdapter {
+  final _responses = <String, ({String body, int statusCode})>{};
+  final _connectionErrors = <String>{};
+  final _hanging = <String>{};
+  final _firstRequest = Completer<void>();
+  final requested = <String>[];
+
+  /// Completes once any request reaches the adapter.
+  Future<void> get firstRequest => _firstRequest.future;
+
+  void respond(String url, String body, {int statusCode = 200}) =>
+      _responses[url] = (body: body, statusCode: statusCode);
+
+  void failWithConnectionError(String url) => _connectionErrors.add(url);
+
+  /// Never answers [url], like a stalled download, so a test can cancel it.
+  void hang(String url) => _hanging.add(url);
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
+    final url = options.uri.toString();
+    requested.add(url);
+    if (!_firstRequest.isCompleted) _firstRequest.complete();
+    if (_hanging.contains(url)) return Completer<ResponseBody>().future;
+    if (_connectionErrors.contains(url)) {
+      throw DioException.connectionError(
+        requestOptions: options,
+        reason: 'offline',
+      );
+    }
+    final response = _responses[url] ?? (body: 'Not Found', statusCode: 404);
+    return ResponseBody.fromString(
+      response.body,
+      response.statusCode,
+      headers: {
+        Headers.contentTypeHeader: ['text/plain'],
+      },
+    );
+  }
+
+  @override
+  void close({bool force = false}) {}
 }

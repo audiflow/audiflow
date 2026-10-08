@@ -25,6 +25,10 @@ abstract class TranscriptRepository {
   /// Marks a transcript as fetched.
   Future<void> markAsFetched(int transcriptId);
 
+  /// Marks a transcript file as holding no usable transcript, so it is
+  /// neither offered nor fetched again.
+  Future<void> markAsUnusable(int transcriptId);
+
   /// Whether transcript content has been fetched.
   Future<bool> isContentFetched(int transcriptId);
 

@@ -21,8 +21,9 @@ class _FakeFileService implements DownloadFileService {
   final List<String> deletedPaths = [];
 
   @override
-  Future<void> deleteFile(String localPath) async =>
-      deletedPaths.add(localPath);
+  Future<void> deleteEpisodeFiles(int episodeId, {String? storedPath}) async {
+    if (storedPath != null) deletedPaths.add(storedPath);
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

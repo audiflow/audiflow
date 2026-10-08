@@ -1,4 +1,5 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar_community/isar.dart';
 
@@ -81,6 +82,28 @@ void main() {
 
       final results = await datasource.getMetasByEpisodeId(episodeId);
       expect(results.length, equals(1));
+    });
+
+    test('keeps fetchedAt when the feed re-declares the same file', () async {
+      await datasource.upsertMetas([_vttMeta(episodeId)]);
+      final stored = (await datasource.getMetasByEpisodeId(episodeId)).first;
+      await datasource.markAsFetched(stored.id);
+
+      await datasource.upsertMetas([_vttMeta(episodeId)]);
+
+      final result = (await datasource.getMetasByEpisodeId(episodeId)).single;
+      check(result.fetchedAt).isNotNull();
+    });
+
+    test('keeps unusableAt when the feed re-declares the same file', () async {
+      await datasource.upsertMetas([_vttMeta(episodeId)]);
+      final stored = (await datasource.getMetasByEpisodeId(episodeId)).first;
+      await datasource.markAsUnusable(stored.id);
+
+      await datasource.upsertMetas([_vttMeta(episodeId)]);
+
+      final result = (await datasource.getMetasByEpisodeId(episodeId)).single;
+      check(result.unusableAt).isNotNull();
     });
   });
 
@@ -229,3 +252,8 @@ void main() {
     });
   });
 }
+
+EpisodeTranscript _vttMeta(int episodeId) => EpisodeTranscript()
+  ..episodeId = episodeId
+  ..url = 'https://example.com/ep1.vtt'
+  ..type = 'text/vtt';

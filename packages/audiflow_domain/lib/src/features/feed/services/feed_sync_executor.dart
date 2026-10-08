@@ -7,6 +7,7 @@ import '../../subscription/repositories/subscription_repository.dart';
 import '../models/feed_parse_progress.dart';
 import '../models/feed_sync_result.dart';
 import '../repositories/episode_repository.dart';
+import 'dropped_episode_remover.dart';
 import 'feed_parser_service.dart';
 import 'feed_sync_diagnostic.dart';
 import 'subscription_metadata_updater.dart';
@@ -22,6 +23,7 @@ class FeedSyncExecutor {
   FeedSyncExecutor({
     required this._subscriptionRepo,
     required this._episodeRepo,
+    required this._droppedEpisodeRemover,
     required this._settingsRepo,
     required this._feedParser,
     required this._dio,
@@ -31,6 +33,7 @@ class FeedSyncExecutor {
 
   final SubscriptionRepository _subscriptionRepo;
   final EpisodeRepository _episodeRepo;
+  final DroppedEpisodeRemover _droppedEpisodeRemover;
   final AppSettingsRepository _settingsRepo;
   final FeedParserService _feedParser;
   final Dio _dio;
@@ -229,6 +232,7 @@ class FeedSyncExecutor {
       // scanned (regex-only) after the early-stop point, giving a complete
       // picture even for incremental syncs. Guard against malformed feeds
       // that parse to zero items.
+      var isDropCleanupComplete = true;
       if (observedGuids.isNotEmpty) {
         final droppedBefore = knownGuids.difference(observedGuids);
         var droppedGuids = droppedBefore;
@@ -255,28 +259,35 @@ class FeedSyncExecutor {
         });
 
         if (droppedGuids.isNotEmpty) {
-          final deleted = await _episodeRepo.deleteByPodcastIdAndGuids(
+          final removal = await _droppedEpisodeRemover.remove(
             sub.id,
             droppedGuids,
           );
-          _logger?.i('Removed $deleted dropped episodes from "${sub.title}"');
+          isDropCleanupComplete = removal.kept == 0;
+          _logger?.i(
+            'Removed ${removal.deleted} dropped episodes from '
+            '"${sub.title}"',
+          );
           _onDiagnostic('feed-sync:drop-result', {
             'path': 'background',
             'podcastId': sub.id,
             'title': sub.title,
             'requested': droppedGuids.length,
-            'deleted': deleted,
+            'deleted': removal.deleted,
+            'kept': removal.kept,
           });
         }
       }
 
       // Persist HTTP cache headers only after successful parse + upsert.
       // Always update so previously stored values are cleared when headers
-      // are no longer sent by the server.
+      // are no longer sent by the server. While dropped episodes are still
+      // waiting on their downloads, clear them instead: an unchanged feed
+      // would answer 304 and skip the parse that retries the removal.
       await _subscriptionRepo.updateHttpCacheHeaders(
         sub.id,
-        etag: etag,
-        lastModified: lastModified,
+        etag: isDropCleanupComplete ? etag : null,
+        lastModified: isDropCleanupComplete ? lastModified : null,
       );
 
       await _subscriptionRepo.updateLastRefreshed(sub.itunesId, DateTime.now());

@@ -83,6 +83,7 @@ export 'src/features/feed/services/notification_artwork_files.dart';
 export 'src/features/feed/services/test_notification_sender.dart';
 export 'src/features/feed/services/background_refresh_service.dart';
 export 'src/features/feed/services/feed_sync_diagnostic.dart';
+export 'src/features/feed/services/dropped_episode_remover.dart';
 export 'src/features/feed/services/feed_sync_executor.dart';
 export 'src/features/feed/services/feed_sync_service.dart';
 export 'src/features/feed/services/subscription_metadata_updater.dart';
@@ -165,6 +166,7 @@ export 'src/features/download/services/download_queue_service.dart';
 export 'src/features/download/services/auto_download_pause_service.dart';
 export 'src/features/download/services/background_download_deleter.dart';
 export 'src/features/download/services/background_download_service.dart';
+export 'src/features/download/services/background_download_worker_lock.dart';
 export 'src/features/download/services/download_retention_service.dart';
 export 'src/features/download/services/download_service.dart';
 
@@ -226,6 +228,7 @@ export 'src/features/transcript/datasources/local/chapter_local_datasource.dart'
 export 'src/features/transcript/datasources/local/transcript_local_datasource.dart';
 export 'src/features/transcript/models/transcript_search_result.dart';
 export 'src/features/transcript/providers/chapter_loader_provider.dart';
+export 'src/features/transcript/providers/transcript_availability_providers.dart';
 export 'src/features/transcript/providers/transcript_providers.dart';
 export 'src/features/transcript/repositories/chapter_repository.dart';
 export 'src/features/transcript/repositories/chapter_repository_impl.dart';

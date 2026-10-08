@@ -326,8 +326,10 @@ class DownloadService {
     if (task.downloadStatus.isActive) {
       await _queueService.cancelDownload(task.id);
     }
-    final localPath = task.localPath;
-    if (localPath != null) await _fileService.deleteFile(localPath);
+    await _fileService.deleteEpisodeFiles(
+      task.episodeId,
+      storedPath: task.localPath,
+    );
     _logger.i('Deleted auto download: ${task.id}');
     await _tryReconcile(task.episodeId);
     return true;
@@ -361,16 +363,19 @@ class DownloadService {
   }
 
   Future<void> _deleteTask(DownloadTask task) async {
-    // Awaited so the cancelled-status write cannot land after the record
-    // is gone.
+    // Awaited until the transfer has stopped, so neither its cancelled
+    // status write nor its file writes land after the cleanup below.
     if (task.downloadStatus.isActive) {
       await _queueService.cancelDownload(task.id);
     }
 
-    final localPath = task.localPath;
-    if (localPath != null) {
-      await _fileService.deleteFile(localPath);
-    }
+    // Swept by episode rather than by localPath: a task records its path
+    // only once it completes, so a paused or cancelled task would
+    // otherwise leave its partial file behind.
+    await _fileService.deleteEpisodeFiles(
+      task.episodeId,
+      storedPath: task.localPath,
+    );
 
     await _repository.delete(task.id);
     _logger.i('Deleted download: ${task.id}');

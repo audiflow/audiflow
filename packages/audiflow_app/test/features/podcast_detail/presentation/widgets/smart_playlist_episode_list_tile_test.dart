@@ -9,6 +9,7 @@ import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 const _audioUrl = 'https://example.com/episode.mp3';
 
@@ -225,6 +226,98 @@ void main() {
 
     check(player.resumed).isTrue();
     check(stations.played).deepEquals([3]);
+  });
+
+  group('transcript badge', () {
+    final episode = Episode()
+      ..id = 7
+      ..podcastId = 1
+      ..guid = 'guid-7'
+      ..title = 'Episode 7'
+      ..audioUrl = _audioUrl;
+
+    Future<ProviderContainer> pumpTile(
+      WidgetTester tester, {
+      required bool declared,
+    }) async {
+      final container = ProviderContainer(
+        overrides: [
+          episodeRepositoryProvider.overrideWithValue(
+            _FakeEpisodeRepository(episode),
+          ),
+          currentPlayingEpisodeUrlProvider.overrideWithValue(null),
+          isEpisodePlayingProvider.overrideWith((ref, _) => false),
+          isEpisodeLoadingProvider.overrideWith((ref, _) => false),
+          episodeDownloadProvider.overrideWith((ref, _) => Stream.value(null)),
+          episodeTranscriptMetasProvider.overrideWith(
+            (ref, _) async => [
+              if (declared)
+                EpisodeTranscript()
+                  ..episodeId = 7
+                  ..url = 'https://example.com/7.vtt'
+                  ..type = 'text/vtt',
+            ],
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: SmartPlaylistEpisodeListTile(
+                episode: episode,
+                podcastTitle: 'Podcast',
+                showThumbnail: false,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      return container;
+    }
+
+    Finder badge() => find.byIcon(Symbols.closed_caption);
+
+    testWidgets('is hidden without a declared transcript', (tester) async {
+      await pumpTile(tester, declared: false);
+      check(badge().evaluate()).isEmpty();
+    });
+
+    testWidgets('shows for a declared transcript not yet fetched', (
+      tester,
+    ) async {
+      await pumpTile(tester, declared: true);
+      check(badge().evaluate().length).equals(1);
+    });
+
+    testWidgets('stays for a declared transcript that loaded', (tester) async {
+      final container = await pumpTile(tester, declared: true);
+
+      container
+          .read(transcriptFetchOutcomesProvider.notifier)
+          .record(7, usable: true);
+      await tester.pumpAndSettle();
+
+      check(badge().evaluate().length).equals(1);
+    });
+
+    testWidgets('drops once a fetch finds the declared transcript unusable', (
+      tester,
+    ) async {
+      final container = await pumpTile(tester, declared: true);
+
+      container
+          .read(transcriptFetchOutcomesProvider.notifier)
+          .record(7, usable: false);
+      await tester.pumpAndSettle();
+
+      check(badge().evaluate()).isEmpty();
+    });
   });
 }
 
