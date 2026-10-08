@@ -9,12 +9,12 @@ import 'package:material_symbols_icons/symbols.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../settings/presentation/utils/open_preset_url.dart';
 
-/// Displays developer-oriented information at the bottom of an
-/// episode detail screen.
+/// Developer-oriented grouped section at the bottom of the episode
+/// detail screen (redesign 4.9).
 ///
-/// Only rendered when [devShowDeveloperInfoProvider] is true.
-/// Shows the podcast RSS feed URL (tap to copy) and a link to
-/// the matching smart playlist pattern in the GitHub repo.
+/// Only rendered when [devShowDeveloperInfoProvider] is true. Shows the
+/// podcast RSS feed URL (tap to copy) and a link to the matching smart
+/// playlist pattern in the GitHub repo.
 class EpisodeDevInfoWidget extends ConsumerWidget {
   const EpisodeDevInfoWidget({super.key, required this.feedUrl});
 
@@ -26,75 +26,38 @@ class EpisodeDevInfoWidget extends ConsumerWidget {
     if (!enabled) return const SizedBox.shrink();
 
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final repo = ref.watch(presetConfigRepositoryProvider);
+    final match = ref
+        .watch(presetConfigRepositoryProvider)
+        .findMatchingPreset(null, feedUrl);
 
-    final match = repo.findMatchingPreset(null, feedUrl);
-
-    final labelStyle = theme.textTheme.bodySmall?.copyWith(
-      color: theme.colorScheme.onSurfaceVariant,
-    );
-    final valueStyle = theme.textTheme.bodySmall;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return GroupedSection(
+      header: l10n.developerSectionLabel,
+      separatorIndent: SettingsRow.separatorIndentWithIcon,
       children: [
-        const Divider(),
-        const SizedBox(height: Spacing.sm),
-        Text(
-          l10n.developerSectionLabel,
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+        SettingsRow(
+          icon: Symbols.content_copy,
+          title: l10n.developerRssFeedUrl,
+          subtitle: feedUrl,
+          onTap: () => _copyFeedUrl(context),
         ),
-        const SizedBox(height: Spacing.sm),
-
-        // RSS Feed URL
-        Text(l10n.developerRssFeedUrl, style: labelStyle),
-        const SizedBox(height: Spacing.xs),
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                feedUrl,
-                style: valueStyle?.copyWith(fontFamily: 'monospace'),
-              ),
-            ),
-            IconButton(
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-              iconSize: 16,
-              tooltip: l10n.developerCopyLabel,
-              icon: Icon(
-                Symbols.content_copy,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-              onPressed: () async {
-                await Clipboard.setData(ClipboardData(text: feedUrl));
-                if (!context.mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(l10n.commonCopiedToClipboard)),
-                );
-              },
-            ),
-          ],
-        ),
-        const SizedBox(height: Spacing.sm),
-
-        // Smart Playlist Pattern
-        Text(l10n.developerPatternLabel, style: labelStyle),
-        const SizedBox(height: Spacing.xs),
-        InkWell(
+        SettingsRow(
+          icon: Symbols.playlist_play,
+          title: l10n.developerPatternLabel,
+          subtitle: match?.displayName ?? l10n.developerPatternNotDefined,
+          trailing: const SettingsTrailing.chevron(),
           onTap: () => openPresetUrl(
             ref,
             match != null ? PresetUrls.presetDir(match.id) : PresetUrls.repo,
           ),
-          child: Text(
-            match?.displayName ?? l10n.developerPatternNotDefined,
-            style: valueStyle?.copyWith(color: theme.colorScheme.primary),
-          ),
         ),
       ],
     );
+  }
+
+  Future<void> _copyFeedUrl(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final message = AppLocalizations.of(context).commonCopiedToClipboard;
+    await Clipboard.setData(ClipboardData(text: feedUrl));
+    messenger.showSnackBar(SnackBar(content: Text(message)));
   }
 }

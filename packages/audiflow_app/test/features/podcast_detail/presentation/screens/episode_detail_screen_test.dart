@@ -1,5 +1,8 @@
 import 'package:audiflow_app/features/podcast_detail/presentation/controllers/podcast_detail_controller.dart';
 import 'package:audiflow_app/features/podcast_detail/presentation/screens/episode_detail_screen.dart';
+import 'package:audiflow_app/features/podcast_detail/presentation/widgets/episode_description_card.dart';
+import 'package:audiflow_app/features/podcast_detail/presentation/widgets/episode_detail_actions.dart';
+import 'package:audiflow_app/features/podcast_detail/presentation/widgets/episode_playback_record.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_app/l10n/app_localizations_en.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
@@ -152,229 +155,225 @@ void main() {
       check(stations.played).deepEquals([3]);
     });
 
-    testWidgets('renders episode title', (tester) async {
+    testWidgets('renders the full title once, selectable', (tester) async {
       await tester.pumpWidget(buildTestWidget());
       await tester.pumpAndSettle();
 
-      // Title appears in header and stats table
-      expect(find.text('Test Episode Title'), findsNWidgets(2));
+      final titles = tester
+          .widgetList<SelectableText>(find.byType(SelectableText))
+          .where((w) => w.data == 'Test Episode Title');
+      check(titles.length).equals(1);
     });
 
-    testWidgets('renders podcast title', (tester) async {
+    testWidgets('renders the podcast name and metadata line', (tester) async {
       await tester.pumpWidget(buildTestWidget());
       await tester.pumpAndSettle();
 
-      // Podcast name appears in header and stats table
-      expect(find.text(testPodcastTitle), findsNWidgets(2));
+      check(find.text(testPodcastTitle).evaluate()).length.equals(1);
+      check(find.text('Mar 15, 2026 · 30m').evaluate()).length.equals(1);
     });
 
-    testWidgets('renders play button when not playing', (tester) async {
-      await tester.pumpWidget(buildTestWidget());
+    testWidgets('floating navigation carries share and more', (tester) async {
+      await tester.pumpWidget(buildTestWidget(itunesId: '12345'));
       await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.play_arrow_rounded), findsOneWidget);
+      check(find.byTooltip(l10n.shareEpisode).evaluate()).length.equals(1);
+      check(
+        find.byTooltip(l10n.episodeMoreActions).evaluate(),
+      ).length.equals(1);
     });
 
-    testWidgets('renders more actions button in app bar', (tester) async {
-      await tester.pumpWidget(buildTestWidget());
-      await tester.pumpAndSettle();
-
-      expect(find.byIcon(Icons.more_vert), findsOneWidget);
-    });
-
-    testWidgets('does not render share button in app bar', (tester) async {
-      await tester.pumpWidget(buildTestWidget());
-      await tester.pumpAndSettle();
-
-      // Share should only be in context menu, not app bar
-      expect(
-        find.descendant(
-          of: find.byType(SliverAppBar),
-          matching: find.byIcon(Icons.share),
-        ),
-        findsNothing,
+    testWidgets('hides share when nothing can be shared', (tester) async {
+      final unshareable = PodcastItem(
+        parsedAt: DateTime(2026),
+        sourceUrl: 'https://example.com/feed.xml',
+        title: 'Test Episode Title',
+        description: 'Test description',
+        enclosureUrl: testAudioUrl,
       );
-    });
-
-    testWidgets('episode title is selectable', (tester) async {
-      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpWidget(buildTestWidget(episode: unshareable));
       await tester.pumpAndSettle();
 
-      final selectableTexts = tester.widgetList<SelectableText>(
-        find.byType(SelectableText),
-      );
-      final titleWidget = selectableTexts.where(
-        (w) => w.data == 'Test Episode Title',
-      );
-      check(titleWidget.length).equals(1);
+      check(find.byTooltip(l10n.shareEpisode).evaluate()).isEmpty();
     });
   });
 
-  group('EpisodeDetailScreen progress indicator', () {
-    testWidgets('shows Played indicator when completed', (tester) async {
-      await tester.pumpWidget(buildTestWidget(progress: testCompletedProgress));
+  group('EpisodeDetailScreen primary pill', () {
+    testWidgets('unplayed reads play with the duration', (tester) async {
+      await tester.pumpWidget(
+        buildTestWidget(progress: testEpisodeWithProgress),
+      );
       await tester.pumpAndSettle();
 
-      expect(find.byType(EpisodeProgressIndicator), findsOneWidget);
-      expect(find.text('Played'), findsOneWidget);
+      check(find.text('Play · 30m').evaluate()).length.equals(1);
     });
 
-    testWidgets('shows remaining time when in progress', (tester) async {
+    testWidgets('in progress reads resume', (tester) async {
       await tester.pumpWidget(
         buildTestWidget(progress: testInProgressProgress),
       );
       await tester.pumpAndSettle();
 
-      expect(find.byType(EpisodeProgressIndicator), findsOneWidget);
-      expect(find.text('20 min left'), findsOneWidget);
+      check(find.text(l10n.episodeDetailResume).evaluate()).length.equals(1);
     });
 
-    testWidgets('hides progress indicator when unplayed', (tester) async {
-      await tester.pumpWidget(
-        buildTestWidget(progress: testEpisodeWithProgress),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.byType(EpisodeProgressIndicator), findsNothing);
-    });
-  });
-
-  group('EpisodeDetailScreen context menu', () {
-    testWidgets('opens bottom sheet on more button tap', (tester) async {
-      await tester.pumpWidget(
-        buildTestWidget(progress: testEpisodeWithProgress, itunesId: '12345'),
-      );
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.byIcon(Icons.more_vert));
-      await tester.pumpAndSettle();
-
-      expect(find.byType(DraggableScrollableSheet), findsOneWidget);
-    });
-
-    testWidgets('context menu shows episode title', (tester) async {
-      await tester.pumpWidget(
-        buildTestWidget(progress: testEpisodeWithProgress, itunesId: '12345'),
-      );
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.byIcon(Icons.more_vert));
-      await tester.pumpAndSettle();
-
-      // Title appears in the screen header, stats table, and bottom sheet
-      expect(find.text('Test Episode Title'), findsNWidgets(3));
-    });
-
-    testWidgets('context menu shows Play next option', (tester) async {
-      await tester.pumpWidget(
-        buildTestWidget(progress: testEpisodeWithProgress, itunesId: '12345'),
-      );
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.byIcon(Icons.more_vert));
-      await tester.pumpAndSettle();
-
-      expect(find.text(l10n.playNext), findsOneWidget);
-    });
-
-    testWidgets('context menu shows Add to queue option', (tester) async {
-      await tester.pumpWidget(
-        buildTestWidget(progress: testEpisodeWithProgress, itunesId: '12345'),
-      );
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.byIcon(Icons.more_vert));
-      await tester.pumpAndSettle();
-
-      expect(find.text(l10n.addToQueue), findsOneWidget);
-    });
-
-    testWidgets('context menu shows Mark as played for unplayed episode', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        buildTestWidget(progress: testEpisodeWithProgress, itunesId: '12345'),
-      );
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.byIcon(Icons.more_vert));
-      await tester.pumpAndSettle();
-
-      expect(find.text(l10n.markAsPlayed), findsOneWidget);
-    });
-
-    testWidgets('context menu shows Mark as unplayed for completed episode', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        buildTestWidget(progress: testCompletedProgress, itunesId: '12345'),
-      );
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.byIcon(Icons.more_vert));
-      await tester.pumpAndSettle();
-
-      expect(find.text(l10n.markAsUnplayed), findsOneWidget);
-    });
-
-    testWidgets('context menu shows Share option when shareable', (
-      tester,
-    ) async {
-      await tester.binding.setSurfaceSize(const Size(800, 1200));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
-
-      await tester.pumpWidget(
-        buildTestWidget(progress: testEpisodeWithProgress, itunesId: '12345'),
-      );
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.byIcon(Icons.more_vert));
-      await tester.pumpAndSettle();
-
-      expect(find.text(l10n.shareEpisode), findsOneWidget);
-    });
-
-    testWidgets('context menu shows Download option', (tester) async {
-      await tester.binding.setSurfaceSize(const Size(800, 1200));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
-
-      await tester.pumpWidget(
-        buildTestWidget(progress: testEpisodeWithProgress, itunesId: '12345'),
-      );
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.byIcon(Icons.more_vert));
-      await tester.pumpAndSettle();
-
-      expect(find.text(l10n.downloadEpisode), findsOneWidget);
-    });
-  });
-
-  group('EpisodeDetailScreen action bar', () {
-    testWidgets('shows download icon when episode has id', (tester) async {
-      await tester.pumpWidget(
-        buildTestWidget(progress: testEpisodeWithProgress),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.byType(DownloadStatusIcon), findsOneWidget);
-    });
-
-    testWidgets('shows queue button when episode has id', (tester) async {
-      await tester.pumpWidget(
-        buildTestWidget(progress: testEpisodeWithProgress),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.byType(AddToQueueButton), findsOneWidget);
-    });
-
-    testWidgets('does not show played status chip', (tester) async {
+    testWidgets('played reads play again', (tester) async {
       await tester.pumpWidget(buildTestWidget(progress: testCompletedProgress));
       await tester.pumpAndSettle();
 
-      // ActionChip should not exist in the action bar
-      expect(find.byType(ActionChip), findsNothing);
+      check(find.text(l10n.episodeDetailPlayAgain).evaluate()).length.equals(1);
+    });
+  });
+
+  group('EpisodeDetailScreen progress line', () {
+    testWidgets('shows the played mark when completed', (tester) async {
+      await tester.pumpWidget(buildTestWidget(progress: testCompletedProgress));
+      await tester.pumpAndSettle();
+
+      check(find.byType(EpisodeProgressStatus).evaluate()).length.equals(1);
+      check(find.text(l10n.episodePillCompleted).evaluate()).length.equals(1);
+    });
+
+    testWidgets('shows the remaining time when in progress', (tester) async {
+      await tester.pumpWidget(
+        buildTestWidget(progress: testInProgressProgress),
+      );
+      await tester.pumpAndSettle();
+
+      check(find.byType(EpisodeProgressStatus).evaluate()).length.equals(1);
+      check(find.text('20m left').evaluate()).length.equals(1);
+    });
+
+    testWidgets('is hidden while unplayed', (tester) async {
+      await tester.pumpWidget(
+        buildTestWidget(progress: testEpisodeWithProgress),
+      );
+      await tester.pumpAndSettle();
+
+      check(find.byType(EpisodeProgressStatus).evaluate()).isEmpty();
+    });
+  });
+
+  group('EpisodeDetailScreen action row', () {
+    testWidgets('shows queue and download buttons for a saved episode', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        buildTestWidget(progress: testEpisodeWithProgress),
+      );
+      await tester.pumpAndSettle();
+
+      check(find.byTooltip(l10n.addToQueue).evaluate()).length.equals(1);
+      check(find.byTooltip(l10n.downloadEpisode).evaluate()).length.equals(1);
+      check(find.byTooltip(l10n.playNext).evaluate()).isEmpty();
+    });
+
+    testWidgets('the queue button offers play next or add to end', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        buildTestWidget(progress: testEpisodeWithProgress),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip(l10n.addToQueue));
+      await tester.pumpAndSettle();
+
+      check(find.text(l10n.playNext).evaluate()).length.equals(1);
+      check(find.text(l10n.episodeDetailAddToEnd).evaluate()).length.equals(1);
+    });
+
+    testWidgets('leaves only the play pill for an unsaved episode', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
+
+      check(find.byType(EpisodeActionCircle).evaluate()).isEmpty();
+      check(find.byType(EpisodePrimaryPill).evaluate()).length.equals(1);
+    });
+  });
+
+  group('EpisodeDetailScreen more menu', () {
+    Future<void> openMenu(
+      WidgetTester tester,
+      EpisodeWithProgress progress,
+    ) async {
+      await tester.pumpWidget(
+        buildTestWidget(progress: progress, itunesId: '12345'),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip(l10n.episodeMoreActions));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('offers mark as played and open podcast', (tester) async {
+      await openMenu(tester, testEpisodeWithProgress);
+
+      check(find.byType(ActionMenu).evaluate()).length.equals(1);
+      check(find.text(l10n.markAsPlayed).evaluate()).length.equals(1);
+      check(
+        find.text(l10n.episodeDetailOpenPodcast).evaluate(),
+      ).length.equals(1);
+    });
+
+    testWidgets('offers mark as unplayed for a played episode', (tester) async {
+      await openMenu(tester, testCompletedProgress);
+
+      check(find.text(l10n.markAsUnplayed).evaluate()).length.equals(1);
+    });
+
+    testWidgets('does not repeat the on-screen actions', (tester) async {
+      await openMenu(tester, testEpisodeWithProgress);
+
+      final menu = find.byType(ActionMenu);
+      for (final label in [
+        l10n.playNext,
+        l10n.addToQueue,
+        l10n.downloadEpisode,
+        l10n.shareEpisode,
+        l10n.removeDownload,
+      ]) {
+        check(
+          find.descendant(of: menu, matching: find.text(label)).evaluate(),
+        ).isEmpty();
+      }
+    });
+  });
+
+  group('EpisodeDetailScreen sections', () {
+    testWidgets('shows the show notes card', (tester) async {
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
+
+      check(find.byType(EpisodeDescriptionCard).evaluate()).length.equals(1);
+      check(find.text(l10n.episodeDetailAbout).evaluate()).length.equals(1);
+    });
+
+    testWidgets('playback record shows placeholders before a play', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        buildTestWidget(progress: testEpisodeWithProgress),
+      );
+      await tester.pumpAndSettle();
+
+      check(
+        find.text(l10n.episodeDetailPlaybackRecord).evaluate(),
+      ).length.equals(1);
+      check(
+        find.text(EpisodePlaybackRecord.noValue).evaluate(),
+      ).length.equals(4);
+      check(find.text(l10n.statsNever).evaluate()).length.equals(2);
+    });
+
+    testWidgets('playback record shows the history values', (tester) async {
+      await tester.pumpWidget(buildTestWidget(progress: testCompletedProgress));
+      await tester.pumpAndSettle();
+
+      check(find.text(EpisodePlaybackRecord.noValue).evaluate()).isEmpty();
+      // completedCount and playCount both default to 0.
+      check(find.text('0 times').evaluate()).length.equals(2);
     });
   });
 }
