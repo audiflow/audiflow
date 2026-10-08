@@ -38,6 +38,7 @@ void main() {
     WidgetTester tester,
     Subscription subscription, {
     VoidCallback? onPlayOrderChanged,
+    PlayOrderPreferenceRepository? playOrders,
   }) async {
     await tester.pumpWidget(
       ProviderScope(
@@ -56,7 +57,7 @@ void main() {
           ).overrideWith((ref) => Stream.value(false)),
           // The sheet's play order and audio rows read these from the database.
           playOrderPreferenceRepositoryProvider.overrideWithValue(
-            FakePlayOrderPreferenceRepository(),
+            playOrders ?? FakePlayOrderPreferenceRepository(),
           ),
           effectiveAudioSettingsProvider(1).overrideWithValue(null),
         ],
@@ -151,6 +152,26 @@ void main() {
     check(changes).equals(1);
   });
 
+  testWidgets('a failed play order save is reported, not applied', (
+    tester,
+  ) async {
+    var changes = 0;
+    await openSheet(
+      tester,
+      _subscription(),
+      onPlayOrderChanged: () => changes++,
+      playOrders: _FailingPlayOrders(),
+    );
+
+    await tester.tap(find.text('Play order'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Oldest first'));
+    await tester.pumpAndSettle();
+
+    check(changes).equals(0);
+    check(find.text("Couldn't save the setting.").evaluate()).length.equals(1);
+  });
+
   testWidgets('every keep-count choice is reachable on a short screen', (
     tester,
   ) async {
@@ -183,4 +204,10 @@ void main() {
           .evaluate(),
     ).length.equals(1);
   });
+}
+
+class _FailingPlayOrders extends FakePlayOrderPreferenceRepository {
+  @override
+  Future<void> setPodcastPlayOrder(int podcastId, AutoPlayOrder? order) =>
+      Future.error(Exception('write failed'));
 }

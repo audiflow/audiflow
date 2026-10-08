@@ -873,6 +873,7 @@
   "parentalControlUnlockTimeout5Min": "5分",
   "parentalControlUnlockTimeout15Min": "15分",
   "parentalControlSettingsSaveError": "設定を保存できませんでした。もう一度お試しください。",
+  "podcastSettingsSaveFailed": "設定を保存できませんでした。",
   "parentalControlToggleFailed": "設定を変更できませんでした。もう一度お試しください。",
   "parentalControlAccessDenied": "制限モードが有効です。設定からロックを解除してください。"
 }

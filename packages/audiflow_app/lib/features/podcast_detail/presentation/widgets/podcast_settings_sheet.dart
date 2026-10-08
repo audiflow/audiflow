@@ -225,9 +225,22 @@ class _PlayOrderRowState extends ConsumerState<_PlayOrderRow> {
       resolvedParentOrder: _globalOrder,
       parentIsGlobal: true,
       onOrderSelected: (order) async {
-        await ref
-            .read(playOrderPreferenceRepositoryProvider)
-            .setPodcastPlayOrder(widget.subscriptionId, order);
+        // Read before awaiting: the sheet may close meanwhile.
+        final repository = ref.read(playOrderPreferenceRepositoryProvider);
+        final logger = ref.read(namedLoggerProvider('PodcastSettings'));
+        final messenger = ScaffoldMessenger.of(context);
+        final failed = AppLocalizations.of(context).podcastSettingsSaveFailed;
+        try {
+          await repository.setPodcastPlayOrder(widget.subscriptionId, order);
+        } catch (error, stackTrace) {
+          logger.w(
+            'Failed to save play order',
+            error: error,
+            stackTrace: stackTrace,
+          );
+          if (mounted) messenger.showSnackBar(SnackBar(content: Text(failed)));
+          return;
+        }
         widget.onChanged?.call();
         if (mounted) setState(() => _order = order);
       },
