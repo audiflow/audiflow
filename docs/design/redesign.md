@@ -230,7 +230,7 @@ These are not implemented today and need their own FR updates and PRs:
 - Library: station tiles limited to 4 with a "show all" route; podcast filter field; a new-since-last-visit dot on podcasts (instead of unplayed counts). (A grid/list toggle was dropped.)
 - In-navigation search on Podcast detail (both tabs) and Series episodes.
 - Artwork-derived Now Playing background.
-- Episode search scope on the Search tab. Current discovery returns podcast metadata only, so this needs an episode-level search source before the "番組 / エピソード" toggle is shown.
+- Episode search scope on the Search tab: deferred (not part of this redesign). Discovery returns podcast metadata only; the candidates are a local search over subscribed episodes and the iTunes episode search (`entity=podcastEpisode`). Until then the "番組 / エピソード" toggle stays hidden.
 
 ## 7. Implementation order
 
