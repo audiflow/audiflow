@@ -85,6 +85,23 @@ void main() {
     // care stub the row themselves.
     when(mockRepository.getById(any)).thenAnswer((_) async => null);
     when(mockRepository.getByEpisodeId(any)).thenAnswer((_) async => null);
+    // Mirrors the repository: the files go only while the episode has no
+    // task, which tests set up through getByEpisodeId.
+    when(
+      mockRepository.removeEpisodeFiles(
+        episodeId: anyNamed('episodeId'),
+        removeFiles: anyNamed('removeFiles'),
+        taskId: anyNamed('taskId'),
+        fileRemovalId: anyNamed('fileRemovalId'),
+      ),
+    ).thenAnswer((invocation) async {
+      final episodeId = invocation.namedArguments[#episodeId] as int;
+      if (await mockRepository.getByEpisodeId(episodeId) != null) return false;
+      final removeFiles =
+          invocation.namedArguments[#removeFiles] as Future<void> Function();
+      await removeFiles();
+      return true;
+    });
 
     service = DownloadQueueService(
       repository: mockRepository,

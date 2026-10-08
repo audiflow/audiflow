@@ -41,8 +41,15 @@ class BackgroundDownloadDeleter {
   /// finishes. Callers see the record still there and retry later.
   Future<void> call(DownloadTask task) async {
     final deleted = await _withIdleTask(task, (current) async {
-      await _deleteFiles(current);
-      await _downloadRepository.delete(current.id);
+      // The worker lock keeps background workers out, but the foreground
+      // can still replace a cancelled or failed task; the repository
+      // removes the record and the files together so the replacement's
+      // file is not swept.
+      await _downloadRepository.removeEpisodeFiles(
+        episodeId: current.episodeId,
+        taskId: current.id,
+        removeFiles: () => _deleteFiles(current),
+      );
       return true;
     });
     if (deleted) await _onDeleted?.call(task.episodeId);

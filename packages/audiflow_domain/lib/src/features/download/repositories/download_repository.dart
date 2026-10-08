@@ -39,7 +39,7 @@ abstract class DownloadRepository {
   /// checking and deleting atomically so a concurrent [markManual] wins.
   ///
   /// The same transaction records a [DownloadFileRemoval] for the task's
-  /// files, which stays until [completeFileRemoval] so a failed or
+  /// files, which stays until [removeEpisodeFiles] drops it, so a failed or
   /// interrupted file delete is retried. Returns the deleted task and that
   /// record, or null if the task is gone or was kept.
   Future<DeletedAutoDownload?> deleteIfAuto(int id);
@@ -48,8 +48,22 @@ abstract class DownloadRepository {
   /// completed yet.
   Future<List<DownloadFileRemoval>> getPendingFileRemovals();
 
-  /// Drops the file removal record [id] once its files are gone.
-  Future<void> completeFileRemoval(int id);
+  /// Removes download files of [episodeId] with [removeFiles], unless the
+  /// episode has a download task. Deletes the task [taskId] and drops the
+  /// file removal record [fileRemovalId] first, when given. Returns whether
+  /// [removeFiles] ran.
+  ///
+  /// Every download of an episode writes the same file name, so this is
+  /// the only safe way to delete them: the task check and [removeFiles]
+  /// run atomically with respect to task creation in every isolate, so a
+  /// download requested meanwhile cannot start writing a file that is
+  /// about to be deleted. If [removeFiles] throws, nothing changes.
+  Future<bool> removeEpisodeFiles({
+    required int episodeId,
+    required Future<void> Function() removeFiles,
+    int? taskId,
+    int? fileRemovalId,
+  });
 
   /// Returns a download task by ID.
   Future<DownloadTask?> getById(int id);

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -506,14 +508,126 @@ void main() {
     test('returns null for an unknown task', () async {
       check(await repository.deleteIfAuto(999)).isNull();
     });
+  });
 
-    test('completeFileRemoval drops the record', () async {
+  group('removeEpisodeFiles', () {
+    Future<DownloadTask?> requestDownload() => repository.createDownload(
+      episodeId: 1,
+      audioUrl: 'https://example.com/ep1.mp3',
+      wifiOnly: true,
+    );
+
+    test('removes the files and drops the record', () async {
       final task = await createAuto(status: const DownloadStatus.completed());
       final deleted = await repository.deleteIfAuto(task.id);
+      var removed = false;
 
-      await repository.completeFileRemoval(deleted!.fileRemoval.id);
+      final ran = await repository.removeEpisodeFiles(
+        episodeId: 1,
+        fileRemovalId: deleted!.fileRemoval.id,
+        removeFiles: () async => removed = true,
+      );
 
+      check(ran).isTrue();
+      check(removed).isTrue();
       check(await repository.getPendingFileRemovals()).isEmpty();
+    });
+
+    test('deletes the given task with its files', () async {
+      final task = await createAuto(status: const DownloadStatus.cancelled());
+
+      final ran = await repository.removeEpisodeFiles(
+        episodeId: 1,
+        taskId: task.id,
+        removeFiles: () async {},
+      );
+
+      check(ran).isTrue();
+      check(await repository.getById(task.id)).isNull();
+    });
+
+    test('leaves the files of a download in progress, dropping the '
+        'record', () async {
+      final old = await createAuto(status: const DownloadStatus.completed());
+      final deleted = await repository.deleteIfAuto(old.id);
+      final current = await requestDownload();
+      await repository.updateStatus(
+        id: current!.id,
+        status: const DownloadStatus.downloading(),
+      );
+      var removed = false;
+
+      final ran = await repository.removeEpisodeFiles(
+        episodeId: 1,
+        fileRemovalId: deleted!.fileRemoval.id,
+        removeFiles: () async => removed = true,
+      );
+
+      check(ran).isFalse();
+      check(removed).isFalse();
+      check(await repository.getPendingFileRemovals()).isEmpty();
+    });
+
+    test('a failed removal keeps the task and the record', () async {
+      final task = await createAuto(status: const DownloadStatus.cancelled());
+      final other = await repository.createDownload(
+        episodeId: 2,
+        audioUrl: 'https://example.com/ep2.mp3',
+        wifiOnly: true,
+        origin: DownloadOrigin.auto,
+      );
+      final deleted = await repository.deleteIfAuto(other!.id);
+
+      await check(
+        repository.removeEpisodeFiles(
+          episodeId: 1,
+          taskId: task.id,
+          removeFiles: () async => throw const FormatException('disk'),
+        ),
+      ).throws<FormatException>();
+      await check(
+        repository.removeEpisodeFiles(
+          episodeId: 2,
+          fileRemovalId: deleted!.fileRemoval.id,
+          removeFiles: () async => throw const FormatException('disk'),
+        ),
+      ).throws<FormatException>();
+
+      check(await repository.getById(task.id)).isNotNull();
+      check(await repository.getPendingFileRemovals()).length.equals(1);
+    });
+
+    test('a download requested after the check waits until the files are '
+        'gone', () async {
+      final old = await createAuto(status: const DownloadStatus.completed());
+      final deleted = await repository.deleteIfAuto(old.id);
+      final events = <String>[];
+      final checked = Completer<void>();
+      final release = Completer<void>();
+
+      final removal = repository.removeEpisodeFiles(
+        episodeId: 1,
+        fileRemovalId: deleted!.fileRemoval.id,
+        removeFiles: () async {
+          // The task check has run by now; hold the removal open while the
+          // listener requests the episode again.
+          checked.complete();
+          await release.future;
+          events.add('removed');
+        },
+      );
+      await checked.future;
+      final request = requestDownload().then((task) {
+        events.add('created');
+        return task;
+      });
+      // Gives the request every chance to land inside the removal.
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      release.complete();
+
+      check(await removal).isTrue();
+      check(await request).isNotNull();
+      check(events).deepEquals(['removed', 'created']);
     });
   });
 

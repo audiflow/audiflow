@@ -96,9 +96,38 @@ class DownloadLocalDatasource {
     return _isar.downloadFileRemovals.where().findAll();
   }
 
-  /// Drops the file removal record [id] once its files are gone.
-  Future<void> deleteFileRemoval(int id) {
-    return _isar.writeTxn(() => _isar.downloadFileRemovals.delete(id));
+  /// Runs [removeFiles] unless a download task of [episodeId] exists,
+  /// after deleting the task [taskId] and the file removal record
+  /// [fileRemovalId] when given. Returns whether [removeFiles] ran.
+  ///
+  /// Every download of an episode writes the same file name, so the check
+  /// and the removal must not let a new task in between. Both run inside
+  /// one write transaction, and Isar's write lock holds across isolates,
+  /// so a task created meanwhile, in the foreground or a background
+  /// worker, is only committed once the files are gone. If [removeFiles]
+  /// throws, nothing is committed: the task and the record stay for a
+  /// retry.
+  ///
+  /// [removeFiles] must not open a transaction of its own.
+  Future<bool> removeEpisodeFiles({
+    required int episodeId,
+    required Future<void> Function() removeFiles,
+    int? taskId,
+    int? fileRemovalId,
+  }) {
+    return _isar.writeTxn(() async {
+      if (taskId != null) await _isar.downloadTasks.delete(taskId);
+      if (fileRemovalId != null) {
+        await _isar.downloadFileRemovals.delete(fileRemovalId);
+      }
+      // A task of the episode owns its files now; deleting them would take
+      // its download too. Removing that task later sweeps the same files.
+      if (await _isar.downloadTasks.getByEpisodeId(episodeId) != null) {
+        return false;
+      }
+      await removeFiles();
+      return true;
+    });
   }
 
   /// Returns a download task by ID.

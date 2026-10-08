@@ -385,13 +385,17 @@ class DownloadService {
 
     // Swept by episode rather than by localPath: a task records its path
     // only once it completes, so a paused or cancelled task would
-    // otherwise leave its partial file behind.
-    await _fileService.deleteEpisodeFiles(
-      task.episodeId,
-      storedPath: task.localPath,
+    // otherwise leave its partial file behind. The record and the files go
+    // together, so a download of the episode requested meanwhile (the
+    // cancel above makes the task replaceable) is not swept with them.
+    await _repository.removeEpisodeFiles(
+      episodeId: task.episodeId,
+      taskId: task.id,
+      removeFiles: () => _fileService.deleteEpisodeFiles(
+        task.episodeId,
+        storedPath: task.localPath,
+      ),
     );
-
-    await _repository.delete(task.id);
     _logger.i('Deleted download: ${task.id}');
     await _tryReconcile(task.episodeId);
   }

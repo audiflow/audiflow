@@ -49,4 +49,5 @@ dart run build_runner build --delete-conflicting-outputs
 - New Isar collection: register in `database_provider.dart`, run codegen
 - Smart playlist model changes: coordinate with `preset_core`/`preset_shared`, update vendored schema, run conformance tests
 - New feature module: add exports to `audiflow_domain.dart`, mirror existing directory structure
+- Download file deletes: every download of an episode writes the same file name, so delete episode files only through `DownloadRepository.removeEpisodeFiles`, which checks that no task of the episode exists and runs the delete in one Isar write transaction (holding off task creation in every isolate); a check followed by a separate delete can sweep a new download's file
 - Download task writes: change fields through `DownloadLocalDatasource.modify` (read and write in one transaction), never by saving a copy read earlier, or a concurrent keep can lose its origin change

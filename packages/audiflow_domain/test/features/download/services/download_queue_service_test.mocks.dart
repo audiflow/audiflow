@@ -109,13 +109,22 @@ class MockDownloadRepository extends _i1.Mock
           as _i3.Future<List<_i6.DownloadFileRemoval>>);
 
   @override
-  _i3.Future<void> completeFileRemoval(int? id) =>
+  _i3.Future<bool> removeEpisodeFiles({
+    required int? episodeId,
+    required _i3.Future<void> Function()? removeFiles,
+    int? taskId,
+    int? fileRemovalId,
+  }) =>
       (super.noSuchMethod(
-            Invocation.method(#completeFileRemoval, [id]),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
+            Invocation.method(#removeEpisodeFiles, [], {
+              #episodeId: episodeId,
+              #removeFiles: removeFiles,
+              #taskId: taskId,
+              #fileRemovalId: fileRemovalId,
+            }),
+            returnValue: _i3.Future<bool>.value(false),
           )
-          as _i3.Future<void>);
+          as _i3.Future<bool>);
 
   @override
   _i3.Future<_i4.DownloadTask?> getById(int? id) =>

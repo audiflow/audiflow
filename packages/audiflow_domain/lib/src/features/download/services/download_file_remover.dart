@@ -25,13 +25,15 @@ class DownloadFileRemover {
   Future<bool> remove(DownloadFileRemoval removal) async {
     try {
       // A download requested since owns the episode's files now, and the
-      // sweep would take its file too. Removing that download later sweeps
-      // the same prefix, so the old files go with it.
-      final replacement = await _repository.getByEpisodeId(removal.episodeId);
-      if (replacement == null) {
-        await _deleteEpisodeFiles(removal.episodeId, removal.storedPath);
-      }
-      await _repository.completeFileRemoval(removal.id);
+      // sweep would take its file too, so the repository skips it then.
+      // Removing that download later sweeps the same prefix, so the old
+      // files go with it.
+      await _repository.removeEpisodeFiles(
+        episodeId: removal.episodeId,
+        fileRemovalId: removal.id,
+        removeFiles: () =>
+            _deleteEpisodeFiles(removal.episodeId, removal.storedPath),
+      );
       return true;
     } on Exception catch (e, stack) {
       _logger?.w(

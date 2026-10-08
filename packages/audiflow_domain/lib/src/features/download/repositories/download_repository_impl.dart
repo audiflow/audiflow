@@ -77,7 +77,17 @@ class DownloadRepositoryImpl implements DownloadRepository {
       _datasource.getFileRemovals();
 
   @override
-  Future<void> completeFileRemoval(int id) => _datasource.deleteFileRemoval(id);
+  Future<bool> removeEpisodeFiles({
+    required int episodeId,
+    required Future<void> Function() removeFiles,
+    int? taskId,
+    int? fileRemovalId,
+  }) => _datasource.removeEpisodeFiles(
+    episodeId: episodeId,
+    removeFiles: removeFiles,
+    taskId: taskId,
+    fileRemovalId: fileRemovalId,
+  );
 
   @override
   Future<DownloadTask?> getById(int id) => _datasource.getById(id);

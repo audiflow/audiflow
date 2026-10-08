@@ -46,9 +46,28 @@ class FakeDownloadRepository implements DownloadRepository {
   Future<List<DownloadFileRemoval>> getPendingFileRemovals() async =>
       List.of(fileRemovals);
 
+  /// Runs the steps the real repository runs in one transaction. Nothing
+  /// interleaves with them here; the atomicity itself is covered against
+  /// Isar in the repository tests.
   @override
-  Future<void> completeFileRemoval(int id) async =>
-      fileRemovals.removeWhere((removal) => removal.id == id);
+  Future<bool> removeEpisodeFiles({
+    required int episodeId,
+    required Future<void> Function() removeFiles,
+    int? taskId,
+    int? fileRemovalId,
+  }) async {
+    if (await getByEpisodeId(episodeId) case final task?
+        when task.id != taskId) {
+      if (taskId != null) await delete(taskId);
+      fileRemovals.removeWhere((removal) => removal.id == fileRemovalId);
+      return false;
+    }
+    // Like an aborted transaction, a failure leaves the task and record.
+    await removeFiles();
+    if (taskId != null) await delete(taskId);
+    fileRemovals.removeWhere((removal) => removal.id == fileRemovalId);
+    return true;
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
