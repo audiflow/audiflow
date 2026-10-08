@@ -6,6 +6,7 @@ import 'package:audiflow_app/features/search/presentation/widgets/search_country
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_search/audiflow_search.dart';
+import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -49,6 +50,21 @@ void main() {
       await tester.pumpWidget(buildTestWidget());
 
       expect(find.byType(TextField), findsOneWidget);
+    });
+
+    testWidgets('the field stays pill-shaped in every state', (tester) async {
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
+      final decoration = tester
+          .widget<TextField>(find.byType(TextField))
+          .decoration!;
+      for (final border in [
+        decoration.border,
+        decoration.enabledBorder,
+        decoration.focusedBorder,
+      ]) {
+        expect((border! as OutlineInputBorder).borderRadius, AppBorders.pill);
+      }
     });
 
     testWidgets('renders the region button beside the field', (tester) async {

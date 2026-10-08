@@ -158,4 +158,34 @@ void main() {
     check(count).equals(3);
     check(historyService.incompleted).deepEquals([11, 12, 13]);
   });
+
+  test('marking all refreshes the filtered episode list', () async {
+    // An Unplayed filter must drop episodes that were just marked played.
+    final container = createContainer(null);
+    var builds = 0;
+    final keyed = filteredSortedEpisodesProvider(
+      'https://example.com/feed',
+      EpisodeFilter.unplayed,
+      SortOrder.descending,
+    );
+    final probe = ProviderContainer(
+      parent: container,
+      overrides: [
+        filteredSortedEpisodesProvider.overrideWith((ref, _) async {
+          builds++;
+          return const [];
+        }),
+      ],
+    );
+    addTearDown(probe.dispose);
+    final subscription = probe.listen(keyed, (_, _) {});
+    addTearDown(subscription.close);
+    await probe.read(keyed.future);
+    check(builds).equals(1);
+
+    await setPodcastPlayedStatus(probe, podcastId: 3, played: true);
+    await probe.read(keyed.future);
+
+    check(builds).equals(2);
+  });
 }

@@ -24,13 +24,7 @@ Future<void> togglePlayedStatus(
     await historyService.markCompleted(episode.id);
   }
 
-  // Family-level invalidate covers every keyed instance any open
-  // screen might watch (episode by audio URL, podcast batch by feed
-  // URL, smart playlist by episode-id list).
-  container
-    ..invalidate(episodeProgressProvider)
-    ..invalidate(podcastEpisodeProgressProvider)
-    ..invalidate(smartPlaylistEpisodesProvider);
+  _refreshPlayedState(container);
 }
 
 /// Marks every episode in [episodeIds] played (or not played) and
@@ -51,11 +45,21 @@ Future<int> setEpisodesPlayedStatus(
   } finally {
     // A batch that fails partway has still changed some episodes; refresh
     // so open lists show what was actually written.
-    container
-      ..invalidate(episodeProgressProvider)
-      ..invalidate(podcastEpisodeProgressProvider)
-      ..invalidate(smartPlaylistEpisodesProvider);
+    _refreshPlayedState(container);
   }
+}
+
+/// Family-level invalidate covers every keyed instance any open screen
+/// might watch (episode by audio URL, podcast batch by feed URL, smart
+/// playlist by episode-id list), and the filtered episode list, which
+/// reads history once and would keep showing episodes an Unplayed or
+/// In progress filter should now drop.
+void _refreshPlayedState(ProviderContainer container) {
+  container
+    ..invalidate(episodeProgressProvider)
+    ..invalidate(podcastEpisodeProgressProvider)
+    ..invalidate(filteredSortedEpisodesProvider)
+    ..invalidate(smartPlaylistEpisodesProvider);
 }
 
 /// [setEpisodesPlayedStatus] for every stored episode of [podcastId].
