@@ -629,11 +629,19 @@ class StationEditController extends _$StationEditController {
   }
 
   /// Deletes the station and all associated data.
-  Future<bool> delete() async {
+  Future<bool> delete() {
     final id = _savedId;
-    if (id == null) return false;
+    if (id == null) return Future.value(false);
     _deleted = true;
     _reconcileTimer?.cancel();
+    final deletion = _deleteStation(id);
+    // Tracked before any await: an editor reopened meanwhile must wait for
+    // the removals too, not only for the writes and rebuilds before them.
+    _activity.track(id, deletion);
+    return deletion;
+  }
+
+  Future<bool> _deleteStation(int id) async {
     try {
       // Let a write or rebuild already in flight finish, so neither can
       // recreate links or feed rows after the delete.

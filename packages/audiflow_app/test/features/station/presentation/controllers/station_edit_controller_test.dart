@@ -256,6 +256,35 @@ void main() {
       ),
     );
 
+    test('a reopened editor waits for a deletion to finish', () async {
+      final station = await existingStation();
+      final first = container.listen(
+        stationEditControllerProvider(station.id),
+        (_, _) {},
+      );
+      final controller = container.read(
+        stationEditControllerProvider(station.id).notifier,
+      );
+      await controller.loaded;
+      reconciler.gate = Completer<void>();
+      controller.setHideCompleted(true);
+      await controller.pendingWrites;
+      await pumpEventQueue();
+      final deleted = controller.delete();
+      first.close();
+      await pumpEventQueue();
+
+      // Reopened while the deletion waits on the running rebuild.
+      final reopened = controllerFor(station.id);
+      reconciler.gate!.complete();
+      check(await deleted).isTrue();
+      await reopened.loaded;
+      // It loads after the removals, so it finds nothing to edit.
+      check(
+        container.read(stationEditControllerProvider(station.id)).loadFailed,
+      ).isTrue();
+    });
+
     test('a delete waits for a running rebuild', () async {
       final station = await existingStation();
       final controller = controllerFor(station.id);
