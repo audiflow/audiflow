@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:audiflow_app/features/library/presentation/controllers/library_controller.dart';
 import 'package:audiflow_app/features/station/presentation/screens/station_edit_screen.dart';
+import 'package:audiflow_app/features/station/presentation/screens/station_podcast_picker_screen.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
@@ -26,6 +27,7 @@ void main() {
   Future<void> pump(
     WidgetTester tester, {
     int? stationId,
+    bool openPodcastPicker = false,
     bool settle = true,
   }) async {
     await tester.pumpWidget(
@@ -49,7 +51,10 @@ void main() {
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: StationEditScreen(stationId: stationId),
+          home: StationEditScreen(
+            stationId: stationId,
+            openPodcastPicker: openPodcastPicker,
+          ),
         ),
       ),
     );
@@ -116,5 +121,17 @@ void main() {
     check(find.byType(TextField).evaluate()).isEmpty();
     check(find.text("Couldn't load this station.").evaluate()).length.equals(1);
     check(find.text('Retry').evaluate()).length.equals(1);
+  });
+
+  testWidgets('opens podcast selection once loaded when asked', (tester) async {
+    await stations.create(_station(0, 'Morning'));
+    await pump(tester, stationId: 1, openPodcastPicker: true);
+    check(find.byType(StationPodcastPickerScreen).evaluate()).length.equals(1);
+  });
+
+  testWidgets('does not open podcast selection by default', (tester) async {
+    await stations.create(_station(0, 'Morning'));
+    await pump(tester, stationId: 1);
+    check(find.byType(StationPodcastPickerScreen).evaluate()).isEmpty();
   });
 }

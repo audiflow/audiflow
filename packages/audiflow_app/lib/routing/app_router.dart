@@ -69,6 +69,10 @@ class AppRoutes {
       'smart-playlist/:playlistId/group/:groupId';
   static const String stationNew = '/library/station/new';
   static const String stationList = '/library/stations';
+
+  /// A station's editor, opening podcast selection right away.
+  static String stationPickPodcasts(int stationId) =>
+      '/library/station/$stationId/edit?pick=podcasts';
   static const String settingsAppearance = '/settings/appearance';
   static const String settingsPlayback = '/settings/playback';
   static const String settingsDownloads = '/settings/downloads';
@@ -664,7 +668,10 @@ Widget _buildStationEditScreen(GoRouterState state) {
   if (stationId == null) {
     return const _StationNotFoundScreen();
   }
-  return StationEditScreen(stationId: stationId);
+  return StationEditScreen(
+    stationId: stationId,
+    openPodcastPicker: state.uri.queryParameters['pick'] == 'podcasts',
+  );
 }
 
 /// Fallback screen shown when station data is not available.

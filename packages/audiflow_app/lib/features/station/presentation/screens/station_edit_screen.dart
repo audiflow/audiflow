@@ -17,9 +17,17 @@ import 'station_podcast_picker_screen.dart';
 /// When [stationId] is null, the screen operates in create mode.
 /// When [stationId] is provided, the screen loads and edits the existing station.
 class StationEditScreen extends ConsumerStatefulWidget {
-  const StationEditScreen({this.stationId, super.key});
+  const StationEditScreen({
+    this.stationId,
+    this.openPodcastPicker = false,
+    super.key,
+  });
 
   final int? stationId;
+
+  /// Opens podcast selection once the station has loaded, e.g. from the
+  /// add button of an empty station's artwork.
+  final bool openPodcastPicker;
 
   @override
   ConsumerState<StationEditScreen> createState() => _StationEditScreenState();
@@ -31,6 +39,7 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
   final FocusNode _nameFocusNode = FocusNode();
   bool _nameInitialized = false;
   bool _isReorderMode = false;
+  bool _pickerOpened = false;
   int? _expandedPodcastId;
 
   /// Whether the initial auto-focus has been consumed.
@@ -135,6 +144,16 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
         offset: editState.name.length,
       );
       _nameInitialized = true;
+    }
+
+    if (widget.openPodcastPicker &&
+        !_pickerOpened &&
+        !editState.isLoading &&
+        !editState.loadFailed) {
+      _pickerOpened = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _pickPodcasts(context, editState, controller);
+      });
     }
 
     final isEditMode = widget.stationId != null;
@@ -623,19 +642,24 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
           totalSubscribed,
         ),
       ),
-      onTap: () async {
-        final result = await Navigator.push<Set<int>>(
-          context,
-          MaterialPageRoute<Set<int>>(
-            fullscreenDialog: true,
-            builder: (_) => StationPodcastPickerScreen(
-              selectedIds: state.selectedPodcastIds,
-            ),
-          ),
-        );
-        if (result != null) await controller.updateSelectedPodcasts(result);
-      },
+      onTap: () => _pickPodcasts(context, state, controller),
     );
+  }
+
+  Future<void> _pickPodcasts(
+    BuildContext context,
+    StationEditState state,
+    StationEditController controller,
+  ) async {
+    final result = await Navigator.push<Set<int>>(
+      context,
+      MaterialPageRoute<Set<int>>(
+        fullscreenDialog: true,
+        builder: (_) =>
+            StationPodcastPickerScreen(selectedIds: state.selectedPodcastIds),
+      ),
+    );
+    if (result != null) await controller.updateSelectedPodcasts(result);
   }
 
   List<Widget> _buildSelectedPodcastList(
