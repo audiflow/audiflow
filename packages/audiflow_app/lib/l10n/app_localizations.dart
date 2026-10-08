@@ -1676,6 +1676,24 @@ abstract class AppLocalizations {
   /// **'Download deleted'**
   String get downloadDeleted;
 
+  /// Menu item and tooltip that turns an auto download into one the listener keeps, so retention never removes it
+  ///
+  /// In en, this message translates to:
+  /// **'Keep download'**
+  String get downloadKeep;
+
+  /// Snackbar after keeping an auto download
+  ///
+  /// In en, this message translates to:
+  /// **'Download kept. It won\'t be removed automatically.'**
+  String get downloadKept;
+
+  /// Download management tile label marking a download created by auto-download, which retention may remove
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-downloaded'**
+  String get downloadOriginAuto;
+
   /// Navigate to download management
   ///
   /// In en, this message translates to:

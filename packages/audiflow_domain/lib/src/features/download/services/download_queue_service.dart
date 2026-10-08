@@ -291,26 +291,27 @@ class DownloadQueueService implements SuspendableWriter {
     }
   }
 
-  /// A replacement download of the same episode writes the same path; its
-  /// file is not the deleted task's to remove. An unreadable lookup counts
-  /// as a replacement so the file is kept.
-  Future<bool> _hasReplacement(DownloadTask task) async {
+  /// Removes the file of [task], whose record was deleted during its
+  /// transfer: [localPath] when the transfer finished, otherwise every file
+  /// of the episode. A replacement download of the same episode writes the
+  /// same path, so the repository skips the removal while one exists, and
+  /// checks that atomically with the removal so one requested meanwhile
+  /// cannot lose its file.
+  Future<void> _discardFilesOfDeletedTask(
+    DownloadTask task, {
+    String? localPath,
+  }) async {
     try {
-      return await _repository.getByEpisodeId(task.episodeId) != null;
-    } catch (e) {
-      _logger.w('Could not look up a replacement of task ${task.id}', error: e);
-      return true;
-    }
-  }
-
-  Future<void> _discardFilesOfDeletedTask(DownloadTask task) async {
-    if (await _hasReplacement(task)) return;
-    try {
-      await _fileService.deleteEpisodeFiles(task.episodeId);
-      _logger.i('Discarded partial download of deleted task ${task.id}');
+      final discarded = await _repository.removeEpisodeFiles(
+        episodeId: task.episodeId,
+        removeFiles: () => localPath == null
+            ? _fileService.deleteEpisodeFiles(task.episodeId)
+            : _fileService.deleteFile(localPath),
+      );
+      if (discarded) _logger.i('Discarded download of deleted task ${task.id}');
     } catch (e, stack) {
       // Runs inside the drain's error handling; a failed sweep must not
-      // stop the queue.
+      // stop the queue. The file is kept, as for an unreadable row.
       _logger.w(
         'Could not discard files of deleted task ${task.id}',
         error: e,
@@ -383,10 +384,7 @@ class DownloadQueueService implements SuspendableWriter {
       );
 
       if (await _wasDeletedDuringDownload(task.id)) {
-        if (!await _hasReplacement(task)) {
-          await _fileService.deleteFile(localPath);
-          _logger.i('Discarded download of deleted task ${task.id}');
-        }
+        await _discardFilesOfDeletedTask(task, localPath: localPath);
         return;
       }
 

@@ -106,6 +106,20 @@ class _FakeDownloadRepository implements DownloadRepository {
     int? totalBytes,
   }) async {}
 
+  /// The check and the removal run back to back here; their atomicity is
+  /// covered against Isar in the repository tests.
+  @override
+  Future<bool> removeEpisodeFiles({
+    required int episodeId,
+    required Future<void> Function() removeFiles,
+    int? taskId,
+    int? fileRemovalId,
+  }) async {
+    if (await getByEpisodeId(episodeId) != null) return false;
+    await removeFiles();
+    return true;
+  }
+
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

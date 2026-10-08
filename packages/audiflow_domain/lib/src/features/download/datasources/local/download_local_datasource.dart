@@ -1,5 +1,6 @@
 import 'package:isar_community/isar.dart';
 
+import '../../models/download_file_removal.dart';
 import '../../models/download_origin.dart';
 import '../../models/download_status.dart';
 import '../../models/download_task.dart';
@@ -18,7 +19,10 @@ class DownloadLocalDatasource {
     return task.id;
   }
 
-  /// Updates a download task by ID.
+  /// Replaces the stored task with [task].
+  ///
+  /// Writes the whole row, so a copy read earlier overwrites fields other
+  /// writers changed since. Use [modify] to change fields of a live task.
   Future<int> updateById(int id, DownloadTask task) async {
     task.id = id;
     await _isar.writeTxn(() => _isar.downloadTasks.put(task));
@@ -31,15 +35,98 @@ class DownloadLocalDatasource {
     return deleted ? 1 : 0;
   }
 
-  /// Marks the task as a manual download. Reads the row inside the write
-  /// transaction so concurrent progress or status writes are not
-  /// overwritten with a stale copy. Does nothing if [id] is unknown.
-  Future<void> markManual(int id) {
+  /// Applies [change] to the stored task and saves it. Returns false if
+  /// [id] is unknown.
+  ///
+  /// The read happens inside the write transaction: a copy read before it
+  /// would put back fields that a concurrent writer changed in between,
+  /// such as the origin a keep request just promoted.
+  Future<bool> modify(int id, void Function(DownloadTask task) change) {
     return _isar.writeTxn(() async {
       final task = await _isar.downloadTasks.get(id);
-      if (task == null) return;
+      if (task == null) return false;
+      change(task);
+      await _isar.downloadTasks.put(task);
+      return true;
+    });
+  }
+
+  /// Promotes an auto download to manual. Returns true only if the task
+  /// still exists and was auto, so a caller can tell a real promotion
+  /// from a task that was deleted or already manual in the meantime.
+  Future<bool> markManual(int id) {
+    return _isar.writeTxn(() async {
+      final task = await _isar.downloadTasks.get(id);
+      if (task == null || task.downloadOrigin != DownloadOrigin.auto) {
+        return false;
+      }
       task.origin = DownloadOrigin.manual.dbValue;
       await _isar.downloadTasks.put(task);
+      return true;
+    });
+  }
+
+  /// Deletes the task only if it is still an auto download, recording a
+  /// [DownloadFileRemoval] for its files. Returns the deleted row and that
+  /// record, or null if the task is gone or was kept.
+  ///
+  /// The origin check, the delete, and the removal record share one
+  /// transaction, so a keep request cannot land between retention's check
+  /// and its delete, and the files are never left with nothing pointing at
+  /// them.
+  Future<({DownloadTask task, DownloadFileRemoval fileRemoval})?> deleteIfAuto(
+    int id,
+  ) {
+    return _isar.writeTxn(() async {
+      final task = await _isar.downloadTasks.get(id);
+      if (task == null || task.downloadOrigin != DownloadOrigin.auto) {
+        return null;
+      }
+      await _isar.downloadTasks.delete(id);
+      final fileRemoval = DownloadFileRemoval()
+        ..episodeId = task.episodeId
+        ..storedPath = task.localPath;
+      await _isar.downloadFileRemovals.put(fileRemoval);
+      return (task: task, fileRemoval: fileRemoval);
+    });
+  }
+
+  /// Returns the file removals still pending, oldest first.
+  Future<List<DownloadFileRemoval>> getFileRemovals() {
+    return _isar.downloadFileRemovals.where().findAll();
+  }
+
+  /// Runs [removeFiles] unless a download task of [episodeId] exists,
+  /// after deleting the task [taskId] and the file removal record
+  /// [fileRemovalId] when given. Returns whether [removeFiles] ran.
+  ///
+  /// Every download of an episode writes the same file name, so the check
+  /// and the removal must not let a new task in between. Both run inside
+  /// one write transaction, and Isar's write lock holds across isolates,
+  /// so a task created meanwhile, in the foreground or a background
+  /// worker, is only committed once the files are gone. If [removeFiles]
+  /// throws, nothing is committed: the task and the record stay for a
+  /// retry.
+  ///
+  /// [removeFiles] must not open a transaction of its own.
+  Future<bool> removeEpisodeFiles({
+    required int episodeId,
+    required Future<void> Function() removeFiles,
+    int? taskId,
+    int? fileRemovalId,
+  }) {
+    return _isar.writeTxn(() async {
+      if (taskId != null) await _isar.downloadTasks.delete(taskId);
+      if (fileRemovalId != null) {
+        await _isar.downloadFileRemovals.delete(fileRemovalId);
+      }
+      // A task of the episode owns its files now; deleting them would take
+      // its download too. Removing that task later sweeps the same files.
+      if (await _isar.downloadTasks.getByEpisodeId(episodeId) != null) {
+        return false;
+      }
+      await removeFiles();
+      return true;
     });
   }
 

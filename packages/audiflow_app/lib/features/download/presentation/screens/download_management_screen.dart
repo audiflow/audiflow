@@ -234,6 +234,14 @@ class _DownloadTaskTileWithTitle extends ConsumerWidget {
       onDelete: () async => ref
           .read(downloadManagementControllerProvider.notifier)
           .delete(task.id),
+      onKeep: () async {
+        final messenger = ScaffoldMessenger.of(context);
+        final message = AppLocalizations.of(context).downloadKept;
+        final kept = await ref
+            .read(downloadManagementControllerProvider.notifier)
+            .keep(task.id);
+        if (kept) messenger.showSnackBar(SnackBar(content: Text(message)));
+      },
     );
   }
 }

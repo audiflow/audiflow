@@ -368,19 +368,26 @@ class BackgroundDownloadService {
     String localPath,
   ) async {
     try {
+      // The common case, a task still there, needs no write transaction.
       if (await _downloadRepo.getById(task.id) != null) return false;
       // A replacement download of the same episode writes the same path;
-      // its file is not this worker's to remove.
-      if (await _downloadRepo.getByEpisodeId(task.episodeId) != null) {
-        return false;
-      }
-      final file = File(localPath);
-      if (await file.exists()) await file.delete();
-      _logger?.i(
-        'BackgroundDownloadService: discarded download of deleted task '
-        '${task.id}',
+      // its file is not this worker's to remove. The repository checks for
+      // one atomically with the delete, so a replacement requested in the
+      // foreground meanwhile keeps its file.
+      final discarded = await _downloadRepo.removeEpisodeFiles(
+        episodeId: task.episodeId,
+        removeFiles: () async {
+          final file = File(localPath);
+          if (await file.exists()) await file.delete();
+        },
       );
-      return true;
+      if (discarded) {
+        _logger?.i(
+          'BackgroundDownloadService: discarded download of deleted task '
+          '${task.id}',
+        );
+      }
+      return discarded;
     } catch (e, stack) {
       // An unreadable row is not proof of deletion; keep the file.
       _logger?.w(

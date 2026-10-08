@@ -133,4 +133,116 @@ void main() {
     check(changedEpisodeIds).isEmpty();
     check(lock.isHeld).isFalse();
   });
+
+  group('deleteAuto', () {
+    DownloadTask storeAuto({
+      DownloadStatus status = const DownloadStatus.completed(),
+      DownloadOrigin origin = DownloadOrigin.auto,
+      String? localPath,
+    }) {
+      final task = fakeDownloadTask(
+        episodeId: 10,
+        id: 1,
+        status: status,
+        origin: origin,
+        localPath: localPath,
+      );
+      repository.tasks.add(task);
+      return fakeDownloadTask(
+        episodeId: 10,
+        id: 1,
+        status: status,
+        origin: DownloadOrigin.auto,
+        localPath: localPath,
+      );
+    }
+
+    test('removes an auto download and its files', () async {
+      final file = File('${downloadsDir.path}/10_episode.mp3')
+        ..writeAsStringSync('audio');
+
+      final deleted = await deleter.deleteAuto(
+        storeAuto(localPath: '${downloadsDir.path}/10_episode.mp3'),
+      );
+
+      check(deleted).isTrue();
+      check(file.existsSync()).isFalse();
+      check(repository.tasks).isEmpty();
+      check(changedEpisodeIds).deepEquals([10]);
+      check(lock.isHeld).isFalse();
+    });
+
+    test('leaves a task that is actively downloading alone', () async {
+      final task = storeAuto(status: const DownloadStatus.downloading());
+
+      check(await deleter.deleteAuto(task)).isFalse();
+      check(repository.tasks).length.equals(1);
+      check(changedEpisodeIds).isEmpty();
+    });
+
+    test('keeps the file of a task promoted after the caller checked '
+        'it', () async {
+      final file = File('${downloadsDir.path}/10_episode.mp3')
+        ..writeAsStringSync('audio');
+      // The caller saw an auto task; a keep request promoted it since.
+      final listed = storeAuto(
+        origin: DownloadOrigin.manual,
+        localPath: '${downloadsDir.path}/10_episode.mp3',
+      );
+
+      check(await deleter.deleteAuto(listed)).isFalse();
+
+      check(file.existsSync()).isTrue();
+      check(repository.tasks).length.equals(1);
+      check(changedEpisodeIds).isEmpty();
+    });
+
+    group('when the file cannot be deleted', () {
+      late File file;
+
+      setUp(() {
+        file = File('${downloadsDir.path}/10_episode.mp3')
+          ..writeAsStringSync('audio');
+        // A read-only directory refuses to unlink its files.
+        Process.runSync('chmod', ['555', downloadsDir.path]);
+      });
+
+      tearDown(() => Process.runSync('chmod', ['755', downloadsDir.path]));
+
+      test('still removes the record and keeps the file owed', () async {
+        final deleted = await deleter.deleteAuto(
+          storeAuto(localPath: file.path),
+        );
+
+        check(deleted).isTrue();
+        check(repository.tasks).isEmpty();
+        check(file.existsSync()).isTrue();
+        check(repository.fileRemovals).length.equals(1);
+        check(changedEpisodeIds).deepEquals([10]);
+        check(lock.isHeld).isFalse();
+      });
+
+      test('a later retry removes the file', () async {
+        await deleter.deleteAuto(storeAuto(localPath: file.path));
+        Process.runSync('chmod', ['755', downloadsDir.path]);
+
+        check(await deleter.retryFileRemovals()).equals(1);
+
+        check(file.existsSync()).isFalse();
+        check(repository.fileRemovals).isEmpty();
+        check(lock.isHeld).isFalse();
+      });
+
+      test('the retry waits while a download worker holds the lock', () async {
+        await deleter.deleteAuto(storeAuto(localPath: file.path));
+        Process.runSync('chmod', ['755', downloadsDir.path]);
+        lock.isHeldElsewhere = true;
+
+        check(await deleter.retryFileRemovals()).equals(0);
+
+        check(file.existsSync()).isTrue();
+        check(repository.fileRemovals).length.equals(1);
+      });
+    });
+  });
 }

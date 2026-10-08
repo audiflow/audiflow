@@ -19,6 +19,56 @@ class FakeDownloadRepository implements DownloadRepository {
   Future<void> delete(int id) async =>
       tasks.removeWhere((task) => task.id == id);
 
+  /// File removals recorded by [deleteIfAuto] and not yet completed.
+  final List<DownloadFileRemoval> fileRemovals = [];
+
+  @override
+  Future<DownloadTask?> getByEpisodeId(int episodeId) async =>
+      tasks.where((task) => task.episodeId == episodeId).firstOrNull;
+
+  @override
+  Future<DeletedAutoDownload?> deleteIfAuto(int id) async {
+    final task = await getById(id);
+    if (task == null || task.downloadOrigin != DownloadOrigin.auto) {
+      return null;
+    }
+    tasks.remove(task);
+    fileRemovals.removeWhere((r) => r.episodeId == task.episodeId);
+    final fileRemoval = DownloadFileRemoval()
+      ..id = task.id
+      ..episodeId = task.episodeId
+      ..storedPath = task.localPath;
+    fileRemovals.add(fileRemoval);
+    return (task: task, fileRemoval: fileRemoval);
+  }
+
+  @override
+  Future<List<DownloadFileRemoval>> getPendingFileRemovals() async =>
+      List.of(fileRemovals);
+
+  /// Runs the steps the real repository runs in one transaction. Nothing
+  /// interleaves with them here; the atomicity itself is covered against
+  /// Isar in the repository tests.
+  @override
+  Future<bool> removeEpisodeFiles({
+    required int episodeId,
+    required Future<void> Function() removeFiles,
+    int? taskId,
+    int? fileRemovalId,
+  }) async {
+    if (await getByEpisodeId(episodeId) case final task?
+        when task.id != taskId) {
+      if (taskId != null) await delete(taskId);
+      fileRemovals.removeWhere((removal) => removal.id == fileRemovalId);
+      return false;
+    }
+    // Like an aborted transaction, a failure leaves the task and record.
+    await removeFiles();
+    if (taskId != null) await delete(taskId);
+    fileRemovals.removeWhere((removal) => removal.id == fileRemovalId);
+    return true;
+  }
+
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

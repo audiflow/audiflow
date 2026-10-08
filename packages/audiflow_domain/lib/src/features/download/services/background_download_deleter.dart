@@ -2,6 +2,7 @@ import '../models/download_status.dart';
 import '../models/download_task.dart';
 import '../repositories/download_repository.dart';
 import 'background_download_worker_lock.dart';
+import 'download_file_remover.dart';
 import 'episode_download_files.dart';
 
 /// Deletes a download from the background isolate, which has no download
@@ -23,6 +24,15 @@ class BackgroundDownloadDeleter {
   /// Follow-up work once the record is gone, such as station reconciliation.
   final Future<void> Function(int episodeId)? _onDeleted;
 
+  late final _fileRemover = DownloadFileRemover(
+    repository: _downloadRepository,
+    deleteEpisodeFiles: (episodeId, storedPath) => deleteEpisodeDownloadFiles(
+      downloadsDir: _downloadsDir,
+      episodeId: episodeId,
+      storedPath: storedPath,
+    ),
+  );
+
   /// Removes [task]'s files, including a partial one, and its record.
   ///
   /// Leaves the task alone while a background download worker holds the
@@ -30,22 +40,74 @@ class BackgroundDownloadDeleter {
   /// writer from here, so deleting the record would orphan the file it
   /// finishes. Callers see the record still there and retry later.
   Future<void> call(DownloadTask task) async {
-    if (!await _lock.tryAcquire()) return;
+    final deleted = await _withIdleTask(task, (current) async {
+      // The worker lock keeps background workers out, but the foreground
+      // can still replace a cancelled or failed task; the repository
+      // removes the record and the files together so the replacement's
+      // file is not swept.
+      await _downloadRepository.removeEpisodeFiles(
+        episodeId: current.episodeId,
+        taskId: current.id,
+        removeFiles: () => _deleteFiles(current),
+      );
+      return true;
+    });
+    if (deleted) await _onDeleted?.call(task.episodeId);
+  }
+
+  /// Removes [task]'s record and files if it is still an auto download.
+  /// Returns whether the record was removed. Skips the same busy tasks as
+  /// [call].
+  ///
+  /// The record goes first, checked and deleted atomically, so a keep
+  /// request that lands after the caller's check still keeps the file.
+  /// Files that fail to delete stay recorded for [retryFileRemovals].
+  Future<bool> deleteAuto(DownloadTask task) async {
+    final deleted = await _withIdleTask(task, (current) async {
+      final removed = await _downloadRepository.deleteIfAuto(current.id);
+      if (removed == null) return false;
+      await _fileRemover.remove(removed.fileRemoval);
+      return true;
+    });
+    if (deleted) await _onDeleted?.call(task.episodeId);
+    return deleted;
+  }
+
+  /// Retries removing the files of auto downloads whose records are already
+  /// gone. Returns the number completed, or 0 while a background download
+  /// worker holds the lock.
+  Future<int> retryFileRemovals() async {
+    if (!await _lock.tryAcquire()) return 0;
+    try {
+      return await _fileRemover.retryPending();
+    } finally {
+      await _lock.release();
+    }
+  }
+
+  /// Runs [action] on the task's current record while holding the worker
+  /// lock, unless the lock is busy, the record is gone, or it is
+  /// downloading. Returns what [action] returned, or false if skipped.
+  Future<bool> _withIdleTask(
+    DownloadTask task,
+    Future<bool> Function(DownloadTask current) action,
+  ) async {
+    if (!await _lock.tryAcquire()) return false;
     try {
       // [task] may have been read before the lock was taken; a worker
       // could have started it since.
       final current = await _downloadRepository.getById(task.id);
-      if (current == null) return;
-      if (current.downloadStatus is DownloadStatusDownloading) return;
-      await deleteEpisodeDownloadFiles(
-        downloadsDir: _downloadsDir,
-        episodeId: current.episodeId,
-        storedPath: current.localPath,
-      );
-      await _downloadRepository.delete(current.id);
+      if (current == null) return false;
+      if (current.downloadStatus is DownloadStatusDownloading) return false;
+      return await action(current);
     } finally {
       await _lock.release();
     }
-    await _onDeleted?.call(task.episodeId);
   }
+
+  Future<void> _deleteFiles(DownloadTask task) => deleteEpisodeDownloadFiles(
+    downloadsDir: _downloadsDir,
+    episodeId: task.episodeId,
+    storedPath: task.localPath,
+  );
 }

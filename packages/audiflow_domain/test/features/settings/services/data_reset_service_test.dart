@@ -292,6 +292,7 @@ Future<void> _seedLibrary(Isar isar) async {
       ..audioUrl = 'https://example.com/a.mp3'
       ..createdAt = _now,
   );
+  await isar.downloadFileRemovals.put(DownloadFileRemoval()..episodeId = 1);
 }
 
 Future<void> _seedSmartPlaylists(Isar isar) async {

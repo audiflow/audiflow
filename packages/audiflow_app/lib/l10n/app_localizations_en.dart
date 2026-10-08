@@ -876,6 +876,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadDeleted => 'Download deleted';
 
   @override
+  String get downloadKeep => 'Keep download';
+
+  @override
+  String get downloadKept =>
+      'Download kept. It won\'t be removed automatically.';
+
+  @override
+  String get downloadOriginAuto => 'Auto-downloaded';
+
+  @override
   String get downloadManageTitle => 'Manage Downloads';
 
   @override
