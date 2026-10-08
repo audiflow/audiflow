@@ -61,7 +61,7 @@ void main() {
         ),
       );
       verifyNever(mockRepository.getByEpisodeId(any));
-      verifyNever(mockRepository.markCompleted(any));
+      verifyNever(mockRepository.finishListen(any));
     });
 
     test('saves progress when interval exceeded', () async {
@@ -136,7 +136,7 @@ void main() {
       ).called(1);
     });
 
-    test('marks as completed when threshold reached', () async {
+    test('finishes the listen when threshold reached', () async {
       const episodeId = 1;
       final progress = PlaybackProgress(
         position: const Duration(seconds: 570), // 95% of 10 minutes
@@ -153,45 +153,23 @@ void main() {
           realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
         ),
       ).thenAnswer((_) async {});
-      when(mockRepository.markCompleted(any)).thenAnswer((_) async {});
+      when(mockRepository.finishListen(any)).thenAnswer((_) async => true);
+      final saved = <int>[];
+      final subscription = service.progressSaved.listen(saved.add);
+      addTearDown(subscription.cancel);
 
       await service.onProgressUpdate(episodeId, progress);
+      await Future<void>.delayed(Duration.zero);
 
-      verify(mockRepository.markCompleted(episodeId)).called(1);
-    });
-
-    test('does not mark completed when the listen already finished', () async {
-      const episodeId = 1;
-      final progress = PlaybackProgress(
-        position: const Duration(seconds: 570),
-        duration: const Duration(minutes: 10),
-        bufferedPosition: const Duration(minutes: 10),
-      );
-
-      when(
-        mockRepository.saveProgress(
-          episodeId: anyNamed('episodeId'),
-          positionMs: anyNamed('positionMs'),
-          durationMs: anyNamed('durationMs'),
-          listenedDeltaMs: anyNamed('listenedDeltaMs'),
-          realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
-        ),
-      ).thenAnswer((_) async {});
-      when(mockRepository.getByEpisodeId(any)).thenAnswer(
-        (_) async => PlaybackHistory()
-          ..episodeId = episodeId
-          ..completedAt = now,
-      );
-
-      await service.onProgressUpdate(episodeId, progress);
-
+      verify(mockRepository.finishListen(episodeId)).called(1);
       verifyNever(mockRepository.markCompleted(any));
+      check(saved).deepEquals([episodeId]);
     });
 
-    test('marks a replay completed when threshold reached', () async {
+    test('does not notify when the listen already finished', () async {
       const episodeId = 1;
       final progress = PlaybackProgress(
-        position: const Duration(seconds: 570),
+        position: const Duration(seconds: 570), // 95% of 10 minutes
         duration: const Duration(minutes: 10),
         bufferedPosition: const Duration(minutes: 10),
       );
@@ -205,17 +183,15 @@ void main() {
           realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
         ),
       ).thenAnswer((_) async {});
-      when(mockRepository.getByEpisodeId(any)).thenAnswer(
-        (_) async => PlaybackHistory()
-          ..episodeId = episodeId
-          ..completedAt = now
-          ..isReplaying = true,
-      );
-      when(mockRepository.markCompleted(any)).thenAnswer((_) async {});
+      when(mockRepository.finishListen(any)).thenAnswer((_) async => false);
+      final saved = <int>[];
+      final subscription = service.progressSaved.listen(saved.add);
+      addTearDown(subscription.cancel);
 
       await service.onProgressUpdate(episodeId, progress);
+      await Future<void>.delayed(Duration.zero);
 
-      verify(mockRepository.markCompleted(episodeId)).called(1);
+      check(saved).isEmpty();
     });
   });
 
@@ -276,7 +252,11 @@ void main() {
       await service.onPlaybackStarted(episodeId, positionMs);
 
       verify(
-        mockRepository.startReplay(episodeId, positionMs: positionMs),
+        mockRepository.startReplay(
+          episodeId,
+          positionMs: positionMs,
+          fromStart: true,
+        ),
       ).called(1);
       verifyNever(mockRepository.markIncomplete(any));
     });
@@ -418,14 +398,36 @@ void main() {
 
   group('markAll', () {
     test('marks each episode completed and counts them', () async {
-      when(mockRepository.markCompleted(any)).thenAnswer((_) async {});
+      when(
+        mockRepository.markCompletedUnlessPlayed(any),
+      ).thenAnswer((_) async => true);
 
       final count = await service.markAllCompleted([1, 2, 3]);
 
       check(count).equals(3);
       for (final id in [1, 2, 3]) {
-        verify(mockRepository.markCompleted(id)).called(1);
+        verify(mockRepository.markCompletedUnlessPlayed(id)).called(1);
       }
+      verifyNever(mockRepository.markCompleted(any));
+    });
+
+    test('skips played episodes and counts only the marked', () async {
+      final reconciler = _RecordingReconciler();
+      service = PlaybackHistoryService(
+        mockRepository,
+        getCompletionThreshold: () => 0.95,
+        reconcilerService: reconciler,
+      );
+      when(mockRepository.markCompletedUnlessPlayed(any)).thenAnswer(
+        (invocation) async => invocation.positionalArguments.first != 2,
+      );
+
+      final count = await service.markAllCompleted([1, 2, 3]);
+
+      check(count).equals(2);
+      check(reconciler.batches).deepEquals([
+        [1, 3],
+      ]);
     });
 
     test('marks each episode not played and counts them', () async {
@@ -445,7 +447,9 @@ void main() {
         getCompletionThreshold: () => 0.95,
         reconcilerService: reconciler,
       );
-      when(mockRepository.markCompleted(any)).thenAnswer((_) async {});
+      when(
+        mockRepository.markCompletedUnlessPlayed(any),
+      ).thenAnswer((_) async => true);
 
       await service.markAllCompleted([1, 2, 3]);
 
@@ -464,10 +468,13 @@ void main() {
           getCompletionThreshold: () => 0.95,
           reconcilerService: reconciler,
         );
-        when(mockRepository.markCompleted(any)).thenAnswer((invocation) async {
+        when(mockRepository.markCompletedUnlessPlayed(any)).thenAnswer((
+          invocation,
+        ) async {
           if (invocation.positionalArguments.first == 3) {
             throw StateError('disk full');
           }
+          return true;
         });
 
         await check(

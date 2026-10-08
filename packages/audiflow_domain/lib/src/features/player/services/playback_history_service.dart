@@ -91,7 +91,8 @@ class PlaybackHistoryService {
   ///
   /// Reopens a finished listen as a replay when it starts below the
   /// completion threshold, and increments play count if starting from
-  /// the beginning.
+  /// the beginning. Only a replay from the beginning counts another
+  /// completion when it finishes.
   Future<void> onPlaybackStarted(int episodeId, int positionMs) async {
     _session = _ListenSession(
       lastSavedPositionMs: positionMs,
@@ -122,7 +123,8 @@ class PlaybackHistoryService {
   /// rewinds, the end-of-chapter sleep timer) are not reported.
   ///
   /// A rewind below the completion threshold reopens a finished listen as
-  /// a replay, so the rewound position is resumable. Playing on, or
+  /// a replay, so the rewound position is resumable; it counts another
+  /// completion only if it rewinds to the beginning. Playing on, or
   /// skipping forward, after "mark as played" keeps the listen finished.
   Future<void> onSeeked(
     int episodeId, {
@@ -142,16 +144,19 @@ class PlaybackHistoryService {
   /// A finished listen taken up again below the threshold is a new
   /// listen (a replay); past the threshold it is the finished listen's
   /// tail, which must not count a second completion. [durationMs] of zero
-  /// means unknown, which counts as below. No-op unless the listen is
-  /// finished and the episode played, see
-  /// [PlaybackHistoryRepository.startReplay].
+  /// means unknown, which counts as below. See
+  /// [PlaybackHistoryRepository.startReplay] for when it changes nothing.
   Future<void> _reopenListenBelowThreshold(
     int episodeId, {
     required int positionMs,
     required int durationMs,
   }) async {
     if (_isPastThreshold(positionMs, durationMs)) return;
-    await _repository.startReplay(episodeId, positionMs: positionMs);
+    await _repository.startReplay(
+      episodeId,
+      positionMs: positionMs,
+      fromStart: positionMs < fromBeginningThresholdMs,
+    );
   }
 
   bool _isPastThreshold(int positionMs, int durationMs) {
@@ -225,12 +230,9 @@ class PlaybackHistoryService {
   }
 
   /// Auto-completion: finishes the current listen once. A finished listen
-  /// playing out its tail is left alone; a replay completes again even
-  /// though the episode is already played.
+  /// playing out its tail, also after an automatic rewind, is left alone.
   Future<void> _finishListen(int episodeId) async {
-    final history = await _repository.getByEpisodeId(episodeId);
-    if (history?.isListenFinished ?? false) return;
-    await _repository.markCompleted(episodeId);
+    if (!await _repository.finishListen(episodeId)) return;
     if (!_progressSaved.isClosed) _progressSaved.add(episodeId);
     await _tryReconcile(episodeId);
   }
@@ -310,6 +312,7 @@ class PlaybackHistoryService {
   }
 
   /// Manually marks an episode as completed, which finishes its listen.
+  /// Marking a played episode does not count another completion.
   Future<void> markCompleted(int episodeId) async {
     await _repository.markCompleted(episodeId);
     await _tryReconcile(episodeId);
@@ -322,33 +325,35 @@ class PlaybackHistoryService {
   }
 
   /// Marks every episode in [episodeIds] as completed (e.g. a whole
-  /// podcast at once). Returns how many were marked.
+  /// podcast at once), skipping those already played, also any being
+  /// replayed. Returns how many were marked.
   ///
   /// Stations are reconciled once for the batch, also when a write fails
   /// partway, so they match the episodes that did change.
   Future<int> markAllCompleted(Iterable<int> episodeIds) =>
-      _markAll(episodeIds, _repository.markCompleted);
+      _markAll(episodeIds, _repository.markCompletedUnlessPlayed);
 
   /// Marks every episode in [episodeIds] as not played. Returns how many
   /// were marked.
   Future<int> markAllIncomplete(Iterable<int> episodeIds) =>
-      _markAll(episodeIds, _repository.markIncomplete);
+      _markAll(episodeIds, (id) async {
+        await _repository.markIncomplete(id);
+        return true;
+      });
 
   Future<int> _markAll(
     Iterable<int> episodeIds,
-    Future<void> Function(int episodeId) mark,
+    Future<bool> Function(int episodeId) mark,
   ) async {
-    final ids = episodeIds.toList();
-    var count = 0;
+    final changed = <int>[];
     try {
-      for (final id in ids) {
-        await mark(id);
-        count++;
+      for (final id in episodeIds) {
+        if (await mark(id)) changed.add(id);
       }
     } finally {
-      if (0 < count) await _tryReconcileAll(ids.take(count));
+      if (changed.isNotEmpty) await _tryReconcileAll(changed);
     }
-    return count;
+    return changed.length;
   }
 
   Future<void> _tryReconcileAll(Iterable<int> episodeIds) async {

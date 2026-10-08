@@ -42,33 +42,38 @@ const PlaybackHistorySchema = CollectionSchema(
       name: r'firstPlayedAt',
       type: IsarType.dateTime,
     ),
-    r'isReplaying': PropertySchema(
+    r'isReplayFromStart': PropertySchema(
       id: 5,
+      name: r'isReplayFromStart',
+      type: IsarType.bool,
+    ),
+    r'isReplaying': PropertySchema(
+      id: 6,
       name: r'isReplaying',
       type: IsarType.bool,
     ),
     r'lastPlayedAt': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'lastPlayedAt',
       type: IsarType.dateTime,
     ),
     r'playCount': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'playCount',
       type: IsarType.long,
     ),
     r'positionMs': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'positionMs',
       type: IsarType.long,
     ),
     r'totalListenedMs': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'totalListenedMs',
       type: IsarType.long,
     ),
     r'totalRealtimeMs': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'totalRealtimeMs',
       type: IsarType.long,
     ),
@@ -123,12 +128,13 @@ void _playbackHistorySerialize(
   writer.writeLong(offsets[2], object.durationMs);
   writer.writeLong(offsets[3], object.episodeId);
   writer.writeDateTime(offsets[4], object.firstPlayedAt);
-  writer.writeBool(offsets[5], object.isReplaying);
-  writer.writeDateTime(offsets[6], object.lastPlayedAt);
-  writer.writeLong(offsets[7], object.playCount);
-  writer.writeLong(offsets[8], object.positionMs);
-  writer.writeLong(offsets[9], object.totalListenedMs);
-  writer.writeLong(offsets[10], object.totalRealtimeMs);
+  writer.writeBool(offsets[5], object.isReplayFromStart);
+  writer.writeBool(offsets[6], object.isReplaying);
+  writer.writeDateTime(offsets[7], object.lastPlayedAt);
+  writer.writeLong(offsets[8], object.playCount);
+  writer.writeLong(offsets[9], object.positionMs);
+  writer.writeLong(offsets[10], object.totalListenedMs);
+  writer.writeLong(offsets[11], object.totalRealtimeMs);
 }
 
 PlaybackHistory _playbackHistoryDeserialize(
@@ -144,12 +150,13 @@ PlaybackHistory _playbackHistoryDeserialize(
   object.episodeId = reader.readLong(offsets[3]);
   object.firstPlayedAt = reader.readDateTimeOrNull(offsets[4]);
   object.id = id;
-  object.isReplaying = reader.readBool(offsets[5]);
-  object.lastPlayedAt = reader.readDateTimeOrNull(offsets[6]);
-  object.playCount = reader.readLong(offsets[7]);
-  object.positionMs = reader.readLong(offsets[8]);
-  object.totalListenedMs = reader.readLong(offsets[9]);
-  object.totalRealtimeMs = reader.readLong(offsets[10]);
+  object.isReplayFromStart = reader.readBool(offsets[5]);
+  object.isReplaying = reader.readBool(offsets[6]);
+  object.lastPlayedAt = reader.readDateTimeOrNull(offsets[7]);
+  object.playCount = reader.readLong(offsets[8]);
+  object.positionMs = reader.readLong(offsets[9]);
+  object.totalListenedMs = reader.readLong(offsets[10]);
+  object.totalRealtimeMs = reader.readLong(offsets[11]);
   return object;
 }
 
@@ -173,14 +180,16 @@ P _playbackHistoryDeserializeProp<P>(
     case 5:
       return (reader.readBool(offset)) as P;
     case 6:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 7:
-      return (reader.readLong(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 8:
       return (reader.readLong(offset)) as P;
     case 9:
       return (reader.readLong(offset)) as P;
     case 10:
+      return (reader.readLong(offset)) as P;
+    case 11:
       return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -836,6 +845,15 @@ extension PlaybackHistoryQueryFilter
   }
 
   QueryBuilder<PlaybackHistory, PlaybackHistory, QAfterFilterCondition>
+  isReplayFromStartEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'isReplayFromStart', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<PlaybackHistory, PlaybackHistory, QAfterFilterCondition>
   isReplayingEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -1217,6 +1235,20 @@ extension PlaybackHistoryQuerySortBy
   }
 
   QueryBuilder<PlaybackHistory, PlaybackHistory, QAfterSortBy>
+  sortByIsReplayFromStart() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isReplayFromStart', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PlaybackHistory, PlaybackHistory, QAfterSortBy>
+  sortByIsReplayFromStartDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isReplayFromStart', Sort.desc);
+    });
+  }
+
+  QueryBuilder<PlaybackHistory, PlaybackHistory, QAfterSortBy>
   sortByIsReplaying() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isReplaying', Sort.asc);
@@ -1386,6 +1418,20 @@ extension PlaybackHistoryQuerySortThenBy
   }
 
   QueryBuilder<PlaybackHistory, PlaybackHistory, QAfterSortBy>
+  thenByIsReplayFromStart() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isReplayFromStart', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PlaybackHistory, PlaybackHistory, QAfterSortBy>
+  thenByIsReplayFromStartDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isReplayFromStart', Sort.desc);
+    });
+  }
+
+  QueryBuilder<PlaybackHistory, PlaybackHistory, QAfterSortBy>
   thenByIsReplaying() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isReplaying', Sort.asc);
@@ -1508,6 +1554,13 @@ extension PlaybackHistoryQueryWhereDistinct
   }
 
   QueryBuilder<PlaybackHistory, PlaybackHistory, QDistinct>
+  distinctByIsReplayFromStart() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'isReplayFromStart');
+    });
+  }
+
+  QueryBuilder<PlaybackHistory, PlaybackHistory, QDistinct>
   distinctByIsReplaying() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'isReplaying');
@@ -1588,6 +1641,13 @@ extension PlaybackHistoryQueryProperty
   firstPlayedAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'firstPlayedAt');
+    });
+  }
+
+  QueryBuilder<PlaybackHistory, bool, QQueryOperations>
+  isReplayFromStartProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'isReplayFromStart');
     });
   }
 

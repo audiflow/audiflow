@@ -75,6 +75,22 @@ class MockPlaybackHistoryRepository extends _i1.Mock
           as _i3.Future<void>);
 
   @override
+  _i3.Future<bool> markCompletedUnlessPlayed(int? episodeId) =>
+      (super.noSuchMethod(
+            Invocation.method(#markCompletedUnlessPlayed, [episodeId]),
+            returnValue: _i3.Future<bool>.value(false),
+          )
+          as _i3.Future<bool>);
+
+  @override
+  _i3.Future<bool> finishListen(int? episodeId) =>
+      (super.noSuchMethod(
+            Invocation.method(#finishListen, [episodeId]),
+            returnValue: _i3.Future<bool>.value(false),
+          )
+          as _i3.Future<bool>);
+
+  @override
   _i3.Future<void> markIncomplete(int? episodeId) =>
       (super.noSuchMethod(
             Invocation.method(#markIncomplete, [episodeId]),
@@ -84,12 +100,16 @@ class MockPlaybackHistoryRepository extends _i1.Mock
           as _i3.Future<void>);
 
   @override
-  _i3.Future<void> startReplay(int? episodeId, {required int? positionMs}) =>
+  _i3.Future<void> startReplay(
+    int? episodeId, {
+    required int? positionMs,
+    required bool? fromStart,
+  }) =>
       (super.noSuchMethod(
             Invocation.method(
               #startReplay,
               [episodeId],
-              {#positionMs: positionMs},
+              {#positionMs: positionMs, #fromStart: fromStart},
             ),
             returnValue: _i3.Future<void>.value(),
             returnValueForMissingStub: _i3.Future<void>.value(),

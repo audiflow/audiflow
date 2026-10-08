@@ -212,15 +212,23 @@ void main() {
 
       check(await repository.isCompleted(episodeId)).isTrue();
       check(await isResumable()).isFalse();
+      // The episode was already played: no second completion.
+      check((await history()).completedCount).equals(1);
     });
 
-    test('bulk mark as played ends the replay', () async {
+    test('bulk mark as played skips the played episode', () async {
       await playToEnd();
       await replayAndPauseAt(const Duration(minutes: 5));
 
-      await service.markAllCompleted([episodeId, otherEpisodeId]);
+      final marked = await service.markAllCompleted([
+        episodeId,
+        otherEpisodeId,
+      ]);
 
-      check(await isResumable()).isFalse();
+      check(marked).equals(1);
+      check(await isResumable()).isTrue();
+      check((await history()).completedCount).equals(1);
+      check(await repository.isCompleted(otherEpisodeId)).isTrue();
     });
   });
 
@@ -290,7 +298,7 @@ void main() {
       check((await history()).completedCount).equals(1);
     });
 
-    test('a replay reopened by a rewind completes again', () async {
+    test('a replay reopened by a rewind finishes without counting', () async {
       await playToEnd();
       const resumeAt = Duration(minutes: 29, seconds: 10);
       await service.onPlaybackStarted(episodeId, resumeAt.inMilliseconds);
@@ -300,7 +308,54 @@ void main() {
       await playTo(const Duration(minutes: 29));
 
       check((await history()).isReplaying).isFalse();
+      check((await history()).completedCount).equals(1);
+      check(await isResumable()).isFalse();
+    });
+
+    test('a rewind to the beginning counts when played through', () async {
+      await playToEnd();
+      const resumeAt = Duration(minutes: 29, seconds: 10);
+      await service.onPlaybackStarted(episodeId, resumeAt.inMilliseconds);
+
+      await seek(resumeAt, Duration.zero);
+      for (final minute in [10, 20, 29]) {
+        await playTo(Duration(minutes: minute));
+      }
+
+      check((await history()).isReplaying).isFalse();
       check((await history()).completedCount).equals(2);
+    });
+
+    test('a rewind to the beginning of an open replay counts', () async {
+      await playToEnd();
+      const resumeAt = Duration(minutes: 29, seconds: 10);
+      await service.onPlaybackStarted(episodeId, resumeAt.inMilliseconds);
+      await seek(resumeAt, const Duration(minutes: 20));
+      await playTo(const Duration(minutes: 20));
+
+      await seek(const Duration(minutes: 20), Duration.zero);
+      for (final minute in [10, 20, 29]) {
+        await playTo(Duration(minutes: minute));
+      }
+
+      check((await history()).completedCount).equals(2);
+    });
+  });
+
+  group('automatic rewind of a finished listen', () {
+    test('keeps it finished through the threshold', () async {
+      await playToEnd();
+      const resumeAt = Duration(minutes: 29, seconds: 10);
+      await service.onPlaybackStarted(episodeId, resumeAt.inMilliseconds);
+
+      // An interruption rewind moves the player without reporting a seek.
+      await playTo(const Duration(minutes: 28));
+      await playTo(const Duration(minutes: 29));
+      await pauseAt(const Duration(minutes: 29));
+
+      check((await history()).isReplaying).isFalse();
+      check((await history()).completedCount).equals(1);
+      check(await isResumable()).isFalse();
     });
   });
 
@@ -351,25 +406,33 @@ void main() {
   });
 
   group('review finding 7: mark as played after a rewind', () {
-    for (final bulk in [false, true]) {
-      test('ends the listen the rewind reopened (bulk: $bulk)', () async {
-        await service.onPlaybackStarted(episodeId, 0);
-        await playTo(const Duration(seconds: 60));
-        await service.markCompleted(episodeId);
-        await playTo(const Duration(seconds: 64));
-        await seek(const Duration(seconds: 64), const Duration(seconds: 62));
-
-        if (bulk) {
-          await service.markAllCompleted([episodeId]);
-        } else {
-          await service.markCompleted(episodeId);
-        }
-        await pauseAt(const Duration(seconds: 62));
-
-        check((await history()).isReplaying).isFalse();
-        check(await isResumable()).isFalse();
-      });
+    Future<void> rewindAfterMarkPlayed() async {
+      await service.onPlaybackStarted(episodeId, 0);
+      await playTo(const Duration(seconds: 60));
+      await service.markCompleted(episodeId);
+      await playTo(const Duration(seconds: 64));
+      await seek(const Duration(seconds: 64), const Duration(seconds: 62));
     }
+
+    test('mark as played ends the listen the rewind reopened', () async {
+      await rewindAfterMarkPlayed();
+
+      await service.markCompleted(episodeId);
+      await pauseAt(const Duration(seconds: 62));
+
+      check((await history()).isReplaying).isFalse();
+      check(await isResumable()).isFalse();
+    });
+
+    test('bulk mark as played leaves it resumable', () async {
+      await rewindAfterMarkPlayed();
+
+      check(await service.markAllCompleted([episodeId])).equals(0);
+      await pauseAt(const Duration(seconds: 62));
+
+      check((await history()).isReplaying).isTrue();
+      check(await isResumable()).isTrue();
+    });
   });
 
   group('review finding 8: mark as played on another episode', () {
@@ -419,6 +482,16 @@ void main() {
 
       check((await history()).isReplaying).isTrue();
       check((await history()).completedCount).equals(1);
+
+      // Resuming mid-episode keeps the replay one from the beginning.
+      for (final minute in [15, 25, 29]) {
+        now = now.add(const Duration(minutes: 10));
+        await relaunched.onProgressUpdate(
+          episodeId,
+          progressAt(Duration(minutes: minute)),
+        );
+      }
+      check((await history()).completedCount).equals(2);
     });
   });
 }

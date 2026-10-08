@@ -23,11 +23,24 @@ abstract class PlaybackHistoryRepository {
     int realtimeDeltaMs = 0,
   });
 
-  /// Marks an episode as completed (played).
+  /// Marks an episode as played on the listener's request.
   ///
   /// Sets the completedAt timestamp to the current time and ends any
-  /// replay in progress.
+  /// replay in progress. Counts a completion only for an episode that was
+  /// not played.
   Future<void> markCompleted(int episodeId);
+
+  /// [markCompleted] for bulk marking: leaves an episode that is already
+  /// played, also one being replayed, unchanged. Returns whether the
+  /// episode changed.
+  Future<bool> markCompletedUnlessPlayed(int episodeId);
+
+  /// Finishes the current listen when playback reaches the completion
+  /// threshold. Returns false, changing nothing, when it already finished.
+  ///
+  /// Counts a completion for a first listen and for a replay started from
+  /// the beginning, not for a replay reopened by a rewind.
+  Future<bool> finishListen(int episodeId);
 
   /// Marks an episode as incomplete (unplayed).
   ///
@@ -35,11 +48,19 @@ abstract class PlaybackHistoryRepository {
   /// position appears in "Continue Listening" again.
   Future<void> markIncomplete(int episodeId);
 
-  /// Starts a replay of a played episode at [positionMs].
+  /// Starts a replay of a played episode at [positionMs]; [fromStart]
+  /// marks a replay from the beginning, the only kind that counts a
+  /// completion when it finishes.
   ///
   /// The episode stays played while the replay's position is saved and
-  /// resumable. Does nothing unless the episode's last listen finished.
-  Future<void> startReplay(int episodeId, {required int positionMs});
+  /// resumable. Taking an open replay back to the beginning makes it
+  /// count; otherwise does nothing unless the episode's last listen
+  /// finished.
+  Future<void> startReplay(
+    int episodeId, {
+    required int positionMs,
+    required bool fromStart,
+  });
 
   /// Increments play count when starting from the beginning.
   ///

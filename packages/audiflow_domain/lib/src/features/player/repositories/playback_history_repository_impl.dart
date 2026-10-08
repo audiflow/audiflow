@@ -54,8 +54,26 @@ class PlaybackHistoryRepositoryImpl implements PlaybackHistoryRepository {
   }
 
   @override
-  Future<void> startReplay(int episodeId, {required int positionMs}) {
-    return _datasource.startReplay(episodeId, positionMs: positionMs);
+  Future<bool> markCompletedUnlessPlayed(int episodeId) {
+    return _datasource.markCompletedUnlessPlayed(episodeId);
+  }
+
+  @override
+  Future<bool> finishListen(int episodeId) {
+    return _datasource.finishListen(episodeId);
+  }
+
+  @override
+  Future<void> startReplay(
+    int episodeId, {
+    required int positionMs,
+    required bool fromStart,
+  }) {
+    return _datasource.startReplay(
+      episodeId,
+      positionMs: positionMs,
+      fromStart: fromStart,
+    );
   }
 
   @override

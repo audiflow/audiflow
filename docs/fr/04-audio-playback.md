@@ -290,8 +290,12 @@ whether its current **listen** is open or finished.
   its own (interruption rewinds, the end-of-chapter sleep timer) never reopen a listen; and
   neither does playing on or skipping forward after "Mark as played".
 - A replay is a listen like any other: it is in progress while open, finishes at the threshold
-  (counting another completion) or when the listener marks the episode played, and the episode
-  stays played throughout. Marking an episode unplayed clears the played status and leaves its
+  or when the listener marks the episode played, and the episode stays played throughout.
+- Only a replay **from the beginning** counts another completion when it reaches the threshold:
+  one that starts from the beginning, or that the listener seeks back to the beginning. A
+  replay reopened by rewinding part of the episode finishes without counting one, and so does
+  marking a replay played. A finished listen the player rewinds on its own stays finished, so
+  passing the threshold again counts nothing. Marking an episode unplayed clears the played status and leaves its
   position in place, so a partly played episode is in progress again.
 - Marking any other episode played or unplayed, in a single action or in bulk, never changes the
   playing episode's listen.

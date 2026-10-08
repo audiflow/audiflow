@@ -25,6 +25,11 @@ class PlaybackHistory {
   /// the replay position resumable without dropping [completedAt].
   bool isReplaying = false;
 
+  /// True while the open replay started from the beginning. Only such a
+  /// replay counts another completion when it finishes; one reopened by
+  /// rewinding part of the episode does not (FR 04).
+  bool isReplayFromStart = false;
+
   DateTime? firstPlayedAt;
   DateTime? lastPlayedAt;
   int playCount = 0;
