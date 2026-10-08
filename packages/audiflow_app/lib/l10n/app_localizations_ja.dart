@@ -1267,7 +1267,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get stationEditTitle => 'ステーションを編集';
 
   @override
-  String get stationSave => '保存';
+  String stationDefaultName(int number) {
+    return 'ステーション $number';
+  }
 
   @override
   String get stationDelete => 'ステーションを削除';
@@ -1316,12 +1318,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get stationNotFoundMessage => 'ステーションのデータが利用できません';
-
-  @override
-  String get stationNameRequired => 'ステーション名を入力してください';
-
-  @override
-  String get stationPodcastRequired => 'ポッドキャストを1つ以上選択してください';
 
   @override
   String get stationEpisodes => 'エピソード';

@@ -1316,7 +1316,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stationEditTitle => 'Edit Station';
 
   @override
-  String get stationSave => 'Save';
+  String stationDefaultName(int number) {
+    return 'Station $number';
+  }
 
   @override
   String get stationDelete => 'Delete Station';
@@ -1366,12 +1368,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get stationNotFoundMessage => 'Station data not available';
-
-  @override
-  String get stationNameRequired => 'Station name is required';
-
-  @override
-  String get stationPodcastRequired => 'Select at least one podcast';
 
   @override
   String get stationEpisodes => 'Episodes';

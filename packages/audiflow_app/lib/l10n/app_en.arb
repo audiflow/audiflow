@@ -823,8 +823,13 @@
   "@stationEmptySubtitle": { "description": "Subtitle for empty station state" },
   "stationEditTitle": "Edit Station",
   "@stationEditTitle": { "description": "App bar title for editing a station" },
-  "stationSave": "Save",
-  "@stationSave": { "description": "Save button label" },
+  "stationDefaultName": "Station {number}",
+  "@stationDefaultName": {
+    "description": "Name a new station starts with; number is the smallest one no station uses",
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
   "stationDelete": "Delete Station",
   "@stationDelete": { "description": "Delete station button label" },
   "stationDeleteTitle": "Delete Station",
@@ -857,10 +862,6 @@
   "@stationNotFoundTitle": { "description": "App bar title for station not found screen" },
   "stationNotFoundMessage": "Station data not available",
   "@stationNotFoundMessage": { "description": "Body text for station not found screen" },
-  "stationNameRequired": "Station name is required",
-  "@stationNameRequired": { "description": "Validation error when station name is empty" },
-  "stationPodcastRequired": "Select at least one podcast",
-  "@stationPodcastRequired": { "description": "Validation error when no podcast is selected" },
   "stationEpisodes": "Episodes",
   "@stationEpisodes": { "description": "Label for episodes in station" },
   "stationLatestOnly": "Latest only",

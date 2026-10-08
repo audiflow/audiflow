@@ -2360,11 +2360,11 @@ abstract class AppLocalizations {
   /// **'Edit Station'**
   String get stationEditTitle;
 
-  /// Save button label
+  /// Name a new station starts with; number is the smallest one no station uses
   ///
   /// In en, this message translates to:
-  /// **'Save'**
-  String get stationSave;
+  /// **'Station {number}'**
+  String stationDefaultName(int number);
 
   /// Delete station button label
   ///
@@ -2461,18 +2461,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Station data not available'**
   String get stationNotFoundMessage;
-
-  /// Validation error when station name is empty
-  ///
-  /// In en, this message translates to:
-  /// **'Station name is required'**
-  String get stationNameRequired;
-
-  /// Validation error when no podcast is selected
-  ///
-  /// In en, this message translates to:
-  /// **'Select at least one podcast'**
-  String get stationPodcastRequired;
 
   /// Label for episodes in station
   ///
