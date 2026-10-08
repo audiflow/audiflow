@@ -2114,6 +2114,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get parentalControlSettingsSaveError => '設定を保存できませんでした。もう一度お試しください。';
 
   @override
+  String get podcastSettingsSaveFailed => '設定を保存できませんでした。';
+
+  @override
   String get parentalControlToggleFailed => '設定を変更できませんでした。もう一度お試しください。';
 
   @override

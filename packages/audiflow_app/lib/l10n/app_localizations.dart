@@ -3908,6 +3908,12 @@ abstract class AppLocalizations {
   /// **'Could not save the change. Please try again.'**
   String get parentalControlSettingsSaveError;
 
+  /// Snackbar when a podcast setting fails to save
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the setting.'**
+  String get podcastSettingsSaveFailed;
+
   /// Snackbar shown when toggling hide-explicit fails.
   ///
   /// In en, this message translates to:
