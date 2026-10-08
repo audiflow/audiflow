@@ -530,11 +530,15 @@
     }
   },
   "episodeFilterAll": "All",
-  "@episodeFilterAll": { "description": "Episode filter chip: show all episodes" },
+  "@episodeFilterAll": { "description": "Episode filter menu choice: show all episodes" },
   "episodeFilterUnplayed": "Unplayed",
-  "@episodeFilterUnplayed": { "description": "Episode filter chip: show unplayed episodes" },
+  "@episodeFilterUnplayed": { "description": "Episode filter menu choice: show unplayed episodes" },
   "episodeFilterInProgress": "In Progress",
-  "@episodeFilterInProgress": { "description": "Episode filter chip: show partially played episodes" },
+  "@episodeFilterInProgress": { "description": "Episode filter menu choice: show partially played episodes" },
+  "episodeFilterPlayed": "Played",
+  "@episodeFilterPlayed": { "description": "Episode filter menu choice: show played episodes" },
+  "episodeFilterDownloaded": "Downloaded",
+  "@episodeFilterDownloaded": { "description": "Episode filter menu choice: show downloaded episodes" },
   "podcastDetailFailedToLoad": "Failed to load: {error}",
   "@podcastDetailFailedToLoad": { "description": "Generic load failure", "placeholders": { "error": { "type": "String" } } },
 
