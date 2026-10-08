@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../utils/default_station_name.dart';
+
 part 'station_edit_controller.freezed.dart';
 part 'station_edit_controller.g.dart';
 
@@ -127,6 +129,10 @@ class StationEditController extends _$StationEditController {
   /// The persisted station; null until a new station is created.
   int? _savedId;
   String _defaultName = '';
+
+  /// Formats a default name from its number; lets a new station be named
+  /// even if the editor closes before the screen's own lookup finishes.
+  String Function(int number)? _defaultNameLabel;
   bool _loaded = false;
   bool _deleted = false;
   Future<void> _writes = Future.value();
@@ -194,16 +200,18 @@ class StationEditController extends _$StationEditController {
     if (!_loadCompleter.isCompleted) _loadCompleter.complete();
   }
 
+  /// Sets how default names read ("Station N"), so creation can compute one
+  /// itself. Call it before any edit.
+  void useDefaultNameLabel(String Function(int number) label) {
+    _defaultNameLabel = label;
+  }
+
   /// Sets a new station's default [name], used whenever the field is left
   /// blank, and prefills it unless a name was already typed. Not a change,
   /// so nothing is written.
   void useDefaultName(String name) {
     _defaultName = name;
     if (state.name.trim().isEmpty) state = state.copyWith(name: name);
-    // A podcast picked before the name arrived is waiting to be created.
-    if (_savedId == null && state.selectedPodcastIds.isNotEmpty) {
-      _scheduleSave();
-    }
   }
 
   /// Fills the form from the stored station; false when it is gone.
@@ -438,13 +446,8 @@ class StationEditController extends _$StationEditController {
   Future<void> _persist(StationEditState edit) async {
     if (_deleted || !_loaded) return;
     final id = _savedId;
-    // A new station exists only once it has a podcast and a name: typed,
-    // or the default, which [useDefaultName] saves with when it arrives.
-    if (id == null &&
-        (edit.selectedPodcastIds.isEmpty ||
-            _nameOr(edit, _defaultName).isEmpty)) {
-      return;
-    }
+    // A new station exists only once it has a podcast.
+    if (id == null && edit.selectedPodcastIds.isEmpty) return;
     try {
       final saved = id == null ? await _create(edit) : await _update(id, edit);
       if (saved == null) return;
@@ -469,6 +472,9 @@ class StationEditController extends _$StationEditController {
   }
 
   Future<Station> _create(StationEditState edit) async {
+    if (_nameOr(edit, _defaultName).isEmpty) {
+      _defaultName = await _computeDefaultName();
+    }
     final now = DateTime.now();
     final station = Station()
       ..name = _nameOr(edit, _defaultName)
@@ -495,6 +501,14 @@ class StationEditController extends _$StationEditController {
       ..updatedAt = DateTime.now();
     await _stations.update(existing);
     return existing;
+  }
+
+  /// "Station N" for the smallest unused N, computed here when the screen
+  /// has not supplied it yet (it may have closed first).
+  Future<String> _computeDefaultName() async {
+    final label = _defaultNameLabel ?? (number) => 'Station $number';
+    final existing = await _stations.watchAll().first;
+    return defaultStationName(existing.map((s) => s.name), label);
   }
 
   /// The trimmed name, or [fallback] while the field is blank.
