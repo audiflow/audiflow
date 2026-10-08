@@ -277,15 +277,25 @@ void main() {
   });
 
   group('a new station without a name yet', () {
-    test('waits for the default name before it is created', () async {
-      final controller = controllerFor(null);
+    test('names itself when the default has not arrived yet', () async {
+      final controller = controllerFor(null)
+        ..useDefaultNameLabel((number) => 'Station $number');
       await controller.updateSelectedPodcasts({7});
       await controller.pendingWrites;
-      check(stations.creates).equals(0);
-
-      controller.useDefaultName('Station 1');
-      await controller.pendingWrites;
       check(stations.stations.values.single.name).equals('Station 1');
+    });
+
+    test('is still created when the editor closes first', () async {
+      await existingStation(name: 'Station 1');
+      final controller = controllerFor(null)
+        ..useDefaultNameLabel((number) => 'Station $number');
+      unawaited(controller.updateSelectedPodcasts({7}));
+      final writes = controller.pendingWrites;
+      // Closed before the screen's name lookup could finish.
+      container.dispose();
+      await writes;
+      final created = stations.stations.values.where((s) => s.id != 1);
+      check(created.single.name).equals('Station 2');
     });
 
     test('reports its id once created, so it can be deleted', () async {

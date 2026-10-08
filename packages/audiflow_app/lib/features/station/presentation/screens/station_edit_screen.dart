@@ -57,6 +57,11 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
   /// so typing replaces it and leaving it keeps a usable name.
   Future<void> _prefillName() async {
     final l10n = AppLocalizations.of(context);
+    // Before the lookup: creation can then name the station by itself if
+    // the editor closes before this finishes.
+    ref
+        .read(stationEditControllerProvider(widget.stationId).notifier)
+        .useDefaultNameLabel(l10n.stationDefaultName);
     final stations = await ref.read(stationRepositoryProvider).watchAll().first;
     if (!mounted) return;
     final name = defaultStationName(
