@@ -401,6 +401,12 @@ class IsolateRssParser {
     r'&(?:(amp|lt|gt|quot|apos)|#(\d+)|#x([0-9a-fA-F]+));',
   );
 
+  static bool _isCodePoint(int? code) =>
+      code != null &&
+      0 <= code &&
+      code <= 0x10FFFF &&
+      !(0xD800 <= code && code <= 0xDFFF);
+
   static String _decodeXmlEntities(String value) {
     if (!value.contains('&')) return value;
     return value.replaceAllMapped(_xmlEntityRe, (m) {
@@ -416,14 +422,15 @@ class IsolateRssParser {
         };
       }
       final decimal = m.group(2);
-      if (decimal != null) {
-        return String.fromCharCode(int.parse(decimal));
-      }
       final hex = m.group(3);
-      if (hex != null) {
-        return String.fromCharCode(int.parse(hex, radix: 16));
-      }
-      return m.group(0)!;
+      final code = decimal != null
+          ? int.tryParse(decimal)
+          : hex != null
+          ? int.tryParse(hex, radix: 16)
+          : null;
+      // An out-of-range or surrogate reference is left as written: a
+      // malformed value must not fail the whole feed.
+      return _isCodePoint(code) ? String.fromCharCode(code!) : m.group(0)!;
     });
   }
 
