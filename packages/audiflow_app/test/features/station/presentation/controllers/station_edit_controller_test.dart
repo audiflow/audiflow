@@ -182,6 +182,27 @@ void main() {
     });
   });
 
+  group('podcast order', () {
+    test('a late automatic order does not replace a manual one', () async {
+      final station = await existingStation(podcastIds: [1, 2]);
+      final controller = controllerFor(station.id);
+      await controller.loaded;
+      controller.reorderPodcasts([2, 1]);
+
+      // Back to manual before the automatic order finishes resolving.
+      final automatic = controller.setPodcastSort(StationPodcastSort.nameAsc);
+      await controller.setPodcastSort(StationPodcastSort.manual);
+      await automatic;
+      await controller.pendingWrites;
+
+      check(
+        container
+            .read(stationEditControllerProvider(station.id))
+            .podcastSortOrder,
+      ).deepEquals([2, 1]);
+    });
+  });
+
   group('closing the editor', () {
     test('a reopened editor loads after the earlier saves', () async {
       final station = await existingStation();
