@@ -35,6 +35,13 @@ class DownloadManagementController extends _$DownloadManagementController {
     await service.retry(taskId);
   }
 
+  /// Returns whether the download was kept (false when there was nothing
+  /// to keep).
+  Future<bool> keep(int taskId) {
+    final service = ref.read(downloadServiceProvider);
+    return service.keep(taskId);
+  }
+
   Future<void> delete(int taskId) async {
     final service = ref.read(downloadServiceProvider);
     await service.delete(taskId);
