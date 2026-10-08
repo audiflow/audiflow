@@ -10,6 +10,7 @@ import '../../../download/presentation/helpers/download_action_helper.dart';
 import '../../../queue/presentation/controllers/queue_controller.dart';
 import '../../../share/presentation/helpers/share_helper.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../station/presentation/helpers/record_station_play.dart';
 import '../controllers/podcast_detail_controller.dart';
 import '../helpers/played_status_helper.dart';
 import '../screens/episode_detail_screen.dart';
@@ -91,23 +92,7 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
   final int? stationId;
 
   void _recordStationPlayIfAny(WidgetRef ref) {
-    if (stationId case final id?) unawaited(_recordStationPlay(ref, id));
-  }
-
-  /// Best effort: a failed write only leaves the Library order stale.
-  static Future<void> _recordStationPlay(WidgetRef ref, int stationId) async {
-    // Read before awaiting: the tile may be gone when the write fails.
-    final stations = ref.read(stationRepositoryProvider);
-    final logger = ref.read(namedLoggerProvider('StationPlay'));
-    try {
-      await stations.markPlayed(stationId, at: DateTime.now());
-    } catch (error, stackTrace) {
-      logger.w(
-        'Failed to record station play',
-        error: error,
-        stackTrace: stackTrace,
-      );
-    }
+    if (stationId case final id?) recordStationPlay(ref, id);
   }
 
   @override
@@ -279,6 +264,7 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
           artworkUrl: artworkUrl,
           progress: progress,
           itunesId: itunesId,
+          stationId: stationId,
         ),
       ),
     );
