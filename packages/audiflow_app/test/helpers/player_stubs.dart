@@ -69,3 +69,17 @@ class StubAudioPlayerController extends AudioPlayerController {
     skipForwardCalled = true;
   }
 }
+
+/// [TranscriptService] answering a fixed load result instead of fetching.
+///
+/// Pass [result] to control when the answer arrives; by default the
+/// episode has no transcript that loads.
+class StubTranscriptService implements TranscriptService {
+  StubTranscriptService([Future<int?>? result])
+    : _result = result ?? Future.value();
+
+  final Future<int?> _result;
+
+  @override
+  Future<int?> ensureContent(int episodeId) => _result;
+}
