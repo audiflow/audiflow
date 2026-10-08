@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:clock/clock.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'library_controller.g.dart';
@@ -58,7 +59,8 @@ Stream<DateTime?> newestEpisodeDate(Ref ref, int podcastId) {
   ref.onDispose(() => release?.cancel());
   return episodeRepo.watchByPodcastId(podcastId).map((episodes) {
     if (episodes.isEmpty) return null;
-    final now = DateTime.now();
+    // clock, not DateTime: lets tests drive time through the release.
+    final now = clock.now();
     // Recompute when the next scheduled episode comes out: an unchanged
     // feed may never write its episodes again to trigger this stream.
     release?.cancel();

@@ -5,6 +5,7 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Fake [EpisodeRepository] that returns canned episodes via streams.
@@ -358,29 +359,35 @@ void main() {
       check(newest).equals(released);
     });
 
-    test('picks up a scheduled episode once its date arrives', () async {
-      final released = DateTime.now().subtract(const Duration(hours: 1));
-      final scheduled = DateTime.now().add(const Duration(milliseconds: 300));
-      // A fresh stream per watch, as the database gives on a rebuild.
-      final repo = _StaticEpisodeRepository([
-        _episode(8, released, id: 801, guid: 'out'),
-        _episode(8, scheduled, id: 802, guid: 'scheduled'),
-      ]);
-      final container = ProviderContainer(
-        overrides: [episodeRepositoryProvider.overrideWithValue(repo)],
-      );
-      addTearDown(container.dispose);
-      final sub = container.listen(newestEpisodeDateProvider(8), (_, _) {});
-      addTearDown(sub.close);
-      check(
-        await container.read(newestEpisodeDateProvider(8).future),
-      ).equals(released);
+    test('picks up a scheduled episode once its date arrives', () {
+      // Fake time: the first read and the release never race the runner.
+      final start = DateTime(2026, 10, 8, 12);
+      final released = start.subtract(const Duration(hours: 1));
+      final scheduled = start.add(const Duration(hours: 2));
+      fakeAsync((async) {
+        // A fresh stream per watch, as the database gives on a rebuild.
+        final repo = _StaticEpisodeRepository([
+          _episode(8, released, id: 801, guid: 'out'),
+          _episode(8, scheduled, id: 802, guid: 'scheduled'),
+        ]);
+        final container = ProviderContainer(
+          overrides: [episodeRepositoryProvider.overrideWithValue(repo)],
+        );
+        final values = <DateTime?>[];
+        container.listen(
+          newestEpisodeDateProvider(8),
+          (_, next) => values.add(next.value),
+          fireImmediately: true,
+        );
+        async.flushMicrotasks();
+        check(values.last).equals(released);
 
-      // No new episode write: the provider recomputes on its own.
-      await Future<void>.delayed(const Duration(milliseconds: 500));
-      check(
-        await container.read(newestEpisodeDateProvider(8).future),
-      ).equals(scheduled);
+        // No new episode write: the provider recomputes on its own.
+        async.elapse(const Duration(hours: 2, minutes: 1));
+        async.flushMicrotasks();
+        check(values.last).equals(scheduled);
+        container.dispose();
+      }, initialTime: start);
     });
   });
 }
