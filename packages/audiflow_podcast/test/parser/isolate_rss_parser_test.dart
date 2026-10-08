@@ -157,6 +157,22 @@ void main() {
       );
     });
 
+    test('reads a channel link placed after the items', () async {
+      const xml =
+          '<?xml version="1.0" encoding="UTF-8"?>'
+          '<rss version="2.0"><channel><title>Show</title>'
+          '<item><guid>e1</guid><title>E1</title>'
+          '<link>https://example.com/show/e1</link></item>'
+          '<link>https://example.com/show</link>'
+          '</channel></rss>';
+      final meta = await IsolateRssParser.parse(
+        feedXml: xml,
+        knownGuids: {},
+      ).firstWhere((event) => event is ParsedPodcastMeta);
+      // The channel's own link, not the item's.
+      expect((meta as ParsedPodcastMeta).link, 'https://example.com/show');
+    });
+
     test('drops a channel link that is not an http(s) address', () async {
       // Such a link only hides "Open website"; it must not fail the feed.
       expect(await channelLink('example.com/show'), isNull);

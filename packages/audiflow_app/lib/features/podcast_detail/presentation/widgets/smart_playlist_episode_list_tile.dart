@@ -96,18 +96,17 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
 
   /// Best effort: a failed write only leaves the Library order stale.
   static Future<void> _recordStationPlay(WidgetRef ref, int stationId) async {
+    // Read before awaiting: the tile may be gone when the write fails.
+    final stations = ref.read(stationRepositoryProvider);
+    final logger = ref.read(namedLoggerProvider('StationPlay'));
     try {
-      await ref
-          .read(stationRepositoryProvider)
-          .markPlayed(stationId, at: DateTime.now());
+      await stations.markPlayed(stationId, at: DateTime.now());
     } catch (error, stackTrace) {
-      ref
-          .read(namedLoggerProvider('StationPlay'))
-          .w(
-            'Failed to record station play',
-            error: error,
-            stackTrace: stackTrace,
-          );
+      logger.w(
+        'Failed to record station play',
+        error: error,
+        stackTrace: stackTrace,
+      );
     }
   }
 
