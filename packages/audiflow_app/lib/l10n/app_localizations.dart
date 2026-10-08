@@ -2378,6 +2378,12 @@ abstract class AppLocalizations {
   /// **'Edit Station'**
   String get stationEditTitle;
 
+  /// Shown in the station editor when the station fails to load
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load this station.'**
+  String get stationLoadError;
+
   /// Name a new station starts with; number is the smallest one no station uses
   ///
   /// In en, this message translates to:

@@ -275,4 +275,55 @@ void main() {
       check(reconciler.reconciled).deepEquals([station.id, station.id]);
     });
   });
+
+  group('a new station without a name yet', () {
+    test('waits for the default name before it is created', () async {
+      final controller = controllerFor(null);
+      await controller.updateSelectedPodcasts({7});
+      await controller.pendingWrites;
+      check(stations.creates).equals(0);
+
+      controller.useDefaultName('Station 1');
+      await controller.pendingWrites;
+      check(stations.stations.values.single.name).equals('Station 1');
+    });
+
+    test('reports its id once created, so it can be deleted', () async {
+      final controller = controllerFor(null)..useDefaultName('Station 1');
+      check(
+        container.read(stationEditControllerProvider(null)).savedStationId,
+      ).isNull();
+      await controller.updateSelectedPodcasts({7});
+      await controller.pendingWrites;
+      check(
+        container.read(stationEditControllerProvider(null)).savedStationId,
+      ).equals(stations.stations.values.single.id);
+    });
+  });
+
+  group('a station that fails to load', () {
+    test('is never written over', () async {
+      final station = await existingStation(name: 'Morning');
+      links.failReads = true;
+      final controller = controllerFor(station.id);
+      await controller.loaded;
+      check(
+        container.read(stationEditControllerProvider(station.id)).loadFailed,
+      ).isTrue();
+
+      controller.setHideCompleted(true);
+      await controller.pendingWrites;
+      check(stations.stations[station.id]!.hideCompleted).isFalse();
+      links.failReads = false;
+      check(links.podcastIdsOf(station.id)).deepEquals([1, 2]);
+    });
+
+    test('reports a missing station as failed', () async {
+      final controller = controllerFor(99);
+      await controller.loaded;
+      check(
+        container.read(stationEditControllerProvider(99)).loadFailed,
+      ).isTrue();
+    });
+  });
 }

@@ -1272,6 +1272,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get stationEditTitle => 'ステーションを編集';
 
   @override
+  String get stationLoadError => 'ステーションを読み込めませんでした。';
+
+  @override
   String stationDefaultName(int number) {
     return 'ステーション $number';
   }

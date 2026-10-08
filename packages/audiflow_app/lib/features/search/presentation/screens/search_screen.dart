@@ -137,9 +137,19 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         fillColor: colors.surfaceSunken,
         isDense: true,
         contentPadding: const EdgeInsets.symmetric(vertical: Spacing.sm),
+        // All three: the theme's enabled and focused borders would
+        // otherwise replace the pill with its rounded rectangle.
         border: const OutlineInputBorder(
           borderRadius: AppBorders.pill,
           borderSide: BorderSide.none,
+        ),
+        enabledBorder: const OutlineInputBorder(
+          borderRadius: AppBorders.pill,
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: AppBorders.pill,
+          borderSide: BorderSide(color: colors.accent, width: 1.5),
         ),
         prefixIcon: Icon(Icons.search_rounded, color: colors.inkTertiary),
         suffixIcon: ValueListenableBuilder<TextEditingValue>(

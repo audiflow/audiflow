@@ -190,7 +190,12 @@ class IsolateRssParser {
       }
 
       final header = xml.substring(0, firstItemIdx);
-      params.sendPort.send(_parseMetadataFromString(header));
+      // RSS lets channel elements follow the items; only the website is
+      // looked for there, since the header holds everything else in
+      // practice and the items are never scanned for it.
+      final lastItemEnd = xml.lastIndexOf('</item>');
+      final trailer = lastItemEnd == -1 ? '' : xml.substring(lastItemEnd);
+      params.sendPort.send(_parseMetadataFromString(header, trailer: trailer));
 
       // --- Episodes: scan for <item>...</item> blocks incrementally ---
       var parsedCount = 0;
@@ -292,7 +297,10 @@ class IsolateRssParser {
   /// Extracts channel metadata from the header portion of the XML
   /// (everything before the first <item>) using lightweight regex.
   /// No DOM allocation needed for the header.
-  static ParsedPodcastMeta _parseMetadataFromString(String headerXml) {
+  static ParsedPodcastMeta _parseMetadataFromString(
+    String headerXml, {
+    String trailer = '',
+  }) {
     final title = _extractTagText(headerXml, 'title') ?? 'Untitled Podcast';
 
     // itunes:image uses an href attribute, not text content
@@ -308,7 +316,9 @@ class IsolateRssParser {
       language: _extractTagText(headerXml, 'language'),
       // The channel <link> precedes <image> (whose own <link> repeats it)
       // in the header; `atom:link` is not matched by this tag name.
-      link: _webLink(_extractXmlText(headerXml, 'link')),
+      link:
+          _webLink(_extractXmlText(headerXml, 'link')) ??
+          _webLink(_extractXmlText(trailer, 'link')),
     );
   }
 

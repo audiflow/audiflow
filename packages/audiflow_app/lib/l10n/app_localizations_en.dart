@@ -1315,6 +1315,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stationEditTitle => 'Edit Station';
 
   @override
+  String get stationLoadError => 'Couldn\'t load this station.';
+
+  @override
   String stationDefaultName(int number) {
     return 'Station $number';
   }

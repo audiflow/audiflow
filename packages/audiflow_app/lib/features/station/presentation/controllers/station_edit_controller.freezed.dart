@@ -19,7 +19,12 @@ mixin _$StationEditState implements DiagnosticableTreeMixin {
  Map<int, int?> get podcastEpisodeLimits;/// Ordered list of selected podcast IDs for manual sort.
  List<int> get podcastSortOrder;/// True until an existing station has loaded; the editor accepts no
 /// changes meanwhile, since the load would replace them.
- bool get isLoading; String? get error;
+ bool get isLoading;/// True when an existing station could not be loaded (or no longer
+/// exists). Autosave stays off: saving the empty form would overwrite
+/// the station.
+ bool get loadFailed;/// The persisted station's id: the edited one, or a new one once it has
+/// been created. Null while a new station exists only in the form.
+ int? get savedStationId; String? get error;
 /// Create a copy of StationEditState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -31,21 +36,21 @@ $StationEditStateCopyWith<StationEditState> get copyWith => _$StationEditStateCo
 void debugFillProperties(DiagnosticPropertiesBuilder properties) {
   properties
     ..add(DiagnosticsProperty('type', 'StationEditState'))
-    ..add(DiagnosticsProperty('name', name))..add(DiagnosticsProperty('selectedPodcastIds', selectedPodcastIds))..add(DiagnosticsProperty('hideCompleted', hideCompleted))..add(DiagnosticsProperty('filterDownloaded', filterDownloaded))..add(DiagnosticsProperty('filterFavorited', filterFavorited))..add(DiagnosticsProperty('durationFilter', durationFilter))..add(DiagnosticsProperty('defaultEpisodeLimit', defaultEpisodeLimit))..add(DiagnosticsProperty('episodeSort', episodeSort))..add(DiagnosticsProperty('groupByPodcast', groupByPodcast))..add(DiagnosticsProperty('podcastSort', podcastSort))..add(DiagnosticsProperty('podcastEpisodeLimits', podcastEpisodeLimits))..add(DiagnosticsProperty('podcastSortOrder', podcastSortOrder))..add(DiagnosticsProperty('isLoading', isLoading))..add(DiagnosticsProperty('error', error));
+    ..add(DiagnosticsProperty('name', name))..add(DiagnosticsProperty('selectedPodcastIds', selectedPodcastIds))..add(DiagnosticsProperty('hideCompleted', hideCompleted))..add(DiagnosticsProperty('filterDownloaded', filterDownloaded))..add(DiagnosticsProperty('filterFavorited', filterFavorited))..add(DiagnosticsProperty('durationFilter', durationFilter))..add(DiagnosticsProperty('defaultEpisodeLimit', defaultEpisodeLimit))..add(DiagnosticsProperty('episodeSort', episodeSort))..add(DiagnosticsProperty('groupByPodcast', groupByPodcast))..add(DiagnosticsProperty('podcastSort', podcastSort))..add(DiagnosticsProperty('podcastEpisodeLimits', podcastEpisodeLimits))..add(DiagnosticsProperty('podcastSortOrder', podcastSortOrder))..add(DiagnosticsProperty('isLoading', isLoading))..add(DiagnosticsProperty('loadFailed', loadFailed))..add(DiagnosticsProperty('savedStationId', savedStationId))..add(DiagnosticsProperty('error', error));
 }
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is StationEditState&&(identical(other.name, name) || other.name == name)&&const DeepCollectionEquality().equals(other.selectedPodcastIds, selectedPodcastIds)&&(identical(other.hideCompleted, hideCompleted) || other.hideCompleted == hideCompleted)&&(identical(other.filterDownloaded, filterDownloaded) || other.filterDownloaded == filterDownloaded)&&(identical(other.filterFavorited, filterFavorited) || other.filterFavorited == filterFavorited)&&(identical(other.durationFilter, durationFilter) || other.durationFilter == durationFilter)&&(identical(other.defaultEpisodeLimit, defaultEpisodeLimit) || other.defaultEpisodeLimit == defaultEpisodeLimit)&&(identical(other.episodeSort, episodeSort) || other.episodeSort == episodeSort)&&(identical(other.groupByPodcast, groupByPodcast) || other.groupByPodcast == groupByPodcast)&&(identical(other.podcastSort, podcastSort) || other.podcastSort == podcastSort)&&const DeepCollectionEquality().equals(other.podcastEpisodeLimits, podcastEpisodeLimits)&&const DeepCollectionEquality().equals(other.podcastSortOrder, podcastSortOrder)&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.error, error) || other.error == error));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is StationEditState&&(identical(other.name, name) || other.name == name)&&const DeepCollectionEquality().equals(other.selectedPodcastIds, selectedPodcastIds)&&(identical(other.hideCompleted, hideCompleted) || other.hideCompleted == hideCompleted)&&(identical(other.filterDownloaded, filterDownloaded) || other.filterDownloaded == filterDownloaded)&&(identical(other.filterFavorited, filterFavorited) || other.filterFavorited == filterFavorited)&&(identical(other.durationFilter, durationFilter) || other.durationFilter == durationFilter)&&(identical(other.defaultEpisodeLimit, defaultEpisodeLimit) || other.defaultEpisodeLimit == defaultEpisodeLimit)&&(identical(other.episodeSort, episodeSort) || other.episodeSort == episodeSort)&&(identical(other.groupByPodcast, groupByPodcast) || other.groupByPodcast == groupByPodcast)&&(identical(other.podcastSort, podcastSort) || other.podcastSort == podcastSort)&&const DeepCollectionEquality().equals(other.podcastEpisodeLimits, podcastEpisodeLimits)&&const DeepCollectionEquality().equals(other.podcastSortOrder, podcastSortOrder)&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.loadFailed, loadFailed) || other.loadFailed == loadFailed)&&(identical(other.savedStationId, savedStationId) || other.savedStationId == savedStationId)&&(identical(other.error, error) || other.error == error));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,name,const DeepCollectionEquality().hash(selectedPodcastIds),hideCompleted,filterDownloaded,filterFavorited,durationFilter,defaultEpisodeLimit,episodeSort,groupByPodcast,podcastSort,const DeepCollectionEquality().hash(podcastEpisodeLimits),const DeepCollectionEquality().hash(podcastSortOrder),isLoading,error);
+int get hashCode => Object.hash(runtimeType,name,const DeepCollectionEquality().hash(selectedPodcastIds),hideCompleted,filterDownloaded,filterFavorited,durationFilter,defaultEpisodeLimit,episodeSort,groupByPodcast,podcastSort,const DeepCollectionEquality().hash(podcastEpisodeLimits),const DeepCollectionEquality().hash(podcastSortOrder),isLoading,loadFailed,savedStationId,error);
 
 @override
 String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
-  return 'StationEditState(name: $name, selectedPodcastIds: $selectedPodcastIds, hideCompleted: $hideCompleted, filterDownloaded: $filterDownloaded, filterFavorited: $filterFavorited, durationFilter: $durationFilter, defaultEpisodeLimit: $defaultEpisodeLimit, episodeSort: $episodeSort, groupByPodcast: $groupByPodcast, podcastSort: $podcastSort, podcastEpisodeLimits: $podcastEpisodeLimits, podcastSortOrder: $podcastSortOrder, isLoading: $isLoading, error: $error)';
+  return 'StationEditState(name: $name, selectedPodcastIds: $selectedPodcastIds, hideCompleted: $hideCompleted, filterDownloaded: $filterDownloaded, filterFavorited: $filterFavorited, durationFilter: $durationFilter, defaultEpisodeLimit: $defaultEpisodeLimit, episodeSort: $episodeSort, groupByPodcast: $groupByPodcast, podcastSort: $podcastSort, podcastEpisodeLimits: $podcastEpisodeLimits, podcastSortOrder: $podcastSortOrder, isLoading: $isLoading, loadFailed: $loadFailed, savedStationId: $savedStationId, error: $error)';
 }
 
 
@@ -56,7 +61,7 @@ abstract mixin class $StationEditStateCopyWith<$Res>  {
   factory $StationEditStateCopyWith(StationEditState value, $Res Function(StationEditState) _then) = _$StationEditStateCopyWithImpl;
 @useResult
 $Res call({
- String name, Set<int> selectedPodcastIds, bool hideCompleted, bool filterDownloaded, bool filterFavorited, StationDurationFilter? durationFilter, int? defaultEpisodeLimit, StationEpisodeSort episodeSort, bool groupByPodcast, StationPodcastSort podcastSort, Map<int, int?> podcastEpisodeLimits, List<int> podcastSortOrder, bool isLoading, String? error
+ String name, Set<int> selectedPodcastIds, bool hideCompleted, bool filterDownloaded, bool filterFavorited, StationDurationFilter? durationFilter, int? defaultEpisodeLimit, StationEpisodeSort episodeSort, bool groupByPodcast, StationPodcastSort podcastSort, Map<int, int?> podcastEpisodeLimits, List<int> podcastSortOrder, bool isLoading, bool loadFailed, int? savedStationId, String? error
 });
 
 
@@ -73,7 +78,7 @@ class _$StationEditStateCopyWithImpl<$Res>
 
 /// Create a copy of StationEditState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? selectedPodcastIds = null,Object? hideCompleted = null,Object? filterDownloaded = null,Object? filterFavorited = null,Object? durationFilter = freezed,Object? defaultEpisodeLimit = freezed,Object? episodeSort = null,Object? groupByPodcast = null,Object? podcastSort = null,Object? podcastEpisodeLimits = null,Object? podcastSortOrder = null,Object? isLoading = null,Object? error = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? selectedPodcastIds = null,Object? hideCompleted = null,Object? filterDownloaded = null,Object? filterFavorited = null,Object? durationFilter = freezed,Object? defaultEpisodeLimit = freezed,Object? episodeSort = null,Object? groupByPodcast = null,Object? podcastSort = null,Object? podcastEpisodeLimits = null,Object? podcastSortOrder = null,Object? isLoading = null,Object? loadFailed = null,Object? savedStationId = freezed,Object? error = freezed,}) {
   return _then(_self.copyWith(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,selectedPodcastIds: null == selectedPodcastIds ? _self.selectedPodcastIds : selectedPodcastIds // ignore: cast_nullable_to_non_nullable
@@ -88,7 +93,9 @@ as bool,podcastSort: null == podcastSort ? _self.podcastSort : podcastSort // ig
 as StationPodcastSort,podcastEpisodeLimits: null == podcastEpisodeLimits ? _self.podcastEpisodeLimits : podcastEpisodeLimits // ignore: cast_nullable_to_non_nullable
 as Map<int, int?>,podcastSortOrder: null == podcastSortOrder ? _self.podcastSortOrder : podcastSortOrder // ignore: cast_nullable_to_non_nullable
 as List<int>,isLoading: null == isLoading ? _self.isLoading : isLoading // ignore: cast_nullable_to_non_nullable
-as bool,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
+as bool,loadFailed: null == loadFailed ? _self.loadFailed : loadFailed // ignore: cast_nullable_to_non_nullable
+as bool,savedStationId: freezed == savedStationId ? _self.savedStationId : savedStationId // ignore: cast_nullable_to_non_nullable
+as int?,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -171,10 +178,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name,  Set<int> selectedPodcastIds,  bool hideCompleted,  bool filterDownloaded,  bool filterFavorited,  StationDurationFilter? durationFilter,  int? defaultEpisodeLimit,  StationEpisodeSort episodeSort,  bool groupByPodcast,  StationPodcastSort podcastSort,  Map<int, int?> podcastEpisodeLimits,  List<int> podcastSortOrder,  bool isLoading,  String? error)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name,  Set<int> selectedPodcastIds,  bool hideCompleted,  bool filterDownloaded,  bool filterFavorited,  StationDurationFilter? durationFilter,  int? defaultEpisodeLimit,  StationEpisodeSort episodeSort,  bool groupByPodcast,  StationPodcastSort podcastSort,  Map<int, int?> podcastEpisodeLimits,  List<int> podcastSortOrder,  bool isLoading,  bool loadFailed,  int? savedStationId,  String? error)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _StationEditState() when $default != null:
-return $default(_that.name,_that.selectedPodcastIds,_that.hideCompleted,_that.filterDownloaded,_that.filterFavorited,_that.durationFilter,_that.defaultEpisodeLimit,_that.episodeSort,_that.groupByPodcast,_that.podcastSort,_that.podcastEpisodeLimits,_that.podcastSortOrder,_that.isLoading,_that.error);case _:
+return $default(_that.name,_that.selectedPodcastIds,_that.hideCompleted,_that.filterDownloaded,_that.filterFavorited,_that.durationFilter,_that.defaultEpisodeLimit,_that.episodeSort,_that.groupByPodcast,_that.podcastSort,_that.podcastEpisodeLimits,_that.podcastSortOrder,_that.isLoading,_that.loadFailed,_that.savedStationId,_that.error);case _:
   return orElse();
 
 }
@@ -192,10 +199,10 @@ return $default(_that.name,_that.selectedPodcastIds,_that.hideCompleted,_that.fi
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  Set<int> selectedPodcastIds,  bool hideCompleted,  bool filterDownloaded,  bool filterFavorited,  StationDurationFilter? durationFilter,  int? defaultEpisodeLimit,  StationEpisodeSort episodeSort,  bool groupByPodcast,  StationPodcastSort podcastSort,  Map<int, int?> podcastEpisodeLimits,  List<int> podcastSortOrder,  bool isLoading,  String? error)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  Set<int> selectedPodcastIds,  bool hideCompleted,  bool filterDownloaded,  bool filterFavorited,  StationDurationFilter? durationFilter,  int? defaultEpisodeLimit,  StationEpisodeSort episodeSort,  bool groupByPodcast,  StationPodcastSort podcastSort,  Map<int, int?> podcastEpisodeLimits,  List<int> podcastSortOrder,  bool isLoading,  bool loadFailed,  int? savedStationId,  String? error)  $default,) {final _that = this;
 switch (_that) {
 case _StationEditState():
-return $default(_that.name,_that.selectedPodcastIds,_that.hideCompleted,_that.filterDownloaded,_that.filterFavorited,_that.durationFilter,_that.defaultEpisodeLimit,_that.episodeSort,_that.groupByPodcast,_that.podcastSort,_that.podcastEpisodeLimits,_that.podcastSortOrder,_that.isLoading,_that.error);}
+return $default(_that.name,_that.selectedPodcastIds,_that.hideCompleted,_that.filterDownloaded,_that.filterFavorited,_that.durationFilter,_that.defaultEpisodeLimit,_that.episodeSort,_that.groupByPodcast,_that.podcastSort,_that.podcastEpisodeLimits,_that.podcastSortOrder,_that.isLoading,_that.loadFailed,_that.savedStationId,_that.error);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -209,10 +216,10 @@ return $default(_that.name,_that.selectedPodcastIds,_that.hideCompleted,_that.fi
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name,  Set<int> selectedPodcastIds,  bool hideCompleted,  bool filterDownloaded,  bool filterFavorited,  StationDurationFilter? durationFilter,  int? defaultEpisodeLimit,  StationEpisodeSort episodeSort,  bool groupByPodcast,  StationPodcastSort podcastSort,  Map<int, int?> podcastEpisodeLimits,  List<int> podcastSortOrder,  bool isLoading,  String? error)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name,  Set<int> selectedPodcastIds,  bool hideCompleted,  bool filterDownloaded,  bool filterFavorited,  StationDurationFilter? durationFilter,  int? defaultEpisodeLimit,  StationEpisodeSort episodeSort,  bool groupByPodcast,  StationPodcastSort podcastSort,  Map<int, int?> podcastEpisodeLimits,  List<int> podcastSortOrder,  bool isLoading,  bool loadFailed,  int? savedStationId,  String? error)?  $default,) {final _that = this;
 switch (_that) {
 case _StationEditState() when $default != null:
-return $default(_that.name,_that.selectedPodcastIds,_that.hideCompleted,_that.filterDownloaded,_that.filterFavorited,_that.durationFilter,_that.defaultEpisodeLimit,_that.episodeSort,_that.groupByPodcast,_that.podcastSort,_that.podcastEpisodeLimits,_that.podcastSortOrder,_that.isLoading,_that.error);case _:
+return $default(_that.name,_that.selectedPodcastIds,_that.hideCompleted,_that.filterDownloaded,_that.filterFavorited,_that.durationFilter,_that.defaultEpisodeLimit,_that.episodeSort,_that.groupByPodcast,_that.podcastSort,_that.podcastEpisodeLimits,_that.podcastSortOrder,_that.isLoading,_that.loadFailed,_that.savedStationId,_that.error);case _:
   return null;
 
 }
@@ -224,7 +231,7 @@ return $default(_that.name,_that.selectedPodcastIds,_that.hideCompleted,_that.fi
 
 
 class _StationEditState with DiagnosticableTreeMixin implements StationEditState {
-  const _StationEditState({this.name = '', final  Set<int> selectedPodcastIds = const {}, this.hideCompleted = false, this.filterDownloaded = false, this.filterFavorited = false, this.durationFilter, this.defaultEpisodeLimit = 3, this.episodeSort = StationEpisodeSort.newest, this.groupByPodcast = false, this.podcastSort = StationPodcastSort.manual, final  Map<int, int?> podcastEpisodeLimits = const {}, final  List<int> podcastSortOrder = const [], this.isLoading = false, this.error}): _selectedPodcastIds = selectedPodcastIds,_podcastEpisodeLimits = podcastEpisodeLimits,_podcastSortOrder = podcastSortOrder;
+  const _StationEditState({this.name = '', final  Set<int> selectedPodcastIds = const {}, this.hideCompleted = false, this.filterDownloaded = false, this.filterFavorited = false, this.durationFilter, this.defaultEpisodeLimit = 3, this.episodeSort = StationEpisodeSort.newest, this.groupByPodcast = false, this.podcastSort = StationPodcastSort.manual, final  Map<int, int?> podcastEpisodeLimits = const {}, final  List<int> podcastSortOrder = const [], this.isLoading = false, this.loadFailed = false, this.savedStationId, this.error}): _selectedPodcastIds = selectedPodcastIds,_podcastEpisodeLimits = podcastEpisodeLimits,_podcastSortOrder = podcastSortOrder;
   
 
 @override@JsonKey() final  String name;
@@ -266,6 +273,13 @@ class _StationEditState with DiagnosticableTreeMixin implements StationEditState
 /// True until an existing station has loaded; the editor accepts no
 /// changes meanwhile, since the load would replace them.
 @override@JsonKey() final  bool isLoading;
+/// True when an existing station could not be loaded (or no longer
+/// exists). Autosave stays off: saving the empty form would overwrite
+/// the station.
+@override@JsonKey() final  bool loadFailed;
+/// The persisted station's id: the edited one, or a new one once it has
+/// been created. Null while a new station exists only in the form.
+@override final  int? savedStationId;
 @override final  String? error;
 
 /// Create a copy of StationEditState
@@ -279,21 +293,21 @@ _$StationEditStateCopyWith<_StationEditState> get copyWith => __$StationEditStat
 void debugFillProperties(DiagnosticPropertiesBuilder properties) {
   properties
     ..add(DiagnosticsProperty('type', 'StationEditState'))
-    ..add(DiagnosticsProperty('name', name))..add(DiagnosticsProperty('selectedPodcastIds', selectedPodcastIds))..add(DiagnosticsProperty('hideCompleted', hideCompleted))..add(DiagnosticsProperty('filterDownloaded', filterDownloaded))..add(DiagnosticsProperty('filterFavorited', filterFavorited))..add(DiagnosticsProperty('durationFilter', durationFilter))..add(DiagnosticsProperty('defaultEpisodeLimit', defaultEpisodeLimit))..add(DiagnosticsProperty('episodeSort', episodeSort))..add(DiagnosticsProperty('groupByPodcast', groupByPodcast))..add(DiagnosticsProperty('podcastSort', podcastSort))..add(DiagnosticsProperty('podcastEpisodeLimits', podcastEpisodeLimits))..add(DiagnosticsProperty('podcastSortOrder', podcastSortOrder))..add(DiagnosticsProperty('isLoading', isLoading))..add(DiagnosticsProperty('error', error));
+    ..add(DiagnosticsProperty('name', name))..add(DiagnosticsProperty('selectedPodcastIds', selectedPodcastIds))..add(DiagnosticsProperty('hideCompleted', hideCompleted))..add(DiagnosticsProperty('filterDownloaded', filterDownloaded))..add(DiagnosticsProperty('filterFavorited', filterFavorited))..add(DiagnosticsProperty('durationFilter', durationFilter))..add(DiagnosticsProperty('defaultEpisodeLimit', defaultEpisodeLimit))..add(DiagnosticsProperty('episodeSort', episodeSort))..add(DiagnosticsProperty('groupByPodcast', groupByPodcast))..add(DiagnosticsProperty('podcastSort', podcastSort))..add(DiagnosticsProperty('podcastEpisodeLimits', podcastEpisodeLimits))..add(DiagnosticsProperty('podcastSortOrder', podcastSortOrder))..add(DiagnosticsProperty('isLoading', isLoading))..add(DiagnosticsProperty('loadFailed', loadFailed))..add(DiagnosticsProperty('savedStationId', savedStationId))..add(DiagnosticsProperty('error', error));
 }
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StationEditState&&(identical(other.name, name) || other.name == name)&&const DeepCollectionEquality().equals(other._selectedPodcastIds, _selectedPodcastIds)&&(identical(other.hideCompleted, hideCompleted) || other.hideCompleted == hideCompleted)&&(identical(other.filterDownloaded, filterDownloaded) || other.filterDownloaded == filterDownloaded)&&(identical(other.filterFavorited, filterFavorited) || other.filterFavorited == filterFavorited)&&(identical(other.durationFilter, durationFilter) || other.durationFilter == durationFilter)&&(identical(other.defaultEpisodeLimit, defaultEpisodeLimit) || other.defaultEpisodeLimit == defaultEpisodeLimit)&&(identical(other.episodeSort, episodeSort) || other.episodeSort == episodeSort)&&(identical(other.groupByPodcast, groupByPodcast) || other.groupByPodcast == groupByPodcast)&&(identical(other.podcastSort, podcastSort) || other.podcastSort == podcastSort)&&const DeepCollectionEquality().equals(other._podcastEpisodeLimits, _podcastEpisodeLimits)&&const DeepCollectionEquality().equals(other._podcastSortOrder, _podcastSortOrder)&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.error, error) || other.error == error));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StationEditState&&(identical(other.name, name) || other.name == name)&&const DeepCollectionEquality().equals(other._selectedPodcastIds, _selectedPodcastIds)&&(identical(other.hideCompleted, hideCompleted) || other.hideCompleted == hideCompleted)&&(identical(other.filterDownloaded, filterDownloaded) || other.filterDownloaded == filterDownloaded)&&(identical(other.filterFavorited, filterFavorited) || other.filterFavorited == filterFavorited)&&(identical(other.durationFilter, durationFilter) || other.durationFilter == durationFilter)&&(identical(other.defaultEpisodeLimit, defaultEpisodeLimit) || other.defaultEpisodeLimit == defaultEpisodeLimit)&&(identical(other.episodeSort, episodeSort) || other.episodeSort == episodeSort)&&(identical(other.groupByPodcast, groupByPodcast) || other.groupByPodcast == groupByPodcast)&&(identical(other.podcastSort, podcastSort) || other.podcastSort == podcastSort)&&const DeepCollectionEquality().equals(other._podcastEpisodeLimits, _podcastEpisodeLimits)&&const DeepCollectionEquality().equals(other._podcastSortOrder, _podcastSortOrder)&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.loadFailed, loadFailed) || other.loadFailed == loadFailed)&&(identical(other.savedStationId, savedStationId) || other.savedStationId == savedStationId)&&(identical(other.error, error) || other.error == error));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,name,const DeepCollectionEquality().hash(_selectedPodcastIds),hideCompleted,filterDownloaded,filterFavorited,durationFilter,defaultEpisodeLimit,episodeSort,groupByPodcast,podcastSort,const DeepCollectionEquality().hash(_podcastEpisodeLimits),const DeepCollectionEquality().hash(_podcastSortOrder),isLoading,error);
+int get hashCode => Object.hash(runtimeType,name,const DeepCollectionEquality().hash(_selectedPodcastIds),hideCompleted,filterDownloaded,filterFavorited,durationFilter,defaultEpisodeLimit,episodeSort,groupByPodcast,podcastSort,const DeepCollectionEquality().hash(_podcastEpisodeLimits),const DeepCollectionEquality().hash(_podcastSortOrder),isLoading,loadFailed,savedStationId,error);
 
 @override
 String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
-  return 'StationEditState(name: $name, selectedPodcastIds: $selectedPodcastIds, hideCompleted: $hideCompleted, filterDownloaded: $filterDownloaded, filterFavorited: $filterFavorited, durationFilter: $durationFilter, defaultEpisodeLimit: $defaultEpisodeLimit, episodeSort: $episodeSort, groupByPodcast: $groupByPodcast, podcastSort: $podcastSort, podcastEpisodeLimits: $podcastEpisodeLimits, podcastSortOrder: $podcastSortOrder, isLoading: $isLoading, error: $error)';
+  return 'StationEditState(name: $name, selectedPodcastIds: $selectedPodcastIds, hideCompleted: $hideCompleted, filterDownloaded: $filterDownloaded, filterFavorited: $filterFavorited, durationFilter: $durationFilter, defaultEpisodeLimit: $defaultEpisodeLimit, episodeSort: $episodeSort, groupByPodcast: $groupByPodcast, podcastSort: $podcastSort, podcastEpisodeLimits: $podcastEpisodeLimits, podcastSortOrder: $podcastSortOrder, isLoading: $isLoading, loadFailed: $loadFailed, savedStationId: $savedStationId, error: $error)';
 }
 
 
@@ -304,7 +318,7 @@ abstract mixin class _$StationEditStateCopyWith<$Res> implements $StationEditSta
   factory _$StationEditStateCopyWith(_StationEditState value, $Res Function(_StationEditState) _then) = __$StationEditStateCopyWithImpl;
 @override @useResult
 $Res call({
- String name, Set<int> selectedPodcastIds, bool hideCompleted, bool filterDownloaded, bool filterFavorited, StationDurationFilter? durationFilter, int? defaultEpisodeLimit, StationEpisodeSort episodeSort, bool groupByPodcast, StationPodcastSort podcastSort, Map<int, int?> podcastEpisodeLimits, List<int> podcastSortOrder, bool isLoading, String? error
+ String name, Set<int> selectedPodcastIds, bool hideCompleted, bool filterDownloaded, bool filterFavorited, StationDurationFilter? durationFilter, int? defaultEpisodeLimit, StationEpisodeSort episodeSort, bool groupByPodcast, StationPodcastSort podcastSort, Map<int, int?> podcastEpisodeLimits, List<int> podcastSortOrder, bool isLoading, bool loadFailed, int? savedStationId, String? error
 });
 
 
@@ -321,7 +335,7 @@ class __$StationEditStateCopyWithImpl<$Res>
 
 /// Create a copy of StationEditState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? selectedPodcastIds = null,Object? hideCompleted = null,Object? filterDownloaded = null,Object? filterFavorited = null,Object? durationFilter = freezed,Object? defaultEpisodeLimit = freezed,Object? episodeSort = null,Object? groupByPodcast = null,Object? podcastSort = null,Object? podcastEpisodeLimits = null,Object? podcastSortOrder = null,Object? isLoading = null,Object? error = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? selectedPodcastIds = null,Object? hideCompleted = null,Object? filterDownloaded = null,Object? filterFavorited = null,Object? durationFilter = freezed,Object? defaultEpisodeLimit = freezed,Object? episodeSort = null,Object? groupByPodcast = null,Object? podcastSort = null,Object? podcastEpisodeLimits = null,Object? podcastSortOrder = null,Object? isLoading = null,Object? loadFailed = null,Object? savedStationId = freezed,Object? error = freezed,}) {
   return _then(_StationEditState(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,selectedPodcastIds: null == selectedPodcastIds ? _self._selectedPodcastIds : selectedPodcastIds // ignore: cast_nullable_to_non_nullable
@@ -336,7 +350,9 @@ as bool,podcastSort: null == podcastSort ? _self.podcastSort : podcastSort // ig
 as StationPodcastSort,podcastEpisodeLimits: null == podcastEpisodeLimits ? _self._podcastEpisodeLimits : podcastEpisodeLimits // ignore: cast_nullable_to_non_nullable
 as Map<int, int?>,podcastSortOrder: null == podcastSortOrder ? _self._podcastSortOrder : podcastSortOrder // ignore: cast_nullable_to_non_nullable
 as List<int>,isLoading: null == isLoading ? _self.isLoading : isLoading // ignore: cast_nullable_to_non_nullable
-as bool,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
+as bool,loadFailed: null == loadFailed ? _self.loadFailed : loadFailed // ignore: cast_nullable_to_non_nullable
+as bool,savedStationId: freezed == savedStationId ? _self.savedStationId : savedStationId // ignore: cast_nullable_to_non_nullable
+as int?,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }

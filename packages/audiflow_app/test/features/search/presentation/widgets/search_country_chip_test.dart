@@ -2,6 +2,7 @@ import 'package:audiflow_app/features/search/presentation/widgets/search_country
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Widget _wrap(Widget child) {
@@ -38,6 +39,21 @@ void main() {
       );
 
       check(find.byType(Semantics).evaluate()).isNotEmpty();
+    });
+
+    testWidgets('screen readers can open the picker', (tester) async {
+      final semantics = tester.ensureSemantics();
+      var tapped = false;
+      await tester.pumpWidget(
+        _wrap(SearchCountryChip(countryCode: 'jp', onTap: () => tapped = true)),
+      );
+      final node = tester.getSemantics(
+        find.bySemanticsLabel(RegExp('Japan|JP')),
+      );
+      check(node.getSemanticsData().hasAction(SemanticsAction.tap)).isTrue();
+      node.owner!.performAction(node.id, SemanticsAction.tap);
+      check(tapped).isTrue();
+      semantics.dispose();
     });
 
     testWidgets('has Tooltip', (tester) async {

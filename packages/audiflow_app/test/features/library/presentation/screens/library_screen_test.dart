@@ -573,5 +573,21 @@ void main() {
       check(field.controller!.text).equals('alp');
       check(find.byType(SubscriptionListTile).evaluate()).length.equals(1);
     });
+
+    testWidgets('the filter stays pill-shaped in every state', (tester) async {
+      await pump(tester);
+      final decoration = tester
+          .widget<TextField>(find.byType(TextField))
+          .decoration!;
+      for (final border in [
+        decoration.border,
+        decoration.enabledBorder,
+        decoration.focusedBorder,
+      ]) {
+        check(
+          (border! as OutlineInputBorder).borderRadius,
+        ).equals(AppBorders.pill);
+      }
+    });
   });
 }
