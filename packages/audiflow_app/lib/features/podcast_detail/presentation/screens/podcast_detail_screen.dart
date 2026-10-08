@@ -473,15 +473,17 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
   Future<void> _openWebsite(Uri website) async {
     final messenger = ScaffoldMessenger.of(context);
     final failed = AppLocalizations.of(context).podcastOpenWebsiteFailed;
+    // Read before awaiting: the page may be gone when the launch fails.
+    final logger = ref.read(namedLoggerProvider('PodcastDetail'));
     var opened = false;
     try {
       opened = await launchUrl(website, mode: LaunchMode.externalApplication);
     } on Exception catch (e, stack) {
-      ref
-          .read(namedLoggerProvider('PodcastDetail'))
-          .w('Failed to open website: $website', error: e, stackTrace: stack);
+      logger.w('Failed to open website: $website', error: e, stackTrace: stack);
     }
-    if (!opened) messenger.showSnackBar(SnackBar(content: Text(failed)));
+    if (!opened && mounted) {
+      messenger.showSnackBar(SnackBar(content: Text(failed)));
+    }
   }
 
   /// Marks the whole podcast played or unplayed after a confirmation that
