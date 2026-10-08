@@ -310,6 +310,8 @@ class PlaybackHistoryService {
 
   /// Manually marks an episode as completed.
   Future<void> markCompleted(int episodeId) async {
+    // Marking played ends the listen: an unsaved rewind must not reopen it.
+    _movedBackSinceSave = false;
     await _repository.markCompleted(episodeId);
     await _tryReconcile(episodeId);
   }
@@ -325,8 +327,10 @@ class PlaybackHistoryService {
   ///
   /// Stations are reconciled once for the batch, also when a write fails
   /// partway, so they match the episodes that did change.
-  Future<int> markAllCompleted(Iterable<int> episodeIds) =>
-      _markAll(episodeIds, _repository.markCompleted);
+  Future<int> markAllCompleted(Iterable<int> episodeIds) {
+    _movedBackSinceSave = false;
+    return _markAll(episodeIds, _repository.markCompleted);
+  }
 
   /// Marks every episode in [episodeIds] as not played. Returns how many
   /// were marked.

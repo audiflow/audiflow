@@ -264,6 +264,40 @@ void main() {
     });
   });
 
+  group('marking played after an unsaved rewind', () {
+    for (final bulk in [false, true]) {
+      test('keeps the listen finished (bulk: $bulk)', () async {
+        await service.onPlaybackStarted(episodeId, 0);
+        now = now.add(const Duration(seconds: 60));
+        await service.onProgressUpdate(
+          episodeId,
+          progressAt(const Duration(seconds: 60)),
+        );
+        await service.onProgressUpdate(
+          episodeId,
+          progressAt(const Duration(seconds: 64)),
+        );
+        await service.onProgressUpdate(
+          episodeId,
+          progressAt(const Duration(seconds: 62)),
+        );
+        if (bulk) {
+          await service.markAllCompleted([episodeId]);
+        } else {
+          await service.markCompleted(episodeId);
+        }
+        await service.onPlaybackPaused(
+          episodeId,
+          progressAt(const Duration(seconds: 62)),
+        );
+
+        final history = await repository.getByEpisodeId(episodeId);
+        check(history!.isReplaying).isFalse();
+        check(await repository.getLastPlayed()).isNull();
+      });
+    }
+  });
+
   group('refresh notifications', () {
     test('passing the completion threshold notifies once', () async {
       final saved = <int>[];
