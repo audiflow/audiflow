@@ -173,6 +173,42 @@ void main() {
       expect((meta as ParsedPodcastMeta).link, 'https://example.com/show');
     });
 
+    Future<String?> linkOf(String channelBody) async {
+      final xml =
+          '<?xml version="1.0" encoding="UTF-8"?>'
+          '<rss version="2.0"><channel><title>Show</title>'
+          '$channelBody'
+          '</channel></rss>';
+      final meta = await IsolateRssParser.parse(
+        feedXml: xml,
+        knownGuids: {},
+      ).firstWhere((event) => event is ParsedPodcastMeta);
+      return (meta as ParsedPodcastMeta).link;
+    }
+
+    test('ignores textInput and image links after the items', () async {
+      expect(
+        await linkOf(
+          '<item><guid>e1</guid></item>'
+          '<textInput><title>Search</title>'
+          '<link>https://example.com/search</link></textInput>'
+          '<link>https://example.com/show</link>',
+        ),
+        'https://example.com/show',
+      );
+    });
+
+    test('ignores a link inside a comment', () async {
+      expect(
+        await linkOf(
+          '<!-- <link>https://example.com/old</link> -->'
+          '<link>https://example.com/show</link>'
+          '<item><guid>e1</guid></item>',
+        ),
+        'https://example.com/show',
+      );
+    });
+
     test('drops a channel link that is not an http(s) address', () async {
       // Such a link only hides "Open website"; it must not fail the feed.
       expect(await channelLink('example.com/show'), isNull);

@@ -316,9 +316,7 @@ class IsolateRssParser {
       language: _extractTagText(headerXml, 'language'),
       // The channel <link> precedes <image> (whose own <link> repeats it)
       // in the header; `atom:link` is not matched by this tag name.
-      link:
-          _webLink(_extractXmlText(headerXml, 'link')) ??
-          _webLink(_extractXmlText(trailer, 'link')),
+      link: _channelLink(headerXml) ?? _channelLink(trailer),
     );
   }
 
@@ -356,6 +354,23 @@ class IsolateRssParser {
   }
 
   static final _cdataRe = RegExp(r'^<!\[CDATA\[([\s\S]*?)\]\]>$');
+
+  /// The channel's own website in a stretch of channel-level XML: comments
+  /// and the elements that carry their own `<link>` (`<image>`,
+  /// `<textInput>`) are removed first, so neither can stand in for it.
+  static String? _channelLink(String xml) {
+    if (xml.isEmpty) return null;
+    final channelOnly = xml
+        .replaceAll(_commentRe, '')
+        .replaceAll(_nestedLinkOwnerRe, '');
+    return _webLink(_extractXmlText(channelOnly, 'link'));
+  }
+
+  static final _commentRe = RegExp(r'<!--[\s\S]*?-->');
+  static final _nestedLinkOwnerRe = RegExp(
+    r'<(image|textInput)\b[\s\S]*?</\1>',
+    caseSensitive: false,
+  );
 
   /// [value] when it is an http(s) address with a host, otherwise null.
   ///
