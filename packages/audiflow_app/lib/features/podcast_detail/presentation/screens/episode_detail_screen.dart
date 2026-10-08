@@ -70,7 +70,9 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
 
   /// Local override after manually toggling played status. Wins over the
   /// reactive provider value because the provider re-fetches by audio URL
-  /// and may briefly miss when the URL doesn't round-trip cleanly.
+  /// and may briefly miss when the URL doesn't round-trip cleanly. Cleared
+  /// once the provider delivers a newer value, so later playback (an
+  /// auto-completion or a replay) is not hidden behind it.
   EpisodeWithProgress? _localProgress;
 
   @override
@@ -111,6 +113,12 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
 
     // Watch reactive progress when enclosureUrl is available;
     // fall back to the constructor-provided snapshot otherwise.
+    if (enclosureUrl != null) {
+      ref.listen(episodeProgressProvider(enclosureUrl), (_, next) {
+        if (_localProgress == null || next.isLoading) return;
+        if (next.value != null) setState(() => _localProgress = null);
+      });
+    }
     final reactiveProgress = enclosureUrl != null
         ? ref.watch(episodeProgressProvider(enclosureUrl)).value
         : null;

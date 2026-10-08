@@ -329,6 +329,20 @@ Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
   }
 }
 
+/// Refetches every view that shows an episode's played state: list
+/// progress maps, filtered lists, smart playlists and the episode detail.
+///
+/// The detail screen must be included: one left open across an
+/// auto-completion or a replay otherwise keeps its earlier snapshot and
+/// offers the wrong "mark as played / unplayed" action (#599).
+void refreshPlayedStateViews(Ref ref) {
+  ref
+    ..invalidate(episodeProgressProvider)
+    ..invalidate(podcastEpisodeProgressProvider)
+    ..invalidate(filteredSortedEpisodesProvider)
+    ..invalidate(smartPlaylistEpisodesProvider);
+}
+
 /// Fetches episode progress for a given audio URL.
 ///
 /// Returns [EpisodeWithProgress] if the episode exists in the database,
