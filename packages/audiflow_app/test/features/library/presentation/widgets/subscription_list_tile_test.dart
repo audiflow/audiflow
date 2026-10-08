@@ -17,6 +17,7 @@ void main() {
           newestPublishedAt: visit.add(const Duration(hours: 1)),
           lastVisitedAt: visit,
           subscribedAt: DateTime(2026),
+          now: DateTime(2026, 10, 9),
         ),
       ).isTrue();
     });
@@ -27,6 +28,7 @@ void main() {
           newestPublishedAt: visit.subtract(const Duration(hours: 1)),
           lastVisitedAt: visit,
           subscribedAt: DateTime(2026),
+          now: DateTime(2026, 10, 9),
         ),
       ).isFalse();
     });
@@ -37,6 +39,7 @@ void main() {
           newestPublishedAt: DateTime(2026, 2),
           lastVisitedAt: null,
           subscribedAt: DateTime(2026),
+          now: DateTime(2026, 10, 9),
         ),
       ).isTrue();
       // The back catalog published before subscribing is not new.
@@ -45,8 +48,30 @@ void main() {
           newestPublishedAt: DateTime(2025),
           lastVisitedAt: null,
           subscribedAt: DateTime(2026),
+          now: DateTime(2026, 10, 9),
         ),
       ).isFalse();
+    });
+
+    test('ignores an episode dated in the future until its date', () {
+      // Opening the podcast must clear the dot even if the feed lists an
+      // episode ahead of time.
+      check(
+        hasNewSinceVisit(
+          newestPublishedAt: DateTime(2026, 10, 20),
+          lastVisitedAt: visit,
+          subscribedAt: DateTime(2026),
+          now: DateTime(2026, 10, 9),
+        ),
+      ).isFalse();
+      check(
+        hasNewSinceVisit(
+          newestPublishedAt: DateTime(2026, 10, 20),
+          lastVisitedAt: visit,
+          subscribedAt: DateTime(2026),
+          now: DateTime(2026, 10, 21),
+        ),
+      ).isTrue();
     });
 
     test('is false without episodes', () {
@@ -55,6 +80,7 @@ void main() {
           newestPublishedAt: null,
           lastVisitedAt: null,
           subscribedAt: DateTime(2026),
+          now: DateTime(2026, 10, 9),
         ),
       ).isFalse();
     });

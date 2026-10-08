@@ -19,7 +19,8 @@ import 'package:audiflow_domain/audiflow_domain.dart'
         podcastViewPreferenceControllerProvider,
         smartPlaylistEpisodesProvider,
         presetByFeedUrlProvider,
-        subscriptionByFeedUrlProvider;
+        subscriptionByFeedUrlProvider,
+        subscriptionRepositoryProvider;
 import 'package:audiflow_search/audiflow_search.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
@@ -33,6 +34,7 @@ import '../../../share/presentation/helpers/share_helper.dart';
 import '../../../subscription/presentation/controllers/subscription_controller.dart';
 import '../controllers/podcast_detail_controller.dart';
 import '../helpers/mark_all_played.dart';
+import '../helpers/podcast_visit.dart';
 import '../widgets/episode_list_section.dart';
 import '../widgets/inline_playlist_section.dart';
 import '../widgets/podcast_description_sheet.dart';
@@ -174,6 +176,20 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
   /// scroll offset to `initialScrollOffset` on remount).
   bool _contentEverRendered = false;
 
+  /// Best effort: a failed write only leaves the Library dot on.
+  Future<void> _recordVisit(String feedUrl) async {
+    try {
+      await recordPodcastVisit(
+        ref.read(subscriptionRepositoryProvider),
+        feedUrl,
+      );
+    } catch (error, stackTrace) {
+      ref
+          .read(namedLoggerProvider('PodcastDetail'))
+          .w('Failed to record visit', error: error, stackTrace: stackTrace);
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -182,6 +198,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
     final feedUrl = podcast.feedUrl;
     if (feedUrl != null) {
       PodcastMetadataHints.set(feedUrl, podcast);
+      unawaited(_recordVisit(feedUrl));
     }
 
     _scrollController.addListener(_updateNavScroll);

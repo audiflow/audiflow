@@ -10,13 +10,18 @@ import '../controllers/library_controller.dart';
 
 /// Whether [newestPublishedAt] is newer than the listener's last visit to
 /// the podcast, or than the subscription when it was never opened. The
-/// back catalog published before subscribing never counts.
+/// back catalog published before subscribing never counts, and an episode
+/// dated after [now] (listed ahead of time) counts only once that date
+/// arrives, so a visit always clears the mark.
 bool hasNewSinceVisit({
   required DateTime? newestPublishedAt,
   required DateTime? lastVisitedAt,
   required DateTime subscribedAt,
+  required DateTime now,
 }) {
-  if (newestPublishedAt == null) return false;
+  if (newestPublishedAt == null || now.isBefore(newestPublishedAt)) {
+    return false;
+  }
   return (lastVisitedAt ?? subscribedAt).isBefore(newestPublishedAt);
 }
 
@@ -55,6 +60,7 @@ class SubscriptionListTile extends ConsumerWidget {
               newestPublishedAt: newest,
               lastVisitedAt: subscription.lastAccessedAt,
               subscribedAt: subscription.subscribedAt,
+              now: DateTime.now(),
             ))
               _NewDot(color: colors.accent),
           ],
