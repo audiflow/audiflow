@@ -24,9 +24,13 @@ import 'play_order_bottom_sheet.dart';
 /// Opens the podcast settings sheet (redesign 4.4): play order,
 /// auto-download, and display options in one place. Audio settings stay
 /// in the player's Audio sheet.
+///
+/// [onPlayOrderChanged] runs once a new play order has been saved, which
+/// may be after the sheet has closed.
 Future<void> showPodcastSettingsSheet({
   required BuildContext context,
   required Podcast podcast,
+  VoidCallback? onPlayOrderChanged,
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -37,15 +41,23 @@ Future<void> showPodcastSettingsSheet({
       borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
     ),
     clipBehavior: Clip.antiAlias,
-    builder: (sheetContext) => PodcastSettingsSheet(podcast: podcast),
+    builder: (sheetContext) => PodcastSettingsSheet(
+      podcast: podcast,
+      onPlayOrderChanged: onPlayOrderChanged,
+    ),
   );
 }
 
 @visibleForTesting
 class PodcastSettingsSheet extends ConsumerWidget {
-  const PodcastSettingsSheet({super.key, required this.podcast});
+  const PodcastSettingsSheet({
+    super.key,
+    required this.podcast,
+    this.onPlayOrderChanged,
+  });
 
   final Podcast podcast;
+  final VoidCallback? onPlayOrderChanged;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -56,11 +68,13 @@ class PodcastSettingsSheet extends ConsumerWidget {
         : ref.watch(subscriptionByFeedUrlProvider(feedUrl)).value;
     final owned = subscription != null && !subscription.isCached;
 
+    // A Scaffold of its own, so snackbars (e.g. a failed save) show above
+    // this full-height sheet instead of behind it.
     return FractionallySizedBox(
       heightFactor: 1,
-      child: ColoredBox(
-        color: colors.bg,
-        child: SafeArea(
+      child: Scaffold(
+        backgroundColor: colors.bg,
+        body: SafeArea(
           top: false,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -68,7 +82,11 @@ class PodcastSettingsSheet extends ConsumerWidget {
               _Header(title: podcast.name),
               Expanded(
                 child: owned
-                    ? _Sections(subscription: subscription, feedUrl: feedUrl!)
+                    ? _Sections(
+                        subscription: subscription,
+                        feedUrl: feedUrl!,
+                        onPlayOrderChanged: onPlayOrderChanged,
+                      )
                     : const SizedBox.shrink(),
               ),
             ],
@@ -117,10 +135,15 @@ class _Header extends StatelessWidget {
 }
 
 class _Sections extends ConsumerWidget {
-  const _Sections({required this.subscription, required this.feedUrl});
+  const _Sections({
+    required this.subscription,
+    required this.feedUrl,
+    this.onPlayOrderChanged,
+  });
 
   final Subscription subscription;
   final String feedUrl;
+  final VoidCallback? onPlayOrderChanged;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -135,7 +158,12 @@ class _Sections extends ConsumerWidget {
       children: [
         GroupedSection(
           header: l10n.settingsPlaybackTitle,
-          children: [_PlayOrderRow(subscriptionId: subscription.id)],
+          children: [
+            _PlayOrderRow(
+              subscriptionId: subscription.id,
+              onChanged: onPlayOrderChanged,
+            ),
+          ],
         ),
         const SizedBox(height: Spacing.lg),
         _DownloadSection(subscription: subscription, feedUrl: feedUrl),
@@ -153,9 +181,12 @@ class _Sections extends ConsumerWidget {
 
 /// Play order picker; opens the play order sheet.
 class _PlayOrderRow extends ConsumerStatefulWidget {
-  const _PlayOrderRow({required this.subscriptionId});
+  const _PlayOrderRow({required this.subscriptionId, this.onChanged});
 
   final int subscriptionId;
+
+  /// Runs after the new order is saved, even if the sheet closed first.
+  final VoidCallback? onChanged;
 
   @override
   ConsumerState<_PlayOrderRow> createState() => _PlayOrderRowState();
@@ -197,6 +228,7 @@ class _PlayOrderRowState extends ConsumerState<_PlayOrderRow> {
         await ref
             .read(playOrderPreferenceRepositoryProvider)
             .setPodcastPlayOrder(widget.subscriptionId, order);
+        widget.onChanged?.call();
         if (mounted) setState(() => _order = order);
       },
     );
@@ -277,15 +309,18 @@ class _DownloadSection extends ConsumerWidget {
     int globalKeepCount,
   ) async {
     final l10n = AppLocalizations.of(context);
+    // Scrollable and allowed to grow: a short phone or landscape cannot
+    // fit the heading and every choice.
     final chosen = await showModalBottomSheet<_KeepCountChoice>(
       context: context,
+      isScrollControlled: true,
       builder: (sheetContext) => SafeArea(
         child: RadioGroup<int?>(
           groupValue: subscription.autoDownloadKeepCount,
           onChanged: (value) =>
               Navigator.of(sheetContext).pop(_KeepCountChoice(value)),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+          child: ListView(
+            shrinkWrap: true,
             children: [
               Padding(
                 padding: const EdgeInsets.all(Spacing.md),
