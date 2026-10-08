@@ -822,6 +822,8 @@
   "@stationEmptySubtitle": { "description": "Subtitle for empty station state" },
   "stationEditTitle": "Edit Station",
   "@stationEditTitle": { "description": "App bar title for editing a station" },
+  "stationLoadError": "Couldn't load this station.",
+  "@stationLoadError": { "description": "Shown in the station editor when the station fails to load" },
   "stationDefaultName": "Station {number}",
   "@stationDefaultName": {
     "description": "Name a new station starts with; number is the smallest one no station uses",

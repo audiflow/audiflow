@@ -8,18 +8,21 @@ part of 'station_edit_controller.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Saves and feed rebuilds still running per station, shared by every
+/// editor instance: an editor keeps saving after it closes, so one opened
+/// again for the same station must wait for them before loading.
 
-@ProviderFor(stationEditActivity)
+@ProviderFor(StationEditActivity)
 final stationEditActivityProvider = StationEditActivityProvider._();
 
+/// Saves and feed rebuilds still running per station, shared by every
+/// editor instance: an editor keeps saving after it closes, so one opened
+/// again for the same station must wait for them before loading.
 final class StationEditActivityProvider
-    extends
-        $FunctionalProvider<
-          StationEditActivity,
-          StationEditActivity,
-          StationEditActivity
-        >
-    with $Provider<StationEditActivity> {
+    extends $NotifierProvider<StationEditActivity, void> {
+  /// Saves and feed rebuilds still running per station, shared by every
+  /// editor instance: an editor keeps saving after it closes, so one opened
+  /// again for the same station must wait for them before loading.
   StationEditActivityProvider._()
     : super(
         from: null,
@@ -36,26 +39,41 @@ final class StationEditActivityProvider
 
   @$internal
   @override
-  $ProviderElement<StationEditActivity> $createElement(
-    $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
-
-  @override
-  StationEditActivity create(Ref ref) {
-    return stationEditActivity(ref);
-  }
+  StationEditActivity create() => StationEditActivity();
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(StationEditActivity value) {
+  Override overrideWithValue(void value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<StationEditActivity>(value),
+      providerOverride: $SyncValueProvider<void>(value),
     );
   }
 }
 
 String _$stationEditActivityHash() =>
-    r'c42e3f490cc9824205cb974d85e339b31e5f9844';
+    r'd8c3103f9390f36c558394fd27dcfb096cd1bea3';
+
+/// Saves and feed rebuilds still running per station, shared by every
+/// editor instance: an editor keeps saving after it closes, so one opened
+/// again for the same station must wait for them before loading.
+
+abstract class _$StationEditActivity extends $Notifier<void> {
+  void build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<void, void>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<void, void>,
+              void,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
+}
 
 /// Edits a station and saves every change as it happens; there is no save
 /// button to forget.
@@ -144,7 +162,7 @@ final class StationEditControllerProvider
 }
 
 String _$stationEditControllerHash() =>
-    r'c854d4670aa22d6305f39f9c77966a7deba56357';
+    r'21cb2ed7c21f4ef662022484f49b4848ac6f3c62';
 
 /// Edits a station and saves every change as it happens; there is no save
 /// button to forget.

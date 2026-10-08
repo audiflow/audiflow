@@ -51,6 +51,15 @@ sealed class StationEditState with _$StationEditState {
     /// True until an existing station has loaded; the editor accepts no
     /// changes meanwhile, since the load would replace them.
     @Default(false) bool isLoading,
+
+    /// True when an existing station could not be loaded (or no longer
+    /// exists). Autosave stays off: saving the empty form would overwrite
+    /// the station.
+    @Default(false) bool loadFailed,
+
+    /// The persisted station's id: the edited one, or a new one once it has
+    /// been created. Null while a new station exists only in the form.
+    int? savedStationId,
     String? error,
   }) = _StationEditState;
 }
@@ -58,8 +67,13 @@ sealed class StationEditState with _$StationEditState {
 /// Saves and feed rebuilds still running per station, shared by every
 /// editor instance: an editor keeps saving after it closes, so one opened
 /// again for the same station must wait for them before loading.
-class StationEditActivity {
+@Riverpod(keepAlive: true)
+class StationEditActivity extends _$StationEditActivity {
   final _pending = <int, Future<void>>{};
+
+  /// No state to expose; the notifier only holds the pending work.
+  @override
+  void build() {}
 
   /// Adds [work] to what [settled] waits for on [stationId].
   void track(int stationId, Future<void> work) {
@@ -79,9 +93,6 @@ class StationEditActivity {
   Future<void> settled(int stationId) =>
       _pending[stationId] ?? Future<void>.value();
 }
-
-@Riverpod(keepAlive: true)
-StationEditActivity stationEditActivity(Ref ref) => StationEditActivity();
 
 /// Edits a station and saves every change as it happens; there is no save
 /// button to forget.
@@ -146,25 +157,41 @@ class StationEditController extends _$StationEditController {
     _episodes = ref.read(stationEpisodeRepositoryProvider);
     _reconciler = ref.read(stationReconcilerServiceProvider);
     _subscriptions = ref.read(subscriptionRepositoryProvider);
-    _activity = ref.read(stationEditActivityProvider);
+    _activity = ref.read(stationEditActivityProvider.notifier);
     _savedId = stationId;
     ref.onDispose(_flushReconcile);
     if (stationId == null) {
       _markLoaded();
     } else {
-      unawaited(_loadExistingStation(stationId).whenComplete(_finishLoading));
+      unawaited(_load(stationId));
     }
-    return StationEditState(isLoading: stationId != null);
+    return StationEditState(
+      isLoading: stationId != null,
+      savedStationId: stationId,
+    );
+  }
+
+  /// Loads an existing station; only a full load turns autosave on.
+  Future<void> _load(int id) async {
+    var loaded = false;
+    try {
+      loaded = await _loadExistingStation(id);
+    } on Object catch (_) {
+      loaded = false;
+    }
+    if (loaded) {
+      _markLoaded();
+    } else if (!_loadCompleter.isCompleted) {
+      _loadCompleter.complete();
+    }
+    if (ref.mounted) {
+      state = state.copyWith(isLoading: false, loadFailed: !loaded);
+    }
   }
 
   void _markLoaded() {
     _loaded = true;
     if (!_loadCompleter.isCompleted) _loadCompleter.complete();
-  }
-
-  void _finishLoading() {
-    _markLoaded();
-    if (ref.mounted) state = state.copyWith(isLoading: false);
   }
 
   /// Sets a new station's default [name], used whenever the field is left
@@ -173,13 +200,18 @@ class StationEditController extends _$StationEditController {
   void useDefaultName(String name) {
     _defaultName = name;
     if (state.name.trim().isEmpty) state = state.copyWith(name: name);
+    // A podcast picked before the name arrived is waiting to be created.
+    if (_savedId == null && state.selectedPodcastIds.isNotEmpty) {
+      _scheduleSave();
+    }
   }
 
-  Future<void> _loadExistingStation(int id) async {
+  /// Fills the form from the stored station; false when it is gone.
+  Future<bool> _loadExistingStation(int id) async {
     // A previous editor for this station may still be saving.
     await _activity.settled(id);
     final station = await _stations.findById(id);
-    if (station == null) return;
+    if (station == null) return false;
 
     final podcasts = await _links.getByStation(id);
 
@@ -213,6 +245,7 @@ class StationEditController extends _$StationEditController {
       podcastEpisodeLimits: limits,
       podcastSortOrder: orderedIds,
     );
+    return true;
   }
 
   void setName(String name) => _edit(state.copyWith(name: name));
@@ -405,8 +438,13 @@ class StationEditController extends _$StationEditController {
   Future<void> _persist(StationEditState edit) async {
     if (_deleted || !_loaded) return;
     final id = _savedId;
-    // A new station exists only once it has a podcast.
-    if (id == null && edit.selectedPodcastIds.isEmpty) return;
+    // A new station exists only once it has a podcast and a name: typed,
+    // or the default, which [useDefaultName] saves with when it arrives.
+    if (id == null &&
+        (edit.selectedPodcastIds.isEmpty ||
+            _nameOr(edit, _defaultName).isEmpty)) {
+      return;
+    }
     try {
       final saved = id == null ? await _create(edit) : await _update(id, edit);
       if (saved == null) return;
@@ -440,6 +478,7 @@ class StationEditController extends _$StationEditController {
     final created = await _stations.create(station);
     _savedId = created.id;
     _activity.track(created.id, _writes);
+    if (ref.mounted) state = state.copyWith(savedStationId: created.id);
     return created;
   }
 

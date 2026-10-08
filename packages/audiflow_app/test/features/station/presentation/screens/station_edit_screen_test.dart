@@ -108,4 +108,13 @@ void main() {
     await tester.pumpAndSettle();
     check(nameField(tester).controller.text).equals('Morning');
   });
+
+  testWidgets('a failed load offers a retry instead of the form', (
+    tester,
+  ) async {
+    await pump(tester, stationId: 99);
+    check(find.byType(TextField).evaluate()).isEmpty();
+    check(find.text("Couldn't load this station.").evaluate()).length.equals(1);
+    check(find.text('Retry').evaluate()).length.equals(1);
+  });
 }
