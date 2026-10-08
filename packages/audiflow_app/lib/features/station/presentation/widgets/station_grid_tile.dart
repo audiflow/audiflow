@@ -2,13 +2,15 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../../routing/app_router.dart';
 import '../../../library/presentation/controllers/library_controller.dart';
 import '../controllers/station_detail_controller.dart';
-import 'station_mosaic.dart';
+import 'station_artwork.dart';
 
-/// Library grid tile for a [Station]: square artwork mosaic, name, and
+/// Library grid tile for a [Station]: square stacked artwork, name, and
 /// podcast and episode counts on a `surface` card (redesign 4.1).
 class StationGridTile extends ConsumerWidget {
   const StationGridTile({
@@ -24,13 +26,15 @@ class StationGridTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = AppColors.of(context);
     final l10n = AppLocalizations.of(context);
-    final podcasts = ref.watch(stationPodcastsProvider(station.id)).value ?? [];
+    final loadedPodcasts = ref.watch(stationPodcastsProvider(station.id)).value;
+    final podcasts = loadedPodcasts ?? [];
     final episodeCount =
         ref.watch(stationEpisodesProvider(station.id)).value?.length ?? 0;
     final subscriptions = ref.watch(librarySubscriptionsProvider).value ?? [];
     final artworkById = {for (final s in subscriptions) s.id: s.artworkUrl};
     final artworkUrls = [
-      for (final podcast in podcasts.take(4)) artworkById[podcast.podcastId],
+      for (final podcast in podcasts.take(StationArtwork.maxCards))
+        artworkById[podcast.podcastId],
     ];
 
     return DecoratedBox(
@@ -54,7 +58,15 @@ class StationGridTile extends ConsumerWidget {
                   aspectRatio: 1,
                   child: ClipRRect(
                     borderRadius: AppBorders.artworkList,
-                    child: StationMosaic(artworkUrls: artworkUrls),
+                    // Blank until loaded, so a station never flashes empty.
+                    child: loadedPodcasts == null
+                        ? ColoredBox(color: colors.surfaceSunken)
+                        : StationArtwork(
+                            artworkUrls: artworkUrls,
+                            onAdd: () => context.push(
+                              AppRoutes.stationPickPodcasts(station.id),
+                            ),
+                          ),
                   ),
                 ),
                 const SizedBox(height: Spacing.sm),
