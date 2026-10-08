@@ -215,6 +215,24 @@ Until episode search ships, the scope toggle is hidden and the screen shows podc
 
 Grouped list instead of a card grid. Groups: [Appearance, Playback, Downloads, Feed sync], [Storage & data, Privacy, Parental control], [Getting started, Developer, About]. Each row: icon tile, title, one-line subtitle, chevron.
 
+### 4.9 Episode detail
+
+Reached from any episode row (Podcast detail, Series episodes, Queue, Library). Same floating navigation as other detail screens: back button, and a [share | …] pill. The episode title (one line) fades into the center once the hero has scrolled away.
+
+- **Hero** (centered): episode artwork 200 (radius 22, tap to view full size), then left-aligned below it: podcast name in `accent` (one line, links to Podcast detail), the full episode title (`heroTitle`, not clamped, selectable), and one metadata line: date · duration · `S67 E3` · file size, each part omitted when unknown. Fades and shrinks on scroll like the podcast hero.
+- **Action row**: a primary pill (height 50, fills the row) followed by three 50px circular buttons: play next, add to end of queue, download. The primary pill reads by state:
+  - unplayed: `accent` fill, "▶ 再生 · 28分"
+  - in progress: `accent` fill, "▶ 続きから再生"
+  - playing: `accentTint` fill with `accent` text, "‖ 一時停止"
+  - played: `surface` fill, "↺ もう一度再生"
+
+  The download button is `accentTint` with an `accent` glyph once downloaded.
+- **Progress line**: under the action row, a full-width 3px line with the status on its right ("残り17分", or "✓ 再生済み" in `accent` with the line full). Hidden while unplayed. This is the standalone form of the bottom-edge line (3.1); the play pill itself never shows progress.
+- **Description**: one `surface` card titled "エピソードについて". Show notes render as rich text with `accent` underlined links, clamped to about 6 lines with a "さらに表示 / 閉じる" toggle. Separator runs are stripped (section 5).
+- **Playback record** ("再生の記録"): a grouped list of label / value rows: times completed, times started, total listened, real time, first played, last played (values "—" or "未再生" before the first play). Title, podcast, duration and publish date are not repeated here because the hero already shows them. Long-press a row to copy its value.
+- **`…` menu**: "再生済みにする / 未再生にする", "ダウンロードを削除" (only when downloaded, in the `error` color), then "番組を開く". Play next, add to queue, download and share are on screen, so they are not repeated in the menu.
+- **Developer info** (feed URL and similar) appears as an extra grouped section at the bottom only when developer mode is on.
+
 ## 5. Content rules
 
 - **Long names**: list rows clamp to 2 lines (series) or 3 lines (episode titles) with an ellipsis; hero titles clamp to 3 lines; navigation titles are one line. Full text is always reachable on the next level down.
