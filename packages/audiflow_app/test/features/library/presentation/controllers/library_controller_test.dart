@@ -330,5 +330,32 @@ void main() {
         multiRepo.dispose();
       },
     );
+
+    test('skips an episode dated in the future', () async {
+      final released = DateTime.now().subtract(const Duration(hours: 1));
+      final repo = _FakeEpisodeRepository(
+        episodeLists: {
+          7: [
+            _episode(7, released, id: 701, guid: 'out'),
+            _episode(
+              7,
+              DateTime.now().add(const Duration(days: 5)),
+              id: 702,
+              guid: 'scheduled',
+            ),
+          ],
+        },
+      );
+      final container = ProviderContainer(
+        overrides: [episodeRepositoryProvider.overrideWithValue(repo)],
+      );
+      addTearDown(container.dispose);
+      addTearDown(repo.dispose);
+      final sub = container.listen(newestEpisodeDateProvider(7), (_, _) {});
+      addTearDown(sub.close);
+
+      final newest = await container.read(newestEpisodeDateProvider(7).future);
+      check(newest).equals(released);
+    });
   });
 }

@@ -54,11 +54,14 @@ Stream<DateTime?> newestEpisodeDate(Ref ref, int podcastId) {
   final episodeRepo = ref.watch(episodeRepositoryProvider);
   return episodeRepo.watchByPodcastId(podcastId).map((episodes) {
     if (episodes.isEmpty) return null;
+    final now = DateTime.now();
     // Compute max publishedAt explicitly -- the interface does not
-    // guarantee any ordering for watchByPodcastId.
+    // guarantee any ordering for watchByPodcastId. An episode a feed lists
+    // ahead of its date is skipped: it would show "Updated" in the future
+    // and hide the new-episode mark of one already out.
     return episodes.fold<DateTime?>(null, (latest, e) {
       final pub = e.publishedAt;
-      if (pub == null) return latest;
+      if (pub == null || now.isBefore(pub)) return latest;
       if (latest == null || latest.isBefore(pub)) return pub;
       return latest;
     });

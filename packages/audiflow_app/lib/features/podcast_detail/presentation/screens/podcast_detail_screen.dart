@@ -178,15 +178,13 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
 
   /// Best effort: a failed write only leaves the Library dot on.
   Future<void> _recordVisit(String feedUrl) async {
+    // Read before awaiting: the screen may be gone when the write fails.
+    final repository = ref.read(subscriptionRepositoryProvider);
+    final logger = ref.read(namedLoggerProvider('PodcastDetail'));
     try {
-      await recordPodcastVisit(
-        ref.read(subscriptionRepositoryProvider),
-        feedUrl,
-      );
+      await recordPodcastVisit(repository, feedUrl);
     } catch (error, stackTrace) {
-      ref
-          .read(namedLoggerProvider('PodcastDetail'))
-          .w('Failed to record visit', error: error, stackTrace: stackTrace);
+      logger.w('Failed to record visit', error: error, stackTrace: stackTrace);
     }
   }
 

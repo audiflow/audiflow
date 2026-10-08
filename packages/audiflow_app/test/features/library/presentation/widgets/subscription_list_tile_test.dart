@@ -87,6 +87,9 @@ void main() {
   });
 
   group('SubscriptionListTile', () {
+    // Relative to the real clock: the row compares with DateTime.now().
+    final lastVisit = DateTime.now().subtract(const Duration(hours: 2));
+
     Future<void> pump(WidgetTester tester, {required DateTime newest}) async {
       final subscription = Subscription()
         ..id = 1
@@ -95,7 +98,7 @@ void main() {
         ..title = 'Alpha'
         ..artistName = 'Artist'
         ..subscribedAt = DateTime(2026)
-        ..lastAccessedAt = DateTime(2026, 10, 8, 9);
+        ..lastAccessedAt = lastVisit;
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
@@ -121,14 +124,14 @@ void main() {
     testWidgets('marks a podcast with an episode since the last visit', (
       tester,
     ) async {
-      await pump(tester, newest: DateTime(2026, 10, 8, 10));
+      await pump(tester, newest: lastVisit.add(const Duration(hours: 1)));
       check(
         find.bySemanticsLabel(RegExp('New episodes')).evaluate(),
       ).length.equals(1);
     });
 
     testWidgets('shows no mark once caught up', (tester) async {
-      await pump(tester, newest: DateTime(2026, 10, 8, 8));
+      await pump(tester, newest: lastVisit.subtract(const Duration(hours: 1)));
       check(find.bySemanticsLabel(RegExp('New episodes')).evaluate()).isEmpty();
     });
   });
