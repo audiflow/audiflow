@@ -40,7 +40,9 @@ class StationArtwork extends StatelessWidget {
         final size = constraints.maxWidth;
         final urls = artworkUrls.take(maxCards).toList();
         if (urls.isEmpty) return _EmptySlots(size: size, onAdd: onAdd);
-        if (urls.length == 1) return _artwork(context, urls.first, size);
+        if (urls.length == 1) {
+          return _artwork(context, urls.first, size, fit: BoxFit.contain);
+        }
         return _stack(context, urls, size);
       },
     );
@@ -76,7 +78,7 @@ class StationArtwork extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: radius,
-        child: _artwork(context, url, size),
+        child: _artwork(context, url, size, fit: BoxFit.contain),
       ),
     );
   }
@@ -94,7 +96,7 @@ class StationArtwork extends StatelessWidget {
             sigmaY: size * 0.08,
             tileMode: TileMode.clamp,
           ),
-          child: _artwork(context, url, size),
+          child: _artwork(context, url, size, fit: BoxFit.cover),
         ),
         // The backdrop is the first card's own artwork; a wash keeps only
         // its tint so that card still stands apart from it.
@@ -103,15 +105,27 @@ class StationArtwork extends StatelessWidget {
     );
   }
 
-  Widget _artwork(BuildContext context, String? url, double size) {
+  /// Visible artwork uses [BoxFit.contain] so a non-square image is never
+  /// cropped; only the blurred backdrop covers.
+  Widget _artwork(
+    BuildContext context,
+    String? url,
+    double size, {
+    required BoxFit fit,
+  }) {
     final fallback = _ArtworkFallback(size: size);
     if (url == null) return fallback;
-    return ArtworkImage(
-      url: url,
-      width: size,
-      height: size,
-      loading: ColoredBox(color: AppColors.of(context).surfaceSunken),
-      placeholder: fallback,
+    final sunken = AppColors.of(context).surfaceSunken;
+    return ColoredBox(
+      color: sunken,
+      child: ArtworkImage(
+        url: url,
+        width: size,
+        height: size,
+        fit: fit,
+        loading: ColoredBox(color: sunken),
+        placeholder: fallback,
+      ),
     );
   }
 }
@@ -181,34 +195,38 @@ class _AddButton extends StatelessWidget {
     final target = size < Spacing.minTouchTarget
         ? Spacing.minTouchTarget
         : size;
-    return SizedBox.square(
-      dimension: target,
-      child: Center(
-        child: DecoratedBox(
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-            boxShadow: AppShadows.floating,
-          ),
-          child: Material(
-            key: StationArtwork.addButtonKey,
-            color: colors.accent,
-            shape: const CircleBorder(),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: onPressed,
-              child: Semantics(
-                button: true,
-                label: label,
-                child: SizedBox.square(
-                  dimension: size,
-                  child: Icon(
-                    Icons.add_rounded,
-                    size: size * 0.55,
-                    color: colors.onAccent,
-                  ),
-                ),
-              ),
-            ),
+    // The whole target takes the tap, not only the visible circle, so a
+    // near miss on a small tile does not open the station instead.
+    return Semantics(
+      button: true,
+      label: label,
+      child: GestureDetector(
+        key: StationArtwork.addButtonKey,
+        behavior: HitTestBehavior.opaque,
+        onTap: onPressed,
+        child: SizedBox.square(
+          dimension: target,
+          child: Center(child: _circle(colors)),
+        ),
+      ),
+    );
+  }
+
+  Widget _circle(AppColors colors) {
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle,
+        boxShadow: AppShadows.floating,
+      ),
+      child: Material(
+        color: colors.accent,
+        shape: const CircleBorder(),
+        child: SizedBox.square(
+          dimension: size,
+          child: Icon(
+            Icons.add_rounded,
+            size: size * 0.55,
+            color: colors.onAccent,
           ),
         ),
       ),

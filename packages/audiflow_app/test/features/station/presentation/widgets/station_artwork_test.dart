@@ -11,6 +11,8 @@ void main() {
     WidgetTester tester,
     int podcasts, {
     VoidCallback? onAdd,
+    double dimension = 160,
+    List<String?>? urls,
   }) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -19,9 +21,9 @@ void main() {
         supportedLocales: AppLocalizations.supportedLocales,
         home: Center(
           child: SizedBox.square(
-            dimension: 160,
+            dimension: dimension,
             child: StationArtwork(
-              artworkUrls: List<String?>.filled(podcasts, null),
+              artworkUrls: urls ?? List<String?>.filled(podcasts, null),
               onAdd: onAdd,
             ),
           ),
@@ -71,6 +73,30 @@ void main() {
       await pump(tester, 0, onAdd: () => added++);
       await tester.tap(find.byKey(StationArtwork.addButtonKey));
       check(added).equals(1);
+    });
+
+    testWidgets('the add button takes taps beside its circle', (tester) async {
+      var added = 0;
+      // A small tile: the circle is 34pt, its tap target 44pt.
+      await pump(tester, 0, onAdd: () => added++, dimension: 100);
+      final center = tester.getCenter(find.byKey(StationArtwork.addButtonKey));
+      await tester.tapAt(center + const Offset(20, 0));
+      check(added).equals(1);
+    });
+
+    testWidgets('visible artwork is contained, only the backdrop covers', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        2,
+        urls: ['https://example.com/a.png', 'https://example.com/b.png'],
+      );
+      final fits = tester
+          .widgetList<ArtworkImage>(find.byType(ArtworkImage))
+          .map((image) => image.fit)
+          .toList();
+      check(fits).deepEquals([BoxFit.cover, BoxFit.contain, BoxFit.contain]);
     });
 
     testWidgets('an empty station without onAdd has no button', (tester) async {
