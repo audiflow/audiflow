@@ -18,13 +18,15 @@ PlaybackHistory _history({
   int? durationMs,
   int playCount = 0,
   DateTime? completedAt,
+  bool isReplaying = false,
 }) {
   return PlaybackHistory()
     ..episodeId = episodeId
     ..positionMs = positionMs
     ..durationMs = durationMs
     ..playCount = playCount
-    ..completedAt = completedAt;
+    ..completedAt = completedAt
+    ..isReplaying = isReplaying;
 }
 
 void main() {
@@ -94,6 +96,31 @@ void main() {
           ),
         );
         expect(ewp.isInProgress, isFalse);
+      });
+
+      test('a replay of a played episode is played and in progress', () {
+        final ewp = EpisodeWithProgress(
+          episode: episode,
+          history: _history(
+            positionMs: 300000,
+            playCount: 2,
+            completedAt: DateTime(2024, 6, 1),
+            isReplaying: true,
+          ),
+        );
+        check(ewp.isCompleted).isTrue();
+        check(ewp.isInProgress).isTrue();
+      });
+
+      test('a replay not yet past the start is not in progress', () {
+        final ewp = EpisodeWithProgress(
+          episode: episode,
+          history: _history(
+            completedAt: DateTime(2024, 6, 1),
+            isReplaying: true,
+          ),
+        );
+        check(ewp.isInProgress).isFalse();
       });
     });
 

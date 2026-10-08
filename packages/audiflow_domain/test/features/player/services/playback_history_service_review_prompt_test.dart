@@ -25,7 +25,8 @@ class _FakePlaybackHistoryRepository implements PlaybackHistoryRepository {
   }
 
   @override
-  Future<bool> isCompleted(int episodeId) async => completed;
+  Future<PlaybackHistory?> getByEpisodeId(int episodeId) async =>
+      completed ? (PlaybackHistory()..completedAt = DateTime(2026)) : null;
 
   @override
   Future<void> markCompleted(int episodeId) async {
@@ -33,9 +34,7 @@ class _FakePlaybackHistoryRepository implements PlaybackHistoryRepository {
   }
 
   @override
-  Future<void> markIncomplete(int episodeId) async {
-    completed = false;
-  }
+  Future<void> startReplay(int episodeId, {required int positionMs}) async {}
 
   @override
   Future<void> incrementPlayCount(int episodeId) async {}

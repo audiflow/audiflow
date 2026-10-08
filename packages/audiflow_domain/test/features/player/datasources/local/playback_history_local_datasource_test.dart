@@ -1,4 +1,5 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar_community/isar.dart';
 
@@ -168,6 +169,88 @@ void main() {
       final result = await datasource.getByEpisodeId(1);
 
       expect(result!.completedAt, isNull);
+    });
+  });
+
+  group('startReplay', () {
+    Future<void> finishListen() async {
+      await datasource.updateProgress(
+        episodeId: 1,
+        positionMs: 60000,
+        durationMs: 60000,
+      );
+      await datasource.markCompleted(1);
+    }
+
+    test('keeps a played episode played and resumable', () async {
+      await finishListen();
+
+      await datasource.startReplay(1, positionMs: 0);
+      await datasource.updateProgress(episodeId: 1, positionMs: 20000);
+
+      final result = await datasource.getByEpisodeId(1);
+      check(result!.completedAt).isNotNull();
+      check(result.isReplaying).isTrue();
+      check(result.positionMs).equals(20000);
+      final inProgress = await datasource.getInProgress();
+      check(inProgress.map((h) => h.episodeId)).deepEquals([1]);
+    });
+
+    test('replaces the finished position with the replay start', () async {
+      await finishListen();
+
+      await datasource.startReplay(1, positionMs: 0);
+
+      final result = await datasource.getByEpisodeId(1);
+      check(result!.positionMs).equals(0);
+    });
+
+    test('does nothing for an unplayed episode', () async {
+      await datasource.updateProgress(episodeId: 1, positionMs: 30000);
+
+      await datasource.startReplay(1, positionMs: 0);
+
+      final result = await datasource.getByEpisodeId(1);
+      check(result!.isReplaying).isFalse();
+      check(result.positionMs).equals(30000);
+    });
+
+    test('does nothing without history', () async {
+      await datasource.startReplay(1, positionMs: 0);
+
+      check(await datasource.getByEpisodeId(1)).isNull();
+    });
+
+    test('completing the replay counts another completion', () async {
+      await finishListen();
+      await datasource.startReplay(1, positionMs: 0);
+
+      await datasource.markCompleted(1);
+
+      final result = await datasource.getByEpisodeId(1);
+      check(result!.isReplaying).isFalse();
+      check(result.completedCount).equals(2);
+      check(await datasource.getInProgress()).isEmpty();
+    });
+
+    test('re-marking a finished listen does not count again', () async {
+      await finishListen();
+
+      await datasource.markCompleted(1);
+
+      final result = await datasource.getByEpisodeId(1);
+      check(result!.completedCount).equals(1);
+    });
+
+    test('marking unplayed ends the replay', () async {
+      await finishListen();
+      await datasource.startReplay(1, positionMs: 0);
+
+      await datasource.markIncomplete(1);
+
+      final result = await datasource.getByEpisodeId(1);
+      check(result!.completedAt).isNull();
+      check(result.isReplaying).isFalse();
     });
   });
 

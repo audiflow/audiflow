@@ -54,6 +54,11 @@ class PlaybackHistoryRepositoryImpl implements PlaybackHistoryRepository {
   }
 
   @override
+  Future<void> startReplay(int episodeId, {required int positionMs}) {
+    return _datasource.startReplay(episodeId, positionMs: positionMs);
+  }
+
+  @override
   Future<void> incrementPlayCount(int episodeId) {
     return _datasource.incrementPlayCount(episodeId);
   }

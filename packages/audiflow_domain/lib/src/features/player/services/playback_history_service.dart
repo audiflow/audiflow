@@ -8,6 +8,7 @@ import '../../review_prompt/repositories/review_prompt_repository.dart';
 import '../../review_prompt/services/review_prompt_trigger.dart';
 import '../../settings/providers/settings_providers.dart';
 import '../../station/services/station_reconciler_service.dart';
+import '../models/playback_history.dart';
 import '../models/playback_progress.dart';
 import '../repositories/playback_history_repository.dart';
 import '../repositories/playback_history_repository_impl.dart';
@@ -85,18 +86,16 @@ class PlaybackHistoryService {
 
   /// Called when playback starts for an episode.
   ///
-  /// Clears completion status so the episode appears in "last played"
-  /// queries, and increments play count if starting from the beginning.
+  /// Starts a replay when the episode is played, so the new listen shows
+  /// in "last played" queries while the episode stays played, and
+  /// increments play count if starting from the beginning.
   Future<void> onPlaybackStarted(int episodeId, int positionMs) async {
     _lastSavedPositionMs = positionMs;
     _lastSaveTime = _clock();
     _notifiedInProgressThisSession = false;
 
-    // Clear completed status so getLastPlayed() can find this episode.
-    final isCompleted = await _repository.isCompleted(episodeId);
-    if (isCompleted) {
-      await _repository.markIncomplete(episodeId);
-    }
+    // No-op unless the last listen finished.
+    await _repository.startReplay(episodeId, positionMs: positionMs);
 
     // Increment play count if starting from beginning
     if (positionMs < fromBeginningThresholdMs) {
@@ -175,8 +174,9 @@ class PlaybackHistoryService {
     if (0 < durationMs) {
       final progressPercent = positionMs / durationMs;
       if (_getCompletionThreshold() <= progressPercent) {
-        final isAlreadyCompleted = await _repository.isCompleted(episodeId);
-        if (!isAlreadyCompleted) {
+        // A replay completes again even though the episode is played.
+        final history = await _repository.getByEpisodeId(episodeId);
+        if (!(history?.isListenFinished ?? false)) {
           await _repository.markCompleted(episodeId);
           await _tryReconcile(episodeId);
         }

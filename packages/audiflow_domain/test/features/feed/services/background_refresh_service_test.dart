@@ -475,6 +475,8 @@ class FakePlaybackHistoryRepository implements PlaybackHistoryRepository {
   @override
   Future<void> markIncomplete(int episodeId) async {}
   @override
+  Future<void> startReplay(int episodeId, {required int positionMs}) async {}
+  @override
   Future<void> incrementPlayCount(int episodeId) async {}
   @override
   Future<bool> isCompleted(int episodeId) async => false;

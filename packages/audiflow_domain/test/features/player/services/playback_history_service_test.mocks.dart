@@ -84,6 +84,19 @@ class MockPlaybackHistoryRepository extends _i1.Mock
           as _i3.Future<void>);
 
   @override
+  _i3.Future<void> startReplay(int? episodeId, {required int? positionMs}) =>
+      (super.noSuchMethod(
+            Invocation.method(
+              #startReplay,
+              [episodeId],
+              {#positionMs: positionMs},
+            ),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
+
+  @override
   _i3.Future<void> incrementPlayCount(int? episodeId) =>
       (super.noSuchMethod(
             Invocation.method(#incrementPlayCount, [episodeId]),

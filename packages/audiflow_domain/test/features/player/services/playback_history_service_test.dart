@@ -36,6 +36,8 @@ void main() {
       getCompletionThreshold: () => 0.95,
       clock: clock,
     );
+    // No history yet unless a test says otherwise.
+    when(mockRepository.getByEpisodeId(any)).thenAnswer((_) async => null);
   });
 
   group('onProgressUpdate', () {
@@ -58,7 +60,7 @@ void main() {
           realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
         ),
       );
-      verifyNever(mockRepository.isCompleted(any));
+      verifyNever(mockRepository.getByEpisodeId(any));
       verifyNever(mockRepository.markCompleted(any));
     });
 
@@ -79,7 +81,6 @@ void main() {
           realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
         ),
       ).thenAnswer((_) async {});
-      when(mockRepository.isCompleted(any)).thenAnswer((_) async => false);
 
       await service.onProgressUpdate(episodeId, progress);
 
@@ -118,7 +119,6 @@ void main() {
           realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
         ),
       ).thenAnswer((_) async {});
-      when(mockRepository.isCompleted(any)).thenAnswer((_) async => false);
 
       await service.onProgressUpdate(episodeId, progress1);
       now = now.add(const Duration(seconds: 3));
@@ -153,7 +153,6 @@ void main() {
           realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
         ),
       ).thenAnswer((_) async {});
-      when(mockRepository.isCompleted(any)).thenAnswer((_) async => false);
       when(mockRepository.markCompleted(any)).thenAnswer((_) async {});
 
       await service.onProgressUpdate(episodeId, progress);
@@ -161,7 +160,7 @@ void main() {
       verify(mockRepository.markCompleted(episodeId)).called(1);
     });
 
-    test('does not mark completed if already completed', () async {
+    test('does not mark completed when the listen already finished', () async {
       const episodeId = 1;
       final progress = PlaybackProgress(
         position: const Duration(seconds: 570),
@@ -178,11 +177,45 @@ void main() {
           realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
         ),
       ).thenAnswer((_) async {});
-      when(mockRepository.isCompleted(any)).thenAnswer((_) async => true);
+      when(mockRepository.getByEpisodeId(any)).thenAnswer(
+        (_) async => PlaybackHistory()
+          ..episodeId = episodeId
+          ..completedAt = now,
+      );
 
       await service.onProgressUpdate(episodeId, progress);
 
       verifyNever(mockRepository.markCompleted(any));
+    });
+
+    test('marks a replay completed when threshold reached', () async {
+      const episodeId = 1;
+      final progress = PlaybackProgress(
+        position: const Duration(seconds: 570),
+        duration: const Duration(minutes: 10),
+        bufferedPosition: const Duration(minutes: 10),
+      );
+
+      when(
+        mockRepository.saveProgress(
+          episodeId: anyNamed('episodeId'),
+          positionMs: anyNamed('positionMs'),
+          durationMs: anyNamed('durationMs'),
+          listenedDeltaMs: anyNamed('listenedDeltaMs'),
+          realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
+        ),
+      ).thenAnswer((_) async {});
+      when(mockRepository.getByEpisodeId(any)).thenAnswer(
+        (_) async => PlaybackHistory()
+          ..episodeId = episodeId
+          ..completedAt = now
+          ..isReplaying = true,
+      );
+      when(mockRepository.markCompleted(any)).thenAnswer((_) async {});
+
+      await service.onProgressUpdate(episodeId, progress);
+
+      verify(mockRepository.markCompleted(episodeId)).called(1);
     });
   });
 
@@ -198,7 +231,6 @@ void main() {
           autoDownloadPause: pause,
           clock: clock,
         );
-        when(mockRepository.isCompleted(any)).thenAnswer((_) async => false);
         when(mockRepository.incrementPlayCount(any)).thenAnswer((_) async {});
       });
 
@@ -219,7 +251,6 @@ void main() {
       const episodeId = 1;
       const positionMs = 1000; // 1 second (under threshold)
 
-      when(mockRepository.isCompleted(any)).thenAnswer((_) async => false);
       when(mockRepository.incrementPlayCount(any)).thenAnswer((_) async {});
 
       await service.onPlaybackStarted(episodeId, positionMs);
@@ -231,38 +262,22 @@ void main() {
       const episodeId = 1;
       const positionMs = 60000; // 1 minute (over threshold)
 
-      when(mockRepository.isCompleted(any)).thenAnswer((_) async => false);
-
       await service.onPlaybackStarted(episodeId, positionMs);
 
       verifyNever(mockRepository.incrementPlayCount(any));
     });
 
-    test(
-      'clears completion status when restarting completed episode',
-      () async {
-        const episodeId = 1;
-        const positionMs = 0;
-
-        when(mockRepository.isCompleted(any)).thenAnswer((_) async => true);
-        when(mockRepository.markIncomplete(any)).thenAnswer((_) async {});
-        when(mockRepository.incrementPlayCount(any)).thenAnswer((_) async {});
-
-        await service.onPlaybackStarted(episodeId, positionMs);
-
-        verify(mockRepository.markIncomplete(episodeId)).called(1);
-      },
-    );
-
-    test('does not clear completion status when not completed', () async {
+    test('starts a replay without clearing the played status', () async {
       const episodeId = 1;
       const positionMs = 0;
 
-      when(mockRepository.isCompleted(any)).thenAnswer((_) async => false);
       when(mockRepository.incrementPlayCount(any)).thenAnswer((_) async {});
 
       await service.onPlaybackStarted(episodeId, positionMs);
 
+      verify(
+        mockRepository.startReplay(episodeId, positionMs: positionMs),
+      ).called(1);
       verifyNever(mockRepository.markIncomplete(any));
     });
   });
@@ -491,7 +506,6 @@ void main() {
           realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
         ),
       ).thenAnswer((_) async {});
-      when(mockRepository.isCompleted(any)).thenAnswer((_) async => false);
 
       // First update saves
       await service.onProgressUpdate(episodeId, progress1);
@@ -529,7 +543,6 @@ void main() {
           realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
         ),
       ).thenAnswer((_) async {});
-      when(mockRepository.isCompleted(any)).thenAnswer((_) async => false);
       when(mockRepository.incrementPlayCount(any)).thenAnswer((_) async {});
 
       // Start playback
@@ -581,7 +594,6 @@ void main() {
           realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
         ),
       ).thenAnswer((_) async {});
-      when(mockRepository.isCompleted(any)).thenAnswer((_) async => false);
       when(mockRepository.incrementPlayCount(any)).thenAnswer((_) async {});
 
       await service.onPlaybackStarted(episodeId, 0);
@@ -635,7 +647,6 @@ void main() {
           realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
         ),
       ).thenAnswer((_) async {});
-      when(mockRepository.isCompleted(any)).thenAnswer((_) async => false);
       when(mockRepository.incrementPlayCount(any)).thenAnswer((_) async {});
 
       await service.onPlaybackStarted(episodeId, 0);
@@ -687,7 +698,6 @@ void main() {
           realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
         ),
       ).thenAnswer((_) async {});
-      when(mockRepository.isCompleted(any)).thenAnswer((_) async => false);
       when(mockRepository.incrementPlayCount(any)).thenAnswer((_) async {});
 
       await service.onPlaybackStarted(episodeId, 60000);
@@ -738,7 +748,6 @@ void main() {
           realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
         ),
       ).thenAnswer((_) async {});
-      when(mockRepository.isCompleted(any)).thenAnswer((_) async => false);
       when(mockRepository.incrementPlayCount(any)).thenAnswer((_) async {});
 
       await service.onPlaybackStarted(episodeId, 0);
@@ -778,7 +787,6 @@ void main() {
           realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
         ),
       ).thenAnswer((_) async {});
-      when(mockRepository.isCompleted(any)).thenAnswer((_) async => false);
       when(mockRepository.incrementPlayCount(any)).thenAnswer((_) async {});
 
       await service.onPlaybackStarted(episodeId, 0);
@@ -817,7 +825,6 @@ void main() {
           realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
         ),
       ).thenAnswer((_) async {});
-      when(mockRepository.isCompleted(any)).thenAnswer((_) async => false);
       when(mockRepository.incrementPlayCount(any)).thenAnswer((_) async {});
 
       await service.onPlaybackStarted(episodeId, 0);
@@ -861,7 +868,6 @@ void main() {
           realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
         ),
       ).thenAnswer((_) async {});
-      when(mockRepository.isCompleted(any)).thenAnswer((_) async => false);
       when(mockRepository.incrementPlayCount(any)).thenAnswer((_) async {});
 
       // Start playback at position 0

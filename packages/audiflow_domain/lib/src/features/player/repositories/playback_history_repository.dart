@@ -23,23 +23,31 @@ abstract class PlaybackHistoryRepository {
     int realtimeDeltaMs = 0,
   });
 
-  /// Marks an episode as completed.
+  /// Marks an episode as completed (played).
   ///
-  /// Sets the completedAt timestamp to the current time.
+  /// Sets the completedAt timestamp to the current time and ends any
+  /// replay in progress.
   Future<void> markCompleted(int episodeId);
 
-  /// Marks an episode as incomplete.
+  /// Marks an episode as incomplete (unplayed).
   ///
-  /// Clears the completedAt timestamp, allowing the episode
-  /// to appear in "Continue Listening" again.
+  /// Clears the completedAt timestamp and ends any replay, so a saved
+  /// position appears in "Continue Listening" again.
   Future<void> markIncomplete(int episodeId);
+
+  /// Starts a replay of a played episode at [positionMs].
+  ///
+  /// The episode stays played while the replay's position is saved and
+  /// resumable. Does nothing unless the episode's last listen finished.
+  Future<void> startReplay(int episodeId, {required int positionMs});
 
   /// Increments play count when starting from the beginning.
   ///
   /// Called when playback starts from position 0 or near the beginning.
   Future<void> incrementPlayCount(int episodeId);
 
-  /// Returns true if the episode is completed.
+  /// Returns true if the episode is played, including while it is
+  /// being replayed.
   Future<bool> isCompleted(int episodeId);
 
   /// Returns the progress percentage (0.0 to 1.0) for an episode.
@@ -47,15 +55,16 @@ abstract class PlaybackHistoryRepository {
   /// Returns null if no playback history exists or duration is unknown.
   Future<double?> getProgressPercent(int episodeId);
 
-  /// Returns the most recently played incomplete episode, or null.
+  /// Returns the most recently played in-progress episode, or null.
   ///
   /// Used to restore the mini player on app restart.
   Future<PlaybackHistory?> getLastPlayed();
 
   /// Watches episodes that are in progress (for "Continue Listening").
   ///
-  /// Returns episodes that have been started but not completed,
-  /// ordered by most recently played.
+  /// Returns episodes that have been started and whose current listen is
+  /// not finished (replays of played episodes included), ordered by most
+  /// recently played.
   Stream<List<PlaybackHistory>> watchInProgress({int limit = 10});
 
   /// Returns all playback histories for episodes in a podcast.
