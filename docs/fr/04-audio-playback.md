@@ -152,6 +152,18 @@ state and resume position stay coherent no matter where the listener touches it.
   playback passes 95% of its duration (to tolerate trailing credits or silence), and the
   listener can manually toggle an episode played or unplayed, which overrides the auto-detected
   state.
+- Separates the played status from the current listen. An episode is **played** once it has
+  been played to the end (or marked played) and stays played until the listener marks it
+  unplayed. It is **in progress** when it has a saved position past zero and its current listen
+  has not finished. Playing a played episode again starts a **replay**: the episode stays
+  played (menus offer "Mark as unplayed", it stays out of the Unplayed filter, counts toward
+  series played counts, and stays hidden in stations that hide played episodes), while the
+  replay's position is saved and resumed like any in-progress listen (Continue listening,
+  playback restore on launch, the In Progress filter, and the remaining time on rows and the
+  episode detail). Passing the completion threshold again ends the replay and counts another
+  completion; marking the episode played ends it as well, and marking it unplayed clears the
+  played status but keeps the position. A played-download auto-delete waits while a replay
+  is under way and restarts its grace period when the replay completes.
 - Auto-advances to the next queued episode on completion, deferring to the queue feature for
   what plays next.
 - Handles audio-focus interruptions through a dedicated, configurable handler: transient
@@ -177,7 +189,9 @@ state and resume position stay coherent no matter where the listener touches it.
 - The pill has four mutually exclusive states resolved by precedence: loading (indeterminate
   spinner), completed (check glyph in a muted color, "Completed" label), playing (pause glyph,
   accent-colored label on a tinted accent fill, "{time} left" label), and idle (play glyph on a
-  neutral fill; "{time} left" when partially played, total duration otherwise).
+  neutral fill; "{time} left" when partially played, total duration otherwise). A played
+  episode takes the completed state only while it is neither playing nor being replayed; a
+  replay shows the playing or idle state with its remaining time and a partial progress line.
 - The pill never changes shape to show progress. A row whose playback has started instead
   shows a 3 pt progress line along its bottom edge (accent fill on a hairline track),
   reflecting the latest known progress fraction clamped to a valid range. Completed episodes
