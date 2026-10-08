@@ -439,9 +439,24 @@ void backgroundCallback() {
         };
       }
 
+      final reconciler = StationReconcilerService(isar: isar);
+      final deleteDownload = BackgroundDownloadDeleter(
+        downloadRepository: downloadRepo,
+        downloadsDir: '${dir.path}/downloads',
+        // Shared with the download workers, which run in other engines.
+        lock: BackgroundDownloadLock(directory: dir.path),
+        onDeleted: reconciler.onEpisodeChanged,
+      ).call;
+
       final executor = FeedSyncExecutor(
         subscriptionRepo: subscriptionRepo,
         episodeRepo: episodeRepo,
+        droppedEpisodeRemover: DroppedEpisodeRemover(
+          episodeRepository: episodeRepo,
+          downloadRepository: downloadRepo,
+          deleteDownload: deleteDownload,
+          logger: logger,
+        ),
         settingsRepo: settingsRepo,
         feedParser: feedParser,
         dio: dio,
@@ -468,18 +483,13 @@ void backgroundCallback() {
         onDiagnostic: feedSyncDiagnostic,
       );
 
-      final reconciler = StationReconcilerService(isar: isar);
       final downloadRetention = DownloadRetentionService(
         downloadRepository: downloadRepo,
         episodeRepository: episodeRepo,
         playbackHistoryRepository: playbackHistoryRepo,
         // Played cleanup runs in the foreground only; this isolate trims.
         isAutoDeletePlayedEnabled: () => false,
-        deleteDownload: BackgroundDownloadDeleter(
-          downloadRepository: downloadRepo,
-          downloadsDir: '${dir.path}/downloads',
-          onDeleted: reconciler.onEpisodeChanged,
-        ).call,
+        deleteDownload: deleteDownload,
         logger: logger,
       );
 

@@ -8,6 +8,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/providers/http_client_provider.dart';
 import 'download_path.dart';
+import 'episode_download_files.dart';
 
 part 'download_file_service.g.dart';
 
@@ -173,6 +174,16 @@ class DownloadFileService {
     if (await file.exists()) {
       await file.delete();
     }
+  }
+
+  /// Deletes every file a download of [episodeId] left behind, including a
+  /// partial file whose task never recorded a path.
+  Future<void> deleteEpisodeFiles(int episodeId, {String? storedPath}) async {
+    await deleteEpisodeDownloadFiles(
+      downloadsDir: await getDownloadsDirectory(),
+      episodeId: episodeId,
+      storedPath: storedPath,
+    );
   }
 
   /// Returns the size of a downloaded file in bytes.

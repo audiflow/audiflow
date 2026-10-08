@@ -19,6 +19,28 @@ class _FakeDownloadRepository implements DownloadRepository {
   statusUpdates = [];
   final List<int> incrementedRetryIds = [];
 
+  /// Tasks a cleanup elsewhere deletes as soon as this worker starts them.
+  final Set<int> deleteWhenStarted = {};
+  final Set<int> deletedIds = {};
+
+  /// Tasks created for an episode after its earlier task was deleted.
+  final Map<int, DownloadTask> replacements = {};
+
+  @override
+  Future<DownloadTask?> getById(int id) async {
+    if (deletedIds.contains(id)) return null;
+    return pending.where((t) => t.id == id).firstOrNull;
+  }
+
+  @override
+  Future<DownloadTask?> getByEpisodeId(int episodeId) async {
+    final replacement = replacements[episodeId];
+    if (replacement != null) return replacement;
+    return pending
+        .where((t) => t.episodeId == episodeId && !deletedIds.contains(t.id))
+        .firstOrNull;
+  }
+
   @override
   Future<DownloadTask?> getNextPending({
     required bool isOnWifi,
@@ -27,6 +49,7 @@ class _FakeDownloadRepository implements DownloadRepository {
     final idx = pending.indexWhere(
       (t) =>
           t.downloadStatus is DownloadStatusPending &&
+          !deletedIds.contains(t.id) &&
           (isOnWifi || !t.wifiOnly) &&
           !excludeIds.contains(t.id),
     );
@@ -47,6 +70,11 @@ class _FakeDownloadRepository implements DownloadRepository {
       localPath: localPath,
       lastError: lastError,
     ));
+    if (status is DownloadStatusDownloading && deleteWhenStarted.contains(id)) {
+      deletedIds.add(id);
+    }
+    // Like the real repository, a write to a deleted record is a no-op.
+    if (deletedIds.contains(id)) return;
     for (final t in pending) {
       if (t.id == id) {
         t.status = status.toDbValue();
@@ -327,6 +355,74 @@ void main() {
 
       check(partial.existsSync()).isFalse();
       check(downloadRepo.incrementedRetryIds).deepEquals([1]);
+    });
+
+    test('discards the file of a task deleted while it downloaded', () async {
+      downloadRepo.pending.add(_task(id: 1, episodeId: 10));
+      downloadRepo.deleteWhenStarted.add(1);
+      episodeRepo.episodes[10] = _episode(id: 10, title: 'Ep');
+      dioAdapter.onGet(
+        'https://example.com/ep.mp3',
+        (server) => server.reply(200, 'audio'),
+      );
+
+      final count = await createService().execute();
+
+      check(count).equals(0);
+      check(File('$downloadsDir/10_Ep.mp3').existsSync()).isFalse();
+    });
+
+    test('keeps the file when a replacement download exists', () async {
+      downloadRepo.pending.add(_task(id: 1, episodeId: 10));
+      downloadRepo.deleteWhenStarted.add(1);
+      // The listener downloads the episode again while the old worker runs.
+      downloadRepo.replacements[10] = _task(id: 2, episodeId: 10);
+      episodeRepo.episodes[10] = _episode(id: 10, title: 'Ep');
+      dioAdapter.onGet(
+        'https://example.com/ep.mp3',
+        (server) => server.reply(200, 'audio'),
+      );
+
+      await createService().execute();
+
+      check(File('$downloadsDir/10_Ep.mp3').existsSync()).isTrue();
+    });
+
+    test('discards the partial file of a deleted task whose transfer '
+        'failed', () async {
+      final task = _task(id: 1, episodeId: 10)..downloadedBytes = 5000;
+      downloadRepo.pending.add(task);
+      downloadRepo.deleteWhenStarted.add(1);
+      episodeRepo.episodes[10] = _episode(id: 10, title: 'Ep');
+      final partial = File('$downloadsDir/10_Ep.mp3')
+        ..createSync(recursive: true)
+        ..writeAsBytesSync(List.filled(5000, 0));
+      dioAdapter.onGet(
+        'https://example.com/ep.mp3',
+        (server) => server.reply(500, ''),
+      );
+
+      await createService().execute();
+
+      check(partial.existsSync()).isFalse();
+    });
+
+    test('keeps the partial file of a failed task that still exists', () async {
+      final task = _task(id: 1, episodeId: 10)..downloadedBytes = 5000;
+      downloadRepo.pending.add(task);
+      episodeRepo.episodes[10] = _episode(id: 10, title: 'Ep');
+      final partial = File('$downloadsDir/10_Ep.mp3')
+        ..createSync(recursive: true)
+        ..writeAsBytesSync(List.filled(5000, 0));
+      dioAdapter.onGet(
+        'https://example.com/ep.mp3',
+        (server) => server.reply(500, ''),
+      );
+
+      await createService().execute();
+
+      // Kept so the retry resumes from it.
+      check(partial.existsSync()).isTrue();
     });
 
     test('marks failed after max retries exhausted', () async {

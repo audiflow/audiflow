@@ -57,6 +57,19 @@ class _FakeDownloadRetentionService implements DownloadRetentionService {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+class _FakeDroppedEpisodeRemover implements DroppedEpisodeRemover {
+  final List<({int podcastId, Set<String> guids})> calls = [];
+
+  /// How many of the requested episodes to report as kept.
+  int keptCount = 0;
+
+  @override
+  Future<DroppedEpisodeRemoval> remove(int podcastId, Set<String> guids) async {
+    calls.add((podcastId: podcastId, guids: Set.of(guids)));
+    return (deleted: guids.length - keptCount, kept: keptCount);
+  }
+}
+
 class _FakeDownloadQueueService implements DownloadQueueService {
   int startCount = 0;
 
@@ -123,6 +136,7 @@ void main() {
   late MockStationPodcastRepository mockStationPodcastRepo;
   late _FakeDownloadQueueService queueService;
   late _FakeDownloadRetentionService retention;
+  late _FakeDroppedEpisodeRemover droppedEpisodeRemover;
   late _NoopAutoDownloadEnqueuer enqueuer;
   late ProviderContainer container;
   late FeedSyncService service;
@@ -137,6 +151,7 @@ void main() {
     mockDio = MockDio();
     queueService = _FakeDownloadQueueService();
     retention = _FakeDownloadRetentionService();
+    droppedEpisodeRemover = _FakeDroppedEpisodeRemover();
     enqueuer = _NoopAutoDownloadEnqueuer();
 
     // Default settings
@@ -162,6 +177,7 @@ void main() {
         autoDownloadEnqueuerProvider.overrideWithValue(enqueuer),
         downloadQueueServiceProvider.overrideWithValue(queueService),
         downloadRetentionServiceProvider.overrideWithValue(retention),
+        droppedEpisodeRemoverProvider.overrideWithValue(droppedEpisodeRemover),
       ],
     );
 
@@ -520,6 +536,109 @@ void main() {
       verify(
         mockSubscriptionRepo.updateLastRefreshed('itunes-42', any),
       ).called(1);
+    });
+
+    test('removes dropped episodes with their downloads', () async {
+      final sub = _subscription(id: 5, lastRefreshedAt: null);
+      when(dioGet()).thenAnswer((_) async => okResponse());
+      when(
+        mockEpisodeRepo.getGuidsByPodcastId(sub.id),
+      ).thenAnswer((_) async => {'kept', 'gone'});
+      when(
+        mockFeedParser.parseWithProgress(
+          xmlContent: anyNamed('xmlContent'),
+          podcastId: anyNamed('podcastId'),
+          knownGuids: anyNamed('knownGuids'),
+          onBatchReady: anyNamed('onBatchReady'),
+        ),
+      ).thenAnswer(
+        (_) => Stream.value(
+          const FeedParseComplete(
+            total: 0,
+            stoppedEarly: true,
+            tailGuids: {'kept'},
+          ),
+        ),
+      );
+      when(
+        mockSubscriptionRepo.updateLastRefreshed(any, any),
+      ).thenAnswer((_) async {});
+
+      final result = await service.syncFeed(sub);
+
+      check(result.success).isTrue();
+      final call = droppedEpisodeRemover.calls.single;
+      check(call.podcastId).equals(5);
+      check(call.guids).deepEquals({'gone'});
+      verifyNever(mockEpisodeRepo.deleteByPodcastIdAndGuids(any, any));
+    });
+
+    group('cache validators after dropping episodes', () {
+      late Subscription sub;
+
+      setUp(() {
+        sub = _subscription(id: 5, lastRefreshedAt: null);
+        when(dioGet()).thenAnswer(
+          (_) async => Response(
+            data: '<rss></rss>',
+            statusCode: 200,
+            headers: Headers.fromMap({
+              'etag': ['"v2"'],
+              'last-modified': ['T'],
+            }),
+            requestOptions: RequestOptions(),
+          ),
+        );
+        when(
+          mockEpisodeRepo.getGuidsByPodcastId(sub.id),
+        ).thenAnswer((_) async => {'kept', 'gone'});
+        when(
+          mockFeedParser.parseWithProgress(
+            xmlContent: anyNamed('xmlContent'),
+            podcastId: anyNamed('podcastId'),
+            knownGuids: anyNamed('knownGuids'),
+            onBatchReady: anyNamed('onBatchReady'),
+          ),
+        ).thenAnswer(
+          (_) => Stream.value(
+            const FeedParseComplete(
+              total: 0,
+              stoppedEarly: true,
+              tailGuids: {'kept'},
+            ),
+          ),
+        );
+        when(
+          mockSubscriptionRepo.updateLastRefreshed(any, any),
+        ).thenAnswer((_) async {});
+      });
+
+      test('are stored once every dropped episode is gone', () async {
+        await service.syncFeed(sub);
+
+        verify(
+          mockSubscriptionRepo.updateHttpCacheHeaders(
+            5,
+            etag: '"v2"',
+            lastModified: 'T',
+          ),
+        ).called(1);
+      });
+
+      test('are cleared while a dropped episode waits on its download, so '
+          'the next sync is not answered with 304', () async {
+        droppedEpisodeRemover.keptCount = 1;
+
+        await service.syncFeed(sub);
+
+        verify(
+          mockSubscriptionRepo.updateHttpCacheHeaders(
+            5,
+            etag: null,
+            lastModified: null,
+          ),
+        ).called(1);
+      });
     });
 
     group('download queue', () {

@@ -129,6 +129,14 @@ class DownloadQueueService implements SuspendableWriter {
   /// back to pending).
   final _pausing = <int>{};
 
+  /// Tasks a cancel arrived for while their transfer was being set up,
+  /// before the file service registered a token that could stop it.
+  final _cancelling = <int>{};
+
+  /// The transfer the drain is running, so a cancel can wait for it to
+  /// stop writing before the caller removes its file.
+  ({int taskId, Future<void> done})? _activeTransfer;
+
   /// The running queue drain, so [suspend] can wait for it to settle.
   Future<void>? _processing;
 
@@ -227,7 +235,14 @@ class DownloadQueueService implements SuspendableWriter {
           break;
         }
 
-        await _processDownload(nextTask);
+        final transfer = _processDownload(nextTask);
+        _activeTransfer = (taskId: nextTask.id, done: transfer);
+        try {
+          await transfer;
+        } finally {
+          _activeTransfer = null;
+          _cancelling.remove(nextTask.id);
+        }
       }
     } finally {
       _processing = null;
@@ -276,10 +291,39 @@ class DownloadQueueService implements SuspendableWriter {
     }
   }
 
+  /// A replacement download of the same episode writes the same path; its
+  /// file is not the deleted task's to remove. An unreadable lookup counts
+  /// as a replacement so the file is kept.
+  Future<bool> _hasReplacement(DownloadTask task) async {
+    try {
+      return await _repository.getByEpisodeId(task.episodeId) != null;
+    } catch (e) {
+      _logger.w('Could not look up a replacement of task ${task.id}', error: e);
+      return true;
+    }
+  }
+
+  Future<void> _discardFilesOfDeletedTask(DownloadTask task) async {
+    if (await _hasReplacement(task)) return;
+    try {
+      await _fileService.deleteEpisodeFiles(task.episodeId);
+      _logger.i('Discarded partial download of deleted task ${task.id}');
+    } catch (e, stack) {
+      // Runs inside the drain's error handling; a failed sweep must not
+      // stop the queue.
+      _logger.w(
+        'Could not discard files of deleted task ${task.id}',
+        error: e,
+        stackTrace: stack,
+      );
+    }
+  }
+
   Future<void> _processDownload(DownloadTask task) async {
     // A pause that arrived after an earlier transfer had already ended
     // must not swallow this transfer's own cancel.
     _pausing.remove(task.id);
+    _cancelling.remove(task.id);
     _activeDownload = task;
     _activeDownloadController.add(task);
 
@@ -301,7 +345,10 @@ class DownloadQueueService implements SuspendableWriter {
       // The file service only registers its cancel token once the download
       // starts, so a suspend that landed during the awaits above would
       // otherwise let this download run to completion unopposed.
-      if (_isSuspended) throw DownloadException.cancelled();
+      // A cancel in the same window is caught here for the same reason.
+      if (_isSuspended || _cancelling.contains(task.id)) {
+        throw DownloadException.cancelled();
+      }
 
       // Throttle progress updates to avoid overwhelming the database
       var lastUpdateTime = DateTime.now();
@@ -336,8 +383,10 @@ class DownloadQueueService implements SuspendableWriter {
       );
 
       if (await _wasDeletedDuringDownload(task.id)) {
-        await _fileService.deleteFile(localPath);
-        _logger.i('Discarded download of deleted task ${task.id}');
+        if (!await _hasReplacement(task)) {
+          await _fileService.deleteFile(localPath);
+          _logger.i('Discarded download of deleted task ${task.id}');
+        }
         return;
       }
 
@@ -421,6 +470,16 @@ class DownloadQueueService implements SuspendableWriter {
       return;
     }
 
+    // A background cleanup can delete the task between the queue's lookup
+    // and the transfer, outside the cancel that guards foreground deletes
+    // (a cancel is handled above: its caller sweeps the files). Status
+    // writes to the missing record are no-ops, so the partial file would
+    // otherwise stay on disk with nothing left to remove it.
+    if (await _wasDeletedDuringDownload(task.id)) {
+      await _discardFilesOfDeletedTask(task);
+      return;
+    }
+
     // Check if we should retry
     if (task.retryCount < maxRetryAttempts) {
       await _repository.incrementRetryCount(task.id);
@@ -479,13 +538,30 @@ class DownloadQueueService implements SuspendableWriter {
   }
 
   /// Cancels a download. A task that already finished is left alone.
+  ///
+  /// Returns once a running transfer of the task has stopped, so a caller
+  /// that goes on to delete the task's files is not racing the writer, and
+  /// the transfer's own cancelled-status write has already landed.
   Future<void> cancelDownload(int taskId) async {
     if (await _isCompleted(taskId)) return;
+    final transfer = _activeTransfer;
+    if (transfer?.taskId == taskId) _cancelling.add(taskId);
     _fileService.cancelDownload(taskId);
     await _repository.updateStatus(
       id: taskId,
       status: const DownloadStatus.cancelled(),
     );
+    if (transfer == null || transfer.taskId != taskId) return;
+    try {
+      await transfer.done;
+    } catch (e, stack) {
+      // The drain's own caller receives this error; the cancel succeeded.
+      _logger.w(
+        'Cancelled transfer of task $taskId failed',
+        error: e,
+        stackTrace: stack,
+      );
+    }
   }
 
   /// Cancels the active download, stops the queue loop, waits for the
