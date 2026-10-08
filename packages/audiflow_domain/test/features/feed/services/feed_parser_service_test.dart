@@ -13,6 +13,7 @@ void main() {
   <channel>
     <title>Test Podcast</title>
     <description>Test description</description>
+    <link>https://example.com/show</link>
     <item>
       <guid>new-episode</guid>
       <title>New Episode</title>
@@ -229,6 +230,28 @@ void main() {
       ).deepEquals(['Intro', 'Topic', 'Outro']);
       check(byGuid['ep-psc']!.hasDescriptionChapters).isFalse();
       check(byGuid['ep-psc']!.hasChapters).isTrue();
+    });
+  });
+
+  group('channel link', () {
+    // The detail screen reads the website from parseFromString; a dropped
+    // link there hides "Open website" on every show.
+    test('parseFromString maps the channel link to PodcastFeed', () async {
+      final result = await service.parseFromString(testXml);
+      check(result.podcast.link).equals('https://example.com/show');
+    });
+
+    test('parseWithProgress carries the link on FeedMetaReady', () async {
+      final events = await service
+          .parseWithProgress(
+            xmlContent: testXml,
+            podcastId: 1,
+            knownGuids: {},
+            onBatchReady: (_, _) async {},
+          )
+          .toList();
+      final meta = events.whereType<FeedMetaReady>().first;
+      check(meta.link).equals('https://example.com/show');
     });
   });
 

@@ -124,7 +124,11 @@ class FakeSubscriptionRepository implements SubscriptionRepository {
       throw UnimplementedError();
 
   @override
-  Future<void> updateWebsiteUrl(int id, String websiteUrl) =>
+  Future<void> updateWebsiteUrl(
+    int id,
+    String? websiteUrl, {
+    required DateTime syncedAt,
+  }) =>
       throw UnimplementedError();
 
   @override

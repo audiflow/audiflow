@@ -270,8 +270,12 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
   }
 
   @override
-  Future<void> updateWebsiteUrl(int id, String websiteUrl) {
-    return _datasource.updateWebsiteUrl(id, websiteUrl);
+  Future<void> updateWebsiteUrl(
+    int id,
+    String? websiteUrl, {
+    required DateTime syncedAt,
+  }) {
+    return _datasource.updateWebsiteUrl(id, websiteUrl, syncedAt: syncedAt);
   }
 
   @override

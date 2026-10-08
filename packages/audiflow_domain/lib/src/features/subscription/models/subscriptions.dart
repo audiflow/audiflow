@@ -56,6 +56,13 @@ class Subscription {
   /// feed without artwork does not disable conditional requests forever.
   DateTime? feedMetadataSyncedAt;
 
+  /// When the channel `<link>` was last read into [websiteUrl].
+  ///
+  /// Null means it never was: the subscription predates the website, so
+  /// the next refresh asks unconditionally rather than take a 304 that
+  /// skips the parse. Set even when the channel has no link.
+  DateTime? websiteSyncedAt;
+
   /// HTTP ETag header from the last successful feed fetch.
   ///
   /// Sent as `If-None-Match` on subsequent requests to avoid

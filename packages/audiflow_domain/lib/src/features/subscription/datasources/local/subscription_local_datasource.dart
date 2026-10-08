@@ -194,14 +194,21 @@ class SubscriptionLocalDatasource {
     await _isar.writeTxn(() => _isar.subscriptions.put(existing));
   }
 
-  /// Updates the show's website for a subscription.
+  /// Records a read of the channel `<link>`, storing [websiteUrl] unless
+  /// it is null.
   ///
   /// Does nothing if no subscription is found for the given [id].
-  Future<void> updateWebsiteUrl(int id, String websiteUrl) {
+  Future<void> updateWebsiteUrl(
+    int id,
+    String? websiteUrl, {
+    required DateTime syncedAt,
+  }) {
     return _isar.writeTxn(() async {
       final existing = await _isar.subscriptions.get(id);
       if (existing == null) return;
-      existing.websiteUrl = websiteUrl;
+      existing
+        ..websiteUrl = websiteUrl ?? existing.websiteUrl
+        ..websiteSyncedAt = syncedAt;
       await _isar.subscriptions.put(existing);
     });
   }

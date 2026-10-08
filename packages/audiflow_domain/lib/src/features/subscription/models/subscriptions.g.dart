@@ -92,8 +92,13 @@ const SubscriptionSchema = CollectionSchema(
       type: IsarType.dateTime,
     ),
     r'title': PropertySchema(id: 18, name: r'title', type: IsarType.string),
-    r'websiteUrl': PropertySchema(
+    r'websiteSyncedAt': PropertySchema(
       id: 19,
+      name: r'websiteSyncedAt',
+      type: IsarType.dateTime,
+    ),
+    r'websiteUrl': PropertySchema(
+      id: 20,
       name: r'websiteUrl',
       type: IsarType.string,
     ),
@@ -197,7 +202,8 @@ void _subscriptionSerialize(
   writer.writeDateTime(offsets[16], object.lastRefreshedAt);
   writer.writeDateTime(offsets[17], object.subscribedAt);
   writer.writeString(offsets[18], object.title);
-  writer.writeString(offsets[19], object.websiteUrl);
+  writer.writeDateTime(offsets[19], object.websiteSyncedAt);
+  writer.writeString(offsets[20], object.websiteUrl);
 }
 
 Subscription _subscriptionDeserialize(
@@ -227,7 +233,8 @@ Subscription _subscriptionDeserialize(
   object.lastRefreshedAt = reader.readDateTimeOrNull(offsets[16]);
   object.subscribedAt = reader.readDateTime(offsets[17]);
   object.title = reader.readString(offsets[18]);
-  object.websiteUrl = reader.readStringOrNull(offsets[19]);
+  object.websiteSyncedAt = reader.readDateTimeOrNull(offsets[19]);
+  object.websiteUrl = reader.readStringOrNull(offsets[20]);
   return object;
 }
 
@@ -277,6 +284,8 @@ P _subscriptionDeserializeProp<P>(
     case 18:
       return (reader.readString(offset)) as P;
     case 19:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 20:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -2417,6 +2426,79 @@ extension SubscriptionQueryFilter
   }
 
   QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  websiteSyncedAtIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'websiteSyncedAt'),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  websiteSyncedAtIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'websiteSyncedAt'),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  websiteSyncedAtEqualTo(DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'websiteSyncedAt', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  websiteSyncedAtGreaterThan(DateTime? value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'websiteSyncedAt',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  websiteSyncedAtLessThan(DateTime? value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'websiteSyncedAt',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  websiteSyncedAtBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'websiteSyncedAt',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
   websiteUrlIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -2831,6 +2913,20 @@ extension SubscriptionQuerySortBy
     });
   }
 
+  QueryBuilder<Subscription, Subscription, QAfterSortBy>
+  sortByWebsiteSyncedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'websiteSyncedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterSortBy>
+  sortByWebsiteSyncedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'websiteSyncedAt', Sort.desc);
+    });
+  }
+
   QueryBuilder<Subscription, Subscription, QAfterSortBy> sortByWebsiteUrl() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'websiteUrl', Sort.asc);
@@ -3106,6 +3202,20 @@ extension SubscriptionQuerySortThenBy
     });
   }
 
+  QueryBuilder<Subscription, Subscription, QAfterSortBy>
+  thenByWebsiteSyncedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'websiteSyncedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterSortBy>
+  thenByWebsiteSyncedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'websiteSyncedAt', Sort.desc);
+    });
+  }
+
   QueryBuilder<Subscription, Subscription, QAfterSortBy> thenByWebsiteUrl() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'websiteUrl', Sort.asc);
@@ -3262,6 +3372,13 @@ extension SubscriptionQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Subscription, Subscription, QDistinct>
+  distinctByWebsiteSyncedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'websiteSyncedAt');
+    });
+  }
+
   QueryBuilder<Subscription, Subscription, QDistinct> distinctByWebsiteUrl({
     bool caseSensitive = true,
   }) {
@@ -3398,6 +3515,13 @@ extension SubscriptionQueryProperty
   QueryBuilder<Subscription, String, QQueryOperations> titleProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'title');
+    });
+  }
+
+  QueryBuilder<Subscription, DateTime?, QQueryOperations>
+  websiteSyncedAtProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'websiteSyncedAt');
     });
   }
 

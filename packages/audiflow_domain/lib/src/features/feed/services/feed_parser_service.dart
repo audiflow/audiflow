@@ -121,6 +121,7 @@ class FeedParserService {
         description: result.meta.description,
         author: result.meta.author,
         language: result.meta.language,
+        link: result.meta.link,
         images: result.meta.imageUrl != null
             ? [PodcastImage(url: result.meta.imageUrl!)]
             : [],

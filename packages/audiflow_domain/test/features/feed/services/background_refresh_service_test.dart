@@ -242,7 +242,11 @@ class FakeSubscriptionRepository implements SubscriptionRepository {
   Future<void> updateDescription(int id, String? description) async {}
 
   @override
-  Future<void> updateWebsiteUrl(int id, String websiteUrl) async {}
+  Future<void> updateWebsiteUrl(
+    int id,
+    String? websiteUrl, {
+    required DateTime syncedAt,
+  }) async {}
 
   @override
   Future<void> updateFeedMetadata(

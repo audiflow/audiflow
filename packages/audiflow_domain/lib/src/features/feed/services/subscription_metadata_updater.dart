@@ -63,8 +63,12 @@ class SubscriptionMetadataUpdater {
     // Kept apart from the other fields: older rows have no website, and a
     // channel that drops its <link> must not erase a stored one.
     final website = _changedValue(link, sub.websiteUrl);
-    if (website != null) {
-      await _repository.updateWebsiteUrl(sub.id, website);
+    if (website != null || sub.websiteSyncedAt == null) {
+      await _repository.updateWebsiteUrl(
+        sub.id,
+        website,
+        syncedAt: DateTime.now(),
+      );
     }
     final update = diff(
       sub,
@@ -111,6 +115,12 @@ class SubscriptionMetadataUpdater {
   /// subscription would download its whole feed on every refresh forever.
   static bool needsArtworkBackfill(Subscription sub) =>
       _isBlank(sub.artworkUrl) && sub.feedMetadataSyncedAt == null;
+
+  /// Whether [sub] must parse its feed to fill channel metadata it lacks:
+  /// the artwork (see [needsArtworkBackfill]) or a website it has never
+  /// read. Callers skip conditional request headers while this is true.
+  static bool needsChannelBackfill(Subscription sub) =>
+      needsArtworkBackfill(sub) || sub.websiteSyncedAt == null;
 
   /// Returns the trimmed [feedValue] when it carries new information, or
   /// null when it is blank or already equal to [storedValue].

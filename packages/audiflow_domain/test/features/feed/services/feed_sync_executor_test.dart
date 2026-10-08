@@ -149,8 +149,11 @@ class _FakeSubscriptionRepository implements SubscriptionRepository {
       throw UnimplementedError();
 
   @override
-  Future<void> updateWebsiteUrl(int id, String websiteUrl) =>
-      throw UnimplementedError();
+  Future<void> updateWebsiteUrl(
+    int id,
+    String? websiteUrl, {
+    required DateTime syncedAt,
+  }) async {}
 }
 
 class _FakeEpisodeRepository implements EpisodeRepository {
@@ -574,6 +577,9 @@ Subscription _subscription({
   String? artworkUrl = 'https://example.com/itunes.jpg',
   String? description,
   DateTime? feedMetadataSyncedAt,
+  // False for a subscription that predates the stored website, which also
+  // turns off conditional requests.
+  bool websiteRead = true,
 }) {
   return Subscription()
     ..id = id
@@ -584,6 +590,7 @@ Subscription _subscription({
     ..artworkUrl = artworkUrl
     ..description = description
     ..feedMetadataSyncedAt = feedMetadataSyncedAt
+    ..websiteSyncedAt = websiteRead ? DateTime(2026) : null
     ..genres = ''
     ..explicit = false
     ..subscribedAt = DateTime.now()
@@ -921,6 +928,23 @@ void main() {
         );
       },
     );
+
+    test('asks unconditionally until the website has been read', () async {
+      // Otherwise a podcast subscribed before the website was stored gets
+      // 304s forever and never parses its channel <link>.
+      final sub = _subscription(
+        lastRefreshedAt: null,
+        httpEtag: '"abc123"',
+        websiteRead: false,
+      );
+
+      final dio = _NotModifiedDio();
+      final executor = buildExecutor(dio: dio);
+
+      await executor.syncFeed(sub);
+
+      expect(dio.lastRequestHeaders?['If-None-Match'], isNull);
+    });
 
     test('returns success on 304 Not Modified', () async {
       final sub = _subscription(lastRefreshedAt: null, httpEtag: '"abc123"');
