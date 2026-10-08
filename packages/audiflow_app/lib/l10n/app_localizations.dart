@@ -968,11 +968,17 @@ abstract class AppLocalizations {
   /// **'Continue listening'**
   String get libraryContinueListening;
 
-  /// Number of subscribed podcasts in the Library header
+  /// Hint of the field that filters the Library's podcasts by title or author
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =1{1 podcast} other{{count} podcasts}}'**
-  String libraryPodcastCount(int count);
+  /// **'Filter podcasts'**
+  String get libraryFilterHint;
+
+  /// Shown when the Library filter matches no podcast
+  ///
+  /// In en, this message translates to:
+  /// **'No podcasts match'**
+  String get libraryFilterNoMatch;
 
   /// Library section title for subscribed podcasts
   ///
@@ -2204,11 +2210,11 @@ abstract class AppLocalizations {
   /// **'Couldn\'t load your stations.'**
   String get stationListLoadError;
 
-  /// Stations section header link opening the full station list; count is the number of stations
+  /// Stations section header link opening the full station list
   ///
   /// In en, this message translates to:
-  /// **'Show all ({count})'**
-  String stationShowAll(int count);
+  /// **'Show all'**
+  String get stationShowAll;
 
   /// Label for station name input field
   ///

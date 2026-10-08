@@ -11,6 +11,7 @@ import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:audiflow_app/features/library/presentation/widgets/subscription_list_tile.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -341,7 +342,15 @@ void main() {
 
     testWidgets('podcasts header shows the subscription count', (tester) async {
       await pump(tester);
-      check(find.text('2 podcasts').evaluate()).length.equals(1);
+      // The count sits beside the title, leaving the right for the sort.
+      check(
+        find
+            .descendant(
+              of: find.widgetWithText(SectionHeader, 'Podcasts'),
+              matching: find.text('2'),
+            )
+            .evaluate(),
+      ).length.equals(1);
     });
 
     testWidgets('podcast rows run full width, not on an inset surface', (
@@ -441,7 +450,15 @@ void main() {
         tester,
         stations: [for (var i = 1; i <= 5; i++) playedStation(i)],
       );
-      check(find.text('Show all (5)').evaluate()).length.equals(1);
+      check(find.text('Show all').evaluate()).length.equals(1);
+      check(
+        find
+            .descendant(
+              of: find.widgetWithText(SectionHeader, 'Stations'),
+              matching: find.text('5'),
+            )
+            .evaluate(),
+      ).length.equals(1);
     });
 
     testWidgets('has no show-all link while every station fits', (
@@ -452,6 +469,43 @@ void main() {
         stations: [for (var i = 1; i <= 4; i++) playedStation(i)],
       );
       check(find.textContaining('Show all').evaluate()).isEmpty();
+    });
+
+    testWidgets('the filter narrows podcasts by title or author', (
+      tester,
+    ) async {
+      await pump(tester);
+      await tester.enterText(find.byType(TextField), 'alp');
+      await tester.pumpAndSettle();
+      check(find.byType(SubscriptionListTile).evaluate()).length.equals(1);
+      check(find.text('Alpha').evaluate()).length.equals(1);
+
+      // Every fixture shares the author, so it matches both.
+      await tester.enterText(find.byType(TextField), 'ARTIST');
+      await tester.pumpAndSettle();
+      check(find.byType(SubscriptionListTile).evaluate()).length.equals(2);
+    });
+
+    testWidgets('a filter matching nothing says so', (tester) async {
+      await pump(tester);
+      await tester.enterText(find.byType(TextField), 'zzz');
+      await tester.pumpAndSettle();
+      check(find.byType(SubscriptionListTile).evaluate()).isEmpty();
+      check(find.text('No podcasts match').evaluate()).length.equals(1);
+    });
+
+    testWidgets('the header keeps the sort label whole at large text', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await pump(tester, textScale: 1.3);
+      final label = tester.renderObject<RenderParagraph>(
+        find.text('Latest episode'),
+      );
+      check(label.didExceedMaxLines).isFalse();
+      check(tester.takeException()).isNull();
     });
   });
 }

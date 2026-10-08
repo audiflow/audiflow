@@ -473,9 +473,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get libraryContinueListening => '続きから再生';
 
   @override
-  String libraryPodcastCount(int count) {
-    return '$count番組';
-  }
+  String get libraryFilterHint => '番組を絞り込む';
+
+  @override
+  String get libraryFilterNoMatch => '一致する番組はありません';
 
   @override
   String get libraryPodcastsSection => 'ポッドキャスト';
@@ -1164,9 +1165,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get stationListLoadError => 'ステーションを読み込めませんでした。';
 
   @override
-  String stationShowAll(int count) {
-    return 'すべて表示($count)';
-  }
+  String get stationShowAll => 'すべて表示';
 
   @override
   String get stationName => 'ステーション名';

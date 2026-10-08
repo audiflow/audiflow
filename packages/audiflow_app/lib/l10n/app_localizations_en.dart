@@ -492,15 +492,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get libraryContinueListening => 'Continue listening';
 
   @override
-  String libraryPodcastCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count podcasts',
-      one: '1 podcast',
-    );
-    return '$_temp0';
-  }
+  String get libraryFilterHint => 'Filter podcasts';
+
+  @override
+  String get libraryFilterNoMatch => 'No podcasts match';
 
   @override
   String get libraryPodcastsSection => 'Podcasts';
@@ -1210,9 +1205,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stationListLoadError => 'Couldn\'t load your stations.';
 
   @override
-  String stationShowAll(int count) {
-    return 'Show all ($count)';
-  }
+  String get stationShowAll => 'Show all';
 
   @override
   String get stationName => 'Station Name';

@@ -164,8 +164,8 @@ Top to bottom:
 
 1. **Title** "ライブラリ" (`displayTitle`), no trailing button. Adding podcasts is the Search tab's job.
 2. **Continue listening** — horizontal cards for in-progress episodes (up to 10, from playback history). Card: artwork 56, title (2 lines), remaining time, bottom-edge progress line. Section hidden when empty.
-3. **Stations** — a 2-column grid showing at most 4 stations (default: most recently played). Header has a "+" (create) and "すべて表示 N" (opens the station list). The section never grows beyond 4 tiles regardless of station count.
-4. **Podcasts** — sticky header row with count, sort (latest episode / subscribed date / name), and a grid/list toggle. A filter field appears under it when the library has many podcasts (threshold around 20). Grid: 3 columns, artwork with unplayed-count badge, title (2 lines). List: artwork 52, title, last-updated, unplayed badge.
+3. **Stations** — a 2-column grid showing at most 4 stations (default: most recently played). Header: the station count beside the title, then "+" (create) and "すべて表示 ›" (opens the station list, shown only beyond 4). The section never grows beyond 4 tiles regardless of station count.
+4. **Podcasts** — sticky header row with the count beside the title and the sort (latest episode / subscribed date / name) on the right. A filter field sits under it, always shown. List only: artwork 52, title, last-updated, unplayed badge. A grid layout was tried and dropped: at typical library sizes it only trades the last-updated date and full titles for density.
 
 ### 4.2 Podcast detail
 
@@ -227,7 +227,7 @@ These are not implemented today and need their own FR updates and PRs:
 
 - Podcast `…` menu: mark all played / unplayed, open website. (Hiding played episodes was dropped: the "未再生" filter chip covers it.)
 - Series-level progress status in the series list.
-- Library: station tiles limited to 4 with a "show all" route; podcast grid/list toggle; podcast filter field; unplayed-count badges on podcasts.
+- Library: station tiles limited to 4 with a "show all" route; podcast filter field; unplayed-count badges on podcasts. (A grid/list toggle was dropped.)
 - In-navigation search on Podcast detail (both tabs) and Series episodes.
 - Artwork-derived Now Playing background.
 - Episode search scope on the Search tab. Current discovery returns podcast metadata only, so this needs an episode-level search source before the "番組 / エピソード" toggle is shown.

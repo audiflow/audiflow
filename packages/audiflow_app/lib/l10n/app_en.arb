@@ -310,8 +310,10 @@
   "@librarySyncSuccess": { "description": "Sync success message", "placeholders": { "count": { "type": "int" } } },
   "libraryContinueListening": "Continue listening",
   "@libraryContinueListening": { "description": "Library section title for in-progress episodes" },
-  "libraryPodcastCount": "{count, plural, =1{1 podcast} other{{count} podcasts}}",
-  "@libraryPodcastCount": { "description": "Number of subscribed podcasts in the Library header", "placeholders": { "count": { "type": "int" } } },
+  "libraryFilterHint": "Filter podcasts",
+  "@libraryFilterHint": { "description": "Hint of the field that filters the Library's podcasts by title or author" },
+  "libraryFilterNoMatch": "No podcasts match",
+  "@libraryFilterNoMatch": { "description": "Shown when the Library filter matches no podcast" },
   "libraryPodcastsSection": "Podcasts",
   "@libraryPodcastsSection": { "description": "Library section title for subscribed podcasts" },
   "libraryUpdatedOn": "Updated {date}",
@@ -765,13 +767,8 @@
   "stationAdd": "Add station",
   "stationListLoadError": "Couldn't load your stations.",
   "@stationListLoadError": { "description": "Shown on the station list screen when stations fail to load" },
-  "stationShowAll": "Show all ({count})",
-  "@stationShowAll": {
-    "description": "Stations section header link opening the full station list; count is the number of stations",
-    "placeholders": {
-      "count": { "type": "int" }
-    }
-  },
+  "stationShowAll": "Show all",
+  "@stationShowAll": { "description": "Stations section header link opening the full station list" },
   "@stationAdd": { "description": "Inline action label next to the Stations section header for creating a new station" },
   "stationName": "Station Name",
   "@stationName": { "description": "Label for station name input field" },
