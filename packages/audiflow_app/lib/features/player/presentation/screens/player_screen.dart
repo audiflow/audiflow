@@ -24,12 +24,12 @@ import '../widgets/current_chapter_row.dart';
 import '../widgets/player_action_row.dart';
 import '../widgets/seek_undo_overlay.dart';
 import '../widgets/sleep_timer_countdown_format.dart';
-import '../widgets/transcript_tab.dart';
+import '../widgets/transcript_timeline_view.dart';
 
 /// Full player screen presented as a Cupertino sheet.
 ///
-/// Shows playback controls, progress bar, and optionally a transcript
-/// tab when the current episode has transcript or chapter data.
+/// Shows playback controls, progress bar, and a second, transcript page
+/// when the current episode's transcript has loaded.
 class PlayerScreen extends ConsumerStatefulWidget {
   const PlayerScreen({super.key});
 
@@ -150,9 +150,14 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
     }
 
     final episodeId = nowPlaying.episode?.id;
-    final hasTranscriptTab =
-        episodeId != null &&
-        (ref.watch(episodeHasTranscriptProvider(episodeId)).value ?? false);
+    // The transcript page exists only once its content has loaded: a feed
+    // can declare a file that turns out empty or unreachable, and offering
+    // the page before then would lead to a blank one. While the fetch runs
+    // the player stays on a single page.
+    final transcriptId = episodeId == null
+        ? null
+        : ref.watch(usableTranscriptIdProvider(episodeId)).value;
+    final hasTranscriptTab = transcriptId != null;
 
     // Ensure tab controller exists (short-circuits if tab count unchanged)
     _ensureTabController(hasTranscript: hasTranscriptTab);
@@ -193,7 +198,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
                       Expanded(
                         child: _PlayerTabBody(
                           tabController: _tabController!,
-                          hasTranscript: hasTranscriptTab,
+                          transcriptId: transcriptId,
                           episodeId: episodeId,
                           artworkUrl: nowPlaying.artworkUrl,
                           episodeTitle: nowPlaying.episodeTitle,
@@ -497,7 +502,7 @@ class _TranslucentBar extends StatelessWidget {
 class _PlayerTabBody extends StatelessWidget {
   const _PlayerTabBody({
     required this.tabController,
-    required this.hasTranscript,
+    required this.transcriptId,
     required this.episodeId,
     required this.artworkUrl,
     required this.episodeTitle,
@@ -512,7 +517,9 @@ class _PlayerTabBody extends StatelessWidget {
   static const double artworkMinHeight = 160;
 
   final TabController tabController;
-  final bool hasTranscript;
+
+  /// Stored transcript to show on the second page; null for a single page.
+  final int? transcriptId;
   final int? episodeId;
   final String? artworkUrl;
   final String episodeTitle;
@@ -566,13 +573,15 @@ class _PlayerTabBody extends StatelessWidget {
       ],
     );
 
-    if (!hasTranscript) return nowPlayingContent;
+    final transcript = transcriptId;
+    final episode = episodeId;
+    if (transcript == null || episode == null) return nowPlayingContent;
 
     return TabBarView(
       controller: tabController,
       children: [
         nowPlayingContent,
-        TranscriptTab(episodeId: episodeId!),
+        TranscriptTimelineView(transcriptId: transcript, episodeId: episode),
       ],
     );
   }

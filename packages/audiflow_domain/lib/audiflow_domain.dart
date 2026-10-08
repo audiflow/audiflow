@@ -227,6 +227,7 @@ export 'src/features/transcript/datasources/local/chapter_local_datasource.dart'
 export 'src/features/transcript/datasources/local/transcript_local_datasource.dart';
 export 'src/features/transcript/models/transcript_search_result.dart';
 export 'src/features/transcript/providers/chapter_loader_provider.dart';
+export 'src/features/transcript/providers/transcript_availability_providers.dart';
 export 'src/features/transcript/providers/transcript_providers.dart';
 export 'src/features/transcript/repositories/chapter_repository.dart';
 export 'src/features/transcript/repositories/chapter_repository_impl.dart';
