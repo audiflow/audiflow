@@ -473,6 +473,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get libraryContinueListening => '続きから再生';
 
   @override
+  String get libraryNewEpisodes => '新着エピソードあり';
+
+  @override
   String get libraryFilterHint => '番組を絞り込む';
 
   @override

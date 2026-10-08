@@ -492,6 +492,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get libraryContinueListening => 'Continue listening';
 
   @override
+  String get libraryNewEpisodes => 'New episodes';
+
+  @override
   String get libraryFilterHint => 'Filter podcasts';
 
   @override

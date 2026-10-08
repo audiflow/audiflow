@@ -968,6 +968,12 @@ abstract class AppLocalizations {
   /// **'Continue listening'**
   String get libraryContinueListening;
 
+  /// Accessibility label of the dot on a Library row with episodes since the last visit
+  ///
+  /// In en, this message translates to:
+  /// **'New episodes'**
+  String get libraryNewEpisodes;
+
   /// Hint of the field that filters the Library's podcasts by title or author
   ///
   /// In en, this message translates to:

@@ -8,8 +8,21 @@ import 'package:intl/intl.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../controllers/library_controller.dart';
 
+/// Whether [newestPublishedAt] is newer than the listener's last visit to
+/// the podcast, or than the subscription when it was never opened. The
+/// back catalog published before subscribing never counts.
+bool hasNewSinceVisit({
+  required DateTime? newestPublishedAt,
+  required DateTime? lastVisitedAt,
+  required DateTime subscribedAt,
+}) {
+  if (newestPublishedAt == null) return false;
+  return (lastVisitedAt ?? subscribedAt).isBefore(newestPublishedAt);
+}
+
 /// Row for a subscribed podcast inside the Library's grouped list:
-/// artwork 52, title, and the date of its newest episode (redesign 4.1).
+/// artwork 52, title, the date of its newest episode, and an accent dot
+/// while something arrived since the last visit (redesign 4.1).
 class SubscriptionListTile extends ConsumerWidget {
   const SubscriptionListTile({
     required this.subscription,
@@ -38,6 +51,12 @@ class SubscriptionListTile extends ConsumerWidget {
             _artwork(colors),
             const SizedBox(width: Spacing.sm + Spacing.xs),
             Expanded(child: _labels(context, colors, newest)),
+            if (hasNewSinceVisit(
+              newestPublishedAt: newest,
+              lastVisitedAt: subscription.lastAccessedAt,
+              subscribedAt: subscription.subscribedAt,
+            ))
+              _NewDot(color: colors.accent),
           ],
         ),
       ),
@@ -103,6 +122,31 @@ class SubscriptionListTile extends ConsumerWidget {
           style: AppTextStyles.meta.copyWith(color: colors.inkTertiary),
         ),
       ],
+    );
+  }
+}
+
+/// Presence mark, not a count: "something new since you last looked".
+class _NewDot extends StatelessWidget {
+  const _NewDot({required this.color});
+
+  final Color color;
+
+  static const double _size = 10;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(start: Spacing.sm),
+      child: Semantics(
+        label: AppLocalizations.of(context).libraryNewEpisodes,
+        child: SizedBox.square(
+          dimension: _size,
+          child: DecoratedBox(
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+        ),
+      ),
     );
   }
 }

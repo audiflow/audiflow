@@ -155,6 +155,7 @@
   "librarySyncResult": "{successCount}件のフィードを同期、{errorCount}件が失敗",
   "librarySyncSuccess": "{count}件のフィードを同期しました",
   "libraryContinueListening": "続きから再生",
+  "libraryNewEpisodes": "新着エピソードあり",
   "libraryFilterHint": "番組を絞り込む",
   "libraryFilterNoMatch": "一致する番組はありません",
   "libraryPodcastsSection": "ポッドキャスト",

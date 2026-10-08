@@ -310,6 +310,8 @@
   "@librarySyncSuccess": { "description": "Sync success message", "placeholders": { "count": { "type": "int" } } },
   "libraryContinueListening": "Continue listening",
   "@libraryContinueListening": { "description": "Library section title for in-progress episodes" },
+  "libraryNewEpisodes": "New episodes",
+  "@libraryNewEpisodes": { "description": "Accessibility label of the dot on a Library row with episodes since the last visit" },
   "libraryFilterHint": "Filter podcasts",
   "@libraryFilterHint": { "description": "Hint of the field that filters the Library's podcasts by title or author" },
   "libraryFilterNoMatch": "No podcasts match",
