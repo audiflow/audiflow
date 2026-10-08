@@ -12,11 +12,16 @@ class ActionMenuEntry {
     required this.icon,
     required this.label,
     required this.onSelected,
+    this.destructive = false,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback onSelected;
+
+  /// Drawn in the `error` color, for actions that discard something
+  /// (e.g. removing a download).
+  final bool destructive;
 }
 
 /// Opens the `…` popover (redesign 4.2) anchored to the screen's top-right,
@@ -193,37 +198,42 @@ class _ItemGroup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
+    final error = Theme.of(context).colorScheme.error;
     return Column(
       children: [
         for (final item in items)
-          InkWell(
-            borderRadius: AppBorders.md,
-            onTap: () => Navigator.of(context).pop(item),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(
-                minHeight: Spacing.minTouchTarget + Spacing.xs,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: Spacing.sm + Spacing.xs,
-                  vertical: Spacing.sm,
-                ),
-                child: Row(
-                  children: [
-                    Icon(item.icon, size: 22, color: colors.ink),
-                    const SizedBox(width: Spacing.md),
-                    Expanded(
-                      child: Text(
-                        item.label,
-                        style: AppTextStyles.body.copyWith(color: colors.ink),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
+          _item(context, item, item.destructive ? error : colors.ink),
       ],
+    );
+  }
+
+  Widget _item(BuildContext context, ActionMenuEntry item, Color color) {
+    return InkWell(
+      borderRadius: AppBorders.md,
+      onTap: () => Navigator.of(context).pop(item),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(
+          minHeight: Spacing.minTouchTarget + Spacing.xs,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: Spacing.sm + Spacing.xs,
+            vertical: Spacing.sm,
+          ),
+          child: Row(
+            children: [
+              Icon(item.icon, size: 22, color: color),
+              const SizedBox(width: Spacing.md),
+              Expanded(
+                child: Text(
+                  item.label,
+                  style: AppTextStyles.body.copyWith(color: color),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
