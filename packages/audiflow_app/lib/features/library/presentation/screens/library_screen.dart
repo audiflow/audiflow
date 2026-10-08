@@ -583,6 +583,8 @@ class _PodcastFilterFieldState extends State<_PodcastFilterField> {
       child: TextField(
         controller: _controller,
         onChanged: widget.onChanged,
+        // Touching anything else ends the filtering and hides the keyboard.
+        onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
         textInputAction: TextInputAction.search,
         style: AppTextStyles.body.copyWith(color: colors.ink),
         decoration: InputDecoration(

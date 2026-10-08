@@ -123,6 +123,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   Widget _buildSearchField(AppLocalizations l10n) {
     final colors = AppColors.of(context);
     return TextField(
+      // Touching anything else hides the keyboard.
+      onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
       controller: _textController,
       focusNode: _focusNode,
       textCapitalization: TextCapitalization.none,

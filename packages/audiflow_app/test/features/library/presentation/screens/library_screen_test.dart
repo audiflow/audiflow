@@ -507,5 +507,17 @@ void main() {
       check(label.didExceedMaxLines).isFalse();
       check(tester.takeException()).isNull();
     });
+
+    testWidgets('touching outside the filter drops its focus', (tester) async {
+      await pump(tester);
+      await tester.tap(find.byType(TextField));
+      await tester.pump();
+      final field = tester.widget<EditableText>(find.byType(EditableText));
+      check(field.focusNode.hasFocus).isTrue();
+
+      await tester.tapAt(tester.getCenter(find.text('Podcasts')));
+      await tester.pump();
+      check(field.focusNode.hasFocus).isFalse();
+    });
   });
 }
