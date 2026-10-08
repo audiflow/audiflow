@@ -142,6 +142,12 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
       ),
       body: editState.isLoading
           ? const Center(child: CircularProgressIndicator())
+          : editState.loadFailed
+          ? _LoadFailed(
+              onRetry: () => ref.invalidate(
+                stationEditControllerProvider(widget.stationId),
+              ),
+            )
           : SingleChildScrollView(
               padding: const EdgeInsets.all(Spacing.md),
               child: Column(
@@ -161,7 +167,8 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
                   _buildSortOrder(context, editState, controller),
                   const SizedBox(height: Spacing.lg),
                   _buildPodcastsSection(context, editState, controller),
-                  if (isEditMode) ...[
+                  // A new station can be deleted once autosave has created it.
+                  if (editState.savedStationId != null) ...[
                     const SizedBox(height: Spacing.xl),
                     _buildDeleteButton(context, controller),
                   ],
@@ -912,6 +919,37 @@ class _ErrorBanner extends StatelessWidget {
       child: Text(
         message,
         style: TextStyle(color: colorScheme.onErrorContainer),
+      ),
+    );
+  }
+}
+
+/// Shown instead of the form when the station cannot be loaded, so an
+/// edit can never be saved over it.
+class _LoadFailed extends StatelessWidget {
+  const _LoadFailed({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(Spacing.lg),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              l10n.stationLoadError,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.body.copyWith(
+                color: AppColors.of(context).inkSecondary,
+              ),
+            ),
+            TextButton(onPressed: onRetry, child: Text(l10n.commonRetry)),
+          ],
+        ),
       ),
     );
   }

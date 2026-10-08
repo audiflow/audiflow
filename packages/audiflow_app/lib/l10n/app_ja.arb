@@ -438,6 +438,7 @@
   "stationNoSubscriptionsYet": "まだ購読がありません。",
   "stationEmptySubtitle": "新しいエピソードが自動的に表示されます。",
   "stationEditTitle": "ステーションを編集",
+  "stationLoadError": "ステーションを読み込めませんでした。",
   "stationDefaultName": "ステーション {number}",
   "stationDelete": "ステーションを削除",
   "stationDeleteTitle": "ステーションを削除",

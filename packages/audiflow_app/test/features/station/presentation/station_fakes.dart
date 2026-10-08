@@ -80,8 +80,16 @@ class FakeStationPodcastRepository implements StationPodcastRepository {
       if (l.stationId == stationId) l.podcastId,
   ];
 
+  /// When true, [getByStation] fails, as a broken read would.
+  bool failReads = false;
+
   @override
-  Future<List<StationPodcast>> getByStation(int stationId) async => [
+  Future<List<StationPodcast>> getByStation(int stationId) async {
+    if (failReads) throw Exception('read failed');
+    return _linksOf(stationId);
+  }
+
+  List<StationPodcast> _linksOf(int stationId) => [
     for (final l in links)
       if (l.stationId == stationId) l,
   ];
