@@ -1,4 +1,5 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:dio/dio.dart' show CancelToken;
 
 /// [NowPlayingController] seeded with a fixed value instead of null.
 class StubNowPlayingController extends NowPlayingController {
@@ -68,4 +69,19 @@ class StubAudioPlayerController extends AudioPlayerController {
   Future<void> skipForward() async {
     skipForwardCalled = true;
   }
+}
+
+/// [TranscriptService] answering a fixed load result instead of fetching.
+///
+/// Pass [result] to control when the answer arrives; by default the
+/// episode has no transcript that loads.
+class StubTranscriptService implements TranscriptService {
+  StubTranscriptService([Future<int?>? result])
+    : _result = result ?? Future.value();
+
+  final Future<int?> _result;
+
+  @override
+  Future<int?> ensureContent(int episodeId, {CancelToken? cancelToken}) =>
+      _result;
 }

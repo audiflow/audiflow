@@ -49,6 +49,10 @@ class TranscriptRepositoryImpl implements TranscriptRepository {
       _datasource.markAsFetched(transcriptId);
 
   @override
+  Future<void> markAsUnusable(int transcriptId) =>
+      _datasource.markAsUnusable(transcriptId);
+
+  @override
   Future<bool> isContentFetched(int transcriptId) =>
       _datasource.isContentFetched(transcriptId);
 

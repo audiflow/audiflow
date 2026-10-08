@@ -1,5 +1,3 @@
-import 'package:audiflow_podcast/audiflow_podcast.dart'
-    show TranscriptFileParser;
 import 'package:riverpod/riverpod.dart';
 
 import '../models/episode_chapter.dart';
@@ -7,6 +5,7 @@ import '../models/episode_transcript.dart';
 import '../models/transcript_segment_table.dart';
 import '../repositories/chapter_repository_impl.dart';
 import '../repositories/transcript_repository_impl.dart';
+import 'transcript_availability_providers.dart';
 
 /// Transcript metadata for a specific episode.
 final episodeTranscriptMetasProvider = FutureProvider.autoDispose
@@ -30,11 +29,23 @@ final episodeChaptersProvider = FutureProvider.autoDispose
       return ref.watch(chapterRepositoryProvider).getByEpisodeId(episodeId);
     });
 
-/// Whether an episode has a supported transcript format.
+/// Whether to mark an episode as having a transcript, without fetching.
+///
+/// A fetch made this session is the answer when there was one. Otherwise
+/// the feed's declaration stands in, minus files already found unusable:
+/// fetching per row just to draw a badge would cost a download per
+/// episode, so an unfetched declared file counts until a fetch says no.
 final episodeHasTranscriptProvider = FutureProvider.autoDispose
     .family<bool, int>((ref, episodeId) async {
+      final fetched = ref.watch(
+        transcriptFetchOutcomesProvider.select(
+          (outcomes) => outcomes[episodeId],
+        ),
+      );
+      if (fetched != null) return fetched;
+
       final metas = await ref.watch(
         episodeTranscriptMetasProvider(episodeId).future,
       );
-      return metas.any((m) => TranscriptFileParser.isSupported(m.type));
+      return metas.any((m) => m.isCandidate);
     });
