@@ -8,6 +8,55 @@ part of 'station_edit_controller.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+
+@ProviderFor(stationEditActivity)
+final stationEditActivityProvider = StationEditActivityProvider._();
+
+final class StationEditActivityProvider
+    extends
+        $FunctionalProvider<
+          StationEditActivity,
+          StationEditActivity,
+          StationEditActivity
+        >
+    with $Provider<StationEditActivity> {
+  StationEditActivityProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'stationEditActivityProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$stationEditActivityHash();
+
+  @$internal
+  @override
+  $ProviderElement<StationEditActivity> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  StationEditActivity create(Ref ref) {
+    return stationEditActivity(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(StationEditActivity value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<StationEditActivity>(value),
+    );
+  }
+}
+
+String _$stationEditActivityHash() =>
+    r'c42e3f490cc9824205cb974d85e339b31e5f9844';
+
 /// Edits a station and saves every change as it happens; there is no save
 /// button to forget.
 ///
@@ -95,7 +144,7 @@ final class StationEditControllerProvider
 }
 
 String _$stationEditControllerHash() =>
-    r'14cfe3ed9d711de6a600c8ff3c2da2f7e3de327b';
+    r'8bbedb6014c55f11b4a78127365deeeb535ecf51';
 
 /// Edits a station and saves every change as it happens; there is no save
 /// button to forget.

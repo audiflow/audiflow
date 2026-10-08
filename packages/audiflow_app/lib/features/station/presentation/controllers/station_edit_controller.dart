@@ -52,6 +52,34 @@ sealed class StationEditState with _$StationEditState {
   }) = _StationEditState;
 }
 
+/// Saves and feed rebuilds still running per station, shared by every
+/// editor instance: an editor keeps saving after it closes, so one opened
+/// again for the same station must wait for them before loading.
+class StationEditActivity {
+  final _pending = <int, Future<void>>{};
+
+  /// Adds [work] to what [settled] waits for on [stationId].
+  void track(int stationId, Future<void> work) {
+    final all = Future.wait([
+      _pending[stationId] ?? Future<void>.value(),
+      work.catchError((Object _) {}),
+    ]).then((_) {});
+    _pending[stationId] = all;
+    unawaited(
+      all.whenComplete(() {
+        if (identical(_pending[stationId], all)) _pending.remove(stationId);
+      }),
+    );
+  }
+
+  /// Completes once all tracked work for [stationId] has finished.
+  Future<void> settled(int stationId) =>
+      _pending[stationId] ?? Future<void>.value();
+}
+
+@Riverpod(keepAlive: true)
+StationEditActivity stationEditActivity(Ref ref) => StationEditActivity();
+
 /// Edits a station and saves every change as it happens; there is no save
 /// button to forget.
 ///
@@ -80,6 +108,7 @@ class StationEditController extends _$StationEditController {
   late StationEpisodeRepository _episodes;
   late StationReconcilerService _reconciler;
   late SubscriptionRepository _subscriptions;
+  late StationEditActivity _activity;
 
   /// The persisted station; null until a new station is created.
   int? _savedId;
@@ -114,6 +143,7 @@ class StationEditController extends _$StationEditController {
     _episodes = ref.read(stationEpisodeRepositoryProvider);
     _reconciler = ref.read(stationReconcilerServiceProvider);
     _subscriptions = ref.read(subscriptionRepositoryProvider);
+    _activity = ref.read(stationEditActivityProvider);
     _savedId = stationId;
     ref.onDispose(_flushReconcile);
     if (stationId == null) {
@@ -138,6 +168,8 @@ class StationEditController extends _$StationEditController {
   }
 
   Future<void> _loadExistingStation(int id) async {
+    // A previous editor for this station may still be saving.
+    await _activity.settled(id);
     final station = await _stations.findById(id);
     if (station == null) return;
 
@@ -359,6 +391,7 @@ class StationEditController extends _$StationEditController {
   void _scheduleSave() {
     final snapshot = state;
     _writes = _writes.then((_) => _persist(snapshot));
+    if (_savedId case final id?) _activity.track(id, _writes);
   }
 
   Future<void> _persist(StationEditState edit) async {
@@ -398,6 +431,7 @@ class StationEditController extends _$StationEditController {
     _applySettings(station, edit);
     final created = await _stations.create(station);
     _savedId = created.id;
+    _activity.track(created.id, _writes);
     return created;
   }
 
@@ -493,18 +527,23 @@ class StationEditController extends _$StationEditController {
   void _flushReconcile() {
     _closing = true;
     _reconcileTimer?.cancel();
-    unawaited(
-      _writes.then((_) {
-        final id = _pendingReconcileId;
-        if (id != null) _enqueueRebuild(id);
-      }),
-    );
+    final flush = _writes.then((_) {
+      final id = _pendingReconcileId;
+      if (id == null) return null;
+      _enqueueRebuild(id);
+      return _rebuilds;
+    });
+    // Tracked as a whole: the final rebuild is only queued once the writes
+    // finish, and a reopened editor must not load in between.
+    if (_savedId case final id?) _activity.track(id, flush);
+    unawaited(flush);
   }
 
   void _enqueueRebuild(int stationId) {
     _rebuilds = _rebuilds.then((_) {
       if (!_deleted) return _reconcile(stationId);
     });
+    _activity.track(stationId, _rebuilds);
   }
 
   Future<void> _reconcile(int stationId) async {

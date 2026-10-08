@@ -183,6 +183,35 @@ void main() {
   });
 
   group('closing the editor', () {
+    test('a reopened editor loads after the earlier saves', () async {
+      final station = await existingStation();
+      final first = container.listen(
+        stationEditControllerProvider(station.id),
+        (_, _) {},
+      );
+      final firstController = container.read(
+        stationEditControllerProvider(station.id).notifier,
+      );
+      await firstController.loaded;
+      stations.updateGate = Completer<void>();
+      firstController.setHideCompleted(true);
+      first.close();
+      await pumpEventQueue();
+
+      // Reopen while the first editor's save is still in flight.
+      final reopened = controllerFor(station.id);
+      var loaded = false;
+      unawaited(reopened.loaded.then((_) => loaded = true));
+      await pumpEventQueue();
+      check(loaded).isFalse();
+
+      stations.updateGate!.complete();
+      await reopened.loaded;
+      check(
+        container.read(stationEditControllerProvider(station.id)).hideCompleted,
+      ).isTrue();
+    });
+
     test('keeps a sort change made just before it', () async {
       final station = await existingStation();
       final controller = controllerFor(station.id);

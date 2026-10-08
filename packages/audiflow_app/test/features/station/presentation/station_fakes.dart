@@ -19,9 +19,6 @@ class FakeStationRepository implements StationRepository {
     return station;
   }
 
-  @override
-  Future<Station?> findById(int id) async => stations[id];
-
   /// When set, [watchAll] waits for it, to hold the list mid-load.
   Completer<void>? listGate;
 
@@ -31,8 +28,38 @@ class FakeStationRepository implements StationRepository {
     yield stations.values.toList();
   }
 
+  /// When set, [update] waits for it, to hold a save in flight.
+  Completer<void>? updateGate;
+
   @override
-  Future<void> update(Station station) async => stations[station.id] = station;
+  Future<void> update(Station station) async {
+    await updateGate?.future;
+    // Stores a copy so a later edit to the same object is not visible
+    // until it is saved.
+    stations[station.id] = _copy(station);
+  }
+
+  @override
+  Future<Station?> findById(int id) async {
+    final stored = stations[id];
+    return stored == null ? null : _copy(stored);
+  }
+
+  static Station _copy(Station s) => Station()
+    ..id = s.id
+    ..name = s.name
+    ..sortOrder = s.sortOrder
+    ..hideCompleted = s.hideCompleted
+    ..filterDownloaded = s.filterDownloaded
+    ..filterFavorited = s.filterFavorited
+    ..durationFilter = s.durationFilter
+    ..defaultEpisodeLimit = s.defaultEpisodeLimit
+    ..episodeSort = s.episodeSort
+    ..groupByPodcast = s.groupByPodcast
+    ..podcastSort = s.podcastSort
+    ..lastPlayedAt = s.lastPlayedAt
+    ..createdAt = s.createdAt
+    ..updatedAt = s.updatedAt;
 
   @override
   Future<void> delete(int id) async => stations.remove(id);
