@@ -250,6 +250,15 @@ void main() {
       ).equals(1);
     });
 
+    testWidgets('description preview drops decorative rules', (tester) async {
+      await tester.pumpWidget(
+        buildSubject(
+          description: '<p><b>::::::: Today :::::::</b></p><p>The story</p>',
+        ),
+      );
+      check(find.text('Today The story').evaluate().length).equals(1);
+    });
+
     testWidgets('rows end in a hairline starting at the text', (tester) async {
       await tester.pumpWidget(buildSubject());
       final divider = tester.widget<Divider>(find.byType(Divider));

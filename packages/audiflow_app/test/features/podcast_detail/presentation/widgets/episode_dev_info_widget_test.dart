@@ -1,6 +1,7 @@
 import 'package:audiflow_app/features/podcast_detail/presentation/widgets/episode_dev_info_widget.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -92,7 +93,7 @@ void main() {
 
       check(find.text('Developer info').evaluate()).isNotEmpty();
       check(find.text('https://example.com/feed.xml').evaluate()).isNotEmpty();
-      check(find.byType(IconButton).evaluate()).isNotEmpty();
+      check(find.byType(GroupedSection).evaluate()).length.equals(1);
     });
 
     testWidgets('shows "Not defined" when no pattern matches', (tester) async {

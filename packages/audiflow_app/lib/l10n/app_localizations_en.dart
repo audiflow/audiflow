@@ -1508,18 +1508,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get removeDownload => 'Remove download';
 
   @override
-  String get statsTitle => 'Title';
-
-  @override
-  String get statsPodcast => 'Podcast';
-
-  @override
-  String get statsDuration => 'Duration';
-
-  @override
-  String get statsPublished => 'Published';
-
-  @override
   String get statsTimesCompleted => 'Times completed';
 
   @override
@@ -1539,9 +1527,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get statsNever => 'Never';
-
-  @override
-  String get statsSection => 'Statistics';
 
   @override
   String get commonCopiedToClipboard => 'Copied to clipboard';
@@ -2249,4 +2234,50 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get parentalControlAccessDenied =>
       'Restricted Mode is on. Unlock from Settings to continue.';
+
+  @override
+  String get episodeDetailPlay => 'Play';
+
+  @override
+  String episodeDetailPlayWithDuration(String duration) {
+    return 'Play · $duration';
+  }
+
+  @override
+  String get episodeDetailResume => 'Resume';
+
+  @override
+  String get episodeDetailPause => 'Pause';
+
+  @override
+  String get episodeDetailPlayAgain => 'Play again';
+
+  @override
+  String get episodeDetailAbout => 'About this episode';
+
+  @override
+  String get episodeDetailShowMore => 'Show more';
+
+  @override
+  String get episodeDetailShowLess => 'Show less';
+
+  @override
+  String get episodeDetailPlaybackRecord => 'Playback history';
+
+  @override
+  String episodeDetailTimes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count times',
+      one: '1 time',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get episodeDetailOpenPodcast => 'Open podcast';
+
+  @override
+  String get episodeDetailAddToEnd => 'Add to end of queue';
 }

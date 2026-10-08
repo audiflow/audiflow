@@ -1464,25 +1464,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get removeDownload => 'ダウンロードを削除';
 
   @override
-  String get statsTitle => 'タイトル';
+  String get statsTimesCompleted => '再生完了';
 
   @override
-  String get statsPodcast => 'ポッドキャスト';
+  String get statsTimesStarted => '再生開始';
 
   @override
-  String get statsDuration => '再生時間';
-
-  @override
-  String get statsPublished => '公開日';
-
-  @override
-  String get statsTimesCompleted => '完了回数';
-
-  @override
-  String get statsTimesStarted => '再生回数';
-
-  @override
-  String get statsTotalListened => '総再生時間';
+  String get statsTotalListened => '合計再生時間';
 
   @override
   String get statsRealtime => '実時間';
@@ -1495,9 +1483,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get statsNever => '未再生';
-
-  @override
-  String get statsSection => '統計';
 
   @override
   String get commonCopiedToClipboard => 'クリップボードにコピーしました';
@@ -2130,4 +2115,44 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get parentalControlAccessDenied => '制限モードが有効です。設定からロックを解除してください。';
+
+  @override
+  String get episodeDetailPlay => '再生';
+
+  @override
+  String episodeDetailPlayWithDuration(String duration) {
+    return '再生 · $duration';
+  }
+
+  @override
+  String get episodeDetailResume => '続きから再生';
+
+  @override
+  String get episodeDetailPause => '一時停止';
+
+  @override
+  String get episodeDetailPlayAgain => 'もう一度再生';
+
+  @override
+  String get episodeDetailAbout => 'エピソードについて';
+
+  @override
+  String get episodeDetailShowMore => 'さらに表示';
+
+  @override
+  String get episodeDetailShowLess => '閉じる';
+
+  @override
+  String get episodeDetailPlaybackRecord => '再生の記録';
+
+  @override
+  String episodeDetailTimes(int count) {
+    return '$count回';
+  }
+
+  @override
+  String get episodeDetailOpenPodcast => '番組を開く';
+
+  @override
+  String get episodeDetailAddToEnd => 'キューの最後に追加';
 }
