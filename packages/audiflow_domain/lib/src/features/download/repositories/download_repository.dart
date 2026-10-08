@@ -19,6 +19,10 @@ abstract class DownloadRepository {
     DownloadOrigin origin = DownloadOrigin.manual,
   });
 
+  /// Marks the task as a [DownloadOrigin.manual] download so retention
+  /// rules never remove it. Does nothing if [id] is unknown.
+  Future<void> markManual(int id);
+
   /// Returns a download task by ID.
   Future<DownloadTask?> getById(int id);
 

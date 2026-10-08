@@ -297,6 +297,20 @@ class DownloadService {
   /// Retries a failed download.
   Future<void> retry(int taskId) => _queueService.retryDownload(taskId);
 
+  /// Keeps an auto download: promotes it to manual so retention rules
+  /// never remove it.
+  ///
+  /// Returns false when the task is gone or there is nothing to keep (it
+  /// is already manual, or failed or cancelled), so callers confirm only
+  /// a real change.
+  Future<bool> keep(int taskId) async {
+    final task = await _repository.getById(taskId);
+    if (task == null || !task.isRemovableByRetention) return false;
+    await _repository.markManual(taskId);
+    _logger.i('Kept auto download: $taskId');
+    return true;
+  }
+
   /// Deletes a download and its file.
   Future<void> delete(int taskId) async {
     final task = await _repository.getById(taskId);

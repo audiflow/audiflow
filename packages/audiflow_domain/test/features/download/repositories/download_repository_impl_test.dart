@@ -358,6 +358,28 @@ void main() {
     });
   });
 
+  group('markManual', () {
+    test('promotes an auto download to manual', () async {
+      final task = await repository.createDownload(
+        episodeId: 1,
+        audioUrl: 'https://example.com/ep1.mp3',
+        wifiOnly: true,
+        origin: DownloadOrigin.auto,
+      );
+
+      await repository.markManual(task!.id);
+
+      final stored = await repository.getById(task.id);
+      check(stored!.downloadOrigin).equals(DownloadOrigin.manual);
+    });
+
+    test('does nothing for an unknown task', () async {
+      await repository.markManual(999);
+
+      check(await repository.getAll()).isEmpty();
+    });
+  });
+
   group('delete', () {
     test('removes download task', () async {
       final task = await repository.createDownload(

@@ -65,6 +65,9 @@ class DownloadRepositoryImpl implements DownloadRepository {
   }
 
   @override
+  Future<void> markManual(int id) => _datasource.markManual(id);
+
+  @override
   Future<DownloadTask?> getById(int id) => _datasource.getById(id);
 
   @override
