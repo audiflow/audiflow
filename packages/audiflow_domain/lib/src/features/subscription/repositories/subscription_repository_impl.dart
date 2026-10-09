@@ -105,40 +105,58 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
     return inserted;
   }
 
+  /// Demotes the subscription to a cached entry rather than deleting it, so
+  /// a later [subscribe] promotes the same row and the podcast keeps its id,
+  /// episodes, and playback history.
   @override
   Future<void> unsubscribe(String itunesId) async {
-    final existing = await _datasource.getByItunesId(itunesId);
-    final rowsDeleted = await _datasource.deleteByItunesId(itunesId);
-    if (rowsDeleted == 0) {
+    final demoted = await _datasource.demoteToCached(itunesId);
+    if (demoted == null) {
       throw SubscriptionNotFoundException(itunesId);
     }
-    if (existing != null) {
-      final podcastId =
-          analyticsPodcastId(
-            itunesId: existing.itunesId,
-            feedUrl: existing.feedUrl,
-          ) ??
-          existing.feedUrl;
-      await _analytics?.log(
-        PodcastUnsubscribed(
-          podcastId: podcastId,
-          feedUrl: existing.feedUrl,
-          podcastTitle: existing.title,
-        ),
+    final podcastId =
+        analyticsPodcastId(
+          itunesId: demoted.itunesId,
+          feedUrl: demoted.feedUrl,
+        ) ??
+        demoted.feedUrl;
+    await _analytics?.log(
+      PodcastUnsubscribed(
+        podcastId: podcastId,
+        feedUrl: demoted.feedUrl,
+        podcastTitle: demoted.title,
+      ),
+    );
+    // Only subscribed podcasts belong to a station (FR 07).
+    await _bestEffort(
+      'stationReconciler.onSubscriptionRemoved',
+      demoted.id,
+      () async => _reconcilerService?.onSubscriptionRemoved(demoted.id),
+    );
+    await _bestEffort(
+      'parentalControl.pruneFlagsFor',
+      demoted.id,
+      () async => _parentalControlRepository?.pruneFlagsFor(demoted.id),
+    );
+  }
+
+  /// Runs an unsubscribe side effect that must not undo the unsubscribe.
+  ///
+  /// Catches everything rather than `on Exception` because Isar can throw
+  /// Error subclasses (not Exception) on database failures.
+  Future<void> _bestEffort(
+    String operation,
+    int id,
+    Future<void> Function() action,
+  ) async {
+    try {
+      await action();
+    } catch (e, st) {
+      _logger?.w(
+        '$operation failed for id=$id; unsubscribe continues',
+        error: e,
+        stackTrace: st,
       );
-      // Best-effort: remove per-podcast parental control flags.
-      // Use catch (e, st) instead of on Exception because Isar can throw
-      // Error subclasses (not Exception) on database failures.
-      try {
-        await _parentalControlRepository?.pruneFlagsFor(existing.id);
-      } catch (e, st) {
-        _logger?.w(
-          'parentalControl.pruneFlagsFor failed for id=${existing.id}; '
-          'unsubscribe continues',
-          error: e,
-          stackTrace: st,
-        );
-      }
     }
   }
 
@@ -226,7 +244,7 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
     if (deleted) {
       // Best-effort station cleanup — id IS the podcastId (Isar auto-increment).
       try {
-        await _reconcilerService?.onSubscriptionDeleted(id);
+        await _reconcilerService?.onSubscriptionRemoved(id);
       } on Exception {
         // Station reconciliation is best-effort; do not break delete flow.
       }

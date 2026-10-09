@@ -91,6 +91,57 @@ void main() {
         throwsA(isA<SubscriptionNotFoundException>()),
       );
     });
+
+    test('keeps the entry as a cached one outside the library', () async {
+      final subscribed = await repository.subscribe(
+        itunesId: 'itunes-1',
+        feedUrl: 'https://example.com/feed.xml',
+        title: 'Test Podcast',
+        artistName: 'Test Artist',
+      );
+
+      await repository.unsubscribe('itunes-1');
+
+      final kept = await repository.getById(subscribed.id);
+      check(kept).isNotNull().has((s) => s.isCached, 'isCached').isTrue();
+      check(await repository.getSubscriptions()).isEmpty();
+      check(await repository.getCachedSubscriptions()).length.equals(1);
+    });
+
+    test('resubscribing reuses the same podcast id', () async {
+      final first = await repository.subscribe(
+        itunesId: 'itunes-1',
+        feedUrl: 'https://example.com/feed.xml',
+        title: 'Test Podcast',
+        artistName: 'Test Artist',
+      );
+      await repository.unsubscribe('itunes-1');
+
+      final second = await repository.subscribe(
+        itunesId: 'itunes-1',
+        feedUrl: 'https://example.com/feed.xml',
+        title: 'Test Podcast',
+        artistName: 'Test Artist',
+      );
+
+      check(second.id).equals(first.id);
+      check(second.isCached).isFalse();
+      check(await repository.isSubscribed('itunes-1')).isTrue();
+    });
+
+    test('throws SubscriptionNotFoundException for a cached entry', () async {
+      await repository.getOrCreateCached(
+        itunesId: 'itunes-1',
+        feedUrl: 'https://example.com/feed.xml',
+        title: 'Test Podcast',
+        artistName: 'Test Artist',
+      );
+
+      expect(
+        () => repository.unsubscribe('itunes-1'),
+        throwsA(isA<SubscriptionNotFoundException>()),
+      );
+    });
   });
 
   group('isSubscribed', () {

@@ -61,21 +61,28 @@ void main() {
     });
   });
 
-  group('deleteByItunesId', () {
-    test('deletes existing subscription and returns 1', () async {
-      await datasource.insert(makeSubscription());
+  group('demoteToCached', () {
+    test('turns a subscription into a recently accessed cached entry', () async {
+      final inserted = await datasource.insert(makeSubscription());
+      final before = DateTime.now();
 
-      final deleted = await datasource.deleteByItunesId('itunes-1');
+      final demoted = await datasource.demoteToCached('itunes-1');
 
-      expect(deleted, 1);
-      final all = await datasource.getAll();
-      expect(all, isEmpty);
+      expect(demoted?.id, inserted.id);
+      final stored = await datasource.getById(inserted.id);
+      expect(stored?.isCached, isTrue);
+      expect(stored?.lastAccessedAt?.isBefore(before), isFalse);
+      expect(await datasource.getAll(), isEmpty);
     });
 
-    test('returns 0 when subscription does not exist', () async {
-      final deleted = await datasource.deleteByItunesId('nonexistent');
+    test('returns null when subscription does not exist', () async {
+      expect(await datasource.demoteToCached('nonexistent'), isNull);
+    });
 
-      expect(deleted, 0);
+    test('returns null for an entry that is already cached', () async {
+      await datasource.insert(makeSubscription()..isCached = true);
+
+      expect(await datasource.demoteToCached('itunes-1'), isNull);
     });
   });
 

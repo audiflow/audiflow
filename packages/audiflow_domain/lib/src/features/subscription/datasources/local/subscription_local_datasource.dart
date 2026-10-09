@@ -20,13 +20,23 @@ class SubscriptionLocalDatasource {
     return subscription;
   }
 
-  /// Deletes a subscription by its iTunes ID.
+  /// Demotes a real subscription to a cached entry, keeping its id so the
+  /// podcast's episodes and playback history stay attached to it.
   ///
-  /// Returns the number of rows affected.
-  Future<int> deleteByItunesId(String itunesId) async {
-    return _isar.writeTxn(
-      () => _isar.subscriptions.filter().itunesIdEqualTo(itunesId).deleteAll(),
-    );
+  /// Marks it as accessed now, so cache eviction measures its age from the
+  /// unsubscribe. Returns the demoted subscription, or null when no real
+  /// subscription exists for [itunesId].
+  Future<Subscription?> demoteToCached(String itunesId) {
+    // Read inside the transaction, as in [updateLastAccessed].
+    return _isar.writeTxn(() async {
+      final existing = await _isar.subscriptions.getByItunesId(itunesId);
+      if (existing == null || existing.isCached) return null;
+      existing
+        ..isCached = true
+        ..lastAccessedAt = DateTime.now();
+      await _isar.subscriptions.put(existing);
+      return existing;
+    });
   }
 
   /// Returns all real subscriptions (excludes cached entries),
