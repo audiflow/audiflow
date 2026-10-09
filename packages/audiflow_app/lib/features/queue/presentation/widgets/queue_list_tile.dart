@@ -110,8 +110,10 @@ class QueueListTile extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            InkWell(
-              onTap: onTap,
+            _row(
+              context,
+              colors,
+              downloadTask,
               onLongPress: () => _showContextMenu(
                 context,
                 ref,
@@ -119,7 +121,6 @@ class QueueListTile extends ConsumerWidget {
                 download,
                 downloadTask,
               ),
-              child: _row(context, colors, downloadTask),
             ),
             Divider(
               height: 1,
@@ -133,7 +134,38 @@ class QueueListTile extends ConsumerWidget {
     );
   }
 
+  /// The drag handle sits outside the tap and long-press area: holding it
+  /// before dragging would otherwise open the menu instead of reordering.
   Widget _row(
+    BuildContext context,
+    AppColors colors,
+    DownloadTask? downloadTask, {
+    required VoidCallback onLongPress,
+  }) {
+    return Row(
+      children: [
+        Expanded(
+          child: InkWell(
+            onTap: onTap,
+            onLongPress: onLongPress,
+            child: _content(context, colors, downloadTask),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsetsDirectional.only(end: Spacing.xs),
+          child: ReorderableDragStartListener(
+            index: index,
+            child: SizedBox.square(
+              dimension: Spacing.minTouchTarget,
+              child: Icon(Symbols.drag_handle, color: colors.inkTertiary),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _content(
     BuildContext context,
     AppColors colors,
     DownloadTask? downloadTask,
@@ -144,7 +176,6 @@ class QueueListTile extends ConsumerWidget {
         start: Spacing.screenHorizontal,
         top: Spacing.rowVertical,
         bottom: Spacing.rowVertical,
-        end: Spacing.xs,
       ),
       child: Row(
         children: [
@@ -182,13 +213,6 @@ class QueueListTile extends ConsumerWidget {
                   ],
                 ),
               ],
-            ),
-          ),
-          ReorderableDragStartListener(
-            index: index,
-            child: SizedBox.square(
-              dimension: Spacing.minTouchTarget,
-              child: Icon(Symbols.drag_handle, color: colors.inkTertiary),
             ),
           ),
         ],

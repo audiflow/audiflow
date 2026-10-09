@@ -3,6 +3,7 @@ import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:checks/checks.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -176,6 +177,19 @@ void main() {
     await tester.pumpAndSettle();
     check(find.text('Delete download').evaluate()).length.equals(1);
     check(find.text('Share episode').evaluate()).length.equals(1);
+  });
+
+  testWidgets('holding the drag handle never opens the menu', (tester) async {
+    await pump(tester, task: _completed());
+    final gesture = await tester.startGesture(
+      tester.getCenter(find.byIcon(Symbols.drag_handle)),
+    );
+    // Well past the long-press timeout without moving, as a listener
+    // pausing before the drag would.
+    await tester.pump(kLongPressTimeout * 2);
+    await gesture.up();
+    await tester.pumpAndSettle();
+    check(find.text('Delete download').evaluate()).isEmpty();
   });
 
   testWidgets('long press keeps an auto download and says so', (tester) async {
