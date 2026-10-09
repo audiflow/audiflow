@@ -1,9 +1,21 @@
 import 'package:audiflow_app/features/player/presentation/widgets/sleep_timer_sheet.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:audiflow_ui/audiflow_ui.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+class _RecordingHapticPlayer implements HapticPlayer {
+  final played = <HapticToken>[];
+
+  @override
+  void play(HapticToken token) => played.add(token);
+
+  @override
+  void prepare(HapticToken token) {}
+}
 
 Widget _sheet({
   required SleepTimerConfig config,
@@ -256,5 +268,54 @@ void main() {
     await tester.longPress(find.text('Set minutes'));
     await tester.pumpAndSettle();
     check(find.text('Minutes').evaluate()).length.equals(1);
+  });
+
+  group('haptics', () {
+    testWidgets('tapping an option plays selection', (tester) async {
+      final player = _RecordingHapticPlayer();
+      await tester.pumpWidget(
+        HapticsScope(
+          player: player,
+          child: _sheet(config: const SleepTimerConfig.off()),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('End of episode'));
+      check(player.played).deepEquals([HapticToken.selection]);
+    });
+
+    testWidgets('long press plays longPress without a framework vibration', (
+      tester,
+    ) async {
+      final player = _RecordingHapticPlayer();
+      var frameworkVibrations = 0;
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (call) async {
+          if (call.method == 'HapticFeedback.vibrate') frameworkVibrations++;
+          return null;
+        },
+      );
+      addTearDown(
+        () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          null,
+        ),
+      );
+      await tester.pumpWidget(
+        HapticsScope(
+          player: player,
+          child: _sheet(config: const SleepTimerConfig.off(), lastMinutes: 20),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.longPress(find.text('20 minutes'));
+      await tester.pumpAndSettle();
+
+      check(player.played).deepEquals([HapticToken.longPress]);
+      check(frameworkVibrations).equals(0);
+    });
   });
 }

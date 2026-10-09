@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:audiflow_core/audiflow_core.dart';
+import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -33,10 +34,12 @@ class HapticsLevelSelector extends ConsumerWidget {
           ),
         ],
         selected: {level},
-        onSelectionChanged: (selection) => unawaited(
-          ref
-              .read(hapticFeedbackLevelControllerProvider.notifier)
-              .setLevel(selection.single),
+        onSelectionChanged: HapticsScope.of(context).selectionHaptic(
+          (Set<HapticFeedbackLevel> selection) => unawaited(
+            ref
+                .read(hapticFeedbackLevelControllerProvider.notifier)
+                .setLevel(selection.single),
+          ),
         ),
       ),
     );

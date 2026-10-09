@@ -84,10 +84,13 @@ class DownloadsSettingsScreen extends ConsumerWidget {
                       ButtonSegment(value: 3, label: Text('3')),
                     ],
                     selected: {maxConcurrent},
-                    onSelectionChanged: (set) => _update(
-                      ref,
-                      () => repo.setMaxConcurrentDownloads(set.first),
-                    ),
+                    onSelectionChanged: HapticsScope.of(context)
+                        .selectionHaptic(
+                          (Set<int> set) => _update(
+                            ref,
+                            () => repo.setMaxConcurrentDownloads(set.first),
+                          ),
+                        ),
                   ),
                 ),
               ],

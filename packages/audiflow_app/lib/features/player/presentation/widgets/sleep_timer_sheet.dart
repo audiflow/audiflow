@@ -1,4 +1,5 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../l10n/app_localizations.dart';
@@ -281,9 +282,26 @@ class _OptionTile extends StatelessWidget {
       leading: isActive ? const Icon(Icons.check) : const SizedBox(width: 24),
       title: Text(label),
       trailing: _buildEditControl(),
-      onTap: onTap,
-      onLongPress: onLongPress,
+      // The tile plays catalog haptics itself; the framework's long-press
+      // vibration would double up with `longPress`.
+      enableFeedback: false,
+      onTap: () {
+        // Keeps the Android click sound that enableFeedback: false drops.
+        Feedback.forTap(context);
+        HapticsScope.of(context).play(HapticToken.selection);
+        onTap();
+      },
+      onLongPress: _withLongPressHaptic(context),
     );
+  }
+
+  VoidCallback? _withLongPressHaptic(BuildContext context) {
+    final handler = onLongPress;
+    if (handler == null) return null;
+    return () {
+      HapticsScope.of(context).play(HapticToken.longPress);
+      handler();
+    };
   }
 
   Widget? _buildEditControl() {

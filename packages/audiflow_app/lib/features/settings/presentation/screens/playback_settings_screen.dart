@@ -2,7 +2,7 @@ import 'package:audiflow_core/audiflow_core.dart'
     show AutoPlayOrder, DuckInterruptionBehavior, PlaybackSpeedScale;
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart'
-    show HapticToggle, HapticsScope, PlaybackSpeedSlider;
+    show HapticSelection, HapticToggle, HapticsScope, PlaybackSpeedSlider;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -149,7 +149,9 @@ class _SkipForwardTile extends StatelessWidget {
                 ButtonSegment(value: 60, label: Text('60')),
               ],
               selected: {seconds},
-              onSelectionChanged: (set) => onChanged(set.first),
+              onSelectionChanged: HapticsScope.of(
+                context,
+              ).selectionHaptic((Set<int> set) => onChanged(set.first)),
             ),
           ),
         ],
@@ -187,7 +189,9 @@ class _SkipBackwardTile extends StatelessWidget {
                 ButtonSegment(value: 30, label: Text('30')),
               ],
               selected: {seconds},
-              onSelectionChanged: (set) => onChanged(set.first),
+              onSelectionChanged: HapticsScope.of(
+                context,
+              ).selectionHaptic((Set<int> set) => onChanged(set.first)),
             ),
           ),
         ],

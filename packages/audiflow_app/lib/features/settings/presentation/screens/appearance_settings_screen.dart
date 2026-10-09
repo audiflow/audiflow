@@ -1,3 +1,4 @@
+import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -84,7 +85,9 @@ class _ThemeModeTile extends StatelessWidget {
                 ),
               ],
               selected: {themeMode},
-              onSelectionChanged: (set) => onChanged(set.first),
+              onSelectionChanged: HapticsScope.of(
+                context,
+              ).selectionHaptic((Set<ThemeMode> set) => onChanged(set.first)),
             ),
           ),
         ],
@@ -165,7 +168,9 @@ class _TextScaleTile extends StatelessWidget {
                 ),
               ],
               selected: {textScale},
-              onSelectionChanged: (set) => onChanged(set.first),
+              onSelectionChanged: HapticsScope.of(
+                context,
+              ).selectionHaptic((Set<double> set) => onChanged(set.first)),
             ),
           ),
           const SizedBox(height: 8),

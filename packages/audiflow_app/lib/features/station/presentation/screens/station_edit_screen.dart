@@ -460,10 +460,12 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
             ),
           ],
           selected: {state.episodeSort},
-          onSelectionChanged: (selection) {
+          onSelectionChanged: HapticsScope.of(context).selectionHaptic((
+            Set<StationEpisodeSort> selection,
+          ) {
             if (selection.isEmpty) return;
             controller.setEpisodeSort(selection.first);
-          },
+          }),
         ),
       ],
     );
@@ -804,6 +806,9 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
             label: Text(defaultLabel),
             selected: !state.podcastEpisodeLimits.containsKey(podcastId),
             onSelected: (_) {
+              if (state.podcastEpisodeLimits.containsKey(podcastId)) {
+                HapticsScope.of(context).play(HapticToken.selection);
+              }
               controller.setPodcastEpisodeLimit(podcastId, null);
               // Remove override (null removes from map in controller).
             },
@@ -823,6 +828,9 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
               selected: isSelected,
               selectedColor: theme.colorScheme.primaryContainer,
               onSelected: (_) {
+                if (!isSelected) {
+                  HapticsScope.of(context).play(HapticToken.selection);
+                }
                 if (opt == null) {
                   _setAllEpisodesOverride(controller, podcastId);
                 } else {

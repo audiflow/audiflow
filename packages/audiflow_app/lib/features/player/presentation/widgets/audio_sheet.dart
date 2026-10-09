@@ -283,6 +283,7 @@ class _SpeedChips extends StatelessWidget {
               // Re-tapping the current speed is not a new choice. The chip
               // stays enabled so the highlight keeps its selected styling.
               if (chipSpeed == speed) return;
+              HapticsScope.of(context).play(HapticToken.selection);
               onSelected(chipSpeed);
             },
           ),
