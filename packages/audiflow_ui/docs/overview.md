@@ -10,6 +10,7 @@
 - Material 3 theme configuration with light and dark color schemes
 - Design token constants (colors, spacing, border radii, shadows)
 - Responsive grid calculation and search filtering utilities
+- The semantic haptic API (`HapticToken`, `HapticPlayer`, `HapticsScope`) that widgets use to play catalog haptics
 
 ## Non-responsibilities
 
@@ -22,6 +23,7 @@
 
 - **Design tokens**: Static constant classes (`Spacing`, `AppBorders`, `AppShadows`) and the `AppColors` theme extension. All widgets reference these instead of raw values.
 - **Theme system**: `AppTheme` assembles `ThemeData` from `AppColors`, `AppColorScheme`, and `AppTextStyles`. The app applies `AppTheme.light()` or `AppTheme.dark()` at the `MaterialApp` level.
+- **Haptics**: Widgets play haptics by meaning with `HapticsScope.of(context).play(HapticToken.x)`, never through `HapticFeedback` or a platform API. The app injects the real player, already gated by the user's level, above `MaterialApp`; without a scope the player is silent. The catalog of tokens and which interaction uses which is `docs/design/haptics.md`.
 - **Widget placement rule**: A widget moves to `audiflow_ui` when it is consumed by two or more distinct features in `audiflow_app`. Until then, it stays in the feature directory.
 
 ## Directory structure
@@ -36,6 +38,10 @@ lib/
       app_theme.dart            # AppTheme.light() / AppTheme.dark()
       color_scheme.dart         # AppColorScheme -- explicit light/dark ColorScheme
       text_styles.dart          # AppTextStyles -- redesign type roles + textTheme
+    haptics/
+      haptic_token.dart         # HapticToken -- the catalog tokens; names are the channel contract
+      haptic_player.dart        # HapticPlayer interface, NoopHapticPlayer, LevelGatedHapticPlayer
+      haptics_scope.dart        # HapticsScope -- InheritedWidget that provides the player
     styles/
       spacing.dart              # Spacing.xxs..xxl (2..48 dp)
       borders.dart              # AppBorders -- radius scale + named radii

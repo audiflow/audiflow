@@ -12,13 +12,15 @@ refs:
     - fr:14-settings
     - fr:18-parental-control
   modules:
+    - packages/audiflow_ui/lib/src/haptics/
     - packages/audiflow_ui/lib/src/widgets/
+    - packages/audiflow_app/lib/app/haptics/
 ---
 # Haptic feedback design system
 
 > The catalog of haptic tokens the app may play, what each one means, how it is realized on iOS and Android, and which interactions use it. Features request haptics by meaning (a token), never by calling a platform haptic API directly.
 
-Status: **catalog approved (issue #611).** The foundation that plays these tokens is tracked in #612; applying tokens to screens is tracked under #610. Functional Requirements under `docs/fr/` describe current behavior and are updated in the PR that ships each change.
+Status: **catalog approved (issue #611); foundation implemented (#612).** Applying tokens to screens, and the settings row for the user level, are tracked under #610. Functional Requirements under `docs/fr/` describe current behavior and are updated in the PR that ships each change.
 
 ## 1. Principles
 
@@ -140,6 +142,18 @@ The foundation therefore uses a thin platform channel of its own (#612).
 Flutter's Material widgets can play their own feedback. With `enableFeedback` left at its default, `InkWell`, `InkResponse`, and the button widgets call `Feedback.forLongPress` on a long press, which plays a haptic on both platforms (`vibrate` on Android, `heavyImpact` on iOS). `Feedback.forTap` plays only a click sound on Android and nothing on iOS.
 
 A widget that plays a catalog token on long press must set `enableFeedback: false`, or the token plays alongside the framework's haptic. The existing add-to-queue button is such a widget. If the widget still needs the Android tap sound, it calls `Feedback.forTap` itself in its tap handler.
+
+### 4.5 Code map
+
+| Piece | Location |
+|---|---|
+| Tokens, `HapticPlayer`, level gating, `HapticsScope` | `packages/audiflow_ui/lib/src/haptics/` |
+| Channel player, level controller, providers | `packages/audiflow_app/lib/app/haptics/` |
+| iOS mapping | `packages/audiflow_app/ios/Runner/HapticsChannel.swift` |
+| Android mapping | `packages/audiflow_app/android/app/src/main/kotlin/com/reedom/audiflow_app/HapticsChannel.kt` |
+| Persisted level | `SettingsKeys.hapticFeedbackLevel`, `AppSettingsRepository.getHapticFeedbackLevel` |
+
+The channel is `audiflow/haptics`, with methods `play` and `prepare` that take a token name. A token the native side does not know plays nothing.
 
 ## 5. User setting
 

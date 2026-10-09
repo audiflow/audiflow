@@ -20,6 +20,7 @@ Part of the audiflow Flutter monorepo (`audiflow/packages/audiflow_ui/`). Depend
 - App-wide Material 3 theme configuration (light and dark)
 - Design tokens: spacing scale, border radius constants, text styles, color scheme
 - Utility functions for responsive grids and search filtering
+- Semantic haptic API (`HapticToken`, `HapticPlayer`, `HapticsScope`); the platform implementation lives in `audiflow_app`
 
 ## Non-responsibilities
 
