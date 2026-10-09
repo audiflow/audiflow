@@ -86,8 +86,8 @@ Every interaction that was considered is listed here, including those that delib
 | Sleep timer fired / cancelled | `none` (the app is usually in the background; see section 6) |
 | Queue row swipe (remove, download) crosses / un-crosses its threshold | `thresholdCross` / `thresholdRelease` |
 | Queue and station reorder: pick up / move / drop | `dragPickUp` / `dragStep` / `dragDrop` |
-| Add-to-queue long press (Play Next) | `longPress` (replaces the current `mediumImpact`) |
-| Episode and queue long-press menus | `longPress` |
+| Add-to-queue long press (Play Next) | `longPress` |
+| Episode and queue long-press menus, and long-press to copy a playback record value | `longPress` |
 | Subscribe | `success` |
 | Unsubscribe | `tap` |
 | Pull-to-refresh crosses / un-crosses its threshold | `thresholdCross` / `thresholdRelease` |

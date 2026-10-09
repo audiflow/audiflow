@@ -2,6 +2,8 @@ import 'package:audiflow_core/audiflow_core.dart';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
+import '../../haptics/haptic_long_press.dart';
+import '../../haptics/haptics_scope.dart';
 import '../../styles/borders.dart';
 import '../../styles/spacing.dart';
 import '../../themes/app_colors.dart';
@@ -159,8 +161,13 @@ class EpisodeCard extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 InkWell(
-                  onTap: onTap,
-                  onLongPress: onLongPress,
+                  // Long presses play the catalog token; the framework's vibration
+                  // would double up, and wrapForTap keeps the Android click sound.
+                  enableFeedback: false,
+                  onTap: Feedback.wrapForTap(onTap, context),
+                  onLongPress: HapticsScope.of(
+                    context,
+                  ).longPressHaptic(onLongPress),
                   child: _mainArea(colors),
                 ),
                 const SizedBox(height: Spacing.xs),

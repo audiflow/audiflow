@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:material_symbols_icons/symbols.dart';
+
+import '../../haptics/haptic_long_press.dart';
+import '../../haptics/haptics_scope.dart';
 
 /// Button to add episode to queue.
 ///
@@ -27,11 +29,11 @@ class AddToQueueButton extends StatelessWidget {
     return Tooltip(
       message: tooltip,
       child: InkWell(
-        onTap: onPlayLater,
-        onLongPress: () {
-          HapticFeedback.mediumImpact();
-          onPlayNext();
-        },
+        // Long presses play the catalog token; the framework's vibration
+        // would double up, and wrapForTap keeps the Android click sound.
+        enableFeedback: false,
+        onTap: Feedback.wrapForTap(onPlayLater, context),
+        onLongPress: HapticsScope.of(context).longPressHaptic(onPlayNext),
         customBorder: const CircleBorder(),
         child: ConstrainedBox(
           constraints: const BoxConstraints(minWidth: 44, minHeight: 44),

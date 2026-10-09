@@ -111,13 +111,18 @@ class QueueListTile extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             InkWell(
-              onTap: onTap,
-              onLongPress: () => _showContextMenu(
-                context,
-                ref,
-                downloadAction,
-                download,
-                downloadTask,
+              // Long presses play the catalog token; the framework's vibration
+              // would double up, and wrapForTap keeps the Android click sound.
+              enableFeedback: false,
+              onTap: Feedback.wrapForTap(onTap, context),
+              onLongPress: HapticsScope.of(context).longPressHaptic(
+                () => _showContextMenu(
+                  context,
+                  ref,
+                  downloadAction,
+                  download,
+                  downloadTask,
+                ),
               ),
               child: _row(context, colors, downloadTask),
             ),

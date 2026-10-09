@@ -498,8 +498,11 @@ class EpisodeListTile extends ConsumerWidget {
     return Tooltip(
       message: MaterialLocalizations.of(context).moreButtonTooltip,
       child: InkWell(
-        onTap: open,
-        onLongPress: open,
+        // Long presses play the catalog token; the framework's vibration
+        // would double up, and wrapForTap keeps the Android click sound.
+        enableFeedback: false,
+        onTap: Feedback.wrapForTap(open, context),
+        onLongPress: HapticsScope.of(context).longPressHaptic(open),
         customBorder: const CircleBorder(),
         child: ConstrainedBox(
           constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
