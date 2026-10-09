@@ -1,10 +1,9 @@
 • All-new design. The player takes its colors from the episode artwork, and the Library, Queue, Search, episode, and Settings screens are redesigned
-• Haptic feedback for switches, menus, swipes, the seek bar, and more. Choose On, Reduced, or Off in Appearance settings
-• Menus open with a tap or a press: hold, slide to an item, and release to choose it
+• Haptic feedback for switches, filter and sort choices, swipes, the seek bar, and more. Choose On, Reduced, or Off in Appearance settings
 • Library: filter your podcasts by title or author, see a dot on podcasts with new episodes, and see your four most recently played stations first, with "Show all" for the rest
 • Stations show their podcasts' artwork as stacked cards, and station edits are saved as you make them
 • Podcasts: filter episodes by Played or Downloaded, "Mark all played" or "Mark all unplayed" from the menu, and "Open website" for the show's site
-• Podcast settings (play order, audio, auto-download, and more) are now gathered in one sheet
+• Podcast settings (play order, auto-download, and more) are now gathered in one sheet
 • Auto-downloads no longer pile up: each podcast keeps only its newest unplayed episodes (3 by default). Change the number in Download settings, or for one podcast in its settings
 • Auto-download pauses for a podcast you haven't played in a while (after 5 of its episodes are auto-downloaded without you playing any) and resumes when you play one of its episodes, or when you tap Resume in the podcast's settings
 • Auto-downloaded episodes are removed the next time you open the app once 24 hours have passed since you finished them, so you can still replay one or undo an accidental "Mark as played". This is on by default and never removes episodes you downloaded yourself. Use "Keep download" to keep an auto-downloaded episode
