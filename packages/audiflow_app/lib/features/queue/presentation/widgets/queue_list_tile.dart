@@ -14,6 +14,7 @@ import '../../../download/presentation/helpers/download_action_helper.dart';
 import '../../../download/presentation/widgets/keep_download_menu_tile.dart';
 import '../../../podcast_detail/presentation/screens/episode_detail_screen.dart';
 import '../../../share/presentation/helpers/share_helper.dart';
+import 'haptic_dismissible.dart';
 
 /// Up-next row (redesign 4.6): artwork, two-line title, "duration · date"
 /// with a downloaded mark, and a drag handle as the only trailing control.

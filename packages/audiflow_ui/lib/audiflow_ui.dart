@@ -9,7 +9,6 @@ export 'src/themes/now_playing_theme.dart';
 export 'src/themes/text_styles.dart';
 
 // Haptics
-export 'src/haptics/haptic_dismissible.dart';
 export 'src/haptics/haptic_long_press.dart';
 export 'src/haptics/haptic_player.dart';
 export 'src/haptics/haptic_selection.dart';

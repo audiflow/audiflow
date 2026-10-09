@@ -1,3 +1,4 @@
+import 'package:audiflow_app/features/queue/presentation/widgets/haptic_dismissible.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
@@ -104,5 +105,45 @@ void main() {
     check(
       player.played,
     ).deepEquals([HapticToken.thresholdCross, HapticToken.thresholdCross]);
+  });
+
+  group('SwipeThresholdTracker', () {
+    DismissUpdateDetails update(
+      double progress, {
+      required bool reached,
+      required bool previousReached,
+    }) => DismissUpdateDetails(
+      direction: DismissDirection.startToEnd,
+      reached: reached,
+      previousReached: previousReached,
+      progress: progress,
+    );
+
+    test('a new drag during the return trip plays again', () {
+      final tracker = SwipeThresholdTracker();
+      check(
+        tracker.update(update(0.45, reached: true, previousReached: false)),
+      ).equals(HapticToken.thresholdCross);
+      tracker.released();
+      // Return trip: dropping below the threshold is not the finger's doing.
+      check(
+        tracker.update(update(0.3, reached: false, previousReached: true)),
+      ).isNull();
+      // A new drag catches the row mid-return and pulls it past again.
+      check(
+        tracker.update(update(0.35, reached: false, previousReached: false)),
+      ).isNull();
+      check(
+        tracker.update(update(0.45, reached: true, previousReached: false)),
+      ).equals(HapticToken.thresholdCross);
+    });
+
+    test('the finger pulling back below the threshold plays release', () {
+      final tracker = SwipeThresholdTracker();
+      tracker.update(update(0.45, reached: true, previousReached: false));
+      check(
+        tracker.update(update(0.3, reached: false, previousReached: true)),
+      ).equals(HapticToken.thresholdRelease);
+    });
   });
 }
