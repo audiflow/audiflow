@@ -2,6 +2,7 @@ import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/src/common/datasources/shared_preferences_datasource.dart';
 import 'package:audiflow_domain/src/features/settings/repositories/app_settings_repository_impl.dart';
 import 'package:flutter/material.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -246,27 +247,27 @@ void main() {
 
   group('HapticFeedbackLevel', () {
     test('returns default (on) when no value stored', () {
-      expect(
+      check(
         repository.getHapticFeedbackLevel(),
+      ).equals(SettingsDefaults.hapticFeedbackLevel);
+      check(
         SettingsDefaults.hapticFeedbackLevel,
-      );
-      expect(SettingsDefaults.hapticFeedbackLevel, HapticFeedbackLevel.on);
+      ).equals(HapticFeedbackLevel.on);
     });
 
     for (final level in HapticFeedbackLevel.values) {
       test('persists and reads ${level.name}', () async {
         await repository.setHapticFeedbackLevel(level);
-        expect(repository.getHapticFeedbackLevel(), level);
+        check(repository.getHapticFeedbackLevel()).equals(level);
       });
     }
 
     test('returns default for unknown stored value', () async {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(SettingsKeys.hapticFeedbackLevel, 'loud');
-      expect(
+      check(
         repository.getHapticFeedbackLevel(),
-        SettingsDefaults.hapticFeedbackLevel,
-      );
+      ).equals(SettingsDefaults.hapticFeedbackLevel);
     });
   });
 
