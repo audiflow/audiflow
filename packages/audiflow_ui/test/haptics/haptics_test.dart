@@ -119,6 +119,21 @@ void main() {
     });
   });
 
+  group('HapticSelection', () {
+    test('plays selection, then forwards the value', () {
+      final player = _RecordingHapticPlayer();
+      final values = <int>[];
+      player.selectionHaptic<int>(values.add)!(3);
+
+      check(player.played).deepEquals([HapticToken.selection]);
+      check(values).deepEquals([3]);
+    });
+
+    test('keeps a null callback null', () {
+      check(_RecordingHapticPlayer().selectionHaptic<int>(null)).isNull();
+    });
+  });
+
   group('HapticsScope', () {
     testWidgets('of returns a silent player when no scope is present', (
       tester,

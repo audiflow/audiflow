@@ -10,6 +10,7 @@ export 'src/themes/text_styles.dart';
 
 // Haptics
 export 'src/haptics/haptic_player.dart';
+export 'src/haptics/haptic_selection.dart';
 export 'src/haptics/haptic_toggle.dart';
 export 'src/haptics/haptic_token.dart';
 export 'src/haptics/haptics_scope.dart';
