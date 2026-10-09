@@ -17,9 +17,17 @@ import 'haptics_scope.dart';
 ///   that distance divided by its 1.5 drag limit, and never disarms, so
 ///   there is no release token.
 class PullToRefreshHaptics extends StatefulWidget {
-  const PullToRefreshHaptics({required this.child, super.key});
+  const PullToRefreshHaptics({
+    required this.child,
+    this.refreshing = false,
+    super.key,
+  });
 
   final Widget child;
+
+  /// Whether a refresh is still running. A pull started meanwhile cannot
+  /// start another refresh, so it plays nothing.
+  final bool refreshing;
 
   @override
   State<PullToRefreshHaptics> createState() => _PullToRefreshHapticsState();
@@ -42,7 +50,7 @@ class _PullToRefreshHapticsState extends State<PullToRefreshHaptics> {
     if (notification.metrics.axisDirection != AxisDirection.down) return false;
     switch (notification) {
       case ScrollStartNotification(dragDetails: _?)
-          when notification.metrics.extentBefore == 0:
+          when notification.metrics.extentBefore == 0 && !widget.refreshing:
         _pull = 0;
         _crossed = false;
       case ScrollUpdateNotification(:final scrollDelta?):
@@ -85,7 +93,7 @@ class _PullToRefreshHapticsState extends State<PullToRefreshHaptics> {
 ///
 /// Use it in place of [RefreshIndicator] so every refreshable list feels the
 /// same; see [PullToRefreshHaptics] for when each token plays.
-class HapticRefreshIndicator extends StatelessWidget {
+class HapticRefreshIndicator extends StatefulWidget {
   const HapticRefreshIndicator({
     required this.onRefresh,
     required this.child,
@@ -98,12 +106,29 @@ class HapticRefreshIndicator extends StatelessWidget {
   final double edgeOffset;
 
   @override
+  State<HapticRefreshIndicator> createState() => _HapticRefreshIndicatorState();
+}
+
+class _HapticRefreshIndicatorState extends State<HapticRefreshIndicator> {
+  bool _refreshing = false;
+
+  Future<void> _refresh() async {
+    setState(() => _refreshing = true);
+    try {
+      await widget.onRefresh();
+    } finally {
+      if (mounted) setState(() => _refreshing = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return PullToRefreshHaptics(
+      refreshing: _refreshing,
       child: RefreshIndicator(
-        onRefresh: onRefresh,
-        edgeOffset: edgeOffset,
-        child: child,
+        onRefresh: _refresh,
+        edgeOffset: widget.edgeOffset,
+        child: widget.child,
       ),
     );
   }

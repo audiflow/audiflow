@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
@@ -50,7 +52,12 @@ void main() {
   }
 
   /// Pulls down by [pull] in small steps, then optionally back up by [back].
-  Future<void> pull(WidgetTester tester, double pull, {double back = 0}) async {
+  Future<void> pull(
+    WidgetTester tester,
+    double pull, {
+    double back = 0,
+    bool settle = true,
+  }) async {
     final gesture = await tester.startGesture(
       tester.getCenter(find.text('Item 0')),
     );
@@ -63,7 +70,15 @@ void main() {
       await tester.pump();
     }
     await gesture.up();
-    await tester.pumpAndSettle();
+    if (settle) {
+      await tester.pumpAndSettle();
+    } else {
+      // A pending refresh keeps the spinner animating, so settling never
+      // ends; frame by frame lets the snap animation reach onRefresh.
+      for (var i = 0; i < 20; i++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+    }
   }
 
   group('Android', () {
@@ -99,7 +114,50 @@ void main() {
         await pumpList(tester);
         await pull(tester, 400, back: 250);
         check(player.played).deepEquals([HapticToken.thresholdCross]);
+        // The cue promised a refresh, and pulling back does not cancel it.
+        check(refreshes).equals(1);
       },
     );
+  });
+
+  testWidgets('a pull while a refresh is running plays nothing', (
+    tester,
+  ) async {
+    final pending = Completer<void>();
+    tester.view
+      ..physicalSize = const Size(400, 800)
+      ..devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      HapticsScope(
+        player: player,
+        child: MaterialApp(
+          home: Scaffold(
+            body: HapticRefreshIndicator(
+              onRefresh: () {
+                refreshes++;
+                return pending.future;
+              },
+              child: ListView(
+                children: [
+                  for (var i = 0; i < 30; i++)
+                    SizedBox(height: 60, child: Text('Item $i')),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await pull(tester, 400, settle: false);
+    check(refreshes).equals(1);
+    await pull(tester, 400, settle: false);
+
+    check(player.played).deepEquals([HapticToken.thresholdCross]);
+    check(refreshes).equals(1);
+
+    pending.complete();
+    await tester.pumpAndSettle();
   });
 }
