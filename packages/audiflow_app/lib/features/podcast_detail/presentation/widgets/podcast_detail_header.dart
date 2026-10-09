@@ -248,6 +248,14 @@ class _SubscribeButton extends ConsumerWidget {
 /// ("Unsubscribe" when true). If the state has since changed or is not
 /// known yet, nothing happens: toggling would do the opposite of the
 /// label the listener tapped.
+// Subscribing is a completed task (success); unsubscribing is low-key
+// (tap), so the two never share a feel; a failed toggle is an error.
+HapticToken _subscriptionOutcome(AsyncValue<bool> result) => switch (result) {
+  AsyncError() => HapticToken.error,
+  AsyncData(value: true) => HapticToken.success,
+  _ => HapticToken.tap,
+};
+
 Future<void> togglePodcastSubscription({
   required BuildContext context,
   required WidgetRef ref,
@@ -257,10 +265,15 @@ Future<void> togglePodcastSubscription({
 }) async {
   final provider = subscriptionControllerProvider(podcast.id);
   if (ref.read(provider).value != expectSubscribed) return;
+  final haptics = HapticsScope.of(context);
   final allowed = await ref
       .read(provider.notifier)
       .toggleSubscription(context, podcast, source: source);
-  if (allowed || !context.mounted) return;
+  if (!context.mounted) return;
+  if (allowed) {
+    haptics.play(_subscriptionOutcome(ref.read(provider)));
+    return;
+  }
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
       content: Text(AppLocalizations.of(context).parentalControlAccessDenied),

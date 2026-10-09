@@ -15,6 +15,16 @@ const _podcast = Podcast(
   feedUrl: 'https://example.com/feed.xml',
 );
 
+class _RecordingHapticPlayer implements HapticPlayer {
+  final played = <HapticToken>[];
+
+  @override
+  void play(HapticToken token) => played.add(token);
+
+  @override
+  void prepare(HapticToken token) {}
+}
+
 void main() {
   Future<_CountingController> pump(
     WidgetTester tester, {
@@ -23,6 +33,7 @@ void main() {
     _RecordingFeedSync? feedSync,
     VoidCallback? onRowTap,
     bool fails = false,
+    HapticPlayer haptics = const NoopHapticPlayer(),
   }) async {
     final controller = _CountingController(subscribed, fails: fails);
     await tester.pumpWidget(
@@ -33,18 +44,21 @@ void main() {
             feedSync ?? _RecordingFeedSync(),
           ),
         ],
-        child: MaterialApp(
-          theme: AppTheme.light(),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: Scaffold(
-            // Inside a tappable row, as in the search results.
-            body: Center(
-              child: InkWell(
-                onTap: onRowTap,
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: SearchSubscribeButton(podcast: podcast),
+        child: HapticsScope(
+          player: haptics,
+          child: MaterialApp(
+            theme: AppTheme.light(),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              // Inside a tappable row, as in the search results.
+              body: Center(
+                child: InkWell(
+                  onTap: onRowTap,
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: SearchSubscribeButton(podcast: podcast),
+                  ),
                 ),
               ),
             ),
@@ -118,6 +132,13 @@ void main() {
     await tester.tap(find.byTooltip('Retry'));
     await tester.pumpAndSettle();
     check(controller.builds).isGreaterThan(builds);
+  });
+  testWidgets('subscribing plays the success haptic', (tester) async {
+    final haptics = _RecordingHapticPlayer();
+    await pump(tester, subscribed: false, haptics: haptics);
+    await tester.tap(find.byType(SearchSubscribeButton));
+    await tester.pumpAndSettle();
+    check(haptics.played).deepEquals([HapticToken.success]);
   });
 }
 

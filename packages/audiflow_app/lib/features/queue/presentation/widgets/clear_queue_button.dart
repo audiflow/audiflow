@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
@@ -44,6 +45,7 @@ class _ClearQueueButtonState extends State<ClearQueueButton> {
       widget.onClear();
     } else {
       // First tap - enter confirmation state
+      HapticsScope.of(context).play(HapticToken.warning);
       setState(() => _isConfirming = true);
       _resetTimer = Timer(const Duration(seconds: 3), () {
         if (mounted) {
