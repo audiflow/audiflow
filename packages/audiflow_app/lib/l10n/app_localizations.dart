@@ -1598,23 +1598,35 @@ abstract class AppLocalizations {
   /// **'{minutes}m'**
   String episodePillDurationMinutes(int minutes);
 
-  /// Episode filter chip: show all episodes
+  /// Episode filter menu choice: show all episodes
   ///
   /// In en, this message translates to:
   /// **'All'**
   String get episodeFilterAll;
 
-  /// Episode filter chip: show unplayed episodes
+  /// Episode filter menu choice: show unplayed episodes
   ///
   /// In en, this message translates to:
   /// **'Unplayed'**
   String get episodeFilterUnplayed;
 
-  /// Episode filter chip: show partially played episodes
+  /// Episode filter menu choice: show partially played episodes
   ///
   /// In en, this message translates to:
   /// **'In Progress'**
   String get episodeFilterInProgress;
+
+  /// Episode filter menu choice: show played episodes
+  ///
+  /// In en, this message translates to:
+  /// **'Played'**
+  String get episodeFilterPlayed;
+
+  /// Episode filter menu choice: show downloaded episodes
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded'**
+  String get episodeFilterDownloaded;
 
   /// Generic load failure
   ///

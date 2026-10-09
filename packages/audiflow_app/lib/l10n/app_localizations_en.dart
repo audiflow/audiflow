@@ -843,6 +843,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get episodeFilterInProgress => 'In Progress';
 
   @override
+  String get episodeFilterPlayed => 'Played';
+
+  @override
+  String get episodeFilterDownloaded => 'Downloaded';
+
+  @override
   String podcastDetailFailedToLoad(String error) {
     return 'Failed to load: $error';
   }

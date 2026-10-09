@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show setEquals;
 import 'package:riverpod/riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -52,6 +53,19 @@ final completedDownloadsProvider = StreamProvider<List<DownloadTask>>((ref) {
   final repository = ref.watch(downloadRepositoryProvider);
   return repository.watchByStatus(const DownloadStatus.completed());
 });
+
+/// Watches the ids of episodes that have a completed download.
+///
+/// Emits only when the set changes, so progress writes on in-flight tasks
+/// do not rebuild lists that filter by downloaded state.
+@riverpod
+Stream<Set<int>> completedDownloadEpisodeIds(Ref ref) {
+  final repository = ref.watch(downloadRepositoryProvider);
+  return repository
+      .watchByStatus(const DownloadStatus.completed())
+      .map((tasks) => {for (final task in tasks) task.episodeId})
+      .distinct(setEquals);
+}
 
 /// Watches failed downloads.
 final failedDownloadsProvider = StreamProvider<List<DownloadTask>>((ref) {

@@ -170,6 +170,8 @@ class PodcastViewPreferenceRepositoryImpl
     return switch (value) {
       'unplayed' => EpisodeFilter.unplayed,
       'inProgress' => EpisodeFilter.inProgress,
+      'played' => EpisodeFilter.played,
+      'downloaded' => EpisodeFilter.downloaded,
       _ => EpisodeFilter.all,
     };
   }
@@ -194,6 +196,8 @@ class PodcastViewPreferenceRepositoryImpl
       EpisodeFilter.all => 'all',
       EpisodeFilter.unplayed => 'unplayed',
       EpisodeFilter.inProgress => 'inProgress',
+      EpisodeFilter.played => 'played',
+      EpisodeFilter.downloaded => 'downloaded',
     };
   }
 

@@ -4,12 +4,13 @@ import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../l10n/app_localizations.dart';
-import 'episode_filter_chips.dart';
+import 'episode_filter_button.dart';
 import 'episode_list_section.dart';
+import 'menu_selector_button.dart';
 
 /// Controls pinned under the floating navigation on podcast detail
 /// (redesign 4.2): the Episodes / Series switch, then a row that depends
-/// on the view (filter chips, or the series-type dropdown) with the sort
+/// on the view (the episode filter menu, or the series-type menu) with the sort
 /// toggle on the right.
 class PodcastDetailStickyBar extends StatelessWidget {
   const PodcastDetailStickyBar({
@@ -71,7 +72,7 @@ class PodcastDetailStickyBar extends StatelessWidget {
             height: _rowHeight,
             child: Row(
               children: [
-                Expanded(child: series ? _seriesType() : _filterChips()),
+                Expanded(child: series ? _seriesType() : _filterButton()),
                 SortOrderButton(
                   sortOrder: sortOrder,
                   onPressed: onToggleSortOrder,
@@ -85,15 +86,29 @@ class PodcastDetailStickyBar extends StatelessWidget {
     );
   }
 
-  Widget _filterChips() {
-    return EpisodeFilterChips(selected: filter, onSelected: onFilterSelected);
+  Widget _filterButton() {
+    return _leadingSelector(
+      EpisodeFilterButton(selected: filter, onSelected: onFilterSelected),
+    );
   }
 
   Widget _seriesType() {
     final selected = selectedPlaylist;
     if (selected == null) return const SizedBox.shrink();
-    // The dropdown takes at most ~58% of the row so the sort toggle keeps
-    // its room even for long series-type names.
+    return _leadingSelector(
+      MenuSelectorButton<SmartPlaylist>(
+        choices: playlists,
+        selected: selected,
+        labelOf: (playlist) => playlist.formattedDisplayName,
+        isSelected: (playlist) => playlist.id == selected.id,
+        onSelected: onPlaylistSelected,
+      ),
+    );
+  }
+
+  /// Left-aligns a selector pill. It takes at most ~58% of the row so the
+  /// sort toggle keeps its room even for long names.
+  Widget _leadingSelector(Widget selector) {
     return LayoutBuilder(
       builder: (context, constraints) => Align(
         alignment: Alignment.centerLeft,
@@ -103,107 +118,10 @@ class PodcastDetailStickyBar extends StatelessWidget {
             constraints: BoxConstraints(
               maxWidth: (constraints.maxWidth + Spacing.sm) * 0.58,
             ),
-            child: _SeriesTypeDropdown(
-              playlists: playlists,
-              selected: selected,
-              onSelected: onPlaylistSelected,
-            ),
+            child: selector,
           ),
         ),
       ),
     );
-  }
-}
-
-/// Outlined pill naming the current series type; opens a menu of the
-/// others when there is more than one.
-class _SeriesTypeDropdown extends StatelessWidget {
-  const _SeriesTypeDropdown({
-    required this.playlists,
-    required this.selected,
-    required this.onSelected,
-  });
-
-  final List<SmartPlaylist> playlists;
-  final SmartPlaylist selected;
-  final ValueChanged<SmartPlaylist> onSelected;
-
-  bool get _hasChoices => 1 < playlists.length;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    return Material(
-      color: colors.surface,
-      shape: StadiumBorder(side: BorderSide(color: colors.outline)),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: _hasChoices ? () => _showMenu(context) : null,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 36),
-          child: Padding(
-            padding: EdgeInsets.only(
-              left: Spacing.md,
-              right: _hasChoices ? Spacing.sm : Spacing.md,
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Flexible(
-                  child: Text(
-                    selected.formattedDisplayName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTextStyles.label.copyWith(color: colors.ink),
-                  ),
-                ),
-                if (_hasChoices) ...[
-                  const SizedBox(width: Spacing.xs),
-                  Icon(
-                    Icons.expand_more_rounded,
-                    size: 20,
-                    color: colors.inkSecondary,
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _showMenu(BuildContext context) async {
-    final box = context.findRenderObject()! as RenderBox;
-    final overlay =
-        Overlay.of(context).context.findRenderObject()! as RenderBox;
-    final bottomLeft = box.localToGlobal(
-      box.size.bottomLeft(Offset.zero),
-      ancestor: overlay,
-    );
-    final colors = AppColors.of(context);
-    final chosen = await showMenu<SmartPlaylist>(
-      context: context,
-      position: RelativeRect.fromRect(
-        bottomLeft & Size(box.size.width, 0),
-        Offset.zero & overlay.size,
-      ),
-      items: [
-        for (final playlist in playlists)
-          PopupMenuItem(
-            value: playlist,
-            child: Text(
-              playlist.formattedDisplayName,
-              style: playlist.id == selected.id
-                  ? AppTextStyles.body.copyWith(
-                      color: colors.accent,
-                      fontWeight: FontWeight.w600,
-                    )
-                  : null,
-            ),
-          ),
-      ],
-    );
-    if (chosen != null) onSelected(chosen);
   }
 }
