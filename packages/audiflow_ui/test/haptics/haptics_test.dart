@@ -99,6 +99,26 @@ void main() {
     });
   });
 
+  group('HapticToggle', () {
+    test('plays toggleOn or toggleOff, then forwards the value', () {
+      final player = _RecordingHapticPlayer();
+      final values = <bool>[];
+      final onChanged = player.toggleHaptic(values.add)!;
+
+      onChanged(true);
+      onChanged(false);
+
+      check(
+        player.played,
+      ).deepEquals([HapticToken.toggleOn, HapticToken.toggleOff]);
+      check(values).deepEquals([true, false]);
+    });
+
+    test('keeps a null callback null', () {
+      check(_RecordingHapticPlayer().toggleHaptic(null)).isNull();
+    });
+  });
+
   group('HapticsScope', () {
     testWidgets('of returns a silent player when no scope is present', (
       tester,

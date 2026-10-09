@@ -49,7 +49,7 @@ class SettingsRow extends StatelessWidget {
       child: InkWell(
         // The trailing decides the row tap; a disabled toggle must not
         // fall back to onTap.
-        onTap: trailing == null ? onTap : trailing!.rowTap(onTap),
+        onTap: trailing == null ? onTap : trailing!.rowTap(context, onTap),
         child: Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: Spacing.rowHorizontal,
