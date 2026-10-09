@@ -40,8 +40,9 @@ state and resume position stay coherent no matter where the listener touches it.
   player sits on a dark ground taken from the episode artwork (muted and darkened so white
   controls stay readable; a default navy until the artwork is sampled), with white controls.
   Its header shows a close chevron, "Playing from" with the queue's source (or the podcast),
-  and an overflow menu with the transcript page (when available), episode details, and the
-  podcast. If the episode
+  and an overflow menu with the transcript page (when available), episode details, the
+  podcast, and sharing the episode (when it has a link to share). The menu opens just below
+  its button, as the other screens' overflow menus do. If the episode
   was partly played before, it resumes from the saved position; if it was within two seconds of
   the end, it replays from the start. Playback continues when the app is backgrounded or the
   screen is locked.

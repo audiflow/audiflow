@@ -17,6 +17,7 @@ import '../../helpers/chapter_seek_bar_segments.dart';
 import '../../helpers/playback_time_format.dart';
 import '../../helpers/podcast_lookup.dart';
 import '../../../queue/presentation/controllers/queue_controller.dart';
+import '../../../share/presentation/helpers/share_helper.dart';
 import '../../services/audio_route_channel.dart';
 import '../controllers/seek_undo_controller.dart';
 import '../widgets/audio_output_picker_button.dart';
@@ -190,8 +191,9 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
                               ),
                             ) ??
                             nowPlaying.podcastTitle,
-                        onMore: () => _showMoreMenu(
+                        onMore: (anchor) => _showMoreMenu(
                           nowPlaying,
+                          anchor: anchor,
                           hasTranscript: hasTranscriptTab,
                         ),
                       ),
@@ -285,10 +287,14 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
     tabs.animateTo(index);
   }
 
-  /// Player overflow: page switch (when there is a transcript) and links
-  /// out to the episode and podcast.
+  /// Player overflow: page switch (when there is a transcript), links out
+  /// to the episode and podcast, and sharing the episode.
+  ///
+  /// [anchor] is the `…` button's context: the menu opens below it and the
+  /// share sheet points at it on iPad.
   Future<void> _showMoreMenu(
     NowPlayingInfo nowPlaying, {
+    required BuildContext anchor,
     required bool hasTranscript,
   }) {
     final l10n = AppLocalizations.of(context);
@@ -297,7 +303,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
     final episode = nowPlaying.episode;
     return showActionMenu(
       context: context,
-      top: MediaQuery.paddingOf(context).top + Spacing.minTouchTarget,
+      top: _menuTopBelow(anchor),
       sections: [
         [
           if (hasTranscript && tabs != null)
@@ -328,7 +334,46 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
                   _navigateToPodcast(episode, nowPlaying.podcastTitle),
             ),
         ],
+        [
+          if (_canShare(nowPlaying))
+            ActionMenuEntry(
+              icon: Icons.ios_share,
+              label: l10n.shareEpisode,
+              onSelected: () => _share(nowPlaying, anchor),
+            ),
+        ],
       ],
+    );
+  }
+
+  /// Places the menu where the other screens' `…` menus open: at the bottom
+  /// of a floating navigation bar centred on the button. The sheet drops
+  /// the status bar inset from its MediaQuery, so a padding-based offset
+  /// would land the menu over the Dynamic Island.
+  double _menuTopBelow(BuildContext anchor) {
+    final box = anchor.findRenderObject();
+    if (box is! RenderBox || !box.hasSize) {
+      return FloatingNavigationBar.heightOf(context);
+    }
+    final center = box.localToGlobal(box.size.center(Offset.zero));
+    return center.dy + FloatingNavigationBar.barHeight / 2;
+  }
+
+  bool _canShare(NowPlayingInfo nowPlaying) {
+    final guid = nowPlaying.episodeGuid ?? nowPlaying.episode?.guid;
+    final hasDeepLink =
+        nowPlaying.itunesId != null && guid != null && guid.isNotEmpty;
+    return hasDeepLink || nowPlaying.episode?.link != null;
+  }
+
+  void _share(NowPlayingInfo nowPlaying, BuildContext anchor) {
+    if (!anchor.mounted) return;
+    shareEpisode(
+      context: anchor,
+      ref: ref,
+      itunesId: nowPlaying.itunesId,
+      episodeGuid: nowPlaying.episodeGuid ?? nowPlaying.episode?.guid,
+      fallbackLink: nowPlaying.episode?.link,
     );
   }
 
@@ -430,7 +475,9 @@ class _PlayerHeader extends StatelessWidget {
   const _PlayerHeader({required this.playingFrom, required this.onMore});
 
   final String playingFrom;
-  final VoidCallback onMore;
+
+  /// Receives the `…` button's context, to anchor the menu below it.
+  final ValueChanged<BuildContext> onMore;
 
   @override
   Widget build(BuildContext context) {
@@ -466,11 +513,13 @@ class _PlayerHeader extends StatelessWidget {
               ],
             ),
           ),
-          IconButton(
-            tooltip: l10n.playerMoreTooltip,
-            icon: const Icon(Icons.more_horiz_rounded),
-            color: colors.ink,
-            onPressed: onMore,
+          Builder(
+            builder: (buttonContext) => IconButton(
+              tooltip: l10n.playerMoreTooltip,
+              icon: const Icon(Icons.more_horiz_rounded),
+              color: colors.ink,
+              onPressed: () => onMore(buttonContext),
+            ),
           ),
         ],
       ),
