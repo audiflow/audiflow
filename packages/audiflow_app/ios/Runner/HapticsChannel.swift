@@ -21,32 +21,29 @@ final class HapticsChannel {
     case notification(UINotificationFeedbackGenerator.FeedbackType)
   }
 
-  static func register(with messenger: FlutterBinaryMessenger) -> HapticsChannel {
+  /// The handler closure owns the instance, and the messenger owns the
+  /// handler, so the cached generators live as long as the engine.
+  static func register(with messenger: FlutterBinaryMessenger) {
     let instance = HapticsChannel()
     FlutterMethodChannel(name: channelName, binaryMessenger: messenger)
       .setMethodCallHandler { call, result in
         instance.handle(call, result: result)
       }
-    return instance
   }
 
   private func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+    guard call.method == "play" || call.method == "prepare" else {
+      result(FlutterMethodNotImplemented)
+      return
+    }
     guard let name = call.arguments as? String else {
       result(FlutterError(code: "INVALID_ARGUMENT", message: "Token name is required", details: nil))
       return
     }
     // An unknown token is a no-op rather than an error: a newer Dart build
     // must never crash an older native build over a missing haptic.
-    guard let pattern = Self.pattern(for: name) else {
-      result(nil)
-      return
-    }
-    switch call.method {
-    case "play": play(pattern)
-    case "prepare": prepare(pattern)
-    default:
-      result(FlutterMethodNotImplemented)
-      return
+    if let pattern = Self.pattern(for: name) {
+      if call.method == "play" { play(pattern) } else { prepare(pattern) }
     }
     result(nil)
   }

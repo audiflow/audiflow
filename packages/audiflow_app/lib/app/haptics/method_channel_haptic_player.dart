@@ -24,17 +24,13 @@ class MethodChannelHapticPlayer implements HapticPlayer {
   void prepare(HapticToken token) => _send('prepare', token);
 
   // Fire-and-forget: a haptic must not delay the gesture that caused it,
-  // and a missing haptic is never worth surfacing to the user.
+  // and a missing haptic is never worth surfacing to the user, so every
+  // failure is dropped rather than left as an uncaught async error.
   void _send(String method, HapticToken token) {
     unawaited(
-      _channel
-          .invokeMethod<void>(method, token.name)
-          .catchError(_ignore, test: _isPlatformFailure),
+      _channel.invokeMethod<void>(method, token.name).catchError(_ignore),
     );
   }
-
-  static bool _isPlatformFailure(Object error) =>
-      error is PlatformException || error is MissingPluginException;
 
   static void _ignore(Object _) {}
 }

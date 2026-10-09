@@ -15,6 +15,14 @@ class _RecordingHapticPlayer implements HapticPlayer {
   void prepare(HapticToken token) => prepared.add(token);
 }
 
+void _prepareAndPlayAll(HapticPlayer player) {
+  for (final token in HapticToken.values) {
+    player
+      ..prepare(token)
+      ..play(token);
+  }
+}
+
 void main() {
   group('HapticToken', () {
     test('Reduced mode keeps exactly the tokens in the catalog', () {
@@ -62,11 +70,7 @@ void main() {
         level: HapticFeedbackLevel.on,
         inner: inner,
       );
-      for (final token in HapticToken.values) {
-        player
-          ..prepare(token)
-          ..play(token);
-      }
+      _prepareAndPlayAll(player);
       check(inner.played).deepEquals(HapticToken.values);
       check(inner.prepared).deepEquals(HapticToken.values);
     });
@@ -76,11 +80,7 @@ void main() {
         level: HapticFeedbackLevel.reduced,
         inner: inner,
       );
-      for (final token in HapticToken.values) {
-        player
-          ..prepare(token)
-          ..play(token);
-      }
+      _prepareAndPlayAll(player);
       final expected = HapticToken.values
           .where((t) => t.playsInReducedMode)
           .toList();
@@ -93,11 +93,7 @@ void main() {
         level: HapticFeedbackLevel.off,
         inner: inner,
       );
-      for (final token in HapticToken.values) {
-        player
-          ..prepare(token)
-          ..play(token);
-      }
+      _prepareAndPlayAll(player);
       check(inner.played).isEmpty();
       check(inner.prepared).isEmpty();
     });

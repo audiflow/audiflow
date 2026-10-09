@@ -2,7 +2,7 @@ package com.reedom.audiflow_app
 
 import android.app.Activity
 import android.os.Build
-import android.view.HapticFeedbackConstants
+import android.view.HapticFeedbackConstants as C
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodChannel
 import java.lang.ref.WeakReference
@@ -19,6 +19,30 @@ import java.lang.ref.WeakReference
 object HapticsChannel {
     private const val CHANNEL_NAME = "audiflow/haptics"
 
+    /** A constant and the nearest older one to play below [sinceSdk]. */
+    private data class Mapping(val constant: Int, val sinceSdk: Int, val fallback: Int)
+
+    private const val API_30 = Build.VERSION_CODES.R
+    private const val API_34 = Build.VERSION_CODES.UPSIDE_DOWN_CAKE
+
+    // `warning` is deliberately absent: Android has no warning constant, and
+    // every near candidate already carries another token's meaning.
+    private val mappings = mapOf(
+        "selection" to Mapping(C.SEGMENT_TICK, API_34, C.CLOCK_TICK),
+        "detent" to Mapping(C.SEGMENT_TICK, API_34, C.CLOCK_TICK),
+        "toggleOn" to Mapping(C.TOGGLE_ON, API_34, C.CONTEXT_CLICK),
+        "toggleOff" to Mapping(C.TOGGLE_OFF, API_34, C.CLOCK_TICK),
+        "tap" to Mapping(C.VIRTUAL_KEY, 0, C.VIRTUAL_KEY),
+        "longPress" to Mapping(C.LONG_PRESS, 0, C.LONG_PRESS),
+        "thresholdCross" to Mapping(C.GESTURE_THRESHOLD_ACTIVATE, API_34, C.CONTEXT_CLICK),
+        "thresholdRelease" to Mapping(C.GESTURE_THRESHOLD_DEACTIVATE, API_34, C.CLOCK_TICK),
+        "dragPickUp" to Mapping(C.DRAG_START, API_34, C.LONG_PRESS),
+        "dragStep" to Mapping(C.SEGMENT_FREQUENT_TICK, API_34, C.CLOCK_TICK),
+        "dragDrop" to Mapping(C.GESTURE_END, API_30, C.CLOCK_TICK),
+        "success" to Mapping(C.CONFIRM, API_30, C.VIRTUAL_KEY),
+        "error" to Mapping(C.REJECT, API_30, C.LONG_PRESS),
+    )
+
     fun register(messenger: BinaryMessenger, activity: Activity) {
         // audio_service caches the engine beyond the activity's lifetime, so
         // a strong reference here would leak a destroyed MainActivity.
@@ -26,10 +50,7 @@ object HapticsChannel {
         MethodChannel(messenger, CHANNEL_NAME).setMethodCallHandler { call, result ->
             when (call.method) {
                 "play" -> {
-                    val token = call.arguments as? String
-                    val view = activityRef.get()?.takeUnless { it.isFinishing }?.window?.decorView
-                    val constant = token?.let(::constantFor)
-                    if (view != null && constant != null) view.performHapticFeedback(constant)
+                    play(activityRef.get(), call.arguments as? String)
                     result.success(null)
                 }
                 // Android has no warm-up step for performHapticFeedback.
@@ -39,40 +60,16 @@ object HapticsChannel {
         }
     }
 
-    /**
-     * The constant for [token], or null when the token plays nothing on
-     * Android (`warning`, or a token this build does not know).
-     */
-    private fun constantFor(token: String): Int? = when (token) {
-        "selection", "detent" -> onApi34(HapticFeedbackConstants.SEGMENT_TICK, HapticFeedbackConstants.CLOCK_TICK)
-        "toggleOn" -> onApi34(HapticFeedbackConstants.TOGGLE_ON, HapticFeedbackConstants.CONTEXT_CLICK)
-        "toggleOff" -> onApi34(HapticFeedbackConstants.TOGGLE_OFF, HapticFeedbackConstants.CLOCK_TICK)
-        "tap" -> HapticFeedbackConstants.VIRTUAL_KEY
-        "longPress" -> HapticFeedbackConstants.LONG_PRESS
-        "thresholdCross" -> onApi34(
-            HapticFeedbackConstants.GESTURE_THRESHOLD_ACTIVATE,
-            HapticFeedbackConstants.CONTEXT_CLICK,
-        )
-        "thresholdRelease" -> onApi34(
-            HapticFeedbackConstants.GESTURE_THRESHOLD_DEACTIVATE,
-            HapticFeedbackConstants.CLOCK_TICK,
-        )
-        "dragPickUp" -> onApi34(HapticFeedbackConstants.DRAG_START, HapticFeedbackConstants.LONG_PRESS)
-        "dragStep" -> onApi34(HapticFeedbackConstants.SEGMENT_FREQUENT_TICK, HapticFeedbackConstants.CLOCK_TICK)
-        "dragDrop" -> onApi30(HapticFeedbackConstants.GESTURE_END, HapticFeedbackConstants.CLOCK_TICK)
-        "success" -> onApi30(HapticFeedbackConstants.CONFIRM, HapticFeedbackConstants.VIRTUAL_KEY)
-        "error" -> onApi30(HapticFeedbackConstants.REJECT, HapticFeedbackConstants.LONG_PRESS)
-        // No warning constant exists, and every near candidate already
-        // carries another token's meaning; silence beats a discordant feel.
-        "warning" -> null
-        else -> null
+    private fun play(activity: Activity?, token: String?) {
+        val live = activity?.takeUnless { it.isFinishing || it.isDestroyed } ?: return
+        // An unknown token plays nothing: a newer Dart build must never
+        // crash an older native build over a missing haptic.
+        val mapping = mappings[token] ?: return
+        live.window?.decorView?.performHapticFeedback(constantFor(mapping))
     }
 
-    // A constant newer than the running OS plays nothing, so each one
-    // falls back to the nearest older constant (AndroidX compat approach).
-    private fun onApi34(constant: Int, fallback: Int): Int =
-        if (Build.VERSION_CODES.UPSIDE_DOWN_CAKE <= Build.VERSION.SDK_INT) constant else fallback
-
-    private fun onApi30(constant: Int, fallback: Int): Int =
-        if (Build.VERSION_CODES.R <= Build.VERSION.SDK_INT) constant else fallback
+    // A constant newer than the running OS plays nothing, so it falls back
+    // to the nearest older constant (the AndroidX compat approach).
+    private fun constantFor(mapping: Mapping): Int =
+        if (mapping.sinceSdk <= Build.VERSION.SDK_INT) mapping.constant else mapping.fallback
 }

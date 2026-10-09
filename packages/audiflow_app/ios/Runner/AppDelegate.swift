@@ -5,9 +5,6 @@ import workmanager_apple
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
-  // Held so the cached feedback generators outlive each method call.
-  private var hapticsChannel: HapticsChannel?
-
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
@@ -57,7 +54,7 @@ import workmanager_apple
       AudioRoutePickerViewFactory.register(with: registrar)
     }
     if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "HapticsChannel") {
-      hapticsChannel = HapticsChannel.register(with: registrar.messenger())
+      HapticsChannel.register(with: registrar.messenger())
     }
   }
 }
