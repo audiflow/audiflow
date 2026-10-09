@@ -174,7 +174,7 @@ void main() {
       ).length.equals(1);
     });
 
-    testWidgets('haptic feedback level defaults to Reduced and persists', (
+    testWidgets('haptic feedback level defaults to On and persists', (
       tester,
     ) async {
       tester.view
