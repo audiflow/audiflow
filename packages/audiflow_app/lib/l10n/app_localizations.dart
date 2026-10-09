@@ -872,12 +872,6 @@ abstract class AppLocalizations {
   /// **'{count} failed'**
   String storageFailedCount(int count);
 
-  /// App tagline
-  ///
-  /// In en, this message translates to:
-  /// **'Your podcast companion'**
-  String get aboutTagline;
-
   /// Version label
   ///
   /// In en, this message translates to:
