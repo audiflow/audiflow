@@ -2,7 +2,12 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../l10n/app_localizations.dart';
+
 /// Tile displaying a download task with progress and actions.
+///
+/// An auto download that retention may remove is marked in its status line
+/// and offers a keep action; kept (manual) downloads carry no mark.
 class DownloadTaskTile extends StatelessWidget {
   const DownloadTaskTile({
     super.key,
@@ -13,6 +18,7 @@ class DownloadTaskTile extends StatelessWidget {
     this.onCancel,
     this.onRetry,
     this.onDelete,
+    this.onKeep,
   });
 
   final DownloadTask task;
@@ -22,6 +28,7 @@ class DownloadTaskTile extends StatelessWidget {
   final VoidCallback? onCancel;
   final VoidCallback? onRetry;
   final VoidCallback? onDelete;
+  final VoidCallback? onKeep;
 
   double get _progress {
     final total = task.totalBytes;
@@ -55,11 +62,20 @@ class DownloadTaskTile extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 2),
-                if (status is DownloadStatusDownloading)
-                  LinearProgressIndicator(value: _progress, minHeight: 3)
-                else
+                if (status is DownloadStatusDownloading) ...[
+                  LinearProgressIndicator(value: _progress, minHeight: 3),
+                  // The bar replaces the status line, so the auto mark
+                  // moves below it rather than disappearing mid-download.
+                  if (task.isRemovableByRetention)
+                    Text(
+                      AppLocalizations.of(context).downloadOriginAuto,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                ] else
                   Text(
-                    _statusLabel(status),
+                    _subtitle(status, AppLocalizations.of(context)),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: status is DownloadStatusFailed
                           ? colorScheme.error
@@ -69,10 +85,22 @@ class DownloadTaskTile extends StatelessWidget {
               ],
             ),
           ),
+          if (task.isRemovableByRetention)
+            IconButton(
+              icon: const Icon(Icons.push_pin_outlined, size: 20),
+              tooltip: AppLocalizations.of(context).downloadKeep,
+              onPressed: onKeep,
+            ),
           ..._buildActions(status),
         ],
       ),
     );
+  }
+
+  String _subtitle(DownloadStatus status, AppLocalizations l10n) {
+    final label = _statusLabel(status);
+    if (!task.isRemovableByRetention) return label;
+    return '$label · ${l10n.downloadOriginAuto}';
   }
 
   String _statusLabel(DownloadStatus status) {

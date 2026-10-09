@@ -329,6 +329,20 @@ Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
   }
 }
 
+/// Refetches every view that shows an episode's played state: list
+/// progress maps, filtered lists, smart playlists and the episode detail.
+///
+/// The detail screen must be included: one left open across an
+/// auto-completion or a replay otherwise keeps its earlier snapshot and
+/// offers the wrong "mark as played / unplayed" action (#599).
+void refreshPlayedStateViews(Ref ref) {
+  ref
+    ..invalidate(episodeProgressProvider)
+    ..invalidate(podcastEpisodeProgressProvider)
+    ..invalidate(filteredSortedEpisodesProvider)
+    ..invalidate(smartPlaylistEpisodesProvider);
+}
+
 /// Fetches episode progress for a given audio URL.
 ///
 /// Returns [EpisodeWithProgress] if the episode exists in the database,
@@ -473,9 +487,8 @@ bool matchesEpisodeFilter(
   required EpisodeWithProgress? progress,
   required Set<int> downloadedEpisodeIds,
 }) {
-  // Played keys on completedAt, regardless of any saved position. When
-  // PlaybackHistory gains isPlayed / isInProgress (#600), read those here
-  // so an episode being replayed stays under Played.
+  // An episode being replayed is both played and in progress (FR 04), so
+  // it shows under Played and In progress but never under Unplayed.
   final isPlayed = progress?.isCompleted ?? false;
   final isInProgress = progress?.isInProgress ?? false;
   return switch (filter) {

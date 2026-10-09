@@ -19,6 +19,7 @@ import '../../subscription/repositories/subscription_repository.dart';
 import '../../subscription/repositories/subscription_repository_impl.dart';
 import '../repositories/download_repository.dart';
 import '../repositories/download_repository_impl.dart';
+import 'download_file_remover.dart';
 import 'download_file_service.dart';
 import 'download_queue_service.dart';
 
@@ -106,6 +107,13 @@ class DownloadService {
   final int Function() _getBatchDownloadLimit;
   final StationReconcilerService? _reconcilerService;
   final AnalyticsService? _analytics;
+
+  late final _fileRemover = DownloadFileRemover(
+    repository: _repository,
+    deleteEpisodeFiles: (episodeId, storedPath) =>
+        _fileService.deleteEpisodeFiles(episodeId, storedPath: storedPath),
+    logger: _logger,
+  );
 
   /// Resolves the analytics IDs and titles for [episodeId]. Returns null
   /// when the episode, its feed URL, or its GUID is missing so emitters
@@ -297,6 +305,50 @@ class DownloadService {
   /// Retries a failed download.
   Future<void> retry(int taskId) => _queueService.retryDownload(taskId);
 
+  /// Keeps an auto download: promotes it to manual so retention rules
+  /// never remove it.
+  ///
+  /// Returns false when the task is gone or there is nothing to keep (it
+  /// is already manual, or failed or cancelled), so callers confirm only
+  /// a real change.
+  Future<bool> keep(int taskId) async {
+    final task = await _repository.getById(taskId);
+    if (task == null || !task.isRemovableByRetention) return false;
+    // Retention may delete the task after the read above; markManual
+    // reports whether a still-existing auto task was promoted.
+    final promoted = await _repository.markManual(taskId);
+    if (promoted) _logger.i('Kept auto download: $taskId');
+    return promoted;
+  }
+
+  /// Deletes an auto download for retention rules. Returns false, leaving
+  /// everything in place, if the task is gone or was kept in the meantime.
+  ///
+  /// The record is removed first, in the same transaction as the origin
+  /// check, so a keep request either lands before (and the file stays) or
+  /// finds nothing to keep. A late status write from the cancelled
+  /// transfer cannot recreate the record because writers skip missing rows.
+  /// Files that fail to delete stay recorded for [retryFileRemovals]; the
+  /// download is gone either way, so this still returns true.
+  Future<bool> deleteAuto(int taskId) async {
+    final deleted = await _repository.deleteIfAuto(taskId);
+    if (deleted == null) return false;
+    final task = deleted.task;
+    // Awaited until the transfer has stopped, so its file writes do not
+    // land after the sweep below.
+    if (task.downloadStatus.isActive) {
+      await _queueService.cancelDownload(task.id);
+    }
+    await _fileRemover.remove(deleted.fileRemoval);
+    _logger.i('Deleted auto download: ${task.id}');
+    await _tryReconcile(task.episodeId);
+    return true;
+  }
+
+  /// Retries removing the files of auto downloads whose records are already
+  /// gone. Returns the number of removals completed.
+  Future<int> retryFileRemovals() => _fileRemover.retryPending();
+
   /// Deletes a download and its file.
   Future<void> delete(int taskId) async {
     final task = await _repository.getById(taskId);
@@ -325,18 +377,25 @@ class DownloadService {
   }
 
   Future<void> _deleteTask(DownloadTask task) async {
-    // Awaited so the cancelled-status write cannot land after the record
-    // is gone.
+    // Awaited until the transfer has stopped, so neither its cancelled
+    // status write nor its file writes land after the cleanup below.
     if (task.downloadStatus.isActive) {
       await _queueService.cancelDownload(task.id);
     }
 
-    final localPath = task.localPath;
-    if (localPath != null) {
-      await _fileService.deleteFile(localPath);
-    }
-
-    await _repository.delete(task.id);
+    // Swept by episode rather than by localPath: a task records its path
+    // only once it completes, so a paused or cancelled task would
+    // otherwise leave its partial file behind. The record and the files go
+    // together, so a download of the episode requested meanwhile (the
+    // cancel above makes the task replaceable) is not swept with them.
+    await _repository.removeEpisodeFiles(
+      episodeId: task.episodeId,
+      taskId: task.id,
+      removeFiles: () => _fileService.deleteEpisodeFiles(
+        task.episodeId,
+        storedPath: task.localPath,
+      ),
+    );
     _logger.i('Deleted download: ${task.id}');
     await _tryReconcile(task.episodeId);
   }

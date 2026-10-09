@@ -442,6 +442,20 @@ class FakeDownloadRepository implements DownloadRepository {
   @override
   Future<void> delete(int id) async {}
   @override
+  Future<bool> markManual(int id) async => false;
+
+  @override
+  Future<DeletedAutoDownload?> deleteIfAuto(int id) async => null;
+  @override
+  Future<List<DownloadFileRemoval>> getPendingFileRemovals() async => [];
+  @override
+  Future<bool> removeEpisodeFiles({
+    required int episodeId,
+    required Future<void> Function() removeFiles,
+    int? taskId,
+    int? fileRemovalId,
+  }) async => false;
+  @override
   Future<int> getActiveCount() async => 0;
   @override
   Future<int> getTotalStorageUsed() async => 0;
@@ -474,6 +488,16 @@ class FakePlaybackHistoryRepository implements PlaybackHistoryRepository {
   Future<void> markCompleted(int episodeId) async {}
   @override
   Future<void> markIncomplete(int episodeId) async {}
+  @override
+  Future<bool> markCompletedUnlessPlayed(int episodeId) async => false;
+  @override
+  Future<bool> finishListen(int episodeId) async => false;
+  @override
+  Future<void> startReplay(
+    int episodeId, {
+    required int positionMs,
+    required bool fromStart,
+  }) async {}
   @override
   Future<void> incrementPlayCount(int episodeId) async {}
   @override

@@ -80,9 +80,28 @@ void main() {
     when(
       mockRepository.getNextPending(isOnWifi: anyNamed('isOnWifi')),
     ).thenAnswer((_) async => null);
-    // A cancelled transfer re-reads its task to tell a pause from a cancel;
-    // tests that care stub the row themselves.
+    // A cancelled transfer re-reads its task to tell a pause from a cancel,
+    // and a failed one to tell whether it was deleted meanwhile; tests that
+    // care stub the row themselves.
     when(mockRepository.getById(any)).thenAnswer((_) async => null);
+    when(mockRepository.getByEpisodeId(any)).thenAnswer((_) async => null);
+    // Mirrors the repository: the files go only while the episode has no
+    // task, which tests set up through getByEpisodeId.
+    when(
+      mockRepository.removeEpisodeFiles(
+        episodeId: anyNamed('episodeId'),
+        removeFiles: anyNamed('removeFiles'),
+        taskId: anyNamed('taskId'),
+        fileRemovalId: anyNamed('fileRemovalId'),
+      ),
+    ).thenAnswer((invocation) async {
+      final episodeId = invocation.namedArguments[#episodeId] as int;
+      if (await mockRepository.getByEpisodeId(episodeId) != null) return false;
+      final removeFiles =
+          invocation.namedArguments[#removeFiles] as Future<void> Function();
+      await removeFiles();
+      return true;
+    });
 
     service = DownloadQueueService(
       repository: mockRepository,
@@ -177,6 +196,99 @@ void main() {
           status: const DownloadStatus.cancelled(),
         ),
       ).called(1);
+    });
+  });
+
+  group('cancel during a download', () {
+    late DownloadTask task;
+    late Episode episode;
+    late List<String> events;
+
+    setUp(() async {
+      task = _task(id: 1, episodeId: 10);
+      episode = _episode(id: 10);
+      events = [];
+      await Future<void>.delayed(Duration.zero);
+      clearInteractions(mockRepository);
+
+      var pendingCalls = 0;
+      when(
+        mockRepository.getNextPending(isOnWifi: anyNamed('isOnWifi')),
+      ).thenAnswer((_) async => pendingCalls++ == 0 ? task : null);
+      when(
+        mockRepository.updateStatus(
+          id: anyNamed('id'),
+          status: anyNamed('status'),
+          localPath: anyNamed('localPath'),
+          lastError: anyNamed('lastError'),
+        ),
+      ).thenAnswer((invocation) async {
+        final status = invocation.namedArguments[#status] as DownloadStatus;
+        final lastError = invocation.namedArguments[#lastError];
+        events.add('status ${status.toDbValue()} error=${lastError != null}');
+      });
+      when(
+        mockRepository.getById(1),
+      ).thenAnswer((_) async => _task(id: 1, episodeId: 10, status: 1));
+    });
+
+    test('returns only after the running transfer has stopped', () async {
+      when(mockEpisodeRepo.getById(10)).thenAnswer((_) async => episode);
+      final download = Completer<String>();
+      when(
+        mockFileService.downloadFile(
+          taskId: 1,
+          url: task.audioUrl,
+          episodeId: task.episodeId,
+          episodeTitle: episode.title,
+          resumeFromBytes: task.downloadedBytes,
+          onProgress: anyNamed('onProgress'),
+        ),
+      ).thenAnswer((_) => download.future);
+
+      final processing = service.startQueue();
+      await Future<void>.delayed(Duration.zero);
+
+      var cancelled = false;
+      final cancel = service.cancelDownload(1).then((_) => cancelled = true);
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      // The writer has not reported back yet, so its file may still grow.
+      check(cancelled).isFalse();
+
+      download.completeError(DownloadException.cancelled());
+      await cancel;
+      await processing;
+
+      // The transfer's own cancelled write (with its error) landed before
+      // the cancel returned, so a following delete cannot be overtaken.
+      check(events.last).equals(
+        'status ${const DownloadStatus.cancelled().toDbValue()} error=true',
+      );
+    });
+
+    test('stops a transfer that had not registered its token yet', () async {
+      final episodeLookup = Completer<Episode?>();
+      when(mockEpisodeRepo.getById(10)).thenAnswer((_) => episodeLookup.future);
+
+      final processing = service.startQueue();
+      await Future<void>.delayed(Duration.zero);
+
+      final cancel = service.cancelDownload(1);
+      await Future<void>.delayed(Duration.zero);
+      episodeLookup.complete(episode);
+      await cancel;
+      await processing;
+
+      verifyNever(
+        mockFileService.downloadFile(
+          taskId: anyNamed('taskId'),
+          url: anyNamed('url'),
+          episodeId: anyNamed('episodeId'),
+          episodeTitle: anyNamed('episodeTitle'),
+          resumeFromBytes: anyNamed('resumeFromBytes'),
+          onProgress: anyNamed('onProgress'),
+        ),
+      );
     });
   });
 
@@ -694,6 +806,59 @@ void main() {
       );
     });
 
+    test('keeps the file when a replacement download exists', () async {
+      // A bulk delete can remove the record after the queue picked the
+      // task up but before its file finished downloading.
+      final task = _task(id: 1, episodeId: 10);
+      final episode = _episode(id: 10, title: 'Test EP');
+      await Future<void>.delayed(Duration.zero);
+      clearInteractions(mockRepository);
+
+      var callCount = 0;
+      when(
+        mockRepository.getNextPending(
+          isOnWifi: anyNamed('isOnWifi'),
+          excludeIds: anyNamed('excludeIds'),
+        ),
+      ).thenAnswer((_) async => 1 < ++callCount ? null : task);
+      when(
+        mockRepository.updateStatus(
+          id: 1,
+          status: const DownloadStatus.downloading(),
+        ),
+      ).thenAnswer((_) async {});
+      when(mockEpisodeRepo.getById(10)).thenAnswer((_) async => episode);
+      when(
+        mockFileService.downloadFile(
+          taskId: 1,
+          url: task.audioUrl,
+          episodeId: task.episodeId,
+          episodeTitle: episode.title,
+          resumeFromBytes: task.downloadedBytes,
+          onProgress: anyNamed('onProgress'),
+        ),
+      ).thenAnswer((_) async => '/downloads/10_Test_EP.mp3');
+      when(mockRepository.getById(1)).thenAnswer((_) async => null);
+      // The listener downloaded the episode again under a new task.
+      when(
+        mockRepository.getByEpisodeId(10),
+      ).thenAnswer((_) async => _task(id: 2, episodeId: 10));
+      when(
+        mockFileService.deleteFile('/downloads/10_Test_EP.mp3'),
+      ).thenAnswer((_) async {});
+
+      await service.startQueue();
+
+      verifyNever(mockFileService.deleteFile('/downloads/10_Test_EP.mp3'));
+      verifyNever(
+        mockRepository.updateStatus(
+          id: 1,
+          status: const DownloadStatus.completed(),
+          localPath: anyNamed('localPath'),
+        ),
+      );
+    });
+
     test('does nothing when no pending downloads', () async {
       // Arrange - getNextPending already returns null from setUp
       // Allow _init() queue to finish first
@@ -742,6 +907,7 @@ void main() {
       when(mockEpisodeRepo.getById(99)).thenAnswer((_) async => null);
 
       // Episode not found triggers error handling with retry
+      when(mockRepository.getById(1)).thenAnswer((_) async => task);
       when(mockRepository.incrementRetryCount(1)).thenAnswer((_) async {});
       when(
         mockRepository.updateStatus(
@@ -762,6 +928,53 @@ void main() {
         ),
       ).called(1);
       verify(mockEpisodeRepo.getById(99)).called(1);
+      verify(mockRepository.incrementRetryCount(1)).called(1);
+      verifyNever(mockFileService.deleteEpisodeFiles(any));
+    });
+
+    test('removes the partial file when a failed task was deleted '
+        'mid-download', () async {
+      // A background cleanup can delete the task after the queue looked it
+      // up; the failed transfer's status writes then hit no record.
+      final task = _task(id: 1, episodeId: 10);
+      await Future<void>.delayed(Duration.zero);
+      clearInteractions(mockRepository);
+
+      var callCount = 0;
+      when(
+        mockRepository.getNextPending(
+          isOnWifi: anyNamed('isOnWifi'),
+          excludeIds: anyNamed('excludeIds'),
+        ),
+      ).thenAnswer((_) async => 1 < ++callCount ? null : task);
+      when(
+        mockRepository.updateStatus(
+          id: 1,
+          status: const DownloadStatus.downloading(),
+        ),
+      ).thenAnswer((_) async {});
+      when(
+        mockEpisodeRepo.getById(10),
+      ).thenAnswer((_) async => _episode(id: 10));
+      when(
+        mockFileService.downloadFile(
+          taskId: 1,
+          url: anyNamed('url'),
+          episodeId: anyNamed('episodeId'),
+          episodeTitle: anyNamed('episodeTitle'),
+          resumeFromBytes: anyNamed('resumeFromBytes'),
+          onProgress: anyNamed('onProgress'),
+        ),
+      ).thenThrow(
+        DownloadException(DownloadErrorType.networkUnavailable, 'offline'),
+      );
+      when(mockRepository.getById(1)).thenAnswer((_) async => null);
+      when(mockFileService.deleteEpisodeFiles(10)).thenAnswer((_) async {});
+
+      await service.startQueue();
+
+      verify(mockFileService.deleteEpisodeFiles(10)).called(1);
+      verifyNever(mockRepository.incrementRetryCount(any));
     });
   });
 

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
@@ -110,7 +112,10 @@ void main() {
       episodeRepository: episodeRepository,
       playbackHistoryRepository: historyRepository,
       isAutoDeletePlayedEnabled: () => enabled,
-      deleteDownload: (task) async => deletedTaskIds.add(task.id),
+      deleteDownload: (task) async {
+        deletedTaskIds.add(task.id);
+        return true;
+      },
       clock: () => _now,
     );
   });
@@ -152,6 +157,17 @@ void main() {
       check(await service.sweepPlayed()).equals(0);
     });
 
+    test('keeps the download of a played episode being replayed', () async {
+      downloadRepository.tasks.add(_task(id: 1));
+      completeEpisode(1, _graceElapsed);
+      historyRepository.byEpisodeId[1]!
+        ..isReplaying = true
+        ..positionMs = 60000;
+
+      check(await service.sweepPlayed()).equals(0);
+      check(deletedTaskIds).isEmpty();
+    });
+
     test('ignores downloads that have not finished downloading', () async {
       downloadRepository.tasks.add(
         _task(id: 1, status: const DownloadStatus.paused()),
@@ -179,6 +195,24 @@ void main() {
       check(deletedTaskIds).isEmpty();
     });
 
+    test('does not count a task the deleter found kept', () async {
+      // The deleter re-checks the origin atomically; a keep that lands
+      // after the sweep's re-read makes it decline.
+      downloadRepository.tasks.addAll([_task(id: 1), _task(id: 2)]);
+      completeEpisode(1, _graceElapsed);
+      completeEpisode(2, _graceElapsed);
+      service = DownloadRetentionService(
+        downloadRepository: downloadRepository,
+        episodeRepository: episodeRepository,
+        playbackHistoryRepository: historyRepository,
+        isAutoDeletePlayedEnabled: () => true,
+        deleteDownload: (task) async => task.id != 1,
+        clock: () => _now,
+      );
+
+      check(await service.sweepPlayed()).equals(1);
+    });
+
     test('continues past a failed delete', () async {
       downloadRepository.tasks.addAll([_task(id: 1), _task(id: 2)]);
       completeEpisode(1, _graceElapsed);
@@ -191,6 +225,7 @@ void main() {
         deleteDownload: (task) async {
           if (task.id == 1) throw Exception('file locked');
           deletedTaskIds.add(task.id);
+          return true;
         },
         clock: () => _now,
       );
@@ -310,7 +345,10 @@ void main() {
         episodeRepository: episodeRepository,
         playbackHistoryRepository: historyRepository,
         isAutoDeletePlayedEnabled: () => true,
-        deleteDownload: (task) async => handed.add(task.downloadStatus),
+        deleteDownload: (task) async {
+          handed.add(task.downloadStatus);
+          return true;
+        },
         clock: () => _now,
       );
 
@@ -362,6 +400,61 @@ void main() {
       await service.trimForSubscription(subscription, defaultKeepCount: 1);
 
       check(deletedTaskIds).deepEquals([1]);
+    });
+
+    group('file removal retry', () {
+      late int retries;
+
+      setUp(() {
+        retries = 0;
+        service = DownloadRetentionService(
+          downloadRepository: downloadRepository,
+          episodeRepository: episodeRepository,
+          playbackHistoryRepository: historyRepository,
+          isAutoDeletePlayedEnabled: () => enabled,
+          deleteDownload: (task) async => true,
+          retryFileRemovals: () async => ++retries,
+          clock: () => _now,
+        );
+      });
+
+      test('runs on played cleanup even when it is turned off', () async {
+        enabled = false;
+
+        await service.sweepPlayed();
+
+        check(retries).equals(1);
+      });
+
+      test('runs on a keep-count trim', () async {
+        await service.trimForSubscription(subscription, defaultKeepCount: 3);
+
+        check(retries).equals(1);
+      });
+
+      test('a retry failure does not stop the pass', () async {
+        addEpisode(1, day: 1);
+        addEpisode(2, day: 2);
+        final deleted = <int>[];
+        service = DownloadRetentionService(
+          downloadRepository: downloadRepository,
+          episodeRepository: episodeRepository,
+          playbackHistoryRepository: historyRepository,
+          isAutoDeletePlayedEnabled: () => enabled,
+          deleteDownload: (task) async {
+            deleted.add(task.id);
+            return true;
+          },
+          retryFileRemovals: () =>
+              throw const FileSystemException('Operation not permitted'),
+          clock: () => _now,
+        );
+
+        check(
+          await service.trimForSubscription(subscription, defaultKeepCount: 1),
+        ).equals(1);
+        check(deleted).length.equals(1);
+      });
     });
   });
 }

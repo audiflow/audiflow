@@ -856,6 +856,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get downloadDeleted => 'ダウンロードを削除しました';
 
   @override
+  String get downloadKeep => 'ダウンロードを保持';
+
+  @override
+  String get downloadKept => 'ダウンロードを保持しました。自動では削除されません';
+
+  @override
+  String get downloadOriginAuto => '自動ダウンロード';
+
+  @override
   String get downloadManageTitle => 'ダウンロード管理';
 
   @override
@@ -1038,14 +1047,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get podcastMarkAllFailed => '一部のエピソードを更新できませんでした';
 
   @override
-  String podcastMarkAllPlayedDone(int count) {
-    return '$count件を再生済みにしました';
-  }
+  String get podcastMarkAllPlayedDone => 'すべて再生済みにしました';
 
   @override
-  String podcastMarkAllUnplayedDone(int count) {
-    return '$count件を未再生にしました';
-  }
+  String get podcastMarkAllUnplayedDone => 'すべて未再生にしました';
 
   @override
   String get markAsUnplayed => '未再生にする';
@@ -1470,25 +1475,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get removeDownload => 'ダウンロードを削除';
 
   @override
-  String get statsTitle => 'タイトル';
+  String get statsTimesCompleted => '再生完了';
 
   @override
-  String get statsPodcast => 'ポッドキャスト';
+  String get statsTimesStarted => '再生開始';
 
   @override
-  String get statsDuration => '再生時間';
-
-  @override
-  String get statsPublished => '公開日';
-
-  @override
-  String get statsTimesCompleted => '完了回数';
-
-  @override
-  String get statsTimesStarted => '再生回数';
-
-  @override
-  String get statsTotalListened => '総再生時間';
+  String get statsTotalListened => '合計再生時間';
 
   @override
   String get statsRealtime => '実時間';
@@ -1501,9 +1494,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get statsNever => '未再生';
-
-  @override
-  String get statsSection => '統計';
 
   @override
   String get commonCopiedToClipboard => 'クリップボードにコピーしました';
@@ -2136,4 +2126,44 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get parentalControlAccessDenied => '制限モードが有効です。設定からロックを解除してください。';
+
+  @override
+  String get episodeDetailPlay => '再生';
+
+  @override
+  String episodeDetailPlayWithDuration(String duration) {
+    return '再生 · $duration';
+  }
+
+  @override
+  String get episodeDetailResume => '続きから再生';
+
+  @override
+  String get episodeDetailPause => '一時停止';
+
+  @override
+  String get episodeDetailPlayAgain => 'もう一度再生';
+
+  @override
+  String get episodeDetailAbout => 'エピソードについて';
+
+  @override
+  String get episodeDetailShowMore => 'さらに表示';
+
+  @override
+  String get episodeDetailShowLess => '閉じる';
+
+  @override
+  String get episodeDetailPlaybackRecord => '再生の記録';
+
+  @override
+  String episodeDetailTimes(int count) {
+    return '$count回';
+  }
+
+  @override
+  String get episodeDetailOpenPodcast => '番組を開く';
+
+  @override
+  String get episodeDetailAddToEnd => 'キューの最後に追加';
 }

@@ -73,42 +73,125 @@ class PlaybackHistoryLocalDatasource {
     });
   }
 
-  /// Marks an episode as completed.
+  /// Marks an episode as played by the listener.
   ///
-  /// Atomic read-then-write inside a single transaction.
-  Future<void> markCompleted(int episodeId) async {
-    final now = DateTime.now();
-    await _isar.writeTxn(() async {
-      final existing = await _isar.playbackHistorys.getByEpisodeId(episodeId);
+  /// Counts a completion only when the episode was not played: marking a
+  /// played episode, also one being replayed, ends the replay without
+  /// counting one.
+  Future<void> markCompleted(int episodeId) =>
+      _markCompleted(episodeId, skipPlayed: false);
 
+  /// Marks an episode as played unless it already is, for bulk marking:
+  /// a played episode, also one being replayed, is left as it is. Returns
+  /// whether the episode changed.
+  Future<bool> markCompletedUnlessPlayed(int episodeId) =>
+      _markCompleted(episodeId, skipPlayed: true);
+
+  /// Atomic read-then-write inside a single transaction.
+  Future<bool> _markCompleted(int episodeId, {required bool skipPlayed}) async {
+    final now = DateTime.now();
+    return _isar.writeTxn(() async {
+      final existing = await _isar.playbackHistorys.getByEpisodeId(episodeId);
       if (existing == null) {
-        final history = PlaybackHistory()
-          ..episodeId = episodeId
-          ..firstPlayedAt = now
-          ..completedAt = now
-          ..lastPlayedAt = now
-          ..completedCount = 1;
-        await _isar.playbackHistorys.put(history);
-      } else {
-        existing.firstPlayedAt ??= now;
-        existing.lastPlayedAt = now;
-        // Only increment when transitioning from incomplete to complete
-        if (existing.completedAt == null) {
-          existing.completedCount = existing.completedCount + 1;
-        }
-        existing.completedAt = now;
-        await _isar.playbackHistorys.put(existing);
+        await _isar.playbackHistorys.put(_firstCompletion(episodeId, now));
+        return true;
       }
+      if (existing.isPlayed && skipPlayed) return false;
+      if (!existing.isPlayed) {
+        existing.completedCount = existing.completedCount + 1;
+      }
+      _closeListen(existing, now);
+      await _isar.playbackHistorys.put(existing);
+      return true;
     });
   }
 
-  /// Marks an episode as incomplete (removes completedAt).
+  /// Finishes the current listen at the completion threshold. Returns
+  /// false, changing nothing, when the listen is already finished.
+  ///
+  /// A first listen and a replay started from the beginning count a
+  /// completion; a replay reopened by a rewind does not.
+  ///
+  /// Atomic read-then-write inside a single transaction.
+  Future<bool> finishListen(int episodeId) async {
+    final now = DateTime.now();
+    return _isar.writeTxn(() async {
+      final existing = await _isar.playbackHistorys.getByEpisodeId(episodeId);
+      if (existing == null) {
+        await _isar.playbackHistorys.put(_firstCompletion(episodeId, now));
+        return true;
+      }
+      if (existing.isListenFinished) return false;
+      if (!existing.isPlayed || existing.isReplayFromStart) {
+        existing.completedCount = existing.completedCount + 1;
+      }
+      _closeListen(existing, now);
+      await _isar.playbackHistorys.put(existing);
+      return true;
+    });
+  }
+
+  PlaybackHistory _firstCompletion(int episodeId, DateTime now) =>
+      PlaybackHistory()
+        ..episodeId = episodeId
+        ..firstPlayedAt = now
+        ..completedAt = now
+        ..lastPlayedAt = now
+        ..completedCount = 1;
+
+  void _closeListen(PlaybackHistory history, DateTime now) {
+    history
+      ..firstPlayedAt ??= now
+      ..lastPlayedAt = now
+      ..completedAt = now
+      ..isReplaying = false
+      ..isReplayFromStart = false;
+  }
+
+  /// Marks an episode as unplayed (removes completedAt and ends any replay).
   Future<void> markIncomplete(int episodeId) async {
     final existing = await getByEpisodeId(episodeId);
     if (existing == null) return;
 
-    existing.completedAt = null;
+    existing
+      ..completedAt = null
+      ..isReplaying = false
+      ..isReplayFromStart = false;
     await _isar.writeTxn(() => _isar.playbackHistorys.put(existing));
+  }
+
+  /// Opens a replay of a played episode at [positionMs]. [fromStart]
+  /// tells whether the replay starts from the beginning, which makes it
+  /// count a completion when it finishes.
+  ///
+  /// Keeps the played status and makes the new listen resumable. Taking
+  /// an open replay back to the beginning makes it count; otherwise does
+  /// nothing unless the episode's last listen is finished.
+  ///
+  /// Atomic read-then-write inside a single transaction.
+  Future<void> startReplay(
+    int episodeId, {
+    required int positionMs,
+    required bool fromStart,
+  }) async {
+    await _isar.writeTxn(() async {
+      final existing = await _isar.playbackHistorys.getByEpisodeId(episodeId);
+      if (existing == null || !existing.isPlayed) return;
+
+      if (existing.isReplaying) {
+        if (!fromStart || existing.isReplayFromStart) return;
+        existing.isReplayFromStart = true;
+      } else {
+        existing
+          ..isReplaying = true
+          ..isReplayFromStart = fromStart
+          // The previous listen's position (usually the end) is not where
+          // the replay resumes.
+          ..positionMs = positionMs
+          ..lastPlayedAt = DateTime.now();
+      }
+      await _isar.playbackHistorys.put(existing);
+    });
   }
 
   /// Increments play count (called when starting from beginning).
@@ -120,40 +203,38 @@ class PlaybackHistoryLocalDatasource {
     await _isar.writeTxn(() => _isar.playbackHistorys.put(existing));
   }
 
-  /// Returns the most recently played incomplete episode, or null.
+  /// Returns the most recently played in-progress episode, or null.
   Future<PlaybackHistory?> getLastPlayed() async {
     final results = await getInProgress(limit: 1);
     return results.isEmpty ? null : results.first;
   }
 
-  /// Returns episodes that are in progress (started but not completed).
+  /// Returns episodes that are in progress: started, and their current
+  /// listen not finished. Replays of played episodes are included.
   ///
   /// Ordered by lastPlayedAt descending, limited to [limit] items.
   Future<List<PlaybackHistory>> getInProgress({int limit = 10}) {
-    // positionMs > 0 rewritten as: 0 < positionMs
-    return _isar.playbackHistorys
-        .filter()
-        .positionMsGreaterThan(0)
-        .and()
-        .completedAtIsNull()
-        .sortByLastPlayedAtDesc()
-        .limit(limit)
-        .findAll();
+    return _inProgressQuery(limit).findAll();
   }
 
   /// Watches episodes that are in progress.
   Stream<List<PlaybackHistory>> watchInProgress({int limit = 10}) {
+    return _inProgressQuery(limit).watch(fireImmediately: true);
+  }
+
+  /// Mirrors [PlaybackHistoryStatus.isInProgress] as an Isar query.
+  Query<PlaybackHistory> _inProgressQuery(int limit) {
     return _isar.playbackHistorys
         .filter()
         .positionMsGreaterThan(0)
         .and()
-        .completedAtIsNull()
+        .group((q) => q.completedAtIsNull().or().isReplayingEqualTo(true))
         .sortByLastPlayedAtDesc()
         .limit(limit)
-        .watch(fireImmediately: true);
+        .build();
   }
 
-  /// Returns true if the episode is completed.
+  /// Returns true if the episode is played (see [PlaybackHistoryStatus]).
   Future<bool> isCompleted(int episodeId) async {
     final history = await getByEpisodeId(episodeId);
     return history?.completedAt != null;

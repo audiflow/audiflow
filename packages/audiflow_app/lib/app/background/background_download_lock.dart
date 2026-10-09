@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:audiflow_domain/audiflow_domain.dart';
+
 /// Keeps background download workers from transferring at the same time.
 ///
 /// The one-off download task and the iOS refresh-window pass run in
@@ -7,8 +9,9 @@ import 'dart:io';
 /// pending before picking work. Without coordination one could reclaim the
 /// other's in-flight task and write the same file, corrupting the audio.
 /// The lock is a file in the documents directory, created atomically, so it
-/// holds across engines.
-class BackgroundDownloadLock {
+/// holds across engines. The feed refresh's download cleanup takes it too,
+/// so it never deletes a task a worker is about to start.
+class BackgroundDownloadLock implements BackgroundDownloadWorkerLock {
   BackgroundDownloadLock({required String directory, DateTime Function()? now})
     : _file = File('$directory/.background_download.lock'),
       _now = now ?? DateTime.now;
@@ -23,6 +26,7 @@ class BackgroundDownloadLock {
   bool _isHeld = false;
 
   /// Takes the lock, or returns false while another worker holds it.
+  @override
   Future<bool> tryAcquire() async {
     if (await _isHeldElsewhere()) return false;
     try {
@@ -38,6 +42,7 @@ class BackgroundDownloadLock {
   }
 
   /// Releases the lock if this worker holds it.
+  @override
   Future<void> release() async {
     if (!_isHeld) return;
     _isHeld = false;

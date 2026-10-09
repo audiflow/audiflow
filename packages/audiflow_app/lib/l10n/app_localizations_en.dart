@@ -882,6 +882,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadDeleted => 'Download deleted';
 
   @override
+  String get downloadKeep => 'Keep download';
+
+  @override
+  String get downloadKept =>
+      'Download kept. It won\'t be removed automatically.';
+
+  @override
+  String get downloadOriginAuto => 'Auto-downloaded';
+
+  @override
   String get downloadManageTitle => 'Manage Downloads';
 
   @override
@@ -1077,14 +1087,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get podcastMarkAllFailed => 'Some episodes couldn\'t be updated';
 
   @override
-  String podcastMarkAllPlayedDone(int count) {
-    return 'Marked $count episodes as played';
-  }
+  String get podcastMarkAllPlayedDone => 'Marked all episodes as played';
 
   @override
-  String podcastMarkAllUnplayedDone(int count) {
-    return 'Marked $count episodes as unplayed';
-  }
+  String get podcastMarkAllUnplayedDone => 'Marked all episodes as unplayed';
 
   @override
   String get markAsUnplayed => 'Mark as unplayed';
@@ -1514,18 +1520,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get removeDownload => 'Remove download';
 
   @override
-  String get statsTitle => 'Title';
-
-  @override
-  String get statsPodcast => 'Podcast';
-
-  @override
-  String get statsDuration => 'Duration';
-
-  @override
-  String get statsPublished => 'Published';
-
-  @override
   String get statsTimesCompleted => 'Times completed';
 
   @override
@@ -1545,9 +1539,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get statsNever => 'Never';
-
-  @override
-  String get statsSection => 'Statistics';
 
   @override
   String get commonCopiedToClipboard => 'Copied to clipboard';
@@ -2255,4 +2246,50 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get parentalControlAccessDenied =>
       'Restricted Mode is on. Unlock from Settings to continue.';
+
+  @override
+  String get episodeDetailPlay => 'Play';
+
+  @override
+  String episodeDetailPlayWithDuration(String duration) {
+    return 'Play · $duration';
+  }
+
+  @override
+  String get episodeDetailResume => 'Resume';
+
+  @override
+  String get episodeDetailPause => 'Pause';
+
+  @override
+  String get episodeDetailPlayAgain => 'Play again';
+
+  @override
+  String get episodeDetailAbout => 'About this episode';
+
+  @override
+  String get episodeDetailShowMore => 'Show more';
+
+  @override
+  String get episodeDetailShowLess => 'Show less';
+
+  @override
+  String get episodeDetailPlaybackRecord => 'Playback history';
+
+  @override
+  String episodeDetailTimes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count times',
+      one: '1 time',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get episodeDetailOpenPodcast => 'Open podcast';
+
+  @override
+  String get episodeDetailAddToEnd => 'Add to end of queue';
 }

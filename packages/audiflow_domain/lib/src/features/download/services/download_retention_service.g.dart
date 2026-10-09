@@ -55,4 +55,4 @@ final class DownloadRetentionServiceProvider
 }
 
 String _$downloadRetentionServiceHash() =>
-    r'8a4530bc72aa9d57943eebc91e2ae2f2343ed009';
+    r'58de4d5f32e0597cab4f47186785ac35238e4d89';

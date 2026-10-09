@@ -24,6 +24,7 @@ EpisodeWithProgress _progress(
   String name, {
   int positionMs = 0,
   DateTime? completedAt,
+  bool isReplaying = false,
   bool withHistory = true,
 }) => EpisodeWithProgress(
   episode: Episode()
@@ -37,13 +38,15 @@ EpisodeWithProgress _progress(
           ..episodeId = id
           ..positionMs = positionMs
           ..durationMs = 1000
-          ..completedAt = completedAt)
+          ..completedAt = completedAt
+          ..isReplaying = isReplaying)
       : null,
 );
 
 void main() {
   // fresh: stored, never played. started: in progress. done: played.
-  // replay: played with a saved position. unstored: no local record.
+  // replay: played, finished listen with a saved position. unstored: no
+  // local record.
   final items = [
     _item('fresh', 1),
     _item('started', 2),
@@ -193,6 +196,32 @@ void main() {
   });
 
   group('matchesEpisodeFilter', () {
+    test('an episode being replayed is played and in progress', () {
+      final replaying = _progress(
+        6,
+        'replaying',
+        positionMs: 300,
+        completedAt: DateTime(2026, 2),
+        isReplaying: true,
+      );
+      for (final filter in EpisodeFilter.values) {
+        final expected = switch (filter) {
+          EpisodeFilter.all ||
+          EpisodeFilter.inProgress ||
+          EpisodeFilter.played => true,
+          EpisodeFilter.unplayed || EpisodeFilter.downloaded => false,
+        };
+        check(
+          because: '$filter',
+          matchesEpisodeFilter(
+            filter,
+            progress: replaying,
+            downloadedEpisodeIds: const {},
+          ),
+        ).equals(expected);
+      }
+    });
+
     test('an unstored episode is unplayed and nothing else', () {
       for (final filter in EpisodeFilter.values) {
         final expected =

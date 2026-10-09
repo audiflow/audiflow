@@ -33,12 +33,17 @@ DownloadTask _task(int status) => DownloadTask()
 
 DownloadTask _completed() => _task(3);
 
+DownloadTask _autoCompleted() => _completed()
+  ..id = 4
+  ..origin = DownloadOrigin.auto.dbValue;
+
 void main() {
   Future<void> pump(
     WidgetTester tester, {
     DownloadTask? task,
     VoidCallback? onRemove,
     bool downloadCreates = true,
+    _FakeDownloadService? service,
   }) async {
     await tester.pumpWidget(
       ProviderScope(
@@ -47,7 +52,7 @@ void main() {
         overrides: [
           episodeDownloadProvider(9).overrideWith((ref) => Stream.value(task)),
           downloadServiceProvider.overrideWithValue(
-            _FakeDownloadService(creates: downloadCreates),
+            service ?? _FakeDownloadService(creates: downloadCreates),
           ),
         ],
         child: MaterialApp(
@@ -173,6 +178,28 @@ void main() {
     check(find.text('Share episode').evaluate()).length.equals(1);
   });
 
+  testWidgets('long press keeps an auto download and says so', (tester) async {
+    final service = _FakeDownloadService();
+    await pump(tester, task: _autoCompleted(), service: service);
+    await tester.longPress(find.text('Queued Episode'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Keep download'));
+    await tester.pumpAndSettle();
+    check(service.keptIds).deepEquals([4]);
+    check(
+      find.text("Download kept. It won't be removed automatically.").evaluate(),
+    ).length.equals(1);
+  });
+
+  testWidgets('long press does not offer keep for a manual download', (
+    tester,
+  ) async {
+    await pump(tester, task: _completed());
+    await tester.longPress(find.text('Queued Episode'));
+    await tester.pumpAndSettle();
+    check(find.text('Keep download').evaluate()).isEmpty();
+  });
+
   testWidgets('long press offers download before one exists', (tester) async {
     await pump(tester);
     await tester.longPress(find.text('Queued Episode'));
@@ -217,6 +244,14 @@ class _FakeDownloadService implements DownloadService {
 
   /// False mimics a task that already exists: nothing new is created.
   final bool creates;
+
+  final List<int> keptIds = [];
+
+  @override
+  Future<bool> keep(int taskId) async {
+    keptIds.add(taskId);
+    return true;
+  }
 
   @override
   Future<DownloadTask?> downloadEpisode(

@@ -1688,6 +1688,24 @@ abstract class AppLocalizations {
   /// **'Download deleted'**
   String get downloadDeleted;
 
+  /// Menu item and tooltip that turns an auto download into one the listener keeps, so retention never removes it
+  ///
+  /// In en, this message translates to:
+  /// **'Keep download'**
+  String get downloadKeep;
+
+  /// Snackbar after keeping an auto download
+  ///
+  /// In en, this message translates to:
+  /// **'Download kept. It won\'t be removed automatically.'**
+  String get downloadKept;
+
+  /// Download management tile label marking a download created by auto-download, which retention may remove
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-downloaded'**
+  String get downloadOriginAuto;
+
   /// Navigate to download management
   ///
   /// In en, this message translates to:
@@ -2003,14 +2021,14 @@ abstract class AppLocalizations {
   /// Snackbar after marking every episode played
   ///
   /// In en, this message translates to:
-  /// **'Marked {count} episodes as played'**
-  String podcastMarkAllPlayedDone(int count);
+  /// **'Marked all episodes as played'**
+  String get podcastMarkAllPlayedDone;
 
   /// Snackbar after marking every episode not played
   ///
   /// In en, this message translates to:
-  /// **'Marked {count} episodes as unplayed'**
-  String podcastMarkAllUnplayedDone(int count);
+  /// **'Marked all episodes as unplayed'**
+  String get podcastMarkAllUnplayedDone;
 
   /// Action to mark episode as unplayed
   ///
@@ -2750,30 +2768,6 @@ abstract class AppLocalizations {
   /// **'Remove download'**
   String get removeDownload;
 
-  /// Label for episode title in statistics table
-  ///
-  /// In en, this message translates to:
-  /// **'Title'**
-  String get statsTitle;
-
-  /// Label for podcast name in statistics table
-  ///
-  /// In en, this message translates to:
-  /// **'Podcast'**
-  String get statsPodcast;
-
-  /// Label for episode duration in statistics table
-  ///
-  /// In en, this message translates to:
-  /// **'Duration'**
-  String get statsDuration;
-
-  /// Label for publish date in statistics table
-  ///
-  /// In en, this message translates to:
-  /// **'Published'**
-  String get statsPublished;
-
   /// Label for completion count in statistics table
   ///
   /// In en, this message translates to:
@@ -2815,12 +2809,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Never'**
   String get statsNever;
-
-  /// Section header for episode statistics
-  ///
-  /// In en, this message translates to:
-  /// **'Statistics'**
-  String get statsSection;
 
   /// Snackbar shown after copying text to clipboard
   ///
@@ -3955,6 +3943,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Restricted Mode is on. Unlock from Settings to continue.'**
   String get parentalControlAccessDenied;
+
+  /// Episode detail primary button for an unplayed episode without a known duration
+  ///
+  /// In en, this message translates to:
+  /// **'Play'**
+  String get episodeDetailPlay;
+
+  /// Episode detail primary button for an unplayed episode
+  ///
+  /// In en, this message translates to:
+  /// **'Play · {duration}'**
+  String episodeDetailPlayWithDuration(String duration);
+
+  /// Episode detail primary button for an episode in progress
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get episodeDetailResume;
+
+  /// Episode detail primary button while the episode plays
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get episodeDetailPause;
+
+  /// Episode detail primary button for a played episode
+  ///
+  /// In en, this message translates to:
+  /// **'Play again'**
+  String get episodeDetailPlayAgain;
+
+  /// Title of the show notes card on episode detail
+  ///
+  /// In en, this message translates to:
+  /// **'About this episode'**
+  String get episodeDetailAbout;
+
+  /// Expands the clamped show notes
+  ///
+  /// In en, this message translates to:
+  /// **'Show more'**
+  String get episodeDetailShowMore;
+
+  /// Collapses the expanded show notes
+  ///
+  /// In en, this message translates to:
+  /// **'Show less'**
+  String get episodeDetailShowLess;
+
+  /// Header of the playback record section on episode detail
+  ///
+  /// In en, this message translates to:
+  /// **'Playback history'**
+  String get episodeDetailPlaybackRecord;
+
+  /// Count value in the playback record
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 time} other{{count} times}}'**
+  String episodeDetailTimes(int count);
+
+  /// Episode detail menu item that opens the podcast
+  ///
+  /// In en, this message translates to:
+  /// **'Open podcast'**
+  String get episodeDetailOpenPodcast;
+
+  /// Queue choice on episode detail that appends the episode
+  ///
+  /// In en, this message translates to:
+  /// **'Add to end of queue'**
+  String get episodeDetailAddToEnd;
 }
 
 class _AppLocalizationsDelegate

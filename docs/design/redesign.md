@@ -164,7 +164,7 @@ Top to bottom:
 
 1. **Title** "ライブラリ" (`displayTitle`), no trailing button. Adding podcasts is the Search tab's job.
 2. **Continue listening** — horizontal cards for in-progress episodes (up to 10, from playback history). Card: artwork 56, title (2 lines), remaining time, bottom-edge progress line. Section hidden when empty.
-3. **Stations** — a 2-column grid showing at most 4 stations (default: most recently played). Header: the station count beside the title, then "+" (create) and "すべて表示 ›" (opens the station list, shown only beyond 4). The section never grows beyond 4 tiles regardless of station count.
+3. **Stations** — a 2-column grid showing at most 4 stations (default: most recently played). Header: the station count beside the title, then "+" (create) and "すべて表示 ›" (opens the station list, shown only beyond 4). The section never grows beyond 4 tiles regardless of station count. Each tile's artwork shows the station's podcasts as stacked cards, never cropped: one podcast fills the square; two or three are smaller cards with a `floating` shadow, overlapping from top-left to bottom-right over a blur of the first podcast's artwork; beyond three, only the first three show. A station with no podcasts shows four dashed slots on `surfaceSunken` with an `accent` "+" button that opens the station editor with podcast selection already open.
 4. **Podcasts** — sticky header row with the count beside the title and the sort (latest episode / subscribed date / name) on the right. A filter field sits under it, always shown. List only: artwork 52, title, last-updated, and an `accent` dot when an episode arrived since the podcast was last opened (a presence mark rather than an unplayed count, which a long back catalog would inflate). A grid layout was tried and dropped: at typical library sizes it only trades the last-updated date and full titles for density.
 
 ### 4.2 Podcast detail
@@ -200,7 +200,7 @@ Artwork-derived background (2.2). From top: grabber, close chevron, "Playing fro
 
 ### 4.6 Queue
 
-Title "キュー" with a "clear" action. A now-playing card on the artwork-derived color with a white bottom-edge progress line. "Up next" grouped list: artwork 48, title (2 lines), duration and date with a downloaded indicator, and a drag handle as the only trailing control. Remove and download move to swipe actions.
+Title "キュー" with a "clear" action. A now-playing card on the artwork-derived color with a white bottom-edge progress line. "Up next" grouped list: artwork 48, title (2 lines), duration and date with a downloaded indicator, and a drag handle as the only trailing control. Remove and download move to swipe actions. The long-press sheet adds "ダウンロードを保持" for an auto download that retention may remove.
 
 ### 4.7 Search
 
@@ -215,10 +215,28 @@ Until episode search ships, the scope toggle is hidden and the screen shows podc
 
 Grouped list instead of a card grid. Groups: [Appearance, Playback, Downloads, Feed sync], [Storage & data, Privacy, Parental control], [Getting started, Developer, About]. Each row: icon tile, title, one-line subtitle, chevron.
 
+### 4.9 Episode detail
+
+Reached from any episode row (Podcast detail, Series episodes, Queue, Library). Same floating navigation as other detail screens: back button, and a [share | …] pill. The episode title (one line) fades into the center once the hero has scrolled away.
+
+- **Hero** (centered): episode artwork 200 (radius 22, tap to view full size), then left-aligned below it: podcast name in `accent` (one line, links to Podcast detail), the full episode title (`heroTitle`, not clamped, selectable), and one metadata line: date · duration · `S67 E3` · file size, each part omitted when unknown. Fades and shrinks on scroll like the podcast hero.
+- **Action row**: a primary pill (height 50, fills the row) followed by two 50px circular buttons: queue and download. Play now, play next and add to end are one choice for the listener, so they are not three equal buttons: tapping queue opens a small popover under it with "次に再生" and "キューの最後に追加". The primary pill reads by state:
+  - unplayed: `accent` fill, "▶ 再生 · 28分"
+  - in progress: `accent` fill, "▶ 続きから再生"
+  - playing: `accentTint` fill with `accent` text, "‖ 一時停止"
+  - played: `surface` fill, "↺ もう一度再生"
+
+  The download button is `accentTint` with an `accent` glyph once downloaded.
+- **Progress line**: under the action row, a full-width 3px line with the status on its right ("残り17分", or "✓ 再生済み" in `accent` with the line full). Hidden while unplayed. This is the standalone form of the bottom-edge line (3.1); the play pill itself never shows progress.
+- **Description**: one `surface` card titled "エピソードについて". Show notes render as rich text with `accent` underlined links, clamped to about 6 lines with a "さらに表示 / 閉じる" toggle. Separator runs follow section 5 (rule lines become a hairline, decorations are stripped), and links whose text is only invisible characters are removed (they would show a stray underline).
+- **Playback record** ("再生の記録"): a grouped list of label / value rows: times completed, times started, total listened, real time, first played, last played (values "—" or "未再生" before the first play). Title, podcast, duration and publish date are not repeated here because the hero already shows them. Long-press a row to copy its value.
+- **`…` menu**: "再生済みにする / 未再生にする", "ダウンロードを保持" (only for an auto download that retention may still remove; neutral, no accent), "ダウンロードを削除" (only when downloaded, in the `error` color), then "番組を開く". Queue, download and share are on screen, so they are not repeated in the menu.
+- **Developer info** (feed URL and similar) appears as an extra grouped section at the bottom only when developer mode is on.
+
 ## 5. Content rules
 
 - **Long names**: list rows clamp to 2 lines (series) or 3 lines (episode titles) with an ellipsis; hero titles clamp to 3 lines; navigation titles are one line. Full text is always reachable on the next level down.
-- **Descriptions** strip decorative separator runs (e.g. long sequences of `:` or `=`) before display.
+- **Descriptions**: decorative separator runs (five or more of `:`, `=`, `-` and similar) are not shown as characters. In list previews they are stripped, since two lines have no room for them. In full show notes a run standing alone on its line or paragraph is the publisher's section break and becomes a hairline rule (`outline`); a run decorating text (`::::: 今回のお話 :::::`) is stripped and the text kept. Rules at the very start or end are dropped.
 - **Dates** in series lists are omitted; progress is more useful than date ranges.
 
 ## 6. New behavior introduced by the redesign

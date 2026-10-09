@@ -78,9 +78,7 @@ Future<AudiflowAudioHandler> audioHandler(Ref ref) async {
   final lifecycleStream = ref.read(playerLifecycleEventsProvider);
   final lifecycleSub = lifecycleStream.listen((event) {
     if (event is! EpisodeCompletedLifecycle) return;
-    ref.invalidate(podcastEpisodeProgressProvider);
-    ref.invalidate(filteredSortedEpisodesProvider);
-    ref.invalidate(smartPlaylistEpisodesProvider);
+    refreshPlayedStateViews(ref);
   });
   ref.onDispose(lifecycleSub.cancel);
 
@@ -90,11 +88,7 @@ Future<AudiflowAudioHandler> audioHandler(Ref ref) async {
   final savedSub = ref
       .read(playbackHistoryServiceProvider)
       .progressSaved
-      .listen((_) {
-        ref.invalidate(podcastEpisodeProgressProvider);
-        ref.invalidate(filteredSortedEpisodesProvider);
-        ref.invalidate(smartPlaylistEpisodesProvider);
-      });
+      .listen((_) => refreshPlayedStateViews(ref));
   ref.onDispose(savedSub.cancel);
 
   // Fetch on-demand chapters (e.g. <podcast:chapters> JSON) whenever an
