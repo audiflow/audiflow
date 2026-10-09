@@ -11,6 +11,13 @@ review in App Store Connect and publishes the Play draft.
 The [local build](#local-build-fallback) on a maintainer's Mac remains as a
 fallback for when CI cannot be used.
 
+Both workflows set the app version from the tag before building, so the
+`version:` in `pubspec.yaml` is not bumped per release and lags behind on
+`main`. Dev-flavor builds instead take the version of the newest `stg-` tag
+behind `HEAD` (`tools/dev-version.sh`, applied by a Runner build phase on iOS
+and by `android/app/build.gradle.kts` on Android), and keep the pubspec
+version when no such tag is reachable.
+
 ## 1. Choose what to build
 
 Build the commit that was verified on staging, with the same version and build

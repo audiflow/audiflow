@@ -42,6 +42,20 @@ android {
         versionName = flutter.versionName
     }
 
+    // Dev builds report the newest stg tag's version: the pubspec version
+    // lags on main because only the release workflows rewrite it. The
+    // flavors are created later by flavorizr.gradle.kts, hence configureEach.
+    val devVersion = providers.exec {
+        commandLine("bash", rootProject.file("../../../tools/dev-version.sh").path)
+        isIgnoreExitValue = true
+    }.standardOutput.asText.get().trim().split(" ")
+    productFlavors.configureEach {
+        if (name == "dev" && devVersion.size == 2) {
+            versionName = devVersion[0]
+            versionCode = devVersion[1].toInt()
+        }
+    }
+
     if (keystorePropertiesFile.exists()) {
         signingConfigs {
             create("release") {
