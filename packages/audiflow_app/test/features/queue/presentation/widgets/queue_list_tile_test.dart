@@ -11,17 +11,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
-QueueItemWithEpisode _item() => QueueItemWithEpisode(
+const _titles = ['Queued Episode', 'Next Episode'];
+
+/// The [index]th up-next row: queue item 5 + index for episode 9 + index.
+QueueItemWithEpisode _item([int index = 0]) => QueueItemWithEpisode(
   queueItem: QueueItem()
-    ..id = 5
-    ..episodeId = 9
-    ..position = 0
+    ..id = 5 + index
+    ..episodeId = 9 + index
+    ..position = index
     ..addedAt = DateTime(2026),
   episode: Episode()
-    ..id = 9
+    ..id = 9 + index
     ..podcastId = 1
-    ..guid = 'g9'
-    ..title = 'Queued Episode'
+    ..guid = 'g${9 + index}'
+    ..title = _titles[index]
     ..audioUrl = 'https://example.com/9.mp3'
     ..durationMs = 45 * 60 * 1000,
   itunesId: '123',
@@ -56,6 +59,8 @@ void main() {
     DownloadTask? task,
     VoidCallback? onRemove,
     ValueChanged<int>? onReorderStart,
+    void Function(int from, int to)? onReorderItem,
+    int itemCount = 1,
     bool downloadCreates = true,
     _FakeDownloadService? service,
   }) async {
@@ -65,6 +70,7 @@ void main() {
         key: UniqueKey(),
         overrides: [
           episodeDownloadProvider(9).overrideWith((ref) => Stream.value(task)),
+          episodeDownloadProvider(10).overrideWith((ref) => Stream.value(null)),
           downloadServiceProvider.overrideWithValue(
             service ?? _FakeDownloadService(creates: downloadCreates),
           ),
@@ -77,13 +83,13 @@ void main() {
             body: CustomScrollView(
               slivers: [
                 SliverReorderableList(
-                  itemCount: 1,
-                  onReorderItem: (_, _) {},
+                  itemCount: itemCount,
+                  onReorderItem: onReorderItem ?? (_, _) {},
                   onReorderStart: onReorderStart,
                   proxyDecorator: QueueListTile.liftWhileDragging,
                   itemBuilder: (_, index) => QueueListTile(
-                    key: const ValueKey(5),
-                    item: _item(),
+                    key: ValueKey(5 + index),
+                    item: _item(index),
                     index: index,
                     onRemove: onRemove ?? () {},
                     onTap: () {},
@@ -240,6 +246,30 @@ void main() {
     check(_lifted.evaluate()).length.equals(1);
     await gesture.up();
     await tester.pumpAndSettle();
+  });
+
+  testWidgets('holding the handle, then dragging past a row, reorders', (
+    tester,
+  ) async {
+    final moves = <(int, int)>[];
+    await pump(
+      tester,
+      itemCount: 2,
+      onReorderItem: (from, to) => moves.add((from, to)),
+    );
+    final below = tester.getRect(find.text('Next Episode'));
+    final gesture = await tester.startGesture(
+      tester.getCenter(find.byIcon(Symbols.drag_handle).first),
+    );
+    await tester.pump(kLongPressTimeout + const Duration(milliseconds: 50));
+    // Past the second row's midpoint, in steps so the list follows.
+    for (var step = 0; step < 4; step++) {
+      await gesture.moveBy(Offset(0, below.height / 2));
+      await tester.pump();
+    }
+    await gesture.up();
+    await tester.pumpAndSettle();
+    check(moves).deepEquals([(0, 1)]);
   });
 
   testWidgets('the dragged row lifts with the floating shadow', (tester) async {
