@@ -85,6 +85,10 @@ class _PlaybackSpeedSliderState extends State<PlaybackSpeedSlider> {
   }
 
   void _handleDragStart(DragStartDetails details, double width) {
+    // Warmed ahead of the first tick; they use separate iOS generators.
+    HapticsScope.of(context)
+      ..prepare(HapticToken.step)
+      ..prepare(HapticToken.edge);
     _gestureStartIndex = _index;
     // The first contact jumps to the step under the finger, like a tap.
     final index = _positionInSteps(details.localPosition, width).round();

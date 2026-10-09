@@ -28,7 +28,7 @@ These are the rules every haptic in the app follows. Each one is stated by more 
 
 1. **One meaning, one feel.** A token is played only for its documented meaning. Opposite outcomes (success and error, on and off) never share a feel.
 2. **Restraint.** Plain taps and navigation get no haptic. Haptics mark moments the user would otherwise miss: an outcome, a gesture becoming armed, an object being picked up.
-3. **Frequent means faint.** The more often a haptic can fire, the weaker it is. Continuous gestures (scrubbing, slider drags) do not tick on every step; on-device testing already removed the per-band seek-bar haptic and the per-step speed-slider haptic because they read as noise.
+3. **Frequent means faint.** The more often a haptic can fire, the weaker it is. A continuous gesture either stays silent between marks or ticks with `step`, the lightest token: seek-bar scrubbing and its speed bands stay silent (a per-band haptic read as noise on device), while the speed slider ticks each step with `step`, a faint texture the earlier, stronger per-step tick lacked. Marks along the way (`detent`) and the ends (`edge`) are firmer, so they stand out from the texture.
 4. **Short and crisp.** Every token is a single transient or a short platform pattern. No long buzzes; on Android, no one-shot or waveform vibrations for touch feedback.
 5. **In sync with the visual.** A haptic fires in the same frame as the visual change it confirms, never after an async round trip completes unless the token is an outcome (`success`, `error`).
 6. **Never the only signal.** Every haptic accompanies a visible change. iPad, the iOS Simulator, and devices with haptics turned off get no haptics at all.
