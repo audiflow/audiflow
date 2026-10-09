@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:flutter_test/flutter_test.dart';
 
 List<ActionMenuEntry> _tiles(List<String> log) => [
@@ -48,6 +48,16 @@ List<List<ActionMenuEntry>> _sections(List<String> log) => [
   ],
 ];
 
+class _RecordingHapticPlayer implements HapticPlayer {
+  final played = <HapticToken>[];
+
+  @override
+  void play(HapticToken token) => played.add(token);
+
+  @override
+  void prepare(HapticToken token) {}
+}
+
 void main() {
   /// Pumps a trigger labelled `open` at [triggerAlignment] that opens the
   /// sample menu at [placementOf] (the `…` spot under y=[top] by default).
@@ -58,25 +68,29 @@ void main() {
     Alignment triggerAlignment = Alignment.center,
     ActionMenuPlacement Function(BuildContext anchor)? placementOf,
     List<List<ActionMenuEntry>>? sections,
+    HapticPlayer haptics = const NoopHapticPlayer(),
   }) async {
     await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.light(),
-        home: Scaffold(
-          body: Align(
-            alignment: triggerAlignment,
-            child: ActionMenuTrigger(
-              onOpen: (anchor, drag) => showActionMenu(
-                context: anchor,
-                placement:
-                    placementOf?.call(anchor) ??
-                    ActionMenuPlacement.topRight(top: top),
-                tiles: sections == null ? _tiles(log) : const [],
-                sections: sections ?? _sections(log),
-                drag: drag,
+      HapticsScope(
+        player: haptics,
+        child: MaterialApp(
+          theme: AppTheme.light(),
+          home: Scaffold(
+            body: Align(
+              alignment: triggerAlignment,
+              child: ActionMenuTrigger(
+                onOpen: (anchor, drag) => showActionMenu(
+                  context: anchor,
+                  placement:
+                      placementOf?.call(anchor) ??
+                      ActionMenuPlacement.topRight(top: top),
+                  tiles: sections == null ? _tiles(log) : const [],
+                  sections: sections ?? _sections(log),
+                  drag: drag,
+                ),
+                builder: (context, open) =>
+                    TextButton(onPressed: open, child: const Text('open')),
               ),
-              builder: (context, open) =>
-                  TextButton(onPressed: open, child: const Text('open')),
             ),
           ),
         ),
@@ -88,8 +102,9 @@ void main() {
     WidgetTester tester, {
     required List<String> log,
     double top = 100,
+    HapticPlayer haptics = const NoopHapticPlayer(),
   }) async {
-    await pumpTrigger(tester, log: log, top: top);
+    await pumpTrigger(tester, log: log, top: top, haptics: haptics);
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
   }
@@ -135,27 +150,6 @@ void main() {
     );
     await tester.pumpAndSettle();
     return gesture;
-  }
-
-  /// Records the haptic types played through the platform channel.
-  List<String> recordHaptics(WidgetTester tester) {
-    final played = <String>[];
-    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-      SystemChannels.platform,
-      (call) async {
-        if (call.method == 'HapticFeedback.vibrate') {
-          played.add(call.arguments as String);
-        }
-        return null;
-      },
-    );
-    addTearDown(
-      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-        SystemChannels.platform,
-        null,
-      ),
-    );
-    return played;
   }
 
   group('showActionMenu', () {
@@ -501,10 +495,10 @@ void main() {
     testWidgets('plays a selection haptic each time the highlight moves', (
       tester,
     ) async {
-      final played = recordHaptics(tester);
-      await pumpTrigger(tester, log: []);
+      final haptics = _RecordingHapticPlayer();
+      await pumpTrigger(tester, log: [], haptics: haptics);
       final gesture = await holdOpen(tester);
-      check(played).isEmpty();
+      check(haptics.played).isEmpty();
 
       final website = tester.getRect(find.text('Website'));
       await gesture.moveTo(website.centerLeft);
@@ -518,18 +512,17 @@ void main() {
       await gesture.moveTo(tester.getCenter(find.text('Share')));
       await tester.pump();
 
-      check(played).deepEquals([
-        'HapticFeedbackType.selectionClick',
-        'HapticFeedbackType.selectionClick',
-      ]);
+      check(
+        haptics.played,
+      ).deepEquals([HapticToken.selection, HapticToken.selection]);
       await gesture.up();
       await tester.pumpAndSettle();
     });
 
     testWidgets('a plain tap plays no haptic', (tester) async {
-      final played = recordHaptics(tester);
-      await open(tester, log: []);
-      check(played).isEmpty();
+      final haptics = _RecordingHapticPlayer();
+      await open(tester, log: [], haptics: haptics);
+      check(haptics.played).isEmpty();
     });
   });
 

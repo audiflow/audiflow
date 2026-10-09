@@ -1,8 +1,9 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
+import '../../haptics/haptic_token.dart';
+import '../../haptics/haptics_scope.dart';
 import '../../styles/borders.dart';
 import '../../styles/shadows.dart';
 import '../../styles/spacing.dart';
@@ -234,14 +235,10 @@ class _ActionMenuState extends State<ActionMenu> {
   void _highlight(int? index) {
     if (index == _highlighted) return;
     setState(() => _highlighted = index);
-    if (index != null) _playSelectionHaptic();
+    if (index != null) HapticsScope.of(context).play(HapticToken.selection);
   }
 
   void _choose(ActionMenuEntry entry) => widget.onChosen(entry);
-
-  // `selection` token (docs/design/haptics.md). Plays through Flutter's
-  // selection click until the semantic haptics foundation (#612) lands.
-  void _playSelectionHaptic() => HapticFeedback.selectionClick();
 
   @override
   Widget build(BuildContext context) {
