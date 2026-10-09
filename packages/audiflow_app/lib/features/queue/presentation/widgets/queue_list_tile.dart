@@ -34,6 +34,31 @@ class QueueListTile extends ConsumerWidget {
   static const double separatorIndent =
       Spacing.screenHorizontal + artworkSize + Spacing.sm + Spacing.xs;
 
+  /// Drag proxy for the up-next list: the row lifts off the list on a
+  /// surface with the floating shadow, easing in as the drag starts, the
+  /// way `ReorderableListView` lifts its items.
+  static Widget liftWhileDragging(
+    Widget child,
+    int index,
+    Animation<double> animation,
+  ) {
+    return AnimatedBuilder(
+      animation: animation,
+      builder: (context, child) {
+        final lift = Curves.easeInOut.transform(animation.value);
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            color: AppColors.of(context).surface,
+            boxShadow: BoxShadow.lerpList(const [], AppShadows.floating, lift),
+          ),
+          // The proxy lives in the overlay, outside the list's Material.
+          child: Material(type: MaterialType.transparency, child: child),
+        );
+      },
+      child: child,
+    );
+  }
+
   final QueueItemWithEpisode item;
   final int index;
   final VoidCallback onRemove;

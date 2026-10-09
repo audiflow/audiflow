@@ -3,6 +3,7 @@ import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:checks/checks.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
@@ -61,10 +62,6 @@ void main() {
           theme: AppTheme.light(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          // The drag proxy is built in the navigator's overlay; in the app
-          // that navigator sits inside the shell's Scaffold, so mirror the
-          // Material ancestor it finds there.
-          builder: (_, child) => Material(child: child),
           home: Scaffold(
             body: CustomScrollView(
               slivers: [
@@ -72,6 +69,7 @@ void main() {
                   itemCount: 1,
                   onReorderItem: (_, _) {},
                   onReorderStart: onReorderStart,
+                  proxyDecorator: QueueListTile.liftWhileDragging,
                   itemBuilder: (_, index) => QueueListTile(
                     key: const ValueKey(5),
                     item: _item(),
@@ -215,6 +213,28 @@ void main() {
     check(find.text('Delete download').evaluate()).isEmpty();
     await gesture.up();
     await tester.pumpAndSettle();
+  });
+
+  testWidgets('the dragged row lifts with the floating shadow', (tester) async {
+    await pump(tester);
+    final gesture = await tester.startGesture(
+      tester.getCenter(find.byIcon(Symbols.drag_handle)),
+    );
+    await gesture.moveBy(const Offset(0, 40));
+    await tester.pumpAndSettle();
+    final lifted = find.byWidgetPredicate(
+      (widget) =>
+          widget is DecoratedBox &&
+          widget.decoration is BoxDecoration &&
+          listEquals(
+            (widget.decoration as BoxDecoration).boxShadow,
+            AppShadows.floating,
+          ),
+    );
+    check(lifted.evaluate()).length.equals(1);
+    await gesture.up();
+    await tester.pumpAndSettle();
+    check(lifted.evaluate()).isEmpty();
   });
 
   testWidgets('long press just above the handle opens the menu', (
