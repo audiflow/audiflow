@@ -94,6 +94,37 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  /// Pushes a second screen over the trigger's and opens its menu there;
+  /// returns the navigator.
+  Future<NavigatorState> openOnSecondScreen(
+    WidgetTester tester, {
+    required List<String> log,
+  }) async {
+    await pumpTrigger(tester, log: log);
+    final navigator = tester.state<NavigatorState>(find.byType(Navigator));
+    unawaited(
+      navigator.push(
+        MaterialPageRoute<void>(
+          builder: (context) => Scaffold(
+            body: ActionMenuTrigger(
+              onOpen: (anchor, drag) => showActionMenu(
+                context: anchor,
+                placement: const ActionMenuPlacement.topRight(top: 100),
+                sections: _sections(log),
+              ),
+              builder: (context, open) =>
+                  TextButton(onPressed: open, child: const Text('second')),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('second'));
+    await tester.pumpAndSettle();
+    return navigator;
+  }
+
   /// Presses `open` and holds until the menu is up; returns the finger.
   Future<TestGesture> holdOpen(WidgetTester tester) async {
     final gesture = await tester.startGesture(
@@ -199,28 +230,7 @@ void main() {
       tester,
     ) async {
       final log = <String>[];
-      await pumpTrigger(tester, log: log);
-      final navigator = tester.state<NavigatorState>(find.byType(Navigator));
-      unawaited(
-        navigator.push(
-          MaterialPageRoute<void>(
-            builder: (context) => Scaffold(
-              body: ActionMenuTrigger(
-                onOpen: (anchor, drag) => showActionMenu(
-                  context: anchor,
-                  placement: const ActionMenuPlacement.topRight(top: 100),
-                  sections: _sections(log),
-                ),
-                builder: (context, open) =>
-                    TextButton(onPressed: open, child: const Text('second')),
-              ),
-            ),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('second'));
-      await tester.pumpAndSettle();
+      await openOnSecondScreen(tester, log: log);
 
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
@@ -231,6 +241,19 @@ void main() {
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
       check(find.text('second').evaluate()).isEmpty();
+    });
+
+    testWidgets('closes when its screen is popped from elsewhere', (
+      tester,
+    ) async {
+      final log = <String>[];
+      final navigator = await openOnSecondScreen(tester, log: log);
+
+      navigator.pop();
+      await tester.pumpAndSettle();
+      check(find.byKey(ActionMenu.surfaceKey).evaluate()).isEmpty();
+      check(find.text('open').evaluate()).isNotEmpty();
+      check(log).isEmpty();
     });
 
     testWidgets('a disabled entry is faded and cannot be tapped', (

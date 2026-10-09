@@ -82,7 +82,16 @@ class _MenuLayerState<T> extends State<_MenuLayer<T>>
   @override
   void initState() {
     super.initState();
-    widget.route?.registerPopEntry(_popEntry);
+    final route = widget.route;
+    if (route == null) return;
+    route.registerPopEntry(_popEntry);
+    // The menu sits above every route, so it would outlive its screen if
+    // something else popped it (e.g. a deep link).
+    unawaited(
+      route.popped.whenComplete(() {
+        if (mounted) _close(null);
+      }),
+    );
   }
 
   @override

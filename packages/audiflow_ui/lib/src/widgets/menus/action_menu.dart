@@ -161,7 +161,10 @@ class _ActionMenuState extends State<ActionMenu> {
   @override
   void didUpdateWidget(ActionMenu oldWidget) {
     super.didUpdateWidget(oldWidget);
-    _indexEntries();
+    if (oldWidget.tiles != widget.tiles ||
+        oldWidget.sections != widget.sections) {
+      _indexEntries();
+    }
     if (oldWidget.drag != widget.drag) {
       oldWidget.drag?.removeListener(_onDrag);
       _follow(widget.drag);
@@ -177,6 +180,7 @@ class _ActionMenuState extends State<ActionMenu> {
   void _indexEntries() {
     _entries = [...widget.tiles, ...widget.sections.expand((s) => s)];
     _entryKeys = List.generate(_entries.length, (_) => GlobalKey());
+    _highlighted = null;
   }
 
   void _follow(ActionMenuDrag? drag) {
