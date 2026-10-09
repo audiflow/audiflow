@@ -153,16 +153,26 @@ class _SmartPlaylistEpisodesScreenState
       appBar: AppBar(
         title: Text(widget.smartPlaylist.formattedDisplayName),
         actions: [
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              if (value == 'play_order') _showPlayOrderSheet();
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'play_order',
-                child: Text(l10n.playOrderMenuTitle),
-              ),
-            ],
+          ActionMenuTrigger(
+            onOpen: (anchor, drag) => showActionMenu(
+              context: anchor,
+              placement: ActionMenuPlacement.below(anchor),
+              sections: [
+                [
+                  ActionMenuEntry(
+                    icon: Icons.swap_vert,
+                    label: l10n.playOrderMenuTitle,
+                    onSelected: _showPlayOrderSheet,
+                  ),
+                ],
+              ],
+              drag: drag,
+            ),
+            builder: (context, open) => IconButton(
+              icon: const Icon(Icons.more_horiz_rounded),
+              tooltip: MaterialLocalizations.of(context).showMenuTooltip,
+              onPressed: open,
+            ),
           ),
         ],
       ),

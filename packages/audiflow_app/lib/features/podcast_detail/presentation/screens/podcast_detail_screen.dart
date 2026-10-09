@@ -386,10 +386,10 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
               tooltip: l10n.podcastDetailSettingsTooltip,
               onPressed: _openSettingsSheet,
             ),
-          FloatingNavAction(
+          FloatingNavAction.menu(
             icon: Icons.more_horiz_rounded,
             tooltip: l10n.podcastDetailMoreTooltip,
-            onPressed: _showMoreMenu,
+            onOpenMenu: _showMoreMenu,
           ),
         ],
       ),
@@ -408,7 +408,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
   /// Overflow popover under the navigation's trailing pill: primary
   /// actions as tiles, then whole-podcast played status. Play order and
   /// audio live in the settings sheet.
-  Future<void> _showMoreMenu() {
+  Future<void> _showMoreMenu(BuildContext anchor, ActionMenuDrag? drag) {
     final l10n = AppLocalizations.of(context);
     final feedUrl = podcast.feedUrl;
     final subscription = feedUrl == null
@@ -427,8 +427,11 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
         .read(subscriptionControllerProvider(podcast.id))
         .value;
     return showActionMenu(
-      context: context,
-      top: FloatingNavigationBar.heightOf(context),
+      context: anchor,
+      placement: ActionMenuPlacement.topRight(
+        top: FloatingNavigationBar.heightOf(context),
+      ),
+      drag: drag,
       tiles: [
         if (feedUrl != null && isSubscribed != null)
           ActionMenuEntry(

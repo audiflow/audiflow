@@ -4,6 +4,7 @@ import '../../styles/borders.dart';
 import '../../styles/shadows.dart';
 import '../../styles/spacing.dart';
 import '../../themes/app_colors.dart';
+import '../menus/action_menu_trigger.dart';
 
 /// 44px white circular button floating over content (redesign 3.3),
 /// typically the back button of a detail screen.
@@ -57,11 +58,20 @@ class FloatingNavAction {
     required this.icon,
     required this.tooltip,
     required this.onPressed,
-  });
+  }) : onOpenMenu = null;
+
+  /// A button that opens a menu on a tap, or on a press-and-hold that
+  /// slides to an item (see [ActionMenuTrigger]).
+  const FloatingNavAction.menu({
+    required this.icon,
+    required this.tooltip,
+    required ActionMenuOpener this.onOpenMenu,
+  }) : onPressed = null;
 
   final IconData icon;
   final String tooltip;
   final VoidCallback? onPressed;
+  final ActionMenuOpener? onOpenMenu;
 }
 
 /// White pill grouping icon buttons on the trailing side of a floating
@@ -94,12 +104,23 @@ class FloatingNavActions extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               for (final action in actions)
-                _FloatingIconButton(
-                  icon: action.icon,
-                  tooltip: action.tooltip,
-                  onPressed: action.onPressed,
-                  color: colors.ink,
-                ),
+                if (action.onOpenMenu case final onOpenMenu?)
+                  ActionMenuTrigger(
+                    onOpen: onOpenMenu,
+                    builder: (context, open) => _FloatingIconButton(
+                      icon: action.icon,
+                      tooltip: action.tooltip,
+                      onPressed: open,
+                      color: colors.ink,
+                    ),
+                  )
+                else
+                  _FloatingIconButton(
+                    icon: action.icon,
+                    tooltip: action.tooltip,
+                    onPressed: action.onPressed,
+                    color: colors.ink,
+                  ),
             ],
           ),
         ),

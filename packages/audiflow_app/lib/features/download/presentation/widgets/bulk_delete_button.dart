@@ -1,4 +1,5 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../l10n/app_localizations.dart';
@@ -65,23 +66,38 @@ class BulkDeleteButton extends StatelessWidget {
     if (tasks.isEmpty) return const SizedBox.shrink();
 
     final l10n = AppLocalizations.of(context);
-    return PopupMenuButton<BulkDeleteScope>(
-      icon: const Icon(Icons.delete_sweep),
-      tooltip: l10n.downloadBulkDeleteTooltip,
-      onSelected: (scope) => _confirmAndDelete(context, scope),
-      itemBuilder: (_) => [
-        for (final scope in BulkDeleteScope.values)
-          PopupMenuItem(
-            value: scope,
-            enabled: scope.taskIdsIn(tasks).isNotEmpty,
-            child: Text(
-              l10n.downloadSectionCount(
+    return ActionMenuTrigger(
+      onOpen: (anchor, drag) => _showMenu(anchor, drag, l10n),
+      builder: (context, open) => IconButton(
+        icon: const Icon(Icons.delete_sweep),
+        tooltip: l10n.downloadBulkDeleteTooltip,
+        onPressed: open,
+      ),
+    );
+  }
+
+  void _showMenu(
+    BuildContext anchor,
+    ActionMenuDrag? drag,
+    AppLocalizations l10n,
+  ) {
+    showActionMenu(
+      context: anchor,
+      placement: ActionMenuPlacement.below(anchor),
+      sections: [
+        [
+          for (final scope in BulkDeleteScope.values)
+            ActionMenuEntry(
+              label: l10n.downloadSectionCount(
                 scope.label(l10n),
                 scope.taskIdsIn(tasks).length,
               ),
+              enabled: scope.taskIdsIn(tasks).isNotEmpty,
+              onSelected: () => _confirmAndDelete(anchor, scope),
             ),
-          ),
+        ],
       ],
+      drag: drag,
     );
   }
 
@@ -89,6 +105,9 @@ class BulkDeleteButton extends StatelessWidget {
     BuildContext context,
     BulkDeleteScope scope,
   ) async {
+    // The button leaves the tree once its downloads are gone, possibly
+    // while the menu was open.
+    if (!context.mounted) return;
     final l10n = AppLocalizations.of(context);
     // Fix the set now so what gets deleted is what the dialog counted.
     final taskIds = scope.taskIdsIn(tasks);

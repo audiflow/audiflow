@@ -103,8 +103,8 @@ Every interaction that was considered is listed here, including those that delib
 | Segmented controls and filter chips | `selection` |
 | Podcast detail filter menu, playlist selector, and newest/oldest toggle | `selection` |
 | Episode, smart playlist, and play order sort sheets; library sort menu; search country picker | `selection` |
-| Podcast detail filter menu, playlist selector, and newest/oldest toggle | `selection` |
-| Episode, smart playlist, and play order sort sheets; library sort menu; search country picker | `selection` |
+| Popover menu: the highlighted item changes while sliding a held finger | `selection` |
+| Popover menu opens (tap or press-and-hold) | `none` (the menu appearing is the feedback) |
 | Settings switches (and the other preference switches: audio sheet, station filters) | `toggleOn` / `toggleOff` |
 | Clear-queue and bulk-delete confirmation | `warning` |
 | Wrong PIN and PIN lockout | `error` |
