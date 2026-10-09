@@ -76,7 +76,12 @@ class _RecordRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     return InkWell(
-      onLongPress: () => _copy(context),
+      // Long presses play the catalog token; the framework's vibration
+      // would double up, and wrapForTap keeps the Android click sound.
+      enableFeedback: false,
+      onLongPress: HapticsScope.of(
+        context,
+      ).longPressHaptic(() => _copy(context)),
       child: ConstrainedBox(
         constraints: const BoxConstraints(minHeight: 50),
         child: Padding(

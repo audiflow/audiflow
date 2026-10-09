@@ -1,4 +1,5 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -78,6 +79,7 @@ class _PinEntrySheetState extends ConsumerState<PinEntrySheet> {
         final safeRemaining = remaining < 0 ? 0 : remaining;
         errorMessage = l10n.parentalControlPinIncorrect(safeRemaining);
       }
+      HapticsScope.of(context).play(HapticToken.error);
       setState(() {
         _submitting = false;
         _controller.clear();
@@ -88,6 +90,7 @@ class _PinEntrySheetState extends ConsumerState<PinEntrySheet> {
           .read(namedLoggerProvider('ParentalControl'))
           .e('PinEntrySheet submit failed', error: e, stackTrace: st);
       if (!mounted) return;
+      HapticsScope.of(context).play(HapticToken.error);
       setState(() {
         _submitting = false;
         _controller.clear();

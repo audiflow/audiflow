@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -71,6 +72,7 @@ class _SleepTimerChipState extends ConsumerState<SleepTimerChip> {
           labelPadding: const EdgeInsets.symmetric(horizontal: 6),
           visualDensity: VisualDensity.compact,
           onDeleted: () {
+            HapticsScope.of(context).play(HapticToken.toggleOff);
             ref.read(sleepTimerControllerProvider.notifier).setOff();
           },
           deleteIcon: const Icon(Icons.close, size: 16),

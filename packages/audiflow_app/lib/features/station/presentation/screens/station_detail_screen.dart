@@ -260,7 +260,7 @@ class _StationDetailContentState extends ConsumerState<_StationDetailContent> {
         .map((se) => se.episodeId)
         .toList();
 
-    return RefreshIndicator(
+    return HapticRefreshIndicator(
       onRefresh: _syncStationFeeds,
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),

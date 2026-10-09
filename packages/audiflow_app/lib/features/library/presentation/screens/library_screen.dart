@@ -151,7 +151,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
       return _withTitle(l10n, const _EmptyState());
     }
 
-    return RefreshIndicator(
+    return HapticRefreshIndicator(
       onRefresh: _onRefresh,
       child: CustomScrollView(
         slivers: [
@@ -451,7 +451,12 @@ class _SortMenuButton extends StatelessWidget {
 
     return PopupMenuButton<PodcastSortOrder>(
       tooltip: l10n.librarySortTooltip,
-      onSelected: onSelected,
+      onSelected: (order) {
+        if (order != currentOrder) {
+          HapticsScope.of(context).play(HapticToken.selection);
+        }
+        onSelected(order);
+      },
       itemBuilder: (context) => [
         for (final order in PodcastSortOrder.values)
           _buildItem(order, _labelFor(l10n, order)),

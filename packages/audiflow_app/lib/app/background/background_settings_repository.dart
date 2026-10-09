@@ -84,6 +84,10 @@ class BackgroundSettingsRepository implements AppSettingsRepository {
       SettingsDefaults.duckInterruptionBehavior;
 
   @override
+  HapticFeedbackLevel getHapticFeedbackLevel() =>
+      SettingsDefaults.hapticFeedbackLevel;
+
+  @override
   bool getShowRemainingTime() => SettingsDefaults.showRemainingTime;
 
   @override
@@ -147,6 +151,10 @@ class BackgroundSettingsRepository implements AppSettingsRepository {
 
   @override
   Future<void> setDuckInterruptionBehavior(DuckInterruptionBehavior behavior) =>
+      _unsupported();
+
+  @override
+  Future<void> setHapticFeedbackLevel(HapticFeedbackLevel level) =>
       _unsupported();
 
   @override

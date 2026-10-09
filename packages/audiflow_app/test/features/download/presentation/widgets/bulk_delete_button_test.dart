@@ -1,6 +1,7 @@
 import 'package:audiflow_app/features/download/presentation/widgets/bulk_delete_button.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -14,6 +15,16 @@ DownloadTask _task(int id, DownloadStatus status) {
     ..createdAt = DateTime(2026);
 }
 
+class _RecordingHapticPlayer implements HapticPlayer {
+  final played = <HapticToken>[];
+
+  @override
+  void play(HapticToken token) => played.add(token);
+
+  @override
+  void prepare(HapticToken token) {}
+}
+
 void main() {
   final tasks = [
     _task(1, const DownloadStatus.pending()),
@@ -25,21 +36,27 @@ void main() {
 
   setUp(() => deleteCalls = []);
 
-  Widget buildTestWidget(List<DownloadTask> tasks) {
-    return MaterialApp(
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: Scaffold(
-        appBar: AppBar(
-          actions: [
-            BulkDeleteButton(
-              tasks: tasks,
-              onDelete: (taskIds, statuses) async {
-                deleteCalls.add((taskIds: taskIds, statuses: statuses));
-                return 2;
-              },
-            ),
-          ],
+  Widget buildTestWidget(
+    List<DownloadTask> tasks, {
+    HapticPlayer haptics = const NoopHapticPlayer(),
+  }) {
+    return HapticsScope(
+      player: haptics,
+      child: MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          appBar: AppBar(
+            actions: [
+              BulkDeleteButton(
+                tasks: tasks,
+                onDelete: (taskIds, statuses) async {
+                  deleteCalls.add((taskIds: taskIds, statuses: statuses));
+                  return 2;
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -106,5 +123,15 @@ void main() {
     await tester.pumpAndSettle();
 
     check(deleteCalls).isEmpty();
+  });
+
+  testWidgets('the confirmation plays the warning haptic', (tester) async {
+    final haptics = _RecordingHapticPlayer();
+    await tester.pumpWidget(buildTestWidget(tasks, haptics: haptics));
+    await openMenu(tester);
+    await tester.tap(find.text('Delete pending and paused (2)'));
+    await tester.pumpAndSettle();
+
+    check(haptics.played).deepEquals([HapticToken.warning]);
   });
 }

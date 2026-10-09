@@ -4,6 +4,7 @@ import 'package:audiflow_app/features/parental_control/domain/gate_guard.dart';
 import 'package:audiflow_app/features/parental_control/presentation/widgets/pin_entry_sheet.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,15 +14,31 @@ import 'package:flutter_test/flutter_test.dart';
 // Test helpers
 // ---------------------------------------------------------------------------
 
-Widget _wrap(Widget child, {List<dynamic> overrides = const []}) =>
-    ProviderScope(
-      overrides: overrides.cast(),
-      child: MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: Scaffold(body: child),
-      ),
-    );
+class _RecordingHapticPlayer implements HapticPlayer {
+  final played = <HapticToken>[];
+
+  @override
+  void play(HapticToken token) => played.add(token);
+
+  @override
+  void prepare(HapticToken token) {}
+}
+
+Widget _wrap(
+  Widget child, {
+  List<dynamic> overrides = const [],
+  HapticPlayer haptics = const NoopHapticPlayer(),
+}) => ProviderScope(
+  overrides: overrides.cast(),
+  child: HapticsScope(
+    player: haptics,
+    child: MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: Scaffold(body: child),
+    ),
+  ),
+);
 
 /// Enters text into the PIN field and pumps one frame.
 Future<void> _enterPin(WidgetTester tester, String pin) async {
@@ -57,6 +74,16 @@ class _FakeGate extends ParentalControlGate {
     if (nextState != null) state = nextState!;
     return unlockResult;
   }
+}
+
+/// Fake gate whose [tryUnlock] fails, as a storage error would.
+class _ThrowingGate extends ParentalControlGate {
+  @override
+  UnlockState build() => const Locked();
+
+  @override
+  Future<bool> tryUnlock(String pin, {UnlockReason? reason}) async =>
+      throw Exception('store unreadable');
 }
 
 /// Fake gate whose [tryUnlock] never completes until [complete] is called.
@@ -283,4 +310,47 @@ void main() {
       ).isNotNull();
     },
   );
+
+  testWidgets('a wrong PIN plays the error haptic', (tester) async {
+    final haptics = _RecordingHapticPlayer();
+    await tester.pumpWidget(
+      _wrap(
+        const PinEntrySheet(reason: GateReason.subscribe),
+        overrides: [
+          parentalControlGateProvider.overrideWith(
+            () => _FakeGate(unlockResult: false),
+          ),
+          parentalControlRepositoryProvider.overrideWithValue(
+            _FakeRepo(failedAttempts: 2),
+          ),
+        ],
+        haptics: haptics,
+      ),
+    );
+
+    await _enterPin(tester, '1234');
+    await _tapSubmit(tester);
+    await tester.pumpAndSettle();
+
+    check(haptics.played).deepEquals([HapticToken.error]);
+  });
+
+  testWidgets('a failed PIN check plays the error haptic', (tester) async {
+    final haptics = _RecordingHapticPlayer();
+    await tester.pumpWidget(
+      _wrap(
+        const PinEntrySheet(reason: GateReason.subscribe),
+        overrides: [
+          parentalControlGateProvider.overrideWith(_ThrowingGate.new),
+        ],
+        haptics: haptics,
+      ),
+    );
+
+    await _enterPin(tester, '1234');
+    await _tapSubmit(tester);
+    await tester.pumpAndSettle();
+
+    check(haptics.played).deepEquals([HapticToken.error]);
+  });
 }

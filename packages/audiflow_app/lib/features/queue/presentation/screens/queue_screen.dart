@@ -96,6 +96,10 @@ class _QueueScreenState extends ConsumerState<QueueScreen> {
             SliverToBoxAdapter(child: SizedBox(key: _listStartKey)),
             SliverReorderableList(
               itemCount: upNextItems.length,
+              onReorderStart: (_) =>
+                  HapticsScope.of(context).play(HapticToken.dragPickUp),
+              onReorderEnd: (_) =>
+                  HapticsScope.of(context).play(HapticToken.dragDrop),
               proxyDecorator: QueueListTile.liftWhileDragging,
               onReorderItem: (oldIndex, newIndex) {
                 final item = upNextItems[oldIndex];

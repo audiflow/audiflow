@@ -1,5 +1,6 @@
 import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -39,13 +40,17 @@ class DownloadsSettingsScreen extends ConsumerWidget {
             title: Text(l10n.downloadsWifiOnlyTitle),
             subtitle: Text(l10n.downloadsWifiOnlySubtitle),
             value: wifiOnly,
-            onChanged: (v) => _update(ref, () => repo.setWifiOnlyDownload(v)),
+            onChanged: HapticsScope.of(context).toggleHaptic(
+              (v) => _update(ref, () => repo.setWifiOnlyDownload(v)),
+            ),
           ),
           SwitchListTile(
             title: Text(l10n.downloadsAutoDeleteTitle),
             subtitle: Text(l10n.downloadsAutoDeleteSubtitle),
             value: autoDelete,
-            onChanged: (v) => _update(ref, () => repo.setAutoDeletePlayed(v)),
+            onChanged: HapticsScope.of(context).toggleHaptic(
+              (v) => _update(ref, () => repo.setAutoDeletePlayed(v)),
+            ),
           ),
           ListTile(
             title: Text(l10n.downloadsKeepCountTitle),
@@ -79,10 +84,13 @@ class DownloadsSettingsScreen extends ConsumerWidget {
                       ButtonSegment(value: 3, label: Text('3')),
                     ],
                     selected: {maxConcurrent},
-                    onSelectionChanged: (set) => _update(
-                      ref,
-                      () => repo.setMaxConcurrentDownloads(set.first),
-                    ),
+                    onSelectionChanged: HapticsScope.of(context)
+                        .selectionHaptic(
+                          (Set<int> set) => _update(
+                            ref,
+                            () => repo.setMaxConcurrentDownloads(set.first),
+                          ),
+                        ),
                   ),
                 ),
               ],

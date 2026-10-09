@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../haptics/haptic_toggle.dart';
+import '../../haptics/haptics_scope.dart';
 import '../../themes/app_colors.dart';
 import '../../themes/text_styles.dart';
 
@@ -17,7 +19,7 @@ sealed class SettingsTrailing {
   const factory SettingsTrailing.picker({required String value}) = _Picker;
 
   /// A switch. Tapping anywhere on the row flips it; null [onChanged]
-  /// disables both.
+  /// disables both. Every flip plays the toggle haptic.
   const factory SettingsTrailing.toggle({
     required bool value,
     required ValueChanged<bool>? onChanged,
@@ -36,7 +38,7 @@ sealed class SettingsTrailing {
   Widget build(BuildContext context);
 
   /// The row's tap handler given the caller's [onTap].
-  VoidCallback? rowTap(VoidCallback? onTap) => onTap;
+  VoidCallback? rowTap(BuildContext context, VoidCallback? onTap) => onTap;
 
   /// Whether the row's label and this control form one semantics node.
   bool get mergesSemantics => false;
@@ -96,15 +98,18 @@ class _Toggle extends SettingsTrailing {
 
   @override
   Widget build(BuildContext context) {
-    return Switch(value: value, onChanged: onChanged);
+    return Switch(value: value, onChanged: _withHaptic(context));
   }
 
   @override
-  VoidCallback? rowTap(VoidCallback? onTap) {
-    final handler = onChanged;
+  VoidCallback? rowTap(BuildContext context, VoidCallback? onTap) {
+    final handler = _withHaptic(context);
     if (handler == null) return null;
     return () => handler(!value);
   }
+
+  ValueChanged<bool>? _withHaptic(BuildContext context) =>
+      HapticsScope.of(context).toggleHaptic(onChanged);
 
   @override
   bool get mergesSemantics => true;

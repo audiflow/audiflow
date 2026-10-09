@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -16,8 +17,8 @@ import '../widgets/test_notifications_tile.dart';
 ///
 /// Shows a contribute link to the contribute guide, a toggle for
 /// developer info in episode detail, a test-notification action outside
-/// production, a design components preview outside production, and a
-/// browsable list of all presets.
+/// production, design components and haptics previews outside production,
+/// and a browsable list of all presets.
 class DeveloperSettingsScreen extends ConsumerWidget {
   const DeveloperSettingsScreen({super.key});
 
@@ -30,7 +31,7 @@ class DeveloperSettingsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settingsDeveloperTitle)),
-      body: RefreshIndicator(
+      body: HapticRefreshIndicator(
         onRefresh: () async {
           final repo = ref.read(presetConfigRepositoryProvider);
           final rootMeta = await repo.fetchRootMeta();
@@ -69,8 +70,10 @@ class DeveloperSettingsScreen extends ConsumerWidget {
               title: Text(l10n.developerShowInfoTitle),
               subtitle: Text(l10n.developerShowInfoSubtitle),
               value: devInfoEnabled,
-              onChanged: (_) => unawaited(
-                ref.read(devShowDeveloperInfoProvider.notifier).toggle(),
+              onChanged: HapticsScope.of(context).toggleHaptic(
+                (_) => unawaited(
+                  ref.read(devShowDeveloperInfoProvider.notifier).toggle(),
+                ),
               ),
             ),
             const Divider(height: 1),
@@ -84,6 +87,13 @@ class DeveloperSettingsScreen extends ConsumerWidget {
                 subtitle: Text(l10n.developerDesignGallerySubtitle),
                 trailing: const Icon(Symbols.chevron_right),
                 onTap: () => context.push(AppRoutes.settingsDesignGallery),
+              ),
+              const Divider(height: 1),
+              ListTile(
+                title: Text(l10n.developerHapticsCatalogTitle),
+                subtitle: Text(l10n.developerHapticsCatalogSubtitle),
+                trailing: const Icon(Symbols.chevron_right),
+                onTap: () => context.push(AppRoutes.settingsHapticsCatalog),
               ),
               const Divider(height: 1),
             ],

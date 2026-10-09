@@ -31,5 +31,6 @@ export 'src/utils/validators.dart';
 // Models
 export 'src/models/auto_play_order.dart';
 export 'src/models/duck_interruption_behavior.dart';
+export 'src/models/haptic_feedback_level.dart';
 export 'src/models/episode_data.dart';
 export 'src/models/playback_speed_scale.dart';

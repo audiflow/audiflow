@@ -3,6 +3,16 @@ import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+class _RecordingHapticPlayer implements HapticPlayer {
+  final played = <HapticToken>[];
+
+  @override
+  void play(HapticToken token) => played.add(token);
+
+  @override
+  void prepare(HapticToken token) {}
+}
+
 void main() {
   Widget host(Widget child, {ThemeData? theme}) => MaterialApp(
     theme: theme ?? AppTheme.light(),
@@ -106,6 +116,36 @@ void main() {
   });
 
   group('SettingsTrailing.toggle', () {
+    testWidgets('switch and row taps play the toggle haptic', (tester) async {
+      final player = _RecordingHapticPlayer();
+      var value = false;
+      await tester.pumpWidget(
+        HapticsScope(
+          player: player,
+          child: host(
+            StatefulBuilder(
+              builder: (context, setState) => SettingsRow(
+                title: 'Skip silence',
+                trailing: SettingsTrailing.toggle(
+                  value: value,
+                  onChanged: (next) => setState(() => value = next),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.byType(Switch));
+      await tester.pump();
+      await tester.tap(find.text('Skip silence'));
+      await tester.pump();
+
+      check(
+        player.played,
+      ).deepEquals([HapticToken.toggleOn, HapticToken.toggleOff]);
+    });
+
     testWidgets('renders a switch reflecting value', (tester) async {
       await tester.pumpWidget(
         host(

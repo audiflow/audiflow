@@ -303,7 +303,9 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
       children: [
         SwitchListTile(
           value: state.hideCompleted,
-          onChanged: controller.setHideCompleted,
+          onChanged: HapticsScope.of(
+            context,
+          ).toggleHaptic(controller.setHideCompleted),
           title: Text(
             AppLocalizations.of(context).stationFilterHideCompletedLabel,
           ),
@@ -311,7 +313,9 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
         ),
         SwitchListTile(
           value: state.filterDownloaded,
-          onChanged: controller.setFilterDownloaded,
+          onChanged: HapticsScope.of(
+            context,
+          ).toggleHaptic(controller.setFilterDownloaded),
           title: Text(
             AppLocalizations.of(context).stationFilterDownloadedLabel,
           ),
@@ -354,7 +358,7 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
             ),
             Switch(
               value: filter != null,
-              onChanged: (enabled) {
+              onChanged: HapticsScope.of(context).toggleHaptic((enabled) {
                 if (enabled) {
                   final defaultFilter = StationDurationFilter()
                     ..durationOperator = 'shorterThan'
@@ -364,7 +368,7 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
                 } else {
                   controller.setDurationFilter(null);
                 }
-              },
+              }),
             ),
           ],
         ),
@@ -456,10 +460,12 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
             ),
           ],
           selected: {state.episodeSort},
-          onSelectionChanged: (selection) {
+          onSelectionChanged: HapticsScope.of(context).selectionHaptic((
+            Set<StationEpisodeSort> selection,
+          ) {
             if (selection.isEmpty) return;
             controller.setEpisodeSort(selection.first);
-          },
+          }),
         ),
       ],
     );
@@ -474,7 +480,9 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
       children: [
         SwitchListTile(
           value: state.groupByPodcast,
-          onChanged: controller.setGroupByPodcast,
+          onChanged: HapticsScope.of(
+            context,
+          ).toggleHaptic(controller.setGroupByPodcast),
           title: Text(l10n.stationGroupByPodcast),
           contentPadding: EdgeInsets.zero,
         ),
@@ -681,6 +689,10 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
         ReorderableListView(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
+          onReorderStart: (_) =>
+              HapticsScope.of(context).play(HapticToken.dragPickUp),
+          onReorderEnd: (_) =>
+              HapticsScope.of(context).play(HapticToken.dragDrop),
           onReorderItem: (oldIndex, newIndex) {
             final updated = List<int>.from(orderedIds);
             final item = updated.removeAt(oldIndex);
@@ -798,6 +810,9 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
             label: Text(defaultLabel),
             selected: !state.podcastEpisodeLimits.containsKey(podcastId),
             onSelected: (_) {
+              if (state.podcastEpisodeLimits.containsKey(podcastId)) {
+                HapticsScope.of(context).play(HapticToken.selection);
+              }
               controller.setPodcastEpisodeLimit(podcastId, null);
               // Remove override (null removes from map in controller).
             },
@@ -817,6 +832,9 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
               selected: isSelected,
               selectedColor: theme.colorScheme.primaryContainer,
               onSelected: (_) {
+                if (!isSelected) {
+                  HapticsScope.of(context).play(HapticToken.selection);
+                }
                 if (opt == null) {
                   _setAllEpisodesOverride(controller, podcastId);
                 } else {

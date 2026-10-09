@@ -1,4 +1,5 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../l10n/app_localizations.dart';
@@ -92,6 +93,7 @@ class BulkDeleteButton extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     // Fix the set now so what gets deleted is what the dialog counted.
     final taskIds = scope.taskIdsIn(tasks);
+    HapticsScope.of(context).play(HapticToken.warning);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(

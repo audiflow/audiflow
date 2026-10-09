@@ -40,6 +40,7 @@ void main() {
       await tester.pumpAndSettle();
 
       check(find.text('Send test notifications').evaluate()).isNotEmpty();
+      check(find.text('Haptics catalog').evaluate()).isNotEmpty();
     });
 
     testWidgets('hides test notifications in production', (tester) async {
@@ -50,6 +51,7 @@ void main() {
       await tester.pumpAndSettle();
 
       check(find.text('Send test notifications').evaluate()).isEmpty();
+      check(find.text('Haptics catalog').evaluate()).isEmpty();
     });
 
     testWidgets('renders contribute link', (tester) async {

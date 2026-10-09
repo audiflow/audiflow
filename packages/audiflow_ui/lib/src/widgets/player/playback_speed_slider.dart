@@ -2,12 +2,16 @@ import 'package:audiflow_core/audiflow_core.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
+import '../../haptics/haptic_token.dart';
+import '../../haptics/haptics_scope.dart';
 import 'step_drag_tracker.dart';
 
 /// Slider over [PlaybackSpeedScale.steps].
 ///
-/// It gives no haptic per step: on a device, a tick for each of the 21
-/// steps crossed in one drag felt like noise rather than feedback.
+/// Each step a drag crosses plays `step`, the lightest token, so a long
+/// drag stays a faint texture. Reaching or passing 1.0x, the speed
+/// listeners most often return to, plays `edge` instead: as firm as the
+/// seek bar's end, so the normal speed is unmistakable.
 ///
 /// Landmark speeds ([landmarkSpeeds]) are labelled under the exact tick
 /// they belong to, so the uneven step grid (0.1 up to 2.0, then 0.2)
@@ -81,6 +85,10 @@ class _PlaybackSpeedSliderState extends State<PlaybackSpeedSlider> {
   }
 
   void _handleDragStart(DragStartDetails details, double width) {
+    // Warmed ahead of the first tick; they use separate iOS generators.
+    HapticsScope.of(context)
+      ..prepare(HapticToken.step)
+      ..prepare(HapticToken.edge);
     _gestureStartIndex = _index;
     // The first contact jumps to the step under the finger, like a tap.
     final index = _positionInSteps(details.localPosition, width).round();
@@ -94,6 +102,13 @@ class _PlaybackSpeedSliderState extends State<PlaybackSpeedSlider> {
     if (tracker == null) return;
     final position = _positionInSteps(details.localPosition, width);
     if (!tracker.update(position, _lastPointerTime)) return;
+    // Only finger travel is felt; the first contact's jump to the
+    // touched step is not.
+    HapticsScope.of(context).play(
+      _reachesNormal(_index, tracker.index)
+          ? HapticToken.edge
+          : HapticToken.step,
+    );
     _select(tracker.index);
   }
 
@@ -109,6 +124,17 @@ class _PlaybackSpeedSliderState extends State<PlaybackSpeedSlider> {
   void _select(int index) {
     setState(() => _dragIndex = index);
     widget.onChanged(PlaybackSpeedScale.speedForIndex(index));
+  }
+
+  static final int _normalIndex = PlaybackSpeedScale.indexForSpeed(
+    PlaybackSpeedScale.normal,
+  );
+
+  bool _reachesNormal(int from, int to) {
+    if (from == _normalIndex) return false;
+    final low = from < to ? from : to;
+    final high = from < to ? to : from;
+    return low <= _normalIndex && _normalIndex <= high;
   }
 
   void _commit(int index, {required int? startIndex}) {

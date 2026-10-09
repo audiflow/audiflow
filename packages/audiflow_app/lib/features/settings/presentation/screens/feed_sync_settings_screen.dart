@@ -1,4 +1,5 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -109,6 +110,7 @@ class _FeedSyncSettingsScreenState extends ConsumerState<FeedSyncSettingsScreen>
     bool enabled,
   ) async {
     if (!enabled) {
+      HapticsScope.of(context).play(HapticToken.toggleOff);
       await _update(
         repo,
         () => repo.setNotifyNewEpisodes(false),
@@ -134,6 +136,8 @@ class _FeedSyncSettingsScreenState extends ConsumerState<FeedSyncSettingsScreen>
     await _applyPermission(status);
 
     if (status.isGranted) {
+      if (!mounted) return;
+      HapticsScope.of(context).play(HapticToken.toggleOn);
       await _update(
         repo,
         () => repo.setNotifyNewEpisodes(true),
@@ -191,7 +195,9 @@ class _FeedSyncSettingsScreenState extends ConsumerState<FeedSyncSettingsScreen>
             title: Text(l10n.feedSyncAutoSyncTitle),
             subtitle: Text(l10n.feedSyncAutoSyncSubtitle),
             value: autoSync,
-            onChanged: (v) => _update(repo, () => repo.setAutoSync(v)),
+            onChanged: HapticsScope.of(
+              context,
+            ).toggleHaptic((v) => _update(repo, () => repo.setAutoSync(v))),
           ),
           Visibility(
             visible: autoSync,
@@ -249,10 +255,12 @@ class _FeedSyncSettingsScreenState extends ConsumerState<FeedSyncSettingsScreen>
             title: Text(l10n.feedSyncWifiOnlyTitle),
             subtitle: Text(l10n.feedSyncWifiOnlySubtitle),
             value: wifiOnly,
-            onChanged: (v) => _update(
-              repo,
-              () => repo.setWifiOnlySync(v),
-              replaceExisting: true,
+            onChanged: HapticsScope.of(context).toggleHaptic(
+              (v) => _update(
+                repo,
+                () => repo.setWifiOnlySync(v),
+                replaceExisting: true,
+              ),
             ),
           ),
           Visibility(
@@ -261,6 +269,8 @@ class _FeedSyncSettingsScreenState extends ConsumerState<FeedSyncSettingsScreen>
               title: Text(l10n.feedSyncNotifyNewEpisodesTitle),
               subtitle: Text(l10n.feedSyncNotifyNewEpisodesSubtitle),
               value: notifyNewEpisodes,
+              // Plays its toggle haptic itself, once permission lets the
+              // switch actually move.
               onChanged: (v) => _onNotifyToggleChanged(repo, v),
             ),
           ),

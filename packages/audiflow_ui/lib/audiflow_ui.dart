@@ -8,6 +8,15 @@ export 'src/themes/color_scheme.dart';
 export 'src/themes/now_playing_theme.dart';
 export 'src/themes/text_styles.dart';
 
+// Haptics
+export 'src/haptics/haptic_long_press.dart';
+export 'src/haptics/haptic_player.dart';
+export 'src/haptics/haptic_selection.dart';
+export 'src/haptics/haptic_toggle.dart';
+export 'src/haptics/haptic_token.dart';
+export 'src/haptics/haptics_scope.dart';
+export 'src/haptics/pull_to_refresh_haptics.dart';
+
 // Styles
 export 'src/styles/spacing.dart';
 export 'src/styles/borders.dart';

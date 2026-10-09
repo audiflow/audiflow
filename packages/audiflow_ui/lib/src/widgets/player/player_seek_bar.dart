@@ -5,6 +5,8 @@ import 'package:flutter/gestures.dart' show kTouchSlop;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
+import '../../haptics/haptic_token.dart';
+import '../../haptics/haptics_scope.dart';
 import 'scrub_speed.dart';
 import 'seek_release_tracker.dart';
 
@@ -470,6 +472,8 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
       _isDragging = true;
       _dragValue = start;
     });
+    // detent and edge share one generator on iOS, so this warms both.
+    HapticsScope.of(context).prepare(HapticToken.edge);
     widget.onChangeStart?.call(start);
   }
 
@@ -507,8 +511,26 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
     // finger pushes past the end.
     _releaseTracker?.update(next, _lastPointerTime, finger: _fingerTravel);
     if (next == _dragValue) return;
+    final haptics = HapticsScope.of(context);
+    if (next == 0.0 || next == 1.0) {
+      // Reaching either end; stronger than a chapter mark.
+      haptics.play(HapticToken.edge);
+    } else if (_crossesChapterBoundary(_dragValue, next)) {
+      haptics.play(HapticToken.detent);
+    }
     setState(() => _dragValue = next);
     widget.onChanged?.call(next);
+  }
+
+  // A chapter boundary is where one segment starts; the first segment's
+  // start is the track's edge, not a boundary. One detent per move,
+  // however many short chapters a fast drag skips over.
+  bool _crossesChapterBoundary(double from, double to) {
+    final low = from < to ? from : to;
+    final high = from < to ? to : from;
+    return widget.segments
+        .skip(1)
+        .any((segment) => low < segment.start && segment.start <= high);
   }
 
   // On lift-off, commit the settled position when the last move was roll.

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../haptics/haptic_player.dart';
+import '../../haptics/haptic_token.dart';
+import '../../haptics/haptics_scope.dart';
 import '../../styles/borders.dart';
 import '../../styles/shadows.dart';
 import '../../styles/spacing.dart';
@@ -34,6 +37,7 @@ class AppSegmentedControl<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
+    final haptics = HapticsScope.of(context);
     final index = segments.indexWhere((segment) => segment.$1 == selected);
     return DecoratedBox(
       key: trackKey,
@@ -53,7 +57,7 @@ class AppSegmentedControl<T> extends StatelessWidget {
                 child: Row(
                   children: [
                     for (final (value, label) in segments)
-                      Expanded(child: _segment(colors, value, label)),
+                      Expanded(child: _segment(colors, haptics, value, label)),
                   ],
                 ),
               ),
@@ -88,7 +92,12 @@ class AppSegmentedControl<T> extends StatelessWidget {
     );
   }
 
-  Widget _segment(AppColors colors, T value, String label) {
+  Widget _segment(
+    AppColors colors,
+    HapticPlayer haptics,
+    T value,
+    String label,
+  ) {
     final isSelected = value == selected;
     // InkWell rather than a bare gesture detector so the segment takes
     // keyboard focus and activates with Enter or Space.
@@ -96,7 +105,11 @@ class AppSegmentedControl<T> extends StatelessWidget {
       button: true,
       selected: isSelected,
       child: InkWell(
-        onTap: () => onChanged(value),
+        onTap: () {
+          // Re-tapping the current segment is not a new choice.
+          if (value != selected) haptics.play(HapticToken.selection);
+          onChanged(value);
+        },
         borderRadius: AppBorders.pill,
         splashFactory: NoSplash.splashFactory,
         highlightColor: Colors.transparent,
