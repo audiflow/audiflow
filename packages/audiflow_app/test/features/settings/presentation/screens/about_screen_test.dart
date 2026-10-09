@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 class _FakeRateAppService implements RateAppService {
   int calls = 0;
@@ -120,10 +121,11 @@ void main() {
       expect(title.data, equals('About'));
     });
 
-    testWidgets('shows app name in header', (tester) async {
+    testWidgets('shows only the app name in header', (tester) async {
       await tester.pumpWidget(buildTestWidget());
       expect(find.text('audiflow'), findsOneWidget);
-      expect(find.text('Your podcast companion'), findsOneWidget);
+      expect(find.text('Your podcast companion'), findsNothing);
+      expect(find.byIcon(Symbols.podcasts), findsNothing);
     });
 
     testWidgets('shows version info', (tester) async {

@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -419,9 +420,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String storageFailedCount(int count) {
     return '$count件が失敗';
   }
-
-  @override
-  String get aboutTagline => 'あなたのポッドキャストパートナー';
 
   @override
   String get aboutVersion => 'バージョン';

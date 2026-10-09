@@ -2,7 +2,6 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../utils/feedback_service.dart';
@@ -43,23 +42,10 @@ class _AppHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 32),
-      child: Column(
-        children: [
-          Icon(Symbols.podcasts, size: 64, color: theme.colorScheme.primary),
-          const SizedBox(height: 16),
-          Text('audiflow', style: theme.textTheme.headlineSmall),
-          const SizedBox(height: 4),
-          Text(
-            l10n.aboutTagline,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
+      child: Center(
+        child: Text('audiflow', style: theme.textTheme.headlineSmall),
       ),
     );
   }
