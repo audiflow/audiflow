@@ -87,10 +87,12 @@ void main() {
     tester,
   ) async {
     await pumpScreen(tester);
-    // Reduced is the default: only outcome tokens such as success play.
+    // On is the default: every token plays.
     await tester.tap(find.text('selection'));
     await tester.tap(find.text('success'));
-    check(recorder.played).deepEquals([HapticToken.success]);
+    check(
+      recorder.played,
+    ).deepEquals([HapticToken.selection, HapticToken.success]);
     recorder.played.clear();
 
     await tester.tap(find.text('Off'));
@@ -112,13 +114,13 @@ void main() {
   ) async {
     await pumpScreen(tester);
 
-    // Reduced drops selection, but moving away from it must still be felt.
-    await tester.tap(find.text('On'));
+    // Reduced drops selection, but moving into it must still be felt.
+    await tester.tap(find.text('Reduced'));
     await tester.pumpAndSettle();
     check(recorder.played).deepEquals([HapticToken.selection]);
     recorder.played.clear();
 
-    await tester.tap(find.text('Reduced'));
+    await tester.tap(find.text('On'));
     await tester.pumpAndSettle();
     check(recorder.played).deepEquals([HapticToken.selection]);
   });

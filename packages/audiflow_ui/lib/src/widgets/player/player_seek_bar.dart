@@ -51,7 +51,8 @@ class SeekBarSegment {
 ///
 /// Once a drag has started, moving the finger vertically away from the track
 /// slows it down for fine adjustment (see [scrubSpeedForDistance]); the
-/// current speed is shown between the time labels from [scrubSpeedLabels].
+/// current speed is shown between the time labels from [scrubSpeedLabels],
+/// and each band change plays a [HapticToken.step].
 ///
 /// On release, a small move made just as the finger lifts off after holding
 /// still is discarded, and the position the user settled on is committed
@@ -472,8 +473,11 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
       _isDragging = true;
       _dragValue = start;
     });
-    // detent and edge share one generator on iOS, so this warms both.
-    HapticsScope.of(context).prepare(HapticToken.edge);
+    // detent and edge share one generator on iOS, so preparing edge warms
+    // both; step (speed bands) uses its own selection generator.
+    HapticsScope.of(context)
+      ..prepare(HapticToken.edge)
+      ..prepare(HapticToken.step);
     widget.onChangeStart?.call(start);
   }
 
@@ -496,8 +500,9 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
   void _updateScrubSpeed(double distanceFromTrack) {
     final speed = scrubSpeedForDistance(distanceFromTrack);
     if (speed == _scrubSpeed) return;
-    // No haptic: listeners found per-band vibration noisy while scrubbing.
-    // The band label between the time labels shows the speed instead.
+    // The lightest token: an earlier, stronger per-band haptic read as noise,
+    // and step stays distinct from the chapter detent on the same drag.
+    HapticsScope.of(context).play(HapticToken.step);
     setState(() => _scrubSpeed = speed);
   }
 

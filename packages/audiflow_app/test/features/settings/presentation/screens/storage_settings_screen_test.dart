@@ -238,7 +238,7 @@ void main() {
       ).equals(ThemeMode.system);
       check(
         container.read(hapticFeedbackLevelControllerProvider),
-      ).equals(HapticFeedbackLevel.reduced);
+      ).equals(HapticFeedbackLevel.on);
     });
 
     testWidgets(

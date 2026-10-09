@@ -403,18 +403,27 @@ void main() {
       await gesture.up();
     });
 
-    testWidgets('does not vibrate on band changes', (tester) async {
-      final haptics = _recordHaptics(tester);
-      await tester.pumpWidget(_host(value: 0.5, recorder: _SeekRecorder()));
+    testWidgets('plays one step per band change', (tester) async {
+      final player = _RecordingHapticPlayer();
+      await tester.pumpWidget(
+        HapticsScope(
+          player: player,
+          child: _host(value: 0.5, recorder: _SeekRecorder()),
+        ),
+      );
       final gesture = await _startScrub(tester);
-      // Moves within full, into half, within half, into quarter, back to full.
+      // Moves within full, into half, within half, into quarter, then
+      // straight back to full past half: one step for that jump.
       for (final step in [20.0, 40.0, 20.0, 50.0, -120.0]) {
         await gesture.moveBy(Offset(0, step));
       }
       await gesture.up();
       await tester.pump();
 
-      check(haptics).isEmpty();
+      check(player.prepared).deepEquals([HapticToken.edge, HapticToken.step]);
+      check(
+        player.played,
+      ).deepEquals([HapticToken.step, HapticToken.step, HapticToken.step]);
     });
 
     testWidgets('next drag starts at full speed again', (tester) async {
@@ -912,7 +921,7 @@ void main() {
         await tester.drag(_track, const Offset(80, 0));
         await tester.pump();
 
-        check(player.prepared).deepEquals([HapticToken.edge]);
+        check(player.prepared).deepEquals([HapticToken.edge, HapticToken.step]);
         check(player.played).deepEquals([HapticToken.detent]);
       });
 
@@ -949,7 +958,7 @@ void main() {
         await tester.drag(_track, const Offset(300, 0));
         await tester.pump();
 
-        check(player.prepared).deepEquals([HapticToken.edge]);
+        check(player.prepared).deepEquals([HapticToken.edge, HapticToken.step]);
         check(player.played).isEmpty();
       });
 

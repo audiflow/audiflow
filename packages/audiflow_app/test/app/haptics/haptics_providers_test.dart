@@ -96,11 +96,11 @@ void main() {
       return container;
     }
 
-    test('level defaults to reduced', () {
+    test('level defaults to on', () {
       final container = createContainer();
       check(
         container.read(hapticFeedbackLevelControllerProvider),
-      ).equals(HapticFeedbackLevel.reduced);
+      ).equals(HapticFeedbackLevel.on);
     });
 
     test('setLevel persists and updates state', () async {

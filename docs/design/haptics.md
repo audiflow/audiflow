@@ -28,7 +28,7 @@ These are the rules every haptic in the app follows. Each one is stated by more 
 
 1. **One meaning, one feel.** A token is played only for its documented meaning. Opposite outcomes (success and error, on and off) never share a feel.
 2. **Restraint.** Plain taps and navigation get no haptic. Haptics mark moments the user would otherwise miss: an outcome, a gesture becoming armed, an object being picked up.
-3. **Frequent means faint.** The more often a haptic can fire, the weaker it is. A continuous gesture either stays silent between marks or ticks with `step`, the lightest token: seek-bar scrubbing and its speed bands stay silent (a per-band haptic read as noise on device), while the speed slider ticks each step with `step`, a faint texture the earlier, stronger per-step tick lacked. Marks along the way (`detent`) and the ends (`edge`) are firmer, so they stand out from the texture.
+3. **Frequent means faint.** The more often a haptic can fire, the weaker it is. A continuous gesture either stays silent between marks or ticks with `step`, the lightest token: seek-bar scrubbing stays silent, while its speed bands and the speed slider tick each change with `step`, a faint texture the earlier, stronger per-band and per-step ticks lacked (both read as noise on device). Marks along the way (`detent`) and the ends (`edge`) are firmer, so they stand out from the texture.
 4. **Short and crisp.** Every token is a single transient or a short platform pattern. No long buzzes; on Android, no one-shot or waveform vibrations for touch feedback.
 5. **In sync with the visual.** A haptic fires in the same frame as the visual change it confirms, never after an async round trip completes unless the token is an outcome (`success`, `error`).
 6. **Never the only signal.** Every haptic accompanies a visible change. iPad, the iOS Simulator, and devices with haptics turned off get no haptics at all.
@@ -79,7 +79,8 @@ Every interaction that was considered is listed here, including those that delib
 |---|---|
 | Play / pause (full player, mini player) | `none` |
 | Skip back / forward | `none` |
-| Seek bar drag and speed-band changes | `none` (removed after on-device testing) |
+| Seek bar drag | `none` (removed after on-device testing) |
+| Seek bar speed-band change | `step` (the per-band haptic first removed as noise returns at the lightest weight) |
 | Seek bar crosses a chapter boundary | `detent` |
 | Seek bar drag reaches the start or the end | `edge` |
 | Speed slider, per step | `step` (the per-step haptic first removed as noise returns at the lightest weight) |
@@ -176,8 +177,8 @@ A single preference with three values:
 
 | Value | Behavior |
 |---|---|
-| On | All tokens play. |
-| Reduced (default) | Only tokens marked "on" in the Reduced column of section 2 play: outcomes (`success`, `warning`, `error`), gesture thresholds, and drag pick-up. |
+| On (default) | All tokens play. |
+| Reduced | Only tokens marked "on" in the Reduced column of section 2 play: outcomes (`success`, `warning`, `error`), gesture thresholds, and drag pick-up. |
 | Off | Nothing plays. |
 
 On a device without haptic hardware (`isSupported` is false: every iPad, and Android tablets without a vibration motor) the effective level is Off whatever is saved, and the settings selector is locked to Off with a note explaining why. The saved level is left untouched.
