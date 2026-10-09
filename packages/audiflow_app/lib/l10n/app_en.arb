@@ -277,8 +277,6 @@
   "storageFailedCount": "{count} failed",
   "@storageFailedCount": { "description": "Import failure count", "placeholders": { "count": { "type": "int" } } },
 
-  "aboutTagline": "Your podcast companion",
-  "@aboutTagline": { "description": "App tagline" },
   "aboutVersion": "Version",
   "@aboutVersion": { "description": "Version label" },
   "aboutLicenses": "Open Source Licenses",

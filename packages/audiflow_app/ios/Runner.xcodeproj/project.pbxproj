@@ -209,6 +209,7 @@
 				9705A1C41CF9048500538489 /* Embed Frameworks */,
 				3B06AD1E1E4923F5004D2608 /* Thin Binary */,
 				AF1A8FCE2025AF0100000001 /* Copy GoogleService-Info.plist */,
+				AF1A8FCE2025AF0100000002 /* Set dev version from stg tag */,
 			);
 			buildRules = (
 			);
@@ -344,6 +345,23 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "set -euo pipefail\nFLAVOR=\"${CONFIGURATION##*-}\"\nSRC=\"${SRCROOT}/config/${FLAVOR}/GoogleService-Info.plist\"\nDST=\"${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.app/GoogleService-Info.plist\"\nif [ ! -f \"$SRC\" ]; then\n  echo \"warning: missing $SRC — Firebase will not initialize for this flavor.\"\n  exit 0\nfi\nmkdir -p \"$(dirname \"$DST\")\"\ncp -f \"$SRC\" \"$DST\"\necho \"Copied $SRC -> $DST\"\n";
+			showEnvVarsInLog = 0;
+		};
+		AF1A8FCE2025AF0100000002 /* Set dev version from stg tag */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}",
+			);
+			name = "Set dev version from stg tag";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -euo pipefail\n# Dev builds report the highest stg tag's version; the pubspec version lags on main.\ncase \"$CONFIGURATION\" in *-dev) ;; *) exit 0 ;; esac\nVERSION=$(bash \"${SRCROOT}/../../../tools/dev-version.sh\")\nif [ -z \"$VERSION\" ]; then\n  echo \"note: no stg tag reachable; keeping the pubspec version.\"\n  exit 0\nfi\nPLIST=\"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"\n/usr/libexec/PlistBuddy -c \"Set :CFBundleShortVersionString ${VERSION% *}\" -c \"Set :CFBundleVersion ${VERSION#* }\" \"$PLIST\"\necho \"Set dev version to $VERSION\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
