@@ -24,11 +24,16 @@ class LargeTitle extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            // Vertical padding sits inside the row so a trailing control
-            // (e.g. a 48dp IconButton) fits within it instead of making the
-            // row taller and pushing the centered title below other tabs'.
-            child: Padding(
+            // The padded title is at least a Material touch target tall so a
+            // trailing control (e.g. a 48dp IconButton) never makes the row
+            // taller and pushes the centered title below other tabs', even
+            // at small text scales.
+            child: Container(
+              constraints: const BoxConstraints(
+                minHeight: kMinInteractiveDimension,
+              ),
               padding: const EdgeInsets.symmetric(vertical: Spacing.sm),
+              alignment: Alignment.centerLeft,
               child: Semantics(
                 header: true,
                 child: Text(

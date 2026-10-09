@@ -27,30 +27,35 @@ void main() {
       handle.dispose();
     });
 
-    testWidgets('a tall trailing control does not push the title down', (
-      tester,
-    ) async {
-      await tester.pumpWidget(host(const LargeTitle('Queue')));
-      final plainTop = tester.getTopLeft(find.text('Queue')).dy;
+    for (final scale in [0.85, 1.0]) {
+      testWidgets('a tall trailing control does not push the title down '
+          '(text scale $scale)', (tester) async {
+        Widget scaled(Widget child) => MediaQuery(
+          data: MediaQueryData(textScaler: TextScaler.linear(scale)),
+          child: host(child),
+        );
+        await tester.pumpWidget(scaled(const LargeTitle('Queue')));
+        final plainTop = tester.getTopLeft(find.text('Queue')).dy;
 
-      const trailingKey = ValueKey('trailing');
-      await tester.pumpWidget(
-        host(
-          LargeTitle(
-            'Queue',
-            trailing: IconButton(
-              key: trailingKey,
-              onPressed: () {},
-              icon: const Icon(Icons.delete),
+        const trailingKey = ValueKey('trailing');
+        await tester.pumpWidget(
+          scaled(
+            LargeTitle(
+              'Queue',
+              trailing: IconButton(
+                key: trailingKey,
+                onPressed: () {},
+                icon: const Icon(Icons.delete),
+              ),
             ),
           ),
-        ),
-      );
-      check(tester.getTopLeft(find.text('Queue')).dy).equals(plainTop);
-      check(
-        tester.getCenter(find.byKey(trailingKey)).dy,
-      ).isCloseTo(tester.getCenter(find.text('Queue')).dy, 0.5);
-    });
+        );
+        check(tester.getTopLeft(find.text('Queue')).dy).equals(plainTop);
+        check(
+          tester.getCenter(find.byKey(trailingKey)).dy,
+        ).isCloseTo(tester.getCenter(find.text('Queue')).dy, 0.5);
+      });
+    }
   });
 
   group('SectionHeader', () {
