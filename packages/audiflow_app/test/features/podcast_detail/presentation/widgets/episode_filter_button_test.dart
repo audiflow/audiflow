@@ -51,8 +51,13 @@ void main() {
       await pump(tester);
       await openMenu(tester);
       final items = tester
-          .widgetList<PopupMenuItem<int>>(find.byType(PopupMenuItem<int>))
-          .map((item) => ((item.child! as Text).data))
+          .widgetList<Text>(
+            find.descendant(
+              of: find.byKey(ActionMenu.surfaceKey),
+              matching: find.byType(Text),
+            ),
+          )
+          .map((text) => text.data)
           .toList();
       check(items).deepEquals(labels);
     });
@@ -65,7 +70,7 @@ void main() {
       Color? colorOf(String label) => tester
           .widget<Text>(
             find.descendant(
-              of: find.byType(PopupMenuItem<int>),
+              of: find.byKey(ActionMenu.surfaceKey),
               matching: find.text(label),
             ),
           )
@@ -81,6 +86,25 @@ void main() {
       await tester.tap(find.text('Played').last);
       await tester.pumpAndSettle();
       check(chosen).deepEquals([EpisodeFilter.played]);
+    });
+
+    testWidgets('press, slide to a filter, and release chooses it', (
+      tester,
+    ) async {
+      final chosen = await pump(tester);
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.byType(EpisodeFilterButton)),
+      );
+      await tester.pump(
+        ActionMenuTrigger.holdDuration + const Duration(milliseconds: 10),
+      );
+      await tester.pumpAndSettle();
+      await gesture.moveTo(tester.getCenter(find.text('Downloaded')));
+      await tester.pump();
+      await gesture.up();
+      await tester.pumpAndSettle();
+      check(chosen).deepEquals([EpisodeFilter.downloaded]);
+      check(find.byKey(ActionMenu.surfaceKey).evaluate()).isEmpty();
     });
 
     testWidgets('dismissing the menu reports nothing', (tester) async {

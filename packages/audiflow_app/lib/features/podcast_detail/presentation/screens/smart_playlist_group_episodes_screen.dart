@@ -315,10 +315,10 @@ class _SmartPlaylistGroupEpisodesScreenState
             tooltip: l10n.podcastDetailSearchTooltip,
             onPressed: () => _setSearching(true),
           ),
-          FloatingNavAction(
+          FloatingNavAction.menu(
             icon: Icons.more_horiz_rounded,
             tooltip: l10n.podcastDetailMoreTooltip,
-            onPressed: _showMoreMenu,
+            onOpenMenu: (_, drag) => _showMoreMenu(drag),
           ),
         ],
       ),
@@ -337,7 +337,7 @@ class _SmartPlaylistGroupEpisodesScreenState
   /// Overflow popover: plain rows only (batch downloads, played status,
   /// play order). Tiles are for a row of two or three primary actions; a
   /// lone download tile reads as a highlighted button it is not.
-  Future<void> _showMoreMenu() {
+  Future<void> _showMoreMenu([ActionMenuDrag? drag]) {
     final l10n = AppLocalizations.of(context);
     final allTasks = ref.read(allDownloadsProvider).value ?? [];
     final dlState = computeBatchDownloadState(
@@ -346,7 +346,10 @@ class _SmartPlaylistGroupEpisodesScreenState
     );
     return showActionMenu(
       context: context,
-      top: FloatingNavigationBar.heightOf(context),
+      placement: ActionMenuPlacement.topRight(
+        top: FloatingNavigationBar.heightOf(context),
+      ),
+      drag: drag,
       sections: [
         [
           if (dlState.hasDownloadable)

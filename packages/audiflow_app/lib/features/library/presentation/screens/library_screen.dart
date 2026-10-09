@@ -449,54 +449,59 @@ class _SortMenuButton extends StatelessWidget {
       fontWeight: FontWeight.w600,
     );
 
-    return PopupMenuButton<PodcastSortOrder>(
-      tooltip: l10n.librarySortTooltip,
-      onSelected: onSelected,
-      itemBuilder: (context) => [
-        for (final order in PodcastSortOrder.values)
-          _buildItem(order, _labelFor(l10n, order)),
-      ],
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: Spacing.minTouchTarget),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.sort, size: 16, color: colors.accent),
-            const SizedBox(width: Spacing.xs),
-            // Shortens only at extreme text sizes, when even the full
-            // trailing share cannot fit it.
-            Flexible(
-              child: Text(
-                _labelFor(l10n, currentOrder),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: style,
-              ),
+    return ActionMenuTrigger(
+      onOpen: (anchor, drag) => _showMenu(anchor, drag, l10n),
+      builder: (context, open) => Tooltip(
+        message: l10n.librarySortTooltip,
+        child: InkWell(
+          onTap: open,
+          borderRadius: AppBorders.sm,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              minHeight: Spacing.minTouchTarget,
             ),
-          ],
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.sort, size: 16, color: colors.accent),
+                const SizedBox(width: Spacing.xs),
+                // Shortens only at extreme text sizes, when even the full
+                // trailing share cannot fit it.
+                Flexible(
+                  child: Text(
+                    _labelFor(l10n, currentOrder),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: style,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
   }
 
-  PopupMenuItem<PodcastSortOrder> _buildItem(
-    PodcastSortOrder order,
-    String label,
+  void _showMenu(
+    BuildContext anchor,
+    ActionMenuDrag? drag,
+    AppLocalizations l10n,
   ) {
-    return PopupMenuItem<PodcastSortOrder>(
-      value: order,
-      child: Row(
-        children: [
-          if (order == currentOrder)
-            const Padding(
-              padding: EdgeInsets.only(right: 8),
-              child: Icon(Icons.check, size: 20),
-            )
-          else
-            const SizedBox(width: 28),
-          Flexible(child: Text(label, overflow: TextOverflow.ellipsis)),
+    showActionMenu(
+      context: anchor,
+      placement: ActionMenuPlacement.below(anchor),
+      sections: [
+        [
+          for (final order in PodcastSortOrder.values)
+            ActionMenuEntry(
+              label: _labelFor(l10n, order),
+              checked: order == currentOrder,
+              onSelected: () => onSelected(order),
+            ),
         ],
-      ),
+      ],
+      drag: drag,
     );
   }
 }

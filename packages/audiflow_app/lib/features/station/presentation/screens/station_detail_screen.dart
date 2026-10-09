@@ -136,107 +136,14 @@ class _StationDetailContentState extends ConsumerState<_StationDetailContent> {
       appBar: AppBar(
         title: Text(widget.station.name),
         actions: [
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              if (value == 'edit') {
-                context.push(
-                  '${AppRoutes.library}/station/${widget.station.id}/edit',
-                );
-                return;
-              }
-
-              final ids = episodesAsync.value
-                  ?.map((se) => se.episodeId)
-                  .toList();
-              if (ids == null || ids.isEmpty) return;
-
-              final allTasks = ref.read(allDownloadsProvider).value ?? [];
-              final dlState = computeBatchDownloadState(
-                episodeIds: ids,
-                allTasks: allTasks,
-              );
-
-              switch (value) {
-                case 'download_all':
-                  if (dlState.hasDownloadable) {
-                    unawaited(
-                      handleBatchDownload(
-                        context: context,
-                        ref: ref,
-                        episodeIds: ids,
-                        downloadableCount: dlState.downloadableCount,
-                      ),
-                    );
-                  }
-                case 'cancel_all':
-                  unawaited(
-                    handleBatchCancel(
-                      context: context,
-                      ref: ref,
-                      episodeIds: ids,
-                    ),
-                  );
-                case 'resume_all':
-                  unawaited(
-                    handleBatchResume(
-                      context: context,
-                      ref: ref,
-                      episodeIds: ids,
-                    ),
-                  );
-              }
-            },
-            itemBuilder: (context) {
-              final l10n = AppLocalizations.of(context);
-              final ids =
-                  episodesAsync.value?.map((se) => se.episodeId).toList() ?? [];
-              final allTasks = ref.read(allDownloadsProvider).value ?? [];
-              final dlState = computeBatchDownloadState(
-                episodeIds: ids,
-                allTasks: allTasks,
-              );
-              return [
-                PopupMenuItem(
-                  enabled: dlState.hasDownloadable,
-                  value: 'download_all',
-                  child: ListTile(
-                    leading: const Icon(Icons.download),
-                    title: Text(l10n.downloadAllEpisodes),
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-                if (dlState.hasCancelable)
-                  PopupMenuItem(
-                    value: 'cancel_all',
-                    child: ListTile(
-                      leading: const Icon(Icons.cancel_outlined),
-                      title: Text(l10n.downloadCancelAll),
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                  ),
-                if (dlState.hasPaused)
-                  PopupMenuItem(
-                    value: 'resume_all',
-                    child: ListTile(
-                      leading: const Icon(Icons.play_arrow),
-                      title: Text(l10n.downloadResumeAll),
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                  ),
-                PopupMenuItem(
-                  value: 'edit',
-                  child: ListTile(
-                    leading: const Icon(Symbols.edit),
-                    title: Text(l10n.stationEditTooltip),
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-              ];
-            },
+          ActionMenuTrigger(
+            onOpen: (anchor, drag) =>
+                _showMoreMenu(anchor, drag, episodesAsync.value),
+            builder: (context, open) => IconButton(
+              icon: const Icon(Icons.more_horiz_rounded),
+              tooltip: MaterialLocalizations.of(context).showMenuTooltip,
+              onPressed: open,
+            ),
           ),
         ],
       ),
@@ -245,6 +152,64 @@ class _StationDetailContentState extends ConsumerState<_StationDetailContent> {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(child: Text(error.toString())),
       ),
+    );
+  }
+
+  void _showMoreMenu(
+    BuildContext anchor,
+    ActionMenuDrag? drag,
+    List<StationEpisode>? episodes,
+  ) {
+    final l10n = AppLocalizations.of(context);
+    final ids = episodes?.map((se) => se.episodeId).toList() ?? [];
+    final dlState = computeBatchDownloadState(
+      episodeIds: ids,
+      allTasks: ref.read(allDownloadsProvider).value ?? [],
+    );
+    showActionMenu(
+      context: anchor,
+      placement: ActionMenuPlacement.below(anchor),
+      sections: [
+        [
+          ActionMenuEntry(
+            icon: Icons.download,
+            label: l10n.downloadAllEpisodes,
+            enabled: dlState.hasDownloadable,
+            onSelected: () => unawaited(
+              handleBatchDownload(
+                context: context,
+                ref: ref,
+                episodeIds: ids,
+                downloadableCount: dlState.downloadableCount,
+              ),
+            ),
+          ),
+          if (dlState.hasCancelable)
+            ActionMenuEntry(
+              icon: Icons.cancel_outlined,
+              label: l10n.downloadCancelAll,
+              onSelected: () => unawaited(
+                handleBatchCancel(context: context, ref: ref, episodeIds: ids),
+              ),
+            ),
+          if (dlState.hasPaused)
+            ActionMenuEntry(
+              icon: Icons.play_arrow,
+              label: l10n.downloadResumeAll,
+              onSelected: () => unawaited(
+                handleBatchResume(context: context, ref: ref, episodeIds: ids),
+              ),
+            ),
+          ActionMenuEntry(
+            icon: Symbols.edit,
+            label: l10n.stationEditTooltip,
+            onSelected: () => context.push(
+              '${AppRoutes.library}/station/${widget.station.id}/edit',
+            ),
+          ),
+        ],
+      ],
+      drag: drag,
     );
   }
 
