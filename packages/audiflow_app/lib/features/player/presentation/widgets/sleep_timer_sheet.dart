@@ -322,7 +322,12 @@ class _CancelButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     return OutlinedButton(
-      onPressed: onPressed,
+      onPressed: () {
+        // Cancelling switches the timer off, so it feels like a switch
+        // turning off rather than another choice.
+        HapticsScope.of(context).play(HapticToken.toggleOff);
+        onPressed();
+      },
       style: OutlinedButton.styleFrom(
         foregroundColor: colorScheme.error,
         side: BorderSide(color: colorScheme.error),
