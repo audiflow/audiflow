@@ -23,7 +23,7 @@
 
 - **Design tokens**: Static constant classes (`Spacing`, `AppBorders`, `AppShadows`) and the `AppColors` theme extension. All widgets reference these instead of raw values.
 - **Theme system**: `AppTheme` assembles `ThemeData` from `AppColors`, `AppColorScheme`, and `AppTextStyles`. The app applies `AppTheme.light()` or `AppTheme.dark()` at the `MaterialApp` level.
-- **Haptics**: Widgets play haptics by meaning with `HapticsScope.of(context).play(HapticToken.x)`, never through `HapticFeedback` or a platform API. The app injects the real player, already gated by the user's level, above `MaterialApp`; without a scope the player is silent. Switches wrap their `onChanged` with `HapticsScope.of(context).toggleHaptic(...)` so every flip plays `toggleOn` / `toggleOff`; `SettingsTrailing.toggle` does this itself. The catalog of tokens and which interaction uses which is `docs/design/haptics.md`.
+- **Haptics**: Widgets play haptics by meaning with `HapticsScope.of(context).play(HapticToken.x)`, never through `HapticFeedback` or a platform API. The app injects the real player, already gated by the user's level, above `MaterialApp`; without a scope the player is silent. Switches wrap their `onChanged` with `HapticsScope.of(context).toggleHaptic(...)` so every flip plays `toggleOn` / `toggleOff`; `SettingsTrailing.toggle` does this itself. Choice controls wrap their change callback with `selectionHaptic` so a new choice plays `selection`; `AppSegmentedControl` does this itself and stays silent when the current segment is tapped again. The catalog of tokens and which interaction uses which is `docs/design/haptics.md`.
 - **Widget placement rule**: A widget moves to `audiflow_ui` when it is consumed by two or more distinct features in `audiflow_app`. Until then, it stays in the feature directory.
 
 ## Directory structure
@@ -41,6 +41,7 @@ lib/
     haptics/
       haptic_token.dart         # HapticToken -- the catalog tokens; names are the channel contract
       haptic_player.dart        # HapticPlayer interface, NoopHapticPlayer, LevelGatedHapticPlayer
+      haptic_selection.dart     # selectionHaptic -- wraps a choice control's change with selection
       haptic_toggle.dart        # toggleHaptic -- wraps a switch's onChanged with toggleOn/toggleOff
       haptics_scope.dart        # HapticsScope -- InheritedWidget that provides the player
     styles/

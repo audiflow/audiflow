@@ -39,7 +39,7 @@ A Station differs from the Queue in a fundamental way: the Queue is the only pla
 - Gathers episodes per podcast using a count-based limit ("latest N episodes"), configurable as a station-wide default and overridable per podcast.
 - Applies attribute filters across gathered episodes: hide completed episodes, downloaded-only, favorites-only, and a duration threshold (shorter-than / longer-than a minute value). The count limit is applied first, then attribute filters narrow the result further.
 - Maintains a materialized, always-current feed per station through background reconciliation, triggered by feed sync, playback state changes, download state changes, favorite toggles, station configuration changes, and subscription deletion -- using full recalculation when a station's configuration changes and incremental per-episode updates for individual events.
-- Orders the station feed either as a flat list by publish date (newest-first or oldest-first) or grouped by podcast, with podcast ordering by subscription order, podcast name, or a user-defined manual order.
+- Orders the station feed either as a flat list by publish date (newest-first or oldest-first) or grouped by podcast, with podcast ordering by subscription order, podcast name, or a user-defined manual order. Changing the episode sort or a per-podcast episode-limit chip plays a light selection haptic.
 - Presents stations in the Library tab as a dedicated section with stacked podcast artwork and content summaries, and provides per-station detail and edit screens plus a play-all action.
 - Cleans up orphaned podcast links and episodes when a subscription is deleted, so stations never reference podcasts the user no longer follows.
 
