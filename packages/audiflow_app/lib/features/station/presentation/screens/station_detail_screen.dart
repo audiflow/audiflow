@@ -137,8 +137,7 @@ class _StationDetailContentState extends ConsumerState<_StationDetailContent> {
         title: Text(widget.station.name),
         actions: [
           ActionMenuTrigger(
-            onOpen: (anchor, drag) =>
-                _showMoreMenu(anchor, drag, episodesAsync.value),
+            onOpen: _showMoreMenu,
             builder: (context, open) => IconButton(
               icon: const Icon(Icons.more_horiz_rounded),
               tooltip: MaterialLocalizations.of(context).showMenuTooltip,
@@ -155,17 +154,22 @@ class _StationDetailContentState extends ConsumerState<_StationDetailContent> {
     );
   }
 
-  void _showMoreMenu(
-    BuildContext anchor,
-    ActionMenuDrag? drag,
-    List<StationEpisode>? episodes,
-  ) {
+  List<int> _episodeIds() =>
+      ref
+          .read(stationEpisodesProvider(widget.station.id))
+          .value
+          ?.map((se) => se.episodeId)
+          .toList() ??
+      [];
+
+  BatchDownloadState _downloadState(List<int> ids) => computeBatchDownloadState(
+    episodeIds: ids,
+    allTasks: ref.read(allDownloadsProvider).value ?? [],
+  );
+
+  void _showMoreMenu(BuildContext anchor, ActionMenuDrag? drag) {
     final l10n = AppLocalizations.of(context);
-    final ids = episodes?.map((se) => se.episodeId).toList() ?? [];
-    final dlState = computeBatchDownloadState(
-      episodeIds: ids,
-      allTasks: ref.read(allDownloadsProvider).value ?? [],
-    );
+    final dlState = _downloadState(_episodeIds());
     showActionMenu(
       context: anchor,
       placement: ActionMenuPlacement.below(anchor),
@@ -175,30 +179,19 @@ class _StationDetailContentState extends ConsumerState<_StationDetailContent> {
             icon: Icons.download,
             label: l10n.downloadAllEpisodes,
             enabled: dlState.hasDownloadable,
-            onSelected: () => unawaited(
-              handleBatchDownload(
-                context: context,
-                ref: ref,
-                episodeIds: ids,
-                downloadableCount: dlState.downloadableCount,
-              ),
-            ),
+            onSelected: () => _runBatch(_StationBatch.download),
           ),
           if (dlState.hasCancelable)
             ActionMenuEntry(
               icon: Icons.cancel_outlined,
               label: l10n.downloadCancelAll,
-              onSelected: () => unawaited(
-                handleBatchCancel(context: context, ref: ref, episodeIds: ids),
-              ),
+              onSelected: () => _runBatch(_StationBatch.cancel),
             ),
           if (dlState.hasPaused)
             ActionMenuEntry(
               icon: Icons.play_arrow,
               label: l10n.downloadResumeAll,
-              onSelected: () => unawaited(
-                handleBatchResume(context: context, ref: ref, episodeIds: ids),
-              ),
+              onSelected: () => _runBatch(_StationBatch.resume),
             ),
           ActionMenuEntry(
             icon: Symbols.edit,
@@ -211,6 +204,35 @@ class _StationDetailContentState extends ConsumerState<_StationDetailContent> {
       ],
       drag: drag,
     );
+  }
+
+  /// Re-reads the episodes and downloads when the entry is chosen, since
+  /// either may have changed while the menu was open.
+  void _runBatch(_StationBatch batch) {
+    final ids = _episodeIds();
+    if (ids.isEmpty) return;
+    final dlState = _downloadState(ids);
+    final run = switch (batch) {
+      _StationBatch.download when dlState.hasDownloadable =>
+        handleBatchDownload(
+          context: context,
+          ref: ref,
+          episodeIds: ids,
+          downloadableCount: dlState.downloadableCount,
+        ),
+      _StationBatch.download => null,
+      _StationBatch.cancel => handleBatchCancel(
+        context: context,
+        ref: ref,
+        episodeIds: ids,
+      ),
+      _StationBatch.resume => handleBatchResume(
+        context: context,
+        ref: ref,
+        episodeIds: ids,
+      ),
+    };
+    if (run != null) unawaited(run);
   }
 
   Widget _buildEpisodeList(
@@ -338,3 +360,5 @@ class _StationEpisodeTile extends ConsumerWidget {
 }
 
 const double _loadingRowHeight = 160;
+
+enum _StationBatch { download, cancel, resume }

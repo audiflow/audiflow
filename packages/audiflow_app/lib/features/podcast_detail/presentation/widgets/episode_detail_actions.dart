@@ -187,8 +187,9 @@ class EpisodeActionCircle extends StatelessWidget {
   }
 }
 
-/// Queue circle: a tap opens a two-choice popover under the button,
-/// "play next" or "add to end of queue", since the listener picks one.
+/// Queue circle: a tap, or a press that slides to a choice, opens a
+/// two-choice popover under the button, "play next" or "add to end of
+/// queue", since the listener picks one.
 class EpisodeQueueCircle extends StatelessWidget {
   const EpisodeQueueCircle({
     super.key,
@@ -201,57 +202,36 @@ class EpisodeQueueCircle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return EpisodeActionCircle(
-      icon: Icons.playlist_add_rounded,
-      tooltip: AppLocalizations.of(context).addToQueue,
-      // This widget's context sizes to the circle, so the popover
-      // anchors to the button.
-      onPressed: () => _showChoices(context),
-    );
-  }
-
-  Future<void> _showChoices(BuildContext context) async {
-    final l10n = AppLocalizations.of(context);
-    final box = context.findRenderObject()! as RenderBox;
-    final overlay =
-        Overlay.of(context).context.findRenderObject()! as RenderBox;
-    final bottomLeft = box.localToGlobal(
-      box.size.bottomLeft(Offset.zero) + const Offset(0, Spacing.xs),
-      ancestor: overlay,
-    );
-    final chosen = await showMenu<VoidCallback>(
-      context: context,
-      position: RelativeRect.fromRect(
-        bottomLeft & Size(box.size.width, 0),
-        Offset.zero & overlay.size,
+    return ActionMenuTrigger(
+      onOpen: _showChoices,
+      builder: (context, open) => EpisodeActionCircle(
+        icon: Icons.playlist_add_rounded,
+        tooltip: AppLocalizations.of(context).addToQueue,
+        onPressed: open,
       ),
-      items: [
-        _choice(Icons.playlist_play_rounded, l10n.playNext, onPlayNext),
-        _choice(
-          Icons.playlist_add_rounded,
-          l10n.episodeDetailAddToEnd,
-          onAddToEnd,
-        ),
-      ],
     );
-    chosen?.call();
   }
 
-  PopupMenuItem<VoidCallback> _choice(
-    IconData icon,
-    String label,
-    VoidCallback action,
-  ) {
-    return PopupMenuItem(
-      value: action,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 22),
-          const SizedBox(width: Spacing.md),
-          Flexible(child: Text(label)),
+  void _showChoices(BuildContext anchor, ActionMenuDrag? drag) {
+    final l10n = AppLocalizations.of(anchor);
+    showActionMenu(
+      context: anchor,
+      placement: ActionMenuPlacement.below(anchor),
+      sections: [
+        [
+          ActionMenuEntry(
+            icon: Icons.playlist_play_rounded,
+            label: l10n.playNext,
+            onSelected: onPlayNext,
+          ),
+          ActionMenuEntry(
+            icon: Icons.playlist_add_rounded,
+            label: l10n.episodeDetailAddToEnd,
+            onSelected: onAddToEnd,
+          ),
         ],
-      ),
+      ],
+      drag: drag,
     );
   }
 }

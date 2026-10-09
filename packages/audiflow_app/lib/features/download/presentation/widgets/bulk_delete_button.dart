@@ -105,6 +105,9 @@ class BulkDeleteButton extends StatelessWidget {
     BuildContext context,
     BulkDeleteScope scope,
   ) async {
+    // The button leaves the tree once its downloads are gone, possibly
+    // while the menu was open.
+    if (!context.mounted) return;
     final l10n = AppLocalizations.of(context);
     // Fix the set now so what gets deleted is what the dialog counted.
     final taskIds = scope.taskIdsIn(tasks);

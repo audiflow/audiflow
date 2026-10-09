@@ -304,7 +304,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
     final onTranscript = tabs != null && tabs.index == 1;
     final episode = nowPlaying.episode;
     return showActionMenu(
-      context: context,
+      context: anchor,
       placement: ActionMenuPlacement.topRight(top: _menuTopBelow(anchor)),
       drag: drag,
       sections: [

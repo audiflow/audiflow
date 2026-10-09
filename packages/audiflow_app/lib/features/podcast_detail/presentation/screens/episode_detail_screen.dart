@@ -218,7 +218,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
           FloatingNavAction.menu(
             icon: Icons.more_horiz_rounded,
             tooltip: l10n.episodeMoreActions,
-            onOpenMenu: (_, drag) => _showMoreMenu(view, drag: drag),
+            onOpenMenu: (anchor, drag) => _showMoreMenu(view, anchor, drag),
           ),
         ],
       ),
@@ -384,13 +384,17 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
 
   /// Overflow popover. Play next, add to queue, download and share are
   /// on screen, so they are not repeated here.
-  Future<void> _showMoreMenu(_EpisodeView view, {ActionMenuDrag? drag}) {
+  Future<void> _showMoreMenu(
+    _EpisodeView view,
+    BuildContext anchor,
+    ActionMenuDrag? drag,
+  ) {
     final l10n = AppLocalizations.of(context);
     final enclosureUrl = view.enclosureUrl;
     final task = view.downloadTask;
     final downloaded = task?.downloadStatus is DownloadStatusCompleted;
     return showActionMenu(
-      context: context,
+      context: anchor,
       placement: ActionMenuPlacement.topRight(
         top: FloatingNavigationBar.heightOf(context),
       ),
