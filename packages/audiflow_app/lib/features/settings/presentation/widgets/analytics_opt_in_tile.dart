@@ -1,3 +1,4 @@
+import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -15,8 +16,9 @@ class AnalyticsOptInTile extends ConsumerWidget {
       title: Text(l10n.settingsAnalyticsTitle),
       subtitle: Text(l10n.settingsAnalyticsSubtitle),
       value: value,
-      onChanged: (v) =>
-          ref.read(analyticsOptInControllerProvider.notifier).setOptIn(v),
+      onChanged: HapticsScope.of(context).toggleHaptic(
+        (v) => ref.read(analyticsOptInControllerProvider.notifier).setOptIn(v),
+      ),
     );
   }
 }

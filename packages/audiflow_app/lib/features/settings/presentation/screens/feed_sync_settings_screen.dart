@@ -1,4 +1,5 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -191,7 +192,9 @@ class _FeedSyncSettingsScreenState extends ConsumerState<FeedSyncSettingsScreen>
             title: Text(l10n.feedSyncAutoSyncTitle),
             subtitle: Text(l10n.feedSyncAutoSyncSubtitle),
             value: autoSync,
-            onChanged: (v) => _update(repo, () => repo.setAutoSync(v)),
+            onChanged: HapticsScope.of(
+              context,
+            ).toggleHaptic((v) => _update(repo, () => repo.setAutoSync(v))),
           ),
           Visibility(
             visible: autoSync,
@@ -249,10 +252,12 @@ class _FeedSyncSettingsScreenState extends ConsumerState<FeedSyncSettingsScreen>
             title: Text(l10n.feedSyncWifiOnlyTitle),
             subtitle: Text(l10n.feedSyncWifiOnlySubtitle),
             value: wifiOnly,
-            onChanged: (v) => _update(
-              repo,
-              () => repo.setWifiOnlySync(v),
-              replaceExisting: true,
+            onChanged: HapticsScope.of(context).toggleHaptic(
+              (v) => _update(
+                repo,
+                () => repo.setWifiOnlySync(v),
+                replaceExisting: true,
+              ),
             ),
           ),
           Visibility(
@@ -261,7 +266,9 @@ class _FeedSyncSettingsScreenState extends ConsumerState<FeedSyncSettingsScreen>
               title: Text(l10n.feedSyncNotifyNewEpisodesTitle),
               subtitle: Text(l10n.feedSyncNotifyNewEpisodesSubtitle),
               value: notifyNewEpisodes,
-              onChanged: (v) => _onNotifyToggleChanged(repo, v),
+              onChanged: HapticsScope.of(
+                context,
+              ).toggleHaptic((v) => _onNotifyToggleChanged(repo, v)),
             ),
           ),
         ],

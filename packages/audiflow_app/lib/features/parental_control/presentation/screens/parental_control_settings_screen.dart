@@ -1,4 +1,5 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -70,11 +71,13 @@ class _SettingsBody extends ConsumerWidget {
               context,
               reason: GateReason.parentalSettings,
             );
-            if (!ok) return;
+            if (!ok || !context.mounted) return;
+            final haptics = HapticsScope.of(context);
             try {
               await ref
                   .read(parentalControlControllerProvider.notifier)
                   .setRestrictedMode(v);
+              haptics.play(v ? HapticToken.toggleOn : HapticToken.toggleOff);
               if (v) {
                 ref.read(parentalControlGateProvider.notifier).lock();
               }

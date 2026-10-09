@@ -12,7 +12,7 @@
 
   "settingsTitle": "設定",
   "settingsAppearanceTitle": "外観",
-  "settingsAppearanceSubtitle": "テーマ、言語、文字サイズ",
+  "settingsAppearanceSubtitle": "テーマ、言語、文字サイズ、触覚",
   "settingsPlaybackTitle": "再生",
   "settingsPlaybackSubtitle": "速度、スキップ、自動完了",
   "settingsDownloadsTitle": "ダウンロード",
@@ -542,6 +542,7 @@
   "developerHapticsCatalogSubtitle": "トークンを1つずつ鳴らす",
   "developerHapticsPlaysInReduced": "控えめでも鳴る",
   "developerHapticsSilentOnAndroid": "Android では鳴らない",
+  "appearanceHaptics": "触覚フィードバック",
   "settingsHapticsLevelOn": "オン",
   "settingsHapticsLevelReduced": "控えめ",
   "settingsHapticsLevelOff": "オフ",

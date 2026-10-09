@@ -1,7 +1,8 @@
 import 'package:audiflow_core/audiflow_core.dart'
     show AutoPlayOrder, DuckInterruptionBehavior, PlaybackSpeedScale;
 import 'package:audiflow_domain/audiflow_domain.dart';
-import 'package:audiflow_ui/audiflow_ui.dart' show PlaybackSpeedSlider;
+import 'package:audiflow_ui/audiflow_ui.dart'
+    show HapticToggle, HapticsScope, PlaybackSpeedSlider;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -46,7 +47,9 @@ class PlaybackSettingsScreen extends ConsumerWidget {
             title: Text(l10n.playbackContinuousTitle),
             subtitle: Text(l10n.playbackContinuousSubtitle),
             value: continuous,
-            onChanged: (v) => _update(ref, () => repo.setContinuousPlayback(v)),
+            onChanged: HapticsScope.of(context).toggleHaptic(
+              (v) => _update(ref, () => repo.setContinuousPlayback(v)),
+            ),
           ),
           _AutoPlayOrderTile(
             order: autoPlayOrder,

@@ -1,12 +1,8 @@
-import 'dart:async';
-
-import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../app/haptics/haptics_providers.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../widgets/haptics_level_selector.dart';
 
 /// Non-production screen for feeling each catalog haptic on a device.
 ///
@@ -15,7 +11,7 @@ import '../../../../l10n/app_localizations.dart';
 /// rest of the app. Token meanings are fixture text copied from
 /// `docs/design/haptics.md`, not user-facing copy, so they are not
 /// localized.
-class HapticsCatalogScreen extends ConsumerWidget {
+class HapticsCatalogScreen extends StatelessWidget {
   const HapticsCatalogScreen({super.key});
 
   static const _meanings = {
@@ -36,7 +32,7 @@ class HapticsCatalogScreen extends ConsumerWidget {
   };
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final player = HapticsScope.of(context);
     return Scaffold(
@@ -45,7 +41,7 @@ class HapticsCatalogScreen extends ConsumerWidget {
         children: [
           const Padding(
             padding: EdgeInsets.all(Spacing.md),
-            child: _LevelSelector(),
+            child: HapticsLevelSelector(),
           ),
           const Divider(height: 1),
           for (final token in HapticToken.values)
@@ -68,37 +64,5 @@ class HapticsCatalogScreen extends ConsumerWidget {
     // mistaken for a bug while testing.
     if (token != HapticToken.warning) return meaning;
     return '$meaning\n${l10n.developerHapticsSilentOnAndroid}';
-  }
-}
-
-class _LevelSelector extends ConsumerWidget {
-  const _LevelSelector();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
-    final level = ref.watch(hapticFeedbackLevelControllerProvider);
-    return SegmentedButton<HapticFeedbackLevel>(
-      segments: [
-        ButtonSegment(
-          value: HapticFeedbackLevel.on,
-          label: Text(l10n.settingsHapticsLevelOn),
-        ),
-        ButtonSegment(
-          value: HapticFeedbackLevel.reduced,
-          label: Text(l10n.settingsHapticsLevelReduced),
-        ),
-        ButtonSegment(
-          value: HapticFeedbackLevel.off,
-          label: Text(l10n.settingsHapticsLevelOff),
-        ),
-      ],
-      selected: {level},
-      onSelectionChanged: (selection) => unawaited(
-        ref
-            .read(hapticFeedbackLevelControllerProvider.notifier)
-            .setLevel(selection.single),
-      ),
-    );
   }
 }

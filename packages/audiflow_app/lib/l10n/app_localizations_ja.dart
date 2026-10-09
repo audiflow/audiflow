@@ -39,7 +39,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsAppearanceTitle => '外観';
 
   @override
-  String get settingsAppearanceSubtitle => 'テーマ、言語、文字サイズ';
+  String get settingsAppearanceSubtitle => 'テーマ、言語、文字サイズ、触覚';
 
   @override
   String get settingsPlaybackTitle => '再生';
@@ -1555,6 +1555,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get developerHapticsSilentOnAndroid => 'Android では鳴らない';
+
+  @override
+  String get appearanceHaptics => '触覚フィードバック';
 
   @override
   String get settingsHapticsLevelOn => 'オン';

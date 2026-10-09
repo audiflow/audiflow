@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -69,8 +70,10 @@ class DeveloperSettingsScreen extends ConsumerWidget {
               title: Text(l10n.developerShowInfoTitle),
               subtitle: Text(l10n.developerShowInfoSubtitle),
               value: devInfoEnabled,
-              onChanged: (_) => unawaited(
-                ref.read(devShowDeveloperInfoProvider.notifier).toggle(),
+              onChanged: HapticsScope.of(context).toggleHaptic(
+                (_) => unawaited(
+                  ref.read(devShowDeveloperInfoProvider.notifier).toggle(),
+                ),
               ),
             ),
             const Divider(height: 1),

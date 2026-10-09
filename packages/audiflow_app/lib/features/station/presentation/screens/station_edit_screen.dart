@@ -303,7 +303,9 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
       children: [
         SwitchListTile(
           value: state.hideCompleted,
-          onChanged: controller.setHideCompleted,
+          onChanged: HapticsScope.of(
+            context,
+          ).toggleHaptic(controller.setHideCompleted),
           title: Text(
             AppLocalizations.of(context).stationFilterHideCompletedLabel,
           ),
@@ -311,7 +313,9 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
         ),
         SwitchListTile(
           value: state.filterDownloaded,
-          onChanged: controller.setFilterDownloaded,
+          onChanged: HapticsScope.of(
+            context,
+          ).toggleHaptic(controller.setFilterDownloaded),
           title: Text(
             AppLocalizations.of(context).stationFilterDownloadedLabel,
           ),
@@ -354,7 +358,7 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
             ),
             Switch(
               value: filter != null,
-              onChanged: (enabled) {
+              onChanged: HapticsScope.of(context).toggleHaptic((enabled) {
                 if (enabled) {
                   final defaultFilter = StationDurationFilter()
                     ..durationOperator = 'shorterThan'
@@ -364,7 +368,7 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
                 } else {
                   controller.setDurationFilter(null);
                 }
-              },
+              }),
             ),
           ],
         ),
@@ -474,7 +478,9 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
       children: [
         SwitchListTile(
           value: state.groupByPodcast,
-          onChanged: controller.setGroupByPodcast,
+          onChanged: HapticsScope.of(
+            context,
+          ).toggleHaptic(controller.setGroupByPodcast),
           title: Text(l10n.stationGroupByPodcast),
           contentPadding: EdgeInsets.zero,
         ),

@@ -161,7 +161,7 @@ abstract class AppLocalizations {
   /// Appearance category subtitle
   ///
   /// In en, this message translates to:
-  /// **'Theme, language, text size'**
+  /// **'Theme, language, text size, haptics'**
   String get settingsAppearanceSubtitle;
 
   /// Playback category title
@@ -2929,6 +2929,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Silent on Android'**
   String get developerHapticsSilentOnAndroid;
+
+  /// Label of the haptic feedback level setting (On / Reduced / Off) in Appearance settings
+  ///
+  /// In en, this message translates to:
+  /// **'Haptic feedback'**
+  String get appearanceHaptics;
 
   /// Haptic feedback level option: every haptic plays
   ///

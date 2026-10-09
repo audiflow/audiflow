@@ -91,7 +91,7 @@ Every interaction that was considered is listed here, including those that delib
 | Download start | `none` (the snackbar is enough) |
 | Bottom tabs and screen navigation | `none` |
 | Segmented controls and filter chips | `selection` |
-| Settings switches | `toggleOn` / `toggleOff` |
+| Settings switches (and the other preference switches: audio sheet, station filters) | `toggleOn` / `toggleOff` |
 | Clear-queue and bulk-delete confirmation | `warning` |
 | Wrong PIN and PIN lockout | `error` |
 | Full player open / close | `none` |

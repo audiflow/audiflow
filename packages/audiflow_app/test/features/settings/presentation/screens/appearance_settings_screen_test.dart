@@ -173,5 +173,28 @@ void main() {
         find.byType(SegmentedButton<ThemeMode>).evaluate(),
       ).length.equals(1);
     });
+
+    testWidgets('haptic feedback level defaults to On and persists', (
+      tester,
+    ) async {
+      tester.view
+        ..physicalSize = const Size(800, 2000)
+        ..devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(buildTestWidget());
+
+      check(find.text('Haptic feedback').evaluate()).isNotEmpty();
+      final selector = tester.widget<SegmentedButton<HapticFeedbackLevel>>(
+        find.byType(SegmentedButton<HapticFeedbackLevel>),
+      );
+      check(selector.selected).deepEquals({HapticFeedbackLevel.on});
+
+      await tester.tap(find.text('Reduced'));
+      await tester.pumpAndSettle();
+
+      check(
+        prefs.getString(SettingsKeys.hapticFeedbackLevel),
+      ).equals(HapticFeedbackLevel.reduced.name);
+    });
   });
 }
