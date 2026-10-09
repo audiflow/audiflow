@@ -200,6 +200,25 @@ void main() {
       ).length.equals(1);
     });
 
+    testWidgets('picking All overrides a numeric default', (tester) async {
+      await pumpWithPodcast(tester);
+      await tester.tap(find.text('Daily Show'));
+      await tester.pumpAndSettle();
+      await tester.tap(sheetOption('All'));
+      await tester.pumpAndSettle();
+
+      final row = find.widgetWithText(ListTile, 'Daily Show');
+      check(
+        find.descendant(of: row, matching: find.text('All')).evaluate(),
+      ).length.equals(1);
+      await tester.tap(find.text('Daily Show'));
+      await tester.pumpAndSettle();
+      check(tester.widget<ListTile>(sheetOption('All')).trailing).isA<Icon>();
+      check(
+        tester.widget<ListTile>(sheetOption('Default (Latest 3)')).trailing,
+      ).isNull();
+    });
+
     testWidgets('picking default clears an existing override', (tester) async {
       await pumpWithPodcast(tester, episodeLimit: allEpisodesSentinel);
       final row = find.widgetWithText(ListTile, 'Daily Show');
