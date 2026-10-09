@@ -222,6 +222,25 @@ void main() {
       expect(histories, hasLength(1));
     });
 
+    test('skips an entry subscribed to after the pass listed it', () async {
+      final staleDate = DateTime.now().subtract(const Duration(days: 10));
+      final sub = await createCached('stale', lastAccessedAt: staleDate);
+      final ep = await createEpisode(sub.id, 'ep1');
+      // The pass works from this stale list while the row gets promoted.
+      final listed = await subscriptionRepo.getCachedSubscriptions();
+      await subscriptionRepo.promoteToSubscribed('stale');
+
+      service = PodcastCacheEvictionService(
+        subscriptionRepository: _ListedCachedRepository(isar, listed),
+        isar: isar,
+        logger: logger,
+      );
+
+      expect(await service.evict(), 0);
+      expect(await subscriptionRepo.getById(sub.id), isNotNull);
+      expect(await isar.episodes.get(ep.id), isNotNull);
+    });
+
     test('keeps stale cached podcasts that hold downloads', () async {
       final staleDate = DateTime.now().subtract(const Duration(days: 10));
       final sub = await createCached('stale', lastAccessedAt: staleDate);
@@ -400,4 +419,16 @@ void main() {
       expect(result, 1);
     });
   });
+}
+
+/// Returns a fixed list of cached subscriptions, standing in for a list
+/// read just before a concurrent subscribe promoted one of them.
+class _ListedCachedRepository extends SubscriptionRepositoryImpl {
+  _ListedCachedRepository(Isar isar, this._listed)
+    : super(datasource: SubscriptionLocalDatasource(isar));
+
+  final List<Subscription> _listed;
+
+  @override
+  Future<List<Subscription>> getCachedSubscriptions() async => _listed;
 }

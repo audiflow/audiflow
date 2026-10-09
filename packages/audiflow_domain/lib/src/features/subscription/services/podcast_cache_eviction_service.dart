@@ -115,8 +115,8 @@ class PodcastCacheEvictionService {
     return downloads.any((download) => download != null);
   }
 
-  /// Returns false when the podcast gained listener data after it was
-  /// classified as evictable, e.g. playback started during the pass.
+  /// Returns false when, since the pass listed it, the podcast was
+  /// subscribed to again or gained listener data such as a playback start.
   Future<bool> _evictSubscription(Subscription subscription) async {
     final id = subscription.id;
     _logger.d(
@@ -126,6 +126,8 @@ class PodcastCacheEvictionService {
 
     return _isar.writeTxn(() async {
       // Re-check inside the transaction so no write can land in between.
+      final current = await _isar.subscriptions.get(id);
+      if (current == null || !current.isCached) return false;
       if (await _holdsListenerData(await _episodeIdsOf(id))) return false;
 
       // Delete episodes

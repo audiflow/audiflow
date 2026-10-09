@@ -32,6 +32,13 @@ class SubscriptionLocalDatasource {
     return _isar.writeTxn(() async {
       final existing = await _isar.subscriptions.get(id);
       if (existing == null || !existing.isCached) return null;
+      // Validators from another feed must not be sent to this one: a
+      // matching 304 would keep the old feed's episodes.
+      if (existing.feedUrl != incoming.feedUrl) {
+        existing
+          ..httpEtag = null
+          ..httpLastModified = null;
+      }
       existing
         ..itunesId = incoming.itunesId
         ..feedUrl = incoming.feedUrl
@@ -40,7 +47,9 @@ class SubscriptionLocalDatasource {
         ..artworkUrl = _nonBlank(incoming.artworkUrl) ?? existing.artworkUrl
         ..description = _nonBlank(incoming.description) ?? existing.description
         ..genres = _nonBlank(incoming.genres) ?? existing.genres
-        ..explicit = incoming.explicit
+        // An OPML import cannot tell, and arrives as false; a stored flag
+        // is therefore never cleared here.
+        ..explicit = incoming.explicit || existing.explicit
         ..subscribedAt = incoming.subscribedAt
         ..isCached = false;
       await _isar.subscriptions.put(existing);
