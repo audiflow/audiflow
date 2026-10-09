@@ -30,9 +30,10 @@ object HapticsChannel {
         val fallbackRepeats: Int = 1,
     )
 
-    // Long enough to feel as two taps: an actuator rings 20-50 ms after a
-    // click, and Android's guidance calls 50 ms or more discernible.
-    private const val REPEAT_GAP_MS = 100L
+    // Measured from the start of each tap. Old OEM waveforms run longer
+    // than a 10-20 ms click (100 ms merged into one buzz on a Huawei
+    // Android 8 device), so the gap leaves room for the whole pattern.
+    private const val REPEAT_GAP_MS = 200L
 
     private const val API_30 = Build.VERSION_CODES.R
     private const val API_34 = Build.VERSION_CODES.UPSIDE_DOWN_CAKE
