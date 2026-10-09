@@ -42,7 +42,7 @@ android {
         versionName = flutter.versionName
     }
 
-    // Dev builds report the newest stg tag's version: the pubspec version
+    // Dev builds report the highest stg tag's version: the pubspec version
     // lags on main because only the release workflows rewrite it. The
     // flavors are created later by flavorizr.gradle.kts, hence configureEach.
     val devVersion = providers.exec {

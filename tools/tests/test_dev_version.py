@@ -66,6 +66,22 @@ def test_prints_nothing_for_malformed_tag(repo: Path) -> None:
     assert result.stdout == ""
 
 
+def test_skips_malformed_tag_closer_to_head(repo: Path) -> None:
+    _git(repo, "tag", "stg-2.2.0+62")
+    _commit(repo, "second")
+    _git(repo, "tag", "stg-2.2.1")
+    assert _run(repo).stdout == "2.2.0 62\n"
+
+
+def test_ignores_stg_tags_not_behind_head(repo: Path) -> None:
+    _git(repo, "tag", "stg-2.2.0+62")
+    _git(repo, "checkout", "-q", "-b", "side")
+    _commit(repo, "side work")
+    _git(repo, "tag", "stg-2.3.0+70")
+    _git(repo, "checkout", "-q", "-")
+    assert _run(repo).stdout == "2.2.0 62\n"
+
+
 def test_prints_nothing_outside_git_repo(tmp_path: Path) -> None:
     result = _run(tmp_path)
     assert result.returncode == 0

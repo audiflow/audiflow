@@ -361,7 +361,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "set -euo pipefail\n# Dev builds report the newest stg tag's version; the pubspec version lags on main.\ncase \"$CONFIGURATION\" in *-dev) ;; *) exit 0 ;; esac\nVERSION=$(bash \"${SRCROOT}/../../../tools/dev-version.sh\")\nif [ -z \"$VERSION\" ]; then\n  echo \"note: no stg tag reachable; keeping the pubspec version.\"\n  exit 0\nfi\nPLIST=\"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"\n/usr/libexec/PlistBuddy -c \"Set :CFBundleShortVersionString ${VERSION% *}\" -c \"Set :CFBundleVersion ${VERSION#* }\" \"$PLIST\"\necho \"Set dev version to $VERSION\"\n";
+			shellScript = "set -euo pipefail\n# Dev builds report the highest stg tag's version; the pubspec version lags on main.\ncase \"$CONFIGURATION\" in *-dev) ;; *) exit 0 ;; esac\nVERSION=$(bash \"${SRCROOT}/../../../tools/dev-version.sh\")\nif [ -z \"$VERSION\" ]; then\n  echo \"note: no stg tag reachable; keeping the pubspec version.\"\n  exit 0\nfi\nPLIST=\"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"\n/usr/libexec/PlistBuddy -c \"Set :CFBundleShortVersionString ${VERSION% *}\" -c \"Set :CFBundleVersion ${VERSION#* }\" \"$PLIST\"\necho \"Set dev version to $VERSION\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */

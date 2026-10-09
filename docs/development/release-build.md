@@ -13,7 +13,7 @@ fallback for when CI cannot be used.
 
 Both workflows set the app version from the tag before building, so the
 `version:` in `pubspec.yaml` is not bumped per release and lags behind on
-`main`. Dev-flavor builds instead take the version of the newest `stg-` tag
+`main`. Dev-flavor builds instead take the version of the highest `stg-` tag
 behind `HEAD` (`tools/dev-version.sh`, applied by a Runner build phase on iOS
 and by `android/app/build.gradle.kts` on Android), and keep the pubspec
 version when no such tag is reachable.
