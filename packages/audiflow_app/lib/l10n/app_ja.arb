@@ -546,6 +546,7 @@
   "settingsHapticsLevelOn": "オン",
   "settingsHapticsLevelReduced": "控えめ",
   "settingsHapticsLevelOff": "オフ",
+  "settingsHapticsUnsupported": "この端末は触覚フィードバックに対応していません",
   "developerTestNotificationsSent": "テスト通知を{count}通送りました",
   "developerTestNotificationsNone": "通知できるエピソードがありません",
   "developerTestNotificationsFailed": "テスト通知の送信に失敗しました",

@@ -2,6 +2,7 @@ package com.reedom.audiflow_app
 
 import android.app.Activity
 import android.os.Build
+import android.os.Vibrator
 import android.view.HapticFeedbackConstants as C
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodChannel
@@ -76,9 +77,18 @@ object HapticsChannel {
                 }
                 // Android has no warm-up step for performHapticFeedback.
                 "prepare" -> result.success(null)
+                "isSupported" -> result.success(isSupported(activityRef.get()))
                 else -> result.notImplemented()
             }
         }
+    }
+
+    // Tablets without a vibration motor drop performHapticFeedback silently.
+    // An activity already gone answers true so the setting is never locked
+    // by mistake on a device that has the motor.
+    private fun isSupported(activity: Activity?): Boolean {
+        val vibrator = activity?.getSystemService(Vibrator::class.java) ?: return true
+        return vibrator.hasVibrator()
     }
 
     private fun play(activity: Activity?, token: String?) {

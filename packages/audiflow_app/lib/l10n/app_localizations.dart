@@ -2954,6 +2954,12 @@ abstract class AppLocalizations {
   /// **'Off'**
   String get settingsHapticsLevelOff;
 
+  /// Note under the locked haptic feedback level selector on a device without haptic hardware
+  ///
+  /// In en, this message translates to:
+  /// **'This device does not support haptic feedback'**
+  String get settingsHapticsUnsupported;
+
   /// Snackbar after test notifications were posted
   ///
   /// In en, this message translates to:

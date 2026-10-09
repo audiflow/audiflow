@@ -1,3 +1,4 @@
+import 'package:audiflow_app/app/haptics/haptics_providers.dart';
 import 'package:audiflow_app/features/settings/presentation/controllers/locale_controller.dart';
 import 'package:audiflow_app/features/settings/presentation/screens/appearance_settings_screen.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
@@ -17,9 +18,14 @@ void main() {
     prefs = await SharedPreferences.getInstance();
   });
 
-  Widget buildTestWidget() {
+  Widget buildTestWidget({bool hapticsSupported = true}) {
     return ProviderScope(
-      overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(prefs),
+        hapticsSupportedProvider.overrideWithValue(
+          AsyncData(hapticsSupported),
+        ),
+      ],
       child: MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
@@ -195,6 +201,32 @@ void main() {
       check(
         prefs.getString(SettingsKeys.hapticFeedbackLevel),
       ).equals(HapticFeedbackLevel.on.name);
+      check(
+        find.text('This device does not support haptic feedback').evaluate(),
+      ).isEmpty();
+    });
+
+    testWidgets('haptic feedback is locked to Off without device support', (
+      tester,
+    ) async {
+      tester.view
+        ..physicalSize = const Size(800, 2000)
+        ..devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(buildTestWidget(hapticsSupported: false));
+
+      final selector = tester.widget<SegmentedButton<HapticFeedbackLevel>>(
+        find.byType(SegmentedButton<HapticFeedbackLevel>),
+      );
+      check(selector.selected).deepEquals({HapticFeedbackLevel.off});
+      check(selector.onSelectionChanged).isNull();
+      check(
+        find.text('This device does not support haptic feedback').evaluate(),
+      ).isNotEmpty();
+
+      await tester.tap(find.text('On'));
+      await tester.pumpAndSettle();
+      check(prefs.getString(SettingsKeys.hapticFeedbackLevel)).isNull();
     });
   });
 }

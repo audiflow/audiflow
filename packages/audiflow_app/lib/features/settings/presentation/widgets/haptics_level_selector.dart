@@ -15,8 +15,9 @@ class HapticsLevelSelector extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final level = ref.watch(hapticFeedbackLevelControllerProvider);
-    return SizedBox(
+    final supported = ref.watch(hapticsSupportedProvider).value ?? true;
+    final level = ref.watch(effectiveHapticFeedbackLevelProvider);
+    final selector = SizedBox(
       width: double.infinity,
       child: SegmentedButton<HapticFeedbackLevel>(
         segments: [
@@ -34,8 +35,26 @@ class HapticsLevelSelector extends ConsumerWidget {
           ),
         ],
         selected: {level},
-        onSelectionChanged: (selection) => _select(ref, selection.single),
+        // Locked to Off where nothing could play, rather than offering
+        // choices that make no difference.
+        onSelectionChanged: supported
+            ? (selection) => _select(ref, selection.single)
+            : null,
       ),
+    );
+    if (supported) return selector;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        selector,
+        const SizedBox(height: 8),
+        Text(
+          l10n.settingsHapticsUnsupported,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
     );
   }
 

@@ -1569,6 +1569,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsHapticsLevelOff => 'オフ';
 
   @override
+  String get settingsHapticsUnsupported => 'この端末は触覚フィードバックに対応していません';
+
+  @override
   String developerTestNotificationsSent(int count) {
     return 'テスト通知を$count通送りました';
   }

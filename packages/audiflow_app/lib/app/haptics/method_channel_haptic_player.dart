@@ -23,6 +23,21 @@ class MethodChannelHapticPlayer implements HapticPlayer {
   @override
   void prepare(HapticToken token) => _send('prepare', token);
 
+  /// Whether the device can play haptics at all (iPads and some Android
+  /// tablets cannot).
+  ///
+  /// Answers true when the native side fails to answer, so a lookup error
+  /// never locks the setting on a device that does have haptics.
+  Future<bool> isSupported() async {
+    try {
+      return await _channel.invokeMethod<bool>('isSupported') ?? true;
+    } on PlatformException {
+      return true;
+    } on MissingPluginException {
+      return true;
+    }
+  }
+
   // Fire-and-forget: a haptic must not delay the gesture that caused it,
   // and a missing haptic is never worth surfacing to the user, so every
   // failure is dropped rather than left as an uncaught async error.

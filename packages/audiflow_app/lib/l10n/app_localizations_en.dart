@@ -1618,6 +1618,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsHapticsLevelOff => 'Off';
 
   @override
+  String get settingsHapticsUnsupported =>
+      'This device does not support haptic feedback';
+
+  @override
   String developerTestNotificationsSent(int count) {
     return 'Sent $count test notifications';
   }
