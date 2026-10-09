@@ -35,6 +35,17 @@ DownloadTask _task(int status) => DownloadTask()
 
 DownloadTask _completed() => _task(3);
 
+/// The drag proxy once fully lifted.
+final _lifted = find.byWidgetPredicate(
+  (widget) =>
+      widget is DecoratedBox &&
+      widget.decoration is BoxDecoration &&
+      listEquals(
+        (widget.decoration as BoxDecoration).boxShadow,
+        AppShadows.floating,
+      ),
+);
+
 DownloadTask _autoCompleted() => _completed()
   ..id = 4
   ..origin = DownloadOrigin.auto.dbValue;
@@ -215,26 +226,34 @@ void main() {
     await tester.pumpAndSettle();
   });
 
+  testWidgets('holding the handle still lifts the row before it moves', (
+    tester,
+  ) async {
+    final started = <int>[];
+    await pump(tester, onReorderStart: started.add);
+    final gesture = await tester.startGesture(
+      tester.getCenter(find.byIcon(Symbols.drag_handle)),
+    );
+    await tester.pump(kLongPressTimeout + const Duration(milliseconds: 50));
+    await tester.pumpAndSettle();
+    check(started).deepEquals([0]);
+    check(_lifted.evaluate()).length.equals(1);
+    await gesture.up();
+    await tester.pumpAndSettle();
+  });
+
   testWidgets('the dragged row lifts with the floating shadow', (tester) async {
     await pump(tester);
     final gesture = await tester.startGesture(
       tester.getCenter(find.byIcon(Symbols.drag_handle)),
     );
+    // Moving at once, without the hold, still starts the drag.
     await gesture.moveBy(const Offset(0, 40));
     await tester.pumpAndSettle();
-    final lifted = find.byWidgetPredicate(
-      (widget) =>
-          widget is DecoratedBox &&
-          widget.decoration is BoxDecoration &&
-          listEquals(
-            (widget.decoration as BoxDecoration).boxShadow,
-            AppShadows.floating,
-          ),
-    );
-    check(lifted.evaluate()).length.equals(1);
+    check(_lifted.evaluate()).length.equals(1);
     await gesture.up();
     await tester.pumpAndSettle();
-    check(lifted.evaluate()).isEmpty();
+    check(_lifted.evaluate()).isEmpty();
   });
 
   testWidgets('long press just above the handle opens the menu', (

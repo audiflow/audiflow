@@ -227,15 +227,21 @@ class QueueListTile extends ConsumerWidget {
   Widget _dragHandle(AppColors colors) {
     return Padding(
       padding: const EdgeInsetsDirectional.only(end: Spacing.xs),
-      child: ReorderableDragStartListener(
+      // Both listeners compete for the same press: moving at once starts
+      // the drag immediately, while holding still lifts the row after the
+      // long-press delay, before it moves.
+      child: ReorderableDelayedDragStartListener(
         index: index,
-        // Opaque, so the whole target catches touches, not just the glyph;
-        // a near miss would otherwise land on the row's long press.
-        child: ColoredBox(
-          color: Colors.transparent,
-          child: SizedBox.square(
-            dimension: Spacing.minTouchTarget,
-            child: Icon(Symbols.drag_handle, color: colors.inkTertiary),
+        child: ReorderableDragStartListener(
+          index: index,
+          // Opaque, so the whole target catches touches, not just the
+          // glyph; a near miss would otherwise land on the row's long press.
+          child: ColoredBox(
+            color: Colors.transparent,
+            child: SizedBox.square(
+              dimension: Spacing.minTouchTarget,
+              child: Icon(Symbols.drag_handle, color: colors.inkTertiary),
+            ),
           ),
         ),
       ),
