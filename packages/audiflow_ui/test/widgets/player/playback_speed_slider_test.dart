@@ -3,7 +3,18 @@ import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+class _RecordingHapticPlayer implements HapticPlayer {
+  final played = <HapticToken>[];
+
+  @override
+  void play(HapticToken token) => played.add(token);
+
+  @override
+  void prepare(HapticToken token) {}
+}
 
 void main() {
   Widget host({
@@ -229,6 +240,46 @@ void main() {
 
       expect(changes, [1.1]);
       semantics.dispose();
+    });
+  });
+
+  group('1.0x detent', () {
+    Future<List<HapticToken>> dragAcross(
+      WidgetTester tester, {
+      required double fromFraction,
+      required double toFraction,
+    }) async {
+      final player = _RecordingHapticPlayer();
+      await tester.pumpWidget(
+        HapticsScope(
+          player: player,
+          child: host(speed: 2.0, onChanged: (_) {}),
+        ),
+      );
+      final rect = tester.getRect(find.byType(Slider)).deflate(24);
+      Offset at(double fraction) =>
+          rect.centerLeft + Offset(rect.width * fraction, 0);
+      final gesture = await tester.startGesture(at(fromFraction));
+      final steps = 40;
+      for (var i = 1; i <= steps; i++) {
+        final t = fromFraction + (toFraction - fromFraction) * i / steps;
+        await gesture.moveTo(at(t));
+        await tester.pump();
+      }
+      await gesture.up();
+      await tester.pump();
+      return player.played;
+    }
+
+    testWidgets('a drag across 1.0x plays one detent', (tester) async {
+      // The track starts at 0.5x, so 1.0x sits a quarter of the way along.
+      final played = await dragAcross(tester, fromFraction: 0, toFraction: 0.6);
+      check(played).deepEquals([HapticToken.detent]);
+    });
+
+    testWidgets('a drag that stays above 1.0x plays nothing', (tester) async {
+      final played = await dragAcross(tester, fromFraction: 0.6, toFraction: 1);
+      check(played).isEmpty();
     });
   });
 }

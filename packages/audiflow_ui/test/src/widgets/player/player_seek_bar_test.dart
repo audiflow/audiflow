@@ -1,3 +1,5 @@
+import 'package:audiflow_ui/audiflow_ui.dart'
+    show HapticPlayer, HapticToken, HapticsScope;
 import 'package:audiflow_ui/src/widgets/player/player_seek_bar.dart';
 import 'package:audiflow_ui/src/widgets/player/scrub_speed.dart';
 import 'package:checks/checks.dart';
@@ -7,6 +9,17 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 const _barWidth = 400.0;
+
+class _RecordingHapticPlayer implements HapticPlayer {
+  final played = <HapticToken>[];
+  final prepared = <HapticToken>[];
+
+  @override
+  void play(HapticToken token) => played.add(token);
+
+  @override
+  void prepare(HapticToken token) => prepared.add(token);
+}
 
 /// Records every callback the seek bar fires.
 class _SeekRecorder {
@@ -873,6 +886,72 @@ void main() {
 
       check(recorder.ends).length.equals(1);
       check(recorder.ends.single).isGreaterThan(0.6);
+    });
+
+    group('chapter detents', () {
+      const chapters = [
+        SeekBarSegment(start: 0.0, end: 0.5),
+        SeekBarSegment(start: 0.5, end: 1.0),
+      ];
+
+      testWidgets('crossing a chapter boundary plays one detent', (
+        tester,
+      ) async {
+        final player = _RecordingHapticPlayer();
+        await tester.pumpWidget(
+          HapticsScope(
+            player: player,
+            child: _host(
+              value: 0.4,
+              recorder: _SeekRecorder(),
+              segments: chapters,
+            ),
+          ),
+        );
+
+        await tester.drag(_track, const Offset(80, 0));
+        await tester.pump();
+
+        check(player.prepared).deepEquals([HapticToken.detent]);
+        check(player.played).deepEquals([HapticToken.detent]);
+      });
+
+      testWidgets('a drag inside one chapter plays nothing', (tester) async {
+        final player = _RecordingHapticPlayer();
+        await tester.pumpWidget(
+          HapticsScope(
+            player: player,
+            child: _host(
+              value: 0.1,
+              recorder: _SeekRecorder(),
+              segments: chapters,
+            ),
+          ),
+        );
+
+        await tester.drag(_track, const Offset(40, 0));
+        await tester.pump();
+
+        check(player.played).isEmpty();
+      });
+
+      testWidgets('a single-chapter track neither prepares nor plays', (
+        tester,
+      ) async {
+        final player = _RecordingHapticPlayer();
+        await tester.pumpWidget(
+          HapticsScope(
+            player: player,
+            child: _host(value: 0.1, recorder: _SeekRecorder()),
+          ),
+        );
+
+        await tester.drag(_track, const Offset(300, 0));
+        await tester.pump();
+
+        check(player.prepared).isEmpty();
+        check(player.played).isEmpty();
+      });
     });
   });
 }

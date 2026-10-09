@@ -2,12 +2,16 @@ import 'package:audiflow_core/audiflow_core.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
+import '../../haptics/haptic_token.dart';
+import '../../haptics/haptics_scope.dart';
 import 'step_drag_tracker.dart';
 
 /// Slider over [PlaybackSpeedScale.steps].
 ///
 /// It gives no haptic per step: on a device, a tick for each of the 21
-/// steps crossed in one drag felt like noise rather than feedback.
+/// steps crossed in one drag felt like noise rather than feedback. The
+/// one exception is a `detent` when a drag reaches or passes 1.0x, the
+/// speed listeners most often return to.
 ///
 /// Landmark speeds ([landmarkSpeeds]) are labelled under the exact tick
 /// they belong to, so the uneven step grid (0.1 up to 2.0, then 0.2)
@@ -94,6 +98,11 @@ class _PlaybackSpeedSliderState extends State<PlaybackSpeedSlider> {
     if (tracker == null) return;
     final position = _positionInSteps(details.localPosition, width);
     if (!tracker.update(position, _lastPointerTime)) return;
+    // Only finger travel passes the mark; the first contact's jump to the
+    // touched step does not.
+    if (_reachesNormal(_index, tracker.index)) {
+      HapticsScope.of(context).play(HapticToken.detent);
+    }
     _select(tracker.index);
   }
 
@@ -109,6 +118,17 @@ class _PlaybackSpeedSliderState extends State<PlaybackSpeedSlider> {
   void _select(int index) {
     setState(() => _dragIndex = index);
     widget.onChanged(PlaybackSpeedScale.speedForIndex(index));
+  }
+
+  static final int _normalIndex = PlaybackSpeedScale.indexForSpeed(
+    PlaybackSpeedScale.normal,
+  );
+
+  bool _reachesNormal(int from, int to) {
+    if (from == _normalIndex) return false;
+    final low = from < to ? from : to;
+    final high = from < to ? to : from;
+    return low <= _normalIndex && _normalIndex <= high;
   }
 
   void _commit(int index, {required int? startIndex}) {
