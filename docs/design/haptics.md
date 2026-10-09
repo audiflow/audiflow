@@ -96,7 +96,7 @@ Every interaction that was considered is listed here, including those that delib
 | Episode and queue long-press menus, and long-press to copy a playback record value | `longPress` |
 | Subscribe | `success` |
 | Unsubscribe | `tap` |
-| Pull-to-refresh crosses / un-crosses its threshold | `thresholdCross` / `thresholdRelease` |
+| Pull-to-refresh crosses / un-crosses its threshold | `thresholdCross` / `thresholdRelease` (release on Android only: the iOS indicator refreshes once armed and never disarms) |
 | Refresh or download failure not started by the user | `none` |
 | Download start | `none` (the snackbar is enough) |
 | Bottom tabs and screen navigation | `none` |

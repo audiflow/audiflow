@@ -784,7 +784,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
       WidgetsBinding.instance.addPostFrameCallback((_) => _releaseScrollHold());
     }
 
-    return RefreshIndicator(
+    return HapticRefreshIndicator(
       edgeOffset: FloatingNavigationBar.heightOf(context),
       onRefresh: () async {
         ref.invalidate(podcastDetailProvider(feedUrl));

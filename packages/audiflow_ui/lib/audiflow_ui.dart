@@ -15,6 +15,7 @@ export 'src/haptics/haptic_selection.dart';
 export 'src/haptics/haptic_toggle.dart';
 export 'src/haptics/haptic_token.dart';
 export 'src/haptics/haptics_scope.dart';
+export 'src/haptics/pull_to_refresh_haptics.dart';
 
 // Styles
 export 'src/styles/spacing.dart';

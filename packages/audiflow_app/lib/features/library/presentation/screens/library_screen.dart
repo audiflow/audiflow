@@ -151,7 +151,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
       return _withTitle(l10n, const _EmptyState());
     }
 
-    return RefreshIndicator(
+    return HapticRefreshIndicator(
       onRefresh: _onRefresh,
       child: CustomScrollView(
         slivers: [

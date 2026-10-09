@@ -31,7 +31,7 @@ class DeveloperSettingsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settingsDeveloperTitle)),
-      body: RefreshIndicator(
+      body: HapticRefreshIndicator(
         onRefresh: () async {
           final repo = ref.read(presetConfigRepositoryProvider);
           final rootMeta = await repo.fetchRootMeta();
