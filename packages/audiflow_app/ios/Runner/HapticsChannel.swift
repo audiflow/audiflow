@@ -51,8 +51,11 @@ final class HapticsChannel {
   private static func pattern(for token: String) -> Pattern? {
     switch token {
     case "selection", "dragStep": return .selection
-    case "toggleOn", "tap", "dragDrop": return .impact(.light, intensity: 1.0)
-    case "toggleOff": return .impact(.soft, intensity: 0.6)
+    case "tap", "dragDrop": return .impact(.light, intensity: 1.0)
+    // Switches flip often; kept near the selection tick's weight, with
+    // off softer than on so the pair stays distinguishable.
+    case "toggleOn": return .impact(.light, intensity: 0.5)
+    case "toggleOff": return .impact(.soft, intensity: 0.4)
     case "longPress", "thresholdCross", "dragPickUp": return .impact(.medium, intensity: 1.0)
     case "thresholdRelease": return .impact(.light, intensity: 0.5)
     case "detent": return .impact(.rigid, intensity: 0.5)

@@ -43,7 +43,9 @@ object HapticsChannel {
     private val mappings = mapOf(
         "selection" to Mapping(C.SEGMENT_TICK, API_34, C.CLOCK_TICK),
         "detent" to Mapping(C.SEGMENT_TICK, API_34, C.CLOCK_TICK),
-        "toggleOn" to Mapping(C.TOGGLE_ON, API_34, C.CONTEXT_CLICK),
+        // CONTEXT_CLICK felt heavier than the selection tick below API 34, so
+        // on uses the same faint tick as off there; the switch shows which.
+        "toggleOn" to Mapping(C.TOGGLE_ON, API_34, C.CLOCK_TICK),
         "toggleOff" to Mapping(C.TOGGLE_OFF, API_34, C.CLOCK_TICK),
         "tap" to Mapping(C.VIRTUAL_KEY, 0, C.VIRTUAL_KEY),
         "longPress" to Mapping(C.LONG_PRESS, 0, C.LONG_PRESS),

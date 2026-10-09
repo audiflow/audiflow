@@ -87,12 +87,18 @@ void main() {
     tester,
   ) async {
     await pumpScreen(tester);
-    await tester.tap(find.text('Reduced'));
+    // Reduced is the default: only outcome tokens such as success play.
+    await tester.tap(find.text('selection'));
+    await tester.tap(find.text('success'));
+    check(recorder.played).deepEquals([HapticToken.success]);
+    recorder.played.clear();
+
+    await tester.tap(find.text('Off'));
     await tester.pumpAndSettle();
 
     check(
       prefs.getString(SettingsKeys.hapticFeedbackLevel),
-    ).equals(HapticFeedbackLevel.reduced.name);
+    ).equals(HapticFeedbackLevel.off.name);
 
     // Choosing the level is itself a selection, played before it applies.
     check(recorder.played).deepEquals([HapticToken.selection]);
@@ -100,6 +106,6 @@ void main() {
 
     await tester.tap(find.text('selection'));
     await tester.tap(find.text('success'));
-    check(recorder.played).deepEquals([HapticToken.success]);
+    check(recorder.played).isEmpty();
   });
 }

@@ -41,8 +41,8 @@ Tokens are named by meaning. The platform columns give the realization; section 
 | Token | Meaning | iOS | Android (API 34+) | Reduced mode |
 |---|---|---|---|---|
 | `selection` | One discrete option became selected | `UISelectionFeedbackGenerator` | `SEGMENT_TICK` | off |
-| `toggleOn` | A switch turned on | `UIImpactFeedbackGenerator(.light)` | `TOGGLE_ON` | off |
-| `toggleOff` | A switch turned off | `UIImpactFeedbackGenerator(.soft)`, intensity 0.6 | `TOGGLE_OFF` | off |
+| `toggleOn` | A switch turned on | `UIImpactFeedbackGenerator(.light)`, intensity 0.5 | `TOGGLE_ON` | off |
+| `toggleOff` | A switch turned off | `UIImpactFeedbackGenerator(.soft)`, intensity 0.4 | `TOGGLE_OFF` | off |
 | `tap` | A low-key action was accepted, where the result is not otherwise felt | `UIImpactFeedbackGenerator(.light)` | `VIRTUAL_KEY` | off |
 | `longPress` | A long press reached its activation time | `UIImpactFeedbackGenerator(.medium)` | `LONG_PRESS` | off |
 | `thresholdCross` | A drag passed the point where releasing triggers an action | `UIImpactFeedbackGenerator(.medium)` | `GESTURE_THRESHOLD_ACTIVATE` | on |
@@ -113,7 +113,7 @@ Every interaction that was considered is listed here, including those that delib
 
 | Constant | Since | Substitute on older OS |
 |---|---|---|
-| `TOGGLE_ON` | 34 | `CONTEXT_CLICK` |
+| `TOGGLE_ON` | 34 | `CLOCK_TICK` |
 | `TOGGLE_OFF` | 34 | `CLOCK_TICK` |
 | `DRAG_START` | 34 | `LONG_PRESS` |
 | `SEGMENT_TICK` | 34 | `CLOCK_TICK` |
@@ -161,8 +161,8 @@ A single preference with three values:
 
 | Value | Behavior |
 |---|---|
-| On (default) | All tokens play. |
-| Reduced | Only tokens marked "on" in the Reduced column of section 2 play: outcomes (`success`, `warning`, `error`), gesture thresholds, and drag pick-up. |
+| On | All tokens play. |
+| Reduced (default) | Only tokens marked "on" in the Reduced column of section 2 play: outcomes (`success`, `warning`, `error`), gesture thresholds, and drag pick-up. |
 | Off | Nothing plays. |
 
 Reduced mode drops tokens whose effect is already obvious on screen (selection, toggles, long press, drop, detents) and keeps those that confirm something the user cannot see well while their finger covers it, or that report an outcome.
