@@ -1,6 +1,8 @@
-• Auto-downloads no longer pile up: each podcast keeps its newest unplayed episodes (3 by default, adjustable)
-• Auto-download pauses for podcasts you haven't played lately and resumes when you play one
-• Finished auto-downloads are removed on the next app launch after 24 hours (on by default; your own downloads are kept)
-• Delete pending/paused downloads, or bulk-delete by status
-• Fixed missed auto-downloads after refreshing a podcast page
-• Fixed missing download buttons on new episodes
+• New design: artwork-tinted player; new Library, Queue, Search, episode and Settings screens
+• Haptic feedback (Appearance settings)
+• Library: podcast filter; a dot marks new episodes
+• Podcasts: Played/Downloaded filters, Mark all played, Open website
+• Station edits save as you go
+• Auto-downloads keep the newest 3 unplayed, pause for podcasts you don't play, and go 24 h after you finish ("Keep download" to keep)
+• Delete downloads by status
+• Replaying keeps an episode played
