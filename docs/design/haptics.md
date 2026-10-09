@@ -83,7 +83,8 @@ Every interaction that was considered is listed here, including those that delib
 | Sleep timer option chosen | `selection` |
 | Sleep timer long press opens the keypad | `longPress` |
 | Sleep timer keypad digits | `none` (custom keypad buttons deliberately stay silent) |
-| Sleep timer fired / cancelled | `none` (the app is usually in the background; see section 6) |
+| Sleep timer cancelled by the user (sheet Cancel, chip delete) | `toggleOff` |
+| Sleep timer fired, or cancelled by leaving its target | `none` (the app is usually in the background; see section 6) |
 | Queue row swipe (remove, download) crosses / un-crosses its threshold | `thresholdCross` / `thresholdRelease` |
 | Queue and station reorder: pick up / move / drop | `dragPickUp` / `dragStep` / `dragDrop` |
 | Add-to-queue long press (Play Next) | `longPress` |

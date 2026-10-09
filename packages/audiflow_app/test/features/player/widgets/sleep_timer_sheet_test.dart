@@ -271,6 +271,26 @@ void main() {
   });
 
   group('haptics', () {
+    testWidgets('Cancel plays the toggle-off haptic', (tester) async {
+      final player = _RecordingHapticPlayer();
+      var offs = 0;
+      await tester.pumpWidget(
+        HapticsScope(
+          player: player,
+          child: _sheet(
+            config: const SleepTimerConfig.endOfEpisode(),
+            onOff: () => offs++,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Cancel'));
+
+      check(offs).equals(1);
+      check(player.played).deepEquals([HapticToken.toggleOff]);
+    });
+
     testWidgets('tapping an option plays selection', (tester) async {
       final player = _RecordingHapticPlayer();
       await tester.pumpWidget(
