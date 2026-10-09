@@ -108,6 +108,11 @@ class MenuSelectorButton<T> extends StatelessWidget {
           ),
       ],
     );
-    if (chosen != null) onSelected(choices[chosen]);
+    if (chosen == null || !context.mounted) return;
+    final choice = choices[chosen];
+    if (!_matches(choice)) {
+      HapticsScope.of(context).play(HapticToken.selection);
+    }
+    onSelected(choice);
   }
 }

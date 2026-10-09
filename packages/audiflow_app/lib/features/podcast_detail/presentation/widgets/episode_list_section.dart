@@ -66,7 +66,10 @@ class SortOrderButton extends StatelessWidget {
     final ascending = sortOrder == SortOrder.ascending;
     return InkWell(
       borderRadius: AppBorders.pill,
-      onTap: onPressed,
+      onTap: () {
+        HapticsScope.of(context).play(HapticToken.selection);
+        onPressed();
+      },
       child: ConstrainedBox(
         constraints: const BoxConstraints(minHeight: Spacing.minTouchTarget),
         child: Padding(

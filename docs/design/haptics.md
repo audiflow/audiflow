@@ -65,6 +65,10 @@ Notes:
 
 ## 3. Interaction mapping
 
+**`selection` rule.** `selection` plays whenever a persistent choice changes: which items are shown, in what order, or in what mode. It applies whatever the control looks like (segmented control, chip, picker menu, sort sheet, sort toggle button) and only when the value actually changes. It does not apply to action menus (do something once) or to navigation (tabs, the year jump picker). A new choice control follows this rule without a new table row.
+
+**`selection` rule.** `selection` plays whenever a persistent choice changes: which items are shown, in what order, or in what mode. It applies whatever the control looks like (segmented control, chip, picker menu, sort sheet, sort toggle button) and only when the value actually changes. It does not apply to action menus (do something once) or to navigation (tabs, the year jump picker). A new choice control follows this rule without a new table row.
+
 Every interaction that was considered is listed here, including those that deliberately get no haptic. When a new interaction is added, it gets a row in this table.
 
 | Screen / interaction | Token |
@@ -91,6 +95,10 @@ Every interaction that was considered is listed here, including those that delib
 | Download start | `none` (the snackbar is enough) |
 | Bottom tabs and screen navigation | `none` |
 | Segmented controls and filter chips | `selection` |
+| Podcast detail filter menu, playlist selector, and newest/oldest toggle | `selection` |
+| Episode, smart playlist, and play order sort sheets; library sort menu; search country picker | `selection` |
+| Podcast detail filter menu, playlist selector, and newest/oldest toggle | `selection` |
+| Episode, smart playlist, and play order sort sheets; library sort menu; search country picker | `selection` |
 | Settings switches (and the other preference switches: audio sheet, station filters) | `toggleOn` / `toggleOff` |
 | Clear-queue and bulk-delete confirmation | `warning` |
 | Wrong PIN and PIN lockout | `error` |

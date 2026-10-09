@@ -451,7 +451,12 @@ class _SortMenuButton extends StatelessWidget {
 
     return PopupMenuButton<PodcastSortOrder>(
       tooltip: l10n.librarySortTooltip,
-      onSelected: onSelected,
+      onSelected: (order) {
+        if (order != currentOrder) {
+          HapticsScope.of(context).play(HapticToken.selection);
+        }
+        onSelected(order);
+      },
       itemBuilder: (context) => [
         for (final order in PodcastSortOrder.values)
           _buildItem(order, _labelFor(l10n, order)),

@@ -1,5 +1,6 @@
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_core/audiflow_core.dart';
+import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 
 /// Shows a modal bottom sheet for selecting an [AutoPlayOrder].
@@ -45,7 +46,11 @@ class _PlayOrderSheet extends StatelessWidget {
       child: RadioGroup<AutoPlayOrder>(
         groupValue: currentOrder,
         onChanged: (value) {
-          if (value != null) onOrderSelected(value);
+          if (value == null) return;
+          if (value != currentOrder) {
+            HapticsScope.of(context).play(HapticToken.selection);
+          }
+          onOrderSelected(value);
         },
         child: Column(
           mainAxisSize: MainAxisSize.min,
