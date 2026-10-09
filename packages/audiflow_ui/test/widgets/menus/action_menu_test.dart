@@ -273,6 +273,55 @@ void main() {
       check(log).isEmpty();
     });
 
+    testWidgets('a root screen over a nested navigator covers the menu', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: Navigator(
+            onGenerateRoute: (_) => MaterialPageRoute<void>(
+              builder: (context) => Scaffold(
+                body: Center(
+                  child: ActionMenuTrigger(
+                    onOpen: (anchor, drag) => showActionMenu(
+                      context: anchor,
+                      placement: const ActionMenuPlacement.topRight(top: 100),
+                      sections: _sections([]),
+                    ),
+                    builder: (context, open) =>
+                        TextButton(onPressed: open, child: const Text('open')),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      final root = tester.state<NavigatorState>(find.byType(Navigator).first);
+      unawaited(
+        root.push(
+          MaterialPageRoute<void>(
+            builder: (context) => Scaffold(
+              body: TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('covering'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      check(
+        find.byKey(ActionMenu.surfaceKey).hitTestable().evaluate(),
+      ).isEmpty();
+      await tester.tap(find.text('covering'));
+      await tester.pumpAndSettle();
+      check(find.text('covering').evaluate()).isEmpty();
+    });
+
     testWidgets('Escape closes the menu', (tester) async {
       final log = <String>[];
       await open(tester, log: log);
@@ -530,6 +579,48 @@ void main() {
       final trigger = tester.getRect(find.byType(TextButton));
       final menu = tester.getRect(find.byKey(ActionMenu.surfaceKey));
       check(menu.bottom).isLessOrEqual(trigger.top);
+    });
+
+    testWidgets('stays clear of the status bar under a SafeArea', (
+      tester,
+    ) async {
+      tester.view.padding = FakeViewPadding(
+        top: 50 * tester.view.devicePixelRatio,
+      );
+      addTearDown(tester.view.resetPadding);
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: Scaffold(
+            body: SafeArea(
+              child: Align(
+                alignment: Alignment.topLeft,
+                child: ActionMenuTrigger(
+                  onOpen: (anchor, drag) => showActionMenu(
+                    context: anchor,
+                    placement: ActionMenuPlacement.below(anchor),
+                    sections: [
+                      [
+                        for (var index = 0; index < 30; index++)
+                          ActionMenuEntry(
+                            label: 'Row $index',
+                            onSelected: () {},
+                          ),
+                      ],
+                    ],
+                  ),
+                  builder: (context, open) =>
+                      TextButton(onPressed: open, child: const Text('open')),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      final menu = tester.getRect(find.byKey(ActionMenu.surfaceKey));
+      check(50.0).isLessOrEqual(menu.top);
     });
 
     testWidgets('sizes to its entries within the menu width', (tester) async {

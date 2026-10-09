@@ -261,7 +261,10 @@ class _ActionMenuState extends State<ActionMenu> {
       _AnchoredPlacement(:final anchor) => CustomSingleChildLayout(
         delegate: _AnchoredMenuLayout(
           anchor: anchor,
-          safeArea: MediaQuery.paddingOf(context),
+          // The view's own insets: the menu is laid out in screen
+          // coordinates, while the padding inherited from the trigger may
+          // already be consumed by a SafeArea around it.
+          safeArea: MediaQueryData.fromView(View.of(context)).padding,
         ),
         child: IntrinsicWidth(child: _surface(context)),
       ),
