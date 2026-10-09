@@ -365,15 +365,45 @@ class DownloadService {
     Iterable<int> taskIds, {
     required Set<DownloadStatus> statuses,
   }) async {
-    var deleted = 0;
-    for (final id in taskIds.toSet()) {
-      final task = await _repository.getById(id);
-      if (task == null || !statuses.contains(task.downloadStatus)) continue;
-      await _deleteTask(task);
-      deleted++;
+    final ids = taskIds.toSet();
+    final cancelled = await _cancelActiveTasksStillIn(ids, statuses);
+    // The records go in one transaction and the files in one directory
+    // sweep, and stations are reconciled once per station: done per task,
+    // each step repeats work that a bulk delete multiplies by the number
+    // of downloads. Rows are re-read inside the transaction, so a task that
+    // left [statuses] since is kept unless this call cancelled it.
+    final deleted = await _repository.removeTasksWithFiles(
+      taskIds: ids,
+      isRemovable: (task) =>
+          cancelled.contains(task.id) || statuses.contains(task.downloadStatus),
+      removeFiles: (tasks) => _fileService.deleteEpisodesFiles({
+        for (final task in tasks) task.episodeId: task.localPath,
+      }),
+    );
+    if (deleted.isEmpty) return 0;
+    await _tryReconcileAll([for (final task in deleted) task.episodeId]);
+    _logger.i('Deleted ${deleted.length} of ${ids.length} confirmed downloads');
+    return deleted.length;
+  }
+
+  /// Cancels the active tasks of [taskIds] still in [statuses], awaiting
+  /// each until its transfer has stopped, as in [_deleteTask]. Each row is
+  /// re-read just before, so one that left [statuses] is left running.
+  /// Returns the IDs cancelled.
+  Future<Set<int>> _cancelActiveTasksStillIn(
+    Set<int> taskIds,
+    Set<DownloadStatus> statuses,
+  ) async {
+    final cancelled = <int>{};
+    for (final id in taskIds) {
+      final status = (await _repository.getById(id))?.downloadStatus;
+      if (status == null || !status.isActive || !statuses.contains(status)) {
+        continue;
+      }
+      await _queueService.cancelDownload(id);
+      cancelled.add(id);
     }
-    _logger.i('Deleted $deleted of ${taskIds.length} confirmed downloads');
-    return deleted;
+    return cancelled;
   }
 
   Future<void> _deleteTask(DownloadTask task) async {
@@ -398,6 +428,18 @@ class DownloadService {
     );
     _logger.i('Deleted download: ${task.id}');
     await _tryReconcile(task.episodeId);
+  }
+
+  /// Best-effort station reconciliation for a batch of episodes.
+  Future<void> _tryReconcileAll(List<int> episodeIds) async {
+    try {
+      await _reconcilerService?.onEpisodesChanged(episodeIds);
+    } on Exception catch (e) {
+      _logger.w(
+        'Station reconciliation failed for ${episodeIds.length} episodes',
+        error: e,
+      );
+    }
   }
 
   /// Best-effort station reconciliation.

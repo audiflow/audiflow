@@ -65,6 +65,21 @@ abstract class DownloadRepository {
     int? fileRemovalId,
   });
 
+  /// [removeEpisodeFiles] for many tasks in one transaction. Re-reads the
+  /// tasks [taskIds], deletes those [isRemovable] accepts, then removes
+  /// with [removeFiles] the files of their episodes that have no task left.
+  /// Returns the deleted tasks.
+  ///
+  /// [removeFiles] returns the episodes whose files it could not delete;
+  /// they are recorded as pending file removals, retried by
+  /// [DownloadService.retryFileRemovals]. If [removeFiles] throws, nothing
+  /// changes.
+  Future<List<DownloadTask>> removeTasksWithFiles({
+    required Iterable<int> taskIds,
+    required bool Function(DownloadTask task) isRemovable,
+    required Future<Set<int>> Function(List<DownloadTask> tasks) removeFiles,
+  });
+
   /// Returns a download task by ID.
   Future<DownloadTask?> getById(int id);
 

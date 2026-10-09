@@ -52,9 +52,9 @@ Episode _episode({
 }
 
 void main() {
-  late MockDownloadRepository mockRepository;
+  late _BatchRemovingRepository mockRepository;
   late MockDownloadQueueService mockQueueService;
-  late MockDownloadFileService mockFileService;
+  late _RecordingFileService mockFileService;
   late MockEpisodeRepository mockEpisodeRepo;
   late MockSubscriptionRepository mockSubscriptionRepo;
   late FakeAnalyticsService fakeAnalytics;
@@ -63,9 +63,9 @@ void main() {
   late int batchDownloadLimit;
 
   setUp(() {
-    mockRepository = MockDownloadRepository();
+    mockRepository = _BatchRemovingRepository();
     mockQueueService = MockDownloadQueueService();
-    mockFileService = MockDownloadFileService();
+    mockFileService = _RecordingFileService();
     mockEpisodeRepo = MockEpisodeRepository();
     mockSubscriptionRepo = MockSubscriptionRepository();
     fakeAnalytics = FakeAnalyticsService();
@@ -594,33 +594,39 @@ void main() {
       const DownloadStatus.pending(),
       const DownloadStatus.paused(),
     };
+    List<List<int>> removedTaskIds() => mockRepository.removedTaskIds;
 
-    test('deletes the confirmed tasks, cancelling active ones', () async {
+    setUp(() {
+      when(mockQueueService.cancelDownload(any)).thenAnswer((_) async {});
+    });
+
+    test('deletes the confirmed tasks in one batch, cancelling active '
+        'ones', () async {
       // status=0 is pending, status=2 is paused (both active)
       when(
         mockRepository.getById(1),
-      ).thenAnswer((_) async => _task(id: 1, status: 0));
+      ).thenAnswer((_) async => _task(id: 1, episodeId: 10, status: 0));
       when(mockRepository.getById(2)).thenAnswer(
-        (_) async => _task(id: 2, status: 2, localPath: '/downloads/ep2.mp3'),
-      );
-      when(mockQueueService.cancelDownload(any)).thenAnswer((_) async {});
-      when(
-        mockFileService.deleteEpisodeFiles(
-          any,
-          storedPath: anyNamed('storedPath'),
+        (_) async => _task(
+          id: 2,
+          episodeId: 20,
+          status: 2,
+          localPath: '/downloads/ep2.mp3',
         ),
-      ).thenAnswer((_) async {});
+      );
 
       final deleted = await service.deleteTasks([1, 2], statuses: queued);
 
-      expect(deleted, 2);
+      check(deleted).equals(2);
       verify(mockQueueService.cancelDownload(1)).called(1);
       verify(mockQueueService.cancelDownload(2)).called(1);
-      verify(
-        mockFileService.deleteEpisodeFiles(1, storedPath: '/downloads/ep2.mp3'),
-      ).called(1);
-      verify(removalOfTask(1)).called(1);
-      verify(removalOfTask(2)).called(1);
+      check(removedTaskIds()).deepEquals([
+        [1, 2],
+      ]);
+      check(mockFileService.removedStoredPaths).deepEquals([
+        {10: null, 20: '/downloads/ep2.mp3'},
+      ]);
+      verifyNever(removalOfTask(null));
     });
 
     test('skips a task that left the confirmed statuses', () async {
@@ -631,16 +637,78 @@ void main() {
 
       final deleted = await service.deleteTasks([1], statuses: queued);
 
-      expect(deleted, 0);
+      check(deleted).equals(0);
       verifyNever(mockQueueService.cancelDownload(any));
-      verifyNever(removalOfTask(null));
+      check(removedTaskIds()).isEmpty();
     });
 
     test('skips a task that no longer exists', () async {
       when(mockRepository.getById(1)).thenAnswer((_) async => null);
 
-      expect(await service.deleteTasks([1], statuses: queued), 0);
-      verifyNever(removalOfTask(null));
+      check(await service.deleteTasks([1], statuses: queued)).equals(0);
+      check(removedTaskIds()).isEmpty();
+    });
+
+    test('reconciles stations once for the whole batch', () async {
+      final reconciler = _RecordingReconciler();
+      service = DownloadService(
+        repository: mockRepository,
+        queueService: mockQueueService,
+        fileService: mockFileService,
+        episodeRepository: mockEpisodeRepo,
+        subscriptionRepository: mockSubscriptionRepo,
+        logger: Logger(level: Level.off),
+        getWifiOnly: () => false,
+        getBatchDownloadLimit: () => 0,
+        reconcilerService: reconciler,
+      );
+      when(
+        mockRepository.getById(1),
+      ).thenAnswer((_) async => _task(id: 1, episodeId: 10, status: 3));
+      when(
+        mockRepository.getById(2),
+      ).thenAnswer((_) async => _task(id: 2, episodeId: 20, status: 3));
+
+      await service.deleteTasks(
+        [1, 2],
+        statuses: {const DownloadStatus.completed()},
+      );
+
+      check(reconciler.single).isEmpty();
+      check(reconciler.batches).deepEquals([
+        [10, 20],
+      ]);
+    });
+
+    test('keeps a task that left the statuses before the batch '
+        'transaction', () async {
+      // Failed when confirmed, retried (pending again) by the time the
+      // transaction re-reads it.
+      final reads = [_task(id: 1, status: 4), _task(id: 1, status: 0)];
+      when(mockRepository.getById(1)).thenAnswer(
+        (_) async => reads.length == 1 ? reads.first : reads.removeAt(0),
+      );
+
+      final deleted = await service.deleteTasks(
+        [1],
+        statuses: {const DownloadStatus.failed()},
+      );
+
+      check(deleted).equals(0);
+      check(removedTaskIds()).isEmpty();
+    });
+
+    test('deletes a task it cancelled although its status changed', () async {
+      // Pending when re-read before the cancel, cancelled afterwards.
+      final reads = [_task(id: 1, status: 0), _task(id: 1, status: 5)];
+      when(mockRepository.getById(1)).thenAnswer(
+        (_) async => reads.length == 1 ? reads.first : reads.removeAt(0),
+      );
+
+      final deleted = await service.deleteTasks([1], statuses: queued);
+
+      check(deleted).equals(1);
+      verify(mockQueueService.cancelDownload(1)).called(1);
     });
 
     test('deletes a repeated ID once', () async {
@@ -653,8 +721,10 @@ void main() {
         statuses: {const DownloadStatus.completed()},
       );
 
-      expect(deleted, 1);
-      verify(removalOfTask(1)).called(1);
+      check(deleted).equals(1);
+      check(removedTaskIds()).deepEquals([
+        [1],
+      ]);
     });
   });
 
@@ -1052,4 +1122,54 @@ void main() {
       check(queued).equals(1);
     });
   });
+}
+
+/// Records which episodes were reconciled, singly or as a batch.
+class _RecordingReconciler implements StationReconcilerService {
+  final single = <int>[];
+  final batches = <List<int>>[];
+
+  @override
+  Future<void> onEpisodeChanged(int episodeId) async => single.add(episodeId);
+
+  @override
+  Future<void> onEpisodesChanged(Iterable<int> episodeIds) async =>
+      batches.add(episodeIds.toList());
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+/// Runs the batch removal the way the real repository does inside its
+/// transaction: re-reads each task through the stubbed [getById], keeps
+/// those `isRemovable` accepts, and removes files for every episode.
+class _BatchRemovingRepository extends MockDownloadRepository {
+  final removedTaskIds = <List<int>>[];
+
+  @override
+  Future<List<DownloadTask>> removeTasksWithFiles({
+    required Iterable<int> taskIds,
+    required bool Function(DownloadTask task) isRemovable,
+    required Future<Set<int>> Function(List<DownloadTask> tasks) removeFiles,
+  }) async {
+    final tasks = [
+      for (final id in taskIds)
+        if (await getById(id) case final task? when isRemovable(task)) task,
+    ];
+    if (tasks.isEmpty) return tasks;
+    removedTaskIds.add([for (final task in tasks) task.id]);
+    await removeFiles(tasks);
+    return tasks;
+  }
+}
+
+/// Records the batch file removals instead of touching the disk.
+class _RecordingFileService extends MockDownloadFileService {
+  final removedStoredPaths = <Map<int, String?>>[];
+
+  @override
+  Future<Set<int>> deleteEpisodesFiles(Map<int, String?> storedPaths) async {
+    removedStoredPaths.add(storedPaths);
+    return const {};
+  }
 }

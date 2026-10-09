@@ -631,6 +631,133 @@ void main() {
     });
   });
 
+  group('removeTasksWithFiles', () {
+    Future<DownloadTask> request(int episodeId) async =>
+        (await repository.createDownload(
+          episodeId: episodeId,
+          audioUrl: 'https://example.com/ep$episodeId.mp3',
+          wifiOnly: true,
+        ))!;
+
+    Future<List<DownloadTask>> removeAll(
+      List<int> taskIds, {
+      bool Function(DownloadTask task)? isRemovable,
+      List<List<int>>? removedEpisodes,
+      Set<int> failed = const {},
+    }) => repository.removeTasksWithFiles(
+      taskIds: taskIds,
+      isRemovable: isRemovable ?? (_) => true,
+      removeFiles: (tasks) async {
+        removedEpisodes?.add([for (final task in tasks) task.episodeId]);
+        return failed;
+      },
+    );
+
+    test('deletes the tasks and removes their episodes\' files', () async {
+      final first = await request(1);
+      final second = await request(2);
+      final removed = <List<int>>[];
+
+      final deleted = await removeAll([
+        first.id,
+        second.id,
+      ], removedEpisodes: removed);
+
+      check(deleted.map((task) => task.id)).deepEquals([first.id, second.id]);
+      check(removed).deepEquals([
+        [1, 2],
+      ]);
+      check(await repository.getAll()).isEmpty();
+      check(await repository.getPendingFileRemovals()).isEmpty();
+    });
+
+    test('keeps a task the re-read finds not removable', () async {
+      final task = await request(1);
+      await repository.updateStatus(
+        id: task.id,
+        status: const DownloadStatus.completed(),
+      );
+      final removed = <List<int>>[];
+
+      final deleted = await removeAll(
+        [task.id],
+        isRemovable: (task) => task.downloadStatus.isActive,
+        removedEpisodes: removed,
+      );
+
+      check(deleted).isEmpty();
+      check(removed).isEmpty();
+      check(await repository.getById(task.id)).isNotNull();
+    });
+
+    test('leaves the files of an episode that still has a task', () async {
+      final first = await request(1);
+      final second = await request(2);
+      final removed = <List<int>>[];
+
+      await removeAll(
+        [first.id, second.id],
+        // Episode 2 was downloaded again under a task this call keeps.
+        isRemovable: (task) => task.id == first.id,
+        removedEpisodes: removed,
+      );
+
+      check(removed).deepEquals([
+        [1],
+      ]);
+      check(await repository.getById(second.id)).isNotNull();
+    });
+
+    test('records files it could not remove for a retry', () async {
+      final first = await request(1);
+      final second = await request(2);
+
+      await removeAll([first.id, second.id], failed: {2});
+
+      check(await repository.getAll()).isEmpty();
+      final pending = await repository.getPendingFileRemovals();
+      check(pending.map((removal) => removal.episodeId)).deepEquals([2]);
+    });
+
+    test('keeps the stored path of a removal already pending', () async {
+      final old = await repository.createDownload(
+        episodeId: 1,
+        audioUrl: 'https://example.com/ep1.mp3',
+        wifiOnly: true,
+        origin: DownloadOrigin.auto,
+      );
+      await repository.updateStatus(
+        id: old!.id,
+        status: const DownloadStatus.completed(),
+        localPath: '/downloads/legacy-name.mp3',
+      );
+      await repository.deleteIfAuto(old.id);
+      final current = await request(1);
+
+      await removeAll([current.id], failed: {1});
+
+      final pending = await repository.getPendingFileRemovals();
+      check(
+        pending.map((removal) => removal.storedPath),
+      ).deepEquals(['/downloads/legacy-name.mp3']);
+    });
+
+    test('a thrown removal keeps every task', () async {
+      final first = await request(1);
+      final second = await request(2);
+
+      await check(
+        repository.removeTasksWithFiles(
+          taskIds: [first.id, second.id],
+          isRemovable: (_) => true,
+          removeFiles: (_) async => throw const FormatException('disk'),
+        ),
+      ).throws<FormatException>();
+
+      check(await repository.getAll()).length.equals(2);
+    });
+  });
+
   group('delete', () {
     test('removes download task', () async {
       final task = await repository.createDownload(
