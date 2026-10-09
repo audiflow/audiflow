@@ -246,13 +246,13 @@ void main() {
   });
 
   group('HapticFeedbackLevel', () {
-    test('returns default (reduced) when no value stored', () {
+    test('returns default (on) when no value stored', () {
       check(
         repository.getHapticFeedbackLevel(),
       ).equals(SettingsDefaults.hapticFeedbackLevel);
       check(
         SettingsDefaults.hapticFeedbackLevel,
-      ).equals(HapticFeedbackLevel.reduced);
+      ).equals(HapticFeedbackLevel.on);
     });
 
     for (final level in HapticFeedbackLevel.values) {

@@ -40,7 +40,6 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
   bool _nameInitialized = false;
   bool _isReorderMode = false;
   bool _pickerOpened = false;
-  int? _expandedPodcastId;
 
   /// Whether the initial auto-focus has been consumed.
   /// After this, only user taps may focus the name field.
@@ -734,8 +733,6 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
     Subscription? sub,
   ) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final isExpanded = _expandedPodcastId == podcastId;
     final perPodcastLimit = state.podcastEpisodeLimits[podcastId];
     // null = use default; allEpisodesSentinel (0) = explicit "all episodes"
     final effectiveLimit = perPodcastLimit == allEpisodesSentinel
@@ -745,116 +742,115 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
         ? l10n.stationAllEpisodes
         : _episodeLimitLabel(l10n, effectiveLimit);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          leading: _buildPodcastArtwork(context, sub?.artworkUrl),
-          title: Text(
-            sub?.title ?? '',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                limitLabel,
-                style: TextStyle(
-                  color: isExpanded
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(width: 4),
-              Icon(
-                isExpanded ? Icons.expand_less : Icons.expand_more,
-                color: isExpanded
-                    ? theme.colorScheme.primary
-                    : theme.colorScheme.onSurfaceVariant,
-              ),
-            ],
-          ),
-          onTap: () {
-            setState(() => _expandedPodcastId = isExpanded ? null : podcastId);
-          },
-        ),
-        if (isExpanded)
-          _buildPerPodcastLimitChips(context, state, controller, podcastId),
-      ],
-    );
-  }
-
-  Widget _buildPerPodcastLimitChips(
-    BuildContext context,
-    StationEditState state,
-    StationEditController controller,
-    int podcastId,
-  ) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    const options = <int?>[1, 2, 3, 4, 5, 10, null]; // null = All
-    final defaultLimit = state.defaultEpisodeLimit;
-    final defaultLabel = defaultLimit == null
-        ? l10n.stationDefaultAll
-        : l10n.stationDefault(_episodeLimitLabel(l10n, defaultLimit));
-
-    return Padding(
-      padding: const EdgeInsets.only(left: Spacing.lg, bottom: Spacing.sm),
-      child: Wrap(
-        spacing: Spacing.xs,
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: _buildPodcastArtwork(context, sub?.artworkUrl),
+      title: Text(
+        sub?.title ?? '',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // "Default(N)" chip — selected when no override is set.
-          ChoiceChip(
-            label: Text(defaultLabel),
-            selected: !state.podcastEpisodeLimits.containsKey(podcastId),
-            onSelected: (_) {
-              if (state.podcastEpisodeLimits.containsKey(podcastId)) {
-                HapticsScope.of(context).play(HapticToken.selection);
-              }
-              controller.setPodcastEpisodeLimit(podcastId, null);
-              // Remove override (null removes from map in controller).
-            },
+          Text(
+            limitLabel,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
-          ...options.map((opt) {
-            final label = opt == null
-                ? l10n.stationAllEpisodes
-                : _episodeLimitLabel(l10n, opt);
-            // For "All" chip (opt == null), selected when sentinel is stored.
-            // For numeric chips, selected when map contains exact value.
-            final isSelected = opt == null
-                ? state.podcastEpisodeLimits[podcastId] == allEpisodesSentinel
-                : (state.podcastEpisodeLimits.containsKey(podcastId) &&
-                      state.podcastEpisodeLimits[podcastId] == opt);
-            return ChoiceChip(
-              label: Text(label),
-              selected: isSelected,
-              selectedColor: theme.colorScheme.primaryContainer,
-              onSelected: (_) {
-                if (!isSelected) {
-                  HapticsScope.of(context).play(HapticToken.selection);
-                }
-                if (opt == null) {
-                  _setAllEpisodesOverride(controller, podcastId);
-                } else {
-                  controller.setPodcastEpisodeLimit(podcastId, opt);
-                }
-              },
-            );
-          }),
+          const Icon(Icons.chevron_right),
         ],
+      ),
+      onTap: () => _showPodcastEpisodeLimitPicker(
+        state,
+        controller,
+        podcastId,
+        sub?.title,
       ),
     );
   }
 
-  void _setAllEpisodesOverride(
+  void _showPodcastEpisodeLimitPicker(
+    StationEditState state,
     StationEditController controller,
     int podcastId,
+    String? podcastTitle,
   ) {
-    // Store the sentinel value (0) to distinguish "explicitly all episodes"
-    // from "use station default" (null / absent from map).
-    controller.setPodcastEpisodeLimit(podcastId, allEpisodesSentinel);
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) => _buildPodcastEpisodeLimitSheet(
+        ctx,
+        state,
+        controller,
+        podcastId,
+        podcastTitle,
+      ),
+    );
+  }
+
+  Widget _buildPodcastEpisodeLimitSheet(
+    BuildContext ctx,
+    StationEditState state,
+    StationEditController controller,
+    int podcastId,
+    String? podcastTitle,
+  ) {
+    final l10n = AppLocalizations.of(ctx);
+    const options = <int?>[1, 2, 3, 4, 5, 10, null]; // null = All
+    final defaultLimit = state.defaultEpisodeLimit;
+    final override = state.podcastEpisodeLimits[podcastId];
+    final hasOverride = state.podcastEpisodeLimits.containsKey(podcastId);
+
+    Widget option(String label, {required bool isSelected, int? value}) {
+      return ListTile(
+        title: Text(label),
+        trailing: isSelected
+            ? Icon(Icons.check, color: Theme.of(ctx).colorScheme.primary)
+            : null,
+        onTap: () {
+          if (!isSelected) {
+            HapticsScope.of(context).play(HapticToken.selection);
+          }
+          // null removes the override; the sentinel stores "all episodes".
+          controller.setPodcastEpisodeLimit(podcastId, value);
+          Navigator.pop(ctx);
+        },
+      );
+    }
+
+    return SafeArea(
+      child: ListView(
+        shrinkWrap: true,
+        children: [
+          if (podcastTitle != null && podcastTitle.isNotEmpty)
+            ListTile(
+              title: Text(
+                podcastTitle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(ctx).textTheme.titleSmall,
+              ),
+            ),
+          option(
+            defaultLimit == null
+                ? l10n.stationDefaultAll
+                : l10n.stationDefault(_episodeLimitLabel(l10n, defaultLimit)),
+            isSelected: !hasOverride,
+          ),
+          ...options.map(
+            (opt) => option(
+              opt == null
+                  ? l10n.stationAllEpisodes
+                  : _episodeLimitLabel(l10n, opt),
+              isSelected:
+                  hasOverride && override == (opt ?? allEpisodesSentinel),
+              value: opt ?? allEpisodesSentinel,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildPodcastArtwork(BuildContext context, String? artworkUrl) {
