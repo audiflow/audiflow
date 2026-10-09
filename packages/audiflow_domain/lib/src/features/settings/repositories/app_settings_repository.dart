@@ -81,6 +81,12 @@ abstract class AppSettingsRepository {
   /// Persists the duck interruption behavior preference.
   Future<void> setDuckInterruptionBehavior(DuckInterruptionBehavior behavior);
 
+  /// How much haptic feedback the app plays.
+  HapticFeedbackLevel getHapticFeedbackLevel();
+
+  /// Persists the haptic feedback level.
+  Future<void> setHapticFeedbackLevel(HapticFeedbackLevel level);
+
   /// Whether the player shows remaining time instead of total duration
   /// in its right-hand time label.
   bool getShowRemainingTime();

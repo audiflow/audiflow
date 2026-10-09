@@ -244,6 +244,32 @@ void main() {
     });
   });
 
+  group('HapticFeedbackLevel', () {
+    test('returns default (on) when no value stored', () {
+      expect(
+        repository.getHapticFeedbackLevel(),
+        SettingsDefaults.hapticFeedbackLevel,
+      );
+      expect(SettingsDefaults.hapticFeedbackLevel, HapticFeedbackLevel.on);
+    });
+
+    for (final level in HapticFeedbackLevel.values) {
+      test('persists and reads ${level.name}', () async {
+        await repository.setHapticFeedbackLevel(level);
+        expect(repository.getHapticFeedbackLevel(), level);
+      });
+    }
+
+    test('returns default for unknown stored value', () async {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(SettingsKeys.hapticFeedbackLevel, 'loud');
+      expect(
+        repository.getHapticFeedbackLevel(),
+        SettingsDefaults.hapticFeedbackLevel,
+      );
+    });
+  });
+
   group('ShowRemainingTime', () {
     test('returns default true when no value stored', () {
       expect(repository.getShowRemainingTime(), isTrue);

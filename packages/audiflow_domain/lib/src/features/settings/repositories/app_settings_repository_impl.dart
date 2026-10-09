@@ -136,6 +136,17 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
   }
 
   @override
+  HapticFeedbackLevel getHapticFeedbackLevel() {
+    final name = _ds.getString(SettingsKeys.hapticFeedbackLevel);
+    return _parseHapticFeedbackLevel(name);
+  }
+
+  @override
+  Future<void> setHapticFeedbackLevel(HapticFeedbackLevel level) async {
+    await _ds.setString(SettingsKeys.hapticFeedbackLevel, level.name);
+  }
+
+  @override
   bool getShowRemainingTime() =>
       _ds.getBool(SettingsKeys.showRemainingTime) ??
       SettingsDefaults.showRemainingTime;
@@ -342,6 +353,15 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
       'duck' => DuckInterruptionBehavior.duck,
       'pause' => DuckInterruptionBehavior.pause,
       _ => SettingsDefaults.duckInterruptionBehavior,
+    };
+  }
+
+  HapticFeedbackLevel _parseHapticFeedbackLevel(String? name) {
+    return switch (name) {
+      'on' => HapticFeedbackLevel.on,
+      'reduced' => HapticFeedbackLevel.reduced,
+      'off' => HapticFeedbackLevel.off,
+      _ => SettingsDefaults.hapticFeedbackLevel,
     };
   }
 

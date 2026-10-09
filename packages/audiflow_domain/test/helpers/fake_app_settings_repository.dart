@@ -19,6 +19,8 @@ class FakeAppSettingsRepository implements AppSettingsRepository {
   AutoPlayOrder autoPlayOrder = AutoPlayOrder.oldestFirst;
   DuckInterruptionBehavior duckInterruptionBehavior =
       SettingsDefaults.duckInterruptionBehavior;
+  HapticFeedbackLevel hapticFeedbackLevel =
+      SettingsDefaults.hapticFeedbackLevel;
   bool showRemainingTime = true;
   bool skipSilence = false;
   bool voiceBoost = false;
@@ -115,6 +117,13 @@ class FakeAppSettingsRepository implements AppSettingsRepository {
   Future<void> setDuckInterruptionBehavior(
     DuckInterruptionBehavior behavior,
   ) async => duckInterruptionBehavior = behavior;
+
+  @override
+  HapticFeedbackLevel getHapticFeedbackLevel() => hapticFeedbackLevel;
+
+  @override
+  Future<void> setHapticFeedbackLevel(HapticFeedbackLevel level) async =>
+      hapticFeedbackLevel = level;
 
   @override
   bool getShowRemainingTime() => showRemainingTime;
