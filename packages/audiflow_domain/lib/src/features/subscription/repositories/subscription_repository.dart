@@ -23,7 +23,12 @@ abstract class SubscriptionRepository {
 
   /// Unsubscribes from a podcast by its iTunes ID.
   ///
-  /// Throws [SubscriptionNotFoundException] if the subscription doesn't exist.
+  /// Demotes the subscription to a cached entry rather than deleting it, so
+  /// a later [subscribe] promotes the same entry and the podcast keeps its
+  /// id, episodes, and playback history.
+  ///
+  /// Throws [SubscriptionNotFoundException] if no real (non-cached)
+  /// subscription exists.
   Future<void> unsubscribe(String itunesId);
 
   /// Returns whether the user is subscribed to a podcast.

@@ -54,12 +54,13 @@ class StationReconcilerService {
     await _reconciler.reconcileFull(stationId);
   }
 
-  /// Called when a subscription is deleted.
+  /// Called when a podcast stops being a subscription: unsubscribed (demoted
+  /// to a cached entry) or deleted outright.
   ///
   /// Removes orphaned [StationPodcast] entries for the given podcast, then
   /// runs full reconciliation for each affected station so that orphaned
   /// [StationEpisode] rows are also cleaned up.
-  Future<void> onSubscriptionDeleted(int podcastId) async {
+  Future<void> onSubscriptionRemoved(int podcastId) async {
     // Capture affected stations before deleting the link rows.
     final stationPodcasts = await _isar.stationPodcasts
         .filter()
