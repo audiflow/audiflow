@@ -202,8 +202,9 @@ state and resume position stay coherent no matter where the listener touches it.
 - Scrubbing is delta-based: a horizontal drag moves the position by the finger's travel from
   the current position instead of jumping to the touch point, and a tap on the track never
   seeks. The seek bar gives no haptic while scrubbing except a detent haptic each time the
-  drag crosses a chapter boundary (episodes with chapters only) and a firmer one when it
-  reaches the start or the end of the episode.
+  drag crosses a chapter boundary (episodes with chapters only), a firmer one when it
+  reaches the start or the end of the episode, and the lightest tick each time the fine
+  scrubbing speed changes (not played at the Reduced haptics level).
 - Fine scrubbing: once a drag has started, moving the finger vertically away from the track
   (up or down) scales how far horizontal travel moves the position: full speed within 50 pt,
   half speed from 50 pt, quarter speed from 100 pt, and one eighth from 150 pt. A localized label ("Scrubbing (half speed)",
