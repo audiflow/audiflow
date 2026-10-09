@@ -17,10 +17,23 @@ Future<void> deleteEpisodeDownloadFiles({
   required String downloadsDir,
   required int episodeId,
   String? storedPath,
+}) => deleteEpisodesDownloadFiles(
+  downloadsDir: downloadsDir,
+  storedPaths: {episodeId: storedPath},
+);
+
+/// [deleteEpisodeDownloadFiles] for many episodes, listing [downloadsDir]
+/// once instead of once per episode. [storedPaths] maps each episode ID to
+/// its task's stored path, if any.
+Future<void> deleteEpisodesDownloadFiles({
+  required String downloadsDir,
+  required Map<int, String?> storedPaths,
 }) async {
+  if (storedPaths.isEmpty) return;
   final paths = <String>{
-    if (storedPath != null) p.join(downloadsDir, p.basename(storedPath)),
-    ...await _filesWithPrefix(downloadsDir, '${episodeId}_'),
+    for (final storedPath in storedPaths.values)
+      if (storedPath != null) p.join(downloadsDir, p.basename(storedPath)),
+    ...await _filesOfEpisodes(downloadsDir, storedPaths.keys.toSet()),
   };
   for (final path in paths) {
     final file = File(path);
@@ -28,12 +41,23 @@ Future<void> deleteEpisodeDownloadFiles({
   }
 }
 
-Future<List<String>> _filesWithPrefix(String directory, String prefix) async {
+Future<List<String>> _filesOfEpisodes(
+  String directory,
+  Set<int> episodeIds,
+) async {
   final dir = Directory(directory);
   if (!await dir.exists()) return const [];
   return [
     await for (final entity in dir.list(followLinks: false))
-      if (entity is File && p.basename(entity.path).startsWith(prefix))
+      if (entity is File && episodeIds.contains(_episodeIdOf(entity.path)))
         entity.path,
   ];
+}
+
+final _episodeIdPrefix = RegExp(r'^(\d+)_');
+
+/// The episode ID a `<episodeId>_...` download file is named after.
+int? _episodeIdOf(String path) {
+  final match = _episodeIdPrefix.firstMatch(p.basename(path));
+  return match == null ? null : int.parse(match.group(1)!);
 }

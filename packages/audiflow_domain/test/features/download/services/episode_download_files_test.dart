@@ -65,6 +65,25 @@ void main() {
     check(legacy.existsSync()).isFalse();
   });
 
+  test('removes the files of many episodes in one sweep', () async {
+    final first = write('12_First.mp3');
+    final second = write('34_Second.mp3');
+    final legacy = write('legacy-name.mp3');
+    final other = write('56_Other.mp3');
+    final unnumbered = write('x12_Other.mp3');
+
+    await deleteEpisodesDownloadFiles(
+      downloadsDir: downloadsDir.path,
+      storedPaths: {12: null, 34: '/old/downloads/legacy-name.mp3'},
+    );
+
+    check(first.existsSync()).isFalse();
+    check(second.existsSync()).isFalse();
+    check(legacy.existsSync()).isFalse();
+    check(other.existsSync()).isTrue();
+    check(unnumbered.existsSync()).isTrue();
+  });
+
   test('does nothing when the downloads directory does not exist', () async {
     await deleteEpisodeDownloadFiles(
       downloadsDir: p.join(downloadsDir.path, 'missing'),

@@ -631,6 +631,67 @@ void main() {
     });
   });
 
+  group('removeTasksWithFiles', () {
+    Future<DownloadTask> request(int episodeId) async =>
+        (await repository.createDownload(
+          episodeId: episodeId,
+          audioUrl: 'https://example.com/ep$episodeId.mp3',
+          wifiOnly: true,
+        ))!;
+
+    test('deletes the tasks and removes their episodes\' files', () async {
+      final first = await request(1);
+      final second = await request(2);
+      final removed = <Set<int>>[];
+
+      final ran = await repository.removeTasksWithFiles(
+        tasks: [first, second],
+        removeFiles: (episodeIds) async => removed.add(episodeIds),
+      );
+
+      check(ran).deepEquals({1, 2});
+      check(removed).deepEquals([
+        {1, 2},
+      ]);
+      check(await repository.getAll()).isEmpty();
+    });
+
+    test('leaves the files of an episode that still has a task', () async {
+      final first = await request(1);
+      final current = await request(2);
+      // Read before the episode was downloaded again under a new task.
+      final stale = DownloadTask()
+        ..id = current.id + 100
+        ..episodeId = 2
+        ..audioUrl = 'https://example.com/ep2.mp3';
+      final removed = <Set<int>>[];
+
+      await repository.removeTasksWithFiles(
+        tasks: [first, stale],
+        removeFiles: (episodeIds) async => removed.add(episodeIds),
+      );
+
+      check(removed).deepEquals([
+        {1},
+      ]);
+      check(await repository.getById(current.id)).isNotNull();
+    });
+
+    test('a failed removal keeps every task', () async {
+      final first = await request(1);
+      final second = await request(2);
+
+      await check(
+        repository.removeTasksWithFiles(
+          tasks: [first, second],
+          removeFiles: (_) async => throw const FormatException('disk'),
+        ),
+      ).throws<FormatException>();
+
+      check(await repository.getAll()).length.equals(2);
+    });
+  });
+
   group('delete', () {
     test('removes download task', () async {
       final task = await repository.createDownload(

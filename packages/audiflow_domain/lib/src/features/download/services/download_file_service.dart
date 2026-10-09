@@ -186,6 +186,15 @@ class DownloadFileService {
     );
   }
 
+  /// [deleteEpisodeFiles] for many episodes at once. [storedPaths] maps
+  /// each episode ID to its task's stored path, if any.
+  Future<void> deleteEpisodesFiles(Map<int, String?> storedPaths) async {
+    await deleteEpisodesDownloadFiles(
+      downloadsDir: await getDownloadsDirectory(),
+      storedPaths: storedPaths,
+    );
+  }
+
   /// Returns the size of a downloaded file in bytes.
   Future<int> getFileSize(String localPath) async {
     final file = File(localPath);

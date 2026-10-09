@@ -365,15 +365,46 @@ class DownloadService {
     Iterable<int> taskIds, {
     required Set<DownloadStatus> statuses,
   }) async {
-    var deleted = 0;
+    final tasks = await _tasksStillIn(taskIds, statuses);
+    if (tasks.isEmpty) return 0;
+    await _removeTasks(tasks);
+    _logger.i(
+      'Deleted ${tasks.length} of ${taskIds.length} confirmed downloads',
+    );
+    return tasks.length;
+  }
+
+  Future<List<DownloadTask>> _tasksStillIn(
+    Iterable<int> taskIds,
+    Set<DownloadStatus> statuses,
+  ) async {
+    final tasks = <DownloadTask>[];
     for (final id in taskIds.toSet()) {
       final task = await _repository.getById(id);
-      if (task == null || !statuses.contains(task.downloadStatus)) continue;
-      await _deleteTask(task);
-      deleted++;
+      if (task != null && statuses.contains(task.downloadStatus)) {
+        tasks.add(task);
+      }
     }
-    _logger.i('Deleted $deleted of ${taskIds.length} confirmed downloads');
-    return deleted;
+    return tasks;
+  }
+
+  /// [_deleteTask] for many tasks. The records go in one transaction and
+  /// the files in one directory sweep, and stations are reconciled once
+  /// per station: done per task, each step repeats work that a bulk delete
+  /// multiplies by the number of downloads.
+  Future<void> _removeTasks(List<DownloadTask> tasks) async {
+    for (final task in tasks.where((task) => task.downloadStatus.isActive)) {
+      await _queueService.cancelDownload(task.id);
+    }
+    await _repository.removeTasksWithFiles(
+      tasks: tasks,
+      removeFiles: (episodeIds) => _fileService.deleteEpisodesFiles({
+        for (final task in tasks)
+          if (episodeIds.contains(task.episodeId))
+            task.episodeId: task.localPath,
+      }),
+    );
+    await _tryReconcileAll([for (final task in tasks) task.episodeId]);
   }
 
   Future<void> _deleteTask(DownloadTask task) async {
@@ -398,6 +429,18 @@ class DownloadService {
     );
     _logger.i('Deleted download: ${task.id}');
     await _tryReconcile(task.episodeId);
+  }
+
+  /// Best-effort station reconciliation for a batch of episodes.
+  Future<void> _tryReconcileAll(List<int> episodeIds) async {
+    try {
+      await _reconcilerService?.onEpisodesChanged(episodeIds);
+    } on Exception catch (e) {
+      _logger.w(
+        'Station reconciliation failed for ${episodeIds.length} episodes',
+        error: e,
+      );
+    }
   }
 
   /// Best-effort station reconciliation.

@@ -65,6 +65,15 @@ abstract class DownloadRepository {
     int? fileRemovalId,
   });
 
+  /// [removeEpisodeFiles] for many tasks in one transaction: deletes
+  /// [tasks], then removes with [removeFiles] the files of their episodes
+  /// that have no task left. Returns the episodes passed to [removeFiles].
+  /// If [removeFiles] throws, nothing changes.
+  Future<Set<int>> removeTasksWithFiles({
+    required List<DownloadTask> tasks,
+    required Future<void> Function(Set<int> episodeIds) removeFiles,
+  });
+
   /// Returns a download task by ID.
   Future<DownloadTask?> getById(int id);
 

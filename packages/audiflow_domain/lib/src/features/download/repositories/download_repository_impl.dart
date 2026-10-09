@@ -90,6 +90,13 @@ class DownloadRepositoryImpl implements DownloadRepository {
   );
 
   @override
+  Future<Set<int>> removeTasksWithFiles({
+    required List<DownloadTask> tasks,
+    required Future<void> Function(Set<int> episodeIds) removeFiles,
+  }) =>
+      _datasource.removeTasksWithFiles(tasks: tasks, removeFiles: removeFiles);
+
+  @override
   Future<DownloadTask?> getById(int id) => _datasource.getById(id);
 
   @override

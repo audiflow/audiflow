@@ -130,6 +130,32 @@ class DownloadLocalDatasource {
     });
   }
 
+  /// [removeEpisodeFiles] for many tasks in one transaction: deletes
+  /// [tasks], then removes with [removeFiles] the files of their episodes
+  /// that have no task left. Returns the episodes passed to [removeFiles].
+  ///
+  /// One transaction instead of one per task, so a bulk delete commits,
+  /// and notifies watchers, once. [removeFiles] must not open a
+  /// transaction of its own.
+  Future<Set<int>> removeTasksWithFiles({
+    required List<DownloadTask> tasks,
+    required Future<void> Function(Set<int> episodeIds) removeFiles,
+  }) {
+    if (tasks.isEmpty) return Future.value(const {});
+    return _isar.writeTxn(() async {
+      await _isar.downloadTasks.deleteAll([for (final t in tasks) t.id]);
+      final episodeIds = {for (final task in tasks) task.episodeId};
+      // A task of the episode owns its files now; deleting them would take
+      // its download too. Removing that task later sweeps the same files.
+      final owned = await getByEpisodeIds(episodeIds);
+      final unowned = episodeIds.difference({
+        for (final task in owned) task.episodeId,
+      });
+      if (unowned.isNotEmpty) await removeFiles(unowned);
+      return unowned;
+    });
+  }
+
   /// Returns a download task by ID.
   Future<DownloadTask?> getById(int id) {
     return _isar.downloadTasks.get(id);

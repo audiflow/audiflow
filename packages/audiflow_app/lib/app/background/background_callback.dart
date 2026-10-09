@@ -147,6 +147,11 @@ class _DiagDownloadRepo implements DownloadRepository {
     fileRemovalId: fileRemovalId,
   );
   @override
+  Future<Set<int>> removeTasksWithFiles({
+    required List<DownloadTask> tasks,
+    required Future<void> Function(Set<int> episodeIds) removeFiles,
+  }) => _inner.removeTasksWithFiles(tasks: tasks, removeFiles: removeFiles);
+  @override
   Future<int> getActiveCount() => _inner.getActiveCount();
   @override
   Future<List<DownloadTask>> getAll() => _inner.getAll();
