@@ -96,6 +96,7 @@ class _QueueScreenState extends ConsumerState<QueueScreen> {
             SliverToBoxAdapter(child: SizedBox(key: _listStartKey)),
             SliverReorderableList(
               itemCount: upNextItems.length,
+              proxyDecorator: QueueListTile.liftWhileDragging,
               onReorderItem: (oldIndex, newIndex) {
                 final item = upNextItems[oldIndex];
                 ref
