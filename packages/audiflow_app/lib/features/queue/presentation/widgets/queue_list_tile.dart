@@ -110,17 +110,25 @@ class QueueListTile extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _row(
-              context,
-              colors,
-              downloadTask,
-              onLongPress: () => _showContextMenu(
-                context,
-                ref,
-                downloadAction,
-                download,
-                downloadTask,
-              ),
+            Stack(
+              alignment: AlignmentDirectional.centerEnd,
+              children: [
+                InkWell(
+                  onTap: onTap,
+                  onLongPress: () => _showContextMenu(
+                    context,
+                    ref,
+                    downloadAction,
+                    download,
+                    downloadTask,
+                  ),
+                  child: _row(context, colors, downloadTask),
+                ),
+                // Stacked above the row's InkWell rather than inside it, so
+                // holding the handle before dragging never fires the row's
+                // long press and opens its menu instead of reordering.
+                _dragHandle(colors),
+              ],
             ),
             Divider(
               height: 1,
@@ -134,38 +142,7 @@ class QueueListTile extends ConsumerWidget {
     );
   }
 
-  /// The drag handle sits outside the tap and long-press area: holding it
-  /// before dragging would otherwise open the menu instead of reordering.
   Widget _row(
-    BuildContext context,
-    AppColors colors,
-    DownloadTask? downloadTask, {
-    required VoidCallback onLongPress,
-  }) {
-    return Row(
-      children: [
-        Expanded(
-          child: InkWell(
-            onTap: onTap,
-            onLongPress: onLongPress,
-            child: _content(context, colors, downloadTask),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsetsDirectional.only(end: Spacing.xs),
-          child: ReorderableDragStartListener(
-            index: index,
-            child: SizedBox.square(
-              dimension: Spacing.minTouchTarget,
-              child: Icon(Symbols.drag_handle, color: colors.inkTertiary),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _content(
     BuildContext context,
     AppColors colors,
     DownloadTask? downloadTask,
@@ -176,6 +153,8 @@ class QueueListTile extends ConsumerWidget {
         start: Spacing.screenHorizontal,
         top: Spacing.rowVertical,
         bottom: Spacing.rowVertical,
+        // Room for the drag handle stacked over the row's end.
+        end: Spacing.xs + Spacing.minTouchTarget,
       ),
       child: Row(
         children: [
@@ -216,6 +195,24 @@ class QueueListTile extends ConsumerWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _dragHandle(AppColors colors) {
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(end: Spacing.xs),
+      child: ReorderableDragStartListener(
+        index: index,
+        // Opaque, so the whole target catches touches, not just the glyph;
+        // a near miss would otherwise land on the row's long press.
+        child: ColoredBox(
+          color: Colors.transparent,
+          child: SizedBox.square(
+            dimension: Spacing.minTouchTarget,
+            child: Icon(Symbols.drag_handle, color: colors.inkTertiary),
+          ),
+        ),
       ),
     );
   }

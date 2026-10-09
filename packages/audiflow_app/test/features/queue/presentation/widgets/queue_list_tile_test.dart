@@ -43,6 +43,7 @@ void main() {
     WidgetTester tester, {
     DownloadTask? task,
     VoidCallback? onRemove,
+    ValueChanged<int>? onReorderStart,
     bool downloadCreates = true,
     _FakeDownloadService? service,
   }) async {
@@ -60,12 +61,17 @@ void main() {
           theme: AppTheme.light(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
+          // The drag proxy is built in the navigator's overlay; in the app
+          // that navigator sits inside the shell's Scaffold, so mirror the
+          // Material ancestor it finds there.
+          builder: (_, child) => Material(child: child),
           home: Scaffold(
             body: CustomScrollView(
               slivers: [
                 SliverReorderableList(
                   itemCount: 1,
                   onReorderItem: (_, _) {},
+                  onReorderStart: onReorderStart,
                   itemBuilder: (_, index) => QueueListTile(
                     key: const ValueKey(5),
                     item: _item(),
@@ -190,6 +196,40 @@ void main() {
     await gesture.up();
     await tester.pumpAndSettle();
     check(find.text('Delete download').evaluate()).isEmpty();
+  });
+
+  testWidgets('pausing on the handle edge, then moving, starts a reorder', (
+    tester,
+  ) async {
+    final started = <int>[];
+    await pump(tester, task: _completed(), onReorderStart: started.add);
+    // Inside the touch target but off the glyph.
+    final target = tester.getRect(find.byType(ReorderableDragStartListener));
+    final gesture = await tester.startGesture(
+      target.topLeft + const Offset(2, 2),
+    );
+    await tester.pump(kLongPressTimeout * 2);
+    await gesture.moveBy(const Offset(0, 40));
+    await tester.pump();
+    check(started).deepEquals([0]);
+    check(find.text('Delete download').evaluate()).isEmpty();
+    await gesture.up();
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('long press just above the handle opens the menu', (
+    tester,
+  ) async {
+    await pump(tester, task: _completed());
+    final target = tester.getRect(find.byType(ReorderableDragStartListener));
+    final row = tester.getRect(find.byType(InkWell));
+    // The row's long press still covers the handle's column outside the
+    // handle itself.
+    await tester.longPressAt(
+      Offset(target.center.dx, (row.top + target.top) / 2),
+    );
+    await tester.pumpAndSettle();
+    check(find.text('Delete download').evaluate()).length.equals(1);
   });
 
   testWidgets('long press keeps an auto download and says so', (tester) async {
