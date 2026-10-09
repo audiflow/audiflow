@@ -49,7 +49,22 @@ class ActionMenuDrag extends ChangeNotifier {
     _phase = ActionMenuDragPhase.cancelled;
     notifyListeners();
   }
+
+  /// Whether the finger lifted on an entry and chose it. The menu already
+  /// played `selection` when that entry was highlighted, so a selector
+  /// should not play it again for the same choice.
+  bool get choseOnRelease => _choseOnRelease;
+  bool _choseOnRelease = false;
+
+  /// Called by the menu when the release chose an entry.
+  void markChosenOnRelease() => _choseOnRelease = true;
 }
+
+/// Whether a choice made from a menu opened with [drag] still needs its
+/// `selection` haptic: it does unless the release that chose it was
+/// already announced by the highlight.
+bool needsSelectionHaptic(ActionMenuDrag? drag) =>
+    !(drag?.choseOnRelease ?? false);
 
 /// Opens a menu below or beside [anchor] (the trigger's context). [drag] is
 /// null for a plain tap, and follows the finger after a press-and-hold.

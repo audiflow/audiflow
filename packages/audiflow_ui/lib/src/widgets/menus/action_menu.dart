@@ -206,6 +206,7 @@ class _ActionMenuState extends State<ActionMenu> {
         if (index == null) {
           _highlight(null);
         } else {
+          drag.markChosenOnRelease();
           _choose(_entries[index]);
         }
       case ActionMenuDragPhase.cancelled:

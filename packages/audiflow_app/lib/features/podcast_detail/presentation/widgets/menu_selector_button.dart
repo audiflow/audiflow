@@ -90,7 +90,7 @@ class MenuSelectorButton<T> extends StatelessWidget {
             ActionMenuEntry(
               label: labelOf(choice),
               checked: _matches(choice),
-              onSelected: () => _choose(anchor, choice),
+              onSelected: () => _choose(anchor, drag, choice),
             ),
         ],
       ],
@@ -98,8 +98,8 @@ class MenuSelectorButton<T> extends StatelessWidget {
     );
   }
 
-  void _choose(BuildContext anchor, T choice) {
-    if (!_matches(choice) && anchor.mounted) {
+  void _choose(BuildContext anchor, ActionMenuDrag? drag, T choice) {
+    if (!_matches(choice) && needsSelectionHaptic(drag) && anchor.mounted) {
       HapticsScope.of(anchor).play(HapticToken.selection);
     }
     onSelected(choice);

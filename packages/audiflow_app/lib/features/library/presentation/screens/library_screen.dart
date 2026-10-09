@@ -483,8 +483,12 @@ class _SortMenuButton extends StatelessWidget {
     );
   }
 
-  void _choose(BuildContext anchor, PodcastSortOrder order) {
-    if (order != currentOrder && anchor.mounted) {
+  void _choose(
+    BuildContext anchor,
+    ActionMenuDrag? drag,
+    PodcastSortOrder order,
+  ) {
+    if (order != currentOrder && needsSelectionHaptic(drag) && anchor.mounted) {
       HapticsScope.of(anchor).play(HapticToken.selection);
     }
     onSelected(order);
@@ -504,7 +508,7 @@ class _SortMenuButton extends StatelessWidget {
             ActionMenuEntry(
               label: _labelFor(l10n, order),
               checked: order == currentOrder,
-              onSelected: () => _choose(anchor, order),
+              onSelected: () => _choose(anchor, drag, order),
             ),
         ],
       ],
