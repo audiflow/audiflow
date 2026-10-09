@@ -121,10 +121,10 @@ Every interaction that was considered is listed here, including those that delib
 | `GESTURE_THRESHOLD_ACTIVATE` | 34 | `CONTEXT_CLICK` |
 | `GESTURE_THRESHOLD_DEACTIVATE` | 34 | `CLOCK_TICK` |
 | `CONFIRM` | 30 | `VIRTUAL_KEY` |
-| `REJECT` | 30 | `LONG_PRESS` |
+| `REJECT` | 30 | `VIRTUAL_KEY`, played twice 100 ms apart |
 | `GESTURE_END` | 30 | `CLOCK_TICK` |
 
-  The substitutes below API 30 are provisional until checked on a device (section 7). Two of them share a feel with another token on Android 8 to 10: `success` feels like `tap` (`VIRTUAL_KEY`), and `error` feels like `longPress` (`LONG_PRESS`). This is accepted for those older versions because neither pair has opposite meanings.
+  The substitutes below API 30 are provisional until checked on a device (section 7). On Android 8 to 10 the old constants play waveforms that each manufacturer defines, so their relative strength is not guaranteed (on a tested Huawei device, `VIRTUAL_KEY` felt stronger than `LONG_PRESS`). `error` is therefore told apart from `success` by rhythm, two taps against one, rather than by strength, mirroring `REJECT`'s double click. `success` feels like `tap` there, which is accepted because the two do not have opposite meanings.
 
 ### 4.3 Why not Flutter's `HapticFeedback`
 

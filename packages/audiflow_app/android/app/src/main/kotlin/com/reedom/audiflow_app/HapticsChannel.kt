@@ -19,8 +19,20 @@ import java.lang.ref.WeakReference
 object HapticsChannel {
     private const val CHANNEL_NAME = "audiflow/haptics"
 
-    /** A constant and the nearest older one to play below [sinceSdk]. */
-    private data class Mapping(val constant: Int, val sinceSdk: Int, val fallback: Int)
+    /**
+     * A constant and the nearest older one to play below [sinceSdk].
+     * The fallback plays [fallbackRepeats] times, [REPEAT_GAP_MS] apart.
+     */
+    private data class Mapping(
+        val constant: Int,
+        val sinceSdk: Int,
+        val fallback: Int,
+        val fallbackRepeats: Int = 1,
+    )
+
+    // Long enough to feel as two taps: an actuator rings 20-50 ms after a
+    // click, and Android's guidance calls 50 ms or more discernible.
+    private const val REPEAT_GAP_MS = 100L
 
     private const val API_30 = Build.VERSION_CODES.R
     private const val API_34 = Build.VERSION_CODES.UPSIDE_DOWN_CAKE
@@ -40,7 +52,10 @@ object HapticsChannel {
         "dragStep" to Mapping(C.SEGMENT_FREQUENT_TICK, API_34, C.CLOCK_TICK),
         "dragDrop" to Mapping(C.GESTURE_END, API_30, C.CLOCK_TICK),
         "success" to Mapping(C.CONFIRM, API_30, C.VIRTUAL_KEY),
-        "error" to Mapping(C.REJECT, API_30, C.LONG_PRESS),
+        // Below API 30 the old constants play OEM-defined waveforms whose
+        // relative strength varies by device, so error is told apart from
+        // success by rhythm (two taps, like REJECT) instead of strength.
+        "error" to Mapping(C.REJECT, API_30, C.VIRTUAL_KEY, fallbackRepeats = 2),
     )
 
     fun register(messenger: BinaryMessenger, activity: Activity) {
@@ -65,11 +80,16 @@ object HapticsChannel {
         // An unknown token plays nothing: a newer Dart build must never
         // crash an older native build over a missing haptic.
         val mapping = mappings[token] ?: return
-        live.window?.decorView?.performHapticFeedback(constantFor(mapping))
+        val view = live.window?.decorView ?: return
+        // A constant newer than the running OS plays nothing, so it falls
+        // back to the nearest older constant (the AndroidX compat approach).
+        if (mapping.sinceSdk <= Build.VERSION.SDK_INT) {
+            view.performHapticFeedback(mapping.constant)
+            return
+        }
+        view.performHapticFeedback(mapping.fallback)
+        for (i in 1 until mapping.fallbackRepeats) {
+            view.postDelayed({ view.performHapticFeedback(mapping.fallback) }, REPEAT_GAP_MS * i)
+        }
     }
-
-    // A constant newer than the running OS plays nothing, so it falls back
-    // to the nearest older constant (the AndroidX compat approach).
-    private fun constantFor(mapping: Mapping): Int =
-        if (mapping.sinceSdk <= Build.VERSION.SDK_INT) mapping.constant else mapping.fallback
 }
