@@ -17,14 +17,13 @@ sealed class EpisodeWithProgress with _$EpisodeWithProgress {
     PlaybackHistory? history,
   }) = _EpisodeWithProgress;
 
-  /// Returns true if episode has been completed.
-  bool get isCompleted => history?.completedAt != null;
+  /// Returns true if the episode is played, including while it is being
+  /// replayed.
+  bool get isCompleted => history?.isPlayed ?? false;
 
-  /// Returns true if episode is in progress (started but not completed).
-  bool get isInProgress =>
-      history != null &&
-      0 < history!.positionMs &&
-      history!.completedAt == null;
+  /// Returns true if the current listen has a resumable position. A replay
+  /// of a played episode is both [isCompleted] and in progress.
+  bool get isInProgress => history?.isInProgress ?? false;
 
   /// Returns the progress percentage (0.0 to 1.0).
   double? get progressPercent {

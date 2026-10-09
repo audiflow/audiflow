@@ -152,6 +152,8 @@ state and resume position stay coherent no matter where the listener touches it.
   playback passes 95% of its duration (to tolerate trailing credits or silence), and the
   listener can manually toggle an episode played or unplayed, which overrides the auto-detected
   state.
+- Separates the played status from the current listen, so a played episode can be replayed
+  without losing its status (see "Replay and listen sessions" below).
 - Auto-advances to the next queued episode on completion, deferring to the queue feature for
   what plays next.
 - Handles audio-focus interruptions through a dedicated, configurable handler: transient
@@ -177,7 +179,9 @@ state and resume position stay coherent no matter where the listener touches it.
 - The pill has four mutually exclusive states resolved by precedence: loading (indeterminate
   spinner), completed (check glyph in a muted color, "Completed" label), playing (pause glyph,
   accent-colored label on a tinted accent fill, "{time} left" label), and idle (play glyph on a
-  neutral fill; "{time} left" when partially played, total duration otherwise).
+  neutral fill; "{time} left" when partially played, total duration otherwise). A played
+  episode takes the completed state only while it is neither playing nor being replayed; a
+  replay shows the playing or idle state with its remaining time and a partial progress line.
 - The pill never changes shape to show progress. A row whose playback has started instead
   shows a 3 pt progress line along its bottom edge (accent fill on a hairline track),
   reflecting the latest known progress fraction clamped to a valid range. Completed episodes
@@ -260,6 +264,46 @@ state and resume position stay coherent no matter where the listener touches it.
   both move the saved resume position, as the seek bar does.
 - Implemented by `SeekUndoController` (`seekWithUndo`, `goBack`, `dismiss`), a thin layer
   over `AudioPlayerController.seekNowPlaying`, and the `SeekUndoOverlay` widget.
+
+### Replay and listen sessions
+
+An episode's history carries two separate facts: whether the episode is **played**, and
+whether its current **listen** is open or finished.
+
+- An episode is **played** once a listen reaches the completion threshold (or the listener
+  marks it played). It stays played until the listener marks it unplayed; replaying never
+  clears it. Played episodes offer "Mark as unplayed", stay out of the Unplayed filter, count
+  toward series played counts, and stay hidden in stations that hide played episodes.
+- A **listen** is open from the moment playback starts until it reaches the completion
+  threshold or the listener marks the episode played; a finished listen may keep playing its
+  tail without reopening. An episode is **in progress** when it has a saved position past zero
+  and its listen is open, and only then is it resumable: it shows in Continue listening, is
+  restored at launch, matches the In Progress filter, and rows and the episode detail show its
+  remaining time and progress line instead of the played check.
+- A finished listen is taken up again as a new listen, a **replay**, in exactly three cases, all
+  explicit acts of the listener and all judged against the completion threshold:
+  - playback of the episode **starts** at a position below the threshold (from the start, from a
+    saved position, from a chapter or a timestamped link, or after a restart);
+  - the listener **resumes** the paused episode below the threshold (after marking it played
+    while paused);
+  - the listener **seeks backward** to a position below the threshold while the episode plays.
+  Starting or resuming at or past the threshold continues the finished listen, so playing out
+  the tail of a finished episode does not count another completion; seeks and resumes the
+  player makes on its own (interruption rewinds and resumes, the end-of-chapter sleep timer)
+  never reopen a listen; and
+  neither does playing on or skipping forward after "Mark as played".
+- A replay is a listen like any other: it is in progress while open, finishes at the threshold
+  or when the listener marks the episode played, and the episode stays played throughout.
+- Only a replay **from the beginning** counts another completion when it reaches the threshold:
+  one that starts from the beginning, or that the listener seeks back to the beginning. A
+  replay reopened by rewinding part of the episode finishes without counting one, and so does
+  marking a replay played. A finished listen the player rewinds on its own stays finished, so
+  passing the threshold again counts nothing. Marking an episode unplayed clears the played status and leaves its
+  position in place, so a partly played episode is in progress again.
+- Marking any other episode played or unplayed, in a single action or in bulk, never changes the
+  playing episode's listen.
+- A played-download auto-delete waits while the episode's listen is open and restarts its grace
+  period when the listen finishes (FR 05).
 
 ## Boundaries
 

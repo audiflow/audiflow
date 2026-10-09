@@ -181,6 +181,57 @@ void main() {
     check(tester.takeException()).isNull();
   });
 
+  testWidgets('a replay of a played episode shows its position and stays '
+      'played', (tester) async {
+    final episode = Episode()
+      ..id = 7
+      ..podcastId = 1
+      ..guid = 'guid-7'
+      ..title = 'Episode 7'
+      ..audioUrl = _audioUrl
+      ..durationMs = const Duration(minutes: 30).inMilliseconds;
+    final history = PlaybackHistory()
+      ..episodeId = 7
+      ..positionMs = const Duration(minutes: 5).inMilliseconds
+      ..durationMs = const Duration(minutes: 30).inMilliseconds
+      ..completedAt = DateTime(2026, 10, 1)
+      ..isReplaying = true;
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          currentPlayingEpisodeUrlProvider.overrideWithValue(null),
+          isEpisodePlayingProvider.overrideWith((ref, _) => false),
+          isEpisodeLoadingProvider.overrideWith((ref, _) => false),
+          episodeDownloadProvider.overrideWith((ref, _) => Stream.value(null)),
+          episodeHasTranscriptProvider.overrideWith((ref, _) async => false),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: SmartPlaylistEpisodeListTile(
+              episode: episode,
+              podcastTitle: 'Podcast',
+              showThumbnail: false,
+              progress: EpisodeWithProgress(episode: episode, history: history),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    check(find.text('25m left').evaluate()).isNotEmpty();
+    check(find.text('Completed').evaluate()).isEmpty();
+
+    await tester.longPress(find.text('Episode 7'));
+    await tester.pumpAndSettle();
+
+    check(find.text('Mark as unplayed').evaluate()).isNotEmpty();
+    check(find.text('Mark as played').evaluate()).isEmpty();
+  });
+
   testWidgets('resuming from a station records the station play', (
     tester,
   ) async {

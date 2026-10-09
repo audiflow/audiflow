@@ -355,6 +355,27 @@ void main() {
       ).length.equals(1);
     });
 
+    testWidgets('a replay keeps mark as unplayed and offers resume', (
+      tester,
+    ) async {
+      final replaying = EpisodeWithProgress(
+        episode: testCompletedProgress.episode,
+        history: PlaybackHistory()
+          ..id = 1
+          ..episodeId = 1
+          ..positionMs = 600000
+          ..durationMs = 1800000
+          ..completedAt = DateTime(2026, 3, 20)
+          ..isReplaying = true,
+      );
+      await openMenu(tester, replaying);
+
+      check(find.text(l10n.markAsUnplayed).evaluate()).length.equals(1);
+      await tester.tapAt(Offset.zero);
+      await tester.pumpAndSettle();
+      check(find.text(l10n.episodeDetailResume).evaluate()).length.equals(1);
+    });
+
     testWidgets('offers mark as unplayed for a played episode', (tester) async {
       await openMenu(tester, testCompletedProgress);
 

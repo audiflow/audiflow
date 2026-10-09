@@ -80,6 +80,13 @@ class _QuietHistoryService implements PlaybackHistoryService {
   void onPlaybackResumed() {}
 
   @override
+  Future<void> onListenerResumed(
+    int episodeId, {
+    required Duration position,
+    required Duration duration,
+  }) async {}
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }
 

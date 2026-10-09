@@ -15,6 +15,7 @@ import '../../../queue/presentation/controllers/queue_controller.dart';
 import '../../../share/presentation/helpers/share_helper.dart';
 import '../../../station/presentation/helpers/record_station_play.dart';
 import '../controllers/podcast_detail_controller.dart';
+import '../utils/played_display.dart';
 import '../widgets/episode_description_card.dart';
 import '../widgets/episode_detail_actions.dart';
 import '../widgets/episode_detail_hero.dart';
@@ -79,7 +80,9 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
 
   /// Local override after manually toggling played status. Wins over the
   /// reactive provider value because the provider re-fetches by audio URL
-  /// and may briefly miss when the URL doesn't round-trip cleanly.
+  /// and may briefly miss when the URL doesn't round-trip cleanly. Cleared
+  /// once the provider delivers a newer value, so later playback (an
+  /// auto-completion or a replay) is not hidden behind it.
   EpisodeWithProgress? _localProgress;
 
   @override
@@ -147,6 +150,17 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
 
     // Watch reactive progress when enclosureUrl is available;
     // fall back to the constructor-provided snapshot otherwise.
+    if (enclosureUrl != null) {
+      ref.listen(episodeProgressProvider(enclosureUrl), (_, next) {
+        final local = _localProgress;
+        if (local == null || next.isLoading) return;
+        // The URL lookup may resolve to another episode sharing the audio
+        // URL; only this episode's own row replaces the override.
+        if (next.value?.episode.id == local.episode.id) {
+          setState(() => _localProgress = null);
+        }
+      });
+    }
     final reactiveProgress = enclosureUrl != null
         ? ref.watch(episodeProgressProvider(enclosureUrl)).value
         : null;
@@ -281,7 +295,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
   Widget _buildActions(_EpisodeView view) {
     final progress = view.progress;
     final fraction = progress?.progressPercent;
-    final showsLine = view.isCompleted || ProgressLine.isStarted(fraction);
+    final showsLine = view.showsPlayed || ProgressLine.isStarted(fraction);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: Spacing.screenHorizontal),
       child: Column(
@@ -293,7 +307,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
               child: EpisodeProgressStatus(
                 fraction: fraction ?? 0,
                 remaining: progress?.remainingDuration,
-                isCompleted: view.isCompleted,
+                isCompleted: view.showsPlayed,
               ),
             ),
         ],
@@ -709,11 +723,16 @@ class _EpisodeView {
   final int? episodeId;
   final DownloadTask? downloadTask;
 
+  /// Played status, also while the episode is being replayed (menus).
   bool get isCompleted => progress?.isCompleted ?? false;
+
+  /// Whether the pill and progress line show the played look; a replay
+  /// shows its own progress instead (FR 04).
+  bool get showsPlayed => showsPlayedState(progress, isPlaying: isPlaying);
 
   EpisodePlayState get playState {
     if (isPlaying) return EpisodePlayState.playing;
-    if (isCompleted) return EpisodePlayState.played;
+    if (showsPlayed) return EpisodePlayState.played;
     if (isLoadedInPlayer || (progress?.isInProgress ?? false)) {
       return EpisodePlayState.inProgress;
     }

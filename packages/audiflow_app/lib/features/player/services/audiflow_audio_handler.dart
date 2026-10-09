@@ -317,7 +317,7 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
           stackTrace: stack,
         );
       }
-      await play();
+      await _play(automatic: true);
       // Only force the UI / platform into `playing` when just_audio
       // actually reached `ready`. If the source is still loading or
       // buffering after an interruption, the natural state stream will
@@ -353,7 +353,11 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
       _nowPlayingSync.updateDuration(duration);
 
   @override
-  Future<void> play() async {
+  Future<void> play() => _play();
+
+  /// [play] on the player's own account (resuming after an interruption),
+  /// which must not reopen a finished listen.
+  Future<void> _play({bool automatic = false}) async {
     // Ensure the audio session is configured before first playback.
     await _sessionReady;
     // The user explicitly asked to play. If we are mid-interruption
@@ -363,7 +367,11 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
     // before the controller resumes — prevents a racing onBegin(duck)
     // from being clobbered by an in-flight restore.
     await _interruptionHandler.markUserOverride();
-    await _controller.resume();
+    if (automatic) {
+      await _controller.resumeAutomatically();
+    } else {
+      await _controller.resume();
+    }
   }
 
   @override
