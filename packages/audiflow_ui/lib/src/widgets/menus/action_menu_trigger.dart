@@ -1,6 +1,8 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 
+import 'menu_overlay.dart';
+
 /// Where a press-and-hold that opened a menu is in its gesture.
 enum ActionMenuDragPhase {
   /// The finger is still down.
@@ -58,7 +60,9 @@ typedef ActionMenuOpener =
 /// that then slides to an item and releases to choose it.
 ///
 /// [builder] receives the tap callback to hand to the trigger's button
-/// (null when [onOpen] is null, which disables the trigger).
+/// (null when [onOpen] is null, which disables the trigger), and the
+/// context [onOpen] gets as its anchor. Menus open in a [MenuOverlayHost]
+/// the trigger provides, so they close with the trigger's screen.
 class ActionMenuTrigger extends StatefulWidget {
   const ActionMenuTrigger({
     super.key,
@@ -86,14 +90,12 @@ class _ActionMenuTriggerState extends State<ActionMenuTrigger> {
     super.dispose();
   }
 
-  void _openByTap() => widget.onOpen?.call(context, null);
-
-  void _openByHold(LongPressStartDetails details) {
+  void _openByHold(BuildContext anchor, LongPressStartDetails details) {
     final onOpen = widget.onOpen;
     if (onOpen == null) return;
     final drag = ActionMenuDrag(details.globalPosition);
     _drag = drag;
-    onOpen(context, drag);
+    onOpen(anchor, drag);
   }
 
   void _moveHold(LongPressMoveUpdateDetails details) {
@@ -112,24 +114,37 @@ class _ActionMenuTriggerState extends State<ActionMenuTrigger> {
 
   @override
   Widget build(BuildContext context) {
-    final enabled = widget.onOpen != null;
-    final child = widget.builder(context, enabled ? _openByTap : null);
-    if (!enabled) return child;
+    // The anchor sits under the host so menus opened from it find the host.
+    return MenuOverlayHost(child: Builder(builder: _buildTrigger));
+  }
+
+  Widget _buildTrigger(BuildContext anchor) {
+    final onOpen = widget.onOpen;
+    // The detector stays mounted while disabled, so enabling the trigger
+    // does not remount the button and lose its ink or focus.
     return RawGestureDetector(
       gestures: {
-        LongPressGestureRecognizer:
-            GestureRecognizerFactoryWithHandlers<LongPressGestureRecognizer>(
-              () => LongPressGestureRecognizer(
-                duration: ActionMenuTrigger.holdDuration,
+        if (onOpen != null)
+          LongPressGestureRecognizer:
+              GestureRecognizerFactoryWithHandlers<LongPressGestureRecognizer>(
+                () => LongPressGestureRecognizer(
+                  duration: ActionMenuTrigger.holdDuration,
+                ),
+                (recognizer) {
+                  recognizer
+                    ..onLongPressStart = (details) {
+                      _openByHold(anchor, details);
+                    }
+                    ..onLongPressMoveUpdate = _moveHold
+                    ..onLongPressEnd = _endHold
+                    ..onLongPressCancel = _cancelHold;
+                },
               ),
-              (recognizer) => recognizer
-                ..onLongPressStart = _openByHold
-                ..onLongPressMoveUpdate = _moveHold
-                ..onLongPressEnd = _endHold
-                ..onLongPressCancel = _cancelHold,
-            ),
       },
-      child: child,
+      child: widget.builder(
+        anchor,
+        onOpen == null ? null : () => onOpen(anchor, null),
+      ),
     );
   }
 }

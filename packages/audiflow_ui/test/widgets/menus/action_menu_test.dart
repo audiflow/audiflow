@@ -256,6 +256,32 @@ void main() {
       check(log).isEmpty();
     });
 
+    testWidgets('closes when another screen covers its own', (tester) async {
+      final log = <String>[];
+      await open(tester, log: log);
+      final navigator = tester.state<NavigatorState>(find.byType(Navigator));
+      unawaited(
+        navigator.push(
+          MaterialPageRoute<void>(
+            builder: (context) => const Scaffold(body: Text('covering')),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      check(find.byKey(ActionMenu.surfaceKey).evaluate()).isEmpty();
+      check(find.text('covering').evaluate()).isNotEmpty();
+      check(log).isEmpty();
+    });
+
+    testWidgets('Escape closes the menu', (tester) async {
+      final log = <String>[];
+      await open(tester, log: log);
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+      check(find.byKey(ActionMenu.surfaceKey).evaluate()).isEmpty();
+      check(log).isEmpty();
+    });
+
     testWidgets('a disabled entry is faded and cannot be tapped', (
       tester,
     ) async {
@@ -381,6 +407,41 @@ void main() {
       await pumpTrigger(tester, log: log);
       final gesture = await holdOpen(tester);
       await gesture.moveTo(tester.getCenter(find.text('Unavailable')));
+      await tester.pump();
+      await gesture.up();
+      await tester.pumpAndSettle();
+      check(log).isEmpty();
+      check(find.byKey(ActionMenu.surfaceKey).evaluate()).length.equals(1);
+    });
+
+    testWidgets('releasing below a scrolled menu chooses nothing', (
+      tester,
+    ) async {
+      final log = <String>[];
+      await pumpTrigger(
+        tester,
+        log: log,
+        triggerAlignment: const Alignment(-0.8, -0.9),
+        placementOf: ActionMenuPlacement.below,
+        sections: [
+          [
+            for (var index = 0; index < 30; index++)
+              ActionMenuEntry(
+                label: 'Row $index',
+                onSelected: () => log.add('row $index'),
+              ),
+          ],
+        ],
+      );
+      final gesture = await holdOpen(tester);
+      final menu = tester.getRect(find.byKey(ActionMenu.surfaceKey));
+      final screen = tester.getRect(find.byType(Scaffold));
+      final belowMenu = Offset(
+        menu.center.dx,
+        (menu.bottom + screen.bottom) / 2,
+      );
+      check(menu.bottom).isLessThan(belowMenu.dy);
+      await gesture.moveTo(belowMenu);
       await tester.pump();
       await gesture.up();
       await tester.pumpAndSettle();

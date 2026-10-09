@@ -81,7 +81,8 @@ class _AnchoredPlacement extends ActionMenuPlacement {
     if (screen.isEmpty) return Alignment.topCenter;
     return Alignment(
       anchor.center.dx / screen.width * 2 - 1,
-      anchor.bottom / screen.height * 2 - 1,
+      // The vertical center, since the menu may open above the anchor.
+      anchor.center.dy / screen.height * 2 - 1,
     );
   }
 }
@@ -149,6 +150,7 @@ class ActionMenu extends StatefulWidget {
 class _ActionMenuState extends State<ActionMenu> {
   late List<ActionMenuEntry> _entries;
   late List<GlobalKey> _entryKeys;
+  final GlobalKey _viewportKey = GlobalKey();
   int? _highlighted;
 
   @override
@@ -212,14 +214,21 @@ class _ActionMenuState extends State<ActionMenu> {
   }
 
   int? _entryIndexAt(Offset globalPosition) {
+    // Rows scrolled out of a tall menu still have layout beyond its clip.
+    if (!_contains(_viewportKey, globalPosition)) return null;
     for (final (index, key) in _entryKeys.indexed) {
-      if (!_entries[index].enabled) continue;
-      final box = key.currentContext?.findRenderObject();
-      if (box is! RenderBox || !box.attached || !box.hasSize) continue;
-      final local = box.globalToLocal(globalPosition);
-      if ((Offset.zero & box.size).contains(local)) return index;
+      if (_entries[index].enabled && _contains(key, globalPosition)) {
+        return index;
+      }
     }
     return null;
+  }
+
+  bool _contains(GlobalKey key, Offset globalPosition) {
+    final box = key.currentContext?.findRenderObject();
+    if (box is! RenderBox || !box.attached || !box.hasSize) return false;
+    final local = box.globalToLocal(globalPosition);
+    return (Offset.zero & box.size).contains(local);
   }
 
   void _highlight(int? index) {
@@ -273,6 +282,7 @@ class _ActionMenuState extends State<ActionMenu> {
         borderRadius: AppBorders.xl,
         clipBehavior: Clip.antiAlias,
         child: SingleChildScrollView(
+          key: _viewportKey,
           padding: const EdgeInsets.all(Spacing.sm + Spacing.xs),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
