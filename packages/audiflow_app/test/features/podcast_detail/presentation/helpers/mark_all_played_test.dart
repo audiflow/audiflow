@@ -73,7 +73,7 @@ void main() {
     await tester.tap(find.text('Mark as played'));
     await tester.pumpAndSettle();
     check(history.completed).deepEquals([1, 2]);
-    check(find.text('Marked 2 episodes as played').evaluate()).length.equals(1);
+    check(find.text('Marked all episodes as played').evaluate()).length.equals(1);
   });
 
   testWidgets('a failure partway is reported, not swallowed', (tester) async {

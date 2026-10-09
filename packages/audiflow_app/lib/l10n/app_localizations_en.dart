@@ -1081,14 +1081,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get podcastMarkAllFailed => 'Some episodes couldn\'t be updated';
 
   @override
-  String podcastMarkAllPlayedDone(int count) {
-    return 'Marked $count episodes as played';
-  }
+  String get podcastMarkAllPlayedDone => 'Marked all episodes as played';
 
   @override
-  String podcastMarkAllUnplayedDone(int count) {
-    return 'Marked $count episodes as unplayed';
-  }
+  String get podcastMarkAllUnplayedDone => 'Marked all episodes as unplayed';
 
   @override
   String get markAsUnplayed => 'Mark as unplayed';

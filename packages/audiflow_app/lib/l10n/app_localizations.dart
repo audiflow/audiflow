@@ -2009,14 +2009,14 @@ abstract class AppLocalizations {
   /// Snackbar after marking every episode played
   ///
   /// In en, this message translates to:
-  /// **'Marked {count} episodes as played'**
-  String podcastMarkAllPlayedDone(int count);
+  /// **'Marked all episodes as played'**
+  String get podcastMarkAllPlayedDone;
 
   /// Snackbar after marking every episode not played
   ///
   /// In en, this message translates to:
-  /// **'Marked {count} episodes as unplayed'**
-  String podcastMarkAllUnplayedDone(int count);
+  /// **'Marked all episodes as unplayed'**
+  String get podcastMarkAllUnplayedDone;
 
   /// Action to mark episode as unplayed
   ///

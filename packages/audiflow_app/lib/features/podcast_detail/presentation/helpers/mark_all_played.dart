@@ -6,7 +6,7 @@ import '../../../../l10n/app_localizations.dart';
 import 'played_status_helper.dart';
 
 /// Asks to mark all [episodeIds] played (or unplayed) with [confirmText],
-/// then marks them and reports the count in a snackbar. Used by the
+/// then marks them and confirms in a snackbar. Used by the
 /// podcast and series `…` menus.
 Future<void> confirmAndMarkAllPlayed({
   required BuildContext context,
@@ -37,9 +37,8 @@ Future<void> confirmAndMarkAllPlayed({
     ),
   );
   if (confirmed != true) return;
-  final int count;
   try {
-    count = await setEpisodesPlayedStatus(
+    await setEpisodesPlayedStatus(
       container,
       episodeIds: episodeIds,
       played: played,
@@ -55,8 +54,8 @@ Future<void> confirmAndMarkAllPlayed({
     SnackBar(
       content: Text(
         played
-            ? l10n.podcastMarkAllPlayedDone(count)
-            : l10n.podcastMarkAllUnplayedDone(count),
+            ? l10n.podcastMarkAllPlayedDone
+            : l10n.podcastMarkAllUnplayedDone,
       ),
     ),
   );
