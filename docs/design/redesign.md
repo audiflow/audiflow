@@ -158,7 +158,7 @@ Row height ≥ 54 (≥ 60 with a subtitle). Optional leading 32px icon tile (`ac
 
 ### 3.8 Popover menu
 
-Every popover menu (the `…` menus, selector pills, sort and bulk-delete menus) is the same `surface` card (radius 24, floating shadow): an optional row of `surfaceMuted` tiles, then groups of item rows separated by hairlines. The `…` menus sit at the top-right under the navigation and are 300 wide. A menu opened from a pill or button sits under its trigger, on the side that keeps it on screen (above it when there is no room below), and is sized to its items. The current choice of a selector is drawn in `accent` with a trailing check. An unavailable item is drawn in `inkTertiary`.
+Every popover menu (the `…` menus, selector pills, sort, bulk-delete and add-to-queue menus) is the same `surface` card (radius 24, floating shadow): an optional row of `surfaceMuted` tiles, then groups of item rows separated by hairlines. The `…` menus sit at the top-right under the navigation and are 300 wide. A menu opened from a pill or button sits under its trigger, on the side that keeps it on screen (above it when there is no room below), and is sized to its items. The current choice of a selector is drawn in `accent` with a trailing check. An unavailable item is drawn in `inkTertiary`.
 
 A menu opens in two ways, as in Apple Podcasts:
 
