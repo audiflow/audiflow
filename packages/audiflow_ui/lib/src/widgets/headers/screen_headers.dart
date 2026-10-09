@@ -20,22 +20,28 @@ class LargeTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        Spacing.screenHorizontal,
-        Spacing.sm,
-        Spacing.screenHorizontal,
-        Spacing.sm,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: Spacing.screenHorizontal),
       child: Row(
         children: [
           Expanded(
-            child: Semantics(
-              header: true,
-              child: Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppTextStyles.displayTitle.copyWith(color: colors.ink),
+            // The padded title is at least a Material touch target tall so a
+            // trailing control (e.g. a 48dp IconButton) never makes the row
+            // taller and pushes the centered title below other tabs', even
+            // at small text scales.
+            child: Container(
+              constraints: const BoxConstraints(
+                minHeight: kMinInteractiveDimension,
+              ),
+              padding: const EdgeInsets.symmetric(vertical: Spacing.sm),
+              alignment: Alignment.centerLeft,
+              child: Semantics(
+                header: true,
+                child: Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.displayTitle.copyWith(color: colors.ink),
+                ),
               ),
             ),
           ),
