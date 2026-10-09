@@ -272,6 +272,8 @@
   "episodeFilterAll": "すべて",
   "episodeFilterUnplayed": "未再生",
   "episodeFilterInProgress": "再生途中",
+  "episodeFilterPlayed": "再生済み",
+  "episodeFilterDownloaded": "ダウンロード済み",
   "podcastDetailFailedToLoad": "読み込み失敗: {error}",
 
   "episodeReplaceQueueTitle": "キューを置き換えますか？",

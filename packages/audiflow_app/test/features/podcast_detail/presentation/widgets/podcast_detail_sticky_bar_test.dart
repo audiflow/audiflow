@@ -1,4 +1,4 @@
-import 'package:audiflow_app/features/podcast_detail/presentation/widgets/episode_filter_chips.dart';
+import 'package:audiflow_app/features/podcast_detail/presentation/widgets/episode_filter_button.dart';
 import 'package:audiflow_app/features/podcast_detail/presentation/widgets/episode_list_section.dart';
 import 'package:audiflow_app/features/podcast_detail/presentation/widgets/podcast_detail_sticky_bar.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
@@ -61,24 +61,35 @@ void main() {
       check(
         find.byType(AppSegmentedControl<PodcastViewMode>).evaluate(),
       ).isEmpty();
-      check(find.byType(EpisodeFilterChips).evaluate()).length.equals(1);
+      check(find.byType(EpisodeFilterButton).evaluate()).length.equals(1);
     });
 
-    testWidgets('episodes row has filter chips and the sort toggle', (
+    testWidgets('episodes row has the filter button and the sort toggle', (
       tester,
     ) async {
       final log = await pump(tester);
-      check(find.byType(EpisodeFilterChips).evaluate()).length.equals(1);
+      check(find.byType(EpisodeFilterButton).evaluate()).length.equals(1);
       check(find.text('Regular series').evaluate()).isEmpty();
       await tester.tap(find.byType(SortOrderButton));
       check(log.sortToggles).equals(1);
     });
 
-    testWidgets('series row has the series-type dropdown, no chips', (
+    testWidgets('choosing from the filter menu reports the filter', (
+      tester,
+    ) async {
+      final log = await pump(tester);
+      await tester.tap(find.byType(EpisodeFilterButton));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Downloaded').last);
+      await tester.pumpAndSettle();
+      check(log.filters).deepEquals([EpisodeFilter.downloaded]);
+    });
+
+    testWidgets('series row has the series-type menu, no filter button', (
       tester,
     ) async {
       final log = await pump(tester, mode: PodcastViewMode.smartPlaylists);
-      check(find.byType(EpisodeFilterChips).evaluate()).isEmpty();
+      check(find.byType(EpisodeFilterButton).evaluate()).isEmpty();
       check(find.byType(SortOrderButton).evaluate()).length.equals(1);
       await tester.tap(find.text('Regular series'));
       await tester.pumpAndSettle();

@@ -817,6 +817,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get episodeFilterInProgress => '再生途中';
 
   @override
+  String get episodeFilterPlayed => '再生済み';
+
+  @override
+  String get episodeFilterDownloaded => 'ダウンロード済み';
+
+  @override
   String podcastDetailFailedToLoad(String error) {
     return '読み込み失敗: $error';
   }

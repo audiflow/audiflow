@@ -95,6 +95,20 @@ void main() {
       expect(pref.episodeFilter, EpisodeFilter.inProgress);
     });
 
+    test('persists played filter', () async {
+      await repository.updateEpisodeFilter(1, EpisodeFilter.played);
+      final pref = await repository.getPreference(1);
+
+      expect(pref.episodeFilter, EpisodeFilter.played);
+    });
+
+    test('persists downloaded filter', () async {
+      await repository.updateEpisodeFilter(1, EpisodeFilter.downloaded);
+      final pref = await repository.getPreference(1);
+
+      expect(pref.episodeFilter, EpisodeFilter.downloaded);
+    });
+
     test('does not affect other preferences', () async {
       await repository.updateViewMode(1, PodcastViewMode.smartPlaylists);
       await repository.updateEpisodeFilter(1, EpisodeFilter.unplayed);
