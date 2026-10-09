@@ -76,7 +76,7 @@ class QueueListTile extends ConsumerWidget {
       }
     }
 
-    return Dismissible(
+    return HapticDismissible(
       key: ValueKey(item.queueItem.id),
       onDismissed: (_) => onRemove(),
       // A download swipe acts and springs back; only remove dismisses.

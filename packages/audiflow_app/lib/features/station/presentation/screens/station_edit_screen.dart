@@ -689,6 +689,10 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
         ReorderableListView(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
+          onReorderStart: (_) =>
+              HapticsScope.of(context).play(HapticToken.dragPickUp),
+          onReorderEnd: (_) =>
+              HapticsScope.of(context).play(HapticToken.dragDrop),
           onReorderItem: (oldIndex, newIndex) {
             final updated = List<int>.from(orderedIds);
             final item = updated.removeAt(oldIndex);

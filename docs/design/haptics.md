@@ -57,6 +57,8 @@ Tokens are named by meaning. The platform columns give the realization; section 
 
 `none` is not played; it is a documented decision that an interaction gets no haptic (section 3).
 
+`dragStep` is defined but not yet played: Flutter's reorderable lists report only the start and end of a drag, not each position change. It stays in the catalog for a future custom reorder implementation.
+
 Notes:
 
 - **`warning` on Android plays nothing.** Android has no warning constant. The candidates are already taken: `CONFIRM` is `success`, `REJECT` is `error`, and `LONG_PRESS` is `longPress`. A composed pattern would need the `VIBRATE` permission. `warning` only appears with a confirmation dialog, which is visible, so silence is preferred over a discordant substitute.
@@ -86,7 +88,7 @@ Every interaction that was considered is listed here, including those that delib
 | Sleep timer cancelled by the user (sheet Cancel, chip delete) | `toggleOff` |
 | Sleep timer fired, or cancelled by leaving its target | `none` (the app is usually in the background; see section 6) |
 | Queue row swipe (remove, download) crosses / un-crosses its threshold | `thresholdCross` / `thresholdRelease` |
-| Queue and station reorder: pick up / move / drop | `dragPickUp` / `dragStep` / `dragDrop` |
+| Queue and station reorder: pick up / move / drop | `dragPickUp` / `none` (see note) / `dragDrop` |
 | Add-to-queue long press (Play Next) | `longPress` |
 | Episode and queue long-press menus, and long-press to copy a playback record value | `longPress` |
 | Subscribe | `success` |
