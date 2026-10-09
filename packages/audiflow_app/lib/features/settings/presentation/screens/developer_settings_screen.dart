@@ -16,8 +16,8 @@ import '../widgets/test_notifications_tile.dart';
 ///
 /// Shows a contribute link to the contribute guide, a toggle for
 /// developer info in episode detail, a test-notification action outside
-/// production, a design components preview outside production, and a
-/// browsable list of all presets.
+/// production, design components and haptics previews outside production,
+/// and a browsable list of all presets.
 class DeveloperSettingsScreen extends ConsumerWidget {
   const DeveloperSettingsScreen({super.key});
 
@@ -84,6 +84,13 @@ class DeveloperSettingsScreen extends ConsumerWidget {
                 subtitle: Text(l10n.developerDesignGallerySubtitle),
                 trailing: const Icon(Symbols.chevron_right),
                 onTap: () => context.push(AppRoutes.settingsDesignGallery),
+              ),
+              const Divider(height: 1),
+              ListTile(
+                title: Text(l10n.developerHapticsCatalogTitle),
+                subtitle: Text(l10n.developerHapticsCatalogSubtitle),
+                trailing: const Icon(Symbols.chevron_right),
+                onTap: () => context.push(AppRoutes.settingsHapticsCatalog),
               ),
               const Divider(height: 1),
             ],

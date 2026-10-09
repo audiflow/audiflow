@@ -1545,6 +1545,27 @@ class AppLocalizationsJa extends AppLocalizations {
   String get developerDesignGalleryToggleBrightness => 'ライトとダークを切り替え';
 
   @override
+  String get developerHapticsCatalogTitle => 'ハプティクスカタログ';
+
+  @override
+  String get developerHapticsCatalogSubtitle => 'トークンを1つずつ鳴らす';
+
+  @override
+  String get developerHapticsPlaysInReduced => '控えめでも鳴る';
+
+  @override
+  String get developerHapticsSilentOnAndroid => 'Android では鳴らない';
+
+  @override
+  String get settingsHapticsLevelOn => 'オン';
+
+  @override
+  String get settingsHapticsLevelReduced => '控えめ';
+
+  @override
+  String get settingsHapticsLevelOff => 'オフ';
+
+  @override
   String developerTestNotificationsSent(int count) {
     return 'テスト通知を$count通送りました';
   }

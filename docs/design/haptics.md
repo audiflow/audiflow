@@ -175,6 +175,8 @@ Reduced mode drops tokens whose effect is already obvious on screen (selection, 
 
 ## 7. To verify on device
 
+Outside production, Settings > Developer > Haptics catalog plays every token on tap, with a selector for the On / Reduced / Off level.
+
 - iOS: whether Flutter's `Switch`, `CupertinoSwitch`, and `RefreshIndicator` already play a haptic, to avoid double feedback.
 - Android: whether `heavyImpact` (`CONTEXT_CLICK`) really feels lighter than `lightImpact` on target devices.
 - Android: how manufacturer tuning (Pixel, Galaxy) changes each constant, and how the pre-API-30 substitutes feel.

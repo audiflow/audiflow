@@ -38,6 +38,7 @@ import '../features/parental_control/presentation/screens/pin_setup_screen.dart'
 import '../features/settings/presentation/screens/settings_screen.dart';
 import '../features/settings/presentation/screens/storage_settings_screen.dart';
 import '../features/settings/presentation/screens/design_gallery_screen.dart';
+import '../features/settings/presentation/screens/haptics_catalog_screen.dart';
 import '../features/settings/presentation/screens/developer_settings_screen.dart';
 import 'material_route.dart';
 import 'scaffold_with_nav_bar.dart';
@@ -82,6 +83,8 @@ class AppRoutes {
   static const String settingsDeveloper = '/settings/developer';
   static const String settingsDesignGallery =
       '/settings/developer/design-gallery';
+  static const String settingsHapticsCatalog =
+      '/settings/developer/haptics-catalog';
   static const String settingsDownloadManagement =
       '/settings/downloads/management';
   static const String settingsGettingStarted = '/settings/getting-started';
@@ -416,6 +419,11 @@ GoRouter createAppRouter({
                         path: 'design-gallery',
                         builder: (context, state) =>
                             const DesignGalleryScreen(),
+                      ),
+                      materialRoute(
+                        path: 'haptics-catalog',
+                        builder: (context, state) =>
+                            const HapticsCatalogScreen(),
                       ),
                     ],
                   ),

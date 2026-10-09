@@ -2906,6 +2906,48 @@ abstract class AppLocalizations {
   /// **'Toggle light and dark'**
   String get developerDesignGalleryToggleBrightness;
 
+  /// Developer settings entry and screen title for the non-production screen that plays each haptic token
+  ///
+  /// In en, this message translates to:
+  /// **'Haptics catalog'**
+  String get developerHapticsCatalogTitle;
+
+  /// Subtitle of the haptics catalog entry in developer settings
+  ///
+  /// In en, this message translates to:
+  /// **'Play each haptic token'**
+  String get developerHapticsCatalogSubtitle;
+
+  /// Label on a haptic token row meaning the token still plays when haptics are set to Reduced
+  ///
+  /// In en, this message translates to:
+  /// **'Also in Reduced'**
+  String get developerHapticsPlaysInReduced;
+
+  /// Note on the warning haptic row: Android plays nothing for it by design
+  ///
+  /// In en, this message translates to:
+  /// **'Silent on Android'**
+  String get developerHapticsSilentOnAndroid;
+
+  /// Haptic feedback level option: every haptic plays
+  ///
+  /// In en, this message translates to:
+  /// **'On'**
+  String get settingsHapticsLevelOn;
+
+  /// Haptic feedback level option: only important haptics play
+  ///
+  /// In en, this message translates to:
+  /// **'Reduced'**
+  String get settingsHapticsLevelReduced;
+
+  /// Haptic feedback level option: no haptics play
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get settingsHapticsLevelOff;
+
   /// Snackbar after test notifications were posted
   ///
   /// In en, this message translates to:

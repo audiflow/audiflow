@@ -1593,6 +1593,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get developerDesignGalleryToggleBrightness => 'Toggle light and dark';
 
   @override
+  String get developerHapticsCatalogTitle => 'Haptics catalog';
+
+  @override
+  String get developerHapticsCatalogSubtitle => 'Play each haptic token';
+
+  @override
+  String get developerHapticsPlaysInReduced => 'Also in Reduced';
+
+  @override
+  String get developerHapticsSilentOnAndroid => 'Silent on Android';
+
+  @override
+  String get settingsHapticsLevelOn => 'On';
+
+  @override
+  String get settingsHapticsLevelReduced => 'Reduced';
+
+  @override
+  String get settingsHapticsLevelOff => 'Off';
+
+  @override
   String developerTestNotificationsSent(int count) {
     return 'Sent $count test notifications';
   }
