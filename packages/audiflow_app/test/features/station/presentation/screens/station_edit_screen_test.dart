@@ -203,9 +203,9 @@ void main() {
     testWidgets('picking default clears an existing override', (tester) async {
       await pumpWithPodcast(tester, episodeLimit: allEpisodesSentinel);
       final row = find.widgetWithText(ListTile, 'Daily Show');
-      check(find.descendant(of: row, matching: find.text('All')).evaluate())
-          .length
-          .equals(1);
+      check(
+        find.descendant(of: row, matching: find.text('All')).evaluate(),
+      ).length.equals(1);
 
       await tester.tap(find.text('Daily Show'));
       await tester.pumpAndSettle();

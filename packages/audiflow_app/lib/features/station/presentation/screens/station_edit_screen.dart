@@ -302,8 +302,9 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
       children: [
         SwitchListTile(
           value: state.hideCompleted,
-          onChanged: HapticsScope.of(context)
-              .toggleHaptic(controller.setHideCompleted),
+          onChanged: HapticsScope.of(
+            context,
+          ).toggleHaptic(controller.setHideCompleted),
           title: Text(
             AppLocalizations.of(context).stationFilterHideCompletedLabel,
           ),
@@ -311,8 +312,9 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
         ),
         SwitchListTile(
           value: state.filterDownloaded,
-          onChanged: HapticsScope.of(context)
-              .toggleHaptic(controller.setFilterDownloaded),
+          onChanged: HapticsScope.of(
+            context,
+          ).toggleHaptic(controller.setFilterDownloaded),
           title: Text(
             AppLocalizations.of(context).stationFilterDownloadedLabel,
           ),
@@ -403,8 +405,9 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   decoration: InputDecoration(
-                    suffixText: AppLocalizations.of(context)
-                        .stationDurationMinutesSuffix,
+                    suffixText: AppLocalizations.of(
+                      context,
+                    ).stationDurationMinutesSuffix,
                     border: const OutlineInputBorder(),
                     isDense: true,
                   ),
@@ -456,11 +459,12 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
             ),
           ],
           selected: {state.episodeSort},
-          onSelectionChanged: HapticsScope.of(context)
-              .selectionHaptic((Set<StationEpisodeSort> selection) {
-                if (selection.isEmpty) return;
-                controller.setEpisodeSort(selection.first);
-              }),
+          onSelectionChanged: HapticsScope.of(context).selectionHaptic((
+            Set<StationEpisodeSort> selection,
+          ) {
+            if (selection.isEmpty) return;
+            controller.setEpisodeSort(selection.first);
+          }),
         ),
       ],
     );
@@ -475,8 +479,9 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
       children: [
         SwitchListTile(
           value: state.groupByPodcast,
-          onChanged: HapticsScope.of(context)
-              .toggleHaptic(controller.setGroupByPodcast),
+          onChanged: HapticsScope.of(
+            context,
+          ).toggleHaptic(controller.setGroupByPodcast),
           title: Text(l10n.stationGroupByPodcast),
           contentPadding: EdgeInsets.zero,
         ),
