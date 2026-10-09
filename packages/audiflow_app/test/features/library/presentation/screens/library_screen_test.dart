@@ -324,6 +324,12 @@ void main() {
         ],
       );
       addTearDown(container.dispose);
+      Widget scaled(BuildContext context, Widget? child) => MediaQuery(
+        data: MediaQuery.of(
+          context,
+        ).copyWith(textScaler: TextScaler.linear(textScale)),
+        child: child!,
+      );
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: container,
@@ -332,18 +338,14 @@ void main() {
                   localizationsDelegates:
                       AppLocalizations.localizationsDelegates,
                   supportedLocales: AppLocalizations.supportedLocales,
-                  builder: (context, child) => MediaQuery(
-                    data: MediaQuery.of(
-                      context,
-                    ).copyWith(textScaler: TextScaler.linear(textScale)),
-                    child: child!,
-                  ),
+                  builder: scaled,
                   home: const LibraryScreen(),
                 )
               : MaterialApp.router(
                   localizationsDelegates:
                       AppLocalizations.localizationsDelegates,
                   supportedLocales: AppLocalizations.supportedLocales,
+                  builder: scaled,
                   routerConfig: router,
                 ),
         ),
