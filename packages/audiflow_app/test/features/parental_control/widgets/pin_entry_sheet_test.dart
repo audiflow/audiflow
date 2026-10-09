@@ -76,6 +76,16 @@ class _FakeGate extends ParentalControlGate {
   }
 }
 
+/// Fake gate whose [tryUnlock] fails, as a storage error would.
+class _ThrowingGate extends ParentalControlGate {
+  @override
+  UnlockState build() => const Locked();
+
+  @override
+  Future<bool> tryUnlock(String pin, {UnlockReason? reason}) async =>
+      throw Exception('store unreadable');
+}
+
 /// Fake gate whose [tryUnlock] never completes until [complete] is called.
 class _SlowGate extends ParentalControlGate {
   final _completer = Completer<bool>();
@@ -313,6 +323,25 @@ void main() {
           parentalControlRepositoryProvider.overrideWithValue(
             _FakeRepo(failedAttempts: 2),
           ),
+        ],
+        haptics: haptics,
+      ),
+    );
+
+    await _enterPin(tester, '1234');
+    await _tapSubmit(tester);
+    await tester.pumpAndSettle();
+
+    check(haptics.played).deepEquals([HapticToken.error]);
+  });
+
+  testWidgets('a failed PIN check plays the error haptic', (tester) async {
+    final haptics = _RecordingHapticPlayer();
+    await tester.pumpWidget(
+      _wrap(
+        const PinEntrySheet(reason: GateReason.subscribe),
+        overrides: [
+          parentalControlGateProvider.overrideWith(_ThrowingGate.new),
         ],
         haptics: haptics,
       ),
