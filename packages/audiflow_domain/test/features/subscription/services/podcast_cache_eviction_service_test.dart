@@ -200,7 +200,7 @@ void main() {
       expect(episodes, isEmpty);
     });
 
-    test('cascades deletes to playback history', () async {
+    test('keeps stale cached podcasts that hold playback history', () async {
       final staleDate = DateTime.now().subtract(const Duration(days: 10));
       final sub = await createCached('stale', lastAccessedAt: staleDate);
       final ep = await createEpisode(sub.id, 'ep1');
@@ -212,10 +212,45 @@ void main() {
         logger: logger,
       );
 
-      await service.evict();
+      final result = await service.evict();
 
+      expect(result, 0);
+      expect(await subscriptionRepo.getById(sub.id), isNotNull);
+      expect(await isar.episodes.get(ep.id), isNotNull);
       final histories = await isar.playbackHistorys.where().findAll();
-      expect(histories, isEmpty);
+      expect(histories, hasLength(1));
+    });
+
+    test('leaves podcasts with history out of the cap', () async {
+      final withHistory = await createCached(
+        'played',
+        lastAccessedAt: DateTime.now().subtract(const Duration(hours: 3)),
+      );
+      await createHistory((await createEpisode(withHistory.id, 'ep1')).id);
+      await createCached(
+        'older',
+        lastAccessedAt: DateTime.now().subtract(const Duration(hours: 2)),
+      );
+      await createCached(
+        'newer',
+        lastAccessedAt: DateTime.now().subtract(const Duration(hours: 1)),
+      );
+
+      service = PodcastCacheEvictionService(
+        subscriptionRepository: subscriptionRepo,
+        isar: isar,
+        logger: logger,
+        maxCachedPodcasts: 1,
+      );
+
+      final result = await service.evict();
+
+      expect(result, 1);
+      final remaining = await subscriptionRepo.getCachedSubscriptions();
+      expect(
+        remaining.map((s) => s.itunesId),
+        unorderedEquals(['played', 'newer']),
+      );
     });
 
     test('cascades deletes to smart playlists and groups', () async {

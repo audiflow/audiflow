@@ -12,9 +12,9 @@ import '../repositories/subscription_repository.dart';
 /// Evicts stale cached podcast subscriptions to limit storage.
 ///
 /// Cached subscriptions are created when users visit non-subscribed
-/// podcasts. This service removes entries that haven't been accessed
-/// recently, cascading deletes to episodes, smart playlists, groups,
-/// playback history, and view preferences.
+/// podcasts, and when they unsubscribe. This service removes entries that
+/// haven't been accessed recently and hold no playback history, cascading
+/// deletes to episodes, smart playlists, groups, and view preferences.
 class PodcastCacheEvictionService {
   PodcastCacheEvictionService({
     required SubscriptionRepository subscriptionRepository,
@@ -36,17 +36,23 @@ class PodcastCacheEvictionService {
 
   /// Runs the eviction pass.
   ///
+  /// Cached podcasts holding any playback history are never evicted and do
+  /// not count toward the cap: the history is the listener's data, and an
+  /// unsubscribed podcast is demoted to a cached entry so that resubscribing
+  /// finds it again.
+  ///
   /// 1. Evicts cached subscriptions older than [maxAge].
   /// 2. If more than [maxCachedPodcasts] remain, evicts the
   ///    oldest-accessed entries until within the cap.
   Future<int> evict() async {
     var evicted = 0;
-    final cached = await _subscriptionRepo.getCachedSubscriptions();
+    final cached = await _evictableSubscriptions();
     if (cached.isEmpty) return 0;
 
-    _logger.i('Cache eviction: ${cached.length} cached podcasts');
+    _logger.i('Cache eviction: ${cached.length} evictable cached podcasts');
 
     final now = DateTime.now();
+    final remaining = <Subscription>[];
 
     // Phase 1: Evict stale entries
     for (final sub in cached) {
@@ -55,11 +61,12 @@ class PodcastCacheEvictionService {
       if (maxAge <= age) {
         await _evictSubscription(sub);
         evicted++;
+      } else {
+        remaining.add(sub);
       }
     }
 
     // Phase 2: Enforce cap on remaining cached entries
-    final remaining = await _subscriptionRepo.getCachedSubscriptions();
     // Sort in-memory to handle null lastAccessedAt consistently
     remaining.sort((a, b) {
       final aTime = a.lastAccessedAt ?? a.subscribedAt;
@@ -79,6 +86,28 @@ class PodcastCacheEvictionService {
     }
 
     return evicted;
+  }
+
+  Future<List<Subscription>> _evictableSubscriptions() async {
+    final cached = await _subscriptionRepo.getCachedSubscriptions();
+    final evictable = <Subscription>[];
+    for (final sub in cached) {
+      if (!await _holdsPlaybackHistory(sub.id)) evictable.add(sub);
+    }
+    return evictable;
+  }
+
+  Future<bool> _holdsPlaybackHistory(int podcastId) async {
+    final episodeIds = await _isar.episodes
+        .filter()
+        .podcastIdEqualTo(podcastId)
+        .idProperty()
+        .findAll();
+    if (episodeIds.isEmpty) return false;
+    final histories = await _isar.playbackHistorys.getAllByEpisodeId(
+      episodeIds,
+    );
+    return histories.any((history) => history != null);
   }
 
   Future<void> _evictSubscription(Subscription subscription) async {
