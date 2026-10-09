@@ -24,7 +24,7 @@ This feature gives the app a single, branded URL space (`https://audiflow.reedom
 
 ## User-visible Behavior
 
-- Normal case (sharing): from a podcast detail screen, an episode list tile, a smart-playlist episode tile, or the episode detail screen, the user taps a share button. The system share sheet opens with an `audiflow.reedom.com` link. Podcast links look like `https://audiflow.reedom.com/p/{itunesId}`; episode links append `/e/{encodedGuid}`.
+- Normal case (sharing): from a podcast detail screen, an episode list tile, a smart-playlist episode tile, the episode detail screen, or the full player's overflow menu, the user taps a share button. The system share sheet opens with an `audiflow.reedom.com` link. Podcast links look like `https://audiflow.reedom.com/p/{itunesId}`; episode links append `/e/{encodedGuid}`.
 - Normal case (timestamped sharing): when a share is initiated with a chosen position, the episode link carries a `?t=<seconds>` query parameter. Opening that link starts playback at (or near) that moment instead of the saved-resume position.
 - Normal case (opening with the app installed): tapping a universal link launches Audiflow. A brief loading screen ("Opening link...") appears while the link is resolved, then the app navigates to the podcast detail screen or to the episode detail screen.
 - Normal case (opening without the app): tapping the link in a browser or messaging app loads a static page that detects the platform and redirects to the App Store (iOS) or Play Store (Android).
@@ -38,7 +38,7 @@ This feature gives the app a single, branded URL space (`https://audiflow.reedom
 
 - Builds branded universal link URLs for a podcast (by iTunes ID) and for an episode (iTunes ID plus Base64url-encoded GUID, without padding so the URL is HTTP-safe).
 - Optionally embeds a playback start position in an episode link as a `?t=<seconds>` query parameter, emitted only when the position is strictly positive.
-- Presents share buttons across the podcast detail screen, episode detail screen, episode list tiles, and smart-playlist episode tiles, all routed through a shared share helper with a consistent fallback chain (universal link, then RSS link, then no-op).
+- Presents share buttons across the podcast detail screen, episode detail screen, episode list tiles, smart-playlist episode tiles, and the full player's overflow menu, all routed through a shared share helper with a consistent fallback chain (universal link, then RSS link, then no-op).
 - Hands off the constructed URL to the system share sheet.
 - Resolves incoming `https://audiflow.reedom.com/p/...` URIs into typed navigation targets (podcast or episode), validating scheme, host, and path shape.
 - Resolves a linked podcast from a local subscription first, then from the iTunes API when not subscribed; resolves a linked episode from the local database first, then by parsing the live feed.

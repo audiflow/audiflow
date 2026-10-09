@@ -216,7 +216,7 @@ void main() {
     });
   });
 
-  group('onSubscriptionDeleted cleans up', () {
+  group('onSubscriptionRemoved cleans up', () {
     test('removes StationPodcast entries and reconciles station', () async {
       final stationId = await putStation();
       await linkPodcast(stationId, 1);
@@ -229,7 +229,7 @@ void main() {
       check(await stationEpisodeIds(stationId)).deepEquals([ep1, ep2]..sort());
 
       // Delete the subscription.
-      await service.onSubscriptionDeleted(1);
+      await service.onSubscriptionRemoved(1);
 
       // StationPodcast link should be gone.
       check(await stationPodcastIdsForStation(stationId)).isEmpty();
@@ -250,7 +250,7 @@ void main() {
       check(await stationEpisodeIds(stationId)).deepEquals([ep1, ep2]..sort());
 
       // Delete only podcast 1's subscription.
-      await service.onSubscriptionDeleted(1);
+      await service.onSubscriptionRemoved(1);
 
       // Only podcast 2's episode should remain.
       check(await stationEpisodeIds(stationId)).deepEquals([ep2]);
@@ -258,7 +258,7 @@ void main() {
 
     test('no-op when podcast is not linked to any station', () async {
       // Should complete without error even if podcast is not in any station.
-      await service.onSubscriptionDeleted(999);
+      await service.onSubscriptionRemoved(999);
     });
   });
 }

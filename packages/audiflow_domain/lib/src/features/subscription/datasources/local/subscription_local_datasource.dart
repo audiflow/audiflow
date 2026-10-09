@@ -20,13 +20,63 @@ class SubscriptionLocalDatasource {
     return subscription;
   }
 
-  /// Deletes a subscription by its iTunes ID.
+  /// Promotes the cached entry [id] to a real subscription, taking the
+  /// identity and metadata of [incoming]. Blank metadata keeps the stored
+  /// value, so a sparse source such as an OPML import never erases details
+  /// an earlier feed read supplied.
   ///
-  /// Returns the number of rows affected.
-  Future<int> deleteByItunesId(String itunesId) async {
-    return _isar.writeTxn(
-      () => _isar.subscriptions.filter().itunesIdEqualTo(itunesId).deleteAll(),
-    );
+  /// Returns the promoted subscription, or null when [id] is missing or not
+  /// a cached entry.
+  Future<Subscription?> promoteCached(int id, Subscription incoming) {
+    // Read inside the transaction, as in [updateLastAccessed].
+    return _isar.writeTxn(() async {
+      final existing = await _isar.subscriptions.get(id);
+      if (existing == null || !existing.isCached) return null;
+      // Validators from another feed must not be sent to this one: a
+      // matching 304 would keep the old feed's episodes.
+      if (existing.feedUrl != incoming.feedUrl) {
+        existing
+          ..httpEtag = null
+          ..httpLastModified = null;
+      }
+      existing
+        ..itunesId = incoming.itunesId
+        ..feedUrl = incoming.feedUrl
+        ..title = _nonBlank(incoming.title) ?? existing.title
+        ..artistName = _nonBlank(incoming.artistName) ?? existing.artistName
+        ..artworkUrl = _nonBlank(incoming.artworkUrl) ?? existing.artworkUrl
+        ..description = _nonBlank(incoming.description) ?? existing.description
+        ..genres = _nonBlank(incoming.genres) ?? existing.genres
+        // An OPML import cannot tell, and arrives as false; a stored flag
+        // is therefore never cleared here.
+        ..explicit = incoming.explicit || existing.explicit
+        ..subscribedAt = incoming.subscribedAt
+        ..isCached = false;
+      await _isar.subscriptions.put(existing);
+      return existing;
+    });
+  }
+
+  static String? _nonBlank(String? value) =>
+      (value == null || value.trim().isEmpty) ? null : value;
+
+  /// Demotes a real subscription to a cached entry, keeping its id so the
+  /// podcast's episodes and playback history stay attached to it.
+  ///
+  /// Marks it as accessed now, so cache eviction measures its age from the
+  /// unsubscribe. Returns the demoted subscription, or null when no real
+  /// subscription exists for [itunesId].
+  Future<Subscription?> demoteToCached(String itunesId) {
+    // Read inside the transaction, as in [updateLastAccessed].
+    return _isar.writeTxn(() async {
+      final existing = await _isar.subscriptions.getByItunesId(itunesId);
+      if (existing == null || existing.isCached) return null;
+      existing
+        ..isCached = true
+        ..lastAccessedAt = DateTime.now();
+      await _isar.subscriptions.put(existing);
+      return existing;
+    });
   }
 
   /// Returns all real subscriptions (excludes cached entries),

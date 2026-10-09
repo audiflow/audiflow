@@ -91,6 +91,176 @@ void main() {
         throwsA(isA<SubscriptionNotFoundException>()),
       );
     });
+
+    test('keeps the entry as a cached one outside the library', () async {
+      final subscribed = await repository.subscribe(
+        itunesId: 'itunes-1',
+        feedUrl: 'https://example.com/feed.xml',
+        title: 'Test Podcast',
+        artistName: 'Test Artist',
+      );
+
+      await repository.unsubscribe('itunes-1');
+
+      final kept = await repository.getById(subscribed.id);
+      check(kept).isNotNull().has((s) => s.isCached, 'isCached').isTrue();
+      check(await repository.getSubscriptions()).isEmpty();
+      check(await repository.getCachedSubscriptions()).length.equals(1);
+    });
+
+    test('resubscribing reuses the same podcast id', () async {
+      final first = await repository.subscribe(
+        itunesId: 'itunes-1',
+        feedUrl: 'https://example.com/feed.xml',
+        title: 'Test Podcast',
+        artistName: 'Test Artist',
+      );
+      await repository.unsubscribe('itunes-1');
+
+      final second = await repository.subscribe(
+        itunesId: 'itunes-1',
+        feedUrl: 'https://example.com/feed.xml',
+        title: 'Test Podcast',
+        artistName: 'Test Artist',
+      );
+
+      check(second.id).equals(first.id);
+      check(second.isCached).isFalse();
+      check(await repository.isSubscribed('itunes-1')).isTrue();
+    });
+
+    test('resubscribing under another iTunes ID reuses the row', () async {
+      final first = await repository.subscribe(
+        itunesId: 'opml:abc',
+        feedUrl: 'https://example.com/feed.xml',
+        title: 'Imported',
+        artistName: '',
+      );
+      await repository.unsubscribe('opml:abc');
+
+      final second = await repository.subscribe(
+        itunesId: 'itunes-1',
+        feedUrl: 'https://example.com/feed.xml',
+        title: 'Test Podcast',
+        artistName: 'Test Artist',
+      );
+
+      check(second.id).equals(first.id);
+      check(second.itunesId).equals('itunes-1');
+      check(await repository.isSubscribed('itunes-1')).isTrue();
+      check(await repository.getCachedSubscriptions()).isEmpty();
+    });
+
+    test('resubscribing records the metadata passed to subscribe', () async {
+      await repository.subscribe(
+        itunesId: 'itunes-1',
+        feedUrl: 'https://old.example.com/feed.xml',
+        title: 'Old Title',
+        artistName: 'Old Artist',
+        artworkUrl: 'https://example.com/old.jpg',
+      );
+      await repository.unsubscribe('itunes-1');
+
+      final resubscribed = await repository.subscribe(
+        itunesId: 'itunes-1',
+        feedUrl: 'https://new.example.com/feed.xml',
+        title: 'New Title',
+        artistName: 'New Artist',
+        genres: ['News'],
+        explicit: true,
+      );
+
+      check(resubscribed.feedUrl).equals('https://new.example.com/feed.xml');
+      check(resubscribed.title).equals('New Title');
+      check(resubscribed.artistName).equals('New Artist');
+      check(resubscribed.genres).equals('News');
+      check(resubscribed.explicit).isTrue();
+      // Absent values keep what the feed already supplied.
+      check(resubscribed.artworkUrl).equals('https://example.com/old.jpg');
+    });
+
+    test('resubscribing at a new feed URL drops its cache headers', () async {
+      final first = await repository.subscribe(
+        itunesId: 'itunes-1',
+        feedUrl: 'https://old.example.com/feed.xml',
+        title: 'Test Podcast',
+        artistName: 'Test Artist',
+      );
+      await repository.updateHttpCacheHeaders(
+        first.id,
+        etag: 'old-etag',
+        lastModified: 'Mon, 01 Jan 2026 00:00:00 GMT',
+      );
+      await repository.unsubscribe('itunes-1');
+
+      final resubscribed = await repository.subscribe(
+        itunesId: 'itunes-1',
+        feedUrl: 'https://new.example.com/feed.xml',
+        title: 'Test Podcast',
+        artistName: 'Test Artist',
+      );
+
+      check(resubscribed.httpEtag).isNull();
+      check(resubscribed.httpLastModified).isNull();
+    });
+
+    test(
+      'resubscribing at the same feed URL keeps its cache headers',
+      () async {
+        final first = await repository.subscribe(
+          itunesId: 'itunes-1',
+          feedUrl: 'https://example.com/feed.xml',
+          title: 'Test Podcast',
+          artistName: 'Test Artist',
+        );
+        await repository.updateHttpCacheHeaders(first.id, etag: 'etag');
+        await repository.unsubscribe('itunes-1');
+
+        final resubscribed = await repository.subscribe(
+          itunesId: 'itunes-1',
+          feedUrl: 'https://example.com/feed.xml',
+          title: 'Test Podcast',
+          artistName: 'Test Artist',
+        );
+
+        check(resubscribed.httpEtag).equals('etag');
+      },
+    );
+
+    test('an OPML resubscribe keeps a known explicit flag', () async {
+      await repository.subscribe(
+        itunesId: 'itunes-1',
+        feedUrl: 'https://example.com/feed.xml',
+        title: 'Test Podcast',
+        artistName: 'Test Artist',
+        explicit: true,
+      );
+      await repository.unsubscribe('itunes-1');
+
+      // OpmlImportService cannot supply explicit, so it arrives as false.
+      final resubscribed = await repository.subscribe(
+        itunesId: 'opml:abc',
+        feedUrl: 'https://example.com/feed.xml',
+        title: 'Test Podcast',
+        artistName: '',
+      );
+
+      check(resubscribed.explicit).isTrue();
+    });
+
+    test('throws SubscriptionNotFoundException for a cached entry', () async {
+      await repository.getOrCreateCached(
+        itunesId: 'itunes-1',
+        feedUrl: 'https://example.com/feed.xml',
+        title: 'Test Podcast',
+        artistName: 'Test Artist',
+      );
+
+      expect(
+        () => repository.unsubscribe('itunes-1'),
+        throwsA(isA<SubscriptionNotFoundException>()),
+      );
+    });
   });
 
   group('isSubscribed', () {

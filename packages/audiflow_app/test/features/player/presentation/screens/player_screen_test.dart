@@ -3,9 +3,11 @@ import 'dart:async';
 import 'package:audiflow_app/features/player/presentation/screens/player_screen.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
@@ -167,6 +169,165 @@ void main() {
 
       check(find.byType(PlayerScreen).evaluate().length).equals(1);
       check(find.text('Second Episode').evaluate().length).equals(1);
+    });
+  });
+
+  group('PlayerScreen overflow menu', () {
+    Future<void> openMenu(WidgetTester tester) async {
+      await tester.tap(find.byTooltip('More'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('opens just below the button, like the floating bars', (
+      tester,
+    ) async {
+      final container = await _container();
+      await tester.pumpWidget(_buildHost(container));
+      await _openPlayerSheet(tester);
+      final button = tester.getRect(find.byTooltip('More'));
+
+      await openMenu(tester);
+
+      final menu = tester.getRect(find.byKey(ActionMenu.surfaceKey));
+      check(
+        menu.top,
+      ).equals(button.center.dy + FloatingNavigationBar.barHeight / 2);
+      check(button.bottom <= menu.top).isTrue();
+    });
+
+    testWidgets('offers sharing when the episode has a deep link', (
+      tester,
+    ) async {
+      final container = await _container(
+        nowPlaying: _firstEpisode.copyWith(
+          itunesId: '123',
+          episodeGuid: 'guid-1',
+        ),
+      );
+      await tester.pumpWidget(_buildHost(container));
+      await _openPlayerSheet(tester);
+
+      await openMenu(tester);
+
+      check(find.text('Share episode').evaluate().length).equals(1);
+    });
+
+    testWidgets('offers sharing through the episode link alone', (
+      tester,
+    ) async {
+      final episode = Episode()
+        ..podcastId = 1
+        ..guid = 'guid-1'
+        ..title = 'First Episode'
+        ..audioUrl = 'https://example.com/first.mp3'
+        ..link = 'https://example.com/episodes/1';
+      final container = await _container(
+        nowPlaying: _firstEpisode.copyWith(episode: episode),
+      );
+      await tester.pumpWidget(_buildHost(container));
+      await _openPlayerSheet(tester);
+
+      await openMenu(tester);
+
+      check(find.text('Share episode').evaluate().length).equals(1);
+    });
+
+    /// Records what reaches the share plugin, so the sheet's payload can be
+    /// checked without a platform.
+    List<Map<Object?, Object?>> captureShares() {
+      const channel = MethodChannel('dev.fluttercommunity.plus/share');
+      final shares = <Map<Object?, Object?>>[];
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      messenger.setMockMethodCallHandler(channel, (call) async {
+        shares.add(call.arguments as Map<Object?, Object?>);
+        return '';
+      });
+      addTearDown(() => messenger.setMockMethodCallHandler(channel, null));
+      return shares;
+    }
+
+    Future<Map<Object?, Object?>> shareFromMenu(
+      WidgetTester tester,
+      List<Map<Object?, Object?>> shares,
+    ) async {
+      await openMenu(tester);
+      await tester.tap(find.text('Share episode'));
+      await tester.pumpAndSettle();
+      check(shares.length).equals(1);
+      return shares.single;
+    }
+
+    void checkAnchoredOnButton(Map<Object?, Object?> share, Rect button) {
+      check(share['originX']).equals(button.left);
+      check(share['originY']).equals(button.top);
+      check(share['originWidth']).equals(button.width);
+      check(share['originHeight']).equals(button.height);
+    }
+
+    testWidgets('shares the deep link, anchored on the button', (tester) async {
+      final shares = captureShares();
+      final container = await _container(
+        nowPlaying: _firstEpisode.copyWith(
+          itunesId: '123',
+          episodeGuid: 'guid-1',
+        ),
+      );
+      await tester.pumpWidget(_buildHost(container));
+      await _openPlayerSheet(tester);
+      final button = tester.getRect(
+        find.ancestor(
+          of: find.byTooltip('More'),
+          matching: find.byType(IconButton),
+        ),
+      );
+
+      final share = await shareFromMenu(tester, shares);
+
+      check(
+        share['uri'],
+      ).isA<String>().startsWith('https://audiflow.reedom.com/p/123/e/');
+      checkAnchoredOnButton(share, button);
+    });
+
+    testWidgets('falls back to the episode link without a deep link', (
+      tester,
+    ) async {
+      final shares = captureShares();
+      final episode = Episode()
+        ..podcastId = 1
+        ..guid = 'guid-1'
+        ..title = 'First Episode'
+        ..audioUrl = 'https://example.com/first.mp3'
+        ..link = 'https://example.com/episodes/1';
+      final container = await _container(
+        nowPlaying: _firstEpisode.copyWith(episode: episode),
+      );
+      await tester.pumpWidget(_buildHost(container));
+      await _openPlayerSheet(tester);
+      final button = tester.getRect(
+        find.ancestor(
+          of: find.byTooltip('More'),
+          matching: find.byType(IconButton),
+        ),
+      );
+
+      final share = await shareFromMenu(tester, shares);
+
+      check(share['uri']).equals('https://example.com/episodes/1');
+      checkAnchoredOnButton(share, button);
+    });
+
+    testWidgets('hides sharing when there is nothing to link to', (
+      tester,
+    ) async {
+      final container = await _container();
+      await tester.pumpWidget(_buildHost(container));
+      await _openPlayerSheet(tester);
+
+      await openMenu(tester);
+
+      check(find.text('Share episode').evaluate()).isEmpty();
     });
   });
 

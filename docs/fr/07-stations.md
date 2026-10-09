@@ -29,7 +29,7 @@ A Station differs from the Queue in a fundamental way: the Queue is the only pla
 - **Normal update case**: When a podcast in the station publishes a new episode, or an episode is played, completed, downloaded, or favorited, the station's feed reconciles in the background and the detail screen updates reactively. The user does not trigger this manually.
 - **Empty / no-match case**: If no episodes satisfy the station's filters, the detail screen shows an empty state. A station with no podcasts simply shows nothing until podcasts are added.
 - **Edge case -- station limit**: Attempting to create a 16th station is rejected with a "station limit reached" message.
-- **Edge case -- unsubscribing**: If the user unsubscribes from a podcast that belongs to a station, that podcast's membership and its episodes are removed from the station automatically, leaving the rest of the station intact.
+- **Edge case -- unsubscribing**: If the user unsubscribes from a podcast that belongs to a station, that podcast's membership and its episodes are removed from the station automatically, leaving the rest of the station intact. Subscribing again does not restore the membership; the podcast has to be added back to the station.
 - **Editing and deleting**: Re-opening the editor loads all current settings, including per-podcast episode limits and manual ordering, without focusing the name field. Every change is saved as it is made; the station's feed is recalculated once the edits settle and, at the latest, when the editor closes. A station may be left with no podcasts (it is only removed by an explicit delete), and clearing the name keeps the last saved one. Deleting a station removes it together with all of its podcast links and gathered episodes.
 
 ## Capabilities
