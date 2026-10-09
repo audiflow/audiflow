@@ -76,7 +76,7 @@ Every interaction that was considered is listed here, including those that delib
 | Speed preset chip | `selection` |
 | Sleep timer option chosen | `selection` |
 | Sleep timer long press opens the keypad | `longPress` |
-| Sleep timer keypad digits | `none` (the OS keyboard setting already covers key feedback) |
+| Sleep timer keypad digits | `none` (custom keypad buttons deliberately stay silent) |
 | Sleep timer fired / cancelled | `none` (the app is usually in the background; see section 6) |
 | Queue row swipe (remove, download) crosses / un-crosses its threshold | `thresholdCross` / `thresholdRelease` |
 | Queue and station reorder: pick up / move / drop | `dragPickUp` / `dragStep` / `dragDrop` |
@@ -100,7 +100,7 @@ Every interaction that was considered is listed here, including those that delib
 ### 4.1 iOS
 
 - Tokens play through UIKit feedback generators. Core Haptics is not used.
-- The foundation keeps one generator per family and calls `prepare()` when a gesture that may fire a token begins (drag start, long-press down). Calling `prepare()` immediately before firing does not reduce latency.
+- The foundation keeps one impact generator per style used by the catalog (`.light`, `.soft`, `.medium`, `.rigid`), one selection generator, and one notification generator. The impact style is fixed when a generator is created, so styles cannot share one generator. It calls `prepare()` on the relevant generators when a gesture that may fire a token begins (drag start, long-press down). Calling `prepare()` immediately before firing does not reduce latency.
 - Intensities in the catalog use `impactOccurred(intensity:)`.
 - The OS System Haptics switch silences everything. The app cannot read it, so the in-app setting is independent.
 
@@ -128,12 +128,18 @@ Every interaction that was considered is listed here, including those that delib
 
 Flutter's built-in API (as of Flutter 3.47.6) cannot express this catalog:
 
-- On Android, `heavyImpact` maps to `CONTEXT_CLICK`, which plays the lightest effect, so the impact scale is inverted.
+- On Android, `heavyImpact` maps to `CONTEXT_CLICK`. In current AOSP source that constant plays `EFFECT_TICK`, which is lighter than the click that `lightImpact` plays, so the impact scale can come out inverted. Android does not define a strength for `CONTEXT_CLICK`, and manufacturers can retune it, so this is a source-level observation still to be confirmed on devices (section 7).
 - The notification methods (`successNotification` and the others) play nothing below Android 11.
 - It does not reach the API 34 constants, rigid/soft impacts, or impact intensity.
 - On iOS, it creates a new generator for each call and never calls `prepare()`.
 
 The foundation therefore uses a thin platform channel of its own (#612).
+
+### 4.4 Framework feedback
+
+Flutter's Material widgets can play their own feedback. With `enableFeedback` left at its default, `InkWell`, `InkResponse`, and the button widgets call `Feedback.forLongPress` on a long press, which plays a haptic on both platforms (`vibrate` on Android, `heavyImpact` on iOS). `Feedback.forTap` plays only a click sound on Android and nothing on iOS.
+
+A widget that plays a catalog token on long press must set `enableFeedback: false`, or the token plays alongside the framework's haptic. The existing add-to-queue button is such a widget. If the widget still needs the Android tap sound, it calls `Feedback.forTap` itself in its tap handler.
 
 ## 5. User setting
 
@@ -156,6 +162,7 @@ Reduced mode drops tokens whose effect is already obvious on screen (selection, 
 ## 7. To verify on device
 
 - iOS: whether Flutter's `Switch`, `CupertinoSwitch`, and `RefreshIndicator` already play a haptic, to avoid double feedback.
+- Android: whether `heavyImpact` (`CONTEXT_CLICK`) really feels lighter than `lightImpact` on target devices.
 - Android: how manufacturer tuning (Pixel, Galaxy) changes each constant, and how the pre-API-30 substitutes feel.
 - Both: that `thresholdCross` and `thresholdRelease` are distinguishable, and that `dragStep` stays faint during a long reorder.
 
