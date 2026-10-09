@@ -81,7 +81,8 @@ state and resume position stay coherent no matter where the listener touches it.
   finger had rested on the previous step, is undone; and a tap uses the touch-down point
   rather than the lift-off point. The chips are "Normal" plus up to two recently used speeds
   other than 1.0x, shown in ascending speed order; tapping one applies it, and the chip that
-  matches the current speed is highlighted. Only the speed the listener settles on (a chip tap
+  matches the current speed is highlighted. Tapping a chip other than the current speed plays
+  a light selection haptic. Only the speed the listener settles on (a chip tap
   or slider release) counts as recently used, not every step crossed while dragging.
 - **Per-podcast audio settings**: A "Custom for this podcast" switch sits at the top of the
   Audio sheet. Off, the controls edit the global settings and the caption reads "Applies to
