@@ -99,13 +99,27 @@ void main() {
     check(
       prefs.getString(SettingsKeys.hapticFeedbackLevel),
     ).equals(HapticFeedbackLevel.off.name);
-
-    // Choosing the level is itself a selection, played before it applies.
-    check(recorder.played).deepEquals([HapticToken.selection]);
-    recorder.played.clear();
+    // Choosing Off is silent.
+    check(recorder.played).isEmpty();
 
     await tester.tap(find.text('selection'));
     await tester.tap(find.text('success'));
     check(recorder.played).isEmpty();
+  });
+
+  testWidgets('choosing a level plays selection for the new level', (
+    tester,
+  ) async {
+    await pumpScreen(tester);
+
+    // Reduced drops selection, but moving away from it must still be felt.
+    await tester.tap(find.text('On'));
+    await tester.pumpAndSettle();
+    check(recorder.played).deepEquals([HapticToken.selection]);
+    recorder.played.clear();
+
+    await tester.tap(find.text('Reduced'));
+    await tester.pumpAndSettle();
+    check(recorder.played).deepEquals([HapticToken.selection]);
   });
 }

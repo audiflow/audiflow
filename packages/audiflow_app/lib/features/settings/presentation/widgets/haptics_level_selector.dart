@@ -34,14 +34,20 @@ class HapticsLevelSelector extends ConsumerWidget {
           ),
         ],
         selected: {level},
-        onSelectionChanged: HapticsScope.of(context).selectionHaptic(
-          (Set<HapticFeedbackLevel> selection) => unawaited(
-            ref
-                .read(hapticFeedbackLevelControllerProvider.notifier)
-                .setLevel(selection.single),
-          ),
-        ),
+        onSelectionChanged: (selection) => _select(ref, selection.single),
       ),
+    );
+  }
+
+  // The feedback follows the level being chosen, not the one being left:
+  // the old level's gate would drop it when leaving Reduced (which skips
+  // selection), and choosing Off must stay silent.
+  void _select(WidgetRef ref, HapticFeedbackLevel level) {
+    if (level != HapticFeedbackLevel.off) {
+      ref.read(platformHapticPlayerProvider).play(HapticToken.selection);
+    }
+    unawaited(
+      ref.read(hapticFeedbackLevelControllerProvider.notifier).setLevel(level),
     );
   }
 }
