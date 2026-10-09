@@ -110,6 +110,7 @@ class _FeedSyncSettingsScreenState extends ConsumerState<FeedSyncSettingsScreen>
     bool enabled,
   ) async {
     if (!enabled) {
+      HapticsScope.of(context).play(HapticToken.toggleOff);
       await _update(
         repo,
         () => repo.setNotifyNewEpisodes(false),
@@ -135,6 +136,8 @@ class _FeedSyncSettingsScreenState extends ConsumerState<FeedSyncSettingsScreen>
     await _applyPermission(status);
 
     if (status.isGranted) {
+      if (!mounted) return;
+      HapticsScope.of(context).play(HapticToken.toggleOn);
       await _update(
         repo,
         () => repo.setNotifyNewEpisodes(true),
@@ -266,9 +269,9 @@ class _FeedSyncSettingsScreenState extends ConsumerState<FeedSyncSettingsScreen>
               title: Text(l10n.feedSyncNotifyNewEpisodesTitle),
               subtitle: Text(l10n.feedSyncNotifyNewEpisodesSubtitle),
               value: notifyNewEpisodes,
-              onChanged: HapticsScope.of(
-                context,
-              ).toggleHaptic((v) => _onNotifyToggleChanged(repo, v)),
+              // Plays its toggle haptic itself, once permission lets the
+              // switch actually move.
+              onChanged: (v) => _onNotifyToggleChanged(repo, v),
             ),
           ),
         ],
