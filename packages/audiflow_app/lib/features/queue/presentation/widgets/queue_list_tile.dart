@@ -35,6 +35,31 @@ class QueueListTile extends ConsumerWidget {
   static const double separatorIndent =
       Spacing.screenHorizontal + artworkSize + Spacing.sm + Spacing.xs;
 
+  /// Drag proxy for the up-next list: the row lifts off the list on a
+  /// surface with the floating shadow, easing in as the drag starts, the
+  /// way `ReorderableListView` lifts its items.
+  static Widget liftWhileDragging(
+    Widget child,
+    int index,
+    Animation<double> animation,
+  ) {
+    return AnimatedBuilder(
+      animation: animation,
+      builder: (context, child) {
+        final lift = Curves.easeInOut.transform(animation.value);
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            color: AppColors.of(context).surface,
+            boxShadow: BoxShadow.lerpList(const [], AppShadows.floating, lift),
+          ),
+          // The proxy lives in the overlay, outside the list's Material.
+          child: Material(type: MaterialType.transparency, child: child),
+        );
+      },
+      child: child,
+    );
+  }
+
   final QueueItemWithEpisode item;
   final int index;
   final VoidCallback onRemove;
@@ -111,21 +136,31 @@ class QueueListTile extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            InkWell(
-              // Long presses play the catalog token; the framework's vibration
-              // would double up, and wrapForTap keeps the Android click sound.
-              enableFeedback: false,
-              onTap: Feedback.wrapForTap(onTap, context),
-              onLongPress: HapticsScope.of(context).longPressHaptic(
-                () => _showContextMenu(
-                  context,
-                  ref,
-                  downloadAction,
-                  download,
-                  downloadTask,
+            Stack(
+              alignment: AlignmentDirectional.centerEnd,
+              children: [
+                InkWell(
+                  // Long presses play the catalog token; the framework's
+                  // vibration would double up, and wrapForTap keeps the
+                  // Android click sound.
+                  enableFeedback: false,
+                  onTap: Feedback.wrapForTap(onTap, context),
+                  onLongPress: HapticsScope.of(context).longPressHaptic(
+                    () => _showContextMenu(
+                      context,
+                      ref,
+                      downloadAction,
+                      download,
+                      downloadTask,
+                    ),
+                  ),
+                  child: _row(context, colors, downloadTask),
                 ),
-              ),
-              child: _row(context, colors, downloadTask),
+                // Stacked above the row's InkWell rather than inside it, so
+                // holding the handle before dragging never fires the row's
+                // long press and opens its menu instead of reordering.
+                _dragHandle(colors),
+              ],
             ),
             Divider(
               height: 1,
@@ -150,7 +185,8 @@ class QueueListTile extends ConsumerWidget {
         start: Spacing.screenHorizontal,
         top: Spacing.rowVertical,
         bottom: Spacing.rowVertical,
-        end: Spacing.xs,
+        // Room for the drag handle stacked over the row's end.
+        end: Spacing.xs + Spacing.minTouchTarget,
       ),
       child: Row(
         children: [
@@ -190,14 +226,31 @@ class QueueListTile extends ConsumerWidget {
               ],
             ),
           ),
-          ReorderableDragStartListener(
-            index: index,
+        ],
+      ),
+    );
+  }
+
+  Widget _dragHandle(AppColors colors) {
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(end: Spacing.xs),
+      // Both listeners compete for the same press: moving at once starts
+      // the drag immediately, while holding still lifts the row after the
+      // long-press delay, before it moves.
+      child: ReorderableDelayedDragStartListener(
+        index: index,
+        child: ReorderableDragStartListener(
+          index: index,
+          // Opaque, so the whole target catches touches, not just the
+          // glyph; a near miss would otherwise land on the row's long press.
+          child: ColoredBox(
+            color: Colors.transparent,
             child: SizedBox.square(
               dimension: Spacing.minTouchTarget,
               child: Icon(Symbols.drag_handle, color: colors.inkTertiary),
             ),
           ),
-        ],
+        ),
       ),
     );
   }
