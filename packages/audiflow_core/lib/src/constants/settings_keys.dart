@@ -121,7 +121,7 @@ class SettingsDefaults {
 
   /// Default haptic feedback level.
   static const HapticFeedbackLevel hapticFeedbackLevel =
-      HapticFeedbackLevel.reduced;
+      HapticFeedbackLevel.on;
 
   /// Default audio playback speed.
   static const double playbackSpeed = 1.0;

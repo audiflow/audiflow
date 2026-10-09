@@ -177,8 +177,8 @@ A single preference with three values:
 
 | Value | Behavior |
 |---|---|
-| On | All tokens play. |
-| Reduced (default) | Only tokens marked "on" in the Reduced column of section 2 play: outcomes (`success`, `warning`, `error`), gesture thresholds, and drag pick-up. |
+| On (default) | All tokens play. |
+| Reduced | Only tokens marked "on" in the Reduced column of section 2 play: outcomes (`success`, `warning`, `error`), gesture thresholds, and drag pick-up. |
 | Off | Nothing plays. |
 
 Reduced mode drops tokens whose effect is already obvious on screen (selection, toggles, long press, drop, detents) and keeps those that confirm something the user cannot see well while their finger covers it, or that report an outcome.
