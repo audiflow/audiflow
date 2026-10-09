@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:audiflow_app/features/library/presentation/controllers/library_controller.dart';
+import 'package:audiflow_app/features/station/presentation/controllers/station_edit_controller.dart';
 import 'package:audiflow_app/features/station/presentation/screens/station_edit_screen.dart';
 import 'package:audiflow_app/features/station/presentation/screens/station_podcast_picker_screen.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
@@ -21,8 +22,14 @@ Station _station(int id, String name) => Station()
 
 void main() {
   late FakeStationRepository stations;
+  late FakeStationPodcastRepository stationPodcasts;
+  var subscriptions = <Subscription>[];
 
-  setUp(() => stations = FakeStationRepository());
+  setUp(() {
+    stations = FakeStationRepository();
+    stationPodcasts = FakeStationPodcastRepository();
+    subscriptions = [];
+  });
 
   Future<void> pump(
     WidgetTester tester, {
@@ -34,9 +41,7 @@ void main() {
       ProviderScope(
         overrides: [
           stationRepositoryProvider.overrideWithValue(stations),
-          stationPodcastRepositoryProvider.overrideWithValue(
-            FakeStationPodcastRepository(),
-          ),
+          stationPodcastRepositoryProvider.overrideWithValue(stationPodcasts),
           stationEpisodeRepositoryProvider.overrideWithValue(
             FakeStationEpisodeRepository(),
           ),
@@ -45,7 +50,7 @@ void main() {
             FakeSubscriptionRepository(),
           ),
           librarySubscriptionsProvider.overrideWith(
-            (ref) => Stream.value(<Subscription>[]),
+            (ref) => Stream.value(subscriptions),
           ),
         ],
         child: MaterialApp(
@@ -133,5 +138,103 @@ void main() {
     await stations.create(_station(0, 'Morning'));
     await pump(tester, stationId: 1);
     check(find.byType(StationPodcastPickerScreen).evaluate()).isEmpty();
+  });
+
+  group('per-podcast episode limit', () {
+    Future<void> pumpWithPodcast(
+      WidgetTester tester, {
+      int? episodeLimit,
+    }) async {
+      // Tall enough that the podcast row and every sheet option are on screen.
+      tester.view.physicalSize = const Size(800, 2000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await stations.create(_station(0, 'Morning')..defaultEpisodeLimit = 3);
+      await stationPodcasts.add(1, 7, episodeLimit: episodeLimit);
+      subscriptions = [
+        Subscription()
+          ..id = 7
+          ..itunesId = 'itunes-7'
+          ..feedUrl = 'https://example.com/7.xml'
+          ..title = 'Daily Show'
+          ..artistName = 'Host',
+      ];
+      await pump(tester, stationId: 1);
+    }
+
+    Finder sheetOption(String label) => find.descendant(
+      of: find.byType(BottomSheet),
+      matching: find.widgetWithText(ListTile, label),
+    );
+
+    testWidgets('tapping a podcast opens a sheet with the default option', (
+      tester,
+    ) async {
+      await pumpWithPodcast(tester);
+      await tester.tap(find.text('Daily Show'));
+      await tester.pumpAndSettle();
+
+      check(find.byType(BottomSheet).evaluate()).length.equals(1);
+      check(find.byType(ChoiceChip).evaluate()).isEmpty();
+      final defaultOption = tester.widget<ListTile>(
+        sheetOption('Default (Latest 3)'),
+      );
+      check(defaultOption.trailing).isA<Icon>();
+      check(sheetOption('Latest only').evaluate()).length.equals(1);
+      check(sheetOption('All').evaluate()).length.equals(1);
+    });
+
+    testWidgets('picking a limit stores the override and closes the sheet', (
+      tester,
+    ) async {
+      await pumpWithPodcast(tester);
+      await tester.tap(find.text('Daily Show'));
+      await tester.pumpAndSettle();
+      await tester.tap(sheetOption('Latest 10'));
+      await tester.pumpAndSettle();
+
+      check(find.byType(BottomSheet).evaluate()).isEmpty();
+      final row = find.widgetWithText(ListTile, 'Daily Show');
+      check(
+        find.descendant(of: row, matching: find.text('Latest 10')).evaluate(),
+      ).length.equals(1);
+    });
+
+    testWidgets('picking All overrides a numeric default', (tester) async {
+      await pumpWithPodcast(tester);
+      await tester.tap(find.text('Daily Show'));
+      await tester.pumpAndSettle();
+      await tester.tap(sheetOption('All'));
+      await tester.pumpAndSettle();
+
+      final row = find.widgetWithText(ListTile, 'Daily Show');
+      check(
+        find.descendant(of: row, matching: find.text('All')).evaluate(),
+      ).length.equals(1);
+      await tester.tap(find.text('Daily Show'));
+      await tester.pumpAndSettle();
+      check(tester.widget<ListTile>(sheetOption('All')).trailing).isA<Icon>();
+      check(
+        tester.widget<ListTile>(sheetOption('Default (Latest 3)')).trailing,
+      ).isNull();
+    });
+
+    testWidgets('picking default clears an existing override', (tester) async {
+      await pumpWithPodcast(tester, episodeLimit: allEpisodesSentinel);
+      final row = find.widgetWithText(ListTile, 'Daily Show');
+      check(
+        find.descendant(of: row, matching: find.text('All')).evaluate(),
+      ).length.equals(1);
+
+      await tester.tap(find.text('Daily Show'));
+      await tester.pumpAndSettle();
+      check(tester.widget<ListTile>(sheetOption('All')).trailing).isA<Icon>();
+      await tester.tap(sheetOption('Default (Latest 3)'));
+      await tester.pumpAndSettle();
+
+      check(
+        find.descendant(of: row, matching: find.text('Latest 3')).evaluate(),
+      ).length.equals(1);
+    });
   });
 }
