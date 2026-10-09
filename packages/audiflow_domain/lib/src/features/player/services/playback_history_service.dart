@@ -141,6 +141,21 @@ class PlaybackHistoryService {
     }
   }
 
+  /// Called when the listener resumes the paused episode at [position].
+  /// Automatic resumes (after an audio interruption) are not reported.
+  ///
+  /// Resuming below the completion threshold reopens a listen finished
+  /// while paused (e.g. by "mark as played"), so it is resumable again.
+  Future<void> onListenerResumed(
+    int episodeId, {
+    required Duration position,
+    required Duration duration,
+  }) => _reopenListenBelowThreshold(
+    episodeId,
+    positionMs: position.inMilliseconds,
+    durationMs: duration.inMilliseconds,
+  );
+
   /// A finished listen taken up again below the threshold is a new
   /// listen (a replay); past the threshold it is the finished listen's
   /// tail, which must not count a second completion. [durationMs] of zero

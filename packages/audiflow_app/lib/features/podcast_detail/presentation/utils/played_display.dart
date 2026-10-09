@@ -10,6 +10,8 @@ bool showsPlayedState(
   EpisodeWithProgress? progress, {
   required bool isPlaying,
 }) {
-  if (progress == null || !progress.isCompleted) return false;
-  return !progress.isInProgress && !isPlaying;
+  // An open replay shows its playback state even before it has a saved
+  // position past zero, where it is not yet in progress.
+  final listenFinished = progress?.history?.isListenFinished ?? false;
+  return listenFinished && !isPlaying;
 }

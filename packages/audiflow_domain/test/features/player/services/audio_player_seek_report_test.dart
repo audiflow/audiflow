@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -7,7 +9,9 @@ import 'package:riverpod/riverpod.dart';
 import '../../../helpers/fake_app_settings_repository.dart';
 
 const _url = 'https://example.com/a.mp3';
+const _otherUrl = 'https://example.com/b.mp3';
 const _episodeId = 7;
+const _otherEpisodeId = 8;
 const _duration = Duration(minutes: 10);
 const _position = Duration(minutes: 5);
 
@@ -36,14 +40,21 @@ class _StandingAudioPlayer extends AudioPlayer {
   @override
   Future<void> stop() async {}
 
+  /// Holds the next seek open until completed, then clears itself.
+  Completer<void>? seekGate;
+
   @override
-  Future<void> seek(Duration? position, {int? index}) async {}
+  Future<void> seek(Duration? position, {int? index}) async {
+    final gate = seekGate;
+    seekGate = null;
+    await gate?.future;
+  }
 }
 
 class _KnownEpisodeRepository implements EpisodeRepository {
   @override
   Future<Episode?> getByAudioUrl(String audioUrl) async => Episode()
-    ..id = _episodeId
+    ..id = audioUrl == _otherUrl ? _otherEpisodeId : _episodeId
     ..podcastId = 1
     ..guid = 'guid'
     ..title = 'Episode'
@@ -76,9 +87,22 @@ typedef _Seek = ({
   Duration duration,
 });
 
-/// Records the seeks reported to the history service.
+typedef _Resume = ({int episodeId, Duration position, Duration duration});
+
+/// Records the seeks and resumes reported to the history service.
 class _RecordingHistoryService implements PlaybackHistoryService {
   final List<_Seek> seeks = [];
+  final List<_Resume> resumes = [];
+  bool failSeeks = false;
+
+  @override
+  Future<void> onListenerResumed(
+    int episodeId, {
+    required Duration position,
+    required Duration duration,
+  }) async {
+    resumes.add((episodeId: episodeId, position: position, duration: duration));
+  }
 
   @override
   void onPlaybackResumed() {}
@@ -93,6 +117,7 @@ class _RecordingHistoryService implements PlaybackHistoryService {
     required Duration to,
     required Duration duration,
   }) async {
+    if (failSeeks) throw StateError('write failed');
     seeks.add((episodeId: episodeId, from: from, to: to, duration: duration));
   }
 
@@ -133,10 +158,10 @@ void main() {
       container.read(audioPlayerControllerProvider.notifier);
 
   // Full metadata spares play() the subscription lookup for analytics.
-  Future<void> playEpisode() => controller().play(
-    _url,
-    metadata: const NowPlayingInfo(
-      episodeUrl: _url,
+  Future<void> playEpisode([String url = _url]) => controller().play(
+    url,
+    metadata: NowPlayingInfo(
+      episodeUrl: url,
       episodeTitle: 'Episode',
       podcastTitle: 'Podcast',
       feedUrl: 'https://example.com/feed.xml',
@@ -183,5 +208,51 @@ void main() {
     await pumpEventQueue();
 
     check(historyService.seeks).isEmpty();
+  });
+
+  test('does not report a seek overtaken by another episode', () async {
+    await playEpisode();
+    final gate = player.seekGate = Completer<void>();
+
+    final seek = controller().seek(const Duration(minutes: 1));
+    await pumpEventQueue();
+    await playEpisode(_otherUrl);
+    gate.complete();
+    await seek;
+    await pumpEventQueue();
+
+    check(historyService.seeks).isEmpty();
+  });
+
+  test('a failed history write does not fail the seek', () async {
+    await playEpisode();
+    historyService.failSeeks = true;
+
+    await controller().seek(const Duration(minutes: 1));
+    await pumpEventQueue();
+
+    check(historyService.seeks).isEmpty();
+  });
+
+  group('resume', () {
+    test('reports a listener resume with its position', () async {
+      await playEpisode();
+
+      await controller().resume();
+      await pumpEventQueue();
+
+      check(historyService.resumes).deepEquals([
+        (episodeId: _episodeId, position: _position, duration: _duration),
+      ]);
+    });
+
+    test('does not report an automatic resume', () async {
+      await playEpisode();
+
+      await controller().resumeAutomatically();
+      await pumpEventQueue();
+
+      check(historyService.resumes).isEmpty();
+    });
   });
 }

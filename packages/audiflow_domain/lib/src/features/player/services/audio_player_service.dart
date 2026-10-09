@@ -961,13 +961,32 @@ class AudioPlayerController extends _$AudioPlayerController
   /// the user taps play on an episode). When the loaded episode already
   /// played to its end, continues with the next queued episode instead.
   @override
-  Future<void> resume() async {
+  Future<void> resume() => _resume();
+
+  /// Resumes like [resume], on the player's own account rather than the
+  /// listener's (after an audio interruption ends), so a finished listen
+  /// stays finished.
+  Future<void> resumeAutomatically() => _resume(automatic: true);
+
+  Future<void> _resume({bool automatic = false}) async {
     if (_currentUrl == null) return;
     if (_isParkedAtEnd) {
       await _advanceQueueOnce();
       return;
     }
-    ref.read(playbackHistoryServiceProvider).onPlaybackResumed();
+    final historyService = ref.read(playbackHistoryServiceProvider)
+      ..onPlaybackResumed();
+    final episodeId = _currentEpisodeId;
+    final duration = _player.duration;
+    if (!automatic && episodeId != null && duration != null) {
+      _reportToHistory(
+        historyService.onListenerResumed(
+          episodeId,
+          position: _player.position,
+          duration: duration,
+        ),
+      );
+    }
     // Emit BEFORE dispatching `_player.play()`. just_audio's `play()`
     // future does not complete until playback stops/pauses, so awaiting
     // it would defer the `episode_resume` emit until the next pause and
@@ -990,6 +1009,20 @@ class AudioPlayerController extends _$AudioPlayerController
       );
     }
     _startEngine();
+  }
+
+  /// Fire-and-forget history update: a failed write must not escape as
+  /// an unhandled error or hold up playback.
+  void _reportToHistory(Future<void> update) {
+    unawaited(
+      update.catchError((Object error, StackTrace stackTrace) {
+        _log.e(
+          '[AudioPlayer] Playback history update failed',
+          error: error,
+          stackTrace: stackTrace,
+        );
+      }),
+    );
   }
 
   // just_audio's play() future lasts until playback stops, so nothing awaits
@@ -1191,6 +1224,10 @@ class AudioPlayerController extends _$AudioPlayerController
 
   Future<void> _seekLoaded(Duration position, {bool automatic = false}) async {
     if (_currentUrl == null) return;
+    // The seek belongs to the episode loaded now; another play() during
+    // the awaits below owns the player and its history.
+    final attempt = _playAttempt;
+    final episodeId = _currentEpisodeId;
     final duration = _player.duration ?? await _awaitDuration();
     if (duration == null) return;
 
@@ -1220,9 +1257,10 @@ class AudioPlayerController extends _$AudioPlayerController
     // Only the listener's own seeks can reopen a finished listen; the
     // player's automatic ones (interruption rewind, chapter-end pause)
     // are not a decision to listen again.
-    final episodeId = _currentEpisodeId;
-    if (!automatic && episodeId != null) {
-      unawaited(
+    final stillCurrent =
+        _playAttempt == attempt && _currentEpisodeId == episodeId;
+    if (!automatic && episodeId != null && stillCurrent) {
+      _reportToHistory(
         ref
             .read(playbackHistoryServiceProvider)
             .onSeeked(

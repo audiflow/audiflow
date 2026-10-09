@@ -111,6 +111,13 @@ class _QuietHistoryService implements PlaybackHistoryService {
   void onPlaybackResumed() {}
 
   @override
+  Future<void> onListenerResumed(
+    int episodeId, {
+    required Duration position,
+    required Duration duration,
+  }) async {}
+
+  @override
   Future<void> onPlaybackStarted(int episodeId, int positionMs) async {}
 
   @override

@@ -435,6 +435,28 @@ void main() {
     });
   });
 
+  group('resuming after mark as played while paused', () {
+    test('a listener resume below the threshold reopens the listen', () async {
+      await service.onPlaybackStarted(episodeId, 0);
+      await playTo(const Duration(minutes: 10));
+      await pauseAt(const Duration(minutes: 10));
+      await service.markCompleted(episodeId);
+
+      service.onPlaybackResumed();
+      await service.onListenerResumed(
+        episodeId,
+        position: const Duration(minutes: 10),
+        duration: duration,
+      );
+      await playTo(const Duration(minutes: 11));
+      await pauseAt(const Duration(minutes: 11));
+
+      check((await history()).isReplaying).isTrue();
+      check(await isResumable()).isTrue();
+      check((await history()).completedCount).equals(1);
+    });
+  });
+
   group('review finding 8: mark as played on another episode', () {
     for (final bulk in [false, true]) {
       test('leaves the rewound listen resumable (bulk: $bulk)', () async {

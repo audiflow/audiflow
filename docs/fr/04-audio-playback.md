@@ -280,14 +280,17 @@ whether its current **listen** is open or finished.
   and its listen is open, and only then is it resumable: it shows in Continue listening, is
   restored at launch, matches the In Progress filter, and rows and the episode detail show its
   remaining time and progress line instead of the played check.
-- A finished listen is taken up again as a new listen, a **replay**, in exactly two cases, both
-  explicit acts of the listener and both judged against the completion threshold:
+- A finished listen is taken up again as a new listen, a **replay**, in exactly three cases, all
+  explicit acts of the listener and all judged against the completion threshold:
   - playback of the episode **starts** at a position below the threshold (from the start, from a
     saved position, from a chapter or a timestamped link, or after a restart);
+  - the listener **resumes** the paused episode below the threshold (after marking it played
+    while paused);
   - the listener **seeks backward** to a position below the threshold while the episode plays.
   Starting or resuming at or past the threshold continues the finished listen, so playing out
-  the tail of a finished episode does not count another completion; seeks the player makes on
-  its own (interruption rewinds, the end-of-chapter sleep timer) never reopen a listen; and
+  the tail of a finished episode does not count another completion; seeks and resumes the
+  player makes on its own (interruption rewinds and resumes, the end-of-chapter sleep timer)
+  never reopen a listen; and
   neither does playing on or skipping forward after "Mark as played".
 - A replay is a listen like any other: it is in progress while open, finishes at the threshold
   or when the listener marks the episode played, and the episode stays played throughout.
