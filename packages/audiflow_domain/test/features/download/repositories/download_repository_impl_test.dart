@@ -719,6 +719,29 @@ void main() {
       check(pending.map((removal) => removal.episodeId)).deepEquals([2]);
     });
 
+    test('keeps the stored path of a removal already pending', () async {
+      final old = await repository.createDownload(
+        episodeId: 1,
+        audioUrl: 'https://example.com/ep1.mp3',
+        wifiOnly: true,
+        origin: DownloadOrigin.auto,
+      );
+      await repository.updateStatus(
+        id: old!.id,
+        status: const DownloadStatus.completed(),
+        localPath: '/downloads/legacy-name.mp3',
+      );
+      await repository.deleteIfAuto(old.id);
+      final current = await request(1);
+
+      await removeAll([current.id], failed: {1});
+
+      final pending = await repository.getPendingFileRemovals();
+      check(
+        pending.map((removal) => removal.storedPath),
+      ).deepEquals(['/downloads/legacy-name.mp3']);
+    });
+
     test('a thrown removal keeps every task', () async {
       final first = await request(1);
       final second = await request(2);

@@ -155,15 +155,36 @@ class DownloadLocalDatasource {
       final orphaned = await _withoutTaskLeft(tasks);
       if (orphaned.isEmpty) return tasks;
       final failed = await removeFiles(orphaned);
-      await _isar.downloadFileRemovals.putAll([
+      await _recordFileRemovals([
         for (final task in orphaned)
-          if (failed.contains(task.episodeId))
-            DownloadFileRemoval()
-              ..episodeId = task.episodeId
-              ..storedPath = task.localPath,
+          if (failed.contains(task.episodeId)) task,
       ]);
       return tasks;
     });
+  }
+
+  /// Records a [DownloadFileRemoval] for each of [tasks]' episodes.
+  ///
+  /// An episode's pending removal that names a stored path is kept as is:
+  /// that path may be a legacy file name the `<episodeId>_` sweep cannot
+  /// find, while the task's own files carry that prefix and are swept by
+  /// the same retry.
+  Future<void> _recordFileRemovals(List<DownloadTask> tasks) async {
+    if (tasks.isEmpty) return;
+    final pending = await _isar.downloadFileRemovals.getAllByEpisodeId([
+      for (final task in tasks) task.episodeId,
+    ]);
+    final keptEpisodeIds = {
+      for (final removal in pending)
+        if (removal?.storedPath != null) removal!.episodeId,
+    };
+    await _isar.downloadFileRemovals.putAll([
+      for (final task in tasks)
+        if (!keptEpisodeIds.contains(task.episodeId))
+          DownloadFileRemoval()
+            ..episodeId = task.episodeId
+            ..storedPath = task.localPath,
+    ]);
   }
 
   /// The [tasks] whose episode has no download task left. A task of the
