@@ -87,15 +87,21 @@ void main() {
     tester,
   ) async {
     await pumpScreen(tester);
-    await tester.tap(find.text('Reduced'));
+    // Reduced is the default: only outcome tokens such as success play.
+    await tester.tap(find.text('selection'));
+    await tester.tap(find.text('success'));
+    check(recorder.played).deepEquals([HapticToken.success]);
+    recorder.played.clear();
+
+    await tester.tap(find.text('Off'));
     await tester.pumpAndSettle();
 
     check(
       prefs.getString(SettingsKeys.hapticFeedbackLevel),
-    ).equals(HapticFeedbackLevel.reduced.name);
+    ).equals(HapticFeedbackLevel.off.name);
 
     await tester.tap(find.text('selection'));
     await tester.tap(find.text('success'));
-    check(recorder.played).deepEquals([HapticToken.success]);
+    check(recorder.played).isEmpty();
   });
 }

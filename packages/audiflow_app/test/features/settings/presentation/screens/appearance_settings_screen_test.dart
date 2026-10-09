@@ -174,7 +174,7 @@ void main() {
       ).length.equals(1);
     });
 
-    testWidgets('haptic feedback level defaults to On and persists', (
+    testWidgets('haptic feedback level defaults to Reduced and persists', (
       tester,
     ) async {
       tester.view
@@ -187,14 +187,14 @@ void main() {
       final selector = tester.widget<SegmentedButton<HapticFeedbackLevel>>(
         find.byType(SegmentedButton<HapticFeedbackLevel>),
       );
-      check(selector.selected).deepEquals({HapticFeedbackLevel.on});
+      check(selector.selected).deepEquals({HapticFeedbackLevel.reduced});
 
-      await tester.tap(find.text('Reduced'));
+      await tester.tap(find.text('On'));
       await tester.pumpAndSettle();
 
       check(
         prefs.getString(SettingsKeys.hapticFeedbackLevel),
-      ).equals(HapticFeedbackLevel.reduced.name);
+      ).equals(HapticFeedbackLevel.on.name);
     });
   });
 }
