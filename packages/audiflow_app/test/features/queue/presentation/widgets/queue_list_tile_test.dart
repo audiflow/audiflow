@@ -3,23 +3,28 @@ import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:checks/checks.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
-QueueItemWithEpisode _item() => QueueItemWithEpisode(
+const _titles = ['Queued Episode', 'Next Episode'];
+
+/// The [index]th up-next row: queue item 5 + index for episode 9 + index.
+QueueItemWithEpisode _item([int index = 0]) => QueueItemWithEpisode(
   queueItem: QueueItem()
-    ..id = 5
-    ..episodeId = 9
-    ..position = 0
+    ..id = 5 + index
+    ..episodeId = 9 + index
+    ..position = index
     ..addedAt = DateTime(2026),
   episode: Episode()
-    ..id = 9
+    ..id = 9 + index
     ..podcastId = 1
-    ..guid = 'g9'
-    ..title = 'Queued Episode'
+    ..guid = 'g${9 + index}'
+    ..title = _titles[index]
     ..audioUrl = 'https://example.com/9.mp3'
     ..durationMs = 45 * 60 * 1000,
   itunesId: '123',
@@ -32,6 +37,17 @@ DownloadTask _task(int status) => DownloadTask()
   ..createdAt = DateTime(2026);
 
 DownloadTask _completed() => _task(3);
+
+/// The drag proxy once fully lifted.
+final _lifted = find.byWidgetPredicate(
+  (widget) =>
+      widget is DecoratedBox &&
+      widget.decoration is BoxDecoration &&
+      listEquals(
+        (widget.decoration as BoxDecoration).boxShadow,
+        AppShadows.floating,
+      ),
+);
 
 DownloadTask _autoCompleted() => _completed()
   ..id = 4
@@ -52,6 +68,9 @@ void main() {
     WidgetTester tester, {
     DownloadTask? task,
     VoidCallback? onRemove,
+    ValueChanged<int>? onReorderStart,
+    void Function(int from, int to)? onReorderItem,
+    int itemCount = 1,
     bool downloadCreates = true,
     _FakeDownloadService? service,
     HapticPlayer haptics = const NoopHapticPlayer(),
@@ -62,6 +81,7 @@ void main() {
         key: UniqueKey(),
         overrides: [
           episodeDownloadProvider(9).overrideWith((ref) => Stream.value(task)),
+          episodeDownloadProvider(10).overrideWith((ref) => Stream.value(null)),
           downloadServiceProvider.overrideWithValue(
             service ?? _FakeDownloadService(creates: downloadCreates),
           ),
@@ -76,11 +96,13 @@ void main() {
               body: CustomScrollView(
                 slivers: [
                   SliverReorderableList(
-                    itemCount: 1,
-                    onReorderItem: (_, _) {},
+                    itemCount: itemCount,
+                    onReorderItem: onReorderItem ?? (_, _) {},
+                    onReorderStart: onReorderStart,
+                    proxyDecorator: QueueListTile.liftWhileDragging,
                     itemBuilder: (_, index) => QueueListTile(
-                      key: const ValueKey(5),
-                      item: _item(),
+                      key: ValueKey(5 + index),
+                      item: _item(index),
                       index: index,
                       onRemove: onRemove ?? () {},
                       onTap: () {},
@@ -202,6 +224,107 @@ void main() {
     await tester.pumpAndSettle();
     check(find.text('Delete download').evaluate()).length.equals(1);
     check(find.text('Share episode').evaluate()).length.equals(1);
+  });
+
+  testWidgets('holding the drag handle never opens the menu', (tester) async {
+    await pump(tester, task: _completed());
+    final gesture = await tester.startGesture(
+      tester.getCenter(find.byIcon(Symbols.drag_handle)),
+    );
+    // Well past the long-press timeout without moving, as a listener
+    // pausing before the drag would.
+    await tester.pump(kLongPressTimeout * 2);
+    await gesture.up();
+    await tester.pumpAndSettle();
+    check(find.text('Delete download').evaluate()).isEmpty();
+  });
+
+  testWidgets('pausing on the handle edge, then moving, starts a reorder', (
+    tester,
+  ) async {
+    final started = <int>[];
+    await pump(tester, task: _completed(), onReorderStart: started.add);
+    // Inside the touch target but off the glyph.
+    final target = tester.getRect(find.byType(ReorderableDragStartListener));
+    final gesture = await tester.startGesture(
+      target.topLeft + const Offset(2, 2),
+    );
+    await tester.pump(kLongPressTimeout * 2);
+    await gesture.moveBy(const Offset(0, 40));
+    await tester.pump();
+    check(started).deepEquals([0]);
+    check(find.text('Delete download').evaluate()).isEmpty();
+    await gesture.up();
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('holding the handle still lifts the row before it moves', (
+    tester,
+  ) async {
+    final started = <int>[];
+    await pump(tester, onReorderStart: started.add);
+    final gesture = await tester.startGesture(
+      tester.getCenter(find.byIcon(Symbols.drag_handle)),
+    );
+    await tester.pump(kLongPressTimeout + const Duration(milliseconds: 50));
+    await tester.pumpAndSettle();
+    check(started).deepEquals([0]);
+    check(_lifted.evaluate()).length.equals(1);
+    await gesture.up();
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('holding the handle, then dragging past a row, reorders', (
+    tester,
+  ) async {
+    final moves = <(int, int)>[];
+    await pump(
+      tester,
+      itemCount: 2,
+      onReorderItem: (from, to) => moves.add((from, to)),
+    );
+    final below = tester.getRect(find.text('Next Episode'));
+    final gesture = await tester.startGesture(
+      tester.getCenter(find.byIcon(Symbols.drag_handle).first),
+    );
+    await tester.pump(kLongPressTimeout + const Duration(milliseconds: 50));
+    // Past the second row's midpoint, in steps so the list follows.
+    for (var step = 0; step < 4; step++) {
+      await gesture.moveBy(Offset(0, below.height / 2));
+      await tester.pump();
+    }
+    await gesture.up();
+    await tester.pumpAndSettle();
+    check(moves).deepEquals([(0, 1)]);
+  });
+
+  testWidgets('the dragged row lifts with the floating shadow', (tester) async {
+    await pump(tester);
+    final gesture = await tester.startGesture(
+      tester.getCenter(find.byIcon(Symbols.drag_handle)),
+    );
+    // Moving at once, without the hold, still starts the drag.
+    await gesture.moveBy(const Offset(0, 40));
+    await tester.pumpAndSettle();
+    check(_lifted.evaluate()).length.equals(1);
+    await gesture.up();
+    await tester.pumpAndSettle();
+    check(_lifted.evaluate()).isEmpty();
+  });
+
+  testWidgets('long press just above the handle opens the menu', (
+    tester,
+  ) async {
+    await pump(tester, task: _completed());
+    final target = tester.getRect(find.byType(ReorderableDragStartListener));
+    final row = tester.getRect(find.byType(InkWell));
+    // The row's long press still covers the handle's column outside the
+    // handle itself.
+    await tester.longPressAt(
+      Offset(target.center.dx, (row.top + target.top) / 2),
+    );
+    await tester.pumpAndSettle();
+    check(find.text('Delete download').evaluate()).length.equals(1);
   });
 
   testWidgets('long press keeps an auto download and says so', (tester) async {
