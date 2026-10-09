@@ -130,30 +130,56 @@ class DownloadLocalDatasource {
     });
   }
 
-  /// [removeEpisodeFiles] for many tasks in one transaction: deletes
-  /// [tasks], then removes with [removeFiles] the files of their episodes
-  /// that have no task left. Returns the episodes passed to [removeFiles].
+  /// [removeEpisodeFiles] for many tasks in one transaction. Re-reads the
+  /// tasks [taskIds], deletes those [isRemovable] accepts, then removes
+  /// with [removeFiles] the files of their episodes that have no task left.
+  /// Returns the deleted tasks.
   ///
-  /// One transaction instead of one per task, so a bulk delete commits,
-  /// and notifies watchers, once. [removeFiles] must not open a
+  /// [removeFiles] returns the episodes whose files it could not delete.
+  /// Those get a [DownloadFileRemoval] in the same transaction, retried
+  /// with the retention removals, because the files it did delete cannot
+  /// come back and so their records must go. [removeFiles] must not open a
   /// transaction of its own.
-  Future<Set<int>> removeTasksWithFiles({
-    required List<DownloadTask> tasks,
-    required Future<void> Function(Set<int> episodeIds) removeFiles,
+  Future<List<DownloadTask>> removeTasksWithFiles({
+    required Iterable<int> taskIds,
+    required bool Function(DownloadTask task) isRemovable,
+    required Future<Set<int>> Function(List<DownloadTask> tasks) removeFiles,
   }) {
-    if (tasks.isEmpty) return Future.value(const {});
     return _isar.writeTxn(() async {
-      await _isar.downloadTasks.deleteAll([for (final t in tasks) t.id]);
-      final episodeIds = {for (final task in tasks) task.episodeId};
-      // A task of the episode owns its files now; deleting them would take
-      // its download too. Removing that task later sweeps the same files.
-      final owned = await getByEpisodeIds(episodeIds);
-      final unowned = episodeIds.difference({
-        for (final task in owned) task.episodeId,
-      });
-      if (unowned.isNotEmpty) await removeFiles(unowned);
-      return unowned;
+      final tasks = [
+        for (final task in await _isar.downloadTasks.getAll(taskIds.toList()))
+          if (task != null && isRemovable(task)) task,
+      ];
+      if (tasks.isEmpty) return tasks;
+      await _isar.downloadTasks.deleteAll([for (final task in tasks) task.id]);
+      final orphaned = await _withoutTaskLeft(tasks);
+      if (orphaned.isEmpty) return tasks;
+      final failed = await removeFiles(orphaned);
+      await _isar.downloadFileRemovals.putAll([
+        for (final task in orphaned)
+          if (failed.contains(task.episodeId))
+            DownloadFileRemoval()
+              ..episodeId = task.episodeId
+              ..storedPath = task.localPath,
+      ]);
+      return tasks;
     });
+  }
+
+  /// The [tasks] whose episode has no download task left. A task of the
+  /// episode owns its files now; deleting them would take its download
+  /// too. Removing that task later sweeps the same files.
+  Future<List<DownloadTask>> _withoutTaskLeft(List<DownloadTask> tasks) async {
+    final owned = {
+      for (final task in await getByEpisodeIds({
+        for (final task in tasks) task.episodeId,
+      }))
+        task.episodeId,
+    };
+    return [
+      for (final task in tasks)
+        if (!owned.contains(task.episodeId)) task,
+    ];
   }
 
   /// Returns a download task by ID.

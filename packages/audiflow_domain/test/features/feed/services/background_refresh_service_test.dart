@@ -464,10 +464,11 @@ class FakeDownloadRepository implements DownloadRepository {
     int? fileRemovalId,
   }) async => false;
   @override
-  Future<Set<int>> removeTasksWithFiles({
-    required List<DownloadTask> tasks,
-    required Future<void> Function(Set<int> episodeIds) removeFiles,
-  }) async => const {};
+  Future<List<DownloadTask>> removeTasksWithFiles({
+    required Iterable<int> taskIds,
+    required bool Function(DownloadTask task) isRemovable,
+    required Future<Set<int>> Function(List<DownloadTask> tasks) removeFiles,
+  }) async => const [];
   @override
   Future<int> getActiveCount() async => 0;
   @override

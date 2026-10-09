@@ -2,8 +2,9 @@ import 'package:isar_community/isar.dart';
 
 part 'download_file_removal.g.dart';
 
-/// Files of an auto download whose record retention already deleted, kept
-/// until the files are gone.
+/// Files of a download whose record is already deleted, kept until the
+/// files are gone: written by retention, and by a bulk delete for files it
+/// could not remove.
 ///
 /// Retention deletes the record first, atomically with its origin check,
 /// so a keep request can never lose its file. This row is written in that

@@ -365,46 +365,45 @@ class DownloadService {
     Iterable<int> taskIds, {
     required Set<DownloadStatus> statuses,
   }) async {
-    final tasks = await _tasksStillIn(taskIds, statuses);
-    if (tasks.isEmpty) return 0;
-    await _removeTasks(tasks);
-    _logger.i(
-      'Deleted ${tasks.length} of ${taskIds.length} confirmed downloads',
-    );
-    return tasks.length;
-  }
-
-  Future<List<DownloadTask>> _tasksStillIn(
-    Iterable<int> taskIds,
-    Set<DownloadStatus> statuses,
-  ) async {
-    final tasks = <DownloadTask>[];
-    for (final id in taskIds.toSet()) {
-      final task = await _repository.getById(id);
-      if (task != null && statuses.contains(task.downloadStatus)) {
-        tasks.add(task);
-      }
-    }
-    return tasks;
-  }
-
-  /// [_deleteTask] for many tasks. The records go in one transaction and
-  /// the files in one directory sweep, and stations are reconciled once
-  /// per station: done per task, each step repeats work that a bulk delete
-  /// multiplies by the number of downloads.
-  Future<void> _removeTasks(List<DownloadTask> tasks) async {
-    for (final task in tasks.where((task) => task.downloadStatus.isActive)) {
-      await _queueService.cancelDownload(task.id);
-    }
-    await _repository.removeTasksWithFiles(
-      tasks: tasks,
-      removeFiles: (episodeIds) => _fileService.deleteEpisodesFiles({
-        for (final task in tasks)
-          if (episodeIds.contains(task.episodeId))
-            task.episodeId: task.localPath,
+    final ids = taskIds.toSet();
+    final cancelled = await _cancelActiveTasksStillIn(ids, statuses);
+    // The records go in one transaction and the files in one directory
+    // sweep, and stations are reconciled once per station: done per task,
+    // each step repeats work that a bulk delete multiplies by the number
+    // of downloads. Rows are re-read inside the transaction, so a task that
+    // left [statuses] since is kept unless this call cancelled it.
+    final deleted = await _repository.removeTasksWithFiles(
+      taskIds: ids,
+      isRemovable: (task) =>
+          cancelled.contains(task.id) || statuses.contains(task.downloadStatus),
+      removeFiles: (tasks) => _fileService.deleteEpisodesFiles({
+        for (final task in tasks) task.episodeId: task.localPath,
       }),
     );
-    await _tryReconcileAll([for (final task in tasks) task.episodeId]);
+    if (deleted.isEmpty) return 0;
+    await _tryReconcileAll([for (final task in deleted) task.episodeId]);
+    _logger.i('Deleted ${deleted.length} of ${ids.length} confirmed downloads');
+    return deleted.length;
+  }
+
+  /// Cancels the active tasks of [taskIds] still in [statuses], awaiting
+  /// each until its transfer has stopped, as in [_deleteTask]. Each row is
+  /// re-read just before, so one that left [statuses] is left running.
+  /// Returns the IDs cancelled.
+  Future<Set<int>> _cancelActiveTasksStillIn(
+    Set<int> taskIds,
+    Set<DownloadStatus> statuses,
+  ) async {
+    final cancelled = <int>{};
+    for (final id in taskIds) {
+      final status = (await _repository.getById(id))?.downloadStatus;
+      if (status == null || !status.isActive || !statuses.contains(status)) {
+        continue;
+      }
+      await _queueService.cancelDownload(id);
+      cancelled.add(id);
+    }
+    return cancelled;
   }
 
   Future<void> _deleteTask(DownloadTask task) async {

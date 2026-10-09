@@ -17,23 +17,11 @@ Future<void> deleteEpisodeDownloadFiles({
   required String downloadsDir,
   required int episodeId,
   String? storedPath,
-}) => deleteEpisodesDownloadFiles(
-  downloadsDir: downloadsDir,
-  storedPaths: {episodeId: storedPath},
-);
-
-/// [deleteEpisodeDownloadFiles] for many episodes, listing [downloadsDir]
-/// once instead of once per episode. [storedPaths] maps each episode ID to
-/// its task's stored path, if any.
-Future<void> deleteEpisodesDownloadFiles({
-  required String downloadsDir,
-  required Map<int, String?> storedPaths,
 }) async {
-  if (storedPaths.isEmpty) return;
   final paths = <String>{
-    for (final storedPath in storedPaths.values)
-      if (storedPath != null) p.join(downloadsDir, p.basename(storedPath)),
-    ...await _filesOfEpisodes(downloadsDir, storedPaths.keys.toSet()),
+    if (storedPath != null) p.join(downloadsDir, p.basename(storedPath)),
+    for (final (path, _) in await _filesOfEpisodes(downloadsDir, {episodeId}))
+      path,
   };
   for (final path in paths) {
     final file = File(path);
@@ -41,7 +29,45 @@ Future<void> deleteEpisodesDownloadFiles({
   }
 }
 
-Future<List<String>> _filesOfEpisodes(
+/// [deleteEpisodeDownloadFiles] for many episodes, listing [downloadsDir]
+/// once instead of once per episode. [storedPaths] maps each episode ID to
+/// its task's stored path, if any.
+///
+/// Returns the episodes whose files could not all be deleted. A file that
+/// fails to delete does not stop the others: their deletes cannot be
+/// undone, so the caller must commit their records' removal either way and
+/// record the failed episodes for a retry.
+Future<Set<int>> deleteEpisodesDownloadFiles({
+  required String downloadsDir,
+  required Map<int, String?> storedPaths,
+}) async {
+  if (storedPaths.isEmpty) return const {};
+  final episodeIdsByPath = <String, int>{
+    for (final MapEntry(key: episodeId, value: storedPath)
+        in storedPaths.entries)
+      if (storedPath != null)
+        p.join(downloadsDir, p.basename(storedPath)): episodeId,
+    for (final (path, episodeId) in await _filesOfEpisodes(
+      downloadsDir,
+      storedPaths.keys.toSet(),
+    ))
+      path: episodeId,
+  };
+  final failed = <int>{};
+  for (final MapEntry(key: path, value: episodeId)
+      in episodeIdsByPath.entries) {
+    try {
+      final file = File(path);
+      if (await file.exists()) await file.delete();
+    } on FileSystemException {
+      failed.add(episodeId);
+    }
+  }
+  return failed;
+}
+
+/// The download files of [episodeIds] in [directory], with their episode.
+Future<List<(String, int)>> _filesOfEpisodes(
   String directory,
   Set<int> episodeIds,
 ) async {
@@ -49,8 +75,10 @@ Future<List<String>> _filesOfEpisodes(
   if (!await dir.exists()) return const [];
   return [
     await for (final entity in dir.list(followLinks: false))
-      if (entity is File && episodeIds.contains(_episodeIdOf(entity.path)))
-        entity.path,
+      if (entity is File)
+        if (_episodeIdOf(entity.path) case final episodeId?
+            when episodeIds.contains(episodeId))
+          (entity.path, episodeId),
   ];
 }
 

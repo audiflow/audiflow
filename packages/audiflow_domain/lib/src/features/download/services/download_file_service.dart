@@ -187,9 +187,10 @@ class DownloadFileService {
   }
 
   /// [deleteEpisodeFiles] for many episodes at once. [storedPaths] maps
-  /// each episode ID to its task's stored path, if any.
-  Future<void> deleteEpisodesFiles(Map<int, String?> storedPaths) async {
-    await deleteEpisodesDownloadFiles(
+  /// each episode ID to its task's stored path, if any. Returns the
+  /// episodes whose files could not all be deleted.
+  Future<Set<int>> deleteEpisodesFiles(Map<int, String?> storedPaths) async {
+    return deleteEpisodesDownloadFiles(
       downloadsDir: await getDownloadsDirectory(),
       storedPaths: storedPaths,
     );

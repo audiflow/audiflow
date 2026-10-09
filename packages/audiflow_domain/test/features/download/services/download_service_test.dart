@@ -680,6 +680,37 @@ void main() {
       ]);
     });
 
+    test('keeps a task that left the statuses before the batch '
+        'transaction', () async {
+      // Failed when confirmed, retried (pending again) by the time the
+      // transaction re-reads it.
+      final reads = [_task(id: 1, status: 4), _task(id: 1, status: 0)];
+      when(mockRepository.getById(1)).thenAnswer(
+        (_) async => reads.length == 1 ? reads.first : reads.removeAt(0),
+      );
+
+      final deleted = await service.deleteTasks(
+        [1],
+        statuses: {const DownloadStatus.failed()},
+      );
+
+      check(deleted).equals(0);
+      check(removedTaskIds()).isEmpty();
+    });
+
+    test('deletes a task it cancelled although its status changed', () async {
+      // Pending when re-read before the cancel, cancelled afterwards.
+      final reads = [_task(id: 1, status: 0), _task(id: 1, status: 5)];
+      when(mockRepository.getById(1)).thenAnswer(
+        (_) async => reads.length == 1 ? reads.first : reads.removeAt(0),
+      );
+
+      final deleted = await service.deleteTasks([1], statuses: queued);
+
+      check(deleted).equals(1);
+      verify(mockQueueService.cancelDownload(1)).called(1);
+    });
+
     test('deletes a repeated ID once', () async {
       when(
         mockRepository.getById(1),
@@ -1109,20 +1140,26 @@ class _RecordingReconciler implements StationReconcilerService {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-/// Runs the batch file removal the way the real repository does inside its
-/// transaction, for every episode, recording which tasks went.
+/// Runs the batch removal the way the real repository does inside its
+/// transaction: re-reads each task through the stubbed [getById], keeps
+/// those `isRemovable` accepts, and removes files for every episode.
 class _BatchRemovingRepository extends MockDownloadRepository {
   final removedTaskIds = <List<int>>[];
 
   @override
-  Future<Set<int>> removeTasksWithFiles({
-    required List<DownloadTask> tasks,
-    required Future<void> Function(Set<int> episodeIds) removeFiles,
+  Future<List<DownloadTask>> removeTasksWithFiles({
+    required Iterable<int> taskIds,
+    required bool Function(DownloadTask task) isRemovable,
+    required Future<Set<int>> Function(List<DownloadTask> tasks) removeFiles,
   }) async {
+    final tasks = [
+      for (final id in taskIds)
+        if (await getById(id) case final task? when isRemovable(task)) task,
+    ];
+    if (tasks.isEmpty) return tasks;
     removedTaskIds.add([for (final task in tasks) task.id]);
-    final episodeIds = {for (final task in tasks) task.episodeId};
-    await removeFiles(episodeIds);
-    return episodeIds;
+    await removeFiles(tasks);
+    return tasks;
   }
 }
 
@@ -1131,6 +1168,8 @@ class _RecordingFileService extends MockDownloadFileService {
   final removedStoredPaths = <Map<int, String?>>[];
 
   @override
-  Future<void> deleteEpisodesFiles(Map<int, String?> storedPaths) async =>
-      removedStoredPaths.add(storedPaths);
+  Future<Set<int>> deleteEpisodesFiles(Map<int, String?> storedPaths) async {
+    removedStoredPaths.add(storedPaths);
+    return const {};
+  }
 }

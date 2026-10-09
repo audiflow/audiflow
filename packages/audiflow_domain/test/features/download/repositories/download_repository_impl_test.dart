@@ -639,51 +639,94 @@ void main() {
           wifiOnly: true,
         ))!;
 
+    Future<List<DownloadTask>> removeAll(
+      List<int> taskIds, {
+      bool Function(DownloadTask task)? isRemovable,
+      List<List<int>>? removedEpisodes,
+      Set<int> failed = const {},
+    }) => repository.removeTasksWithFiles(
+      taskIds: taskIds,
+      isRemovable: isRemovable ?? (_) => true,
+      removeFiles: (tasks) async {
+        removedEpisodes?.add([for (final task in tasks) task.episodeId]);
+        return failed;
+      },
+    );
+
     test('deletes the tasks and removes their episodes\' files', () async {
       final first = await request(1);
       final second = await request(2);
-      final removed = <Set<int>>[];
+      final removed = <List<int>>[];
 
-      final ran = await repository.removeTasksWithFiles(
-        tasks: [first, second],
-        removeFiles: (episodeIds) async => removed.add(episodeIds),
-      );
+      final deleted = await removeAll([
+        first.id,
+        second.id,
+      ], removedEpisodes: removed);
 
-      check(ran).deepEquals({1, 2});
+      check(deleted.map((task) => task.id)).deepEquals([first.id, second.id]);
       check(removed).deepEquals([
-        {1, 2},
+        [1, 2],
       ]);
       check(await repository.getAll()).isEmpty();
+      check(await repository.getPendingFileRemovals()).isEmpty();
+    });
+
+    test('keeps a task the re-read finds not removable', () async {
+      final task = await request(1);
+      await repository.updateStatus(
+        id: task.id,
+        status: const DownloadStatus.completed(),
+      );
+      final removed = <List<int>>[];
+
+      final deleted = await removeAll(
+        [task.id],
+        isRemovable: (task) => task.downloadStatus.isActive,
+        removedEpisodes: removed,
+      );
+
+      check(deleted).isEmpty();
+      check(removed).isEmpty();
+      check(await repository.getById(task.id)).isNotNull();
     });
 
     test('leaves the files of an episode that still has a task', () async {
       final first = await request(1);
-      final current = await request(2);
-      // Read before the episode was downloaded again under a new task.
-      final stale = DownloadTask()
-        ..id = current.id + 100
-        ..episodeId = 2
-        ..audioUrl = 'https://example.com/ep2.mp3';
-      final removed = <Set<int>>[];
+      final second = await request(2);
+      final removed = <List<int>>[];
 
-      await repository.removeTasksWithFiles(
-        tasks: [first, stale],
-        removeFiles: (episodeIds) async => removed.add(episodeIds),
+      await removeAll(
+        [first.id, second.id],
+        // Episode 2 was downloaded again under a task this call keeps.
+        isRemovable: (task) => task.id == first.id,
+        removedEpisodes: removed,
       );
 
       check(removed).deepEquals([
-        {1},
+        [1],
       ]);
-      check(await repository.getById(current.id)).isNotNull();
+      check(await repository.getById(second.id)).isNotNull();
     });
 
-    test('a failed removal keeps every task', () async {
+    test('records files it could not remove for a retry', () async {
+      final first = await request(1);
+      final second = await request(2);
+
+      await removeAll([first.id, second.id], failed: {2});
+
+      check(await repository.getAll()).isEmpty();
+      final pending = await repository.getPendingFileRemovals();
+      check(pending.map((removal) => removal.episodeId)).deepEquals([2]);
+    });
+
+    test('a thrown removal keeps every task', () async {
       final first = await request(1);
       final second = await request(2);
 
       await check(
         repository.removeTasksWithFiles(
-          tasks: [first, second],
+          taskIds: [first.id, second.id],
+          isRemovable: (_) => true,
           removeFiles: (_) async => throw const FormatException('disk'),
         ),
       ).throws<FormatException>();

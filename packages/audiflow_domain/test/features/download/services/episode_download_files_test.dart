@@ -72,17 +72,35 @@ void main() {
     final other = write('56_Other.mp3');
     final unnumbered = write('x12_Other.mp3');
 
-    await deleteEpisodesDownloadFiles(
+    final failed = await deleteEpisodesDownloadFiles(
       downloadsDir: downloadsDir.path,
       storedPaths: {12: null, 34: '/old/downloads/legacy-name.mp3'},
     );
 
+    check(failed).isEmpty();
     check(first.existsSync()).isFalse();
     check(second.existsSync()).isFalse();
     check(legacy.existsSync()).isFalse();
     check(other.existsSync()).isTrue();
     check(unnumbered.existsSync()).isTrue();
   });
+
+  test('reports the episodes whose files failed to delete', () async {
+    final first = write('12_First.mp3');
+    final second = write('34_Second.mp3');
+    // A read-only directory refuses every delete in it.
+    Process.runSync('chmod', ['555', downloadsDir.path]);
+    addTearDown(() => Process.runSync('chmod', ['755', downloadsDir.path]));
+
+    final failed = await deleteEpisodesDownloadFiles(
+      downloadsDir: downloadsDir.path,
+      storedPaths: {12: null, 34: null},
+    );
+
+    check(failed).deepEquals({12, 34});
+    check(first.existsSync()).isTrue();
+    check(second.existsSync()).isTrue();
+  }, testOn: 'mac-os || linux');
 
   test('does nothing when the downloads directory does not exist', () async {
     await deleteEpisodeDownloadFiles(
