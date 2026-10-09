@@ -243,7 +243,7 @@ void main() {
     });
   });
 
-  group('1.0x detent', () {
+  group('1.0x mark', () {
     Future<List<HapticToken>> dragAcross(
       WidgetTester tester, {
       required double fromFraction,
@@ -271,16 +271,14 @@ void main() {
       return player.played;
     }
 
-    testWidgets('a drag across 1.0x plays steps and one detent', (
-      tester,
-    ) async {
+    testWidgets('a drag across 1.0x plays steps and one edge', (tester) async {
       // The track starts at 0.5x, so 1.0x sits a quarter of the way along.
       final played = await dragAcross(tester, fromFraction: 0, toFraction: 0.6);
       check(
-        played.where((t) => t == HapticToken.detent).toList(),
+        played.where((t) => t == HapticToken.edge).toList(),
       ).length.equals(1);
       check(
-        played.where((t) => t != HapticToken.detent).toSet(),
+        played.where((t) => t != HapticToken.edge).toSet(),
       ).deepEquals({HapticToken.step});
     });
 

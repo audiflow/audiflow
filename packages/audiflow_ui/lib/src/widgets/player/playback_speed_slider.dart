@@ -10,7 +10,8 @@ import 'step_drag_tracker.dart';
 ///
 /// Each step a drag crosses plays `step`, the lightest token, so a long
 /// drag stays a faint texture. Reaching or passing 1.0x, the speed
-/// listeners most often return to, plays the stronger `detent` instead.
+/// listeners most often return to, plays `edge` instead: as firm as the
+/// seek bar's end, so the normal speed is unmistakable.
 ///
 /// Landmark speeds ([landmarkSpeeds]) are labelled under the exact tick
 /// they belong to, so the uneven step grid (0.1 up to 2.0, then 0.2)
@@ -101,7 +102,7 @@ class _PlaybackSpeedSliderState extends State<PlaybackSpeedSlider> {
     // touched step is not.
     HapticsScope.of(context).play(
       _reachesNormal(_index, tracker.index)
-          ? HapticToken.detent
+          ? HapticToken.edge
           : HapticToken.step,
     );
     _select(tracker.index);

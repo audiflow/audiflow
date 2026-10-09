@@ -36,7 +36,7 @@ state and resume position stay coherent no matter where the listener touches it.
   slides up from above the bottom navigation bar showing artwork, episode title, podcast name,
   skip-forward and play/pause buttons, and a thin progress line along its bottom edge once
   playback has started. Playback starts within a moment, and tapping the mini player opens
-  the full player screen with artwork, a scrubbable seek bar, and skip controls. The full
+  the full player screen (with a light haptic as it opens) with artwork, a scrubbable seek bar, and skip controls. The full
   player sits on a dark ground taken from the episode artwork (muted and darkened so white
   controls stay readable; a default navy until the artwork is sampled), with white controls.
   Its header shows a close chevron, "Playing from" with the queue's source (or the podcast),
@@ -76,7 +76,7 @@ state and resume position stay coherent no matter where the listener touches it.
   2.6x, 2.8x, and 3.0x — with 0.5x, 1.0x, 2.0x, and 3.0x labelled under their ticks. It snaps
   to the positions, applies each step immediately, and shows the speed above the thumb while
   dragging; each step a drag crosses plays the lightest haptic, and reaching or passing 1.0x
-  plays a firmer detent instead. The slider commits the speed the listener meant:
+  plays a firm haptic instead, as firm as reaching the seek bar's end. The slider commits the speed the listener meant:
   a step is only taken once the finger is well past a boundary, so resting on a boundary does
   not flicker between two speeds; a single-step change made just before lift-off, after the
   finger had rested on the previous step, is undone; and a tap uses the touch-down point

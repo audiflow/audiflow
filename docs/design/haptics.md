@@ -83,7 +83,7 @@ Every interaction that was considered is listed here, including those that delib
 | Seek bar crosses a chapter boundary | `detent` |
 | Seek bar drag reaches the start or the end | `edge` |
 | Speed slider, per step | `step` (the per-step haptic first removed as noise returns at the lightest weight) |
-| Speed slider reaches or crosses 1.0x | `detent` (in place of that step's `step`) |
+| Speed slider reaches or crosses 1.0x | `edge` (in place of that step's `step`; as firm as the seek bar's end) |
 | Speed preset chip | `selection` |
 | Sleep timer option chosen | `selection` |
 | Sleep timer long press opens the keypad | `longPress` |
@@ -108,7 +108,8 @@ Every interaction that was considered is listed here, including those that delib
 | Settings switches (and the other preference switches: audio sheet, station filters) | `toggleOn` / `toggleOff` |
 | Clear-queue and bulk-delete confirmation | `warning` |
 | Wrong PIN and PIN lockout | `error` |
-| Full player open / close | `none` |
+| Full player opened from the mini player | `detent` |
+| Full player closed | `none` |
 | Seek undo | `tap` |
 
 ## 4. Platform realization
