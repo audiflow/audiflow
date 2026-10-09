@@ -51,6 +51,8 @@ Tokens are named by meaning. The platform columns give the realization; section 
 | `dragStep` | A dragged item moved past a neighbor | `UISelectionFeedbackGenerator` | `SEGMENT_FREQUENT_TICK` | off |
 | `dragDrop` | A dragged item was put down | `UIImpactFeedbackGenerator(.light)` | `GESTURE_END` | off |
 | `detent` | A continuous gesture passed a meaningful mark | `UIImpactFeedbackGenerator(.rigid)`, intensity 0.5 | `SEGMENT_TICK` | off |
+| `step` | A stepped control moved one notch (the lightest token) | `UISelectionFeedbackGenerator` | `SEGMENT_FREQUENT_TICK` | off |
+| `edge` | A continuous gesture reached the end of its range (stronger than `detent`) | `UIImpactFeedbackGenerator(.rigid)` | `VIRTUAL_KEY` | off |
 | `success` | A user-initiated task completed | `UINotificationFeedbackGenerator(.success)` | `CONFIRM` | on |
 | `warning` | A confirmation for an irreversible action appeared | `UINotificationFeedbackGenerator(.warning)` | none (see note) | on |
 | `error` | A user-initiated task failed | `UINotificationFeedbackGenerator(.error)` | `REJECT` | on |
@@ -79,8 +81,9 @@ Every interaction that was considered is listed here, including those that delib
 | Skip back / forward | `none` |
 | Seek bar drag and speed-band changes | `none` (removed after on-device testing) |
 | Seek bar crosses a chapter boundary | `detent` |
-| Speed slider, per step | `none` (removed after on-device testing) |
-| Speed slider crosses 1.0x | `detent` |
+| Seek bar drag reaches the start or the end | `edge` |
+| Speed slider, per step | `step` (the per-step haptic first removed as noise returns at the lightest weight) |
+| Speed slider reaches or crosses 1.0x | `detent` (in place of that step's `step`) |
 | Speed preset chip | `selection` |
 | Sleep timer option chosen | `selection` |
 | Sleep timer long press opens the keypad | `longPress` |

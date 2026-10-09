@@ -912,7 +912,7 @@ void main() {
         await tester.drag(_track, const Offset(80, 0));
         await tester.pump();
 
-        check(player.prepared).deepEquals([HapticToken.detent]);
+        check(player.prepared).deepEquals([HapticToken.edge]);
         check(player.played).deepEquals([HapticToken.detent]);
       });
 
@@ -935,7 +935,7 @@ void main() {
         check(player.played).isEmpty();
       });
 
-      testWidgets('a single-chapter track neither prepares nor plays', (
+      testWidgets('a single-chapter track plays nothing mid-track', (
         tester,
       ) async {
         final player = _RecordingHapticPlayer();
@@ -949,8 +949,28 @@ void main() {
         await tester.drag(_track, const Offset(300, 0));
         await tester.pump();
 
-        check(player.prepared).isEmpty();
+        check(player.prepared).deepEquals([HapticToken.edge]);
         check(player.played).isEmpty();
+      });
+
+      testWidgets('reaching the end plays one edge', (tester) async {
+        final player = _RecordingHapticPlayer();
+        await tester.pumpWidget(
+          HapticsScope(
+            player: player,
+            child: _host(
+              value: 0.9,
+              recorder: _SeekRecorder(),
+              segments: chapters,
+            ),
+          ),
+        );
+
+        // Pushes past the end: later moves clamp at 1.0 and stay silent.
+        await tester.drag(_track, const Offset(200, 0));
+        await tester.pump();
+
+        check(player.played).deepEquals([HapticToken.edge]);
       });
     });
   });

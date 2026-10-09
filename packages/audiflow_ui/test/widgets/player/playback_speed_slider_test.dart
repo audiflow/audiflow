@@ -271,15 +271,25 @@ void main() {
       return player.played;
     }
 
-    testWidgets('a drag across 1.0x plays one detent', (tester) async {
+    testWidgets('a drag across 1.0x plays steps and one detent', (
+      tester,
+    ) async {
       // The track starts at 0.5x, so 1.0x sits a quarter of the way along.
       final played = await dragAcross(tester, fromFraction: 0, toFraction: 0.6);
-      check(played).deepEquals([HapticToken.detent]);
+      check(
+        played.where((t) => t == HapticToken.detent).toList(),
+      ).length.equals(1);
+      check(
+        played.where((t) => t != HapticToken.detent).toSet(),
+      ).deepEquals({HapticToken.step});
     });
 
-    testWidgets('a drag that stays above 1.0x plays nothing', (tester) async {
+    testWidgets('a drag that stays above 1.0x plays only steps', (
+      tester,
+    ) async {
       final played = await dragAcross(tester, fromFraction: 0.6, toFraction: 1);
-      check(played).isEmpty();
+      check(played).isNotEmpty();
+      check(played.toSet()).deepEquals({HapticToken.step});
     });
   });
 }

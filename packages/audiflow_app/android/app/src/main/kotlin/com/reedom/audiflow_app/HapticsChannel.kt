@@ -43,6 +43,9 @@ object HapticsChannel {
     private val mappings = mapOf(
         "selection" to Mapping(C.SEGMENT_TICK, API_34, C.CLOCK_TICK),
         "detent" to Mapping(C.SEGMENT_TICK, API_34, C.CLOCK_TICK),
+        "step" to Mapping(C.SEGMENT_FREQUENT_TICK, API_34, C.CLOCK_TICK),
+        // A click, a step up from the detent tick, so the end reads as a stop.
+        "edge" to Mapping(C.VIRTUAL_KEY, 0, C.VIRTUAL_KEY),
         // CONTEXT_CLICK felt heavier than the selection tick below API 34, so
         // on uses the same faint tick as off there; the switch shows which.
         "toggleOn" to Mapping(C.TOGGLE_ON, API_34, C.CLOCK_TICK),

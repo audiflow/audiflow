@@ -75,8 +75,8 @@ state and resume position stay coherent no matter where the listener touches it.
   stepped slider. The slider has 21 positions — 0.5x to 2.0x in 0.1 steps, then 2.2x, 2.4x,
   2.6x, 2.8x, and 3.0x — with 0.5x, 1.0x, 2.0x, and 3.0x labelled under their ticks. It snaps
   to the positions, applies each step immediately, and shows the speed above the thumb while
-  dragging; it gives no haptic per step, only a single detent haptic when a drag reaches or
-  passes 1.0x. The slider commits the speed the listener meant:
+  dragging; each step a drag crosses plays the lightest haptic, and reaching or passing 1.0x
+  plays a firmer detent instead. The slider commits the speed the listener meant:
   a step is only taken once the finger is well past a boundary, so resting on a boundary does
   not flicker between two speeds; a single-step change made just before lift-off, after the
   finger had rested on the previous step, is undone; and a tap uses the touch-down point
@@ -201,8 +201,9 @@ state and resume position stay coherent no matter where the listener touches it.
   primary color and the rest in the same color at 30% opacity.
 - Scrubbing is delta-based: a horizontal drag moves the position by the finger's travel from
   the current position instead of jumping to the touch point, and a tap on the track never
-  seeks. The seek bar gives no haptic while scrubbing except a single detent haptic each time
-  the drag crosses a chapter boundary (episodes with chapters only).
+  seeks. The seek bar gives no haptic while scrubbing except a detent haptic each time the
+  drag crosses a chapter boundary (episodes with chapters only) and a firmer one when it
+  reaches the start or the end of the episode.
 - Fine scrubbing: once a drag has started, moving the finger vertically away from the track
   (up or down) scales how far horizontal travel moves the position: full speed within 50 pt,
   half speed from 50 pt, quarter speed from 100 pt, and one eighth from 150 pt. A localized label ("Scrubbing (half speed)",

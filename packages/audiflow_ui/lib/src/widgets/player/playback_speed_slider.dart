@@ -8,10 +8,9 @@ import 'step_drag_tracker.dart';
 
 /// Slider over [PlaybackSpeedScale.steps].
 ///
-/// It gives no haptic per step: on a device, a tick for each of the 21
-/// steps crossed in one drag felt like noise rather than feedback. The
-/// one exception is a `detent` when a drag reaches or passes 1.0x, the
-/// speed listeners most often return to.
+/// Each step a drag crosses plays `step`, the lightest token, so a long
+/// drag stays a faint texture. Reaching or passing 1.0x, the speed
+/// listeners most often return to, plays the stronger `detent` instead.
 ///
 /// Landmark speeds ([landmarkSpeeds]) are labelled under the exact tick
 /// they belong to, so the uneven step grid (0.1 up to 2.0, then 0.2)
@@ -98,11 +97,13 @@ class _PlaybackSpeedSliderState extends State<PlaybackSpeedSlider> {
     if (tracker == null) return;
     final position = _positionInSteps(details.localPosition, width);
     if (!tracker.update(position, _lastPointerTime)) return;
-    // Only finger travel passes the mark; the first contact's jump to the
-    // touched step does not.
-    if (_reachesNormal(_index, tracker.index)) {
-      HapticsScope.of(context).play(HapticToken.detent);
-    }
+    // Only finger travel is felt; the first contact's jump to the
+    // touched step is not.
+    HapticsScope.of(context).play(
+      _reachesNormal(_index, tracker.index)
+          ? HapticToken.detent
+          : HapticToken.step,
+    );
     _select(tracker.index);
   }
 

@@ -37,6 +37,14 @@ enum HapticToken {
   /// A continuous gesture passed a meaningful mark.
   detent(playsInReducedMode: false),
 
+  /// A stepped control moved one notch. The lightest token; it can fire
+  /// many times in one drag.
+  step(playsInReducedMode: false),
+
+  /// A continuous gesture reached the end of its range. Stronger than
+  /// [detent] so the end is felt as a stop, not another mark.
+  edge(playsInReducedMode: false),
+
   /// A user-initiated task completed.
   success(playsInReducedMode: true),
 

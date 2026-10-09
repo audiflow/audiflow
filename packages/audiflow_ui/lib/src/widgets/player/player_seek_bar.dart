@@ -472,9 +472,8 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
       _isDragging = true;
       _dragValue = start;
     });
-    if (1 < widget.segments.length) {
-      HapticsScope.of(context).prepare(HapticToken.detent);
-    }
+    // detent and edge share one generator on iOS, so this warms both.
+    HapticsScope.of(context).prepare(HapticToken.edge);
     widget.onChangeStart?.call(start);
   }
 
@@ -512,8 +511,12 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
     // finger pushes past the end.
     _releaseTracker?.update(next, _lastPointerTime, finger: _fingerTravel);
     if (next == _dragValue) return;
-    if (_crossesChapterBoundary(_dragValue, next)) {
-      HapticsScope.of(context).play(HapticToken.detent);
+    final haptics = HapticsScope.of(context);
+    if (next == 0.0 || next == 1.0) {
+      // Reaching either end; stronger than a chapter mark.
+      haptics.play(HapticToken.edge);
+    } else if (_crossesChapterBoundary(_dragValue, next)) {
+      haptics.play(HapticToken.detent);
     }
     setState(() => _dragValue = next);
     widget.onChanged?.call(next);

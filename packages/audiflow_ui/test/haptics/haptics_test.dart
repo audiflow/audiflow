@@ -53,6 +53,8 @@ void main() {
         'dragStep',
         'dragDrop',
         'detent',
+        'step',
+        'edge',
         'success',
         'warning',
         'error',
