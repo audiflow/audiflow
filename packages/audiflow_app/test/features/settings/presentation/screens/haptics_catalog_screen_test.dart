@@ -94,6 +94,10 @@ void main() {
       prefs.getString(SettingsKeys.hapticFeedbackLevel),
     ).equals(HapticFeedbackLevel.reduced.name);
 
+    // Choosing the level is itself a selection, played before it applies.
+    check(recorder.played).deepEquals([HapticToken.selection]);
+    recorder.played.clear();
+
     await tester.tap(find.text('selection'));
     await tester.tap(find.text('success'));
     check(recorder.played).deepEquals([HapticToken.success]);
