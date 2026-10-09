@@ -48,8 +48,8 @@ class StationReconciler {
       // _matchesConditions so the limit always selects the N most-recent
       // episodes regardless of filter match.
       final sorted = _isar.episodes
-          .filter()
-          .podcastIdEqualTo(sp.podcastId)
+          .where()
+          .podcastIdEqualToAnyGuid(sp.podcastId)
           .sortByPublishedAtDesc()
           .thenByGuidDesc();
       final podcastEpisodes = limit != null
@@ -226,8 +226,8 @@ class StationReconciler {
     // Fetch only IDs for the top N episodes to avoid deserializing full
     // Episode objects on the incremental reconcile path.
     final topNIds = await _isar.episodes
-        .filter()
-        .podcastIdEqualTo(podcastId)
+        .where()
+        .podcastIdEqualToAnyGuid(podcastId)
         .sortByPublishedAtDesc()
         .thenByGuidDesc()
         .limit(limit)
@@ -249,8 +249,8 @@ class StationReconciler {
   }) async {
     // Determine the top N episodes (same ordering as reconcileFull).
     final topN = await _isar.episodes
-        .filter()
-        .podcastIdEqualTo(sp.podcastId)
+        .where()
+        .podcastIdEqualToAnyGuid(sp.podcastId)
         .sortByPublishedAtDesc()
         .thenByGuidDesc()
         .limit(limit)
@@ -267,8 +267,8 @@ class StationReconciler {
     // Build a set of episode IDs belonging to this podcast via a lightweight
     // ID-only query, then filter station entries by membership.
     final podcastEpisodeIds = await _isar.episodes
-        .filter()
-        .podcastIdEqualTo(sp.podcastId)
+        .where()
+        .podcastIdEqualToAnyGuid(sp.podcastId)
         .idProperty()
         .findAll();
     final podcastIdSet = podcastEpisodeIds.toSet();
