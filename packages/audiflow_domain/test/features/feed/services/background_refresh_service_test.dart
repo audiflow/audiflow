@@ -1,5 +1,9 @@
 import 'package:audiflow_core/audiflow_core.dart'
-    show AutoPlayOrder, DuckInterruptionBehavior, SettingsDefaults;
+    show
+        AutoPlayOrder,
+        DuckInterruptionBehavior,
+        HapticFeedbackLevel,
+        SettingsDefaults;
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter/material.dart' show ThemeMode;
@@ -87,6 +91,10 @@ class FakeAppSettingsRepository implements AppSettingsRepository {
   Future<void> setDuckInterruptionBehavior(
     DuckInterruptionBehavior behavior,
   ) async {}
+  @override
+  HapticFeedbackLevel getHapticFeedbackLevel() => HapticFeedbackLevel.on;
+  @override
+  Future<void> setHapticFeedbackLevel(HapticFeedbackLevel level) async {}
   @override
   bool getShowRemainingTime() => true;
   @override

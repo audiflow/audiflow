@@ -1,3 +1,4 @@
+import 'package:audiflow_app/app/haptics/haptics_providers.dart';
 import 'package:audiflow_app/features/parental_control/domain/gate_guard.dart';
 import 'package:audiflow_app/features/parental_control/providers/gate_guard_provider.dart';
 import 'package:audiflow_app/features/settings/presentation/controllers/theme_controller.dart';
@@ -51,6 +52,7 @@ void main() {
   setUp(() async {
     SharedPreferences.setMockInitialValues({
       SettingsKeys.themeMode: ThemeMode.dark.name,
+      SettingsKeys.hapticFeedbackLevel: HapticFeedbackLevel.off.name,
     });
     prefs = await SharedPreferences.getInstance();
     resetService = _FakeDataResetService(prefs);
@@ -220,6 +222,9 @@ void main() {
         tester.element(find.byType(StorageSettingsScreen)),
       );
       check(container.read(themeModeControllerProvider)).equals(ThemeMode.dark);
+      check(
+        container.read(hapticFeedbackLevelControllerProvider),
+      ).equals(HapticFeedbackLevel.off);
 
       await tester.tap(find.text('Reset All Data'));
       await tester.pumpAndSettle();
@@ -231,6 +236,9 @@ void main() {
       check(
         container.read(themeModeControllerProvider),
       ).equals(ThemeMode.system);
+      check(
+        container.read(hapticFeedbackLevelControllerProvider),
+      ).equals(HapticFeedbackLevel.reduced);
     });
 
     testWidgets(

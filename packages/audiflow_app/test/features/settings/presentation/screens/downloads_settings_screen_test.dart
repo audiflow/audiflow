@@ -1,11 +1,22 @@
 import 'package:audiflow_app/features/settings/presentation/screens/downloads_settings_screen.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+class _RecordingHapticPlayer implements HapticPlayer {
+  final played = <HapticToken>[];
+
+  @override
+  void play(HapticToken token) => played.add(token);
+
+  @override
+  void prepare(HapticToken token) {}
+}
 
 void main() {
   late SharedPreferences prefs;
@@ -153,6 +164,20 @@ void main() {
           .toList();
       final batchField = fields.where((f) => f.controller.text == '50');
       check(batchField.length).equals(1);
+    });
+
+    testWidgets('switches play the toggle haptic', (tester) async {
+      final player = _RecordingHapticPlayer();
+      await tester.pumpWidget(
+        HapticsScope(player: player, child: buildTestWidget()),
+      );
+      await tester.pumpAndSettle();
+
+      // WiFi-only starts on, so the first flip turns it off.
+      await tester.tap(find.byType(SwitchListTile).first);
+      await tester.pumpAndSettle();
+
+      check(player.played).deepEquals([HapticToken.toggleOff]);
     });
   });
 }

@@ -1,5 +1,6 @@
 import '../models/auto_play_order.dart';
 import '../models/duck_interruption_behavior.dart';
+import '../models/haptic_feedback_level.dart';
 
 /// Keys for SharedPreferences storage of user settings.
 class SettingsKeys {
@@ -15,6 +16,9 @@ class SettingsKeys {
 
   /// UI text scale factor.
   static const String textScale = 'settings_text_scale';
+
+  /// Haptic feedback level (on, reduced, off).
+  static const String hapticFeedbackLevel = 'settings_haptic_feedback_level';
 
   // -- Playback --
 
@@ -114,6 +118,10 @@ class SettingsDefaults {
 
   /// Default UI text scale factor.
   static const double textScale = 1.0;
+
+  /// Default haptic feedback level.
+  static const HapticFeedbackLevel hapticFeedbackLevel =
+      HapticFeedbackLevel.reduced;
 
   /// Default audio playback speed.
   static const double playbackSpeed = 1.0;

@@ -39,7 +39,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsAppearanceTitle => '外観';
 
   @override
-  String get settingsAppearanceSubtitle => 'テーマ、言語、文字サイズ';
+  String get settingsAppearanceSubtitle => 'テーマ、言語、文字サイズ、触覚';
 
   @override
   String get settingsPlaybackTitle => '再生';
@@ -1543,6 +1543,30 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get developerDesignGalleryToggleBrightness => 'ライトとダークを切り替え';
+
+  @override
+  String get developerHapticsCatalogTitle => 'ハプティクスカタログ';
+
+  @override
+  String get developerHapticsCatalogSubtitle => 'トークンを1つずつ鳴らす';
+
+  @override
+  String get developerHapticsPlaysInReduced => '控えめでも鳴る';
+
+  @override
+  String get developerHapticsSilentOnAndroid => 'Android では鳴らない';
+
+  @override
+  String get appearanceHaptics => '触覚フィードバック';
+
+  @override
+  String get settingsHapticsLevelOn => 'オン';
+
+  @override
+  String get settingsHapticsLevelReduced => '控えめ';
+
+  @override
+  String get settingsHapticsLevelOff => 'オフ';
 
   @override
   String developerTestNotificationsSent(int count) {

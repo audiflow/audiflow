@@ -27,6 +27,7 @@ import 'app/app_locale.dart';
 import 'app/notification/notification_tap_handler.dart';
 import 'app/background/background_callback.dart';
 import 'app/background/background_task_registrar.dart';
+import 'app/haptics/haptics_providers.dart';
 import 'features/force_update/force_update.dart';
 import 'features/monitoring/services/sentry_diagnostics.dart';
 import 'features/monitoring/services/firebase_analytics_service.dart';
@@ -558,30 +559,35 @@ class _MyAppState extends ConsumerState<MyApp> {
     final themeMode = ref.watch(themeModeControllerProvider);
     final textScale = ref.watch(textScaleControllerProvider);
     final locale = ref.watch(localeControllerProvider);
+    final hapticPlayer = ref.watch(hapticPlayerProvider);
 
-    return MediaQuery(
-      data: MediaQuery.of(
-        context,
-      ).copyWith(textScaler: TextScaler.linear(textScale)),
-      child: MaterialApp.router(
-        title: 'audiflow',
-        locale: locale,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        localeResolutionCallback: resolveSupportedLocale,
-        theme: AppTheme.light(),
-        darkTheme: AppTheme.dark(),
-        themeMode: themeMode,
-        // The gate is placed inside MaterialApp.builder so it has
-        // access to MaterialLocalizations + AppLocalizations and sits
-        // above the router subtree — HardUpdate / Maintenance render
-        // before any route mounts.
-        builder: (context, child) => IntlLocaleSync(
-          child: ForceUpdateGate(
-            child: ReviewPromptGate(child: OpmlFileReceiver(child: child!)),
+    // Above MaterialApp so routes, dialogs, and sheets all share one player.
+    return HapticsScope(
+      player: hapticPlayer,
+      child: MediaQuery(
+        data: MediaQuery.of(
+          context,
+        ).copyWith(textScaler: TextScaler.linear(textScale)),
+        child: MaterialApp.router(
+          title: 'audiflow',
+          locale: locale,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          localeResolutionCallback: resolveSupportedLocale,
+          theme: AppTheme.light(),
+          darkTheme: AppTheme.dark(),
+          themeMode: themeMode,
+          // The gate is placed inside MaterialApp.builder so it has
+          // access to MaterialLocalizations + AppLocalizations and sits
+          // above the router subtree — HardUpdate / Maintenance render
+          // before any route mounts.
+          builder: (context, child) => IntlLocaleSync(
+            child: ForceUpdateGate(
+              child: ReviewPromptGate(child: OpmlFileReceiver(child: child!)),
+            ),
           ),
+          routerConfig: _router,
         ),
-        routerConfig: _router,
       ),
     );
   }

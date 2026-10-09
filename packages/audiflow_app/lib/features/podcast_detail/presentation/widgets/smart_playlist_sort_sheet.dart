@@ -80,6 +80,9 @@ class SmartPlaylistSortSheet extends StatelessWidget {
           ? Icon(Icons.check, color: colorScheme.primary)
           : null,
       onTap: () {
+        if (!isSelected) {
+          HapticsScope.of(context).play(HapticToken.selection);
+        }
         onSortSelected(field, order);
         Navigator.pop(context);
       },

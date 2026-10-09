@@ -6,6 +6,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+class _RecordingHapticPlayer implements HapticPlayer {
+  final played = <HapticToken>[];
+
+  @override
+  void play(HapticToken token) => played.add(token);
+
+  @override
+  void prepare(HapticToken token) {}
+}
+
 void main() {
   Widget host({required String selected, ValueChanged<String>? onChanged}) {
     return MaterialApp(
@@ -93,6 +103,21 @@ void main() {
       check(node.flagsCollection.isSelected).equals(Tristate.isTrue);
       check(node.flagsCollection.isButton).isTrue();
       handle.dispose();
+    });
+
+    testWidgets('plays selection only when the choice changes', (tester) async {
+      final player = _RecordingHapticPlayer();
+      await tester.pumpWidget(
+        HapticsScope(
+          player: player,
+          child: host(selected: 'episodes'),
+        ),
+      );
+
+      await tester.tap(find.text('Episodes'));
+      await tester.tap(find.text('Series'));
+
+      check(player.played).deepEquals([HapticToken.selection]);
     });
   });
 }

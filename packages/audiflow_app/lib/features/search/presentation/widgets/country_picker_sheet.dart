@@ -127,7 +127,12 @@ class _CountryPickerSheetState extends State<CountryPickerSheet> {
                     ? Icon(Icons.check, color: theme.colorScheme.primary)
                     : null,
                 selected: isSelected,
-                onTap: () => widget.onCountrySelected(entry.key),
+                onTap: () {
+                  if (!isSelected) {
+                    HapticsScope.of(context).play(HapticToken.selection);
+                  }
+                  widget.onCountrySelected(entry.key);
+                },
               );
             },
           ),

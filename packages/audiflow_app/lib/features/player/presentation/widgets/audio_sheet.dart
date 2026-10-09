@@ -146,7 +146,9 @@ class AudioSheet extends StatelessWidget {
                       : l10n.audioSheetScopeGlobal,
                 ),
                 value: override,
-                onChanged: onPodcastOverrideChanged,
+                onChanged: HapticsScope.of(
+                  context,
+                ).toggleHaptic(onPodcastOverrideChanged),
               ),
             const SizedBox(height: 8),
             _SpeedSection(
@@ -187,9 +189,11 @@ class _EffectsSection extends StatelessWidget {
             title: Text(_title(l10n, effect)),
             subtitle: Text(_caption(l10n, effect)),
             value: effects.isEnabled(effect),
-            onChanged: onChanged == null
-                ? null
-                : (enabled) => onChanged!(effect, enabled),
+            onChanged: HapticsScope.of(context).toggleHaptic(
+              onChanged == null
+                  ? null
+                  : (enabled) => onChanged!(effect, enabled),
+            ),
           ),
       ],
     );
@@ -279,6 +283,7 @@ class _SpeedChips extends StatelessWidget {
               // Re-tapping the current speed is not a new choice. The chip
               // stays enabled so the highlight keeps its selected styling.
               if (chipSpeed == speed) return;
+              HapticsScope.of(context).play(HapticToken.selection);
               onSelected(chipSpeed);
             },
           ),

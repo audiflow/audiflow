@@ -10,6 +10,7 @@
 - Material 3 theme configuration with light and dark color schemes
 - Design token constants (colors, spacing, border radii, shadows)
 - Responsive grid calculation and search filtering utilities
+- The semantic haptic API (`HapticToken`, `HapticPlayer`, `HapticsScope`) that widgets use to play catalog haptics
 
 ## Non-responsibilities
 
@@ -22,6 +23,7 @@
 
 - **Design tokens**: Static constant classes (`Spacing`, `AppBorders`, `AppShadows`) and the `AppColors` theme extension. All widgets reference these instead of raw values.
 - **Theme system**: `AppTheme` assembles `ThemeData` from `AppColors`, `AppColorScheme`, and `AppTextStyles`. The app applies `AppTheme.light()` or `AppTheme.dark()` at the `MaterialApp` level.
+- **Haptics**: Widgets play haptics by meaning with `HapticsScope.of(context).play(HapticToken.x)`, never through `HapticFeedback` or a platform API. The app injects the real player, already gated by the user's level, above `MaterialApp`; without a scope the player is silent. Switches wrap their `onChanged` with `HapticsScope.of(context).toggleHaptic(...)` so every flip plays `toggleOn` / `toggleOff`; `SettingsTrailing.toggle` does this itself. Choice controls wrap their change callback with `selectionHaptic` so a new choice plays `selection`; `AppSegmentedControl` does this itself and stays silent when the current segment is tapped again. The catalog of tokens and which interaction uses which is `docs/design/haptics.md`. Long presses use `longPressHaptic` on an `InkWell` with `enableFeedback: false` (its tap goes through `Feedback.wrapForTap` to keep the Android click sound).
 - **Widget placement rule**: A widget moves to `audiflow_ui` when it is consumed by two or more distinct features in `audiflow_app`. Until then, it stays in the feature directory.
 
 ## Directory structure
@@ -36,6 +38,13 @@ lib/
       app_theme.dart            # AppTheme.light() / AppTheme.dark()
       color_scheme.dart         # AppColorScheme -- explicit light/dark ColorScheme
       text_styles.dart          # AppTextStyles -- redesign type roles + textTheme
+    haptics/
+      haptic_long_press.dart    # longPressHaptic -- wraps a long-press handler with longPress
+      haptic_selection.dart     # selectionHaptic -- wraps a choice control's change with selection
+      haptic_token.dart         # HapticToken -- the catalog tokens; names are the channel contract
+      haptic_player.dart        # HapticPlayer interface, NoopHapticPlayer, LevelGatedHapticPlayer
+      haptic_toggle.dart        # toggleHaptic -- wraps a switch's onChanged with toggleOn/toggleOff
+      haptics_scope.dart        # HapticsScope -- InheritedWidget that provides the player
     styles/
       spacing.dart              # Spacing.xxs..xxl (2..48 dp)
       borders.dart              # AppBorders -- radius scale + named radii
@@ -106,7 +115,7 @@ lib/
 | `FloatingNavScroll` / `CollapsingHero` | `widgets/navigation/` | offset, heroExtent / progress, child | Maps scroll offset to hero, title and background progress (title fades in over the next 24dp after the hero scrolls away). The hero fades and shrinks to 85% toward its bottom edge. `withSearch(progress)` folds an in-navigation search transition in (hero collapsed, bar filled, title hidden). |
 | `NavigationSearchField` | `widgets/navigation/` | controller, hintText, cancelLabel, onCancel, onChanged | Autofocused search field with an `accent` cancel button that clears the query. |
 | `DownloadStatusIcon` | `widgets/downloads/` | DownloadTask?, size, onTap | Icon per state: download, pending, progress ring, paused, completed, failed, cancelled. Depends on `audiflow_domain.DownloadTask`. |
-| `AddToQueueButton` | `widgets/queue/` | onPlayLater, onPlayNext | Tap adds to end of queue; long-press adds to front with haptic feedback. |
+| `AddToQueueButton` | `widgets/queue/` | onPlayLater, onPlayNext | Tap adds to end of queue; long-press adds to front and plays the `longPress` haptic. |
 | `AnchoredContentBackdrop` | `widgets/lists/` | anchorKey, child | Puts a `ContentBackdrop` behind a scroll view, starting at the anchor widget's top edge and read at paint time so it moves in the same frame as the scroll; the child sits on a transparent `Material` so row ink stays visible. |
 | `ContentBackdrop` | `widgets/lists/` | top / `.tracking(topGetter, reclip)` | Fixed backdrop for long content lists: `bg` lifted toward `surface` with faint soft light and shade patches below `top` (plain `bg` above it). `ContentBackdrop.baseColorFor` gives the surface color for frosted pinned headers (the sticky year header). |
 | `GroupedSection` | `widgets/lists/` | children, header, footer, separatorIndent, margin | Rows on one rounded `surface` (radius 18, grouped shadow) separated by `hairline` dividers; overline header (semantics header) and meta footer in `inkTertiary`; 20dp screen gutter by default. |

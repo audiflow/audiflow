@@ -37,6 +37,16 @@ DownloadTask _autoCompleted() => _completed()
   ..id = 4
   ..origin = DownloadOrigin.auto.dbValue;
 
+class _RecordingHapticPlayer implements HapticPlayer {
+  final played = <HapticToken>[];
+
+  @override
+  void play(HapticToken token) => played.add(token);
+
+  @override
+  void prepare(HapticToken token) {}
+}
+
 void main() {
   Future<void> pump(
     WidgetTester tester, {
@@ -44,6 +54,7 @@ void main() {
     VoidCallback? onRemove,
     bool downloadCreates = true,
     _FakeDownloadService? service,
+    HapticPlayer haptics = const NoopHapticPlayer(),
   }) async {
     await tester.pumpWidget(
       ProviderScope(
@@ -55,25 +66,28 @@ void main() {
             service ?? _FakeDownloadService(creates: downloadCreates),
           ),
         ],
-        child: MaterialApp(
-          theme: AppTheme.light(),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: Scaffold(
-            body: CustomScrollView(
-              slivers: [
-                SliverReorderableList(
-                  itemCount: 1,
-                  onReorderItem: (_, _) {},
-                  itemBuilder: (_, index) => QueueListTile(
-                    key: const ValueKey(5),
-                    item: _item(),
-                    index: index,
-                    onRemove: onRemove ?? () {},
-                    onTap: () {},
+        child: HapticsScope(
+          player: haptics,
+          child: MaterialApp(
+            theme: AppTheme.light(),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: CustomScrollView(
+                slivers: [
+                  SliverReorderableList(
+                    itemCount: 1,
+                    onReorderItem: (_, _) {},
+                    itemBuilder: (_, index) => QueueListTile(
+                      key: const ValueKey(5),
+                      item: _item(),
+                      index: index,
+                      onRemove: onRemove ?? () {},
+                      onTap: () {},
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -116,6 +130,18 @@ void main() {
   testWidgets('labels a waiting download', (tester) async {
     await pump(tester, task: _task(0));
     check(find.text('Pending').evaluate()).length.equals(1);
+  });
+
+  testWidgets('a download swipe plays the threshold haptic once', (
+    tester,
+  ) async {
+    final haptics = _RecordingHapticPlayer();
+    await pump(tester, haptics: haptics);
+    await tester.drag(find.text('Queued Episode'), const Offset(600, 0));
+    await tester.pumpAndSettle();
+    // The row springs back after starting the download; that return trip
+    // is not a cancel, so no release token follows.
+    check(haptics.played).deepEquals([HapticToken.thresholdCross]);
   });
 
   testWidgets('swiping right starts a download and says so', (tester) async {

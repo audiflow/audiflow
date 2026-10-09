@@ -64,6 +64,8 @@ class ScaffoldWithNavBar extends ConsumerWidget {
   }
 
   void _onMiniPlayerTap(BuildContext context) {
+    // A light mark as the player lifts into view; closing stays silent.
+    HapticsScope.of(context).play(HapticToken.detent);
     showCupertinoSheet<void>(
       context: context,
       scrollableBuilder: (context, controller) => const PlayerScreen(),

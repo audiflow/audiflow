@@ -1,3 +1,4 @@
+import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -64,7 +65,10 @@ class _SeekUndoPill extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             TextButton.icon(
-              onPressed: onGoBack,
+              onPressed: () {
+                HapticsScope.of(context).play(HapticToken.tap);
+                onGoBack();
+              },
               icon: const Icon(Symbols.undo),
               label: Text(l10n.playerSeekUndoGoBack),
               style: TextButton.styleFrom(

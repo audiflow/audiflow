@@ -53,5 +53,8 @@ import workmanager_apple
     if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "AudioRoutePicker") {
       AudioRoutePickerViewFactory.register(with: registrar)
     }
+    if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "HapticsChannel") {
+      HapticsChannel.register(with: registrar.messenger())
+    }
   }
 }

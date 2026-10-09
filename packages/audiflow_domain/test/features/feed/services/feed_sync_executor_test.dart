@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:audiflow_core/audiflow_core.dart'
-    show AutoPlayOrder, DuckInterruptionBehavior;
+    show AutoPlayOrder, DuckInterruptionBehavior, HapticFeedbackLevel;
 import 'package:checks/checks.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_podcast/audiflow_podcast.dart' show ParsedChapter;
@@ -350,6 +350,13 @@ class _FakeAppSettingsRepository implements AppSettingsRepository {
 
   @override
   Future<void> setDuckInterruptionBehavior(DuckInterruptionBehavior behavior) =>
+      throw UnimplementedError();
+
+  @override
+  HapticFeedbackLevel getHapticFeedbackLevel() => throw UnimplementedError();
+
+  @override
+  Future<void> setHapticFeedbackLevel(HapticFeedbackLevel level) =>
       throw UnimplementedError();
 
   @override

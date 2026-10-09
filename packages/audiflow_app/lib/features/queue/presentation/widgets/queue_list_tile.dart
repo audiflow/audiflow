@@ -14,6 +14,7 @@ import '../../../download/presentation/helpers/download_action_helper.dart';
 import '../../../download/presentation/widgets/keep_download_menu_tile.dart';
 import '../../../podcast_detail/presentation/screens/episode_detail_screen.dart';
 import '../../../share/presentation/helpers/share_helper.dart';
+import 'haptic_dismissible.dart';
 
 /// Up-next row (redesign 4.6): artwork, two-line title, "duration · date"
 /// with a downloaded mark, and a drag handle as the only trailing control.
@@ -76,7 +77,7 @@ class QueueListTile extends ConsumerWidget {
       }
     }
 
-    return Dismissible(
+    return HapticDismissible(
       key: ValueKey(item.queueItem.id),
       onDismissed: (_) => onRemove(),
       // A download swipe acts and springs back; only remove dismisses.
@@ -111,13 +112,18 @@ class QueueListTile extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             InkWell(
-              onTap: onTap,
-              onLongPress: () => _showContextMenu(
-                context,
-                ref,
-                downloadAction,
-                download,
-                downloadTask,
+              // Long presses play the catalog token; the framework's vibration
+              // would double up, and wrapForTap keeps the Android click sound.
+              enableFeedback: false,
+              onTap: Feedback.wrapForTap(onTap, context),
+              onLongPress: HapticsScope.of(context).longPressHaptic(
+                () => _showContextMenu(
+                  context,
+                  ref,
+                  downloadAction,
+                  download,
+                  downloadTask,
+                ),
               ),
               child: _row(context, colors, downloadTask),
             ),

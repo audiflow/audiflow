@@ -113,7 +113,7 @@ void main() {
         await tester.pumpWidget(buildTestWidget());
 
         check(
-          find.text('Theme, language, text size').evaluate(),
+          find.text('Theme, language, text size, haptics').evaluate(),
         ).length.equals(1);
         check(
           find.text('Speed, skipping, auto-complete').evaluate(),

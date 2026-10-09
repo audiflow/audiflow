@@ -7,6 +7,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../app/haptics/haptics_providers.dart';
 import '../../../../routing/app_router.dart';
 import '../../../consent/presentation/controllers/privacy_consent_controller.dart';
 import '../../../onboarding/presentation/controllers/onboarding_completion_controller.dart';
@@ -27,6 +28,7 @@ void applyRuntimeReset(BuildContext context, WidgetRef ref) {
     ..invalidate(themeModeControllerProvider)
     ..invalidate(textScaleControllerProvider)
     ..invalidate(localeControllerProvider)
+    ..invalidate(hapticFeedbackLevelControllerProvider)
     ..invalidate(analyticsOptInControllerProvider)
     ..invalidate(lastTabControllerProvider)
     ..invalidate(privacyConsentControllerProvider)
