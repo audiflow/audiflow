@@ -89,6 +89,8 @@ Every interaction that was considered is listed here, including those that delib
 | Download start | `none` (the snackbar is enough) |
 | Bottom tabs and screen navigation | `none` |
 | Segmented controls and filter chips | `selection` |
+| Popover menu: the highlighted item changes while sliding a held finger | `selection` |
+| Popover menu opens (tap or press-and-hold) | `none` (the menu appearing is the feedback) |
 | Settings switches | `toggleOn` / `toggleOff` |
 | Clear-queue and bulk-delete confirmation | `warning` |
 | Wrong PIN and PIN lockout | `error` |

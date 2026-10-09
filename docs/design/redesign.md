@@ -156,6 +156,17 @@ Four tabs (Search, Library, Queue, Settings). Active tab: `accent` icon (filled 
 
 Row height ≥ 54 (≥ 60 with a subtitle). Optional leading 32px icon tile (`accentTint` background, `accent` glyph — one tint for all rows, not per-row colors). Trailing: chevron, current value plus up/down chevron for pickers, a switch, or a −/+ stepper.
 
+### 3.8 Popover menu
+
+Every popover menu (the `…` menus, selector pills, sort and bulk-delete menus) is the same `surface` card (radius 24, floating shadow): an optional row of `surfaceMuted` tiles, then groups of item rows separated by hairlines. The `…` menus sit at the top-right under the navigation and are 300 wide. A menu opened from a pill or button sits under its trigger, on the side that keeps it on screen (above it when there is no room below), and is sized to its items. The current choice of a selector is drawn in `accent` with a trailing check. An unavailable item is drawn in `inkTertiary`.
+
+A menu opens in two ways, as in Apple Podcasts:
+
+- Tap the trigger: the menu opens, and the user taps an item or taps outside to close it.
+- Press and hold the trigger (about 0.3s): the menu opens with the finger still down. Sliding highlights the item under the finger (`surfaceSunken` for rows, `outline` for tiles). Lifting on an item chooses it; lifting anywhere else leaves the menu open for a tap.
+
+The back gesture closes an open menu, not the screen beneath it.
+
 ## 4. Screens
 
 ### 4.1 Library

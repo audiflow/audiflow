@@ -42,7 +42,8 @@ state and resume position stay coherent no matter where the listener touches it.
   Its header shows a close chevron, "Playing from" with the queue's source (or the podcast),
   and an overflow menu with the transcript page (when available), episode details, the
   podcast, and sharing the episode (when it has a link to share). The menu opens just below
-  its button, as the other screens' overflow menus do. If the episode
+  its button, as the other screens' overflow menus do, and like every popover menu it can be
+  opened by a tap or by pressing, sliding to an item, and releasing (redesign 3.8). If the episode
   was partly played before, it resumes from the saved position; if it was within two seconds of
   the end, it replays from the start. Playback continues when the app is backgrounded or the
   screen is locked.
