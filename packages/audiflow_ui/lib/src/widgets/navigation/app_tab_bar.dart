@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../themes/app_colors.dart';
@@ -29,20 +31,27 @@ class AppTabBarItem {
 class AppTabBar extends StatelessWidget {
   const AppTabBar({super.key, required this.items});
 
-  /// Height above the bottom safe-area inset.
+  /// Height above the bottom padding.
   static const double height = 56;
+
+  /// How far the tabs sink into the iOS home-indicator inset.
+  ///
+  /// Padding by the full 34pt inset leaves the tabs visibly higher than
+  /// native iOS tab bars, which draw part-way into that area. Android
+  /// keeps the full inset because it can be the 3-button navigation bar.
+  static const double homeIndicatorOverlap = 12;
 
   final List<AppTabBarItem> items;
 
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
+    final bottomPadding = _bottomPadding(context);
     return Material(
       color: colors.bg,
       child: Container(
-        height: height + bottomInset,
-        padding: EdgeInsets.only(bottom: bottomInset),
+        height: height + bottomPadding,
+        padding: EdgeInsets.only(bottom: bottomPadding),
         decoration: BoxDecoration(
           border: Border(top: BorderSide(color: colors.hairline, width: 0.5)),
         ),
@@ -53,6 +62,12 @@ class AppTabBar extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  static double _bottomPadding(BuildContext context) {
+    final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
+    if (Theme.of(context).platform != TargetPlatform.iOS) return bottomInset;
+    return math.max(0, bottomInset - homeIndicatorOverlap);
   }
 }
 
