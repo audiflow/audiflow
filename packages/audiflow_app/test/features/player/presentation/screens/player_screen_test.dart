@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:audiflow_app/features/player/presentation/screens/player_screen.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -167,6 +168,79 @@ void main() {
 
       check(find.byType(PlayerScreen).evaluate().length).equals(1);
       check(find.text('Second Episode').evaluate().length).equals(1);
+    });
+  });
+
+  group('PlayerScreen overflow menu', () {
+    Future<void> openMenu(WidgetTester tester) async {
+      await tester.tap(find.byTooltip('More'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('opens just below the button, like the floating bars', (
+      tester,
+    ) async {
+      final container = await _container();
+      await tester.pumpWidget(_buildHost(container));
+      await _openPlayerSheet(tester);
+      final button = tester.getRect(find.byTooltip('More'));
+
+      await openMenu(tester);
+
+      final menu = tester.getRect(find.byKey(ActionMenu.surfaceKey));
+      check(
+        menu.top,
+      ).equals(button.center.dy + FloatingNavigationBar.barHeight / 2);
+      check(button.bottom <= menu.top).isTrue();
+    });
+
+    testWidgets('offers sharing when the episode has a deep link', (
+      tester,
+    ) async {
+      final container = await _container(
+        nowPlaying: _firstEpisode.copyWith(
+          itunesId: '123',
+          episodeGuid: 'guid-1',
+        ),
+      );
+      await tester.pumpWidget(_buildHost(container));
+      await _openPlayerSheet(tester);
+
+      await openMenu(tester);
+
+      check(find.text('Share episode').evaluate().length).equals(1);
+    });
+
+    testWidgets('offers sharing through the episode link alone', (
+      tester,
+    ) async {
+      final episode = Episode()
+        ..podcastId = 1
+        ..guid = 'guid-1'
+        ..title = 'First Episode'
+        ..audioUrl = 'https://example.com/first.mp3'
+        ..link = 'https://example.com/episodes/1';
+      final container = await _container(
+        nowPlaying: _firstEpisode.copyWith(episode: episode),
+      );
+      await tester.pumpWidget(_buildHost(container));
+      await _openPlayerSheet(tester);
+
+      await openMenu(tester);
+
+      check(find.text('Share episode').evaluate().length).equals(1);
+    });
+
+    testWidgets('hides sharing when there is nothing to link to', (
+      tester,
+    ) async {
+      final container = await _container();
+      await tester.pumpWidget(_buildHost(container));
+      await _openPlayerSheet(tester);
+
+      await openMenu(tester);
+
+      check(find.text('Share episode').evaluate()).isEmpty();
     });
   });
 
