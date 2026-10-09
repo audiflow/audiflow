@@ -289,7 +289,16 @@ class AppTheme {
     return SegmentedButtonThemeData(
       style: ButtonStyle(
         backgroundColor: _selected(colors.surface, colors.surfaceSunken),
-        foregroundColor: _selected(colors.ink, colors.inkSecondary),
+        foregroundColor: WidgetStateProperty.resolveWith((states) {
+          final color = states.contains(WidgetState.selected)
+              ? colors.ink
+              : colors.inkSecondary;
+          // Without this a disabled control looks fully interactive; 0.38
+          // is Material's disabled-content opacity.
+          return states.contains(WidgetState.disabled)
+              ? color.withValues(alpha: 0.38)
+              : color;
+        }),
         side: WidgetStatePropertyAll(BorderSide(color: colors.surfaceSunken)),
         textStyle: const WidgetStatePropertyAll(AppTextStyles.label),
       ),

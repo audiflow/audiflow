@@ -14,6 +14,8 @@ void main() {
 
   const channel = MethodChannel(MethodChannelHapticPlayer.channelName);
   late List<MethodCall> calls;
+  // The players also ask the channel whether the device has haptics.
+  Iterable<MethodCall> plays() => calls.where((c) => c.method == 'play');
 
   void handleChannel(Future<Object?>? Function(MethodCall call) handler) {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -57,6 +59,26 @@ void main() {
       handleChannel((_) => throw PlatformException(code: 'failed'));
       const MethodChannelHapticPlayer().play(HapticToken.error);
       await pumpEventQueue();
+    });
+  });
+
+  group('MethodChannelHapticPlayer.isSupported', () {
+    test('returns the native answer', () async {
+      handleChannel(
+        (call) async => call.method == 'isSupported' ? false : null,
+      );
+      check(await const MethodChannelHapticPlayer().isSupported()).isFalse();
+    });
+
+    // A failed lookup must not hide the setting on a device that has haptics.
+    test('assumes support when the native side does not answer', () async {
+      handleChannel((_) => throw MissingPluginException());
+      check(await const MethodChannelHapticPlayer().isSupported()).isTrue();
+    });
+
+    test('assumes support on a platform error', () async {
+      handleChannel((_) => throw PlatformException(code: 'failed'));
+      check(await const MethodChannelHapticPlayer().isSupported()).isTrue();
     });
   });
 
@@ -105,7 +127,7 @@ void main() {
 
       container.read(hapticPlayerProvider).play(HapticToken.success);
       await pumpEventQueue();
-      check(calls).isEmpty();
+      check(plays()).isEmpty();
 
       await container
           .read(hapticFeedbackLevelControllerProvider.notifier)
@@ -113,7 +135,24 @@ void main() {
 
       container.read(hapticPlayerProvider).play(HapticToken.success);
       await pumpEventQueue();
-      check(calls).length.equals(1);
+      check(plays()).length.equals(1);
+    });
+
+    test('player stays silent on a device without haptics', () async {
+      final container = ProviderContainer(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          hapticsSupportedProvider.overrideWithValue(const AsyncData(false)),
+        ],
+      );
+      addTearDown(container.dispose);
+      await container
+          .read(hapticFeedbackLevelControllerProvider.notifier)
+          .setLevel(HapticFeedbackLevel.on);
+
+      container.read(hapticPlayerProvider).play(HapticToken.success);
+      await pumpEventQueue();
+      check(plays()).isEmpty();
     });
   });
 }

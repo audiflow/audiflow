@@ -1024,6 +1024,8 @@
   "@settingsHapticsLevelReduced": {"description": "Haptic feedback level option: only important haptics play"},
   "settingsHapticsLevelOff": "Off",
   "@settingsHapticsLevelOff": {"description": "Haptic feedback level option: no haptics play"},
+  "settingsHapticsUnsupported": "This device does not support haptic feedback",
+  "@settingsHapticsUnsupported": {"description": "Note under the locked haptic feedback level selector on a device without haptic hardware"},
   "developerTestNotificationsSent": "Sent {count} test notifications",
   "@developerTestNotificationsSent": {"description": "Snackbar after test notifications were posted", "placeholders": {"count": {"type": "int"}}},
   "developerTestNotificationsNone": "No podcast episodes to notify about",

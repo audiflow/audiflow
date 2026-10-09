@@ -1,3 +1,4 @@
+import CoreHaptics
 import Flutter
 import UIKit
 
@@ -32,6 +33,12 @@ final class HapticsChannel {
   }
 
   private func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+    // iPads have no Taptic Engine; the feedback generators silently do
+    // nothing there, so the settings screen asks first.
+    if call.method == "isSupported" {
+      result(CHHapticEngine.capabilitiesForHardware().supportsHaptics)
+      return
+    }
     guard call.method == "play" || call.method == "prepare" else {
       result(FlutterMethodNotImplemented)
       return

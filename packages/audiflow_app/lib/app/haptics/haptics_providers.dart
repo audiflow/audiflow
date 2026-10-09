@@ -28,10 +28,24 @@ class HapticFeedbackLevelController extends _$HapticFeedbackLevelController {
 @Riverpod(keepAlive: true)
 HapticPlayer platformHapticPlayer(Ref ref) => const MethodChannelHapticPlayer();
 
-/// The player the app injects into `HapticsScope`, gated by the user's
+/// Whether the device has haptic hardware. Asked once per launch.
+@Riverpod(keepAlive: true)
+Future<bool> hapticsSupported(Ref ref) =>
+    const MethodChannelHapticPlayer().isSupported();
+
+/// The level in effect: the user's choice, or off on a device without
+/// haptics. Assumes support until the device answers.
+@Riverpod(keepAlive: true)
+HapticFeedbackLevel effectiveHapticFeedbackLevel(Ref ref) {
+  final supported = ref.watch(hapticsSupportedProvider).value ?? true;
+  if (!supported) return HapticFeedbackLevel.off;
+  return ref.watch(hapticFeedbackLevelControllerProvider);
+}
+
+/// The player the app injects into `HapticsScope`, gated by the effective
 /// level. Rebuilds when the level changes.
 @Riverpod(keepAlive: true)
 HapticPlayer hapticPlayer(Ref ref) => LevelGatedHapticPlayer(
-  level: ref.watch(hapticFeedbackLevelControllerProvider),
+  level: ref.watch(effectiveHapticFeedbackLevelProvider),
   inner: ref.watch(platformHapticPlayerProvider),
 );

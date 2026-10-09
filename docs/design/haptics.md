@@ -169,7 +169,7 @@ A widget that plays a catalog token on long press must set `enableFeedback: fals
 | Android mapping | `packages/audiflow_app/android/app/src/main/kotlin/com/reedom/audiflow_app/HapticsChannel.kt` |
 | Persisted level | `SettingsKeys.hapticFeedbackLevel`, `AppSettingsRepository.getHapticFeedbackLevel` |
 
-The channel is `audiflow/haptics`, with methods `play` and `prepare` that take a token name. A token the native side does not know plays nothing.
+The channel is `audiflow/haptics`, with methods `play` and `prepare` that take a token name. A token the native side does not know plays nothing. A third method, `isSupported`, answers whether the device has haptic hardware: `CHHapticEngine.capabilitiesForHardware().supportsHaptics` on iOS, `Vibrator.hasVibrator()` on Android. The Dart side assumes support when the call fails.
 
 ## 5. User setting
 
@@ -180,6 +180,8 @@ A single preference with three values:
 | On (default) | All tokens play. |
 | Reduced | Only tokens marked "on" in the Reduced column of section 2 play: outcomes (`success`, `warning`, `error`), gesture thresholds, and drag pick-up. |
 | Off | Nothing plays. |
+
+On a device without haptic hardware (`isSupported` is false: every iPad, and Android tablets without a vibration motor) the effective level is Off whatever is saved, and the settings selector is locked to Off with a note explaining why. The saved level is left untouched.
 
 Reduced mode drops tokens whose effect is already obvious on screen (selection, toggles, long press, drop, detents) and keeps those that confirm something the user cannot see well while their finger covers it, or that report an outcome.
 

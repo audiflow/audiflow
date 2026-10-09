@@ -146,6 +146,21 @@ void main() {
             .equals(AppBorders.sheet);
       });
 
+      test('$name segmented buttons fade their labels when disabled', () {
+        final style = theme.segmentedButtonTheme.style!;
+        Color? foreground(Set<WidgetState> states) =>
+            style.foregroundColor!.resolve(states);
+
+        check(foreground({})).equals(colors.inkSecondary);
+        check(foreground({WidgetState.selected})).equals(colors.ink);
+        check(
+          foreground({WidgetState.disabled}),
+        ).equals(colors.inkSecondary.withValues(alpha: 0.38));
+        check(
+          foreground({WidgetState.selected, WidgetState.disabled}),
+        ).equals(colors.ink.withValues(alpha: 0.38));
+      });
+
       test('$name snackbar action text reaches 4.5:1 on its fill', () {
         final snackBar = theme.snackBarTheme;
         check(
