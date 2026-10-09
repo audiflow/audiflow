@@ -69,15 +69,31 @@ void main() {
     handle.dispose();
   });
 
-  testWidgets('pads for the bottom inset', (tester) async {
-    await tester.pumpWidget(
-      MediaQuery(
-        data: const MediaQueryData(viewPadding: EdgeInsets.only(bottom: 34)),
-        child: host(bar()),
-      ),
-    );
+  Widget hostWithInset(double inset, TargetPlatform platform) => MediaQuery(
+    data: MediaQueryData(viewPadding: EdgeInsets.only(bottom: inset)),
+    child: MaterialApp(
+      theme: AppTheme.light().copyWith(platform: platform),
+      home: Scaffold(bottomNavigationBar: bar()),
+    ),
+  );
+
+  double barHeight(WidgetTester tester) =>
+      tester.getSize(find.byType(AppTabBar)).height;
+
+  testWidgets('pads for the full bottom inset on Android', (tester) async {
+    await tester.pumpWidget(hostWithInset(34, TargetPlatform.android));
+    check(barHeight(tester)).equals(AppTabBar.height + 34);
+  });
+
+  testWidgets('sinks into the home indicator inset on iOS', (tester) async {
+    await tester.pumpWidget(hostWithInset(34, TargetPlatform.iOS));
     check(
-      tester.getSize(find.byType(AppTabBar)).height,
-    ).equals(AppTabBar.height + 34);
+      barHeight(tester),
+    ).equals(AppTabBar.height + 34 - AppTabBar.homeIndicatorOverlap);
+  });
+
+  testWidgets('never pads negatively for a small iOS inset', (tester) async {
+    await tester.pumpWidget(hostWithInset(4, TargetPlatform.iOS));
+    check(barHeight(tester)).equals(AppTabBar.height);
   });
 }
