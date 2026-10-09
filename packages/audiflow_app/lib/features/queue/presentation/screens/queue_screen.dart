@@ -100,6 +100,7 @@ class _QueueScreenState extends ConsumerState<QueueScreen> {
                   HapticsScope.of(context).play(HapticToken.dragPickUp),
               onReorderEnd: (_) =>
                   HapticsScope.of(context).play(HapticToken.dragDrop),
+              proxyDecorator: QueueListTile.liftWhileDragging,
               onReorderItem: (oldIndex, newIndex) {
                 final item = upNextItems[oldIndex];
                 ref
