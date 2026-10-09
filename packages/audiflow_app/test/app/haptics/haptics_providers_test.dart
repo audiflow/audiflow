@@ -64,7 +64,9 @@ void main() {
 
   group('MethodChannelHapticPlayer.isSupported', () {
     test('returns the native answer', () async {
-      handleChannel((call) async => call.method == 'isSupported' ? false : null);
+      handleChannel(
+        (call) async => call.method == 'isSupported' ? false : null,
+      );
       check(await const MethodChannelHapticPlayer().isSupported()).isFalse();
     });
 

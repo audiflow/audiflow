@@ -22,9 +22,7 @@ void main() {
     return ProviderScope(
       overrides: [
         sharedPreferencesProvider.overrideWithValue(prefs),
-        hapticsSupportedProvider.overrideWithValue(
-          AsyncData(hapticsSupported),
-        ),
+        hapticsSupportedProvider.overrideWithValue(AsyncData(hapticsSupported)),
       ],
       child: MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
