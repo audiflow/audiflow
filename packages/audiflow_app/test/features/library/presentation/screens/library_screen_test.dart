@@ -6,6 +6,7 @@ import 'package:audiflow_app/features/library/presentation/screens/library_scree
 import 'package:audiflow_app/features/station/presentation/controllers/station_list_controller.dart';
 import 'package:audiflow_app/features/station/presentation/widgets/station_grid_tile.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
+import 'package:audiflow_app/routing/app_router.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:audiflow_app/features/library/presentation/widgets/subscription_list_tile.dart';
@@ -14,6 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -303,6 +305,7 @@ void main() {
       List<EpisodeWithProgress> inProgress = const [],
       List<Station> stations = const [],
       double textScale = 1,
+      GoRouter? router,
     }) async {
       final container = ProviderContainer(
         overrides: [
@@ -321,23 +324,63 @@ void main() {
         ],
       );
       addTearDown(container.dispose);
+      Widget scaled(BuildContext context, Widget? child) => MediaQuery(
+        data: MediaQuery.of(
+          context,
+        ).copyWith(textScaler: TextScaler.linear(textScale)),
+        child: child!,
+      );
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: container,
-          child: MaterialApp(
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            builder: (context, child) => MediaQuery(
-              data: MediaQuery.of(
-                context,
-              ).copyWith(textScaler: TextScaler.linear(textScale)),
-              child: child!,
-            ),
-            home: const LibraryScreen(),
-          ),
+          child: router == null
+              ? MaterialApp(
+                  localizationsDelegates:
+                      AppLocalizations.localizationsDelegates,
+                  supportedLocales: AppLocalizations.supportedLocales,
+                  builder: scaled,
+                  home: const LibraryScreen(),
+                )
+              : MaterialApp.router(
+                  localizationsDelegates:
+                      AppLocalizations.localizationsDelegates,
+                  supportedLocales: AppLocalizations.supportedLocales,
+                  builder: scaled,
+                  routerConfig: router,
+                ),
         ),
       );
       await tester.pumpAndSettle();
+    }
+
+    /// Mirrors the Library branch's nested routes with stub pages, so a
+    /// test can tell which pages navigation stacks up.
+    GoRouter libraryRouter() {
+      final router = GoRouter(
+        initialLocation: AppRoutes.library,
+        routes: [
+          GoRoute(
+            path: AppRoutes.library,
+            builder: (context, state) => const LibraryScreen(),
+            routes: [
+              GoRoute(
+                path: AppRoutes.podcastDetailChild,
+                builder: (context, state) =>
+                    const Scaffold(body: Text('podcast page')),
+                routes: [
+                  GoRoute(
+                    path: AppRoutes.episodeDetail,
+                    builder: (context, state) =>
+                        const Scaffold(body: Text('episode page')),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+      return router;
     }
 
     testWidgets('podcasts header shows the subscription count', (tester) async {
@@ -382,6 +425,23 @@ void main() {
         ),
       );
       check(line.fraction).isNotNull().isCloseTo(30 / 48, 1e-9);
+    });
+
+    testWidgets('back from a continue listening episode returns to Library', (
+      tester,
+    ) async {
+      final router = libraryRouter();
+      await pump(tester, inProgress: [inProgressEpisode()], router: router);
+
+      await tester.tap(find.text('Halfway episode'));
+      await tester.pumpAndSettle();
+      check(find.text('episode page').evaluate()).length.equals(1);
+
+      router.pop();
+      await tester.pumpAndSettle();
+      // The podcast was never visited, so it must not sit under the episode.
+      check(find.text('podcast page').evaluate()).isEmpty();
+      check(find.byType(LibraryScreen).evaluate()).length.equals(1);
     });
 
     testWidgets('continue listening skips episodes of unsubscribed podcasts', (

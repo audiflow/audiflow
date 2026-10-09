@@ -59,8 +59,10 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     }
   }
 
-  /// Opens the episode detail on top of its podcast, so back leads to the
-  /// podcast rather than straight to the Library.
+  /// Pushes only the episode detail, so back returns straight to the
+  /// Library; the podcast stays one tap away through the episode's podcast
+  /// link. `go` would rebuild the nested path and slip the never-visited
+  /// podcast detail in between.
   void _openEpisode(
     EpisodeWithProgress item,
     List<Subscription> subscriptions,
@@ -74,7 +76,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
         '${AppRoutes.library}/podcast/${subscription.itunesId}/'
                 '${AppRoutes.episodeDetail}'
             .replaceAll(':episodeGuid', Uri.encodeComponent(episode.guid));
-    context.go(
+    context.push(
       path,
       extra: <String, dynamic>{
         'episode': episode.toPodcastItem(feedUrl: subscription.feedUrl),
