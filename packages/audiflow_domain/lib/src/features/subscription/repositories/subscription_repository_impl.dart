@@ -61,28 +61,7 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
     bool explicit = false,
     SubscribeSource source = SubscribeSource.unknown,
   }) async {
-    final podcastId =
-        analyticsPodcastId(itunesId: itunesId, feedUrl: feedUrl) ?? feedUrl;
-
-    // Check for existing cached entry and promote it
-    final existing = await _datasource.getByItunesId(itunesId);
-    if (existing != null && existing.isCached) {
-      final promoted = await _datasource.promoteToSubscribed(itunesId);
-      if (promoted != null) {
-        await _analytics?.log(
-          PodcastSubscribed(
-            podcastId: podcastId,
-            feedUrl: feedUrl,
-            podcastTitle: title,
-            source: source,
-          ),
-        );
-        return promoted;
-      }
-      // Concurrent delete -- fall through to create fresh
-    }
-
-    final subscription = Subscription()
+    final incoming = Subscription()
       ..itunesId = itunesId
       ..feedUrl = feedUrl
       ..title = title
@@ -93,40 +72,38 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
       ..explicit = explicit
       ..subscribedAt = DateTime.now();
 
-    final inserted = await _datasource.insert(subscription);
+    final saved =
+        await _promoteCached(incoming) ?? await _datasource.insert(incoming);
     await _analytics?.log(
       PodcastSubscribed(
-        podcastId: podcastId,
+        podcastId:
+            analyticsPodcastId(itunesId: itunesId, feedUrl: feedUrl) ?? feedUrl,
         feedUrl: feedUrl,
         podcastTitle: title,
         source: source,
       ),
     );
-    return inserted;
+    return saved;
   }
 
-  /// Demotes the subscription to a cached entry rather than deleting it, so
-  /// a later [subscribe] promotes the same row and the podcast keeps its id,
-  /// episodes, and playback history.
+  /// Promotes this podcast's cached entry, matched by iTunes ID or else by
+  /// feed URL: an OPML import stores a placeholder iTunes ID, so the same
+  /// feed can come back under another one after an unsubscribe.
+  Future<Subscription?> _promoteCached(Subscription incoming) async {
+    final existing =
+        await _datasource.getByItunesId(incoming.itunesId) ??
+        await _datasource.getByFeedUrl(incoming.feedUrl);
+    if (existing == null || !existing.isCached) return null;
+    // Null after a concurrent eviction; the caller then inserts afresh.
+    return _datasource.promoteCached(existing.id, incoming);
+  }
+
   @override
   Future<void> unsubscribe(String itunesId) async {
     final demoted = await _datasource.demoteToCached(itunesId);
     if (demoted == null) {
       throw SubscriptionNotFoundException(itunesId);
     }
-    final podcastId =
-        analyticsPodcastId(
-          itunesId: demoted.itunesId,
-          feedUrl: demoted.feedUrl,
-        ) ??
-        demoted.feedUrl;
-    await _analytics?.log(
-      PodcastUnsubscribed(
-        podcastId: podcastId,
-        feedUrl: demoted.feedUrl,
-        podcastTitle: demoted.title,
-      ),
-    );
     // Only subscribed podcasts belong to a station (FR 07).
     await _bestEffort(
       'stationReconciler.onSubscriptionRemoved',
@@ -138,9 +115,22 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
       demoted.id,
       () async => _parentalControlRepository?.pruneFlagsFor(demoted.id),
     );
+    await _analytics?.log(
+      PodcastUnsubscribed(
+        podcastId:
+            analyticsPodcastId(
+              itunesId: demoted.itunesId,
+              feedUrl: demoted.feedUrl,
+            ) ??
+            demoted.feedUrl,
+        feedUrl: demoted.feedUrl,
+        podcastTitle: demoted.title,
+      ),
+    );
   }
 
-  /// Runs an unsubscribe side effect that must not undo the unsubscribe.
+  /// Runs a side effect of removing a subscription that must not undo the
+  /// removal.
   ///
   /// Catches everything rather than `on Exception` because Isar can throw
   /// Error subclasses (not Exception) on database failures.
@@ -153,7 +143,7 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
       await action();
     } catch (e, st) {
       _logger?.w(
-        '$operation failed for id=$id; unsubscribe continues',
+        '$operation failed for id=$id; continuing',
         error: e,
         stackTrace: st,
       );
@@ -242,12 +232,12 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
   Future<bool> deleteById(int id) async {
     final deleted = await _datasource.deleteById(id);
     if (deleted) {
-      // Best-effort station cleanup — id IS the podcastId (Isar auto-increment).
-      try {
-        await _reconcilerService?.onSubscriptionRemoved(id);
-      } on Exception {
-        // Station reconciliation is best-effort; do not break delete flow.
-      }
+      // id IS the podcastId (Isar auto-increment).
+      await _bestEffort(
+        'stationReconciler.onSubscriptionRemoved',
+        id,
+        () async => _reconcilerService?.onSubscriptionRemoved(id),
+      );
     }
     return deleted;
   }

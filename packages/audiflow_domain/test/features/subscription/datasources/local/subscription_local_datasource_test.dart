@@ -62,18 +62,21 @@ void main() {
   });
 
   group('demoteToCached', () {
-    test('turns a subscription into a recently accessed cached entry', () async {
-      final inserted = await datasource.insert(makeSubscription());
-      final before = DateTime.now();
+    test(
+      'turns a subscription into a recently accessed cached entry',
+      () async {
+        final inserted = await datasource.insert(makeSubscription());
+        final before = DateTime.now();
 
-      final demoted = await datasource.demoteToCached('itunes-1');
+        final demoted = await datasource.demoteToCached('itunes-1');
 
-      expect(demoted?.id, inserted.id);
-      final stored = await datasource.getById(inserted.id);
-      expect(stored?.isCached, isTrue);
-      expect(stored?.lastAccessedAt?.isBefore(before), isFalse);
-      expect(await datasource.getAll(), isEmpty);
-    });
+        expect(demoted?.id, inserted.id);
+        final stored = await datasource.getById(inserted.id);
+        expect(stored?.isCached, isTrue);
+        expect(stored?.lastAccessedAt?.isBefore(before), isFalse);
+        expect(await datasource.getAll(), isEmpty);
+      },
+    );
 
     test('returns null when subscription does not exist', () async {
       expect(await datasource.demoteToCached('nonexistent'), isNull);

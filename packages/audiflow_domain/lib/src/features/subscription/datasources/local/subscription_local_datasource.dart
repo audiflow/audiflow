@@ -20,6 +20,37 @@ class SubscriptionLocalDatasource {
     return subscription;
   }
 
+  /// Promotes the cached entry [id] to a real subscription, taking the
+  /// identity and metadata of [incoming]. Blank metadata keeps the stored
+  /// value, so a sparse source such as an OPML import never erases details
+  /// an earlier feed read supplied.
+  ///
+  /// Returns the promoted subscription, or null when [id] is missing or not
+  /// a cached entry.
+  Future<Subscription?> promoteCached(int id, Subscription incoming) {
+    // Read inside the transaction, as in [updateLastAccessed].
+    return _isar.writeTxn(() async {
+      final existing = await _isar.subscriptions.get(id);
+      if (existing == null || !existing.isCached) return null;
+      existing
+        ..itunesId = incoming.itunesId
+        ..feedUrl = incoming.feedUrl
+        ..title = _nonBlank(incoming.title) ?? existing.title
+        ..artistName = _nonBlank(incoming.artistName) ?? existing.artistName
+        ..artworkUrl = _nonBlank(incoming.artworkUrl) ?? existing.artworkUrl
+        ..description = _nonBlank(incoming.description) ?? existing.description
+        ..genres = _nonBlank(incoming.genres) ?? existing.genres
+        ..explicit = incoming.explicit
+        ..subscribedAt = incoming.subscribedAt
+        ..isCached = false;
+      await _isar.subscriptions.put(existing);
+      return existing;
+    });
+  }
+
+  static String? _nonBlank(String? value) =>
+      (value == null || value.trim().isEmpty) ? null : value;
+
   /// Demotes a real subscription to a cached entry, keeping its id so the
   /// podcast's episodes and playback history stay attached to it.
   ///

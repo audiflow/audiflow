@@ -129,6 +129,56 @@ void main() {
       check(await repository.isSubscribed('itunes-1')).isTrue();
     });
 
+    test('resubscribing under another iTunes ID reuses the row', () async {
+      final first = await repository.subscribe(
+        itunesId: 'opml:abc',
+        feedUrl: 'https://example.com/feed.xml',
+        title: 'Imported',
+        artistName: '',
+      );
+      await repository.unsubscribe('opml:abc');
+
+      final second = await repository.subscribe(
+        itunesId: 'itunes-1',
+        feedUrl: 'https://example.com/feed.xml',
+        title: 'Test Podcast',
+        artistName: 'Test Artist',
+      );
+
+      check(second.id).equals(first.id);
+      check(second.itunesId).equals('itunes-1');
+      check(await repository.isSubscribed('itunes-1')).isTrue();
+      check(await repository.getCachedSubscriptions()).isEmpty();
+    });
+
+    test('resubscribing records the metadata passed to subscribe', () async {
+      await repository.subscribe(
+        itunesId: 'itunes-1',
+        feedUrl: 'https://old.example.com/feed.xml',
+        title: 'Old Title',
+        artistName: 'Old Artist',
+        artworkUrl: 'https://example.com/old.jpg',
+      );
+      await repository.unsubscribe('itunes-1');
+
+      final resubscribed = await repository.subscribe(
+        itunesId: 'itunes-1',
+        feedUrl: 'https://new.example.com/feed.xml',
+        title: 'New Title',
+        artistName: 'New Artist',
+        genres: ['News'],
+        explicit: true,
+      );
+
+      check(resubscribed.feedUrl).equals('https://new.example.com/feed.xml');
+      check(resubscribed.title).equals('New Title');
+      check(resubscribed.artistName).equals('New Artist');
+      check(resubscribed.genres).equals('News');
+      check(resubscribed.explicit).isTrue();
+      // Absent values keep what the feed already supplied.
+      check(resubscribed.artworkUrl).equals('https://example.com/old.jpg');
+    });
+
     test('throws SubscriptionNotFoundException for a cached entry', () async {
       await repository.getOrCreateCached(
         itunesId: 'itunes-1',

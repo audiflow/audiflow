@@ -9,6 +9,7 @@ import '../../../helpers/isar_test_helper.dart';
 /// everything that only holds subscribed podcasts (FR 07).
 void main() {
   late Isar isar;
+  late StationReconcilerService reconciler;
   late SubscriptionRepositoryImpl repository;
 
   setUpAll(() async {
@@ -25,9 +26,10 @@ void main() {
       PlaybackHistorySchema,
       DownloadTaskSchema,
     ]);
+    reconciler = StationReconcilerService(isar: isar);
     repository = SubscriptionRepositoryImpl(
       datasource: SubscriptionLocalDatasource(isar),
-      reconcilerService: StationReconcilerService(isar: isar),
+      reconcilerService: reconciler,
     );
   });
 
@@ -75,9 +77,7 @@ void main() {
     final subscription = await subscribe();
     final stationId = await putStationWith(subscription.id);
     await putEpisode(subscription.id, 'ep1');
-    await StationReconcilerService(
-      isar: isar,
-    ).onStationConfigChanged(stationId);
+    await reconciler.onStationConfigChanged(stationId);
 
     await repository.unsubscribe('itunes-1');
 
