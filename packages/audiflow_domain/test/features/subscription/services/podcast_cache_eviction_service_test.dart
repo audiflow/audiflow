@@ -23,6 +23,7 @@ void main() {
       SmartPlaylistEntitySchema,
       SmartPlaylistGroupEntitySchema,
       PodcastViewPreferenceSchema,
+      DownloadTaskSchema,
     ]);
     final datasource = SubscriptionLocalDatasource(isar);
     subscriptionRepo = SubscriptionRepositoryImpl(datasource: datasource);
@@ -219,6 +220,30 @@ void main() {
       expect(await isar.episodes.get(ep.id), isNotNull);
       final histories = await isar.playbackHistorys.where().findAll();
       expect(histories, hasLength(1));
+    });
+
+    test('keeps stale cached podcasts that hold downloads', () async {
+      final staleDate = DateTime.now().subtract(const Duration(days: 10));
+      final sub = await createCached('stale', lastAccessedAt: staleDate);
+      final ep = await createEpisode(sub.id, 'ep1');
+      await isar.writeTxn(
+        () => isar.downloadTasks.put(
+          DownloadTask()
+            ..episodeId = ep.id
+            ..audioUrl = ep.audioUrl
+            ..wifiOnly = false
+            ..createdAt = DateTime.now(),
+        ),
+      );
+
+      service = PodcastCacheEvictionService(
+        subscriptionRepository: subscriptionRepo,
+        isar: isar,
+        logger: logger,
+      );
+
+      expect(await service.evict(), 0);
+      expect(await isar.episodes.get(ep.id), isNotNull);
     });
 
     test('leaves podcasts with history out of the cap', () async {
