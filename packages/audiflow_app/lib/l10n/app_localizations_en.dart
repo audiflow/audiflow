@@ -1397,6 +1397,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stationAllEpisodes => 'All';
 
   @override
+  String get stationEpisodeLimitLatestSegment => 'Latest N';
+
+  @override
+  String get stationEpisodeLimitStationSubtitle => 'Default for this station';
+
+  @override
+  String stationEpisodeLimitUnit(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'episodes',
+      one: 'episode',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get stationEpisodeLimitSet => 'Set';
+
+  @override
   String get stationGroupByPodcast => 'Group by podcast';
 
   @override

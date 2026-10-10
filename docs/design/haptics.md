@@ -88,7 +88,8 @@ Every interaction that was considered is listed here, including those that delib
 | Speed preset chip | `selection` |
 | Sleep timer option chosen | `selection` |
 | Sleep timer long press opens the keypad | `longPress` |
-| Sleep timer keypad digits | `none` (custom keypad buttons deliberately stay silent) |
+| Sleep timer and station episode-limit keypad digits | `none` (custom keypad buttons deliberately stay silent) |
+| Station episode limit: "Default" / "All" segment, or a new count confirmed with Set | `selection` (the segment's own haptic; Set plays it only when the limit changes) |
 | Sleep timer cancelled by the user (sheet Cancel, chip delete) | `toggleOff` |
 | Sleep timer fired, or cancelled by leaving its target | `none` (the app is usually in the background; see section 6) |
 | Queue row swipe (remove, download) crosses / un-crosses its threshold | `thresholdCross` / `thresholdRelease` |
