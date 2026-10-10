@@ -85,14 +85,20 @@ class EpisodeLocalDatasource {
   }
 
   /// Returns the stored episode for a feed item: the row stored with its
-  /// guid and current audio URL, else the row under its raw guid.
+  /// guid and current audio URL.
+  ///
+  /// Every upserted item's row holds its current audio URL, so no match
+  /// means the item was not stored (a repost skipped in favor of another
+  /// item); falling back to the raw guid would hand its media to another
+  /// episode.
   Future<Episode?> getByFeedItem(
     int podcastId,
     String guid,
     String audioUrl,
   ) async {
     final raw = await _isar.episodes.getByPodcastIdGuid(podcastId, guid);
-    if (raw?.audioUrl == audioUrl) return raw;
+    // An item without an enclosure URL can only be matched by guid.
+    if (audioUrl.isEmpty || raw?.audioUrl == audioUrl) return raw;
     final duplicate = await _isar.episodes
         .where()
         .podcastIdEqualToAnyGuid(podcastId)
@@ -100,7 +106,7 @@ class EpisodeLocalDatasource {
         .guidStartsWith(duplicateGuidKey(guid, ''))
         .audioUrlEqualTo(audioUrl)
         .findFirst();
-    return duplicate ?? raw;
+    return duplicate;
   }
 
   /// Returns all episodes for a podcast, ordered by publish date

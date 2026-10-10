@@ -328,6 +328,30 @@ void main() {
         expect(titles, ['Repost #2', 'Owner']);
       });
 
+      test('finds no row for a repost that was not stored', () async {
+        await datasource.upsertAll([
+          makeEpisode(
+            guid: 'shared',
+            title: 'Repost #2',
+            audioUrl: 'https://example.com/a.mp3',
+            publishedAt: oct10,
+          ),
+          makeEpisode(
+            guid: 'shared',
+            title: 'Repost',
+            audioUrl: 'https://example.com/b.mp3',
+            publishedAt: oct10,
+          ),
+        ]);
+
+        final found = await datasource.getByFeedItem(
+          1,
+          'shared',
+          'https://example.com/b.mp3',
+        );
+        expect(found, isNull);
+      });
+
       test('keeps the stored row when a new episode reuses its guid', () async {
         final storedId = await datasource.upsert(
           makeEpisode(
