@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
+import '../../../../app/errors/user_facing_error.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
 import '../../../station/presentation/controllers/station_list_controller.dart';
@@ -118,7 +119,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
           error: (error, stack) => _withTitle(
             l10n,
             _ErrorState(
-              error: error.toString(),
+              error: error,
               onRetry: () => ref.invalidate(librarySubscriptionsProvider),
             ),
           ),
@@ -382,7 +383,7 @@ class _EmptyState extends StatelessWidget {
 class _ErrorState extends StatelessWidget {
   const _ErrorState({required this.error, required this.onRetry});
 
-  final String error;
+  final Object error;
   final VoidCallback onRetry;
 
   @override
@@ -407,7 +408,7 @@ class _ErrorState extends StatelessWidget {
             ),
             const SizedBox(height: Spacing.sm),
             Text(
-              error,
+              userFacingErrorMessage(l10n, error),
               style: AppTextStyles.meta.copyWith(color: colors.inkSecondary),
               textAlign: TextAlign.center,
               maxLines: 3,

@@ -204,7 +204,7 @@ class _ExportTile extends ConsumerWidget {
       final message = switch (next) {
         OpmlExportEmpty() => l10n.storageExportEmpty,
         OpmlExportSuccess() => l10n.storageExportSuccess,
-        OpmlExportError(:final message) => l10n.storageExportError(message),
+        OpmlExportError() => l10n.storageExportError,
         _ => null,
       };
       if (message != null) {
@@ -296,6 +296,8 @@ class _DangerZoneSection extends StatelessWidget {
     if (!allowed) return;
     if (!context.mounted) return;
 
+    // Read up front: the reset may outlive this screen's element.
+    final logger = ref.read(namedLoggerProvider('StorageSettings'));
     showDialog<void>(
       context: context,
       builder: (dialogContext) => _ResetConfirmationDialog(
@@ -308,14 +310,15 @@ class _DangerZoneSection extends StatelessWidget {
               );
               applyRuntimeReset(context, ref);
             }
-          } on Object catch (e) {
+          } on Object catch (e, stack) {
             // IsarError extends Error, not Exception, so a narrower clause
             // would let a failed clear transaction escape the dialog with
             // no feedback at all.
+            logger.e('Data reset failed', error: e, stackTrace: stack);
             if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(l10n.storageResetFailed(e.toString()))),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(l10n.storageResetFailed)));
             }
           }
         },

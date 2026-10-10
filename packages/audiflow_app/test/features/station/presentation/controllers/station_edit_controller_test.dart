@@ -109,6 +109,16 @@ void main() {
         ),
       ).isTrue();
     });
+
+    test('reports an unexpected save failure without its text', () async {
+      stations.createError = StateError('IsarError: Unique index violated.');
+      final controller = controllerFor(null)..useDefaultName('Station 1');
+      await controller.updateSelectedPodcasts({7});
+      await controller.pendingWrites;
+      check(
+        container.read(stationEditControllerProvider(null)).error,
+      ).equals(StationEditError.unexpected);
+    });
   });
 
   group('an existing station', () {

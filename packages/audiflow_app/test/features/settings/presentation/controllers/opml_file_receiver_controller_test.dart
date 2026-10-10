@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:audiflow_app/features/settings/presentation/controllers/opml_file_receiver_controller.dart';
+import 'package:audiflow_app/features/settings/presentation/utils/opml_read_failure.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter/services.dart';
@@ -172,7 +173,10 @@ void main() {
         Uri.parse('content://com.android.providers.downloads/document/123'),
       );
       final state = container.read(opmlFileReceiverControllerProvider);
-      check(state).isA<OpmlFileReceiverError>();
+      check(state)
+          .isA<OpmlFileReceiverError>()
+          .has((it) => it.failure, 'failure')
+          .equals(OpmlReadFailure.unreadableFile);
     });
   });
 }
