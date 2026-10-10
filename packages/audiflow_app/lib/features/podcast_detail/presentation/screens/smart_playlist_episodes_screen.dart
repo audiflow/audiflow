@@ -345,6 +345,8 @@ class _SmartPlaylistEpisodesScreenState
               );
         final sorted = List.of(displayEpisodes);
         sortEpisodeData(sorted, effectiveRule);
+        // Rows queue what follows them on screen, so pass the shown order.
+        final displayedIds = [for (final data in sorted) data.episode.id];
 
         final showThumbnail = _resolveEpisodeRowThumbnail();
         final playlistDef = _resolvePlaylistDef();
@@ -364,7 +366,7 @@ class _SmartPlaylistEpisodesScreenState
                 showThumbnail: showThumbnail,
                 lastRefreshedAt: widget.lastRefreshedAt,
                 progress: data.progress,
-                siblingEpisodeIds: widget.smartPlaylist.episodeIds,
+                siblingEpisodeIds: displayedIds,
                 itunesId: widget.podcast.id,
                 feedUrl: widget.podcast.feedUrl,
                 effectiveOrder: _resolvedPlayOrder,
@@ -454,6 +456,10 @@ class _SmartPlaylistEpisodesScreenState
             ? (a, b) => b.compareTo(a)
             : (a, b) => a.compareTo(b),
       );
+    final displayedIds = [
+      for (final year in sortedYears)
+        for (final data in byYear[year]!) data.episode.id,
+    ];
 
     final showThumbnail = _resolveEpisodeRowThumbnail();
     final playlistDef = _resolvePlaylistDef();
@@ -469,7 +475,7 @@ class _SmartPlaylistEpisodesScreenState
         feedImageUrl: widget.feedImageUrl,
         showThumbnail: showThumbnail,
         progress: data.progress,
-        siblingEpisodeIds: widget.smartPlaylist.episodeIds,
+        siblingEpisodeIds: displayedIds,
         itunesId: widget.podcast.id,
         feedUrl: widget.podcast.feedUrl,
         effectiveOrder: _resolvedPlayOrder,

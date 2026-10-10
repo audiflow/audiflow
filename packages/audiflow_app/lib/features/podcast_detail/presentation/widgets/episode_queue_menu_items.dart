@@ -23,6 +23,13 @@ class EpisodeQueueMenuOptions {
   /// "from here" actions are hidden when there are none.
   final bool hasFollowing;
 
+  /// Offered when the queue cannot be read: the single-episode actions
+  /// still work, and the rest of the row menu stays reachable.
+  static const fallback = EpisodeQueueMenuOptions(
+    queueIsEmpty: false,
+    hasFollowing: false,
+  );
+
   static Future<EpisodeQueueMenuOptions> resolve(
     WidgetRef ref, {
     required int episodeId,
@@ -30,18 +37,29 @@ class EpisodeQueueMenuOptions {
     required AutoPlayOrder? effectiveOrder,
   }) async {
     final service = ref.read(queueServiceProvider);
-    final queue = await service.getQueue();
-    final fromHere = siblingEpisodeIds == null
-        ? const <int>[]
-        : await service.episodesFromHere(
-            startingEpisodeId: episodeId,
-            siblingEpisodeIds: siblingEpisodeIds,
-            effectiveOrder: effectiveOrder,
+    try {
+      final queue = await service.getQueue();
+      final fromHere = siblingEpisodeIds == null
+          ? const <int>[]
+          : await service.episodesFromHere(
+              startingEpisodeId: episodeId,
+              siblingEpisodeIds: siblingEpisodeIds,
+              effectiveOrder: effectiveOrder,
+            );
+      return EpisodeQueueMenuOptions(
+        queueIsEmpty: !queue.hasItems,
+        hasFollowing: 1 < fromHere.length,
+      );
+    } on Object catch (error, stackTrace) {
+      ref
+          .read(namedLoggerProvider('EpisodeQueueMenu'))
+          .w(
+            'Failed to resolve queue menu options',
+            error: error,
+            stackTrace: stackTrace,
           );
-    return EpisodeQueueMenuOptions(
-      queueIsEmpty: !queue.hasItems,
-      hasFollowing: 1 < fromHere.length,
-    );
+      return fallback;
+    }
   }
 }
 

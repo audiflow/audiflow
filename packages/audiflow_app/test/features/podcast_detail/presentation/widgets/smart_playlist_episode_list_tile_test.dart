@@ -47,13 +47,15 @@ class _KeepRecordingDownloadService extends Fake implements DownloadService {
 
 /// Serves a queue with [queuedCount] items and records bulk queue calls.
 class _FakeQueueService extends Fake implements QueueService {
-  _FakeQueueService({this.queuedCount = 0});
+  _FakeQueueService({this.queuedCount = 0, this.failsToRead = false});
 
   final int queuedCount;
+  final bool failsToRead;
   final calls = <String>[];
 
   @override
   Future<PlaybackQueue> getQueue() async {
+    if (failsToRead) throw StateError('queue unavailable');
     final items = [
       for (var i = 0; i < queuedCount; i++)
         QueueItemWithEpisode(
@@ -269,6 +271,18 @@ void main() {
       );
 
       check(queueItemsShown()).deepEquals([playNext, addToQueue]);
+    });
+
+    testWidgets('still opens with single-episode actions when the queue '
+        'cannot be read', (tester) async {
+      await openMenu(
+        tester,
+        _FakeQueueService(failsToRead: true),
+        siblings: [7, 8, 9],
+      );
+
+      check(queueItemsShown()).deepEquals([playNext, addToQueue]);
+      check(find.text('Mark as played').evaluate()).length.equals(1);
     });
 
     testWidgets('adds the rest of the list and reports how many', (
