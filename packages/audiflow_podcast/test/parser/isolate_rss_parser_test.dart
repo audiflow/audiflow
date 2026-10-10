@@ -217,6 +217,30 @@ void main() {
       expect(complete.stoppedEarly, isFalse);
     });
 
+    test('reads the episode explicit flag', () async {
+      const xml = '''
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
+  <channel>
+    <title>Show</title>
+    <item><guid>a</guid><title>A</title><itunes:explicit>yes</itunes:explicit></item>
+    <item><guid>b</guid><title>B</title><itunes:explicit> Explicit </itunes:explicit></item>
+    <item><guid>c</guid><title>C</title><itunes:explicit>clean</itunes:explicit></item>
+    <item><guid>d</guid><title>D</title></item>
+  </channel>
+</rss>
+''';
+      final episodes = await IsolateRssParser.parse(
+        feedXml: xml,
+        knownGuids: {},
+      ).where((e) => e is ParsedEpisode).cast<ParsedEpisode>().toList();
+
+      expect(
+        {for (final e in episodes) e.guid: e.isExplicit},
+        {'a': true, 'b': true, 'c': false, 'd': null},
+      );
+    });
+
     test('emits metadata first', () async {
       final progress = <ParseProgress>[];
 

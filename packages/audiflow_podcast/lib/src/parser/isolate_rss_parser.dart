@@ -6,6 +6,7 @@ import 'package:xml/xml.dart';
 import '../models/episode_identity.dart';
 import '../models/podcast_chapters_link.dart';
 import 'description_chapters_parser.dart';
+import 'itunes_boolean.dart';
 import 'parse_progress.dart';
 
 /// Trims whitespace and returns null for blank strings.
@@ -552,6 +553,7 @@ class IsolateRssParser {
       episodeNumber: int.tryParse(_extractItunesText(item, 'episode') ?? ''),
       seasonNumber: int.tryParse(_extractItunesText(item, 'season') ?? ''),
       imageUrl: _extractItunesImageUrl(item),
+      isExplicit: _explicitOf(item),
       contentEncoded: contentEncoded,
       summary: _extractItunesText(item, 'summary'),
       link: _extractText(item, 'link'),
@@ -566,6 +568,12 @@ class IsolateRssParser {
             ], episodeDuration: duration)
           : const [],
     );
+  }
+
+  /// Null when the item has no `<itunes:explicit>` tag.
+  static bool? _explicitOf(XmlElement item) {
+    final value = _extractItunesText(item, 'explicit');
+    return value == null ? null : parseItunesBoolean(value);
   }
 
   static List<ParsedTranscript>? _extractTranscripts(XmlElement item) {

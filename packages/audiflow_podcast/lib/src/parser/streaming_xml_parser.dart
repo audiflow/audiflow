@@ -8,6 +8,7 @@ import '../errors/podcast_parse_error.dart';
 import '../models/podcast_entity.dart';
 import '../models/podcast_feed.dart';
 import '../models/podcast_item.dart';
+import 'itunes_boolean.dart';
 
 /// Trims whitespace and returns null for blank strings.
 String? _nullIfBlank(String? value) {
@@ -177,7 +178,9 @@ class StreamingXmlParser {
       'itunes:explicit',
     );
     if (itunesExplicit != null) {
-      _state.currentFeedData['itunesExplicit'] = _parseBoolean(itunesExplicit);
+      _state.currentFeedData['itunesExplicit'] = parseItunesBoolean(
+        itunesExplicit,
+      );
     }
 
     final itunesComplete = _extractElementText(
@@ -185,7 +188,9 @@ class StreamingXmlParser {
       'itunes:complete',
     );
     if (itunesComplete != null) {
-      _state.currentFeedData['itunesComplete'] = _parseBoolean(itunesComplete);
+      _state.currentFeedData['itunesComplete'] = parseItunesBoolean(
+        itunesComplete,
+      );
     }
 
     // Extract iTunes image
@@ -415,7 +420,7 @@ class StreamingXmlParser {
         case 'summary':
           itemData['itunesSummary'] = elementData;
         case 'explicit':
-          itemData['itunesExplicit'] = _parseBoolean(elementData);
+          itemData['itunesExplicit'] = parseItunesBoolean(elementData);
         case 'duration':
           itemData['itunesDuration'] = _parseDuration(elementData);
         case 'image':
@@ -591,7 +596,9 @@ class StreamingXmlParser {
         case 'summary':
           _state.currentFeedData['itunesSummary'] = elementData;
         case 'explicit':
-          _state.currentFeedData['itunesExplicit'] = _parseBoolean(elementData);
+          _state.currentFeedData['itunesExplicit'] = parseItunesBoolean(
+            elementData,
+          );
         case 'image':
           final href = _nullIfBlank(element.getAttribute('href'));
           if (href != null) {
@@ -610,7 +617,9 @@ class StreamingXmlParser {
         case 'type':
           _state.currentFeedData['itunesType'] = elementData;
         case 'complete':
-          _state.currentFeedData['itunesComplete'] = _parseBoolean(elementData);
+          _state.currentFeedData['itunesComplete'] = parseItunesBoolean(
+            elementData,
+          );
         case 'new-feed-url':
           _state.currentFeedData['itunesNewFeedUrl'] = elementData;
       }
@@ -689,7 +698,9 @@ class StreamingXmlParser {
         case 'summary':
           _state.currentItemData['itunesSummary'] = elementData;
         case 'explicit':
-          _state.currentItemData['itunesExplicit'] = _parseBoolean(elementData);
+          _state.currentItemData['itunesExplicit'] = parseItunesBoolean(
+            elementData,
+          );
         case 'duration':
           _state.currentItemData['itunesDuration'] = _parseDuration(
             elementData,
@@ -810,19 +821,6 @@ class StreamingXmlParser {
     } catch (e) {
       return null;
     }
-  }
-
-  /// Parse boolean string
-  ///
-  /// Recognizes `true`, `yes`, `1`, and `explicit` (Apple-spec value) as
-  /// truthy, case-insensitive and whitespace-trimmed. All other values,
-  /// including an absent tag, map to `false`.
-  bool _parseBoolean(String value) {
-    final lower = value.toLowerCase().trim();
-    return lower == 'true' ||
-        lower == 'yes' ||
-        lower == '1' ||
-        lower == 'explicit';
   }
 
   /// Parse image element
