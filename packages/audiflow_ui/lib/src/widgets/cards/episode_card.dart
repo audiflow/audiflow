@@ -15,6 +15,10 @@ import '../indicators/progress_line.dart';
 const double _thumbnailSize = 56.0;
 const double _actionRowHeight = 44.0;
 
+/// A full-year date, the widest form `formatEpisodeDate` produces. A getter
+/// so it follows the current locale.
+String get _widestDateSample => DateTime(2000, 12, 28).formatEpisodeDate();
+
 /// Episode row (redesign 4.2): date line (accent dot when new), title,
 /// description, artwork on the right, then the action row with the play
 /// pill and the caller's actions. Played episodes fade their title and
@@ -299,17 +303,35 @@ class EpisodeCard extends StatelessWidget {
         ),
         if (date != null) ...[
           const SizedBox(width: Spacing.sm),
+          // The gap shrinks with the date on narrow phones instead of
+          // pushing the buttons off the row.
           Flexible(
-            child: Text(
-              date,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppTextStyles.caption.copyWith(color: colors.inkTertiary),
+            child: Padding(
+              padding: const EdgeInsets.only(right: Spacing.md),
+              child: _dateSlot(date, colors),
             ),
           ),
-        ],
-        const Spacer(),
+        ] else
+          const SizedBox(width: Spacing.md),
         ...actionButtons,
+      ],
+    );
+  }
+
+  /// Reserves the width of the longest date format so the action buttons
+  /// that follow line up across rows ("Today" vs "Dec 28, 2025"), rather
+  /// than drifting with each label or hugging the far edge on wide screens.
+  Widget _dateSlot(String date, AppColors colors) {
+    final style = AppTextStyles.caption.copyWith(color: colors.inkTertiary);
+    return Stack(
+      children: [
+        ExcludeSemantics(
+          child: Visibility.maintain(
+            visible: false,
+            child: Text(_widestDateSample, maxLines: 1, style: style),
+          ),
+        ),
+        Text(date, maxLines: 1, overflow: TextOverflow.ellipsis, style: style),
       ],
     );
   }

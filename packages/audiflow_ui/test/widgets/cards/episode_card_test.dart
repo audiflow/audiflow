@@ -68,6 +68,70 @@ void main() {
       check(pill.right).isLessThan(date.left);
     });
 
+    group('action buttons', () {
+      const actionKey = Key('action');
+      const action = SizedBox(key: actionKey, width: 44, height: 44);
+      const button = SizedBox(width: 44, height: 44);
+
+      Future<double> actionLeft(WidgetTester tester, String date) async {
+        await tester.pumpWidget(
+          buildSubject(
+            numberLabel: '#1',
+            dateLabel: date,
+            actionButtons: const [action],
+          ),
+        );
+        return tester.getRect(find.byKey(actionKey)).left;
+      }
+
+      setUp(() {
+        final view =
+            TestWidgetsFlutterBinding.instance.platformDispatcher.implicitView!;
+        view.physicalSize = const Size(1024, 800);
+        view.devicePixelRatio = 1;
+      });
+
+      tearDown(() {
+        TestWidgetsFlutterBinding.instance.platformDispatcher.implicitView!
+          ..resetPhysicalSize()
+          ..resetDevicePixelRatio();
+      });
+
+      testWidgets('line up across dates of different lengths', (tester) async {
+        final short = await actionLeft(tester, 'Today');
+        final long = await actionLeft(tester, 'Dec 28, 2025');
+        check(short).isCloseTo(long, 0.5);
+      });
+
+      testWidgets('follow the date instead of the right edge', (tester) async {
+        final left = await actionLeft(tester, 'Mar 22');
+        final date = tester.getRect(find.text('Mar 22'));
+        check(date.right).isLessThan(left);
+        check(left).isLessThan(1024 / 2);
+      });
+
+      testWidgets('do not overflow on a narrow phone', (tester) async {
+        TestWidgetsFlutterBinding
+            .instance
+            .platformDispatcher
+            .implicitView!
+            // iPhone SE, the narrowest iOS 16 screen.
+            .physicalSize = const Size(
+          375,
+          800,
+        );
+        await tester.pumpWidget(
+          buildSubject(
+            numberLabel: '#1',
+            pillLabel: '1h 58m left',
+            dateLabel: 'Dec 28, 2025',
+            actionButtons: const [button, button, button],
+          ),
+        );
+        check(tester.takeException()).isNull();
+      });
+    });
+
     testWidgets('renders title, pill, and date separately', (tester) async {
       await tester.pumpWidget(
         buildSubject(
