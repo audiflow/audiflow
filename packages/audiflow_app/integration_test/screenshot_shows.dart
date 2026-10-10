@@ -16,7 +16,6 @@ class ScreenshotScenario {
     required this.searchTerm,
     required this.searchCountry,
     required this.stationName,
-    required this.stationEpisodesPerShow,
   });
 
   /// Has a grouped preset: Shows, Series and Curated captions.
@@ -42,10 +41,6 @@ class ScreenshotScenario {
 
   final String stationName;
 
-  /// Episodes the station takes from each show; one per show unless the
-  /// scenario has too few shows to fill the screen.
-  final int stationEpisodesPerShow;
-
   List<ScreenshotShow> get all => {primary, themed, chaptered, ?extra}.toList();
 }
 
@@ -67,7 +62,6 @@ const _japanese = ScreenshotScenario(
   searchTerm: '歴史',
   searchCountry: 'jp',
   stationName: '通勤ミックス',
-  stationEpisodesPerShow: 1,
 );
 
 const _businessWars = ScreenshotShow(
@@ -96,7 +90,6 @@ const _english = ScreenshotScenario(
   searchTerm: 'history',
   searchCountry: 'us',
   stationName: 'Commute Mix',
-  stationEpisodesPerShow: 1,
 );
 
 /// Returns the scenario for [locale] (`ja` or `en`).

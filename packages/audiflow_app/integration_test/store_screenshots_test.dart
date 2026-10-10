@@ -421,13 +421,25 @@ Future<void> _captureStation(
   ProviderContainer container,
   Map<ScreenshotShow, Subscription> shows,
 ) async {
+  // One episode per show fills a phone; a tablet needs two.
+  final tablet = DeviceUtils.isTablet(
+    MediaQuery.sizeOf(
+      tester.element(find.byType(MaterialApp).first),
+    ).shortestSide,
+  );
   final now = DateTime.now();
   final station = await container
       .read(stationRepositoryProvider)
       .create(
         Station()
           ..name = _scenario.stationName
-          ..defaultEpisodeLimit = _scenario.stationEpisodesPerShow
+          ..defaultEpisodeLimit = tablet ? 2 : 1
+          // Two from one show may be consecutive parts of a series, which
+          // play oldest first; grouping by show keeps them together.
+          ..groupByPodcast = tablet
+          ..episodeSort = tablet
+              ? StationEpisodeSort.oldest
+              : StationEpisodeSort.newest
           ..createdAt = now
           ..updatedAt = now,
       );
