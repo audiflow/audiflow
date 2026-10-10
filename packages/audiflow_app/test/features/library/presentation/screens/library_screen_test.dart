@@ -467,7 +467,10 @@ void main() {
       });
     }
 
-    testWidgets('stations are laid out two per row', (tester) async {
+    testWidgets('stations are laid out two per row on a phone', (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
       Station station(int id) => Station()
         ..id = id
         ..name = 'Station $id';

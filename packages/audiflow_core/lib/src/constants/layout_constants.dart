@@ -12,6 +12,9 @@ class LayoutConstants {
   /// Target width per podcast grid item for column count calculation.
   static const double podcastGridItemWidth = 130.0;
 
+  /// Target width per station grid tile for column count calculation.
+  static const double stationGridItemWidth = 180.0;
+
   /// Width of the sidebar in tablet landscape mode.
   static const double sidebarWidth = 280.0;
 }
