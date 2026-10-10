@@ -1640,6 +1640,18 @@ abstract class AppLocalizations {
   /// **'Starting playback will replace your current queue with episodes from this list.'**
   String get episodeReplaceQueueContent;
 
+  /// Clear queue dialog title shown before playing a single episode
+  ///
+  /// In en, this message translates to:
+  /// **'Clear queue?'**
+  String get episodeClearQueueTitle;
+
+  /// Dialog content when playing a single episode would clear the queue
+  ///
+  /// In en, this message translates to:
+  /// **'Starting playback will clear your current queue.'**
+  String get episodeClearQueueContent;
+
   /// Replace button label
   ///
   /// In en, this message translates to:

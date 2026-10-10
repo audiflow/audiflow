@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -823,6 +822,12 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get episodeReplaceQueueContent =>
       '再生を開始すると、現在のキューがこのリストのエピソードに置き換わります。';
+
+  @override
+  String get episodeClearQueueTitle => 'キューをクリアしますか？';
+
+  @override
+  String get episodeClearQueueContent => '再生を開始すると、現在のキューがクリアされます。';
 
   @override
   String get episodeReplace => '置き換え';

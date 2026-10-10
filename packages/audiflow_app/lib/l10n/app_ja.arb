@@ -277,6 +277,8 @@
 
   "episodeReplaceQueueTitle": "キューを置き換えますか？",
   "episodeReplaceQueueContent": "再生を開始すると、現在のキューがこのリストのエピソードに置き換わります。",
+  "episodeClearQueueTitle": "キューをクリアしますか？",
+  "episodeClearQueueContent": "再生を開始すると、現在のキューがクリアされます。",
   "episodeReplace": "置き換え",
   "downloadCancelled": "ダウンロードをキャンセルしました",
   "downloadRetrying": "ダウンロードを再試行中",

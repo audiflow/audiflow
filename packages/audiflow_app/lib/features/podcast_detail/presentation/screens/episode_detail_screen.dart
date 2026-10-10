@@ -534,14 +534,14 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
 
       if (shouldConfirm) {
         if (!context.mounted) return;
-        final confirmed = await _showReplaceQueueDialog(context);
+        final confirmed = await _showClearQueueDialog(context);
         if (!confirmed) return;
       }
 
-      await queueService.createAdhocQueue(
-        startingEpisodeId: episodeId,
-        sourceContext: widget.podcastTitle,
-      );
+      // Plays this episode alone: the screen can be reached from many places
+      // (lists, stations, the player, deep links), so it has no list to
+      // queue from. Queuing a range is an explicit action on list rows.
+      await queueService.clearQueue();
     }
 
     // Only now, past the replace-queue confirmation: a cancelled play must
@@ -630,13 +630,13 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
     }
   }
 
-  Future<bool> _showReplaceQueueDialog(BuildContext context) async {
+  Future<bool> _showClearQueueDialog(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(l10n.episodeReplaceQueueTitle),
-        content: Text(l10n.episodeReplaceQueueContent),
+        title: Text(l10n.episodeClearQueueTitle),
+        content: Text(l10n.episodeClearQueueContent),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -644,7 +644,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.episodeReplace),
+            child: Text(l10n.commonClear),
           ),
         ],
       ),
