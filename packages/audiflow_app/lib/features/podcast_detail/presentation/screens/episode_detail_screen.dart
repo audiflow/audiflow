@@ -527,22 +527,19 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
       return;
     }
 
-    final episodeId = widget.progress?.episode.id;
-    if (episodeId != null) {
-      final queueService = ref.read(queueServiceProvider);
-      final shouldConfirm = await queueService.shouldConfirmAdhocReplace();
-
-      if (shouldConfirm) {
-        if (!context.mounted) return;
-        final confirmed = await _showClearQueueDialog(context);
-        if (!confirmed) return;
-      }
-
-      // Plays this episode alone: the screen can be reached from many places
-      // (lists, stations, the player, deep links), so it has no list to
-      // queue from. Queuing a range is an explicit action on list rows.
-      await queueService.clearQueue();
+    // Plays this episode alone: the screen can be reached from many places
+    // (lists, stations, the player, deep links, notifications), so it has
+    // no list to queue from. Queuing a range is an explicit action on list
+    // rows. Clearing needs no episode ID, so it runs even when the screen
+    // was opened without a progress snapshot.
+    final queueService = ref.read(queueServiceProvider);
+    final shouldConfirm = await queueService.shouldConfirmAdhocReplace();
+    if (shouldConfirm) {
+      if (!context.mounted) return;
+      final confirmed = await _showClearQueueDialog(context);
+      if (!confirmed) return;
     }
+    await queueService.clearQueue();
 
     // Only now, past the replace-queue confirmation: a cancelled play must
     // not move the station up the Library.
