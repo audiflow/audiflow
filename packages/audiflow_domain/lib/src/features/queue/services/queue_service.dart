@@ -128,51 +128,12 @@ class QueueService {
     List<int> episodeIds;
 
     if (siblingEpisodeIds != null) {
-      final order = effectiveOrder ?? _settingsRepository.getAutoPlayOrder();
-      if (order == AutoPlayOrder.asDisplayed) {
-        // Use IDs in their original display order, just remove
-        // the starting episode and take everything after it.
-        final startIndex = siblingEpisodeIds.indexOf(startingEpisodeId);
-        if (0 <= startIndex && startIndex < siblingEpisodeIds.length - 1) {
-          episodeIds = siblingEpisodeIds.sublist(startIndex + 1);
-        } else {
-          episodeIds = [];
-        }
-      } else {
-        // Sort siblings by publishedAt (chronological) with
-        // episodeNumber as fallback.
-        final siblings = await _episodeRepository.getByIds(siblingEpisodeIds);
-        siblings.sort((a, b) {
-          final aPub = a.publishedAt;
-          final bPub = b.publishedAt;
-          if (aPub != null && bPub != null) {
-            final cmp = aPub.compareTo(bPub);
-            if (cmp != 0) return cmp;
-          } else if (aPub != null) {
-            return -1;
-          } else if (bPub != null) {
-            return 1;
-          }
-          final aNum = a.episodeNumber;
-          final bNum = b.episodeNumber;
-          if (aNum != null && bNum != null) {
-            return aNum.compareTo(bNum);
-          }
-          return 0;
-        });
-
-        final startIndex = siblings.indexWhere(
-          (e) => e.id == startingEpisodeId,
-        );
-        if (0 <= startIndex && startIndex < siblings.length - 1) {
-          episodeIds = siblings
-              .sublist(startIndex + 1)
-              .map((e) => e.id)
-              .toList();
-        } else {
-          episodeIds = [];
-        }
-      }
+      final fromHere = await episodesFromHere(
+        startingEpisodeId: startingEpisodeId,
+        siblingEpisodeIds: siblingEpisodeIds,
+        effectiveOrder: effectiveOrder,
+      );
+      episodeIds = fromHere.skip(1).toList();
     } else {
       // Get subsequent episodes (episode number ascending, after starting)
       final subsequentEpisodes = await _episodeRepository.getSubsequentEpisodes(
@@ -192,6 +153,82 @@ class QueueService {
       'Created adhoc queue from "$sourceContext" with ${episodeIds.length} '
       'episode(s), after: ${startingEpisode.title}',
     );
+  }
+
+  /// Returns [startingEpisodeId] followed by the episodes after it in
+  /// [siblingEpisodeIds], ordered by [effectiveOrder] (falling back to the
+  /// user's auto-play order). Empty when the starting episode is not in
+  /// the list.
+  Future<List<int>> episodesFromHere({
+    required int startingEpisodeId,
+    required List<int> siblingEpisodeIds,
+    AutoPlayOrder? effectiveOrder,
+  }) async {
+    final order = effectiveOrder ?? _settingsRepository.getAutoPlayOrder();
+    final ordered = order == AutoPlayOrder.asDisplayed
+        ? siblingEpisodeIds
+        : await _chronologicalIds(siblingEpisodeIds);
+    final startIndex = ordered.indexOf(startingEpisodeId);
+    if (startIndex < 0) return [];
+    return ordered.sublist(startIndex);
+  }
+
+  /// Puts the episodes from [startingEpisodeId] onward at the front of the
+  /// manual queue (bulk Play Next). Returns how many were added.
+  Future<int> playNextFromHere({
+    required int startingEpisodeId,
+    required List<int> siblingEpisodeIds,
+    AutoPlayOrder? effectiveOrder,
+  }) async {
+    final episodeIds = await episodesFromHere(
+      startingEpisodeId: startingEpisodeId,
+      siblingEpisodeIds: siblingEpisodeIds,
+      effectiveOrder: effectiveOrder,
+    );
+    await _repository.addAllToFront(episodeIds);
+    _logger.i('Added ${episodeIds.length} episode(s) to queue (Play Next)');
+    return episodeIds.length;
+  }
+
+  /// Appends the episodes from [startingEpisodeId] onward to the manual
+  /// queue (bulk Play Later). Returns how many were added.
+  Future<int> playLaterFromHere({
+    required int startingEpisodeId,
+    required List<int> siblingEpisodeIds,
+    AutoPlayOrder? effectiveOrder,
+  }) async {
+    final episodeIds = await episodesFromHere(
+      startingEpisodeId: startingEpisodeId,
+      siblingEpisodeIds: siblingEpisodeIds,
+      effectiveOrder: effectiveOrder,
+    );
+    await _repository.addAllToEnd(episodeIds);
+    _logger.i('Added ${episodeIds.length} episode(s) to queue (Play Later)');
+    return episodeIds.length;
+  }
+
+  /// Sorts by publishedAt (chronological) with episodeNumber as fallback.
+  Future<List<int>> _chronologicalIds(List<int> episodeIds) async {
+    final episodes = await _episodeRepository.getByIds(episodeIds);
+    episodes.sort(_compareChronologically);
+    return episodes.map((e) => e.id).toList();
+  }
+
+  static int _compareChronologically(Episode a, Episode b) {
+    final aPub = a.publishedAt;
+    final bPub = b.publishedAt;
+    if (aPub != null && bPub != null) {
+      final cmp = aPub.compareTo(bPub);
+      if (cmp != 0) return cmp;
+    } else if (aPub != null) {
+      return -1;
+    } else if (bPub != null) {
+      return 1;
+    }
+    final aNum = a.episodeNumber;
+    final bNum = b.episodeNumber;
+    if (aNum != null && bNum != null) return aNum.compareTo(bNum);
+    return 0;
   }
 
   /// Removes an item from the queue.

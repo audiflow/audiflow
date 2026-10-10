@@ -1,3 +1,4 @@
+import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -20,6 +21,38 @@ class QueueController extends _$QueueController {
   Future<void> playNext(int episodeId) async {
     final service = ref.read(queueServiceProvider);
     await service.playNext(episodeId);
+  }
+
+  /// Queues [episodeId] and the episodes after it in [siblingEpisodeIds]
+  /// to play next. Returns how many were added.
+  Future<int> playNextFromHere({
+    required int episodeId,
+    required List<int> siblingEpisodeIds,
+    AutoPlayOrder? effectiveOrder,
+  }) {
+    return ref
+        .read(queueServiceProvider)
+        .playNextFromHere(
+          startingEpisodeId: episodeId,
+          siblingEpisodeIds: siblingEpisodeIds,
+          effectiveOrder: effectiveOrder,
+        );
+  }
+
+  /// Appends [episodeId] and the episodes after it in [siblingEpisodeIds]
+  /// to the queue. Returns how many were added.
+  Future<int> playLaterFromHere({
+    required int episodeId,
+    required List<int> siblingEpisodeIds,
+    AutoPlayOrder? effectiveOrder,
+  }) {
+    return ref
+        .read(queueServiceProvider)
+        .playLaterFromHere(
+          startingEpisodeId: episodeId,
+          siblingEpisodeIds: siblingEpisodeIds,
+          effectiveOrder: effectiveOrder,
+        );
   }
 
   Future<void> removeItem(int queueItemId) async {

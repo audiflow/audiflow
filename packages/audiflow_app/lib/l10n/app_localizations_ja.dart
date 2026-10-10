@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -627,6 +626,22 @@ class AppLocalizationsJa extends AppLocalizations {
   String get queueClearConfirm => '確認？';
 
   @override
+  String get playNextFromHere => 'これ以降を次に再生';
+
+  @override
+  String get addToQueueFromHere => 'これ以降をキューに追加';
+
+  @override
+  String queuePlayingNextCount(int count) {
+    return '$count件を次に再生します';
+  }
+
+  @override
+  String queueAddedToQueueCount(int count) {
+    return '$count件をキューに追加しました';
+  }
+
+  @override
   String get queueAddedToQueue => 'キューに追加しました';
 
   @override
@@ -823,6 +838,12 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get episodeReplaceQueueContent =>
       '再生を開始すると、現在のキューがこのリストのエピソードに置き換わります。';
+
+  @override
+  String get episodeClearQueueTitle => 'キューをクリアしますか？';
+
+  @override
+  String get episodeClearQueueContent => '再生を開始すると、現在のキューがクリアされます。';
 
   @override
   String get episodeReplace => '置き換え';

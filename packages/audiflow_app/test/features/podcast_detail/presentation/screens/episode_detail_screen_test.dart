@@ -5,6 +5,7 @@ import 'package:audiflow_app/features/podcast_detail/presentation/widgets/episod
 import 'package:audiflow_app/features/podcast_detail/presentation/widgets/episode_playback_record.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_app/l10n/app_localizations_en.dart';
+import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:checks/checks.dart';
@@ -125,7 +126,7 @@ void main() {
   }
 
   group('EpisodeDetailScreen', () {
-    testWidgets('cancelling the queue replacement records no station play', (
+    testWidgets('cancelling the queue clear records no station play', (
       tester,
     ) async {
       final stations = _RecordingStationRepository();
@@ -145,6 +146,37 @@ void main() {
       await tester.pumpAndSettle();
 
       check(stations.played).isEmpty();
+    });
+
+    testWidgets('a fresh play clears the queue without queuing others', (
+      tester,
+    ) async {
+      final queue = _RecordingQueueService();
+      await tester.pumpWidget(
+        buildTestWidget(progress: testEpisodeWithProgress, queue: queue),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.play_arrow_rounded));
+      await tester.pumpAndSettle();
+      // Let the bounded wait for playback to start time out.
+      await tester.pump(const Duration(seconds: 31));
+
+      check(queue.calls).deepEquals(['clearQueue']);
+    });
+
+    testWidgets('a fresh play without a progress snapshot clears the queue', (
+      tester,
+    ) async {
+      final queue = _RecordingQueueService();
+      await tester.pumpWidget(buildTestWidget(queue: queue));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.play_arrow_rounded));
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 31));
+
+      check(queue.calls).deepEquals(['clearQueue']);
     });
 
     testWidgets('play again restarts a loaded played episode', (tester) async {
@@ -564,10 +596,29 @@ class _LoadedAudioPlayerController extends _FakeAudioPlayerController {
   Future<void> resume() async => calls.add('resume');
 }
 
-/// Asks to confirm replacing the queue, so the test can cancel.
+/// Asks to confirm clearing the queue, so the test can cancel.
 class _ConfirmingQueueService extends Fake implements QueueService {
   @override
   Future<bool> shouldConfirmAdhocReplace() async => true;
+}
+
+/// Records queue mutations so a test can check what a play changed.
+class _RecordingQueueService extends Fake implements QueueService {
+  final calls = <String>[];
+
+  @override
+  Future<bool> shouldConfirmAdhocReplace() async => false;
+
+  @override
+  Future<void> clearQueue() async => calls.add('clearQueue');
+
+  @override
+  Future<void> createAdhocQueue({
+    required int startingEpisodeId,
+    required String sourceContext,
+    List<int>? siblingEpisodeIds,
+    AutoPlayOrder? effectiveOrder,
+  }) async => calls.add('createAdhocQueue');
 }
 
 class _KeepRecordingDownloadService implements DownloadService {

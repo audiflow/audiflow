@@ -77,6 +77,24 @@ class QueueRepositoryImpl implements QueueRepository {
   }
 
   @override
+  Future<void> addAllToFront(List<int> episodeIds) {
+    return _queueDatasource.insertManualRange(
+      episodeIds,
+      atFront: true,
+      spacing: _positionIncrement,
+    );
+  }
+
+  @override
+  Future<void> addAllToEnd(List<int> episodeIds) {
+    return _queueDatasource.insertManualRange(
+      episodeIds,
+      atFront: false,
+      spacing: _positionIncrement,
+    );
+  }
+
+  @override
   Future<void> replaceWithAdhoc({
     required List<int> episodeIds,
     required String sourceContext,

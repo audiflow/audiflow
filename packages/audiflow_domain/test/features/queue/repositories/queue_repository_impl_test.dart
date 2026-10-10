@@ -94,6 +94,38 @@ void main() {
     });
   });
 
+  group('addAllToFront', () {
+    test('inserts the episodes ahead of existing items in order', () async {
+      await repository.addToEnd(1);
+      await repository.addAllToFront([2, 3, 4]);
+
+      final queue = await repository.getQueue();
+      final episodes = queue.manualItems.map((i) => i.episode.id).toList();
+
+      expect(episodes, [2, 3, 4, 1]);
+      expect(queue.adhocItems, isEmpty);
+    });
+
+    test('does nothing for an empty list', () async {
+      await repository.addAllToFront([]);
+
+      final queue = await repository.getQueue();
+      expect(queue.manualItems, isEmpty);
+    });
+  });
+
+  group('addAllToEnd', () {
+    test('appends the episodes after existing items in order', () async {
+      await repository.addToEnd(1);
+      await repository.addAllToEnd([2, 3, 4]);
+
+      final queue = await repository.getQueue();
+      final episodes = queue.manualItems.map((i) => i.episode.id).toList();
+
+      expect(episodes, [1, 2, 3, 4]);
+    });
+  });
+
   group('replaceWithAdhoc', () {
     test('replaces queue with adhoc items', () async {
       await repository.addToEnd(1);

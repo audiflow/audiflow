@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:audiflow_app/features/podcast_detail/presentation/controllers/podcast_detail_controller.dart';
 import 'package:audiflow_app/features/podcast_detail/presentation/widgets/smart_playlist_episode_list_tile.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
+import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:checks/checks.dart';
@@ -44,6 +45,52 @@ class _KeepRecordingDownloadService extends Fake implements DownloadService {
   }
 }
 
+/// Serves a queue with [queuedCount] items and records bulk queue calls.
+class _FakeQueueService extends Fake implements QueueService {
+  _FakeQueueService({this.queuedCount = 0, this.failsToRead = false});
+
+  final int queuedCount;
+  final bool failsToRead;
+  final calls = <String>[];
+
+  @override
+  Future<PlaybackQueue> getQueue() async {
+    if (failsToRead) throw StateError('queue unavailable');
+    final items = [
+      for (var i = 0; i < queuedCount; i++)
+        QueueItemWithEpisode(
+          queueItem: QueueItem()..episodeId = 100 + i,
+          episode: Episode()..id = 100 + i,
+        ),
+    ];
+    return PlaybackQueue(manualItems: items);
+  }
+
+  @override
+  Future<List<int>> episodesFromHere({
+    required int startingEpisodeId,
+    required List<int> siblingEpisodeIds,
+    AutoPlayOrder? effectiveOrder,
+  }) async {
+    final index = siblingEpisodeIds.indexOf(startingEpisodeId);
+    return index < 0 ? [] : siblingEpisodeIds.sublist(index);
+  }
+
+  @override
+  Future<int> playLaterFromHere({
+    required int startingEpisodeId,
+    required List<int> siblingEpisodeIds,
+    AutoPlayOrder? effectiveOrder,
+  }) async {
+    calls.add('playLaterFromHere $startingEpisodeId');
+    final range = await episodesFromHere(
+      startingEpisodeId: startingEpisodeId,
+      siblingEpisodeIds: siblingEpisodeIds,
+    );
+    return range.length;
+  }
+}
+
 void main() {
   group('row menu keep download', () {
     final episode = Episode()
@@ -68,6 +115,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            queueServiceProvider.overrideWithValue(_FakeQueueService()),
             downloadServiceProvider.overrideWithValue(downloads),
             currentPlayingEpisodeUrlProvider.overrideWithValue(null),
             isEpisodePlayingProvider.overrideWith((ref, _) => false),
@@ -118,6 +166,139 @@ void main() {
     });
   });
 
+  group('row menu queue actions', () {
+    final episode = Episode()
+      ..id = 7
+      ..podcastId = 1
+      ..guid = 'guid-7'
+      ..title = 'Episode 7'
+      ..audioUrl = _audioUrl;
+    const playNext = 'Play next';
+    const playNextFromHere = 'Play next from here';
+    const addToQueue = 'Add to queue';
+    const addToQueueFromHere = 'Add to queue from here';
+
+    Future<void> openMenu(
+      WidgetTester tester,
+      _FakeQueueService queue, {
+      required List<int> siblings,
+    }) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            queueServiceProvider.overrideWithValue(queue),
+            currentPlayingEpisodeUrlProvider.overrideWithValue(null),
+            isEpisodePlayingProvider.overrideWith((ref, _) => false),
+            isEpisodeLoadingProvider.overrideWith((ref, _) => false),
+            episodeDownloadProvider.overrideWith(
+              (ref, _) => Stream.value(null),
+            ),
+            episodeHasTranscriptProvider.overrideWith((ref, _) async => false),
+          ],
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: SmartPlaylistEpisodeListTile(
+                episode: episode,
+                podcastTitle: 'Podcast',
+                showThumbnail: false,
+                siblingEpisodeIds: siblings,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.longPress(find.text('Episode 7'));
+      await tester.pumpAndSettle();
+    }
+
+    List<String> queueItemsShown() => [
+      for (final label in [
+        playNext,
+        playNextFromHere,
+        addToQueue,
+        addToQueueFromHere,
+      ])
+        if (find.text(label).evaluate().isNotEmpty) label,
+    ];
+
+    double topOf(WidgetTester tester, String label) =>
+        tester.getTopLeft(find.text(label)).dy;
+
+    testWidgets('offers all four, in order, with a queue and later episodes', (
+      tester,
+    ) async {
+      await openMenu(
+        tester,
+        _FakeQueueService(queuedCount: 2),
+        siblings: [7, 8, 9],
+      );
+
+      check(queueItemsShown()).deepEquals([
+        playNext,
+        playNextFromHere,
+        addToQueue,
+        addToQueueFromHere,
+      ]);
+      check(
+        topOf(tester, playNext),
+      ).isLessThan(topOf(tester, playNextFromHere));
+      check(
+        topOf(tester, playNextFromHere),
+      ).isLessThan(topOf(tester, addToQueue));
+      check(
+        topOf(tester, addToQueue),
+      ).isLessThan(topOf(tester, addToQueueFromHere));
+    });
+
+    testWidgets('offers only play next actions when the queue is empty', (
+      tester,
+    ) async {
+      await openMenu(tester, _FakeQueueService(), siblings: [7, 8, 9]);
+
+      check(queueItemsShown()).deepEquals([playNext, playNextFromHere]);
+    });
+
+    testWidgets('hides the from-here actions for the last episode', (
+      tester,
+    ) async {
+      await openMenu(
+        tester,
+        _FakeQueueService(queuedCount: 2),
+        siblings: [5, 6, 7],
+      );
+
+      check(queueItemsShown()).deepEquals([playNext, addToQueue]);
+    });
+
+    testWidgets('still opens with single-episode actions when the queue '
+        'cannot be read', (tester) async {
+      await openMenu(
+        tester,
+        _FakeQueueService(failsToRead: true),
+        siblings: [7, 8, 9],
+      );
+
+      check(queueItemsShown()).deepEquals([playNext, addToQueue]);
+      check(find.text('Mark as played').evaluate()).length.equals(1);
+    });
+
+    testWidgets('adds the rest of the list and reports how many', (
+      tester,
+    ) async {
+      final queue = _FakeQueueService(queuedCount: 1);
+      await openMenu(tester, queue, siblings: [6, 7, 8, 9]);
+
+      await tester.tap(find.text(addToQueueFromHere));
+      await tester.pumpAndSettle();
+
+      check(queue.calls).deepEquals(['playLaterFromHere 7']);
+      check(find.text('Added 3 episodes to queue').evaluate()).length.equals(1);
+    });
+  });
+
   testWidgets('mark as played completes after the tile is unmounted mid-save', (
     tester,
   ) async {
@@ -134,6 +315,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          queueServiceProvider.overrideWithValue(_FakeQueueService()),
           episodeRepositoryProvider.overrideWithValue(
             _FakeEpisodeRepository(episode),
           ),
@@ -200,6 +382,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          queueServiceProvider.overrideWithValue(_FakeQueueService()),
           currentPlayingEpisodeUrlProvider.overrideWithValue(null),
           isEpisodePlayingProvider.overrideWith((ref, _) => false),
           isEpisodeLoadingProvider.overrideWith((ref, _) => false),
@@ -247,6 +430,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          queueServiceProvider.overrideWithValue(_FakeQueueService()),
           audioPlayerControllerProvider.overrideWith(() => player),
           stationRepositoryProvider.overrideWithValue(stations),
           currentPlayingEpisodeUrlProvider.overrideWithValue(_audioUrl),
@@ -293,6 +477,7 @@ void main() {
     }) async {
       final container = ProviderContainer(
         overrides: [
+          queueServiceProvider.overrideWithValue(_FakeQueueService()),
           episodeRepositoryProvider.overrideWithValue(
             _FakeEpisodeRepository(episode),
           ),
