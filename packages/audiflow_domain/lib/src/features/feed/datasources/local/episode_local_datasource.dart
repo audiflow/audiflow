@@ -36,15 +36,14 @@ class EpisodeLocalDatasource {
   /// under the key [_FeedItemBatch.claim] picks, and its `guid` is
   /// rewritten to that key so callers see where it was stored. An item
   /// that repeats an episode already in the batch is skipped, since
-  /// writing it would violate the unique index and abort the whole batch.
+  /// writing it would violate the unique index and abort the whole batch;
+  /// its `guid` becomes the key of the episode it repeats.
   /// App-owned state on existing rows is kept (see [_keepAppState]).
   Future<void> upsertAll(List<Episode> episodes) async {
     await _isar.writeTxn(() async {
       final batch = _FeedItemBatch();
       for (final episode in episodes) {
-        final stored = await _storedSiblings(episode, batch);
-        final key = batch.claim(episode, stored);
-        if (key != null) episode.guid = key;
+        batch.claim(episode, await _storedSiblings(episode, batch));
       }
       await _isar.episodes.putAll(batch.episodes);
     });
@@ -282,26 +281,34 @@ class _FeedItemBatch {
     Future<Map<String, List<Episode>>> Function() load,
   ) async => _duplicatesByPodcast[podcastId] ??= await load();
 
-  /// Picks the storage key for [episode] given the [stored] rows sharing
-  /// its guid, or null when the batch already holds the same episode.
+  /// Rewrites [episode]'s guid to its storage key, given the [stored]
+  /// rows sharing its guid, and queues it for writing unless the batch
+  /// already holds the same episode.
   ///
   /// A matching stored row keeps its key, id and app state, whichever key
   /// it is under; only an unmatched item gets a new key: the raw guid
-  /// when free, otherwise its duplicate-guid key.
-  String? claim(Episode episode, List<Episode> stored) {
+  /// when free, otherwise its duplicate-guid key. A skipped repeat takes
+  /// the key of the episode it repeats, so callers recording observed
+  /// keys never mark another stored episode as still in the feed.
+  void claim(Episode episode, List<Episode> stored) {
     final guidKey = (episode.podcastId, episode.guid);
     final queued = _byGuid[guidKey] ?? const <Episode>[];
-    if (queued.any((other) => _isSameEpisode(other, episode))) return null;
+    final repeated = queued.where((other) => _isSameEpisode(other, episode));
+    if (repeated.isNotEmpty) {
+      episode.guid = repeated.first.guid;
+      return;
+    }
     final unclaimed = stored.where(
       (row) => !_byKey.containsKey((row.podcastId, row.guid)),
     );
     final match = _bestMatch(unclaimed, episode);
     final key = match?.guid ?? _newKey(episode, [...stored, ...queued]);
-    if (key == null) return null;
+    episode.guid = key;
+    // Never queue two items under one key: the write would abort.
+    if (_byKey.containsKey((episode.podcastId, key))) return;
     if (match != null) _keepAppState(episode, match);
     _byKey[(episode.podcastId, key)] = episode;
     (_byGuid[guidKey] ??= []).add(episode);
-    return key;
   }
 
   /// A row with the same audio URL first, so a date match never takes a
@@ -310,11 +317,10 @@ class _FeedItemBatch {
       rows.where((row) => row.audioUrl == episode.audioUrl).firstOrNull ??
       rows.where((row) => _isSameEpisode(row, episode)).firstOrNull;
 
-  static String? _newKey(Episode episode, Iterable<Episode> taken) {
+  static String _newKey(Episode episode, Iterable<Episode> taken) {
     final takenKeys = {for (final row in taken) row.guid};
     if (!takenKeys.contains(episode.guid)) return episode.guid;
-    final key = duplicateGuidKey(episode.guid, episode.audioUrl);
-    return takenKeys.contains(key) ? null : key;
+    return duplicateGuidKey(episode.guid, episode.audioUrl);
   }
 }
 
@@ -336,9 +342,15 @@ void _keepAppState(Episode incoming, Episode existing) {
 /// the publish date matches: hosts rewrite enclosure URLs (tracking
 /// prefixes, signed URLs) but keep the date, and a reposted item keeps the
 /// date too. A guid reused for a new episode changes both.
+///
+/// Without a date on either side there is nothing to tell a reused guid
+/// from a rewritten URL, so the guid decides, as it did before reused
+/// guids were told apart: keeping the stored row's identity is safer than
+/// dropping it and its download.
 bool _isSameEpisode(Episode a, Episode b) {
   if (a.audioUrl == b.audioUrl) return true;
   final (aDate, bDate) = (a.publishedAt, b.publishedAt);
+  if (aDate == null || bDate == null) return true;
   // Isar returns local time; compare instants, not representations.
-  return aDate != null && bDate != null && aDate.isAtSameMomentAs(bDate);
+  return aDate.isAtSameMomentAs(bDate);
 }

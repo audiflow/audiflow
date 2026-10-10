@@ -352,6 +352,55 @@ void main() {
         expect(found, isNull);
       });
 
+      test('gives a skipped repost the key of the kept episode', () async {
+        await datasource.upsert(
+          makeEpisode(
+            guid: 'shared',
+            title: 'Owner',
+            audioUrl: 'https://example.com/owner.mp3',
+            publishedAt: oct1,
+          ),
+        );
+        final kept = makeEpisode(
+          guid: 'shared',
+          title: 'Repost #2',
+          audioUrl: 'https://example.com/a.mp3',
+          publishedAt: oct10,
+        );
+        final skipped = makeEpisode(
+          guid: 'shared',
+          title: 'Repost',
+          audioUrl: 'https://example.com/b.mp3',
+          publishedAt: oct10,
+        );
+
+        await datasource.upsertAll([kept, skipped]);
+
+        expect(skipped.guid, kept.guid);
+        expect(skipped.guid, isNot('shared'));
+      });
+
+      test('keeps an undated row when its audio URL changes', () async {
+        final storedId = await datasource.upsert(
+          makeEpisode(
+            guid: 'shared',
+            title: 'Undated',
+            audioUrl: 'https://example.com/old.mp3',
+          ),
+        );
+
+        final moved = makeEpisode(
+          guid: 'shared',
+          title: 'Undated',
+          audioUrl: 'https://cdn.example.com/old.mp3',
+        );
+        await datasource.upsertAll([moved]);
+
+        expect(moved.guid, 'shared');
+        expect(moved.id, storedId);
+        expect(await datasource.getByPodcastId(1), hasLength(1));
+      });
+
       test('keeps the stored row when a new episode reuses its guid', () async {
         final storedId = await datasource.upsert(
           makeEpisode(
