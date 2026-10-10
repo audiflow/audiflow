@@ -318,18 +318,27 @@ Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
 
     return result;
   } on DioException catch (e) {
-    logger.e('Network error fetching feed', error: e);
-    // Only a connectivity failure is tagged as a network error, so the UI
-    // tells the user to check the connection only when that can help.
-    throw isConnectivityFailure(e)
-        ? PodcastException.network(
-            'Network error: ${e.message}',
-            sourceUrl: feedUrl,
-          )
-        : PodcastException(
-            message: 'Network error: ${e.message}',
-            sourceUrl: feedUrl,
-          );
+    // A warning, not an error: the provider fails with the exception below
+    // and error monitoring reports that failure. Logging the DioException
+    // at error level would report the same failure a second time.
+    logger.w('Network error fetching feed', error: e);
+    final message = 'Network error: ${e.message}';
+    // Only a connectivity failure is tagged as a transport error, so the UI
+    // tells the user to check the connection only when that can help and
+    // monitoring treats it as expected.
+    if (isConnectivityFailure(e)) {
+      throw PodcastException.network(message, sourceUrl: feedUrl);
+    }
+    // The status code keeps server errors apart from transport failures.
+    final statusCode = e.response?.statusCode;
+    if (statusCode != null) {
+      throw PodcastException.network(
+        message,
+        statusCode: statusCode,
+        sourceUrl: feedUrl,
+      );
+    }
+    throw PodcastException(message: message, sourceUrl: feedUrl);
   } catch (e, stack) {
     logger.e('Error fetching/parsing feed', error: e, stackTrace: stack);
     rethrow;

@@ -42,7 +42,53 @@ Logger appLogger(Ref ref) {
 /// ```
 @riverpod
 Logger namedLogger(Ref ref, String name) {
-  return Logger(printer: _NamedPrinter(name), level: Level.debug);
+  return NamedLogger(name);
+}
+
+/// A [Logger] that knows its component name.
+///
+/// [LogEvent] carries no logger identity, so global listeners registered
+/// with [Logger.addLogListener] (e.g. error reporting) cannot tell which
+/// component logged. [NamedLogger] exposes its name through
+/// [dispatchingName] for the duration of each synchronous dispatch.
+class NamedLogger extends Logger {
+  NamedLogger(this.name)
+    : super(printer: _NamedPrinter(name), level: Level.debug);
+
+  /// Component name, also used as the printed prefix.
+  final String name;
+
+  static String? _dispatchingName;
+
+  /// Name of the [NamedLogger] whose event is being dispatched to log
+  /// listeners right now, or null outside such a dispatch.
+  ///
+  /// Safe as a static: [Logger.log] runs listeners synchronously and an
+  /// isolate is single-threaded, so no other dispatch can interleave.
+  static String? get dispatchingName => _dispatchingName;
+
+  @override
+  void log(
+    Level level,
+    dynamic message, {
+    DateTime? time,
+    Object? error,
+    StackTrace? stackTrace,
+  }) {
+    final previous = _dispatchingName;
+    _dispatchingName = name;
+    try {
+      super.log(
+        level,
+        message,
+        time: time,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    } finally {
+      _dispatchingName = previous;
+    }
+  }
 }
 
 /// Custom printer that prefixes log messages with a component name.
