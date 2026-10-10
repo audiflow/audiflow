@@ -18,8 +18,8 @@ String redactUrls(String text) => text.replaceAllMapped(_urlPattern, (match) {
 
 final _trailingPunctuation = RegExp(r'[)\]},.;:!?]+$');
 
-/// [event] with URLs in exception values, the event message, and
-/// breadcrumb messages and data reduced to scheme and host.
+/// [event] with URLs in exception values, the event message, breadcrumb
+/// messages and data, and custom contexts reduced to scheme and host.
 ///
 /// Used as `beforeSend`: exception values come from `toString()` (e.g.
 /// `PodcastException` appends its feed URL) and HTTP breadcrumbs record
@@ -38,6 +38,13 @@ SentryEvent scrubEventUrls(SentryEvent event) {
     breadcrumb.message = _redactNullable(breadcrumb.message);
     final data = breadcrumb.data;
     if (data != null) breadcrumb.data = _redactMap(data);
+  }
+  // Custom contexts (e.g. `player_interruption`) carry raw diagnostic data;
+  // the SDK's typed contexts (device, app, ...) are not strings or maps
+  // and pass through unchanged.
+  final contexts = event.contexts;
+  for (final key in contexts.keys.toList()) {
+    contexts[key] = _redactValue(contexts[key]);
   }
   return event;
 }

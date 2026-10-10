@@ -171,6 +171,24 @@ void main() {
       check(reporter.captured).has((it) => it.length, 'length').equals(1);
     });
 
+    test('reports an error a notifier assigns after a user action', () async {
+      final error = StateError('Unique index violated.');
+      final notifier = AsyncNotifierProvider<_SavingNotifier, int>(
+        () => _SavingNotifier(error),
+        name: 'stationEditProvider',
+      );
+      final container = containerWith();
+      container.listen(notifier, (_, _) {});
+      await container.read(notifier.future);
+
+      await container.read(notifier.notifier).save();
+      await container.read(notifier.notifier).save();
+
+      check(container.read(notifier).error).identicalTo(error);
+      check(reporter.captured).has((it) => it.length, 'length').equals(1);
+      check(reporter.captured.single.origin).equals('stationEditProvider');
+    });
+
     test('records expected provider failures as breadcrumbs', () async {
       final failing = FutureProvider<int>((ref) async => throw _offline());
       final container = containerWith();
@@ -181,4 +199,19 @@ void main() {
       check(reporter.breadcrumbs).has((it) => it.length, 'length').equals(1);
     });
   });
+}
+
+/// Builds fine, then fails in an action through [AsyncValue.guard], the
+/// pattern controllers use for errors shown after a user action.
+class _SavingNotifier extends AsyncNotifier<int> {
+  _SavingNotifier(this._error);
+
+  final Object _error;
+
+  @override
+  Future<int> build() async => 0;
+
+  Future<void> save() async {
+    state = await AsyncValue.guard(() async => throw _error);
+  }
 }

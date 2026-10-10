@@ -85,6 +85,24 @@ void main() {
       });
     });
 
+    test('redacts custom contexts and keeps typed ones', () {
+      final device = SentryDevice(name: 'iPad mini');
+      final event = SentryEvent(
+        contexts: Contexts(device: device)
+          ..['player_interruption'] = {
+            'error': 'PlayerException: $_secretUrl',
+            'position': 42,
+          },
+      );
+
+      final contexts = scrubEventUrls(event).contexts;
+
+      check(contexts['player_interruption'])
+          .isA<Map<String, dynamic>>()
+          .deepEquals({'error': 'PlayerException: $_host', 'position': 42});
+      check(contexts.device).identicalTo(device);
+    });
+
     test('leaves an event without URLs intact', () {
       final event = SentryEvent(
         message: SentryMessage('plain'),
