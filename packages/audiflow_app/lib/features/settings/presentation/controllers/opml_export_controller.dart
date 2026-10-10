@@ -19,8 +19,10 @@ class OpmlExportSuccess extends OpmlExportState {}
 class OpmlExportEmpty extends OpmlExportState {}
 
 class OpmlExportError extends OpmlExportState {
-  OpmlExportError(this.message);
-  final String message;
+  OpmlExportError(this.error);
+
+  /// The underlying failure, kept for diagnostics; never shown to users.
+  final Object error;
 }
 
 /// Controls OPML export: fetch subscriptions, generate XML,
@@ -63,8 +65,11 @@ class OpmlExportController extends _$OpmlExportController {
       }
 
       state = OpmlExportSuccess();
-    } on Exception catch (e) {
-      state = OpmlExportError(e.toString());
+    } on Exception catch (e, stack) {
+      ref
+          .read(namedLoggerProvider('OpmlExport'))
+          .e('OPML export failed', error: e, stackTrace: stack);
+      state = OpmlExportError(e);
     }
   }
 }

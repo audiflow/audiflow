@@ -8,12 +8,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../app/errors/user_facing_error.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/duration_label.dart';
 import '../../../../routing/app_router.dart';
 import '../utils/group_sorting.dart';
 import '../utils/smart_playlist_def_resolver.dart';
 import '../widgets/play_order_bottom_sheet.dart';
+import '../widgets/podcast_detail_empty_states.dart';
 import '../widgets/smart_playlist_episode_list_tile.dart';
 
 /// Screen showing episodes within a single smart playlist.
@@ -404,7 +406,7 @@ class _SmartPlaylistEpisodesScreenState
                   ),
                   const SizedBox(height: Spacing.sm),
                   Text(
-                    error.toString(),
+                    userFacingErrorMessage(AppLocalizations.of(context), error),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -539,9 +541,8 @@ class _SmartPlaylistEpisodesScreenState
             padding: const EdgeInsets.all(Spacing.lg),
             child: Center(
               child: Text(
-                AppLocalizations.of(
-                  context,
-                ).podcastDetailFailedToLoad(e.toString()),
+                podcastDetailLoadErrorText(AppLocalizations.of(context), e),
+                textAlign: TextAlign.center,
               ),
             ),
           ),

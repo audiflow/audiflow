@@ -2,9 +2,11 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
 import '../controllers/opml_file_receiver_controller.dart';
 import '../screens/opml_import_preview_screen.dart';
+import '../utils/opml_read_failure.dart';
 
 /// Transparent widget that listens for incoming OPML files
 /// from external apps and navigates to the import preview.
@@ -30,8 +32,8 @@ class _OpmlFileReceiverState extends ConsumerState<OpmlFileReceiver> {
             entries: entries,
             subscribedFeedUrls: subscribedFeedUrls,
           );
-        case OpmlFileReceiverError(:final message):
-          _showError(message);
+        case OpmlFileReceiverError(:final failure, :final error):
+          _showError(failure, error);
           ref.read(opmlFileReceiverControllerProvider.notifier).reset();
         case OpmlFileReceiverIdle():
         case OpmlFileReceiverLoading():
@@ -42,13 +44,17 @@ class _OpmlFileReceiverState extends ConsumerState<OpmlFileReceiver> {
     return widget.child;
   }
 
-  void _showError(String message) {
+  void _showError(OpmlReadFailure failure, Object? error) {
     final navigator = rootNavigatorKey.currentState;
     if (navigator == null) return;
 
     final overlay = navigator.overlay;
     if (overlay == null) return;
 
+    final message = failure.message(
+      AppLocalizations.of(overlay.context),
+      error,
+    );
     ScaffoldMessenger.of(
       overlay.context,
     ).showSnackBar(SnackBar(content: Text(message)));

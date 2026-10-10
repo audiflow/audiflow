@@ -122,7 +122,7 @@
   "storageExport": "エクスポート",
   "storageExportEmpty": "エクスポートする購読がありません",
   "storageExportSuccess": "購読をエクスポートしました",
-  "storageExportError": "エクスポート失敗: {message}",
+  "storageExportError": "エクスポートに失敗しました",
   "storageImportTitle": "購読をインポート",
   "storageImportSubtitle": "OPMLファイルからインポート",
   "storageImport": "インポート",
@@ -134,7 +134,7 @@
   "storageResetTypeConfirm": "確認のため RESET と入力:",
   "storageResetButton": "リセット",
   "storageResetComplete": "データのリセットが完了しました",
-  "storageResetFailed": "リセット失敗: {error}",
+  "storageResetFailed": "リセットに失敗しました",
   "storageImportComplete": "インポート完了",
   "storageImportedCount": "{count}件のポッドキャストをインポートしました",
   "storageAlreadySubscribedCount": "{count}件は購読済み",
@@ -264,7 +264,6 @@
   "podcastDetailTryDifferentFilter": "別のフィルターをお試しください",
   "podcastDetailNoEpisodes": "エピソードが見つかりません",
   "podcastDetailPlaylistEmpty": "このプレイリストにはエピソードがありません",
-  "podcastDetailEpisodeLoadError": "エピソード読み込みエラー: {error}",
   "podcastDetailEpisodeCount": "{count}エピソード",
   "podcastDetailGroupCount": "{count}シリーズ",
   "podcastDetailOldestFirst": "古い順",
@@ -275,7 +274,6 @@
   "episodeFilterInProgress": "再生途中",
   "episodeFilterPlayed": "再生済み",
   "episodeFilterDownloaded": "ダウンロード済み",
-  "podcastDetailFailedToLoad": "読み込み失敗: {error}",
 
   "episodeReplaceQueueTitle": "キューを置き換えますか？",
   "episodeReplaceQueueContent": "再生を開始すると、現在のキューがこのリストのエピソードに置き換わります。",
@@ -347,6 +345,8 @@
   "@downloadsBatchLimitSubtitle": { "description": "一括ダウンロード制限の設定サブタイトル" },
 
   "opmlImportTitle": "ポッドキャストをインポート",
+  "opmlFileUnreadable": "このファイルを読み込めませんでした",
+  "opmlNoFeedsFound": "ファイルにポッドキャストのフィードが見つかりませんでした",
   "opmlAlreadySubscribed": "購読済み",
   "opmlImportSelected": "選択をインポート ({count})",
 

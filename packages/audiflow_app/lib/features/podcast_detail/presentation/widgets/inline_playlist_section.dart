@@ -128,9 +128,8 @@ List<Widget> buildInlinePlaylistSlivers({
             padding: const EdgeInsets.all(Spacing.lg),
             child: Center(
               child: Text(
-                AppLocalizations.of(
-                  context,
-                ).podcastDetailEpisodeLoadError(error.toString()),
+                podcastDetailLoadErrorText(AppLocalizations.of(context), error),
+                textAlign: TextAlign.center,
               ),
             ),
           ),

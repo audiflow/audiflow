@@ -3,10 +3,12 @@ import 'dart:io';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/widgets.dart';
+import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../parental_control/domain/gate_guard.dart';
 import '../../../parental_control/providers/gate_guard_provider.dart';
+import '../utils/opml_read_failure.dart';
 
 part 'opml_import_controller.g.dart';
 
@@ -32,10 +34,13 @@ class OpmlPickSuccess extends OpmlPickResult {
 
 /// An error occurred during pick or parse.
 class OpmlPickError extends OpmlPickResult {
-  OpmlPickError(this.message);
+  OpmlPickError(this.failure, {this.error});
 
-  /// Human-readable error description.
-  final String message;
+  /// Why the file could not be used; the UI maps it to localized text.
+  final OpmlReadFailure failure;
+
+  /// The underlying failure, if any; kept for diagnostics only.
+  final Object? error;
 }
 
 /// User cancelled the file picker.
@@ -71,7 +76,7 @@ class OpmlImportController extends _$OpmlImportController {
 
       final path = file.path;
       if (path == null) {
-        state = OpmlPickError('Could not read file');
+        state = OpmlPickError(OpmlReadFailure.unreadableFile);
         return true;
       }
 
@@ -80,7 +85,7 @@ class OpmlImportController extends _$OpmlImportController {
       final entries = parser.parse(content);
 
       if (entries.isEmpty) {
-        state = OpmlPickError('No podcast feeds found in the file');
+        state = OpmlPickError(OpmlReadFailure.noFeeds);
         return true;
       }
 
@@ -98,11 +103,15 @@ class OpmlImportController extends _$OpmlImportController {
         entries: entries,
         subscribedFeedUrls: subscribedUrls,
       );
-    } on FormatException catch (e) {
-      state = OpmlPickError(e.message);
-    } on Exception catch (e) {
-      state = OpmlPickError(e.toString());
+    } on FormatException catch (e, stack) {
+      _logger.w('OPML file is not valid', error: e, stackTrace: stack);
+      state = OpmlPickError(OpmlReadFailure.unreadableFile, error: e);
+    } on Exception catch (e, stack) {
+      _logger.e('OPML import failed', error: e, stackTrace: stack);
+      state = OpmlPickError(OpmlReadFailure.unexpected, error: e);
     }
     return true;
   }
+
+  Logger get _logger => ref.read(namedLoggerProvider('OpmlImport'));
 }

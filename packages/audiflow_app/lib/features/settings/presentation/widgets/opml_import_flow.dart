@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../controllers/opml_import_controller.dart';
 import '../screens/opml_import_preview_screen.dart';
+import '../utils/opml_read_failure.dart';
 
 /// Starts the OPML import: opens the parental-control gate, then the picker.
 ///
@@ -45,7 +46,8 @@ class _OpmlImportFlowState extends ConsumerState<OpmlImportFlow> {
             entries: entries,
             subscribedFeedUrls: subscribedFeedUrls,
           );
-        case OpmlPickError(:final message):
+        case OpmlPickError(:final failure, :final error):
+          final message = failure.message(AppLocalizations.of(context), error);
           ScaffoldMessenger.of(
             context,
           ).showSnackBar(SnackBar(content: Text(message)));

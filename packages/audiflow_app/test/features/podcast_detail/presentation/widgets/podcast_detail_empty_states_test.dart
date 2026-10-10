@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:audiflow_app/features/podcast_detail/presentation/widgets/podcast_detail_empty_states.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -75,18 +77,44 @@ void main() {
       expect(find.text('Failed to load episodes'), findsOneWidget);
     });
 
-    testWidgets('shows the error message passed in', (tester) async {
+    testWidgets('shows the connection message for a network failure', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         buildTestWidget(
           PodcastDetailErrorState(
-            error: 'Connection timed out',
+            error: const SocketException('Connection timed out'),
             onRetry: () {},
           ),
         ),
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Connection timed out'), findsOneWidget);
+      expect(
+        find.text(
+          "Couldn't connect. Check your internet connection and try again.",
+        ),
+        findsOneWidget,
+      );
+      expect(find.textContaining('Connection timed out'), findsNothing);
+    });
+
+    testWidgets('hides the raw text of an internal error', (tester) async {
+      await tester.pumpWidget(
+        buildTestWidget(
+          PodcastDetailErrorState(
+            error: StateError('IsarError: Unique index violated.'),
+            onRetry: () {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Something went wrong. Please try again later.'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('IsarError'), findsNothing);
     });
 
     testWidgets('shows retry button with text and refresh icon', (

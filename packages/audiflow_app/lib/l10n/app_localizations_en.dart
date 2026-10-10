@@ -384,9 +384,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get storageExportSuccess => 'Subscriptions exported';
 
   @override
-  String storageExportError(String message) {
-    return 'Export failed: $message';
-  }
+  String get storageExportError => 'Export failed';
 
   @override
   String get storageImportTitle => 'Import Subscriptions';
@@ -424,9 +422,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get storageResetComplete => 'Data reset complete';
 
   @override
-  String storageResetFailed(String error) {
-    return 'Reset failed: $error';
-  }
+  String get storageResetFailed => 'Reset failed';
 
   @override
   String get storageImportComplete => 'Import Complete';
@@ -814,11 +810,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get podcastDetailPlaylistEmpty => 'This playlist has no episodes';
 
   @override
-  String podcastDetailEpisodeLoadError(String error) {
-    return 'Error loading episodes: $error';
-  }
-
-  @override
   String podcastDetailEpisodeCount(int count) {
     return '$count episodes';
   }
@@ -853,11 +844,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get episodeFilterDownloaded => 'Downloaded';
-
-  @override
-  String podcastDetailFailedToLoad(String error) {
-    return 'Failed to load: $error';
-  }
 
   @override
   String get episodeReplaceQueueTitle => 'Replace queue?';
@@ -1015,6 +1001,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get opmlImportTitle => 'Import Podcasts';
+
+  @override
+  String get opmlFileUnreadable => 'Couldn\'t read this file';
+
+  @override
+  String get opmlNoFeedsFound => 'No podcast feeds found in the file';
 
   @override
   String get opmlAlreadySubscribed => 'Already subscribed';

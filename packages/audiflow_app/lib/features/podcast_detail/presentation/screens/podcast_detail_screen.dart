@@ -530,7 +530,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
 
     if (feedAsync.hasError) {
       return PodcastDetailErrorState(
-        error: feedAsync.error.toString(),
+        error: feedAsync.error!,
         onRetry: () => ref.invalidate(podcastDetailProvider(feedUrl)),
       );
     }
