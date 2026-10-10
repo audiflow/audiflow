@@ -1,6 +1,8 @@
 import 'package:sentry_flutter/sentry_flutter.dart';
 
-final _urlPattern = RegExp(r'[a-zA-Z][a-zA-Z0-9+.-]*://[^\s\x27"<>]+');
+// Apostrophes are valid inside a URL (and could hide a token suffix), so
+// a quoting apostrophe is only trimmed as trailing punctuation below.
+final _urlPattern = RegExp(r'[a-zA-Z][a-zA-Z0-9+.-]*://[^\s"<>]+');
 
 /// [text] with every URL reduced to scheme and host.
 ///
@@ -16,7 +18,7 @@ String redactUrls(String text) => text.replaceAllMapped(_urlPattern, (match) {
   return '${Uri(scheme: uri.scheme, host: uri.host)}$trailing';
 });
 
-final _trailingPunctuation = RegExp(r'[)\]},.;:!?]+$');
+final _trailingPunctuation = RegExp(r"[)\]},.;:!?']+$");
 
 /// [event] with URLs in exception values, the event message, breadcrumb
 /// messages and data, and custom contexts reduced to scheme and host.

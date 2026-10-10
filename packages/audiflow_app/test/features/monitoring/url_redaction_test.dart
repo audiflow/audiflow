@@ -20,6 +20,12 @@ void main() {
       ).equals('(url: https://x.example.com).');
     });
 
+    test('redacts apostrophes inside a URL', () {
+      check(
+        redactUrls("fetch 'https://x.example.com/p?token=abc'def' failed"),
+      ).equals("fetch 'https://x.example.com' failed");
+    });
+
     test('leaves text without URLs unchanged', () {
       check(
         redactUrls('parse failed at line 3'),
