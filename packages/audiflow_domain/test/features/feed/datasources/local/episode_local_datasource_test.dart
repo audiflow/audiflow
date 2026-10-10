@@ -401,6 +401,30 @@ void main() {
         expect(await datasource.getByPodcastId(1), hasLength(1));
       });
 
+      test('keeps both rows when one item lost its date', () async {
+        await storeNewAndOld();
+        final ids = {
+          for (final e in await datasource.getByPodcastId(1)) e.title: e.id,
+        };
+
+        final undated = makeEpisode(
+          guid: 'shared',
+          title: 'New',
+          audioUrl: 'https://cdn.example.com/new.mp3',
+        );
+        final dated = makeEpisode(
+          guid: 'shared',
+          title: 'Old',
+          audioUrl: 'https://cdn.example.com/old.mp3',
+          publishedAt: oct1,
+        );
+        await datasource.upsertAll([undated, dated]);
+
+        expect(undated.id, ids['New']);
+        expect(dated.id, ids['Old']);
+        expect(await datasource.getByPodcastId(1), hasLength(2));
+      });
+
       test('keeps the stored row when a new episode reuses its guid', () async {
         final storedId = await datasource.upsert(
           makeEpisode(

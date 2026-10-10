@@ -312,10 +312,22 @@ class _FeedItemBatch {
   }
 
   /// A row with the same audio URL first, so a date match never takes a
-  /// row that another item in the feed matches exactly.
+  /// row that another item in the feed matches exactly; then the same
+  /// date; then, when a date is missing, the raw-guid row before any
+  /// duplicate, as the guid alone decided before reused guids were told
+  /// apart.
   static Episode? _bestMatch(Iterable<Episode> rows, Episode episode) =>
       rows.where((row) => row.audioUrl == episode.audioUrl).firstOrNull ??
-      rows.where((row) => _isSameEpisode(row, episode)).firstOrNull;
+      rows.where((row) => _isSameEpisode(row, episode)).firstOrNull ??
+      _undatedMatch(rows, episode);
+
+  static Episode? _undatedMatch(Iterable<Episode> rows, Episode episode) {
+    final candidates = rows.where(
+      (row) => row.publishedAt == null || episode.publishedAt == null,
+    );
+    return candidates.where((row) => row.guid == episode.guid).firstOrNull ??
+        candidates.firstOrNull;
+  }
 
   static String _newKey(Episode episode, Iterable<Episode> taken) {
     final takenKeys = {for (final row in taken) row.guid};
@@ -343,14 +355,13 @@ void _keepAppState(Episode incoming, Episode existing) {
 /// prefixes, signed URLs) but keep the date, and a reposted item keeps the
 /// date too. A guid reused for a new episode changes both.
 ///
-/// Without a date on either side there is nothing to tell a reused guid
-/// from a rewritten URL, so the guid decides, as it did before reused
-/// guids were told apart: keeping the stored row's identity is safer than
-/// dropping it and its download.
+/// A missing date proves nothing either way; stored rows fall back to the
+/// guid for it (see [_FeedItemBatch._undatedMatch]), but two items in one
+/// batch are only collapsed on positive evidence, so an undated item never
+/// swallows a dated one that identifies another stored row.
 bool _isSameEpisode(Episode a, Episode b) {
   if (a.audioUrl == b.audioUrl) return true;
   final (aDate, bDate) = (a.publishedAt, b.publishedAt);
-  if (aDate == null || bDate == null) return true;
   // Isar returns local time; compare instants, not representations.
-  return aDate.isAtSameMomentAs(bDate);
+  return aDate != null && bDate != null && aDate.isAtSameMomentAs(bDate);
 }
