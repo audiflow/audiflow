@@ -150,14 +150,15 @@ class _EpisodeLimitSheetState extends State<EpisodeLimitSheet> {
   }
 
   // The number box sits on the sheet's center line and grows with the
-  // digits; the unit hangs off its right edge so it never pulls the
-  // number off center.
+  // digits; the unit hangs off its right edge, on the digits' baseline,
+  // so it never pulls the number off center.
   Widget _readout(BuildContext context, AppLocalizations l10n) {
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
     final color = _isLatest ? null : theme.disabledColor;
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.baseline,
+      textBaseline: TextBaseline.alphabetic,
       children: [
         const Spacer(),
         _numberBox(theme, colors, color),

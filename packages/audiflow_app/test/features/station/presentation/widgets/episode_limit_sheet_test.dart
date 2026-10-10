@@ -142,4 +142,19 @@ void main() {
 
     check(tester.getCenter(box).dx).equals(sheetCenter);
   });
+
+  testWidgets('the unit sits on the digits baseline', (tester) async {
+    await pumpSheet(tester);
+
+    final row = tester.widget<Row>(
+      find
+          .ancestor(
+            of: find.byKey(EpisodeLimitSheet.numberBoxKey),
+            matching: find.byType(Row),
+          )
+          .first,
+    );
+    check(row.crossAxisAlignment).equals(CrossAxisAlignment.baseline);
+    check(row.textBaseline).equals(TextBaseline.alphabetic);
+  });
 }
