@@ -48,4 +48,5 @@ dart run build_runner build --delete-conflicting-outputs
 - New screen: add route in `lib/routing/app_router.dart` + `AppRoutes`
 - New feature: `lib/features/{name}/presentation/{controllers,screens,widgets}/`
 - New l10n key: add to `app_en.arb` + `app_ja.arb`, run `flutter gen-l10n`
-- New provider override: add to `ProviderContainer` in `lib/main.dart`
+- New provider override: add to the `ProviderContainer` in `bootstrapAppContainer` (`lib/main.dart`)
+- Screen layout or navigation change: the store screenshot test (`integration_test/store_screenshots_test.dart`, run from audiflow-store-assets' `tools/capture_screenshots.py`) walks the real app and may need its finders updated
