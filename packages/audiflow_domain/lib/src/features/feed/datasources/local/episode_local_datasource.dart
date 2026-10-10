@@ -28,9 +28,14 @@ class EpisodeLocalDatasource {
   }
 
   /// Upserts multiple episodes in a batch.
+  ///
+  /// Feeds sometimes reuse one guid for several items. Only the first item
+  /// per (podcastId, guid) is stored, since a later one would violate the
+  /// unique index and abort the whole batch.
   Future<void> upsertAll(List<Episode> episodes) async {
+    final unique = _firstPerPodcastGuid(episodes);
     await _isar.writeTxn(() async {
-      for (final episode in episodes) {
+      for (final episode in unique) {
         final existing = await _isar.episodes.getByPodcastIdGuid(
           episode.podcastId,
           episode.guid,
@@ -39,8 +44,16 @@ class EpisodeLocalDatasource {
           episode.id = existing.id;
         }
       }
-      await _isar.episodes.putAll(episodes);
+      await _isar.episodes.putAll(unique);
     });
+  }
+
+  List<Episode> _firstPerPodcastGuid(List<Episode> episodes) {
+    final seen = <(int, String)>{};
+    return [
+      for (final episode in episodes)
+        if (seen.add((episode.podcastId, episode.guid))) episode,
+    ];
   }
 
   /// Returns all episodes for a podcast, ordered by publish date

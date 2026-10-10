@@ -147,6 +147,58 @@ void main() {
       expect(episodes, hasLength(1));
       expect(episodes.first.title, 'Updated Title');
     });
+
+    test('keeps the first of items sharing a guid in one batch', () async {
+      await datasource.upsertAll([
+        makeEpisode(
+          guid: 'shared',
+          title: 'First #397',
+          audioUrl: 'https://example.com/first.mp3',
+        ),
+        makeEpisode(
+          guid: 'other',
+          title: 'Other',
+          audioUrl: 'https://example.com/other.mp3',
+        ),
+        makeEpisode(
+          guid: 'shared',
+          title: 'Second',
+          audioUrl: 'https://example.com/second.mp3',
+        ),
+      ]);
+
+      final episodes = await datasource.getByPodcastId(1);
+      expect(episodes, hasLength(2));
+      final shared = await datasource.getByPodcastIdAndGuid(1, 'shared');
+      expect(shared?.title, 'First #397');
+    });
+
+    test('updates a stored episode when the batch repeats its guid', () async {
+      await datasource.upsert(
+        makeEpisode(
+          guid: 'shared',
+          title: 'Stored',
+          audioUrl: 'https://example.com/stored.mp3',
+        ),
+      );
+
+      await datasource.upsertAll([
+        makeEpisode(
+          guid: 'shared',
+          title: 'First',
+          audioUrl: 'https://example.com/first.mp3',
+        ),
+        makeEpisode(
+          guid: 'shared',
+          title: 'Second',
+          audioUrl: 'https://example.com/second.mp3',
+        ),
+      ]);
+
+      final episodes = await datasource.getByPodcastId(1);
+      expect(episodes, hasLength(1));
+      expect(episodes.single.title, 'First');
+    });
   });
 
   group('upsert', () {
