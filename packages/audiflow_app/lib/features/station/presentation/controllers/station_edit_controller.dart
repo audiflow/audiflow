@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../utils/default_station_name.dart';
@@ -18,6 +19,9 @@ const int allEpisodesSentinel = 0;
 /// Error keys for localization in the UI layer.
 abstract final class StationEditError {
   static const notFound = 'not_found';
+
+  /// A save, rebuild or delete failed; the detail goes to the log only.
+  static const unexpected = 'unexpected';
   static const _limitReachedPrefix = 'limit_reached:';
   static String limitReached(int max) => '$_limitReachedPrefix$max';
 
@@ -125,6 +129,7 @@ class StationEditController extends _$StationEditController {
   late StationReconcilerService _reconciler;
   late SubscriptionRepository _subscriptions;
   late StationEditActivity _activity;
+  late Logger _logger;
 
   /// The persisted station; null until a new station is created.
   int? _savedId;
@@ -164,6 +169,7 @@ class StationEditController extends _$StationEditController {
     _reconciler = ref.read(stationReconcilerServiceProvider);
     _subscriptions = ref.read(subscriptionRepositoryProvider);
     _activity = ref.read(stationEditActivityProvider.notifier);
+    _logger = ref.read(namedLoggerProvider('StationEdit'));
     _savedId = stationId;
     ref.onDispose(_flushReconcile);
     if (stationId == null) {
@@ -472,15 +478,22 @@ class StationEditController extends _$StationEditController {
           StationLimitExceededException.maxStations,
         ),
       );
-    } on Object catch (e) {
+    } on Object catch (e, stack) {
       // Any failure, not only an Exception: the write chain must go on.
-      _setError(e.toString());
+      _reportUnexpected('Station save failed', e, stack);
     }
   }
 
   void _setError(String? error) {
     if (!ref.mounted || state.error == error) return;
     state = state.copyWith(error: error);
+  }
+
+  /// Logs the raw failure and shows only a generic error key, so internal
+  /// detail (database, file system) never reaches the screen.
+  void _reportUnexpected(String what, Object error, StackTrace stack) {
+    _logger.e(what, error: error, stackTrace: stack);
+    _setError(StationEditError.unexpected);
   }
 
   Future<Station> _create(StationEditState edit) async {
@@ -622,9 +635,9 @@ class StationEditController extends _$StationEditController {
   Future<void> _reconcile(int stationId) async {
     try {
       await _reconciler.onStationConfigChanged(stationId);
-    } on Object catch (e) {
+    } on Object catch (e, stack) {
       // Any failure: the rebuild chain must go on.
-      _setError(e.toString());
+      _reportUnexpected('Station rebuild failed', e, stack);
     }
   }
 
@@ -651,9 +664,9 @@ class StationEditController extends _$StationEditController {
       await _links.removeAllForStation(id);
       await _stations.delete(id);
       return true;
-    } on Exception catch (e) {
+    } on Exception catch (e, stack) {
       _deleted = false;
-      _setError(e.toString());
+      _reportUnexpected('Station delete failed', e, stack);
       return false;
     }
   }

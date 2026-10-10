@@ -17,6 +17,34 @@ class QueueLocalDatasource {
     return item.id;
   }
 
+  /// Inserts [episodeIds] as manual items before every existing item
+  /// ([atFront]) or after them, keeping their order and [spacing] apart.
+  ///
+  /// The position lookup and all inserts share one transaction, so a queue
+  /// change made meanwhile (e.g. a clear) cannot split the range.
+  Future<void> insertManualRange(
+    List<int> episodeIds, {
+    required bool atFront,
+    required int spacing,
+  }) async {
+    if (episodeIds.isEmpty) return;
+    await _isar.writeTxn(() async {
+      final firstPosition = atFront
+          ? await getMinPosition() - spacing * episodeIds.length
+          : await getMaxPosition() + spacing;
+      final now = DateTime.now();
+      final items = [
+        for (var i = 0; i < episodeIds.length; i++)
+          QueueItem()
+            ..episodeId = episodeIds[i]
+            ..position = firstPosition + spacing * i
+            ..isAdhoc = false
+            ..addedAt = now,
+      ];
+      await _isar.queueItems.putAll(items);
+    });
+  }
+
   /// Gets all queue items ordered by position.
   Future<List<QueueItem>> getAll() {
     return _isar.queueItems.where().sortByPosition().findAll();

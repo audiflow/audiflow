@@ -310,7 +310,7 @@ class FakeEpisodeRepository implements EpisodeRepository {
   @override
   Future<List<Episode>> getByIds(List<int> ids) async => [];
   @override
-  Future<Set<String>> getGuidsByPodcastId(int podcastId) async => {};
+  Future<Map<String, String>> getAudioUrlsByGuid(int podcastId) async => {};
   @override
   Future<Episode?> getNewestByPodcastId(int podcastId) async => null;
   @override

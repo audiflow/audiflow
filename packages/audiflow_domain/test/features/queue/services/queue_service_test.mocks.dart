@@ -81,6 +81,24 @@ class MockQueueRepository extends _i1.Mock implements _i3.QueueRepository {
           as _i4.Future<_i2.QueueItem>);
 
   @override
+  _i4.Future<void> addAllToFront(List<int>? episodeIds) =>
+      (super.noSuchMethod(
+            Invocation.method(#addAllToFront, [episodeIds]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
+  _i4.Future<void> addAllToEnd(List<int>? episodeIds) =>
+      (super.noSuchMethod(
+            Invocation.method(#addAllToEnd, [episodeIds]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
   _i4.Future<void> replaceWithAdhoc({
     required List<int>? episodeIds,
     required String? sourceContext,
@@ -272,12 +290,14 @@ class MockEpisodeRepository extends _i1.Mock implements _i8.EpisodeRepository {
           as _i4.Future<List<_i7.Episode>>);
 
   @override
-  _i4.Future<Set<String>> getGuidsByPodcastId(int? podcastId) =>
+  _i4.Future<Map<String, String>> getAudioUrlsByGuid(int? podcastId) =>
       (super.noSuchMethod(
-            Invocation.method(#getGuidsByPodcastId, [podcastId]),
-            returnValue: _i4.Future<Set<String>>.value(<String>{}),
+            Invocation.method(#getAudioUrlsByGuid, [podcastId]),
+            returnValue: _i4.Future<Map<String, String>>.value(
+              <String, String>{},
+            ),
           )
-          as _i4.Future<Set<String>>);
+          as _i4.Future<Map<String, String>>);
 
   @override
   _i4.Future<_i7.Episode?> getNewestByPodcastId(int? podcastId) =>
@@ -534,6 +554,23 @@ class MockAppSettingsRepository extends _i1.Mock
   ) =>
       (super.noSuchMethod(
             Invocation.method(#setDuckInterruptionBehavior, [behavior]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
+  _i15.HapticFeedbackLevel getHapticFeedbackLevel() =>
+      (super.noSuchMethod(
+            Invocation.method(#getHapticFeedbackLevel, []),
+            returnValue: _i15.HapticFeedbackLevel.on,
+          )
+          as _i15.HapticFeedbackLevel);
+
+  @override
+  _i4.Future<void> setHapticFeedbackLevel(_i15.HapticFeedbackLevel? level) =>
+      (super.noSuchMethod(
+            Invocation.method(#setHapticFeedbackLevel, [level]),
             returnValue: _i4.Future<void>.value(),
             returnValueForMissingStub: _i4.Future<void>.value(),
           )

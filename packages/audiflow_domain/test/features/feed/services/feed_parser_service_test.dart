@@ -190,6 +190,56 @@ void main() {
     });
   });
 
+  group('explicit flag', () {
+    const explicitXml = '''
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
+  <channel>
+    <title>Show</title>
+    <item>
+      <guid>marked</guid>
+      <title>Marked</title>
+      <itunes:explicit>true</itunes:explicit>
+      <enclosure url="https://example.com/marked.mp3" type="audio/mpeg"/>
+    </item>
+    <item>
+      <guid>clean</guid>
+      <title>Clean</title>
+      <itunes:explicit>false</itunes:explicit>
+      <enclosure url="https://example.com/clean.mp3" type="audio/mpeg"/>
+    </item>
+    <item>
+      <guid>unmarked</guid>
+      <title>Unmarked</title>
+      <enclosure url="https://example.com/unmarked.mp3" type="audio/mpeg"/>
+    </item>
+  </channel>
+</rss>
+''';
+
+    test('parseWithProgress stores it on each episode', () async {
+      final episodes = <Episode>[];
+      await for (final _ in service.parseWithProgress(
+        xmlContent: explicitXml,
+        podcastId: 1,
+        knownGuids: {},
+        onBatchReady: (batch, _) async => episodes.addAll(batch),
+      )) {}
+
+      check({
+        for (final e in episodes) e.guid: e.itunesExplicit,
+      }).deepEquals({'marked': true, 'clean': false, 'unmarked': false});
+    });
+
+    test('parseFromString maps it to PodcastItem', () async {
+      final result = await service.parseFromString(explicitXml);
+
+      check({
+        for (final e in result.episodes) e.guid: e.isExplicit,
+      }).deepEquals({'marked': true, 'clean': false, 'unmarked': null});
+    });
+  });
+
   group('chapters link', () {
     test('parseWithProgress stores the link on the episode', () async {
       final episodes = <Episode>[];

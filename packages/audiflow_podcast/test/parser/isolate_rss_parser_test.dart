@@ -68,6 +68,136 @@ void main() {
       expect(complete.stoppedEarly, isTrue);
     });
 
+    group('with knownEnclosureUrls', () {
+      const reusedXml = '''
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Test Podcast</title>
+    <item>
+      <guid>reused</guid>
+      <title>New episode reusing an old guid</title>
+      <enclosure url="https://example.com/new.mp3" type="audio/mpeg"/>
+    </item>
+    <item>
+      <guid>reused</guid>
+      <title>Old episode</title>
+      <enclosure url="https://example.com/old.mp3" type="audio/mpeg"/>
+    </item>
+    <item>
+      <guid>older</guid>
+      <title>Older episode</title>
+      <enclosure url="https://example.com/older.mp3" type="audio/mpeg"/>
+    </item>
+  </channel>
+</rss>
+''';
+
+      Future<List<ParseProgress>> parse(Map<String, String> known) {
+        return IsolateRssParser.parse(
+          feedXml: reusedXml,
+          knownGuids: known.keys.toSet(),
+          knownEnclosureUrls: known,
+        ).toList();
+      }
+
+      test('parses a new item that reuses a known guid', () async {
+        final progress = await parse({
+          'reused': 'https://example.com/old.mp3',
+          'older': 'https://example.com/older.mp3',
+        });
+
+        final episodes = progress.whereType<ParsedEpisode>().toList();
+        expect(episodes.map((e) => e.title), [
+          'New episode reusing an old guid',
+        ]);
+        final complete = progress.whereType<ParseComplete>().single;
+        expect(complete.stoppedEarly, isTrue);
+        expect(complete.tailGuids, {'reused', 'older'});
+      });
+
+      test('reports only the matching row of a shared guid', () async {
+        final duplicateKey = duplicateGuidKey(
+          'reused',
+          'https://example.com/new.mp3',
+        );
+        final progress = await IsolateRssParser.parse(
+          feedXml: reusedXml.replaceFirst(
+            RegExp(
+              r'<item>\s*<guid>reused</guid>\s*<title>Old.*?</item>',
+              dotAll: true,
+            ),
+            '',
+          ),
+          knownGuids: {duplicateKey, 'reused', 'older'},
+          knownEnclosureUrls: {
+            duplicateKey: 'https://example.com/new.mp3',
+            'reused': 'https://example.com/old.mp3',
+            'older': 'https://example.com/older.mp3',
+          },
+        ).toList();
+
+        final complete = progress.whereType<ParseComplete>().single;
+        // The raw-guid row left the feed, so it must not be reported.
+        expect(complete.tailGuids, {duplicateKey, 'older'});
+      });
+
+      test('reports the guid of an item whose URL was rewritten', () async {
+        final progress = await parse({
+          'reused': 'https://example.com/old.mp3',
+          'older': 'https://old-host.example.com/older.mp3',
+        });
+
+        final complete = progress.whereType<ParseComplete>().single;
+        expect(complete.tailGuids, contains('older'));
+      });
+
+      test('keeps every row of a guid whose tail item is unmatched', () async {
+        final duplicateKey = duplicateGuidKey(
+          'older',
+          'https://example.com/older-repost.mp3',
+        );
+        final progress = await parse({
+          'reused': 'https://example.com/old.mp3',
+          'older': 'https://old-host.example.com/older.mp3',
+          duplicateKey: 'https://old-host.example.com/older-repost.mp3',
+        });
+
+        final complete = progress.whereType<ParseComplete>().single;
+        expect(complete.tailGuids, containsAll(['older', duplicateKey]));
+      });
+
+      test('stops at a duplicate row stored under an older URL', () async {
+        final staleKey = duplicateGuidKey(
+          'reused',
+          'https://example.com/stale.mp3',
+        );
+        final progress = await parse({
+          staleKey: 'https://example.com/new.mp3',
+          'reused': 'https://example.com/old.mp3',
+        });
+
+        expect(progress.whereType<ParsedEpisode>(), isEmpty);
+        final complete = progress.whereType<ParseComplete>().single;
+        expect(complete.tailGuids, contains(staleKey));
+      });
+
+      test('stops at an item stored under its duplicate-guid key', () async {
+        final duplicateKey = duplicateGuidKey(
+          'reused',
+          'https://example.com/new.mp3',
+        );
+        final progress = await parse({
+          duplicateKey: 'https://example.com/new.mp3',
+          'reused': 'https://example.com/old.mp3',
+        });
+
+        expect(progress.whereType<ParsedEpisode>(), isEmpty);
+        final complete = progress.whereType<ParseComplete>().single;
+        expect(complete.tailGuids, contains(duplicateKey));
+      });
+    });
+
     test('stops at maxNewEpisodes limit', () async {
       final progress = <ParseProgress>[];
 
@@ -85,6 +215,30 @@ void main() {
       final complete = progress.whereType<ParseComplete>().first;
       expect(complete.totalParsed, 2);
       expect(complete.stoppedEarly, isFalse);
+    });
+
+    test('reads the episode explicit flag', () async {
+      const xml = '''
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
+  <channel>
+    <title>Show</title>
+    <item><guid>a</guid><title>A</title><itunes:explicit>yes</itunes:explicit></item>
+    <item><guid>b</guid><title>B</title><itunes:explicit> Explicit </itunes:explicit></item>
+    <item><guid>c</guid><title>C</title><itunes:explicit>clean</itunes:explicit></item>
+    <item><guid>d</guid><title>D</title></item>
+  </channel>
+</rss>
+''';
+      final episodes = await IsolateRssParser.parse(
+        feedXml: xml,
+        knownGuids: {},
+      ).where((e) => e is ParsedEpisode).cast<ParsedEpisode>().toList();
+
+      expect(
+        {for (final e in episodes) e.guid: e.isExplicit},
+        {'a': true, 'b': true, 'c': false, 'd': null},
+      );
     });
 
     test('emits metadata first', () async {

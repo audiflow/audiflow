@@ -366,19 +366,23 @@ void main() {
     });
 
     test('updates existing episodes on conflict', () async {
+      final publishedAt = DateTime.utc(2026, 10, 1);
       await episodeDatasource.upsert(
         makeEpisode(
           guid: 'conflict-ep',
           title: 'Original',
           audioUrl: 'https://example.com/original.mp3',
+          publishedAt: publishedAt,
         ),
       );
 
+      // Same guid and publish date: the host only moved the audio file.
       await repository.upsertEpisodes([
         makeEpisode(
           guid: 'conflict-ep',
           title: 'Updated',
           audioUrl: 'https://example.com/updated.mp3',
+          publishedAt: publishedAt,
         ),
       ]);
 
@@ -388,8 +392,8 @@ void main() {
     });
   });
 
-  group('getGuidsByPodcastId', () {
-    test('returns set of guids for podcast', () async {
+  group('getAudioUrlsByGuid', () {
+    test('returns audio URL per guid for podcast', () async {
       await repository.upsertEpisodes([
         makeEpisode(
           guid: 'guid-a',
@@ -403,13 +407,19 @@ void main() {
         ),
       ]);
 
-      final guids = await repository.getGuidsByPodcastId(podcastId);
-      expect(guids, equals({'guid-a', 'guid-b'}));
+      final urls = await repository.getAudioUrlsByGuid(podcastId);
+      expect(
+        urls,
+        equals({
+          'guid-a': 'https://example.com/a.mp3',
+          'guid-b': 'https://example.com/b.mp3',
+        }),
+      );
     });
 
-    test('returns empty set for unknown podcast', () async {
-      final guids = await repository.getGuidsByPodcastId(9999);
-      expect(guids, isEmpty);
+    test('returns empty map for unknown podcast', () async {
+      final urls = await repository.getAudioUrlsByGuid(9999);
+      expect(urls, isEmpty);
     });
   });
 

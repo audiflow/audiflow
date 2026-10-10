@@ -37,6 +37,12 @@ class FakeQueueService extends QueueService {
 
 class _NoOpQueueRepository implements QueueRepository {
   @override
+  Future<void> addAllToFront(List<int> episodeIds) async {}
+
+  @override
+  Future<void> addAllToEnd(List<int> episodeIds) async {}
+
+  @override
   Future<QueueItem> addToEnd(int episodeId) async => QueueItem()
     ..episodeId = episodeId
     ..position = 0;
@@ -118,7 +124,7 @@ class _NoOpEpisodeRepository implements EpisodeRepository {
   Future<List<Episode>> getByIds(List<int> ids) async => const [];
 
   @override
-  Future<Set<String>> getGuidsByPodcastId(int podcastId) async => {};
+  Future<Map<String, String>> getAudioUrlsByGuid(int podcastId) async => {};
 
   @override
   Future<Episode?> getNewestByPodcastId(int podcastId) async => null;

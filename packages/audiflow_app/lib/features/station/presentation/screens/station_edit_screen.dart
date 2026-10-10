@@ -129,7 +129,9 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
     if (StationEditError.isLimitReached(errorKey)) {
       return l10n.stationLimitReached(StationEditError.parseLimitMax(errorKey));
     }
-    return errorKey;
+    // Unknown keys fall back to the generic message rather than echoing
+    // the key itself.
+    return l10n.errorGeneric;
   }
 
   @override

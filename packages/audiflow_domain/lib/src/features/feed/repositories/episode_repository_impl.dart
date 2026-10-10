@@ -177,48 +177,62 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
     final hasTranscriptItems = items.where((i) => i.hasTranscripts);
     final hasChapterItems = items.where((i) => i.hasChapters);
     // Derived by the isolate parser, off the UI isolate.
-    final derivedByGuid = {
+    final derivedByKey = {
       for (final item in items)
         if (item.descriptionChapters.isNotEmpty)
-          item.guid!: item.descriptionChapters,
+          _podcastItemKey(item): item.descriptionChapters,
     };
 
     if (hasTranscriptItems.isEmpty &&
         hasChapterItems.isEmpty &&
-        derivedByGuid.isEmpty) {
+        derivedByKey.isEmpty) {
       return;
     }
 
     // Resolve episode IDs for items that need transcript/chapter storage
-    final guidsNeedingLookup = <String>{
-      ...hasTranscriptItems.map((i) => i.guid!),
-      ...hasChapterItems.map((i) => i.guid!),
-      ...derivedByGuid.keys,
+    final itemsNeedingLookup = {
+      for (final item in [...hasTranscriptItems, ...hasChapterItems])
+        _podcastItemKey(item): item,
+      for (final item in items)
+        if (derivedByKey.containsKey(_podcastItemKey(item)))
+          _podcastItemKey(item): item,
     };
 
-    final guidToId = <String, int>{};
-    for (final guid in guidsNeedingLookup) {
-      final episode = await _datasource.getByPodcastIdAndGuid(podcastId, guid);
+    final keyToId = <String, int>{};
+    for (final MapEntry(:key, value: item) in itemsNeedingLookup.entries) {
+      final episode = await _datasource.getByFeedItem(
+        podcastId,
+        item.guid!,
+        item.enclosureUrl!,
+      );
       if (episode != null) {
-        guidToId[guid] = episode.id;
+        keyToId[key] = episode.id;
       }
     }
 
-    if (guidToId.isEmpty) return;
+    if (keyToId.isEmpty) return;
 
-    await _storeTranscriptMetas(hasTranscriptItems, guidToId);
-    await _storeChapters(hasChapterItems, guidToId);
-    await _storeDescriptionChapters(derivedByGuid, guidToId);
+    await _storeTranscriptMetas(hasTranscriptItems, keyToId);
+    await _storeChapters(hasChapterItems, keyToId);
+    await _storeDescriptionChapters(derivedByKey, keyToId);
   }
 
-  /// Stores chapters derived from show notes, keyed by guid.
+  /// Identifies a feed item by guid and enclosure URL, since a feed may
+  /// reuse one guid for several items.
+  static String _feedItemKey(String guid, String audioUrl) =>
+      duplicateGuidKey(guid, audioUrl);
+
+  static String _podcastItemKey(PodcastItem item) =>
+      _feedItemKey(item.guid!, item.enclosureUrl!);
+
+  /// Stores chapters derived from show notes, keyed by feed item key.
   Future<void> _storeDescriptionChapters(
-    Map<String, List<PodcastChapter>> chaptersByGuid,
-    Map<String, int> guidToId,
+    Map<String, List<PodcastChapter>> chaptersByKey,
+    Map<String, int> keyToId,
   ) async {
     final rows = <int, List<EpisodeChapter>>{};
-    for (final MapEntry(key: guid, value: chapters) in chaptersByGuid.entries) {
-      final episodeId = guidToId[guid];
+    for (final MapEntry(:key, value: chapters) in chaptersByKey.entries) {
+      final episodeId = keyToId[key];
       if (episodeId == null) continue;
       rows[episodeId] = toEpisodeChapters(episodeId, chapters);
     }
@@ -228,13 +242,13 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
   /// Builds and upserts transcript metadata.
   Future<void> _storeTranscriptMetas(
     Iterable<PodcastItem> items,
-    Map<String, int> guidToId,
+    Map<String, int> keyToId,
   ) async {
     if (_transcriptDatasource == null) return;
 
     final metas = <EpisodeTranscript>[];
     for (final item in items) {
-      final episodeId = guidToId[item.guid!];
+      final episodeId = keyToId[_podcastItemKey(item)];
       if (episodeId == null) continue;
 
       for (final transcript in item.transcripts!) {
@@ -257,13 +271,13 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
   /// Builds and upserts chapters.
   Future<void> _storeChapters(
     Iterable<PodcastItem> items,
-    Map<String, int> guidToId,
+    Map<String, int> keyToId,
   ) async {
     if (_chapterDatasource == null) return;
 
     final chaptersByEpisode = <int, List<EpisodeChapter>>{};
     for (final item in items) {
-      final episodeId = guidToId[item.guid!];
+      final episodeId = keyToId[_podcastItemKey(item)];
       if (episodeId == null) continue;
       chaptersByEpisode[episodeId] = [
         for (final (index, chapter) in item.chapters!.indexed)
@@ -312,25 +326,28 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
     final withData = mediaMetas.where((m) => m.hasData);
     if (withData.isEmpty) return;
 
-    // Resolve episode IDs by guid
-    final guidToId = <String, int>{};
+    // Resolve episode IDs by guid and audio URL
+    String keyOf(ParsedEpisodeMediaMeta meta) =>
+        _feedItemKey(meta.guid, meta.audioUrl);
+    final keyToId = <String, int>{};
     for (final meta in withData) {
-      final episode = await _datasource.getByPodcastIdAndGuid(
+      final episode = await _datasource.getByFeedItem(
         podcastId,
         meta.guid,
+        meta.audioUrl,
       );
       if (episode != null) {
-        guidToId[meta.guid] = episode.id;
+        keyToId[keyOf(meta)] = episode.id;
       }
     }
-    if (guidToId.isEmpty) return;
+    if (keyToId.isEmpty) return;
 
     // Store transcript metas
     if (_transcriptDatasource != null) {
       final transcriptMetas = <EpisodeTranscript>[];
       for (final meta in withData) {
         if (!meta.hasTranscripts) continue;
-        final episodeId = guidToId[meta.guid];
+        final episodeId = keyToId[keyOf(meta)];
         if (episodeId == null) continue;
 
         for (final t in meta.transcripts!) {
@@ -352,7 +369,7 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
     final chaptersByEpisode = <int, List<EpisodeChapter>>{};
     for (final meta in withData) {
       if (!meta.hasChapters) continue;
-      final episodeId = guidToId[meta.guid];
+      final episodeId = keyToId[keyOf(meta)];
       if (episodeId == null) continue;
       chaptersByEpisode[episodeId] = [
         for (final (index, c) in meta.chapters!.indexed)
@@ -368,13 +385,13 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
     await _storeChapterRows(chaptersByEpisode, ChapterSource.podlove);
     await _storeDescriptionChapters({
       for (final meta in withData)
-        if (meta.hasDescriptionChapters) meta.guid: meta.descriptionChapters,
-    }, guidToId);
+        if (meta.hasDescriptionChapters) keyOf(meta): meta.descriptionChapters,
+    }, keyToId);
   }
 
   @override
-  Future<Set<String>> getGuidsByPodcastId(int podcastId) {
-    return _datasource.getGuidsByPodcastId(podcastId);
+  Future<Map<String, String>> getAudioUrlsByGuid(int podcastId) {
+    return _datasource.getAudioUrlsByGuid(podcastId);
   }
 
   @override

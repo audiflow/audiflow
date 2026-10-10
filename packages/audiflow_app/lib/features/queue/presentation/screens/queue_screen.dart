@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
+import '../../../../app/errors/user_facing_error.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../controllers/queue_controller.dart';
 import '../widgets/clear_queue_button.dart';
@@ -46,7 +47,7 @@ class _QueueScreenState extends ConsumerState<QueueScreen> {
             title,
             _buildErrorState(
               context,
-              error.toString(),
+              error,
               () => ref.invalidate(queueControllerProvider),
             ),
           ),
@@ -166,7 +167,7 @@ class _QueueScreenState extends ConsumerState<QueueScreen> {
 
   Widget _buildErrorState(
     BuildContext context,
-    String error,
+    Object error,
     VoidCallback onRetry,
   ) {
     final theme = Theme.of(context);
@@ -193,7 +194,7 @@ class _QueueScreenState extends ConsumerState<QueueScreen> {
             ),
             const SizedBox(height: Spacing.sm),
             Text(
-              error,
+              userFacingErrorMessage(l10n, error),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: colorScheme.onSurfaceVariant,
               ),

@@ -7,6 +7,7 @@ import '../models/podcast_feed.dart';
 import '../models/podcast_image.dart';
 import '../models/podcast_item.dart';
 import '../models/podcast_transcript.dart';
+import 'itunes_boolean.dart';
 
 /// Factory class responsible for creating Feed and Item entities from parsed XML data.
 /// Handles RSS 2.0 standard elements and iTunes namespace extensions.
@@ -492,13 +493,7 @@ class EntityFactory {
 
     if (value is bool) return value;
 
-    if (value is String) {
-      final lower = value.toLowerCase().trim();
-      return lower == 'true' ||
-          lower == 'yes' ||
-          lower == '1' ||
-          lower == 'explicit';
-    }
+    if (value is String) return parseItunesBoolean(value);
 
     return false;
   }

@@ -167,7 +167,9 @@ class _FakeEpisodeRepository implements EpisodeRepository {
   List<({int podcastId, Set<String> guids})> deleteCalls = [];
 
   @override
-  Future<Set<String>> getGuidsByPodcastId(int podcastId) async => storedGuids;
+  Future<Map<String, String>> getAudioUrlsByGuid(int podcastId) async => {
+    for (final guid in storedGuids) guid: '',
+  };
 
   @override
   Future<Episode?> getNewestByPodcastId(int podcastId) async => null;
@@ -455,6 +457,7 @@ class _FakeFeedParserService extends FeedParserService {
     required String xmlContent,
     required int podcastId,
     required Set<String> knownGuids,
+    Map<String, String> knownEnclosureUrls = const {},
     required Future<void> Function(
       List<Episode> episodes,
       List<ParsedEpisodeMediaMeta> mediaMetas,

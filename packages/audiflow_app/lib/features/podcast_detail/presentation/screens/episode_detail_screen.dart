@@ -527,22 +527,19 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
       return;
     }
 
-    final episodeId = widget.progress?.episode.id;
-    if (episodeId != null) {
-      final queueService = ref.read(queueServiceProvider);
-      final shouldConfirm = await queueService.shouldConfirmAdhocReplace();
-
-      if (shouldConfirm) {
-        if (!context.mounted) return;
-        final confirmed = await _showReplaceQueueDialog(context);
-        if (!confirmed) return;
-      }
-
-      await queueService.createAdhocQueue(
-        startingEpisodeId: episodeId,
-        sourceContext: widget.podcastTitle,
-      );
+    // Plays this episode alone: the screen can be reached from many places
+    // (lists, stations, the player, deep links, notifications), so it has
+    // no list to queue from. Queuing a range is an explicit action on list
+    // rows. Clearing needs no episode ID, so it runs even when the screen
+    // was opened without a progress snapshot.
+    final queueService = ref.read(queueServiceProvider);
+    final shouldConfirm = await queueService.shouldConfirmAdhocReplace();
+    if (shouldConfirm) {
+      if (!context.mounted) return;
+      final confirmed = await _showClearQueueDialog(context);
+      if (!confirmed) return;
     }
+    await queueService.clearQueue();
 
     // Only now, past the replace-queue confirmation: a cancelled play must
     // not move the station up the Library.
@@ -630,13 +627,13 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
     }
   }
 
-  Future<bool> _showReplaceQueueDialog(BuildContext context) async {
+  Future<bool> _showClearQueueDialog(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(l10n.episodeReplaceQueueTitle),
-        content: Text(l10n.episodeReplaceQueueContent),
+        title: Text(l10n.episodeClearQueueTitle),
+        content: Text(l10n.episodeClearQueueContent),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -644,7 +641,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.episodeReplace),
+            child: Text(l10n.commonClear),
           ),
         ],
       ),

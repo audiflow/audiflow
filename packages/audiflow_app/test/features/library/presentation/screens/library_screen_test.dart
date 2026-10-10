@@ -467,7 +467,14 @@ void main() {
       });
     }
 
-    testWidgets('stations are laid out two per row', (tester) async {
+    void useScreen(WidgetTester tester, Size size) {
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+    }
+
+    testWidgets('stations are laid out two per row on a phone', (tester) async {
+      useScreen(tester, const Size(390, 844));
       Station station(int id) => Station()
         ..id = id
         ..name = 'Station $id';
@@ -488,9 +495,10 @@ void main() {
       ..sortOrder = id
       ..lastPlayedAt = lastPlayedAt;
 
-    testWidgets('shows at most four stations, most recently played first', (
+    testWidgets('shows at most four stations on a phone, recent first', (
       tester,
     ) async {
+      useScreen(tester, const Size(390, 844));
       await pump(
         tester,
         stations: [
@@ -503,9 +511,10 @@ void main() {
       check(tester.widget<StationGridTile>(tiles.first).station.id).equals(6);
     });
 
-    testWidgets('links to every station once there are more than four', (
+    testWidgets('links to every station once more than four on a phone', (
       tester,
     ) async {
+      useScreen(tester, const Size(390, 844));
       await pump(
         tester,
         stations: [for (var i = 1; i <= 5; i++) playedStation(i)],
@@ -524,10 +533,42 @@ void main() {
     testWidgets('has no show-all link while every station fits', (
       tester,
     ) async {
+      useScreen(tester, const Size(390, 844));
       await pump(
         tester,
         stations: [for (var i = 1; i <= 4; i++) playedStation(i)],
       );
+      check(find.textContaining('Show all').evaluate()).isEmpty();
+    });
+
+    // iPad Pro 13" portrait fits five 160pt tiles in its one row.
+    testWidgets('fills one row on a tablet, then links to the rest', (
+      tester,
+    ) async {
+      useScreen(tester, const Size(1032, 1376));
+      await pump(
+        tester,
+        stations: [for (var i = 1; i <= 6; i++) playedStation(i)],
+      );
+      final tiles = find.byType(StationGridTile);
+      check(tiles.evaluate()).length.equals(5);
+      final tops = {
+        for (final tile in tiles.evaluate())
+          tester.getTopLeft(find.byWidget(tile.widget)).dy,
+      };
+      check(tops).length.equals(1);
+      check(find.text('Show all').evaluate()).length.equals(1);
+    });
+
+    testWidgets('has no show-all link while one tablet row fits all', (
+      tester,
+    ) async {
+      useScreen(tester, const Size(1032, 1376));
+      await pump(
+        tester,
+        stations: [for (var i = 1; i <= 5; i++) playedStation(i)],
+      );
+      check(find.byType(StationGridTile).evaluate()).length.equals(5);
       check(find.textContaining('Show all').evaluate()).isEmpty();
     });
 
@@ -557,9 +598,7 @@ void main() {
     testWidgets('the header keeps the sort label whole at large text', (
       tester,
     ) async {
-      tester.view.physicalSize = const Size(390, 844);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.reset);
+      useScreen(tester, const Size(390, 844));
       await pump(tester, textScale: 1.3);
       final label = tester.renderObject<RenderParagraph>(
         find.text('Latest episode'),

@@ -146,6 +146,18 @@ abstract class AppLocalizations {
   /// **'Done'**
   String get commonDone;
 
+  /// User-facing message for a failure caused by no or unstable network connectivity
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t connect. Check your internet connection and try again.'**
+  String get errorNetwork;
+
+  /// User-facing fallback message for any unexpected failure; never shows internal error details
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong. Please try again later.'**
+  String get errorGeneric;
+
   /// Settings screen title
   ///
   /// In en, this message translates to:
@@ -773,8 +785,8 @@ abstract class AppLocalizations {
   /// Export error snackbar
   ///
   /// In en, this message translates to:
-  /// **'Export failed: {message}'**
-  String storageExportError(String message);
+  /// **'Export failed'**
+  String get storageExportError;
 
   /// Import subscriptions setting title
   ///
@@ -845,8 +857,8 @@ abstract class AppLocalizations {
   /// Reset failed snackbar
   ///
   /// In en, this message translates to:
-  /// **'Reset failed: {error}'**
-  String storageResetFailed(String error);
+  /// **'Reset failed'**
+  String get storageResetFailed;
 
   /// Import complete dialog title
   ///
@@ -1262,6 +1274,30 @@ abstract class AppLocalizations {
   /// **'Confirm?'**
   String get queueClearConfirm;
 
+  /// Menu action to queue this episode and the ones after it in the list to play next
+  ///
+  /// In en, this message translates to:
+  /// **'Play next from here'**
+  String get playNextFromHere;
+
+  /// Menu action to add this episode and the ones after it in the list to the end of the queue
+  ///
+  /// In en, this message translates to:
+  /// **'Add to queue from here'**
+  String get addToQueueFromHere;
+
+  /// Snackbar after queuing several episodes to play next
+  ///
+  /// In en, this message translates to:
+  /// **'{count} episodes playing next'**
+  String queuePlayingNextCount(int count);
+
+  /// Snackbar after adding several episodes to the queue
+  ///
+  /// In en, this message translates to:
+  /// **'Added {count} episodes to queue'**
+  String queueAddedToQueueCount(int count);
+
   /// Added to queue snackbar
   ///
   /// In en, this message translates to:
@@ -1556,12 +1592,6 @@ abstract class AppLocalizations {
   /// **'This playlist has no episodes'**
   String get podcastDetailPlaylistEmpty;
 
-  /// Episode load error with detail
-  ///
-  /// In en, this message translates to:
-  /// **'Error loading episodes: {error}'**
-  String podcastDetailEpisodeLoadError(String error);
-
   /// Episode count label
   ///
   /// In en, this message translates to:
@@ -1622,12 +1652,6 @@ abstract class AppLocalizations {
   /// **'Downloaded'**
   String get episodeFilterDownloaded;
 
-  /// Generic load failure
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to load: {error}'**
-  String podcastDetailFailedToLoad(String error);
-
   /// Replace queue dialog title
   ///
   /// In en, this message translates to:
@@ -1639,6 +1663,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Starting playback will replace your current queue with episodes from this list.'**
   String get episodeReplaceQueueContent;
+
+  /// Clear queue dialog title shown before playing a single episode
+  ///
+  /// In en, this message translates to:
+  /// **'Clear queue?'**
+  String get episodeClearQueueTitle;
+
+  /// Dialog content when playing a single episode would clear the queue
+  ///
+  /// In en, this message translates to:
+  /// **'Starting playback will clear your current queue.'**
+  String get episodeClearQueueContent;
 
   /// Replace button label
   ///
@@ -1879,6 +1915,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Import Podcasts'**
   String get opmlImportTitle;
+
+  /// Snackbar when an OPML file cannot be read or is not valid OPML
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read this file'**
+  String get opmlFileUnreadable;
+
+  /// Snackbar when an OPML file contains no podcast feeds
+  ///
+  /// In en, this message translates to:
+  /// **'No podcast feeds found in the file'**
+  String get opmlNoFeedsFound;
 
   /// Already subscribed label in OPML import
   ///

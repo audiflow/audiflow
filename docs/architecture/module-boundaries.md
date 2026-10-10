@@ -111,6 +111,7 @@ audiflow_cli -> audiflow_domain, audiflow_podcast
 - Graceful handling of malformed feeds
 - XML entity decoding in tail scan identifiers
 - Enclosure URL fallback for GUID resolution in tail scans
+- Duplicate-guid storage keys (`duplicateGuidKey`, `guidOfStorageKey`), used by early stop and tail scans when a feed reuses a guid
 
 #### Non-responsibilities
 - Podcast subscription management, episode storage

@@ -21,6 +21,14 @@ void main() {
     }
   });
 
+  // The density PNGs ship only in App Bundle density splits; a device that
+  // receives none of them must still resolve the icon from the base APK.
+  test('ships a density-independent fallback in the base resources', () {
+    final vector = File('$_resDir/drawable/$androidNotificationSmallIcon.xml');
+    check(vector.existsSync()).isTrue();
+    check(vector.readAsStringSync()).contains('<vector');
+  });
+
   // An opaque replacement would still exist on disk but bring the blank
   // circle back, so the mask itself must have both clear and solid pixels.
   testWidgets('icon has a transparent background around a solid mark', (

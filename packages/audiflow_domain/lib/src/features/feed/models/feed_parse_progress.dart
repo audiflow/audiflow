@@ -13,6 +13,7 @@ sealed class FeedParseProgress {
 final class ParsedEpisodeMediaMeta {
   const ParsedEpisodeMediaMeta({
     required this.guid,
+    this.audioUrl = '',
     this.transcripts,
     this.chapters,
     this.descriptionChapters = const [],
@@ -20,6 +21,9 @@ final class ParsedEpisodeMediaMeta {
 
   /// Episode GUID used to resolve the database episode ID.
   final String guid;
+
+  /// Enclosure URL; with [guid] it tells apart items sharing a guid.
+  final String audioUrl;
 
   /// Parsed transcript metadata from RSS feed.
   final List<ParsedTranscript>? transcripts;

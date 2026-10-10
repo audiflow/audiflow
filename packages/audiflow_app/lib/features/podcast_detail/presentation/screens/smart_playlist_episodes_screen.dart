@@ -8,12 +8,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../app/errors/user_facing_error.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/duration_label.dart';
 import '../../../../routing/app_router.dart';
 import '../utils/group_sorting.dart';
 import '../utils/smart_playlist_def_resolver.dart';
 import '../widgets/play_order_bottom_sheet.dart';
+import '../widgets/podcast_detail_empty_states.dart';
 import '../widgets/smart_playlist_episode_list_tile.dart';
 
 /// Screen showing episodes within a single smart playlist.
@@ -343,6 +345,8 @@ class _SmartPlaylistEpisodesScreenState
               );
         final sorted = List.of(displayEpisodes);
         sortEpisodeData(sorted, effectiveRule);
+        // Rows queue what follows them on screen, so pass the shown order.
+        final displayedIds = [for (final data in sorted) data.episode.id];
 
         final showThumbnail = _resolveEpisodeRowThumbnail();
         final playlistDef = _resolvePlaylistDef();
@@ -362,7 +366,7 @@ class _SmartPlaylistEpisodesScreenState
                 showThumbnail: showThumbnail,
                 lastRefreshedAt: widget.lastRefreshedAt,
                 progress: data.progress,
-                siblingEpisodeIds: widget.smartPlaylist.episodeIds,
+                siblingEpisodeIds: displayedIds,
                 itunesId: widget.podcast.id,
                 feedUrl: widget.podcast.feedUrl,
                 effectiveOrder: _resolvedPlayOrder,
@@ -404,7 +408,7 @@ class _SmartPlaylistEpisodesScreenState
                   ),
                   const SizedBox(height: Spacing.sm),
                   Text(
-                    error.toString(),
+                    userFacingErrorMessage(AppLocalizations.of(context), error),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -452,6 +456,10 @@ class _SmartPlaylistEpisodesScreenState
             ? (a, b) => b.compareTo(a)
             : (a, b) => a.compareTo(b),
       );
+    final displayedIds = [
+      for (final year in sortedYears)
+        for (final data in byYear[year]!) data.episode.id,
+    ];
 
     final showThumbnail = _resolveEpisodeRowThumbnail();
     final playlistDef = _resolvePlaylistDef();
@@ -467,7 +475,7 @@ class _SmartPlaylistEpisodesScreenState
         feedImageUrl: widget.feedImageUrl,
         showThumbnail: showThumbnail,
         progress: data.progress,
-        siblingEpisodeIds: widget.smartPlaylist.episodeIds,
+        siblingEpisodeIds: displayedIds,
         itunesId: widget.podcast.id,
         feedUrl: widget.podcast.feedUrl,
         effectiveOrder: _resolvedPlayOrder,
@@ -539,9 +547,8 @@ class _SmartPlaylistEpisodesScreenState
             padding: const EdgeInsets.all(Spacing.lg),
             child: Center(
               child: Text(
-                AppLocalizations.of(
-                  context,
-                ).podcastDetailFailedToLoad(e.toString()),
+                podcastDetailLoadErrorText(AppLocalizations.of(context), e),
+                textAlign: TextAlign.center,
               ),
             ),
           ),

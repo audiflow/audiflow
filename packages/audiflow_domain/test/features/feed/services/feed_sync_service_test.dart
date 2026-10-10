@@ -248,14 +248,15 @@ void main() {
       when(dioGet()).thenAnswer((_) async => okResponse());
 
       when(
-        mockEpisodeRepo.getGuidsByPodcastId(any),
-      ).thenAnswer((_) async => <String>{});
+        mockEpisodeRepo.getAudioUrlsByGuid(any),
+      ).thenAnswer((_) async => <String, String>{});
 
       when(
         mockFeedParser.parseWithProgress(
           xmlContent: anyNamed('xmlContent'),
           podcastId: anyNamed('podcastId'),
           knownGuids: anyNamed('knownGuids'),
+          knownEnclosureUrls: anyNamed('knownEnclosureUrls'),
           onBatchReady: anyNamed('onBatchReady'),
         ),
       ).thenAnswer((_) {
@@ -300,13 +301,14 @@ void main() {
 
       when(dioGet()).thenAnswer((_) async => okResponse());
       when(
-        mockEpisodeRepo.getGuidsByPodcastId(sub.id),
-      ).thenAnswer((_) async => <String>{});
+        mockEpisodeRepo.getAudioUrlsByGuid(sub.id),
+      ).thenAnswer((_) async => <String, String>{});
       when(
         mockFeedParser.parseWithProgress(
           xmlContent: anyNamed('xmlContent'),
           podcastId: anyNamed('podcastId'),
           knownGuids: anyNamed('knownGuids'),
+          knownEnclosureUrls: anyNamed('knownEnclosureUrls'),
           onBatchReady: anyNamed('onBatchReady'),
         ),
       ).thenAnswer(
@@ -334,13 +336,14 @@ void main() {
 
       when(dioGet()).thenAnswer((_) async => okResponse());
       when(
-        mockEpisodeRepo.getGuidsByPodcastId(sub.id),
-      ).thenAnswer((_) async => <String>{});
+        mockEpisodeRepo.getAudioUrlsByGuid(sub.id),
+      ).thenAnswer((_) async => <String, String>{});
       when(
         mockFeedParser.parseWithProgress(
           xmlContent: anyNamed('xmlContent'),
           podcastId: anyNamed('podcastId'),
           knownGuids: anyNamed('knownGuids'),
+          knownEnclosureUrls: anyNamed('knownEnclosureUrls'),
           onBatchReady: anyNamed('onBatchReady'),
         ),
       ).thenAnswer(
@@ -382,13 +385,14 @@ void main() {
 
       when(dioGet()).thenAnswer((_) async => okResponse());
       when(
-        mockEpisodeRepo.getGuidsByPodcastId(sub.id),
-      ).thenAnswer((_) async => <String>{});
+        mockEpisodeRepo.getAudioUrlsByGuid(sub.id),
+      ).thenAnswer((_) async => <String, String>{});
       when(
         mockFeedParser.parseWithProgress(
           xmlContent: anyNamed('xmlContent'),
           podcastId: anyNamed('podcastId'),
           knownGuids: anyNamed('knownGuids'),
+          knownEnclosureUrls: anyNamed('knownEnclosureUrls'),
           onBatchReady: anyNamed('onBatchReady'),
         ),
       ).thenAnswer(
@@ -416,13 +420,14 @@ void main() {
 
       when(dioGet()).thenAnswer((_) async => okResponse());
       when(
-        mockEpisodeRepo.getGuidsByPodcastId(sub.id),
-      ).thenAnswer((_) async => <String>{});
+        mockEpisodeRepo.getAudioUrlsByGuid(sub.id),
+      ).thenAnswer((_) async => <String, String>{});
       when(
         mockFeedParser.parseWithProgress(
           xmlContent: anyNamed('xmlContent'),
           podcastId: anyNamed('podcastId'),
           knownGuids: anyNamed('knownGuids'),
+          knownEnclosureUrls: anyNamed('knownEnclosureUrls'),
           onBatchReady: anyNamed('onBatchReady'),
         ),
       ).thenAnswer(
@@ -511,13 +516,14 @@ void main() {
 
       when(dioGet()).thenAnswer((_) async => okResponse());
       when(
-        mockEpisodeRepo.getGuidsByPodcastId(sub.id),
-      ).thenAnswer((_) async => <String>{});
+        mockEpisodeRepo.getAudioUrlsByGuid(sub.id),
+      ).thenAnswer((_) async => <String, String>{});
       when(
         mockFeedParser.parseWithProgress(
           xmlContent: anyNamed('xmlContent'),
           podcastId: anyNamed('podcastId'),
           knownGuids: anyNamed('knownGuids'),
+          knownEnclosureUrls: anyNamed('knownEnclosureUrls'),
           onBatchReady: anyNamed('onBatchReady'),
         ),
       ).thenAnswer(
@@ -542,13 +548,14 @@ void main() {
       final sub = _subscription(id: 5, lastRefreshedAt: null);
       when(dioGet()).thenAnswer((_) async => okResponse());
       when(
-        mockEpisodeRepo.getGuidsByPodcastId(sub.id),
-      ).thenAnswer((_) async => {'kept', 'gone'});
+        mockEpisodeRepo.getAudioUrlsByGuid(sub.id),
+      ).thenAnswer((_) async => {'kept': '', 'gone': ''});
       when(
         mockFeedParser.parseWithProgress(
           xmlContent: anyNamed('xmlContent'),
           podcastId: anyNamed('podcastId'),
           knownGuids: anyNamed('knownGuids'),
+          knownEnclosureUrls: anyNamed('knownEnclosureUrls'),
           onBatchReady: anyNamed('onBatchReady'),
         ),
       ).thenAnswer(
@@ -590,13 +597,14 @@ void main() {
           ),
         );
         when(
-          mockEpisodeRepo.getGuidsByPodcastId(sub.id),
-        ).thenAnswer((_) async => {'kept', 'gone'});
+          mockEpisodeRepo.getAudioUrlsByGuid(sub.id),
+        ).thenAnswer((_) async => {'kept': '', 'gone': ''});
         when(
           mockFeedParser.parseWithProgress(
             xmlContent: anyNamed('xmlContent'),
             podcastId: anyNamed('podcastId'),
             knownGuids: anyNamed('knownGuids'),
+            knownEnclosureUrls: anyNamed('knownEnclosureUrls'),
             onBatchReady: anyNamed('onBatchReady'),
           ),
         ).thenAnswer(
@@ -648,13 +656,14 @@ void main() {
         sub = _subscription(lastRefreshedAt: null);
         when(dioGet()).thenAnswer((_) async => okResponse());
         when(
-          mockEpisodeRepo.getGuidsByPodcastId(sub.id),
-        ).thenAnswer((_) async => <String>{});
+          mockEpisodeRepo.getAudioUrlsByGuid(sub.id),
+        ).thenAnswer((_) async => <String, String>{});
         when(
           mockFeedParser.parseWithProgress(
             xmlContent: anyNamed('xmlContent'),
             podcastId: anyNamed('podcastId'),
             knownGuids: anyNamed('knownGuids'),
+            knownEnclosureUrls: anyNamed('knownEnclosureUrls'),
             onBatchReady: anyNamed('onBatchReady'),
           ),
         ).thenAnswer(
@@ -725,6 +734,7 @@ void main() {
           xmlContent: anyNamed('xmlContent'),
           podcastId: anyNamed('podcastId'),
           knownGuids: anyNamed('knownGuids'),
+          knownEnclosureUrls: anyNamed('knownEnclosureUrls'),
           onBatchReady: anyNamed('onBatchReady'),
         ),
       ).thenAnswer(
@@ -733,8 +743,8 @@ void main() {
         ),
       );
       when(
-        mockEpisodeRepo.getGuidsByPodcastId(any),
-      ).thenAnswer((_) async => <String>{});
+        mockEpisodeRepo.getAudioUrlsByGuid(any),
+      ).thenAnswer((_) async => <String, String>{});
       when(
         mockSubscriptionRepo.updateLastRefreshed(any, any),
       ).thenAnswer((_) async {});
@@ -776,6 +786,7 @@ void main() {
           xmlContent: anyNamed('xmlContent'),
           podcastId: anyNamed('podcastId'),
           knownGuids: anyNamed('knownGuids'),
+          knownEnclosureUrls: anyNamed('knownEnclosureUrls'),
           onBatchReady: anyNamed('onBatchReady'),
         ),
       );
@@ -940,13 +951,14 @@ void main() {
     void stubSuccessfulSync(Subscription sub) {
       when(dioGet()).thenAnswer((_) async => okResponse());
       when(
-        mockEpisodeRepo.getGuidsByPodcastId(sub.id),
-      ).thenAnswer((_) async => <String>{});
+        mockEpisodeRepo.getAudioUrlsByGuid(sub.id),
+      ).thenAnswer((_) async => <String, String>{});
       when(
         mockFeedParser.parseWithProgress(
           xmlContent: anyNamed('xmlContent'),
           podcastId: anyNamed('podcastId'),
           knownGuids: anyNamed('knownGuids'),
+          knownEnclosureUrls: anyNamed('knownEnclosureUrls'),
           onBatchReady: anyNamed('onBatchReady'),
         ),
       ).thenAnswer(
@@ -1060,13 +1072,14 @@ void main() {
         dioGet('https://example.com/feed1.xml'),
       ).thenAnswer((_) async => okResponse());
       when(
-        mockEpisodeRepo.getGuidsByPodcastId(10),
-      ).thenAnswer((_) async => <String>{});
+        mockEpisodeRepo.getAudioUrlsByGuid(10),
+      ).thenAnswer((_) async => <String, String>{});
       when(
         mockFeedParser.parseWithProgress(
           xmlContent: anyNamed('xmlContent'),
           podcastId: 10,
           knownGuids: anyNamed('knownGuids'),
+          knownEnclosureUrls: anyNamed('knownEnclosureUrls'),
           onBatchReady: anyNamed('onBatchReady'),
         ),
       ).thenAnswer(
@@ -1157,13 +1170,14 @@ void main() {
     void stubMetadataSync({required String imageUrl}) {
       when(dioGet()).thenAnswer((_) async => okResponse());
       when(
-        mockEpisodeRepo.getGuidsByPodcastId(any),
-      ).thenAnswer((_) async => <String>{});
+        mockEpisodeRepo.getAudioUrlsByGuid(any),
+      ).thenAnswer((_) async => <String, String>{});
       when(
         mockFeedParser.parseWithProgress(
           xmlContent: anyNamed('xmlContent'),
           podcastId: anyNamed('podcastId'),
           knownGuids: anyNamed('knownGuids'),
+          knownEnclosureUrls: anyNamed('knownEnclosureUrls'),
           onBatchReady: anyNamed('onBatchReady'),
         ),
       ).thenAnswer(

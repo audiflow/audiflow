@@ -8,8 +8,12 @@ class FakeStationRepository implements StationRepository {
   int creates = 0;
   int _nextId = 1;
 
+  /// When set, [create] throws it, as a failing database write would.
+  Object? createError;
+
   @override
   Future<Station> create(Station station) async {
+    if (createError case final error?) throw error;
     if (StationLimitExceededException.maxStations <= stations.length) {
       throw const StationLimitExceededException();
     }

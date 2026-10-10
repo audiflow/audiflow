@@ -597,6 +597,80 @@ void main() {
     });
   });
 
+  group('episodesFromHere', () {
+    test(
+      'includes the starting episode and those after it, as displayed',
+      () async {
+        final ids = await service.episodesFromHere(
+          startingEpisodeId: 30,
+          siblingEpisodeIds: [50, 30, 10, 40],
+          effectiveOrder: AutoPlayOrder.asDisplayed,
+        );
+
+        expect(ids, [30, 10, 40]);
+        verifyNever(mockEpisodeRepo.getByIds(any));
+      },
+    );
+
+    test('follows the chronological order when oldest first', () async {
+      final siblings = [
+        _episode(id: 3, publishedAt: DateTime(2026, 3)),
+        _episode(id: 1, publishedAt: DateTime(2026, 1)),
+        _episode(id: 2, publishedAt: DateTime(2026, 2)),
+      ];
+      when(
+        mockEpisodeRepo.getByIds([3, 1, 2]),
+      ).thenAnswer((_) async => siblings);
+
+      final ids = await service.episodesFromHere(
+        startingEpisodeId: 2,
+        siblingEpisodeIds: [3, 1, 2],
+      );
+
+      expect(ids, [2, 3]);
+    });
+
+    test('is empty when the starting episode is not in the list', () async {
+      final ids = await service.episodesFromHere(
+        startingEpisodeId: 99,
+        siblingEpisodeIds: [10, 20],
+        effectiveOrder: AutoPlayOrder.asDisplayed,
+      );
+
+      expect(ids, isEmpty);
+    });
+  });
+
+  group('playNextFromHere', () {
+    test('puts the range at the front and returns its size', () async {
+      when(mockQueueRepo.addAllToFront(any)).thenAnswer((_) async {});
+
+      final count = await service.playNextFromHere(
+        startingEpisodeId: 20,
+        siblingEpisodeIds: [10, 20, 30, 40],
+        effectiveOrder: AutoPlayOrder.asDisplayed,
+      );
+
+      expect(count, 3);
+      verify(mockQueueRepo.addAllToFront([20, 30, 40])).called(1);
+    });
+  });
+
+  group('playLaterFromHere', () {
+    test('appends the range and returns its size', () async {
+      when(mockQueueRepo.addAllToEnd(any)).thenAnswer((_) async {});
+
+      final count = await service.playLaterFromHere(
+        startingEpisodeId: 20,
+        siblingEpisodeIds: [10, 20, 30, 40],
+        effectiveOrder: AutoPlayOrder.asDisplayed,
+      );
+
+      expect(count, 3);
+      verify(mockQueueRepo.addAllToEnd([20, 30, 40])).called(1);
+    });
+  });
+
   group('removeItem', () {
     test('delegates to repository', () async {
       when(mockQueueRepo.remove(5)).thenAnswer((_) async {});

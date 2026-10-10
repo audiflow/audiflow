@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -32,6 +31,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get commonDone => 'Done';
+
+  @override
+  String get errorNetwork =>
+      'Couldn\'t connect. Check your internet connection and try again.';
+
+  @override
+  String get errorGeneric => 'Something went wrong. Please try again later.';
 
   @override
   String get settingsTitle => 'Settings';
@@ -377,9 +383,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get storageExportSuccess => 'Subscriptions exported';
 
   @override
-  String storageExportError(String message) {
-    return 'Export failed: $message';
-  }
+  String get storageExportError => 'Export failed';
 
   @override
   String get storageImportTitle => 'Import Subscriptions';
@@ -417,9 +421,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get storageResetComplete => 'Data reset complete';
 
   @override
-  String storageResetFailed(String error) {
-    return 'Reset failed: $error';
-  }
+  String get storageResetFailed => 'Reset failed';
 
   @override
   String get storageImportComplete => 'Import Complete';
@@ -649,6 +651,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get queueClearConfirm => 'Confirm?';
 
   @override
+  String get playNextFromHere => 'Play next from here';
+
+  @override
+  String get addToQueueFromHere => 'Add to queue from here';
+
+  @override
+  String queuePlayingNextCount(int count) {
+    return '$count episodes playing next';
+  }
+
+  @override
+  String queueAddedToQueueCount(int count) {
+    return 'Added $count episodes to queue';
+  }
+
+  @override
   String get queueAddedToQueue => 'Added to queue';
 
   @override
@@ -807,11 +825,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get podcastDetailPlaylistEmpty => 'This playlist has no episodes';
 
   @override
-  String podcastDetailEpisodeLoadError(String error) {
-    return 'Error loading episodes: $error';
-  }
-
-  @override
   String podcastDetailEpisodeCount(int count) {
     return '$count episodes';
   }
@@ -848,16 +861,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get episodeFilterDownloaded => 'Downloaded';
 
   @override
-  String podcastDetailFailedToLoad(String error) {
-    return 'Failed to load: $error';
-  }
-
-  @override
   String get episodeReplaceQueueTitle => 'Replace queue?';
 
   @override
   String get episodeReplaceQueueContent =>
       'Starting playback will replace your current queue with episodes from this list.';
+
+  @override
+  String get episodeClearQueueTitle => 'Clear queue?';
+
+  @override
+  String get episodeClearQueueContent =>
+      'Starting playback will clear your current queue.';
 
   @override
   String get episodeReplace => 'Replace';
@@ -1008,6 +1023,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get opmlImportTitle => 'Import Podcasts';
+
+  @override
+  String get opmlFileUnreadable => 'Couldn\'t read this file';
+
+  @override
+  String get opmlNoFeedsFound => 'No podcast feeds found in the file';
 
   @override
   String get opmlAlreadySubscribed => 'Already subscribed';

@@ -15,6 +15,36 @@ import '../indicators/progress_line.dart';
 const double _thumbnailSize = 56.0;
 const double _actionRowHeight = 44.0;
 
+/// Full-year dates for every month, the widest forms `formatEpisodeDate`
+/// produces; month names differ in width, so no single date covers all.
+List<String> _fullYearDateSamples() => [
+  for (var month = 1; month <= 12; month++)
+    DateTime(2000, month, 28).formatEpisodeDate(),
+];
+
+final Map<String, double> _dateSlotWidthCache = {};
+
+/// Width of the widest full-year date in [style], cached per locale
+/// output, font size, and text scale since every row asks for it.
+double _dateSlotWidth(TextStyle style, TextScaler textScaler) {
+  final samples = _fullYearDateSamples();
+  final key = '${samples.join('|')}|${style.fontSize}|${textScaler.scale(1)}';
+  return _dateSlotWidthCache.putIfAbsent(key, () {
+    var widest = 0.0;
+    for (final sample in samples) {
+      final painter = TextPainter(
+        text: TextSpan(text: sample, style: style),
+        maxLines: 1,
+        textScaler: textScaler,
+        textDirection: TextDirection.ltr,
+      )..layout();
+      if (widest < painter.width) widest = painter.width;
+      painter.dispose();
+    }
+    return widest.ceilToDouble();
+  });
+}
+
 /// Episode row (redesign 4.2): date line (accent dot when new), title,
 /// description, artwork on the right, then the action row with the play
 /// pill and the caller's actions. Played episodes fade their title and
@@ -171,7 +201,10 @@ class EpisodeCard extends StatelessWidget {
                   child: _mainArea(colors),
                 ),
                 const SizedBox(height: Spacing.xs),
-                SizedBox(height: _actionRowHeight, child: _actionRow(colors)),
+                SizedBox(
+                  height: _actionRowHeight,
+                  child: _actionRow(context, colors),
+                ),
               ],
             ),
           ),
@@ -286,7 +319,7 @@ class EpisodeCard extends StatelessWidget {
     );
   }
 
-  Widget _actionRow(AppColors colors) {
+  Widget _actionRow(BuildContext context, AppColors colors) {
     final date = numberLabel == null ? null : dateLabel;
     return Row(
       children: [
@@ -299,18 +332,35 @@ class EpisodeCard extends StatelessWidget {
         ),
         if (date != null) ...[
           const SizedBox(width: Spacing.sm),
+          // The gap shrinks with the date on narrow phones instead of
+          // pushing the buttons off the row.
           Flexible(
-            child: Text(
-              date,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppTextStyles.caption.copyWith(color: colors.inkTertiary),
+            child: Padding(
+              padding: const EdgeInsets.only(right: Spacing.md),
+              child: _dateSlot(context, date, colors),
             ),
           ),
-        ],
-        const Spacer(),
+        ] else
+          const SizedBox(width: Spacing.md),
         ...actionButtons,
       ],
+    );
+  }
+
+  /// Reserves the width of the widest date format so the action buttons
+  /// that follow line up across rows ("Today" vs "Dec 28, 2025"), rather
+  /// than drifting with each label or hugging the far edge on wide screens.
+  /// A label wider than the slot ellipsizes instead of widening it.
+  Widget _dateSlot(BuildContext context, String date, AppColors colors) {
+    final style = AppTextStyles.caption.copyWith(color: colors.inkTertiary);
+    return SizedBox(
+      width: _dateSlotWidth(style, MediaQuery.textScalerOf(context)),
+      child: Text(
+        date,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: style,
+      ),
     );
   }
 }

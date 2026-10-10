@@ -1,4 +1,5 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:audiflow_podcast/audiflow_podcast.dart' show duplicateGuidKey;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar_community/isar.dart';
 
@@ -55,13 +56,13 @@ void main() {
       ..episodeNumber = episodeNumber;
   }
 
-  group('getGuidsByPodcastId', () {
-    test('returns empty set for podcast with no episodes', () async {
-      final guids = await datasource.getGuidsByPodcastId(999);
+  group('getAudioUrlsByGuid', () {
+    test('returns empty map for podcast with no episodes', () async {
+      final guids = await datasource.getAudioUrlsByGuid(999);
       expect(guids, isEmpty);
     });
 
-    test('returns all GUIDs for podcast', () async {
+    test('returns each GUID with its audio URL', () async {
       await datasource.upsert(
         makeEpisode(
           guid: 'guid-1',
@@ -97,11 +98,12 @@ void main() {
         ),
       );
 
-      final guids = await datasource.getGuidsByPodcastId(1);
+      final guids = await datasource.getAudioUrlsByGuid(1);
 
-      expect(guids, hasLength(2));
-      expect(guids, containsAll(['guid-1', 'guid-2']));
-      expect(guids, isNot(contains('guid-3')));
+      expect(guids, {
+        'guid-1': 'https://example.com/ep1.mp3',
+        'guid-2': 'https://example.com/ep2.mp3',
+      });
     });
   });
 
@@ -146,6 +148,385 @@ void main() {
       final episodes = await datasource.getByPodcastId(1);
       expect(episodes, hasLength(1));
       expect(episodes.first.title, 'Updated Title');
+    });
+
+    group('with a reused guid', () {
+      final oct1 = DateTime.utc(2026, 10, 1);
+      final oct10 = DateTime.utc(2026, 10, 10);
+
+      test('keeps the first of reposted items in one batch', () async {
+        await datasource.upsertAll([
+          makeEpisode(
+            guid: 'shared',
+            title: 'Repost #397',
+            audioUrl: 'https://example.com/a.mp3',
+            publishedAt: oct1,
+          ),
+          makeEpisode(
+            guid: 'shared',
+            title: 'Repost',
+            audioUrl: 'https://example.com/b.mp3',
+            publishedAt: oct1,
+          ),
+        ]);
+
+        final episodes = await datasource.getByPodcastId(1);
+        expect(episodes.map((e) => e.title), ['Repost #397']);
+      });
+
+      test('stores a distinct episode under its duplicate-guid key', () async {
+        await datasource.upsertAll([
+          makeEpisode(
+            guid: 'shared',
+            title: 'New',
+            audioUrl: 'https://example.com/new.mp3',
+            publishedAt: oct10,
+          ),
+          makeEpisode(
+            guid: 'shared',
+            title: 'Old',
+            audioUrl: 'https://example.com/old.mp3',
+            publishedAt: oct1,
+          ),
+        ]);
+
+        final duplicateKey = duplicateGuidKey(
+          'shared',
+          'https://example.com/old.mp3',
+        );
+        final old = await datasource.getByPodcastIdAndGuid(1, duplicateKey);
+        final latest = await datasource.getByPodcastIdAndGuid(1, 'shared');
+        expect(old?.title, 'Old');
+        expect(latest?.title, 'New');
+      });
+
+      test('keeps a duplicate row when its audio URL changes', () async {
+        await datasource.upsertAll([
+          makeEpisode(
+            guid: 'shared',
+            title: 'New',
+            audioUrl: 'https://example.com/new.mp3',
+            publishedAt: oct10,
+          ),
+          makeEpisode(
+            guid: 'shared',
+            title: 'Old',
+            audioUrl: 'https://example.com/old.mp3',
+            publishedAt: oct1,
+          ),
+        ]);
+        final duplicateKey = duplicateGuidKey(
+          'shared',
+          'https://example.com/old.mp3',
+        );
+        final before = await datasource.getByPodcastIdAndGuid(1, duplicateKey);
+
+        final moved = makeEpisode(
+          guid: 'shared',
+          title: 'Old',
+          audioUrl: 'https://cdn.example.com/old.mp3?sig=1',
+          publishedAt: oct1,
+        );
+        await datasource.upsertAll([moved]);
+
+        final episodes = await datasource.getByPodcastId(1);
+        expect(episodes, hasLength(2));
+        expect(moved.guid, duplicateKey);
+        final after = await datasource.getByPodcastIdAndGuid(1, duplicateKey);
+        expect(after?.id, before?.id);
+        expect(after?.audioUrl, 'https://cdn.example.com/old.mp3?sig=1');
+      });
+
+      Future<void> storeNewAndOld() => datasource.upsertAll([
+        makeEpisode(
+          guid: 'shared',
+          title: 'New',
+          audioUrl: 'https://example.com/new.mp3',
+          publishedAt: oct10,
+        ),
+        makeEpisode(
+          guid: 'shared',
+          title: 'Old',
+          audioUrl: 'https://example.com/old.mp3',
+          publishedAt: oct1,
+        ),
+      ]);
+
+      test('finds a moved duplicate by its current audio URL', () async {
+        await storeNewAndOld();
+        await datasource.upsertAll([
+          makeEpisode(
+            guid: 'shared',
+            title: 'Old',
+            audioUrl: 'https://cdn.example.com/old.mp3',
+            publishedAt: oct1,
+          ),
+        ]);
+
+        final found = await datasource.getByFeedItem(
+          1,
+          'shared',
+          'https://cdn.example.com/old.mp3',
+        );
+        expect(found?.title, 'Old');
+      });
+
+      test(
+        'keeps a surviving duplicate after the raw-guid row is gone',
+        () async {
+          await storeNewAndOld();
+          await datasource.deleteByPodcastIdAndGuids(1, {'shared'});
+          final duplicateKey = duplicateGuidKey(
+            'shared',
+            'https://example.com/old.mp3',
+          );
+          final before = await datasource.getByPodcastIdAndGuid(
+            1,
+            duplicateKey,
+          );
+
+          final moved = makeEpisode(
+            guid: 'shared',
+            title: 'Old',
+            audioUrl: 'https://cdn.example.com/old.mp3',
+            publishedAt: oct1,
+          );
+          await datasource.upsertAll([moved]);
+
+          expect(moved.guid, duplicateKey);
+          expect(moved.id, before?.id);
+          expect(await datasource.getByPodcastId(1), hasLength(1));
+        },
+      );
+
+      test('collapses reposts of a guid another episode owns', () async {
+        await datasource.upsert(
+          makeEpisode(
+            guid: 'shared',
+            title: 'Owner',
+            audioUrl: 'https://example.com/owner.mp3',
+            publishedAt: oct1,
+          ),
+        );
+
+        await datasource.upsertAll([
+          makeEpisode(
+            guid: 'shared',
+            title: 'Repost #2',
+            audioUrl: 'https://example.com/a.mp3',
+            publishedAt: oct10,
+          ),
+          makeEpisode(
+            guid: 'shared',
+            title: 'Repost',
+            audioUrl: 'https://example.com/b.mp3',
+            publishedAt: oct10,
+          ),
+        ]);
+
+        final titles = (await datasource.getByPodcastId(1)).map((e) => e.title);
+        expect(titles, ['Repost #2', 'Owner']);
+      });
+
+      test('finds no row for a repost that was not stored', () async {
+        await datasource.upsertAll([
+          makeEpisode(
+            guid: 'shared',
+            title: 'Repost #2',
+            audioUrl: 'https://example.com/a.mp3',
+            publishedAt: oct10,
+          ),
+          makeEpisode(
+            guid: 'shared',
+            title: 'Repost',
+            audioUrl: 'https://example.com/b.mp3',
+            publishedAt: oct10,
+          ),
+        ]);
+
+        final found = await datasource.getByFeedItem(
+          1,
+          'shared',
+          'https://example.com/b.mp3',
+        );
+        expect(found, isNull);
+      });
+
+      test('gives a skipped repost the key of the kept episode', () async {
+        await datasource.upsert(
+          makeEpisode(
+            guid: 'shared',
+            title: 'Owner',
+            audioUrl: 'https://example.com/owner.mp3',
+            publishedAt: oct1,
+          ),
+        );
+        final kept = makeEpisode(
+          guid: 'shared',
+          title: 'Repost #2',
+          audioUrl: 'https://example.com/a.mp3',
+          publishedAt: oct10,
+        );
+        final skipped = makeEpisode(
+          guid: 'shared',
+          title: 'Repost',
+          audioUrl: 'https://example.com/b.mp3',
+          publishedAt: oct10,
+        );
+
+        await datasource.upsertAll([kept, skipped]);
+
+        expect(skipped.guid, kept.guid);
+        expect(skipped.guid, isNot('shared'));
+      });
+
+      test('keeps an undated row when its audio URL changes', () async {
+        final storedId = await datasource.upsert(
+          makeEpisode(
+            guid: 'shared',
+            title: 'Undated',
+            audioUrl: 'https://example.com/old.mp3',
+          ),
+        );
+
+        final moved = makeEpisode(
+          guid: 'shared',
+          title: 'Undated',
+          audioUrl: 'https://cdn.example.com/old.mp3',
+        );
+        await datasource.upsertAll([moved]);
+
+        expect(moved.guid, 'shared');
+        expect(moved.id, storedId);
+        expect(await datasource.getByPodcastId(1), hasLength(1));
+      });
+
+      test('keeps both rows when one item lost its date', () async {
+        await storeNewAndOld();
+        final ids = {
+          for (final e in await datasource.getByPodcastId(1)) e.title: e.id,
+        };
+
+        final undated = makeEpisode(
+          guid: 'shared',
+          title: 'New',
+          audioUrl: 'https://cdn.example.com/new.mp3',
+        );
+        final dated = makeEpisode(
+          guid: 'shared',
+          title: 'Old',
+          audioUrl: 'https://cdn.example.com/old.mp3',
+          publishedAt: oct1,
+        );
+        await datasource.upsertAll([undated, dated]);
+
+        expect(undated.id, ids['New']);
+        expect(dated.id, ids['Old']);
+        expect(await datasource.getByPodcastId(1), hasLength(2));
+      });
+
+      test('keeps the stored row when a new episode reuses its guid', () async {
+        final storedId = await datasource.upsert(
+          makeEpisode(
+            guid: 'shared',
+            title: 'Old',
+            audioUrl: 'https://example.com/old.mp3',
+            publishedAt: oct1,
+          ),
+        );
+
+        final incoming = [
+          makeEpisode(
+            guid: 'shared',
+            title: 'New',
+            audioUrl: 'https://example.com/new.mp3',
+            publishedAt: oct10,
+          ),
+          makeEpisode(
+            guid: 'shared',
+            title: 'Old (edited)',
+            audioUrl: 'https://example.com/old.mp3',
+            publishedAt: oct1,
+          ),
+        ];
+        await datasource.upsertAll(incoming);
+        // A later refresh must resolve to the same rows.
+        await datasource.upsertAll([
+          makeEpisode(
+            guid: 'shared',
+            title: 'New',
+            audioUrl: 'https://example.com/new.mp3',
+            publishedAt: oct10,
+          ),
+        ]);
+
+        final old = await datasource.getByPodcastIdAndGuid(1, 'shared');
+        expect(old?.id, storedId);
+        expect(old?.title, 'Old (edited)');
+        final duplicateKey = duplicateGuidKey(
+          'shared',
+          'https://example.com/new.mp3',
+        );
+        expect(incoming.first.guid, duplicateKey);
+        expect(await datasource.getByPodcastId(1), hasLength(2));
+      });
+
+      test('updates the stored row when only the audio URL changed', () async {
+        final storedId = await datasource.upsert(
+          makeEpisode(
+            guid: 'shared',
+            title: 'Episode',
+            audioUrl: 'https://example.com/old.mp3',
+            publishedAt: oct1,
+          ),
+        );
+
+        await datasource.upsertAll([
+          makeEpisode(
+            guid: 'shared',
+            title: 'Episode',
+            audioUrl: 'https://tracker.example/example.com/old.mp3',
+            publishedAt: oct1,
+          ),
+        ]);
+
+        final episodes = await datasource.getByPodcastId(1);
+        expect(episodes.single.id, storedId);
+        expect(
+          episodes.single.audioUrl,
+          'https://tracker.example/example.com/old.mp3',
+        );
+      });
+
+      test('getByFeedItem prefers the duplicate-guid key', () async {
+        await datasource.upsertAll([
+          makeEpisode(
+            guid: 'shared',
+            title: 'New',
+            audioUrl: 'https://example.com/new.mp3',
+            publishedAt: oct10,
+          ),
+          makeEpisode(
+            guid: 'shared',
+            title: 'Old',
+            audioUrl: 'https://example.com/old.mp3',
+            publishedAt: oct1,
+          ),
+        ]);
+
+        final old = await datasource.getByFeedItem(
+          1,
+          'shared',
+          'https://example.com/old.mp3',
+        );
+        final latest = await datasource.getByFeedItem(
+          1,
+          'shared',
+          'https://example.com/new.mp3',
+        );
+        expect(old?.title, 'Old');
+        expect(latest?.title, 'New');
+      });
     });
   });
 
@@ -645,6 +1026,69 @@ void main() {
       );
 
       expect(episodes, isEmpty);
+    });
+  });
+  group('upsert preserves app state', () {
+    // Feed sync rebuilds Episode rows from feed data, so these fields
+    // arrive at their defaults and must be kept from the stored row.
+    Future<Episode> storeFavoritedAndEnqueued() async {
+      final id = await datasource.upsert(
+        makeEpisode(
+          guid: 'guid-1',
+          title: 'Episode 1',
+          audioUrl: 'https://example.com/ep1.mp3',
+        ),
+      );
+      final stored = (await datasource.getById(id))!
+        ..isFavorited = true
+        ..favoritedAt = DateTime(2026, 1, 2, 3, 4, 5)
+        ..autoDownloadEnqueued = true;
+      await isar.writeTxn(() => isar.episodes.put(stored));
+      return stored;
+    }
+
+    Episode refreshedFromFeed() => makeEpisode(
+      guid: 'guid-1',
+      title: 'Episode 1 (updated)',
+      audioUrl: 'https://example.com/ep1.mp3',
+    );
+
+    void expectStatePreserved(Episode? episode, Episode stored) {
+      expect(episode, isNotNull);
+      expect(episode!.id, stored.id);
+      expect(episode.title, 'Episode 1 (updated)');
+      expect(episode.isFavorited, isTrue);
+      expect(episode.favoritedAt, stored.favoritedAt);
+      expect(episode.autoDownloadEnqueued, isTrue);
+    }
+
+    test('upsert keeps favorite and auto-download state', () async {
+      final stored = await storeFavoritedAndEnqueued();
+
+      await datasource.upsert(refreshedFromFeed());
+
+      final result = await datasource.getByPodcastIdAndGuid(1, 'guid-1');
+      expectStatePreserved(result, stored);
+    });
+
+    test('upsertAll keeps favorite and auto-download state', () async {
+      final stored = await storeFavoritedAndEnqueued();
+
+      await datasource.upsertAll([refreshedFromFeed()]);
+
+      final result = await datasource.getByPodcastIdAndGuid(1, 'guid-1');
+      expectStatePreserved(result, stored);
+      final pending = await datasource.getPendingAutoDownloadByPodcastId(1);
+      expect(pending, isEmpty);
+    });
+
+    test('new episodes keep default app state', () async {
+      await datasource.upsertAll([refreshedFromFeed()]);
+
+      final result = await datasource.getByPodcastIdAndGuid(1, 'guid-1');
+      expect(result!.isFavorited, isFalse);
+      expect(result.favoritedAt, isNull);
+      expect(result.autoDownloadEnqueued, isFalse);
     });
   });
 }

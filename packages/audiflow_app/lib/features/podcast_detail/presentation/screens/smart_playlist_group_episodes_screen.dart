@@ -558,10 +558,13 @@ class _SmartPlaylistGroupEpisodesScreenState
       EpisodeSortField.publishedAt;
 
   /// The row for [data]; also used to start playback from the hero the
-  /// same way the row's play pill would.
+  /// same way the row's play pill would. [displayedIds] is the on-screen
+  /// order, which the row queues from; the hero has none and uses the
+  /// group's own order.
   SmartPlaylistEpisodeListTile _tileFor(
     SmartPlaylistEpisodeData data, {
     String? feedImageUrl,
+    List<int>? displayedIds,
   }) {
     final number = data.episode.episodeNumber;
     return SmartPlaylistEpisodeListTile(
@@ -573,7 +576,7 @@ class _SmartPlaylistGroupEpisodesScreenState
       showThumbnail: _resolveEpisodeRowThumbnail(),
       lastRefreshedAt: widget.lastRefreshedAt,
       progress: data.progress,
-      siblingEpisodeIds: _episodeIds,
+      siblingEpisodeIds: displayedIds ?? _episodeIds,
       itunesId: widget.itunesId,
       feedUrl: widget.feedUrl,
       effectiveOrder: _resolvedPlayOrder,
@@ -661,13 +664,17 @@ class _SmartPlaylistGroupEpisodesScreenState
         );
         final sorted = List.of(displayEpisodes);
         sortEpisodeData(sorted, effectiveRule);
+        final displayedIds = [for (final data in sorted) data.episode.id];
 
         return [
           sortRow,
           SliverList.builder(
             itemCount: sorted.length,
-            itemBuilder: (context, index) =>
-                _tileFor(sorted[index], feedImageUrl: feedImageUrl),
+            itemBuilder: (context, index) => _tileFor(
+              sorted[index],
+              feedImageUrl: feedImageUrl,
+              displayedIds: displayedIds,
+            ),
           ),
           const SliverToBoxAdapter(child: SizedBox(height: Spacing.xl)),
         ];
@@ -718,12 +725,19 @@ class _SmartPlaylistGroupEpisodesScreenState
             ? (a, b) => b.compareTo(a)
             : (a, b) => a.compareTo(b),
       );
+    final displayedIds = [
+      for (final year in sortedYears)
+        for (final data in byYear[year]!) data.episode.id,
+    ];
 
     return buildYearGroupedSlivers<SmartPlaylistEpisodeData>(
       itemsByYear: byYear,
       sortedYears: sortedYears,
-      itemBuilder: (context, data) =>
-          _tileFor(data, feedImageUrl: feedImageUrl),
+      itemBuilder: (context, data) => _tileFor(
+        data,
+        feedImageUrl: feedImageUrl,
+        displayedIds: displayedIds,
+      ),
       scrollController: _scrollController,
       yearGroupingEnabled: true,
     );
