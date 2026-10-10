@@ -39,6 +39,13 @@ void main() {
       check(item.publishDate).equals(DateTime.utc(2025, 1, 15));
     });
 
+    test('maps the explicit flag', () {
+      final explicit = buildFullEpisode()..itunesExplicit = true;
+
+      check(explicit.toPodcastItem().isExplicit).equals(true);
+      check(buildFullEpisode().toPodcastItem().isExplicit).equals(false);
+    });
+
     test('maps imageUrl to images list', () {
       final item = buildFullEpisode().toPodcastItem();
 

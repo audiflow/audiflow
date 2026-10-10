@@ -6,6 +6,7 @@ import 'package:xml/xml.dart';
 import '../models/episode_identity.dart';
 import '../models/podcast_chapters_link.dart';
 import 'description_chapters_parser.dart';
+import 'itunes_boolean.dart';
 import 'parse_progress.dart';
 
 /// Trims whitespace and returns null for blank strings.
@@ -552,7 +553,7 @@ class IsolateRssParser {
       episodeNumber: int.tryParse(_extractItunesText(item, 'episode') ?? ''),
       seasonNumber: int.tryParse(_extractItunesText(item, 'season') ?? ''),
       imageUrl: _extractItunesImageUrl(item),
-      isExplicit: _parseExplicit(_extractItunesText(item, 'explicit')),
+      isExplicit: _explicitOf(item),
       contentEncoded: contentEncoded,
       summary: _extractItunesText(item, 'summary'),
       link: _extractText(item, 'link'),
@@ -569,16 +570,10 @@ class IsolateRssParser {
     );
   }
 
-  /// Same truthy values as the streaming parser: Apple's `explicit` and
-  /// the legacy `true`/`yes`/`1`; anything else, such as `clean`, is false.
-  static bool? _parseExplicit(String? value) {
-    if (value == null) return null;
-    return const {
-      'true',
-      'yes',
-      '1',
-      'explicit',
-    }.contains(value.toLowerCase().trim());
+  /// Null when the item has no `<itunes:explicit>` tag.
+  static bool? _explicitOf(XmlElement item) {
+    final value = _extractItunesText(item, 'explicit');
+    return value == null ? null : parseItunesBoolean(value);
   }
 
   static List<ParsedTranscript>? _extractTranscripts(XmlElement item) {
