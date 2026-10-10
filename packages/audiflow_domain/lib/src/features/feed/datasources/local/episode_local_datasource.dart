@@ -65,7 +65,8 @@ class EpisodeLocalDatasource {
   }
 
   /// Picks the storage key for [episode]: its guid when that is free or
-  /// already holds the same episode, otherwise its duplicate-guid key.
+  /// already holds the same episode, otherwise the key of its stored
+  /// duplicate row, or a new duplicate-guid key.
   /// Keeps the stored row's id and app state on a match. Returns null when
   /// the batch already holds the same episode.
   Future<String?> _resolveKey(
@@ -86,11 +87,36 @@ class EpisodeLocalDatasource {
         episode.podcastId,
         key,
       );
-      if (stored == null) return key;
+      if (stored == null) {
+        if (key == episode.guid) return key;
+        return await _movedDuplicateKey(episode, pending) ?? key;
+      }
       if (_isSameEpisode(stored, episode)) {
         _keepAppState(episode, stored);
         return key;
       }
+    }
+    return null;
+  }
+
+  /// The key of a stored duplicate of [episode]'s guid whose enclosure URL
+  /// has since changed, matched by publish date. Its key was built from
+  /// the old URL, so the lookup by the new URL misses it; without this, a
+  /// rewritten URL would store a second row and drop the first one.
+  Future<String?> _movedDuplicateKey(
+    Episode episode,
+    Map<(int, String), Episode> pending,
+  ) async {
+    final siblings = await _isar.episodes
+        .filter()
+        .podcastIdEqualTo(episode.podcastId)
+        .guidStartsWith(duplicateGuidKey(episode.guid, ''))
+        .findAll();
+    for (final stored in siblings) {
+      if (pending.containsKey((episode.podcastId, stored.guid))) continue;
+      if (!_isSameEpisode(stored, episode)) continue;
+      _keepAppState(episode, stored);
+      return stored.guid;
     }
     return null;
   }

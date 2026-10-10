@@ -113,17 +113,58 @@ void main() {
         ]);
         final complete = progress.whereType<ParseComplete>().single;
         expect(complete.stoppedEarly, isTrue);
-        expect(
-          complete.tailGuids,
-          containsAll([
-            'reused',
-            duplicateGuidKey(
-              'reused',
-              'https://example.com/old.mp3',
-            ),
-            'older',
-          ]),
+        expect(complete.tailGuids, {'reused', 'older'});
+      });
+
+      test('reports only the matching row of a shared guid', () async {
+        final duplicateKey = duplicateGuidKey(
+          'reused',
+          'https://example.com/new.mp3',
         );
+        final progress = await IsolateRssParser.parse(
+          feedXml: reusedXml.replaceFirst(
+            RegExp(
+              r'<item>\s*<guid>reused</guid>\s*<title>Old.*?</item>',
+              dotAll: true,
+            ),
+            '',
+          ),
+          knownGuids: {duplicateKey, 'reused', 'older'},
+          knownEnclosureUrls: {
+            duplicateKey: 'https://example.com/new.mp3',
+            'reused': 'https://example.com/old.mp3',
+            'older': 'https://example.com/older.mp3',
+          },
+        ).toList();
+
+        final complete = progress.whereType<ParseComplete>().single;
+        // The raw-guid row left the feed, so it must not be reported.
+        expect(complete.tailGuids, {duplicateKey, 'older'});
+      });
+
+      test('reports the guid of an item whose URL was rewritten', () async {
+        final progress = await parse({
+          'reused': 'https://example.com/old.mp3',
+          'older': 'https://old-host.example.com/older.mp3',
+        });
+
+        final complete = progress.whereType<ParseComplete>().single;
+        expect(complete.tailGuids, contains('older'));
+      });
+
+      test('stops at a duplicate row stored under an older URL', () async {
+        final staleKey = duplicateGuidKey(
+          'reused',
+          'https://example.com/stale.mp3',
+        );
+        final progress = await parse({
+          staleKey: 'https://example.com/new.mp3',
+          'reused': 'https://example.com/old.mp3',
+        });
+
+        expect(progress.whereType<ParsedEpisode>(), isEmpty);
+        final complete = progress.whereType<ParseComplete>().single;
+        expect(complete.tailGuids, contains(staleKey));
       });
 
       test('stops at an item stored under its duplicate-guid key', () async {

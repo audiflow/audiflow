@@ -209,6 +209,7 @@ class IsolateRssParser {
       var parsedCount = 0;
       var stoppedEarly = false;
       final tailGuids = <String>{};
+      final keysByItem = _indexKeysByItem(params.knownEnclosureUrls);
       final cutoff = params.knownNewestPubDate;
       final cutoffGuid = params.knownNewestGuid;
       final itemOpenTag = RegExp(r'<item[\s>]');
@@ -235,10 +236,12 @@ class IsolateRssParser {
             : null;
 
         // Early stop: GUID-set match (legacy path, used by parseWithProgress)
-        if (decodedGuid != null &&
-            _isKnownItem(params, decodedGuid, enclosureUrl)) {
+        final storedKey = decodedGuid == null
+            ? null
+            : _storedKeyOf(params, keysByItem, decodedGuid, enclosureUrl);
+        if (storedKey != null) {
           stoppedEarly = true;
-          tailGuids.addAll(_itemIds(decodedGuid, enclosureUrl));
+          tailGuids.add(storedKey);
           break;
         }
 
@@ -249,7 +252,13 @@ class IsolateRssParser {
           if (pubDate != null && !cutoff.isBefore(pubDate)) {
             if (cutoffGuid == null || cutoffGuid == decodedGuid) {
               stoppedEarly = true;
-              tailGuids.addAll(_itemIds(decodedGuid, enclosureUrl));
+              _addItemId(
+                tailGuids,
+                params,
+                keysByItem,
+                decodedGuid,
+                enclosureUrl,
+              );
               break;
             }
           }
@@ -283,11 +292,12 @@ class IsolateRssParser {
           final snippet = xml.substring(start, close + itemCloseTag.length);
           final rawGuid = _extractTagText(snippet, 'guid');
           final rawUrl = _extractEnclosureUrl(snippet);
-          tailGuids.addAll(
-            _itemIds(
-              rawGuid != null ? _decodeXmlEntities(rawGuid) : null,
-              rawUrl != null ? _decodeXmlEntities(rawUrl) : null,
-            ),
+          _addItemId(
+            tailGuids,
+            params,
+            keysByItem,
+            rawGuid != null ? _decodeXmlEntities(rawGuid) : null,
+            rawUrl != null ? _decodeXmlEntities(rawUrl) : null,
           );
         }
       }
@@ -406,33 +416,53 @@ class IsolateRssParser {
   /// Whether an item is already stored. With [_IsolateParams.knownEnclosureUrls]
   /// a guid match alone is not enough: the feed may have reused the guid for
   /// a new item, which is then stored under a duplicate-guid key.
-  static bool _isKnownItem(
+  /// Maps each stored (guid, enclosure URL) pair to the key its row is
+  /// stored under, so an item finds its row whichever key holds it.
+  static Map<(String, String), String> _indexKeysByItem(
+    Map<String, String> knownEnclosureUrls,
+  ) => {
+    for (final MapEntry(:key, :value) in knownEnclosureUrls.entries)
+      (guidOfStorageKey(key), value): key,
+  };
+
+  /// The stored key of the row this item matches, or null for a new item.
+  ///
+  /// With enclosure URLs known, an item matches only the row stored with
+  /// its guid and URL, so a new item reusing an old guid is still parsed.
+  static String? _storedKeyOf(
     _IsolateParams params,
+    Map<(String, String), String> keysByItem,
     String guid,
     String? enclosureUrl,
   ) {
     if (params.knownEnclosureUrls.isEmpty || enclosureUrl == null) {
-      return params.knownGuids.contains(guid);
+      return params.knownGuids.contains(guid) ? guid : null;
     }
-    final storedUrl = params.knownEnclosureUrls[guid];
+    final key = keysByItem[(guid, enclosureUrl)];
+    if (key != null) return key;
     // Rows stored without an enclosure URL can only be matched by guid.
-    if (storedUrl != null && (storedUrl.isEmpty || storedUrl == enclosureUrl)) {
-      return true;
-    }
-    return params.knownGuids.contains(
-      duplicateGuidKey(guid, enclosureUrl),
-    );
+    return params.knownEnclosureUrls[guid] == '' ? guid : null;
   }
 
-  /// Every stored key the item may live under: its guid (or enclosure URL
-  /// when it has none) and, for a reused guid, its duplicate-guid key.
-  static Iterable<String> _itemIds(String? guid, String? enclosureUrl) sync* {
-    final id = guid ?? enclosureUrl;
-    if (id == null || id.isEmpty) return;
-    yield id;
-    if (guid != null && enclosureUrl != null) {
-      yield duplicateGuidKey(guid, enclosureUrl);
-    }
+  /// Records the key under which an item seen in the feed is stored.
+  ///
+  /// An item matching a row reports only that row's key, so a sibling
+  /// sharing its guid can still be detected as dropped. An unmatched item
+  /// reports its guid (or enclosure URL when it has none): its row may be
+  /// stored under a URL the host has since rewritten, and must not be
+  /// treated as dropped.
+  static void _addItemId(
+    Set<String> ids,
+    _IsolateParams params,
+    Map<(String, String), String> keysByItem,
+    String? guid,
+    String? enclosureUrl,
+  ) {
+    final storedKey = guid == null
+        ? null
+        : _storedKeyOf(params, keysByItem, guid, enclosureUrl);
+    final id = storedKey ?? guid ?? enclosureUrl;
+    if (id != null && id.isNotEmpty) ids.add(id);
   }
 
   static String? _extractEnclosureUrl(String xml) {

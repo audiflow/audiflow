@@ -200,6 +200,43 @@ void main() {
         expect(latest?.title, 'New');
       });
 
+      test('keeps a duplicate row when its audio URL changes', () async {
+        await datasource.upsertAll([
+          makeEpisode(
+            guid: 'shared',
+            title: 'New',
+            audioUrl: 'https://example.com/new.mp3',
+            publishedAt: oct10,
+          ),
+          makeEpisode(
+            guid: 'shared',
+            title: 'Old',
+            audioUrl: 'https://example.com/old.mp3',
+            publishedAt: oct1,
+          ),
+        ]);
+        final duplicateKey = duplicateGuidKey(
+          'shared',
+          'https://example.com/old.mp3',
+        );
+        final before = await datasource.getByPodcastIdAndGuid(1, duplicateKey);
+
+        final moved = makeEpisode(
+          guid: 'shared',
+          title: 'Old',
+          audioUrl: 'https://cdn.example.com/old.mp3?sig=1',
+          publishedAt: oct1,
+        );
+        await datasource.upsertAll([moved]);
+
+        final episodes = await datasource.getByPodcastId(1);
+        expect(episodes, hasLength(2));
+        expect(moved.guid, duplicateKey);
+        final after = await datasource.getByPodcastIdAndGuid(1, duplicateKey);
+        expect(after?.id, before?.id);
+        expect(after?.audioUrl, 'https://cdn.example.com/old.mp3?sig=1');
+      });
+
       test('keeps the stored row when a new episode reuses its guid', () async {
         final storedId = await datasource.upsert(
           makeEpisode(

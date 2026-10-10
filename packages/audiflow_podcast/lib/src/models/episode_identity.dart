@@ -9,3 +9,10 @@ const _duplicateGuidSeparator = '::audiflow-dup:';
 /// on every refresh.
 String duplicateGuidKey(String guid, String enclosureUrl) =>
     '$guid$_duplicateGuidSeparator$enclosureUrl';
+
+/// The feed guid a storage key was built from: the guid itself for a raw
+/// key, or the guid part of a [duplicateGuidKey].
+String guidOfStorageKey(String key) {
+  final separatorAt = key.indexOf(_duplicateGuidSeparator);
+  return separatorAt == -1 ? key : key.substring(0, separatorAt);
+}
