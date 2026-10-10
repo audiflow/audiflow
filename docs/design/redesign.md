@@ -148,6 +148,8 @@ Scope follows the context: series names on the Series tab, episode titles and de
 
 A floating `surface` card (radius 16) above the tab bar: artwork 44, episode title (one line), podcast name (one line), skip-forward and play/pause buttons, and the bottom-edge progress line in `brand`. No remaining-time text.
 
+On tablets (shortest side of 600 pt or more) the trailing buttons expand to, left to right: speed (text-only label such as `1.3x`, opens the Audio sheet), skip back, play/pause, skip forward, and the sleep timer button (same as the full player's action row).
+
 ### 3.6 Tab bar
 
 Four tabs (Search, Library, Queue, Settings). Active tab: `accent` icon (filled variant) and label weight 600. Inactive: `inkTertiary`.

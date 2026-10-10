@@ -6,7 +6,8 @@ import '../../../../l10n/app_localizations.dart';
 import 'sleep_timer_countdown_format.dart';
 import 'sleep_timer_sheet.dart';
 
-/// Sleep-timer icon button for the full player's action row.
+/// Sleep-timer icon button for the full player's action row and the
+/// tablet mini player.
 ///
 /// The icon switches between outlined (inactive) and filled (active)
 /// variants and shows nothing else; the time left appears in the seek bar.
