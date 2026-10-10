@@ -319,10 +319,17 @@ Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
     return result;
   } on DioException catch (e) {
     logger.e('Network error fetching feed', error: e);
-    throw PodcastException(
-      message: 'Network error: ${e.message}',
-      sourceUrl: feedUrl,
-    );
+    // Only a connectivity failure is tagged as a network error, so the UI
+    // tells the user to check the connection only when that can help.
+    throw isConnectivityFailure(e)
+        ? PodcastException.network(
+            'Network error: ${e.message}',
+            sourceUrl: feedUrl,
+          )
+        : PodcastException(
+            message: 'Network error: ${e.message}',
+            sourceUrl: feedUrl,
+          );
   } catch (e, stack) {
     logger.e('Error fetching/parsing feed', error: e, stackTrace: stack);
     rethrow;
