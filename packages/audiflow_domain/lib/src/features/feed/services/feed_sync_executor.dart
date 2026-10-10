@@ -174,7 +174,8 @@ class FeedSyncExecutor {
         );
       }
 
-      final knownGuids = await _episodeRepo.getGuidsByPodcastId(sub.id);
+      final knownAudioUrls = await _episodeRepo.getAudioUrlsByGuid(sub.id);
+      final knownGuids = knownAudioUrls.keys.toSet();
 
       final metadataUpdater = SubscriptionMetadataUpdater(_subscriptionRepo);
 
@@ -186,9 +187,12 @@ class FeedSyncExecutor {
         xmlContent: xmlContent,
         podcastId: sub.id,
         knownGuids: knownGuids,
+        knownEnclosureUrls: knownAudioUrls,
         onBatchReady: (episodes, mediaMetas) async {
-          observedGuids.addAll(episodes.map((e) => e.guid));
           await _episodeRepo.upsertEpisodes(episodes);
+          // After the upsert, each guid is the key the episode is stored
+          // under, which may be a duplicate-guid key.
+          observedGuids.addAll(episodes.map((e) => e.guid));
           await _storeMediaMetas(sub, mediaMetas);
         },
       )) {

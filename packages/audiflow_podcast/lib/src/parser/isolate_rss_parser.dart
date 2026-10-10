@@ -3,6 +3,7 @@ import 'dart:isolate';
 
 import 'package:xml/xml.dart';
 
+import '../models/episode_identity.dart';
 import '../models/podcast_chapters_link.dart';
 import 'description_chapters_parser.dart';
 import 'parse_progress.dart';
@@ -42,6 +43,7 @@ class IsolateRssParser {
   static Future<IsolateParsedFeed> parseFeed({
     required String feedXml,
     Set<String> knownGuids = const {},
+    Map<String, String> knownEnclosureUrls = const {},
     DateTime? knownNewestPubDate,
     String? knownNewestGuid,
   }) async {
@@ -52,6 +54,7 @@ class IsolateRssParser {
     await for (final progress in parse(
       feedXml: feedXml,
       knownGuids: knownGuids,
+      knownEnclosureUrls: knownEnclosureUrls,
       knownNewestPubDate: knownNewestPubDate,
       knownNewestGuid: knownNewestGuid,
     )) {
@@ -80,6 +83,9 @@ class IsolateRssParser {
   ///
   /// - [feedXml]: Raw XML content of the RSS feed
   /// - [knownGuids]: Set of episode GUIDs already in the database
+  /// - [knownEnclosureUrls]: Stored enclosure URL per known guid. When
+  ///   given, a known guid only stops parsing if the item's enclosure URL
+  ///   matches too, so a new item that reuses an old guid is still parsed.
   /// - [maxNewEpisodes]: Optional limit on episodes to parse (null = unlimited)
   ///
   /// Returns a stream of [ParseProgress] events. The isolate is spawned
@@ -90,6 +96,7 @@ class IsolateRssParser {
   static Stream<ParseProgress> parse({
     required String feedXml,
     required Set<String> knownGuids,
+    Map<String, String> knownEnclosureUrls = const {},
     int? maxNewEpisodes,
     DateTime? knownNewestPubDate,
     String? knownNewestGuid,
@@ -107,6 +114,7 @@ class IsolateRssParser {
               _IsolateParams(
                 feedXml: feedXml,
                 knownGuids: knownGuids,
+                knownEnclosureUrls: knownEnclosureUrls,
                 maxNewEpisodes: maxNewEpisodes,
                 sendPort: receivePort.sendPort,
                 knownNewestPubDate: knownNewestPubDate,
@@ -221,11 +229,16 @@ class IsolateRssParser {
 
         // Decode once for comparison against database-stored (decoded) GUIDs
         final decodedGuid = guid != null ? _decodeXmlEntities(guid) : null;
+        final rawEnclosure = _extractEnclosureUrl(itemXml);
+        final enclosureUrl = rawEnclosure != null
+            ? _decodeXmlEntities(rawEnclosure)
+            : null;
 
         // Early stop: GUID-set match (legacy path, used by parseWithProgress)
-        if (decodedGuid != null && params.knownGuids.contains(decodedGuid)) {
+        if (decodedGuid != null &&
+            _isKnownItem(params, decodedGuid, enclosureUrl)) {
           stoppedEarly = true;
-          tailGuids.add(decodedGuid);
+          tailGuids.addAll(_itemIds(decodedGuid, enclosureUrl));
           break;
         }
 
@@ -236,12 +249,7 @@ class IsolateRssParser {
           if (pubDate != null && !cutoff.isBefore(pubDate)) {
             if (cutoffGuid == null || cutoffGuid == decodedGuid) {
               stoppedEarly = true;
-              final id =
-                  decodedGuid ??
-                  _decodeXmlEntities(
-                    _extractEnclosureUrl(itemXml) ?? '',
-                  );
-              if (id.isNotEmpty) tailGuids.add(id);
+              tailGuids.addAll(_itemIds(decodedGuid, enclosureUrl));
               break;
             }
           }
@@ -273,9 +281,14 @@ class IsolateRssParser {
           final close = xml.indexOf(itemCloseTag, start);
           if (close == -1) break;
           final snippet = xml.substring(start, close + itemCloseTag.length);
-          final raw =
-              _extractTagText(snippet, 'guid') ?? _extractEnclosureUrl(snippet);
-          if (raw != null) tailGuids.add(_decodeXmlEntities(raw));
+          final rawGuid = _extractTagText(snippet, 'guid');
+          final rawUrl = _extractEnclosureUrl(snippet);
+          tailGuids.addAll(
+            _itemIds(
+              rawGuid != null ? _decodeXmlEntities(rawGuid) : null,
+              rawUrl != null ? _decodeXmlEntities(rawUrl) : null,
+            ),
+          );
         }
       }
 
@@ -389,6 +402,38 @@ class IsolateRssParser {
     r'<enclosure\b[^>]*\burl\s*=\s*["\x27]([^"\x27]*)["\x27]',
     caseSensitive: false,
   );
+
+  /// Whether an item is already stored. With [_IsolateParams.knownEnclosureUrls]
+  /// a guid match alone is not enough: the feed may have reused the guid for
+  /// a new item, which is then stored under a duplicate-guid key.
+  static bool _isKnownItem(
+    _IsolateParams params,
+    String guid,
+    String? enclosureUrl,
+  ) {
+    if (params.knownEnclosureUrls.isEmpty || enclosureUrl == null) {
+      return params.knownGuids.contains(guid);
+    }
+    final storedUrl = params.knownEnclosureUrls[guid];
+    // Rows stored without an enclosure URL can only be matched by guid.
+    if (storedUrl != null && (storedUrl.isEmpty || storedUrl == enclosureUrl)) {
+      return true;
+    }
+    return params.knownGuids.contains(
+      duplicateGuidKey(guid, enclosureUrl),
+    );
+  }
+
+  /// Every stored key the item may live under: its guid (or enclosure URL
+  /// when it has none) and, for a reused guid, its duplicate-guid key.
+  static Iterable<String> _itemIds(String? guid, String? enclosureUrl) sync* {
+    final id = guid ?? enclosureUrl;
+    if (id == null || id.isEmpty) return;
+    yield id;
+    if (guid != null && enclosureUrl != null) {
+      yield duplicateGuidKey(guid, enclosureUrl);
+    }
+  }
 
   static String? _extractEnclosureUrl(String xml) {
     final match = _enclosureUrlRe.firstMatch(xml);
@@ -692,6 +737,7 @@ class _IsolateParams {
   const _IsolateParams({
     required this.feedXml,
     required this.knownGuids,
+    required this.knownEnclosureUrls,
     required this.maxNewEpisodes,
     required this.sendPort,
     this.knownNewestPubDate,
@@ -700,6 +746,7 @@ class _IsolateParams {
 
   final String feedXml;
   final Set<String> knownGuids;
+  final Map<String, String> knownEnclosureUrls;
   final int? maxNewEpisodes;
   final SendPort sendPort;
 

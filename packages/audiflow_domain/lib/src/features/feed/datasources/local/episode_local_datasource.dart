@@ -1,3 +1,4 @@
+import 'package:audiflow_podcast/audiflow_podcast.dart' show duplicateGuidKey;
 import 'package:isar_community/isar.dart';
 
 import '../../models/episode.dart';
@@ -29,31 +30,78 @@ class EpisodeLocalDatasource {
 
   /// Upserts multiple episodes in a batch.
   ///
-  /// Feeds sometimes reuse one guid for several items. Only the first item
-  /// per (podcastId, guid) is stored, since a later one would violate the
-  /// unique index and abort the whole batch.
+  /// Feeds sometimes reuse one guid for several items. Each item is stored
+  /// under the key from [_resolveKey], and its `guid` is rewritten to that
+  /// key so callers see where it was stored. An item that repeats an
+  /// episode already in the batch is skipped, since writing it would
+  /// violate the unique index and abort the whole batch.
   Future<void> upsertAll(List<Episode> episodes) async {
-    final unique = _firstPerPodcastGuid(episodes);
     await _isar.writeTxn(() async {
-      for (final episode in unique) {
-        final existing = await _isar.episodes.getByPodcastIdGuid(
-          episode.podcastId,
-          episode.guid,
-        );
-        if (existing != null) {
-          episode.id = existing.id;
-        }
+      final pending = <(int, String), Episode>{};
+      for (final episode in episodes) {
+        final key = await _resolveKey(episode, pending);
+        if (key == null) continue;
+        episode.guid = key;
+        pending[(episode.podcastId, key)] = episode;
       }
-      await _isar.episodes.putAll(unique);
+      await _isar.episodes.putAll(pending.values.toList());
     });
   }
 
-  List<Episode> _firstPerPodcastGuid(List<Episode> episodes) {
-    final seen = <(int, String)>{};
-    return [
-      for (final episode in episodes)
-        if (seen.add((episode.podcastId, episode.guid))) episode,
+  /// Picks the storage key for [episode]: its guid when that is free or
+  /// already holds the same episode, otherwise its duplicate-guid key.
+  /// Sets the stored row's id on a match. Returns null when the batch
+  /// already holds the same episode.
+  Future<String?> _resolveKey(
+    Episode episode,
+    Map<(int, String), Episode> pending,
+  ) async {
+    final candidates = [
+      episode.guid,
+      duplicateGuidKey(episode.guid, episode.audioUrl),
     ];
+    for (final key in candidates) {
+      final queued = pending[(episode.podcastId, key)];
+      if (queued != null) {
+        if (_isSameEpisode(queued, episode)) return null;
+        continue;
+      }
+      final stored = await _isar.episodes.getByPodcastIdGuid(
+        episode.podcastId,
+        key,
+      );
+      if (stored == null) return key;
+      if (_isSameEpisode(stored, episode)) {
+        episode.id = stored.id;
+        return key;
+      }
+    }
+    return null;
+  }
+
+  /// Two items with one guid are the same episode when the enclosure URL
+  /// or the publish date matches: hosts rewrite enclosure URLs (tracking
+  /// prefixes, signed URLs) but keep the date, and a reposted item keeps
+  /// the date too. A guid reused for a new episode changes both.
+  static bool _isSameEpisode(Episode a, Episode b) {
+    if (a.audioUrl == b.audioUrl) return true;
+    final (aDate, bDate) = (a.publishedAt, b.publishedAt);
+    // Isar returns local time; compare instants, not representations.
+    return aDate != null && bDate != null && aDate.isAtSameMomentAs(bDate);
+  }
+
+  /// Returns the stored episode for a feed item, checking its
+  /// duplicate-guid key before its raw guid.
+  Future<Episode?> getByFeedItem(
+    int podcastId,
+    String guid,
+    String audioUrl,
+  ) async {
+    final duplicate = await _isar.episodes.getByPodcastIdGuid(
+      podcastId,
+      duplicateGuidKey(guid, audioUrl),
+    );
+    return duplicate ?? _isar.episodes.getByPodcastIdGuid(podcastId, guid);
   }
 
   /// Returns all episodes for a podcast, ordered by publish date
@@ -93,15 +141,16 @@ class EpisodeLocalDatasource {
     return _isar.episodes.filter().audioUrlEqualTo(audioUrl).findFirst();
   }
 
-  /// Returns all episode GUIDs for a podcast.
+  /// Returns each stored episode key of a podcast with its audio URL.
   ///
-  /// Used for early-stop optimization during RSS parsing.
-  Future<Set<String>> getGuidsByPodcastId(int podcastId) async {
+  /// Used for early-stop during RSS parsing, so a known guid only stops the
+  /// parse when the item's enclosure URL matches the stored one.
+  Future<Map<String, String>> getAudioUrlsByGuid(int podcastId) async {
     final episodes = await _isar.episodes
         .filter()
         .podcastIdEqualTo(podcastId)
         .findAll();
-    return episodes.map((e) => e.guid).toSet();
+    return {for (final e in episodes) e.guid: e.audioUrl};
   }
 
   /// Returns the newest episode for a podcast by publishedAt descending.

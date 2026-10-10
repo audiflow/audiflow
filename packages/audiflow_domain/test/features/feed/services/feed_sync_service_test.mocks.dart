@@ -547,12 +547,14 @@ class MockEpisodeRepository extends _i1.Mock implements _i13.EpisodeRepository {
           as _i11.Future<List<_i14.Episode>>);
 
   @override
-  _i11.Future<Set<String>> getGuidsByPodcastId(int? podcastId) =>
+  _i11.Future<Map<String, String>> getAudioUrlsByGuid(int? podcastId) =>
       (super.noSuchMethod(
-            Invocation.method(#getGuidsByPodcastId, [podcastId]),
-            returnValue: _i11.Future<Set<String>>.value(<String>{}),
+            Invocation.method(#getAudioUrlsByGuid, [podcastId]),
+            returnValue: _i11.Future<Map<String, String>>.value(
+              <String, String>{},
+            ),
           )
-          as _i11.Future<Set<String>>);
+          as _i11.Future<Map<String, String>>);
 
   @override
   _i11.Future<_i14.Episode?> getNewestByPodcastId(int? podcastId) =>
@@ -1134,6 +1136,7 @@ class MockFeedParserService extends _i1.Mock implements _i22.FeedParserService {
     required String? xmlContent,
     required int? podcastId,
     required Set<String>? knownGuids,
+    Map<String, String>? knownEnclosureUrls = const {},
     required _i11.Future<void> Function(
       List<_i14.Episode>,
       List<_i18.ParsedEpisodeMediaMeta>,
@@ -1146,6 +1149,7 @@ class MockFeedParserService extends _i1.Mock implements _i22.FeedParserService {
               #xmlContent: xmlContent,
               #podcastId: podcastId,
               #knownGuids: knownGuids,
+              #knownEnclosureUrls: knownEnclosureUrls,
               #onBatchReady: onBatchReady,
               #batchSize: batchSize,
             }),
