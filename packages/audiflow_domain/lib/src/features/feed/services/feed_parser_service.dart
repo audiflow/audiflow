@@ -254,6 +254,7 @@ class FeedParserService {
           :final episodeNumber,
           :final seasonNumber,
           :final imageUrl,
+          :final isExplicit,
           :final contentEncoded,
           :final summary,
           :final link,
@@ -276,6 +277,7 @@ class FeedParserService {
               ..durationMs = duration?.inMilliseconds
               ..publishedAt = publishDate
               ..imageUrl = imageUrl
+              ..itunesExplicit = isExplicit ?? false
               ..episodeNumber = episodeNumber
               ..seasonNumber = seasonNumber
               ..contentEncoded = contentEncoded

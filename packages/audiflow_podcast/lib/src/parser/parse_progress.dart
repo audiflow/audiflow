@@ -43,6 +43,7 @@ final class ParsedEpisode extends ParseProgress {
     this.episodeNumber,
     this.seasonNumber,
     this.imageUrl,
+    this.isExplicit,
     this.contentEncoded,
     this.summary,
     this.link,
@@ -63,6 +64,10 @@ final class ParsedEpisode extends ParseProgress {
   final int? episodeNumber;
   final int? seasonNumber;
   final String? imageUrl;
+
+  /// Whether `<itunes:explicit>` marks the episode explicit; null when the
+  /// item has no such tag.
+  final bool? isExplicit;
 
   /// Rich HTML content from <content:encoded>.
   final String? contentEncoded;

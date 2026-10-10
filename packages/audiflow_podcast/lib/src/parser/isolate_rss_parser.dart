@@ -552,6 +552,7 @@ class IsolateRssParser {
       episodeNumber: int.tryParse(_extractItunesText(item, 'episode') ?? ''),
       seasonNumber: int.tryParse(_extractItunesText(item, 'season') ?? ''),
       imageUrl: _extractItunesImageUrl(item),
+      isExplicit: _parseExplicit(_extractItunesText(item, 'explicit')),
       contentEncoded: contentEncoded,
       summary: _extractItunesText(item, 'summary'),
       link: _extractText(item, 'link'),
@@ -566,6 +567,18 @@ class IsolateRssParser {
             ], episodeDuration: duration)
           : const [],
     );
+  }
+
+  /// Same truthy values as the streaming parser: Apple's `explicit` and
+  /// the legacy `true`/`yes`/`1`; anything else, such as `clean`, is false.
+  static bool? _parseExplicit(String? value) {
+    if (value == null) return null;
+    return const {
+      'true',
+      'yes',
+      '1',
+      'explicit',
+    }.contains(value.toLowerCase().trim());
   }
 
   static List<ParsedTranscript>? _extractTranscripts(XmlElement item) {

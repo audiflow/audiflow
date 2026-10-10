@@ -21,6 +21,7 @@ extension EpisodeToPodcastItem on Episode {
       guid: guid,
       episodeNumber: episodeNumber,
       seasonNumber: seasonNumber,
+      isExplicit: itunesExplicit,
       images: imageUrl != null ? [PodcastImage(url: imageUrl!)] : const [],
     );
   }
