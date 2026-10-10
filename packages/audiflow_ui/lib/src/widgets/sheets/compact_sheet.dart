@@ -53,6 +53,10 @@ class CompactSheet extends StatelessWidget {
   /// the mini player's inset so a sheet opened from it lines up above it.
   static const double edgeGap = Spacing.sm;
 
+  /// Width for short pickers and control sheets; wider leaves rows of
+  /// mostly empty space on a tablet.
+  static const double narrowWidth = 400;
+
   final Widget child;
   final AlignmentDirectional alignment;
   final double maxWidth;

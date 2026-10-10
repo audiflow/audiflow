@@ -72,6 +72,7 @@ Future<void> showSleepTimerSheet(
   return showCompactSheet<void>(
     context: context,
     alignment: alignment,
+    maxWidth: CompactSheet.narrowWidth,
     builder: (ctx) {
       return Consumer(
         builder: (ctx, ref, _) {

@@ -270,8 +270,7 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
     final l10n = AppLocalizations.of(context);
     showCompactSheet<void>(
       context: context,
-      // Short labels only; a full-width list looks empty on a tablet.
-      maxWidth: 400,
+      maxWidth: CompactSheet.narrowWidth,
       showDragHandle: false,
       isScrollControlled: false,
       useSafeArea: false,

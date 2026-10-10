@@ -31,6 +31,7 @@ Future<void> showAudioSheet(
   return showCompactSheet<void>(
     context: context,
     alignment: alignment,
+    maxWidth: CompactSheet.narrowWidth,
     builder: (_) => _AudioSheetHost(podcastId: targetId),
   );
 }
