@@ -647,4 +647,67 @@ void main() {
       expect(episodes, isEmpty);
     });
   });
+  group('upsert preserves app state', () {
+    // Feed sync rebuilds Episode rows from feed data, so these fields
+    // arrive at their defaults and must be kept from the stored row.
+    Future<Episode> storeFavoritedAndEnqueued() async {
+      final id = await datasource.upsert(
+        makeEpisode(
+          guid: 'guid-1',
+          title: 'Episode 1',
+          audioUrl: 'https://example.com/ep1.mp3',
+        ),
+      );
+      final stored = (await datasource.getById(id))!
+        ..isFavorited = true
+        ..favoritedAt = DateTime(2026, 1, 2, 3, 4, 5)
+        ..autoDownloadEnqueued = true;
+      await isar.writeTxn(() => isar.episodes.put(stored));
+      return stored;
+    }
+
+    Episode refreshedFromFeed() => makeEpisode(
+      guid: 'guid-1',
+      title: 'Episode 1 (updated)',
+      audioUrl: 'https://example.com/ep1.mp3',
+    );
+
+    void expectStatePreserved(Episode? episode, Episode stored) {
+      expect(episode, isNotNull);
+      expect(episode!.id, stored.id);
+      expect(episode.title, 'Episode 1 (updated)');
+      expect(episode.isFavorited, isTrue);
+      expect(episode.favoritedAt, stored.favoritedAt);
+      expect(episode.autoDownloadEnqueued, isTrue);
+    }
+
+    test('upsert keeps favorite and auto-download state', () async {
+      final stored = await storeFavoritedAndEnqueued();
+
+      await datasource.upsert(refreshedFromFeed());
+
+      final result = await datasource.getByPodcastIdAndGuid(1, 'guid-1');
+      expectStatePreserved(result, stored);
+    });
+
+    test('upsertAll keeps favorite and auto-download state', () async {
+      final stored = await storeFavoritedAndEnqueued();
+
+      await datasource.upsertAll([refreshedFromFeed()]);
+
+      final result = await datasource.getByPodcastIdAndGuid(1, 'guid-1');
+      expectStatePreserved(result, stored);
+      final pending = await datasource.getPendingAutoDownloadByPodcastId(1);
+      expect(pending, isEmpty);
+    });
+
+    test('new episodes keep default app state', () async {
+      await datasource.upsertAll([refreshedFromFeed()]);
+
+      final result = await datasource.getByPodcastIdAndGuid(1, 'guid-1');
+      expect(result!.isFavorited, isFalse);
+      expect(result.favoritedAt, isNull);
+      expect(result.autoDownloadEnqueued, isFalse);
+    });
+  });
 }

@@ -13,6 +13,7 @@ class EpisodeLocalDatasource {
   /// Upserts an episode (insert or update on conflict).
   ///
   /// Matches on composite key (podcastId, guid). Returns the episode ID.
+  /// App-owned state on an existing row is kept (see [_keepAppState]).
   Future<int> upsert(Episode episode) async {
     await _isar.writeTxn(() async {
       final existing = await _isar.episodes.getByPodcastIdGuid(
@@ -20,7 +21,7 @@ class EpisodeLocalDatasource {
         episode.guid,
       );
       if (existing != null) {
-        episode.id = existing.id;
+        _keepAppState(episode, existing);
       }
       await _isar.episodes.put(episode);
     });
@@ -28,6 +29,8 @@ class EpisodeLocalDatasource {
   }
 
   /// Upserts multiple episodes in a batch.
+  ///
+  /// App-owned state on existing rows is kept (see [_keepAppState]).
   Future<void> upsertAll(List<Episode> episodes) async {
     await _isar.writeTxn(() async {
       for (final episode in episodes) {
@@ -36,11 +39,25 @@ class EpisodeLocalDatasource {
           episode.guid,
         );
         if (existing != null) {
-          episode.id = existing.id;
+          _keepAppState(episode, existing);
         }
       }
       await _isar.episodes.putAll(episodes);
     });
+  }
+
+  /// Carries the existing row's identity and app-owned state onto
+  /// [incoming].
+  ///
+  /// Callers build [incoming] from feed data, so fields the feed does not
+  /// carry arrive at their defaults; without this, every feed refresh
+  /// would clear favorites and re-arm auto-download.
+  static void _keepAppState(Episode incoming, Episode existing) {
+    incoming
+      ..id = existing.id
+      ..isFavorited = existing.isFavorited
+      ..favoritedAt = existing.favoritedAt
+      ..autoDownloadEnqueued = existing.autoDownloadEnqueued;
   }
 
   /// Returns all episodes for a podcast, ordered by publish date
