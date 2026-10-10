@@ -18,5 +18,23 @@ void main() {
         3,
       );
     });
+    test('counts the spacing between columns', () {
+      expect(
+        ResponsiveGrid.columnCount(
+          availableWidth: 712,
+          itemWidth: 160,
+          spacing: 12,
+        ),
+        4,
+      );
+      expect(
+        ResponsiveGrid.columnCount(
+          availableWidth: 1000,
+          itemWidth: 160,
+          spacing: 12,
+        ),
+        5,
+      );
+    });
   });
 }
