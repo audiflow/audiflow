@@ -1,3 +1,4 @@
+import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -62,6 +63,10 @@ Future<void> showSleepTimerSheet(BuildContext context) {
     showDragHandle: true,
     isScrollControlled: true,
     useSafeArea: true,
+    // Match the full player's column so the sheet doesn't span a tablet.
+    constraints: const BoxConstraints(
+      maxWidth: LayoutConstants.contentMaxWidth,
+    ),
     builder: (ctx) {
       return Consumer(
         builder: (ctx, ref, _) {

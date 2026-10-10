@@ -27,6 +27,10 @@ Future<void> showAudioSheet(BuildContext context, {int? podcastId}) {
     showDragHandle: true,
     isScrollControlled: true,
     useSafeArea: true,
+    // Match the full player's column so the sheet doesn't span a tablet.
+    constraints: const BoxConstraints(
+      maxWidth: LayoutConstants.contentMaxWidth,
+    ),
     builder: (_) => _AudioSheetHost(podcastId: targetId),
   );
 }
