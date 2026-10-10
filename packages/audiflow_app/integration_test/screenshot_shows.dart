@@ -10,11 +10,13 @@ class ScreenshotScenario {
   const ScreenshotScenario({
     required this.primary,
     required this.themed,
+    required this.themedPlaylistName,
     required this.chaptered,
     required this.extra,
     required this.searchTerm,
     required this.searchCountry,
     required this.stationName,
+    required this.stationEpisodesPerShow,
   });
 
   /// Has a grouped preset: Shows, Series and Curated captions.
@@ -22,6 +24,9 @@ class ScreenshotScenario {
 
   /// Has a preset grouped by theme: Smart Playlists caption.
   final ScreenshotShow themed;
+
+  /// Series-tab playlist to show for [themed]; null keeps the first one.
+  final String? themedPlaylistName;
 
   /// Has chapters: played for the Player caption.
   final ScreenshotShow chaptered;
@@ -37,6 +42,10 @@ class ScreenshotScenario {
 
   final String stationName;
 
+  /// Episodes the station takes from each show; one per show unless the
+  /// scenario has too few shows to fill the screen.
+  final int stationEpisodesPerShow;
+
   List<ScreenshotShow> get all => {primary, themed, chaptered, ?extra}.toList();
 }
 
@@ -49,6 +58,7 @@ const _japanese = ScreenshotScenario(
   primary: _cotenRadio,
   // Preset: by_category playlist.
   themed: ScreenshotShow(feedUrl: 'https://anchor.fm/s/81fb5eec/podcast/rss'),
+  themedPlaylistName: null,
   // Chapters and transcripts.
   chaptered: ScreenshotShow(
     feedUrl: 'https://rss.listen.style/p/scientalk/rss',
@@ -57,6 +67,7 @@ const _japanese = ScreenshotScenario(
   searchTerm: '歴史',
   searchCountry: 'jp',
   stationName: '通勤ミックス',
+  stationEpisodesPerShow: 1,
 );
 
 const _businessWars = ScreenshotShow(
@@ -66,8 +77,12 @@ const _businessWars = ScreenshotShow(
 const _english = ScreenshotScenario(
   // Preset: seasons playlist.
   primary: _businessWars,
-  // The only English show with a preset, so it doubles as the themed one.
-  themed: _businessWars,
+  // Preset.
+  themed: ScreenshotShow(
+    feedUrl: 'https://rss.pdrl.fm/5858fc/feeds.megaphone.fm/thisishistory',
+  ),
+  // The first playlist, The Tudors, has a single series.
+  themedPlaylistName: 'A Dynasty to Die For',
   // Chapters.
   chaptered: ScreenshotShow(feedUrl: 'https://feeds.transistor.fm/acquired'),
   // Transcripts.
@@ -81,6 +96,7 @@ const _english = ScreenshotScenario(
   searchTerm: 'history',
   searchCountry: 'us',
   stationName: 'Commute Mix',
+  stationEpisodesPerShow: 1,
 );
 
 /// Returns the scenario for [locale] (`ja` or `en`).

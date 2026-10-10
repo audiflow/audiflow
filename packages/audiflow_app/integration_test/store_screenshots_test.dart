@@ -16,6 +16,7 @@ import 'package:audiflow_app/features/player/presentation/screens/player_screen.
 import 'package:audiflow_app/features/player/presentation/widgets/mini_player.dart';
 import 'package:audiflow_app/features/podcast_detail/presentation/screens/podcast_detail_screen.dart';
 import 'package:audiflow_app/features/podcast_detail/presentation/widgets/inline_group_card.dart';
+import 'package:audiflow_app/features/podcast_detail/presentation/widgets/menu_selector_button.dart';
 import 'package:audiflow_app/features/review_prompt/presentation/review_prompt_gate.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_app/main.dart';
@@ -258,6 +259,8 @@ Future<void> _captureShowScreens(
   // A show whose preset has a single playlist shows it inline, without the
   // Episodes / Series switch.
   if (_seriesTab.evaluate().isNotEmpty) await _openSeriesTab(tester);
+  final playlistName = _scenario.themedPlaylistName;
+  if (playlistName != null) await _selectPlaylist(tester, playlistName);
   await capture.take('smart');
   await _goTo(tester, AppRoutes.library);
 }
@@ -275,6 +278,23 @@ final _seriesTab = find.descendant(
 
 Future<void> _openSeriesTab(WidgetTester tester) async {
   await tapWhenFound(tester, _seriesTab, settleFor: 4);
+}
+
+/// Switches the Series tab to the preset playlist named [name].
+Future<void> _selectPlaylist(WidgetTester tester, String name) async {
+  await tapWhenFound(
+    tester,
+    find.byWidgetPredicate((widget) => widget is MenuSelectorButton),
+    settleFor: 1,
+  );
+  await tapWhenFound(
+    tester,
+    find.descendant(
+      of: find.byType(PopupMenuItem<int>),
+      matching: find.text(name),
+    ),
+    settleFor: 4,
+  );
 }
 
 /// Plays the chaptered show's newest episode from [_playerPosition] and
@@ -332,25 +352,67 @@ Future<void> _captureQueue(
   Map<ScreenshotShow, Subscription> shows,
 ) async {
   final episodes = container.read(episodeRepositoryProvider);
-  final playing = await episodes.getNewestByPodcastId(
-    shows[_scenario.chaptered]!.id,
+  // A run of one series, then the next show: within a series a listener
+  // plays oldest first, so the queue does too.
+  final upNext = await _seriesRun(
+    container,
+    shows[_scenario.primary]!,
+    _queueLength - 1,
   );
-  final picked = <int>{};
-  for (final subscription in shows.values) {
-    final newest = await episodes.getNewestByPodcastId(subscription.id);
-    if (newest != null && newest.id != playing?.id) picked.add(newest.id);
+  final themed = await episodes.getNewestByPodcastId(
+    shows[_scenario.themed]!.id,
+  );
+  if (themed != null && upNext.every((episode) => episode.id != themed.id)) {
+    upNext.add(themed);
   }
-  final primary = await episodes.getByPodcastId(shows[_scenario.primary]!.id);
-  picked.addAll(primary.map((episode) => episode.id));
 
   final queue = container.read(queueRepositoryProvider);
-  for (final episodeId in picked.take(_queueLength)) {
-    await queue.addToEnd(episodeId);
+  for (final episode in upNext) {
+    await queue.addToEnd(episode.id);
   }
 
   await _goTo(tester, AppRoutes.queue);
   await pumpFor(tester, const Duration(seconds: 3));
   await capture.take('queue');
+}
+
+/// The latest [length] episodes of [show]'s most recent series that has
+/// that many, oldest first.
+Future<List<Episode>> _seriesRun(
+  ProviderContainer container,
+  Subscription show,
+  int length,
+) async {
+  // Auto-dispose: without a listener the provider is torn down mid-build.
+  final provider = podcastSmartPlaylistsProvider(show.id);
+  final keepAlive = container.listen(provider, (_, _) {});
+  final SmartPlaylistGrouping? grouping;
+  try {
+    grouping = await container.read(provider.future);
+  } finally {
+    keepAlive.close();
+  }
+  final episodes = container.read(episodeRepositoryProvider);
+  List<Episode>? latest;
+  for (final playlist in grouping?.playlists ?? const <SmartPlaylist>[]) {
+    for (final group in playlist.groups ?? const <SmartPlaylistGroup>[]) {
+      final run = (await episodes.getByIds(group.episodeIds))
+        ..sort(_byPublishedAt);
+      if (run.length < length) continue;
+      if (latest == null || _byPublishedAt(run.last, latest.last) > 0) {
+        latest = run;
+      }
+    }
+  }
+  if (latest == null) {
+    throw StateError('${show.title} has no series of $length episodes');
+  }
+  return latest.sublist(latest.length - length);
+}
+
+int _byPublishedAt(Episode a, Episode b) {
+  final epoch = DateTime.fromMillisecondsSinceEpoch(0);
+  return (a.publishedAt ?? epoch).compareTo(b.publishedAt ?? epoch);
 }
 
 Future<void> _captureStation(
@@ -365,6 +427,7 @@ Future<void> _captureStation(
       .create(
         Station()
           ..name = _scenario.stationName
+          ..defaultEpisodeLimit = _scenario.stationEpisodesPerShow
           ..createdAt = now
           ..updatedAt = now,
       );
