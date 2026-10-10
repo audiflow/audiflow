@@ -95,6 +95,8 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
     );
   }
 
+  // Sheets opened from the trailing buttons rise on that side on tablets,
+  // above the button that opened them.
   List<Widget> _actions(
     BuildContext context, {
     required bool isPlaying,
@@ -120,7 +122,9 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
       ),
       playPause,
       skipForward,
-      const SleepTimerIconButton(),
+      const SleepTimerIconButton(
+        sheetAlignment: AlignmentDirectional.bottomEnd,
+      ),
     ];
   }
 }
@@ -171,7 +175,8 @@ class _MiniPlayerSpeedButton extends ConsumerWidget {
     final label = PlaybackSpeedScale.label(ref.watch(nowPlayingSpeedProvider));
     return TextButton(
       style: TextButton.styleFrom(foregroundColor: AppColors.of(context).ink),
-      onPressed: () => showAudioSheet(context),
+      onPressed: () =>
+          showAudioSheet(context, alignment: AlignmentDirectional.bottomEnd),
       child: Text(
         label,
         semanticsLabel: l10n.playerAudioButtonLabel(label),

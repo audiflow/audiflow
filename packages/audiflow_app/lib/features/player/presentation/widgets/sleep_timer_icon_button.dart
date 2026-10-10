@@ -1,5 +1,5 @@
-import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -16,7 +16,13 @@ import 'sleep_timer_sheet.dart';
 /// episode, 12 minutes left". Tapping opens the sleep-timer sheet via
 /// [showSleepTimerSheet].
 class SleepTimerIconButton extends ConsumerWidget {
-  const SleepTimerIconButton({super.key});
+  const SleepTimerIconButton({
+    super.key,
+    this.sheetAlignment = AlignmentDirectional.bottomCenter,
+  });
+
+  /// Where the sheet sits on wide screens; see [showCompactSheet].
+  final AlignmentDirectional sheetAlignment;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -41,7 +47,7 @@ class SleepTimerIconButton extends ConsumerWidget {
         isActive ? Icons.nights_stay : Icons.nights_stay_outlined,
         color: isActive ? theme.colorScheme.primary : null,
       ),
-      onPressed: () => showSleepTimerSheet(context),
+      onPressed: () => showSleepTimerSheet(context, alignment: sheetAlignment),
     );
     if (semanticsLabel == null) return button;
     // The tooltip names the button; while a timer runs the label carries
@@ -50,23 +56,22 @@ class SleepTimerIconButton extends ConsumerWidget {
       container: true,
       button: true,
       label: semanticsLabel,
-      onTap: () => showSleepTimerSheet(context),
+      onTap: () => showSleepTimerSheet(context, alignment: sheetAlignment),
       child: ExcludeSemantics(child: button),
     );
   }
 }
 
 /// Opens the sleep-timer sheet wired to [sleepTimerControllerProvider].
-Future<void> showSleepTimerSheet(BuildContext context) {
-  return showModalBottomSheet<void>(
+///
+/// [alignment] places the sheet on wide screens; see [showCompactSheet].
+Future<void> showSleepTimerSheet(
+  BuildContext context, {
+  AlignmentDirectional alignment = AlignmentDirectional.bottomCenter,
+}) {
+  return showCompactSheet<void>(
     context: context,
-    showDragHandle: true,
-    isScrollControlled: true,
-    useSafeArea: true,
-    // Match the full player's column so the sheet doesn't span a tablet.
-    constraints: const BoxConstraints(
-      maxWidth: LayoutConstants.contentMaxWidth,
-    ),
+    alignment: alignment,
     builder: (ctx) {
       return Consumer(
         builder: (ctx, ref, _) {
