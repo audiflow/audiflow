@@ -32,6 +32,7 @@ import 'features/force_update/force_update.dart';
 import 'features/monitoring/services/error_reporter.dart';
 import 'features/monitoring/services/sentry_diagnostics.dart';
 import 'features/monitoring/services/unexpected_error_monitor.dart';
+import 'features/monitoring/services/url_redaction.dart';
 import 'features/monitoring/services/firebase_analytics_service.dart';
 import 'features/monitoring/services/throttled_analytics_service.dart';
 import 'features/player/services/audio_handler_provider.dart';
@@ -111,6 +112,7 @@ Future<void> appMain({
             : flavor.name;
         options.tracesSampleRate = 0;
         options.debug = kDebugMode;
+        options.beforeSend = (event, _) => scrubEventUrls(event);
       },
       appRunner: () async {
         Sentry.configureScope((scope) {

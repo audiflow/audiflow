@@ -16,6 +16,7 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:workmanager/workmanager.dart';
 
 import '../../features/monitoring/services/sentry_diagnostics.dart';
+import '../../features/monitoring/services/url_redaction.dart';
 import 'artwork_failure_report.dart';
 import 'background_download_lock.dart';
 import 'background_settings_repository.dart';
@@ -344,6 +345,7 @@ void backgroundCallback() {
         await Sentry.init((options) {
           options.dsn = sentryDsn;
           options.tracesSampleRate = 0;
+          options.beforeSend = (event, _) => scrubEventUrls(event);
           options.environment = sentryEnvironment;
           options.debug = kDebugMode;
         });
@@ -755,6 +757,7 @@ Future<bool> _executeDownloadTask(Map<String, dynamic>? inputData) async {
       await Sentry.init((options) {
         options.dsn = sentryDsn;
         options.tracesSampleRate = 0;
+        options.beforeSend = (event, _) => scrubEventUrls(event);
         options.environment = sentryEnvironment;
         options.debug = kDebugMode;
       });

@@ -8,6 +8,7 @@ import 'package:logger/logger.dart';
 import 'error_report_deduplicator.dart';
 import 'error_reporter.dart';
 import 'failure_classification.dart';
+import 'url_redaction.dart';
 
 /// Forwards unexpected errors to an [ErrorReporter] from the two places
 /// they surface: error-level log entries carrying an error object, and
@@ -100,15 +101,3 @@ final class _ReportingProviderObserver extends ProviderObserver {
     _monitor._onProviderFailed(context.provider, error, stackTrace);
   }
 }
-
-final _urlPattern = RegExp(r'[a-zA-Z][a-zA-Z0-9+.-]*://[^\s\x27"<>]+');
-
-/// [text] with every URL reduced to scheme and host.
-///
-/// Feed and media URLs can carry credentials or tokens in their user info,
-/// path or query (private feeds, signed CDN links).
-String redactUrls(String text) => text.replaceAllMapped(_urlPattern, (match) {
-  final uri = Uri.tryParse(match[0]!);
-  if (uri == null || uri.host.isEmpty) return '<url>';
-  return Uri(scheme: uri.scheme, host: uri.host).toString();
-});

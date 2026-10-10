@@ -181,18 +181,4 @@ void main() {
       check(reporter.breadcrumbs).has((it) => it.length, 'length').equals(1);
     });
   });
-
-  group('redactUrls', () {
-    test('keeps only scheme and host of each URL', () {
-      check(
-        redactUrls('a http://x.example.com/p?q=1 and https://y.example.org/'),
-      ).equals('a http://x.example.com and https://y.example.org');
-    });
-
-    test('leaves text without URLs unchanged', () {
-      check(
-        redactUrls('parse failed at line 3'),
-      ).equals('parse failed at line 3');
-    });
-  });
 }
