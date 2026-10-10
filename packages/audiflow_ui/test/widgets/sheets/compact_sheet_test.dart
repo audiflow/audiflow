@@ -1,4 +1,5 @@
 import 'package:audiflow_ui/audiflow_ui.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -40,8 +41,8 @@ void main() {
     await openSheet(tester, screen: const Size(390, 844));
 
     final rect = contentRect(tester);
-    expect(rect.left, 0);
-    expect(rect.width, 390);
+    check(rect.left).equals(0);
+    check(rect.width).equals(390);
   });
 
   testWidgets('caps width and centers by default on a wide screen', (
@@ -50,8 +51,8 @@ void main() {
     await openSheet(tester, screen: const Size(1024, 768));
 
     final rect = contentRect(tester);
-    expect(rect.width, 400);
-    expect(rect.center.dx, 512);
+    check(rect.width).equals(400);
+    check(rect.center.dx).equals(512);
   });
 
   testWidgets('end alignment keeps a gap from the trailing edge', (
@@ -64,8 +65,8 @@ void main() {
     );
 
     final rect = contentRect(tester);
-    expect(rect.width, 400);
-    expect(rect.right, 1024 - CompactSheet.edgeGap);
+    check(rect.width).equals(400);
+    check(rect.right).equals(1024 - CompactSheet.edgeGap);
   });
 
   testWidgets('tapping beside the sheet dismisses it', (tester) async {
@@ -78,7 +79,7 @@ void main() {
     await tester.tapAt(Offset(40, contentRect(tester).center.dy));
     await tester.pumpAndSettle();
 
-    expect(find.byKey(_contentKey), findsNothing);
+    check(find.byKey(_contentKey).evaluate()).isEmpty();
   });
 
   testWidgets('tapping the sheet itself keeps it open', (tester) async {
@@ -87,6 +88,6 @@ void main() {
     await tester.tapAt(contentRect(tester).center);
     await tester.pumpAndSettle();
 
-    expect(find.byKey(_contentKey), findsOneWidget);
+    check(find.byKey(_contentKey).evaluate()).length.equals(1);
   });
 }
