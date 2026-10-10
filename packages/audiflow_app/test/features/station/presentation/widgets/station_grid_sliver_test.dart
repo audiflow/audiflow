@@ -70,12 +70,14 @@ void main() {
       check(firstRowTiles(tester)).equals(2);
     });
 
-    testWidgets('adds columns on a tablet so tiles stay small', (tester) async {
+    testWidgets('fits as many tiles as keep the minimum width on a tablet', (
+      tester,
+    ) async {
       await pump(tester, 820);
       check(firstRowTiles(tester)).equals(4);
       check(
         tester.getSize(find.byType(StationGridTile).first).width,
-      ).isLessThan(LayoutConstants.stationGridItemWidth + 20);
+      ).isGreaterOrEqual(LayoutConstants.stationGridItemWidth);
     });
   });
 }

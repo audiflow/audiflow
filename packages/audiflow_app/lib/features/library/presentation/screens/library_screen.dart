@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
@@ -163,7 +164,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
               podcastIds: {for (final s in subscriptions) s.id},
             ),
           ),
-          ..._stationSlivers(context, stations),
+          _stationSection(context, stations),
           const SliverToBoxAdapter(child: SizedBox(height: Spacing.sectionGap)),
           SliverPersistentHeader(
             pinned: true,
@@ -191,26 +192,42 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   }
 
   /// The Stations section caps the grid so it never pushes the podcasts
-  /// far down; the rest are a "Show all" tap away.
-  static const int _maxStationTiles = 4;
-
-  List<Widget> _stationSlivers(BuildContext context, List<Station> stations) {
+  /// far down: two rows on a phone, one row on a tablet, as many tiles per
+  /// row as fit. The rest are a "Show all" tap away.
+  Widget _stationSection(BuildContext context, List<Station> stations) {
     final l10n = AppLocalizations.of(context);
-    return [
-      SliverToBoxAdapter(
-        child: SectionHeader(
-          title: l10n.stationSectionTitle,
-          count: stations.isEmpty ? null : stations.length,
-          trailing: _StationsHeaderActions(stationCount: stations.length),
-        ),
-      ),
-      if (stations.isEmpty)
-        SliverToBoxAdapter(child: _InlinePlaceholder(l10n.stationNoStationsYet))
-      else
-        StationGridSliver(
-          stations: recentlyPlayedStations(stations, limit: _maxStationTiles),
-        ),
-    ];
+    final isTablet = DeviceUtils.isTablet(
+      MediaQuery.sizeOf(context).shortestSide,
+    );
+    return SliverLayoutBuilder(
+      builder: (context, constraints) {
+        final columns = StationGridSliver.columnCountFor(
+          constraints.crossAxisExtent,
+        );
+        final maxTiles = columns * (isTablet ? 1 : 2);
+        return SliverMainAxisGroup(
+          slivers: [
+            SliverToBoxAdapter(
+              child: SectionHeader(
+                title: l10n.stationSectionTitle,
+                count: stations.isEmpty ? null : stations.length,
+                trailing: _StationsHeaderActions(
+                  showAll: maxTiles < stations.length,
+                ),
+              ),
+            ),
+            if (stations.isEmpty)
+              SliverToBoxAdapter(
+                child: _InlinePlaceholder(l10n.stationNoStationsYet),
+              )
+            else
+              StationGridSliver(
+                stations: recentlyPlayedStations(stations, limit: maxTiles),
+              ),
+          ],
+        );
+      },
+    );
   }
 
   Widget _podcastsSliver(
@@ -509,9 +526,9 @@ class _SortMenuButton extends StatelessWidget {
 
 /// "+" and, once the grid is capped, "Show all" for the Stations header.
 class _StationsHeaderActions extends StatelessWidget {
-  const _StationsHeaderActions({required this.stationCount});
+  const _StationsHeaderActions({required this.showAll});
 
-  final int stationCount;
+  final bool showAll;
 
   @override
   Widget build(BuildContext context) {
@@ -525,7 +542,7 @@ class _StationsHeaderActions extends StatelessWidget {
           icon: Icon(Icons.add_rounded, color: colors.accent),
           onPressed: () => context.push(AppRoutes.stationNew),
         ),
-        if (_LibraryScreenState._maxStationTiles < stationCount)
+        if (showAll)
           Flexible(
             child: TextButton(
               onPressed: () => context.push(AppRoutes.stationList),

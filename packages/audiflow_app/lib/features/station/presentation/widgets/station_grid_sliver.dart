@@ -8,9 +8,10 @@ import '../../../../routing/app_router.dart';
 import 'station_grid_tile.dart';
 
 /// [stations] as a grid of [StationGridTile]s, each opening its
-/// station (redesign 4.1). Two columns on a phone, more as the width grows,
-/// so a tablet tile stays phone-sized. Shared by the Library section and
-/// the full station list.
+/// station (redesign 4.1). As many columns as fit at
+/// [LayoutConstants.stationGridItemWidth] (two on a phone), so a tablet tile
+/// stays phone-sized. Shared by the Library section and the full station
+/// list.
 class StationGridSliver extends StatelessWidget {
   const StationGridSliver({required this.stations, super.key});
 
@@ -18,15 +19,19 @@ class StationGridSliver extends StatelessWidget {
 
   static const double _gridGap = 12;
 
+  /// Columns the grid lays out in a sliver [crossAxisExtent] wide.
+  static int columnCountFor(double crossAxisExtent) =>
+      ResponsiveGrid.columnCount(
+        availableWidth: crossAxisExtent - 2 * Spacing.screenHorizontal,
+        itemWidth: LayoutConstants.stationGridItemWidth,
+        spacing: _gridGap,
+      );
+
   @override
   Widget build(BuildContext context) {
     return SliverLayoutBuilder(
       builder: (context, constraints) {
-        final columnCount = ResponsiveGrid.columnCount(
-          availableWidth:
-              constraints.crossAxisExtent - 2 * Spacing.screenHorizontal,
-          itemWidth: LayoutConstants.stationGridItemWidth,
-        );
+        final columnCount = columnCountFor(constraints.crossAxisExtent);
         return SliverPadding(
           padding: const EdgeInsets.fromLTRB(
             Spacing.screenHorizontal,
