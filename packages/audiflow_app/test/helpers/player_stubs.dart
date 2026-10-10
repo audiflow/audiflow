@@ -54,13 +54,14 @@ class StubAppSettingsRepository implements AppSettingsRepository {
 
 /// [AudioPlayerController] that starts in a fixed state and records skips.
 ///
-/// Only [skipForward] is overridden; the real methods touch the audio
+/// Only [skipForward] and [skipBackward] are overridden; the real methods touch the audio
 /// player, so tests that tap other controls must override them too.
 class StubAudioPlayerController extends AudioPlayerController {
   StubAudioPlayerController(this._initial);
   final PlaybackState _initial;
 
   bool skipForwardCalled = false;
+  bool skipBackwardCalled = false;
 
   @override
   PlaybackState build() => _initial;
@@ -68,6 +69,11 @@ class StubAudioPlayerController extends AudioPlayerController {
   @override
   Future<void> skipForward() async {
     skipForwardCalled = true;
+  }
+
+  @override
+  Future<void> skipBackward() async {
+    skipBackwardCalled = true;
   }
 }
 

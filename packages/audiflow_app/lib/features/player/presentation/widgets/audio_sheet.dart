@@ -12,7 +12,13 @@ import '../../../../l10n/app_localizations.dart';
 /// The sheet edits the podcast's override while it has one and the
 /// global settings otherwise. Without a podcast (an episode that is not
 /// in the database) it only edits the global settings.
-Future<void> showAudioSheet(BuildContext context, {int? podcastId}) {
+///
+/// [alignment] places the sheet on wide screens; see [showCompactSheet].
+Future<void> showAudioSheet(
+  BuildContext context, {
+  int? podcastId,
+  AlignmentDirectional alignment = AlignmentDirectional.bottomCenter,
+}) {
   // Pin the podcast for the life of the sheet: following the now-playing
   // podcast would retarget a drag in progress when the queue advances,
   // sending the rest of it to another podcast's (or the global) settings.
@@ -22,11 +28,10 @@ Future<void> showAudioSheet(BuildContext context, {int? podcastId}) {
         context,
         listen: false,
       ).read(nowPlayingPodcastIdProvider);
-  return showModalBottomSheet<void>(
+  return showCompactSheet<void>(
     context: context,
-    showDragHandle: true,
-    isScrollControlled: true,
-    useSafeArea: true,
+    alignment: alignment,
+    maxWidth: CompactSheet.narrowWidth,
     builder: (_) => _AudioSheetHost(podcastId: targetId),
   );
 }

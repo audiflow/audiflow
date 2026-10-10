@@ -64,6 +64,8 @@ lib/
         screen_headers.dart            # LargeTitle, SectionHeader -- top-level title and section rows
       menus/
         action_menu.dart               # showActionMenu, ActionMenu -- `…` popover with tiles and item rows
+      sheets/
+        compact_sheet.dart             # showCompactSheet, CompactSheet -- width-capped bottom sheet placed by alignment
       navigation/
         app_tab_bar.dart               # AppTabBar, AppTabBarItem -- bottom tab bar
         floating_nav_button.dart       # FloatingNavButton, FloatingNavActions -- floating nav controls
@@ -106,6 +108,7 @@ lib/
 | `MiniPlayerCard` | `widgets/player/` | artwork, title, subtitle, actions, progress, onTap, semanticLabel | Floating `surface` card (radius 16, floating shadow) 64dp tall: 44dp artwork, one-line title and subtitle, caller-supplied action buttons, and a `brand` bottom-edge progress line once started. No remaining-time text. |
 | `LargeTitle` / `SectionHeader` | `widgets/headers/` | title, trailing | Left-aligned `displayTitle` for top-level tabs and 44dp `sectionTitle` rows, both with a 20dp gutter, header semantics, and an optional trailing control. |
 | `showActionMenu` / `ActionMenu` | `widgets/menus/` | top, tiles, sections (`ActionMenuEntry` icon, label, onSelected) | `…` popover anchored top-right below `top`: a row of `surfaceMuted` tiles for primary actions, then hairline-separated groups of item rows, on a radius-24 `surface` with the floating shadow. Closes before running the chosen entry. |
+| `showCompactSheet` / `CompactSheet` | `widgets/sheets/` | builder, alignment (default bottomCenter), maxWidth (default `LayoutConstants.contentMaxWidth`; `CompactSheet.narrowWidth` = 400 for pickers and control sheets), showDragHandle | Modal bottom sheet capped at `maxWidth`. Flutter's own `constraints` always centers a capped sheet, so the route spans the screen with a transparent surface and draws the `surface` card (28 top corners) itself, placed at `alignment`; start/end-aligned cards keep `CompactSheet.edgeGap` (8dp) from the edge. Tapping beside the card dismisses it like a barrier tap. On screens no wider than `maxWidth` it looks like a regular full-width sheet. |
 | `AppTabBar` | `widgets/navigation/` | items (`AppTabBarItem`: icon, label, selected, onTap) | `bg` bar with a top hairline, 56dp plus the bottom inset (on iOS, minus `homeIndicatorOverlap` so the tabs sit part-way into the home-indicator area like native tab bars). Active tab: `accent`, filled icon, 600 label; inactive: `inkTertiary`. Callers pass only visible tabs. |
 | `FloatingNavigationBar` | `widgets/navigation/` | leading, title, titleOpacity, backgroundOpacity, trailing, search | Overlay bar for detail screens. Title and `bg` + hairline background fade in by opacity; a `NavigationSearchField` replaces the whole row with a 260ms cross-fade and slight drift (`switchDuration`). Use `heightOf(context)` to inset content. |
 | `FloatingNavButton` / `FloatingNavActions` | `widgets/navigation/` | icon, tooltip, onPressed / actions | 44dp white circle, or a white pill of 44dp icon buttons, both with the floating shadow. |

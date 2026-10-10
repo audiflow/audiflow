@@ -268,8 +268,12 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
   ) {
     const options = [1, 2, 3, 4, 5, 10, null]; // null = All
     final l10n = AppLocalizations.of(context);
-    showModalBottomSheet<void>(
+    showCompactSheet<void>(
       context: context,
+      maxWidth: CompactSheet.narrowWidth,
+      showDragHandle: false,
+      isScrollControlled: false,
+      useSafeArea: false,
       builder: (ctx) => SafeArea(
         child: ListView(
           shrinkWrap: true,

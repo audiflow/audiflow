@@ -1,4 +1,5 @@
 import 'package:audiflow_app/features/player/presentation/widgets/mini_player.dart';
+import 'package:audiflow_app/features/player/presentation/widgets/sleep_timer_icon_button.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
@@ -7,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../helpers/player_stubs.dart';
 
@@ -28,7 +30,104 @@ void main() {
     );
   }
 
+  group('MiniPlayer tablet layout', () {
+    Future<ProviderContainer> tabletContainer(
+      StubAudioPlayerController controller,
+    ) async {
+      SharedPreferences.setMockInitialValues({'settings_playback_speed': 1.3});
+      final prefs = await SharedPreferences.getInstance();
+      final container = ProviderContainer(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          nowPlayingControllerProvider.overrideWith(
+            () => StubNowPlayingController(_nowPlaying),
+          ),
+          audioPlayerControllerProvider.overrideWith(() => controller),
+          appSettingsRepositoryProvider.overrideWithValue(
+            StubAppSettingsRepository(
+              skipForwardSeconds: 30,
+              skipBackwardSeconds: 10,
+            ),
+          ),
+          playbackProgressProvider.overrideWith((ref) => null),
+          sleepTimerTimeLeftProvider.overrideWith((ref) => null),
+          nowPlayingSpeedProvider.overrideWith((ref) => 1.3),
+        ],
+      );
+      addTearDown(container.dispose);
+      return container;
+    }
+
+    Future<void> pumpTablet(
+      WidgetTester tester,
+      ProviderContainer container,
+    ) async {
+      tester.view.physicalSize = const Size(1024, 768);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(buildTestWidget(container));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('shows speed, skip back, play, skip forward, sleep in order', (
+      tester,
+    ) async {
+      final container = await tabletContainer(
+        StubAudioPlayerController(
+          const PlaybackState.paused(episodeUrl: 'test'),
+        ),
+      );
+      await pumpTablet(tester, container);
+
+      final speed = find.text('1.3x');
+      final skips = find.byType(SkipDurationIcon);
+      final play = find.byIcon(Symbols.play_arrow);
+      final sleep = find.byType(SleepTimerIconButton);
+      check(skips.evaluate().length).equals(2);
+      final xs = [
+        speed,
+        skips.at(0),
+        play,
+        skips.at(1),
+        sleep,
+      ].map((f) => tester.getCenter(f).dx).toList();
+      for (var i = 1; i < xs.length; i++) {
+        check(xs[i - 1]).isLessThan(xs[i]);
+      }
+      final back = tester.widget<SkipDurationIcon>(skips.at(0));
+      check(back.isForward).isFalse();
+      check(back.seconds).equals(10);
+    });
+
+    testWidgets('skip back button calls skipBackward', (tester) async {
+      final controller = StubAudioPlayerController(
+        const PlaybackState.playing(episodeUrl: 'test'),
+      );
+      final container = await tabletContainer(controller);
+      await pumpTablet(tester, container);
+
+      await tester.tap(find.byType(SkipDurationIcon).first);
+      await tester.pump();
+
+      check(controller.skipBackwardCalled).isTrue();
+      check(controller.skipForwardCalled).isFalse();
+      await tester.pump(const Duration(milliseconds: 200));
+    });
+  });
+
   group('MiniPlayer skip forward button', () {
+    // The default 800x600 test view counts as a tablet; pin a phone size.
+    setUp(() {
+      final view =
+          TestWidgetsFlutterBinding.instance.platformDispatcher.views.first;
+      view.physicalSize = const Size(390, 844);
+      view.devicePixelRatio = 1;
+    });
+    tearDown(
+      () => TestWidgetsFlutterBinding.instance.platformDispatcher.views.first
+          .reset(),
+    );
+
     testWidgets('renders skip forward icon', (tester) async {
       final container = ProviderContainer(
         overrides: [
