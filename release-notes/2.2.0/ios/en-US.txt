@@ -4,6 +4,7 @@
 • Stations show their podcasts' artwork as stacked cards, and station edits are saved as you make them
 • Podcasts: filter episodes by Played or Downloaded, "Mark all played" or "Mark all unplayed" from the menu, and "Open website" for the show's site
 • Podcast settings (play order, auto-download, and more) are now gathered in one sheet
+• "Play next from here" and "Add to queue from here" in an episode's menu queue it together with every episode that follows it in the play order
 • Auto-downloads no longer pile up: each podcast keeps only its newest unplayed episodes (3 by default). Change the number in Download settings, or for one podcast in its settings
 • Auto-download pauses for a podcast you haven't played in a while (after 5 of its episodes are auto-downloaded without you playing any) and resumes when you play one of its episodes, or when you tap Resume in the podcast's settings
 • Auto-downloaded episodes are removed the next time you open the app once 24 hours have passed since you finished them, so you can still replay one or undo an accidental "Mark as played". This is on by default and never removes episodes you downloaded yourself. Use "Keep download" to keep an auto-downloaded episode
@@ -15,4 +16,5 @@
 • Fixed a paused download starting over from 0% when resumed
 • Fixed Back from Continue listening opening the podcast page instead of returning to the Library
 • Fixed new episodes sometimes not being auto-downloaded after refreshing a podcast's page
+• Fixed playing an episode from its page also queuing unrelated episodes of the podcast. It now plays that episode alone and clears the queue
 • Fixed newly fetched episodes missing their download and queue buttons until the page was reopened

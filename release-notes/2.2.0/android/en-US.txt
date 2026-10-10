@@ -1,8 +1,9 @@
 • New design: artwork-tinted player; new Library, Queue, Search, episode and Settings screens
-• Haptic feedback (Appearance settings)
+• Haptic feedback
 • Library: podcast filter; a dot marks new episodes
 • Podcasts: Played/Downloaded filters, Mark all played, Open website
 • Station edits save as you go
+• Queue an episode and all after it at once
 • Auto-downloads keep the newest 3 unplayed, pause for podcasts you don't play, and go 24 h after you finish ("Keep download" to keep)
 • Delete downloads by status
-• Replaying keeps an episode played
+• Replays stay played
