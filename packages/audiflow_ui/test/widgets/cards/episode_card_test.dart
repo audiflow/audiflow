@@ -103,6 +103,14 @@ void main() {
         check(short).isCloseTo(long, 0.5);
       });
 
+      testWidgets('stay put when a label is wider than any date', (
+        tester,
+      ) async {
+        final regular = await actionLeft(tester, 'Dec 28, 2025');
+        final wide = await actionLeft(tester, 'A label far wider than a date');
+        check(wide).isCloseTo(regular, 0.5);
+      });
+
       testWidgets('follow the date instead of the right edge', (tester) async {
         final left = await actionLeft(tester, 'Mar 22');
         final date = tester.getRect(find.text('Mar 22'));
