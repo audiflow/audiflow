@@ -15,8 +15,9 @@ void main() {
     EpisodeLimitMode mode = EpisodeLimitMode.latest,
     int count = 3,
     bool withDefault = false,
+    Size size = const Size(400, 900),
   }) async {
-    tester.view.physicalSize = const Size(400, 900);
+    tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await tester.pumpWidget(
@@ -64,6 +65,17 @@ void main() {
     await tester.tap(find.text('Default (3)'));
 
     check(events).deepEquals(['default']);
+  });
+
+  testWidgets('a short window scrolls to reach Set', (tester) async {
+    await pumpSheet(tester, size: const Size(400, 320));
+
+    await tester.ensureVisible(setButton());
+    await tester.pump();
+    await tester.tap(setButton());
+
+    check(tester.takeException()).isNull();
+    check(events).deepEquals(['latest 3']);
   });
 
   testWidgets('a typed count saves with Set', (tester) async {

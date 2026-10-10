@@ -83,9 +83,10 @@ class _EpisodeLimitSheetState extends State<EpisodeLimitSheet> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final canSet = _isLatest && 0 < _entry.value;
+    // Scrolls so a short tablet window cannot clip Set off the sheet.
     return SafeArea(
       top: false,
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(
           Spacing.md,
           0,
