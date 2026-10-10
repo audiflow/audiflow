@@ -11,7 +11,8 @@ class ResponsiveGrid {
   /// Calculates the number of grid columns based on available width.
   ///
   /// With [spacing], the gaps between columns are counted too, so every
-  /// column is at least [itemWidth] wide.
+  /// column is at least [itemWidth] wide, except when the two-column minimum
+  /// forces narrower columns on a narrow screen.
   static int columnCount({
     required double availableWidth,
     double itemWidth = LayoutConstants.podcastGridItemWidth,
