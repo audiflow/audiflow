@@ -17,6 +17,14 @@ abstract class QueueRepository {
   /// Returns the created queue item.
   Future<QueueItem> addToFront(int episodeId);
 
+  /// Adds episodes to the front of the manual queue, keeping their order
+  /// (bulk Play Next).
+  Future<void> addAllToFront(List<int> episodeIds);
+
+  /// Adds episodes to the end of the manual queue, keeping their order
+  /// (bulk Play Later).
+  Future<void> addAllToEnd(List<int> episodeIds);
+
   /// Replaces the entire queue with adhoc items from an episode list.
   ///
   /// Clears all existing items and inserts new adhoc items from

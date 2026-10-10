@@ -1274,6 +1274,30 @@ abstract class AppLocalizations {
   /// **'Confirm?'**
   String get queueClearConfirm;
 
+  /// Menu action to queue this episode and the ones after it in the list to play next
+  ///
+  /// In en, this message translates to:
+  /// **'Play next from here'**
+  String get playNextFromHere;
+
+  /// Menu action to add this episode and the ones after it in the list to the end of the queue
+  ///
+  /// In en, this message translates to:
+  /// **'Add to queue from here'**
+  String get addToQueueFromHere;
+
+  /// Snackbar after queuing several episodes to play next
+  ///
+  /// In en, this message translates to:
+  /// **'{count} episodes playing next'**
+  String queuePlayingNextCount(int count);
+
+  /// Snackbar after adding several episodes to the queue
+  ///
+  /// In en, this message translates to:
+  /// **'Added {count} episodes to queue'**
+  String queueAddedToQueueCount(int count);
+
   /// Added to queue snackbar
   ///
   /// In en, this message translates to:

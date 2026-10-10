@@ -77,6 +77,35 @@ class QueueRepositoryImpl implements QueueRepository {
   }
 
   @override
+  Future<void> addAllToFront(List<int> episodeIds) async {
+    if (episodeIds.isEmpty) return;
+    final minPosition = await _queueDatasource.getMinPosition();
+    final firstPosition = minPosition - _positionIncrement * episodeIds.length;
+    await _insertManual(episodeIds, firstPosition);
+  }
+
+  @override
+  Future<void> addAllToEnd(List<int> episodeIds) async {
+    if (episodeIds.isEmpty) return;
+    final maxPosition = await _queueDatasource.getMaxPosition();
+    await _insertManual(episodeIds, maxPosition + _positionIncrement);
+  }
+
+  Future<void> _insertManual(List<int> episodeIds, int firstPosition) async {
+    final now = DateTime.now();
+    var position = firstPosition;
+    for (final episodeId in episodeIds) {
+      final item = QueueItem()
+        ..episodeId = episodeId
+        ..position = position
+        ..isAdhoc = false
+        ..addedAt = now;
+      await _queueDatasource.insert(item);
+      position += _positionIncrement;
+    }
+  }
+
+  @override
   Future<void> replaceWithAdhoc({
     required List<int> episodeIds,
     required String sourceContext,

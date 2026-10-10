@@ -651,6 +651,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get queueClearConfirm => 'Confirm?';
 
   @override
+  String get playNextFromHere => 'Play next from here';
+
+  @override
+  String get addToQueueFromHere => 'Add to queue from here';
+
+  @override
+  String queuePlayingNextCount(int count) {
+    return '$count episodes playing next';
+  }
+
+  @override
+  String queueAddedToQueueCount(int count) {
+    return 'Added $count episodes to queue';
+  }
+
+  @override
   String get queueAddedToQueue => 'Added to queue';
 
   @override

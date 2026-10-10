@@ -414,6 +414,20 @@
   "@queueClearTooltip": { "description": "Clear queue tooltip" },
   "queueClearConfirm": "Confirm?",
   "@queueClearConfirm": { "description": "Clear queue confirmation" },
+  "playNextFromHere": "Play next from here",
+  "@playNextFromHere": { "description": "Menu action to queue this episode and the ones after it in the list to play next" },
+  "addToQueueFromHere": "Add to queue from here",
+  "@addToQueueFromHere": { "description": "Menu action to add this episode and the ones after it in the list to the end of the queue" },
+  "queuePlayingNextCount": "{count} episodes playing next",
+  "@queuePlayingNextCount": {
+    "description": "Snackbar after queuing several episodes to play next",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "queueAddedToQueueCount": "Added {count} episodes to queue",
+  "@queueAddedToQueueCount": {
+    "description": "Snackbar after adding several episodes to the queue",
+    "placeholders": { "count": { "type": "int" } }
+  },
   "queueAddedToQueue": "Added to queue",
   "@queueAddedToQueue": { "description": "Added to queue snackbar" },
   "queuePlayingNext": "Playing next",

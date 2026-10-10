@@ -17,6 +17,7 @@ import '../helpers/played_status_helper.dart';
 import '../screens/episode_detail_screen.dart';
 import '../utils/played_display.dart';
 import 'episode_pill_duration_label.dart';
+import 'episode_queue_menu_items.dart';
 
 /// Displays a single episode from the database (Episode model) with playback.
 ///
@@ -273,17 +274,24 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
     );
   }
 
-  void _showContextMenu(
+  Future<void> _showContextMenu(
     BuildContext context,
     WidgetRef ref,
     String audioUrl,
     EpisodeWithProgress? progress,
     DownloadTask? downloadTask,
-  ) {
+  ) async {
+    final queueOptions = await EpisodeQueueMenuOptions.resolve(
+      ref,
+      episodeId: episode.id,
+      siblingEpisodeIds: siblingEpisodeIds,
+      effectiveOrder: effectiveOrder,
+    );
+    if (!context.mounted) return;
     final isCompleted = progress?.isCompleted ?? false;
     final l10n = AppLocalizations.of(context);
 
-    showModalBottomSheet(
+    await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       builder: (_) => DraggableScrollableSheet(
@@ -325,37 +333,14 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
                   controller: scrollController,
                   shrinkWrap: true,
                   children: [
-                    ListTile(
-                      leading: const Icon(Icons.playlist_play),
-                      title: Text(l10n.playNext),
-                      onTap: () {
-                        Navigator.pop(sheetContext);
-                        ref
-                            .read(queueControllerProvider.notifier)
-                            .playNext(episode.id);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(l10n.queuePlayingNext),
-                            duration: const Duration(seconds: 1),
-                          ),
-                        );
-                      },
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.playlist_add),
-                      title: Text(l10n.addToQueue),
-                      onTap: () {
-                        Navigator.pop(sheetContext);
-                        ref
-                            .read(queueControllerProvider.notifier)
-                            .playLater(episode.id);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(l10n.queueAddedToQueue),
-                            duration: const Duration(seconds: 1),
-                          ),
-                        );
-                      },
+                    ...buildEpisodeQueueMenuItems(
+                      context: context,
+                      sheetContext: sheetContext,
+                      ref: ref,
+                      episodeId: episode.id,
+                      options: queueOptions,
+                      siblingEpisodeIds: siblingEpisodeIds,
+                      effectiveOrder: effectiveOrder,
                     ),
                     ListTile(
                       leading: Icon(

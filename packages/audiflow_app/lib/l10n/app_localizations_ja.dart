@@ -626,6 +626,22 @@ class AppLocalizationsJa extends AppLocalizations {
   String get queueClearConfirm => '確認？';
 
   @override
+  String get playNextFromHere => 'これ以降を次に再生';
+
+  @override
+  String get addToQueueFromHere => 'これ以降をキューに追加';
+
+  @override
+  String queuePlayingNextCount(int count) {
+    return '$count件を次に再生します';
+  }
+
+  @override
+  String queueAddedToQueueCount(int count) {
+    return '$count件をキューに追加しました';
+  }
+
+  @override
   String get queueAddedToQueue => 'キューに追加しました';
 
   @override
