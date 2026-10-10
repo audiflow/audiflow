@@ -29,7 +29,10 @@ import 'app/background/background_callback.dart';
 import 'app/background/background_task_registrar.dart';
 import 'app/haptics/haptics_providers.dart';
 import 'features/force_update/force_update.dart';
+import 'features/monitoring/services/error_reporter.dart';
 import 'features/monitoring/services/sentry_diagnostics.dart';
+import 'features/monitoring/services/unexpected_error_monitor.dart';
+import 'features/monitoring/services/url_redaction.dart';
 import 'features/monitoring/services/firebase_analytics_service.dart';
 import 'features/monitoring/services/throttled_analytics_service.dart';
 import 'features/player/services/audio_handler_provider.dart';
@@ -109,6 +112,7 @@ Future<void> appMain({
             : flavor.name;
         options.tracesSampleRate = 0;
         options.debug = kDebugMode;
+        options.beforeSend = (event, _) => scrubEventUrls(event);
       },
       appRunner: () async {
         Sentry.configureScope((scope) {
@@ -266,7 +270,10 @@ Future<void> _startApp(
 
   const forceUpdateConfigUrl = String.fromEnvironment(forceUpdateConfigUrlEnv);
 
+  final errorMonitor = _installErrorMonitor();
+
   final container = ProviderContainer(
+    observers: [?errorMonitor?.providerObserver],
     overrides: [
       isarProvider.overrideWithValue(isar),
       dioProvider.overrideWithValue(dio),
@@ -370,6 +377,20 @@ Future<void> _startApp(
       child: const AppLifecycleObserver(child: MyApp()),
     ),
   );
+}
+
+/// Starts forwarding unexpected logged errors and provider failures to
+/// Sentry; null when Sentry is not running (debug without a DSN, flavors
+/// without crash reporting).
+///
+/// Installed only after the Isar open, which captures its own failure
+/// explicitly. Background isolates are separate and keep their explicit
+/// captures, so they do not install this.
+UnexpectedErrorMonitor? _installErrorMonitor() {
+  if (!Sentry.isEnabled) return null;
+  final monitor = UnexpectedErrorMonitor(reporter: const SentryErrorReporter());
+  Logger.addLogListener(monitor.onLogEvent);
+  return monitor;
 }
 
 /// Runs podcast cache eviction in the background.
