@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Density-independent copy of the notification small icon (the audiflow
+     mark traced from the drawable-*dpi PNGs). The PNGs live only in density
+     splits of the App Bundle; a device that gets none of them (seen on a
+     106 dpi Play test device) failed to find the icon and could not set up
+     notifications. A vector in the unqualified folder ships in the base APK,
+     so the name always resolves. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <path
+        android:pathData="M33,32L63,14M33,57L63,39M33,82L63,64"
+        android:strokeWidth="14"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeLineCap="round" />
+</vector>
