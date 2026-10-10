@@ -10,36 +10,26 @@ class ScreenshotScenario {
   const ScreenshotScenario({
     required this.primary,
     required this.themed,
-    required this.themedPlaylistName,
     required this.chaptered,
     required this.extra,
-    required this.searchTerm,
     required this.searchCountry,
-    required this.stationName,
   });
 
   /// Has a grouped preset: Shows, Series and Curated captions.
   final ScreenshotShow primary;
 
-  /// Has a preset grouped by theme: Smart Playlists caption.
+  /// Joins the queue after the primary show's series run.
   final ScreenshotShow themed;
-
-  /// Series-tab playlist to show for [themed]; null keeps the first one.
-  final String? themedPlaylistName;
 
   /// Has chapters: played for the Player caption.
   final ScreenshotShow chaptered;
 
-  /// Rounds out the library, queue and station.
+  /// Rounds out the library and queue.
   final ScreenshotShow? extra;
-
-  final String searchTerm;
 
   /// iTunes store country for search, so results match the locale rather
   /// than the simulator's region.
   final String searchCountry;
-
-  final String stationName;
 
   List<ScreenshotShow> get all => {primary, themed, chaptered, ?extra}.toList();
 }
@@ -53,15 +43,12 @@ const _japanese = ScreenshotScenario(
   primary: _cotenRadio,
   // Preset: by_category playlist.
   themed: ScreenshotShow(feedUrl: 'https://anchor.fm/s/81fb5eec/podcast/rss'),
-  themedPlaylistName: null,
   // Chapters and transcripts.
   chaptered: ScreenshotShow(
     feedUrl: 'https://rss.listen.style/p/scientalk/rss',
   ),
   extra: null,
-  searchTerm: '歴史',
   searchCountry: 'jp',
-  stationName: '通勤ミックス',
 );
 
 const _businessWars = ScreenshotShow(
@@ -75,8 +62,6 @@ const _english = ScreenshotScenario(
   themed: ScreenshotShow(
     feedUrl: 'https://rss.pdrl.fm/5858fc/feeds.megaphone.fm/thisishistory',
   ),
-  // The first playlist, The Tudors, has a single series.
-  themedPlaylistName: 'A Dynasty to Die For',
   // Chapters.
   chaptered: ScreenshotShow(feedUrl: 'https://feeds.transistor.fm/acquired'),
   // Transcripts.
@@ -87,9 +72,7 @@ const _english = ScreenshotScenario(
         'd9566f78-0464-4367-9dcc-b05700aeec6f/'
         '7f880b3c-7f67-4b4b-b520-b05700af9172/podcast.rss',
   ),
-  searchTerm: 'history',
   searchCountry: 'us',
-  stationName: 'Commute Mix',
 );
 
 /// Returns the scenario for [locale] (`ja` or `en`).

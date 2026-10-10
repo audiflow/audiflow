@@ -48,6 +48,9 @@ const _queueLength = 4;
 
 const _parentalPin = '2580';
 
+/// The router's onboarding-completion flag (`_kOnboardingCompletedKey`).
+const _onboardingCompletedKey = 'onboarding.carousel_completed_v1';
+
 final _l10n = lookupAppLocalizations(Locale(_locale));
 final _scenario = scenarioForLocale(_locale);
 
@@ -87,8 +90,7 @@ Future<void> _captureAll(
   await _captureShowScreens(tester, capture, shows);
   await _capturePlayer(tester, capture, container, shows);
   await _captureQueue(tester, capture, container, shows);
-  await _captureStation(tester, capture, container, shows);
-  await _captureSearch(tester, capture);
+  await _captureIntro(tester, capture);
   // Last: restricted mode hides the Search tab.
   await _captureParental(tester, capture, container);
 }
@@ -116,7 +118,7 @@ Future<ProviderContainer> _bootContainer() async {
   FlavorConfig.initialize(FlavorConfig.dev);
   SharedPreferences.setMockInitialValues({
     SettingsKeys.privacyConsentAccepted: true,
-    'onboarding.carousel_completed_v1': true,
+    _onboardingCompletedKey: true,
     'review_prompt.status': 'optedOut',
     SettingsKeys.locale: _locale,
     SettingsKeys.lastTabIndex: _libraryTabIndex,
@@ -247,21 +249,15 @@ Future<void> _captureShowScreens(
   await capture.take('shows');
 
   await _openSeriesTab(tester);
+  // The open group menu shows that a show's playlists can be switched.
+  await tapWhenFound(tester, _groupMenuButton, settleFor: 1);
   await capture.take('series');
+  await _closeGroupMenu(tester);
 
   // The newest group is often a season that has only just started; the
   // second one has a full list.
   await tapWhenFound(tester, find.byType(InlineGroupCard).at(1), settleFor: 4);
   await capture.take('curated');
-  await _goTo(tester, AppRoutes.library);
-
-  await _openShow(tester, shows[_scenario.themed]!);
-  // A show whose preset has a single playlist shows it inline, without the
-  // Episodes / Series switch.
-  if (_seriesTab.evaluate().isNotEmpty) await _openSeriesTab(tester);
-  final playlistName = _scenario.themedPlaylistName;
-  if (playlistName != null) await _selectPlaylist(tester, playlistName);
-  await capture.take('smart');
   await _goTo(tester, AppRoutes.library);
 }
 
@@ -280,21 +276,14 @@ Future<void> _openSeriesTab(WidgetTester tester) async {
   await tapWhenFound(tester, _seriesTab, settleFor: 4);
 }
 
-/// Switches the Series tab to the preset playlist named [name].
-Future<void> _selectPlaylist(WidgetTester tester, String name) async {
-  await tapWhenFound(
-    tester,
-    find.byWidgetPredicate((widget) => widget is MenuSelectorButton),
-    settleFor: 1,
-  );
-  await tapWhenFound(
-    tester,
-    find.descendant(
-      of: find.byType(PopupMenuItem<int>),
-      matching: find.text(name),
-    ),
-    settleFor: 4,
-  );
+final _groupMenuButton = find.byWidgetPredicate(
+  (widget) => widget is MenuSelectorButton,
+);
+
+/// Dismisses the group menu without changing the selected group.
+Future<void> _closeGroupMenu(WidgetTester tester) async {
+  Navigator.of(tester.element(find.byType(PopupMenuItem<int>).first)).pop();
+  await pumpFor(tester, const Duration(seconds: 1));
 }
 
 /// Plays the chaptered show's newest episode from [_playerPosition] and
@@ -415,67 +404,29 @@ int _byPublishedAt(Episode a, Episode b) {
   return (a.publishedAt ?? epoch).compareTo(b.publishedAt ?? epoch);
 }
 
-Future<void> _captureStation(
-  WidgetTester tester,
-  Capturer capture,
-  ProviderContainer container,
-  Map<ScreenshotShow, Subscription> shows,
-) async {
-  // One episode per show fills a phone; a tablet needs two.
-  final tablet = DeviceUtils.isTablet(
-    MediaQuery.sizeOf(
-      tester.element(find.byType(MaterialApp).first),
-    ).shortestSide,
-  );
-  final now = DateTime.now();
-  final station = await container
-      .read(stationRepositoryProvider)
-      .create(
-        Station()
-          ..name = _scenario.stationName
-          ..defaultEpisodeLimit = tablet ? 2 : 1
-          // Two from one show may be consecutive parts of a series, which
-          // play oldest first; grouping by show keeps them together.
-          ..groupByPodcast = tablet
-          ..episodeSort = tablet
-              ? StationEpisodeSort.oldest
-              : StationEpisodeSort.newest
-          ..createdAt = now
-          ..updatedAt = now,
-      );
-  final members = container.read(stationPodcastRepositoryProvider);
-  var order = 0;
-  for (final subscription in shows.values) {
-    await members.add(station.id, subscription.id, sortOrder: order++);
-  }
-  await container
-      .read(stationReconcilerServiceProvider)
-      .onStationConfigChanged(station.id);
-
-  await _goTo(tester, '${AppRoutes.library}/station/${station.id}');
-  await pumpFor(tester, const Duration(seconds: 5));
-  await capture.take('stations');
-}
-
-Future<void> _captureSearch(WidgetTester tester, Capturer capture) async {
-  await _goTo(tester, AppRoutes.search);
-  await tapWhenFound(tester, find.byType(TextField), settleFor: 0);
-  await tester.enterText(find.byType(TextField), _scenario.searchTerm);
-  await tester.testTextInput.receiveAction(TextInputAction.search);
-  // Phones list the results; tablets lay them out as an artwork grid.
+/// The onboarding carousel's three pages, as the Search, Stations and
+/// Smart Playlists slides. The router only shows the carousel before
+/// onboarding is completed, so the flag is cleared for the visit.
+Future<void> _captureIntro(WidgetTester tester, Capturer capture) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setBool(_onboardingCompletedKey, false);
+  await _goTo(tester, AppRoutes.onboarding);
   await pumpUntilFound(
     tester,
-    find.byWidgetPredicate(
-      (widget) =>
-          widget.key == const Key('search_results_list') ||
-          widget.key == const Key('search_results_grid'),
-    ),
-    settleFor: 4,
+    find.text(_l10n.onboardingPageSearchTitle),
+    settleFor: 1,
   );
-  // Drop the keyboard so the results fill the screen.
-  FocusManager.instance.primaryFocus?.unfocus();
-  await pumpFor(tester, const Duration(seconds: 1));
   await capture.take('search');
+  for (final (name, title) in [
+    ('stations', _l10n.onboardingPageStationsTitle),
+    ('smart', _l10n.onboardingPageSmartPlaylistsTitle),
+  ]) {
+    await tapWhenFound(tester, find.byType(FilledButton), settleFor: 0);
+    await pumpUntilFound(tester, find.text(title), settleFor: 1);
+    await capture.take(name);
+  }
+  await prefs.setBool(_onboardingCompletedKey, true);
+  await _goTo(tester, AppRoutes.library);
 }
 
 Future<void> _captureParental(
