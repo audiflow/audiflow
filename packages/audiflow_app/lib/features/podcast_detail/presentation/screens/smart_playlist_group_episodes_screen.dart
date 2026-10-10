@@ -12,6 +12,7 @@ import '../../../download/presentation/helpers/batch_download_action_helper.dart
 import '../utils/smart_playlist_def_resolver.dart';
 import '../widgets/play_order_bottom_sheet.dart';
 import '../helpers/mark_all_played.dart';
+import '../utils/group_sorting.dart' show seriesEpisodeOrder;
 import '../utils/series_resume.dart';
 import '../widgets/episode_list_section.dart' show SortOrderButton;
 import '../widgets/inline_group_card.dart' show formatGroupDuration;
@@ -97,14 +98,9 @@ class _SmartPlaylistGroupEpisodesScreenState
   @override
   void initState() {
     super.initState();
-    final groupSort =
-        widget.group.episodeSort ?? widget.parentPlaylist.episodeSort;
-    _sortOrder =
-        groupSort?.order ??
-        (widget.parentPlaylist.userSortable &&
-                widget.parentPlaylist.groupSort != null
-            ? widget.parentPlaylist.groupSort!.order
-            : SortOrder.descending);
+    _sortOrder = seriesEpisodeOrder(
+      widget.group.episodeSort ?? widget.parentPlaylist.episodeSort,
+    );
     _resolvePlayOrder();
     _scrollController.addListener(_updateNavScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {

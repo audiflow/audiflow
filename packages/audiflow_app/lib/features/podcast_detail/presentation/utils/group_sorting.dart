@@ -1,11 +1,19 @@
 import 'package:audiflow_domain/audiflow_domain.dart'
     show
+        EpisodeSortRule,
         SmartPlaylistGroup,
         SmartPlaylistSortField,
         SmartPlaylistSortRule,
         SortOrder;
 
 import '../widgets/inline_group_card.dart' show YearFilteredInlineGroup;
+
+/// Initial episode order inside a series: the preset's [episodeSort] when
+/// it sets one, else oldest first, the order a series is meant to be heard
+/// in. The group order is deliberately not consulted: listing the newest
+/// season first says nothing about how its episodes run.
+SortOrder seriesEpisodeOrder(EpisodeSortRule? episodeSort) =>
+    episodeSort?.order ?? SortOrder.ascending;
 
 /// Sorts groups using the playlist's [groupSort] rule and
 /// the user's [sortOrder] toggle.
