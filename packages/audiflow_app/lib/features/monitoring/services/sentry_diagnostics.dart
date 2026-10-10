@@ -12,6 +12,11 @@ import 'package:flutter/services.dart';
 /// isolates never initialize `FlavorConfig`.
 final bool sentryDiagnosticsEnabled = isDiagnosticFlavor(appFlavor);
 
+/// Flavors that send the messages. Empty while paused: on dev and stg they
+/// were using up the Sentry quota. Add `Flavor.dev` / `Flavor.stg` back to
+/// collect them again during an investigation.
+const Set<Flavor> _diagnosticFlavors = {};
+
 /// Unknown flavors count as prod so a misconfigured build stays quiet.
 bool isDiagnosticFlavor(String? flavor) =>
-    flavor == Flavor.dev.name || flavor == Flavor.stg.name;
+    _diagnosticFlavors.any((diagnostic) => diagnostic.name == flavor);

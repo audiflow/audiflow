@@ -4,9 +4,11 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('isDiagnosticFlavor', () {
-    test('enables diagnostics for dev and stg', () {
-      check(isDiagnosticFlavor('dev')).isTrue();
-      check(isDiagnosticFlavor('stg')).isTrue();
+    // Paused for every flavor: the info-level messages were using up the
+    // Sentry quota on dev and stg as well.
+    test('disables diagnostics for dev and stg while paused', () {
+      check(isDiagnosticFlavor('dev')).isFalse();
+      check(isDiagnosticFlavor('stg')).isFalse();
     });
 
     test('disables diagnostics for prod', () {
