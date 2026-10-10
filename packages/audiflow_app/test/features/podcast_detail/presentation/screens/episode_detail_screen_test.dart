@@ -165,6 +165,20 @@ void main() {
       check(queue.calls).deepEquals(['clearQueue']);
     });
 
+    testWidgets('a fresh play without a progress snapshot clears the queue', (
+      tester,
+    ) async {
+      final queue = _RecordingQueueService();
+      await tester.pumpWidget(buildTestWidget(queue: queue));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.play_arrow_rounded));
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 31));
+
+      check(queue.calls).deepEquals(['clearQueue']);
+    });
+
     testWidgets('play again restarts a loaded played episode', (tester) async {
       _LoadedAudioPlayerController.calls.clear();
       await tester.pumpWidget(
