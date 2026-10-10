@@ -1351,6 +1351,20 @@ class AppLocalizationsJa extends AppLocalizations {
   String get stationAllEpisodes => 'すべて';
 
   @override
+  String get stationEpisodeLimitLatestSegment => '最新◯話';
+
+  @override
+  String get stationEpisodeLimitStationSubtitle => 'このステーションの既定';
+
+  @override
+  String stationEpisodeLimitUnit(int count) {
+    return '話';
+  }
+
+  @override
+  String get stationEpisodeLimitSet => '設定';
+
+  @override
   String get stationGroupByPodcast => '番組ごとにまとめる';
 
   @override

@@ -4,8 +4,10 @@ import 'package:audiflow_app/features/library/presentation/controllers/library_c
 import 'package:audiflow_app/features/station/presentation/controllers/station_edit_controller.dart';
 import 'package:audiflow_app/features/station/presentation/screens/station_edit_screen.dart';
 import 'package:audiflow_app/features/station/presentation/screens/station_podcast_picker_screen.dart';
+import 'package:audiflow_app/features/station/presentation/widgets/episode_limit_sheet.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -162,79 +164,99 @@ void main() {
       await pump(tester, stationId: 1);
     }
 
-    Finder sheetOption(String label) => find.descendant(
-      of: find.byType(BottomSheet),
-      matching: find.widgetWithText(ListTile, label),
+    Finder inSheet(Finder finder) =>
+        find.descendant(of: find.byType(EpisodeLimitSheet), matching: finder);
+
+    EpisodeLimitMode selectedMode(WidgetTester tester) => tester
+        .widget<AppSegmentedControl<EpisodeLimitMode>>(
+          find.byType(AppSegmentedControl<EpisodeLimitMode>),
+        )
+        .selected;
+
+    Finder rowLabel(String label) => find.descendant(
+      of: find.widgetWithText(ListTile, 'Daily Show'),
+      matching: find.text(label),
     );
 
-    testWidgets('tapping a podcast opens a sheet with the default option', (
+    Future<void> openSheet(WidgetTester tester) async {
+      await tester.tap(find.text('Daily Show'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('tapping a podcast opens the sheet on the default', (
       tester,
     ) async {
       await pumpWithPodcast(tester);
-      await tester.tap(find.text('Daily Show'));
-      await tester.pumpAndSettle();
+      await openSheet(tester);
 
-      check(find.byType(BottomSheet).evaluate()).length.equals(1);
-      check(find.byType(ChoiceChip).evaluate()).isEmpty();
-      final defaultOption = tester.widget<ListTile>(
-        sheetOption('Default (Latest 3)'),
-      );
-      check(defaultOption.trailing).isA<Icon>();
-      check(sheetOption('Latest only').evaluate()).length.equals(1);
-      check(sheetOption('All').evaluate()).length.equals(1);
+      check(find.byType(EpisodeLimitSheet).evaluate()).length.equals(1);
+      check(inSheet(find.text('Default (3)')).evaluate()).length.equals(1);
+      check(selectedMode(tester)).equals(EpisodeLimitMode.stationDefault);
     });
 
-    testWidgets('picking a limit stores the override and closes the sheet', (
+    testWidgets('a typed count stores the override and closes the sheet', (
       tester,
     ) async {
       await pumpWithPodcast(tester);
-      await tester.tap(find.text('Daily Show'));
-      await tester.pumpAndSettle();
-      await tester.tap(sheetOption('Latest 10'));
+      await openSheet(tester);
+      await tester.tap(inSheet(find.text('1')));
+      await tester.tap(inSheet(find.text('2')));
+      await tester.pump();
+      await tester.tap(inSheet(find.widgetWithText(FilledButton, 'Set')));
       await tester.pumpAndSettle();
 
-      check(find.byType(BottomSheet).evaluate()).isEmpty();
-      final row = find.widgetWithText(ListTile, 'Daily Show');
-      check(
-        find.descendant(of: row, matching: find.text('Latest 10')).evaluate(),
-      ).length.equals(1);
+      check(find.byType(EpisodeLimitSheet).evaluate()).isEmpty();
+      check(rowLabel('Latest 12').evaluate()).length.equals(1);
     });
 
-    testWidgets('picking All overrides a numeric default', (tester) async {
+    testWidgets('tapping All overrides a numeric default', (tester) async {
       await pumpWithPodcast(tester);
-      await tester.tap(find.text('Daily Show'));
-      await tester.pumpAndSettle();
-      await tester.tap(sheetOption('All'));
+      await openSheet(tester);
+      await tester.tap(inSheet(find.text('All')));
       await tester.pumpAndSettle();
 
-      final row = find.widgetWithText(ListTile, 'Daily Show');
-      check(
-        find.descendant(of: row, matching: find.text('All')).evaluate(),
-      ).length.equals(1);
-      await tester.tap(find.text('Daily Show'));
-      await tester.pumpAndSettle();
-      check(tester.widget<ListTile>(sheetOption('All')).trailing).isA<Icon>();
-      check(
-        tester.widget<ListTile>(sheetOption('Default (Latest 3)')).trailing,
-      ).isNull();
+      check(find.byType(EpisodeLimitSheet).evaluate()).isEmpty();
+      check(rowLabel('All').evaluate()).length.equals(1);
+      await openSheet(tester);
+      check(selectedMode(tester)).equals(EpisodeLimitMode.all);
     });
 
-    testWidgets('picking default clears an existing override', (tester) async {
+    testWidgets('tapping default clears an existing override', (tester) async {
       await pumpWithPodcast(tester, episodeLimit: allEpisodesSentinel);
-      final row = find.widgetWithText(ListTile, 'Daily Show');
-      check(
-        find.descendant(of: row, matching: find.text('All')).evaluate(),
-      ).length.equals(1);
+      check(rowLabel('All').evaluate()).length.equals(1);
 
-      await tester.tap(find.text('Daily Show'));
-      await tester.pumpAndSettle();
-      check(tester.widget<ListTile>(sheetOption('All')).trailing).isA<Icon>();
-      await tester.tap(sheetOption('Default (Latest 3)'));
+      await openSheet(tester);
+      check(selectedMode(tester)).equals(EpisodeLimitMode.all);
+      await tester.tap(inSheet(find.text('Default (3)')));
       await tester.pumpAndSettle();
 
-      check(
-        find.descendant(of: row, matching: find.text('Latest 3')).evaluate(),
-      ).length.equals(1);
+      check(rowLabel('Latest 3').evaluate()).length.equals(1);
     });
+  });
+
+  testWidgets('the station-wide limit takes a typed count', (tester) async {
+    tester.view.physicalSize = const Size(800, 2000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await stations.create(_station(0, 'Morning')..defaultEpisodeLimit = 3);
+    await pump(tester, stationId: 1);
+
+    await tester.tap(find.widgetWithText(ListTile, 'Episodes'));
+    await tester.pumpAndSettle();
+    check(find.text('Default for this station').evaluate()).length.equals(1);
+    await tester.tap(
+      find.descendant(
+        of: find.byType(EpisodeLimitSheet),
+        matching: find.text('7'),
+      ),
+    );
+    await tester.pump();
+    await tester.tap(find.widgetWithText(FilledButton, 'Set'));
+    await tester.pumpAndSettle();
+
+    final row = find.widgetWithText(ListTile, 'Episodes');
+    check(
+      find.descendant(of: row, matching: find.text('Latest 7')).evaluate(),
+    ).length.equals(1);
   });
 }

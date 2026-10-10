@@ -10,7 +10,12 @@ import '../../../../routing/app_router.dart';
 import '../../../library/presentation/controllers/library_controller.dart';
 import '../controllers/station_edit_controller.dart';
 import '../utils/default_station_name.dart';
+import '../widgets/episode_limit_sheet.dart';
 import 'station_podcast_picker_screen.dart';
+
+/// Keypad pre-fill when no count is set anywhere ("All" everywhere);
+/// matches the initial [Station.defaultEpisodeLimit].
+const _fallbackEpisodeCount = 3;
 
 /// Screen for creating or editing a [Station].
 ///
@@ -266,35 +271,40 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
     StationEditState state,
     StationEditController controller,
   ) {
-    const options = [1, 2, 3, 4, 5, 10, null]; // null = All
     final l10n = AppLocalizations.of(context);
+    final limit = state.defaultEpisodeLimit;
+    void save(int? value) {
+      Navigator.pop(context);
+      if (value != limit) controller.setDefaultEpisodeLimit(value);
+    }
+
+    _showEpisodeLimitSheet(
+      EpisodeLimitSheet(
+        subtitle: l10n.stationEpisodeLimitStationSubtitle,
+        initialMode: limit == null
+            ? EpisodeLimitMode.all
+            : EpisodeLimitMode.latest,
+        initialCount: limit ?? _fallbackEpisodeCount,
+        onAll: () => save(null),
+        onLatest: (count) {
+          _playLimitChangeHaptic(changed: count != limit);
+          save(count);
+        },
+      ),
+    );
+  }
+
+  // Segment taps play their own selection haptic; a count confirmed with
+  // Set plays it here, and only when the limit actually changes.
+  void _playLimitChangeHaptic({required bool changed}) {
+    if (changed) HapticsScope.of(context).play(HapticToken.selection);
+  }
+
+  void _showEpisodeLimitSheet(EpisodeLimitSheet sheet) {
     showCompactSheet<void>(
       context: context,
       maxWidth: CompactSheet.narrowWidth,
-      showDragHandle: false,
-      isScrollControlled: false,
-      useSafeArea: false,
-      builder: (ctx) => SafeArea(
-        child: ListView(
-          shrinkWrap: true,
-          children: options.map((opt) {
-            final label = opt == null
-                ? l10n.stationAllEpisodes
-                : _episodeLimitLabel(l10n, opt);
-            final isSelected = state.defaultEpisodeLimit == opt;
-            return ListTile(
-              title: Text(label),
-              trailing: isSelected
-                  ? Icon(Icons.check, color: Theme.of(ctx).colorScheme.primary)
-                  : null,
-              onTap: () {
-                controller.setDefaultEpisodeLimit(opt);
-                Navigator.pop(ctx);
-              },
-            );
-          }).toList(),
-        ),
-      ),
+      builder: (_) => sheet,
     );
   }
 
@@ -781,78 +791,42 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
     int podcastId,
     String? podcastTitle,
   ) {
-    showModalBottomSheet<void>(
-      context: context,
-      builder: (ctx) => _buildPodcastEpisodeLimitSheet(
-        ctx,
-        state,
-        controller,
-        podcastId,
-        podcastTitle,
-      ),
-    );
-  }
-
-  Widget _buildPodcastEpisodeLimitSheet(
-    BuildContext ctx,
-    StationEditState state,
-    StationEditController controller,
-    int podcastId,
-    String? podcastTitle,
-  ) {
-    final l10n = AppLocalizations.of(ctx);
-    const options = <int?>[1, 2, 3, 4, 5, 10, null]; // null = All
+    final l10n = AppLocalizations.of(context);
     final defaultLimit = state.defaultEpisodeLimit;
-    final override = state.podcastEpisodeLimits[podcastId];
     final hasOverride = state.podcastEpisodeLimits.containsKey(podcastId);
-
-    Widget option(String label, {required bool isSelected, int? value}) {
-      return ListTile(
-        title: Text(label),
-        trailing: isSelected
-            ? Icon(Icons.check, color: Theme.of(ctx).colorScheme.primary)
-            : null,
-        onTap: () {
-          if (!isSelected) {
-            HapticsScope.of(context).play(HapticToken.selection);
-          }
-          // null removes the override; the sentinel stores "all episodes".
-          controller.setPodcastEpisodeLimit(podcastId, value);
-          Navigator.pop(ctx);
-        },
-      );
+    final override = state.podcastEpisodeLimits[podcastId];
+    // null removes the override; the sentinel stores "all episodes".
+    bool isCurrent(int? value) =>
+        hasOverride ? value == override : value == null;
+    void save(int? value) {
+      Navigator.pop(context);
+      if (!isCurrent(value)) {
+        controller.setPodcastEpisodeLimit(podcastId, value);
+      }
     }
 
-    return SafeArea(
-      child: ListView(
-        shrinkWrap: true,
-        children: [
-          if (podcastTitle != null && podcastTitle.isNotEmpty)
-            ListTile(
-              title: Text(
-                podcastTitle,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(ctx).textTheme.titleSmall,
-              ),
-            ),
-          option(
-            defaultLimit == null
-                ? l10n.stationDefaultAll
-                : l10n.stationDefault(_episodeLimitLabel(l10n, defaultLimit)),
-            isSelected: !hasOverride,
-          ),
-          ...options.map(
-            (opt) => option(
-              opt == null
-                  ? l10n.stationAllEpisodes
-                  : _episodeLimitLabel(l10n, opt),
-              isSelected:
-                  hasOverride && override == (opt ?? allEpisodesSentinel),
-              value: opt ?? allEpisodesSentinel,
-            ),
-          ),
-        ],
+    final mode = !hasOverride
+        ? EpisodeLimitMode.stationDefault
+        : override == allEpisodesSentinel
+        ? EpisodeLimitMode.all
+        : EpisodeLimitMode.latest;
+    final count = hasOverride && override != allEpisodesSentinel
+        ? override
+        : defaultLimit;
+    _showEpisodeLimitSheet(
+      EpisodeLimitSheet(
+        subtitle: podcastTitle ?? '',
+        initialMode: mode,
+        initialCount: count ?? _fallbackEpisodeCount,
+        defaultLabel: l10n.stationDefault(
+          defaultLimit == null ? l10n.stationAllEpisodes : '$defaultLimit',
+        ),
+        onDefault: () => save(null),
+        onAll: () => save(allEpisodesSentinel),
+        onLatest: (count) {
+          _playLimitChangeHaptic(changed: !isCurrent(count));
+          save(count);
+        },
       ),
     );
   }

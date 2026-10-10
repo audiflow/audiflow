@@ -2534,6 +2534,30 @@ abstract class AppLocalizations {
   /// **'All'**
   String get stationAllEpisodes;
 
+  /// Segment in the episode-limit sheet that limits a podcast to its latest N episodes; N is typed on the keypad below
+  ///
+  /// In en, this message translates to:
+  /// **'Latest N'**
+  String get stationEpisodeLimitLatestSegment;
+
+  /// Subtitle of the episode-limit sheet when it edits the station-wide default
+  ///
+  /// In en, this message translates to:
+  /// **'Default for this station'**
+  String get stationEpisodeLimitStationSubtitle;
+
+  /// Unit shown after the large number in the episode-limit sheet
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{episode} other{episodes}}'**
+  String stationEpisodeLimitUnit(int count);
+
+  /// Button that saves the typed episode count in the episode-limit sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Set'**
+  String get stationEpisodeLimitSet;
+
   /// Option to group episodes by podcast
   ///
   /// In en, this message translates to:
