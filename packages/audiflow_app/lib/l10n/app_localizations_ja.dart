@@ -34,6 +34,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get commonDone => '完了';
 
   @override
+  String get errorNetwork => '接続できませんでした。インターネット接続を確認して、もう一度お試しください。';
+
+  @override
+  String get errorGeneric => '問題が発生しました。しばらくしてから再試行してください。';
+
+  @override
   String get settingsTitle => '設定';
 
   @override

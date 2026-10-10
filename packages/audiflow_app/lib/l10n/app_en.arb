@@ -17,6 +17,10 @@
   "@commonComingSoon": { "description": "Feature not yet available" },
   "commonDone": "Done",
   "@commonDone": { "description": "Common done action" },
+  "errorNetwork": "Couldn't connect. Check your internet connection and try again.",
+  "@errorNetwork": { "description": "User-facing message for a failure caused by no or unstable network connectivity" },
+  "errorGeneric": "Something went wrong. Please try again later.",
+  "@errorGeneric": { "description": "User-facing fallback message for any unexpected failure; never shows internal error details" },
 
   "settingsTitle": "Settings",
   "@settingsTitle": { "description": "Settings screen title" },

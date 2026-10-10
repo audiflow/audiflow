@@ -34,6 +34,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonDone => 'Done';
 
   @override
+  String get errorNetwork =>
+      'Couldn\'t connect. Check your internet connection and try again.';
+
+  @override
+  String get errorGeneric => 'Something went wrong. Please try again later.';
+
+  @override
   String get settingsTitle => 'Settings';
 
   @override

@@ -9,6 +9,8 @@
   "commonLoading": "読み込み中...",
   "commonComingSoon": "近日公開",
   "commonDone": "完了",
+  "errorNetwork": "接続できませんでした。インターネット接続を確認して、もう一度お試しください。",
+  "errorGeneric": "問題が発生しました。しばらくしてから再試行してください。",
 
   "settingsTitle": "設定",
   "settingsAppearanceTitle": "外観",

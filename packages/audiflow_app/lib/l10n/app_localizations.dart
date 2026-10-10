@@ -146,6 +146,18 @@ abstract class AppLocalizations {
   /// **'Done'**
   String get commonDone;
 
+  /// User-facing message for a failure caused by no or unstable network connectivity
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t connect. Check your internet connection and try again.'**
+  String get errorNetwork;
+
+  /// User-facing fallback message for any unexpected failure; never shows internal error details
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong. Please try again later.'**
+  String get errorGeneric;
+
   /// Settings screen title
   ///
   /// In en, this message translates to:
