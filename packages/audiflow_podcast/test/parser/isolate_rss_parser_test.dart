@@ -152,6 +152,21 @@ void main() {
         expect(complete.tailGuids, contains('older'));
       });
 
+      test('keeps every row of a guid whose tail item is unmatched', () async {
+        final duplicateKey = duplicateGuidKey(
+          'older',
+          'https://example.com/older-repost.mp3',
+        );
+        final progress = await parse({
+          'reused': 'https://example.com/old.mp3',
+          'older': 'https://old-host.example.com/older.mp3',
+          duplicateKey: 'https://old-host.example.com/older-repost.mp3',
+        });
+
+        final complete = progress.whereType<ParseComplete>().single;
+        expect(complete.tailGuids, containsAll(['older', duplicateKey]));
+      });
+
       test('stops at a duplicate row stored under an older URL', () async {
         final staleKey = duplicateGuidKey(
           'reused',

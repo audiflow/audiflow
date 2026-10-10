@@ -210,6 +210,7 @@ class IsolateRssParser {
       var stoppedEarly = false;
       final tailGuids = <String>{};
       final keysByItem = _indexKeysByItem(params.knownEnclosureUrls);
+      final keysByGuid = _indexKeysByGuid(params.knownGuids);
       final cutoff = params.knownNewestPubDate;
       final cutoffGuid = params.knownNewestGuid;
       final itemOpenTag = RegExp(r'<item[\s>]');
@@ -256,6 +257,7 @@ class IsolateRssParser {
                 tailGuids,
                 params,
                 keysByItem,
+                keysByGuid,
                 decodedGuid,
                 enclosureUrl,
               );
@@ -296,6 +298,7 @@ class IsolateRssParser {
             tailGuids,
             params,
             keysByItem,
+            keysByGuid,
             rawGuid != null ? _decodeXmlEntities(rawGuid) : null,
             rawUrl != null ? _decodeXmlEntities(rawUrl) : null,
           );
@@ -425,6 +428,15 @@ class IsolateRssParser {
       (guidOfStorageKey(key), value): key,
   };
 
+  /// Groups stored keys by the feed guid they were built from.
+  static Map<String, List<String>> _indexKeysByGuid(Set<String> knownGuids) {
+    final byGuid = <String, List<String>>{};
+    for (final key in knownGuids) {
+      (byGuid[guidOfStorageKey(key)] ??= []).add(key);
+    }
+    return byGuid;
+  }
+
   /// The stored key of the row this item matches, or null for a new item.
   ///
   /// With enclosure URLs known, an item matches only the row stored with
@@ -448,20 +460,30 @@ class IsolateRssParser {
   ///
   /// An item matching a row reports only that row's key, so a sibling
   /// sharing its guid can still be detected as dropped. An unmatched item
-  /// reports its guid (or enclosure URL when it has none): its row may be
-  /// stored under a URL the host has since rewritten, and must not be
-  /// treated as dropped.
+  /// reports every stored key of its guid (or its guid, or enclosure URL
+  /// when it has none): its row may be stored under a URL the host has
+  /// since rewritten, and must not be treated as dropped.
   static void _addItemId(
     Set<String> ids,
     _IsolateParams params,
     Map<(String, String), String> keysByItem,
+    Map<String, List<String>> keysByGuid,
     String? guid,
     String? enclosureUrl,
   ) {
     final storedKey = guid == null
         ? null
         : _storedKeyOf(params, keysByItem, guid, enclosureUrl);
-    final id = storedKey ?? guid ?? enclosureUrl;
+    if (storedKey != null) {
+      ids.add(storedKey);
+      return;
+    }
+    final siblings = guid == null ? null : keysByGuid[guid];
+    if (siblings != null) {
+      ids.addAll(siblings);
+      return;
+    }
+    final id = guid ?? enclosureUrl;
     if (id != null && id.isNotEmpty) ids.add(id);
   }
 

@@ -237,6 +237,97 @@ void main() {
         expect(after?.audioUrl, 'https://cdn.example.com/old.mp3?sig=1');
       });
 
+      Future<void> storeNewAndOld() => datasource.upsertAll([
+        makeEpisode(
+          guid: 'shared',
+          title: 'New',
+          audioUrl: 'https://example.com/new.mp3',
+          publishedAt: oct10,
+        ),
+        makeEpisode(
+          guid: 'shared',
+          title: 'Old',
+          audioUrl: 'https://example.com/old.mp3',
+          publishedAt: oct1,
+        ),
+      ]);
+
+      test('finds a moved duplicate by its current audio URL', () async {
+        await storeNewAndOld();
+        await datasource.upsertAll([
+          makeEpisode(
+            guid: 'shared',
+            title: 'Old',
+            audioUrl: 'https://cdn.example.com/old.mp3',
+            publishedAt: oct1,
+          ),
+        ]);
+
+        final found = await datasource.getByFeedItem(
+          1,
+          'shared',
+          'https://cdn.example.com/old.mp3',
+        );
+        expect(found?.title, 'Old');
+      });
+
+      test(
+        'keeps a surviving duplicate after the raw-guid row is gone',
+        () async {
+          await storeNewAndOld();
+          await datasource.deleteByPodcastIdAndGuids(1, {'shared'});
+          final duplicateKey = duplicateGuidKey(
+            'shared',
+            'https://example.com/old.mp3',
+          );
+          final before = await datasource.getByPodcastIdAndGuid(
+            1,
+            duplicateKey,
+          );
+
+          final moved = makeEpisode(
+            guid: 'shared',
+            title: 'Old',
+            audioUrl: 'https://cdn.example.com/old.mp3',
+            publishedAt: oct1,
+          );
+          await datasource.upsertAll([moved]);
+
+          expect(moved.guid, duplicateKey);
+          expect(moved.id, before?.id);
+          expect(await datasource.getByPodcastId(1), hasLength(1));
+        },
+      );
+
+      test('collapses reposts of a guid another episode owns', () async {
+        await datasource.upsert(
+          makeEpisode(
+            guid: 'shared',
+            title: 'Owner',
+            audioUrl: 'https://example.com/owner.mp3',
+            publishedAt: oct1,
+          ),
+        );
+
+        await datasource.upsertAll([
+          makeEpisode(
+            guid: 'shared',
+            title: 'Repost #2',
+            audioUrl: 'https://example.com/a.mp3',
+            publishedAt: oct10,
+          ),
+          makeEpisode(
+            guid: 'shared',
+            title: 'Repost',
+            audioUrl: 'https://example.com/b.mp3',
+            publishedAt: oct10,
+          ),
+        ]);
+
+        final titles = (await datasource.getByPodcastId(1)).map((e) => e.title);
+        expect(titles, ['Repost #2', 'Owner']);
+      });
+
       test('keeps the stored row when a new episode reuses its guid', () async {
         final storedId = await datasource.upsert(
           makeEpisode(
