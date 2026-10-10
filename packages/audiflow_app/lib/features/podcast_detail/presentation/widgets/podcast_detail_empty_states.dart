@@ -1,7 +1,15 @@
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../app/errors/user_facing_error.dart';
 import '../../../../l10n/app_localizations.dart';
+
+/// Two-line text for an inline episode load failure: what failed, then a
+/// user-facing summary of [error] that never exposes its raw text.
+String podcastDetailLoadErrorText(AppLocalizations l10n, Object error) {
+  return '${l10n.podcastDetailLoadError}\n'
+      '${userFacingErrorMessage(l10n, error)}';
+}
 
 /// Displayed when a podcast has no feed URL.
 class PodcastDetailNoFeedUrlState extends StatelessWidget {
@@ -54,7 +62,8 @@ class PodcastDetailErrorState extends StatelessWidget {
     required this.onRetry,
   });
 
-  final String error;
+  /// The failure; only a localized summary of it is shown.
+  final Object error;
   final VoidCallback onRetry;
 
   @override
@@ -83,7 +92,7 @@ class PodcastDetailErrorState extends StatelessWidget {
             ),
             const SizedBox(height: Spacing.sm),
             Text(
-              error,
+              userFacingErrorMessage(l10n, error),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: colorScheme.onSurfaceVariant,
               ),

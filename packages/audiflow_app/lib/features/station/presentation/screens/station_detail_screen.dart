@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
+import '../../../../app/errors/user_facing_error.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
 import '../../../podcast_detail/presentation/controllers/podcast_detail_controller.dart';
@@ -40,7 +41,12 @@ class StationDetailScreen extends ConsumerWidget {
         appBar: AppBar(
           title: Text(AppLocalizations.of(context).stationSectionTitle),
         ),
-        body: Center(child: Text(error.toString())),
+        body: Center(
+          child: Text(
+            userFacingErrorMessage(AppLocalizations.of(context), error),
+            textAlign: TextAlign.center,
+          ),
+        ),
       ),
     );
   }
@@ -243,7 +249,12 @@ class _StationDetailContentState extends ConsumerState<_StationDetailContent> {
       body: episodesAsync.when(
         data: (episodes) => _buildEpisodeList(context, episodes),
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(child: Text(error.toString())),
+        error: (error, _) => Center(
+          child: Text(
+            userFacingErrorMessage(AppLocalizations.of(context), error),
+            textAlign: TextAlign.center,
+          ),
+        ),
       ),
     );
   }

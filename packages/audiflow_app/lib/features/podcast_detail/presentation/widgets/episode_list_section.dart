@@ -186,9 +186,7 @@ List<Widget> buildEpisodeListSlivers({
           builder: (context) => Padding(
             padding: const EdgeInsets.all(Spacing.lg),
             child: Text(
-              AppLocalizations.of(
-                context,
-              ).podcastDetailEpisodeLoadError(error.toString()),
+              podcastDetailLoadErrorText(AppLocalizations.of(context), error),
             ),
           ),
         ),

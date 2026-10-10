@@ -4,7 +4,10 @@ import 'package:app_links/app_links.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+import '../utils/opml_read_failure.dart';
 
 part 'opml_file_receiver_controller.g.dart';
 
@@ -32,9 +35,13 @@ class OpmlFileReceiverSuccess extends OpmlFileReceiverState {
 
 /// Error during file processing.
 class OpmlFileReceiverError extends OpmlFileReceiverState {
-  OpmlFileReceiverError(this.message);
+  OpmlFileReceiverError(this.failure, {this.error});
 
-  final String message;
+  /// Why the file could not be used; the UI maps it to localized text.
+  final OpmlReadFailure failure;
+
+  /// The underlying failure, if any; kept for diagnostics only.
+  final Object? error;
 }
 
 /// Listens for incoming .opml file URIs from external apps
@@ -76,7 +83,7 @@ class OpmlFileReceiverController extends _$OpmlFileReceiverController {
       final entries = parser.parse(content);
 
       if (entries.isEmpty) {
-        state = OpmlFileReceiverError('No podcast feeds found in the file');
+        state = OpmlFileReceiverError(OpmlReadFailure.noFeeds);
         return;
       }
 
@@ -93,10 +100,16 @@ class OpmlFileReceiverController extends _$OpmlFileReceiverController {
         entries: entries,
         subscribedFeedUrls: subscribedUrls,
       );
-    } on FormatException catch (e) {
-      state = OpmlFileReceiverError(e.message);
-    } on Exception catch (e) {
-      state = OpmlFileReceiverError(e.toString());
+    } on FormatException catch (e, stack) {
+      _logger.w(
+        'Received OPML file is not readable',
+        error: e,
+        stackTrace: stack,
+      );
+      state = OpmlFileReceiverError(OpmlReadFailure.unreadableFile, error: e);
+    } on Exception catch (e, stack) {
+      _logger.e('Received OPML file failed', error: e, stackTrace: stack);
+      state = OpmlFileReceiverError(OpmlReadFailure.unexpected, error: e);
     }
   }
 
@@ -122,6 +135,8 @@ class OpmlFileReceiverController extends _$OpmlFileReceiverController {
   /// Exposes [_handleUri] for unit testing.
   @visibleForTesting
   Future<void> handleUriForTest(Uri uri) => _handleUri(uri);
+
+  Logger get _logger => ref.read(namedLoggerProvider('OpmlFileReceiver'));
 
   /// Resets state to idle after navigation has been handled.
   void reset() {

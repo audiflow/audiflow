@@ -34,6 +34,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get commonDone => '完了';
 
   @override
+  String get errorNetwork => '接続できませんでした。インターネット接続を確認して、もう一度お試しください。';
+
+  @override
+  String get errorGeneric => '問題が発生しました。しばらくしてから再試行してください。';
+
+  @override
   String get settingsTitle => '設定';
 
   @override
@@ -360,9 +366,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get storageExportSuccess => '購読をエクスポートしました';
 
   @override
-  String storageExportError(String message) {
-    return 'エクスポート失敗: $message';
-  }
+  String get storageExportError => 'エクスポートに失敗しました';
 
   @override
   String get storageImportTitle => '購読をインポート';
@@ -399,9 +403,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get storageResetComplete => 'データのリセットが完了しました';
 
   @override
-  String storageResetFailed(String error) {
-    return 'リセット失敗: $error';
-  }
+  String get storageResetFailed => 'リセットに失敗しました';
 
   @override
   String get storageImportComplete => 'インポート完了';
@@ -780,11 +782,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get podcastDetailPlaylistEmpty => 'このプレイリストにはエピソードがありません';
 
   @override
-  String podcastDetailEpisodeLoadError(String error) {
-    return 'エピソード読み込みエラー: $error';
-  }
-
-  @override
   String podcastDetailEpisodeCount(int count) {
     return '$countエピソード';
   }
@@ -819,11 +816,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get episodeFilterDownloaded => 'ダウンロード済み';
-
-  @override
-  String podcastDetailFailedToLoad(String error) {
-    return '読み込み失敗: $error';
-  }
 
   @override
   String get episodeReplaceQueueTitle => 'キューを置き換えますか？';
@@ -967,6 +959,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get opmlImportTitle => 'ポッドキャストをインポート';
+
+  @override
+  String get opmlFileUnreadable => 'このファイルを読み込めませんでした';
+
+  @override
+  String get opmlNoFeedsFound => 'ファイルにポッドキャストのフィードが見つかりませんでした';
 
   @override
   String get opmlAlreadySubscribed => '購読済み';

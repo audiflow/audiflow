@@ -1,6 +1,7 @@
 import 'package:audiflow_app/features/settings/presentation/controllers/opml_import_controller.dart';
 import 'package:audiflow_app/features/settings/presentation/screens/opml_import_preview_screen.dart';
 import 'package:audiflow_app/features/settings/presentation/widgets/opml_import_flow.dart';
+import 'package:audiflow_app/features/settings/presentation/utils/opml_read_failure.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
@@ -60,10 +61,29 @@ void main() {
       check(find.byType(OpmlImportPreviewScreen).evaluate()).isNotEmpty();
     });
 
+    testWidgets('shows the generic message, not the raw error text', (
+      tester,
+    ) async {
+      await pumpFlow(tester);
+
+      fake.emit(
+        OpmlPickError(
+          OpmlReadFailure.unexpected,
+          error: StateError('IsarError: Unique index violated.'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      check(
+        find.text('Something went wrong. Please try again later.').evaluate(),
+      ).isNotEmpty();
+      check(find.textContaining('IsarError').evaluate()).isEmpty();
+    });
+
     testWidgets('surfaces a parse error without navigating', (tester) async {
       await pumpFlow(tester);
 
-      fake.emit(OpmlPickError('No podcast feeds found in the file'));
+      fake.emit(OpmlPickError(OpmlReadFailure.noFeeds));
       await tester.pumpAndSettle();
 
       check(

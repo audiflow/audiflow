@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
+import '../../../../app/errors/user_facing_error.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../controllers/transcript_follow_controller.dart';
 
@@ -96,7 +97,13 @@ class _TranscriptTimelineViewState
   }
 
   Widget _buildError(Object error) {
-    return Center(child: Text('$error'));
+    final l10n = AppLocalizations.of(context);
+    return Center(
+      child: Text(
+        userFacingErrorMessage(l10n, error),
+        textAlign: TextAlign.center,
+      ),
+    );
   }
 
   Widget _buildTimeline(
