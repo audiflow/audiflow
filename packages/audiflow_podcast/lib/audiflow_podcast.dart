@@ -87,6 +87,7 @@ export 'src/cache/cache_metadata.dart';
 export 'src/errors/podcast_exception.dart';
 // Error types
 export 'src/errors/podcast_parse_error.dart';
+export 'src/models/episode_identity.dart';
 export 'src/models/podcast_chapter.dart';
 export 'src/models/podcast_chapters_link.dart';
 // Entity models

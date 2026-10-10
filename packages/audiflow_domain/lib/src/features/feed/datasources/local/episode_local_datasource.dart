@@ -1,3 +1,5 @@
+import 'package:audiflow_podcast/audiflow_podcast.dart'
+    show duplicateGuidKey, duplicateGuidSeparator, guidOfStorageKey;
 import 'package:isar_community/isar.dart';
 
 import '../../models/episode.dart';
@@ -30,34 +32,80 @@ class EpisodeLocalDatasource {
 
   /// Upserts multiple episodes in a batch.
   ///
+  /// Feeds sometimes reuse one guid for several items. Each item is stored
+  /// under the key [_FeedItemBatch.claim] picks, and its `guid` is
+  /// rewritten to that key so callers see where it was stored. An item
+  /// that repeats an episode already in the batch is skipped, since
+  /// writing it would violate the unique index and abort the whole batch;
+  /// its `guid` becomes the key of the episode it repeats.
   /// App-owned state on existing rows is kept (see [_keepAppState]).
   Future<void> upsertAll(List<Episode> episodes) async {
     await _isar.writeTxn(() async {
+      final batch = _FeedItemBatch();
       for (final episode in episodes) {
-        final existing = await _isar.episodes.getByPodcastIdGuid(
-          episode.podcastId,
-          episode.guid,
-        );
-        if (existing != null) {
-          _keepAppState(episode, existing);
-        }
+        batch.claim(episode, await _storedSiblings(episode, batch));
       }
-      await _isar.episodes.putAll(episodes);
+      await _isar.episodes.putAll(batch.episodes);
     });
   }
 
-  /// Carries the existing row's identity and app-owned state onto
-  /// [incoming].
+  /// Stored rows created from feed items with [episode]'s guid: the row
+  /// under the raw guid and every duplicate-guid row.
+  Future<List<Episode>> _storedSiblings(
+    Episode episode,
+    _FeedItemBatch batch,
+  ) async {
+    final raw = await _isar.episodes.getByPodcastIdGuid(
+      episode.podcastId,
+      episode.guid,
+    );
+    final duplicates = await batch.storedDuplicates(
+      episode.podcastId,
+      () => _storedDuplicates(episode.podcastId),
+    );
+    return [?raw, ...?duplicates[episode.guid]];
+  }
+
+  /// A podcast's duplicate-guid rows grouped by their feed guid. Loaded
+  /// once per batch: such rows are rare, and a raw guid alone cannot
+  /// find a row whose key was built from an enclosure URL since changed.
+  Future<Map<String, List<Episode>>> _storedDuplicates(int podcastId) async {
+    final rows = await _isar.episodes
+        .where()
+        .podcastIdEqualToAnyGuid(podcastId)
+        .filter()
+        .guidContains(duplicateGuidSeparator)
+        .findAll();
+    final byGuid = <String, List<Episode>>{};
+    for (final row in rows) {
+      (byGuid[guidOfStorageKey(row.guid)] ??= []).add(row);
+    }
+    return byGuid;
+  }
+
+  /// Returns the stored episode for a feed item: the row stored with its
+  /// guid and current audio URL.
   ///
-  /// Callers build [incoming] from feed data, so fields the feed does not
-  /// carry arrive at their defaults; without this, every feed refresh
-  /// would clear favorites and re-arm auto-download.
-  static void _keepAppState(Episode incoming, Episode existing) {
-    incoming
-      ..id = existing.id
-      ..isFavorited = existing.isFavorited
-      ..favoritedAt = existing.favoritedAt
-      ..autoDownloadEnqueued = existing.autoDownloadEnqueued;
+  /// Every upserted item's row holds its current audio URL, so no match
+  /// means the item was not stored (a repost skipped in favor of another
+  /// item); falling back to the raw guid would hand its media to another
+  /// episode.
+  Future<Episode?> getByFeedItem(
+    int podcastId,
+    String guid,
+    String audioUrl,
+  ) async {
+    final raw = await _isar.episodes.getByPodcastIdGuid(podcastId, guid);
+    // An item without an enclosure URL can only be matched by guid.
+    if (audioUrl.isEmpty || raw?.audioUrl == audioUrl) return raw;
+    final duplicate = await _isar.episodes
+        .where()
+        .podcastIdEqualToAnyGuid(podcastId)
+        .filter()
+        .guidStartsWith(duplicateGuidKey(guid, ''))
+        .audioUrlEqualTo(audioUrl)
+        .findFirst();
+    return duplicate;
   }
 
   /// Returns all episodes for a podcast, ordered by publish date
@@ -97,15 +145,16 @@ class EpisodeLocalDatasource {
     return _isar.episodes.filter().audioUrlEqualTo(audioUrl).findFirst();
   }
 
-  /// Returns all episode GUIDs for a podcast.
+  /// Returns each stored episode key of a podcast with its audio URL.
   ///
-  /// Used for early-stop optimization during RSS parsing.
-  Future<Set<String>> getGuidsByPodcastId(int podcastId) async {
+  /// Used for early-stop during RSS parsing, so a known guid only stops the
+  /// parse when the item's enclosure URL matches the stored one.
+  Future<Map<String, String>> getAudioUrlsByGuid(int podcastId) async {
     final episodes = await _isar.episodes
         .filter()
         .podcastIdEqualTo(podcastId)
         .findAll();
-    return episodes.map((e) => e.guid).toSet();
+    return {for (final e in episodes) e.guid: e.audioUrl};
   }
 
   /// Returns the newest episode for a podcast by publishedAt descending.
@@ -217,4 +266,102 @@ class EpisodeLocalDatasource {
 
     return query.sortByEpisodeNumber().limit(limit).findAll();
   }
+}
+
+/// Storage keys claimed by one [EpisodeLocalDatasource.upsertAll] batch.
+class _FeedItemBatch {
+  final _byKey = <(int, String), Episode>{};
+  final _byGuid = <(int, String), List<Episode>>{};
+  final _duplicatesByPodcast = <int, Map<String, List<Episode>>>{};
+
+  List<Episode> get episodes => _byKey.values.toList();
+
+  Future<Map<String, List<Episode>>> storedDuplicates(
+    int podcastId,
+    Future<Map<String, List<Episode>>> Function() load,
+  ) async => _duplicatesByPodcast[podcastId] ??= await load();
+
+  /// Rewrites [episode]'s guid to its storage key, given the [stored]
+  /// rows sharing its guid, and queues it for writing unless the batch
+  /// already holds the same episode.
+  ///
+  /// A matching stored row keeps its key, id and app state, whichever key
+  /// it is under; only an unmatched item gets a new key: the raw guid
+  /// when free, otherwise its duplicate-guid key. A skipped repeat takes
+  /// the key of the episode it repeats, so callers recording observed
+  /// keys never mark another stored episode as still in the feed.
+  void claim(Episode episode, List<Episode> stored) {
+    final guidKey = (episode.podcastId, episode.guid);
+    final queued = _byGuid[guidKey] ?? const <Episode>[];
+    final repeated = queued.where((other) => _isSameEpisode(other, episode));
+    if (repeated.isNotEmpty) {
+      episode.guid = repeated.first.guid;
+      return;
+    }
+    final unclaimed = stored.where(
+      (row) => !_byKey.containsKey((row.podcastId, row.guid)),
+    );
+    final match = _bestMatch(unclaimed, episode);
+    final key = match?.guid ?? _newKey(episode, [...stored, ...queued]);
+    episode.guid = key;
+    // Never queue two items under one key: the write would abort.
+    if (_byKey.containsKey((episode.podcastId, key))) return;
+    if (match != null) _keepAppState(episode, match);
+    _byKey[(episode.podcastId, key)] = episode;
+    (_byGuid[guidKey] ??= []).add(episode);
+  }
+
+  /// A row with the same audio URL first, so a date match never takes a
+  /// row that another item in the feed matches exactly; then the same
+  /// date; then, when a date is missing, the raw-guid row before any
+  /// duplicate, as the guid alone decided before reused guids were told
+  /// apart.
+  static Episode? _bestMatch(Iterable<Episode> rows, Episode episode) =>
+      rows.where((row) => row.audioUrl == episode.audioUrl).firstOrNull ??
+      rows.where((row) => _isSameEpisode(row, episode)).firstOrNull ??
+      _undatedMatch(rows, episode);
+
+  static Episode? _undatedMatch(Iterable<Episode> rows, Episode episode) {
+    final candidates = rows.where(
+      (row) => row.publishedAt == null || episode.publishedAt == null,
+    );
+    return candidates.where((row) => row.guid == episode.guid).firstOrNull ??
+        candidates.firstOrNull;
+  }
+
+  static String _newKey(Episode episode, Iterable<Episode> taken) {
+    final takenKeys = {for (final row in taken) row.guid};
+    if (!takenKeys.contains(episode.guid)) return episode.guid;
+    return duplicateGuidKey(episode.guid, episode.audioUrl);
+  }
+}
+
+/// Carries the existing row's identity and app-owned state onto
+/// [incoming].
+///
+/// Callers build [incoming] from feed data, so fields the feed does not
+/// carry arrive at their defaults; without this, every feed refresh would
+/// clear favorites and re-arm auto-download.
+void _keepAppState(Episode incoming, Episode existing) {
+  incoming
+    ..id = existing.id
+    ..isFavorited = existing.isFavorited
+    ..favoritedAt = existing.favoritedAt
+    ..autoDownloadEnqueued = existing.autoDownloadEnqueued;
+}
+
+/// Two items with one guid are the same episode when the enclosure URL or
+/// the publish date matches: hosts rewrite enclosure URLs (tracking
+/// prefixes, signed URLs) but keep the date, and a reposted item keeps the
+/// date too. A guid reused for a new episode changes both.
+///
+/// A missing date proves nothing either way; stored rows fall back to the
+/// guid for it (see [_FeedItemBatch._undatedMatch]), but two items in one
+/// batch are only collapsed on positive evidence, so an undated item never
+/// swallows a dated one that identifies another stored row.
+bool _isSameEpisode(Episode a, Episode b) {
+  if (a.audioUrl == b.audioUrl) return true;
+  final (aDate, bDate) = (a.publishedAt, b.publishedAt);
+  // Isar returns local time; compare instants, not representations.
+  return aDate != null && bDate != null && aDate.isAtSameMomentAs(bDate);
 }

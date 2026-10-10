@@ -3,6 +3,7 @@ import 'dart:isolate';
 
 import 'package:xml/xml.dart';
 
+import '../models/episode_identity.dart';
 import '../models/podcast_chapters_link.dart';
 import 'description_chapters_parser.dart';
 import 'parse_progress.dart';
@@ -42,6 +43,7 @@ class IsolateRssParser {
   static Future<IsolateParsedFeed> parseFeed({
     required String feedXml,
     Set<String> knownGuids = const {},
+    Map<String, String> knownEnclosureUrls = const {},
     DateTime? knownNewestPubDate,
     String? knownNewestGuid,
   }) async {
@@ -52,6 +54,7 @@ class IsolateRssParser {
     await for (final progress in parse(
       feedXml: feedXml,
       knownGuids: knownGuids,
+      knownEnclosureUrls: knownEnclosureUrls,
       knownNewestPubDate: knownNewestPubDate,
       knownNewestGuid: knownNewestGuid,
     )) {
@@ -80,6 +83,9 @@ class IsolateRssParser {
   ///
   /// - [feedXml]: Raw XML content of the RSS feed
   /// - [knownGuids]: Set of episode GUIDs already in the database
+  /// - [knownEnclosureUrls]: Stored enclosure URL per known guid. When
+  ///   given, a known guid only stops parsing if the item's enclosure URL
+  ///   matches too, so a new item that reuses an old guid is still parsed.
   /// - [maxNewEpisodes]: Optional limit on episodes to parse (null = unlimited)
   ///
   /// Returns a stream of [ParseProgress] events. The isolate is spawned
@@ -90,6 +96,7 @@ class IsolateRssParser {
   static Stream<ParseProgress> parse({
     required String feedXml,
     required Set<String> knownGuids,
+    Map<String, String> knownEnclosureUrls = const {},
     int? maxNewEpisodes,
     DateTime? knownNewestPubDate,
     String? knownNewestGuid,
@@ -107,6 +114,7 @@ class IsolateRssParser {
               _IsolateParams(
                 feedXml: feedXml,
                 knownGuids: knownGuids,
+                knownEnclosureUrls: knownEnclosureUrls,
                 maxNewEpisodes: maxNewEpisodes,
                 sendPort: receivePort.sendPort,
                 knownNewestPubDate: knownNewestPubDate,
@@ -201,6 +209,8 @@ class IsolateRssParser {
       var parsedCount = 0;
       var stoppedEarly = false;
       final tailGuids = <String>{};
+      final keysByItem = _indexKeysByItem(params.knownEnclosureUrls);
+      final keysByGuid = _indexKeysByGuid(params.knownGuids);
       final cutoff = params.knownNewestPubDate;
       final cutoffGuid = params.knownNewestGuid;
       final itemOpenTag = RegExp(r'<item[\s>]');
@@ -221,11 +231,18 @@ class IsolateRssParser {
 
         // Decode once for comparison against database-stored (decoded) GUIDs
         final decodedGuid = guid != null ? _decodeXmlEntities(guid) : null;
+        final rawEnclosure = _extractEnclosureUrl(itemXml);
+        final enclosureUrl = rawEnclosure != null
+            ? _decodeXmlEntities(rawEnclosure)
+            : null;
 
         // Early stop: GUID-set match (legacy path, used by parseWithProgress)
-        if (decodedGuid != null && params.knownGuids.contains(decodedGuid)) {
+        final storedKey = decodedGuid == null
+            ? null
+            : _storedKeyOf(params, keysByItem, decodedGuid, enclosureUrl);
+        if (storedKey != null) {
           stoppedEarly = true;
-          tailGuids.add(decodedGuid);
+          tailGuids.add(storedKey);
           break;
         }
 
@@ -236,12 +253,14 @@ class IsolateRssParser {
           if (pubDate != null && !cutoff.isBefore(pubDate)) {
             if (cutoffGuid == null || cutoffGuid == decodedGuid) {
               stoppedEarly = true;
-              final id =
-                  decodedGuid ??
-                  _decodeXmlEntities(
-                    _extractEnclosureUrl(itemXml) ?? '',
-                  );
-              if (id.isNotEmpty) tailGuids.add(id);
+              _addItemId(
+                tailGuids,
+                params,
+                keysByItem,
+                keysByGuid,
+                decodedGuid,
+                enclosureUrl,
+              );
               break;
             }
           }
@@ -273,9 +292,16 @@ class IsolateRssParser {
           final close = xml.indexOf(itemCloseTag, start);
           if (close == -1) break;
           final snippet = xml.substring(start, close + itemCloseTag.length);
-          final raw =
-              _extractTagText(snippet, 'guid') ?? _extractEnclosureUrl(snippet);
-          if (raw != null) tailGuids.add(_decodeXmlEntities(raw));
+          final rawGuid = _extractTagText(snippet, 'guid');
+          final rawUrl = _extractEnclosureUrl(snippet);
+          _addItemId(
+            tailGuids,
+            params,
+            keysByItem,
+            keysByGuid,
+            rawGuid != null ? _decodeXmlEntities(rawGuid) : null,
+            rawUrl != null ? _decodeXmlEntities(rawUrl) : null,
+          );
         }
       }
 
@@ -389,6 +415,77 @@ class IsolateRssParser {
     r'<enclosure\b[^>]*\burl\s*=\s*["\x27]([^"\x27]*)["\x27]',
     caseSensitive: false,
   );
+
+  /// Whether an item is already stored. With [_IsolateParams.knownEnclosureUrls]
+  /// a guid match alone is not enough: the feed may have reused the guid for
+  /// a new item, which is then stored under a duplicate-guid key.
+  /// Maps each stored (guid, enclosure URL) pair to the key its row is
+  /// stored under, so an item finds its row whichever key holds it.
+  static Map<(String, String), String> _indexKeysByItem(
+    Map<String, String> knownEnclosureUrls,
+  ) => {
+    for (final MapEntry(:key, :value) in knownEnclosureUrls.entries)
+      (guidOfStorageKey(key), value): key,
+  };
+
+  /// Groups stored keys by the feed guid they were built from.
+  static Map<String, List<String>> _indexKeysByGuid(Set<String> knownGuids) {
+    final byGuid = <String, List<String>>{};
+    for (final key in knownGuids) {
+      (byGuid[guidOfStorageKey(key)] ??= []).add(key);
+    }
+    return byGuid;
+  }
+
+  /// The stored key of the row this item matches, or null for a new item.
+  ///
+  /// With enclosure URLs known, an item matches only the row stored with
+  /// its guid and URL, so a new item reusing an old guid is still parsed.
+  static String? _storedKeyOf(
+    _IsolateParams params,
+    Map<(String, String), String> keysByItem,
+    String guid,
+    String? enclosureUrl,
+  ) {
+    if (params.knownEnclosureUrls.isEmpty || enclosureUrl == null) {
+      return params.knownGuids.contains(guid) ? guid : null;
+    }
+    final key = keysByItem[(guid, enclosureUrl)];
+    if (key != null) return key;
+    // Rows stored without an enclosure URL can only be matched by guid.
+    return params.knownEnclosureUrls[guid] == '' ? guid : null;
+  }
+
+  /// Records the key under which an item seen in the feed is stored.
+  ///
+  /// An item matching a row reports only that row's key, so a sibling
+  /// sharing its guid can still be detected as dropped. An unmatched item
+  /// reports every stored key of its guid (or its guid, or enclosure URL
+  /// when it has none): its row may be stored under a URL the host has
+  /// since rewritten, and must not be treated as dropped.
+  static void _addItemId(
+    Set<String> ids,
+    _IsolateParams params,
+    Map<(String, String), String> keysByItem,
+    Map<String, List<String>> keysByGuid,
+    String? guid,
+    String? enclosureUrl,
+  ) {
+    final storedKey = guid == null
+        ? null
+        : _storedKeyOf(params, keysByItem, guid, enclosureUrl);
+    if (storedKey != null) {
+      ids.add(storedKey);
+      return;
+    }
+    final siblings = guid == null ? null : keysByGuid[guid];
+    if (siblings != null) {
+      ids.addAll(siblings);
+      return;
+    }
+    final id = guid ?? enclosureUrl;
+    if (id != null && id.isNotEmpty) ids.add(id);
+  }
 
   static String? _extractEnclosureUrl(String xml) {
     final match = _enclosureUrlRe.firstMatch(xml);
@@ -692,6 +789,7 @@ class _IsolateParams {
   const _IsolateParams({
     required this.feedXml,
     required this.knownGuids,
+    required this.knownEnclosureUrls,
     required this.maxNewEpisodes,
     required this.sendPort,
     this.knownNewestPubDate,
@@ -700,6 +798,7 @@ class _IsolateParams {
 
   final String feedXml;
   final Set<String> knownGuids;
+  final Map<String, String> knownEnclosureUrls;
   final int? maxNewEpisodes;
   final SendPort sendPort;
 

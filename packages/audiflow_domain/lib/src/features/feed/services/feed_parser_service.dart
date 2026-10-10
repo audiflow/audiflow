@@ -199,12 +199,15 @@ class FeedParserService {
   /// - [xmlContent]: Raw XML content of the RSS feed
   /// - [podcastId]: Database ID for the podcast
   /// - [knownGuids]: Set of episode GUIDs already in the database
+  /// - [knownEnclosureUrls]: Stored audio URL per known guid, so a new item
+  ///   that reuses a known guid does not stop the parse
   /// - [onBatchReady]: Callback to persist episodes and media metadata
   /// - [batchSize]: Number of episodes per batch (default: 20)
   Stream<FeedParseProgress> parseWithProgress({
     required String xmlContent,
     required int podcastId,
     required Set<String> knownGuids,
+    Map<String, String> knownEnclosureUrls = const {},
     required Future<void> Function(
       List<Episode> episodes,
       List<ParsedEpisodeMediaMeta> mediaMetas,
@@ -222,6 +225,7 @@ class FeedParserService {
     await for (final progress in IsolateRssParser.parse(
       feedXml: xmlContent,
       knownGuids: knownGuids,
+      knownEnclosureUrls: knownEnclosureUrls,
     )) {
       switch (progress) {
         case ParsedPodcastMeta(
@@ -287,6 +291,7 @@ class FeedParserService {
             mediaMetaBuffer.add(
               ParsedEpisodeMediaMeta(
                 guid: resolvedGuid,
+                audioUrl: enclosureUrl ?? '',
                 transcripts: transcripts,
                 chapters: chapters,
                 descriptionChapters: descriptionChapters,

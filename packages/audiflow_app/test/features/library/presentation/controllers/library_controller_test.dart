@@ -89,7 +89,7 @@ class _FakeEpisodeRepository implements EpisodeRepository {
   @override
   Future<List<Episode>> getByIds(List<int> ids) => throw UnimplementedError();
   @override
-  Future<Set<String>> getGuidsByPodcastId(int podcastId) =>
+  Future<Map<String, String>> getAudioUrlsByGuid(int podcastId) =>
       throw UnimplementedError();
   @override
   Future<void> storeTranscriptAndChapterDataFromParsed(

@@ -373,7 +373,8 @@ class FeedSyncService implements SuspendableWriter {
       }
 
       // Get known GUIDs for early termination
-      final knownGuids = await episodeRepo.getGuidsByPodcastId(sub.id);
+      final knownAudioUrls = await episodeRepo.getAudioUrlsByGuid(sub.id);
+      final knownGuids = knownAudioUrls.keys.toSet();
 
       // Look up preset config for per-group extraction
       final presetConfig = await _ref.read(
@@ -389,11 +390,11 @@ class FeedSyncService implements SuspendableWriter {
         xmlContent: xmlContent,
         podcastId: sub.id,
         knownGuids: knownGuids,
+        knownEnclosureUrls: knownAudioUrls,
         onBatchReady: (episodes, mediaMetas) async {
           // The parser calls back between progress events, so a batch can
           // arrive after the loop below decided to break.
           if (cancelToken.isCancelled) return;
-          observedGuids.addAll(episodes.map((e) => e.guid));
           // Apply per-group extractor resolution if pattern config
           // is available.
           if (resolver != null) {
@@ -422,6 +423,9 @@ class FeedSyncService implements SuspendableWriter {
             }
           }
           await episodeRepo.upsertEpisodes(episodes);
+          // After the upsert, each guid is the key the episode is stored
+          // under, which may be a duplicate-guid key.
+          observedGuids.addAll(episodes.map((e) => e.guid));
 
           // Notify stations about newly inserted/updated episodes.
           final reconcilerService = _ref.read(stationReconcilerServiceProvider);
