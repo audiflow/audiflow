@@ -127,4 +127,19 @@ void main() {
           .selected,
     ).equals(EpisodeLimitMode.latest);
   });
+
+  testWidgets('the number box stays centered as digits are added', (
+    tester,
+  ) async {
+    await pumpSheet(tester);
+    final box = find.byKey(EpisodeLimitSheet.numberBoxKey);
+    final sheetCenter = tester.getCenter(find.byType(EpisodeLimitSheet)).dx;
+    check(tester.getCenter(box).dx).equals(sheetCenter);
+
+    await tester.tap(find.text('1'));
+    await tester.tap(find.text('5'));
+    await tester.pump();
+
+    check(tester.getCenter(box).dx).equals(sheetCenter);
+  });
 }

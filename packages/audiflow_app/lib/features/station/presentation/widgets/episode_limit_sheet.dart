@@ -32,6 +32,9 @@ class EpisodeLimitSheet extends StatefulWidget {
   /// Largest count the keypad accepts; beyond it "All" is the choice.
   static const int maxCount = 99;
 
+  @visibleForTesting
+  static const Key numberBoxKey = ValueKey('episodeLimitNumberBox');
+
   /// The podcast's title, or a note that the station default is edited.
   final String subtitle;
   final EpisodeLimitMode initialMode;
@@ -146,30 +149,55 @@ class _EpisodeLimitSheetState extends State<EpisodeLimitSheet> {
     );
   }
 
+  // The number box sits on the sheet's center line and grows with the
+  // digits; the unit hangs off its right edge so it never pulls the
+  // number off center.
   Widget _readout(BuildContext context, AppLocalizations l10n) {
     final theme = Theme.of(context);
+    final colors = AppColors.of(context);
     final color = _isLatest ? null : theme.disabledColor;
-    final count = _entry.value;
     return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.baseline,
-      textBaseline: TextBaseline.alphabetic,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text(
-          _entry.text.isEmpty ? '0' : _entry.text,
-          style: theme.textTheme.displayMedium?.copyWith(
-            color: color,
-            fontFeatures: const [FontFeature.tabularFigures()],
-          ),
-        ),
-        const SizedBox(width: Spacing.xs),
-        Text(
-          l10n.stationEpisodeLimitUnit(count),
-          style: AppTextStyles.body.copyWith(
-            color: color ?? AppColors.of(context).inkSecondary,
+        const Spacer(),
+        _numberBox(theme, colors, color),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsetsDirectional.only(start: Spacing.sm),
+            child: Text(
+              l10n.stationEpisodeLimitUnit(_entry.value),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTextStyles.body.copyWith(
+                color: color ?? colors.inkSecondary,
+              ),
+            ),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _numberBox(ThemeData theme, AppColors colors, Color? color) {
+    return Container(
+      key: EpisodeLimitSheet.numberBoxKey,
+      constraints: const BoxConstraints(minWidth: 88),
+      padding: const EdgeInsets.symmetric(
+        horizontal: Spacing.md,
+        vertical: Spacing.xxs,
+      ),
+      decoration: BoxDecoration(
+        color: colors.surfaceSunken,
+        borderRadius: AppBorders.sm,
+      ),
+      child: Text(
+        _entry.text.isEmpty ? '0' : _entry.text,
+        textAlign: TextAlign.center,
+        style: theme.textTheme.displayMedium?.copyWith(
+          color: color,
+          fontFeatures: const [FontFeature.tabularFigures()],
+        ),
+      ),
     );
   }
 }
