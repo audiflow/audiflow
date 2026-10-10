@@ -230,6 +230,14 @@ void main() {
         for (final e in episodes) e.guid: e.itunesExplicit,
       }).deepEquals({'marked': true, 'clean': false, 'unmarked': false});
     });
+
+    test('parseFromString maps it to PodcastItem', () async {
+      final result = await service.parseFromString(explicitXml);
+
+      check({
+        for (final e in result.episodes) e.guid: e.isExplicit,
+      }).deepEquals({'marked': true, 'clean': false, 'unmarked': null});
+    });
   });
 
   group('chapters link', () {

@@ -143,6 +143,7 @@ class FeedParserService {
               duration: e.duration,
               episodeNumber: e.episodeNumber,
               seasonNumber: e.seasonNumber,
+              isExplicit: e.isExplicit,
               contentEncoded: e.contentEncoded,
               summary: e.summary,
               link: e.link,
