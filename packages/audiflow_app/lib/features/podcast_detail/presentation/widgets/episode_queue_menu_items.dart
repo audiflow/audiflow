@@ -36,7 +36,10 @@ class EpisodeQueueMenuOptions {
     required List<int>? siblingEpisodeIds,
     required AutoPlayOrder? effectiveOrder,
   }) async {
+    // Read up front: the row may unmount during the awaits, and a ref read
+    // after that throws instead of reaching the fallback.
     final service = ref.read(queueServiceProvider);
+    final logger = ref.read(namedLoggerProvider('EpisodeQueueMenu'));
     try {
       final queue = await service.getQueue();
       final fromHere = siblingEpisodeIds == null
@@ -51,13 +54,11 @@ class EpisodeQueueMenuOptions {
         hasFollowing: 1 < fromHere.length,
       );
     } on Object catch (error, stackTrace) {
-      ref
-          .read(namedLoggerProvider('EpisodeQueueMenu'))
-          .w(
-            'Failed to resolve queue menu options',
-            error: error,
-            stackTrace: stackTrace,
-          );
+      logger.w(
+        'Failed to resolve queue menu options',
+        error: error,
+        stackTrace: stackTrace,
+      );
       return fallback;
     }
   }
