@@ -1,6 +1,8 @@
 import 'package:audiflow_app/features/podcast_detail/presentation/utils/group_sorting.dart';
 import 'package:audiflow_domain/audiflow_domain.dart'
     show
+        EpisodeSortField,
+        EpisodeSortRule,
         SmartPlaylistGroup,
         SmartPlaylistSortField,
         SmartPlaylistSortRule,
@@ -23,6 +25,20 @@ SmartPlaylistGroup _group({
 }
 
 void main() {
+  group('seriesEpisodeOrder', () {
+    test('defaults to oldest first when the preset sets no order', () {
+      expect(seriesEpisodeOrder(null), SortOrder.ascending);
+    });
+
+    test('follows the preset episode sort when set', () {
+      const newestFirst = EpisodeSortRule(
+        field: EpisodeSortField.publishedAt,
+        order: SortOrder.descending,
+      );
+      expect(seriesEpisodeOrder(newestFirst), SortOrder.descending);
+    });
+  });
+
   group('sortGroupsBySort', () {
     group('null groupSort falls back to sortKey', () {
       final groups = [

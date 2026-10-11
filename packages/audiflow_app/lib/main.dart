@@ -10,6 +10,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:go_router/go_router.dart';
 import 'package:isar_community/isar.dart';
 import 'package:logger/logger.dart';
@@ -186,7 +187,61 @@ Future<void> _startApp(
 }) async {
   await _configureOrientation();
 
-  final dir = await getApplicationDocumentsDirectory();
+  final container = await bootstrapAppContainer(
+    presetConfigBaseUrl: presetConfigBaseUrl,
+    prefs: prefs,
+    firebaseAnalytics: firebaseAnalytics,
+  );
+
+  // Run cache eviction non-blocking after startup
+  _runCacheEviction(container, container.read(isarProvider));
+
+  // Initialize background refresh (guarded for unsupported platforms)
+  try {
+    await Workmanager().initialize(backgroundCallback);
+    final settingsRepo = container.read(appSettingsRepositoryProvider);
+    if (settingsRepo.getAutoSync()) {
+      await BackgroundTaskRegistrar.register(
+        intervalMinutes: settingsRepo.getSyncIntervalMinutes(),
+        wifiOnly: settingsRepo.getWifiOnlySync(),
+        inputData: BackgroundTaskRegistrar.buildInputData(settingsRepo),
+      );
+    }
+  } catch (e, stack) {
+    // Workmanager not available or platform error — non-critical
+    final logger = container.read(namedLoggerProvider('BackgroundRefresh'));
+    logger.w(
+      'Failed to initialize background refresh',
+      error: e,
+      stackTrace: stack,
+    );
+  }
+
+  runApp(
+    UncontrolledProviderScope(
+      container: container,
+      child: const AppLifecycleObserver(child: MyApp()),
+    ),
+  );
+}
+
+/// Opens the database and builds the root [ProviderContainer], running the
+/// boot steps the first frame depends on (audio handler, last-played restore,
+/// preset summaries).
+///
+/// Shared with the store-screenshot integration test so it boots the same
+/// container as production instead of a hand-maintained copy. The test passes
+/// a throwaway [databaseDirectory] and its own [overrides]; production leaves
+/// both at their defaults.
+Future<ProviderContainer> bootstrapAppContainer({
+  required String presetConfigBaseUrl,
+  required SharedPreferences prefs,
+  required FirebaseAnalytics? firebaseAnalytics,
+  String? databaseDirectory,
+  List<Override> overrides = const [],
+}) async {
+  final dirPath =
+      databaseDirectory ?? (await getApplicationDocumentsDirectory()).path;
   // Standalone logger: ProviderContainer cannot be built before Isar is
   // open (Isar is a container override), so the logger provider is not
   // yet available. A plain Logger is sufficient for surfacing open
@@ -206,13 +261,13 @@ Future<void> _startApp(
     Breadcrumb(
       message: 'Opening Isar database',
       category: 'database',
-      data: {'directory': dir.path},
+      data: {'directory': dirPath},
     ),
   );
   final Isar isar;
   try {
     isar = await openIsarWithRecovery(
-      directory: dir.path,
+      directory: dirPath,
       logger: isarOpenLogger,
     );
     Sentry.addBreadcrumb(
@@ -308,6 +363,7 @@ Future<void> _startApp(
           reporter: ref.watch(forceUpdateReporterProvider),
         ),
       ),
+      ...overrides,
     ],
   );
 
@@ -347,36 +403,7 @@ Future<void> _startApp(
       .read(presetSchemaVersionProvider.notifier)
       .setSchemaVersion(rootMeta.schemaVersion);
 
-  // Run cache eviction non-blocking after startup
-  _runCacheEviction(container, isar);
-
-  // Initialize background refresh (guarded for unsupported platforms)
-  try {
-    await Workmanager().initialize(backgroundCallback);
-    final settingsRepo = container.read(appSettingsRepositoryProvider);
-    if (settingsRepo.getAutoSync()) {
-      await BackgroundTaskRegistrar.register(
-        intervalMinutes: settingsRepo.getSyncIntervalMinutes(),
-        wifiOnly: settingsRepo.getWifiOnlySync(),
-        inputData: BackgroundTaskRegistrar.buildInputData(settingsRepo),
-      );
-    }
-  } catch (e, stack) {
-    // Workmanager not available or platform error — non-critical
-    final logger = container.read(namedLoggerProvider('BackgroundRefresh'));
-    logger.w(
-      'Failed to initialize background refresh',
-      error: e,
-      stackTrace: stack,
-    );
-  }
-
-  runApp(
-    UncontrolledProviderScope(
-      container: container,
-      child: const AppLifecycleObserver(child: MyApp()),
-    ),
-  );
+  return container;
 }
 
 /// Starts forwarding unexpected logged errors and provider failures to
