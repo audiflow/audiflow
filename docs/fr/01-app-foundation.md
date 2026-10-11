@@ -28,6 +28,7 @@ The foundation exists so feature code never has to worry about how the app boots
 - **Switching tabs**: Each tab keeps its own navigation history. Moving from a deep screen in Library over to Search and back returns the user exactly where they left off in Library — no tab resets another tab's stack.
 - **Tablet layout**: On a phone the app is portrait-only with a bottom navigation bar. On a tablet it also allows landscape; tablet portrait shows a top tab bar and tablet landscape shows a persistent side navigation rail. The four destinations and the mini player remain available in every layout.
 - **Cold start from a notification**: If the app is launched by tapping a new-episode notification, after boot it navigates directly to the relevant episode instead of the default tab.
+- **Launch after a background start**: On Android the system can start the app without showing it (a media button, a Bluetooth device, media resumption). Opening the app afterwards shows the UI normally instead of staying on the splash screen.
 - **Database recovery**: If the local database fails to open because its schema is stale, the app recovers by recreating the database rather than crashing. Genuinely unrecoverable open failures are reported to crash monitoring.
 - **Unknown route**: Navigating to a route the app does not recognise quietly redirects to the Search tab instead of showing an error.
 
@@ -38,7 +39,7 @@ The foundation exists so feature code never has to worry about how the app boots
 - **Root service container**: A single application-wide container supplies shared dependencies to all feature code, so features depend on stable provider seams rather than constructing their own database, HTTP client, or analytics services.
 - **Tab navigation**: Four top-level destinations — Search, Library, Queue, Settings — each backed by an independent navigation stack so per-tab history is preserved across tab switches.
 - **Adaptive navigation shell**: One shell renders the appropriate navigation chrome for the device — bottom bar on phones, top tab bar on tablet portrait, side rail on tablet landscape — while keeping the same destinations and mini player in all three.
-- **Orientation policy**: Phones are locked to portrait; tablets are allowed all orientations, decided once at startup from the device's shortest screen side.
+- **Orientation policy**: Phones are locked to portrait; tablets are allowed all orientations, decided from the device's shortest screen side when the app first reaches the foreground. Boot never waits on it: an Android start without an activity cannot apply it, and awaiting it there would keep the app from ever rendering.
 - **Onboarding gate**: A router-level redirect sends first-time users through an onboarding carousel and persists a completion flag so the gate fires exactly once per install.
 - **Non-blocking startup work**: Best-effort tasks — stale-podcast cache eviction, background refresh registration, last-played restore — are tolerant of failure and never block or abort the app launch.
 
