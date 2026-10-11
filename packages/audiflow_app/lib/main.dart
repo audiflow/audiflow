@@ -8,7 +8,6 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:go_router/go_router.dart';
@@ -28,6 +27,7 @@ import 'app/app_locale.dart';
 import 'app/notification/notification_tap_handler.dart';
 import 'app/background/background_callback.dart';
 import 'app/background/background_task_registrar.dart';
+import 'app/orientation/orientation_lock.dart';
 import 'app/haptics/haptics_providers.dart';
 import 'features/force_update/force_update.dart';
 import 'features/monitoring/services/error_reporter.dart';
@@ -167,26 +167,11 @@ Future<void> appMain({
   }
 }
 
-Future<void> _configureOrientation() async {
-  final view = WidgetsBinding.instance.platformDispatcher.views.firstOrNull;
-  final logicalSize = view != null
-      ? view.physicalSize / view.devicePixelRatio
-      : Size.zero;
-  final isTablet = DeviceUtils.isTablet(logicalSize.shortestSide);
-  await SystemChrome.setPreferredOrientations(
-    isTablet
-        ? DeviceOrientation.values
-        : const [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown],
-  );
-}
-
 Future<void> _startApp(
   String presetConfigBaseUrl, {
   required SharedPreferences prefs,
   required FirebaseAnalytics? firebaseAnalytics,
 }) async {
-  await _configureOrientation();
-
   final container = await bootstrapAppContainer(
     presetConfigBaseUrl: presetConfigBaseUrl,
     prefs: prefs,
@@ -502,6 +487,7 @@ class MyApp extends ConsumerStatefulWidget {
 
 class _MyAppState extends ConsumerState<MyApp> {
   late final GoRouter _router;
+  final _orientationLock = OrientationLock();
 
   @override
   void initState() {
@@ -514,6 +500,7 @@ class _MyAppState extends ConsumerState<MyApp> {
       observers: [?faObserver],
     );
     unawaited(_initNotificationTapHandler());
+    _orientationLock.applyWhenResumed();
   }
 
   Future<void> _initNotificationTapHandler() async {
@@ -598,6 +585,7 @@ class _MyAppState extends ConsumerState<MyApp> {
 
   @override
   void dispose() {
+    _orientationLock.dispose();
     _router.dispose();
     super.dispose();
   }
