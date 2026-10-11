@@ -72,6 +72,37 @@ void main() {
       expect(applied, hasLength(1));
     });
 
+    void setView(WidgetTester tester, Size physicalSize, double pixelRatio) {
+      tester.view
+        ..physicalSize = physicalSize
+        ..devicePixelRatio = pixelRatio;
+      addTearDown(tester.view.reset);
+    }
+
+    testWidgets('locks a phone to portrait from its view size', (tester) async {
+      // 1440x3120 px at 3.5x is a 411 dp wide phone; it only reads as a
+      // tablet if the pixel ratio is ignored.
+      setView(tester, const Size(1440, 3120), 3.5);
+      setLifecycle(tester, AppLifecycleState.detached);
+      lock = createLock(tester)..applyWhenResumed();
+      addTearDown(lock.dispose);
+
+      setLifecycle(tester, AppLifecycleState.resumed);
+      expect(applied, [
+        const [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown],
+      ]);
+    });
+
+    testWidgets('frees a tablet from its view size', (tester) async {
+      setView(tester, const Size(1600, 2560), 2);
+      setLifecycle(tester, AppLifecycleState.detached);
+      lock = createLock(tester)..applyWhenResumed();
+      addTearDown(lock.dispose);
+
+      setLifecycle(tester, AppLifecycleState.resumed);
+      expect(applied, [DeviceOrientation.values]);
+    });
+
     testWidgets('never applies once disposed before a resume', (tester) async {
       setLifecycle(tester, AppLifecycleState.detached);
       lock = createLock(tester)..applyWhenResumed();
