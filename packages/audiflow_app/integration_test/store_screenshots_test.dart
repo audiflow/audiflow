@@ -8,6 +8,7 @@
 //
 // Run through audiflow-store-assets' `tools/capture_screenshots.py`, which
 // picks the device and passes SCREENSHOT_LOCALE (`ja` or `en`).
+import 'dart:async';
 import 'dart:io';
 
 import 'package:audiflow_app/app/app_lifecycle_observer.dart';
@@ -85,7 +86,7 @@ Future<void> _captureAll(
   final capture = Capturer(binding, tester);
   await capture.prepare();
   await _waitForLibrary(tester, shows.values);
-  await _waitForFeedSync(tester, container, shows.values);
+  await _waitForFeedSync(tester, container);
 
   await _captureShowScreens(tester, capture, shows);
   await _capturePlayer(tester, capture, container, shows);
@@ -135,6 +136,7 @@ Future<ProviderContainer> _bootContainer() async {
     overrides: [
       reviewPromptForegroundCheckProvider.overrideWithValue(() => false),
       forceUpdateRepositoryProvider.overrideWithValue(NoUpdateRepository()),
+      feedSyncServiceProvider.overrideWith(TrackedFeedSyncService.new),
     ],
   );
 }
@@ -154,11 +156,10 @@ Future<Map<ScreenshotShow, Subscription>> _subscribe(
   ProviderContainer container,
 ) async {
   final repository = container.read(subscriptionRepositoryProvider);
-  final dio = container.read(dioProvider);
   await OpmlImportService(repository: repository).importEntries([
     for (final show in _scenario.all)
       OpmlEntry(
-        title: await _channelTitle(dio, show.feedUrl),
+        title: await _channelTitle(container, show.feedUrl),
         feedUrl: show.feedUrl,
       ),
   ]);
@@ -168,31 +169,24 @@ Future<Map<ScreenshotShow, Subscription>> _subscribe(
   };
 }
 
-/// Reads the channel title from the feed.
+/// Reads the channel title from the feed with the app's own feed parser.
 ///
 /// The feed sync never rewrites a subscription's title, so an OPML-style
-/// subscribe must carry the real one. The channel `<title>` is the first one
-/// in an RSS document, ahead of every item's.
-Future<String> _channelTitle(Dio dio, String feedUrl) async {
-  final response = await dio.get<String>(
-    feedUrl,
-    options: Options(responseType: ResponseType.plain),
-  );
-  final match = RegExp(
-    r'<title>\s*(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?\s*</title>',
-    dotAll: true,
-  ).firstMatch(response.data ?? '');
-  if (match == null) throw StateError('No channel title in $feedUrl');
-  return _unescapeXml(match.group(1)!.trim());
+/// subscribe must carry the real one.
+Future<String> _channelTitle(
+  ProviderContainer container,
+  String feedUrl,
+) async {
+  final response = await container
+      .read(dioProvider)
+      .get<String>(feedUrl, options: Options(responseType: ResponseType.plain));
+  final xml = response.data;
+  if (xml == null || xml.isEmpty) throw StateError('Empty feed: $feedUrl');
+  final parsed = await container
+      .read(feedParserServiceProvider)
+      .parseFromString(xml);
+  return parsed.podcast.title;
 }
-
-String _unescapeXml(String text) => text
-    .replaceAll('&lt;', '<')
-    .replaceAll('&gt;', '>')
-    .replaceAll('&quot;', '"')
-    .replaceAll('&apos;', "'")
-    .replaceAll('&#39;', "'")
-    .replaceAll('&amp;', '&');
 
 /// Waits until every subscription's artwork has arrived from the feed sync.
 Future<void> _waitForLibrary(
@@ -210,34 +204,35 @@ Future<void> _waitForLibrary(
 }
 
 /// Waits for the launch feed sync to finish storing episodes, so episode
-/// counts on screen are final. Sync stores feeds one after another in
-/// batches; done means every show has episodes and the total stopped growing.
-/// A show with none yet means its feed is still being fetched.
+/// counts on screen are final.
 Future<void> _waitForFeedSync(
   WidgetTester tester,
   ProviderContainer container,
-  Iterable<Subscription> subscriptions,
 ) async {
-  final episodes = container.read(episodeRepositoryProvider);
-  Future<int> total() async {
-    var sum = 0;
-    for (final subscription in subscriptions) {
-      final count = (await episodes.getByPodcastId(subscription.id)).length;
-      if (count == 0) return 0;
-      sum += count;
-    }
-    return sum;
+  final feedSync = container.read(feedSyncServiceProvider);
+  if (feedSync is! TrackedFeedSyncService) {
+    throw StateError('feedSyncServiceProvider is not tracked');
   }
-
-  var previous = -1;
+  FeedSyncResult? result;
+  Object? failure;
+  unawaited(
+    feedSync.firstFullSync.then(
+      (value) => result = value,
+      onError: (Object error) => failure = error,
+    ),
+  );
+  // Frames keep pumping while waiting so the library keeps rendering.
   final deadline = DateTime.now().add(const Duration(minutes: 3));
-  while (DateTime.now().isBefore(deadline)) {
-    final current = await total();
-    if (current > 0 && current == previous) return;
-    previous = current;
-    await pumpFor(tester, const Duration(seconds: 3));
+  while (result == null && failure == null) {
+    if (deadline.isBefore(DateTime.now())) {
+      throw TestFailure('Feed sync did not finish within 3 minutes');
+    }
+    await pumpFor(tester, const Duration(seconds: 1));
   }
-  throw TestFailure('Feed sync did not settle within 3 minutes');
+  if (failure != null) throw TestFailure('Feed sync failed: $failure');
+  if (0 < result!.errorCount) {
+    throw TestFailure('Feed sync had errors: $result');
+  }
 }
 
 Future<void> _captureShowScreens(
@@ -388,7 +383,7 @@ Future<List<Episode>> _seriesRun(
       final run = (await episodes.getByIds(group.episodeIds))
         ..sort(_byPublishedAt);
       if (run.length < length) continue;
-      if (latest == null || _byPublishedAt(run.last, latest.last) > 0) {
+      if (latest == null || 0 < _byPublishedAt(run.last, latest.last)) {
         latest = run;
       }
     }

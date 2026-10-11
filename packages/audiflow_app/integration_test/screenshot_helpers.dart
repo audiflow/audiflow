@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 
@@ -84,4 +86,27 @@ class NoUpdateRepository implements ForceUpdateRepository {
 
   @override
   DateTime? lastFetchAt() => DateTime.now().toUtc();
+}
+
+/// Exposes when the first full feed sync finishes. The app starts that sync
+/// at launch (`AppLifecycleObserver`), so this is the moment the episode
+/// counts on screen become final.
+class TrackedFeedSyncService extends FeedSyncService {
+  TrackedFeedSyncService(Ref ref)
+    : super(
+        ref: ref,
+        logger: ref.watch(namedLoggerProvider('FeedSync')),
+        onDiagnostic: ref.watch(feedSyncDiagnosticSinkProvider),
+      );
+
+  final _firstFullSync = Completer<FeedSyncResult>();
+
+  Future<FeedSyncResult> get firstFullSync => _firstFullSync.future;
+
+  @override
+  Future<FeedSyncResult> syncAllSubscriptions({bool forceRefresh = false}) {
+    final sync = super.syncAllSubscriptions(forceRefresh: forceRefresh);
+    if (!_firstFullSync.isCompleted) _firstFullSync.complete(sync);
+    return sync;
+  }
 }
