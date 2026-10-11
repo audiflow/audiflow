@@ -1,4 +1,5 @@
 import 'package:audiflow_app/app/orientation/orientation_lock.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -6,17 +7,16 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   group('preferredOrientationsFor', () {
     test('locks phones to portrait', () {
-      expect(preferredOrientationsFor(const Size(412, 915)), const [
+      check(preferredOrientationsFor(const Size(412, 915))).deepEquals(const [
         DeviceOrientation.portraitUp,
         DeviceOrientation.portraitDown,
       ]);
     });
 
     test('allows every orientation on tablets', () {
-      expect(
+      check(
         preferredOrientationsFor(const Size(800, 1280)),
-        DeviceOrientation.values,
-      );
+      ).deepEquals(DeviceOrientation.values);
     });
   });
 
@@ -44,7 +44,7 @@ void main() {
       lock = createLock(tester)..applyWhenResumed();
       addTearDown(lock.dispose);
 
-      expect(applied, hasLength(1));
+      check(applied).length.equals(1);
     });
 
     testWidgets('waits for the first resume when started detached', (
@@ -54,10 +54,10 @@ void main() {
       setLifecycle(tester, AppLifecycleState.detached);
       lock = createLock(tester)..applyWhenResumed();
       addTearDown(lock.dispose);
-      expect(applied, isEmpty);
+      check(applied).isEmpty();
 
       setLifecycle(tester, AppLifecycleState.resumed);
-      expect(applied, hasLength(1));
+      check(applied).length.equals(1);
     });
 
     testWidgets('applies only once across later resumes', (tester) async {
@@ -69,7 +69,7 @@ void main() {
       setLifecycle(tester, AppLifecycleState.inactive);
       setLifecycle(tester, AppLifecycleState.resumed);
 
-      expect(applied, hasLength(1));
+      check(applied).length.equals(1);
     });
 
     void setView(WidgetTester tester, Size physicalSize, double pixelRatio) {
@@ -88,7 +88,7 @@ void main() {
       addTearDown(lock.dispose);
 
       setLifecycle(tester, AppLifecycleState.resumed);
-      expect(applied, [
+      check(applied).deepEquals([
         const [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown],
       ]);
     });
@@ -100,7 +100,7 @@ void main() {
       addTearDown(lock.dispose);
 
       setLifecycle(tester, AppLifecycleState.resumed);
-      expect(applied, [DeviceOrientation.values]);
+      check(applied).deepEquals([DeviceOrientation.values]);
     });
 
     testWidgets('never applies once disposed before a resume', (tester) async {
@@ -109,7 +109,7 @@ void main() {
       lock.dispose();
 
       setLifecycle(tester, AppLifecycleState.resumed);
-      expect(applied, isEmpty);
+      check(applied).isEmpty();
     });
   });
 }
