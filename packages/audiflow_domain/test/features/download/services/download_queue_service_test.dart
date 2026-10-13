@@ -13,6 +13,14 @@ import 'package:mockito/mockito.dart';
 @GenerateMocks([DownloadRepository, DownloadFileService, EpisodeRepository])
 import 'download_queue_service_test.mocks.dart';
 
+/// Captures log events so tests can assert on their levels.
+class _CapturingOutput extends LogOutput {
+  final List<OutputEvent> events = [];
+
+  @override
+  void output(OutputEvent event) => events.add(event);
+}
+
 DownloadTask _task({
   required int id,
   int episodeId = 1,
@@ -1334,6 +1342,51 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       check(lookups.first).isEmpty();
+    });
+  });
+
+  group('error reporting', () {
+    late _CapturingOutput logOutput;
+
+    /// Runs [task] through a queue whose downloads all fail and returns the
+    /// levels of the logged events.
+    Future<List<Level>> runFailingDownload(DownloadTask task) async {
+      logOutput = _CapturingOutput();
+      final loggingService = DownloadQueueService(
+        repository: mockRepository,
+        fileService: mockFileService,
+        episodeRepository: mockEpisodeRepo,
+        logger: Logger(
+          filter: ProductionFilter(),
+          output: logOutput,
+          printer: SimplePrinter(),
+          level: Level.trace,
+        ),
+      );
+      addTearDown(loggingService.dispose);
+      await Future<void>.delayed(Duration.zero);
+      stubFailingDownload(task);
+      servePending([task]);
+      logOutput.events.clear();
+
+      await loggingService.startQueue();
+
+      return logOutput.events.map((e) => e.origin.level).toList();
+    }
+
+    test('does not log an error for an attempt that will be retried', () async {
+      final levels = await runFailingDownload(_task(id: 1, episodeId: 10));
+
+      check(levels).contains(Level.warning);
+      check(levels).not((it) => it.contains(Level.error));
+    });
+
+    test('logs an error once the retries run out', () async {
+      final levels = await runFailingDownload(
+        _task(id: 1, episodeId: 10, retryCount: maxRetryAttempts),
+      );
+
+      check(levels).contains(Level.error);
     });
   });
 

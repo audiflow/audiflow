@@ -9,7 +9,8 @@ import '../../feed/repositories/episode_repository.dart';
 import '../models/download_status.dart';
 import '../models/download_task.dart';
 import '../repositories/download_repository.dart';
-import 'download_file_service.dart' show isRangeNotSatisfiable;
+import 'download_file_service.dart'
+    show describeDioError, isConnectionFailure, isRangeNotSatisfiable;
 import 'download_path.dart';
 
 /// Maximum retry attempts per download (matches DownloadQueueService).
@@ -99,16 +100,24 @@ class BackgroundDownloadService {
           );
           break;
         }
+        errors.add(('episodeId=${task.episodeId}', e, stack));
+        if (isConnectionFailure(e)) {
+          // A lost connection is expected on mobile and the task is retried
+          // later, so it is not reported as an error.
+          _logger?.w(
+            'BackgroundDownloadService: connection lost for '
+            'episodeId=${task.episodeId}: ${describeDioError(e)}',
+          );
+          // Without a connection every remaining task would fail the same
+          // way and burn a retry; leave them for the next run.
+          break;
+        }
         _logger?.e(
           'BackgroundDownloadService: download failed for '
           'episodeId=${task.episodeId}',
           error: e,
           stackTrace: stack,
         );
-        errors.add(('episodeId=${task.episodeId}', e, stack));
-        // Without a connection every remaining task would fail the same
-        // way and burn a retry; leave them for the next run.
-        if (_isConnectionFailure(e)) break;
         failedIds.add(task.id);
       } catch (e, stack) {
         _logger?.e(
@@ -306,12 +315,12 @@ class BackgroundDownloadService {
             'Range not satisfiable; restarting download',
           ),
         );
-      } else if (_isConnectionFailure(e)) {
+      } else if (isConnectionFailure(e)) {
         await _handleError(
           task,
           DownloadException(
             DownloadErrorType.networkUnavailable,
-            'Network unavailable: ${e.message}',
+            'Network unavailable: ${describeDioError(e)}',
           ),
         );
       } else {
@@ -319,7 +328,7 @@ class BackgroundDownloadService {
           task,
           DownloadException(
             DownloadErrorType.serverError,
-            'Download failed: ${e.message}',
+            'Download failed: ${describeDioError(e)}',
           ),
         );
       }
@@ -402,13 +411,6 @@ class BackgroundDownloadService {
 
   /// Failures that point at the network rather than this one download, so
   /// every remaining task would hit them too.
-  bool _isConnectionFailure(DioException error) => const {
-    DioExceptionType.connectionError,
-    DioExceptionType.connectionTimeout,
-    DioExceptionType.sendTimeout,
-    DioExceptionType.receiveTimeout,
-  }.contains(error.type);
-
   Future<void> _discardPartialFile(DownloadTask task, String localPath) async {
     try {
       await File(localPath).delete();

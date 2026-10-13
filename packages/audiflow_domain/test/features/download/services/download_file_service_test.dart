@@ -792,4 +792,127 @@ void main() {
       expect(exists, isFalse);
     });
   });
+
+  group('dropped connection', () {
+    test('throws networkUnavailable naming the cause '
+        'when the transfer drops mid-body', () async {
+      // Dio reports a body cut off mid-transfer as an unknown error with no
+      // message, wrapping the HttpException.
+      when(
+        mockDio.download(
+          any,
+          any,
+          cancelToken: anyNamed('cancelToken'),
+          deleteOnError: anyNamed('deleteOnError'),
+          fileAccessMode: anyNamed('fileAccessMode'),
+          options: anyNamed('options'),
+          onReceiveProgress: anyNamed('onReceiveProgress'),
+        ),
+      ).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: '/test'),
+          error: const HttpException('Connection closed while receiving data'),
+        ),
+      );
+
+      await check(
+        service.downloadFile(
+          taskId: 1,
+          url: 'https://example.com/ep.mp3',
+          episodeId: 1,
+          episodeTitle: 'Test Episode',
+          onProgress: (_, _) {},
+        ),
+      ).throws<DownloadException>(
+        (it) => it
+          ..has(
+            (e) => e.type,
+            'type',
+          ).equals(DownloadErrorType.networkUnavailable)
+          ..has(
+            (e) => e.message,
+            'message',
+          ).contains('Connection closed while receiving data'),
+      );
+    });
+  });
+
+  group('isConnectionFailure', () {
+    DioException dioError(DioExceptionType type, {Object? error}) =>
+        DioException(
+          type: type,
+          requestOptions: RequestOptions(path: '/test'),
+          error: error,
+        );
+
+    test('is true for connection and timeout types', () {
+      for (final type in [
+        DioExceptionType.connectionError,
+        DioExceptionType.connectionTimeout,
+        DioExceptionType.sendTimeout,
+        DioExceptionType.receiveTimeout,
+      ]) {
+        check(isConnectionFailure(dioError(type))).isTrue();
+      }
+    });
+
+    test('is true for an unknown error wrapping a network error', () {
+      for (final error in [
+        const SocketException('Connection reset by peer'),
+        const HttpException('Connection closed while receiving data'),
+        const TlsException('Handshake failed'),
+      ]) {
+        check(
+          isConnectionFailure(dioError(DioExceptionType.unknown, error: error)),
+        ).isTrue();
+      }
+    });
+
+    test('is false for an unknown error wrapping a non-network error', () {
+      check(
+        isConnectionFailure(
+          dioError(
+            DioExceptionType.unknown,
+            error: const FileSystemException('write failed'),
+          ),
+        ),
+      ).isFalse();
+    });
+
+    test('is false for a bad response', () {
+      check(
+        isConnectionFailure(dioError(DioExceptionType.badResponse)),
+      ).isFalse();
+    });
+  });
+
+  group('describeDioError', () {
+    test('prefers the Dio message', () {
+      final error = DioException(
+        requestOptions: RequestOptions(path: '/test'),
+        message: 'Bad response',
+        error: StateError('inner'),
+      );
+
+      check(describeDioError(error)).equals('Bad response');
+    });
+
+    test('falls back to the wrapped error when the message is null', () {
+      final error = DioException(
+        requestOptions: RequestOptions(path: '/test'),
+        error: const SocketException('Connection reset by peer'),
+      );
+
+      check(describeDioError(error)).contains('Connection reset by peer');
+    });
+
+    test('falls back to the error type when nothing else is known', () {
+      final error = DioException(
+        type: DioExceptionType.receiveTimeout,
+        requestOptions: RequestOptions(path: '/test'),
+      );
+
+      check(describeDioError(error)).equals('receiveTimeout');
+    });
+  });
 }

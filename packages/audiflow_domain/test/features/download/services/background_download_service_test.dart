@@ -352,6 +352,38 @@ void main() {
       check(downloadRepo.statusUpdates.where((u) => u.id == 2)).isEmpty();
     });
 
+    test('stops the run when the connection drops mid-transfer', () async {
+      downloadRepo.pending.addAll([
+        _task(id: 1, episodeId: 10, audioUrl: 'https://example.com/a.mp3'),
+        _task(id: 2, episodeId: 20, audioUrl: 'https://example.com/b.mp3'),
+      ]);
+      episodeRepo.episodes[10] = _episode(id: 10, title: 'Ep A');
+      episodeRepo.episodes[20] = _episode(id: 20, title: 'Ep B');
+      dioAdapter
+        ..onGet(
+          'https://example.com/a.mp3',
+          (server) => server.throws(
+            0,
+            DioException(
+              requestOptions: RequestOptions(path: ''),
+              error: const HttpException(
+                'Connection closed while receiving data',
+              ),
+            ),
+          ),
+        )
+        ..onGet('https://example.com/b.mp3', (server) => server.reply(200, ''));
+
+      final service = createService();
+      final count = await service.execute();
+
+      check(count).equals(0);
+      check(downloadRepo.statusUpdates.where((u) => u.id == 2)).isEmpty();
+      check(
+        downloadRepo.statusUpdates.last.lastError,
+      ).isNotNull().contains('Connection closed while receiving data');
+    });
+
     test('discards a partial file the server cannot resume', () async {
       final task = _task(id: 1, episodeId: 10)..downloadedBytes = 5000;
       downloadRepo.pending.add(task);
