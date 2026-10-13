@@ -59,6 +59,9 @@ class FakeConfigRepository implements PresetConfigRepository {
   /// Simulates an offline device with no disk-cached config.
   bool failGetConfig = false;
 
+  /// When set, [getConfig] waits for it so tests can act mid-load.
+  Completer<void>? getConfigGate;
+
   @override
   PresetSummary? findMatchingPreset(String? podcastGuid, String feedUrl) =>
       summary;
@@ -66,6 +69,7 @@ class FakeConfigRepository implements PresetConfigRepository {
   @override
   Future<PresetConfig> getConfig(PresetSummary summary) async {
     getConfigCalls++;
+    await getConfigGate?.future;
     if (failGetConfig) throw StateError('config unavailable');
     onGetConfig?.call();
     return config!;
