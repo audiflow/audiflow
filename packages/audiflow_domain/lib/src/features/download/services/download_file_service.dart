@@ -17,6 +17,31 @@ part 'download_file_service.g.dart';
 bool isRangeNotSatisfiable(DioException error) =>
     error.response?.statusCode == 416;
 
+/// Whether [error] means the connection failed or dropped, rather than the
+/// server rejecting the request.
+bool isConnectionFailure(DioException error) => switch (error.type) {
+  DioExceptionType.connectionError ||
+  DioExceptionType.connectionTimeout ||
+  DioExceptionType.sendTimeout ||
+  DioExceptionType.receiveTimeout => true,
+  _ => isTransferDropped(error),
+};
+
+/// Whether [error] is a transfer cut off by the socket, HTTP or TLS layer,
+/// which Dio surfaces as an `unknown` type wrapping that error. Unlike a
+/// failed connection, it may affect only one host.
+bool isTransferDropped(DioException error) =>
+    error.type == DioExceptionType.unknown &&
+    (error.error is SocketException ||
+        error.error is HttpException ||
+        error.error is TlsException);
+
+/// Describes [error] for logs and the task's last error. Dio leaves
+/// `message` null when it wraps a lower-level error, which would otherwise
+/// hide the actual cause.
+String describeDioError(DioException error) =>
+    error.message ?? error.error?.toString() ?? error.type.name;
+
 /// Callback for download progress updates.
 typedef DownloadProgressCallback =
     void Function(int downloadedBytes, int totalBytes);
@@ -126,16 +151,15 @@ class DownloadFileService {
           'Range not satisfiable; restarting download',
         );
       }
-      if (e.type == DioExceptionType.connectionError ||
-          e.type == DioExceptionType.connectionTimeout) {
+      if (isConnectionFailure(e)) {
         throw DownloadException(
           DownloadErrorType.networkUnavailable,
-          'Network unavailable: ${e.message}',
+          'Network unavailable: ${describeDioError(e)}',
         );
       }
       throw DownloadException(
         DownloadErrorType.serverError,
-        'Download failed: ${e.message}',
+        'Download failed: ${describeDioError(e)}',
       );
     } on FileSystemException catch (e) {
       if (e.osError?.errorCode == 28) {

@@ -5,6 +5,7 @@ import 'package:checks/checks.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http_mock_adapter/http_mock_adapter.dart';
+import 'package:logger/logger.dart';
 import 'package:path/path.dart' as p;
 
 // ---------------------------------------------------------------------------
@@ -188,6 +189,12 @@ void main() {
     }
   });
 
+  /// What Dio throws when the connection drops while the body streams in.
+  DioException droppedTransfer() => DioException(
+    requestOptions: RequestOptions(path: ''),
+    error: const HttpException('Connection closed while receiving data'),
+  );
+
   BackgroundDownloadService createService({
     Duration timeBudget = const Duration(minutes: 5),
     bool isOnWifi = false,
@@ -352,6 +359,75 @@ void main() {
       check(downloadRepo.statusUpdates.where((u) => u.id == 2)).isEmpty();
     });
 
+    test('moves on to the next task when a transfer drops mid-body', () async {
+      // A dropped transfer may be one host failing, so it must not hold up
+      // downloads from other hosts.
+      downloadRepo.pending.addAll([
+        _task(id: 1, episodeId: 10, audioUrl: 'https://example.com/a.mp3'),
+        _task(id: 2, episodeId: 20, audioUrl: 'https://example.com/b.mp3'),
+      ]);
+      episodeRepo.episodes[10] = _episode(id: 10, title: 'Ep A');
+      episodeRepo.episodes[20] = _episode(id: 20, title: 'Ep B');
+      dioAdapter
+        ..onGet(
+          'https://example.com/a.mp3',
+          (server) => server.throws(0, droppedTransfer()),
+        )
+        ..onGet('https://example.com/b.mp3', (server) => server.reply(200, ''));
+
+      final service = createService();
+      final count = await service.execute();
+
+      check(count).equals(1);
+      final failure = downloadRepo.statusUpdates.lastWhere(
+        (u) => u.id == 1 && u.status is DownloadStatusPending,
+      );
+      check(
+        failure.lastError,
+      ).isNotNull().contains('Connection closed while receiving data');
+    });
+
+    group('connection loss logging', () {
+      Future<List<Level>> runDroppedTransfer({required int retryCount}) async {
+        downloadRepo.pending.add(_task(id: 1, retryCount: retryCount));
+        episodeRepo.episodes[1] = _episode(id: 1);
+        dioAdapter.onGet(
+          'https://example.com/ep.mp3',
+          (server) => server.throws(0, droppedTransfer()),
+        );
+        final logOutput = _CapturingOutput();
+        final service = BackgroundDownloadService(
+          downloadRepo: downloadRepo,
+          episodeRepo: episodeRepo,
+          dio: dio,
+          downloadsDir: downloadsDir,
+          logger: Logger(
+            filter: ProductionFilter(),
+            output: logOutput,
+            printer: SimplePrinter(),
+            level: Level.trace,
+          ),
+        );
+
+        await service.execute();
+
+        return logOutput.events.map((e) => e.origin.level).toList();
+      }
+
+      test('logs a retryable connection loss as a warning', () async {
+        final levels = await runDroppedTransfer(retryCount: 0);
+
+        check(levels).contains(Level.warning);
+        check(levels).not((it) => it.contains(Level.error));
+      });
+
+      test('logs an error once the retries run out', () async {
+        final levels = await runDroppedTransfer(retryCount: 5);
+
+        check(levels).contains(Level.error);
+      });
+    });
+
     test('discards a partial file the server cannot resume', () async {
       final task = _task(id: 1, episodeId: 10)..downloadedBytes = 5000;
       downloadRepo.pending.add(task);
@@ -507,4 +583,12 @@ void main() {
       },
     );
   });
+}
+
+/// Captures log events so tests can assert on their levels.
+class _CapturingOutput extends LogOutput {
+  final List<OutputEvent> events = [];
+
+  @override
+  void output(OutputEvent event) => events.add(event);
 }

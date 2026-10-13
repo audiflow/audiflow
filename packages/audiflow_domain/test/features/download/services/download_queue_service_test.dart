@@ -13,6 +13,14 @@ import 'package:mockito/mockito.dart';
 @GenerateMocks([DownloadRepository, DownloadFileService, EpisodeRepository])
 import 'download_queue_service_test.mocks.dart';
 
+/// Captures log events so tests can assert on their levels.
+class _CapturingOutput extends LogOutput {
+  final List<OutputEvent> events = [];
+
+  @override
+  void output(OutputEvent event) => events.add(event);
+}
+
 DownloadTask _task({
   required int id,
   int episodeId = 1,
@@ -1334,6 +1342,53 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       check(lookups.first).isEmpty();
+    });
+  });
+
+  group('error reporting', () {
+    late _CapturingOutput logOutput;
+
+    /// Runs [task] through a queue whose downloads all fail and returns the
+    /// levels of the logged events.
+    Future<List<LogEvent>> runFailingDownload(DownloadTask task) async {
+      logOutput = _CapturingOutput();
+      final loggingService = DownloadQueueService(
+        repository: mockRepository,
+        fileService: mockFileService,
+        episodeRepository: mockEpisodeRepo,
+        logger: Logger(
+          filter: ProductionFilter(),
+          output: logOutput,
+          printer: SimplePrinter(),
+          level: Level.trace,
+        ),
+      );
+      addTearDown(loggingService.dispose);
+      await Future<void>.delayed(Duration.zero);
+      stubFailingDownload(task);
+      servePending([task]);
+      logOutput.events.clear();
+
+      await loggingService.startQueue();
+
+      return logOutput.events.map((e) => e.origin).toList();
+    }
+
+    test('does not log an error for an attempt that will be retried', () async {
+      final events = await runFailingDownload(_task(id: 1, episodeId: 10));
+      final levels = events.map((e) => e.level);
+
+      check(levels).contains(Level.warning);
+      check(levels).not((it) => it.contains(Level.error));
+    });
+
+    test('logs an error with its stack once the retries run out', () async {
+      final events = await runFailingDownload(
+        _task(id: 1, episodeId: 10, retryCount: maxRetryAttempts),
+      );
+
+      final error = events.singleWhere((e) => e.level == Level.error);
+      check(error.stackTrace).isNotNull();
     });
   });
 

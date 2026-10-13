@@ -396,13 +396,14 @@ class DownloadQueueService implements SuspendableWriter {
       );
 
       _logger.i('Download completed: episodeId=${task.episodeId}');
-    } on DownloadException catch (e) {
-      await _handleDownloadError(task, e);
+    } on DownloadException catch (e, stack) {
+      await _handleDownloadError(task, e, stack);
       return;
-    } catch (e) {
+    } catch (e, stack) {
       await _handleDownloadError(
         task,
         DownloadException(DownloadErrorType.unknown, e.toString()),
+        stack,
       );
       return;
     }
@@ -452,10 +453,10 @@ class DownloadQueueService implements SuspendableWriter {
   Future<void> _handleDownloadError(
     DownloadTask task,
     DownloadException error,
+    StackTrace stack,
   ) async {
-    _logger.e('Download error: ${error.message}', error: error);
-
     if (error.type == DownloadErrorType.cancelled) {
+      _logger.i('Download cancelled: episodeId=${task.episodeId}');
       // A pause stops the transfer the same way a cancel does; leave the
       // status to the pause (or a resume after it) and keep the partial
       // file, so the download continues from where it stopped.
@@ -480,6 +481,9 @@ class DownloadQueueService implements SuspendableWriter {
 
     // Check if we should retry
     if (task.retryCount < maxRetryAttempts) {
+      // A failed attempt that will be retried is routine (a dropped mobile
+      // connection, a flaky host), so it stays out of error reporting.
+      _logger.w('Download attempt failed: ${error.message}');
       await _repository.incrementRetryCount(task.id);
       await _repository.updateStatus(
         id: task.id,
@@ -502,7 +506,11 @@ class DownloadQueueService implements SuspendableWriter {
         status: const DownloadStatus.failed(),
         lastError: error.message,
       );
-      _logger.w('Download failed after $maxRetryAttempts retries');
+      _logger.e(
+        'Download failed after $maxRetryAttempts retries: ${error.message}',
+        error: error,
+        stackTrace: stack,
+      );
     }
   }
 
