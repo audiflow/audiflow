@@ -8,11 +8,21 @@ class FakeSubscriptionRepository implements SubscriptionRepository {
 
   final Subscription _subscription;
 
+  /// When set, [getByFeedUrl] waits for it so tests can act mid-lookup.
+  Completer<void>? getByFeedUrlGate;
+
+  /// Number of [getByFeedUrl] calls.
+  int getByFeedUrlCalls = 0;
+
   @override
   Future<Subscription?> getById(int id) async => _subscription;
 
   @override
-  Future<Subscription?> getByFeedUrl(String feedUrl) async => _subscription;
+  Future<Subscription?> getByFeedUrl(String feedUrl) async {
+    getByFeedUrlCalls++;
+    await getByFeedUrlGate?.future;
+    return _subscription;
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

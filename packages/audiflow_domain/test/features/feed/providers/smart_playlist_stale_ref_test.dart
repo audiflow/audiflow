@@ -4,6 +4,7 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart' hide expect;
 import 'package:isar_community/isar.dart';
+import 'package:riverpod/misc.dart' show ProviderBase;
 import 'package:riverpod/riverpod.dart';
 
 import '../../../helpers/isar_test_helper.dart';
@@ -52,8 +53,22 @@ final class _FailureObserver extends ProviderObserver {
   }
 }
 
+/// Polls [condition] until it holds, failing with [what] instead of
+/// hanging until the global test timeout.
+Future<void> _waitUntil(bool Function() condition, String what) async {
+  final deadline = DateTime.now().add(const Duration(seconds: 5));
+  while (!condition()) {
+    if (deadline.isBefore(DateTime.now())) {
+      fail('Timed out waiting until $what');
+    }
+    await Future<void>.delayed(Duration.zero);
+  }
+}
+
 void main() {
   late Isar isar;
+  late SmartPlaylistLocalDatasource datasource;
+  late FakeSubscriptionRepository subscriptionRepo;
   late FakeEpisodeRepository episodeRepo;
   late FakeConfigRepository configRepo;
   late _FailureObserver observer;
@@ -68,19 +83,17 @@ void main() {
       SmartPlaylistEntitySchema,
       SmartPlaylistGroupEntitySchema,
     ]);
+    datasource = SmartPlaylistLocalDatasource(isar);
+    subscriptionRepo = FakeSubscriptionRepository(testSubscription());
     episodeRepo = FakeEpisodeRepository([_episode(1, 1), _episode(2, 1)]);
     configRepo = FakeConfigRepository(summary: _summary(1), config: _config);
     observer = _FailureObserver();
     container = ProviderContainer(
       observers: [observer],
       overrides: [
-        subscriptionRepositoryProvider.overrideWithValue(
-          FakeSubscriptionRepository(testSubscription()),
-        ),
+        subscriptionRepositoryProvider.overrideWithValue(subscriptionRepo),
         episodeRepositoryProvider.overrideWithValue(episodeRepo),
-        smartPlaylistLocalDatasourceProvider.overrideWithValue(
-          SmartPlaylistLocalDatasource(isar),
-        ),
+        smartPlaylistLocalDatasourceProvider.overrideWithValue(datasource),
         presetConfigRepositoryProvider.overrideWithValue(configRepo),
       ],
     );
@@ -91,48 +104,97 @@ void main() {
     await isar.close(deleteFromDisk: true);
   });
 
-  /// Starts a re-read that stops inside the preset config load,
-  /// disposes the provider there (the user left the screen), then
-  /// lets the build resume. Returns the failures the build reported.
-  Future<List<Object>> disposeDuringConfigLoad() async {
-    final provider = podcastSmartPlaylistsProvider(1);
+  /// Listens to [provider] until [paused] reports the build is held
+  /// at [gate], disposes the provider there (the user left the
+  /// screen), then lets the abandoned build resume.
+  Future<void> disposeWhilePaused(
+    ProviderBase<Object?> provider,
+    Completer<void> gate,
+    bool Function() paused,
+  ) async {
+    container.invalidate(provider);
+    final sub = container.listen(provider, (_, _) {});
+    await _waitUntil(paused, 'the build reaches the gate');
+    sub.close();
+    await _waitUntil(
+      () => !container.exists(provider),
+      'the provider disposes',
+    );
+    gate.complete();
+    // Nothing awaits the abandoned build; give it time to finish.
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+  }
+
+  Future<void> disposeDuringConfigLoad() {
     final gate = Completer<void>();
     configRepo.getConfigGate = gate;
     final callsBefore = configRepo.getConfigCalls;
+    final provider = podcastSmartPlaylistsProvider(1);
+    return disposeWhilePaused(
+      provider,
+      gate,
+      () => callsBefore < configRepo.getConfigCalls,
+    );
+  }
 
-    container.invalidate(provider);
-    final sub = container.listen(provider, (_, _) {});
-    while (configRepo.getConfigCalls == callsBefore) {
-      await Future<void>.delayed(Duration.zero);
-    }
-    sub.close();
-    while (container.exists(provider)) {
-      await Future<void>.delayed(Duration.zero);
-    }
-    gate.complete();
-    // Let the abandoned build run to completion.
-    await Future<void>.delayed(const Duration(milliseconds: 50));
-    return observer.failures;
+  Future<void> disposeDuringFeedUrlLookup(ProviderBase<Object?> provider) {
+    final gate = Completer<void>();
+    subscriptionRepo.getByFeedUrlGate = gate;
+    final callsBefore = subscriptionRepo.getByFeedUrlCalls;
+    return disposeWhilePaused(
+      provider,
+      gate,
+      () => callsBefore < subscriptionRepo.getByFeedUrlCalls,
+    );
   }
 
   group('podcastSmartPlaylists disposed mid-build', () {
-    test('re-resolve after episodes changed does not use the disposed '
-        'ref', () async {
+    test('re-resolve after episodes changed neither fails nor touches '
+        'the cache', () async {
       await readSmartPlaylists(container, 1);
+      final cached = await datasource.getByPodcastId(1);
       episodeRepo.episodes.add(_episode(3, 2));
 
-      final failures = await disposeDuringConfigLoad();
+      await disposeDuringConfigLoad();
 
-      check(failures).isEmpty();
+      check(observer.failures).isEmpty();
+      final after = await datasource.getByPodcastId(1);
+      check(
+        after.map((e) => e.episodeFingerprint),
+      ).deepEquals(cached.map((e) => e.episodeFingerprint));
     });
 
-    test('config version migration does not use the disposed ref', () async {
+    test('config version migration neither fails nor touches the '
+        'cache', () async {
       await readSmartPlaylists(container, 1);
       configRepo.summary = _summary(2);
 
-      final failures = await disposeDuringConfigLoad();
+      await disposeDuringConfigLoad();
 
-      check(failures).isEmpty();
+      check(observer.failures).isEmpty();
+      check(episodeRepo.upserted).isEmpty();
+      final after = await datasource.getByPodcastId(1);
+      check(after.map((e) => e.configVersion)).deepEquals([1]);
+    });
+  });
+
+  group('by-feed-URL providers disposed during the subscription lookup', () {
+    const feedUrl = 'https://example.com/feed.xml';
+
+    test('podcastSmartPlaylistsByFeedUrl does not fail', () async {
+      await disposeDuringFeedUrlLookup(
+        podcastSmartPlaylistsByFeedUrlProvider(feedUrl),
+      );
+
+      check(observer.failures).isEmpty();
+    });
+
+    test('hasSmartPlaylistViewByFeedUrl does not fail', () async {
+      await disposeDuringFeedUrlLookup(
+        hasSmartPlaylistViewByFeedUrlProvider(feedUrl),
+      );
+
+      check(observer.failures).isEmpty();
     });
   });
 }

@@ -208,6 +208,7 @@ Future<SmartPlaylistGrouping?> podcastSmartPlaylists(
         cachedPlaylists.first.heuristicVersion != autoDetectHeuristicVersion;
 
     if (cacheStale) {
+      if (!deps.isMounted) return null;
       await playlistDatasource.deleteByPodcastId(podcastId);
       logger.d(
         'Purged stale auto-detect cache for podcastId=$podcastId '
@@ -242,14 +243,21 @@ Future<SmartPlaylistGrouping?> podcastSmartPlaylists(
 /// disposed (screen left) or rebuilt during any later await, and a
 /// stale Ref throws [UnmountedRefException] on every use.
 final class _SmartPlaylistDeps {
-  _SmartPlaylistDeps.watch(Ref ref)
-    : logger = ref.watch(namedLoggerProvider('PodcastSmartPlaylists')),
-      reResolveLogger = ref.watch(
+  _SmartPlaylistDeps.watch(this._ref)
+    : logger = _ref.watch(namedLoggerProvider('PodcastSmartPlaylists')),
+      reResolveLogger = _ref.watch(
         namedLoggerProvider('ReResolveSmartPlaylists'),
       ),
-      episodeRepo = ref.watch(episodeRepositoryProvider),
-      playlistDatasource = ref.watch(smartPlaylistLocalDatasourceProvider),
-      configRepo = ref.watch(presetConfigRepositoryProvider);
+      episodeRepo = _ref.watch(episodeRepositoryProvider),
+      playlistDatasource = _ref.watch(smartPlaylistLocalDatasourceProvider),
+      configRepo = _ref.watch(presetConfigRepositoryProvider);
+
+  final Ref _ref;
+
+  /// False once the build is abandoned. Checked before each cache
+  /// write so an abandoned build cannot interleave its deletes and
+  /// upserts with the build that replaced it.
+  bool get isMounted => _ref.mounted;
 
   final Logger logger;
   final Logger reResolveLogger;
@@ -316,6 +324,7 @@ Future<SmartPlaylistGrouping?> _buildGroupingFromCache(
         'Episodes changed since smart playlists were cached for '
         'podcastId=$podcastId; re-resolving',
       );
+      if (!deps.isMounted) return null;
       await playlistDatasource.deleteByPodcastId(podcastId);
       await playlistDatasource.deleteGroupsByPodcastId(podcastId);
       return _resolveAndPersistSmartPlaylists(
@@ -519,6 +528,7 @@ Future<SmartPlaylistGrouping?> _migrateToNewConfigVersion(
     return _reResolveFromEpisodes(deps, podcastId, feedUrl);
   }
 
+  if (!deps.isMounted) return null;
   final episodes = await episodeRepo.getByPodcastId(podcastId);
   final changed = EpisodeReExtractionService().reExtract(episodes, config);
   if (changed.isNotEmpty) {
@@ -530,6 +540,7 @@ Future<SmartPlaylistGrouping?> _migrateToNewConfigVersion(
     '${episodes.length} episodes',
   );
 
+  if (!deps.isMounted) return null;
   await playlistDatasource.deleteByPodcastId(podcastId);
   await playlistDatasource.deleteGroupsByPodcastId(podcastId);
 
@@ -643,6 +654,7 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
     );
   }
 
+  if (!deps.isMounted) return null;
   await playlistDatasource.upsertAllForPodcast(podcastId, entities);
 
   // Persist groups with cached metadata
@@ -884,7 +896,9 @@ Future<bool> hasSmartPlaylistView(Ref ref, int podcastId) async {
 Future<bool> hasSmartPlaylistViewByFeedUrl(Ref ref, String feedUrl) async {
   final subscriptionRepo = ref.watch(subscriptionRepositoryProvider);
   final subscription = await subscriptionRepo.getByFeedUrl(feedUrl);
-  if (subscription == null) return false;
+  // The id is only known after the lookup; an abandoned build must
+  // not touch the stale Ref.
+  if (subscription == null || !ref.mounted) return false;
 
   return ref.watch(hasSmartPlaylistViewProvider(subscription.id).future);
 }
@@ -903,7 +917,9 @@ Future<SmartPlaylistGrouping?> podcastSmartPlaylistsByFeedUrl(
 ) async {
   final subscriptionRepo = ref.watch(subscriptionRepositoryProvider);
   final subscription = await subscriptionRepo.getByFeedUrl(feedUrl);
-  if (subscription == null) return null;
+  // The id is only known after the lookup; an abandoned build must
+  // not touch the stale Ref.
+  if (subscription == null || !ref.mounted) return null;
 
   return ref.watch(podcastSmartPlaylistsProvider(subscription.id).future);
 }
