@@ -396,13 +396,14 @@ class DownloadQueueService implements SuspendableWriter {
       );
 
       _logger.i('Download completed: episodeId=${task.episodeId}');
-    } on DownloadException catch (e) {
-      await _handleDownloadError(task, e);
+    } on DownloadException catch (e, stack) {
+      await _handleDownloadError(task, e, stack);
       return;
-    } catch (e) {
+    } catch (e, stack) {
       await _handleDownloadError(
         task,
         DownloadException(DownloadErrorType.unknown, e.toString()),
+        stack,
       );
       return;
     }
@@ -452,6 +453,7 @@ class DownloadQueueService implements SuspendableWriter {
   Future<void> _handleDownloadError(
     DownloadTask task,
     DownloadException error,
+    StackTrace stack,
   ) async {
     if (error.type == DownloadErrorType.cancelled) {
       _logger.i('Download cancelled: episodeId=${task.episodeId}');
@@ -507,6 +509,7 @@ class DownloadQueueService implements SuspendableWriter {
       _logger.e(
         'Download failed after $maxRetryAttempts retries: ${error.message}',
         error: error,
+        stackTrace: stack,
       );
     }
   }

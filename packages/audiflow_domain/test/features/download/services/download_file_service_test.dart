@@ -886,6 +886,27 @@ void main() {
     });
   });
 
+  group('isTransferDropped', () {
+    test('is true for an unknown error wrapping an HTTP error', () {
+      final error = DioException(
+        requestOptions: RequestOptions(path: '/test'),
+        error: const HttpException('Connection closed while receiving data'),
+      );
+
+      check(isTransferDropped(error)).isTrue();
+    });
+
+    test('is false for a failed connection', () {
+      final error = DioException(
+        type: DioExceptionType.connectionError,
+        requestOptions: RequestOptions(path: '/test'),
+        error: const SocketException('Network is unreachable'),
+      );
+
+      check(isTransferDropped(error)).isFalse();
+    });
+  });
+
   group('describeDioError', () {
     test('prefers the Dio message', () {
       final error = DioException(

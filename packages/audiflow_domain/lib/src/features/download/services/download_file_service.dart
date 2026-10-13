@@ -18,19 +18,23 @@ bool isRangeNotSatisfiable(DioException error) =>
     error.response?.statusCode == 416;
 
 /// Whether [error] means the connection failed or dropped, rather than the
-/// server rejecting the request. A transfer cut off mid-body surfaces as an
-/// `unknown` type wrapping the socket, HTTP or TLS error.
+/// server rejecting the request.
 bool isConnectionFailure(DioException error) => switch (error.type) {
   DioExceptionType.connectionError ||
   DioExceptionType.connectionTimeout ||
   DioExceptionType.sendTimeout ||
   DioExceptionType.receiveTimeout => true,
-  DioExceptionType.unknown =>
-    error.error is SocketException ||
-        error.error is HttpException ||
-        error.error is TlsException,
-  _ => false,
+  _ => isTransferDropped(error),
 };
+
+/// Whether [error] is a transfer cut off by the socket, HTTP or TLS layer,
+/// which Dio surfaces as an `unknown` type wrapping that error. Unlike a
+/// failed connection, it may affect only one host.
+bool isTransferDropped(DioException error) =>
+    error.type == DioExceptionType.unknown &&
+    (error.error is SocketException ||
+        error.error is HttpException ||
+        error.error is TlsException);
 
 /// Describes [error] for logs and the task's last error. Dio leaves
 /// `message` null when it wraps a lower-level error, which would otherwise
