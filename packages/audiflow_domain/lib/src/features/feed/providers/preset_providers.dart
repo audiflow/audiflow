@@ -528,9 +528,9 @@ Future<SmartPlaylistGrouping?> _migrateToNewConfigVersion(
     return _reResolveFromEpisodes(deps, podcastId, feedUrl);
   }
 
-  if (!deps.isMounted) return null;
   final episodes = await episodeRepo.getByPodcastId(podcastId);
   final changed = EpisodeReExtractionService().reExtract(episodes, config);
+  if (!deps.isMounted) return null;
   if (changed.isNotEmpty) {
     await episodeRepo.upsertEpisodes(changed);
   }
@@ -654,6 +654,9 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
     );
   }
 
+  // Once started, persisting runs to the end: stopping between the
+  // playlist and group writes would leave playlists without groups
+  // that later reads accept as a valid cache.
   if (!deps.isMounted) return null;
   await playlistDatasource.upsertAllForPodcast(podcastId, entities);
 
