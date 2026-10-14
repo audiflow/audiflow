@@ -120,6 +120,8 @@ flutter build apk --flavor prod -t lib/main_prod.dart --release --dart-define-fr
 flutter build ios --flavor prod -t lib/main_prod.dart --release --dart-define-from-file=.env.prod
 ```
 
+Sentry SDK debug logging is off by default; add `--dart-define=SENTRY_DEBUG=true` to a debug run to turn it on. It is off because its duplicate-SDK check can deadlock app startup on the iOS simulator.
+
 ## Common Commands
 
 **Code generation:**

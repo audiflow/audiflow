@@ -112,7 +112,7 @@ Future<void> appMain({
             ? sentryEnvironment
             : flavor.name;
         options.tracesSampleRate = 0;
-        options.debug = kDebugMode;
+        options.debug = sentryDebugEnabled;
         options.beforeSend = (event, _) => scrubEventUrls(event);
       },
       appRunner: () async {
