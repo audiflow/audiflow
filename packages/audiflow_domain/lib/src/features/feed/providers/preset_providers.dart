@@ -168,10 +168,14 @@ Future<SmartPlaylistGrouping?> podcastSmartPlaylists(
   Ref ref,
   int podcastId,
 ) async {
-  final logger = ref.watch(namedLoggerProvider('PodcastSmartPlaylists'));
   final subscriptionRepo = ref.watch(subscriptionRepositoryProvider);
-  final episodeRepo = ref.watch(episodeRepositoryProvider);
-  final playlistDatasource = ref.watch(smartPlaylistLocalDatasourceProvider);
+  final deps = _SmartPlaylistDeps.watch(ref);
+  final _SmartPlaylistDeps(
+    :logger,
+    :episodeRepo,
+    :playlistDatasource,
+    :configRepo,
+  ) = deps;
 
   final subscription = await subscriptionRepo.getById(podcastId);
   if (subscription == null) {
@@ -180,7 +184,6 @@ Future<SmartPlaylistGrouping?> podcastSmartPlaylists(
   }
 
   // Log matched pattern for this podcast
-  final configRepo = ref.watch(presetConfigRepositoryProvider);
   final matchedSummary = configRepo.findMatchingPreset(
     null,
     subscription.feedUrl,
@@ -205,6 +208,7 @@ Future<SmartPlaylistGrouping?> podcastSmartPlaylists(
         cachedPlaylists.first.heuristicVersion != autoDetectHeuristicVersion;
 
     if (cacheStale) {
+      if (!deps.isMounted) return null;
       await playlistDatasource.deleteByPodcastId(podcastId);
       logger.d(
         'Purged stale auto-detect cache for podcastId=$podcastId '
@@ -217,23 +221,49 @@ Future<SmartPlaylistGrouping?> podcastSmartPlaylists(
         'playlists for podcastId=$podcastId',
       );
       return _buildGroupingFromCache(
-        ref,
+        deps,
         podcastId,
         cachedPlaylists,
-        episodeRepo,
         subscription.feedUrl,
-        logger,
       );
     }
   }
 
   // No usable cache - resolve from episodes
   return _resolveAndPersistSmartPlaylists(
-    ref,
+    deps,
     podcastId,
     subscription.feedUrl,
-    logger,
   );
+}
+
+/// Providers the [podcastSmartPlaylists] build depends on.
+///
+/// Watched once, before the build's first await: the provider can be
+/// disposed (screen left) or rebuilt during any later await, and a
+/// stale Ref throws [UnmountedRefException] on every use.
+final class _SmartPlaylistDeps {
+  _SmartPlaylistDeps.watch(this._ref)
+    : logger = _ref.watch(namedLoggerProvider('PodcastSmartPlaylists')),
+      reResolveLogger = _ref.watch(
+        namedLoggerProvider('ReResolveSmartPlaylists'),
+      ),
+      episodeRepo = _ref.watch(episodeRepositoryProvider),
+      playlistDatasource = _ref.watch(smartPlaylistLocalDatasourceProvider),
+      configRepo = _ref.watch(presetConfigRepositoryProvider);
+
+  final Ref _ref;
+
+  /// False once the build is abandoned. Checked before each cache
+  /// write so an abandoned build cannot interleave its deletes and
+  /// upserts with the build that replaced it.
+  bool get isMounted => _ref.mounted;
+
+  final Logger logger;
+  final Logger reResolveLogger;
+  final EpisodeRepository episodeRepo;
+  final SmartPlaylistLocalDatasource playlistDatasource;
+  final PresetConfigRepository configRepo;
 }
 
 /// Builds SmartPlaylistGrouping from cached SmartPlaylistEntity
@@ -245,28 +275,24 @@ Future<SmartPlaylistGrouping?> podcastSmartPlaylists(
 /// cached episode fingerprint (feed sync added, removed, or edited
 /// episodes).
 Future<SmartPlaylistGrouping?> _buildGroupingFromCache(
-  Ref ref,
+  _SmartPlaylistDeps deps,
   int podcastId,
   List<SmartPlaylistEntity> cachedPlaylists,
-  EpisodeRepository episodeRepo,
   String feedUrl,
-  Logger logger,
 ) async {
-  final playlistDatasource = ref.watch(smartPlaylistLocalDatasourceProvider);
+  final _SmartPlaylistDeps(
+    :logger,
+    :episodeRepo,
+    :playlistDatasource,
+    :configRepo,
+  ) = deps;
 
   // Check if config version has changed
-  final configRepo = ref.watch(presetConfigRepositoryProvider);
   final summary = configRepo.findMatchingPreset(null, feedUrl);
   if (summary != null) {
     final cachedVersion = cachedPlaylists.first.configVersion;
     if (cachedVersion == null || cachedVersion != summary.dataVersion) {
-      return _migrateToNewConfigVersion(
-        ref,
-        podcastId,
-        feedUrl,
-        summary,
-        logger,
-      );
+      return _migrateToNewConfigVersion(deps, podcastId, feedUrl, summary);
     }
   }
 
@@ -298,13 +324,13 @@ Future<SmartPlaylistGrouping?> _buildGroupingFromCache(
         'Episodes changed since smart playlists were cached for '
         'podcastId=$podcastId; re-resolving',
       );
+      if (!deps.isMounted) return null;
       await playlistDatasource.deleteByPodcastId(podcastId);
       await playlistDatasource.deleteGroupsByPodcastId(podcastId);
       return _resolveAndPersistSmartPlaylists(
-        ref,
+        deps,
         podcastId,
         feedUrl,
-        logger,
         preloaded: preset == null ? null : (summary: summary!, config: preset),
       );
     }
@@ -474,13 +500,17 @@ Future<PresetConfig?> _tryLoadPreset(
 /// and re-resolve so the persisted grouping advances to the new
 /// configVersion.
 Future<SmartPlaylistGrouping?> _migrateToNewConfigVersion(
-  Ref ref,
+  _SmartPlaylistDeps deps,
   int podcastId,
   String feedUrl,
   PresetSummary summary,
-  Logger logger,
 ) async {
-  final configRepo = ref.watch(presetConfigRepositoryProvider);
+  final _SmartPlaylistDeps(
+    :logger,
+    :episodeRepo,
+    :playlistDatasource,
+    :configRepo,
+  ) = deps;
   PresetConfig config;
   try {
     config = await configRepo.getConfig(summary);
@@ -495,12 +525,12 @@ Future<SmartPlaylistGrouping?> _migrateToNewConfigVersion(
     // Without the new config episodes cannot be re-extracted. Keep
     // the stale cache and serve a transient re-resolve; the next
     // read retries the migration.
-    return _reResolveFromEpisodes(ref, podcastId, feedUrl);
+    return _reResolveFromEpisodes(deps, podcastId, feedUrl);
   }
 
-  final episodeRepo = ref.watch(episodeRepositoryProvider);
   final episodes = await episodeRepo.getByPodcastId(podcastId);
   final changed = EpisodeReExtractionService().reExtract(episodes, config);
+  if (!deps.isMounted) return null;
   if (changed.isNotEmpty) {
     await episodeRepo.upsertEpisodes(changed);
   }
@@ -510,28 +540,29 @@ Future<SmartPlaylistGrouping?> _migrateToNewConfigVersion(
     '${episodes.length} episodes',
   );
 
-  final playlistDatasource = ref.watch(smartPlaylistLocalDatasourceProvider);
+  if (!deps.isMounted) return null;
   await playlistDatasource.deleteByPodcastId(podcastId);
   await playlistDatasource.deleteGroupsByPodcastId(podcastId);
 
-  return _resolveAndPersistSmartPlaylists(ref, podcastId, feedUrl, logger);
+  return _resolveAndPersistSmartPlaylists(deps, podcastId, feedUrl);
 }
 
 /// Resolves smart playlists from episodes and persists to
 /// database.
 Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
-  Ref ref,
+  _SmartPlaylistDeps deps,
   int podcastId,
-  String feedUrl,
-  Logger logger, {
+  String feedUrl, {
   String? podcastImageUrl,
   ({PresetSummary summary, PresetConfig config})? preloaded,
 }) async {
-  final episodeRepo = ref.watch(episodeRepositoryProvider);
-  final playlistDatasource = ref.watch(smartPlaylistLocalDatasourceProvider);
+  final _SmartPlaylistDeps(
+    :logger,
+    :episodeRepo,
+    :playlistDatasource,
+    configRepo: repo,
+  ) = deps;
 
-  // Load matching config from repository
-  final repo = ref.watch(presetConfigRepositoryProvider);
   final summary = preloaded?.summary ?? repo.findMatchingPreset(null, feedUrl);
   var config = preloaded?.config;
   if (summary != null) {
@@ -551,7 +582,7 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
     // it and never retry the preset. Serve it transiently instead.
     if (config == null) {
       return _reResolveFromEpisodes(
-        ref,
+        deps,
         podcastId,
         feedUrl,
         podcastImageUrl: podcastImageUrl,
@@ -623,6 +654,10 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
     );
   }
 
+  // Once started, persisting runs to the end: stopping between the
+  // playlist and group writes would leave playlists without groups
+  // that later reads accept as a valid cache.
+  if (!deps.isMounted) return null;
   await playlistDatasource.upsertAllForPodcast(podcastId, entities);
 
   // Persist groups with cached metadata
@@ -864,7 +899,9 @@ Future<bool> hasSmartPlaylistView(Ref ref, int podcastId) async {
 Future<bool> hasSmartPlaylistViewByFeedUrl(Ref ref, String feedUrl) async {
   final subscriptionRepo = ref.watch(subscriptionRepositoryProvider);
   final subscription = await subscriptionRepo.getByFeedUrl(feedUrl);
-  if (subscription == null) return false;
+  // The id is only known after the lookup; an abandoned build must
+  // not touch the stale Ref.
+  if (subscription == null || !ref.mounted) return false;
 
   return ref.watch(hasSmartPlaylistViewProvider(subscription.id).future);
 }
@@ -883,7 +920,9 @@ Future<SmartPlaylistGrouping?> podcastSmartPlaylistsByFeedUrl(
 ) async {
   final subscriptionRepo = ref.watch(subscriptionRepositoryProvider);
   final subscription = await subscriptionRepo.getByFeedUrl(feedUrl);
-  if (subscription == null) return null;
+  // The id is only known after the lookup; an abandoned build must
+  // not touch the stale Ref.
+  if (subscription == null || !ref.mounted) return null;
 
   return ref.watch(podcastSmartPlaylistsProvider(subscription.id).future);
 }
@@ -960,16 +999,17 @@ Future<List<SmartPlaylistEpisodeData>> smartPlaylistEpisodes(
 /// resolver service, enriches with thumbnails, but does not
 /// persist (data is already cached).
 Future<SmartPlaylistGrouping?> _reResolveFromEpisodes(
-  Ref ref,
+  _SmartPlaylistDeps deps,
   int podcastId,
   String feedUrl, {
   String? podcastImageUrl,
 }) async {
-  final logger = ref.watch(namedLoggerProvider('ReResolveSmartPlaylists'));
-  final episodeRepo = ref.watch(episodeRepositoryProvider);
+  final _SmartPlaylistDeps(
+    reResolveLogger: logger,
+    :episodeRepo,
+    configRepo: repo,
+  ) = deps;
 
-  // Load matching config from repository
-  final repo = ref.watch(presetConfigRepositoryProvider);
   final summary = repo.findMatchingPreset(null, feedUrl);
   PresetConfig? config;
   if (summary != null) {
