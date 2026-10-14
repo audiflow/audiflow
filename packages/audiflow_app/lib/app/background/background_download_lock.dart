@@ -56,7 +56,14 @@ class BackgroundDownloadLock implements BackgroundDownloadWorkerLock {
   /// Whether a live lock exists; clears a stale one so it can be retaken.
   Future<bool> _isHeldElsewhere() async {
     if (!await _file.exists()) return false;
-    final age = _now().difference(await _file.lastModified());
+    final DateTime modified;
+    try {
+      modified = await _file.lastModified();
+    } on PathNotFoundException {
+      // Released between the exists check and the stat; the create decides.
+      return false;
+    }
+    final age = _now().difference(modified);
     if (age < staleAfter) return true;
     try {
       await _file.delete();
