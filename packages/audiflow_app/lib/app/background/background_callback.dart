@@ -347,7 +347,7 @@ void backgroundCallback() {
           options.tracesSampleRate = 0;
           options.beforeSend = (event, _) => scrubEventUrls(event);
           options.environment = sentryEnvironment;
-          options.debug = kDebugMode;
+          options.debug = sentryDebugEnabled;
         });
         sentryInitialized = true;
         _bgDebug('Sentry.init succeeded');
@@ -759,7 +759,7 @@ Future<bool> _executeDownloadTask(Map<String, dynamic>? inputData) async {
         options.tracesSampleRate = 0;
         options.beforeSend = (event, _) => scrubEventUrls(event);
         options.environment = sentryEnvironment;
-        options.debug = kDebugMode;
+        options.debug = sentryDebugEnabled;
       });
       sentryInitialized = true;
     }
