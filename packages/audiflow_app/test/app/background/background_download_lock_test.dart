@@ -52,5 +52,42 @@ void main() {
 
       check(await createLock().tryAcquire()).isFalse();
     });
+
+    test('acquires when the holder releases mid-check', () async {
+      // The holder deletes the lock after exists() but before the stat.
+      final lockFile = File('${tempDir.path}/.background_download.lock');
+      final acquired = await IOOverrides.runZoned(
+        () => createLock().tryAcquire(),
+        createFile: (_) => _VanishingLockFile(lockFile),
+      );
+
+      check(acquired).isTrue();
+    });
   });
+}
+
+/// Reports the lock as present, then fails the stat as if it was deleted.
+class _VanishingLockFile extends Fake implements File {
+  _VanishingLockFile(this._real);
+
+  final File _real;
+
+  @override
+  String get path => _real.path;
+
+  @override
+  Future<bool> exists() async => true;
+
+  @override
+  Future<DateTime> lastModified() async => throw PathNotFoundException(
+    path,
+    const OSError('No such file or directory', 2),
+  );
+
+  @override
+  Future<File> create({bool recursive = false, bool exclusive = false}) =>
+      _real.create(recursive: recursive, exclusive: exclusive);
+
+  @override
+  Future<void> setLastModified(DateTime time) => _real.setLastModified(time);
 }
