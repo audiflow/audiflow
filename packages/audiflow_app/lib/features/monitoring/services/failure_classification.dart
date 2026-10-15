@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:dio/dio.dart';
+import 'package:just_audio/just_audio.dart';
 
 /// Whether [error] is an expected runtime condition rather than a defect:
 /// the device is offline or the network stalled, or the user cancelled.
@@ -25,10 +26,26 @@ bool isExpectedFailure(Object error) => switch (error) {
     type == DioExceptionType.cancel ||
         isConnectivityFailure(error) ||
         (cause != null && isExpectedFailure(cause)),
+  // On iOS the code is the NSURLError behind a failed stream load.
+  PlayerException(:final code) => _connectivityUrlErrorCodes.contains(code),
   _ => false,
 };
 
 const _podcastTransportFailureCode = 'PODCAST_NETWORK_ERROR';
+
+/// NSURLError codes meaning the network, not the episode, failed: timed
+/// out, host not found, cannot connect, connection lost, not connected,
+/// roaming disabled, data not allowed. Android reports non-negative
+/// ExoPlaybackException types, so these never match there.
+const _connectivityUrlErrorCodes = {
+  -1001,
+  -1003,
+  -1004,
+  -1005,
+  -1009,
+  -1018,
+  -1020,
+};
 
 /// Short, telemetry-safe label for [error]: its type, refined with the Dio
 /// failure type and HTTP status. Never includes the message, which can

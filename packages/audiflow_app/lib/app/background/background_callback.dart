@@ -19,6 +19,7 @@ import '../../features/monitoring/services/sentry_diagnostics.dart';
 import '../../features/monitoring/services/url_redaction.dart';
 import 'artwork_failure_report.dart';
 import 'background_download_lock.dart';
+import 'background_isar_lease.dart';
 import 'background_settings_repository.dart';
 import 'background_task_registrar.dart';
 import 'refresh_download_budget.dart';
@@ -298,6 +299,20 @@ Future<void> _downloadWithinRefreshWindow({
   }
 }
 
+// Isolate-wide so tasks Workmanager runs side by side in one background
+// engine share the database instead of opening it twice.
+BackgroundIsarLease<Isar>? _isarLease;
+
+Future<Isar> _acquireBackgroundIsar(String directory, Logger logger) {
+  final lease = _isarLease ??= BackgroundIsarLease<Isar>(
+    open: () => openIsarWithRecovery(directory: directory, logger: logger),
+    close: (isar) async {
+      if (isar.isOpen) await isar.close();
+    },
+  );
+  return lease.acquire();
+}
+
 @pragma('vm:entry-point')
 void backgroundCallback() {
   Workmanager().executeTask((taskName, inputData) async {
@@ -386,7 +401,7 @@ void backgroundCallback() {
 
     try {
       final dir = await getApplicationDocumentsDirectory();
-      isar = await openIsarWithRecovery(directory: dir.path, logger: logger);
+      isar = await _acquireBackgroundIsar(dir.path, logger);
 
       if (sentryInitialized) {
         Sentry.addBreadcrumb(
@@ -408,7 +423,6 @@ void backgroundCallback() {
               ),
             );
           }
-          await isar.close();
           return true;
         }
       }
@@ -713,8 +727,8 @@ void backgroundCallback() {
       }
     } finally {
       dio?.close();
-      if (isar != null && isar.isOpen) {
-        await isar.close();
+      if (isar != null) {
+        await _isarLease?.release(isar);
       }
       if (sentryInitialized) {
         // Allow time for the Sentry transport to send queued events.
@@ -792,7 +806,7 @@ Future<bool> _executeDownloadTask(Map<String, dynamic>? inputData) async {
       _bgDebug('another background download worker is active, deferring');
       return false;
     }
-    isar = await openIsarWithRecovery(directory: dir.path, logger: logger);
+    isar = await _acquireBackgroundIsar(dir.path, logger);
     dio = Dio(
       BaseOptions(
         connectTimeout: const Duration(seconds: 30),
@@ -920,8 +934,8 @@ Future<bool> _executeDownloadTask(Map<String, dynamic>? inputData) async {
   } finally {
     await lock?.release();
     dio?.close();
-    if (isar != null && isar.isOpen) {
-      await isar.close();
+    if (isar != null) {
+      await _isarLease?.release(isar);
     }
     if (sentryInitialized) {
       _bgDebug('waiting for Sentry transport to drain');
