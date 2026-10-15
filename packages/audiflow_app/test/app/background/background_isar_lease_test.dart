@@ -80,6 +80,41 @@ void main() {
       check(second.isOpen).isTrue();
     });
 
+    test('acquire just before the last release keeps it open', () async {
+      final lease = createLease();
+      final first = await lease.acquire();
+
+      final reacquire = lease.acquire();
+      await lease.release(first);
+      final second = await reacquire;
+
+      check(identical(first, second)).isTrue();
+      check(second.isOpen).isTrue();
+      check(closed).isEmpty();
+    });
+
+    test('acquire during a pending close reopens after it', () async {
+      final closeGate = Completer<void>();
+      final lease = BackgroundIsarLease<_FakeDatabase>(
+        open: () async => _FakeDatabase(++openCount),
+        close: (database) async {
+          await closeGate.future;
+          database.isOpen = false;
+        },
+      );
+      final first = await lease.acquire();
+
+      final release = lease.release(first);
+      final reacquire = lease.acquire();
+      closeGate.complete();
+      await release;
+      final second = await reacquire;
+
+      check(first.isOpen).isFalse();
+      check(second.id).equals(2);
+      check(second.isOpen).isTrue();
+    });
+
     test('failed open does not leave a holder behind', () async {
       var shouldFail = true;
       final lease = BackgroundIsarLease<_FakeDatabase>(

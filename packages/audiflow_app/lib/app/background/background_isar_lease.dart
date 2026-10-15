@@ -20,7 +20,11 @@ class BackgroundIsarLease<T extends Object> {
   Future<T> acquire() async {
     // A close that started when the previous holder left must finish
     // before reopening, or the new open would still see the old instance.
-    await _closing;
+    // Only await when a close is pending: awaiting null still yields, and
+    // a release in that gap would start a close this call never sees.
+    for (var closing = _closing; closing != null; closing = _closing) {
+      await closing;
+    }
     _holders++;
     try {
       return await (_opening ??= _open());
