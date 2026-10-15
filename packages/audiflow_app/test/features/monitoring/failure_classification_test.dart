@@ -7,6 +7,7 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:just_audio/just_audio.dart';
 
 DioException _dio(DioExceptionType type, {Object? error, int? status}) {
   final options = RequestOptions(path: 'https://feeds.example.com/rss');
@@ -41,6 +42,16 @@ void main() {
         DownloadErrorType.networkUnavailable,
       ),
       'podcast transport failure': PodcastException.network('offline'),
+      'player load while offline': PlayerException(
+        -1009,
+        'The Internet connection appears to be offline.',
+        null,
+      ),
+      'player load timeout': PlayerException(
+        -1001,
+        'The request timed out.',
+        null,
+      ),
     };
     for (final MapEntry(key: name, value: error) in expected.entries) {
       test('treats $name as expected', () {
@@ -58,6 +69,8 @@ void main() {
       ),
       'podcast server error': PodcastException.network('gone', statusCode: 404),
       'podcast parse failure': PodcastException.parsing('bad xml'),
+      'player unsupported file': PlayerException(-11828, 'Cannot Open', null),
+      'player android source error': PlayerException(0, 'Source error', null),
     };
     for (final MapEntry(key: name, value: error) in unexpected.entries) {
       test('reports $name', () {
