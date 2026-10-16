@@ -110,6 +110,34 @@ Future<void> _openPlayerSheet(WidgetTester tester) async {
 }
 
 void main() {
+  group('PlayerScreen header', () {
+    testWidgets('shows the playback context as a single line, no caption', (
+      tester,
+    ) async {
+      final container = await _container();
+      await tester.pumpWidget(_buildHost(container));
+      await _openPlayerSheet(tester);
+
+      final l10n = lookupAppLocalizations(const Locale('en'));
+      final header = find
+          .ancestor(
+            of: find.byTooltip(l10n.playerCloseLabel),
+            matching: find.byType(Row),
+          )
+          .first;
+      final headerTexts = find.descendant(
+        of: header,
+        matching: find.byType(Text),
+      );
+
+      // Without an ad hoc queue context, the header falls back to the
+      // podcast title; it is the only text between chevron and overflow.
+      check(
+        tester.widgetList<Text>(headerTexts).map((text) => text.data),
+      ).deepEquals([_firstEpisode.podcastTitle]);
+    });
+  });
+
   group('PlayerScreen auto-dismiss', () {
     testWidgets('pops the sheet when the queue is exhausted', (tester) async {
       final container = await _container();
