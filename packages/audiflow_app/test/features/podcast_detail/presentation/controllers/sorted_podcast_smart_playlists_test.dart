@@ -48,11 +48,13 @@ void main() {
   late Completer<SmartPlaylistGrouping?> groupingGate;
   late Completer<PresetConfig?> presetGate;
   late _FailureObserver observer;
+  Subscription? subscription;
   late ProviderContainer container;
 
   setUp(() {
     groupingGate = Completer<SmartPlaylistGrouping?>();
     presetGate = Completer<PresetConfig?>();
+    subscription = null;
     observer = _FailureObserver();
     container = ProviderContainer(
       observers: [observer],
@@ -62,7 +64,7 @@ void main() {
         ).overrideWith((ref) => groupingGate.future),
         subscriptionByFeedUrlProvider(
           _feedUrl,
-        ).overrideWith((ref) async => null),
+        ).overrideWith((ref) async => subscription),
         presetByFeedUrlProvider(
           _feedUrl,
         ).overrideWith((ref) => presetGate.future),
@@ -114,6 +116,23 @@ void main() {
       check(observer.failures).isEmpty();
     },
   );
+
+  test('sortedPodcastSmartPlaylists for a subscribed podcast disposed '
+      'mid-build does not fail', () async {
+    // A subscription sends the build on to read saved preferences, which
+    // must not happen on the stale Ref.
+    subscription = Subscription()..id = 7;
+
+    await disposeWhilePending(
+      sortedPodcastSmartPlaylistsProvider(_feedUrl),
+      () {
+        groupingGate.complete(_grouping);
+        presetGate.complete(null);
+      },
+    );
+
+    check(observer.failures).isEmpty();
+  });
 
   test(
     'hasSmartPlaylistViewAfterLoad disposed mid-build does not fail',
