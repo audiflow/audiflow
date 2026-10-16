@@ -79,8 +79,13 @@ class SubscriptionMetadataUpdater {
       description: description,
     );
     // The write also records that the channel was read, so a feed carrying no
-    // artwork is not asked for unconditionally on every future refresh.
-    if (update.isEmpty && sub.feedMetadataSyncedAt != null) return;
+    // artwork, or no author to replace an encoded one, is not asked for
+    // unconditionally on every future refresh.
+    if (update.isEmpty &&
+        sub.feedMetadataSyncedAt != null &&
+        !needsChannelTextBackfill(sub)) {
+      return;
+    }
 
     await _repository.updateFeedMetadata(
       sub.id,
@@ -120,22 +125,28 @@ class SubscriptionMetadataUpdater {
 
   /// Whether [sub] must parse its feed to fill channel metadata it lacks:
   /// the artwork (see [needsArtworkBackfill]), a website it has never
-  /// read, or an author stored with undecoded character references.
-  /// Callers skip conditional request headers while this is true.
+  /// read, or channel text an older version stored undecoded (see
+  /// [needsChannelTextBackfill]). Callers skip conditional request headers
+  /// while this is true.
   static bool needsChannelBackfill(Subscription sub) =>
       needsArtworkBackfill(sub) ||
       sub.websiteSyncedAt == null ||
-      _hasUndecodedAuthor(sub);
+      needsChannelTextBackfill(sub);
 
-  /// Earlier parsers stored the channel author without decoding character
-  /// references (`A &amp; B`). The next parse writes the decoded value,
-  /// which ends this; only a feed whose author really is `&amp;` (CDATA)
-  /// keeps asking unconditionally, as a feed without validators does.
-  /// Descriptions are not checked: they are HTML that legitimately keeps
-  /// references, so checking them would defeat conditional requests for
-  /// most feeds.
-  static bool _hasUndecodedAuthor(Subscription sub) =>
-      decodeXmlEntities(sub.artistName) != sub.artistName;
+  /// Whether [sub] holds an author or description that an older parser
+  /// stored without decoding character references (`A &amp; B`).
+  ///
+  /// True only until the channel has been written once since: the
+  /// references themselves cannot tell such a row from a feed whose text
+  /// legitimately keeps them (double-escaped or CDATA), so the timestamp
+  /// bounds the unconditional request to a single parse.
+  static bool needsChannelTextBackfill(Subscription sub) =>
+      sub.channelTextSyncedAt == null &&
+      (_hasCharacterReference(sub.artistName) ||
+          _hasCharacterReference(sub.description));
+
+  static bool _hasCharacterReference(String? value) =>
+      value != null && decodeXmlEntities(value) != value;
 
   /// Returns the trimmed [feedValue] when it carries new information, or
   /// null when it is blank or already equal to [storedValue].

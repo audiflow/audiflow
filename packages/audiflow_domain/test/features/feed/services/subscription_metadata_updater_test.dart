@@ -53,6 +53,7 @@ Subscription _subscription({
   DateTime? feedMetadataSyncedAt,
   String? websiteUrl,
   DateTime? websiteSyncedAt,
+  DateTime? channelTextSyncedAt,
 }) {
   return Subscription()
     ..id = id
@@ -65,6 +66,7 @@ Subscription _subscription({
     ..feedMetadataSyncedAt = feedMetadataSyncedAt
     ..websiteUrl = websiteUrl
     ..websiteSyncedAt = websiteSyncedAt
+    ..channelTextSyncedAt = channelTextSyncedAt
     ..genres = ''
     ..explicit = false
     ..subscribedAt = DateTime.now();
@@ -222,6 +224,28 @@ void main() {
       check(repository.callCount).equals(0);
     });
 
+    test(
+      'records the read of encoded text the feed no longer carries',
+      () async {
+        // Without the write, a feed that dropped its author would leave the
+        // encoded row asking unconditionally on every refresh.
+        final sub = _subscription(
+          artistName: 'A &amp; B',
+          artworkUrl: 'https://example.com/art.jpg',
+          feedMetadataSyncedAt: DateTime(2026),
+        );
+
+        await updater.applyFeedMeta(
+          sub,
+          const FeedMetaReady(title: 'Test Podcast', description: ''),
+        );
+
+        check(repository.callCount).equals(1);
+        check(repository.lastArtistName).isNull();
+        check(repository.lastSyncedAt).isNotNull();
+      },
+    );
+
     test('trims surrounding whitespace before comparing and writing', () async {
       final sub = _subscription(artworkUrl: 'https://example.com/art.jpg');
 
@@ -311,9 +335,9 @@ void main() {
       ).isFalse();
     });
 
-    test('is true while the author holds an undecoded reference', () {
+    test('is true while channel text holds an undecoded reference', () {
       // Earlier parsers stored channel text without decoding it; a 304
-      // would keep such an author encoded forever.
+      // would keep it encoded forever.
       for (final author in ['A &amp; B', 'A &#38; B', 'A &#x26; B']) {
         check(
           SubscriptionMetadataUpdater.needsChannelBackfill(
@@ -325,6 +349,30 @@ void main() {
           ),
         ).isTrue();
       }
+      check(
+        SubscriptionMetadataUpdater.needsChannelBackfill(
+          _subscription(
+            description: '<p>A &amp; B</p>',
+            feedMetadataSyncedAt: synced,
+            websiteSyncedAt: synced,
+          ),
+        ),
+      ).isTrue();
+    });
+
+    test('is false once a decoding parser has written the channel', () {
+      // A double-escaped feed keeps a reference after decoding; the
+      // timestamp keeps it from refetching unconditionally forever.
+      check(
+        SubscriptionMetadataUpdater.needsChannelBackfill(
+          _subscription(
+            artistName: 'A &amp; B',
+            feedMetadataSyncedAt: synced,
+            websiteSyncedAt: synced,
+            channelTextSyncedAt: synced,
+          ),
+        ),
+      ).isFalse();
     });
 
     test('is false for an author with a plain ampersand', () {
