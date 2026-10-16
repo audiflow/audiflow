@@ -613,13 +613,14 @@ class _MyAppState extends ConsumerState<MyApp> {
           theme: AppTheme.light(),
           darkTheme: AppTheme.dark(),
           themeMode: themeMode,
+          // ThemedSystemUiOverlay is outermost so every route, including
+          // the gates below, has a status bar style to fall back on; icons
+          // then recover after a transient region (the full player's
+          // Cupertino sheet) goes away.
           // The gate is placed inside MaterialApp.builder so it has
           // access to MaterialLocalizations + AppLocalizations and sits
           // above the router subtree — HardUpdate / Maintenance render
           // before any route mounts.
-          // ThemedSystemUiOverlay gives every route a status bar style to
-          // fall back on, so icons recover after a transient region (the
-          // full player's Cupertino sheet) goes away.
           builder: (context, child) => ThemedSystemUiOverlay(
             child: IntlLocaleSync(
               child: ForceUpdateGate(
