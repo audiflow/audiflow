@@ -495,22 +495,12 @@ class _PlayerHeader extends StatelessWidget {
             onPressed: () => CupertinoSheetRoute.popSheet(context),
           ),
           Expanded(
-            child: Column(
-              children: [
-                Text(
-                  l10n.playerPlayingFrom,
-                  style: AppTextStyles.caption.copyWith(
-                    color: colors.inkSecondary,
-                  ),
-                ),
-                Text(
-                  playingFrom,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.label.copyWith(color: colors.ink),
-                ),
-              ],
+            child: Text(
+              playingFrom,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.label.copyWith(color: colors.ink),
             ),
           ),
           Builder(
