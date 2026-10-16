@@ -617,9 +617,14 @@ class _MyAppState extends ConsumerState<MyApp> {
           // access to MaterialLocalizations + AppLocalizations and sits
           // above the router subtree — HardUpdate / Maintenance render
           // before any route mounts.
-          builder: (context, child) => IntlLocaleSync(
-            child: ForceUpdateGate(
-              child: ReviewPromptGate(child: OpmlFileReceiver(child: child!)),
+          // ThemedSystemUiOverlay gives every route a status bar style to
+          // fall back on, so icons recover after a transient region (the
+          // full player's Cupertino sheet) goes away.
+          builder: (context, child) => ThemedSystemUiOverlay(
+            child: IntlLocaleSync(
+              child: ForceUpdateGate(
+                child: ReviewPromptGate(child: OpmlFileReceiver(child: child!)),
+              ),
             ),
           ),
           routerConfig: _router,
