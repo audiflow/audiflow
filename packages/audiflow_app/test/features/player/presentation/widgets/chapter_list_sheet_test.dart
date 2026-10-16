@@ -8,29 +8,39 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
+String _title(int index) => 'Chapter title ${index + 1}';
+
 EpisodeChapter _chapter(int index) => EpisodeChapter()
   ..id = index + 1
   ..episodeId = 1
   ..sortOrder = index
-  ..title = 'Chapter title ${index + 1}'
+  ..title = _title(index)
   ..startMs = Duration(minutes: index).inMilliseconds;
 
 final _chapters = List.generate(40, _chapter);
 
+/// Far enough down that the sheet must scroll to show it.
+const _current = 30;
+
 class _CurrentIndex extends Notifier<int?> {
+  _CurrentIndex(this._initial);
+
+  final int? _initial;
+
   @override
-  int? build() => 30;
+  int? build() => _initial;
 
   void set(int? value) => state = value;
 }
 
 final _currentIndexProvider = NotifierProvider<_CurrentIndex, int?>(
-  _CurrentIndex.new,
+  () => _CurrentIndex(_current),
 );
 
-Widget _buildSheet({ThemeData? theme}) {
+Widget _buildSheet({ThemeData? theme, int? initialIndex = _current}) {
   return ProviderScope(
     overrides: [
+      _currentIndexProvider.overrideWith(() => _CurrentIndex(initialIndex)),
       currentEpisodeChaptersProvider.overrideWith(
         (ref) => Stream.value(_chapters),
       ),
@@ -56,12 +66,18 @@ Widget _buildSheet({ThemeData? theme}) {
 }
 
 Finder _tileOf(int index) => find.ancestor(
-  of: find.text('Chapter title ${index + 1}'),
+  of: find.text(_title(index)),
   matching: find.byType(ListTile),
 );
 
 ListTile _tile(WidgetTester tester, int index) =>
     tester.widget<ListTile>(_tileOf(index));
+
+void _setCurrent(WidgetTester tester, int? index) {
+  ProviderScope.containerOf(
+    tester.element(find.byType(ChapterListSheet)),
+  ).read(_currentIndexProvider.notifier).set(index);
+}
 
 Finder _playingIconIn(int index) => find.descendant(
   of: _tileOf(index),
@@ -76,21 +92,16 @@ void main() {
       await tester.pumpWidget(_buildSheet());
       await tester.pumpAndSettle();
 
-      check(
-        find.text('Chapter title 31').hitTestable().evaluate(),
-      ).isNotEmpty();
-      check(find.text('Chapter title 1').hitTestable().evaluate()).isEmpty();
+      check(find.text(_title(_current)).hitTestable().evaluate()).isNotEmpty();
+      check(find.text(_title(0)).hitTestable().evaluate()).isEmpty();
     });
 
     testWidgets('stays at the top when no chapter is current', (tester) async {
-      await tester.pumpWidget(_buildSheet());
-      final container = ProviderScope.containerOf(
-        tester.element(find.byType(ChapterListSheet)),
-      );
-      container.read(_currentIndexProvider.notifier).set(null);
+      await tester.pumpWidget(_buildSheet(initialIndex: null));
       await tester.pumpAndSettle();
 
-      check(find.text('Chapter title 1').hitTestable().evaluate()).isNotEmpty();
+      check(find.text(_title(0)).hitTestable().evaluate()).isNotEmpty();
+      check(find.byIcon(Symbols.graphic_eq).evaluate()).isEmpty();
     });
 
     for (final (name, theme, colors) in [
@@ -103,13 +114,13 @@ void main() {
         await tester.pumpWidget(_buildSheet(theme: theme));
         await tester.pumpAndSettle();
 
-        final current = _tile(tester, 30);
+        final current = _tile(tester, _current);
         check(current.selected).isTrue();
         check(current.selectedTileColor).equals(colors.accentTint);
         check(current.selectedColor).equals(colors.accent);
-        check(_playingIconIn(30).evaluate()).isNotEmpty();
+        check(_playingIconIn(_current).evaluate()).isNotEmpty();
 
-        final title = tester.widget<Text>(find.text('Chapter title 31'));
+        final title = tester.widget<Text>(find.text(_title(_current)));
         check(title.style?.fontWeight).equals(FontWeight.w600);
       });
     }
@@ -118,11 +129,12 @@ void main() {
       await tester.pumpWidget(_buildSheet());
       await tester.pumpAndSettle();
 
-      check(_tile(tester, 29).selected).isFalse();
-      check(_playingIconIn(29).evaluate()).isEmpty();
+      const previous = _current - 1;
+      check(_tile(tester, previous).selected).isFalse();
+      check(_playingIconIn(previous).evaluate()).isEmpty();
       final number = find.descendant(
-        of: _tileOf(29),
-        matching: find.text('30'),
+        of: _tileOf(previous),
+        matching: find.text('${previous + 1}'),
       );
       check(number.evaluate()).isNotEmpty();
     });
@@ -130,17 +142,15 @@ void main() {
     testWidgets('highlight follows playback while open', (tester) async {
       await tester.pumpWidget(_buildSheet());
       await tester.pumpAndSettle();
-      final container = ProviderScope.containerOf(
-        tester.element(find.byType(ChapterListSheet)),
-      );
 
-      container.read(_currentIndexProvider.notifier).set(31);
+      const next = _current + 1;
+      _setCurrent(tester, next);
       await tester.pumpAndSettle();
 
-      check(_tile(tester, 31).selected).isTrue();
-      check(_tile(tester, 30).selected).isFalse();
-      check(_playingIconIn(31).evaluate()).isNotEmpty();
-      check(_playingIconIn(30).evaluate()).isEmpty();
+      check(_tile(tester, next).selected).isTrue();
+      check(_tile(tester, _current).selected).isFalse();
+      check(_playingIconIn(next).evaluate()).isNotEmpty();
+      check(_playingIconIn(_current).evaluate()).isEmpty();
     });
 
     testWidgets('exposes the current chapter as selected to screen readers', (
@@ -151,9 +161,9 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        tester.getSemantics(_tileOf(30)),
+        tester.getSemantics(_tileOf(_current)),
         matchesSemantics(
-          label: 'Chapter 31: Chapter title 31, starts at 30:00',
+          label: 'Chapter 31: ${_title(_current)}, starts at 30:00',
           isSelected: true,
           hasSelectedState: true,
           isButton: true,
