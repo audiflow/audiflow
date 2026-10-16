@@ -1,9 +1,11 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../styles/borders.dart';
 import 'artwork_image.dart';
+import 'system/themed_system_ui_overlay.dart';
 
 /// Full-screen overlay that displays artwork at near-full-screen size
 /// with a Hero animation. Tapping anywhere dismisses the overlay.
@@ -25,40 +27,45 @@ class ArtworkOverlay extends StatelessWidget {
     final artworkSize = math.min(size.width, size.height) * 0.85;
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Semantics(
-      label: 'Dismiss artwork',
-      button: true,
-      onTap: () => Navigator.of(context).pop(),
-      child: GestureDetector(
-        excludeFromSemantics: true,
+    // Callers show this over a near-black barrier, so the status bar needs
+    // light icons regardless of the app theme.
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: ThemedSystemUiOverlay.styleOn(Brightness.dark),
+      child: Semantics(
+        label: 'Dismiss artwork',
+        button: true,
         onTap: () => Navigator.of(context).pop(),
-        behavior: HitTestBehavior.opaque,
-        child: Center(
-          child: Hero(
-            tag: heroTag,
-            child: ClipRRect(
-              borderRadius: AppBorders.lg,
-              child: ArtworkImage(
-                url: imageUrl,
-                width: artworkSize,
-                height: artworkSize,
-                loading: Container(
+        child: GestureDetector(
+          excludeFromSemantics: true,
+          onTap: () => Navigator.of(context).pop(),
+          behavior: HitTestBehavior.opaque,
+          child: Center(
+            child: Hero(
+              tag: heroTag,
+              child: ClipRRect(
+                borderRadius: AppBorders.lg,
+                child: ArtworkImage(
+                  url: imageUrl,
                   width: artworkSize,
                   height: artworkSize,
-                  color: colorScheme.surfaceContainerHighest,
-                  child: const Center(
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                  loading: Container(
+                    width: artworkSize,
+                    height: artworkSize,
+                    color: colorScheme.surfaceContainerHighest,
+                    child: const Center(
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
                   ),
-                ),
-                placeholder: Container(
-                  width: artworkSize,
-                  height: artworkSize,
-                  alignment: Alignment.center,
-                  color: colorScheme.surfaceContainerHighest,
-                  child: Icon(
-                    Icons.broken_image,
-                    size: 64,
-                    color: colorScheme.onSurfaceVariant,
+                  placeholder: Container(
+                    width: artworkSize,
+                    height: artworkSize,
+                    alignment: Alignment.center,
+                    color: colorScheme.surfaceContainerHighest,
+                    child: Icon(
+                      Icons.broken_image,
+                      size: 64,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
               ),
