@@ -121,7 +121,12 @@ Future<Isar> openIsarWithRecovery({
       stackTrace: stack,
     );
     await _deleteIsarFiles(directory: directory, name: name, logger: logger);
-    return open();
+    // Another engine can still be opening the environment during recovery.
+    return _openRetryingTransient(
+      open,
+      retryDelays: transientRetryDelays,
+      logger: logger,
+    );
   }
 }
 
@@ -152,8 +157,12 @@ Future<Isar> _openRetryingTransient(
 
 /// Heuristic match for MDBX `EAGAIN` (`MdbxError (11): Try again`),
 /// which signals contention on the environment rather than corruption.
+///
+/// Matches the error code only: the closing parenthesis keeps other codes
+/// such as `(110)` out, and the bare "Try again" text could come from an
+/// unrelated error.
 bool _isTransientOpenError(String message) {
-  return message.contains('MdbxError (11)') || message.contains('Try again');
+  return message.contains('MdbxError (11)');
 }
 
 /// Heuristic match for Isar schema-mismatch errors.

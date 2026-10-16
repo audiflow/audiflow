@@ -81,6 +81,48 @@ void main() {
     check(dbFile.existsSync()).isTrue();
   });
 
+  for (final message in [
+    'Cannot open Environment: MdbxError (110): Connection timed out',
+    'Try again later',
+  ]) {
+    test('does not retry near-miss error "$message"', () async {
+      var attempts = 0;
+
+      await check(
+        openIsarWithRecovery(
+          directory: directory.path,
+          transientRetryDelays: _noDelays,
+          opener: () async {
+            attempts++;
+            throw IsarError(message);
+          },
+        ),
+      ).throws<IsarError>();
+
+      check(attempts).equals(1);
+    });
+  }
+
+  test('retries EAGAIN on the reopen after schema recovery', () async {
+    final isar = _FakeIsar();
+    var attempts = 0;
+
+    final result = await openIsarWithRecovery(
+      directory: directory.path,
+      transientRetryDelays: _noDelays,
+      opener: () async {
+        attempts++;
+        if (attempts == 1) throw IsarError('Schema mismatch');
+        if (attempts == 2) throw IsarError(_eagain);
+        return isar;
+      },
+    );
+
+    check(result).identicalTo(isar);
+    check(attempts).equals(3);
+    check(dbFile.existsSync()).isFalse();
+  });
+
   test('deletes files and reopens on schema mismatch', () async {
     final isar = _FakeIsar();
     var attempts = 0;
