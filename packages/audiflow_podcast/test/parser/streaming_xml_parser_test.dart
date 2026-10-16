@@ -614,6 +614,22 @@ void main() {
         expect(feed.description, '<p>A &lt; B</p>');
         expect(feed.author, 'X & Y');
       });
+
+      test('reads a CDATA category', () async {
+        final feed = await channelFeed(
+          '<title>Show</title>'
+          '<category><![CDATA[News & Politics]]></category>',
+        );
+        expect(feed.categories, contains('News & Politics'));
+      });
+
+      test('a self-closing element does not open a text span', () async {
+        final feed = await channelFeed(
+          '<title>Show</title><description />'
+          '<image><description>Logo</description></image>',
+        );
+        expect(feed.description, isNot(contains('<image>')));
+      });
     });
 
     group('parseXmlStream', () {

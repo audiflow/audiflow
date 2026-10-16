@@ -207,13 +207,13 @@ class StreamingXmlParser {
 
     // Extract categories
     final categoryMatches = RegExp(
-      r'<category[^>]*>([^<]*)</category>',
+      r'<category(?:\s[^>]*)?(?<!/)>([\s\S]*?)</category>',
     ).allMatches(channelContent);
     final categories = <String>[];
     for (final match in categoryMatches) {
-      final category = match.group(1)?.trim();
-      if (category != null && category.isNotEmpty) {
-        categories.add(decodeXmlEntities(category));
+      final category = decodeXmlText(match.group(1)!.trim()).trim();
+      if (category.isNotEmpty) {
+        categories.add(category);
       }
     }
     if (categories.isNotEmpty) {

@@ -6,7 +6,9 @@ final _xmlEntityRe = RegExp(
   r'&(?:(amp|lt|gt|quot|apos)|#(\d+)|#x([0-9a-fA-F]+));',
 );
 
-final _cdataSectionRe = RegExp(r'<!\[CDATA\[([\s\S]*?)\]\]>');
+// An unterminated section runs to the end, as the old CDATA-stripping
+// helpers read it, so a malformed feed does not leak the `<![CDATA[` marker.
+final _cdataSectionRe = RegExp(r'<!\[CDATA\[([\s\S]*?)(?:\]\]>|$)');
 
 final _elementTextCache = <String, RegExp>{};
 
@@ -24,28 +26,27 @@ String decodeXmlEntities(String value) {
   return value.replaceAllMapped(_xmlEntityRe, _decodeEntity);
 }
 
-String _decodeEntity(Match m) {
-  final named = m.group(1);
-  if (named != null) {
-    return switch (named) {
-      'amp' => '&',
-      'lt' => '<',
-      'gt' => '>',
-      'quot' => '"',
-      'apos' => "'",
-      _ => m.group(0)!,
-    };
-  }
-  final decimal = m.group(2);
-  final hex = m.group(3);
-  final code = decimal != null
-      ? int.tryParse(decimal)
-      : hex != null
-      ? int.tryParse(hex, radix: 16)
-      : null;
+String _decodeEntity(Match match) {
+  final named = match.group(1);
+  if (named != null) return _namedEntities[named] ?? match.group(0)!;
+  final code = _codePointOf(decimal: match.group(2), hex: match.group(3));
   // An out-of-range or surrogate reference is left as written: a
   // malformed value must not fail the whole feed.
-  return _isCodePoint(code) ? String.fromCharCode(code!) : m.group(0)!;
+  return _isCodePoint(code) ? String.fromCharCode(code!) : match.group(0)!;
+}
+
+const _namedEntities = {
+  'amp': '&',
+  'lt': '<',
+  'gt': '>',
+  'quot': '"',
+  'apos': "'",
+};
+
+int? _codePointOf({String? decimal, String? hex}) {
+  if (decimal != null) return int.tryParse(decimal);
+  if (hex != null) return int.tryParse(hex, radix: 16);
+  return null;
 }
 
 /// Text content of raw element content: character references in plain
@@ -70,7 +71,8 @@ String? extractXmlElementText(String xml, String tagName) {
   final re = _elementTextCache.putIfAbsent(
     tagName,
     () => RegExp(
-      '<${RegExp.escape(tagName)}(?:\\s[^>]*)?>'
+      // `(?<!/)` skips a self-closing `<tag />`, which has no content.
+      '<${RegExp.escape(tagName)}(?:\\s[^>]*)?(?<!/)>'
       r'([\s\S]*?)'
       '</${RegExp.escape(tagName)}>',
       caseSensitive: false,

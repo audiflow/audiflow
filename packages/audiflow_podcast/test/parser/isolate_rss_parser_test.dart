@@ -426,6 +426,13 @@ void main() {
         expect(meta.author, 'X & Y');
       });
 
+      test('drops the marker of an unterminated CDATA section', () async {
+        final meta = await channelMeta(
+          '<title><![CDATA[Show &amp; Tell</title>',
+        );
+        expect(meta.title, 'Show &amp; Tell');
+      });
+
       test('decodes an episode guid once', () async {
         const xml =
             '<?xml version="1.0" encoding="UTF-8"?>'
