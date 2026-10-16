@@ -126,18 +126,6 @@ void main() {
     });
   });
 
-  group('ProgressLine.fillColorFor', () {
-    test('accent while in progress, inkTertiary once completed', () {
-      const colors = AppColors.light;
-      check(
-        ProgressLine.fillColorFor(colors, completed: false),
-      ).equals(colors.accent);
-      check(
-        ProgressLine.fillColorFor(colors, completed: true),
-      ).equals(colors.inkTertiary);
-    });
-  });
-
   group('ProgressLine.isStarted', () {
     test('true once fraction is above 0, including finished', () {
       check(ProgressLine.isStarted(0.5)).isTrue();

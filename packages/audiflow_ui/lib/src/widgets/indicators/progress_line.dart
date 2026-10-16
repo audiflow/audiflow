@@ -4,7 +4,7 @@ import '../../themes/app_colors.dart';
 
 /// A thin playback progress line (redesign section 3.1).
 ///
-/// Track is `hairline`. The fill follows the state (see [fillColorFor]):
+/// Track is `hairline`. The fill follows the state:
 /// `accent` while in progress, a neutral `inkTertiary` once [completed],
 /// unless [fillColor] overrides it (the mini player passes `brand`).
 /// Usually placed by [BottomEdgeProgress] rather than directly.
@@ -47,7 +47,7 @@ class ProgressLine extends StatelessWidget {
   /// Fill for an item in the given state. Finished items take a neutral
   /// fill so orange lines remain only where something can be resumed;
   /// a list of played rows would otherwise read as a stack of accents.
-  static Color fillColorFor(AppColors colors, {required bool completed}) =>
+  static Color _fillColorFor(AppColors colors, {required bool completed}) =>
       completed ? colors.inkTertiary : colors.accent;
 
   double get _clamped {
@@ -72,7 +72,7 @@ class ProgressLine extends StatelessWidget {
               heightFactor: 1,
               child: ColoredBox(
                 key: fillKey,
-                color: fillColor ?? fillColorFor(colors, completed: completed),
+                color: fillColor ?? _fillColorFor(colors, completed: completed),
               ),
             ),
           ),
