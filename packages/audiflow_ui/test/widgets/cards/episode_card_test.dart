@@ -179,12 +179,14 @@ void main() {
       );
       check(find.byIcon(Icons.check_rounded).evaluate().length).equals(1);
       check(find.text('Completed').evaluate().length).equals(1);
-      final line = tester.widget<ProgressLine>(find.byType(ProgressLine));
-      check(line.fraction).equals(1);
+      final line = find.byType(ProgressLine);
+      final fill = find.byKey(ProgressLine.fillKey);
+      check(tester.getSize(fill).width).equals(tester.getSize(line).width);
       // Finished rows recede: the line uses the neutral fill, not accent.
-      check(line.completed).isTrue();
-      final fill = tester.widget<ColoredBox>(find.byKey(ProgressLine.fillKey));
-      check(fill.color).equals(AppColors.light.inkTertiary);
+      check(tester.widget<ProgressLine>(line).completed).isTrue();
+      check(
+        tester.widget<ColoredBox>(fill).color,
+      ).equals(AppColors.light.inkTertiary);
     });
 
     testWidgets('playing: pause glyph, progress on the bottom edge', (

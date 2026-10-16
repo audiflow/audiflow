@@ -247,18 +247,18 @@ class _ProgressRowsPreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const rows = [
-      ('未再生', null),
-      ('途中まで再生（35%）', 0.35),
-      ('もうすぐ終わり（92%）', 0.92),
-      ('再生済み', 1.0),
+      ('未再生', null, false),
+      ('途中まで再生（35%）', 0.35, false),
+      ('もうすぐ終わり（92%）', 0.92, false),
+      ('再生済み', null, true),
     ];
     return GroupedSection(
       header: 'BOTTOM-EDGE PROGRESS',
       children: [
-        for (final (title, fraction) in rows)
+        for (final (title, fraction, completed) in rows)
           BottomEdgeProgress(
             fraction: fraction,
-            completed: fraction == 1.0,
+            completed: completed,
             child: SettingsRow(title: title),
           ),
       ],

@@ -118,19 +118,20 @@ class BottomEdgeProgress extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final value = completed ? 1.0 : fraction;
+    final value = fraction;
     // The Stack stays in the tree whether or not the line shows, so
     // crossing a progress boundary does not rebuild the child and reset
     // its state.
     return Stack(
       children: [
         child,
-        if (ProgressLine.isStarted(value))
+        if (completed || ProgressLine.isStarted(value))
           PositionedDirectional(
             start: inset,
             end: inset,
             bottom: 0,
-            child: _line(value!),
+            // ProgressLine draws a completed line full on its own.
+            child: _line(value ?? 0),
           ),
       ],
     );
