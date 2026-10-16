@@ -1,3 +1,5 @@
+import 'package:audiflow_podcast/audiflow_podcast.dart' show decodeXmlEntities;
+
 import '../../subscription/models/subscriptions.dart';
 import '../../subscription/repositories/subscription_repository.dart';
 import '../models/feed_parse_progress.dart';
@@ -117,10 +119,23 @@ class SubscriptionMetadataUpdater {
       _isBlank(sub.artworkUrl) && sub.feedMetadataSyncedAt == null;
 
   /// Whether [sub] must parse its feed to fill channel metadata it lacks:
-  /// the artwork (see [needsArtworkBackfill]) or a website it has never
-  /// read. Callers skip conditional request headers while this is true.
+  /// the artwork (see [needsArtworkBackfill]), a website it has never
+  /// read, or an author stored with undecoded character references.
+  /// Callers skip conditional request headers while this is true.
   static bool needsChannelBackfill(Subscription sub) =>
-      needsArtworkBackfill(sub) || sub.websiteSyncedAt == null;
+      needsArtworkBackfill(sub) ||
+      sub.websiteSyncedAt == null ||
+      _hasUndecodedAuthor(sub);
+
+  /// Earlier parsers stored the channel author without decoding character
+  /// references (`A &amp; B`). The next parse writes the decoded value,
+  /// which ends this; only a feed whose author really is `&amp;` (CDATA)
+  /// keeps asking unconditionally, as a feed without validators does.
+  /// Descriptions are not checked: they are HTML that legitimately keeps
+  /// references, so checking them would defeat conditional requests for
+  /// most feeds.
+  static bool _hasUndecodedAuthor(Subscription sub) =>
+      decodeXmlEntities(sub.artistName) != sub.artistName;
 
   /// Returns the trimmed [feedValue] when it carries new information, or
   /// null when it is blank or already equal to [storedValue].

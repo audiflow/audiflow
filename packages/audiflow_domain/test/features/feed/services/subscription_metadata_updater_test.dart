@@ -310,6 +310,34 @@ void main() {
         ),
       ).isFalse();
     });
+
+    test('is true while the author holds an undecoded reference', () {
+      // Earlier parsers stored channel text without decoding it; a 304
+      // would keep such an author encoded forever.
+      for (final author in ['A &amp; B', 'A &#38; B', 'A &#x26; B']) {
+        check(
+          SubscriptionMetadataUpdater.needsChannelBackfill(
+            _subscription(
+              artistName: author,
+              feedMetadataSyncedAt: synced,
+              websiteSyncedAt: synced,
+            ),
+          ),
+        ).isTrue();
+      }
+    });
+
+    test('is false for an author with a plain ampersand', () {
+      check(
+        SubscriptionMetadataUpdater.needsChannelBackfill(
+          _subscription(
+            artistName: 'A & B',
+            feedMetadataSyncedAt: synced,
+            websiteSyncedAt: synced,
+          ),
+        ),
+      ).isFalse();
+    });
   });
 
   group('SubscriptionMetadataUpdater.needsArtworkBackfill', () {
