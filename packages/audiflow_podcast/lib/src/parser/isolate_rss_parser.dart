@@ -8,6 +8,7 @@ import '../models/podcast_chapters_link.dart';
 import 'description_chapters_parser.dart';
 import 'itunes_boolean.dart';
 import 'parse_progress.dart';
+import 'xml_text.dart';
 
 /// Trims whitespace and returns null for blank strings.
 String? _nullIfBlank(String? value) {
@@ -227,14 +228,13 @@ class IsolateRssParser {
         final itemEnd = closeIdx + itemCloseTag.length;
         final itemXml = xml.substring(itemStart, itemEnd);
 
-        // Quick-check guid and pubDate via lightweight regex before DOM-parsing
-        final guid = _extractTagText(itemXml, 'guid');
-
-        // Decode once for comparison against database-stored (decoded) GUIDs
-        final decodedGuid = guid != null ? _decodeXmlEntities(guid) : null;
+        // Quick-check guid and pubDate via lightweight regex before
+        // DOM-parsing. The guid is decoded the way XmlDocument decodes it,
+        // to compare against database-stored (decoded) GUIDs.
+        final decodedGuid = _extractTagText(itemXml, 'guid');
         final rawEnclosure = _extractEnclosureUrl(itemXml);
         final enclosureUrl = rawEnclosure != null
-            ? _decodeXmlEntities(rawEnclosure)
+            ? decodeXmlEntities(rawEnclosure)
             : null;
 
         // Early stop: GUID-set match (legacy path, used by parseWithProgress)
@@ -293,15 +293,14 @@ class IsolateRssParser {
           final close = xml.indexOf(itemCloseTag, start);
           if (close == -1) break;
           final snippet = xml.substring(start, close + itemCloseTag.length);
-          final rawGuid = _extractTagText(snippet, 'guid');
           final rawUrl = _extractEnclosureUrl(snippet);
           _addItemId(
             tailGuids,
             params,
             keysByItem,
             keysByGuid,
-            rawGuid != null ? _decodeXmlEntities(rawGuid) : null,
-            rawUrl != null ? _decodeXmlEntities(rawUrl) : null,
+            _extractTagText(snippet, 'guid'),
+            rawUrl != null ? decodeXmlEntities(rawUrl) : null,
           );
         }
       }
@@ -347,40 +346,11 @@ class IsolateRssParser {
     );
   }
 
-  /// Lightweight tag text extraction using regex — no DOM allocation.
-  /// Handles both plain text and CDATA content.
-  static final _tagTextCache = <String, RegExp>{};
-
-  static String? _extractTagText(String xml, String tagName) {
-    final re = _tagTextCache.putIfAbsent(
-      tagName,
-      () => RegExp(
-        '<$tagName[^>]*>'
-        r'(?:<!\[CDATA\[)?' // optional CDATA start
-        r'([\s\S]*?)' // content (non-greedy)
-        r'(?:\]\]>)?' // optional CDATA end
-        '</$tagName>',
-        caseSensitive: false,
-      ),
-    );
-    final match = re.firstMatch(xml);
-    return _nullIfBlank(match?.group(1));
-  }
-
-  /// Like [_extractTagText], but returns the text an XML parser would:
-  /// character references decoded, CDATA content kept verbatim.
-  static String? _extractXmlText(String xml, String tagName) {
-    final match = RegExp(
-      '<$tagName(?:\\s[^>]*)?>([\\s\\S]*?)</$tagName>',
-      caseSensitive: false,
-    ).firstMatch(xml);
-    final raw = match?.group(1)?.trim();
-    if (raw == null) return null;
-    final cdata = _cdataRe.firstMatch(raw);
-    return _nullIfBlank(cdata?.group(1) ?? _decodeXmlEntities(raw));
-  }
-
-  static final _cdataRe = RegExp(r'^<!\[CDATA\[([\s\S]*?)\]\]>$');
+  /// Lightweight tag text extraction using regex, no DOM allocation.
+  /// Returns the text an XML parser would: character references decoded,
+  /// CDATA content kept verbatim.
+  static String? _extractTagText(String xml, String tagName) =>
+      _nullIfBlank(extractXmlElementText(xml, tagName));
 
   /// The channel's own website in a stretch of channel-level XML: comments
   /// and the elements that carry their own `<link>` (`<image>`,
@@ -390,7 +360,7 @@ class IsolateRssParser {
     final channelOnly = xml
         .replaceAll(_commentRe, '')
         .replaceAll(_nestedLinkOwnerRe, '');
-    return _webLink(_extractXmlText(channelOnly, 'link'));
+    return _webLink(_extractTagText(channelOnly, 'link'));
   }
 
   static final _commentRe = RegExp(r'<!--[\s\S]*?-->');
@@ -491,45 +461,6 @@ class IsolateRssParser {
   static String? _extractEnclosureUrl(String xml) {
     final match = _enclosureUrlRe.firstMatch(xml);
     return _nullIfBlank(match?.group(1));
-  }
-
-  /// Decodes XML character references (named and numeric) so
-  /// regex-extracted values match what `XmlDocument.parse` produces.
-  static final _xmlEntityRe = RegExp(
-    r'&(?:(amp|lt|gt|quot|apos)|#(\d+)|#x([0-9a-fA-F]+));',
-  );
-
-  static bool _isCodePoint(int? code) =>
-      code != null &&
-      0 <= code &&
-      code <= 0x10FFFF &&
-      !(0xD800 <= code && code <= 0xDFFF);
-
-  static String _decodeXmlEntities(String value) {
-    if (!value.contains('&')) return value;
-    return value.replaceAllMapped(_xmlEntityRe, (m) {
-      final named = m.group(1);
-      if (named != null) {
-        return switch (named) {
-          'amp' => '&',
-          'lt' => '<',
-          'gt' => '>',
-          'quot' => '"',
-          'apos' => "'",
-          _ => m.group(0)!,
-        };
-      }
-      final decimal = m.group(2);
-      final hex = m.group(3);
-      final code = decimal != null
-          ? int.tryParse(decimal)
-          : hex != null
-          ? int.tryParse(hex, radix: 16)
-          : null;
-      // An out-of-range or surrogate reference is left as written: a
-      // malformed value must not fail the whole feed.
-      return _isCodePoint(code) ? String.fromCharCode(code!) : m.group(0)!;
-    });
   }
 
   static const _descriptionChaptersParser = DescriptionChaptersParser();

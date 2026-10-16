@@ -569,6 +569,53 @@ void main() {
       );
     });
 
+    group('channel text fields', () {
+      Future<PodcastFeed> channelFeed(String channelXml) async {
+        final xml =
+            '<?xml version="1.0" encoding="UTF-8"?>'
+            '<rss version="2.0" '
+            'xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">'
+            '<channel>$channelXml'
+            '<item><guid>e1</guid><title>E1</title></item>'
+            '</channel></rss>';
+        final entities = <PodcastEntity>[];
+        parser.entityStream.listen(entities.add);
+        await parser.parseXmlStream(
+          Stream.fromIterable([utf8.encode(xml)]),
+        );
+        return entities.whereType<PodcastFeed>().single;
+      }
+
+      test('decodes named and numeric references', () async {
+        final feed = await channelFeed(
+          '<title>Tom &amp; Jerry &lt;Live&gt;</title>'
+          '<description>A &#38; B &#x26; C</description>'
+          '<itunes:author>Soichiro Takashima &amp; Kensei Shiraishi'
+          '</itunes:author>'
+          '<itunes:summary>Q &amp;amp; A</itunes:summary>'
+          '<category>Society &amp; Culture</category>'
+          '<itunes:category text="Kids &amp; Family"/>',
+        );
+        expect(feed.title, 'Tom & Jerry <Live>');
+        expect(feed.description, 'A & B & C');
+        expect(feed.author, 'Soichiro Takashima & Kensei Shiraishi');
+        expect(feed.summary, 'Q &amp; A');
+        expect(feed.categories, contains('Society & Culture'));
+        expect(feed.categories, contains('Kids & Family'));
+      });
+
+      test('keeps CDATA content verbatim', () async {
+        final feed = await channelFeed(
+          '<title><![CDATA[Tom &amp; Jerry]]></title>'
+          '<description><![CDATA[<p>A &lt; B</p>]]></description>'
+          '<itunes:author><![CDATA[X & Y]]></itunes:author>',
+        );
+        expect(feed.title, 'Tom &amp; Jerry');
+        expect(feed.description, '<p>A &lt; B</p>');
+        expect(feed.author, 'X & Y');
+      });
+    });
+
     group('parseXmlStream', () {
       test('should parse RSS feed from byte stream', () async {
         const xmlContent = '''<?xml version="1.0" encoding="UTF-8"?>

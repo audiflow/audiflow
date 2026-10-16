@@ -109,5 +109,7 @@ export 'src/parser/transcript/srt_parser.dart';
 export 'src/parser/transcript/transcript_file_parser.dart';
 export 'src/parser/transcript/transcript_segment.dart';
 export 'src/parser/transcript/vtt_parser.dart';
+// XML text decoding
+export 'src/parser/xml_text.dart' show decodeXmlEntities;
 // Core parser
 export 'src/podcast_feed_parser.dart' show CacheOptions, PodcastRssParser;

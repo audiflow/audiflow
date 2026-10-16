@@ -381,5 +381,65 @@ void main() {
       expect(await channelLink('example.com/show'), isNull);
       expect(await channelLink('mailto:host@example.com'), isNull);
     });
+
+    group('channel text fields', () {
+      Future<ParsedPodcastMeta> channelMeta(String channelXml) async {
+        final xml =
+            '<?xml version="1.0" encoding="UTF-8"?>'
+            '<rss version="2.0" '
+            'xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">'
+            '<channel>$channelXml'
+            '<item><guid>e1</guid><title>E1</title></item>'
+            '</channel></rss>';
+        final meta = await IsolateRssParser.parse(
+          feedXml: xml,
+          knownGuids: {},
+        ).firstWhere((event) => event is ParsedPodcastMeta);
+        return meta as ParsedPodcastMeta;
+      }
+
+      test('decodes named and numeric references', () async {
+        final meta = await channelMeta(
+          '<title>Tom &amp; Jerry &lt;Live&gt;</title>'
+          '<description>A &#38; B &#x26; C</description>'
+          '<itunes:author>Soichiro Takashima &amp; Kensei Shiraishi'
+          '</itunes:author>',
+        );
+        expect(meta.title, 'Tom & Jerry <Live>');
+        expect(meta.description, 'A & B & C');
+        expect(meta.author, 'Soichiro Takashima & Kensei Shiraishi');
+      });
+
+      test('decodes a reference only once', () async {
+        final meta = await channelMeta('<title>a &amp;lt; b</title>');
+        expect(meta.title, 'a &lt; b');
+      });
+
+      test('keeps CDATA content verbatim', () async {
+        final meta = await channelMeta(
+          '<title><![CDATA[Tom &amp; Jerry]]></title>'
+          '<description><![CDATA[<p>A &lt; B</p>]]></description>'
+          '<itunes:author><![CDATA[X & Y]]></itunes:author>',
+        );
+        expect(meta.title, 'Tom &amp; Jerry');
+        expect(meta.description, '<p>A &lt; B</p>');
+        expect(meta.author, 'X & Y');
+      });
+
+      test('decodes an episode guid once', () async {
+        const xml =
+            '<?xml version="1.0" encoding="UTF-8"?>'
+            '<rss version="2.0"><channel><title>Show</title>'
+            '<item><guid>new</guid><title>New</title></item>'
+            '<item><guid><![CDATA[a&amp;b]]></guid><title>Old</title></item>'
+            '</channel></rss>';
+        final events = await IsolateRssParser.parse(
+          feedXml: xml,
+          knownGuids: {'a&amp;b'},
+        ).toList();
+        final episodes = events.whereType<ParsedEpisode>();
+        expect(episodes.map((e) => e.guid), ['new']);
+      });
+    });
   });
 }

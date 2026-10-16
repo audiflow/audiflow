@@ -9,6 +9,7 @@ import '../models/podcast_entity.dart';
 import '../models/podcast_feed.dart';
 import '../models/podcast_item.dart';
 import 'itunes_boolean.dart';
+import 'xml_text.dart';
 
 /// Trims whitespace and returns null for blank strings.
 String? _nullIfBlank(String? value) {
@@ -212,7 +213,7 @@ class StreamingXmlParser {
     for (final match in categoryMatches) {
       final category = match.group(1)?.trim();
       if (category != null && category.isNotEmpty) {
-        categories.add(category);
+        categories.add(decodeXmlEntities(category));
       }
     }
     if (categories.isNotEmpty) {
@@ -227,7 +228,7 @@ class StreamingXmlParser {
     for (final match in itunesCategoryMatches) {
       final category = match.group(1)?.trim();
       if (category != null && category.isNotEmpty) {
-        itunesCategories.add(category);
+        itunesCategories.add(decodeXmlEntities(category));
       }
     }
     if (itunesCategories.isNotEmpty) {
@@ -247,12 +248,10 @@ class StreamingXmlParser {
     }
   }
 
-  /// Extract element text using regex
-  String? _extractElementText(String content, String elementName) {
-    final regex = RegExp('<$elementName[^>]*>([^<]*)</$elementName>');
-    final match = regex.firstMatch(content);
-    return match?.group(1)?.trim();
-  }
+  /// Extract element text using regex, decoded the way an XML parser
+  /// would: character references decoded, CDATA content kept verbatim.
+  String? _extractElementText(String content, String elementName) =>
+      extractXmlElementText(content, elementName)?.trim();
 
   /// Process a single item XML
   Future<void> _processItemXml(String itemXml) async {
