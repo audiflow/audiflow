@@ -93,6 +93,7 @@ void main() {
 
       check(find.text('Developer info').evaluate()).isNotEmpty();
       check(find.text('https://example.com/feed.xml').evaluate()).isNotEmpty();
+      check(find.text('Preset').evaluate()).isNotEmpty();
       check(find.byType(GroupedSection).evaluate()).length.equals(1);
     });
 

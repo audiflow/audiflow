@@ -2915,7 +2915,7 @@ abstract class AppLocalizations {
   /// Settings grid card subtitle for developer preferences
   ///
   /// In en, this message translates to:
-  /// **'Smart playlist patterns and debug info'**
+  /// **'Presets and debug info'**
   String get settingsDeveloperSubtitle;
 
   /// Tappable row label linking to the contribute guide
@@ -2939,7 +2939,7 @@ abstract class AppLocalizations {
   /// Toggle subtitle explaining what developer info shows
   ///
   /// In en, this message translates to:
-  /// **'Display RSS feed URL and pattern links in episode details'**
+  /// **'Display RSS feed URL and preset links in episode details'**
   String get developerShowInfoSubtitle;
 
   /// Developer settings action that posts sample new-episode notifications
@@ -3050,10 +3050,10 @@ abstract class AppLocalizations {
   /// **'Notifications are not allowed for this app'**
   String get developerTestNotificationsPermissionDenied;
 
-  /// Section header for the pattern list
+  /// Section header for the preset list
   ///
   /// In en, this message translates to:
-  /// **'Smart Playlist Patterns'**
+  /// **'Presets'**
   String get developerPatternsHeader;
 
   /// Section label in episode detail for developer info
@@ -3074,13 +3074,13 @@ abstract class AppLocalizations {
   /// **'Copy'**
   String get developerCopyLabel;
 
-  /// Label for the pattern link field
+  /// Label for the matching preset link field
   ///
   /// In en, this message translates to:
-  /// **'Smart Playlist Pattern'**
+  /// **'Preset'**
   String get developerPatternLabel;
 
-  /// Shown when no smart playlist pattern matches the podcast
+  /// Shown when no preset matches the podcast
   ///
   /// In en, this message translates to:
   /// **'Not defined — add one?'**
