@@ -48,8 +48,7 @@ class _ChapterListSheetState extends ConsumerState<ChapterListSheet> {
   static const double _revealAlignment = 0.3;
 
   final GlobalKey _currentTileKey = GlobalKey();
-  bool _revealedCurrent = false;
-  bool _revealScheduled = false;
+  bool _revealHandled = false;
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +56,7 @@ class _ChapterListSheetState extends ConsumerState<ChapterListSheet> {
     final chapters =
         ref.watch(currentEpisodeChaptersProvider).unwrapPrevious().value ?? [];
     final currentIndex = ref.watch(currentChapterProvider)?.index;
-    if (currentIndex != null && chapters.isNotEmpty) _scheduleRevealCurrent();
+    if (chapters.isNotEmpty) _scheduleRevealOnce();
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -69,16 +68,27 @@ class _ChapterListSheetState extends ConsumerState<ChapterListSheet> {
             style: Theme.of(context).textTheme.titleMedium,
           ),
         ),
-        Flexible(child: _list(chapters, currentIndex)),
+        Flexible(child: _list(context, chapters, currentIndex)),
       ],
     );
   }
 
   // Built eagerly rather than lazily: chapter lists are short, and every
   // tile must be laid out for the current one to be scrolled into view.
-  Widget _list(List<EpisodeChapter> chapters, int? currentIndex) {
+  Widget _list(
+    BuildContext context,
+    List<EpisodeChapter> chapters,
+    int? currentIndex,
+  ) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: Spacing.sm),
+      // The modal leaves the bottom inset to its content; keep the last
+      // chapter clear of the home indicator.
+      padding: EdgeInsets.fromLTRB(
+        Spacing.sm,
+        0,
+        Spacing.sm,
+        MediaQuery.paddingOf(context).bottom,
+      ),
       // Tile tints paint on the nearest Material; one inside the scroll
       // view keeps them clipped to the list instead of the whole sheet.
       child: Material(
@@ -101,16 +111,16 @@ class _ChapterListSheetState extends ConsumerState<ChapterListSheet> {
     );
   }
 
-  /// Scrolls the current chapter into view once, after the first layout
-  /// that shows it; later chapter changes only move the highlight.
-  void _scheduleRevealCurrent() {
-    if (_revealedCurrent || _revealScheduled) return;
-    _revealScheduled = true;
+  /// Decides the opening scroll once, on the first frame with chapters:
+  /// brings the current chapter into view, or stays at the top when none is
+  /// current yet. Later chapter changes only move the highlight, so the
+  /// list never jumps under the listener's finger.
+  void _scheduleRevealOnce() {
+    if (_revealHandled) return;
+    _revealHandled = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _revealScheduled = false;
       final tileContext = _currentTileKey.currentContext;
       if (!mounted || tileContext == null) return;
-      _revealedCurrent = true;
       Scrollable.ensureVisible(tileContext, alignment: _revealAlignment);
     });
   }
@@ -168,8 +178,10 @@ class _ChapterTile extends StatelessWidget {
   }
 
   Widget _leading(AppColors colors) {
-    return SizedBox(
-      width: _leadingWidth,
+    // A minimum rather than a fixed width, so large accessibility text
+    // widens the column instead of wrapping the digits.
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: _leadingWidth),
       child: isCurrent
           ? Icon(
               Symbols.graphic_eq,

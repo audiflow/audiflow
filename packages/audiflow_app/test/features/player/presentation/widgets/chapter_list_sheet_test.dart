@@ -79,6 +79,9 @@ void _setCurrent(WidgetTester tester, int? index) {
   ).read(_currentIndexProvider.notifier).set(index);
 }
 
+double _scrollOffset(WidgetTester tester) =>
+    tester.state<ScrollableState>(find.byType(Scrollable)).position.pixels;
+
 Finder _playingIconIn(int index) => find.descendant(
   of: _tileOf(index),
   matching: find.byIcon(Symbols.graphic_eq),
@@ -104,9 +107,12 @@ void main() {
       check(find.byIcon(Symbols.graphic_eq).evaluate()).isEmpty();
     });
 
-    for (final (name, theme, colors) in [
-      ('light', AppTheme.light(), AppColors.light),
-      ('dark', AppTheme.dark(), AppColors.dark),
+    // The sheet opens from the player, so it also runs on the player's
+    // white-on-ground palette.
+    for (final (name, theme) in [
+      ('light', AppTheme.light()),
+      ('dark', AppTheme.dark()),
+      ('player', nowPlayingTheme(NowPlayingColors.fallbackBackground)),
     ]) {
       testWidgets('tints the current chapter with the accent ($name)', (
         tester,
@@ -114,8 +120,10 @@ void main() {
         await tester.pumpWidget(_buildSheet(theme: theme));
         await tester.pumpAndSettle();
 
+        final colors = theme.extension<AppColors>()!;
         final current = _tile(tester, _current);
         check(current.selected).isTrue();
+        check(colors.accentTint).not((it) => it.equals(colors.surface));
         check(current.selectedTileColor).equals(colors.accentTint);
         check(current.selectedColor).equals(colors.accent);
         check(_playingIconIn(_current).evaluate()).isNotEmpty();
@@ -171,6 +179,25 @@ void main() {
         ),
       );
       handle.dispose();
+    });
+
+    testWidgets('does not scroll again when the current chapter changes', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_buildSheet(initialIndex: null));
+      await tester.pumpAndSettle();
+      await tester.drag(find.byType(ChapterListSheet), const Offset(0, -600));
+      await tester.pumpAndSettle();
+      final scrolled = _scrollOffset(tester);
+      check(scrolled).isGreaterThan(0);
+
+      _setCurrent(tester, 0);
+      await tester.pumpAndSettle();
+      check(_scrollOffset(tester)).equals(scrolled);
+
+      _setCurrent(tester, _current);
+      await tester.pumpAndSettle();
+      check(_scrollOffset(tester)).equals(scrolled);
     });
   });
 }
