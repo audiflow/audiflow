@@ -1026,7 +1026,7 @@
   "@developerContributeRepo": {"description": "Subtitle below the contribute link, describing the guide page it opens"},
   "developerShowInfoTitle": "Show developer info",
   "@developerShowInfoTitle": {"description": "Toggle title for developer info in episode detail"},
-  "developerShowInfoSubtitle": "Display RSS feed URL and preset links in episode details",
+  "developerShowInfoSubtitle": "Display RSS feed URL and preset link in episode details",
   "@developerShowInfoSubtitle": {"description": "Toggle subtitle explaining what developer info shows"},
   "developerTestNotificationsTitle": "Send test notifications",
   "@developerTestNotificationsTitle": {"description": "Developer settings action that posts sample new-episode notifications"},

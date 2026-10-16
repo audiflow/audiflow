@@ -1613,7 +1613,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get developerShowInfoSubtitle =>
-      'Display RSS feed URL and preset links in episode details';
+      'Display RSS feed URL and preset link in episode details';
 
   @override
   String get developerTestNotificationsTitle => 'Send test notifications';

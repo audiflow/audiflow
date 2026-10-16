@@ -2939,7 +2939,7 @@ abstract class AppLocalizations {
   /// Toggle subtitle explaining what developer info shows
   ///
   /// In en, this message translates to:
-  /// **'Display RSS feed URL and preset links in episode details'**
+  /// **'Display RSS feed URL and preset link in episode details'**
   String get developerShowInfoSubtitle;
 
   /// Developer settings action that posts sample new-episode notifications
