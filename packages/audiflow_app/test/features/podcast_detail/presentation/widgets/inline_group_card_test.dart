@@ -141,6 +141,9 @@ void main() {
         .widget<BottomEdgeProgress>(find.byType(BottomEdgeProgress))
         .fraction;
 
+    Color lineFill(WidgetTester tester) =>
+        tester.widget<ColoredBox>(find.byKey(ProgressLine.fillKey)).color;
+
     testWidgets('meta line joins the count and total duration', (tester) async {
       await pump(tester, null);
       check(find.text('4 episodes · 1h30m').evaluate()).length.equals(1);
@@ -166,6 +169,7 @@ void main() {
       final status = tester.widget<Text>(find.text('2/4 played'));
       check(status.style?.color).equals(AppColors.light.accent);
       check(lineFraction(tester)).equals(0.6);
+      check(lineFill(tester)).equals(AppColors.light.accent);
     });
 
     testWidgets('finished series: played and a full line', (tester) async {
@@ -175,6 +179,7 @@ void main() {
       );
       check(find.text('Played').evaluate()).length.equals(1);
       check(lineFraction(tester)).equals(1);
+      check(lineFill(tester)).equals(AppColors.light.inkTertiary);
     });
   });
 

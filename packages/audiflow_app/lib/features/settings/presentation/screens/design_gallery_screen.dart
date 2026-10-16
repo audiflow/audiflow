@@ -258,6 +258,7 @@ class _ProgressRowsPreview extends StatelessWidget {
         for (final (title, fraction) in rows)
           BottomEdgeProgress(
             fraction: fraction,
+            completed: fraction == 1.0,
             child: SettingsRow(title: title),
           ),
       ],

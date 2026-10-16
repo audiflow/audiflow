@@ -335,7 +335,8 @@ class EpisodeProgressStatus extends StatelessWidget {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(ProgressLine.thickness / 2),
             child: ProgressLine(
-              fraction: isCompleted ? 1 : fraction,
+              fraction: fraction,
+              completed: isCompleted,
               trackColor: colors.progressTrack,
             ),
           ),

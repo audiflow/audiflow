@@ -4,13 +4,15 @@ import '../../themes/app_colors.dart';
 
 /// A thin playback progress line (redesign section 3.1).
 ///
-/// Track is `hairline`, fill is `accent` unless [fillColor] overrides it
-/// (the mini player passes `brand`). Usually placed by
-/// [BottomEdgeProgress] rather than directly.
+/// Track is `hairline`. The fill follows the state (see [fillColorFor]):
+/// `accent` while in progress, a neutral `inkTertiary` once [completed],
+/// unless [fillColor] overrides it (the mini player passes `brand`).
+/// Usually placed by [BottomEdgeProgress] rather than directly.
 class ProgressLine extends StatelessWidget {
   const ProgressLine({
     super.key,
     required this.fraction,
+    this.completed = false,
     this.fillColor,
     this.trackColor,
   });
@@ -25,7 +27,11 @@ class ProgressLine extends StatelessWidget {
   static const Key fillKey = ValueKey('progressLineFill');
 
   /// Progress in `[0, 1]`. Out-of-range values are clamped; NaN is empty.
+  /// Ignored when [completed], which always draws the line full.
   final double fraction;
+
+  /// Whether the item has been played to the end.
+  final bool completed;
 
   final Color? fillColor;
   final Color? trackColor;
@@ -38,7 +44,16 @@ class ProgressLine extends StatelessWidget {
     return 0 < fraction;
   }
 
-  double get _clamped => fraction.isNaN ? 0 : fraction.clamp(0.0, 1.0);
+  /// Fill for an item in the given state. Finished items take a neutral
+  /// fill so orange lines remain only where something can be resumed;
+  /// a list of played rows would otherwise read as a stack of accents.
+  static Color fillColorFor(AppColors colors, {required bool completed}) =>
+      completed ? colors.inkTertiary : colors.accent;
+
+  double get _clamped {
+    if (completed) return 1;
+    return fraction.isNaN ? 0 : fraction.clamp(0.0, 1.0);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +72,7 @@ class ProgressLine extends StatelessWidget {
               heightFactor: 1,
               child: ColoredBox(
                 key: fillKey,
-                color: fillColor ?? colors.accent,
+                color: fillColor ?? fillColorFor(colors, completed: completed),
               ),
             ),
           ),
@@ -68,8 +83,8 @@ class ProgressLine extends StatelessWidget {
 }
 
 /// Overlays a [ProgressLine] on the bottom edge of [child] while
-/// playback has started (full once finished), without changing the
-/// child's size.
+/// playback has started or the item is [completed] (then full, in the
+/// neutral fill), without changing the child's size.
 ///
 /// Rounded parents clip the line themselves (e.g. via the card's shape).
 /// Full-width list rows pass [inset] so the line lines up with the row
@@ -79,6 +94,7 @@ class BottomEdgeProgress extends StatelessWidget {
     super.key,
     required this.fraction,
     required this.child,
+    this.completed = false,
     this.fillColor,
     this.trackColor,
     this.inset = 0,
@@ -86,6 +102,11 @@ class BottomEdgeProgress extends StatelessWidget {
 
   final double? fraction;
   final Widget child;
+
+  /// Shows the line full in the neutral completed fill, whatever
+  /// [fraction] says.
+  final bool completed;
+
   final Color? fillColor;
 
   /// Unplayed part of the line; `hairline` unless set (e.g. translucent
@@ -97,7 +118,7 @@ class BottomEdgeProgress extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final value = fraction;
+    final value = completed ? 1.0 : fraction;
     // The Stack stays in the tree whether or not the line shows, so
     // crossing a progress boundary does not rebuild the child and reset
     // its state.
@@ -118,6 +139,7 @@ class BottomEdgeProgress extends StatelessWidget {
   Widget _line(double value) {
     final line = ProgressLine(
       fraction: value,
+      completed: completed,
       fillColor: fillColor,
       trackColor: trackColor,
     );

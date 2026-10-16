@@ -83,6 +83,59 @@ void main() {
         tester.widget<ColoredBox>(fillFinder()).color,
       ).equals(AppColors.dark.accent);
     });
+
+    testWidgets('completed: full inkTertiary fill whatever the fraction', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        host(const ProgressLine(fraction: 0.4, completed: true)),
+      );
+      check(
+        tester.widget<ColoredBox>(fillFinder()).color,
+      ).equals(AppColors.light.inkTertiary);
+      check(tester.getSize(fillFinder()).width).equals(200);
+    });
+
+    testWidgets('completed resolves the dark neutral in dark theme', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        host(
+          const ProgressLine(fraction: 1, completed: true),
+          theme: AppTheme.dark(),
+        ),
+      );
+      check(
+        tester.widget<ColoredBox>(fillFinder()).color,
+      ).equals(AppColors.dark.inkTertiary);
+    });
+
+    testWidgets('an explicit fill still wins over completed', (tester) async {
+      await tester.pumpWidget(
+        host(
+          ProgressLine(
+            fraction: 1,
+            completed: true,
+            fillColor: AppColors.light.brand,
+          ),
+        ),
+      );
+      check(
+        tester.widget<ColoredBox>(fillFinder()).color,
+      ).equals(AppColors.light.brand);
+    });
+  });
+
+  group('ProgressLine.fillColorFor', () {
+    test('accent while in progress, inkTertiary once completed', () {
+      const colors = AppColors.light;
+      check(
+        ProgressLine.fillColorFor(colors, completed: false),
+      ).equals(colors.accent);
+      check(
+        ProgressLine.fillColorFor(colors, completed: true),
+      ).equals(colors.inkTertiary);
+    });
   });
 
   group('ProgressLine.isStarted', () {
@@ -167,6 +220,36 @@ void main() {
       check(
         tester.getSize(find.byKey(ProgressLine.fillKey)).width,
       ).equals(tester.getSize(line).width);
+    });
+
+    testWidgets('completed: full neutral line even without a fraction', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        host(
+          BottomEdgeProgress(
+            fraction: null,
+            completed: true,
+            child: const SizedBox(height: 80, child: Text('row')),
+          ),
+        ),
+      );
+      final line = find.byType(ProgressLine);
+      check(line.evaluate().length).equals(1);
+      check(tester.widget<ProgressLine>(line).completed).isTrue();
+      check(
+        tester.widget<ColoredBox>(fillFinder()).color,
+      ).equals(AppColors.light.inkTertiary);
+      check(
+        tester.getSize(fillFinder()).width,
+      ).equals(tester.getSize(line).width);
+    });
+
+    testWidgets('in progress keeps the accent fill', (tester) async {
+      await tester.pumpWidget(card(0.4));
+      check(
+        tester.widget<ColoredBox>(fillFinder()).color,
+      ).equals(AppColors.light.accent);
     });
 
     for (final fraction in <double?>[null, 0]) {

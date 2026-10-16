@@ -181,6 +181,10 @@ void main() {
       check(find.text('Completed').evaluate().length).equals(1);
       final line = tester.widget<ProgressLine>(find.byType(ProgressLine));
       check(line.fraction).equals(1);
+      // Finished rows recede: the line uses the neutral fill, not accent.
+      check(line.completed).isTrue();
+      final fill = tester.widget<ColoredBox>(find.byKey(ProgressLine.fillKey));
+      check(fill.color).equals(AppColors.light.inkTertiary);
     });
 
     testWidgets('playing: pause glyph, progress on the bottom edge', (
@@ -218,6 +222,8 @@ void main() {
       );
       check(find.byIcon(Icons.play_arrow_rounded).evaluate().length).equals(1);
       check(find.byType(ProgressLine).evaluate().length).equals(1);
+      final fill = tester.widget<ColoredBox>(find.byKey(ProgressLine.fillKey));
+      check(fill.color).equals(AppColors.light.accent);
     });
 
     testWidgets('height follows the content, leaving no gap', (tester) async {
