@@ -1,4 +1,5 @@
 import 'package:audiflow_app/features/podcast_detail/presentation/widgets/episode_detail_actions.dart';
+import 'package:audiflow_app/features/podcast_detail/presentation/widgets/podcast_detail_header.dart';
 import 'package:audiflow_app/features/podcast_detail/presentation/widgets/series_hero.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:checks/checks.dart';
@@ -10,6 +11,7 @@ void main() {
     WidgetTester tester, {
     String title = 'Mongol invasions',
     String? resumeLabel,
+    String? thumbnailUrl,
     VoidCallback? onResume,
     VoidCallback? onPodcastTap,
   }) => tester.pumpWidget(
@@ -20,6 +22,7 @@ void main() {
           title: title,
           podcastTitle: 'COTEN RADIO',
           meta: '8 episodes · 4h',
+          thumbnailUrl: thumbnailUrl,
           resumeLabel: resumeLabel,
           onResume: onResume,
           onPodcastTap: onPodcastTap,
@@ -28,20 +31,51 @@ void main() {
     ),
   );
 
-  testWidgets('artwork sits beside the title', (tester) async {
-    await pump(tester);
-    final artwork = tester.getRect(find.byKey(SeriesHero.artworkKey));
-    final title = tester.getRect(find.text('Mongol invasions'));
-    check(artwork.width).equals(SeriesHero.artworkSize);
-    check(artwork.right).isLessThan(title.left);
-    check(find.text('8 episodes · 4h').evaluate()).length.equals(1);
-  });
-
   void setScreenSize(WidgetTester tester, Size size) {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
   }
+
+  testWidgets('artwork sits beside the title', (tester) async {
+    await pump(tester);
+    final artwork = tester.getRect(find.byKey(SeriesHero.artworkKey));
+    final title = tester.getRect(find.text('Mongol invasions'));
+    check(artwork.right).isLessThan(title.left);
+    check(find.text('8 episodes · 4h').evaluate()).length.equals(1);
+  });
+
+  testWidgets('artwork keeps the compact size on phones', (tester) async {
+    setScreenSize(tester, const Size(390, 844));
+    await pump(tester);
+    final artwork = tester.getRect(find.byKey(SeriesHero.artworkKey));
+    final title = tester.getRect(find.text('Mongol invasions'));
+    check(artwork.size).equals(const Size.square(SeriesHero.phoneArtworkSize));
+    check(title.left - artwork.right).equals(Spacing.md);
+  });
+
+  testWidgets('artwork matches the podcast hero artwork on tablets', (
+    tester,
+  ) async {
+    setScreenSize(tester, const Size(1024, 768));
+    await pump(tester, thumbnailUrl: 'https://example.com/a.jpg');
+    final artwork = tester.getRect(find.byKey(SeriesHero.artworkKey));
+    final title = tester.getRect(find.text('Mongol invasions'));
+    check(
+      artwork.size,
+    ).equals(const Size.square(PodcastDetailHeader.artworkSize));
+    check(title.left - artwork.right).equals(Spacing.lg);
+    // Decodes at the podcast hero's width, so a series showing the podcast
+    // artwork shares that decoded image instead of adding another.
+    final image = tester.widget<ArtworkImage>(find.byType(ArtworkImage));
+    check(image.width).equals(PodcastDetailHeader.artworkSize);
+  });
+
+  testWidgets('the default test surface counts as a tablet', (tester) async {
+    await pump(tester);
+    final artwork = tester.getRect(find.byKey(SeriesHero.artworkKey));
+    check(artwork.width).equals(SeriesHero.tabletArtworkSize);
+  });
 
   testWidgets('resume button spans the width on phones and plays', (
     tester,
