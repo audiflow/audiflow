@@ -330,19 +330,26 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
     final episodeId = view.episodeId;
     return Row(
       children: [
-        Expanded(
-          child: EpisodePrimaryPill(
-            state: view.playState,
-            duration: widget.episode.duration,
-            isLoading: view.isLoading,
-            onPressed: enclosureUrl == null
-                ? null
-                : () => _onPlayPausePressed(
-                    context,
-                    enclosureUrl,
-                    view.isPlaying,
-                    restart: view.playState == EpisodePlayState.played,
-                  ),
+        // Flexible plus a cap: the pill still shrinks to fit beside the
+        // circles on phones, but stops growing on wide layouts.
+        Flexible(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              maxWidth: EpisodePrimaryPill.maxWidth,
+            ),
+            child: EpisodePrimaryPill(
+              state: view.playState,
+              duration: widget.episode.duration,
+              isLoading: view.isLoading,
+              onPressed: enclosureUrl == null
+                  ? null
+                  : () => _onPlayPausePressed(
+                      context,
+                      enclosureUrl,
+                      view.isPlaying,
+                      restart: view.playState == EpisodePlayState.played,
+                    ),
+            ),
           ),
         ),
         if (episodeId != null) ...[

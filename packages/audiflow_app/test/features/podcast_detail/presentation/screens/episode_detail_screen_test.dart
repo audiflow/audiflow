@@ -599,6 +599,33 @@ void main() {
       check(find.byKey(DetailHeroLayout.artworkColumnKey).evaluate()).isEmpty();
       check(pillInHero().evaluate()).isEmpty();
     });
+
+    testWidgets('the play pill stops at its max width on a tablet', (
+      tester,
+    ) async {
+      useViewSize(tester, const Size(1180, 820));
+      await tester.pumpWidget(
+        buildTestWidget(progress: testEpisodeWithProgress),
+      );
+      await tester.pumpAndSettle();
+
+      check(
+        tester.getSize(find.byType(EpisodePrimaryPill)).width,
+      ).equals(EpisodePrimaryPill.maxWidth);
+    });
+
+    testWidgets('the play pill keeps its phone width beside the buttons', (
+      tester,
+    ) async {
+      useViewSize(tester, const Size(390, 844));
+      await tester.pumpWidget(
+        buildTestWidget(progress: testEpisodeWithProgress),
+      );
+      await tester.pumpAndSettle();
+
+      // 390 - 2 * 20 gutter - 2 * (50 circle + 10 gap).
+      check(tester.getSize(find.byType(EpisodePrimaryPill)).width).equals(230);
+    });
   });
 }
 
