@@ -47,58 +47,63 @@ const SubscriptionSchema = CollectionSchema(
       name: r'autoDownloadsSinceLastPlay',
       type: IsarType.long,
     ),
-    r'description': PropertySchema(
+    r'channelTextSyncedAt': PropertySchema(
       id: 6,
+      name: r'channelTextSyncedAt',
+      type: IsarType.dateTime,
+    ),
+    r'description': PropertySchema(
+      id: 7,
       name: r'description',
       type: IsarType.string,
     ),
-    r'explicit': PropertySchema(id: 7, name: r'explicit', type: IsarType.bool),
+    r'explicit': PropertySchema(id: 8, name: r'explicit', type: IsarType.bool),
     r'feedMetadataSyncedAt': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'feedMetadataSyncedAt',
       type: IsarType.dateTime,
     ),
-    r'feedUrl': PropertySchema(id: 9, name: r'feedUrl', type: IsarType.string),
-    r'genres': PropertySchema(id: 10, name: r'genres', type: IsarType.string),
+    r'feedUrl': PropertySchema(id: 10, name: r'feedUrl', type: IsarType.string),
+    r'genres': PropertySchema(id: 11, name: r'genres', type: IsarType.string),
     r'httpEtag': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'httpEtag',
       type: IsarType.string,
     ),
     r'httpLastModified': PropertySchema(
-      id: 12,
+      id: 13,
       name: r'httpLastModified',
       type: IsarType.string,
     ),
-    r'isCached': PropertySchema(id: 13, name: r'isCached', type: IsarType.bool),
+    r'isCached': PropertySchema(id: 14, name: r'isCached', type: IsarType.bool),
     r'itunesId': PropertySchema(
-      id: 14,
+      id: 15,
       name: r'itunesId',
       type: IsarType.string,
     ),
     r'lastAccessedAt': PropertySchema(
-      id: 15,
+      id: 16,
       name: r'lastAccessedAt',
       type: IsarType.dateTime,
     ),
     r'lastRefreshedAt': PropertySchema(
-      id: 16,
+      id: 17,
       name: r'lastRefreshedAt',
       type: IsarType.dateTime,
     ),
     r'subscribedAt': PropertySchema(
-      id: 17,
+      id: 18,
       name: r'subscribedAt',
       type: IsarType.dateTime,
     ),
-    r'title': PropertySchema(id: 18, name: r'title', type: IsarType.string),
+    r'title': PropertySchema(id: 19, name: r'title', type: IsarType.string),
     r'websiteSyncedAt': PropertySchema(
-      id: 19,
+      id: 20,
       name: r'websiteSyncedAt',
       type: IsarType.dateTime,
     ),
     r'websiteUrl': PropertySchema(
-      id: 20,
+      id: 21,
       name: r'websiteUrl',
       type: IsarType.string,
     ),
@@ -189,21 +194,22 @@ void _subscriptionSerialize(
   writer.writeLong(offsets[3], object.autoDownloadKeepCount);
   writer.writeDateTime(offsets[4], object.autoDownloadPausedAt);
   writer.writeLong(offsets[5], object.autoDownloadsSinceLastPlay);
-  writer.writeString(offsets[6], object.description);
-  writer.writeBool(offsets[7], object.explicit);
-  writer.writeDateTime(offsets[8], object.feedMetadataSyncedAt);
-  writer.writeString(offsets[9], object.feedUrl);
-  writer.writeString(offsets[10], object.genres);
-  writer.writeString(offsets[11], object.httpEtag);
-  writer.writeString(offsets[12], object.httpLastModified);
-  writer.writeBool(offsets[13], object.isCached);
-  writer.writeString(offsets[14], object.itunesId);
-  writer.writeDateTime(offsets[15], object.lastAccessedAt);
-  writer.writeDateTime(offsets[16], object.lastRefreshedAt);
-  writer.writeDateTime(offsets[17], object.subscribedAt);
-  writer.writeString(offsets[18], object.title);
-  writer.writeDateTime(offsets[19], object.websiteSyncedAt);
-  writer.writeString(offsets[20], object.websiteUrl);
+  writer.writeDateTime(offsets[6], object.channelTextSyncedAt);
+  writer.writeString(offsets[7], object.description);
+  writer.writeBool(offsets[8], object.explicit);
+  writer.writeDateTime(offsets[9], object.feedMetadataSyncedAt);
+  writer.writeString(offsets[10], object.feedUrl);
+  writer.writeString(offsets[11], object.genres);
+  writer.writeString(offsets[12], object.httpEtag);
+  writer.writeString(offsets[13], object.httpLastModified);
+  writer.writeBool(offsets[14], object.isCached);
+  writer.writeString(offsets[15], object.itunesId);
+  writer.writeDateTime(offsets[16], object.lastAccessedAt);
+  writer.writeDateTime(offsets[17], object.lastRefreshedAt);
+  writer.writeDateTime(offsets[18], object.subscribedAt);
+  writer.writeString(offsets[19], object.title);
+  writer.writeDateTime(offsets[20], object.websiteSyncedAt);
+  writer.writeString(offsets[21], object.websiteUrl);
 }
 
 Subscription _subscriptionDeserialize(
@@ -219,22 +225,23 @@ Subscription _subscriptionDeserialize(
   object.autoDownloadKeepCount = reader.readLongOrNull(offsets[3]);
   object.autoDownloadPausedAt = reader.readDateTimeOrNull(offsets[4]);
   object.autoDownloadsSinceLastPlay = reader.readLong(offsets[5]);
-  object.description = reader.readStringOrNull(offsets[6]);
-  object.explicit = reader.readBool(offsets[7]);
-  object.feedMetadataSyncedAt = reader.readDateTimeOrNull(offsets[8]);
-  object.feedUrl = reader.readString(offsets[9]);
-  object.genres = reader.readString(offsets[10]);
-  object.httpEtag = reader.readStringOrNull(offsets[11]);
-  object.httpLastModified = reader.readStringOrNull(offsets[12]);
+  object.channelTextSyncedAt = reader.readDateTimeOrNull(offsets[6]);
+  object.description = reader.readStringOrNull(offsets[7]);
+  object.explicit = reader.readBool(offsets[8]);
+  object.feedMetadataSyncedAt = reader.readDateTimeOrNull(offsets[9]);
+  object.feedUrl = reader.readString(offsets[10]);
+  object.genres = reader.readString(offsets[11]);
+  object.httpEtag = reader.readStringOrNull(offsets[12]);
+  object.httpLastModified = reader.readStringOrNull(offsets[13]);
   object.id = id;
-  object.isCached = reader.readBool(offsets[13]);
-  object.itunesId = reader.readString(offsets[14]);
-  object.lastAccessedAt = reader.readDateTimeOrNull(offsets[15]);
-  object.lastRefreshedAt = reader.readDateTimeOrNull(offsets[16]);
-  object.subscribedAt = reader.readDateTime(offsets[17]);
-  object.title = reader.readString(offsets[18]);
-  object.websiteSyncedAt = reader.readDateTimeOrNull(offsets[19]);
-  object.websiteUrl = reader.readStringOrNull(offsets[20]);
+  object.isCached = reader.readBool(offsets[14]);
+  object.itunesId = reader.readString(offsets[15]);
+  object.lastAccessedAt = reader.readDateTimeOrNull(offsets[16]);
+  object.lastRefreshedAt = reader.readDateTimeOrNull(offsets[17]);
+  object.subscribedAt = reader.readDateTime(offsets[18]);
+  object.title = reader.readString(offsets[19]);
+  object.websiteSyncedAt = reader.readDateTimeOrNull(offsets[20]);
+  object.websiteUrl = reader.readStringOrNull(offsets[21]);
   return object;
 }
 
@@ -258,34 +265,36 @@ P _subscriptionDeserializeProp<P>(
     case 5:
       return (reader.readLong(offset)) as P;
     case 6:
-      return (reader.readStringOrNull(offset)) as P;
-    case 7:
-      return (reader.readBool(offset)) as P;
-    case 8:
       return (reader.readDateTimeOrNull(offset)) as P;
+    case 7:
+      return (reader.readStringOrNull(offset)) as P;
+    case 8:
+      return (reader.readBool(offset)) as P;
     case 9:
-      return (reader.readString(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 10:
       return (reader.readString(offset)) as P;
     case 11:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 12:
       return (reader.readStringOrNull(offset)) as P;
     case 13:
-      return (reader.readBool(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 14:
-      return (reader.readString(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 15:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 16:
       return (reader.readDateTimeOrNull(offset)) as P;
     case 17:
-      return (reader.readDateTime(offset)) as P;
-    case 18:
-      return (reader.readString(offset)) as P;
-    case 19:
       return (reader.readDateTimeOrNull(offset)) as P;
+    case 18:
+      return (reader.readDateTime(offset)) as P;
+    case 19:
+      return (reader.readString(offset)) as P;
     case 20:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 21:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1012,6 +1021,79 @@ extension SubscriptionQueryFilter
       return query.addFilterCondition(
         FilterCondition.between(
           property: r'autoDownloadsSinceLastPlay',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  channelTextSyncedAtIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'channelTextSyncedAt'),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  channelTextSyncedAtIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'channelTextSyncedAt'),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  channelTextSyncedAtEqualTo(DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'channelTextSyncedAt', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  channelTextSyncedAtGreaterThan(DateTime? value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'channelTextSyncedAt',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  channelTextSyncedAtLessThan(DateTime? value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'channelTextSyncedAt',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  channelTextSyncedAtBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'channelTextSyncedAt',
           lower: lower,
           includeLower: includeLower,
           upper: upper,
@@ -2747,6 +2829,20 @@ extension SubscriptionQuerySortBy
     });
   }
 
+  QueryBuilder<Subscription, Subscription, QAfterSortBy>
+  sortByChannelTextSyncedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'channelTextSyncedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterSortBy>
+  sortByChannelTextSyncedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'channelTextSyncedAt', Sort.desc);
+    });
+  }
+
   QueryBuilder<Subscription, Subscription, QAfterSortBy> sortByDescription() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'description', Sort.asc);
@@ -3024,6 +3120,20 @@ extension SubscriptionQuerySortThenBy
     });
   }
 
+  QueryBuilder<Subscription, Subscription, QAfterSortBy>
+  thenByChannelTextSyncedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'channelTextSyncedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterSortBy>
+  thenByChannelTextSyncedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'channelTextSyncedAt', Sort.desc);
+    });
+  }
+
   QueryBuilder<Subscription, Subscription, QAfterSortBy> thenByDescription() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'description', Sort.asc);
@@ -3275,6 +3385,13 @@ extension SubscriptionQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Subscription, Subscription, QDistinct>
+  distinctByChannelTextSyncedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'channelTextSyncedAt');
+    });
+  }
+
   QueryBuilder<Subscription, Subscription, QDistinct> distinctByDescription({
     bool caseSensitive = true,
   }) {
@@ -3432,6 +3549,13 @@ extension SubscriptionQueryProperty
   autoDownloadsSinceLastPlayProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'autoDownloadsSinceLastPlay');
+    });
+  }
+
+  QueryBuilder<Subscription, DateTime?, QQueryOperations>
+  channelTextSyncedAtProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'channelTextSyncedAt');
     });
   }
 
