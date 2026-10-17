@@ -10,8 +10,9 @@ scripts:
     else
       echo "worktrunk (wt) not found; copy .env.* and Firebase configs from $ORCA_ROOT_PATH manually." >&2
     fi
-    # Without wt (or if the copy skipped it), recreate the fvm SDK link from .fvmrc.
-    if [ ! -e .fvm/flutter_sdk ]; then
+    # Relink the SDK from this worktree's .fvmrc: the copied link follows the
+    # primary checkout's version, which can differ on another branch.
+    if command -v fvm > /dev/null; then
       fvm install
     fi
     if command -v mise > /dev/null; then
