@@ -48,6 +48,8 @@ void main() {
     WidgetTester tester, {
     int? episodeId = _episodeId,
     PlaybackHistory? snapshot,
+    Locale? locale,
+    double textScale = 1,
   }) async {
     await tester.pumpWidget(
       ProviderScope(
@@ -60,6 +62,13 @@ void main() {
           theme: AppTheme.light(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
+          locale: locale,
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: TextScaler.linear(textScale)),
+            child: child!,
+          ),
           home: Scaffold(
             body: SingleChildScrollView(
               child: EpisodePlaybackRecord(
@@ -213,6 +222,33 @@ void main() {
       check(
         find.text(l10n.episodeDetailPlaybackRecord).evaluate(),
       ).length.equals(1);
+    });
+
+    testWidgets('fits Japanese values at large text in the narrowest columns', (
+      tester,
+    ) async {
+      // 2 * 280 + 16 between the 20pt gutters: both columns at their minimum.
+      useScreen(tester, const Size(616, 900));
+      await pump(
+        tester,
+        snapshot: _history(
+          playCount: 128,
+          completedCount: 64,
+          totalListenedMs: const Duration(
+            hours: 123,
+            minutes: 45,
+          ).inMilliseconds,
+          totalRealtimeMs: const Duration(hours: 98, minutes: 7).inMilliseconds,
+          lastPlayedAt: DateTime(2026, 12, 31),
+        ),
+        locale: const Locale('ja'),
+        textScale: 2,
+      );
+
+      final rects = surfaces(tester);
+      check(rects).length.equals(2);
+      check(rects.first.width).equals(280);
+      check(tester.takeException()).isNull();
     });
 
     testWidgets('stacks one capped surface on a narrow tablet', (tester) async {

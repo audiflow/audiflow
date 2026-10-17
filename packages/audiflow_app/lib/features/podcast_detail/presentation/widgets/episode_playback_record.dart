@@ -258,12 +258,17 @@ class _RecordRow extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: Spacing.md),
-              Text(
-                value,
-                style: AppTextStyles.tabular(
-                  AppTextStyles.body.copyWith(
-                    color: colors.ink,
-                    fontWeight: FontWeight.w600,
+              // Large text in a narrow row ("123時間45分" at 2x in a 280pt
+              // tablet column) would overflow; the value wraps instead.
+              Flexible(
+                child: Text(
+                  value,
+                  textAlign: TextAlign.end,
+                  style: AppTextStyles.tabular(
+                    AppTextStyles.body.copyWith(
+                      color: colors.ink,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
