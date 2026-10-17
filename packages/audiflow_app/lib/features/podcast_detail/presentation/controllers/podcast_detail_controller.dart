@@ -542,6 +542,9 @@ Future<bool> hasSmartPlaylistViewAfterLoad(Ref ref, String feedUrl) async {
   // Check for a registered pattern first (e.g., category-based)
   final pattern = await ref.watch(presetByFeedUrlProvider(feedUrl).future);
   if (pattern != null) return true;
+  // The feed is only needed without a pattern; an abandoned build must
+  // not touch the stale Ref.
+  if (!ref.mounted) return false;
 
   final feed = await ref.watch(podcastDetailProvider(feedUrl).future);
   return feed.episodes.any((e) => e.seasonNumber != null);
@@ -556,22 +559,32 @@ Future<SmartPlaylistGrouping?> sortedPodcastSmartPlaylists(
   Ref ref,
   String feedUrl,
 ) async {
-  // Database-backed resolution works for all visited podcasts
-  final grouping = await ref.watch(
+  // Watch every dependency before the first await: the provider can be
+  // disposed (screen left) or rebuilt (feed sync) during any await, and a
+  // stale Ref throws UnmountedRefException on every use.
+  final groupingFuture = ref.watch(
     podcastSmartPlaylistsByFeedUrlProvider(feedUrl).future,
   );
+  final subscriptionFuture = ref.watch(
+    subscriptionByFeedUrlProvider(feedUrl).future,
+  );
+  final patternFuture = ref.watch(presetByFeedUrlProvider(feedUrl).future);
+  final episodeRepo = ref.watch(episodeRepositoryProvider);
 
+  // Database-backed resolution works for all visited podcasts
+  final grouping = await groupingFuture;
   if (grouping == null) return null;
 
   // Get persisted preferences if subscribed,
   // otherwise use defaults
-  final subscription = await ref.watch(
-    subscriptionByFeedUrlProvider(feedUrl).future,
-  );
+  final subscription = await subscriptionFuture;
   SmartPlaylistSortField sortField;
   SortOrder sortOrder;
 
   if (subscription != null) {
+    // The id is only known after the lookup; an abandoned build must
+    // not touch the stale Ref.
+    if (!ref.mounted) return null;
     final prefs = await ref.watch(
       podcastViewPreferenceControllerProvider(subscription.id).future,
     );
@@ -581,8 +594,7 @@ Future<SmartPlaylistGrouping?> sortedPodcastSmartPlaylists(
     sortField = SmartPlaylistSortField.playlistNumber;
     sortOrder = SortOrder.descending;
   }
-  final pattern = await ref.watch(presetByFeedUrlProvider(feedUrl).future);
-  final episodeRepo = ref.watch(episodeRepositoryProvider);
+  final pattern = await patternFuture;
 
   // Sort smart playlists based on config
   final sortedPlaylists = List<SmartPlaylist>.from(grouping.playlists);
