@@ -98,7 +98,7 @@ class DeveloperSettingsScreen extends ConsumerWidget {
               const Divider(height: 1),
             ],
 
-            // Pattern list header
+            // Preset list header
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               child: Text(
@@ -110,7 +110,7 @@ class DeveloperSettingsScreen extends ConsumerWidget {
               ),
             ),
 
-            // Pattern items
+            // Preset items
             ...summaries.map((summary) {
               return ListTile(
                 title: Text(summary.displayName),
