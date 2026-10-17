@@ -193,7 +193,7 @@ Top to bottom:
 
 ### 4.3 Series episodes
 
-- **Hero** (side by side): artwork 88, series name (up to 3 lines; one size smaller when long), podcast name (links back), "N エピソード · 合計時間", and a full-width "#n を続きから再生" button. Fades and shrinks on scroll, like the podcast hero.
+- **Hero** (side by side): artwork 88, series name (up to 3 lines; one size smaller when long), podcast name (links back), "N エピソード · 合計時間", and a "#n を続きから再生" button, full width on phones (centered at a capped width on tablets, below). Fades and shrinks on scroll, like the podcast hero.
 - **Hero on tablets**: same row layout, with the artwork at the podcast hero's 180 (24 gap to the text, as the podcast hero's square column leaves) so the hero does not look sparse; the button is centered at the episode detail play pill's width. Matching the podcast hero's size also lets a series that falls back to the podcast artwork reuse the image already decoded for Podcast detail.
 - **Navigation**: floating back button and [search | …] pill; series name fades into the center after the hero is gone.
 - **Sort**: a right-aligned text button "↑古い順" above the list, same style as on Podcast detail. Not sticky.
