@@ -251,6 +251,16 @@ void main() {
       check(tester.takeException()).isNull();
     });
 
+    testWidgets('ends every value at the same trailing edge', (tester) async {
+      useScreen(tester, const Size(390, 844));
+      await pump(tester);
+      await write(tester, null);
+
+      final dash = find.text(EpisodePlaybackRecord.noValue).first;
+      final never = find.text(l10n.statsNever).first;
+      check(tester.getRect(dash).right).equals(tester.getRect(never).right);
+    });
+
     testWidgets('stacks one capped surface on a narrow tablet', (tester) async {
       useScreen(tester, const Size(610, 900));
       await pump(tester);

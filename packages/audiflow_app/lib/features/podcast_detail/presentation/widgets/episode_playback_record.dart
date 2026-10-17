@@ -260,7 +260,9 @@ class _RecordRow extends StatelessWidget {
               const SizedBox(width: Spacing.md),
               // Large text in a narrow row ("123時間45分" at 2x in a 280pt
               // tablet column) would overflow; the value wraps instead.
-              Flexible(
+              // Expanded, not Flexible, so every value ends at the row's
+              // trailing edge.
+              Expanded(
                 child: Text(
                   value,
                   textAlign: TextAlign.end,
