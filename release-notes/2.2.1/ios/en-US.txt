@@ -1,0 +1,11 @@
+• iPad: podcast and episode pages place the artwork beside the title and details, making better use of the wider screen
+• The episode play button no longer stretches across wide screens, and sits centered under the title when there is room
+• The playback record on an episode's page now updates while you listen
+• Tap anywhere on a shortened episode description to show all of it
+• The chapter list highlights the chapter that is playing, opens scrolled to it, and has a close button
+• The player's top bar is simpler: just the close and menu buttons, since the podcast name already appears under the episode title
+• Progress lines on finished episodes and seasons are now gray, so lists with many played episodes look calmer
+• Episodes within a season now play oldest first by default
+• Fixed the clock and battery icons turning white and hard to read after closing the player
+• Fixed podcast names and authors showing codes like "&amp;" instead of "&"
+• Background refresh and downloads now fail less often
