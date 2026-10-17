@@ -144,6 +144,7 @@ export 'src/features/player/providers/current_chapter_providers.dart';
 export 'src/features/player/providers/sleep_timer_providers.dart';
 export 'src/features/player/providers/now_playing_speed_provider.dart';
 export 'src/features/player/providers/sleep_timer_time_left_provider.dart';
+export 'src/features/player/providers/episode_playback_history_provider.dart';
 
 // Player feature - Playback History
 export 'src/features/player/models/episode_with_progress.dart';

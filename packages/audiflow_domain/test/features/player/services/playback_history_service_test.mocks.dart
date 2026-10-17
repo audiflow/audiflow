@@ -45,6 +45,14 @@ class MockPlaybackHistoryRepository extends _i1.Mock
           as _i3.Future<_i4.PlaybackHistory?>);
 
   @override
+  _i3.Stream<_i4.PlaybackHistory?> watchByEpisodeId(int? episodeId) =>
+      (super.noSuchMethod(
+            Invocation.method(#watchByEpisodeId, [episodeId]),
+            returnValue: _i3.Stream<_i4.PlaybackHistory?>.empty(),
+          )
+          as _i3.Stream<_i4.PlaybackHistory?>);
+
+  @override
   _i3.Future<void> saveProgress({
     required int? episodeId,
     required int? positionMs,
