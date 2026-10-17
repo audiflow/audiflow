@@ -62,6 +62,9 @@ signing files are gitignored.
   age key at `~/.config/mise/age.txt`, then run `mise run secrets:pull`.
   After editing a plaintext file, run `mise run secrets:encrypt -- <path>` and
   commit in `audiflow-secrets`. In a new worktree, run `mise run secrets:decrypt`.
+  Worktrees created by [Orca](https://www.onorca.dev) run the `orca.yaml` setup
+  script instead, which copies these files from the primary checkout with
+  worktrunk's `wt step copy-ignored` and runs `flutter pub get`.
 - **Contributors:** create the `.env.*` files at the repo root and place your own
   Firebase configs next to the committed `*.example` templates.
 
