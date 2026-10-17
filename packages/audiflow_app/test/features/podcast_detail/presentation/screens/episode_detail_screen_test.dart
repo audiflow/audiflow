@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audiflow_app/features/podcast_detail/presentation/controllers/podcast_detail_controller.dart';
 import 'package:audiflow_app/features/podcast_detail/presentation/screens/episode_detail_screen.dart';
 import 'package:audiflow_app/features/podcast_detail/presentation/widgets/episode_description_card.dart';
@@ -91,6 +93,7 @@ void main() {
     QueueService? queue,
     DownloadTask? download,
     DownloadService? downloads,
+    Stream<PlaybackHistory?>? histories,
   }) {
     return ProviderScope(
       overrides: [
@@ -110,6 +113,9 @@ void main() {
               : _FakeAudioPlayerController(),
         ),
         episodeProgressProvider.overrideWith((ref, url) async => progress),
+        episodePlaybackHistoryProvider.overrideWith(
+          (ref, episodeId) => histories ?? Stream.value(progress?.history),
+        ),
       ],
       child: MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -549,6 +555,37 @@ void main() {
       check(find.text(EpisodePlaybackRecord.noValue).evaluate()).isEmpty();
       // completedCount and playCount both default to 0.
       check(find.text('0 times').evaluate()).length.equals(2);
+    });
+
+    testWidgets('a history write updates the record, not the screen', (
+      tester,
+    ) async {
+      final histories = StreamController<PlaybackHistory?>.broadcast();
+      addTearDown(histories.close);
+      var screenBuilds = 0;
+      debugOnRebuildDirtyWidget = (element, _) {
+        if (element.widget is EpisodeDetailScreen) screenBuilds++;
+      };
+      addTearDown(() => debugOnRebuildDirtyWidget = null);
+      await tester.pumpWidget(
+        buildTestWidget(
+          progress: testInProgressProgress,
+          histories: histories.stream,
+        ),
+      );
+      await tester.pumpAndSettle();
+      final builds = screenBuilds;
+
+      histories.add(
+        PlaybackHistory()
+          ..episodeId = 1
+          ..playCount = 4
+          ..totalListenedMs = 120000,
+      );
+      await tester.pumpAndSettle();
+
+      check(find.text(l10n.episodeDetailTimes(4)).evaluate()).length.equals(1);
+      check(screenBuilds).equals(builds);
     });
   });
 }
