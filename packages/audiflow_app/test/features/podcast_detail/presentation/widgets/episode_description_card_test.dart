@@ -26,6 +26,8 @@ void main() {
     addTearDown(() => UrlLauncherPlatform.instance = original);
   });
 
+  const nextLabel = 'Next control';
+
   Future<void> pump(WidgetTester tester, String content) async {
     await tester.binding.setSurfaceSize(const Size(400, 2000));
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -36,7 +38,13 @@ void main() {
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: SingleChildScrollView(
-            child: EpisodeDescriptionCard(content: content),
+            child: Column(
+              children: [
+                EpisodeDescriptionCard(content: content),
+                // A focus stop after the card, to count the card's own.
+                TextButton(onPressed: () {}, child: const Text(nextLabel)),
+              ],
+            ),
           ),
         ),
       ),
@@ -175,24 +183,34 @@ void main() {
     testWidgets('clamped card has one keyboard focus stop that expands', (
       tester,
     ) async {
-      await pump(tester, long);
+      await pump(tester, longWithLink);
       final collapsed = cardHeight(tester);
+      bool focusIsIn(Finder finder) => find
+          .ancestor(
+            of: find.byWidget(
+              FocusManager.instance.primaryFocus!.context!.widget,
+            ),
+            matching: finder,
+          )
+          .evaluate()
+          .isNotEmpty;
 
       await tester.sendKeyEvent(LogicalKeyboardKey.tab);
       await tester.pump();
-      final focused = FocusManager.instance.primaryFocus!.context!;
-      check(focused.widget).isA<Focus>();
-      check(
-        find
-            .ancestor(
-              of: find.byWidget(focused.widget),
-              matching: find.byType(InkWell),
-            )
-            .evaluate(),
-      ).isNotEmpty();
+      check(focusIsIn(find.byType(EpisodeDescriptionCard))).isTrue();
+
+      // Neither the link nor the hidden toggle takes the next stop.
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+      check(focusIsIn(find.widgetWithText(TextButton, nextLabel))).isTrue();
+
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.pump();
+      check(focusIsIn(find.byType(EpisodeDescriptionCard))).isTrue();
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.pumpAndSettle();
-
       check(cardHeight(tester)).isGreaterThan(collapsed);
     });
 
