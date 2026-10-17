@@ -27,6 +27,11 @@ class PlaybackHistoryRepositoryImpl implements PlaybackHistoryRepository {
   }
 
   @override
+  Stream<PlaybackHistory?> watchByEpisodeId(int episodeId) {
+    return _datasource.watchByEpisodeId(episodeId);
+  }
+
+  @override
   Future<void> saveProgress({
     required int episodeId,
     required int positionMs,

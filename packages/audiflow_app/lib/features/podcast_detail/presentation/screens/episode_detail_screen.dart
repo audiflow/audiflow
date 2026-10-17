@@ -15,7 +15,9 @@ import '../../../queue/presentation/controllers/queue_controller.dart';
 import '../../../share/presentation/helpers/share_helper.dart';
 import '../../../station/presentation/helpers/record_station_play.dart';
 import '../controllers/podcast_detail_controller.dart';
+import '../utils/play_pill_placement.dart';
 import '../utils/played_display.dart';
+import '../widgets/detail_hero_layout.dart';
 import '../widgets/episode_description_card.dart';
 import '../widgets/episode_detail_actions.dart';
 import '../widgets/episode_detail_hero.dart';
@@ -226,6 +228,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
   }
 
   Widget _buildScrollView(_EpisodeView view) {
+    final sideBySide = DetailHeroLayout.isSideBySide(context);
     final content =
         widget.episode.contentEncoded ??
         widget.episode.summary ??
@@ -252,10 +255,19 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
               valueListenable: _navScroll,
               builder: (context, scroll, child) =>
                   CollapsingHero(progress: scroll.hero, child: child!),
-              child: KeyedSubtree(key: _heroKey, child: _buildHero()),
+              child: KeyedSubtree(
+                key: _heroKey,
+                child: _buildHero(sideBySide ? _buildActions(view) : null),
+              ),
             ),
           ),
-          SliverToBoxAdapter(child: _buildActions(view)),
+          if (!sideBySide)
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: Spacing.screenHorizontal,
+              ),
+              sliver: SliverToBoxAdapter(child: _buildActions(view)),
+            ),
           if (content.isNotBlank)
             SliverPadding(
               padding: sectionGap,
@@ -266,7 +278,10 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
           SliverPadding(
             padding: sectionGap,
             sliver: SliverToBoxAdapter(
-              child: EpisodePlaybackRecord(history: view.progress?.history),
+              child: EpisodePlaybackRecord(
+                episodeId: view.episodeId,
+                history: view.progress?.history,
+              ),
             ),
           ),
           SliverToBoxAdapter(
@@ -282,13 +297,15 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
     );
   }
 
-  Widget _buildHero() {
+  /// [actions] joins the hero's right-hand column on tablets.
+  Widget _buildHero(Widget? actions) {
     return EpisodeDetailHero(
       episode: widget.episode,
       podcastTitle: widget.podcastTitle,
       artworkUrl: _imageUrl,
       heroTag: 'episode_artwork_${widget.episode.guid ?? widget.episode.title}',
       onPodcastTap: () => _navigateToPodcast(context),
+      actions: actions,
     );
   }
 
@@ -296,64 +313,82 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
     final progress = view.progress;
     final fraction = progress?.progressPercent;
     final showsLine = view.showsPlayed || ProgressLine.isStarted(fraction);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: Spacing.screenHorizontal),
-      child: Column(
-        children: [
-          _buildActionRow(view),
-          if (showsLine)
-            Padding(
-              padding: const EdgeInsets.only(top: Spacing.md),
-              child: EpisodeProgressStatus(
-                fraction: fraction ?? 0,
-                remaining: progress?.remainingDuration,
-                isCompleted: view.showsPlayed,
-              ),
+    return Column(
+      children: [
+        _buildActionRow(view),
+        if (showsLine)
+          Padding(
+            padding: const EdgeInsets.only(top: Spacing.md),
+            child: EpisodeProgressStatus(
+              fraction: fraction ?? 0,
+              remaining: progress?.remainingDuration,
+              isCompleted: view.showsPlayed,
             ),
-        ],
-      ),
+          ),
+      ],
     );
   }
 
+  /// Width the queue and download circles take at the row's end,
+  /// including the gap that separates them from the pill.
+  static const double _circlesReserve =
+      2 * EpisodeActionCircle.size + 2 * _actionGap;
+
   Widget _buildActionRow(_EpisodeView view) {
-    final enclosureUrl = view.enclosureUrl;
     final episodeId = view.episodeId;
-    return Row(
-      children: [
-        Expanded(
-          child: EpisodePrimaryPill(
-            state: view.playState,
-            duration: widget.episode.duration,
-            isLoading: view.isLoading,
-            onPressed: enclosureUrl == null
-                ? null
-                : () => _onPlayPausePressed(
-                    context,
-                    enclosureUrl,
-                    view.isPlaying,
-                    restart: view.playState == EpisodePlayState.played,
-                  ),
-          ),
-        ),
-        if (episodeId != null) ...[
-          const SizedBox(width: _actionGap),
-          EpisodeQueueCircle(
-            onPlayNext: () => _playNext(episodeId),
-            onAddToEnd: () => _playLater(episodeId),
-          ),
-          const SizedBox(width: _actionGap),
-          EpisodeDownloadCircle(
-            task: view.downloadTask,
-            onPressed: () => handleDownloadTap(
-              context: context,
-              ref: ref,
-              episodeId: episodeId,
-              task: view.downloadTask,
-            ),
-          ),
-        ],
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final placement = PlayPillPlacement.resolve(
+          rowWidth: constraints.maxWidth,
+          maxPillWidth: EpisodePrimaryPill.maxWidth,
+          trailingReserve: episodeId == null ? 0 : _circlesReserve,
+        );
+        return Row(
+          children: [
+            SizedBox(width: placement.start),
+            SizedBox(width: placement.width, child: _buildPlayPill(view)),
+            const Spacer(),
+            if (episodeId != null) ..._buildActionCircles(view, episodeId),
+          ],
+        );
+      },
     );
+  }
+
+  Widget _buildPlayPill(_EpisodeView view) {
+    final enclosureUrl = view.enclosureUrl;
+    return EpisodePrimaryPill(
+      state: view.playState,
+      duration: widget.episode.duration,
+      isLoading: view.isLoading,
+      onPressed: enclosureUrl == null
+          ? null
+          : () => _onPlayPausePressed(
+              context,
+              enclosureUrl,
+              view.isPlaying,
+              restart: view.playState == EpisodePlayState.played,
+            ),
+    );
+  }
+
+  List<Widget> _buildActionCircles(_EpisodeView view, int episodeId) {
+    return [
+      EpisodeQueueCircle(
+        onPlayNext: () => _playNext(episodeId),
+        onAddToEnd: () => _playLater(episodeId),
+      ),
+      const SizedBox(width: _actionGap),
+      EpisodeDownloadCircle(
+        task: view.downloadTask,
+        onPressed: () => handleDownloadTap(
+          context: context,
+          ref: ref,
+          episodeId: episodeId,
+          task: view.downloadTask,
+        ),
+      ),
+    ];
   }
 
   void _playNext(int episodeId) {

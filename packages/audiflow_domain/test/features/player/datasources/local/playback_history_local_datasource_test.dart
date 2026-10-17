@@ -140,6 +140,49 @@ void main() {
     });
   });
 
+  group('watchByEpisodeId', () {
+    test('emits null before the first play', () async {
+      final first = await datasource.watchByEpisodeId(1).first;
+
+      expect(first, isNull);
+    });
+
+    test('emits the history again after each write', () async {
+      final emitted = datasource
+          .watchByEpisodeId(1)
+          .map((history) => history?.totalListenedMs)
+          .take(3)
+          .toList();
+
+      await datasource.updateProgress(
+        episodeId: 1,
+        positionMs: 1000,
+        listenedDeltaMs: 1000,
+      );
+      await datasource.updateProgress(
+        episodeId: 1,
+        positionMs: 3000,
+        listenedDeltaMs: 2000,
+      );
+
+      expect(await emitted, [null, 1000, 3000]);
+    });
+
+    test('ignores writes to other episodes', () async {
+      await datasource.updateProgress(episodeId: 1, positionMs: 1000);
+      final emitted = datasource
+          .watchByEpisodeId(1)
+          .map((history) => history?.positionMs)
+          .take(2)
+          .toList();
+
+      await datasource.updateProgress(episodeId: 2, positionMs: 9000);
+      await datasource.updateProgress(episodeId: 1, positionMs: 2000);
+
+      expect(await emitted, [1000, 2000]);
+    });
+  });
+
   group('markCompleted', () {
     test('marks episode as completed with new record', () async {
       await datasource.markCompleted(1);

@@ -73,6 +73,11 @@ class CollapsingHero extends StatelessWidget {
   /// Scale at full collapse.
   static const double minScale = 0.85;
 
+  /// Progress from which the hero stops taking taps. Past half faded, a
+  /// control in it (artwork, play button) is too faint to be a deliberate
+  /// target, so a tap there would act without the listener seeing it.
+  static const double ignoreTapsFrom = 0.5;
+
   final double progress;
   final Widget child;
 
@@ -81,10 +86,13 @@ class CollapsingHero extends StatelessWidget {
     final t = progress.clamp(0.0, 1.0);
     return Opacity(
       opacity: 1 - t,
-      child: Transform.scale(
-        scale: lerpDouble(1, minScale, t)!,
-        alignment: Alignment.bottomCenter,
-        child: child,
+      child: IgnorePointer(
+        ignoring: ignoreTapsFrom <= t,
+        child: Transform.scale(
+          scale: lerpDouble(1, minScale, t)!,
+          alignment: Alignment.bottomCenter,
+          child: child,
+        ),
       ),
     );
   }

@@ -8,9 +8,11 @@ import 'package:intl/intl.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/duration_label.dart';
+import 'detail_hero_layout.dart';
 
-/// Episode hero (redesign 4.9): centered artwork, then left-aligned
-/// podcast name, the full episode title, and one metadata line.
+/// Episode hero (redesign 4.9): artwork, then left-aligned podcast name,
+/// the full episode title, and one metadata line. The artwork is centered
+/// above the text on phones and sits beside it on tablets.
 class EpisodeDetailHero extends StatelessWidget {
   const EpisodeDetailHero({
     super.key,
@@ -19,6 +21,7 @@ class EpisodeDetailHero extends StatelessWidget {
     required this.artworkUrl,
     required this.heroTag,
     required this.onPodcastTap,
+    this.actions,
   });
 
   static const double artworkSize = 200;
@@ -36,47 +39,54 @@ class EpisodeDetailHero extends StatelessWidget {
 
   final VoidCallback onPodcastTap;
 
+  /// Action row placed under the metadata. The screen passes it only side
+  /// by side, where it belongs to the right-hand column; phones keep it
+  /// below the hero so it scrolls normally instead of fading.
+  final Widget? actions;
+
   @override
   Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    final meta = episodeMetaLine(
-      episode,
-      AppLocalizations.of(context),
-      Localizations.localeOf(context).toLanguageTag(),
-    );
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
+    return DetailHeroLayout(
+      artworkSize: artworkSize,
+      artworkGap: Spacing.lg,
+      phonePadding: const EdgeInsets.fromLTRB(
         Spacing.screenHorizontal,
         Spacing.sm,
         Spacing.screenHorizontal,
         Spacing.lg,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Center(
-            child: _HeroArtwork(url: artworkUrl, heroTag: heroTag),
-          ),
-          const SizedBox(height: Spacing.lg),
-          if (podcastTitle.isNotBlank) ...[
-            _PodcastLink(title: podcastTitle, onTap: onPodcastTap),
-            const SizedBox(height: Spacing.xs),
-          ],
-          SelectableText(
-            episode.title,
-            style: AppTextStyles.heroTitle.copyWith(color: colors.ink),
-          ),
-          if (meta != null) ...[
-            const SizedBox(height: Spacing.sm),
-            Text(
-              meta,
-              style: AppTextStyles.tabular(
-                AppTextStyles.meta.copyWith(color: colors.inkSecondary),
-              ),
-            ),
-          ],
+      phoneAlignment: CrossAxisAlignment.stretch,
+      artwork: _HeroArtwork(url: artworkUrl, heroTag: heroTag),
+      content: _buildContent(context),
+    );
+  }
+
+  Widget _buildContent(BuildContext context) {
+    final meta = episodeMetaLine(
+      episode,
+      AppLocalizations.of(context),
+      Localizations.localeOf(context).toLanguageTag(),
+    );
+    final actions = this.actions;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (podcastTitle.isNotBlank) ...[
+          _PodcastLink(title: podcastTitle, onTap: onPodcastTap),
+          const SizedBox(height: Spacing.xs),
         ],
-      ),
+        SelectableText(
+          episode.title,
+          style: AppTextStyles.heroTitle.copyWith(
+            color: AppColors.of(context).ink,
+          ),
+        ),
+        if (meta != null) ...[
+          const SizedBox(height: Spacing.sm),
+          _MetaLine(meta: meta),
+        ],
+        if (actions != null) ...[const SizedBox(height: Spacing.lg), actions],
+      ],
     );
   }
 }
@@ -107,6 +117,23 @@ String? _episodeNumber(PodcastItem episode) {
   if (number == null) return null;
   final season = episode.seasonNumber;
   return season == null ? 'E$number' : 'S$season E$number';
+}
+
+class _MetaLine extends StatelessWidget {
+  const _MetaLine({required this.meta});
+
+  final String meta;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return Text(
+      meta,
+      style: AppTextStyles.tabular(
+        AppTextStyles.meta.copyWith(color: colors.inkSecondary),
+      ),
+    );
+  }
 }
 
 class _PodcastLink extends StatelessWidget {

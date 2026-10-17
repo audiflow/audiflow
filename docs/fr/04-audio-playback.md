@@ -155,7 +155,8 @@ state and resume position stay coherent no matter where the listener touches it.
   records completed episodes to playback history. An episode is auto-marked completed once
   playback passes 95% of its duration (to tolerate trailing credits or silence), and the
   listener can manually toggle an episode played or unplayed, which overrides the auto-detected
-  state.
+  state. The episode detail's playback record follows these saves while it is
+  open, without saving more often.
 - Separates the played status from the current listen, so a played episode can be replayed
   without losing its status (see "Replay and listen sessions" below).
 - Auto-advances to the next queued episode on completion, deferring to the queue feature for
