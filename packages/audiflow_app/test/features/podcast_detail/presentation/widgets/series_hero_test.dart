@@ -1,3 +1,4 @@
+import 'package:audiflow_app/features/podcast_detail/presentation/widgets/episode_detail_actions.dart';
 import 'package:audiflow_app/features/podcast_detail/presentation/widgets/series_hero.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:checks/checks.dart';
@@ -36,11 +37,33 @@ void main() {
     check(find.text('8 episodes · 4h').evaluate()).length.equals(1);
   });
 
-  testWidgets('resume button spans the width and plays', (tester) async {
+  void setScreenSize(WidgetTester tester, Size size) {
+    tester.view.physicalSize = size;
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+  }
+
+  testWidgets('resume button spans the width on phones and plays', (
+    tester,
+  ) async {
+    setScreenSize(tester, const Size(390, 844));
     var resumed = 0;
     await pump(tester, resumeLabel: 'Resume #3', onResume: () => resumed++);
     final button = tester.getRect(find.byType(FilledButton));
-    check(button.width).equals(800 - 2 * Spacing.screenHorizontal);
+    check(button.width).equals(390 - 2 * Spacing.screenHorizontal);
+    check(button.left).equals(Spacing.screenHorizontal);
+    await tester.tap(find.text('Resume #3'));
+    check(resumed).equals(1);
+  });
+
+  testWidgets('resume button is centered at the episode pill width on '
+      'tablets', (tester) async {
+    setScreenSize(tester, const Size(1024, 768));
+    var resumed = 0;
+    await pump(tester, resumeLabel: 'Resume #3', onResume: () => resumed++);
+    final button = tester.getRect(find.byType(FilledButton));
+    check(button.width).equals(EpisodePrimaryPill.maxWidth);
+    check(button.center.dx).equals(1024 / 2);
     await tester.tap(find.text('Resume #3'));
     check(resumed).equals(1);
   });
