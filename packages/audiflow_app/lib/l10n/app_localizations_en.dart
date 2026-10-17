@@ -1173,9 +1173,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playerTabTranscript => 'Transcript';
 
   @override
-  String get playerPlayingFrom => 'Playing from';
-
-  @override
   String get playerEpisodeDetails => 'Episode details';
 
   @override
@@ -1600,8 +1597,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsDeveloperTitle => 'Developer';
 
   @override
-  String get settingsDeveloperSubtitle =>
-      'Smart playlist patterns and debug info';
+  String get settingsDeveloperSubtitle => 'Presets and debug info';
 
   @override
   String get developerContributeLabel => 'Contribute presets';
@@ -1614,7 +1610,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get developerShowInfoSubtitle =>
-      'Display RSS feed URL and pattern links in episode details';
+      'Display RSS feed URL and preset link in episode details';
 
   @override
   String get developerTestNotificationsTitle => 'Send test notifications';
@@ -1678,7 +1674,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Notifications are not allowed for this app';
 
   @override
-  String get developerPatternsHeader => 'Smart Playlist Patterns';
+  String get developerPatternsHeader => 'Presets';
 
   @override
   String get developerSectionLabel => 'Developer info';
@@ -1690,7 +1686,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get developerCopyLabel => 'Copy';
 
   @override
-  String get developerPatternLabel => 'Smart Playlist Pattern';
+  String get developerPatternLabel => 'Preset';
 
   @override
   String get developerPatternNotDefined => 'Not defined — add one?';

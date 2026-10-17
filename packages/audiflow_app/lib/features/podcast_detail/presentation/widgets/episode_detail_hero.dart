@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
@@ -169,16 +171,8 @@ class _HeroArtwork extends StatelessWidget {
   }
 
   void _showOverlay(BuildContext context, String imageUrl) {
-    Navigator.of(context).push(
-      PageRouteBuilder<void>(
-        opaque: false,
-        barrierDismissible: true,
-        barrierColor: Colors.black87,
-        transitionDuration: const Duration(milliseconds: 300),
-        reverseTransitionDuration: const Duration(milliseconds: 250),
-        pageBuilder: (context, _, _) =>
-            ArtworkOverlay(imageUrl: imageUrl, heroTag: heroTag),
-      ),
+    unawaited(
+      ArtworkOverlay.show(context, imageUrl: imageUrl, heroTag: heroTag),
     );
   }
 }

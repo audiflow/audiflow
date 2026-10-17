@@ -13,8 +13,8 @@ import '../../../settings/presentation/utils/open_preset_url.dart';
 /// detail screen (redesign 4.9).
 ///
 /// Only rendered when [devShowDeveloperInfoProvider] is true. Shows the
-/// podcast RSS feed URL (tap to copy) and a link to the matching smart
-/// playlist pattern in the GitHub repo.
+/// podcast RSS feed URL (tap to copy) and a link to the matching preset
+/// in the audiflow-preset GitHub repo (or the repo root when none matches).
 class EpisodeDevInfoWidget extends ConsumerWidget {
   const EpisodeDevInfoWidget({super.key, required this.feedUrl});
 

@@ -10,8 +10,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// Fake repository that returns a pre-configured matching
 /// pattern. Only [findMatchingPreset] is used by the widget.
-class _FakeSmartPlaylistConfigRepository implements PresetConfigRepository {
-  _FakeSmartPlaylistConfigRepository({this.summaries = const []});
+class _FakePresetConfigRepository implements PresetConfigRepository {
+  _FakePresetConfigRepository({this.summaries = const []});
 
   final List<PresetSummary> summaries;
 
@@ -81,7 +81,7 @@ void main() {
           overrides: [
             sharedPreferencesProvider.overrideWithValue(prefs),
             presetConfigRepositoryProvider.overrideWithValue(
-              _FakeSmartPlaylistConfigRepository(),
+              _FakePresetConfigRepository(),
             ),
           ],
           child: _localizedApp(
@@ -93,17 +93,18 @@ void main() {
 
       check(find.text('Developer info').evaluate()).isNotEmpty();
       check(find.text('https://example.com/feed.xml').evaluate()).isNotEmpty();
+      check(find.text('Preset').evaluate()).isNotEmpty();
       check(find.byType(GroupedSection).evaluate()).length.equals(1);
     });
 
-    testWidgets('shows "Not defined" when no pattern matches', (tester) async {
+    testWidgets('shows "Not defined" when no preset matches', (tester) async {
       await prefs.setBool('dev_show_developer_info', true);
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
             sharedPreferencesProvider.overrideWithValue(prefs),
             presetConfigRepositoryProvider.overrideWithValue(
-              _FakeSmartPlaylistConfigRepository(),
+              _FakePresetConfigRepository(),
             ),
           ],
           child: _localizedApp(
@@ -117,7 +118,7 @@ void main() {
       check(find.textContaining('Not defined').evaluate()).isNotEmpty();
     });
 
-    testWidgets('shows pattern name when matched', (tester) async {
+    testWidgets('shows preset name when matched', (tester) async {
       await prefs.setBool('dev_show_developer_info', true);
       final summaries = [
         const PresetSummary(
@@ -134,7 +135,7 @@ void main() {
           overrides: [
             sharedPreferencesProvider.overrideWithValue(prefs),
             presetConfigRepositoryProvider.overrideWithValue(
-              _FakeSmartPlaylistConfigRepository(summaries: summaries),
+              _FakePresetConfigRepository(summaries: summaries),
             ),
           ],
           child: _localizedApp(
