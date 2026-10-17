@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audiflow_domain/audiflow_domain.dart' show SubscribeSource;
 import 'package:audiflow_search/audiflow_search.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
@@ -30,19 +32,11 @@ class PodcastDetailHeader extends ConsumerWidget {
   final SubscribeSource subscribeSource;
 
   void _showArtworkOverlay(BuildContext context, String artworkUrl) {
-    Navigator.of(context).push(
-      PageRouteBuilder<void>(
-        opaque: false,
-        barrierDismissible: true,
-        barrierColor: Colors.black87,
-        transitionDuration: const Duration(milliseconds: 300),
-        reverseTransitionDuration: const Duration(milliseconds: 250),
-        pageBuilder: (context, animation, secondaryAnimation) {
-          return ArtworkOverlay(
-            imageUrl: artworkUrl,
-            heroTag: 'podcast_artwork_${podcast.id}',
-          );
-        },
+    unawaited(
+      ArtworkOverlay.show(
+        context,
+        imageUrl: artworkUrl,
+        heroTag: 'podcast_artwork_${podcast.id}',
       ),
     );
   }
