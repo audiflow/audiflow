@@ -110,6 +110,30 @@ Future<void> _openPlayerSheet(WidgetTester tester) async {
 }
 
 void main() {
+  group('PlayerScreen header', () {
+    testWidgets('shows only the close and overflow buttons', (tester) async {
+      final container = await _container();
+      await tester.pumpWidget(_buildHost(container));
+      await _openPlayerSheet(tester);
+
+      final l10n = lookupAppLocalizations(const Locale('en'));
+      final header = find
+          .ancestor(
+            of: find.byTooltip(l10n.playerCloseLabel),
+            matching: find.byType(Row),
+          )
+          .first;
+      final headerTexts = find.descendant(
+        of: header,
+        matching: find.byType(Text),
+      );
+
+      // The podcast name sits under the episode title, so the header
+      // carries no text of its own.
+      check(headerTexts.evaluate()).isEmpty();
+    });
+  });
+
   group('PlayerScreen auto-dismiss', () {
     testWidgets('pops the sheet when the queue is exhausted', (tester) async {
       final container = await _container();

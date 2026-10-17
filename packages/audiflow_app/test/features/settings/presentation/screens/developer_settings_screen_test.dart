@@ -138,6 +138,7 @@ void main() {
 
       check(find.text('Coten Radio').evaluate()).isNotEmpty();
       check(find.text('News Connect').evaluate()).isNotEmpty();
+      check(find.text('Presets').evaluate()).isNotEmpty();
     });
   });
 }

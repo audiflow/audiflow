@@ -136,9 +136,7 @@ void main() {
         check(
           find.text('PIN, restricted mode, re-lock timer').evaluate(),
         ).length.equals(1);
-        check(
-          find.text('Smart playlist patterns and debug info').evaluate(),
-        ).length.equals(1);
+        check(find.text('Presets and debug info').evaluate()).length.equals(1);
       });
     });
   });

@@ -1130,9 +1130,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get playerTabTranscript => '書き起こし';
 
   @override
-  String get playerPlayingFrom => '再生元';
-
-  @override
   String get playerEpisodeDetails => 'エピソードの詳細';
 
   @override
@@ -1546,10 +1543,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsDeveloperTitle => '開発';
 
   @override
-  String get settingsDeveloperSubtitle => 'スマートプレイリストパターンとデバッグ情報';
+  String get settingsDeveloperSubtitle => 'プリセットとデバッグ情報';
 
   @override
-  String get developerContributeLabel => 'スマートプレイリストパターンを貢献';
+  String get developerContributeLabel => 'プリセットに貢献';
 
   @override
   String get developerContributeRepo => '質問や貢献の方法';
@@ -1558,7 +1555,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get developerShowInfoTitle => '開発者情報を表示';
 
   @override
-  String get developerShowInfoSubtitle => 'エピソード詳細にRSSフィードURLとパターンリンクを表示';
+  String get developerShowInfoSubtitle => 'エピソード詳細にRSSフィードURLとプリセットリンクを表示';
 
   @override
   String get developerTestNotificationsTitle => 'テスト通知を送る';
@@ -1617,7 +1614,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get developerTestNotificationsPermissionDenied => '通知が許可されていません';
 
   @override
-  String get developerPatternsHeader => 'スマートプレイリストパターン';
+  String get developerPatternsHeader => 'プリセット';
 
   @override
   String get developerSectionLabel => '開発者向け情報';
@@ -1629,7 +1626,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get developerCopyLabel => 'コピー';
 
   @override
-  String get developerPatternLabel => 'スマートプレイリストパターン';
+  String get developerPatternLabel => 'プリセット';
 
   @override
   String get developerPatternNotDefined => '未定義 — 追加しませんか？';
