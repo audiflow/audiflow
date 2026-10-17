@@ -8,6 +8,10 @@ abstract class PlaybackHistoryRepository {
   /// Returns playback history for an episode, or null if not found.
   Future<PlaybackHistory?> getByEpisodeId(int episodeId);
 
+  /// Watches playback history for an episode: the current value first,
+  /// then the value after each write, or null before the first play.
+  Stream<PlaybackHistory?> watchByEpisodeId(int episodeId);
+
   /// Saves playback progress for an episode.
   ///
   /// Updates position and optionally duration. Creates a new record
