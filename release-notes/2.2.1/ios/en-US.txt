@@ -1,5 +1,7 @@
 • iPad: podcast and episode pages place the artwork beside the title and details, making better use of the wider screen
-• The episode play button no longer stretches across wide screens, and sits centered under the title when there is room
+• iPad: season pages show larger artwork, and an episode's playback record keeps to a readable width, in two columns when there is room
+• The episode play button no longer stretches across wide screens, and sits centered under the title when there is room. On iPad the season page's play button is centered at the same width
+• Menus can be used in one motion: press a menu button, slide to an item, and release to choose it. A tap still opens the menu as before
 • The playback record on an episode's page now updates while you listen
 • Tap anywhere on a shortened episode description to show all of it
 • The chapter list highlights the chapter that is playing, opens scrolled to it, and has a close button
