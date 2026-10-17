@@ -16,6 +16,16 @@ class PlaybackHistoryLocalDatasource {
     return _isar.playbackHistorys.getByEpisodeId(episodeId);
   }
 
+  /// Watches playback history for an episode, emitting null until the
+  /// first play. Emits the current value immediately, then after writes.
+  Stream<PlaybackHistory?> watchByEpisodeId(int episodeId) {
+    return _isar.playbackHistorys
+        .where()
+        .episodeIdEqualTo(episodeId)
+        .watch(fireImmediately: true)
+        .map((results) => results.firstOrNull);
+  }
+
   /// Upserts playback history (insert or update on conflict).
   Future<void> upsert(PlaybackHistory history) async {
     await _isar.writeTxn(() async {

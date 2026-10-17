@@ -278,7 +278,10 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
           SliverPadding(
             padding: sectionGap,
             sliver: SliverToBoxAdapter(
-              child: EpisodePlaybackRecord(history: view.progress?.history),
+              child: EpisodePlaybackRecord(
+                episodeId: view.episodeId,
+                history: view.progress?.history,
+              ),
             ),
           ),
           SliverToBoxAdapter(

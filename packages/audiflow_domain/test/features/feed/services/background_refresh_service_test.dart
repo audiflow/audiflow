@@ -523,6 +523,9 @@ class FakePlaybackHistoryRepository implements PlaybackHistoryRepository {
   @override
   Stream<List<PlaybackHistory>> watchInProgress({int limit = 10}) =>
       const Stream.empty();
+  @override
+  Stream<PlaybackHistory?> watchByEpisodeId(int episodeId) =>
+      const Stream.empty();
 }
 
 // ---------------------------------------------------------------------------
