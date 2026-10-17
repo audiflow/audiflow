@@ -330,25 +330,29 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
     final episodeId = view.episodeId;
     return Row(
       children: [
-        // Flexible plus a cap: the pill still shrinks to fit beside the
-        // circles on phones, but stops growing on wide layouts.
-        Flexible(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(
-              maxWidth: EpisodePrimaryPill.maxWidth,
-            ),
-            child: EpisodePrimaryPill(
-              state: view.playState,
-              duration: widget.episode.duration,
-              isLoading: view.isLoading,
-              onPressed: enclosureUrl == null
-                  ? null
-                  : () => _onPlayPausePressed(
-                      context,
-                      enclosureUrl,
-                      view.isPlaying,
-                      restart: view.playState == EpisodePlayState.played,
-                    ),
+        // The pill shrinks to fit beside the circles on phones but stops
+        // growing at its cap on wide layouts; the slot itself still takes
+        // the leftover width, which pushes the circles to the trailing edge.
+        Expanded(
+          child: Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                maxWidth: EpisodePrimaryPill.maxWidth,
+              ),
+              child: EpisodePrimaryPill(
+                state: view.playState,
+                duration: widget.episode.duration,
+                isLoading: view.isLoading,
+                onPressed: enclosureUrl == null
+                    ? null
+                    : () => _onPlayPausePressed(
+                        context,
+                        enclosureUrl,
+                        view.isPlaying,
+                        restart: view.playState == EpisodePlayState.played,
+                      ),
+              ),
             ),
           ),
         ),

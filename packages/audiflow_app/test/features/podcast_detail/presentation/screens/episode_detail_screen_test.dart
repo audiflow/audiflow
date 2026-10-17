@@ -647,6 +647,34 @@ void main() {
       ).equals(EpisodePrimaryPill.maxWidth);
     });
 
+    testWidgets('pushes the queue and download buttons to the end', (
+      tester,
+    ) async {
+      useViewSize(tester, const Size(1180, 820));
+      await tester.pumpWidget(
+        buildTestWidget(progress: testEpisodeWithProgress),
+      );
+      await tester.pumpAndSettle();
+
+      final pill = tester.getRect(find.byType(EpisodePrimaryPill));
+      final queue = tester.getRect(find.byType(EpisodeQueueCircle));
+      final download = tester.getRect(find.byType(EpisodeDownloadCircle));
+      final row = tester.getRect(
+        find
+            .ancestor(
+              of: find.byType(EpisodeQueueCircle),
+              matching: find.byType(Row),
+            )
+            .first,
+      );
+
+      // The capped pill stays at the start; the circles end flush with the
+      // row, leaving the free width between them and the pill.
+      check(pill.left).equals(row.left);
+      check(download.right).equals(row.right);
+      check(queue.left - pill.right).isGreaterThan(Spacing.xl);
+    });
+
     testWidgets('the play pill keeps its phone width beside the buttons', (
       tester,
     ) async {
