@@ -3,10 +3,13 @@ import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/duration_label.dart';
+
+part 'episode_playback_record.freezed.dart';
 
 /// "Playback history" grouped list (redesign 4.9). Title, podcast,
 /// duration and publish date are left to the hero.
@@ -106,23 +109,16 @@ class EpisodePlaybackRecord extends ConsumerWidget {
 /// durations in whole minutes ([DurationLabel.durationLabel] truncates)
 /// and dates as calendar days ([DateFormat.yMMMd]). Equal values render
 /// identically, which is what lets the record skip rebuilds.
-@immutable
-class PlaybackRecordValues {
-  const PlaybackRecordValues({
-    required this.completedCount,
-    required this.playCount,
-    required this.listenedMinutes,
-    required this.realtimeMinutes,
-    required this.firstPlayedDay,
-    required this.lastPlayedDay,
-  });
-
-  final int completedCount;
-  final int playCount;
-  final int listenedMinutes;
-  final int realtimeMinutes;
-  final DateTime? firstPlayedDay;
-  final DateTime? lastPlayedDay;
+@freezed
+sealed class PlaybackRecordValues with _$PlaybackRecordValues {
+  const factory PlaybackRecordValues({
+    required int completedCount,
+    required int playCount,
+    required int listenedMinutes,
+    required int realtimeMinutes,
+    required DateTime? firstPlayedDay,
+    required DateTime? lastPlayedDay,
+  }) = _PlaybackRecordValues;
 
   /// Null before the first play, when there is no history.
   static PlaybackRecordValues? of(PlaybackHistory? history) {
@@ -142,26 +138,6 @@ class PlaybackRecordValues {
 
   static DateTime? _day(DateTime? value) =>
       value == null ? null : DateTime(value.year, value.month, value.day);
-
-  @override
-  bool operator ==(Object other) =>
-      other is PlaybackRecordValues &&
-      other.completedCount == completedCount &&
-      other.playCount == playCount &&
-      other.listenedMinutes == listenedMinutes &&
-      other.realtimeMinutes == realtimeMinutes &&
-      other.firstPlayedDay == firstPlayedDay &&
-      other.lastPlayedDay == lastPlayedDay;
-
-  @override
-  int get hashCode => Object.hash(
-    completedCount,
-    playCount,
-    listenedMinutes,
-    realtimeMinutes,
-    firstPlayedDay,
-    lastPlayedDay,
-  );
 }
 
 /// Label / value row; a long press copies the value.
