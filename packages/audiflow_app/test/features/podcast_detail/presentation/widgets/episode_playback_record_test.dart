@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:audiflow_app/features/podcast_detail/presentation/widgets/episode_playback_record.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_app/l10n/app_localizations_en.dart';
+import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:checks/checks.dart';
@@ -47,6 +48,8 @@ void main() {
     WidgetTester tester, {
     int? episodeId = _episodeId,
     PlaybackHistory? snapshot,
+    Locale? locale,
+    double textScale = 1,
   }) async {
     await tester.pumpWidget(
       ProviderScope(
@@ -59,6 +62,13 @@ void main() {
           theme: AppTheme.light(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
+          locale: locale,
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: TextScaler.linear(textScale)),
+            child: child!,
+          ),
           home: Scaffold(
             body: SingleChildScrollView(
               child: EpisodePlaybackRecord(
@@ -173,6 +183,92 @@ void main() {
       await write(tester, _history(totalListenedMs: 120000));
 
       check(recordBuilds).equals(builds + 1);
+    });
+  });
+
+  group('EpisodePlaybackRecord layout', () {
+    void useScreen(WidgetTester tester, Size size) {
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+    }
+
+    List<Rect> surfaces(WidgetTester tester) => find
+        .byKey(GroupedSection.surfaceKey)
+        .evaluate()
+        .map((element) => tester.getRect(find.byWidget(element.widget)))
+        .toList();
+
+    testWidgets('fills the phone width with one surface', (tester) async {
+      useScreen(tester, const Size(390, 844));
+      await pump(tester);
+
+      final rects = surfaces(tester);
+      check(rects).length.equals(1);
+      check(rects.single.width).equals(390 - 2 * Spacing.screenHorizontal);
+    });
+
+    testWidgets('splits totals and dates into capped columns on a tablet', (
+      tester,
+    ) async {
+      useScreen(tester, const Size(1024, 768));
+      await pump(tester);
+
+      final rects = surfaces(tester);
+      check(rects).length.equals(2);
+      check(rects.first.left).equals(Spacing.screenHorizontal);
+      check(rects.first.width).equals(360);
+      check(rects.last.width).equals(360);
+      check(
+        find.text(l10n.episodeDetailPlaybackRecord).evaluate(),
+      ).length.equals(1);
+    });
+
+    testWidgets('fits Japanese values at large text in the narrowest columns', (
+      tester,
+    ) async {
+      // 2 * 280 + 16 between the 20pt gutters: both columns at their minimum.
+      useScreen(tester, const Size(616, 900));
+      await pump(
+        tester,
+        snapshot: _history(
+          playCount: 128,
+          completedCount: 64,
+          totalListenedMs: const Duration(
+            hours: 123,
+            minutes: 45,
+          ).inMilliseconds,
+          totalRealtimeMs: const Duration(hours: 98, minutes: 7).inMilliseconds,
+          lastPlayedAt: DateTime(2026, 12, 31),
+        ),
+        locale: const Locale('ja'),
+        textScale: 2,
+      );
+
+      final rects = surfaces(tester);
+      check(rects).length.equals(2);
+      check(rects.first.width).equals(280);
+      check(tester.takeException()).isNull();
+    });
+
+    testWidgets('ends every value at the same trailing edge', (tester) async {
+      useScreen(tester, const Size(390, 844));
+      await pump(tester);
+      await write(tester, null);
+
+      final dash = find.text(EpisodePlaybackRecord.noValue).first;
+      final never = find.text(l10n.statsNever).first;
+      check(tester.getRect(dash).right).equals(tester.getRect(never).right);
+    });
+
+    testWidgets('stacks one capped surface on a narrow tablet', (tester) async {
+      useScreen(tester, const Size(610, 900));
+      await pump(tester);
+
+      final rects = surfaces(tester);
+      check(rects).length.equals(1);
+      check(rects.single.left).equals(Spacing.screenHorizontal);
+      check(rects.single.width).equals(LayoutConstants.contentMaxWidth);
     });
   });
 }

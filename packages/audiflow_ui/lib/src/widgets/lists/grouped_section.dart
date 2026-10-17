@@ -44,7 +44,7 @@ class GroupedSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (header != null) _Header(text: header!, color: colors.inkTertiary),
+          if (header != null) GroupedSectionHeader(text: header!),
           _surface(colors),
           if (footer != null) _Footer(text: footer!, color: colors.inkTertiary),
         ],
@@ -93,11 +93,12 @@ class GroupedSection extends StatelessWidget {
   }
 }
 
-class _Header extends StatelessWidget {
-  const _Header({required this.text, required this.color});
+/// Overline header of a [GroupedSection]. Public so a layout that spreads
+/// one group over several surfaces can title them once.
+class GroupedSectionHeader extends StatelessWidget {
+  const GroupedSectionHeader({super.key, required this.text});
 
   final String text;
-  final Color color;
 
   @override
   Widget build(BuildContext context) {
@@ -109,7 +110,12 @@ class _Header extends StatelessWidget {
       ),
       child: Semantics(
         header: true,
-        child: Text(text, style: AppTextStyles.overline.copyWith(color: color)),
+        child: Text(
+          text,
+          style: AppTextStyles.overline.copyWith(
+            color: AppColors.of(context).inkTertiary,
+          ),
+        ),
       ),
     );
   }

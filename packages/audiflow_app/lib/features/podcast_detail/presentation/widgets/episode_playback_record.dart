@@ -1,3 +1,4 @@
+import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +9,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/duration_label.dart';
+import 'detail_hero_layout.dart';
 
 part 'episode_playback_record.freezed.dart';
 
@@ -36,14 +38,17 @@ class EpisodePlaybackRecord extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final record = _watchRecord(ref);
-    return GroupedSection(
-      header: AppLocalizations.of(context).episodeDetailPlaybackRecord,
-      separatorIndent: 0,
-      children: [
-        ..._totalRows(AppLocalizations.of(context), record),
-        ..._dateRows(context, record),
-      ],
-    );
+    final header = AppLocalizations.of(context).episodeDetailPlaybackRecord;
+    final totals = _totalRows(AppLocalizations.of(context), record);
+    final dates = _dateRows(context, record);
+    if (!DetailHeroLayout.isSideBySide(context)) {
+      return GroupedSection(
+        header: header,
+        separatorIndent: 0,
+        children: [...totals, ...dates],
+      );
+    }
+    return _TabletPlaybackRecord(header: header, totals: totals, dates: dates);
   }
 
   List<Widget> _totalRows(AppLocalizations l10n, PlaybackRecordValues? record) {
@@ -140,6 +145,86 @@ sealed class PlaybackRecordValues with _$PlaybackRecordValues {
       value == null ? null : DateTime(value.year, value.month, value.day);
 }
 
+/// Tablet layout: label / value rows stretched across a tablet-wide screen
+/// put the value too far from its label, so the record keeps to a
+/// readable width at the start edge. Totals and dates sit in two columns
+/// when both fit, and stack in one capped column otherwise.
+class _TabletPlaybackRecord extends StatelessWidget {
+  const _TabletPlaybackRecord({
+    required this.header,
+    required this.totals,
+    required this.dates,
+  });
+
+  /// Widest a column grows; wider, the value drifts away from its label.
+  static const double _columnMaxWidth = 360;
+
+  /// Narrowest column that still fits a label and its value on one line.
+  static const double _columnMinWidth = 280;
+
+  static const double _columnGap = Spacing.md;
+
+  final String header;
+  final List<Widget> totals;
+  final List<Widget> dates;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: Spacing.screenHorizontal),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          const twoColumnsMinWidth = 2 * _columnMinWidth + _columnGap;
+          if (constraints.maxWidth < twoColumnsMinWidth) {
+            return _singleColumn();
+          }
+          final width = (constraints.maxWidth - _columnGap) / 2;
+          return _twoColumns(width < _columnMaxWidth ? width : _columnMaxWidth);
+        },
+      ),
+    );
+  }
+
+  Widget _singleColumn() {
+    return Align(
+      alignment: AlignmentDirectional.centerStart,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(
+          maxWidth: LayoutConstants.contentMaxWidth,
+        ),
+        child: _section([...totals, ...dates], header: header),
+      ),
+    );
+  }
+
+  Widget _twoColumns(double columnWidth) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        GroupedSectionHeader(text: header),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(width: columnWidth, child: _section(totals)),
+            const SizedBox(width: _columnGap),
+            SizedBox(width: columnWidth, child: _section(dates)),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// The outer padding already holds the screen gutter.
+  static Widget _section(List<Widget> rows, {String? header}) {
+    return GroupedSection(
+      header: header,
+      separatorIndent: 0,
+      margin: EdgeInsets.zero,
+      children: rows,
+    );
+  }
+}
+
 /// Label / value row; a long press copies the value.
 class _RecordRow extends StatelessWidget {
   const _RecordRow({required this.label, required this.value});
@@ -173,12 +258,19 @@ class _RecordRow extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: Spacing.md),
-              Text(
-                value,
-                style: AppTextStyles.tabular(
-                  AppTextStyles.body.copyWith(
-                    color: colors.ink,
-                    fontWeight: FontWeight.w600,
+              // Large text in a narrow row ("123時間45分" at 2x in a 280pt
+              // tablet column) would overflow; the value wraps instead.
+              // Expanded, not Flexible, so every value ends at the row's
+              // trailing edge.
+              Expanded(
+                child: Text(
+                  value,
+                  textAlign: TextAlign.end,
+                  style: AppTextStyles.tabular(
+                    AppTextStyles.body.copyWith(
+                      color: colors.ink,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
