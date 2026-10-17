@@ -524,19 +524,11 @@ class _SmartPlaylistGroupEpisodesScreenState
   void _openPodcast() => popToPodcastRoute(Navigator.of(context));
 
   void _showArtworkOverlay(String artworkUrl) {
-    Navigator.of(context).push(
-      PageRouteBuilder<void>(
-        opaque: false,
-        barrierDismissible: true,
-        barrierColor: Colors.black87,
-        transitionDuration: const Duration(milliseconds: 300),
-        reverseTransitionDuration: const Duration(milliseconds: 250),
-        pageBuilder: (context, animation, secondaryAnimation) {
-          return ArtworkOverlay(
-            imageUrl: artworkUrl,
-            heroTag: 'group_artwork_$artworkUrl',
-          );
-        },
+    unawaited(
+      ArtworkOverlay.show(
+        context,
+        imageUrl: artworkUrl,
+        heroTag: 'group_artwork_$artworkUrl',
       ),
     );
   }

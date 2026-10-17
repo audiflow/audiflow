@@ -79,6 +79,9 @@ export 'src/widgets/navigation/navigation_search_field.dart';
 // Widgets - Search
 export 'src/widgets/search/searchable_app_bar.dart';
 
+// Widgets - System
+export 'src/widgets/system/themed_system_ui_overlay.dart';
+
 // Widgets - Text
 export 'src/widgets/text/copyable_text.dart';
 
