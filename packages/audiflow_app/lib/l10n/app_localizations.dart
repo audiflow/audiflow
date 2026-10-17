@@ -2168,12 +2168,6 @@ abstract class AppLocalizations {
   /// **'Transcript'**
   String get playerTabTranscript;
 
-  /// Label above the context the current episode plays from, in the player header
-  ///
-  /// In en, this message translates to:
-  /// **'Playing from'**
-  String get playerPlayingFrom;
-
   /// Player overflow menu item opening the episode detail screen
   ///
   /// In en, this message translates to:
