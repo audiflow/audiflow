@@ -37,7 +37,13 @@ final _currentIndexProvider = NotifierProvider<_CurrentIndex, int?>(
   () => _CurrentIndex(_current),
 );
 
-Widget _buildSheet({ThemeData? theme, int? initialIndex = _current}) {
+const _openSheetKey = ValueKey('openChapterSheet');
+
+Widget _buildSheet({
+  ThemeData? theme,
+  int? initialIndex = _current,
+  bool asModal = false,
+}) {
   return ProviderScope(
     overrides: [
       _currentIndexProvider.overrideWith(() => _CurrentIndex(initialIndex)),
@@ -56,10 +62,21 @@ Widget _buildSheet({ThemeData? theme, int? initialIndex = _current}) {
       supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
         // Short enough that most of the 40 chapters are off screen.
-        body: SizedBox(
-          height: 400,
-          child: ChapterListSheet(onChapterSelected: (_) {}),
-        ),
+        body: asModal
+            ? Builder(
+                builder: (context) => TextButton(
+                  key: _openSheetKey,
+                  onPressed: () => showChapterListSheet(
+                    context: context,
+                    onChapterSelected: (_) {},
+                  ),
+                  child: const Text('open'),
+                ),
+              )
+            : SizedBox(
+                height: 400,
+                child: ChapterListSheet(onChapterSelected: (_) {}),
+              ),
       ),
     ),
   );
@@ -89,6 +106,19 @@ Finder _playingIconIn(int index) => find.descendant(
 
 void main() {
   group('ChapterListSheet', () {
+    testWidgets('closes from the header chevron', (tester) async {
+      await tester.pumpWidget(_buildSheet(asModal: true));
+      await tester.tap(find.byKey(_openSheetKey));
+      await tester.pumpAndSettle();
+      check(find.byType(ChapterListSheet).evaluate()).isNotEmpty();
+
+      final l10n = lookupAppLocalizations(const Locale('en'));
+      await tester.tap(find.byTooltip(l10n.playerCloseLabel));
+      await tester.pumpAndSettle();
+
+      check(find.byType(ChapterListSheet).evaluate()).isEmpty();
+    });
+
     testWidgets('opens scrolled so the current chapter is visible', (
       tester,
     ) async {
