@@ -166,16 +166,14 @@ class EpisodeCard extends StatelessWidget {
 
   bool get _showThumbnail => showThumbnail && _displayThumbnailUrl != null;
 
-  double? get _edgeProgress {
-    if (isCompleted) return 1;
-    return isInProgress ? progressFraction : null;
-  }
+  double? get _edgeProgress => isInProgress ? progressFraction : null;
 
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     return BottomEdgeProgress(
       fraction: _edgeProgress,
+      completed: isCompleted,
       inset: Spacing.screenHorizontal,
       child: Column(
         mainAxisSize: MainAxisSize.min,

@@ -296,12 +296,16 @@ void main() {
   });
 
   group('EpisodeDetailScreen progress line', () {
+    Color lineFill(WidgetTester tester) =>
+        tester.widget<ColoredBox>(find.byKey(ProgressLine.fillKey)).color;
+
     testWidgets('shows the played mark when completed', (tester) async {
       await tester.pumpWidget(buildTestWidget(progress: testCompletedProgress));
       await tester.pumpAndSettle();
 
       check(find.byType(EpisodeProgressStatus).evaluate()).length.equals(1);
       check(find.text(l10n.episodePillCompleted).evaluate()).length.equals(1);
+      check(lineFill(tester)).equals(AppColors.light.inkTertiary);
     });
 
     testWidgets('shows the remaining time when in progress', (tester) async {
@@ -312,6 +316,7 @@ void main() {
 
       check(find.byType(EpisodeProgressStatus).evaluate()).length.equals(1);
       check(find.text('20m left').evaluate()).length.equals(1);
+      check(lineFill(tester)).equals(AppColors.light.accent);
     });
 
     testWidgets('is hidden while unplayed', (tester) async {

@@ -189,7 +189,8 @@ state and resume position stay coherent no matter where the listener touches it.
 - The pill never changes shape to show progress. A row whose playback has started instead
   shows a 3 pt progress line along its bottom edge (accent fill on a hairline track),
   reflecting the latest known progress fraction clamped to a valid range. Completed episodes
-  show the line full; unplayed episodes show none. The line is not animated and simply
+  show the line full in a neutral color instead of the accent, so orange lines mark only
+  episodes the listener can resume; unplayed episodes show none. The line is not animated and simply
   redraws as the row rebuilds on playback ticks.
 - Durations on episode rows use a single compact format shared app-wide: `{minutes}m` at one
   minute or longer, `0:ss` below one minute. Pill state labels are localized for English and
