@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:audiflow_app/features/podcast_detail/presentation/widgets/episode_playback_record.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_app/l10n/app_localizations_en.dart';
+import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:checks/checks.dart';
@@ -173,6 +174,55 @@ void main() {
       await write(tester, _history(totalListenedMs: 120000));
 
       check(recordBuilds).equals(builds + 1);
+    });
+  });
+
+  group('EpisodePlaybackRecord layout', () {
+    void useScreen(WidgetTester tester, Size size) {
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+    }
+
+    List<Rect> surfaces(WidgetTester tester) => find
+        .byKey(GroupedSection.surfaceKey)
+        .evaluate()
+        .map((element) => tester.getRect(find.byWidget(element.widget)))
+        .toList();
+
+    testWidgets('fills the phone width with one surface', (tester) async {
+      useScreen(tester, const Size(390, 844));
+      await pump(tester);
+
+      final rects = surfaces(tester);
+      check(rects).length.equals(1);
+      check(rects.single.width).equals(390 - 2 * Spacing.screenHorizontal);
+    });
+
+    testWidgets('splits totals and dates into capped columns on a tablet', (
+      tester,
+    ) async {
+      useScreen(tester, const Size(1024, 768));
+      await pump(tester);
+
+      final rects = surfaces(tester);
+      check(rects).length.equals(2);
+      check(rects.first.left).equals(Spacing.screenHorizontal);
+      check(rects.first.width).equals(360);
+      check(rects.last.width).equals(360);
+      check(
+        find.text(l10n.episodeDetailPlaybackRecord).evaluate(),
+      ).length.equals(1);
+    });
+
+    testWidgets('stacks one capped surface on a narrow tablet', (tester) async {
+      useScreen(tester, const Size(610, 900));
+      await pump(tester);
+
+      final rects = surfaces(tester);
+      check(rects).length.equals(1);
+      check(rects.single.left).equals(Spacing.screenHorizontal);
+      check(rects.single.width).equals(LayoutConstants.contentMaxWidth);
     });
   });
 }
