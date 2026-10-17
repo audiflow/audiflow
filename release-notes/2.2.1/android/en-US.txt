@@ -1,9 +1,10 @@
-• Tablets: artwork beside the details on podcast and episode pages
-• Play button no longer stretches on wide screens
-• Episode playback record updates as you listen
-• Tap a shortened description to expand it
-• Chapter list highlights the playing chapter and has a close button
+• Tablets: side-by-side artwork, bigger season art, compact playback record
+• Play buttons don't stretch on wide screens
+• Menus: press, slide, release to choose
+• Playback record updates as you listen
+• Tap shortened descriptions to expand
+• Chapter list: playing chapter highlighted, close button
 • Simpler player top bar
-• Gray progress lines for finished episodes
+• Gray progress for finished episodes
 • Season episodes play oldest first
-• Fixed status bar icons after closing the player, "&amp;" in podcast names, and stuck launches from Bluetooth
+• Fixed status bar icons after closing the player, "&amp;" in names, and stuck Bluetooth launches
