@@ -61,13 +61,7 @@ class _ChapterListSheetState extends ConsumerState<ChapterListSheet> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: Spacing.sm),
-          child: Text(
-            l10n.playerChaptersTitle,
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-        ),
+        _SheetHeader(title: l10n.playerChaptersTitle),
         Flexible(child: _list(context, chapters, currentIndex)),
       ],
     );
@@ -123,6 +117,45 @@ class _ChapterListSheetState extends ConsumerState<ChapterListSheet> {
       if (!mounted || tileContext == null) return;
       Scrollable.ensureVisible(tileContext, alignment: _revealAlignment);
     });
+  }
+}
+
+/// Title flanked by the same close chevron the full player shows, so the
+/// sheet can be dismissed without a swipe. A matching empty slot on the
+/// right keeps the title centered.
+class _SheetHeader extends StatelessWidget {
+  const _SheetHeader({required this.title});
+
+  final String title;
+
+  static const double _buttonSlot = 48;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(Spacing.sm, 0, Spacing.sm, Spacing.sm),
+      child: Row(
+        children: [
+          IconButton(
+            tooltip: l10n.playerCloseLabel,
+            icon: const Icon(Symbols.keyboard_arrow_down),
+            color: AppColors.of(context).ink,
+            onPressed: () => Navigator.of(context).maybePop(),
+          ),
+          Expanded(
+            child: Text(
+              title,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+          ),
+          const SizedBox(width: _buttonSlot),
+        ],
+      ),
+    );
   }
 }
 
