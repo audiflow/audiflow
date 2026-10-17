@@ -29,8 +29,9 @@ class DetailHeroLayout extends StatelessWidget {
   /// Space between the artwork and the content below it on phones.
   final double artworkGap;
 
-  /// Outer padding of the stacked phone layout. Its top and bottom also
-  /// apply side by side; the sides follow the screen gutter there instead.
+  /// Outer padding of the stacked phone layout. Side by side only its top
+  /// applies; the sides follow the screen gutter and the bottom is
+  /// [artworkGap] under both columns.
   final EdgeInsets phonePadding;
   final Widget content;
   final CrossAxisAlignment phoneAlignment;
@@ -60,7 +61,6 @@ class DetailHeroLayout extends StatelessWidget {
   }
 
   Widget _sideBySide() {
-    final side = phonePadding.top + artworkSize + artworkGap;
     // The screen gutter, not the phone padding, so the artwork lines up
     // with the rows and bars below the hero.
     return Padding(
@@ -68,27 +68,31 @@ class DetailHeroLayout extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox.square(
-            key: artworkColumnKey,
-            dimension: side,
-            child: Padding(
-              padding: EdgeInsets.only(top: phonePadding.top),
-              child: Align(
-                alignment: AlignmentDirectional.topStart,
-                child: artwork,
-              ),
-            ),
-          ),
+          _artworkColumn(),
           Expanded(
+            // Ends artworkGap below the text, as the square does below
+            // the artwork, so the hero's bottom gap does not depend on
+            // which column is taller.
             child: Padding(
               padding: EdgeInsets.only(
                 top: phonePadding.top,
-                bottom: phonePadding.bottom,
+                bottom: artworkGap,
               ),
               child: content,
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _artworkColumn() {
+    return SizedBox.square(
+      key: artworkColumnKey,
+      dimension: phonePadding.top + artworkSize + artworkGap,
+      child: Padding(
+        padding: EdgeInsets.only(top: phonePadding.top),
+        child: Align(alignment: AlignmentDirectional.topStart, child: artwork),
       ),
     );
   }

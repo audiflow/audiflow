@@ -127,12 +127,24 @@ void main() {
     );
   }
 
+  // The default 800x600 test view is tablet sized (shortest side 600), so
+  // the shared cases run on a phone view, the layout most listeners get;
+  // the tablet layout has its own group below.
+  Future<void> pumpOnPhone(WidgetTester tester, Widget widget) {
+    tester.view
+      ..physicalSize = const Size(390, 844)
+      ..devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    return tester.pumpWidget(widget);
+  }
+
   group('EpisodeDetailScreen', () {
     testWidgets('cancelling the queue clear records no station play', (
       tester,
     ) async {
       final stations = _RecordingStationRepository();
-      await tester.pumpWidget(
+      await pumpOnPhone(
+        tester,
         buildTestWidget(
           progress: testEpisodeWithProgress,
           stationId: 3,
@@ -154,7 +166,8 @@ void main() {
       tester,
     ) async {
       final queue = _RecordingQueueService();
-      await tester.pumpWidget(
+      await pumpOnPhone(
+        tester,
         buildTestWidget(progress: testEpisodeWithProgress, queue: queue),
       );
       await tester.pumpAndSettle();
@@ -171,7 +184,7 @@ void main() {
       tester,
     ) async {
       final queue = _RecordingQueueService();
-      await tester.pumpWidget(buildTestWidget(queue: queue));
+      await pumpOnPhone(tester, buildTestWidget(queue: queue));
       await tester.pumpAndSettle();
 
       await tester.tap(find.byIcon(Icons.play_arrow_rounded));
@@ -183,7 +196,8 @@ void main() {
 
     testWidgets('play again restarts a loaded played episode', (tester) async {
       _LoadedAudioPlayerController.calls.clear();
-      await tester.pumpWidget(
+      await pumpOnPhone(
+        tester,
         buildTestWidget(progress: testCompletedProgress, loaded: true),
       );
       await tester.pumpAndSettle();
@@ -200,7 +214,8 @@ void main() {
       tester,
     ) async {
       _LoadedAudioPlayerController.calls.clear();
-      await tester.pumpWidget(
+      await pumpOnPhone(
+        tester,
         buildTestWidget(progress: testInProgressProgress, loaded: true),
       );
       await tester.pumpAndSettle();
@@ -228,7 +243,7 @@ void main() {
     });
 
     testWidgets('renders the full title once, selectable', (tester) async {
-      await tester.pumpWidget(buildTestWidget());
+      await pumpOnPhone(tester, buildTestWidget());
       await tester.pumpAndSettle();
 
       final titles = tester
@@ -238,7 +253,7 @@ void main() {
     });
 
     testWidgets('renders the podcast name and metadata line', (tester) async {
-      await tester.pumpWidget(buildTestWidget());
+      await pumpOnPhone(tester, buildTestWidget());
       await tester.pumpAndSettle();
 
       check(find.text(testPodcastTitle).evaluate()).length.equals(1);
@@ -246,7 +261,7 @@ void main() {
     });
 
     testWidgets('floating navigation carries share and more', (tester) async {
-      await tester.pumpWidget(buildTestWidget(itunesId: '12345'));
+      await pumpOnPhone(tester, buildTestWidget(itunesId: '12345'));
       await tester.pumpAndSettle();
 
       check(find.byTooltip(l10n.shareEpisode).evaluate()).length.equals(1);
@@ -263,7 +278,7 @@ void main() {
         description: 'Test description',
         enclosureUrl: testAudioUrl,
       );
-      await tester.pumpWidget(buildTestWidget(episode: unshareable));
+      await pumpOnPhone(tester, buildTestWidget(episode: unshareable));
       await tester.pumpAndSettle();
 
       check(find.byTooltip(l10n.shareEpisode).evaluate()).isEmpty();
@@ -272,7 +287,8 @@ void main() {
 
   group('EpisodeDetailScreen primary pill', () {
     testWidgets('unplayed reads play with the duration', (tester) async {
-      await tester.pumpWidget(
+      await pumpOnPhone(
+        tester,
         buildTestWidget(progress: testEpisodeWithProgress),
       );
       await tester.pumpAndSettle();
@@ -281,7 +297,8 @@ void main() {
     });
 
     testWidgets('in progress reads resume', (tester) async {
-      await tester.pumpWidget(
+      await pumpOnPhone(
+        tester,
         buildTestWidget(progress: testInProgressProgress),
       );
       await tester.pumpAndSettle();
@@ -290,7 +307,10 @@ void main() {
     });
 
     testWidgets('played reads play again', (tester) async {
-      await tester.pumpWidget(buildTestWidget(progress: testCompletedProgress));
+      await pumpOnPhone(
+        tester,
+        buildTestWidget(progress: testCompletedProgress),
+      );
       await tester.pumpAndSettle();
 
       check(find.text(l10n.episodeDetailPlayAgain).evaluate()).length.equals(1);
@@ -302,7 +322,10 @@ void main() {
         tester.widget<ColoredBox>(find.byKey(ProgressLine.fillKey)).color;
 
     testWidgets('shows the played mark when completed', (tester) async {
-      await tester.pumpWidget(buildTestWidget(progress: testCompletedProgress));
+      await pumpOnPhone(
+        tester,
+        buildTestWidget(progress: testCompletedProgress),
+      );
       await tester.pumpAndSettle();
 
       check(find.byType(EpisodeProgressStatus).evaluate()).length.equals(1);
@@ -311,7 +334,8 @@ void main() {
     });
 
     testWidgets('shows the remaining time when in progress', (tester) async {
-      await tester.pumpWidget(
+      await pumpOnPhone(
+        tester,
         buildTestWidget(progress: testInProgressProgress),
       );
       await tester.pumpAndSettle();
@@ -322,7 +346,8 @@ void main() {
     });
 
     testWidgets('is hidden while unplayed', (tester) async {
-      await tester.pumpWidget(
+      await pumpOnPhone(
+        tester,
         buildTestWidget(progress: testEpisodeWithProgress),
       );
       await tester.pumpAndSettle();
@@ -335,7 +360,8 @@ void main() {
     testWidgets('shows queue and download buttons for a saved episode', (
       tester,
     ) async {
-      await tester.pumpWidget(
+      await pumpOnPhone(
+        tester,
         buildTestWidget(progress: testEpisodeWithProgress),
       );
       await tester.pumpAndSettle();
@@ -348,7 +374,8 @@ void main() {
     testWidgets('the queue button offers play next or add to end', (
       tester,
     ) async {
-      await tester.pumpWidget(
+      await pumpOnPhone(
+        tester,
         buildTestWidget(progress: testEpisodeWithProgress),
       );
       await tester.pumpAndSettle();
@@ -363,7 +390,7 @@ void main() {
     testWidgets('leaves only the play pill for an unsaved episode', (
       tester,
     ) async {
-      await tester.pumpWidget(buildTestWidget());
+      await pumpOnPhone(tester, buildTestWidget());
       await tester.pumpAndSettle();
 
       check(find.byType(EpisodeActionCircle).evaluate()).isEmpty();
@@ -376,7 +403,8 @@ void main() {
       WidgetTester tester,
       EpisodeWithProgress progress,
     ) async {
-      await tester.pumpWidget(
+      await pumpOnPhone(
+        tester,
         buildTestWidget(progress: progress, itunesId: '12345'),
       );
       await tester.pumpAndSettle();
@@ -455,7 +483,8 @@ void main() {
       DownloadTask task,
     ) async {
       final downloads = _KeepRecordingDownloadService();
-      await tester.pumpWidget(
+      await pumpOnPhone(
+        tester,
         buildTestWidget(
           progress: testEpisodeWithProgress,
           download: task,
@@ -520,7 +549,7 @@ void main() {
 
   group('EpisodeDetailScreen sections', () {
     testWidgets('shows the show notes card', (tester) async {
-      await tester.pumpWidget(buildTestWidget());
+      await pumpOnPhone(tester, buildTestWidget());
       await tester.pumpAndSettle();
 
       check(find.byType(EpisodeDescriptionCard).evaluate()).length.equals(1);
@@ -530,7 +559,8 @@ void main() {
     testWidgets('playback record shows placeholders before a play', (
       tester,
     ) async {
-      await tester.pumpWidget(
+      await pumpOnPhone(
+        tester,
         buildTestWidget(progress: testEpisodeWithProgress),
       );
       await tester.pumpAndSettle();
@@ -545,7 +575,10 @@ void main() {
     });
 
     testWidgets('playback record shows the history values', (tester) async {
-      await tester.pumpWidget(buildTestWidget(progress: testCompletedProgress));
+      await pumpOnPhone(
+        tester,
+        buildTestWidget(progress: testCompletedProgress),
+      );
       await tester.pumpAndSettle();
 
       check(find.text(EpisodePlaybackRecord.noValue).evaluate()).isEmpty();

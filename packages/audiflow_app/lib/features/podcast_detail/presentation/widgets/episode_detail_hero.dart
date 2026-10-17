@@ -62,7 +62,6 @@ class EpisodeDetailHero extends StatelessWidget {
   }
 
   Widget _buildContent(BuildContext context) {
-    final colors = AppColors.of(context);
     final meta = episodeMetaLine(
       episode,
       AppLocalizations.of(context),
@@ -78,16 +77,13 @@ class EpisodeDetailHero extends StatelessWidget {
         ],
         SelectableText(
           episode.title,
-          style: AppTextStyles.heroTitle.copyWith(color: colors.ink),
+          style: AppTextStyles.heroTitle.copyWith(
+            color: AppColors.of(context).ink,
+          ),
         ),
         if (meta != null) ...[
           const SizedBox(height: Spacing.sm),
-          Text(
-            meta,
-            style: AppTextStyles.tabular(
-              AppTextStyles.meta.copyWith(color: colors.inkSecondary),
-            ),
-          ),
+          _MetaLine(meta: meta),
         ],
         if (actions != null) ...[const SizedBox(height: Spacing.lg), actions],
       ],
@@ -121,6 +117,23 @@ String? _episodeNumber(PodcastItem episode) {
   if (number == null) return null;
   final season = episode.seasonNumber;
   return season == null ? 'E$number' : 'S$season E$number';
+}
+
+class _MetaLine extends StatelessWidget {
+  const _MetaLine({required this.meta});
+
+  final String meta;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return Text(
+      meta,
+      style: AppTextStyles.tabular(
+        AppTextStyles.meta.copyWith(color: colors.inkSecondary),
+      ),
+    );
+  }
 }
 
 class _PodcastLink extends StatelessWidget {
