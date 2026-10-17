@@ -3,12 +3,14 @@ import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 
 import 'episode_detail_actions.dart' show EpisodePrimaryPill;
+import 'podcast_detail_header.dart' show PodcastDetailHeader;
 
 /// Series episodes hero (redesign 4.3): artwork beside the series name,
 /// the podcast name linking back, the series meta line, and a button that
 /// resumes (or starts) the series. The button spans the width on phones;
 /// on tablets it is centered and capped at the episode detail play pill's
-/// width so it does not stretch across the screen.
+/// width so it does not stretch across the screen. On tablets the artwork
+/// grows to the podcast hero's size so the hero does not look sparse.
 class SeriesHero extends StatelessWidget {
   const SeriesHero({
     super.key,
@@ -23,7 +25,21 @@ class SeriesHero extends StatelessWidget {
     this.onResume,
   });
 
-  static const double artworkSize = 88;
+  static const double phoneArtworkSize = 88;
+
+  /// Tied to the podcast hero, not just equal to it: [ArtworkImage] decodes
+  /// at the displayed physical width, and a series without its own artwork
+  /// shows the podcast artwork. At the same size it reuses the decoded image
+  /// the podcast screen (the usual way here) already holds in memory.
+  static const double tabletArtworkSize = PodcastDetailHeader.artworkSize;
+
+  /// Artwork side for this screen: [tabletArtworkSize] from the app-wide
+  /// tablet breakpoint, [phoneArtworkSize] below it.
+  static double artworkSizeOf(BuildContext context) =>
+      _isTablet(context) ? tabletArtworkSize : phoneArtworkSize;
+
+  static bool _isTablet(BuildContext context) =>
+      DeviceUtils.isTablet(MediaQuery.sizeOf(context).shortestSide);
 
   @visibleForTesting
   static const Key artworkKey = ValueKey('series-hero-artwork');
@@ -66,7 +82,9 @@ class SeriesHero extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _artwork(context),
-              const SizedBox(width: Spacing.md),
+              // On tablets, the podcast hero's artwork-to-text spacing: its
+              // square column leaves 24 beside the artwork.
+              SizedBox(width: _isTablet(context) ? Spacing.lg : Spacing.md),
               Expanded(child: _texts(context)),
             ],
           ),
@@ -89,9 +107,7 @@ class SeriesHero extends StatelessWidget {
         shape: const StadiumBorder(),
       ),
     );
-    if (!DeviceUtils.isTablet(MediaQuery.sizeOf(context).shortestSide)) {
-      return button;
-    }
+    if (!_isTablet(context)) return button;
     // Same width as the episode detail play pill, so both screens' primary
     // play actions read as one size on tablets. Center hands the SizedBox
     // loose constraints, so a narrower row still clamps it.
@@ -103,12 +119,15 @@ class SeriesHero extends StatelessWidget {
   Widget _artwork(BuildContext context) {
     final colors = AppColors.of(context);
     final url = thumbnailUrl;
+    final artworkSize = artworkSizeOf(context);
+    // 64 matches the podcast hero's fallback icon at the same artwork size.
+    final iconSize = _isTablet(context) ? 64.0 : 36.0;
     Widget fallback(IconData icon) => Container(
       width: artworkSize,
       height: artworkSize,
       alignment: Alignment.center,
       color: colors.surfaceSunken,
-      child: Icon(icon, size: 36, color: colors.inkTertiary),
+      child: Icon(icon, size: iconSize, color: colors.inkTertiary),
     );
     final image = url == null
         ? fallback(Icons.folder_outlined)
