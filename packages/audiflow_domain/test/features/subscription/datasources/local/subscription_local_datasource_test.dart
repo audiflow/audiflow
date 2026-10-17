@@ -297,4 +297,24 @@ void main() {
       expect(await datasource.getById(999), isNull);
     });
   });
+
+  group('updateFeedMetadata', () {
+    test('records that a decoding parser wrote the channel text', () async {
+      final inserted = await datasource.insert(
+        makeSubscription(artistName: 'A &amp; B'),
+      );
+      final syncedAt = DateTime(2026, 10, 16);
+
+      await datasource.updateFeedMetadata(
+        inserted.id,
+        artistName: 'A & B',
+        syncedAt: syncedAt,
+      );
+
+      final stored = await datasource.getById(inserted.id);
+      expect(stored?.artistName, 'A & B');
+      expect(stored?.feedMetadataSyncedAt, syncedAt);
+      expect(stored?.channelTextSyncedAt, syncedAt);
+    });
+  });
 }

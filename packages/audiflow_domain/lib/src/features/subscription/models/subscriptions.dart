@@ -63,6 +63,15 @@ class Subscription {
   /// skips the parse. Set even when the channel has no link.
   DateTime? websiteSyncedAt;
 
+  /// When channel text was last written by a parser that decodes character
+  /// references.
+  ///
+  /// Null means older versions alone wrote [artistName] and [description],
+  /// which may still hold references such as `&amp;`; such a row asks its
+  /// feed unconditionally once so a 304 cannot keep the encoded text. Set
+  /// together with [feedMetadataSyncedAt].
+  DateTime? channelTextSyncedAt;
+
   /// HTTP ETag header from the last successful feed fetch.
   ///
   /// Sent as `If-None-Match` on subsequent requests to avoid
