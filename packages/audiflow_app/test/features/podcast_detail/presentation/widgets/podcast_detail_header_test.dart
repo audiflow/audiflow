@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:audiflow_app/features/podcast_detail/presentation/widgets/detail_hero_layout.dart';
 import 'package:audiflow_app/features/podcast_detail/presentation/widgets/podcast_detail_header.dart';
 import 'package:audiflow_app/features/subscription/presentation/controllers/subscription_controller.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
@@ -51,6 +52,61 @@ void main() {
   }
 
   group('PodcastDetailHeader', () {
+    const phoneSize = Size(390, 844);
+    const tabletSize = Size(820, 1180);
+
+    void useViewSize(WidgetTester tester, Size size) {
+      tester.view
+        ..physicalSize = size
+        ..devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+    }
+
+    Future<void> pumpHeader(WidgetTester tester, Size size) async {
+      useViewSize(tester, size);
+      final container = ProviderContainer(
+        overrides: [
+          subscriptionControllerProvider(
+            'test-id',
+          ).overrideWith(() => _FakeSubscriptionController(false)),
+        ],
+      );
+      addTearDown(container.dispose);
+      await tester.pumpWidget(buildTestWidget(container, testPodcast));
+      await tester.pumpAndSettle();
+    }
+
+    Rect artworkRect(WidgetTester tester) =>
+        tester.getRect(find.byKey(PodcastDetailHeader.artworkKey));
+
+    testWidgets('a tablet puts the artwork left of the content', (
+      tester,
+    ) async {
+      await pumpHeader(tester, tabletSize);
+
+      final title = find.text('Test Podcast');
+      check(artworkRect(tester).right).isLessThan(tester.getRect(title).left);
+      check(artworkRect(tester).size).equals(const Size(180, 180));
+      // Square column: top inset 8 + artwork 180 + gap 16.
+      check(
+        tester.getSize(find.byKey(DetailHeroLayout.artworkColumnKey)),
+      ).equals(const Size(204, 204));
+      check(tester.widget<Text>(title).textAlign).equals(TextAlign.start);
+      // Content is left-aligned, so the pill starts where the title does.
+      check(
+        tester.getRect(find.byType(FilledButton)).left,
+      ).equals(tester.getRect(title).left);
+    });
+
+    testWidgets('a phone keeps the artwork above the content', (tester) async {
+      await pumpHeader(tester, phoneSize);
+
+      final titleRect = tester.getRect(find.text('Test Podcast'));
+      check(artworkRect(tester).bottom).isLessThan(titleRect.top);
+      check(artworkRect(tester).center.dx).equals(titleRect.center.dx);
+      check(find.byKey(DetailHeroLayout.artworkColumnKey).evaluate()).isEmpty();
+    });
+
     testWidgets('shows podcast title', (tester) async {
       final container = ProviderContainer(
         overrides: [
@@ -218,6 +274,7 @@ void main() {
     testWidgets('hero artwork is 180 and the title is centered', (
       tester,
     ) async {
+      useViewSize(tester, phoneSize);
       final container = ProviderContainer(
         overrides: [
           subscriptionControllerProvider(

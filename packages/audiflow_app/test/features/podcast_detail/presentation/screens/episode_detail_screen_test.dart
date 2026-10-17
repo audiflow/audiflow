@@ -1,7 +1,9 @@
 import 'package:audiflow_app/features/podcast_detail/presentation/controllers/podcast_detail_controller.dart';
 import 'package:audiflow_app/features/podcast_detail/presentation/screens/episode_detail_screen.dart';
 import 'package:audiflow_app/features/podcast_detail/presentation/widgets/episode_description_card.dart';
+import 'package:audiflow_app/features/podcast_detail/presentation/widgets/detail_hero_layout.dart';
 import 'package:audiflow_app/features/podcast_detail/presentation/widgets/episode_detail_actions.dart';
+import 'package:audiflow_app/features/podcast_detail/presentation/widgets/episode_detail_hero.dart';
 import 'package:audiflow_app/features/podcast_detail/presentation/widgets/episode_playback_record.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_app/l10n/app_localizations_en.dart';
@@ -549,6 +551,53 @@ void main() {
       check(find.text(EpisodePlaybackRecord.noValue).evaluate()).isEmpty();
       // completedCount and playCount both default to 0.
       check(find.text('0 times').evaluate()).length.equals(2);
+    });
+  });
+
+  group('EpisodeDetailScreen tablet layout', () {
+    void useViewSize(WidgetTester tester, Size size) {
+      tester.view
+        ..physicalSize = size
+        ..devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+    }
+
+    Rect artworkRect(WidgetTester tester) =>
+        tester.getRect(find.byKey(EpisodeDetailHero.artworkKey));
+    Rect titleRect(WidgetTester tester) =>
+        tester.getRect(find.byType(SelectableText));
+    Finder pillInHero() => find.descendant(
+      of: find.byType(EpisodeDetailHero),
+      matching: find.byType(EpisodePrimaryPill),
+    );
+
+    testWidgets('a tablet puts the artwork left of the title', (tester) async {
+      useViewSize(tester, const Size(820, 1180));
+      await tester.pumpWidget(
+        buildTestWidget(progress: testEpisodeWithProgress),
+      );
+      await tester.pumpAndSettle();
+
+      check(artworkRect(tester).right).isLessThan(titleRect(tester).left);
+      check(artworkRect(tester).size).equals(const Size(200, 200));
+      // Square column: top inset 8 + artwork 200 + gap 24.
+      check(
+        tester.getSize(find.byKey(DetailHeroLayout.artworkColumnKey)),
+      ).equals(const Size(232, 232));
+      // The action row joins the right-hand column.
+      check(pillInHero().evaluate()).length.equals(1);
+    });
+
+    testWidgets('a phone keeps the artwork above the title', (tester) async {
+      useViewSize(tester, const Size(390, 844));
+      await tester.pumpWidget(
+        buildTestWidget(progress: testEpisodeWithProgress),
+      );
+      await tester.pumpAndSettle();
+
+      check(artworkRect(tester).bottom).isLessThan(titleRect(tester).top);
+      check(find.byKey(DetailHeroLayout.artworkColumnKey).evaluate()).isEmpty();
+      check(pillInHero().evaluate()).isEmpty();
     });
   });
 }

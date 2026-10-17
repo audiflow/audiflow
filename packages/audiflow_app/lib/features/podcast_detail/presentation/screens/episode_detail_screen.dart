@@ -16,6 +16,7 @@ import '../../../share/presentation/helpers/share_helper.dart';
 import '../../../station/presentation/helpers/record_station_play.dart';
 import '../controllers/podcast_detail_controller.dart';
 import '../utils/played_display.dart';
+import '../widgets/detail_hero_layout.dart';
 import '../widgets/episode_description_card.dart';
 import '../widgets/episode_detail_actions.dart';
 import '../widgets/episode_detail_hero.dart';
@@ -226,6 +227,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
   }
 
   Widget _buildScrollView(_EpisodeView view) {
+    final sideBySide = DetailHeroLayout.isSideBySide(context);
     final content =
         widget.episode.contentEncoded ??
         widget.episode.summary ??
@@ -252,10 +254,19 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
               valueListenable: _navScroll,
               builder: (context, scroll, child) =>
                   CollapsingHero(progress: scroll.hero, child: child!),
-              child: KeyedSubtree(key: _heroKey, child: _buildHero()),
+              child: KeyedSubtree(
+                key: _heroKey,
+                child: _buildHero(sideBySide ? _buildActions(view) : null),
+              ),
             ),
           ),
-          SliverToBoxAdapter(child: _buildActions(view)),
+          if (!sideBySide)
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: Spacing.screenHorizontal,
+              ),
+              sliver: SliverToBoxAdapter(child: _buildActions(view)),
+            ),
           if (content.isNotBlank)
             SliverPadding(
               padding: sectionGap,
@@ -282,13 +293,15 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
     );
   }
 
-  Widget _buildHero() {
+  /// [actions] joins the hero's right-hand column on tablets.
+  Widget _buildHero(Widget? actions) {
     return EpisodeDetailHero(
       episode: widget.episode,
       podcastTitle: widget.podcastTitle,
       artworkUrl: _imageUrl,
       heroTag: 'episode_artwork_${widget.episode.guid ?? widget.episode.title}',
       onPodcastTap: () => _navigateToPodcast(context),
+      actions: actions,
     );
   }
 
@@ -296,22 +309,19 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
     final progress = view.progress;
     final fraction = progress?.progressPercent;
     final showsLine = view.showsPlayed || ProgressLine.isStarted(fraction);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: Spacing.screenHorizontal),
-      child: Column(
-        children: [
-          _buildActionRow(view),
-          if (showsLine)
-            Padding(
-              padding: const EdgeInsets.only(top: Spacing.md),
-              child: EpisodeProgressStatus(
-                fraction: fraction ?? 0,
-                remaining: progress?.remainingDuration,
-                isCompleted: view.showsPlayed,
-              ),
+    return Column(
+      children: [
+        _buildActionRow(view),
+        if (showsLine)
+          Padding(
+            padding: const EdgeInsets.only(top: Spacing.md),
+            child: EpisodeProgressStatus(
+              fraction: fraction ?? 0,
+              remaining: progress?.remainingDuration,
+              isCompleted: view.showsPlayed,
             ),
-        ],
-      ),
+          ),
+      ],
     );
   }
 

@@ -8,9 +8,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../subscription/presentation/controllers/subscription_controller.dart';
+import 'detail_hero_layout.dart';
 
-/// Centered podcast hero: artwork, title, meta line, and a subscribe pill
-/// when not yet subscribed (redesign 4.2).
+/// Podcast hero: artwork, title, meta line, and a subscribe pill when not
+/// yet subscribed (redesign 4.2). Centered on phones; artwork beside
+/// left-aligned content on tablets.
 class PodcastDetailHeader extends ConsumerWidget {
   const PodcastDetailHeader({
     super.key,
@@ -43,37 +45,52 @@ class PodcastDetailHeader extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final artworkUrl = podcast.artworkUrl;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
+    // Centered under the artwork on phones; left-aligned beside it on
+    // tablets, where the content has a column of its own.
+    final sideBySide = DetailHeroLayout.isSideBySide(context);
+    return DetailHeroLayout(
+      artworkSize: artworkSize,
+      artworkGap: Spacing.md,
+      phonePadding: const EdgeInsets.fromLTRB(
         Spacing.xl,
         Spacing.sm,
         Spacing.xl,
         Spacing.lg,
       ),
-      child: Column(
+      artwork: _buildArtwork(context),
+      content: Column(
+        crossAxisAlignment: sideBySide
+            ? CrossAxisAlignment.start
+            : CrossAxisAlignment.center,
         children: [
-          Semantics(
-            label: 'View podcast artwork',
-            button: true,
-            child: GestureDetector(
-              onTap: artworkUrl == null
-                  ? null
-                  : () => _showArtworkOverlay(context, artworkUrl),
-              child: Hero(
-                tag: 'podcast_artwork_${podcast.id}',
-                child: ClipRRect(
-                  key: artworkKey,
-                  borderRadius: AppBorders.artworkHero,
-                  child: _PodcastArtwork(artworkUrl: artworkUrl),
-                ),
-              ),
-            ),
+          _PodcastMetadata(
+            podcast: podcast,
+            longTitle: _isLongTitle,
+            textAlign: sideBySide ? TextAlign.start : TextAlign.center,
           ),
-          const SizedBox(height: Spacing.md),
-          _PodcastMetadata(podcast: podcast, longTitle: _isLongTitle),
           _SubscribeButton(podcast: podcast, subscribeSource: subscribeSource),
         ],
+      ),
+    );
+  }
+
+  Widget _buildArtwork(BuildContext context) {
+    final artworkUrl = podcast.artworkUrl;
+    return Semantics(
+      label: 'View podcast artwork',
+      button: true,
+      child: GestureDetector(
+        onTap: artworkUrl == null
+            ? null
+            : () => _showArtworkOverlay(context, artworkUrl),
+        child: Hero(
+          tag: 'podcast_artwork_${podcast.id}',
+          child: ClipRRect(
+            key: artworkKey,
+            borderRadius: AppBorders.artworkHero,
+            child: _PodcastArtwork(artworkUrl: artworkUrl),
+          ),
+        ),
       ),
     );
   }
@@ -82,10 +99,15 @@ class PodcastDetailHeader extends ConsumerWidget {
 }
 
 class _PodcastMetadata extends StatelessWidget {
-  const _PodcastMetadata({required this.podcast, required this.longTitle});
+  const _PodcastMetadata({
+    required this.podcast,
+    required this.longTitle,
+    required this.textAlign,
+  });
 
   final Podcast podcast;
   final bool longTitle;
+  final TextAlign textAlign;
 
   @override
   Widget build(BuildContext context) {
@@ -100,10 +122,13 @@ class _PodcastMetadata extends StatelessWidget {
 
     return SelectionArea(
       child: Column(
+        crossAxisAlignment: textAlign == TextAlign.center
+            ? CrossAxisAlignment.center
+            : CrossAxisAlignment.start,
         children: [
           Text(
             podcast.name,
-            textAlign: TextAlign.center,
+            textAlign: textAlign,
             style: titleStyle.copyWith(color: colors.ink),
             maxLines: 3,
             overflow: TextOverflow.ellipsis,
@@ -111,7 +136,7 @@ class _PodcastMetadata extends StatelessWidget {
           const SizedBox(height: Spacing.xs),
           Text(
             meta,
-            textAlign: TextAlign.center,
+            textAlign: textAlign,
             style: AppTextStyles.meta.copyWith(color: colors.inkSecondary),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
