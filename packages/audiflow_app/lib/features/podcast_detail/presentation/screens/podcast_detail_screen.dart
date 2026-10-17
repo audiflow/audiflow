@@ -560,7 +560,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen>
         ref
             .read(namedLoggerProvider('PodcastDetailScreen'))
             .e(
-              'Smart playlist pattern load failed for feedUrl=$feedUrl; '
+              'Preset load failed for feedUrl=$feedUrl; '
               'keeping toggle visible as a conservative fallback',
               error: next.error,
               stackTrace: next.stackTrace,
