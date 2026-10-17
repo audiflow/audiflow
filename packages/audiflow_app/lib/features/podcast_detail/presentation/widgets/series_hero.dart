@@ -1,9 +1,14 @@
+import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 
+import 'episode_detail_actions.dart' show EpisodePrimaryPill;
+
 /// Series episodes hero (redesign 4.3): artwork beside the series name,
-/// the podcast name linking back, the series meta line, and a full-width
-/// button that resumes (or starts) the series.
+/// the podcast name linking back, the series meta line, and a button that
+/// resumes (or starts) the series. The button spans the width on phones;
+/// on tablets it is centered and capped at the episode detail play pill's
+/// width so it does not stretch across the screen.
 class SeriesHero extends StatelessWidget {
   const SeriesHero({
     super.key,
@@ -67,18 +72,31 @@ class SeriesHero extends StatelessWidget {
           ),
           if (resumeLabel != null) ...[
             const SizedBox(height: Spacing.md),
-            FilledButton.icon(
-              onPressed: onResume,
-              icon: const Icon(Icons.play_arrow_rounded),
-              label: Text(resumeLabel),
-              style: FilledButton.styleFrom(
-                minimumSize: const Size.fromHeight(Spacing.minTouchTarget),
-                shape: const StadiumBorder(),
-              ),
-            ),
+            _resumeButton(context, resumeLabel),
           ],
         ],
       ),
+    );
+  }
+
+  Widget _resumeButton(BuildContext context, String label) {
+    final button = FilledButton.icon(
+      onPressed: onResume,
+      icon: const Icon(Icons.play_arrow_rounded),
+      label: Text(label),
+      style: FilledButton.styleFrom(
+        minimumSize: const Size.fromHeight(Spacing.minTouchTarget),
+        shape: const StadiumBorder(),
+      ),
+    );
+    if (!DeviceUtils.isTablet(MediaQuery.sizeOf(context).shortestSide)) {
+      return button;
+    }
+    // Same width as the episode detail play pill, so both screens' primary
+    // play actions read as one size on tablets. Center hands the SizedBox
+    // loose constraints, so a narrower row still clamps it.
+    return Center(
+      child: SizedBox(width: EpisodePrimaryPill.maxWidth, child: button),
     );
   }
 
