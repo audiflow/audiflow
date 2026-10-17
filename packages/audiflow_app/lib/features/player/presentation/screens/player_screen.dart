@@ -180,9 +180,10 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
                     children: [
                       const _DragHandle(),
                       _PlayerHeader(
-                        onMore: (anchor) => _showMoreMenu(
+                        onMore: (anchor, drag) => _showMoreMenu(
                           nowPlaying,
                           anchor: anchor,
+                          drag: drag,
                           hasTranscript: hasTranscriptTab,
                         ),
                       ),
@@ -284,6 +285,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
   Future<void> _showMoreMenu(
     NowPlayingInfo nowPlaying, {
     required BuildContext anchor,
+    required ActionMenuDrag? drag,
     required bool hasTranscript,
   }) {
     final l10n = AppLocalizations.of(context);
@@ -291,8 +293,9 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
     final onTranscript = tabs != null && tabs.index == 1;
     final episode = nowPlaying.episode;
     return showActionMenu(
-      context: context,
-      top: _menuTopBelow(anchor),
+      context: anchor,
+      placement: ActionMenuPlacement.topRight(top: _menuTopBelow(anchor)),
+      drag: drag,
       sections: [
         [
           if (hasTranscript && tabs != null)
@@ -465,7 +468,7 @@ class _PlayerHeader extends StatelessWidget {
   const _PlayerHeader({required this.onMore});
 
   /// Receives the `…` button's context, to anchor the menu below it.
-  final ValueChanged<BuildContext> onMore;
+  final ActionMenuOpener onMore;
 
   @override
   Widget build(BuildContext context) {
@@ -483,12 +486,13 @@ class _PlayerHeader extends StatelessWidget {
             onPressed: () => CupertinoSheetRoute.popSheet(context),
           ),
           const Spacer(),
-          Builder(
-            builder: (buttonContext) => IconButton(
+          ActionMenuTrigger(
+            onOpen: onMore,
+            builder: (context, open) => IconButton(
               tooltip: l10n.playerMoreTooltip,
               icon: const Icon(Icons.more_horiz_rounded),
               color: colors.ink,
-              onPressed: () => onMore(buttonContext),
+              onPressed: open,
             ),
           ),
         ],

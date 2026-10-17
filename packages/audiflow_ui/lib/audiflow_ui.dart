@@ -69,6 +69,7 @@ export 'src/widgets/lists/year_picker_bottom_sheet.dart';
 export 'src/widgets/headers/screen_headers.dart';
 export 'src/widgets/inputs/number_keypad.dart';
 export 'src/widgets/menus/action_menu.dart';
+export 'src/widgets/menus/action_menu_trigger.dart';
 export 'src/widgets/sheets/compact_sheet.dart';
 export 'src/widgets/navigation/app_tab_bar.dart';
 export 'src/widgets/navigation/floating_nav_button.dart';

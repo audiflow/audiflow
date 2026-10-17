@@ -154,6 +154,38 @@ void main() {
       }
       check(log).deepEquals([0, 1, 2]);
     });
+
+    testWidgets('a menu action opens on a tap, or on a press-and-hold', (
+      tester,
+    ) async {
+      final opened = <ActionMenuDrag?>[];
+      await tester.pumpWidget(
+        host(
+          FloatingNavActions(
+            actions: [
+              FloatingNavAction.menu(
+                icon: Icons.more_horiz_rounded,
+                tooltip: 'More',
+                onOpenMenu: (_, drag) => opened.add(drag),
+              ),
+            ],
+          ),
+        ),
+      );
+      await tester.tap(find.byTooltip('More'));
+      check(opened).deepEquals([null]);
+
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.byTooltip('More')),
+      );
+      await tester.pump(
+        ActionMenuTrigger.holdDuration + const Duration(milliseconds: 10),
+      );
+      await gesture.up();
+      await tester.pumpAndSettle();
+      check(opened).length.equals(2);
+      check(opened.last).isNotNull();
+    });
   });
 
   group('FloatingNavigationBar', () {

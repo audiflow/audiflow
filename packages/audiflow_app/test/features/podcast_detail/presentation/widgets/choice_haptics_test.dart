@@ -58,6 +58,35 @@ void main() {
       check(player.played).deepEquals([HapticToken.selection]);
     });
 
+    testWidgets('sliding to a new choice and releasing plays it once', (
+      tester,
+    ) async {
+      final chosen = <String>[];
+      await tester.pumpWidget(
+        host(
+          MenuSelectorButton<String>(
+            choices: const ['All', 'Unplayed'],
+            selected: 'All',
+            labelOf: (choice) => choice,
+            onSelected: chosen.add,
+          ),
+        ),
+      );
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.byType(MenuSelectorButton<String>)),
+      );
+      await tester.pump(
+        ActionMenuTrigger.holdDuration + const Duration(milliseconds: 10),
+      );
+      await tester.pumpAndSettle();
+      await gesture.moveTo(tester.getCenter(find.text('Unplayed')));
+      await tester.pump();
+      await gesture.up();
+      await tester.pumpAndSettle();
+      check(chosen).deepEquals(['Unplayed']);
+      check(player.played).deepEquals([HapticToken.selection]);
+    });
+
     testWidgets('re-picking the current choice plays nothing', (tester) async {
       check(await choose(tester, 'All')).deepEquals(['All']);
       check(player.played).isEmpty();

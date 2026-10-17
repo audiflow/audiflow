@@ -265,12 +265,12 @@ void main() {
       await tester.tap(find.byIcon(Icons.sort));
       await tester.pumpAndSettle();
 
-      final latestItem = find.ancestor(
-        of: find.text('Latest episode'),
-        matching: find.byType(PopupMenuItem<PodcastSortOrder>),
+      final latestItem = find.descendant(
+        of: find.byKey(ActionMenu.surfaceKey),
+        matching: find.text('Latest episode'),
       );
       expect(latestItem, findsOneWidget);
-      expect(find.byIcon(Icons.check), findsOneWidget);
+      expect(find.byIcon(Icons.check_rounded), findsOneWidget);
     });
   });
 
