@@ -384,6 +384,23 @@ void main() {
       ).equals(const Rect.fromLTWH(0, 0, 200, 300));
     });
 
+    testWidgets('stops taking taps once mostly faded', (tester) async {
+      bool ignoring() => tester
+          .widget<IgnorePointer>(
+            find
+                .ancestor(
+                  of: find.byKey(const ValueKey('hero')),
+                  matching: find.byType(IgnorePointer),
+                )
+                .first,
+          )
+          .ignoring;
+      await tester.pumpWidget(hero(0.4));
+      check(ignoring()).isFalse();
+      await tester.pumpWidget(hero(CollapsingHero.ignoreTapsFrom));
+      check(ignoring()).isTrue();
+    });
+
     testWidgets('fades as it collapses', (tester) async {
       await tester.pumpWidget(hero(0.5));
       check(opacity(tester)).equals(0.5);

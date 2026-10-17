@@ -25,6 +25,11 @@ class EpisodePrimaryPill extends StatelessWidget {
   @visibleForTesting
   static const Key surfaceKey = ValueKey('episodePrimaryPillSurface');
 
+  /// Widest the pill grows. Wider than the space it gets beside the two
+  /// circles on phones, so it only stops the pill stretching across
+  /// tablet layouts.
+  static const double maxWidth = 280;
+
   final EpisodePlayState state;
 
   /// Shown on the unplayed label ("Play · 28m") when known.
@@ -144,6 +149,9 @@ class EpisodeActionCircle extends StatelessWidget {
 
   /// Draws a ring around the glyph, e.g. download progress. Null hides it.
   final double? progress;
+
+  /// Diameter, exposed so the action row can reserve room for the circles.
+  static const double size = _actionHeight;
 
   @override
   Widget build(BuildContext context) {

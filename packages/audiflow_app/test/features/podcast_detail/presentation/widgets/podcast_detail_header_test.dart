@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:audiflow_app/features/podcast_detail/presentation/widgets/detail_hero_layout.dart';
 import 'package:audiflow_app/features/podcast_detail/presentation/widgets/podcast_detail_header.dart';
 import 'package:audiflow_app/features/subscription/presentation/controllers/subscription_controller.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
@@ -51,6 +52,94 @@ void main() {
   }
 
   group('PodcastDetailHeader', () {
+    const phoneSize = Size(390, 844);
+    const tabletSize = Size(820, 1180);
+
+    void useViewSize(WidgetTester tester, Size size) {
+      tester.view
+        ..physicalSize = size
+        ..devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+    }
+
+    // The default 800x600 test view is tablet sized (shortest side 600),
+    // so the shared cases run on a phone view.
+    Future<void> pumpOnPhone(WidgetTester tester, Widget widget) {
+      useViewSize(tester, phoneSize);
+      return tester.pumpWidget(widget);
+    }
+
+    Future<void> pumpHeader(WidgetTester tester, Size size) async {
+      useViewSize(tester, size);
+      final container = ProviderContainer(
+        overrides: [
+          subscriptionControllerProvider(
+            'test-id',
+          ).overrideWith(() => _FakeSubscriptionController(false)),
+        ],
+      );
+      addTearDown(container.dispose);
+      await tester.pumpWidget(buildTestWidget(container, testPodcast));
+      await tester.pumpAndSettle();
+    }
+
+    Rect artworkRect(WidgetTester tester) =>
+        tester.getRect(find.byKey(PodcastDetailHeader.artworkKey));
+
+    testWidgets('a tablet puts the artwork left of the content', (
+      tester,
+    ) async {
+      await pumpHeader(tester, tabletSize);
+
+      final title = find.text('Test Podcast');
+      check(artworkRect(tester).right).isLessThan(tester.getRect(title).left);
+      check(artworkRect(tester).size).equals(const Size(180, 180));
+      // Square column: top inset 8 + artwork 180 + gap 16.
+      check(
+        tester.getSize(find.byKey(DetailHeroLayout.artworkColumnKey)),
+      ).equals(const Size(204, 204));
+      check(tester.widget<Text>(title).textAlign).equals(TextAlign.start);
+      // Content is left-aligned, so the pill starts where the title does.
+      check(
+        tester.getRect(find.byType(FilledButton)).left,
+      ).equals(tester.getRect(title).left);
+    });
+
+    testWidgets('a long title keeps the full hero style on a tablet', (
+      tester,
+    ) async {
+      useViewSize(tester, tabletSize);
+      final container = ProviderContainer(
+        overrides: [
+          subscriptionControllerProvider(
+            'test-id',
+          ).overrideWith(() => _FakeSubscriptionController(true)),
+        ],
+      );
+      addTearDown(container.dispose);
+      const longName = 'A Podcast Name Long Enough To Shrink';
+      await tester.pumpWidget(
+        buildTestWidget(container, testPodcast.copyWith(name: longName)),
+      );
+      await tester.pumpAndSettle();
+
+      final title = tester.widget<Text>(find.text(longName));
+      check(title.style?.fontSize).equals(AppTextStyles.heroTitle.fontSize);
+      // Short content: the hero ends with the square artwork column.
+      check(
+        tester.getSize(find.byType(PodcastDetailHeader)).height,
+      ).equals(204);
+    });
+
+    testWidgets('a phone keeps the artwork above the content', (tester) async {
+      await pumpHeader(tester, phoneSize);
+
+      final titleRect = tester.getRect(find.text('Test Podcast'));
+      check(artworkRect(tester).bottom).isLessThan(titleRect.top);
+      check(artworkRect(tester).center.dx).equals(titleRect.center.dx);
+      check(find.byKey(DetailHeroLayout.artworkColumnKey).evaluate()).isEmpty();
+    });
+
     testWidgets('shows podcast title', (tester) async {
       final container = ProviderContainer(
         overrides: [
@@ -61,7 +150,7 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      await tester.pumpWidget(buildTestWidget(container, testPodcast));
+      await pumpOnPhone(tester, buildTestWidget(container, testPodcast));
       await tester.pumpAndSettle();
 
       expect(find.text('Test Podcast'), findsOneWidget);
@@ -77,7 +166,7 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      await tester.pumpWidget(buildTestWidget(container, testPodcast));
+      await pumpOnPhone(tester, buildTestWidget(container, testPodcast));
       await tester.pumpAndSettle();
 
       expect(find.text('Test Artist'), findsOneWidget);
@@ -93,7 +182,8 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      await tester.pumpWidget(
+      await pumpOnPhone(
+        tester,
         buildTestWidget(container, testPodcastWithGenres),
       );
       await tester.pumpAndSettle();
@@ -111,7 +201,7 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      await tester.pumpWidget(buildTestWidget(container, testPodcast));
+      await pumpOnPhone(tester, buildTestWidget(container, testPodcast));
       await tester.pumpAndSettle();
 
       // No genres text should exist besides
@@ -135,7 +225,10 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      await tester.pumpWidget(buildTestWidget(container, testPodcastNoArtwork));
+      await pumpOnPhone(
+        tester,
+        buildTestWidget(container, testPodcastNoArtwork),
+      );
       await tester.pumpAndSettle();
 
       expect(find.byIcon(Icons.podcasts), findsOneWidget);
@@ -151,7 +244,7 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      await tester.pumpWidget(buildTestWidget(container, testPodcast));
+      await pumpOnPhone(tester, buildTestWidget(container, testPodcast));
       await tester.pumpAndSettle();
 
       expect(find.text('Subscribe'), findsOneWidget);
@@ -168,7 +261,7 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      await tester.pumpWidget(buildTestWidget(container, testPodcast));
+      await pumpOnPhone(tester, buildTestWidget(container, testPodcast));
       await tester.pumpAndSettle();
 
       // Unsubscribing lives in the more menu, so the hero shows nothing.
@@ -186,7 +279,7 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      await tester.pumpWidget(buildTestWidget(container, testPodcast));
+      await pumpOnPhone(tester, buildTestWidget(container, testPodcast));
       // Pump a frame to render loading state.
       await tester.pump();
       await tester.pump();
@@ -208,7 +301,7 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      await tester.pumpWidget(buildTestWidget(container, testPodcast));
+      await pumpOnPhone(tester, buildTestWidget(container, testPodcast));
       await tester.pumpAndSettle();
 
       expect(find.text('Retry'), findsOneWidget);
@@ -227,7 +320,10 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      await tester.pumpWidget(buildTestWidget(container, testPodcastNoArtwork));
+      await pumpOnPhone(
+        tester,
+        buildTestWidget(container, testPodcastNoArtwork),
+      );
       await tester.pumpAndSettle();
 
       check(
@@ -248,7 +344,7 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      await tester.pumpWidget(buildTestWidget(container, testPodcast));
+      await pumpOnPhone(tester, buildTestWidget(container, testPodcast));
       await tester.pumpAndSettle();
 
       final style = tester
@@ -268,7 +364,7 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      await tester.pumpWidget(buildTestWidget(container, testPodcast));
+      await pumpOnPhone(tester, buildTestWidget(container, testPodcast));
       await tester.pumpAndSettle();
 
       // Verify SelectionArea wraps the header content

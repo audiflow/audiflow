@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:audiflow_app/features/podcast_detail/presentation/controllers/podcast_detail_controller.dart';
 import 'package:audiflow_app/features/podcast_detail/presentation/screens/episode_detail_screen.dart';
 import 'package:audiflow_app/features/podcast_detail/presentation/widgets/episode_description_card.dart';
+import 'package:audiflow_app/features/podcast_detail/presentation/widgets/detail_hero_layout.dart';
 import 'package:audiflow_app/features/podcast_detail/presentation/widgets/episode_detail_actions.dart';
+import 'package:audiflow_app/features/podcast_detail/presentation/widgets/episode_detail_hero.dart';
 import 'package:audiflow_app/features/podcast_detail/presentation/widgets/episode_playback_record.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_app/l10n/app_localizations_en.dart';
@@ -131,12 +133,24 @@ void main() {
     );
   }
 
+  // The default 800x600 test view is tablet sized (shortest side 600), so
+  // the shared cases run on a phone view, the layout most listeners get;
+  // the tablet layout has its own group below.
+  Future<void> pumpOnPhone(WidgetTester tester, Widget widget) {
+    tester.view
+      ..physicalSize = const Size(390, 844)
+      ..devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    return tester.pumpWidget(widget);
+  }
+
   group('EpisodeDetailScreen', () {
     testWidgets('cancelling the queue clear records no station play', (
       tester,
     ) async {
       final stations = _RecordingStationRepository();
-      await tester.pumpWidget(
+      await pumpOnPhone(
+        tester,
         buildTestWidget(
           progress: testEpisodeWithProgress,
           stationId: 3,
@@ -158,7 +172,8 @@ void main() {
       tester,
     ) async {
       final queue = _RecordingQueueService();
-      await tester.pumpWidget(
+      await pumpOnPhone(
+        tester,
         buildTestWidget(progress: testEpisodeWithProgress, queue: queue),
       );
       await tester.pumpAndSettle();
@@ -175,7 +190,7 @@ void main() {
       tester,
     ) async {
       final queue = _RecordingQueueService();
-      await tester.pumpWidget(buildTestWidget(queue: queue));
+      await pumpOnPhone(tester, buildTestWidget(queue: queue));
       await tester.pumpAndSettle();
 
       await tester.tap(find.byIcon(Icons.play_arrow_rounded));
@@ -187,7 +202,8 @@ void main() {
 
     testWidgets('play again restarts a loaded played episode', (tester) async {
       _LoadedAudioPlayerController.calls.clear();
-      await tester.pumpWidget(
+      await pumpOnPhone(
+        tester,
         buildTestWidget(progress: testCompletedProgress, loaded: true),
       );
       await tester.pumpAndSettle();
@@ -204,7 +220,8 @@ void main() {
       tester,
     ) async {
       _LoadedAudioPlayerController.calls.clear();
-      await tester.pumpWidget(
+      await pumpOnPhone(
+        tester,
         buildTestWidget(progress: testInProgressProgress, loaded: true),
       );
       await tester.pumpAndSettle();
@@ -232,7 +249,7 @@ void main() {
     });
 
     testWidgets('renders the full title once, selectable', (tester) async {
-      await tester.pumpWidget(buildTestWidget());
+      await pumpOnPhone(tester, buildTestWidget());
       await tester.pumpAndSettle();
 
       final titles = tester
@@ -242,7 +259,7 @@ void main() {
     });
 
     testWidgets('renders the podcast name and metadata line', (tester) async {
-      await tester.pumpWidget(buildTestWidget());
+      await pumpOnPhone(tester, buildTestWidget());
       await tester.pumpAndSettle();
 
       check(find.text(testPodcastTitle).evaluate()).length.equals(1);
@@ -250,7 +267,7 @@ void main() {
     });
 
     testWidgets('floating navigation carries share and more', (tester) async {
-      await tester.pumpWidget(buildTestWidget(itunesId: '12345'));
+      await pumpOnPhone(tester, buildTestWidget(itunesId: '12345'));
       await tester.pumpAndSettle();
 
       check(find.byTooltip(l10n.shareEpisode).evaluate()).length.equals(1);
@@ -267,7 +284,7 @@ void main() {
         description: 'Test description',
         enclosureUrl: testAudioUrl,
       );
-      await tester.pumpWidget(buildTestWidget(episode: unshareable));
+      await pumpOnPhone(tester, buildTestWidget(episode: unshareable));
       await tester.pumpAndSettle();
 
       check(find.byTooltip(l10n.shareEpisode).evaluate()).isEmpty();
@@ -276,7 +293,8 @@ void main() {
 
   group('EpisodeDetailScreen primary pill', () {
     testWidgets('unplayed reads play with the duration', (tester) async {
-      await tester.pumpWidget(
+      await pumpOnPhone(
+        tester,
         buildTestWidget(progress: testEpisodeWithProgress),
       );
       await tester.pumpAndSettle();
@@ -285,7 +303,8 @@ void main() {
     });
 
     testWidgets('in progress reads resume', (tester) async {
-      await tester.pumpWidget(
+      await pumpOnPhone(
+        tester,
         buildTestWidget(progress: testInProgressProgress),
       );
       await tester.pumpAndSettle();
@@ -294,7 +313,10 @@ void main() {
     });
 
     testWidgets('played reads play again', (tester) async {
-      await tester.pumpWidget(buildTestWidget(progress: testCompletedProgress));
+      await pumpOnPhone(
+        tester,
+        buildTestWidget(progress: testCompletedProgress),
+      );
       await tester.pumpAndSettle();
 
       check(find.text(l10n.episodeDetailPlayAgain).evaluate()).length.equals(1);
@@ -306,7 +328,10 @@ void main() {
         tester.widget<ColoredBox>(find.byKey(ProgressLine.fillKey)).color;
 
     testWidgets('shows the played mark when completed', (tester) async {
-      await tester.pumpWidget(buildTestWidget(progress: testCompletedProgress));
+      await pumpOnPhone(
+        tester,
+        buildTestWidget(progress: testCompletedProgress),
+      );
       await tester.pumpAndSettle();
 
       check(find.byType(EpisodeProgressStatus).evaluate()).length.equals(1);
@@ -315,7 +340,8 @@ void main() {
     });
 
     testWidgets('shows the remaining time when in progress', (tester) async {
-      await tester.pumpWidget(
+      await pumpOnPhone(
+        tester,
         buildTestWidget(progress: testInProgressProgress),
       );
       await tester.pumpAndSettle();
@@ -326,7 +352,8 @@ void main() {
     });
 
     testWidgets('is hidden while unplayed', (tester) async {
-      await tester.pumpWidget(
+      await pumpOnPhone(
+        tester,
         buildTestWidget(progress: testEpisodeWithProgress),
       );
       await tester.pumpAndSettle();
@@ -339,7 +366,8 @@ void main() {
     testWidgets('shows queue and download buttons for a saved episode', (
       tester,
     ) async {
-      await tester.pumpWidget(
+      await pumpOnPhone(
+        tester,
         buildTestWidget(progress: testEpisodeWithProgress),
       );
       await tester.pumpAndSettle();
@@ -352,7 +380,8 @@ void main() {
     testWidgets('the queue button offers play next or add to end', (
       tester,
     ) async {
-      await tester.pumpWidget(
+      await pumpOnPhone(
+        tester,
         buildTestWidget(progress: testEpisodeWithProgress),
       );
       await tester.pumpAndSettle();
@@ -367,7 +396,7 @@ void main() {
     testWidgets('leaves only the play pill for an unsaved episode', (
       tester,
     ) async {
-      await tester.pumpWidget(buildTestWidget());
+      await pumpOnPhone(tester, buildTestWidget());
       await tester.pumpAndSettle();
 
       check(find.byType(EpisodeActionCircle).evaluate()).isEmpty();
@@ -380,7 +409,8 @@ void main() {
       WidgetTester tester,
       EpisodeWithProgress progress,
     ) async {
-      await tester.pumpWidget(
+      await pumpOnPhone(
+        tester,
         buildTestWidget(progress: progress, itunesId: '12345'),
       );
       await tester.pumpAndSettle();
@@ -459,7 +489,8 @@ void main() {
       DownloadTask task,
     ) async {
       final downloads = _KeepRecordingDownloadService();
-      await tester.pumpWidget(
+      await pumpOnPhone(
+        tester,
         buildTestWidget(
           progress: testEpisodeWithProgress,
           download: task,
@@ -524,7 +555,7 @@ void main() {
 
   group('EpisodeDetailScreen sections', () {
     testWidgets('shows the show notes card', (tester) async {
-      await tester.pumpWidget(buildTestWidget());
+      await pumpOnPhone(tester, buildTestWidget());
       await tester.pumpAndSettle();
 
       check(find.byType(EpisodeDescriptionCard).evaluate()).length.equals(1);
@@ -534,7 +565,8 @@ void main() {
     testWidgets('playback record shows placeholders before a play', (
       tester,
     ) async {
-      await tester.pumpWidget(
+      await pumpOnPhone(
+        tester,
         buildTestWidget(progress: testEpisodeWithProgress),
       );
       await tester.pumpAndSettle();
@@ -549,7 +581,10 @@ void main() {
     });
 
     testWidgets('playback record shows the history values', (tester) async {
-      await tester.pumpWidget(buildTestWidget(progress: testCompletedProgress));
+      await pumpOnPhone(
+        tester,
+        buildTestWidget(progress: testCompletedProgress),
+      );
       await tester.pumpAndSettle();
 
       check(find.text(EpisodePlaybackRecord.noValue).evaluate()).isEmpty();
@@ -586,6 +621,108 @@ void main() {
 
       check(find.text(l10n.episodeDetailTimes(4)).evaluate()).length.equals(1);
       check(screenBuilds).equals(builds);
+    });
+  });
+
+  group('EpisodeDetailScreen tablet layout', () {
+    void useViewSize(WidgetTester tester, Size size) {
+      tester.view
+        ..physicalSize = size
+        ..devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+    }
+
+    Rect artworkRect(WidgetTester tester) =>
+        tester.getRect(find.byKey(EpisodeDetailHero.artworkKey));
+    Rect titleRect(WidgetTester tester) =>
+        tester.getRect(find.byType(SelectableText));
+    Finder pillInHero() => find.descendant(
+      of: find.byType(EpisodeDetailHero),
+      matching: find.byType(EpisodePrimaryPill),
+    );
+
+    testWidgets('a tablet puts the artwork left of the title', (tester) async {
+      useViewSize(tester, const Size(820, 1180));
+      await tester.pumpWidget(
+        buildTestWidget(progress: testEpisodeWithProgress),
+      );
+      await tester.pumpAndSettle();
+
+      check(artworkRect(tester).right).isLessThan(titleRect(tester).left);
+      check(artworkRect(tester).size).equals(const Size(200, 200));
+      // Square column: top inset 8 + artwork 200 + gap 24.
+      check(
+        tester.getSize(find.byKey(DetailHeroLayout.artworkColumnKey)),
+      ).equals(const Size(232, 232));
+      // The action row joins the right-hand column.
+      check(pillInHero().evaluate()).length.equals(1);
+    });
+
+    testWidgets('a phone keeps the artwork above the title', (tester) async {
+      useViewSize(tester, const Size(390, 844));
+      await tester.pumpWidget(
+        buildTestWidget(progress: testEpisodeWithProgress),
+      );
+      await tester.pumpAndSettle();
+
+      check(artworkRect(tester).bottom).isLessThan(titleRect(tester).top);
+      check(find.byKey(DetailHeroLayout.artworkColumnKey).evaluate()).isEmpty();
+      check(pillInHero().evaluate()).isEmpty();
+    });
+
+    testWidgets('the play pill stops at its max width on a tablet', (
+      tester,
+    ) async {
+      useViewSize(tester, const Size(1180, 820));
+      await tester.pumpWidget(
+        buildTestWidget(progress: testEpisodeWithProgress),
+      );
+      await tester.pumpAndSettle();
+
+      check(
+        tester.getSize(find.byType(EpisodePrimaryPill)).width,
+      ).equals(EpisodePrimaryPill.maxWidth);
+    });
+
+    testWidgets('centers the pill and trails the buttons on a tablet', (
+      tester,
+    ) async {
+      useViewSize(tester, const Size(1180, 820));
+      await tester.pumpWidget(
+        buildTestWidget(progress: testEpisodeWithProgress),
+      );
+      await tester.pumpAndSettle();
+
+      final pill = tester.getRect(find.byType(EpisodePrimaryPill));
+      final queue = tester.getRect(find.byType(EpisodeQueueCircle));
+      final download = tester.getRect(find.byType(EpisodeDownloadCircle));
+      final row = tester.getRect(
+        find
+            .ancestor(
+              of: find.byType(EpisodeQueueCircle),
+              matching: find.byType(Row),
+            )
+            .first,
+      );
+
+      // Centered under the title and description, with the circles flush
+      // with the row's end and clear of the pill.
+      check(pill.center.dx).equals(row.center.dx);
+      check(download.right).equals(row.right);
+      check(queue.left - pill.right).isGreaterThan(Spacing.xl);
+    });
+
+    testWidgets('the play pill keeps its phone width beside the buttons', (
+      tester,
+    ) async {
+      useViewSize(tester, const Size(390, 844));
+      await tester.pumpWidget(
+        buildTestWidget(progress: testEpisodeWithProgress),
+      );
+      await tester.pumpAndSettle();
+
+      // 390 - 2 * 20 gutter - 2 * (50 circle + 10 gap).
+      check(tester.getSize(find.byType(EpisodePrimaryPill)).width).equals(230);
     });
   });
 }

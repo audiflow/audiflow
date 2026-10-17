@@ -8,9 +8,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../subscription/presentation/controllers/subscription_controller.dart';
+import 'detail_hero_layout.dart';
 
-/// Centered podcast hero: artwork, title, meta line, and a subscribe pill
-/// when not yet subscribed (redesign 4.2).
+/// Podcast hero: artwork, title, meta line, and a subscribe pill when not
+/// yet subscribed (redesign 4.2). Centered on phones; artwork beside
+/// left-aligned content on tablets.
 class PodcastDetailHeader extends ConsumerWidget {
   const PodcastDetailHeader({
     super.key,
@@ -22,7 +24,7 @@ class PodcastDetailHeader extends ConsumerWidget {
   static const Key artworkKey = ValueKey('podcast-detail-hero-artwork');
 
   /// Titles at or past this length use the smaller hero style so they
-  /// stay within three lines.
+  /// stay within three lines in the narrow centered phone column.
   static const int _longTitleLength = 28;
 
   final Podcast podcast;
@@ -43,37 +45,57 @@ class PodcastDetailHeader extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final artworkUrl = podcast.artworkUrl;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
+    return DetailHeroLayout(
+      artworkSize: artworkSize,
+      artworkGap: Spacing.md,
+      phonePadding: const EdgeInsets.fromLTRB(
         Spacing.xl,
         Spacing.sm,
         Spacing.xl,
         Spacing.lg,
       ),
-      child: Column(
-        children: [
-          Semantics(
-            label: 'View podcast artwork',
-            button: true,
-            child: GestureDetector(
-              onTap: artworkUrl == null
-                  ? null
-                  : () => _showArtworkOverlay(context, artworkUrl),
-              child: Hero(
-                tag: 'podcast_artwork_${podcast.id}',
-                child: ClipRRect(
-                  key: artworkKey,
-                  borderRadius: AppBorders.artworkHero,
-                  child: _PodcastArtwork(artworkUrl: artworkUrl),
-                ),
-              ),
-            ),
+      artwork: _buildArtwork(context),
+      content: _buildContent(DetailHeroLayout.isSideBySide(context)),
+    );
+  }
+
+  /// Centered under the artwork on phones; left-aligned beside it on
+  /// tablets, where the content has a column of its own.
+  Widget _buildContent(bool sideBySide) {
+    return Column(
+      crossAxisAlignment: sideBySide
+          ? CrossAxisAlignment.start
+          : CrossAxisAlignment.center,
+      children: [
+        _PodcastMetadata(
+          podcast: podcast,
+          // The tablet column is wide enough for a long title in the
+          // full hero style within three lines.
+          longTitle: !sideBySide && _isLongTitle,
+          centered: !sideBySide,
+        ),
+        _SubscribeButton(podcast: podcast, subscribeSource: subscribeSource),
+      ],
+    );
+  }
+
+  Widget _buildArtwork(BuildContext context) {
+    final artworkUrl = podcast.artworkUrl;
+    return Semantics(
+      label: 'View podcast artwork',
+      button: true,
+      child: GestureDetector(
+        onTap: artworkUrl == null
+            ? null
+            : () => _showArtworkOverlay(context, artworkUrl),
+        child: Hero(
+          tag: 'podcast_artwork_${podcast.id}',
+          child: ClipRRect(
+            key: artworkKey,
+            borderRadius: AppBorders.artworkHero,
+            child: _PodcastArtwork(artworkUrl: artworkUrl),
           ),
-          const SizedBox(height: Spacing.md),
-          _PodcastMetadata(podcast: podcast, longTitle: _isLongTitle),
-          _SubscribeButton(podcast: podcast, subscribeSource: subscribeSource),
-        ],
+        ),
       ),
     );
   }
@@ -82,10 +104,15 @@ class PodcastDetailHeader extends ConsumerWidget {
 }
 
 class _PodcastMetadata extends StatelessWidget {
-  const _PodcastMetadata({required this.podcast, required this.longTitle});
+  const _PodcastMetadata({
+    required this.podcast,
+    required this.longTitle,
+    required this.centered,
+  });
 
   final Podcast podcast;
   final bool longTitle;
+  final bool centered;
 
   @override
   Widget build(BuildContext context) {
@@ -94,16 +121,20 @@ class _PodcastMetadata extends StatelessWidget {
         ? AppTextStyles.heroTitleLong
         : AppTextStyles.heroTitle;
     final category = podcast.genres.firstOrNull;
+    final textAlign = centered ? TextAlign.center : TextAlign.start;
     final meta = category == null
         ? podcast.artistName
         : '${podcast.artistName} · $category';
 
     return SelectionArea(
       child: Column(
+        crossAxisAlignment: centered
+            ? CrossAxisAlignment.center
+            : CrossAxisAlignment.start,
         children: [
           Text(
             podcast.name,
-            textAlign: TextAlign.center,
+            textAlign: textAlign,
             style: titleStyle.copyWith(color: colors.ink),
             maxLines: 3,
             overflow: TextOverflow.ellipsis,
@@ -111,7 +142,7 @@ class _PodcastMetadata extends StatelessWidget {
           const SizedBox(height: Spacing.xs),
           Text(
             meta,
-            textAlign: TextAlign.center,
+            textAlign: textAlign,
             style: AppTextStyles.meta.copyWith(color: colors.inkSecondary),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
