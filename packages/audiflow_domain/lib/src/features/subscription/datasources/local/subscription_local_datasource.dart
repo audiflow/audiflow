@@ -296,7 +296,8 @@ class SubscriptionLocalDatasource {
         ..artworkUrl = artworkUrl ?? existing.artworkUrl
         ..artistName = artistName ?? existing.artistName
         ..description = description ?? existing.description
-        ..feedMetadataSyncedAt = syncedAt ?? existing.feedMetadataSyncedAt;
+        ..feedMetadataSyncedAt = syncedAt ?? existing.feedMetadataSyncedAt
+        ..channelTextSyncedAt = syncedAt ?? existing.channelTextSyncedAt;
       await _isar.subscriptions.put(existing);
     });
   }

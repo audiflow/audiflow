@@ -190,7 +190,7 @@ Future<SmartPlaylistGrouping?> podcastSmartPlaylists(
   );
   if (matchedSummary != null) {
     logger.d(
-      'Matched smart playlist pattern: '
+      'Matched preset: '
       '"${matchedSummary.displayName}" '
       'dataVersion=${matchedSummary.dataVersion}',
     );
@@ -567,7 +567,7 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
   var config = preloaded?.config;
   if (summary != null) {
     logger.d(
-      'Matched smart playlist pattern: '
+      'Matched preset: '
       '"${summary.displayName}" dataVersion=${summary.dataVersion}',
     );
     config ??= await _tryLoadPreset(

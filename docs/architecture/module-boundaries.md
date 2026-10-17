@@ -109,7 +109,7 @@ audiflow_cli -> audiflow_domain, audiflow_podcast
 - HTTP feed fetching with caching and conditional requests
 - Builder interface (`PodcastEntityBuilder`) for zero-copy entity construction
 - Graceful handling of malformed feeds
-- XML entity decoding in tail scan identifiers
+- XML entity decoding in tail scan identifiers and regex-extracted channel text (`title`, `description`, `itunes:author`, ...); CDATA content is kept verbatim (`xml_text.dart`)
 - Enclosure URL fallback for GUID resolution in tail scans
 - Duplicate-guid storage keys (`duplicateGuidKey`, `guidOfStorageKey`), used by early stop and tail scans when a feed reuses a guid
 

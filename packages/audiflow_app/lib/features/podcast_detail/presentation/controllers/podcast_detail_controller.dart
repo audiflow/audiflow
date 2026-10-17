@@ -262,10 +262,10 @@ Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
 
       final episodeRepo = ref.read(episodeRepositoryProvider);
 
-      // Look up smart playlist pattern for per-group extraction
+      // Look up the matching preset for per-group extraction
       final pattern = await ref.read(presetByFeedUrlProvider(feedUrl).future);
       logger.d(
-        'Smart playlist pattern lookup: '
+        'Preset lookup: '
         'feedUrl=$feedUrl, '
         'pattern=${pattern?.id}',
       );
