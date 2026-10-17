@@ -46,9 +46,18 @@ class _EpisodeDescriptionCardState extends State<EpisodeDescriptionCard> {
     if (oldWidget.content != widget.content) _html = _toHtml(widget.content);
   }
 
+  final _selectionKey = GlobalKey<SelectionAreaState>();
+
   bool get _isClamped => _overflows && !_expanded;
 
   void _expand() => setState(() => _expanded = true);
+
+  void _collapse() {
+    // Clamped text ignores touches, so a selection kept across the
+    // collapse could neither be adjusted nor dismissed.
+    _selectionKey.currentState?.selectableRegion.clearSelection();
+    setState(() => _expanded = false);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,36 +71,30 @@ class _EpisodeDescriptionCardState extends State<EpisodeDescriptionCard> {
           borderRadius: AppBorders.groupedSurface,
           boxShadow: AppShadows.groupedSurface,
         ),
-        child: _tapToExpand(l10n, colors, _content(l10n, colors)),
+        child: _tapToExpand(colors, _content(l10n, colors)),
       ),
     );
   }
 
-  /// While clamped the whole card is one "show more" button: links and
+  /// While clamped the whole card expands on tap, and links and
   /// selection in the cut-off text are dormant, so a tap meant to read on
-  /// never opens a link by accident. The wrappers stay in the tree in
-  /// both states (only their flags flip) so the HTML subtree is kept.
-  Widget _tapToExpand(AppLocalizations l10n, AppColors colors, Widget child) {
-    final clamped = _isClamped;
-    return Semantics(
-      container: true,
-      button: clamped,
-      label: clamped ? l10n.episodeDetailShowMore : null,
-      child: Material(
-        type: MaterialType.transparency,
-        child: InkWell(
-          // The toggle's accent ink; like it, no haptic (a plain tap,
-          // docs/design/haptics.md).
-          onTap: clamped ? _expand : null,
-          overlayColor: WidgetStatePropertyAll(
-            colors.accent.withValues(alpha: 0.1),
-          ),
-          borderRadius: AppBorders.groupedSurface,
-          child: ExcludeSemantics(
-            excluding: clamped,
-            child: AbsorbPointer(absorbing: clamped, child: child),
-          ),
+  /// never opens a link by accident.
+  Widget _tapToExpand(AppColors colors, Widget child) {
+    return Material(
+      type: MaterialType.transparency,
+      child: InkWell(
+        // The toggle's accent ink; like it, no haptic (a plain tap,
+        // docs/design/haptics.md).
+        onTap: _isClamped ? _expand : null,
+        overlayColor: WidgetStatePropertyAll(
+          colors.accent.withValues(alpha: 0.1),
         ),
+        borderRadius: AppBorders.groupedSurface,
+        // The screen reader button lives on the notes (see _dormant), so
+        // the heading stays readable on its own. The card keeps the one
+        // keyboard focus stop, since the toggle inside is unfocusable.
+        excludeFromSemantics: true,
+        child: child,
       ),
     );
   }
@@ -112,9 +115,34 @@ class _EpisodeDescriptionCardState extends State<EpisodeDescriptionCard> {
             style: AppTextStyles.overline.copyWith(color: colors.inkSecondary),
           ),
           const SizedBox(height: Spacing.sm + Spacing.xs),
-          _clamped(colors),
-          _toggle(l10n, colors),
+          _dormant(l10n, [_clamped(colors), _toggle(l10n, colors)]),
         ],
+      ),
+    );
+  }
+
+  /// While clamped, the notes and toggle are one "show more" button for
+  /// pointers, focus, and screen readers. The wrappers stay in the tree
+  /// in both states (only their flags flip) so the HTML subtree is kept.
+  Widget _dormant(AppLocalizations l10n, List<Widget> children) {
+    final clamped = _isClamped;
+    return Semantics(
+      container: true,
+      button: clamped,
+      label: clamped ? l10n.episodeDetailShowMore : null,
+      onTap: clamped ? _expand : null,
+      child: ExcludeSemantics(
+        excluding: clamped,
+        child: ExcludeFocus(
+          excluding: clamped,
+          child: AbsorbPointer(
+            absorbing: clamped,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: children,
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -122,7 +150,6 @@ class _EpisodeDescriptionCardState extends State<EpisodeDescriptionCard> {
   /// Kept in one subtree whether expanded or not, so toggling does not
   /// rebuild the HTML or drop a text selection.
   Widget _clamped(AppColors colors) {
-    final clamp = _isClamped;
     return ShaderMask(
       blendMode: BlendMode.dstIn,
       shaderCallback: (bounds) => LinearGradient(
@@ -130,7 +157,7 @@ class _EpisodeDescriptionCardState extends State<EpisodeDescriptionCard> {
         end: Alignment.bottomCenter,
         colors: const [Colors.white, Colors.transparent],
         // Fade only the last line, and only while clamped.
-        stops: clamp
+        stops: _isClamped
             ? [(1 - 28 / bounds.height).clamp(0.0, 1.0), 1]
             : const [1, 1],
       ).createShader(bounds),
@@ -144,7 +171,7 @@ class _EpisodeDescriptionCardState extends State<EpisodeDescriptionCard> {
           onNotification: _onMetrics,
           child: SingleChildScrollView(
             physics: const NeverScrollableScrollPhysics(),
-            child: SelectionArea(child: _body(colors)),
+            child: SelectionArea(key: _selectionKey, child: _body(colors)),
           ),
         ),
       ),
@@ -191,7 +218,7 @@ class _EpisodeDescriptionCardState extends State<EpisodeDescriptionCard> {
   Widget _toggle(AppLocalizations l10n, AppColors colors) {
     if (!_overflows) return const SizedBox(height: Spacing.sm);
     return TextButton(
-      onPressed: () => setState(() => _expanded = !_expanded),
+      onPressed: _expanded ? _collapse : _expand,
       style: TextButton.styleFrom(
         foregroundColor: colors.accent,
         padding: EdgeInsets.zero,
