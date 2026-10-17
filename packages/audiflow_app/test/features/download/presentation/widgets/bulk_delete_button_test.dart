@@ -80,13 +80,11 @@ void main() {
     expect(find.text('Delete completed (1)'), findsOneWidget);
     expect(find.text('Delete pending and paused (2)'), findsOneWidget);
     expect(find.text('Delete all (3)'), findsOneWidget);
-    final failedItem = tester.widget<PopupMenuItem<BulkDeleteScope>>(
-      find.ancestor(
-        of: find.text('Delete failed and cancelled (0)'),
-        matching: find.byType(PopupMenuItem<BulkDeleteScope>),
-      ),
-    );
-    check(failedItem.enabled).isFalse();
+
+    await tester.tap(find.text('Delete failed and cancelled (0)'));
+    await tester.pumpAndSettle();
+    check(find.byType(AlertDialog).evaluate()).isEmpty();
+    check(find.byKey(ActionMenu.surfaceKey).evaluate()).length.equals(1);
   });
 
   testWidgets('deletes pending and paused after confirmation', (tester) async {
