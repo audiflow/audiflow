@@ -102,6 +102,7 @@ Every interaction that was considered is listed here, including those that delib
 | Refresh or download failure not started by the user | `none` |
 | Download start | `none` (the snackbar is enough) |
 | Bottom tabs and screen navigation | `none` |
+| Episode description "Show more" / "Show less", and tapping the clamped card to expand | `none` (a plain tap; the text reflowing is the feedback) |
 | Segmented controls and filter chips | `selection` |
 | Podcast detail filter menu, playlist selector, and newest/oldest toggle | `selection` |
 | Episode, smart playlist, and play order sort sheets; library sort menu; search country picker | `selection` |

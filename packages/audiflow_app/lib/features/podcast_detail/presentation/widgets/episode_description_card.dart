@@ -8,7 +8,8 @@ import '../../../../l10n/app_localizations.dart';
 
 /// "About this episode" card (redesign 4.9): show notes as rich text
 /// with `accent` links, clamped to about six lines behind a
-/// "show more / show less" toggle.
+/// "show more / show less" toggle. While clamped, a tap anywhere on the
+/// card expands it; only "show less" collapses it again.
 class EpisodeDescriptionCard extends StatefulWidget {
   const EpisodeDescriptionCard({super.key, required this.content});
 
@@ -45,6 +46,10 @@ class _EpisodeDescriptionCardState extends State<EpisodeDescriptionCard> {
     if (oldWidget.content != widget.content) _html = _toHtml(widget.content);
   }
 
+  bool get _isClamped => _overflows && !_expanded;
+
+  void _expand() => setState(() => _expanded = true);
+
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
@@ -57,28 +62,59 @@ class _EpisodeDescriptionCardState extends State<EpisodeDescriptionCard> {
           borderRadius: AppBorders.groupedSurface,
           boxShadow: AppShadows.groupedSurface,
         ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            Spacing.screenHorizontal,
-            Spacing.md + Spacing.xs,
-            Spacing.screenHorizontal,
-            Spacing.sm,
+        child: _tapToExpand(l10n, colors, _content(l10n, colors)),
+      ),
+    );
+  }
+
+  /// While clamped the whole card is one "show more" button: links and
+  /// selection in the cut-off text are dormant, so a tap meant to read on
+  /// never opens a link by accident. The wrappers stay in the tree in
+  /// both states (only their flags flip) so the HTML subtree is kept.
+  Widget _tapToExpand(AppLocalizations l10n, AppColors colors, Widget child) {
+    final clamped = _isClamped;
+    return Semantics(
+      container: true,
+      button: clamped,
+      label: clamped ? l10n.episodeDetailShowMore : null,
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          // The toggle's accent ink; like it, no haptic (a plain tap,
+          // docs/design/haptics.md).
+          onTap: clamped ? _expand : null,
+          overlayColor: WidgetStatePropertyAll(
+            colors.accent.withValues(alpha: 0.1),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                l10n.episodeDetailAbout,
-                style: AppTextStyles.overline.copyWith(
-                  color: colors.inkSecondary,
-                ),
-              ),
-              const SizedBox(height: Spacing.sm + Spacing.xs),
-              _clamped(colors),
-              _toggle(l10n, colors),
-            ],
+          borderRadius: AppBorders.groupedSurface,
+          child: ExcludeSemantics(
+            excluding: clamped,
+            child: AbsorbPointer(absorbing: clamped, child: child),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _content(AppLocalizations l10n, AppColors colors) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        Spacing.screenHorizontal,
+        Spacing.md + Spacing.xs,
+        Spacing.screenHorizontal,
+        Spacing.sm,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.episodeDetailAbout,
+            style: AppTextStyles.overline.copyWith(color: colors.inkSecondary),
+          ),
+          const SizedBox(height: Spacing.sm + Spacing.xs),
+          _clamped(colors),
+          _toggle(l10n, colors),
+        ],
       ),
     );
   }
@@ -86,7 +122,7 @@ class _EpisodeDescriptionCardState extends State<EpisodeDescriptionCard> {
   /// Kept in one subtree whether expanded or not, so toggling does not
   /// rebuild the HTML or drop a text selection.
   Widget _clamped(AppColors colors) {
-    final clamp = _overflows && !_expanded;
+    final clamp = _isClamped;
     return ShaderMask(
       blendMode: BlendMode.dstIn,
       shaderCallback: (bounds) => LinearGradient(
