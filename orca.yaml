@@ -1,0 +1,23 @@
+# Orca (https://www.onorca.dev) project config. The setup script runs in each
+# new Orca worktree, with ORCA_ROOT_PATH pointing at the primary checkout.
+scripts:
+  setup: |
+    set -euo pipefail
+    # Copy only the .worktreeinclude allowlist (env, Firebase, signing, .fvm).
+    # Copying Flutter-generated files leaks primary-checkout paths (issue #448).
+    if command -v wt > /dev/null; then
+      wt step copy-ignored
+    else
+      echo "worktrunk (wt) not found; copy .env.* and Firebase configs from $ORCA_ROOT_PATH manually." >&2
+    fi
+    # Relink the SDK from this worktree's .fvmrc: the copied link follows the
+    # primary checkout's version, which can differ on another branch.
+    if command -v fvm > /dev/null; then
+      fvm install
+    fi
+    if command -v mise > /dev/null; then
+      mise trust --quiet
+    fi
+    # A root pub get resolves the whole Flutter workspace, so melos (often not
+    # on PATH) is not needed. Use the fvm-pinned SDK the copy step linked.
+    .fvm/flutter_sdk/bin/flutter pub get
