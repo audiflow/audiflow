@@ -16,7 +16,6 @@ import '../../../../routing/app_router.dart';
 import '../../helpers/chapter_seek_bar_segments.dart';
 import '../../helpers/playback_time_format.dart';
 import '../../helpers/podcast_lookup.dart';
-import '../../../queue/presentation/controllers/queue_controller.dart';
 import '../../../share/presentation/helpers/share_helper.dart';
 import '../../services/audio_route_channel.dart';
 import '../controllers/seek_undo_controller.dart';
@@ -181,16 +180,6 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
                     children: [
                       const _DragHandle(),
                       _PlayerHeader(
-                        playingFrom:
-                            ref.watch(
-                              queueControllerProvider.select(
-                                (queue) => playingFromContext(
-                                  queue.value,
-                                  nowPlaying.episodeUrl,
-                                ),
-                              ),
-                            ) ??
-                            nowPlaying.podcastTitle,
                         onMore: (anchor) => _showMoreMenu(
                           nowPlaying,
                           anchor: anchor,
@@ -470,11 +459,10 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
   }
 }
 
-/// Close chevron, the context the episode plays from, and the overflow.
+/// Close chevron and overflow. No context line: the podcast name already
+/// sits under the episode title, so repeating it here only added noise.
 class _PlayerHeader extends StatelessWidget {
-  const _PlayerHeader({required this.playingFrom, required this.onMore});
-
-  final String playingFrom;
+  const _PlayerHeader({required this.onMore});
 
   /// Receives the `…` button's context, to anchor the menu below it.
   final ValueChanged<BuildContext> onMore;
@@ -494,15 +482,7 @@ class _PlayerHeader extends StatelessWidget {
             color: colors.ink,
             onPressed: () => CupertinoSheetRoute.popSheet(context),
           ),
-          Expanded(
-            child: Text(
-              playingFrom,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: AppTextStyles.label.copyWith(color: colors.ink),
-            ),
-          ),
+          const Spacer(),
           Builder(
             builder: (buttonContext) => IconButton(
               tooltip: l10n.playerMoreTooltip,
@@ -1136,18 +1116,4 @@ class _PlayerPlayPauseButton extends ConsumerWidget {
       ),
     );
   }
-}
-
-/// Where the episode at [episodeUrl] plays from: the source of its own
-/// ad hoc queue entry (e.g. a season), or null when it was not started
-/// from one (manually queued, or already taken off the queue), in which
-/// case the header falls back to the podcast.
-@visibleForTesting
-String? playingFromContext(PlaybackQueue? queue, String episodeUrl) {
-  if (queue == null) return null;
-  for (final item in queue.allItems) {
-    if (item.episode.audioUrl != episodeUrl) continue;
-    return item.queueItem.isAdhoc ? item.queueItem.sourceContext : null;
-  }
-  return null;
 }

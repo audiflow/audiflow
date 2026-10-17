@@ -198,7 +198,7 @@ This consolidates the settings gear sheet with the play-order entry that lived i
 
 ### 4.5 Now Playing
 
-Artwork-derived background (2.2). From top: grabber, close chevron, a single-line playback context (queue source or podcast), overflow; artwork 342; title (2 lines) and podcast name; scrubber with elapsed/remaining; back 10 / play-pause 80 / forward 30; a translucent bar with speed, sleep timer, and output route. No "up next" or "add to queue" controls on this screen; the queue is reached from its tab.
+Artwork-derived background (2.2). From top: grabber, close chevron and overflow (no playback context line; the podcast name under the title is enough); artwork 342; title (2 lines) and podcast name; scrubber with elapsed/remaining; back 10 / play-pause 80 / forward 30; a translucent bar with speed, sleep timer, and output route. No "up next" or "add to queue" controls on this screen; the queue is reached from its tab.
 
 ### 4.6 Queue
 

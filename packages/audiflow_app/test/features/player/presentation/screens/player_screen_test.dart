@@ -111,9 +111,7 @@ Future<void> _openPlayerSheet(WidgetTester tester) async {
 
 void main() {
   group('PlayerScreen header', () {
-    testWidgets('shows the playback context as a single line, no caption', (
-      tester,
-    ) async {
+    testWidgets('shows only the close and overflow buttons', (tester) async {
       final container = await _container();
       await tester.pumpWidget(_buildHost(container));
       await _openPlayerSheet(tester);
@@ -130,11 +128,9 @@ void main() {
         matching: find.byType(Text),
       );
 
-      // Without an ad hoc queue context, the header falls back to the
-      // podcast title; it is the only text between chevron and overflow.
-      check(
-        tester.widgetList<Text>(headerTexts).map((text) => text.data),
-      ).deepEquals([_firstEpisode.podcastTitle]);
+      // The podcast name sits under the episode title, so the header
+      // carries no text of its own.
+      check(headerTexts.evaluate()).isEmpty();
     });
   });
 
