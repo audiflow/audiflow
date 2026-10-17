@@ -647,7 +647,7 @@ void main() {
       ).equals(EpisodePrimaryPill.maxWidth);
     });
 
-    testWidgets('pushes the queue and download buttons to the end', (
+    testWidgets('centers the pill and trails the buttons on a tablet', (
       tester,
     ) async {
       useViewSize(tester, const Size(1180, 820));
@@ -668,9 +668,9 @@ void main() {
             .first,
       );
 
-      // The capped pill stays at the start; the circles end flush with the
-      // row, leaving the free width between them and the pill.
-      check(pill.left).equals(row.left);
+      // Centered under the title and description, with the circles flush
+      // with the row's end and clear of the pill.
+      check(pill.center.dx).equals(row.center.dx);
       check(download.right).equals(row.right);
       check(queue.left - pill.right).isGreaterThan(Spacing.xl);
     });

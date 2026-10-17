@@ -15,6 +15,7 @@ import '../../../queue/presentation/controllers/queue_controller.dart';
 import '../../../share/presentation/helpers/share_helper.dart';
 import '../../../station/presentation/helpers/record_station_play.dart';
 import '../controllers/podcast_detail_controller.dart';
+import '../utils/play_pill_placement.dart';
 import '../utils/played_display.dart';
 import '../widgets/detail_hero_layout.dart';
 import '../widgets/episode_description_card.dart';
@@ -325,56 +326,66 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
     );
   }
 
+  /// Width the queue and download circles take at the row's end,
+  /// including the gap that separates them from the pill.
+  static const double _circlesReserve =
+      2 * EpisodeActionCircle.size + 2 * _actionGap;
+
   Widget _buildActionRow(_EpisodeView view) {
-    final enclosureUrl = view.enclosureUrl;
     final episodeId = view.episodeId;
-    return Row(
-      children: [
-        // The pill shrinks to fit beside the circles on phones but stops
-        // growing at its cap on wide layouts; the slot itself still takes
-        // the leftover width, which pushes the circles to the trailing edge.
-        Expanded(
-          child: Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(
-                maxWidth: EpisodePrimaryPill.maxWidth,
-              ),
-              child: EpisodePrimaryPill(
-                state: view.playState,
-                duration: widget.episode.duration,
-                isLoading: view.isLoading,
-                onPressed: enclosureUrl == null
-                    ? null
-                    : () => _onPlayPausePressed(
-                        context,
-                        enclosureUrl,
-                        view.isPlaying,
-                        restart: view.playState == EpisodePlayState.played,
-                      ),
-              ),
-            ),
-          ),
-        ),
-        if (episodeId != null) ...[
-          const SizedBox(width: _actionGap),
-          EpisodeQueueCircle(
-            onPlayNext: () => _playNext(episodeId),
-            onAddToEnd: () => _playLater(episodeId),
-          ),
-          const SizedBox(width: _actionGap),
-          EpisodeDownloadCircle(
-            task: view.downloadTask,
-            onPressed: () => handleDownloadTap(
-              context: context,
-              ref: ref,
-              episodeId: episodeId,
-              task: view.downloadTask,
-            ),
-          ),
-        ],
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final placement = PlayPillPlacement.resolve(
+          rowWidth: constraints.maxWidth,
+          maxPillWidth: EpisodePrimaryPill.maxWidth,
+          trailingReserve: episodeId == null ? 0 : _circlesReserve,
+        );
+        return Row(
+          children: [
+            SizedBox(width: placement.start),
+            SizedBox(width: placement.width, child: _buildPlayPill(view)),
+            const Spacer(),
+            if (episodeId != null) ..._buildActionCircles(view, episodeId),
+          ],
+        );
+      },
     );
+  }
+
+  Widget _buildPlayPill(_EpisodeView view) {
+    final enclosureUrl = view.enclosureUrl;
+    return EpisodePrimaryPill(
+      state: view.playState,
+      duration: widget.episode.duration,
+      isLoading: view.isLoading,
+      onPressed: enclosureUrl == null
+          ? null
+          : () => _onPlayPausePressed(
+              context,
+              enclosureUrl,
+              view.isPlaying,
+              restart: view.playState == EpisodePlayState.played,
+            ),
+    );
+  }
+
+  List<Widget> _buildActionCircles(_EpisodeView view, int episodeId) {
+    return [
+      EpisodeQueueCircle(
+        onPlayNext: () => _playNext(episodeId),
+        onAddToEnd: () => _playLater(episodeId),
+      ),
+      const SizedBox(width: _actionGap),
+      EpisodeDownloadCircle(
+        task: view.downloadTask,
+        onPressed: () => handleDownloadTap(
+          context: context,
+          ref: ref,
+          episodeId: episodeId,
+          task: view.downloadTask,
+        ),
+      ),
+    ];
   }
 
   void _playNext(int episodeId) {

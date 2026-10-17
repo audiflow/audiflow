@@ -150,6 +150,9 @@ class EpisodeActionCircle extends StatelessWidget {
   /// Draws a ring around the glyph, e.g. download progress. Null hides it.
   final double? progress;
 
+  /// Diameter, exposed so the action row can reserve room for the circles.
+  static const double size = _actionHeight;
+
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
