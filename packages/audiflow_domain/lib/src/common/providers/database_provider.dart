@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:isar_community/isar.dart';
 import 'package:logger/logger.dart';
+import 'package:meta/meta.dart';
 import 'package:path/path.dart' as p;
 import 'package:riverpod/riverpod.dart';
 
@@ -75,6 +76,11 @@ const List<CollectionSchema<dynamic>> isarSchemas = [
 /// message is always logged so unknown failures can be diagnosed and
 /// matched in [_isSchemaMismatchError] in future releases.
 ///
+/// Transient open failures (MDBX `EAGAIN`, raised when another engine
+/// such as a Workmanager worker or the main app is opening the same
+/// environment at the same moment) are retried after each delay in
+/// [transientRetryDelays] before being rethrown.
+///
 /// Note: [IsarError] extends [Error] with only a `message` string and
 /// no structured error codes, so substring matching is the only way
 /// to narrow the catch.
@@ -83,13 +89,22 @@ Future<Isar> openIsarWithRecovery({
   String name = 'audiflow',
   Logger? logger,
   bool inspector = false,
+  List<Duration> transientRetryDelays = defaultTransientOpenRetryDelays,
+  @visibleForTesting Future<Isar> Function()? opener,
 }) async {
+  final open =
+      opener ??
+      () => Isar.open(
+        isarSchemas,
+        directory: directory,
+        name: name,
+        inspector: inspector,
+      );
   try {
-    return await Isar.open(
-      isarSchemas,
-      directory: directory,
-      name: name,
-      inspector: inspector,
+    return await _openRetryingTransient(
+      open,
+      retryDelays: transientRetryDelays,
+      logger: logger,
     );
   } on IsarError catch (e, stack) {
     if (!_isSchemaMismatchError(e.message)) {
@@ -106,13 +121,48 @@ Future<Isar> openIsarWithRecovery({
       stackTrace: stack,
     );
     await _deleteIsarFiles(directory: directory, name: name, logger: logger);
-    return Isar.open(
-      isarSchemas,
-      directory: directory,
-      name: name,
-      inspector: inspector,
+    // Another engine can still be opening the environment during recovery.
+    return _openRetryingTransient(
+      open,
+      retryDelays: transientRetryDelays,
+      logger: logger,
     );
   }
+}
+
+/// Backoff used between attempts when Isar reports a transient open error.
+const List<Duration> defaultTransientOpenRetryDelays = [
+  Duration(milliseconds: 200),
+  Duration(milliseconds: 500),
+  Duration(seconds: 1),
+  Duration(seconds: 2),
+];
+
+Future<Isar> _openRetryingTransient(
+  Future<Isar> Function() open, {
+  required List<Duration> retryDelays,
+  Logger? logger,
+}) async {
+  for (final delay in retryDelays) {
+    try {
+      return await open();
+    } on IsarError catch (e) {
+      if (!_isTransientOpenError(e.message)) rethrow;
+      logger?.w('Isar open hit transient error, retrying in $delay: $e');
+      await Future<void>.delayed(delay);
+    }
+  }
+  return open();
+}
+
+/// Heuristic match for MDBX `EAGAIN` (`MdbxError (11): Try again`),
+/// which signals contention on the environment rather than corruption.
+///
+/// Matches the error code only: the closing parenthesis keeps other codes
+/// such as `(110)` out, and the bare "Try again" text could come from an
+/// unrelated error.
+bool _isTransientOpenError(String message) {
+  return message.contains('MdbxError (11)');
 }
 
 /// Heuristic match for Isar schema-mismatch errors.
