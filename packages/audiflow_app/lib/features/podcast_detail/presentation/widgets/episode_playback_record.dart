@@ -32,61 +32,71 @@ class EpisodePlaybackRecord extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
-    final dates = DateFormat.yMMMd(
-      Localizations.localeOf(context).toLanguageTag(),
-    );
     final record = _watchRecord(ref);
+    return GroupedSection(
+      header: AppLocalizations.of(context).episodeDetailPlaybackRecord,
+      separatorIndent: 0,
+      children: [
+        ..._totalRows(AppLocalizations.of(context), record),
+        ..._dateRows(context, record),
+      ],
+    );
+  }
+
+  List<Widget> _totalRows(AppLocalizations l10n, PlaybackRecordValues? record) {
     String count(int Function(PlaybackRecordValues) of) =>
         record == null ? noValue : l10n.episodeDetailTimes(of(record));
     String time(int Function(PlaybackRecordValues) of) => record == null
         ? noValue
         : l10n.durationLabel(Duration(minutes: of(record)));
+    return [
+      _RecordRow(
+        label: l10n.statsTimesCompleted,
+        value: count((r) => r.completedCount),
+      ),
+      _RecordRow(
+        label: l10n.statsTimesStarted,
+        value: count((r) => r.playCount),
+      ),
+      _RecordRow(
+        label: l10n.statsTotalListened,
+        value: time((r) => r.listenedMinutes),
+      ),
+      _RecordRow(
+        label: l10n.statsRealtime,
+        value: time((r) => r.realtimeMinutes),
+      ),
+    ];
+  }
+
+  List<Widget> _dateRows(BuildContext context, PlaybackRecordValues? record) {
+    final l10n = AppLocalizations.of(context);
+    final dates = DateFormat.yMMMd(
+      Localizations.localeOf(context).toLanguageTag(),
+    );
     String date(DateTime? value) =>
         value == null ? l10n.statsNever : dates.format(value);
-
-    return GroupedSection(
-      header: l10n.episodeDetailPlaybackRecord,
-      separatorIndent: 0,
-      children: [
-        _RecordRow(
-          label: l10n.statsTimesCompleted,
-          value: count((r) => r.completedCount),
-        ),
-        _RecordRow(
-          label: l10n.statsTimesStarted,
-          value: count((r) => r.playCount),
-        ),
-        _RecordRow(
-          label: l10n.statsTotalListened,
-          value: time((r) => r.listenedMinutes),
-        ),
-        _RecordRow(
-          label: l10n.statsRealtime,
-          value: time((r) => r.realtimeMinutes),
-        ),
-        _RecordRow(
-          label: l10n.statsFirstPlayed,
-          value: date(record?.firstPlayedDay),
-        ),
-        _RecordRow(
-          label: l10n.statsLastPlayed,
-          value: date(record?.lastPlayedDay),
-        ),
-      ],
-    );
+    return [
+      _RecordRow(
+        label: l10n.statsFirstPlayed,
+        value: date(record?.firstPlayedDay),
+      ),
+      _RecordRow(
+        label: l10n.statsLastPlayed,
+        value: date(record?.lastPlayedDay),
+      ),
+    ];
   }
 
   /// Every progress save emits a new history; selecting the shown values
   /// keeps those saves from rebuilding the section until a label changes.
+  /// The snapshot stands in while the live history loads or has failed.
   PlaybackRecordValues? _watchRecord(WidgetRef ref) {
-    final snapshot = PlaybackRecordValues.of(history);
     final id = episodeId;
-    if (id == null) return snapshot;
+    if (id == null) return PlaybackRecordValues.of(history);
     return ref.watch(
       episodePlaybackHistoryProvider(id).select(
-        (live) =>
-            live.hasValue ? PlaybackRecordValues.of(live.value) : snapshot,
+        (live) => PlaybackRecordValues.of(live.hasValue ? live.value : history),
       ),
     );
   }
