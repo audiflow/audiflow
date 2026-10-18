@@ -3,6 +3,7 @@ import 'dart:collection';
 import 'dart:math';
 
 import 'package:audiflow_core/audiflow_core.dart' show EpisodeData;
+import 'package:audiflow_podcast/audiflow_podcast.dart' show PodcastException;
 import 'package:dio/dio.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -555,7 +556,7 @@ class FeedSyncService implements SuspendableWriter {
       }
       _logger.e(
         'Failed to sync feed for "${sub.title}"',
-        error: e,
+        error: _feedFailure(e, sub.feedUrl),
         stackTrace: stack,
       );
       return SingleFeedSyncResult(
@@ -565,6 +566,20 @@ class FeedSyncService implements SuspendableWriter {
         errorMessage: e.toString(),
       );
     }
+  }
+
+  /// [error] as a [PodcastException] when the feed host answered that the
+  /// feed is gone, so error monitoring can tell a moved or removed feed
+  /// from other HTTP failures; any other error is returned unchanged.
+  Object _feedFailure(Object error, String feedUrl) {
+    final status = error is DioException ? error.response?.statusCode : null;
+    if (status == null) return error;
+    final failure = PodcastException.network(
+      'Feed request failed',
+      statusCode: status,
+      sourceUrl: feedUrl,
+    );
+    return failure.isFeedUnavailable ? failure : error;
   }
 
   /// Enqueues auto-downloads for every pending episode of [sub], then trims

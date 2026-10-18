@@ -4,6 +4,7 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:logger/logger.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:riverpod/riverpod.dart';
@@ -127,6 +128,14 @@ Response<String> okResponse([String body = '<rss></rss>']) =>
 Response<String> notModifiedResponse() =>
     Response(statusCode: 304, requestOptions: RequestOptions());
 
+/// Captures log events so tests can see which error a failure was logged with.
+class _CapturingOutput extends LogOutput {
+  final List<OutputEvent> events = [];
+
+  @override
+  void output(OutputEvent event) => events.add(event);
+}
+
 void main() {
   late MockSubscriptionRepository mockSubscriptionRepo;
   late MockEpisodeRepository mockEpisodeRepo;
@@ -140,6 +149,7 @@ void main() {
   late _NoopAutoDownloadEnqueuer enqueuer;
   late ProviderContainer container;
   late FeedSyncService service;
+  late _CapturingOutput logOutput;
 
   setUp(() {
     mockSubscriptionRepo = MockSubscriptionRepository();
@@ -163,8 +173,16 @@ void main() {
     // Smart playlist config: no pattern matches by default
     when(mockConfigRepo.findMatchingPreset(any, any)).thenReturn(null);
 
+    logOutput = _CapturingOutput();
     container = ProviderContainer(
       overrides: [
+        namedLoggerProvider('FeedSync').overrideWithValue(
+          Logger(
+            filter: ProductionFilter(),
+            output: logOutput,
+            printer: SimplePrinter(),
+          ),
+        ),
         subscriptionRepositoryProvider.overrideWithValue(mockSubscriptionRepo),
         episodeRepositoryProvider.overrideWithValue(mockEpisodeRepo),
         appSettingsRepositoryProvider.overrideWithValue(mockSettingsRepo),
@@ -508,6 +526,43 @@ void main() {
       expect(result.success, isFalse);
       expect(result.skipped, isFalse);
       expect(result.errorMessage, isNotNull);
+    });
+
+    DioException httpError(int status) {
+      final options = RequestOptions(path: 'https://feeds.example.com/rss');
+      return DioException(
+        requestOptions: options,
+        type: DioExceptionType.badResponse,
+        response: Response<void>(requestOptions: options, statusCode: status),
+      );
+    }
+
+    Object? loggedError() => logOutput.events
+        .where((event) => event.level == Level.error)
+        .single
+        .origin
+        .error;
+
+    test('logs a removed feed as an unavailable feed', () async {
+      final sub = _subscription(lastRefreshedAt: null);
+      when(dioGet()).thenThrow(httpError(404));
+
+      final result = await service.syncFeed(sub);
+
+      check(result.success).isFalse();
+      check(loggedError()).isA<PodcastException>()
+        ..has((e) => e.isFeedUnavailable, 'isFeedUnavailable').isTrue()
+        ..has((e) => e.sourceUrl, 'sourceUrl').equals(sub.feedUrl);
+    });
+
+    test('logs a server error as the original failure', () async {
+      final sub = _subscription(lastRefreshedAt: null);
+      final error = httpError(503);
+      when(dioGet()).thenThrow(error);
+
+      await service.syncFeed(sub);
+
+      check(loggedError()).identicalTo(error);
     });
 
     test('updates lastRefreshedAt after successful sync', () async {

@@ -1,4 +1,5 @@
 import 'package:audiflow_podcast/src/errors/podcast_exception.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -7,8 +8,8 @@ void main() {
       test('is true for HTTP $status', () {
         final error = PodcastException.network('x', statusCode: status);
 
-        expect(error.statusCode, equals(status));
-        expect(error.isFeedUnavailable, isTrue);
+        check(error.statusCode).equals(status);
+        check(error.isFeedUnavailable).isTrue();
       });
     }
 
@@ -18,13 +19,13 @@ void main() {
       test('is false for HTTP $status', () {
         final error = PodcastException.network('x', statusCode: status);
 
-        expect(error.isFeedUnavailable, isFalse);
+        check(error.isFeedUnavailable).isFalse();
       });
     }
 
     test('is false without a status code', () {
-      expect(PodcastException.network('offline').isFeedUnavailable, isFalse);
-      expect(PodcastException.parsing('bad xml').isFeedUnavailable, isFalse);
+      check(PodcastException.network('offline').isFeedUnavailable).isFalse();
+      check(PodcastException.parsing('bad xml').isFeedUnavailable).isFalse();
     });
   });
 }
