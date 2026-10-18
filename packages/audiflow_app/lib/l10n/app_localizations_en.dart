@@ -40,6 +40,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorGeneric => 'Something went wrong. Please try again later.';
 
   @override
+  String get errorFeedUnavailable =>
+      'This feed is unavailable. The publisher may have moved or removed the show.';
+
+  @override
   String get settingsTitle => 'Settings';
 
   @override

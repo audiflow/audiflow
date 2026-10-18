@@ -39,6 +39,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get errorGeneric => '問題が発生しました。しばらくしてから再試行してください。';
 
   @override
+  String get errorFeedUnavailable =>
+      'このフィードは利用できません。配信元で番組が移動または削除された可能性があります。';
+
+  @override
   String get settingsTitle => '設定';
 
   @override

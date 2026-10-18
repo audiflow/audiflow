@@ -158,6 +158,12 @@ abstract class AppLocalizations {
   /// **'Something went wrong. Please try again later.'**
   String get errorGeneric;
 
+  /// User-facing message when the feed host answers that the feed is not found or not accessible (HTTP 4xx)
+  ///
+  /// In en, this message translates to:
+  /// **'This feed is unavailable. The publisher may have moved or removed the show.'**
+  String get errorFeedUnavailable;
+
   /// Settings screen title
   ///
   /// In en, this message translates to:

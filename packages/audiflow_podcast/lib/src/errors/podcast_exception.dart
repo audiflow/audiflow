@@ -12,6 +12,7 @@ class PodcastException extends AppException {
     String? code,
     this.parseError,
     this.sourceUrl,
+    this.statusCode,
   }) : super(message, code ?? _inferCode(parseError));
 
   /// Creates a [PodcastException] from a [PodcastParseError].
@@ -36,6 +37,7 @@ class PodcastException extends AppException {
       message: message,
       code: code,
       sourceUrl: sourceUrl,
+      statusCode: statusCode,
     );
   }
 
@@ -88,6 +90,20 @@ class PodcastException extends AppException {
 
   /// The source URL where the error occurred.
   final String? sourceUrl;
+
+  /// HTTP status the feed host answered with, if it answered at all.
+  final int? statusCode;
+
+  /// Whether the feed host answered that the feed is not there for us
+  /// (moved, removed, or made private), which the app cannot fix.
+  ///
+  /// 408 and 429 are left out: a timeout or rate limit clears up on its
+  /// own, so retrying later is the right advice.
+  bool get isFeedUnavailable {
+    final status = statusCode;
+    if (status == null || status == 408 || status == 429) return false;
+    return 400 <= status && status < 500;
+  }
 
   static String _inferCode(PodcastParseError? error) {
     if (error == null) return 'PODCAST_ERROR';

@@ -7,12 +7,12 @@ import 'package:dio/dio.dart';
 import 'package:just_audio/just_audio.dart';
 
 /// Whether [error] is an expected runtime condition rather than a defect:
-/// the device is offline or the network stalled, or the user cancelled.
+/// the device is offline or the network stalled, the user cancelled, or a
+/// feed host says the feed is gone.
 ///
-/// These happen routinely on mobile networks and are not actionable, so
-/// error monitoring keeps them out of the issue stream (at most a
-/// breadcrumb). HTTP status failures are not included: a server answering
-/// with an error is worth seeing.
+/// These happen routinely and are not actionable, so error monitoring
+/// keeps them out of the issue stream (at most a breadcrumb). Other HTTP
+/// status failures are not included: a server error is worth seeing.
 bool isExpectedFailure(Object error) => switch (error) {
   TimeoutException() || SocketException() || HttpException() => true,
   NetworkException() => true,
@@ -20,8 +20,10 @@ bool isExpectedFailure(Object error) => switch (error) {
     type == DownloadErrorType.cancelled ||
         type == DownloadErrorType.networkUnavailable,
   // Transport-level failures carry no status code; see
-  // PodcastException.network.
-  PodcastException(:final code) => code == _podcastTransportFailureCode,
+  // PodcastException.network. A feed the publisher moved or removed is
+  // theirs to fix, and the user is told so.
+  PodcastException(:final code, :final isFeedUnavailable) =>
+    code == _podcastTransportFailureCode || isFeedUnavailable,
   DioException(:final type, error: final cause) =>
     type == DioExceptionType.cancel ||
         isConnectivityFailure(error) ||
