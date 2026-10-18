@@ -42,6 +42,8 @@ void main() {
         DownloadErrorType.networkUnavailable,
       ),
       'podcast transport failure': PodcastException.network('offline'),
+      'podcast feed gone': PodcastException.network('gone', statusCode: 404),
+      'podcast feed forbidden': PodcastException.network('x', statusCode: 403),
       'player load while offline': PlayerException(
         -1009,
         'The Internet connection appears to be offline.',
@@ -67,7 +69,8 @@ void main() {
       'failed download write': DownloadException(
         DownloadErrorType.fileWriteError,
       ),
-      'podcast server error': PodcastException.network('gone', statusCode: 404),
+      'podcast server error': PodcastException.network('down', statusCode: 503),
+      'podcast rate limited': PodcastException.network('x', statusCode: 429),
       'podcast parse failure': PodcastException.parsing('bad xml'),
       'player unsupported file': PlayerException(-11828, 'Cannot Open', null),
       'player android source error': PlayerException(0, 'Source error', null),

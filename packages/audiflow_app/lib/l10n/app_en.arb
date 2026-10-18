@@ -21,6 +21,8 @@
   "@errorNetwork": { "description": "User-facing message for a failure caused by no or unstable network connectivity" },
   "errorGeneric": "Something went wrong. Please try again later.",
   "@errorGeneric": { "description": "User-facing fallback message for any unexpected failure; never shows internal error details" },
+  "errorFeedUnavailable": "This feed is unavailable. The publisher may have moved or removed the show.",
+  "@errorFeedUnavailable": { "description": "User-facing message when the feed host answers that the feed is not found or not accessible (HTTP 4xx)" },
 
   "settingsTitle": "Settings",
   "@settingsTitle": { "description": "Settings screen title" },

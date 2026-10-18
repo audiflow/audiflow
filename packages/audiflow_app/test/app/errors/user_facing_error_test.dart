@@ -62,9 +62,9 @@ void main() {
       'storage Error': _FakeStorageError(),
       'DioException badResponse': _dio(DioExceptionType.badResponse),
       'DioException cancel': _dio(DioExceptionType.cancel),
-      'PodcastException.network with HTTP status': PodcastException.network(
-        'Not found',
-        statusCode: 404,
+      'PodcastException.network with server error': PodcastException.network(
+        'Unavailable',
+        statusCode: 503,
       ),
       'PodcastException parse failure': PodcastException.parsing('bad xml'),
       'DownloadException insufficientStorage': DownloadException(
@@ -74,6 +74,25 @@ void main() {
       'StateError': StateError('boom'),
       'plain string': 'boom',
     };
+
+    final feedUnavailableErrors = <String, Object>{
+      'PodcastException.network 404': PodcastException.network(
+        'Not found',
+        statusCode: 404,
+      ),
+      'PodcastException.network 410': PodcastException.network(
+        'Gone',
+        statusCode: 410,
+      ),
+    };
+
+    for (final MapEntry(:key, :value) in feedUnavailableErrors.entries) {
+      test('$key is an unavailable feed', () {
+        check(
+          classifyUserFacingError(value),
+        ).equals(UserFacingErrorKind.feedUnavailable);
+      });
+    }
 
     for (final MapEntry(:key, :value) in genericErrors.entries) {
       test('$key is a generic failure', () {
@@ -93,6 +112,13 @@ void main() {
 
       check(userFacingErrorMessage(ja, error)).equals(ja.errorNetwork);
       check(userFacingErrorMessage(en, error)).equals(en.errorNetwork);
+    });
+
+    test('maps an unavailable feed to the feed message', () {
+      final error = PodcastException.network('Not found', statusCode: 404);
+
+      check(userFacingErrorMessage(ja, error)).equals(ja.errorFeedUnavailable);
+      check(userFacingErrorMessage(en, error)).equals(en.errorFeedUnavailable);
     });
 
     test('maps anything else to the generic message', () {
@@ -120,9 +146,15 @@ void main() {
       }
     });
 
-    test('the two messages differ', () {
-      check(ja.errorNetwork).not((it) => it.equals(ja.errorGeneric));
-      check(en.errorNetwork).not((it) => it.equals(en.errorGeneric));
+    test('the messages differ', () {
+      for (final l10n in [ja, en]) {
+        final messages = {
+          l10n.errorNetwork,
+          l10n.errorGeneric,
+          l10n.errorFeedUnavailable,
+        };
+        check(messages).length.equals(3);
+      }
     });
   });
 }

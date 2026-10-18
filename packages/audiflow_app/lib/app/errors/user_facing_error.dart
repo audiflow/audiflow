@@ -15,6 +15,10 @@ enum UserFacingErrorKind {
   /// The device could not reach the server; checking the connection helps.
   network,
 
+  /// The feed host says the feed is gone (moved, removed, or private);
+  /// retrying will not help until the publisher fixes it.
+  feedUnavailable,
+
   /// Anything else; the user can only retry later.
   generic,
 }
@@ -25,6 +29,9 @@ enum UserFacingErrorKind {
 /// failures (storage, parsing, programming errors) never get a more
 /// specific, possibly misleading message.
 UserFacingErrorKind classifyUserFacingError(Object error) {
+  if (error is PodcastException && error.isFeedUnavailable) {
+    return UserFacingErrorKind.feedUnavailable;
+  }
   return _isNetworkFailure(error)
       ? UserFacingErrorKind.network
       : UserFacingErrorKind.generic;
@@ -38,6 +45,7 @@ UserFacingErrorKind classifyUserFacingError(Object error) {
 String userFacingErrorMessage(AppLocalizations l10n, Object error) {
   return switch (classifyUserFacingError(error)) {
     UserFacingErrorKind.network => l10n.errorNetwork,
+    UserFacingErrorKind.feedUnavailable => l10n.errorFeedUnavailable,
     UserFacingErrorKind.generic => l10n.errorGeneric,
   };
 }

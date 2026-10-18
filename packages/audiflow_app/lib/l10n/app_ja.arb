@@ -11,6 +11,7 @@
   "commonDone": "完了",
   "errorNetwork": "接続できませんでした。インターネット接続を確認して、もう一度お試しください。",
   "errorGeneric": "問題が発生しました。しばらくしてから再試行してください。",
+  "errorFeedUnavailable": "このフィードは利用できません。配信元で番組が移動または削除された可能性があります。",
 
   "settingsTitle": "設定",
   "settingsAppearanceTitle": "外観",
