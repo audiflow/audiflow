@@ -296,7 +296,9 @@ class _SubscribeButtonState extends ConsumerState<_SubscribeButton> {
       );
     }
     // Nothing until the state is known, so a subscribed podcast does not
-    // flash a pill that then disappears.
+    // flash a pill that then disappears. A toggle's loading state keeps
+    // the previous value (Riverpod carries it over), so the pill stays put
+    // mid-request.
     if (state.value ?? true) {
       return const SizedBox.shrink(key: ValueKey('none'));
     }
@@ -348,7 +350,7 @@ class _SubscribeButtonState extends ConsumerState<_SubscribeButton> {
     return AnimatedSize(
       duration: _sizeDuration,
       curve: Curves.easeOutCubic,
-      alignment: Alignment.topCenter,
+      alignment: alignment,
       child: switcher,
     );
   }

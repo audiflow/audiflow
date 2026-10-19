@@ -376,7 +376,10 @@ void main() {
     });
 
     group('after subscribing', () {
-      Future<_FlippingController> pumpUnsubscribed(WidgetTester tester) async {
+      Future<_FlippingController> pumpUnsubscribed(
+        WidgetTester tester, {
+        Size size = phoneSize,
+      }) async {
         final controller = _FlippingController();
         final container = ProviderContainer(
           overrides: [
@@ -386,10 +389,56 @@ void main() {
           ],
         );
         addTearDown(container.dispose);
-        await pumpOnPhone(tester, buildTestWidget(container, testPodcast));
+        useViewSize(tester, size);
+        await tester.pumpWidget(buildTestWidget(container, testPodcast));
         await tester.pumpAndSettle();
         return controller;
       }
+
+      testWidgets('a slow subscribe keeps the pill in place', (tester) async {
+        final controller = await pumpUnsubscribed(tester);
+        final hold = controller.hold = Completer<void>();
+        final height = tester.getSize(find.byType(PodcastDetailHeader)).height;
+
+        await tester.tap(find.text('Subscribe'));
+        for (var frame = 0; frame < 5; frame++) {
+          await tester.pump(const Duration(milliseconds: 100));
+          check(find.text('Subscribe').evaluate()).length.equals(1);
+          check(
+            tester.getSize(find.byType(PodcastDetailHeader)).height,
+          ).equals(height);
+        }
+
+        hold.complete();
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 200));
+        check(find.text('Subscribed').evaluate()).length.equals(1);
+        await tester.pump(const Duration(milliseconds: 700));
+        await tester.pumpAndSettle();
+      });
+
+      testWidgets('on a tablet the pill stays on the start edge', (
+        tester,
+      ) async {
+        await pumpUnsubscribed(tester, size: tabletSize);
+        final start = tester.getTopLeft(find.text('Test Podcast')).dx;
+
+        await tester.tap(find.text('Subscribe'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 80));
+
+        // Mid-resize, a centered box would push its content past the start
+        // edge while the box is narrower than the pills.
+        final content = find
+            .descendant(
+              of: find.byType(AnimatedSize),
+              matching: find.byType(Stack),
+            )
+            .first;
+        check(tester.getTopLeft(content).dx).equals(start);
+        await tester.pump(const Duration(milliseconds: 700));
+        await tester.pumpAndSettle();
+      });
 
       testWidgets('confirms, then collapses the pill', (tester) async {
         await pumpUnsubscribed(tester);
@@ -589,6 +638,10 @@ class _CountingController extends SubscriptionController {
 class _FlippingController extends SubscriptionController {
   var toggles = 0;
 
+  /// When set, the toggle stays loading until this completes, like a slow
+  /// write.
+  Completer<void>? hold;
+
   @override
   Future<bool> build(String itunesId) async => false;
 
@@ -601,7 +654,7 @@ class _FlippingController extends SubscriptionController {
     toggles++;
     final next = !(state.value ?? false);
     state = const AsyncValue.loading();
-    await Future<void>.value();
+    await (hold?.future ?? Future<void>.value());
     state = AsyncData(next);
     return true;
   }
