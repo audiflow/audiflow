@@ -78,25 +78,11 @@ class QueueController extends _$QueueController {
     final subscription = await ref
         .read(subscriptionRepositoryProvider)
         .getById(episode.podcastId);
-    final podcastTitle = subscription?.title ?? '';
-
     final controller = ref.read(audioPlayerControllerProvider.notifier);
     controller.markPlaySource(PlaySource.queue);
     controller.play(
       episode.audioUrl,
-      metadata: NowPlayingInfo(
-        episodeUrl: episode.audioUrl,
-        episodeTitle: episode.title,
-        podcastTitle: podcastTitle,
-        artworkUrl: episode.imageUrl ?? subscription?.artworkUrl,
-        totalDuration: episode.durationMs != null
-            ? Duration(milliseconds: episode.durationMs!)
-            : null,
-        episode: episode,
-        itunesId: subscription?.itunesId,
-        episodeGuid: episode.guid,
-        feedUrl: subscription?.feedUrl,
-      ),
+      metadata: nowPlayingInfoForEpisode(episode, subscription),
     );
   }
 }

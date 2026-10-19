@@ -36,7 +36,7 @@ final class QueueControllerProvider
   QueueController create() => QueueController();
 }
 
-String _$queueControllerHash() => r'7168db0f8b7a2e504c6705b56538a791706c7825';
+String _$queueControllerHash() => r'c4087229c42ec25ae548958738326f42a38e84fb';
 
 /// Controller for queue screen state and actions.
 
