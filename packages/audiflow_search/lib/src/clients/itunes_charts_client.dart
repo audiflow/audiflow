@@ -1,6 +1,7 @@
 import '../builders/podcast_search_entity_builder.dart';
 import '../builders/search_entity_result.dart';
 import '../exceptions/search_exception.dart';
+import '../exceptions/status_code.dart';
 import '../models/charts_query.dart';
 import '../models/podcast.dart';
 import '../parsers/feed_response_parser.dart';
@@ -191,15 +192,28 @@ class ItunesChartsClient {
   /// Returns null if lookup fails (allows partial results).
   Future<Podcast?> lookupPodcast(String podcastId) async {
     try {
-      final url = '$lookupBaseUrl?id=$podcastId';
-      final response = await _httpClient.get(url);
-      return _lookupParser.parseLookupResponse(
-        response.data as Map<String, dynamic>,
-      );
+      return await fetchPodcast(podcastId);
     } on Object {
       // Return null for failed lookups to allow partial results
       return null;
     }
+  }
+
+  /// Looks up podcast details by ID, reporting why a lookup failed.
+  ///
+  /// Throws [SearchException]: [StatusCode.notFound] when no podcast has
+  /// [podcastId], [SearchNetworkException] when the API is unreachable,
+  /// and other subtypes for API or response errors.
+  Future<Podcast> fetchPodcast(String podcastId) async {
+    final response = await _httpClient.get('$lookupBaseUrl?id=$podcastId');
+    final data = response.data;
+    if (data is! Map<String, dynamic>) {
+      throw SearchException.internal(
+        providerId: 'itunes_lookup',
+        message: 'Lookup response is not a JSON object',
+      );
+    }
+    return _lookupParser.parseLookupResponse(data);
   }
 
   /// Closes the client and cleans up resources.
