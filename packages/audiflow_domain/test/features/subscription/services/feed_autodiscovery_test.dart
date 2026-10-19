@@ -13,6 +13,11 @@ void main() {
       check(looksLikeHtml(htmlWith(''))).isTrue();
     });
 
+    test('detects a page without an <html> tag', () {
+      check(looksLikeHtml('<!doctype html><title>x</title>')).isTrue();
+      check(looksLikeHtml('<head><title>x</title></head>')).isTrue();
+    });
+
     test('rejects an RSS document', () {
       check(
         looksLikeHtml('<?xml version="1.0"?><rss><channel/></rss>'),
@@ -48,6 +53,19 @@ void main() {
       check(
         discoverFeedUrl(html, page),
       ).equals('https://example.com/feed?a=1&b=2');
+    });
+
+    test('prefers the feed that mentions podcast', () {
+      final html = htmlWith(
+        '<link rel="alternate" type="application/rss+xml" href="/feed/">'
+        '<link rel="alternate" type="application/rss+xml" '
+        'href="/comments/feed/">'
+        '<link rel="alternate" type="application/rss+xml" '
+        'title="Show Podcast" href="/feed/audio/">',
+      );
+      check(
+        discoverFeedUrl(html, page),
+      ).equals('https://example.com/feed/audio/');
     });
 
     test('skips links that are not RSS alternates', () {

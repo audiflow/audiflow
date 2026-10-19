@@ -11,25 +11,40 @@ bool looksLikeHtml(String body) {
 /// against [pageUrl] and upgraded to HTTPS; null when it announces none.
 ///
 /// Podcast websites commonly carry this tag, so a pasted show homepage
-/// still leads to its feed.
+/// still leads to its feed. Sites often announce their article and
+/// comment feeds too, so a feed whose title or URL mentions "podcast" wins
+/// over the first one listed.
 String? discoverFeedUrl(String html, Uri pageUrl) {
-  for (final tag in _linkTag.allMatches(html)) {
-    final attributes = _attributes(tag.group(0)!);
-    final rel = attributes['rel']?.toLowerCase().split(_whitespace) ?? [];
-    final type = attributes['type']?.toLowerCase();
-    final href = attributes['href'];
-    if (!rel.contains('alternate') || type != _rssType || href == null) {
-      continue;
-    }
-    final resolved = pageUrl.resolve(href.trim());
-    return resolved.replace(scheme: 'https').toString();
-  }
-  return null;
+  final feeds = [
+    for (final tag in _linkTag.allMatches(html))
+      ?_rssAlternate(_attributes(tag.group(0)!)),
+  ];
+  if (feeds.isEmpty) return null;
+  final chosen = feeds.firstWhere(_mentionsPodcast, orElse: () => feeds.first);
+  final resolved = pageUrl.resolve(chosen['href']!.trim());
+  return resolved.replace(scheme: 'https').toString();
 }
 
-const _sniffLength = 1024;
+/// [attributes] when they describe an RSS alternate link with an href.
+Map<String, String>? _rssAlternate(Map<String, String> attributes) {
+  final rel = attributes['rel']?.toLowerCase().split(_whitespace) ?? [];
+  final type = attributes['type']?.toLowerCase();
+  final isFeed = rel.contains('alternate') && type == _rssType;
+  return isFeed && attributes['href'] != null ? attributes : null;
+}
+
+bool _mentionsPodcast(Map<String, String> attributes) {
+  final text = '${attributes['title'] ?? ''} ${attributes['href']}';
+  return text.toLowerCase().contains('podcast');
+}
+
+const _sniffLength = 4096;
 const _rssType = 'application/rss+xml';
-final _htmlTag = RegExp(r'<html[\s>]', caseSensitive: false);
+// The <html> tag is optional, so a doctype or <head> also marks a page.
+final _htmlTag = RegExp(
+  r'<(!doctype\s+html|html|head)[\s>]',
+  caseSensitive: false,
+);
 final _linkTag = RegExp(r'<link\b[^>]*>', caseSensitive: false);
 final _attribute = RegExp(
   r'''([a-zA-Z-]+)\s*=\s*("([^"]*)"|'([^']*)'|([^\s>]+))''',

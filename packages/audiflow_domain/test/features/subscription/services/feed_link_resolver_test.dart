@@ -9,9 +9,16 @@ import '../../share/services/fake_subscription_repository.dart';
 
 class _FakeItunesChartsClient extends ItunesChartsClient {
   final Map<String, Podcast> podcasts = {};
+  SearchException? error;
 
   @override
-  Future<Podcast?> lookupPodcast(String podcastId) async => podcasts[podcastId];
+  Future<Podcast> fetchPodcast(String podcastId) async {
+    final error = this.error;
+    if (error != null) throw error;
+    final podcast = podcasts[podcastId];
+    if (podcast != null) return podcast;
+    throw SearchException.notFound(providerId: 'fake', message: 'none');
+  }
 }
 
 /// Parses only bodies containing a key of [feeds]; anything else is not a
@@ -19,6 +26,7 @@ class _FakeItunesChartsClient extends ItunesChartsClient {
 /// adapter JSON-encodes string replies.
 class _FakeFeedParserService extends FeedParserService {
   final Map<String, PodcastFeed> feeds = {};
+  List<PodcastItem> episodes = [_episode(enclosureUrl: 'https://e/1.mp3')];
 
   @override
   Future<ParsedFeed> parseFromString(
@@ -31,9 +39,17 @@ class _FakeFeedParserService extends FeedParserService {
         .firstOrNull
         ?.value;
     if (feed == null) throw PodcastException(message: 'not a feed');
-    return ParsedFeed(podcast: feed, episodes: const []);
+    return ParsedFeed(podcast: feed, episodes: episodes);
   }
 }
+
+PodcastItem _episode({String? enclosureUrl}) => PodcastItem.fromData(
+  parsedAt: DateTime(2026),
+  sourceUrl: '',
+  title: 'Episode',
+  description: '',
+  enclosureUrl: enclosureUrl,
+);
 
 void main() {
   const feedUrl = 'https://example.com/feed.xml';
@@ -152,6 +168,15 @@ void main() {
       );
     });
 
+    test('fails as not a feed when no episode has audio', () async {
+      parser.episodes = [_episode()];
+      server.onGet(feedUrl, (s) => s.reply(200, rssBody));
+      await expectFailure(
+        const FeedLink.direct(url: feedUrl),
+        FeedLinkFailure.notPodcastFeed,
+      );
+    });
+
     for (final (status, failure) in [
       (404, FeedLinkFailure.feedUnavailable),
       (410, FeedLinkFailure.feedUnavailable),
@@ -218,6 +243,32 @@ void main() {
         const FeedLink.itunes(itunesId: itunesId),
       );
       check(podcast.id).equals(feedPlaceholderId(feedUrl));
+    });
+
+    test('fails as not found when the directory has no such ID', () async {
+      await expectFailure(
+        const FeedLink.itunes(itunesId: itunesId),
+        FeedLinkFailure.notFound,
+      );
+    });
+
+    test('maps an unreachable directory to a network failure', () async {
+      itunes.error = SearchNetworkException(providerId: 'fake', message: 'x');
+      await expectFailure(
+        const FeedLink.itunes(itunesId: itunesId),
+        FeedLinkFailure.network,
+      );
+    });
+
+    test('maps a directory error to a server failure', () async {
+      itunes.error = SearchException.unavailable(
+        providerId: 'fake',
+        message: 'x',
+      );
+      await expectFailure(
+        const FeedLink.itunes(itunesId: itunesId),
+        FeedLinkFailure.serverError,
+      );
     });
 
     test('fails as not found when the lookup has no feed', () async {
