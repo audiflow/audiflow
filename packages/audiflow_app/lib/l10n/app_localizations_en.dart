@@ -2362,34 +2362,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get episodeDetailAddToEnd => 'Add to end of queue';
 
   @override
-  String get carPlayUpNextTab => 'Up Next';
+  String get carUpNextTab => 'Up Next';
 
   @override
-  String get carPlayInProgressTab => 'In Progress';
+  String get carInProgressTab => 'In Progress';
 
   @override
-  String get carPlayLibraryTab => 'Library';
+  String get carLibraryTab => 'Library';
 
   @override
-  String get carPlayDownloadsTab => 'Downloads';
+  String get carDownloadsTab => 'Downloads';
 
   @override
-  String get carPlayUpNextEmpty => 'Nothing up next';
+  String get carUpNextEmpty => 'Nothing up next';
 
   @override
-  String get carPlayInProgressEmpty => 'No episodes in progress';
+  String get carInProgressEmpty => 'No episodes in progress';
 
   @override
-  String get carPlayLibraryEmpty => 'No subscriptions yet';
+  String get carLibraryEmpty => 'No subscriptions yet';
 
   @override
-  String get carPlayDownloadsEmpty => 'No downloaded episodes';
+  String get carDownloadsEmpty => 'No downloaded episodes';
 
   @override
-  String get carPlayPodcastEmpty => 'No episodes';
+  String get carPodcastEmpty => 'No episodes';
 
   @override
-  String get carPlayLoadFailed => 'Couldn\'t load this list';
+  String get carLoadFailed => 'Couldn\'t load this list';
 
   @override
   String get feedLinkAddByUrl => 'Add by RSS feed URL';

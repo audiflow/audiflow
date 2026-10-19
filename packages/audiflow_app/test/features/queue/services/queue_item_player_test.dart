@@ -85,10 +85,10 @@ void main() {
       await playQueueItem(
         container.read(_refProvider),
         5,
-        source: PlaySource.carplay,
+        source: PlaySource.car,
       );
 
-      check(player.sources).deepEquals([PlaySource.carplay]);
+      check(player.sources).deepEquals([PlaySource.car]);
     });
 
     test('plays nothing when the item has left the queue', () async {

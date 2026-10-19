@@ -23,7 +23,7 @@ enum PlaySource {
   station,
   search,
   deeplink,
-  carplay,
+  car,
   unknown,
 }
 

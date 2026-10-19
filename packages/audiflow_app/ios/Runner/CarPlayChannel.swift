@@ -2,7 +2,7 @@ import Flutter
 import Foundation
 
 /// A CarPlay list. Raw values are the wire names shared with
-/// `CarPlaySection` in `lib/features/carplay/models/carplay_list_item.dart`.
+/// `CarSection` in `lib/features/car/models/car_list_item.dart`.
 enum CarPlaySection: String, CaseIterable {
   case upNext
   case inProgress
@@ -12,7 +12,7 @@ enum CarPlaySection: String, CaseIterable {
   case podcast
 }
 
-/// One row of a CarPlay list, decoded from Dart's `CarPlayListItem.toMap`.
+/// One row of a CarPlay list, decoded from Dart's `CarListItem.toMap`.
 struct CarPlayItem {
   /// Queue item id in `upNext`, podcast id in `library`, episode id elsewhere.
   let id: Int

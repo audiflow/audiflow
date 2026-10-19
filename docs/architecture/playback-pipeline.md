@@ -241,7 +241,7 @@ same `AudiflowAudioHandler`. Only the rate button (`cycleSpeed`, saved through
 specific.
 
 The lists go over `audiflow/carplay`. Native owns the templates and asks for
-rows (`listItems`); Dart (`CarPlayBridge`, `CarPlayCatalog`) owns the data and
+rows (`listItems`); Dart (`CarPlayBridge`, `CarCatalog`) owns the data and
 plays rows (`playItem`) through `AudioPlayerController`. Dart sends `ready`
 with the ARB-localized labels at startup and on language change; native shows
 a placeholder root until then. Native sends `connected` / `disconnected`, and

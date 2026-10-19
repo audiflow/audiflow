@@ -3,9 +3,10 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:logger/logger.dart';
 
-import '../models/carplay_list_item.dart';
-import 'carplay_catalog.dart';
-import 'carplay_playback.dart';
+import '../../car/models/car_list_item.dart';
+import '../../car/services/car_catalog.dart';
+import '../../car/services/car_change_batcher.dart';
+import '../../car/services/car_playback.dart';
 
 /// Dart end of `audiflow/carplay`, the channel to the CarPlay scene
 /// (`ios/Runner/CarPlayChannel.swift`).
@@ -31,19 +32,19 @@ class CarPlayBridge {
   /// Read on each request rather than held, so a rebuilt catalog (its
   /// repositories changed) is picked up without restarting the bridge and
   /// re-announcing `ready`, which would reset the head unit's navigation.
-  final CarPlayCatalog Function() _catalog;
-  final CarPlayPlayback _playback;
+  final CarCatalog Function() _catalog;
+  final CarPlayback _playback;
   final Map<String, String> Function() _labels;
   final Logger _logger;
   final void Function({required bool connected})? _onConnectionChanged;
   final MethodChannel _channel;
 
-  /// Coalesces bursts of changes (a playing episode saves its progress
-  /// repeatedly) into one reload per list.
   final Duration _invalidationDelay;
 
-  final Set<CarPlaySection> _pendingInvalidations = {};
-  Timer? _invalidationTimer;
+  late final CarChangeBatcher _invalidations = CarChangeBatcher(
+    onFlush: _sendInvalidation,
+    delay: _invalidationDelay,
+  );
   bool _connected = false;
 
   /// Whether a head unit is showing the CarPlay scene.
@@ -59,23 +60,20 @@ class CarPlayBridge {
   Future<void> announce() => _send('ready', {'labels': _labels()});
 
   /// Asks the native side to reload [sections], if a head unit is connected.
-  void invalidate(Set<CarPlaySection> sections) {
+  void invalidate(Set<CarSection> sections) {
     if (!_connected) return;
-    _pendingInvalidations.addAll(sections);
-    _invalidationTimer ??= Timer(_invalidationDelay, _flushInvalidations);
+    _invalidations.add(sections);
   }
 
   void dispose() {
-    _invalidationTimer?.cancel();
+    _invalidations.dispose();
     _channel.setMethodCallHandler(null);
   }
 
-  void _flushInvalidations() {
-    _invalidationTimer = null;
-    if (!_connected || _pendingInvalidations.isEmpty) return;
-    final sections = [for (final s in _pendingInvalidations) s.name];
-    _pendingInvalidations.clear();
-    unawaited(_send('invalidate', {'sections': sections}));
+  void _sendInvalidation(Set<CarSection> sections) {
+    if (!_connected) return;
+    final names = [for (final s in sections) s.name];
+    unawaited(_send('invalidate', {'sections': names}));
   }
 
   Future<Object?> _handle(MethodCall call) async {
@@ -101,11 +99,7 @@ class CarPlayBridge {
   void _setConnected({required bool connected}) {
     if (_connected == connected) return;
     _connected = connected;
-    if (!connected) {
-      _invalidationTimer?.cancel();
-      _invalidationTimer = null;
-      _pendingInvalidations.clear();
-    }
+    if (!connected) _invalidations.clear();
     _onConnectionChanged?.call(connected: connected);
   }
 
@@ -136,10 +130,10 @@ class CarPlayBridge {
     if (id is! int) throw _invalidArgument('id');
     // A podcast row opens its episode list on the native side; it is
     // never sent here.
-    if (section == CarPlaySection.library) throw _invalidArgument('section');
+    if (section == CarSection.library) throw _invalidArgument('section');
     final bool started;
     try {
-      started = section == CarPlaySection.upNext
+      started = section == CarSection.upNext
           ? await _playback.playQueueItem(id)
           : await _playback.playEpisode(id);
     } on Object catch (e, stack) {
@@ -159,8 +153,8 @@ class CarPlayBridge {
     throw _invalidArgument('arguments');
   }
 
-  static CarPlaySection _section(Map<Object?, Object?> arguments) {
-    return CarPlaySection.byName(arguments['section']) ??
+  static CarSection _section(Map<Object?, Object?> arguments) {
+    return CarSection.byName(arguments['section']) ??
         (throw _invalidArgument('section'));
   }
 

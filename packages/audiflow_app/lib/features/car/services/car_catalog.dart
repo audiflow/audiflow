@@ -1,15 +1,16 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
 
-import '../models/carplay_list_item.dart';
+import '../models/car_list_item.dart';
 
-/// Builds the CarPlay lists from the same data the phone screens show.
+/// Builds the in-car lists (CarPlay and Android Auto) from the same data the
+/// phone screens show.
 ///
-/// Parental control (FR 18) needs no gate here: CarPlay has no search,
+/// Parental control (FR 18) needs no gate here: the car has no search,
 /// subscribe, or deep-link surface, so it only ever lists the subscribed
 /// set. A podcast's "hide explicit episodes" flag is applied to its episode
 /// list, as on podcast detail.
-class CarPlayCatalog {
-  CarPlayCatalog({
+class CarCatalog {
+  CarCatalog({
     required this._queueService,
     required this._historyRepository,
     required this._episodeRepository,
@@ -40,22 +41,19 @@ class CarPlayCatalog {
   final String Function(Duration duration) _formatDuration;
 
   /// The rows of [section]; [podcastId] picks the podcast for
-  /// [CarPlaySection.podcast].
-  Future<List<CarPlayListItem>> items(
-    CarPlaySection section, {
-    int? podcastId,
-  }) async {
+  /// [CarSection.podcast].
+  Future<List<CarListItem>> items(CarSection section, {int? podcastId}) async {
     return switch (section) {
-      CarPlaySection.upNext => _upNext(),
-      CarPlaySection.inProgress => _inProgress(),
-      CarPlaySection.library => _library(),
-      CarPlaySection.downloads => _downloads(),
-      CarPlaySection.podcast =>
+      CarSection.upNext => _upNext(),
+      CarSection.inProgress => _inProgress(),
+      CarSection.library => _library(),
+      CarSection.downloads => _downloads(),
+      CarSection.podcast =>
         podcastId == null ? const [] : _podcastEpisodes(podcastId),
     };
   }
 
-  Future<List<CarPlayListItem>> _upNext() async {
+  Future<List<CarListItem>> _upNext() async {
     final queue = await _queueService.getQueue();
     final items = queue
         .upNextItems(nowPlayingUrl: _nowPlayingUrl())
@@ -64,7 +62,7 @@ class CarPlayCatalog {
     final podcasts = await _podcastsById(items.map((i) => i.episode));
     return [
       for (final item in items)
-        CarPlayListItem(
+        CarListItem(
           id: item.queueItem.id,
           title: item.episode.title,
           detail: podcasts[item.episode.podcastId]?.title,
@@ -73,7 +71,7 @@ class CarPlayCatalog {
     ];
   }
 
-  Future<List<CarPlayListItem>> _inProgress() async {
+  Future<List<CarListItem>> _inProgress() async {
     final histories = await _historyRepository
         .watchInProgress(limit: inProgressLimit)
         .first;
@@ -90,7 +88,7 @@ class CarPlayCatalog {
     );
   }
 
-  Future<List<CarPlayListItem>> _downloads() async {
+  Future<List<CarListItem>> _downloads() async {
     final tasks = await _downloadRepository.getByStatus(
       const DownloadStatus.completed(),
     );
@@ -105,11 +103,11 @@ class CarPlayCatalog {
   static DateTime _downloadedAt(DownloadTask task) =>
       task.completedAt ?? task.createdAt;
 
-  Future<List<CarPlayListItem>> _library() async {
+  Future<List<CarListItem>> _library() async {
     final subscriptions = await _loadSubscriptions();
     return [
       for (final subscription in subscriptions.take(itemLimit))
-        CarPlayListItem(
+        CarListItem(
           id: subscription.id,
           title: subscription.title,
           detail: subscription.artistName,
@@ -118,7 +116,7 @@ class CarPlayCatalog {
     ];
   }
 
-  Future<List<CarPlayListItem>> _podcastEpisodes(int podcastId) async {
+  Future<List<CarListItem>> _podcastEpisodes(int podcastId) async {
     final subscription = await _subscriptionRepository.getById(podcastId);
     if (subscription == null) return const [];
     final hideExplicit = await _hidesExplicit(podcastId);
@@ -130,7 +128,7 @@ class CarPlayCatalog {
     final nowPlayingUrl = _nowPlayingUrl();
     return [
       for (final episode in visible)
-        CarPlayListItem(
+        CarListItem(
           id: episode.id,
           title: episode.title,
           detail: _durationOf(episode),
@@ -164,7 +162,7 @@ class CarPlayCatalog {
   }
 
   /// Episode rows titled with their podcast, for lists that mix podcasts.
-  Future<List<CarPlayListItem>> _episodeItems(
+  Future<List<CarListItem>> _episodeItems(
     List<Episode> episodes, {
     double? Function(Episode episode)? progressOf,
   }) async {
@@ -172,7 +170,7 @@ class CarPlayCatalog {
     final nowPlayingUrl = _nowPlayingUrl();
     return [
       for (final episode in episodes)
-        CarPlayListItem(
+        CarListItem(
           id: episode.id,
           title: episode.title,
           detail: podcasts[episode.podcastId]?.title,

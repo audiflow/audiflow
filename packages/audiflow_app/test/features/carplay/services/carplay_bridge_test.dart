@@ -1,29 +1,26 @@
-import 'package:audiflow_app/features/carplay/models/carplay_list_item.dart';
+import 'package:audiflow_app/features/car/models/car_list_item.dart';
 import 'package:audiflow_app/features/carplay/services/carplay_bridge.dart';
-import 'package:audiflow_app/features/carplay/services/carplay_catalog.dart';
-import 'package:audiflow_app/features/carplay/services/carplay_playback.dart';
+import 'package:audiflow_app/features/car/services/car_catalog.dart';
+import 'package:audiflow_app/features/car/services/car_playback.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:logger/logger.dart';
 
-class _FakeCatalog extends Fake implements CarPlayCatalog {
-  final requests = <(CarPlaySection, int?)>[];
-  List<CarPlayListItem> rows = const [];
+class _FakeCatalog extends Fake implements CarCatalog {
+  final requests = <(CarSection, int?)>[];
+  List<CarListItem> rows = const [];
   Object? error;
 
   @override
-  Future<List<CarPlayListItem>> items(
-    CarPlaySection section, {
-    int? podcastId,
-  }) async {
+  Future<List<CarListItem>> items(CarSection section, {int? podcastId}) async {
     requests.add((section, podcastId));
     if (error case final e?) throw e;
     return rows;
   }
 }
 
-class _FakePlayback extends Fake implements CarPlayPlayback {
+class _FakePlayback extends Fake implements CarPlayback {
   final playedEpisodes = <int>[];
   final playedQueueItems = <int>[];
   double? nextSpeed = 1.5;
@@ -119,15 +116,15 @@ void main() {
   });
 
   test('answers listItems with the catalog rows', () async {
-    const item = CarPlayListItem(id: 3, title: 'Episode 3', isPlaying: true);
+    const item = CarListItem(id: 3, title: 'Episode 3', isPlaying: true);
     catalog.rows = [item];
 
     final reply = await fromNative('listItems', {
-      'section': CarPlaySection.podcast.name,
+      'section': CarSection.podcast.name,
       'podcastId': 7,
     });
 
-    check(catalog.requests.single).equals((CarPlaySection.podcast, 7));
+    check(catalog.requests.single).equals((CarSection.podcast, 7));
     check(reply).isA<List<Object?>>().deepEquals([item.toMap()]);
   });
 
@@ -142,17 +139,14 @@ void main() {
     catalog.error = StateError('db closed');
 
     await check(
-      fromNative('listItems', {'section': CarPlaySection.library.name}),
+      fromNative('listItems', {'section': CarSection.library.name}),
     ).throws<PlatformException>();
   });
 
   test('plays a queue item from upNext and an episode elsewhere', () async {
+    await fromNative('playItem', {'section': CarSection.upNext.name, 'id': 11});
     await fromNative('playItem', {
-      'section': CarPlaySection.upNext.name,
-      'id': 11,
-    });
-    await fromNative('playItem', {
-      'section': CarPlaySection.downloads.name,
+      'section': CarSection.downloads.name,
       'id': 22,
     });
 
@@ -164,13 +158,13 @@ void main() {
     playback.found = false;
 
     await check(
-      fromNative('playItem', {'section': CarPlaySection.upNext.name, 'id': 5}),
+      fromNative('playItem', {'section': CarSection.upNext.name, 'id': 5}),
     ).throws<PlatformException>();
   });
 
   test('rejects playing a podcast row', () async {
     await check(
-      fromNative('playItem', {'section': CarPlaySection.library.name, 'id': 1}),
+      fromNative('playItem', {'section': CarSection.library.name, 'id': 1}),
     ).throws<PlatformException>();
     check(playback.playedEpisodes).isEmpty();
   });
@@ -180,7 +174,7 @@ void main() {
   });
 
   test('ignores invalidations while disconnected', () async {
-    bridge.invalidate({CarPlaySection.upNext});
+    bridge.invalidate({CarSection.upNext});
     await pumpEventQueue();
 
     check(sentNamed('invalidate')).isEmpty();
@@ -189,8 +183,8 @@ void main() {
   test('coalesces invalidations while connected', () async {
     await fromNative('connected');
     bridge
-      ..invalidate({CarPlaySection.upNext})
-      ..invalidate({CarPlaySection.upNext, CarPlaySection.downloads});
+      ..invalidate({CarSection.upNext})
+      ..invalidate({CarSection.upNext, CarSection.downloads});
     await pumpEventQueue();
 
     final invalidation = sentNamed('invalidate').single.arguments;
@@ -198,15 +192,12 @@ void main() {
         .isA<Map<Object?, Object?>>()
         .has((a) => a['sections'], 'sections')
         .isA<List<Object?>>()
-        .unorderedEquals([
-          CarPlaySection.upNext.name,
-          CarPlaySection.downloads.name,
-        ]);
+        .unorderedEquals([CarSection.upNext.name, CarSection.downloads.name]);
   });
 
   test('drops pending invalidations on disconnect', () async {
     await fromNative('connected');
-    bridge.invalidate({CarPlaySection.upNext});
+    bridge.invalidate({CarSection.upNext});
     await fromNative('disconnected');
     await pumpEventQueue();
 

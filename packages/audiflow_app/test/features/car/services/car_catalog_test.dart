@@ -1,5 +1,5 @@
-import 'package:audiflow_app/features/carplay/models/carplay_list_item.dart';
-import 'package:audiflow_app/features/carplay/services/carplay_catalog.dart';
+import 'package:audiflow_app/features/car/models/car_list_item.dart';
+import 'package:audiflow_app/features/car/services/car_catalog.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -110,7 +110,7 @@ void main() {
   late _FakeParentalControlRepository parentalControlRepository;
   late List<Subscription> sortedSubscriptions;
   String? nowPlayingUrl;
-  late CarPlayCatalog catalog;
+  late CarCatalog catalog;
 
   final podcastA = _subscription(1, 'Podcast A');
   final podcastB = _subscription(2, 'Podcast B');
@@ -125,7 +125,7 @@ void main() {
     parentalControlRepository = _FakeParentalControlRepository();
     sortedSubscriptions = [podcastB, podcastA];
     nowPlayingUrl = null;
-    catalog = CarPlayCatalog(
+    catalog = CarCatalog(
       queueService: queueService,
       historyRepository: historyRepository,
       episodeRepository: episodeRepository,
@@ -138,7 +138,7 @@ void main() {
     );
   });
 
-  List<int> ids(List<CarPlayListItem> items) => [for (final i in items) i.id];
+  List<int> ids(List<CarListItem> items) => [for (final i in items) i.id];
 
   group('upNext', () {
     QueueItemWithEpisode queued(int queueItemId, Episode episode) =>
@@ -160,7 +160,7 @@ void main() {
         adhocItems: [adhoc],
       );
 
-      final items = await catalog.items(CarPlaySection.upNext);
+      final items = await catalog.items(CarSection.upNext);
 
       check(ids(items)).deepEquals([manual.queueItem.id, adhoc.queueItem.id]);
       check(items.first)
@@ -175,7 +175,7 @@ void main() {
       queueService.queue = PlaybackQueue(manualItems: [playing, next]);
       nowPlayingUrl = playing.episode.audioUrl;
 
-      final items = await catalog.items(CarPlaySection.upNext);
+      final items = await catalog.items(CarSection.upNext);
 
       check(ids(items)).deepEquals([next.queueItem.id]);
     });
@@ -192,7 +192,7 @@ void main() {
       ];
       nowPlayingUrl = second.audioUrl;
 
-      final items = await catalog.items(CarPlaySection.inProgress);
+      final items = await catalog.items(CarSection.inProgress);
 
       check(ids(items)).deepEquals([second.id, first.id]);
       check(items.first)
@@ -208,13 +208,13 @@ void main() {
     test('drops histories whose episode is gone', () async {
       historyRepository.inProgress = [_history(99, positionMs: 10)];
 
-      check(await catalog.items(CarPlaySection.inProgress)).isEmpty();
+      check(await catalog.items(CarSection.inProgress)).isEmpty();
     });
   });
 
   group('library', () {
     test('lists subscriptions in the library sort order', () async {
-      final items = await catalog.items(CarPlaySection.library);
+      final items = await catalog.items(CarSection.library);
 
       check(ids(items)).deepEquals([podcastB.id, podcastA.id]);
       check(items.first)
@@ -238,7 +238,7 @@ void main() {
         task(2, DateTime(2026, 2, 1)),
       ];
 
-      final items = await catalog.items(CarPlaySection.downloads);
+      final items = await catalog.items(CarSection.downloads);
 
       check(ids(items)).deepEquals([2, 1]);
     });
@@ -259,7 +259,7 @@ void main() {
       };
 
       final items = await catalog.items(
-        CarPlaySection.podcast,
+        CarSection.podcast,
         podcastId: podcastA.id,
       );
 
@@ -278,7 +278,7 @@ void main() {
       parentalControlRepository.hideExplicit = true;
 
       final items = await catalog.items(
-        CarPlaySection.podcast,
+        CarSection.podcast,
         podcastId: podcastA.id,
       );
 
@@ -290,7 +290,7 @@ void main() {
       parentalControlRepository.failRead = true;
 
       final items = await catalog.items(
-        CarPlaySection.podcast,
+        CarSection.podcast,
         podcastId: podcastA.id,
       );
 
@@ -300,23 +300,21 @@ void main() {
     test('is empty for a podcast that is not subscribed', () async {
       episodeRepository.episodes = [_episode(1, podcastId: 9)];
 
-      check(
-        await catalog.items(CarPlaySection.podcast, podcastId: 9),
-      ).isEmpty();
-      check(await catalog.items(CarPlaySection.podcast)).isEmpty();
+      check(await catalog.items(CarSection.podcast, podcastId: 9)).isEmpty();
+      check(await catalog.items(CarSection.podcast)).isEmpty();
     });
 
     test('caps the list at itemLimit', () async {
       episodeRepository.episodes = [
-        for (var i = 0; i < CarPlayCatalog.itemLimit + 5; i++) _episode(i),
+        for (var i = 0; i < CarCatalog.itemLimit + 5; i++) _episode(i),
       ];
 
       final items = await catalog.items(
-        CarPlaySection.podcast,
+        CarSection.podcast,
         podcastId: podcastA.id,
       );
 
-      check(items).length.equals(CarPlayCatalog.itemLimit);
+      check(items).length.equals(CarCatalog.itemLimit);
     });
   });
 }

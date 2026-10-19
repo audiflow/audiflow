@@ -1,8 +1,9 @@
-/// A CarPlay list the native side can ask for over `audiflow/carplay`.
+/// An in-car list.
 ///
-/// The enum names are the wire values, shared with `CarPlaySection` in
-/// `ios/Runner/CarPlayChannel.swift`.
-enum CarPlaySection {
+/// The enum names are wire values: CarPlay sends them over
+/// `audiflow/carplay` (`CarPlaySection` in `ios/Runner/CarPlayChannel.swift`),
+/// and Android Auto media ids are built from them.
+enum CarSection {
   upNext,
   inProgress,
   library,
@@ -12,7 +13,7 @@ enum CarPlaySection {
   podcast;
 
   /// The section named [name], or null for a value this build does not know.
-  static CarPlaySection? byName(Object? name) {
+  static CarSection? byName(Object? name) {
     for (final section in values) {
       if (section.name == name) return section;
     }
@@ -20,9 +21,9 @@ enum CarPlaySection {
   }
 }
 
-/// One row of a CarPlay list.
-final class CarPlayListItem {
-  const CarPlayListItem({
+/// One row of an in-car list.
+final class CarListItem {
+  const CarListItem({
     required this.id,
     required this.title,
     this.detail,
@@ -31,8 +32,8 @@ final class CarPlayListItem {
     this.isPlaying = false,
   });
 
-  /// The queue item id in [CarPlaySection.upNext], the podcast id in
-  /// [CarPlaySection.library], and the episode id everywhere else: the id
+  /// The queue item id in [CarSection.upNext], the podcast id in
+  /// [CarSection.library], and the episode id everywhere else: the id
   /// the native side sends back when the row is tapped.
   final int id;
 
