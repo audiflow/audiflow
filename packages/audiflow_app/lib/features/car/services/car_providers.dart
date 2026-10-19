@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../app/app_locale.dart';
@@ -10,8 +12,15 @@ import '../../../l10n/duration_label.dart';
 import '../../library/presentation/controllers/continue_listening_controller.dart';
 import '../../library/presentation/controllers/library_controller.dart';
 import '../../settings/presentation/controllers/locale_controller.dart';
+import '../../player/services/artwork_downscaler.dart';
+import '../../player/services/now_playing_artwork_fetcher.dart';
+import '../../player/services/now_playing_artwork_preparer.dart';
 import '../models/car_list_item.dart';
+import 'car_artwork_resolver.dart';
 import 'car_catalog.dart';
+import 'car_change_batcher.dart';
+import 'car_media_browser.dart';
+import 'car_playback.dart';
 
 part 'car_providers.g.dart';
 
@@ -81,4 +90,52 @@ List<ProviderSubscription<Object?>> watchCarListChanges(
       changes(CarSection.values.toSet()),
     ),
   ];
+}
+
+/// Android Auto's media browser. Created on the first browse request.
+@Riverpod(keepAlive: true)
+Future<CarMediaBrowser> carMediaBrowser(Ref ref) async {
+  final packageInfo = await PackageInfo.fromPlatform();
+  final fetcher = NowPlayingArtworkFetcher(dio: ref.read(dioProvider));
+  final artwork = ContentProviderArtworkResolver(
+    preparer: FileNowPlayingArtworkPreparer(
+      cacheDirectory: Directory(
+        '${ref.read(cacheDirProvider)}/$carArtworkCacheFolder',
+      ),
+      fetchBytes: fetcher.fetch,
+      downscale: downscaleArtworkToPng,
+      logger: ref.read(namedLoggerProvider('CarArtwork')),
+      maxEdgePixels: carArtworkMaxEdgePixels,
+      entryLimit: carArtworkCacheEntryLimit,
+    ),
+    authority: '${packageInfo.packageName}.carartwork',
+  );
+
+  final watchers = <ProviderSubscription<Object?>>[];
+  late final CarMediaBrowser browser;
+  final changes = CarChangeBatcher(onFlush: (s) => browser.notifyChanged(s));
+  browser = CarMediaBrowser(
+    catalog: () => ref.read(carCatalogProvider),
+    playback: CarPlayback(ref),
+    artwork: artwork,
+    tabTitles: () {
+      final l10n = carAppLocalizations(ref);
+      return {
+        CarSection.upNext: l10n.carUpNextTab,
+        CarSection.inProgress: l10n.carInProgressTab,
+        CarSection.library: l10n.carLibraryTab,
+        CarSection.downloads: l10n.carDownloadsTab,
+      };
+    },
+    logger: ref.read(namedLoggerProvider('AndroidAuto')),
+    onFirstBrowse: () => watchers.addAll(watchCarListChanges(ref, changes.add)),
+  );
+  ref.onDispose(() {
+    for (final watcher in watchers) {
+      watcher.close();
+    }
+    changes.dispose();
+    browser.dispose();
+  });
+  return browser;
 }

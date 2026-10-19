@@ -49,3 +49,47 @@ final class CarCatalogProvider
 }
 
 String _$carCatalogHash() => r'654b7207a0f3729bdcbbe46e3040ebe04f938ed4';
+
+/// Android Auto's media browser. Created on the first browse request.
+
+@ProviderFor(carMediaBrowser)
+final carMediaBrowserProvider = CarMediaBrowserProvider._();
+
+/// Android Auto's media browser. Created on the first browse request.
+
+final class CarMediaBrowserProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<CarMediaBrowser>,
+          CarMediaBrowser,
+          FutureOr<CarMediaBrowser>
+        >
+    with $FutureModifier<CarMediaBrowser>, $FutureProvider<CarMediaBrowser> {
+  /// Android Auto's media browser. Created on the first browse request.
+  CarMediaBrowserProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'carMediaBrowserProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$carMediaBrowserHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<CarMediaBrowser> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<CarMediaBrowser> create(Ref ref) {
+    return carMediaBrowser(ref);
+  }
+}
+
+String _$carMediaBrowserHash() => r'38458d273c96149f9ee518dad88b37b86eba4e0c';

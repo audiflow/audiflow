@@ -59,6 +59,15 @@
         <action android:name="android.media.browse.MediaBrowserService"/>
       </intent-filter>
     </service>
+    <!-- Row artwork for Android Auto; see CarArtworkProvider. -->
+    <provider
+      android:name=".CarArtworkProvider"
+      android:authorities="${applicationId}.carartwork"
+      android:exported="true" />
+    <!-- Lists the app in Android Auto as a media app (FR 19). -->
+    <meta-data
+      android:name="com.google.android.gms.car.application"
+      android:resource="@xml/automotive_app_desc" />
     <receiver
       android:name="com.ryanheise.audioservice.MediaButtonReceiver"
       android:exported="true">

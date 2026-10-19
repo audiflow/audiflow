@@ -26,6 +26,13 @@ const audioServiceConfig = AudioServiceConfig(
   androidStopForegroundOnPause: true,
   artDownscaleWidth: androidArtworkDownscalePixels,
   artDownscaleHeight: androidArtworkDownscalePixels,
+  // Android Auto shows browse rows as lists, like the phone's lists and
+  // CarPlay: episode titles are long and read better in a row than a tile.
+  androidBrowsableRootExtras: {
+    AndroidContentStyle.supportedKey: true,
+    AndroidContentStyle.browsableHintKey: AndroidContentStyle.listItemHintValue,
+    AndroidContentStyle.playableHintKey: AndroidContentStyle.listItemHintValue,
+  },
 );
 
 /// Requested edge for the decoded artwork bitmap on Android.

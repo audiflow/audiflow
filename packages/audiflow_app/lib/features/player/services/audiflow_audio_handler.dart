@@ -6,8 +6,11 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:logger/logger.dart';
+import 'package:rxdart/rxdart.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
+import '../../car/services/car_media_browser.dart';
+import '../../car/services/car_providers.dart';
 import '../../monitoring/services/sentry_diagnostics.dart';
 import 'audio_interruption_handler.dart';
 import 'now_playing_artwork_provider.dart';
@@ -393,6 +396,39 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
   Future<void> seek(Duration position) async {
     await _controller.seek(position);
   }
+
+  // Android Auto's media browser (FR 19). iOS never calls these.
+
+  Future<CarMediaBrowser> get _carBrowser =>
+      _ref.read(carMediaBrowserProvider.future);
+
+  @override
+  Future<List<audio_service.MediaItem>> getChildren(
+    String parentMediaId, [
+    Map<String, dynamic>? options,
+  ]) async => (await _carBrowser).getChildren(parentMediaId);
+
+  @override
+  ValueStream<Map<String, dynamic>> subscribeToChildren(String parentMediaId) {
+    // audio_service needs the stream synchronously; forward the browser's
+    // once it exists.
+    final relay = BehaviorSubject<Map<String, dynamic>>.seeded(const {});
+    unawaited(
+      _carBrowser.then(
+        (browser) => browser
+            .subscribeToChildren(parentMediaId)
+            .skip(1)
+            .listen(relay.add),
+      ),
+    );
+    return relay;
+  }
+
+  @override
+  Future<void> playFromMediaId(
+    String mediaId, [
+    Map<String, dynamic>? extras,
+  ]) async => (await _carBrowser).playFromMediaId(mediaId);
 
   @override
   Future<void> skipToNext() async => _controller.skipForward();
