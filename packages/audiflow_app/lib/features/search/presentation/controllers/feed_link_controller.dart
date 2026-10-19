@@ -60,13 +60,16 @@ class FeedLinkController extends _$FeedLinkController {
       state = const FeedLinkIdle();
       return podcast;
     } on FeedLinkException catch (e) {
+      if (!_isCurrent(link)) return null;
       // Only the failure kind: the cause carries the URL, and private feed
       // URLs embed access tokens.
       _logger.w('Feed link failed: ${e.failure}');
-      if (_isCurrent(link)) state = FeedLinkFailed(link, error: e);
-    } on Exception catch (e, stack) {
+      state = FeedLinkFailed(link, error: e);
+      // Errors too (e.g. IsarError): the panel must never stay spinning.
+    } catch (e, stack) {
+      if (!_isCurrent(link)) return null;
       _logger.e('Feed link failed unexpectedly', error: e, stackTrace: stack);
-      if (_isCurrent(link)) state = FeedLinkFailed(link);
+      state = FeedLinkFailed(link);
     }
     return null;
   }

@@ -205,6 +205,32 @@ void main() {
     });
   });
 
+  test('controller reports an Error as a failure', () async {
+    final container = ProviderContainer(
+      overrides: [
+        feedLinkResolverProvider.overrideWithValue(
+          _DeferredFeedLinkResolver(Future.error(StateError('db'))),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    final subscription = container.listen(
+      feedLinkControllerProvider,
+      (_, _) {},
+    );
+    addTearDown(subscription.close);
+
+    final opened = await container
+        .read(feedLinkControllerProvider.notifier)
+        .open(const FeedLink.direct(url: feedUrl));
+
+    expect(opened, isNull);
+    expect(
+      container.read(feedLinkControllerProvider),
+      isA<FeedLinkFailed>().having((s) => s.error, 'error', isNull),
+    );
+  });
+
   test('controller drops a result once the link is reset', () async {
     final pending = Completer<Podcast>();
     final container = ProviderContainer(
