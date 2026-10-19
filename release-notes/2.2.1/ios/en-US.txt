@@ -8,6 +8,7 @@
 • The player's top bar is simpler: just the close and menu buttons, since the podcast name already appears under the episode title
 • Progress lines on finished episodes and seasons are now gray, so lists with many played episodes look calmer
 • Episodes within a season now play oldest first by default
+• A podcast whose feed the publisher moved or removed now says so, instead of asking you to try again later
 • Fixed the clock and battery icons turning white and hard to read after closing the player
 • Fixed podcast names and authors showing codes like "&amp;" instead of "&"
 • Background refresh and downloads now fail less often

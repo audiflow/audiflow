@@ -1,10 +1,11 @@
-• Tablets: side-by-side artwork, bigger season art, compact playback record
+• Tablets: side-by-side artwork, bigger season art, compact play record
 • Play buttons don't stretch on wide screens
-• Menus: press, slide, release to choose
-• Playback record updates as you listen
-• Tap shortened descriptions to expand
-• Chapter list: playing chapter highlighted, close button
+• Menus: press, slide, release to pick
+• Play record updates as you listen
+• Tap short descriptions to expand
+• Chapter list: current chapter shown, close button
 • Simpler player top bar
-• Gray progress for finished episodes
-• Season episodes play oldest first
-• Fixed status bar icons after closing the player, "&amp;" in names, and stuck Bluetooth launches
+• Gray progress when finished
+• Seasons play oldest first
+• Removed feeds say so, not "retry later"
+• Fixed status bar icons after the player closes, "&amp;" in names, stuck Bluetooth launches
