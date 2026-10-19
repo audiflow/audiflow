@@ -6,6 +6,7 @@ refs:
   modules:
     - packages/audiflow_app/lib/features/player/
     - packages/audiflow_domain/lib/src/features/player/
+    - packages/audiflow_app/lib/features/car/
     - packages/audiflow_app/lib/features/carplay/
 ---
 # Playback Pipeline
@@ -248,6 +249,28 @@ a placeholder root until then. Native sends `connected` / `disconnected`, and
 only while connected does Dart listen to the queue, in-progress, library,
 downloads and now-playing providers, coalescing changes into `invalidate`
 messages (500 ms).
+
+## Android Auto
+
+FR 19. `AndroidManifest.xml` declares the car application
+(`res/xml/automotive_app_desc.xml`); the browse tree is the audio_service
+`MediaBrowserService` the app already runs. `AudiflowAudioHandler` forwards
+`getChildren`, `subscribeToChildren` and `playFromMediaId` to
+`CarMediaBrowser`, which builds `MediaItem`s from the same `CarCatalog` as
+CarPlay. Media ids: the tabs by `CarSection` name, `podcast/<id>`
+(browsable), `queue/<queueItemId>` and `episode/<episodeId>` (playable);
+`AudioService.recentRootId` returns the latest in-progress episode for
+playback resumption. Now Playing and its controls are the media session
+audio_service already publishes (Layer 2).
+
+Row artwork must be a `content:` URI. `ContentProviderArtworkResolver`
+prepares it with a second `FileNowPlayingArtworkPreparer` (320 px, 300
+entries) under `<cache>/car_artwork/`, and `CarArtworkProvider` (Kotlin,
+exported, read-only) serves files from that folder by their MD5 name. A list
+waits at most 2 s for its artwork; when some arrives later the list's
+`subscribeToChildren` stream fires once so Android Auto reloads it. List
+data is watched (`watchCarListChanges`, coalesced by `CarChangeBatcher`) from
+the first browse request on, since Android gives no disconnect signal.
 
 ## When to update
 
