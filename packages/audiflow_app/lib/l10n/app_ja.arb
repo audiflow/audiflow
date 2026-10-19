@@ -922,5 +922,15 @@
   "episodeDetailPlaybackRecord": "再生の記録",
   "episodeDetailTimes": "{count}回",
   "episodeDetailOpenPodcast": "番組を開く",
-  "episodeDetailAddToEnd": "キューの最後に追加"
+  "episodeDetailAddToEnd": "キューの最後に追加",
+  "carPlayUpNextTab": "次に再生",
+  "carPlayInProgressTab": "再生途中",
+  "carPlayLibraryTab": "ライブラリ",
+  "carPlayDownloadsTab": "ダウンロード",
+  "carPlayUpNextEmpty": "次に再生するエピソードはありません",
+  "carPlayInProgressEmpty": "再生途中のエピソードはありません",
+  "carPlayLibraryEmpty": "購読がありません",
+  "carPlayDownloadsEmpty": "ダウンロード済みのエピソードはありません",
+  "carPlayPodcastEmpty": "エピソードがありません",
+  "carPlayLoadFailed": "リストを読み込めませんでした"
 }

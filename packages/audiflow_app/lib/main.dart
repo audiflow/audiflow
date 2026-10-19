@@ -36,6 +36,7 @@ import 'features/monitoring/services/unexpected_error_monitor.dart';
 import 'features/monitoring/services/url_redaction.dart';
 import 'features/monitoring/services/firebase_analytics_service.dart';
 import 'features/monitoring/services/throttled_analytics_service.dart';
+import 'features/carplay/services/carplay_providers.dart';
 import 'features/player/services/audio_handler_provider.dart';
 import 'features/review_prompt/presentation/review_prompt_gate.dart';
 import 'features/settings/presentation/controllers/last_tab_controller.dart';
@@ -362,6 +363,11 @@ Future<ProviderContainer> bootstrapAppContainer({
   // Keep the sleep timer following chapter boundaries while no sleep-timer
   // widget is on screen (backgrounded app, covered route).
   container.listen(sleepTimerControllerProvider, (_, _) {});
+
+  // Answer the CarPlay scene. iOS only: the channel has no Android side.
+  if (defaultTargetPlatform == TargetPlatform.iOS) {
+    container.read(carPlayBridgeProvider);
+  }
 
   // Restore last played episode for mini player
   await _restoreLastPlayed(container);

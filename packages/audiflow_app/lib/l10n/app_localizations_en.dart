@@ -2360,4 +2360,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get episodeDetailAddToEnd => 'Add to end of queue';
+
+  @override
+  String get carPlayUpNextTab => 'Up Next';
+
+  @override
+  String get carPlayInProgressTab => 'In Progress';
+
+  @override
+  String get carPlayLibraryTab => 'Library';
+
+  @override
+  String get carPlayDownloadsTab => 'Downloads';
+
+  @override
+  String get carPlayUpNextEmpty => 'Nothing up next';
+
+  @override
+  String get carPlayInProgressEmpty => 'No episodes in progress';
+
+  @override
+  String get carPlayLibraryEmpty => 'No subscriptions yet';
+
+  @override
+  String get carPlayDownloadsEmpty => 'No downloaded episodes';
+
+  @override
+  String get carPlayPodcastEmpty => 'No episodes';
+
+  @override
+  String get carPlayLoadFailed => 'Couldn\'t load this list';
 }

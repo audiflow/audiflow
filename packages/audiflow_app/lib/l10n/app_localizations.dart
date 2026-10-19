@@ -4135,6 +4135,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add to end of queue'**
   String get episodeDetailAddToEnd;
+
+  /// CarPlay tab listing the playback queue
+  ///
+  /// In en, this message translates to:
+  /// **'Up Next'**
+  String get carPlayUpNextTab;
+
+  /// CarPlay tab listing partly played episodes
+  ///
+  /// In en, this message translates to:
+  /// **'In Progress'**
+  String get carPlayInProgressTab;
+
+  /// CarPlay tab listing subscribed podcasts
+  ///
+  /// In en, this message translates to:
+  /// **'Library'**
+  String get carPlayLibraryTab;
+
+  /// CarPlay tab listing downloaded episodes
+  ///
+  /// In en, this message translates to:
+  /// **'Downloads'**
+  String get carPlayDownloadsTab;
+
+  /// CarPlay empty Up Next list
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing up next'**
+  String get carPlayUpNextEmpty;
+
+  /// CarPlay empty In Progress list
+  ///
+  /// In en, this message translates to:
+  /// **'No episodes in progress'**
+  String get carPlayInProgressEmpty;
+
+  /// CarPlay empty Library list
+  ///
+  /// In en, this message translates to:
+  /// **'No subscriptions yet'**
+  String get carPlayLibraryEmpty;
+
+  /// CarPlay empty Downloads list
+  ///
+  /// In en, this message translates to:
+  /// **'No downloaded episodes'**
+  String get carPlayDownloadsEmpty;
+
+  /// CarPlay empty episode list of a podcast
+  ///
+  /// In en, this message translates to:
+  /// **'No episodes'**
+  String get carPlayPodcastEmpty;
+
+  /// CarPlay list shown when its data failed to load
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load this list'**
+  String get carPlayLoadFailed;
 }
 
 class _AppLocalizationsDelegate
