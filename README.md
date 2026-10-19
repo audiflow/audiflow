@@ -2,6 +2,9 @@
 
 A podcast player for Android and iOS built with Flutter.
 
+<a href="https://apps.apple.com/app/id6479216840"><img src="docs/assets/badges/app-store-en.svg" alt="Download on the App Store" height="40"></a>
+<a href="https://play.google.com/store/apps/details?id=com.reedom.audiflow_app"><img src="docs/assets/badges/google-play-en.png" alt="Get it on Google Play" height="40"></a>
+
 ## Features
 
 - Podcast discovery via iTunes search and genre/region charts
@@ -12,7 +15,6 @@ A podcast player for Android and iOS built with Flutter.
 - Smart playlist consumption (curated episode groupings)
 - Station management (custom multi-podcast playlists)
 - Podcast transcript and chapter display
-- On-device voice commands
 
 ## Requirements
 
