@@ -28,7 +28,10 @@ class CarPlayBridge {
 
   static const channelName = 'audiflow/carplay';
 
-  final CarPlayCatalog _catalog;
+  /// Read on each request rather than held, so a rebuilt catalog (its
+  /// repositories changed) is picked up without restarting the bridge and
+  /// re-announcing `ready`, which would reset the head unit's navigation.
+  final CarPlayCatalog Function() _catalog;
   final CarPlayPlayback _playback;
   final Map<String, String> Function() _labels;
   final Logger _logger;
@@ -112,7 +115,7 @@ class CarPlayBridge {
     final section = _section(arguments);
     final podcastId = arguments['podcastId'];
     try {
-      final items = await _catalog.items(
+      final items = await _catalog().items(
         section,
         podcastId: podcastId is int ? podcastId : null,
       );
@@ -134,15 +137,19 @@ class CarPlayBridge {
     // A podcast row opens its episode list on the native side; it is
     // never sent here.
     if (section == CarPlaySection.library) throw _invalidArgument('section');
+    final bool started;
     try {
-      if (section == CarPlaySection.upNext) {
-        await _playback.playQueueItem(id);
-      } else {
-        await _playback.playEpisode(id);
-      }
+      started = section == CarPlaySection.upNext
+          ? await _playback.playQueueItem(id)
+          : await _playback.playEpisode(id);
     } on Object catch (e, stack) {
       _logger.e('Failed to play CarPlay item $id', error: e, stackTrace: stack);
       throw PlatformException(code: 'PLAY_FAILED', message: '$e');
+    }
+    // The row went stale (removed on the phone): an error reply keeps the
+    // native side on the list instead of opening Now Playing.
+    if (!started) {
+      throw PlatformException(code: 'NOT_FOUND', message: 'No item $id');
     }
   }
 

@@ -27,6 +27,10 @@ final class CarPlayTemplateController: NSObject {
   /// Lists pushed over the tab bar, bottom first.
   private var pushedLists: [ShownList] = []
   private var labels: CarPlayLabels?
+  /// The latest `listItems` request per template. Dart answers requests
+  /// concurrently, so an older reply can arrive after a newer one and must
+  /// not overwrite it.
+  private var requestGenerations: [ObjectIdentifier: Int] = [:]
 
   init(interfaceController: CPInterfaceController, channel: CarPlayChannel) {
     self.interfaceController = interfaceController
@@ -71,6 +75,7 @@ final class CarPlayTemplateController: NSObject {
       ShownList(template: makeListTemplate(section, title: labels.title(of: section)), section: section)
     }
     pushedLists = []
+    requestGenerations = [:]
     let tabBar = CPTabBarTemplate(templates: tabLists.map(\.template))
     interfaceController.setRootTemplate(tabBar, animated: false, completion: nil)
     configureNowPlaying(labels)
@@ -110,8 +115,11 @@ final class CarPlayTemplateController: NSObject {
   // MARK: - Loading rows
 
   private func reload(_ list: ShownList) {
+    let key = ObjectIdentifier(list.template)
+    let generation = (requestGenerations[key] ?? 0) + 1
+    requestGenerations[key] = generation
     channel.listItems(list.section, podcastId: list.podcastId) { [weak self] items in
-      guard let self else { return }
+      guard let self, self.requestGenerations[key] == generation else { return }
       guard let items else {
         list.template.emptyViewTitleVariants = [self.labels?.loadFailed ?? ""]
         list.template.updateSections([])
@@ -170,6 +178,12 @@ final class CarPlayTemplateController: NSObject {
   private func showNowPlaying() {
     let nowPlaying = CPNowPlayingTemplate.shared
     if interfaceController.topTemplate === nowPlaying { return }
+    // Now Playing may already sit under a list opened from its Up Next
+    // button; CarPlay rejects pushing a template that is in the stack.
+    if interfaceController.templates.contains(where: { $0 === nowPlaying }) {
+      interfaceController.pop(to: nowPlaying, animated: true, completion: nil)
+      return
+    }
     interfaceController.pushTemplate(nowPlaying, animated: true, completion: nil)
   }
 }
@@ -194,7 +208,9 @@ extension CarPlayTemplateController: CPInterfaceControllerDelegate {
   func templateDidDisappear(_ aTemplate: CPTemplate, animated: Bool) {
     // Stop refreshing lists the driver has popped.
     let onScreen = interfaceController.templates
-    pushedLists.removeAll { shown in !onScreen.contains { $0 === shown.template } }
+    let popped = pushedLists.filter { shown in !onScreen.contains { $0 === shown.template } }
+    popped.forEach { requestGenerations[ObjectIdentifier($0.template)] = nil }
+    pushedLists.removeAll { shown in popped.contains { $0.template === shown.template } }
   }
 }
 

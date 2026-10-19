@@ -2,6 +2,8 @@ import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../services/queue_item_player.dart';
+
 part 'queue_controller.g.dart';
 
 /// Controller for queue screen state and actions.
@@ -70,19 +72,5 @@ class QueueController extends _$QueueController {
     await service.reorderItem(queueItemId, newIndex);
   }
 
-  Future<void> skipToItem(int queueItemId) async {
-    final service = ref.read(queueServiceProvider);
-    final episode = await service.skipToItem(queueItemId);
-    if (episode == null) return;
-
-    final subscription = await ref
-        .read(subscriptionRepositoryProvider)
-        .getById(episode.podcastId);
-    final controller = ref.read(audioPlayerControllerProvider.notifier);
-    controller.markPlaySource(PlaySource.queue);
-    controller.play(
-      episode.audioUrl,
-      metadata: nowPlayingInfoForEpisode(episode, subscription),
-    );
-  }
+  Future<void> skipToItem(int queueItemId) => playQueueItem(ref, queueItemId);
 }

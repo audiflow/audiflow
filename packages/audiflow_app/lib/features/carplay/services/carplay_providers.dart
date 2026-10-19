@@ -83,7 +83,7 @@ CarPlayBridge carPlayBridge(Ref ref) {
 
   late final CarPlayBridge bridge;
   bridge = CarPlayBridge(
-    catalog: ref.watch(carPlayCatalogProvider),
+    catalog: () => ref.read(carPlayCatalogProvider),
     playback: CarPlayPlayback(ref),
     labels: () => carPlayLabels(_appLocalizations(ref)),
     logger: ref.read(namedLoggerProvider('CarPlay')),
@@ -114,7 +114,8 @@ List<ProviderSubscription<Object?>> _watchListChanges(
     ref.listen(playbackQueueProvider, invalidates({CarPlaySection.upNext})),
     ref.listen(
       continueListeningEpisodesProvider,
-      invalidates({CarPlaySection.inProgress}),
+      // A podcast's episode list shows the same progress bars.
+      invalidates({CarPlaySection.inProgress, CarPlaySection.podcast}),
     ),
     ref.listen(
       sortedSubscriptionsProvider,

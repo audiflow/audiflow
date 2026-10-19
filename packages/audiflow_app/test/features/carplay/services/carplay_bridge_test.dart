@@ -28,13 +28,19 @@ class _FakePlayback extends Fake implements CarPlayPlayback {
   final playedQueueItems = <int>[];
   double? nextSpeed = 1.5;
 
-  @override
-  Future<void> playEpisode(int episodeId) async =>
-      playedEpisodes.add(episodeId);
+  bool found = true;
 
   @override
-  Future<void> playQueueItem(int queueItemId) async =>
-      playedQueueItems.add(queueItemId);
+  Future<bool> playEpisode(int episodeId) async {
+    playedEpisodes.add(episodeId);
+    return found;
+  }
+
+  @override
+  Future<bool> playQueueItem(int queueItemId) async {
+    playedQueueItems.add(queueItemId);
+    return found;
+  }
 
   @override
   Future<double?> cycleSpeed() async => nextSpeed;
@@ -65,7 +71,7 @@ void main() {
       return null;
     });
     bridge = CarPlayBridge(
-      catalog: catalog,
+      catalog: () => catalog,
       playback: playback,
       labels: () => labels,
       logger: Logger(level: Level.off),
@@ -152,6 +158,14 @@ void main() {
 
     check(playback.playedQueueItems).deepEquals([11]);
     check(playback.playedEpisodes).deepEquals([22]);
+  });
+
+  test('reports a row that is gone as an error', () async {
+    playback.found = false;
+
+    await check(
+      fromNative('playItem', {'section': CarPlaySection.upNext.name, 'id': 5}),
+    ).throws<PlatformException>();
   });
 
   test('rejects playing a podcast row', () async {

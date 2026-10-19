@@ -64,10 +64,16 @@ import workmanager_apple
   }
 
   /// Runs the shared engine on first use and returns it.
+  ///
+  /// A failed `run()` is not remembered, so the next scene to connect
+  /// tries again instead of attaching to a dead engine.
   func startFlutterEngine() -> FlutterEngine {
     if isFlutterEngineRunning { return flutterEngine }
+    guard flutterEngine.run() else {
+      NSLog("[AppDelegate] Flutter engine failed to start")
+      return flutterEngine
+    }
     isFlutterEngineRunning = true
-    flutterEngine.run()
     GeneratedPluginRegistrant.register(with: flutterEngine)
     if let registrar = flutterEngine.registrar(forPlugin: "AudioRoutePicker") {
       AudioRoutePickerViewFactory.register(with: registrar)

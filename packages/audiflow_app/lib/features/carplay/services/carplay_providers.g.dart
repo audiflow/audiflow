@@ -103,4 +103,4 @@ final class CarPlayBridgeProvider
   }
 }
 
-String _$carPlayBridgeHash() => r'c6410d32a4de235c6809a1646265cadd679f0613';
+String _$carPlayBridgeHash() => r'2675f49b288f76207c7c8d31a9c019590c6b3d3f';
