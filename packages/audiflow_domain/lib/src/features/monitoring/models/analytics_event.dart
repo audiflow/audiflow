@@ -14,7 +14,7 @@ sealed class AnalyticsEvent {
   Map<String, Object> get params;
 }
 
-enum SubscribeSource { search, discovery, opml, deeplink, unknown }
+enum SubscribeSource { search, discovery, opml, deeplink, feedLink, unknown }
 
 enum PlaySource { queue, library, playlist, station, search, deeplink, unknown }
 
