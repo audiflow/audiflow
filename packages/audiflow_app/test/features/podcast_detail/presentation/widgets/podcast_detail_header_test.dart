@@ -374,6 +374,105 @@ void main() {
       final titleFinder = find.text('Test Podcast');
       expect(titleFinder, findsOneWidget);
     });
+
+    group('after subscribing', () {
+      Future<_FlippingController> pumpUnsubscribed(WidgetTester tester) async {
+        final controller = _FlippingController();
+        final container = ProviderContainer(
+          overrides: [
+            subscriptionControllerProvider(
+              'test-id',
+            ).overrideWith(() => controller),
+          ],
+        );
+        addTearDown(container.dispose);
+        await pumpOnPhone(tester, buildTestWidget(container, testPodcast));
+        await tester.pumpAndSettle();
+        return controller;
+      }
+
+      testWidgets('confirms, then collapses the pill', (tester) async {
+        await pumpUnsubscribed(tester);
+
+        await tester.tap(find.text('Subscribe'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 200));
+        check(find.text('Subscribed').evaluate()).length.equals(1);
+
+        await tester.pump(const Duration(milliseconds: 700));
+        await tester.pumpAndSettle();
+        check(find.byType(FilledButton).evaluate()).isEmpty();
+      });
+
+      testWidgets('iOS Reduce Motion closes the space without sizing', (
+        tester,
+      ) async {
+        tester.platformDispatcher.accessibilityFeaturesTestValue =
+            const FakeAccessibilityFeatures(reduceMotion: true);
+        addTearDown(
+          tester.platformDispatcher.clearAccessibilityFeaturesTestValue,
+        );
+        await pumpUnsubscribed(tester);
+        await tester.pump();
+
+        check(find.byType(AnimatedSize).evaluate()).isEmpty();
+        // The switcher still fades; it only stops scaling.
+        final switcher = find.byType(AnimatedSwitcher);
+        check(switcher.evaluate()).length.equals(1);
+        check(
+          find
+              .descendant(of: switcher, matching: find.byType(ScaleTransition))
+              .evaluate(),
+        ).isEmpty();
+      });
+
+      testWidgets('without Reduce Motion the space closes by sizing', (
+        tester,
+      ) async {
+        await pumpUnsubscribed(tester);
+        await tester.pump();
+
+        check(find.byType(AnimatedSize).evaluate()).length.equals(1);
+      });
+
+      testWidgets('the confirmation cannot be tapped', (tester) async {
+        final controller = await pumpUnsubscribed(tester);
+
+        await tester.tap(find.text('Subscribe'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 200));
+        await tester.tap(find.text('Subscribed'), warnIfMissed: false);
+        await tester.pumpAndSettle();
+
+        check(controller.toggles).equals(1);
+      });
+    });
+
+    testWidgets('the pill appears without animating on first load', (
+      tester,
+    ) async {
+      final container = ProviderContainer(
+        overrides: [
+          subscriptionControllerProvider(
+            'test-id',
+          ).overrideWith(() => _FakeSubscriptionController(false)),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await pumpOnPhone(tester, buildTestWidget(container, testPodcast));
+      await tester.pump();
+      await tester.pump();
+      final firstHeight = tester
+          .getSize(find.byType(PodcastDetailHeader))
+          .height;
+      await tester.pumpAndSettle();
+
+      check(find.text('Subscribe').evaluate()).length.equals(1);
+      check(
+        tester.getSize(find.byType(PodcastDetailHeader)).height,
+      ).equals(firstHeight);
+    });
   });
 
   _toggleTests();
@@ -481,6 +580,29 @@ class _CountingController extends SubscriptionController {
     SubscribeSource source = SubscribeSource.discovery,
   }) async {
     toggles++;
+    return true;
+  }
+}
+
+/// Starts unsubscribed and subscribes through a loading state, as the real
+/// controller does.
+class _FlippingController extends SubscriptionController {
+  var toggles = 0;
+
+  @override
+  Future<bool> build(String itunesId) async => false;
+
+  @override
+  Future<bool> toggleSubscription(
+    BuildContext context,
+    Podcast podcast, {
+    SubscribeSource source = SubscribeSource.discovery,
+  }) async {
+    toggles++;
+    final next = !(state.value ?? false);
+    state = const AsyncValue.loading();
+    await Future<void>.value();
+    state = AsyncData(next);
     return true;
   }
 }
