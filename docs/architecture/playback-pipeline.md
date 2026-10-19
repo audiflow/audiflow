@@ -6,6 +6,7 @@ refs:
   modules:
     - packages/audiflow_app/lib/features/player/
     - packages/audiflow_domain/lib/src/features/player/
+    - packages/audiflow_app/lib/features/carplay/
 ---
 # Playback Pipeline
 
@@ -215,6 +216,34 @@ Managed by `SleepTimerController` (keepAlive Notifier, separate from `AudioPlaye
 - Remembers last-used minutes and episode count across sessions (persisted via `SleepTimerPreferencesDatasource`)
 - Decision logic is encapsulated in `SleepTimerService` (pure, stateless, testable)
 - Emits `SleepTimerEvent` stream for UI notifications: `SleepTimerFired`, and `SleepTimerCancelled` when leaving the target cancels a timer (not when the listener turns it off)
+
+## CarPlay (iOS)
+
+FR 19. The Runner has two scenes: the phone window (`PhoneSceneDelegate`, a
+`FlutterSceneDelegate`) and the CarPlay audio scene (`CarPlaySceneDelegate`).
+Both use one `FlutterEngine` owned by `AppDelegate` and started by whichever
+scene connects first (`startFlutterEngine`, which also registers plugins and
+the app's channels). The storyboard's implicit engine was dropped because the
+car can launch the app with no phone window, and Dart must still run. The
+phone window builds a `FlutterViewController(engine:)` before calling `super`,
+so `FlutterSceneDelegate` still forwards connection options to plugins, and
+releases it on disconnect so a later window can attach to the same engine.
+
+Now Playing needs no bridge: `CPNowPlayingTemplate` reads
+`MPNowPlayingInfoCenter` and sends `MPRemoteCommandCenter` commands, both of
+which audio_service (Layer 2) already owns, so car and phone controls hit the
+same `AudiflowAudioHandler`. Only the rate button (`cycleSpeed`, saved through
+`setSpeed` to the now-playing scope) and the Up Next button are CarPlay
+specific.
+
+The lists go over `audiflow/carplay`. Native owns the templates and asks for
+rows (`listItems`); Dart (`CarPlayBridge`, `CarPlayCatalog`) owns the data and
+plays rows (`playItem`) through `AudioPlayerController`. Dart sends `ready`
+with the ARB-localized labels at startup and on language change; native shows
+a placeholder root until then. Native sends `connected` / `disconnected`, and
+only while connected does Dart listen to the queue, in-progress, library,
+downloads and now-playing providers, coalescing changes into `invalidate`
+messages (500 ms).
 
 ## When to update
 

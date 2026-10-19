@@ -23,6 +23,7 @@ Part of the audiflow ecosystem. Consumes smart playlist config JSON from `audifl
 
 - Podcast discovery, subscription, and feed management
 - Audio playback with background support and system controls
+- CarPlay browsing and playback control (iOS)
 - Configurable audio interruption behavior (duck or pause-and-rewind)
 - Episode download and queue management
 - Smart playlist config consumption and local caching

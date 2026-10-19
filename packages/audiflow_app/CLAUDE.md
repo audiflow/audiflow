@@ -22,6 +22,7 @@ Top-level app package in the `audiflow/` monorepo. Depends on `audiflow_domain`,
 - Feature screens and controllers under `lib/features/`
 - Adaptive nav shell (phone bottom bar, tablet top tabs, tablet landscape rail)
 - Audio handler init, mini player restore, background feed refresh (Workmanager)
+- iOS scenes: the phone window and CarPlay share one `FlutterEngine` owned by `AppDelegate`; CarPlay lists come from `lib/features/carplay/` over the `audiflow/carplay` channel
 - Localization: ARB files in `lib/l10n/` (en, ja)
 
 ## Non-responsibilities
