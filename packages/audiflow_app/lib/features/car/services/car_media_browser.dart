@@ -81,8 +81,16 @@ final class CarEpisodeId extends CarMediaId {
 ///
 /// Android has no signal for a head unit connecting, so the list data is
 /// watched from the first browse request for the rest of the process
-/// ([onFirstBrowse]); until then a phone that never uses Android Auto pays
-/// nothing for it.
+/// ([onFirstBrowse]). The recent root does not count: Android's own media
+/// resumption asks for it on every phone, Android Auto or not.
+
+/// Description extras Android Auto reads to draw a row's progress
+/// (`MediaConstants.DESCRIPTION_EXTRAS_KEY_COMPLETION_*` in androidx).
+const _completionStatusKey = 'android.media.extra.PLAYBACK_STATUS';
+const _completionPercentageKey =
+    'androidx.media.MediaItem.Extras.COMPLETION_PERCENTAGE';
+const _partiallyPlayed = 1;
+
 class CarMediaBrowser {
   CarMediaBrowser({
     required this._catalog,
@@ -120,9 +128,10 @@ class CarMediaBrowser {
   /// The children of [parentMediaId]; empty for an id this build does not
   /// know or a list that failed to load.
   Future<List<MediaItem>> getChildren(String parentMediaId) async {
-    _markBrowsed();
+    final id = CarMediaId.parse(parentMediaId);
+    if (id is! CarRecentId) _markBrowsed();
     try {
-      return await switch (CarMediaId.parse(parentMediaId)) {
+      return await switch (id) {
         CarRootId() => Future.value(_tabItems()),
         CarRecentId() => _recent(),
         CarTabId(:final section) => _rows(parentMediaId, section),
@@ -142,7 +151,6 @@ class CarMediaBrowser {
   /// Emits whenever the children of [parentMediaId] change; audio_service
   /// then tells Android Auto to reload them.
   ValueStream<Map<String, dynamic>> subscribeToChildren(String parentMediaId) {
-    _markBrowsed();
     return _subscriptions.putIfAbsent(
       parentMediaId,
       () => BehaviorSubject.seeded(const {}),
@@ -239,8 +247,17 @@ class CarMediaBrowser {
           displaySubtitle: row.detail,
           artUri: artwork[row.artworkUrl],
           playable: section != CarSection.library,
+          extras: _progressExtras(row.progress),
         ),
     ];
+  }
+
+  static Map<String, dynamic>? _progressExtras(double? progress) {
+    if (progress == null) return null;
+    return {
+      _completionStatusKey: _partiallyPlayed,
+      _completionPercentageKey: progress.clamp(0.0, 1.0),
+    };
   }
 
   static String _mediaIdOf(CarListItem row, CarSection section) {
@@ -265,16 +282,29 @@ class CarMediaBrowser {
     var allDone = false;
     final all = Future.wait([
       for (final url in urls)
-        _artwork.resolve(url).then((uri) {
-          if (uri != null) resolved[url] = uri;
-        }),
+        _artwork
+            .resolve(url)
+            .then((uri) {
+              if (uri != null) resolved[url] = uri;
+            })
+            // One bad image must not empty the whole list.
+            .catchError(
+              (Object e) => _logger.w('Artwork failed: $url', error: e),
+            ),
     ]).then((_) => allDone = true);
     await Future.any([all, Future<void>.delayed(_artworkWait)]);
-    // Only a list sent before its artwork arrived is reloaded; reloading
-    // a complete one would resolve the (now cached) art and loop.
+    final sent = {...resolved};
     if (!allDone) {
-      unawaited(all.then((_) => _subscriptions[parentMediaId]?.add(const {})));
+      // Reload only when late artwork actually arrived: artwork that keeps
+      // failing slowly would otherwise reload (and refetch) forever.
+      unawaited(
+        all.then((_) {
+          if (sent.length < resolved.length) {
+            _subscriptions[parentMediaId]?.add(const {});
+          }
+        }),
+      );
     }
-    return {...resolved};
+    return sent;
   }
 }

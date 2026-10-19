@@ -59,4 +59,4 @@ final class NowPlayingArtworkPreparerProvider
 }
 
 String _$nowPlayingArtworkPreparerHash() =>
-    r'75560436dd0feab9cbaa817eedfe04dbc9387b4b';
+    r'0982be2d56164c15c37b7dee6c9eb1105d8f91b1';

@@ -397,16 +397,33 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
     await _controller.seek(position);
   }
 
-  // Android Auto's media browser (FR 19). iOS never calls these.
+  // Android Auto's media browser (FR 19). iOS never calls these. A browser
+  // that fails to start leaves the head unit with empty lists, never an
+  // error thrown into audio_service.
 
   Future<CarMediaBrowser> get _carBrowser =>
       _ref.read(carMediaBrowserProvider.future);
+
+  void _logCarBrowserError(Object error, StackTrace stack) {
+    _log.e(
+      '[AudioHandler] Android Auto browser failed',
+      error: error,
+      stackTrace: stack,
+    );
+  }
 
   @override
   Future<List<audio_service.MediaItem>> getChildren(
     String parentMediaId, [
     Map<String, dynamic>? options,
-  ]) async => (await _carBrowser).getChildren(parentMediaId);
+  ]) async {
+    try {
+      return await (await _carBrowser).getChildren(parentMediaId);
+    } on Object catch (e, stack) {
+      _logCarBrowserError(e, stack);
+      return const [];
+    }
+  }
 
   @override
   ValueStream<Map<String, dynamic>> subscribeToChildren(String parentMediaId) {
@@ -414,12 +431,14 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
     // once it exists.
     final relay = BehaviorSubject<Map<String, dynamic>>.seeded(const {});
     unawaited(
-      _carBrowser.then(
-        (browser) => browser
-            .subscribeToChildren(parentMediaId)
-            .skip(1)
-            .listen(relay.add),
-      ),
+      _carBrowser
+          .then<void>((browser) {
+            browser
+                .subscribeToChildren(parentMediaId)
+                .skip(1)
+                .listen(relay.add);
+          })
+          .catchError(_logCarBrowserError),
     );
     return relay;
   }
@@ -428,7 +447,13 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
   Future<void> playFromMediaId(
     String mediaId, [
     Map<String, dynamic>? extras,
-  ]) async => (await _carBrowser).playFromMediaId(mediaId);
+  ]) async {
+    try {
+      await (await _carBrowser).playFromMediaId(mediaId);
+    } on Object catch (e, stack) {
+      _logCarBrowserError(e, stack);
+    }
+  }
 
   @override
   Future<void> skipToNext() async => _controller.skipForward();

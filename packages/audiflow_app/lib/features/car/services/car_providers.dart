@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:ui';
 
 import 'package:audiflow_domain/audiflow_domain.dart';
@@ -12,9 +11,7 @@ import '../../../l10n/duration_label.dart';
 import '../../library/presentation/controllers/continue_listening_controller.dart';
 import '../../library/presentation/controllers/library_controller.dart';
 import '../../settings/presentation/controllers/locale_controller.dart';
-import '../../player/services/artwork_downscaler.dart';
-import '../../player/services/now_playing_artwork_fetcher.dart';
-import '../../player/services/now_playing_artwork_preparer.dart';
+import '../../player/services/now_playing_artwork_provider.dart';
 import '../models/car_list_item.dart';
 import 'car_artwork_resolver.dart';
 import 'car_catalog.dart';
@@ -96,14 +93,13 @@ List<ProviderSubscription<Object?>> watchCarListChanges(
 @Riverpod(keepAlive: true)
 Future<CarMediaBrowser> carMediaBrowser(Ref ref) async {
   final packageInfo = await PackageInfo.fromPlatform();
-  final fetcher = NowPlayingArtworkFetcher(dio: ref.read(dioProvider));
+  // Read, not watched: a rebuild would close the change streams that
+  // audio_service keeps listening to for the life of the process.
   final artwork = ContentProviderArtworkResolver(
-    preparer: FileNowPlayingArtworkPreparer(
-      cacheDirectory: Directory(
-        '${ref.read(cacheDirProvider)}/$carArtworkCacheFolder',
-      ),
-      fetchBytes: fetcher.fetch,
-      downscale: downscaleArtworkToPng,
+    preparer: buildArtworkPreparer(
+      dio: ref.read(dioProvider),
+      cacheDir: ref.read(cacheDirProvider),
+      folder: carArtworkCacheFolder,
       logger: ref.read(namedLoggerProvider('CarArtwork')),
       maxEdgePixels: carArtworkMaxEdgePixels,
       entryLimit: carArtworkCacheEntryLimit,

@@ -53,9 +53,17 @@ class _FakeArtwork implements CarArtworkResolver {
   static Uri uriFor(String url) =>
       Uri(scheme: 'content', host: 'test', pathSegments: [url]);
 
+  /// URLs that resolve to null (unavailable artwork).
+  final missing = <String>{};
+
+  /// URLs whose resolve throws.
+  final throwing = <String>{};
+
   @override
   Future<Uri?> resolve(String artworkUrl) async {
     if (hold) await (_held ??= Completer()).future;
+    if (throwing.contains(artworkUrl)) throw StateError('decode failed');
+    if (missing.contains(artworkUrl)) return null;
     return uriFor(artworkUrl);
   }
 }
@@ -193,6 +201,70 @@ void main() {
 
     test('is empty for an unknown id', () async {
       check(await browser.getChildren('radio/1')).isEmpty();
+    });
+
+    test('does not start watching for the system resumption request', () async {
+      await browser.getChildren(AudioService.recentRootId);
+      browser.subscribeToChildren(AudioService.recentRootId);
+
+      check(firstBrowseCalls).equals(0);
+    });
+
+    test('carries row progress in the completion extras', () async {
+      catalog.rows[CarSection.inProgress] = [
+        const CarListItem(id: 1, title: 'Half', progress: 0.5),
+        const CarListItem(id: 2, title: 'Unplayed'),
+      ];
+
+      final items = await browser.getChildren(
+        CarMediaId.tab(CarSection.inProgress),
+      );
+
+      check(items.first.extras).isNotNull().deepEquals({
+        'android.media.extra.PLAYBACK_STATUS': 1,
+        'androidx.media.MediaItem.Extras.COMPLETION_PERCENTAGE': 0.5,
+      });
+      check(items.last.extras).isNull();
+    });
+
+    test('keeps the rows when one image fails', () async {
+      const bad = 'https://example.com/bad.jpg';
+      const good = 'https://example.com/good.jpg';
+      artwork.throwing.add(bad);
+      catalog.rows[CarSection.downloads] = [
+        const CarListItem(id: 1, title: 'Bad', artworkUrl: bad),
+        const CarListItem(id: 2, title: 'Good', artworkUrl: good),
+      ];
+
+      final items = await browser.getChildren(
+        CarMediaId.tab(CarSection.downloads),
+      );
+
+      check([
+        for (final i in items) i.artUri,
+      ]).deepEquals([null, _FakeArtwork.uriFor(good)]);
+    });
+
+    test('does not reload for artwork that fails late', () {
+      fakeAsync((async) {
+        const url = 'https://example.com/gone.jpg';
+        catalog.rows[CarSection.downloads] = [
+          const CarListItem(id: 1, title: 'Episode', artworkUrl: url),
+        ];
+        artwork
+          ..hold = true
+          ..missing.add(url);
+        final parent = CarMediaId.tab(CarSection.downloads);
+        final reloads = <Object?>[];
+        browser.subscribeToChildren(parent).skip(1).listen(reloads.add);
+
+        unawaited(browser.getChildren(parent));
+        async.elapse(artworkWait);
+        artwork.release();
+        async.flushMicrotasks();
+
+        check(reloads).isEmpty();
+      });
     });
 
     test('starts watching data on the first browse only', () async {

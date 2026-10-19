@@ -268,9 +268,13 @@ prepares it with a second `FileNowPlayingArtworkPreparer` (320 px, 300
 entries) under `<cache>/car_artwork/`, and `CarArtworkProvider` (Kotlin,
 exported, read-only) serves files from that folder by their MD5 name. A list
 waits at most 2 s for its artwork; when some arrives later the list's
-`subscribeToChildren` stream fires once so Android Auto reloads it. List
-data is watched (`watchCarListChanges`, coalesced by `CarChangeBatcher`) from
-the first browse request on, since Android gives no disconnect signal.
+`subscribeToChildren` stream fires once so Android Auto reloads it (only if
+new artwork actually arrived, so failing artwork cannot loop). At most four
+images are prepared at once. Rows carry progress in the androidx completion
+description extras. List data is watched (`watchCarListChanges`, coalesced by
+`CarChangeBatcher`) from the first browse request on, since Android gives no
+disconnect signal; requests for the recent root do not count, because
+SystemUI's media resumption makes them on every phone.
 
 ## When to update
 

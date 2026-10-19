@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:collection';
+
 import '../../player/services/now_playing_artwork_preparer.dart';
 
 /// Subdirectory of the app cache holding artwork for Android Auto rows.
@@ -28,6 +31,7 @@ class ContentProviderArtworkResolver implements CarArtworkResolver {
   ContentProviderArtworkResolver({
     required this._preparer,
     required this._authority,
+    this._maxConcurrent = 4,
   });
 
   final NowPlayingArtworkPreparer _preparer;
@@ -35,14 +39,45 @@ class ContentProviderArtworkResolver implements CarArtworkResolver {
   /// `<applicationId>.carartwork`, as declared in AndroidManifest.xml.
   final String _authority;
 
+  /// Downloads and decodes run at once. A list asks for up to 100 images,
+  /// and each download buffers up to 8 MB before it is decoded.
+  final int _maxConcurrent;
+
+  int _running = 0;
+  final Queue<Completer<void>> _waiting = Queue();
+
   @override
   Future<Uri?> resolve(String artworkUrl) async {
-    final file = await _preparer.prepare(artworkUrl);
-    if (file == null) return null;
-    return Uri(
-      scheme: 'content',
-      host: _authority,
-      pathSegments: [file.pathSegments.last],
-    );
+    await _acquire();
+    try {
+      final file = await _preparer.prepare(artworkUrl);
+      if (file == null) return null;
+      return Uri(
+        scheme: 'content',
+        host: _authority,
+        pathSegments: [file.pathSegments.last],
+      );
+    } finally {
+      _release();
+    }
+  }
+
+  Future<void> _acquire() async {
+    if (_running < _maxConcurrent) {
+      _running++;
+      return;
+    }
+    final turn = Completer<void>();
+    _waiting.add(turn);
+    // The releasing call hands its slot over, so _running is unchanged.
+    await turn.future;
+  }
+
+  void _release() {
+    if (_waiting.isNotEmpty) {
+      _waiting.removeFirst().complete();
+      return;
+    }
+    _running--;
   }
 }
