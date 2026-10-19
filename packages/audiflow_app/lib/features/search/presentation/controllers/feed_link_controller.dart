@@ -1,0 +1,84 @@
+import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:logger/logger.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+import '../../../podcast_detail/presentation/controllers/podcast_detail_controller.dart';
+
+part 'feed_link_controller.g.dart';
+
+/// Provider for [FeedLinkResolver].
+@riverpod
+FeedLinkResolver feedLinkResolver(Ref ref) {
+  return FeedLinkResolver(
+    subscriptionRepository: ref.watch(subscriptionRepositoryProvider),
+    itunesClient: ref.watch(itunesChartsClientProvider),
+    httpClient: ref.watch(feedHttpClientProvider),
+    feedParser: ref.watch(feedParserServiceProvider),
+  );
+}
+
+/// Progress of opening a pasted feed link.
+sealed class FeedLinkState {
+  const FeedLinkState();
+}
+
+/// No link is being opened.
+class FeedLinkIdle extends FeedLinkState {
+  const FeedLinkIdle();
+}
+
+/// [link] is being resolved.
+class FeedLinkResolving extends FeedLinkState {
+  const FeedLinkResolving(this.link);
+
+  final FeedLink link;
+}
+
+/// [link] could not be opened.
+class FeedLinkFailed extends FeedLinkState {
+  const FeedLinkFailed(this.link, {this.error});
+
+  final FeedLink link;
+
+  /// Why it failed; null for an unexpected error.
+  final FeedLinkException? error;
+}
+
+/// Resolves a feed link pasted into search to the podcast to preview.
+@riverpod
+class FeedLinkController extends _$FeedLinkController {
+  @override
+  FeedLinkState build() => const FeedLinkIdle();
+
+  /// Returns the podcast for [link], or null when it failed (the failure
+  /// is in [state]) or a newer request replaced this one.
+  Future<Podcast?> open(FeedLink link) async {
+    state = FeedLinkResolving(link);
+    try {
+      final podcast = await ref.read(feedLinkResolverProvider).resolve(link);
+      if (!_isCurrent(link)) return null;
+      state = const FeedLinkIdle();
+      return podcast;
+    } on FeedLinkException catch (e) {
+      // Only the failure kind: the cause carries the URL, and private feed
+      // URLs embed access tokens.
+      _logger.w('Feed link failed: ${e.failure}');
+      if (_isCurrent(link)) state = FeedLinkFailed(link, error: e);
+    } on Exception catch (e, stack) {
+      _logger.e('Feed link failed unexpectedly', error: e, stackTrace: stack);
+      if (_isCurrent(link)) state = FeedLinkFailed(link);
+    }
+    return null;
+  }
+
+  /// Forgets any pending or failed link, e.g. when the text changes.
+  void reset() => state = const FeedLinkIdle();
+
+  bool _isCurrent(FeedLink link) {
+    if (!ref.mounted) return false;
+    final current = state;
+    return current is FeedLinkResolving && current.link == link;
+  }
+
+  Logger get _logger => ref.read(namedLoggerProvider('FeedLink'));
+}

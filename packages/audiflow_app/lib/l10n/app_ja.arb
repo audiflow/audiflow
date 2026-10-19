@@ -922,5 +922,14 @@
   "episodeDetailPlaybackRecord": "再生の記録",
   "episodeDetailTimes": "{count}回",
   "episodeDetailOpenPodcast": "番組を開く",
-  "episodeDetailAddToEnd": "キューの最後に追加"
+  "episodeDetailAddToEnd": "キューの最後に追加",
+  "feedLinkAddByUrl": "RSSフィードのURLで追加",
+  "feedLinkDialogHint": "フィードURLまたは番組のリンク",
+  "feedLinkDialogInvalid": "https://example.com/feed.xml のようなリンクを入力してください",
+  "feedLinkOpen": "開く",
+  "feedLinkPanelTitle": "このリンクから番組を開く",
+  "feedLinkErrorUnsupported": "{platform} のリンクにはRSSフィードが含まれていません。番組のRSSフィードのURLを貼り付けてください。",
+  "feedLinkErrorNotFound": "この番組のRSSフィードが見つかりませんでした。",
+  "feedLinkErrorNotFeed": "このリンクはポッドキャストのRSSフィードではありません。",
+  "feedLinkErrorServer": "サーバーからフィードを取得できませんでした。時間をおいてお試しください。"
 }
