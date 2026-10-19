@@ -76,44 +76,43 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final state = ref.watch(podcastSearchControllerProvider);
     final l10n = AppLocalizations.of(context);
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () => _focusNode.unfocus(),
-      child: Scaffold(
-        body: SafeArea(
-          bottom: false,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              LargeTitle(l10n.navSearch),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  Spacing.screenHorizontal,
-                  0,
-                  Spacing.screenHorizontal,
-                  Spacing.sm,
-                ),
-                child: Row(
-                  children: [
-                    Expanded(child: _buildSearchField(l10n)),
-                    const SizedBox(width: Spacing.sm),
-                    SearchCountryChip(
-                      countryCode: ref
-                          .read(podcastSearchControllerProvider.notifier)
-                          .currentCountry,
-                      onTap: _onCountryTap,
-                    ),
-                  ],
-                ),
+    // No screen-wide tap-to-unfocus: the tap that opens the iOS edit menu
+    // would reach it and drop focus before Paste lands. The field's
+    // onTapOutside already hides the keyboard.
+    return Scaffold(
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            LargeTitle(l10n.navSearch),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                Spacing.screenHorizontal,
+                0,
+                Spacing.screenHorizontal,
+                Spacing.sm,
               ),
-              Expanded(
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  child: _buildContent(state),
-                ),
+              child: Row(
+                children: [
+                  Expanded(child: _buildSearchField(l10n)),
+                  const SizedBox(width: Spacing.sm),
+                  SearchCountryChip(
+                    countryCode: ref
+                        .read(podcastSearchControllerProvider.notifier)
+                        .currentCountry,
+                    onTap: _onCountryTap,
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+            Expanded(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                child: _buildContent(state),
+              ),
+            ),
+          ],
         ),
       ),
     );
