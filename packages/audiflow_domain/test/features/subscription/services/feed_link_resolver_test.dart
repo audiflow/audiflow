@@ -101,6 +101,20 @@ void main() {
       check(podcast.id).equals('42');
     });
 
+    test('matches a subscription stored under http', () async {
+      subscriptions.addSubscription(
+        id: 1,
+        itunesId: '42',
+        feedUrl: 'http://example.com/feed.xml',
+      );
+
+      final podcast = await resolver.resolve(
+        const FeedLink.direct(url: feedUrl),
+      );
+
+      check(podcast.id).equals('42');
+    });
+
     test('follows the feed a web page announces', () async {
       const pageUrl = 'https://example.com/show';
       server

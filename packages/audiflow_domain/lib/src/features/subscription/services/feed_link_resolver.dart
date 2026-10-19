@@ -53,12 +53,12 @@ class FeedLinkResolver {
     if (podcast == null || feedUrl == null || feedUrl.isEmpty) {
       throw const FeedLinkException(FeedLinkFailure.notFound);
     }
-    final imported = await _subscriptionRepository.getByFeedUrl(feedUrl);
+    final imported = await _findByFeedUrl(feedUrl);
     return imported == null ? podcast : _fromSubscription(imported);
   }
 
   Future<Podcast> _resolveFeedUrl(String url) async {
-    final existing = await _subscriptionRepository.getByFeedUrl(url);
+    final existing = await _findByFeedUrl(url);
     if (existing != null) return _fromSubscription(existing);
 
     final body = await _fetch(url);
@@ -68,11 +68,21 @@ class FeedLinkResolver {
     if (announced == null) {
       throw const FeedLinkException(FeedLinkFailure.notPodcastFeed);
     }
-    final announcedExisting = await _subscriptionRepository.getByFeedUrl(
-      announced,
-    );
+    final announcedExisting = await _findByFeedUrl(announced);
     if (announcedExisting != null) return _fromSubscription(announcedExisting);
     return _parseFeed(announced, await _fetch(announced));
+  }
+
+  /// The entry for [feedUrl], also under its `http` form: feed links are
+  /// upgraded to `https`, while OPML imports keep the URL as written.
+  Future<Subscription?> _findByFeedUrl(String feedUrl) async {
+    final exact = await _subscriptionRepository.getByFeedUrl(feedUrl);
+    if (exact != null) return exact;
+    final uri = Uri.parse(feedUrl);
+    if (uri.scheme != 'https') return null;
+    return _subscriptionRepository.getByFeedUrl(
+      uri.replace(scheme: 'http').toString(),
+    );
   }
 
   Future<String> _fetch(String url) async {
