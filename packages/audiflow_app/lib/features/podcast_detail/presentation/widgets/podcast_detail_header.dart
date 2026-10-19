@@ -234,6 +234,11 @@ class _SubscribeButtonState extends ConsumerState<_SubscribeButton> {
     super.dispose();
   }
 
+  void _cancelConfirmation() {
+    _confirmTimer?.cancel();
+    setState(() => _confirming = false);
+  }
+
   void _startConfirmation() {
     _confirmTimer?.cancel();
     setState(() => _confirming = true);
@@ -261,6 +266,8 @@ class _SubscribeButtonState extends ConsumerState<_SubscribeButton> {
       // Only a real unsubscribed -> subscribed change earns the
       // confirmation; the first load does not.
       if (_lastSettled == false && settled) _startConfirmation();
+      // An unsubscribe within the hold must not keep saying "Subscribed".
+      if (!settled && _confirming) _cancelConfirmation();
       _lastSettled = settled;
     });
     final subscriptionState = ref.watch(provider);

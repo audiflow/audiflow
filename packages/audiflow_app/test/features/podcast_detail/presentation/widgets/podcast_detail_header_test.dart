@@ -417,6 +417,27 @@ void main() {
         await tester.pumpAndSettle();
       });
 
+      testWidgets('unsubscribing mid-confirmation drops the confirmation', (
+        tester,
+      ) async {
+        final controller = await pumpUnsubscribed(tester);
+
+        await tester.tap(find.text('Subscribe'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 200));
+        check(find.text('Subscribed').evaluate()).length.equals(1);
+
+        // As the `...` menu would, well inside the 700ms hold.
+        await controller.toggleSubscription(
+          tester.element(find.byType(PodcastDetailHeader)),
+          testPodcast,
+        );
+        await tester.pumpAndSettle();
+
+        check(find.text('Subscribed').evaluate()).isEmpty();
+        check(find.text('Subscribe').evaluate()).length.equals(1);
+      });
+
       testWidgets('on a tablet the pill stays on the start edge', (
         tester,
       ) async {
