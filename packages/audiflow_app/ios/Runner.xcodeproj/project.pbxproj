@@ -19,9 +19,13 @@
 		72F3D8221A40210B7635B004 /* stgDebug.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 51F53DB9B0ABDDA1B135CCF3 /* stgDebug.xcconfig */; };
 		74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FAE1ED2DC5600515810 /* AppDelegate.swift */; };
 		A0F526A11ED2DC5600515810 /* AudioRoutePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0F526A21ED2DC5600515810 /* AudioRoutePicker.swift */; };
+		6AF2767B307203131F646470 /* PhoneSceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1906F647FE67D3FE8B235FAA /* PhoneSceneDelegate.swift */; };
+		DF0D45760579F5BF98A810DB /* CarPlaySceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FB13D28BED9A2599D4BFE21 /* CarPlaySceneDelegate.swift */; };
+		F7BDD74EF9545565498C8944 /* CarPlayChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A457DF333BE0A226BA5DBA14 /* CarPlayChannel.swift */; };
+		30E4966B6426A1AE3A6C2BD1 /* CarPlayTemplateController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC829EDD157A7E1D00902926 /* CarPlayTemplateController.swift */; };
+		D82D28AB42700CF57292A35F /* CarPlayArtworkLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF052BAB1C2757335973239 /* CarPlayArtworkLoader.swift */; };
 		A0F526A31ED2DC5600515810 /* HapticsChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0F526A41ED2DC5600515810 /* HapticsChannel.swift */; };
 		78A318202AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage in Frameworks */ = {isa = PBXBuildFile; productRef = 78A3181F2AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage */; };
-		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
 		BDE031080EAE17731D3B211F /* prodDebug.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 7CE7FB42AB0799855139039D /* prodDebug.xcconfig */; };
@@ -54,6 +58,7 @@
 /* Begin PBXFileReference section */
 		0335139CE53B477FCE4AA89B /* prodRelease.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = prodRelease.xcconfig; path = Flutter/prodRelease.xcconfig; sourceTree = "<group>"; };
 		05E18F1765A0B57C35FB9331 /* devDebug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = devDebug.xcconfig; path = Flutter/devDebug.xcconfig; sourceTree = "<group>"; };
+		4A3CFA17A0655A50FDE7A79E /* RunnerSimulator.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RunnerSimulator.entitlements; sourceTree = "<group>"; };
 		07D6FAB72F66CAAD00CEF907 /* Runner.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Runner.entitlements; sourceTree = "<group>"; };
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
@@ -64,6 +69,11 @@
 		74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Runner-Bridging-Header.h"; sourceTree = "<group>"; };
 		74858FAE1ED2DC5600515810 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		A0F526A21ED2DC5600515810 /* AudioRoutePicker.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioRoutePicker.swift; sourceTree = "<group>"; };
+		1906F647FE67D3FE8B235FAA /* PhoneSceneDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PhoneSceneDelegate.swift; sourceTree = "<group>"; };
+		2FB13D28BED9A2599D4BFE21 /* CarPlaySceneDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CarPlaySceneDelegate.swift; sourceTree = "<group>"; };
+		A457DF333BE0A226BA5DBA14 /* CarPlayChannel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CarPlayChannel.swift; sourceTree = "<group>"; };
+		EC829EDD157A7E1D00902926 /* CarPlayTemplateController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CarPlayTemplateController.swift; sourceTree = "<group>"; };
+		1FF052BAB1C2757335973239 /* CarPlayArtworkLoader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CarPlayArtworkLoader.swift; sourceTree = "<group>"; };
 		A0F526A41ED2DC5600515810 /* HapticsChannel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HapticsChannel.swift; sourceTree = "<group>"; };
 		78E0A7A72DC9AD7400C4905E /* FlutterGeneratedPluginSwiftPackage */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = FlutterGeneratedPluginSwiftPackage; path = Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage; sourceTree = "<group>"; };
 		7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = Flutter/Release.xcconfig; sourceTree = "<group>"; };
@@ -74,7 +84,6 @@
 		9740EEB31CF90195004384FC /* Generated.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Generated.xcconfig; path = Flutter/Generated.xcconfig; sourceTree = "<group>"; };
 		9740EEB41CF90195004384FC /* Profile.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Profile.xcconfig; path = Flutter/Profile.xcconfig; sourceTree = "<group>"; };
 		97C146EE1CF9000F007C117D /* Runner.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Runner.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		97C146FB1CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		97C146FD1CF9000F007C117D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		97C147001CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -156,7 +165,7 @@
 			isa = PBXGroup;
 			children = (
 				07D6FAB72F66CAAD00CEF907 /* Runner.entitlements */,
-				97C146FA1CF9000F007C117D /* Main.storyboard */,
+				4A3CFA17A0655A50FDE7A79E /* RunnerSimulator.entitlements */,
 				97C146FD1CF9000F007C117D /* Assets.xcassets */,
 				97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */,
 				97C147021CF9000F007C117D /* Info.plist */,
@@ -165,6 +174,11 @@
 				74858FAE1ED2DC5600515810 /* AppDelegate.swift */,
 				A0F526A21ED2DC5600515810 /* AudioRoutePicker.swift */,
 				A0F526A41ED2DC5600515810 /* HapticsChannel.swift */,
+				1FF052BAB1C2757335973239 /* CarPlayArtworkLoader.swift */,
+				EC829EDD157A7E1D00902926 /* CarPlayTemplateController.swift */,
+				A457DF333BE0A226BA5DBA14 /* CarPlayChannel.swift */,
+				2FB13D28BED9A2599D4BFE21 /* CarPlaySceneDelegate.swift */,
+				1906F647FE67D3FE8B235FAA /* PhoneSceneDelegate.swift */,
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
 			);
 			path = Runner;
@@ -280,7 +294,6 @@
 				97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */,
 				3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */,
 				97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */,
-				97C146FC1CF9000F007C117D /* Main.storyboard in Resources */,
 				649775C568E03768C316044D /* devDebug.xcconfig in Resources */,
 				1E448C73DC0239B273DE3BC9 /* devProfile.xcconfig in Resources */,
 				08C079F730945ADC13312178 /* devRelease.xcconfig in Resources */,
@@ -382,6 +395,11 @@
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
 				A0F526A11ED2DC5600515810 /* AudioRoutePicker.swift in Sources */,
 				A0F526A31ED2DC5600515810 /* HapticsChannel.swift in Sources */,
+				D82D28AB42700CF57292A35F /* CarPlayArtworkLoader.swift in Sources */,
+				30E4966B6426A1AE3A6C2BD1 /* CarPlayTemplateController.swift in Sources */,
+				F7BDD74EF9545565498C8944 /* CarPlayChannel.swift in Sources */,
+				DF0D45760579F5BF98A810DB /* CarPlaySceneDelegate.swift in Sources */,
+				6AF2767B307203131F646470 /* PhoneSceneDelegate.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -397,14 +415,6 @@
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
-		97C146FA1CF9000F007C117D /* Main.storyboard */ = {
-			isa = PBXVariantGroup;
-			children = (
-				97C146FB1CF9000F007C117D /* Base */,
-			);
-			name = Main.storyboard;
-			sourceTree = "<group>";
-		};
 		97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -538,6 +548,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = Runner/RunnerSimulator.entitlements;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				DEVELOPMENT_TEAM = R6HMM3C9D7;
 				ENABLE_BITCODE = NO;
@@ -606,6 +617,7 @@
 			baseConfigurationReference = 7F721F7404832DFAE0D37835 /* stgProfile.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = Runner/RunnerSimulator.entitlements;
 				DEVELOPMENT_TEAM = R6HMM3C9D7;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -616,6 +628,7 @@
 			baseConfigurationReference = 51F53DB9B0ABDDA1B135CCF3 /* stgDebug.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = Runner/RunnerSimulator.entitlements;
 				DEVELOPMENT_TEAM = R6HMM3C9D7;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -626,6 +639,7 @@
 			baseConfigurationReference = 8E9D94829E9F7C7555B62132 /* devRelease.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = Runner/RunnerSimulator.entitlements;
 				DEVELOPMENT_TEAM = R6HMM3C9D7;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -711,6 +725,7 @@
 			baseConfigurationReference = B2E1C866CA962629B16D5A75 /* stgRelease.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = Runner/RunnerSimulator.entitlements;
 				DEVELOPMENT_TEAM = R6HMM3C9D7;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -976,6 +991,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = Runner/RunnerSimulator.entitlements;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				DEVELOPMENT_TEAM = R6HMM3C9D7;
 				ENABLE_BITCODE = NO;
@@ -1000,6 +1016,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = Runner/RunnerSimulator.entitlements;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				DEVELOPMENT_TEAM = R6HMM3C9D7;
 				ENABLE_BITCODE = NO;
@@ -1168,6 +1185,7 @@
 			baseConfigurationReference = E7145E4780B881430076E454 /* devProfile.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = Runner/RunnerSimulator.entitlements;
 				DEVELOPMENT_TEAM = R6HMM3C9D7;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -1248,6 +1266,7 @@
 			baseConfigurationReference = E3996B1F8838C18597B5019A /* prodProfile.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = Runner/RunnerSimulator.entitlements;
 				DEVELOPMENT_TEAM = R6HMM3C9D7;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -1258,6 +1277,7 @@
 			baseConfigurationReference = 0335139CE53B477FCE4AA89B /* prodRelease.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = Runner/RunnerSimulator.entitlements;
 				DEVELOPMENT_TEAM = R6HMM3C9D7;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -1340,6 +1360,7 @@
 			baseConfigurationReference = 05E18F1765A0B57C35FB9331 /* devDebug.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = Runner/RunnerSimulator.entitlements;
 				DEVELOPMENT_TEAM = R6HMM3C9D7;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -1350,6 +1371,7 @@
 			baseConfigurationReference = 7CE7FB42AB0799855139039D /* prodDebug.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = Runner/RunnerSimulator.entitlements;
 				DEVELOPMENT_TEAM = R6HMM3C9D7;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
