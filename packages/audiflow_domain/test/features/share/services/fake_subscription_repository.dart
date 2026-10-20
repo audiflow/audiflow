@@ -67,8 +67,9 @@ class FakeSubscriptionRepository implements SubscriptionRepository {
   }
 
   @override
-  Future<Subscription?> getByFeedUrl(String feedUrl) =>
-      throw UnimplementedError();
+  Future<Subscription?> getByFeedUrl(String feedUrl) async {
+    return _subscriptions.where((s) => s.feedUrl == feedUrl).firstOrNull;
+  }
 
   @override
   Future<void> updateLastRefreshed(String itunesId, DateTime timestamp) =>

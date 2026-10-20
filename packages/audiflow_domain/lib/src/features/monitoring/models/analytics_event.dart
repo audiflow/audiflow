@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 
+import '../../subscription/services/feed_placeholder_id.dart';
+
 /// Base type for all analytics events.
 ///
 /// Every concrete event maps to a single GA event name and a flat
@@ -12,7 +14,7 @@ sealed class AnalyticsEvent {
   Map<String, Object> get params;
 }
 
-enum SubscribeSource { search, discovery, opml, deeplink, unknown }
+enum SubscribeSource { search, discovery, opml, deeplink, feedLink, unknown }
 
 enum PlaySource { queue, library, playlist, station, search, deeplink, unknown }
 
@@ -60,8 +62,8 @@ Map<String, Object> _speedParam(double? speed) =>
     speed == null ? const {} : {'speed': speed};
 
 /// Resolves the `podcast_id` analytics param: the raw iTunes ID when it is
-/// a real one, else the [analyticsFeedKey]. OPML imports carry a synthetic
-/// `opml:`-prefixed iTunes ID that must never reach GA.
+/// a real one, else the [analyticsFeedKey]. Podcasts added by feed URL
+/// carry a synthetic [feedPlaceholderId] that must never reach GA.
 ///
 /// Returns null when neither source is usable so emitters can skip.
 String? analyticsPodcastId({
@@ -70,7 +72,7 @@ String? analyticsPodcastId({
 }) {
   if (itunesId != null &&
       itunesId.isNotEmpty &&
-      !itunesId.startsWith('opml:')) {
+      !itunesId.startsWith(feedPlaceholderIdPrefix)) {
     return itunesId;
   }
   if (feedUrl != null && feedUrl.isNotEmpty) return analyticsFeedKey(feedUrl);

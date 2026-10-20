@@ -4135,6 +4135,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add to end of queue'**
   String get episodeDetailAddToEnd;
+
+  /// Search screen button and dialog title for adding a podcast by its RSS feed URL
+  ///
+  /// In en, this message translates to:
+  /// **'Add by RSS feed URL'**
+  String get feedLinkAddByUrl;
+
+  /// Hint in the add-by-URL dialog field
+  ///
+  /// In en, this message translates to:
+  /// **'Feed URL or podcast link'**
+  String get feedLinkDialogHint;
+
+  /// Error under the add-by-URL field when the text is not a link
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a web link, such as https://example.com/feed.xml'**
+  String get feedLinkDialogInvalid;
+
+  /// Add-by-URL dialog confirm action and the action that opens a pasted feed link
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get feedLinkOpen;
+
+  /// Title shown in search when the field holds a feed URL or podcast link
+  ///
+  /// In en, this message translates to:
+  /// **'Open podcast from this link'**
+  String get feedLinkPanelTitle;
+
+  /// Error when the pasted link is from a service that does not expose RSS, such as Spotify
+  ///
+  /// In en, this message translates to:
+  /// **'{platform} links don\'t include an RSS feed. Paste the show\'s RSS feed URL instead.'**
+  String feedLinkErrorUnsupported(String platform);
+
+  /// Error when a podcast app link has no RSS feed in the directory
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t find an RSS feed for this podcast.'**
+  String get feedLinkErrorNotFound;
+
+  /// Error when the pasted URL answers with something other than a podcast RSS feed
+  ///
+  /// In en, this message translates to:
+  /// **'This link isn\'t a podcast RSS feed.'**
+  String get feedLinkErrorNotFeed;
+
+  /// Error when the feed host answers with a server error
+  ///
+  /// In en, this message translates to:
+  /// **'The server couldn\'t return the feed. Try again later.'**
+  String get feedLinkErrorServer;
 }
 
 class _AppLocalizationsDelegate
