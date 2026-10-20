@@ -53,21 +53,22 @@ class FeedLinkController extends _$FeedLinkController {
   /// Returns the podcast for [link], or null when it failed (the failure
   /// is in [state]) or a newer request replaced this one.
   Future<Podcast?> open(FeedLink link) async {
+    final request = ++_latestRequest;
     state = FeedLinkResolving(link);
     try {
       final podcast = await ref.read(feedLinkResolverProvider).resolve(link);
-      if (!_isCurrent(link)) return null;
+      if (!_isCurrent(request)) return null;
       state = const FeedLinkIdle();
       return podcast;
     } on FeedLinkException catch (e) {
-      if (!_isCurrent(link)) return null;
+      if (!_isCurrent(request)) return null;
       // Only the failure kind: the cause carries the URL, and private feed
       // URLs embed access tokens.
       _logger.w('Feed link failed: ${e.failure}');
       state = FeedLinkFailed(link, error: e);
       // Errors too (e.g. IsarError): the panel must never stay spinning.
     } catch (e, stack) {
-      if (!_isCurrent(link)) return null;
+      if (!_isCurrent(request)) return null;
       _logger.e('Feed link failed unexpectedly', error: e, stackTrace: stack);
       state = FeedLinkFailed(link);
     }
@@ -75,13 +76,16 @@ class FeedLinkController extends _$FeedLinkController {
   }
 
   /// Forgets any pending or failed link, e.g. when the text changes.
-  void reset() => state = const FeedLinkIdle();
-
-  bool _isCurrent(FeedLink link) {
-    if (!ref.mounted) return false;
-    final current = state;
-    return current is FeedLinkResolving && current.link == link;
+  void reset() {
+    _latestRequest++;
+    state = const FeedLinkIdle();
   }
+
+  // Counts requests rather than comparing links: the same link can be
+  // opened again while an earlier attempt is still in flight.
+  int _latestRequest = 0;
+
+  bool _isCurrent(int request) => ref.mounted && request == _latestRequest;
 
   Logger get _logger => ref.read(namedLoggerProvider('FeedLink'));
 }

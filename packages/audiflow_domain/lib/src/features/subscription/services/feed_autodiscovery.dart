@@ -1,10 +1,8 @@
 /// Whether [body] is an HTML page rather than a feed document.
-bool looksLikeHtml(String body) {
-  final head = body.length <= _sniffLength
-      ? body
-      : body.substring(0, _sniffLength);
-  return _htmlTag.hasMatch(head);
-}
+///
+/// Only the root element counts: feeds often embed whole HTML documents in
+/// their show notes, so a tag anywhere else proves nothing.
+bool looksLikeHtml(String body) => _htmlRoot.hasMatch(body);
 
 /// The RSS feed URL a web page announces with
 /// `<link rel="alternate" type="application/rss+xml" href="...">`, resolved
@@ -38,11 +36,13 @@ bool _mentionsPodcast(Map<String, String> attributes) {
   return text.toLowerCase().contains('podcast');
 }
 
-const _sniffLength = 4096;
 const _rssType = 'application/rss+xml';
-// The <html> tag is optional, so a doctype or <head> also marks a page.
-final _htmlTag = RegExp(
-  r'<(!doctype\s+html|html|head)[\s>]',
+// Skips a byte order mark, XML declarations, processing instructions and
+// comments before the root. The <html> tag is optional, so a doctype or
+// <head> also marks a page.
+final _htmlRoot = RegExp(
+  r'^\uFEFF?\s*(?:(?:<\?[\s\S]*?\?>|<!--[\s\S]*?-->)\s*)*'
+  r'<(?:!doctype\s+html|html|head)[\s>]',
   caseSensitive: false,
 );
 final _linkTag = RegExp(r'<link\b[^>]*>', caseSensitive: false);

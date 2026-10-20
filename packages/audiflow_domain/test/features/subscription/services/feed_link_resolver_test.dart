@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_search/audiflow_search.dart';
 import 'package:checks/checks.dart';
@@ -21,9 +24,8 @@ class _FakeItunesChartsClient extends ItunesChartsClient {
   }
 }
 
-/// Parses only bodies containing a key of [feeds]; anything else is not a
-/// feed, as with the real parser. Matches by containment because the mock
-/// adapter JSON-encodes string replies.
+/// Parses only bodies equal to a key of [feeds]; anything else is not a
+/// feed, as with the real parser.
 class _FakeFeedParserService extends FeedParserService {
   final Map<String, PodcastFeed> feeds = {};
   List<PodcastItem> episodes = [_episode(enclosureUrl: 'https://e/1.mp3')];
@@ -34,22 +36,21 @@ class _FakeFeedParserService extends FeedParserService {
     DateTime? knownNewestPubDate,
     String? knownNewestGuid,
   }) async {
-    final feed = feeds.entries
-        .where((e) => xmlContent.contains(e.key))
-        .firstOrNull
-        ?.value;
+    final feed = feeds[xmlContent];
     if (feed == null) throw PodcastException(message: 'not a feed');
     return ParsedFeed(podcast: feed, episodes: episodes);
   }
 }
 
-PodcastItem _episode({String? enclosureUrl}) => PodcastItem.fromData(
-  parsedAt: DateTime(2026),
-  sourceUrl: '',
-  title: 'Episode',
-  description: '',
-  enclosureUrl: enclosureUrl,
-);
+PodcastItem _episode({String? enclosureUrl, String? enclosureType}) =>
+    PodcastItem.fromData(
+      parsedAt: DateTime(2026),
+      sourceUrl: '',
+      title: 'Episode',
+      description: '',
+      enclosureUrl: enclosureUrl,
+      enclosureType: enclosureType,
+    );
 
 void main() {
   const feedUrl = 'https://example.com/feed.xml';
@@ -92,7 +93,7 @@ void main() {
 
   group('direct link', () {
     test('previews the parsed feed under a placeholder ID', () async {
-      server.onGet(feedUrl, (s) => s.reply(200, rssBody));
+      server.onGet(feedUrl, (s) => s.reply(200, _raw(rssBody)));
 
       final podcast = await resolver.resolve(
         const FeedLink.direct(url: feedUrl),
@@ -138,12 +139,13 @@ void main() {
           pageUrl,
           (s) => s.reply(
             200,
-            // Single quotes: the mock adapter JSON-encodes string replies.
-            "<html><head><link rel='alternate' "
-            "type='application/rss+xml' href='/feed.xml'></head></html>",
+            _raw(
+              "<html><head><link rel='alternate' "
+              "type='application/rss+xml' href='/feed.xml'></head></html>",
+            ),
           ),
         )
-        ..onGet(feedUrl, (s) => s.reply(200, rssBody));
+        ..onGet(feedUrl, (s) => s.reply(200, _raw(rssBody)));
 
       final podcast = await resolver.resolve(
         const FeedLink.direct(url: pageUrl),
@@ -153,7 +155,7 @@ void main() {
     });
 
     test('fails as not a feed for a page without a feed', () async {
-      server.onGet(feedUrl, (s) => s.reply(200, '<html><body/></html>'));
+      server.onGet(feedUrl, (s) => s.reply(200, _raw('<html><body/></html>')));
       await expectFailure(
         const FeedLink.direct(url: feedUrl),
         FeedLinkFailure.notPodcastFeed,
@@ -161,7 +163,7 @@ void main() {
     });
 
     test('fails as not a feed when the body does not parse', () async {
-      server.onGet(feedUrl, (s) => s.reply(200, '{"json": true}'));
+      server.onGet(feedUrl, (s) => s.reply(200, _raw('{"json": true}')));
       await expectFailure(
         const FeedLink.direct(url: feedUrl),
         FeedLinkFailure.notPodcastFeed,
@@ -170,11 +172,42 @@ void main() {
 
     test('fails as not a feed when no episode has audio', () async {
       parser.episodes = [_episode()];
-      server.onGet(feedUrl, (s) => s.reply(200, rssBody));
+      server.onGet(feedUrl, (s) => s.reply(200, _raw(rssBody)));
       await expectFailure(
         const FeedLink.direct(url: feedUrl),
         FeedLinkFailure.notPodcastFeed,
       );
+    });
+
+    test('fails as not a feed when enclosures are not audio', () async {
+      parser.episodes = [
+        _episode(enclosureUrl: 'https://e/1.jpg', enclosureType: 'image/jpeg'),
+        _episode(
+          enclosureUrl: 'https://e/2.pdf',
+          enclosureType: 'application/pdf',
+        ),
+      ];
+      server.onGet(feedUrl, (s) => s.reply(200, _raw(rssBody)));
+      await expectFailure(
+        const FeedLink.direct(url: feedUrl),
+        FeedLinkFailure.notPodcastFeed,
+      );
+    });
+
+    test('accepts audio under a generic enclosure type', () async {
+      parser.episodes = [
+        _episode(
+          enclosureUrl: 'https://e/1.mp3',
+          enclosureType: 'application/octet-stream',
+        ),
+      ];
+      server.onGet(feedUrl, (s) => s.reply(200, _raw(rssBody)));
+
+      final podcast = await resolver.resolve(
+        const FeedLink.direct(url: feedUrl),
+      );
+
+      check(podcast.feedUrl).equals(feedUrl);
     });
 
     for (final (status, failure) in [
@@ -184,7 +217,7 @@ void main() {
       (503, FeedLinkFailure.serverError),
     ]) {
       test('maps HTTP $status to $failure', () async {
-        server.onGet(feedUrl, (s) => s.reply(status, ''));
+        server.onGet(feedUrl, (s) => s.reply(status, _raw('')));
         await expectFailure(const FeedLink.direct(url: feedUrl), failure);
       });
     }
@@ -293,3 +326,7 @@ void main() {
     );
   });
 }
+
+/// [body] as bytes, which the mock adapter sends as is; it JSON-encodes a
+/// string reply.
+Uint8List _raw(String body) => utf8.encode(body);

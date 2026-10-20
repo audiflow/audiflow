@@ -18,6 +18,21 @@ void main() {
       check(looksLikeHtml('<head><title>x</title></head>')).isTrue();
     });
 
+    test('looks past a prolog and comments', () {
+      check(
+        looksLikeHtml('\uFEFF<?xml version="1.0"?>\n<!-- page -->\n<html>'),
+      ).isTrue();
+    });
+
+    test('ignores HTML inside the show notes of a feed', () {
+      check(
+        looksLikeHtml(
+          '<?xml version="1.0"?><rss><channel><description><![CDATA['
+          '<!DOCTYPE html><html><head></head></html>]]></description>',
+        ),
+      ).isFalse();
+    });
+
     test('rejects an RSS document', () {
       check(
         looksLikeHtml('<?xml version="1.0"?><rss><channel/></rss>'),

@@ -295,6 +295,20 @@ void main() {
       );
     });
 
+    test('matches a feed stored under the other scheme', () async {
+      await repository.subscribe(
+        itunesId: 'itunes-1',
+        feedUrl: 'https://example.com/feed.xml',
+        title: 'Test Podcast',
+        artistName: 'Test Artist',
+      );
+
+      expect(
+        await repository.isSubscribedByFeedUrl('http://example.com/feed.xml'),
+        true,
+      );
+    });
+
     test('returns false when not subscribed by feed URL', () async {
       expect(
         await repository.isSubscribedByFeedUrl(

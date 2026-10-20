@@ -257,6 +257,39 @@ void main() {
     expect(await opened, isNull);
     expect(container.read(feedLinkControllerProvider), isA<FeedLinkIdle>());
   });
+
+  test('controller ignores an earlier attempt at the same link', () async {
+    final first = Completer<Podcast>();
+    final second = Completer<Podcast>();
+    final resolver = _QueuedFeedLinkResolver([first.future, second.future]);
+    final container = ProviderContainer(
+      overrides: [feedLinkResolverProvider.overrideWithValue(resolver)],
+    );
+    addTearDown(container.dispose);
+    final subscription = container.listen(
+      feedLinkControllerProvider,
+      (_, _) {},
+    );
+    addTearDown(subscription.close);
+    final controller = container.read(feedLinkControllerProvider.notifier);
+    const link = FeedLink.direct(url: feedUrl);
+    const podcast = Podcast(
+      id: '1',
+      name: 'Show',
+      artistName: '',
+      feedUrl: feedUrl,
+    );
+
+    final stale = controller.open(link);
+    controller.reset();
+    final latest = controller.open(link);
+    first.completeError(const FeedLinkException(FeedLinkFailure.network));
+    second.complete(podcast);
+
+    expect(await stale, isNull);
+    expect(await latest, podcast);
+    expect(container.read(feedLinkControllerProvider), isA<FeedLinkIdle>());
+  });
 }
 
 class _DeferredFeedLinkResolver implements FeedLinkResolver {
@@ -266,4 +299,14 @@ class _DeferredFeedLinkResolver implements FeedLinkResolver {
 
   @override
   Future<Podcast> resolve(FeedLink link) => _result;
+}
+
+/// Answers each resolve with the next of [_results].
+class _QueuedFeedLinkResolver implements FeedLinkResolver {
+  _QueuedFeedLinkResolver(this._results);
+
+  final List<Future<Podcast>> _results;
+
+  @override
+  Future<Podcast> resolve(FeedLink link) => _results.removeAt(0);
 }

@@ -205,6 +205,7 @@ export 'src/features/subscription/models/feed_link_exception.dart';
 export 'src/features/subscription/services/feed_link_parser.dart';
 export 'src/features/subscription/services/feed_link_resolver.dart';
 export 'src/features/subscription/services/feed_placeholder_id.dart';
+export 'src/features/subscription/services/feed_url_variants.dart';
 
 // Re-export audiflow_search types for subscription extension
 export 'package:audiflow_search/audiflow_search.dart' show Podcast;

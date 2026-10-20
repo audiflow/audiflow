@@ -1,4 +1,5 @@
-import 'package:audiflow_podcast/audiflow_podcast.dart' show PodcastException;
+import 'package:audiflow_podcast/audiflow_podcast.dart'
+    show PodcastException, PodcastItem;
 import 'package:audiflow_search/audiflow_search.dart';
 import 'package:dio/dio.dart';
 
@@ -11,6 +12,7 @@ import '../models/subscriptions.dart';
 import '../repositories/subscription_repository.dart';
 import 'feed_autodiscovery.dart';
 import 'feed_placeholder_id.dart';
+import 'feed_url_variants.dart';
 
 /// Resolves a [FeedLink] to the [Podcast] the podcast detail screen
 /// previews, so the user can subscribe the same way as from search.
@@ -84,16 +86,12 @@ class FeedLinkResolver {
     return _parseFeed(announced, (await _fetch(announced)).body);
   }
 
-  /// The entry for [feedUrl], also under its `http` form: feed links are
-  /// upgraded to `https`, while OPML imports keep the URL as written.
   Future<Subscription?> _findByFeedUrl(String feedUrl) async {
-    final exact = await _subscriptionRepository.getByFeedUrl(feedUrl);
-    if (exact != null) return exact;
-    final uri = Uri.parse(feedUrl);
-    if (uri.scheme != 'https') return null;
-    return _subscriptionRepository.getByFeedUrl(
-      uri.replace(scheme: 'http').toString(),
-    );
+    for (final url in feedUrlVariants(feedUrl)) {
+      final existing = await _subscriptionRepository.getByFeedUrl(url);
+      if (existing != null) return existing;
+    }
+    return null;
   }
 
   Future<({String body, Uri url})> _fetch(String url) async {
@@ -120,10 +118,7 @@ class FeedLinkResolver {
       throw FeedLinkException(FeedLinkFailure.notPodcastFeed, cause: e);
     }
     // Blog and comment feeds are RSS too; only audio makes a podcast.
-    final hasAudio = parsed.episodes.any(
-      (episode) => episode.enclosureUrl?.isNotEmpty ?? false,
-    );
-    if (!hasAudio) {
+    if (!parsed.episodes.any(_hasAudio)) {
       throw const FeedLinkException(FeedLinkFailure.notPodcastFeed);
     }
     final feed = parsed.podcast;
@@ -136,6 +131,17 @@ class FeedLinkResolver {
       artworkUrl: feed.primaryImage?.url,
     );
   }
+}
+
+/// Whether [episode] carries audio. Many audio feeds omit the enclosure
+/// type or send a generic one, so only a specific non-audio type (an
+/// image, a PDF, a video) rules an episode out.
+bool _hasAudio(PodcastItem episode) {
+  if (episode.enclosureUrl?.isEmpty ?? true) return false;
+  final type = episode.enclosureType?.trim().toLowerCase() ?? '';
+  return type.isEmpty ||
+      type.startsWith('audio/') ||
+      type == 'application/octet-stream';
 }
 
 /// Not found means the directory has no such podcast; anything else is a
