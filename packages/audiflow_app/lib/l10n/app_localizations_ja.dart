@@ -2255,4 +2255,34 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get carPlayLoadFailed => 'リストを読み込めませんでした';
+
+  @override
+  String get feedLinkAddByUrl => 'RSSフィードのURLで追加';
+
+  @override
+  String get feedLinkDialogHint => 'フィードURLまたは番組のリンク';
+
+  @override
+  String get feedLinkDialogInvalid =>
+      'https://example.com/feed.xml のようなリンクを入力してください';
+
+  @override
+  String get feedLinkOpen => '開く';
+
+  @override
+  String get feedLinkPanelTitle => 'このリンクから番組を開く';
+
+  @override
+  String feedLinkErrorUnsupported(String platform) {
+    return '$platform のリンクにはRSSフィードが含まれていません。番組のRSSフィードのURLを貼り付けてください。';
+  }
+
+  @override
+  String get feedLinkErrorNotFound => 'この番組のRSSフィードが見つかりませんでした。';
+
+  @override
+  String get feedLinkErrorNotFeed => 'このリンクはポッドキャストのRSSフィードではありません。';
+
+  @override
+  String get feedLinkErrorServer => 'サーバーからフィードを取得できませんでした。時間をおいてお試しください。';
 }

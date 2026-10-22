@@ -1523,5 +1523,28 @@
   "carPlayPodcastEmpty": "No episodes",
   "@carPlayPodcastEmpty": { "description": "CarPlay empty episode list of a podcast" },
   "carPlayLoadFailed": "Couldn't load this list",
-  "@carPlayLoadFailed": { "description": "CarPlay list shown when its data failed to load" }
+  "@carPlayLoadFailed": { "description": "CarPlay list shown when its data failed to load" },
+  "feedLinkAddByUrl": "Add by RSS feed URL",
+  "@feedLinkAddByUrl": { "description": "Search screen button and dialog title for adding a podcast by its RSS feed URL" },
+  "feedLinkDialogHint": "Feed URL or podcast link",
+  "@feedLinkDialogHint": { "description": "Hint in the add-by-URL dialog field" },
+  "feedLinkDialogInvalid": "Enter a web link, such as https://example.com/feed.xml",
+  "@feedLinkDialogInvalid": { "description": "Error under the add-by-URL field when the text is not a link" },
+  "feedLinkOpen": "Open",
+  "@feedLinkOpen": { "description": "Add-by-URL dialog confirm action and the action that opens a pasted feed link" },
+  "feedLinkPanelTitle": "Open podcast from this link",
+  "@feedLinkPanelTitle": { "description": "Title shown in search when the field holds a feed URL or podcast link" },
+  "feedLinkErrorUnsupported": "{platform} links don't include an RSS feed. Paste the show's RSS feed URL instead.",
+  "@feedLinkErrorUnsupported": {
+    "description": "Error when the pasted link is from a service that does not expose RSS, such as Spotify",
+    "placeholders": {
+      "platform": { "type": "String" }
+    }
+  },
+  "feedLinkErrorNotFound": "Couldn't find an RSS feed for this podcast.",
+  "@feedLinkErrorNotFound": { "description": "Error when a podcast app link has no RSS feed in the directory" },
+  "feedLinkErrorNotFeed": "This link isn't a podcast RSS feed.",
+  "@feedLinkErrorNotFeed": { "description": "Error when the pasted URL answers with something other than a podcast RSS feed" },
+  "feedLinkErrorServer": "The server couldn't return the feed. Try again later.",
+  "@feedLinkErrorServer": { "description": "Error when the feed host answers with a server error" }
 }

@@ -932,5 +932,14 @@
   "carPlayLibraryEmpty": "購読がありません",
   "carPlayDownloadsEmpty": "ダウンロード済みのエピソードはありません",
   "carPlayPodcastEmpty": "エピソードがありません",
-  "carPlayLoadFailed": "リストを読み込めませんでした"
+  "carPlayLoadFailed": "リストを読み込めませんでした",
+  "feedLinkAddByUrl": "RSSフィードのURLで追加",
+  "feedLinkDialogHint": "フィードURLまたは番組のリンク",
+  "feedLinkDialogInvalid": "https://example.com/feed.xml のようなリンクを入力してください",
+  "feedLinkOpen": "開く",
+  "feedLinkPanelTitle": "このリンクから番組を開く",
+  "feedLinkErrorUnsupported": "{platform} のリンクにはRSSフィードが含まれていません。番組のRSSフィードのURLを貼り付けてください。",
+  "feedLinkErrorNotFound": "この番組のRSSフィードが見つかりませんでした。",
+  "feedLinkErrorNotFeed": "このリンクはポッドキャストのRSSフィードではありません。",
+  "feedLinkErrorServer": "サーバーからフィードを取得できませんでした。時間をおいてお試しください。"
 }

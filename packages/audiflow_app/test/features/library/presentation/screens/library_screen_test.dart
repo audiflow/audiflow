@@ -276,7 +276,10 @@ void main() {
 
   group('LibraryScreen redesign sections', () {
     late SharedPreferences prefs;
-    final fixtures = [_sub(1, 'Alpha'), _sub(2, 'Beta')];
+    final fixtures = [
+      _sub(1, 'Alpha')..artworkUrl = 'https://example.com/alpha.jpg',
+      _sub(2, 'Beta'),
+    ];
 
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
@@ -286,13 +289,15 @@ void main() {
     EpisodeWithProgress inProgressEpisode({
       int podcastId = 1,
       String title = 'Halfway episode',
+      String? imageUrl,
     }) {
       final episode = Episode()
         ..id = 10
         ..podcastId = podcastId
         ..guid = 'g10'
         ..title = title
-        ..audioUrl = 'https://example.com/10.mp3';
+        ..audioUrl = 'https://example.com/10.mp3'
+        ..imageUrl = imageUrl;
       final history = PlaybackHistory()
         ..episodeId = 10
         ..positionMs = 30 * 60000
@@ -425,6 +430,39 @@ void main() {
         ),
       );
       check(line.fraction).isNotNull().isCloseTo(30 / 48, 1e-9);
+    });
+
+    String? cardArtworkUrl(WidgetTester tester) {
+      final artwork = find.descendant(
+        of: find.ancestor(
+          of: find.text('Halfway episode'),
+          matching: find.byType(BottomEdgeProgress),
+        ),
+        matching: find.byType(ArtworkImage),
+      );
+      if (artwork.evaluate().isEmpty) return null;
+      return tester.widget<ArtworkImage>(artwork).url;
+    }
+
+    testWidgets('continue listening falls back to the podcast artwork', (
+      tester,
+    ) async {
+      // Many feeds give episodes no image of their own; the card must not
+      // show a placeholder while the mini player shows the show's artwork.
+      await pump(tester, inProgress: [inProgressEpisode()]);
+      check(cardArtworkUrl(tester)).equals('https://example.com/alpha.jpg');
+    });
+
+    testWidgets('continue listening prefers the episode artwork', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        inProgress: [
+          inProgressEpisode(imageUrl: 'https://example.com/episode.jpg'),
+        ],
+      );
+      check(cardArtworkUrl(tester)).equals('https://example.com/episode.jpg');
     });
 
     testWidgets('back from a continue listening episode returns to Library', (

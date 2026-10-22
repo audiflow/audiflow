@@ -131,6 +131,18 @@ void main() {
       expect(focusNode.hasFocus, isFalse);
     });
 
+    testWidgets('tapping outside the field hides the keyboard', (tester) async {
+      await tester.pumpWidget(buildTestWidget());
+      await tester.tap(find.byType(TextField));
+      await tester.pump();
+
+      await tester.tapAt(tester.getCenter(find.byType(Scaffold)));
+      await tester.pump();
+
+      final field = tester.widget<TextField>(find.byType(TextField));
+      expect(field.focusNode!.hasFocus, isFalse);
+    });
+
     testWidgets('watches PodcastSearchController state', (tester) async {
       await tester.pumpWidget(buildTestWidget());
 

@@ -2390,4 +2390,36 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get carPlayLoadFailed => 'Couldn\'t load this list';
+
+  @override
+  String get feedLinkAddByUrl => 'Add by RSS feed URL';
+
+  @override
+  String get feedLinkDialogHint => 'Feed URL or podcast link';
+
+  @override
+  String get feedLinkDialogInvalid =>
+      'Enter a web link, such as https://example.com/feed.xml';
+
+  @override
+  String get feedLinkOpen => 'Open';
+
+  @override
+  String get feedLinkPanelTitle => 'Open podcast from this link';
+
+  @override
+  String feedLinkErrorUnsupported(String platform) {
+    return '$platform links don\'t include an RSS feed. Paste the show\'s RSS feed URL instead.';
+  }
+
+  @override
+  String get feedLinkErrorNotFound =>
+      'Couldn\'t find an RSS feed for this podcast.';
+
+  @override
+  String get feedLinkErrorNotFeed => 'This link isn\'t a podcast RSS feed.';
+
+  @override
+  String get feedLinkErrorServer =>
+      'The server couldn\'t return the feed. Try again later.';
 }
