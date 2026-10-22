@@ -16,7 +16,16 @@ sealed class AnalyticsEvent {
 
 enum SubscribeSource { search, discovery, opml, deeplink, feedLink, unknown }
 
-enum PlaySource { queue, library, playlist, station, search, deeplink, unknown }
+enum PlaySource {
+  queue,
+  library,
+  playlist,
+  station,
+  search,
+  deeplink,
+  car,
+  unknown,
+}
 
 enum SleepTimerMode { duration, episodes, endOfEpisode, endOfChapter }
 

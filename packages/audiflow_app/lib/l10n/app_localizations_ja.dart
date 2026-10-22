@@ -2227,6 +2227,36 @@ class AppLocalizationsJa extends AppLocalizations {
   String get episodeDetailAddToEnd => 'キューの最後に追加';
 
   @override
+  String get carUpNextTab => '次に再生';
+
+  @override
+  String get carInProgressTab => '再生途中';
+
+  @override
+  String get carLibraryTab => 'ライブラリ';
+
+  @override
+  String get carDownloadsTab => 'ダウンロード';
+
+  @override
+  String get carUpNextEmpty => '次に再生するエピソードはありません';
+
+  @override
+  String get carInProgressEmpty => '再生途中のエピソードはありません';
+
+  @override
+  String get carLibraryEmpty => '購読がありません';
+
+  @override
+  String get carDownloadsEmpty => 'ダウンロード済みのエピソードはありません';
+
+  @override
+  String get carPodcastEmpty => 'エピソードがありません';
+
+  @override
+  String get carLoadFailed => 'リストを読み込めませんでした';
+
+  @override
   String get feedLinkAddByUrl => 'RSSフィードのURLで追加';
 
   @override

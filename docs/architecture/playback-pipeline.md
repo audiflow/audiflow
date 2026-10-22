@@ -6,6 +6,8 @@ refs:
   modules:
     - packages/audiflow_app/lib/features/player/
     - packages/audiflow_domain/lib/src/features/player/
+    - packages/audiflow_app/lib/features/car/
+    - packages/audiflow_app/lib/features/carplay/
 ---
 # Playback Pipeline
 
@@ -42,12 +44,16 @@ Wraps the AudioPlayer to provide:
 out immediately with no artwork; `NowPlayingArtworkPreparer` then fetches the
 artwork (UI image cache first, network on a miss), downscales it to a
 512 px PNG under `<app cache>/now_playing_artwork/`, and the item is re-published
-with a `file:` `artUri`. Later updates (duration, etc.) copy that URI along.
+with that file as its `artUri`: a `file:` URI on iOS, and on Android a
+`content:` URI served by `CarArtworkProvider` (`ContentUriArtworkPreparer`),
+because Android Auto, Android Automotive's media center and System UI read the
+session artwork by URI from outside the app and cannot open a file in its
+private cache. Later updates (duration, etc.) copy that URI along.
 That directory keeps the 32 most recently written files; older ones are
 deleted after each write and prepared again on demand.
 
-Why a local file: audio_service passes a `file:` URI to the platform on every
-update, but downloads a remote URL asynchronously and drops the follow-up
+Why a local file: audio_service passes a `file:` or `content:` URI to the
+platform on every update, but downloads a remote URL asynchronously and drops the follow-up
 update whenever another media item lands first. The iOS plugin also decodes
 the file at native size, and very large `MPMediaItemArtwork` images fail to
 render on the lock screen (#453). The Android plugin still applies its own
@@ -215,6 +221,69 @@ Managed by `SleepTimerController` (keepAlive Notifier, separate from `AudioPlaye
 - Remembers last-used minutes and episode count across sessions (persisted via `SleepTimerPreferencesDatasource`)
 - Decision logic is encapsulated in `SleepTimerService` (pure, stateless, testable)
 - Emits `SleepTimerEvent` stream for UI notifications: `SleepTimerFired`, and `SleepTimerCancelled` when leaving the target cancels a timer (not when the listener turns it off)
+
+## CarPlay (iOS)
+
+FR 19. The Runner has two scenes: the phone window (`PhoneSceneDelegate`, a
+`FlutterSceneDelegate`) and the CarPlay audio scene (`CarPlaySceneDelegate`).
+Both use one `FlutterEngine` owned by `AppDelegate` and started by whichever
+scene connects first (`startFlutterEngine`, which also registers plugins and
+the app's channels). The storyboard's implicit engine was dropped because the
+car can launch the app with no phone window, and Dart must still run. The
+phone window builds a `FlutterViewController(engine:)` before calling `super`,
+so `FlutterSceneDelegate` still forwards connection options to plugins, and
+releases it on disconnect so a later window can attach to the same engine.
+A failed engine start is not attached anywhere: `startFlutterEngine` returns
+nil, and each scene tries again when it becomes active (the phone builds its
+window then; CarPlay keeps the `CPInterfaceController` to set up its
+templates).
+
+Now Playing needs no bridge: `CPNowPlayingTemplate` reads
+`MPNowPlayingInfoCenter` and sends `MPRemoteCommandCenter` commands, both of
+which audio_service (Layer 2) already owns, so car and phone controls hit the
+same `AudiflowAudioHandler`. Only the rate button (`cycleSpeed`, saved through
+`setSpeed` to the now-playing scope) and the Up Next button are CarPlay
+specific.
+
+The lists go over `audiflow/carplay`. Native owns the templates and asks for
+rows (`listItems`); Dart (`CarPlayBridge`, `CarCatalog`) owns the data and
+plays rows (`playItem`) through `AudioPlayerController`. Dart sends `ready`
+with the ARB-localized labels at startup and on language change; native shows
+a placeholder root until then. Native sends `connected` / `disconnected`, and
+only while connected does Dart listen to the queue, in-progress, library,
+downloads and now-playing providers, coalescing changes into `invalidate`
+messages (500 ms).
+
+## Android Auto
+
+FR 19. `AndroidManifest.xml` declares the car application
+(`res/xml/automotive_app_desc.xml`); the browse tree is the audio_service
+`MediaBrowserService` the app already runs. `AudiflowAudioHandler` forwards
+`getChildren`, `subscribeToChildren` and `playFromMediaId` to
+`CarMediaBrowser`, which builds `MediaItem`s from the same `CarCatalog` as
+CarPlay. Media ids: the tabs by `CarSection` name, `podcast/<id>`
+(browsable), `queue/<queueItemId>` and `episode/<episodeId>` (playable);
+`AudioService.recentRootId` returns the latest in-progress episode for
+playback resumption. Now Playing and its controls are the media session
+audio_service already publishes (Layer 2).
+
+Row artwork must be a `content:` URI. `ContentProviderArtworkResolver`
+prepares it with a second `FileNowPlayingArtworkPreparer` (320 px, 300
+entries) under `<cache>/car_artwork/`, and `CarArtworkProvider` (Kotlin,
+exported, read-only) serves files from that folder and from
+`now_playing_artwork/` as `/<folder>/<MD5 name>`. A list
+waits at most 2 s for its artwork; when some arrives later the list's
+`subscribeToChildren` stream fires once so Android Auto reloads it (only if
+new artwork actually arrived, so failing artwork cannot loop). At most four
+images are prepared at once. Rows carry progress in the androidx completion
+description extras. List data is watched (`watchCarListChanges`, coalesced by
+`CarChangeBatcher`) from the first browse request on, since Android gives no
+disconnect signal; requests for the recent root do not count, because
+SystemUI's media resumption makes them on every phone. The audio handler holds
+one listener on the browser provider for its whole life (`CarBrowserLink`):
+a bare `read` per request would leave the provider unlistened afterwards, and
+Riverpod would then pause the database watches behind those list changes, so
+an open list would only update on the next browse request.
 
 ## When to update
 

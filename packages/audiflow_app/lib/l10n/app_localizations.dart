@@ -4136,6 +4136,66 @@ abstract class AppLocalizations {
   /// **'Add to end of queue'**
   String get episodeDetailAddToEnd;
 
+  /// In-car (CarPlay, Android Auto) tab listing the playback queue
+  ///
+  /// In en, this message translates to:
+  /// **'Up Next'**
+  String get carUpNextTab;
+
+  /// In-car (CarPlay, Android Auto) tab listing partly played episodes
+  ///
+  /// In en, this message translates to:
+  /// **'In Progress'**
+  String get carInProgressTab;
+
+  /// In-car (CarPlay, Android Auto) tab listing subscribed podcasts
+  ///
+  /// In en, this message translates to:
+  /// **'Library'**
+  String get carLibraryTab;
+
+  /// In-car (CarPlay, Android Auto) tab listing downloaded episodes
+  ///
+  /// In en, this message translates to:
+  /// **'Downloads'**
+  String get carDownloadsTab;
+
+  /// In-car (CarPlay, Android Auto) empty Up Next list
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing up next'**
+  String get carUpNextEmpty;
+
+  /// In-car (CarPlay, Android Auto) empty In Progress list
+  ///
+  /// In en, this message translates to:
+  /// **'No episodes in progress'**
+  String get carInProgressEmpty;
+
+  /// In-car (CarPlay, Android Auto) empty Library list
+  ///
+  /// In en, this message translates to:
+  /// **'No subscriptions yet'**
+  String get carLibraryEmpty;
+
+  /// In-car (CarPlay, Android Auto) empty Downloads list
+  ///
+  /// In en, this message translates to:
+  /// **'No downloaded episodes'**
+  String get carDownloadsEmpty;
+
+  /// In-car (CarPlay, Android Auto) empty episode list of a podcast
+  ///
+  /// In en, this message translates to:
+  /// **'No episodes'**
+  String get carPodcastEmpty;
+
+  /// In-car (CarPlay, Android Auto) list shown when its data failed to load
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load this list'**
+  String get carLoadFailed;
+
   /// Search screen button and dialog title for adding a podcast by its RSS feed URL
   ///
   /// In en, this message translates to:
