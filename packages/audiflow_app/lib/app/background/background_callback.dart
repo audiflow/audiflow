@@ -631,6 +631,18 @@ void backgroundCallback() {
                 ),
               );
             }
+          } on NotificationsNotAuthorizedException catch (e) {
+            // The user turned notifications off: expected, not reportable.
+            _bgDebug('notifications not authorized, skipped: $e');
+            logger.i('Notifications not authorized; skipped');
+            if (sentryInitialized) {
+              Sentry.addBreadcrumb(
+                Breadcrumb(
+                  message: 'Notifications not authorized; skipped',
+                  category: 'background.notification',
+                ),
+              );
+            }
           } catch (e, stack) {
             _bgDebug('notification FAILED: $e');
             logger.e(
