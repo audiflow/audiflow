@@ -228,6 +228,10 @@ car can launch the app with no phone window, and Dart must still run. The
 phone window builds a `FlutterViewController(engine:)` before calling `super`,
 so `FlutterSceneDelegate` still forwards connection options to plugins, and
 releases it on disconnect so a later window can attach to the same engine.
+A failed engine start is not attached anywhere: `startFlutterEngine` returns
+nil, and each scene tries again when it becomes active (the phone builds its
+window then; CarPlay keeps the `CPInterfaceController` to set up its
+templates).
 
 Now Playing needs no bridge: `CPNowPlayingTemplate` reads
 `MPNowPlayingInfoCenter` and sends `MPRemoteCommandCenter` commands, both of

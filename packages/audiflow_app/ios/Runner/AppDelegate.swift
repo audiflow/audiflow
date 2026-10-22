@@ -63,15 +63,16 @@ import workmanager_apple
     return result
   }
 
-  /// Runs the shared engine on first use and returns it.
+  /// Runs the shared engine on first use and returns it, or nil when it
+  /// failed to start.
   ///
-  /// A failed `run()` is not remembered, so the next scene to connect
-  /// tries again instead of attaching to a dead engine.
-  func startFlutterEngine() -> FlutterEngine {
+  /// A failed `run()` is not remembered, so a caller can try again later
+  /// instead of attaching to a dead engine.
+  func startFlutterEngine() -> FlutterEngine? {
     if isFlutterEngineRunning { return flutterEngine }
     guard flutterEngine.run() else {
       NSLog("[AppDelegate] Flutter engine failed to start")
-      return flutterEngine
+      return nil
     }
     isFlutterEngineRunning = true
     GeneratedPluginRegistrant.register(with: flutterEngine)

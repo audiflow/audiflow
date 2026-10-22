@@ -46,7 +46,7 @@ class CarPlayPlayback {
   /// Jumps to queue item [queueItemId], as tapping it in the Queue tab
   /// does. Returns false when the item has left the queue.
   Future<bool> playQueueItem(int queueItemId) =>
-      queue_player.playQueueItem(_ref, queueItemId);
+      queue_player.playQueueItem(_ref, queueItemId, source: PlaySource.carplay);
 
   /// Steps the now-playing speed to the next of [carPlaySpeeds] and returns
   /// it, or null while the now-playing settings are still loading.

@@ -7,17 +7,21 @@ import UIKit
 final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegate {
   private var templateController: CarPlayTemplateController?
 
+  /// The head unit while connected, kept so a setup that failed because
+  /// the engine did not start can be retried.
+  private var interfaceController: CPInterfaceController?
+
   func templateApplicationScene(
     _ templateApplicationScene: CPTemplateApplicationScene,
     didConnect interfaceController: CPInterfaceController
   ) {
-    guard let appDelegate = AppDelegate.shared else { return }
-    _ = appDelegate.startFlutterEngine()
-    guard let channel = appDelegate.carPlayChannel else { return }
-    let controller = CarPlayTemplateController(
-      interfaceController: interfaceController, channel: channel)
-    templateController = controller
-    controller.connect()
+    self.interfaceController = interfaceController
+    connectIfNeeded()
+  }
+
+  func sceneDidBecomeActive(_ scene: UIScene) {
+    // Retries a setup whose engine start failed at connect.
+    connectIfNeeded()
   }
 
   func templateApplicationScene(
@@ -26,5 +30,19 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
   ) {
     templateController?.disconnect()
     templateController = nil
+    self.interfaceController = nil
+  }
+
+  private func connectIfNeeded() {
+    guard templateController == nil,
+      let interfaceController,
+      let appDelegate = AppDelegate.shared,
+      appDelegate.startFlutterEngine() != nil,
+      let channel = appDelegate.carPlayChannel
+    else { return }
+    let controller = CarPlayTemplateController(
+      interfaceController: interfaceController, channel: channel)
+    templateController = controller
+    controller.connect()
   }
 }

@@ -4,11 +4,16 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 /// Jumps the queue to [queueItemId] and plays its episode: what tapping a
 /// row in the Queue tab does, shared with the CarPlay Up Next list.
 ///
-/// Returns false when the item is no longer in the queue.
-Future<bool> playQueueItem(Ref ref, int queueItemId) async {
+/// Returns false when the item is no longer in the queue. [source] is
+/// reported to analytics.
+Future<bool> playQueueItem(
+  Ref ref,
+  int queueItemId, {
+  PlaySource source = PlaySource.queue,
+}) async {
   final episode = await ref.read(queueServiceProvider).skipToItem(queueItemId);
   if (episode == null) return false;
-  await startEpisode(ref, episode, PlaySource.queue);
+  await startEpisode(ref, episode, source);
   return true;
 }
 
