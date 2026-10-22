@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'dart:collection';
 
+import '../../player/services/content_uri_artwork_preparer.dart';
 import '../../player/services/now_playing_artwork_preparer.dart';
 
 /// Subdirectory of the app cache holding artwork for Android Auto rows.
 ///
-/// Must match `CarArtworkProvider.FOLDER` (Android), which serves it.
+/// Must match `CarArtworkProvider.FOLDERS` (Android), which serves it.
 const carArtworkCacheFolder = 'car_artwork';
 
 /// Long edge of row artwork. Android Auto draws browse rows well under
@@ -52,10 +53,10 @@ class ContentProviderArtworkResolver implements CarArtworkResolver {
     try {
       final file = await _preparer.prepare(artworkUrl);
       if (file == null) return null;
-      return Uri(
-        scheme: 'content',
-        host: _authority,
-        pathSegments: [file.pathSegments.last],
+      return artworkContentUri(
+        authority: _authority,
+        folder: carArtworkCacheFolder,
+        file: file,
       );
     } finally {
       _release();

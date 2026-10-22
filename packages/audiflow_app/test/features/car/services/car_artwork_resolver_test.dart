@@ -41,7 +41,7 @@ void main() {
     );
   });
 
-  test('maps the prepared file to a content URI by file name', () async {
+  test('maps the prepared file to a content URI by folder and name', () async {
     const url = 'https://example.com/a.jpg';
     final pendingUri = resolver.resolve(url);
     await pumpEventQueue();
@@ -49,7 +49,11 @@ void main() {
     preparer.finish(url, file);
 
     check(await pendingUri).equals(
-      Uri(scheme: 'content', host: authority, pathSegments: ['0123abcd.png']),
+      Uri(
+        scheme: 'content',
+        host: authority,
+        pathSegments: [carArtworkCacheFolder, '0123abcd.png'],
+      ),
     );
   });
 

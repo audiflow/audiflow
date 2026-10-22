@@ -2,7 +2,6 @@ import 'dart:ui';
 
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../app/app_locale.dart';
@@ -11,6 +10,7 @@ import '../../../l10n/duration_label.dart';
 import '../../library/presentation/controllers/continue_listening_controller.dart';
 import '../../library/presentation/controllers/library_controller.dart';
 import '../../settings/presentation/controllers/locale_controller.dart';
+import '../../player/services/content_uri_artwork_preparer.dart';
 import '../../player/services/now_playing_artwork_provider.dart';
 import '../models/car_list_item.dart';
 import 'car_artwork_resolver.dart';
@@ -89,10 +89,27 @@ List<ProviderSubscription<Object?>> watchCarListChanges(
   ];
 }
 
+/// The audio handler's lasting hold on [carMediaBrowserProvider].
+///
+/// The browser follows list changes through its own `ref.listen` on
+/// database watches. Each bare `read` leaves the browser with no listener
+/// once it returns, and Riverpod then deactivates the browser's
+/// subscriptions, which pauses those watches: open car lists would only
+/// catch up on the next browse request. One listener held for the life of
+/// the handler keeps them running.
+class CarBrowserLink {
+  CarBrowserLink(Ref ref)
+    : _subscription = ref.listen(carMediaBrowserProvider.future, (_, _) {});
+
+  final ProviderSubscription<Future<CarMediaBrowser>> _subscription;
+
+  Future<CarMediaBrowser> get browser => _subscription.read();
+}
+
 /// Android Auto's media browser. Created on the first browse request.
 @Riverpod(keepAlive: true)
 Future<CarMediaBrowser> carMediaBrowser(Ref ref) async {
-  final packageInfo = await PackageInfo.fromPlatform();
+  final authority = await artworkProviderAuthority();
   // Read, not watched: a rebuild would close the change streams that
   // audio_service keeps listening to for the life of the process.
   final artwork = ContentProviderArtworkResolver(
@@ -104,7 +121,7 @@ Future<CarMediaBrowser> carMediaBrowser(Ref ref) async {
       maxEdgePixels: carArtworkMaxEdgePixels,
       entryLimit: carArtworkCacheEntryLimit,
     ),
-    authority: '${packageInfo.packageName}.carartwork',
+    authority: authority,
   );
 
   final watchers = <ProviderSubscription<Object?>>[];

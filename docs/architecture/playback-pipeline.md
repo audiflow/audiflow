@@ -44,12 +44,16 @@ Wraps the AudioPlayer to provide:
 out immediately with no artwork; `NowPlayingArtworkPreparer` then fetches the
 artwork (UI image cache first, network on a miss), downscales it to a
 512 px PNG under `<app cache>/now_playing_artwork/`, and the item is re-published
-with a `file:` `artUri`. Later updates (duration, etc.) copy that URI along.
+with that file as its `artUri`: a `file:` URI on iOS, and on Android a
+`content:` URI served by `CarArtworkProvider` (`ContentUriArtworkPreparer`),
+because Android Auto, Android Automotive's media center and System UI read the
+session artwork by URI from outside the app and cannot open a file in its
+private cache. Later updates (duration, etc.) copy that URI along.
 That directory keeps the 32 most recently written files; older ones are
 deleted after each write and prepared again on demand.
 
-Why a local file: audio_service passes a `file:` URI to the platform on every
-update, but downloads a remote URL asynchronously and drops the follow-up
+Why a local file: audio_service passes a `file:` or `content:` URI to the
+platform on every update, but downloads a remote URL asynchronously and drops the follow-up
 update whenever another media item lands first. The iOS plugin also decodes
 the file at native size, and very large `MPMediaItemArtwork` images fail to
 render on the lock screen (#453). The Android plugin still applies its own
@@ -266,7 +270,8 @@ audio_service already publishes (Layer 2).
 Row artwork must be a `content:` URI. `ContentProviderArtworkResolver`
 prepares it with a second `FileNowPlayingArtworkPreparer` (320 px, 300
 entries) under `<cache>/car_artwork/`, and `CarArtworkProvider` (Kotlin,
-exported, read-only) serves files from that folder by their MD5 name. A list
+exported, read-only) serves files from that folder and from
+`now_playing_artwork/` as `/<folder>/<MD5 name>`. A list
 waits at most 2 s for its artwork; when some arrives later the list's
 `subscribeToChildren` stream fires once so Android Auto reloads it (only if
 new artwork actually arrived, so failing artwork cannot loop). At most four
@@ -274,7 +279,11 @@ images are prepared at once. Rows carry progress in the androidx completion
 description extras. List data is watched (`watchCarListChanges`, coalesced by
 `CarChangeBatcher`) from the first browse request on, since Android gives no
 disconnect signal; requests for the recent root do not count, because
-SystemUI's media resumption makes them on every phone.
+SystemUI's media resumption makes them on every phone. The audio handler holds
+one listener on the browser provider for its whole life (`CarBrowserLink`):
+a bare `read` per request would leave the provider unlistened afterwards, and
+Riverpod would then pause the database watches behind those list changes, so
+an open list would only update on the next browse request.
 
 ## When to update
 

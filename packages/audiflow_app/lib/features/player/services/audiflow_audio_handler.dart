@@ -401,8 +401,11 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
   // that fails to start leaves the head unit with empty lists, never an
   // error thrown into audio_service.
 
-  Future<CarMediaBrowser> get _carBrowser =>
-      _ref.read(carMediaBrowserProvider.future);
+  // Created on the first browse request: iOS and phones that never browse
+  // must not start the browser.
+  late final _carBrowserLink = CarBrowserLink(_ref);
+
+  Future<CarMediaBrowser> get _carBrowser => _carBrowserLink.browser;
 
   void _logCarBrowserError(Object error, StackTrace stack) {
     _log.e(

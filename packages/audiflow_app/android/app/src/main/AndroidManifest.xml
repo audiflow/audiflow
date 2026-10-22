@@ -59,7 +59,7 @@
         <action android:name="android.media.browse.MediaBrowserService"/>
       </intent-filter>
     </service>
-    <!-- Row artwork for Android Auto; see CarArtworkProvider. -->
+    <!-- Row and now-playing artwork for media hosts; see CarArtworkProvider. -->
     <provider
       android:name=".CarArtworkProvider"
       android:authorities="${applicationId}.carartwork"

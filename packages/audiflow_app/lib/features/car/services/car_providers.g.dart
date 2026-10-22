@@ -92,4 +92,4 @@ final class CarMediaBrowserProvider
   }
 }
 
-String _$carMediaBrowserHash() => r'b470f80432a11d8d979fb0826672ed8f7e3efe5b';
+String _$carMediaBrowserHash() => r'07a7b827170ebafe7c7d3a8dde22417d7ce572b4';
