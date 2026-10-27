@@ -133,6 +133,56 @@ void main() {
       check(database.isOpen).isFalse();
     });
 
+    test('reuses an instance opened outside the lease', () async {
+      final foreground = _FakeDatabase(0);
+      final lease = BackgroundIsarLease<_FakeDatabase>(
+        open: () async => _FakeDatabase(++openCount),
+        close: (database) async => closed.add(database),
+        findOpen: () => foreground,
+      );
+
+      final database = await lease.acquire();
+
+      check(identical(database, foreground)).isTrue();
+      check(openCount).equals(0);
+    });
+
+    test('never closes an instance opened outside the lease', () async {
+      final foreground = _FakeDatabase(0);
+      final lease = BackgroundIsarLease<_FakeDatabase>(
+        open: () async => _FakeDatabase(++openCount),
+        close: (database) async {
+          database.isOpen = false;
+          closed.add(database);
+        },
+        findOpen: () => foreground,
+      );
+
+      final database = await lease.acquire();
+      await lease.release(database);
+
+      check(foreground.isOpen).isTrue();
+      check(closed).isEmpty();
+    });
+
+    test('opens and closes its own instance when none is found', () async {
+      final lease = BackgroundIsarLease<_FakeDatabase>(
+        open: () async => _FakeDatabase(++openCount),
+        close: (database) async {
+          database.isOpen = false;
+          closed.add(database);
+        },
+        findOpen: () => null,
+      );
+
+      final database = await lease.acquire();
+      await lease.release(database);
+
+      check(openCount).equals(1);
+      check(database.isOpen).isFalse();
+      check(closed).length.equals(1);
+    });
+
     test('extra release is ignored', () async {
       final lease = createLease();
       final database = await lease.acquire();

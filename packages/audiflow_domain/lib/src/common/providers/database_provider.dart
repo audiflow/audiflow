@@ -54,6 +54,9 @@ const List<CollectionSchema<dynamic>> isarSchemas = [
   PodcastAudioPreferenceSchema,
 ];
 
+/// Name of the app's Isar instance, shared by every entry point.
+const String isarInstanceName = 'audiflow';
+
 /// Opens Isar with automatic recovery on schema-mismatch [IsarError]s.
 ///
 /// When Isar fails to open with a schema-mismatch error (e.g. after an
@@ -86,7 +89,7 @@ const List<CollectionSchema<dynamic>> isarSchemas = [
 /// to narrow the catch.
 Future<Isar> openIsarWithRecovery({
   required String directory,
-  String name = 'audiflow',
+  String name = isarInstanceName,
   Logger? logger,
   bool inspector = false,
   List<Duration> transientRetryDelays = defaultTransientOpenRetryDelays,
