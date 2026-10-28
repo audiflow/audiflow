@@ -1,0 +1,2 @@
+/* Japanese overrides for Info.plist usage descriptions. Keys not listed here fall back to the English values in Info.plist. */
+"NSPhotoLibraryUsageDescription" = "ポッドキャストのアートワークに使う写真を選択するために、写真ライブラリへのアクセスを使用します";
