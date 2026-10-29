@@ -76,9 +76,15 @@ void main() {
   late ProviderContainer container;
   late _RecordingAudioPlayerController player;
 
-  setUp(() {
-    player = _RecordingAudioPlayerController();
-    container = ProviderContainer(
+  const activePosition = Duration(
+    milliseconds: _activeSegment * _segmentLengthMs + 100,
+  );
+
+  ProviderContainer buildContainer({
+    required PlaybackProgress progress,
+    required NowPlayingInfo nowPlaying,
+  }) {
+    return ProviderContainer(
       overrides: [
         transcriptSegmentsProvider(
           _transcriptId,
@@ -86,26 +92,28 @@ void main() {
         episodeChaptersProvider(
           _episodeId,
         ).overrideWith((ref) async => _buildChapters()),
-        playbackProgressProvider.overrideWith(
-          (ref) => const PlaybackProgress(
-            position: Duration(
-              milliseconds: _activeSegment * _segmentLengthMs + 100,
-            ),
-            duration: Duration(hours: 1),
-            bufferedPosition: Duration.zero,
-          ),
-        ),
+        playbackProgressProvider.overrideWith((ref) => progress),
         audioPlayerControllerProvider.overrideWith(() => player),
         nowPlayingControllerProvider.overrideWith(
-          () => StubNowPlayingController(
-            const NowPlayingInfo(
-              episodeUrl: 'test',
-              episodeTitle: 'Episode',
-              podcastTitle: 'Podcast',
-            ),
-          ),
+          () => StubNowPlayingController(nowPlaying),
         ),
       ],
+    );
+  }
+
+  setUp(() {
+    player = _RecordingAudioPlayerController();
+    container = buildContainer(
+      progress: const PlaybackProgress(
+        position: activePosition,
+        duration: Duration(hours: 1),
+        bufferedPosition: Duration.zero,
+      ),
+      nowPlaying: const NowPlayingInfo(
+        episodeUrl: 'test',
+        episodeTitle: 'Episode',
+        podcastTitle: 'Podcast',
+      ),
     );
   });
 
@@ -269,6 +277,49 @@ void main() {
       await tester.pumpAndSettle();
 
       check(player.seeks).isEmpty();
+    });
+  });
+
+  // After a restart nothing is loaded, and the progress stream reports a
+  // zero position with a zero duration until playback starts.
+  group('with no audio loaded', () {
+    const idle = PlaybackProgress(
+      position: Duration.zero,
+      duration: Duration.zero,
+      bufferedPosition: Duration.zero,
+    );
+
+    NowPlayingInfo restored(int episodeId) => NowPlayingInfo(
+      episodeUrl: 'test',
+      episodeTitle: 'Episode',
+      podcastTitle: 'Podcast',
+      savedPosition: activePosition,
+      episode: Episode()..id = episodeId,
+    );
+
+    testWidgets('follows the saved position of this episode', (tester) async {
+      container.dispose();
+      container = buildContainer(
+        progress: idle,
+        nowPlaying: restored(_episodeId),
+      );
+      await pumpView(tester);
+
+      check(_activeText().evaluate()).length.equals(1);
+      check(_activeTileAlignment(tester)).isCloseTo(0.33, 0.01);
+    });
+
+    testWidgets('ignores the saved position of another episode', (
+      tester,
+    ) async {
+      container.dispose();
+      container = buildContainer(
+        progress: idle,
+        nowPlaying: restored(_episodeId + 1),
+      );
+      await pumpView(tester);
+
+      check(_activeText().evaluate()).isEmpty();
     });
   });
 }
