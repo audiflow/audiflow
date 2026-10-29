@@ -149,13 +149,31 @@ class _TranscriptTimelineViewState
     );
   }
 
+  /// Live position while audio is loaded, else the restored saved position
+  /// when this transcript belongs to the now-playing episode.
+  ///
+  /// The progress stream reports a zero duration while idle (after a
+  /// restart), which mirrors the player screen's own fallback.
+  int _positionMs() {
+    final live = ref.watch(playbackProgressProvider);
+    if (live != null && 0 < live.duration.inMilliseconds) {
+      return live.position.inMilliseconds;
+    }
+    final saved = ref.watch(
+      nowPlayingControllerProvider.select(
+        (info) =>
+            info?.episode?.id == widget.episodeId ? info?.savedPosition : null,
+      ),
+    );
+    return saved?.inMilliseconds ?? 0;
+  }
+
   /// Merges chapters and segments into a single sorted timeline.
   List<_TimelineEntry> _buildEntries(
     List<TranscriptSegment> segments,
     List<EpisodeChapter> chapters,
   ) {
-    final progress = ref.watch(playbackProgressProvider);
-    final positionMs = progress?.position.inMilliseconds ?? 0;
+    final positionMs = _positionMs();
 
     final entries = <_TimelineEntry>[];
 
