@@ -55,6 +55,17 @@ Podcasts are heavily listened to while commuting. A podcast player that does not
 - Lists are capped at 100 rows (and at what the head unit allows), and there is no search, sort or filter on the head unit; the phone remains the place to manage subscriptions, the queue and downloads.
 - No queue editing, downloading, marking played, sleep timer, chapters or transcripts on the head unit. Playback commands from the car (including the steering wheel) reach the same player as lock-screen controls (FR 04).
 - The CarPlay audio entitlement must be granted by Apple and present in the provisioning profiles before CarPlay works on a device. Until then CarPlay exists only in simulator builds; see below.
+- Android Auto is not yet in production builds; see below.
+
+## Android Auto release status
+
+Status (2026-10-29): verified only on the Android Automotive OS emulator, not on Android Auto itself, and the app is not opted in to the Android Auto form factor on Google Play. Until both are done, `android/app/src/prod/AndroidManifest.xml` removes the `com.google.android.gms.car.application` meta-data from prod builds, so the production app is not listed in Android Auto. Dev and stg builds keep it.
+
+To ship it:
+
+1. Test with the Desktop Head Unit (DHU) and a phone. Builds from Firebase App Distribution need Android Auto's developer mode with "Unknown sources" enabled.
+2. Delete `android/app/src/prod/AndroidManifest.xml`.
+3. In Play Console, Advanced settings > Form factors, add Android Auto and release to a testing track. The car app quality review then blocks open testing and production releases until it passes.
 
 ## CarPlay entitlement
 
