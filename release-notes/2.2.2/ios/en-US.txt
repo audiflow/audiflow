@@ -1,0 +1,7 @@
+• Add a podcast from its feed link: paste an RSS feed URL, or an Apple Podcasts, Overcast or Castro share link, into the search field and open it. An empty search screen also has an "Add by RSS feed URL" button
+• Pasting into the search field works again
+• Continue listening cards show the podcast's artwork when an episode has no image of its own
+• Stations: fixed a podcast that was unsubscribed and subscribed to again staying stuck on old episodes. It is removed from the station; add it back to see its new episodes
+• Stations: scrolling up through a long station is smooth again
+• After restarting the app, the mini player shows how far you got in the episode instead of an empty progress line
+• After restarting the app, the transcript opens at where you stopped listening instead of the beginning
