@@ -121,6 +121,9 @@ Play edit, so the platform can be rerun as is.
 - **App Store Connect**: once the build finishes processing, add it to the
   `$VERSION` App Store version (create the version if needed), paste the
   "What's New" text from `release-notes/$VERSION/ios/`, and submit for review.
+  The first submission after Apple grants the CarPlay entitlement must
+  mention CarPlay in the App Review notes; until it is granted, builds ship
+  without CarPlay (see `docs/fr/19-car-playback.md`, "CarPlay entitlement").
 - **Google Play Console**: open the production track, review the draft
   release `$VERSION ($BUILD)` and its release notes, then send it for review
   and roll it out.
