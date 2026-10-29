@@ -83,13 +83,19 @@ Until the entitlement is granted, device builds ship without CarPlay while the c
 
 - `RunnerSimulator.entitlements` (simulator builds only, via `CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]`) carries the entitlement; `Runner.entitlements` does not.
 - The Runner build phase "Strip CarPlay scene from device builds" deletes the `CPTemplateApplicationSceneSessionRoleApplication` scene from the built `Info.plist` for every non-simulator build, so iOS never offers the app to a head unit.
-- Testing therefore needs the iOS Simulator's CarPlay window, which Xcode 27's Device Hub no longer offers; an Xcode 26.x install is the only local option. With the entitlement, a USB-connected iPhone works with Device Hub's CarPlay Simulator or an aftermarket head unit.
+- CarPlay is not tested before the grant. Xcode 27's Device Hub has no simulator CarPlay window, and whether running the CarPlay scene in the simulator counts as accessing CarPlay APIs under the addendum is unconfirmed. After the grant, test with a USB-connected iPhone and Device Hub's CarPlay Simulator, or an aftermarket head unit.
 
-Once Apple grants it:
+Apple may grant a development entitlement before approving distribution, so the steps come in two stages.
+
+After the development grant:
 
 1. Enable the CarPlay capability on the App IDs `com.reedom.audiflow`, `com.reedom.audiflow.stg` and `com.reedom.audiflow.dev`, regenerate their provisioning profiles, and update the CI secrets holding the stg and prod profiles.
-2. Move the entitlement key into `Runner.entitlements`, delete `RunnerSimulator.entitlements` and the `[sdk=iphonesimulator*]` settings, and delete the strip build phase.
-3. Test on a device, then mention CarPlay in the App Review notes of the first production submission that includes it.
+2. Move the entitlement key into `Runner.entitlements` and delete `RunnerSimulator.entitlements` and the `[sdk=iphonesimulator*]` settings. Narrow the strip build phase to the stg and prod configurations instead of deleting it, so dev builds can be tested on a device while store builds stay without CarPlay.
+
+After Apple approves distribution in writing:
+
+3. Delete the strip build phase.
+4. Mention CarPlay in the App Review notes of the first production submission that includes it.
 
 ## Traceability
 
