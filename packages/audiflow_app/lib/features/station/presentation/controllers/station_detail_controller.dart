@@ -31,7 +31,47 @@ Stream<List<StationPodcast>> stationPodcasts(Ref ref, int stationId) {
   return ref.watch(stationPodcastRepositoryProvider).watchByStation(stationId);
 }
 
+/// A station list row with everything it needs to build at its final height.
+typedef StationEpisodeRow = ({
+  StationEpisode stationEpisode,
+  Episode episode,
+  Subscription? subscription,
+});
+
+/// Loads the episodes and podcasts behind the station's list in one pass.
+///
+/// Rows used to load their own episode, so a row rebuilt above the viewport
+/// while scrolling up showed a placeholder and then grew to its real height,
+/// pushing the visible rows down.
 @riverpod
-Future<Episode?> episodeById(Ref ref, int episodeId) {
-  return ref.watch(episodeRepositoryProvider).getById(episodeId);
+Future<List<StationEpisodeRow>> stationEpisodeRows(
+  Ref ref,
+  int stationId,
+) async {
+  final stationEpisodes = await ref.watch(
+    stationEpisodesProvider(stationId).future,
+  );
+  final episodes = await ref
+      .watch(episodeRepositoryProvider)
+      .getByIds(stationEpisodes.map((se) => se.episodeId).toList());
+  final episodeById = {for (final e in episodes) e.id: e};
+
+  final subscriptionRepo = ref.watch(subscriptionRepositoryProvider);
+  final podcastIds = {for (final e in episodes) e.podcastId}.toList();
+  final subscriptions = await Future.wait(
+    podcastIds.map(subscriptionRepo.getById),
+  );
+  final subscriptionById = {
+    for (var i = 0; i < podcastIds.length; i++) podcastIds[i]: subscriptions[i],
+  };
+
+  return [
+    for (final se in stationEpisodes)
+      if (episodeById[se.episodeId] case final episode?)
+        (
+          stationEpisode: se,
+          episode: episode,
+          subscription: subscriptionById[episode.podcastId],
+        ),
+  ];
 }
