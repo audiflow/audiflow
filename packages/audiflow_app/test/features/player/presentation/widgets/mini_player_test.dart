@@ -236,6 +236,85 @@ void main() {
       await tester.pump(const Duration(milliseconds: 200));
     });
   });
+
+  group('MiniPlayer progress', () {
+    const restored = NowPlayingInfo(
+      episodeUrl: 'https://example.com/episode.mp3',
+      episodeTitle: 'Test Episode',
+      podcastTitle: 'Test Podcast',
+      totalDuration: Duration(minutes: 60),
+      savedPosition: Duration(minutes: 15),
+    );
+
+    // The default 800x600 test view counts as a tablet; pin a phone size.
+    setUp(() {
+      final view =
+          TestWidgetsFlutterBinding.instance.platformDispatcher.views.first;
+      view.physicalSize = const Size(390, 844);
+      view.devicePixelRatio = 1;
+    });
+    tearDown(
+      () => TestWidgetsFlutterBinding.instance.platformDispatcher.views.first
+          .reset(),
+    );
+
+    Future<double?> shownProgress(
+      WidgetTester tester,
+      PlaybackProgress live,
+    ) async {
+      final container = ProviderContainer(
+        overrides: [
+          nowPlayingControllerProvider.overrideWith(
+            () => StubNowPlayingController(restored),
+          ),
+          audioPlayerControllerProvider.overrideWith(
+            () => StubAudioPlayerController(const PlaybackState.idle()),
+          ),
+          appSettingsRepositoryProvider.overrideWithValue(
+            StubAppSettingsRepository(),
+          ),
+          playbackProgressProvider.overrideWith((ref) => live),
+        ],
+      );
+      addTearDown(container.dispose);
+      await tester.pumpWidget(buildTestWidget(container));
+      await tester.pumpAndSettle();
+      return tester
+          .widget<MiniPlayerCard>(find.byType(MiniPlayerCard))
+          .progress;
+    }
+
+    // After a restart nothing is loaded yet, but the player still reports
+    // a zero position with a zero duration, which used to win over the
+    // restored position and showed an empty progress line.
+    testWidgets('shows the saved position while no audio is loaded', (
+      tester,
+    ) async {
+      final progress = await shownProgress(
+        tester,
+        const PlaybackProgress(
+          position: Duration.zero,
+          duration: Duration.zero,
+          bufferedPosition: Duration.zero,
+        ),
+      );
+
+      check(progress).equals(0.25);
+    });
+
+    testWidgets('shows live progress once audio is loaded', (tester) async {
+      final progress = await shownProgress(
+        tester,
+        const PlaybackProgress(
+          position: Duration(minutes: 30),
+          duration: Duration(minutes: 60),
+          bufferedPosition: Duration.zero,
+        ),
+      );
+
+      check(progress).equals(0.5);
+    });
+  });
 }
 
 /// Controller that transitions state to [PlaybackLoading] during
