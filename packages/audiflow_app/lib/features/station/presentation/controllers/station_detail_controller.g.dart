@@ -233,48 +233,72 @@ final class StationPodcastsFamily extends $Family
   String toString() => r'stationPodcastsProvider';
 }
 
-@ProviderFor(episodeById)
-final episodeByIdProvider = EpisodeByIdFamily._();
+/// Loads the episodes and podcasts behind the station's list in one pass.
+///
+/// Rows used to load their own episode, so a row rebuilt above the viewport
+/// while scrolling up showed a placeholder and then grew to its real height,
+/// pushing the visible rows down.
 
-final class EpisodeByIdProvider
+@ProviderFor(stationEpisodeRows)
+final stationEpisodeRowsProvider = StationEpisodeRowsFamily._();
+
+/// Loads the episodes and podcasts behind the station's list in one pass.
+///
+/// Rows used to load their own episode, so a row rebuilt above the viewport
+/// while scrolling up showed a placeholder and then grew to its real height,
+/// pushing the visible rows down.
+
+final class StationEpisodeRowsProvider
     extends
-        $FunctionalProvider<AsyncValue<Episode?>, Episode?, FutureOr<Episode?>>
-    with $FutureModifier<Episode?>, $FutureProvider<Episode?> {
-  EpisodeByIdProvider._({
-    required EpisodeByIdFamily super.from,
+        $FunctionalProvider<
+          AsyncValue<List<StationEpisodeRow>>,
+          List<StationEpisodeRow>,
+          FutureOr<List<StationEpisodeRow>>
+        >
+    with
+        $FutureModifier<List<StationEpisodeRow>>,
+        $FutureProvider<List<StationEpisodeRow>> {
+  /// Loads the episodes and podcasts behind the station's list in one pass.
+  ///
+  /// Rows used to load their own episode, so a row rebuilt above the viewport
+  /// while scrolling up showed a placeholder and then grew to its real height,
+  /// pushing the visible rows down.
+  StationEpisodeRowsProvider._({
+    required StationEpisodeRowsFamily super.from,
     required int super.argument,
   }) : super(
          retry: null,
-         name: r'episodeByIdProvider',
+         name: r'stationEpisodeRowsProvider',
          isAutoDispose: true,
          dependencies: null,
          $allTransitiveDependencies: null,
        );
 
   @override
-  String debugGetCreateSourceHash() => _$episodeByIdHash();
+  String debugGetCreateSourceHash() => _$stationEpisodeRowsHash();
 
   @override
   String toString() {
-    return r'episodeByIdProvider'
+    return r'stationEpisodeRowsProvider'
         ''
         '($argument)';
   }
 
   @$internal
   @override
-  $FutureProviderElement<Episode?> $createElement($ProviderPointer pointer) =>
-      $FutureProviderElement(pointer);
+  $FutureProviderElement<List<StationEpisodeRow>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
 
   @override
-  FutureOr<Episode?> create(Ref ref) {
+  FutureOr<List<StationEpisodeRow>> create(Ref ref) {
     final argument = this.argument as int;
-    return episodeById(ref, argument);
+    return stationEpisodeRows(ref, argument);
   }
 
   @override
   bool operator ==(Object other) {
-    return other is EpisodeByIdProvider && other.argument == argument;
+    return other is StationEpisodeRowsProvider && other.argument == argument;
   }
 
   @override
@@ -283,22 +307,35 @@ final class EpisodeByIdProvider
   }
 }
 
-String _$episodeByIdHash() => r'913f7253ee5a8ff2508f058934d3cd75aa6a8c6c';
+String _$stationEpisodeRowsHash() =>
+    r'22081721b5ba5ede7c9e06b34f5a4fd364036e9a';
 
-final class EpisodeByIdFamily extends $Family
-    with $FunctionalFamilyOverride<FutureOr<Episode?>, int> {
-  EpisodeByIdFamily._()
+/// Loads the episodes and podcasts behind the station's list in one pass.
+///
+/// Rows used to load their own episode, so a row rebuilt above the viewport
+/// while scrolling up showed a placeholder and then grew to its real height,
+/// pushing the visible rows down.
+
+final class StationEpisodeRowsFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<List<StationEpisodeRow>>, int> {
+  StationEpisodeRowsFamily._()
     : super(
         retry: null,
-        name: r'episodeByIdProvider',
+        name: r'stationEpisodeRowsProvider',
         dependencies: null,
         $allTransitiveDependencies: null,
         isAutoDispose: true,
       );
 
-  EpisodeByIdProvider call(int episodeId) =>
-      EpisodeByIdProvider._(argument: episodeId, from: this);
+  /// Loads the episodes and podcasts behind the station's list in one pass.
+  ///
+  /// Rows used to load their own episode, so a row rebuilt above the viewport
+  /// while scrolling up showed a placeholder and then grew to its real height,
+  /// pushing the visible rows down.
+
+  StationEpisodeRowsProvider call(int stationId) =>
+      StationEpisodeRowsProvider._(argument: stationId, from: this);
 
   @override
-  String toString() => r'episodeByIdProvider';
+  String toString() => r'stationEpisodeRowsProvider';
 }
