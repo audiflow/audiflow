@@ -65,21 +65,25 @@ class StationReconcilerService {
   /// Unsubscribing used to hard-delete the subscription and leave its station
   /// link behind; a resubscribe then created a new podcast id, so the station
   /// kept serving the old id's stale episodes under a blank podcast row.
-  Future<void> _pruneUnsubscribedPodcasts(int stationId) async {
-    final links = await _isar.stationPodcasts
-        .filter()
-        .stationIdEqualTo(stationId)
-        .findAll();
-    if (links.isEmpty) return;
-    final subscriptions = await _isar.subscriptions.getAll(
-      links.map((link) => link.podcastId).toList(),
-    );
-    final staleIds = [
-      for (var i = 0; i < links.length; i++)
-        if (subscriptions[i]?.isCached ?? true) links[i].id,
-    ];
-    if (staleIds.isEmpty) return;
-    await _isar.writeTxn(() => _isar.stationPodcasts.deleteAll(staleIds));
+  Future<void> _pruneUnsubscribedPodcasts(int stationId) {
+    // Read inside the transaction so a resubscribe committing between the
+    // check and the delete cannot lose its station link.
+    return _isar.writeTxn(() async {
+      final links = await _isar.stationPodcasts
+          .filter()
+          .stationIdEqualTo(stationId)
+          .findAll();
+      if (links.isEmpty) return;
+      final subscriptions = await _isar.subscriptions.getAll(
+        links.map((link) => link.podcastId).toList(),
+      );
+      final staleIds = [
+        for (var i = 0; i < links.length; i++)
+          if (subscriptions[i]?.isCached ?? true) links[i].id,
+      ];
+      if (staleIds.isEmpty) return;
+      await _isar.stationPodcasts.deleteAll(staleIds);
+    });
   }
 
   /// Called when a podcast stops being a subscription: unsubscribed (demoted
