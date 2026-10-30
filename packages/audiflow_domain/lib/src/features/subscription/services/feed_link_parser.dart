@@ -5,8 +5,9 @@ import '../models/feed_link.dart';
 ///
 /// Accepts `http`/`https` URLs and the feed schemes podcast apps register
 /// (`feed:`, `podcast:`, `pcast:`, `itpc:`). Links from Apple Podcasts,
-/// Overcast, and Castro resolve through their Apple Podcasts ID; links
-/// from services that never expose RSS are reported as unsupported.
+/// Overcast, and Castro resolve through their Apple Podcasts ID, or
+/// through the page they open when the URL carries none; links from
+/// services that never expose RSS are reported as unsupported.
 FeedLink? parseFeedLink(String input) {
   final text = input.trim();
   if (text.isEmpty || _whitespace.hasMatch(text)) return null;
@@ -29,6 +30,8 @@ final _feedScheme = RegExp('^(feed|podcast|pcast|itpc):', caseSensitive: false);
 final _httpScheme = RegExp('^https?://', caseSensitive: false);
 final _appleId = RegExp(r'^id(\d+)$');
 final _overcastId = RegExp(r'^itunes(\d+)$');
+final _overcastEpisode = RegExp(r'^\+[A-Za-z0-9_-]+$');
+final _castroPageId = RegExp(r'^[A-Za-z0-9-]+$');
 final _digits = RegExp(r'^\d+$');
 
 /// Turns `feed://host/x` into `https://host/x` and `feed:https://host/x`
@@ -66,7 +69,9 @@ FeedLink? _parsePlatformLink(String host, List<String> segments) {
     return FeedLink.unsupported(platformName: unsupported);
   }
   return switch (host) {
-    'podcasts.apple.com' || 'itunes.apple.com' => _appleLink(segments),
+    'podcasts.apple.com' ||
+    'itunes.apple.com' ||
+    'geo.itunes.apple.com' => _appleLink(segments),
     'overcast.fm' => _overcastLink(segments),
     'castro.fm' => _castroLink(segments),
     _ => null,
@@ -82,23 +87,38 @@ FeedLink _appleLink(List<String> segments) {
   return const FeedLink.unsupported(platformName: 'Apple Podcasts');
 }
 
-/// `overcast.fm/itunes<digits>/<slug>`; `overcast.fm/+<code>` episode
-/// links carry no podcast ID.
+/// `overcast.fm/itunes<digits>/<slug>`, or an `overcast.fm/+<code>`
+/// episode link, optionally followed by a `/<timestamp>` segment.
 FeedLink _overcastLink(List<String> segments) {
-  final match = segments.isEmpty ? null : _overcastId.firstMatch(segments[0]);
-  if (match == null) {
-    return const FeedLink.unsupported(platformName: 'Overcast');
+  final first = segments.isEmpty ? '' : segments[0];
+  final match = _overcastId.firstMatch(first);
+  if (match != null) return FeedLink.itunes(itunesId: match.group(1)!);
+  if (_overcastEpisode.hasMatch(first)) {
+    // The timestamp only picks a playback position; the page is the same.
+    return FeedLink.appPage(
+      url: 'https://overcast.fm/$first',
+      platformName: 'Overcast',
+    );
   }
-  return FeedLink.itunes(itunesId: match.group(1)!);
+  return const FeedLink.unsupported(platformName: 'Overcast');
 }
 
-/// `castro.fm/itunes/<digits>`; `castro.fm/podcast/<uuid>` links carry
-/// no Apple Podcasts ID.
+/// `castro.fm/itunes/<digits>`, or a `castro.fm/podcast/<uuid>` show or
+/// `castro.fm/episode/<code>` episode link.
 FeedLink _castroLink(List<String> segments) {
-  final isItunesLink =
-      segments.length == 2 &&
-      segments[0] == 'itunes' &&
-      _digits.hasMatch(segments[1]);
-  if (!isItunesLink) return const FeedLink.unsupported(platformName: 'Castro');
-  return FeedLink.itunes(itunesId: segments[1]);
+  if (segments.length != 2) {
+    return const FeedLink.unsupported(platformName: 'Castro');
+  }
+  final [kind, id] = segments;
+  if (kind == 'itunes' && _digits.hasMatch(id)) {
+    return FeedLink.itunes(itunesId: id);
+  }
+  final isPage = kind == 'podcast' || kind == 'episode';
+  if (isPage && _castroPageId.hasMatch(id)) {
+    return FeedLink.appPage(
+      url: 'https://castro.fm/$kind/$id',
+      platformName: 'Castro',
+    );
+  }
+  return const FeedLink.unsupported(platformName: 'Castro');
 }

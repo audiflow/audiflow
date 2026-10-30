@@ -313,6 +313,74 @@ void main() {
     });
   });
 
+  group('app page link', () {
+    const episodeUrl = 'https://overcast.fm/+AAJIS2x5e9w';
+    const episode = FeedLink.appPage(url: episodeUrl, platformName: 'Overcast');
+
+    String pageWith(String badge) =>
+        '<!DOCTYPE html><html><body>$badge</body></html>';
+
+    test('resolves the show through its Apple Podcasts badge', () async {
+      const listed = Podcast(
+        id: '1237931798',
+        name: 'Listed',
+        artistName: 'Host',
+        feedUrl: feedUrl,
+      );
+      itunes.podcasts[listed.id] = listed;
+      server.onGet(
+        episodeUrl,
+        (s) => s.reply(
+          200,
+          _raw(
+            pageWith(
+              '<a href="https://podcasts.apple.com/podcast/id1237931798">'
+              '<img src="/img/badge-apple.svg"/></a>',
+            ),
+          ),
+        ),
+      );
+
+      check(await resolver.resolve(episode)).equals(listed);
+    });
+
+    test('resolves the show through its RSS badge', () async {
+      server
+        ..onGet(
+          episodeUrl,
+          (s) => s.reply(
+            200,
+            _raw(
+              pageWith(
+                '<a href="$feedUrl"><img src="/img/badge-rss.svg"/></a>',
+              ),
+            ),
+          ),
+        )
+        ..onGet(feedUrl, (s) => s.reply(200, _raw(rssBody)));
+
+      check((await resolver.resolve(episode)).feedUrl).equals(feedUrl);
+    });
+
+    test('fails as unsupported, naming the app, without badges', () async {
+      server.onGet(episodeUrl, (s) => s.reply(200, _raw(pageWith(''))));
+
+      await check(resolver.resolve(episode)).throws<FeedLinkException>(
+        (it) => it
+          ..has(
+            (e) => e.failure,
+            'failure',
+          ).equals(FeedLinkFailure.unsupportedLink)
+          ..has((e) => e.platformName, 'platformName').equals('Overcast'),
+      );
+    });
+
+    test('maps a missing episode page to an unavailable feed', () async {
+      server.onGet(episodeUrl, (s) => s.reply(404, _raw('')));
+      await expectFailure(episode, FeedLinkFailure.feedUnavailable);
+    });
+  });
+
   test('unsupported link fails with its platform name', () async {
     await check(
       resolver.resolve(const FeedLink.unsupported(platformName: 'Spotify')),

@@ -76,9 +76,25 @@ void main() {
         );
       });
 
+      test('reads the ID behind a percent-encoded slug', () {
+        expectLink(
+          'https://podcasts.apple.com/jp/podcast/'
+          '%E6%97%A5%E7%B5%8C%E3%83%93%E3%82%B8%E3%83%8D%E3%82%B9/'
+          'id1786590822?l=en-US',
+          const FeedLink.itunes(itunesId: '1786590822'),
+        );
+      });
+
       test('reads the ID from a legacy iTunes link', () {
         expectLink(
           'https://itunes.apple.com/us/podcast/id603013428',
+          const FeedLink.itunes(itunesId: '603013428'),
+        );
+      });
+
+      test('reads the ID from a geo-routed iTunes link', () {
+        expectLink(
+          'https://geo.itunes.apple.com/ca/podcast/feed/id603013428?at=x',
           const FeedLink.itunes(itunesId: '603013428'),
         );
       });
@@ -89,6 +105,33 @@ void main() {
           const FeedLink.itunes(itunesId: '603013428'),
         );
       });
+
+      for (final (url, page, platform) in [
+        (
+          'http://overcast.fm/+AAJIS2x5e9w',
+          'https://overcast.fm/+AAJIS2x5e9w',
+          'Overcast',
+        ),
+        (
+          'https://overcast.fm/+AAJIS2x5e9w/1:23',
+          'https://overcast.fm/+AAJIS2x5e9w',
+          'Overcast',
+        ),
+        (
+          'https://castro.fm/podcast/0185fc7e-9db7-4d28-90ab-cbc79b762140',
+          'https://castro.fm/podcast/0185fc7e-9db7-4d28-90ab-cbc79b762140',
+          'Castro',
+        ),
+        (
+          'https://castro.fm/episode/10H6xF?ref=share',
+          'https://castro.fm/episode/10H6xF',
+          'Castro',
+        ),
+      ]) {
+        test('reads $url through its page', () {
+          expectLink(url, FeedLink.appPage(url: page, platformName: platform));
+        });
+      }
 
       test('reads the ID from a Castro link', () {
         expectLink(
@@ -106,8 +149,10 @@ void main() {
 
       for (final (url, platform) in [
         ('https://podcasts.apple.com/us/browse', 'Apple Podcasts'),
-        ('https://overcast.fm/+AbCdEf', 'Overcast'),
-        ('https://castro.fm/podcast/0f1e2d3c', 'Castro'),
+        ('https://overcast.fm/login', 'Overcast'),
+        ('https://overcast.fm/+', 'Overcast'),
+        ('https://castro.fm/', 'Castro'),
+        ('https://castro.fm/podcast/a/b', 'Castro'),
         ('https://open.spotify.com/show/abc', 'Spotify'),
         ('https://spotify.link/abc', 'Spotify'),
         ('https://www.youtube.com/@channel', 'YouTube'),
