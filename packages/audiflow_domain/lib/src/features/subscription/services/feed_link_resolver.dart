@@ -13,6 +13,7 @@ import '../repositories/subscription_repository.dart';
 import 'feed_autodiscovery.dart';
 import 'feed_placeholder_id.dart';
 import 'feed_url_variants.dart';
+import 'app_page_badges.dart';
 
 /// Resolves a [FeedLink] to the [Podcast] the podcast detail screen
 /// previews, so the user can subscribe the same way as from search.
@@ -38,6 +39,10 @@ class FeedLinkResolver {
     return switch (link) {
       DirectFeedLink(:final url) => _resolveFeedUrl(url),
       ItunesFeedLink(:final itunesId) => _resolveItunesId(itunesId),
+      AppPageFeedLink(:final url, :final platformName) => _resolveAppPage(
+        url,
+        platformName,
+      ),
       UnsupportedFeedLink(:final platformName) => throw FeedLinkException(
         FeedLinkFailure.unsupportedLink,
         platformName: platformName,
@@ -66,6 +71,17 @@ class FeedLinkResolver {
     } on SearchException catch (e) {
       throw FeedLinkException(_lookupFailure(e), cause: e);
     }
+  }
+
+  Future<Podcast> _resolveAppPage(String url, String platformName) async {
+    final show = showLinkFromBadges((await _fetch(url)).body);
+    if (show == null) {
+      throw FeedLinkException(
+        FeedLinkFailure.unsupportedLink,
+        platformName: platformName,
+      );
+    }
+    return resolve(show);
   }
 
   Future<Podcast> _resolveFeedUrl(String url) async {
