@@ -12,25 +12,25 @@ import 'feed_link_parser.dart';
 /// This reads the apps' markup, which they may change; a page whose badges
 /// no longer match yields null rather than a wrong show.
 FeedLink? showLinkFromBadges(String html) {
-  final apple = _badgeHref(html, 'apple');
-  if (apple != null) {
-    final link = parseFeedLink(apple);
-    if (link is ItunesFeedLink) return link;
-  }
-  final rss = _badgeHref(html, 'rss');
-  if (rss == null) return null;
-  final link = parseFeedLink(rss);
-  return link is DirectFeedLink ? link : null;
+  // A commented-out badge is not shown, so it must not pick the show.
+  final live = html.replaceAll(_comment, '');
+  final links = [
+    for (final name in const ['apple', 'rss'])
+      for (final href in _badgeHrefs(live, name)) parseFeedLink(href),
+  ];
+  return links.whereType<ItunesFeedLink>().firstOrNull ??
+      links.whereType<DirectFeedLink>().firstOrNull;
 }
 
-/// The href of the first link wrapping a [name] badge image.
-String? _badgeHref(String html, String name) {
+/// The hrefs of the links wrapping a [name] badge image, in page order.
+Iterable<String> _badgeHrefs(String html, String name) sync* {
   for (final match in _badge.allMatches(html)) {
     if (match.group(2)!.toLowerCase() != name) continue;
-    return match.group(1)!.replaceAll('&amp;', '&');
+    yield match.group(1)!.replaceAll('&amp;', '&');
   }
-  return null;
 }
+
+final _comment = RegExp(r'<!--[\s\S]*?-->');
 
 // An <a href> whose first child is an <img> named after its directory:
 // Overcast serves `/img/badge-apple.svg`, Castro `/railsassets/apple-<hash>.png`.

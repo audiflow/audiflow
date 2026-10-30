@@ -71,6 +71,24 @@ void main() {
     check(showLinkFromBadges(pageWith(unrelated))).isNull();
   });
 
+  test('skips an Apple badge that names no podcast', () {
+    const broken =
+        '<a href="https://podcasts.apple.com/us/browse">'
+        '<img src="/img/badge-apple.svg"></a>';
+    check(
+      showLinkFromBadges(pageWith('$broken$overcastRss$overcastApple')),
+    ).equals(const FeedLink.itunes(itunesId: '1237931798'));
+  });
+
+  test('ignores badges inside HTML comments', () {
+    const hidden =
+        '<!-- <a href="https://podcasts.apple.com/podcast/id999">'
+        '<img src="/img/badge-apple.svg"></a> -->';
+    check(
+      showLinkFromBadges(pageWith('$hidden$overcastApple')),
+    ).equals(const FeedLink.itunes(itunesId: '1237931798'));
+  });
+
   test('returns null for a page without badges', () {
     check(showLinkFromBadges(pageWith(''))).isNull();
   });
