@@ -76,6 +76,15 @@ void main() {
         );
       });
 
+      test('reads the ID behind a percent-encoded slug', () {
+        expectLink(
+          'https://podcasts.apple.com/jp/podcast/'
+          '%E6%97%A5%E7%B5%8C%E3%83%93%E3%82%B8%E3%83%8D%E3%82%B9/'
+          'id1786590822?l=en-US',
+          const FeedLink.itunes(itunesId: '1786590822'),
+        );
+      });
+
       test('reads the ID from a legacy iTunes link', () {
         expectLink(
           'https://itunes.apple.com/us/podcast/id603013428',
