@@ -365,8 +365,11 @@ Future<ProviderContainer> bootstrapAppContainer({
   container.listen(sleepTimerControllerProvider, (_, _) {});
 
   // Answer the CarPlay scene. iOS only: the channel has no Android side.
+  // Listened rather than read, as above: a head unit can launch the app in
+  // the background, where no screen watches the speed or the list data, and
+  // paused subscriptions would leave CarPlay showing stale values.
   if (defaultTargetPlatform == TargetPlatform.iOS) {
-    container.read(carPlayBridgeProvider);
+    container.listen(carPlayBridgeProvider, (_, _) {});
   }
 
   // Restore last played episode for mini player
