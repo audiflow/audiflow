@@ -24,11 +24,18 @@ class _FakeCatalog extends Fake implements CarCatalog {
 
 class _FakePlayback extends Fake implements CarPlayback {
   final playedEpisodes = <int>[];
+  final playedPodcastEpisodes = <int>[];
   final playedQueueItems = <int>[];
 
   @override
   Future<bool> playEpisode(int episodeId) async {
     playedEpisodes.add(episodeId);
+    return true;
+  }
+
+  @override
+  Future<bool> playPodcastEpisode(int episodeId) async {
+    playedPodcastEpisodes.add(episodeId);
     return true;
   }
 
@@ -117,12 +124,23 @@ void main() {
       check(
         CarMediaId.parse(CarMediaId.episode(6)),
       ).isA<CarEpisodeId>().has((id) => id.episodeId, 'episodeId').equals(6);
+      check(CarMediaId.parse(CarMediaId.podcastEpisode(7)))
+          .isA<CarPodcastEpisodeId>()
+          .has((id) => id.episodeId, 'episodeId')
+          .equals(7);
       check(CarMediaId.parse(AudioService.browsableRootId)).isA<CarRootId>();
       check(CarMediaId.parse(AudioService.recentRootId)).isA<CarRecentId>();
     });
 
     test('rejects ids it did not issue', () {
-      for (final id in ['', 'podcast', 'podcast/x', 'episode/', 'radio/1']) {
+      for (final id in [
+        '',
+        'podcast',
+        'podcast/x',
+        'episode/',
+        'podcastEpisode/',
+        'radio/1',
+      ]) {
         check(because: id, CarMediaId.parse(id)).isNull();
       }
     });
@@ -184,7 +202,7 @@ void main() {
           ..has((i) => i.id, 'id').equals(CarMediaId.podcast(3))
           ..has((i) => i.playable, 'playable').equals(false);
         check(catalog.requests.last).equals((CarSection.podcast, 3));
-        check(episodes.single.id).equals(CarMediaId.episode(30));
+        check(episodes.single.id).equals(CarMediaId.podcastEpisode(30));
       },
     );
 
@@ -303,9 +321,11 @@ void main() {
     test('plays queue items and episodes', () async {
       await browser.playFromMediaId(CarMediaId.queueItem(7));
       await browser.playFromMediaId(CarMediaId.episode(8));
+      await browser.playFromMediaId(CarMediaId.podcastEpisode(9));
 
       check(playback.playedQueueItems).deepEquals([7]);
       check(playback.playedEpisodes).deepEquals([8]);
+      check(playback.playedPodcastEpisodes).deepEquals([9]);
     });
 
     test('ignores browsable and unknown ids', () async {

@@ -116,14 +116,32 @@ class CarCatalog {
     ];
   }
 
-  Future<List<CarListItem>> _podcastEpisodes(int podcastId) async {
+  /// The ids of the episodes [CarSection.podcast] lists for [podcastId], in
+  /// list order: what playing one of its rows queues from, as the episode
+  /// list on podcast detail does.
+  Future<List<int>> podcastEpisodeIds(int podcastId) async {
+    final listed = await _listedPodcastEpisodes(podcastId);
+    return [
+      for (final episode in listed?.episodes ?? const <Episode>[]) episode.id,
+    ];
+  }
+
+  Future<({Subscription subscription, List<Episode> episodes})?>
+  _listedPodcastEpisodes(int podcastId) async {
     final subscription = await _subscriptionRepository.getById(podcastId);
-    if (subscription == null) return const [];
+    if (subscription == null) return null;
     final hideExplicit = await _hidesExplicit(podcastId);
     final episodes = await _episodeRepository.getByPodcastId(podcastId);
     final visible = newestFirst(
       hideExplicit ? episodes.where((e) => !e.itunesExplicit) : episodes,
-    ).take(itemLimit);
+    ).take(itemLimit).toList();
+    return (subscription: subscription, episodes: visible);
+  }
+
+  Future<List<CarListItem>> _podcastEpisodes(int podcastId) async {
+    final listed = await _listedPodcastEpisodes(podcastId);
+    if (listed == null) return const [];
+    final (:subscription, episodes: visible) = listed;
     final histories = await _historyRepository.getByPodcastId(podcastId);
     final nowPlayingUrl = _nowPlayingUrl();
     return [

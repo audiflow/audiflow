@@ -149,9 +149,12 @@ class CarPlayBridge {
     if (section == CarSection.library) throw _invalidArgument('section');
     final bool started;
     try {
-      started = section == CarSection.upNext
-          ? await _playback.playQueueItem(id)
-          : await _playback.playEpisode(id);
+      started = switch (section) {
+        CarSection.upNext => await _playback.playQueueItem(id),
+        // A podcast's own list queues the episodes after the tapped one.
+        CarSection.podcast => await _playback.playPodcastEpisode(id),
+        _ => await _playback.playEpisode(id),
+      };
     } on Object catch (e, stack) {
       _logger.e('Failed to play CarPlay item $id', error: e, stackTrace: stack);
       throw PlatformException(code: 'PLAY_FAILED', message: '$e');
