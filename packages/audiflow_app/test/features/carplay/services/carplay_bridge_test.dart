@@ -173,6 +173,22 @@ void main() {
     check(await fromNative('cycleSpeed')).equals(playback.nextSpeed);
   });
 
+  test('sends now-playing controls even while disconnected', () async {
+    await bridge.sendNowPlayingControls(
+      speed: 1.5,
+      skipForwardSeconds: 30,
+      skipBackwardSeconds: 15,
+    );
+
+    check(
+      sentNamed('nowPlayingControls').single.arguments,
+    ).isA<Map<Object?, Object?>>().deepEquals({
+      'speed': 1.5,
+      'skipForwardSeconds': 30,
+      'skipBackwardSeconds': 15,
+    });
+  });
+
   test('ignores invalidations while disconnected', () async {
     bridge.invalidate({CarSection.upNext});
     await pumpEventQueue();
