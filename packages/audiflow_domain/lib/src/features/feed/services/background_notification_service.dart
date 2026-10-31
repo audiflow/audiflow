@@ -1,5 +1,6 @@
 import 'dart:ui' show Color;
 
+import 'package:flutter/services.dart' show PlatformException;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:logger/logger.dart';
 import 'package:meta/meta.dart';
@@ -82,11 +83,44 @@ typedef ArtworkFileProvider =
 /// timeout, so the app layer can surface it to telemetry.
 typedef ArtworkFailureSink = void Function(String artworkUrl, Object error);
 
+/// Thrown when the OS refuses to post notifications because the user has
+/// turned them off or never allowed them.
+///
+/// This is a user setting, not a fault, so callers should not report it as
+/// an error.
+class NotificationsNotAuthorizedException implements Exception {
+  const NotificationsNotAuthorizedException([this.cause]);
+
+  /// The platform error that revealed the refusal, if any.
+  final Object? cause;
+
+  @override
+  String toString() =>
+      'NotificationsNotAuthorizedException'
+      '${cause == null ? '' : ': $cause'}';
+}
+
+/// iOS `UNErrorDomain` codes meaning the app may not post notifications:
+/// 1 is `UNErrorCodeNotificationsNotAllowed`; 2003 ("Source is not
+/// authorized") is what iOS returns when notifications are off for the app.
+const _notAuthorizedCodes = {'Error 1', 'Error 2003'};
+
+bool _isNotAuthorizedError(Object error) =>
+    error is PlatformException &&
+    error.details == 'UNErrorDomain' &&
+    _notAuthorizedCodes.contains(error.code);
+
 /// Abstracts the `show` call on [FlutterLocalNotificationsPlugin] so tests can
 /// inject a fake without subclassing the plugin (which has a private
 /// constructor in v21+).
 @visibleForTesting
 abstract interface class NotificationsShowDelegate {
+  /// Whether the OS will let the app post notifications.
+  ///
+  /// Returns true when the platform cannot tell, so an unknown state still
+  /// tries to show.
+  Future<bool> isAuthorized();
+
   Future<void> show({
     required int id,
     String? title,
@@ -101,6 +135,24 @@ class _PluginShowDelegate implements NotificationsShowDelegate {
   const _PluginShowDelegate(this._plugin);
 
   final FlutterLocalNotificationsPlugin _plugin;
+
+  @override
+  Future<bool> isAuthorized() async {
+    final ios = _plugin
+        .resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin
+        >();
+    if (ios != null) {
+      final options = await ios.checkPermissions();
+      if (options == null) return true;
+      return options.isEnabled || options.isProvisionalEnabled;
+    }
+    final android = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+    return await android?.areNotificationsEnabled() ?? true;
+  }
 
   @override
   Future<void> show({
@@ -165,6 +217,9 @@ class BackgroundNotificationService {
   }
 
   /// Shows one notification per [NewEpisodeNotification].
+  ///
+  /// Throws [NotificationsNotAuthorizedException] when the user has not
+  /// allowed notifications.
   Future<void> showPerEpisodeNotifications(
     FlutterLocalNotificationsPlugin plugin,
     List<NewEpisodeNotification> notifications,
@@ -183,6 +238,9 @@ class BackgroundNotificationService {
     NotificationsShowDelegate delegate,
     List<NewEpisodeNotification> notifications,
   ) async {
+    if (!await delegate.isAuthorized()) {
+      throw const NotificationsNotAuthorizedException();
+    }
     final details = buildNotificationDetails(notifications, _textFormatter);
     // Fetch concurrently: the OS grants background refresh only ~30s, and
     // notifications must not wait on artwork one podcast at a time.
@@ -195,6 +253,14 @@ class BackgroundNotificationService {
         await _showWithFallback(delegate, detail, artworkPaths[index]);
         _logger?.i('Showed notification: ${detail.title} — ${detail.body}');
       } catch (e, stack) {
+        // Permission can be revoked after the check above; every remaining
+        // notification would be refused the same way.
+        if (_isNotAuthorizedError(e)) {
+          Error.throwWithStackTrace(
+            NotificationsNotAuthorizedException(e),
+            stack,
+          );
+        }
         _logger?.e('Failed to show notification', error: e, stackTrace: stack);
         errors.add((e, stack));
       }
@@ -223,7 +289,8 @@ class BackgroundNotificationService {
     try {
       await _show(delegate, detail, artworkPath);
     } catch (e, stack) {
-      if (artworkPath == null) rethrow;
+      // A refusal is not about the attachment, so a retry would fail too.
+      if (artworkPath == null || _isNotAuthorizedError(e)) rethrow;
       _logger?.w(
         'Retrying notification without artwork',
         error: e,
