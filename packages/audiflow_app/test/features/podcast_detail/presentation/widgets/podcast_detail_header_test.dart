@@ -374,6 +374,175 @@ void main() {
       final titleFinder = find.text('Test Podcast');
       expect(titleFinder, findsOneWidget);
     });
+
+    group('after subscribing', () {
+      Future<_FlippingController> pumpUnsubscribed(
+        WidgetTester tester, {
+        Size size = phoneSize,
+      }) async {
+        final controller = _FlippingController();
+        final container = ProviderContainer(
+          overrides: [
+            subscriptionControllerProvider(
+              'test-id',
+            ).overrideWith(() => controller),
+          ],
+        );
+        addTearDown(container.dispose);
+        useViewSize(tester, size);
+        await tester.pumpWidget(buildTestWidget(container, testPodcast));
+        await tester.pumpAndSettle();
+        return controller;
+      }
+
+      testWidgets('a slow subscribe keeps the pill in place', (tester) async {
+        final controller = await pumpUnsubscribed(tester);
+        final hold = controller.hold = Completer<void>();
+        final height = tester.getSize(find.byType(PodcastDetailHeader)).height;
+
+        await tester.tap(find.text('Subscribe'));
+        for (var frame = 0; frame < 5; frame++) {
+          await tester.pump(const Duration(milliseconds: 100));
+          check(find.text('Subscribe').evaluate()).length.equals(1);
+          check(
+            tester.getSize(find.byType(PodcastDetailHeader)).height,
+          ).equals(height);
+        }
+
+        hold.complete();
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 200));
+        check(find.text('Subscribed').evaluate()).length.equals(1);
+        await tester.pump(const Duration(milliseconds: 700));
+        await tester.pumpAndSettle();
+      });
+
+      testWidgets('unsubscribing mid-confirmation drops the confirmation', (
+        tester,
+      ) async {
+        final controller = await pumpUnsubscribed(tester);
+
+        await tester.tap(find.text('Subscribe'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 200));
+        check(find.text('Subscribed').evaluate()).length.equals(1);
+
+        // As the `...` menu would, well inside the 700ms hold.
+        await controller.toggleSubscription(
+          tester.element(find.byType(PodcastDetailHeader)),
+          testPodcast,
+        );
+        await tester.pumpAndSettle();
+
+        check(find.text('Subscribed').evaluate()).isEmpty();
+        check(find.text('Subscribe').evaluate()).length.equals(1);
+      });
+
+      testWidgets('on a tablet the pill stays on the start edge', (
+        tester,
+      ) async {
+        await pumpUnsubscribed(tester, size: tabletSize);
+        final start = tester.getTopLeft(find.text('Test Podcast')).dx;
+
+        await tester.tap(find.text('Subscribe'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 80));
+
+        // Mid-resize, a centered box would push its content past the start
+        // edge while the box is narrower than the pills.
+        final content = find
+            .descendant(
+              of: find.byType(AnimatedSize),
+              matching: find.byType(Stack),
+            )
+            .first;
+        check(tester.getTopLeft(content).dx).equals(start);
+        await tester.pump(const Duration(milliseconds: 700));
+        await tester.pumpAndSettle();
+      });
+
+      testWidgets('confirms, then collapses the pill', (tester) async {
+        await pumpUnsubscribed(tester);
+
+        await tester.tap(find.text('Subscribe'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 200));
+        check(find.text('Subscribed').evaluate()).length.equals(1);
+
+        await tester.pump(const Duration(milliseconds: 700));
+        await tester.pumpAndSettle();
+        check(find.byType(FilledButton).evaluate()).isEmpty();
+      });
+
+      testWidgets('iOS Reduce Motion closes the space without sizing', (
+        tester,
+      ) async {
+        tester.platformDispatcher.accessibilityFeaturesTestValue =
+            const FakeAccessibilityFeatures(reduceMotion: true);
+        addTearDown(
+          tester.platformDispatcher.clearAccessibilityFeaturesTestValue,
+        );
+        await pumpUnsubscribed(tester);
+        await tester.pump();
+
+        check(find.byType(AnimatedSize).evaluate()).isEmpty();
+        // The switcher still fades; it only stops scaling.
+        final switcher = find.byType(AnimatedSwitcher);
+        check(switcher.evaluate()).length.equals(1);
+        check(
+          find
+              .descendant(of: switcher, matching: find.byType(ScaleTransition))
+              .evaluate(),
+        ).isEmpty();
+      });
+
+      testWidgets('without Reduce Motion the space closes by sizing', (
+        tester,
+      ) async {
+        await pumpUnsubscribed(tester);
+        await tester.pump();
+
+        check(find.byType(AnimatedSize).evaluate()).length.equals(1);
+      });
+
+      testWidgets('the confirmation cannot be tapped', (tester) async {
+        final controller = await pumpUnsubscribed(tester);
+
+        await tester.tap(find.text('Subscribe'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 200));
+        await tester.tap(find.text('Subscribed'), warnIfMissed: false);
+        await tester.pumpAndSettle();
+
+        check(controller.toggles).equals(1);
+      });
+    });
+
+    testWidgets('the pill appears without animating on first load', (
+      tester,
+    ) async {
+      final container = ProviderContainer(
+        overrides: [
+          subscriptionControllerProvider(
+            'test-id',
+          ).overrideWith(() => _FakeSubscriptionController(false)),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await pumpOnPhone(tester, buildTestWidget(container, testPodcast));
+      await tester.pump();
+      await tester.pump();
+      final firstHeight = tester
+          .getSize(find.byType(PodcastDetailHeader))
+          .height;
+      await tester.pumpAndSettle();
+
+      check(find.text('Subscribe').evaluate()).length.equals(1);
+      check(
+        tester.getSize(find.byType(PodcastDetailHeader)).height,
+      ).equals(firstHeight);
+    });
   });
 
   _toggleTests();
@@ -481,6 +650,33 @@ class _CountingController extends SubscriptionController {
     SubscribeSource source = SubscribeSource.discovery,
   }) async {
     toggles++;
+    return true;
+  }
+}
+
+/// Starts unsubscribed and subscribes through a loading state, as the real
+/// controller does.
+class _FlippingController extends SubscriptionController {
+  var toggles = 0;
+
+  /// When set, the toggle stays loading until this completes, like a slow
+  /// write.
+  Completer<void>? hold;
+
+  @override
+  Future<bool> build(String itunesId) async => false;
+
+  @override
+  Future<bool> toggleSubscription(
+    BuildContext context,
+    Podcast podcast, {
+    SubscribeSource source = SubscribeSource.discovery,
+  }) async {
+    toggles++;
+    final next = !(state.value ?? false);
+    state = const AsyncValue.loading();
+    await (hold?.future ?? Future<void>.value());
+    state = AsyncData(next);
     return true;
   }
 }
