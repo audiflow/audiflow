@@ -59,7 +59,6 @@
 /* Begin PBXFileReference section */
 		0335139CE53B477FCE4AA89B /* prodRelease.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = prodRelease.xcconfig; path = Flutter/prodRelease.xcconfig; sourceTree = "<group>"; };
 		05E18F1765A0B57C35FB9331 /* devDebug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = devDebug.xcconfig; path = Flutter/devDebug.xcconfig; sourceTree = "<group>"; };
-		4A3CFA17A0655A50FDE7A79E /* RunnerSimulator.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RunnerSimulator.entitlements; sourceTree = "<group>"; };
 		07D6FAB72F66CAAD00CEF907 /* Runner.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Runner.entitlements; sourceTree = "<group>"; };
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
@@ -167,7 +166,6 @@
 			isa = PBXGroup;
 			children = (
 				07D6FAB72F66CAAD00CEF907 /* Runner.entitlements */,
-				4A3CFA17A0655A50FDE7A79E /* RunnerSimulator.entitlements */,
 				97C146FD1CF9000F007C117D /* Assets.xcassets */,
 				97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */,
 				97C147021CF9000F007C117D /* Info.plist */,
@@ -227,7 +225,6 @@
 				3B06AD1E1E4923F5004D2608 /* Thin Binary */,
 				AF1A8FCE2025AF0100000001 /* Copy GoogleService-Info.plist */,
 				AF1A8FCE2025AF0100000002 /* Set dev version from stg tag */,
-				AF1A8FCE2025AF0100000003 /* Strip CarPlay scene from device builds */,
 			);
 			buildRules = (
 			);
@@ -381,23 +378,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "set -euo pipefail\n# Dev builds report the highest stg tag's version; the pubspec version lags on main.\ncase \"$CONFIGURATION\" in *-dev) ;; *) exit 0 ;; esac\nVERSION=$(bash \"${SRCROOT}/../../../tools/dev-version.sh\")\nif [ -z \"$VERSION\" ]; then\n  echo \"note: no stg tag reachable; keeping the pubspec version.\"\n  exit 0\nfi\nPLIST=\"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"\n/usr/libexec/PlistBuddy -c \"Set :CFBundleShortVersionString ${VERSION% *}\" -c \"Set :CFBundleVersion ${VERSION#* }\" \"$PLIST\"\necho \"Set dev version to $VERSION\"\n";
-			showEnvVarsInLog = 0;
-		};
-		AF1A8FCE2025AF0100000003 /* Strip CarPlay scene from device builds */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}",
-			);
-			name = "Strip CarPlay scene from device builds";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "set -euo pipefail\n# Apple has not granted the CarPlay audio entitlement yet, and its CarPlay\n# Entitlement Addendum forbids using CarPlay APIs before it does. Simulator\n# builds keep the scene for testing; device builds ship without it. Delete\n# this phase once the entitlement is granted (docs/fr/19-car-playback.md).\ncase \"$PLATFORM_NAME\" in iphonesimulator) exit 0 ;; esac\nPLIST=\"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"\nKEY=\":UIApplicationSceneManifest:UISceneConfigurations:CPTemplateApplicationSceneSessionRoleApplication\"\nif /usr/libexec/PlistBuddy -c \"Print $KEY\" \"$PLIST\" >/dev/null 2>&1; then\n  /usr/libexec/PlistBuddy -c \"Delete $KEY\" \"$PLIST\"\n  echo \"Removed the CarPlay scene from the device build\"\nfi\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -579,7 +559,6 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
-				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = Runner/RunnerSimulator.entitlements;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				DEVELOPMENT_TEAM = R6HMM3C9D7;
 				ENABLE_BITCODE = NO;
@@ -648,7 +627,6 @@
 			baseConfigurationReference = 7F721F7404832DFAE0D37835 /* stgProfile.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
-				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = Runner/RunnerSimulator.entitlements;
 				DEVELOPMENT_TEAM = R6HMM3C9D7;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -659,7 +637,6 @@
 			baseConfigurationReference = 51F53DB9B0ABDDA1B135CCF3 /* stgDebug.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
-				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = Runner/RunnerSimulator.entitlements;
 				DEVELOPMENT_TEAM = R6HMM3C9D7;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -670,7 +647,6 @@
 			baseConfigurationReference = 8E9D94829E9F7C7555B62132 /* devRelease.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
-				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = Runner/RunnerSimulator.entitlements;
 				DEVELOPMENT_TEAM = R6HMM3C9D7;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -756,7 +732,6 @@
 			baseConfigurationReference = B2E1C866CA962629B16D5A75 /* stgRelease.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
-				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = Runner/RunnerSimulator.entitlements;
 				DEVELOPMENT_TEAM = R6HMM3C9D7;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -1022,7 +997,6 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
-				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = Runner/RunnerSimulator.entitlements;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				DEVELOPMENT_TEAM = R6HMM3C9D7;
 				ENABLE_BITCODE = NO;
@@ -1047,7 +1021,6 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
-				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = Runner/RunnerSimulator.entitlements;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				DEVELOPMENT_TEAM = R6HMM3C9D7;
 				ENABLE_BITCODE = NO;
@@ -1216,7 +1189,6 @@
 			baseConfigurationReference = E7145E4780B881430076E454 /* devProfile.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
-				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = Runner/RunnerSimulator.entitlements;
 				DEVELOPMENT_TEAM = R6HMM3C9D7;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -1297,7 +1269,6 @@
 			baseConfigurationReference = E3996B1F8838C18597B5019A /* prodProfile.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
-				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = Runner/RunnerSimulator.entitlements;
 				DEVELOPMENT_TEAM = R6HMM3C9D7;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -1308,7 +1279,6 @@
 			baseConfigurationReference = 0335139CE53B477FCE4AA89B /* prodRelease.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
-				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = Runner/RunnerSimulator.entitlements;
 				DEVELOPMENT_TEAM = R6HMM3C9D7;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -1391,7 +1361,6 @@
 			baseConfigurationReference = 05E18F1765A0B57C35FB9331 /* devDebug.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
-				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = Runner/RunnerSimulator.entitlements;
 				DEVELOPMENT_TEAM = R6HMM3C9D7;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -1402,7 +1371,6 @@
 			baseConfigurationReference = 7CE7FB42AB0799855139039D /* prodDebug.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
-				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = Runner/RunnerSimulator.entitlements;
 				DEVELOPMENT_TEAM = R6HMM3C9D7;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
