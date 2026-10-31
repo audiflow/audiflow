@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -79,6 +82,61 @@ class CarPlayback {
         );
     await queue_player.startEpisode(_ref, episode, PlaySource.car);
     return true;
+  }
+
+  /// Plays episode [episodeId] from station [stationId]'s list and queues
+  /// the episodes after it in the order the list shows, as tapping a row
+  /// on the station screen does. The play is recorded so the station moves
+  /// up in the Library. Returns false when the station or the episode no
+  /// longer exists.
+  Future<bool> playStationEpisode(int stationId, int episodeId) async {
+    final station = await _ref
+        .read(stationRepositoryProvider)
+        .findById(stationId);
+    if (station == null) return false;
+    final episode = await _ref
+        .read(episodeRepositoryProvider)
+        .getById(episodeId);
+    if (episode == null) return false;
+    final siblingIds = await _catalog().stationEpisodeIds(stationId);
+    await _ref
+        .read(queueServiceProvider)
+        .createAdhocQueue(
+          startingEpisodeId: episodeId,
+          sourceContext: station.name,
+          siblingEpisodeIds: siblingIds,
+          effectiveOrder: AutoPlayOrder.asDisplayed,
+        );
+    await queue_player.startEpisode(_ref, episode, PlaySource.car);
+    _recordStationPlay(station);
+    return true;
+  }
+
+  /// Fire-and-forget, as on the phone: a failed write only leaves the
+  /// Library order stale, and a lost analytics event changes nothing.
+  void _recordStationPlay(Station station) {
+    final stations = _ref.read(stationRepositoryProvider);
+    final installIds = _ref.read(installIdRepositoryProvider);
+    final analytics = _ref.read(analyticsServiceProvider);
+    final logger = _ref.read(namedLoggerProvider('CarPlayback'));
+    void logFailure(Object error, StackTrace stackTrace) => logger.w(
+      'Failed to record station play',
+      error: error,
+      stackTrace: stackTrace,
+    );
+    unawaited(
+      stations
+          .markPlayed(station.id, at: DateTime.now())
+          .catchError(logFailure),
+    );
+    unawaited(
+      () async {
+        final installId = await installIds.getOrCreate();
+        await analytics.log(
+          StationPlayed(stationId: stableId('$installId:${station.name}')),
+        );
+      }().catchError(logFailure),
+    );
   }
 
   /// Jumps to queue item [queueItemId], as tapping it in the Queue tab

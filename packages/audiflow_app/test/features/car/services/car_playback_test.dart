@@ -28,9 +28,40 @@ class _FakePlayOrderRepository extends Fake
       AutoPlayOrder.asDisplayed;
 }
 
+class _FakeStationRepository extends Fake implements StationRepository {
+  final played = <int>[];
+
+  @override
+  Future<Station?> findById(int id) async => id == 3
+      ? (Station()
+          ..id = 3
+          ..name = 'Mix'
+          ..createdAt = DateTime(2026)
+          ..updatedAt = DateTime(2026))
+      : null;
+
+  @override
+  Future<void> markPlayed(int id, {required DateTime at}) async =>
+      played.add(id);
+}
+
+class _FakeInstallIdRepository extends Fake implements InstallIdRepository {
+  @override
+  Future<String> getOrCreate() async => 'install';
+}
+
+class _FakeAnalytics extends Fake implements AnalyticsService {
+  final events = <AnalyticsEvent>[];
+
+  @override
+  Future<void> log(AnalyticsEvent event) async => events.add(event);
+}
+
 class _FakeQueueService extends Fake implements QueueService {
   final adhocCalls =
-      <({int start, List<int>? siblings, AutoPlayOrder? order})>[];
+      <
+        ({int start, String context, List<int>? siblings, AutoPlayOrder? order})
+      >[];
   var cleared = 0;
 
   @override
@@ -42,6 +73,7 @@ class _FakeQueueService extends Fake implements QueueService {
   }) async {
     adhocCalls.add((
       start: startingEpisodeId,
+      context: sourceContext,
       siblings: siblingEpisodeIds,
       order: effectiveOrder,
     ));
@@ -59,6 +91,10 @@ class _FakeCatalog extends Fake implements CarCatalog {
     requested.add(podcastId);
     return const [7, 6, 5];
   }
+
+  @override
+  Future<List<int>> stationEpisodeIds(int stationId) async =>
+      stationId == 3 ? const [9, 6, 8] : const [];
 }
 
 class _RecordingPlayer extends StubAudioPlayerController {
@@ -118,6 +154,8 @@ void main() {
     late _FakeQueueService queue;
     late _FakeCatalog catalog;
     late _RecordingPlayer player;
+    late _FakeStationRepository stations;
+    late _FakeAnalytics analytics;
     late CarPlayback playback;
 
     setUp(() {
@@ -131,6 +169,8 @@ void main() {
       queue = _FakeQueueService();
       catalog = _FakeCatalog();
       player = _RecordingPlayer();
+      stations = _FakeStationRepository();
+      analytics = _FakeAnalytics();
       final container = ProviderContainer(
         overrides: [
           episodeRepositoryProvider.overrideWithValue(episodes),
@@ -142,6 +182,11 @@ void main() {
           ),
           queueServiceProvider.overrideWithValue(queue),
           audioPlayerControllerProvider.overrideWith(() => player),
+          stationRepositoryProvider.overrideWithValue(stations),
+          installIdRepositoryProvider.overrideWithValue(
+            _FakeInstallIdRepository(),
+          ),
+          analyticsServiceProvider.overrideWithValue(analytics),
         ],
       );
       addTearDown(container.dispose);
@@ -161,6 +206,32 @@ void main() {
         ..has((c) => c.order, 'order').equals(AutoPlayOrder.asDisplayed);
       check(queue.cleared).equals(0);
       check(player.urls).deepEquals(['https://example.com/6.mp3']);
+    });
+
+    test('a station row queues the station list as displayed', () async {
+      check(await playback.playStationEpisode(3, 6)).isTrue();
+      await pumpEventQueue();
+
+      check(queue.adhocCalls.single)
+        ..has((c) => c.start, 'start').equals(6)
+        ..has((c) => c.context, 'context').equals('Mix')
+        ..has((c) => c.siblings, 'siblings').isNotNull().deepEquals([9, 6, 8])
+        ..has((c) => c.order, 'order').equals(AutoPlayOrder.asDisplayed);
+      check(player.urls).deepEquals(['https://example.com/6.mp3']);
+      // Moves the station up in the Library, as a play on the phone does.
+      check(stations.played).deepEquals([3]);
+      check(analytics.events.single).isA<StationPlayed>();
+    });
+
+    test('a station that is gone changes nothing', () async {
+      check(await playback.playStationEpisode(4, 6)).isFalse();
+      check(await playback.playStationEpisode(3, 99)).isFalse();
+      await pumpEventQueue();
+
+      check(queue.adhocCalls).isEmpty();
+      check(player.urls).isEmpty();
+      check(stations.played).isEmpty();
+      check(analytics.events).isEmpty();
     });
 
     test('another row plays alone and clears the queue', () async {

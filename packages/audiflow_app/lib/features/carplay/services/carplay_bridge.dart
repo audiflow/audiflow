@@ -124,10 +124,12 @@ class CarPlayBridge {
   ) async {
     final section = _section(arguments);
     final podcastId = arguments['podcastId'];
+    final stationId = arguments['stationId'];
     try {
       final items = await _catalog().items(
         section,
         podcastId: podcastId is int ? podcastId : null,
+        stationId: stationId is int ? stationId : null,
       );
       return [for (final item in items) item.toMap()];
     } on Object catch (e, stack) {
@@ -144,15 +146,29 @@ class CarPlayBridge {
     final section = _section(arguments);
     final id = arguments['id'];
     if (id is! int) throw _invalidArgument('id');
-    // A podcast row opens its episode list on the native side; it is
-    // never sent here.
-    if (section == CarSection.library) throw _invalidArgument('section');
+    // A podcast or station row opens its episode list on the native side;
+    // it is never sent here.
+    if (section == CarSection.library || section == CarSection.stations) {
+      throw _invalidArgument('section');
+    }
+    final stationId = switch (arguments['stationId']) {
+      final int value => value,
+      _ when section == CarSection.station => throw _invalidArgument(
+        'stationId',
+      ),
+      _ => null,
+    };
     final bool started;
     try {
       started = switch (section) {
         CarSection.upNext => await _playback.playQueueItem(id),
-        // A podcast's own list queues the episodes after the tapped one.
+        // A podcast's or station's own list queues the episodes after the
+        // tapped one.
         CarSection.podcast => await _playback.playPodcastEpisode(id),
+        CarSection.station => await _playback.playStationEpisode(
+          stationId!,
+          id,
+        ),
         _ => await _playback.playEpisode(id),
       };
     } on Object catch (e, stack) {

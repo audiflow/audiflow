@@ -4142,11 +4142,11 @@ abstract class AppLocalizations {
   /// **'Up Next'**
   String get carUpNextTab;
 
-  /// In-car (CarPlay, Android Auto) tab listing partly played episodes
+  /// In-car (CarPlay, Android Auto) tab listing the user's stations
   ///
   /// In en, this message translates to:
-  /// **'In Progress'**
-  String get carInProgressTab;
+  /// **'Stations'**
+  String get carStationsTab;
 
   /// In-car (CarPlay, Android Auto) tab listing subscribed podcasts
   ///
@@ -4166,11 +4166,11 @@ abstract class AppLocalizations {
   /// **'Nothing up next'**
   String get carUpNextEmpty;
 
-  /// In-car (CarPlay, Android Auto) empty In Progress list
+  /// In-car (CarPlay, Android Auto) empty Stations list
   ///
   /// In en, this message translates to:
-  /// **'No episodes in progress'**
-  String get carInProgressEmpty;
+  /// **'No stations yet'**
+  String get carStationsEmpty;
 
   /// In-car (CarPlay, Android Auto) empty Library list
   ///

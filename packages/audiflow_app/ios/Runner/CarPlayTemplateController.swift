@@ -3,14 +3,15 @@ import UIKit
 
 /// Builds and refreshes the CarPlay templates for one connected head unit.
 ///
-/// The root is a tab bar of four lists (Up Next, In Progress, Library,
-/// Downloads). A Library row pushes that podcast's episodes; any episode
+/// The root is a tab bar of four lists (Up Next, Stations, Library,
+/// Downloads). A Stations row pushes that station's episodes and a Library
+/// row that podcast's; any episode
 /// row plays and shows the shared Now Playing template. Now Playing itself
 /// is driven by `MPNowPlayingInfoCenter` and `MPRemoteCommandCenter`, which
 /// audio_service keeps in step with the phone player; only the speed button
 /// and the Up Next button are wired here.
 final class CarPlayTemplateController: NSObject {
-  private static let tabs: [CarPlaySection] = [.upNext, .inProgress, .library, .downloads]
+  private static let tabs: [CarPlaySection] = [.upNext, .stations, .library, .downloads]
 
   private let interfaceController: CPInterfaceController
   private let channel: CarPlayChannel
@@ -21,6 +22,7 @@ final class CarPlayTemplateController: NSObject {
     let template: CPListTemplate
     let section: CarPlaySection
     var podcastId: Int?
+    var stationId: Int?
   }
 
   private var tabLists: [ShownList] = []
@@ -96,7 +98,7 @@ final class CarPlayTemplateController: NSObject {
   private static func tabSymbol(_ section: CarPlaySection) -> String {
     switch section {
     case .upNext: return "list.bullet"
-    case .inProgress: return "clock"
+    case .stations, .station: return "dot.radiowaves.left.and.right"
     case .library, .podcast: return "square.stack"
     case .downloads: return "arrow.down.circle"
     }
@@ -156,7 +158,8 @@ final class CarPlayTemplateController: NSObject {
     let key = ObjectIdentifier(list.template)
     let generation = (requestGenerations[key] ?? 0) + 1
     requestGenerations[key] = generation
-    channel.listItems(list.section, podcastId: list.podcastId) { [weak self] items in
+    channel.listItems(list.section, podcastId: list.podcastId, stationId: list.stationId) {
+      [weak self] items in
       guard let self, self.requestGenerations[key] == generation else { return }
       guard let items else {
         list.template.emptyViewTitleVariants = [self.labels?.loadFailed ?? ""]
@@ -180,7 +183,7 @@ final class CarPlayTemplateController: NSObject {
     if let progress = item.progress {
       row.playbackProgress = CGFloat(min(max(progress, 0), 1))
     }
-    if list.section == .library {
+    if list.section == .library || list.section == .stations {
       row.accessoryType = .disclosureIndicator
     }
     if let url = item.artworkURL, artwork.cachedImage(for: url) == nil {
@@ -196,18 +199,28 @@ final class CarPlayTemplateController: NSObject {
   // MARK: - Selection
 
   private func select(_ item: CarPlayItem, in list: ShownList) {
-    if list.section == .library {
+    switch list.section {
+    case .library:
       push(.podcast, title: item.title, podcastId: item.id)
       return
+    case .stations:
+      push(.station, title: item.title, stationId: item.id)
+      return
+    default:
+      break
     }
-    channel.playItem(list.section, id: item.id) { [weak self] started in
+    channel.playItem(list.section, id: item.id, stationId: list.stationId) {
+      [weak self] started in
       if started { self?.showNowPlaying() }
     }
   }
 
-  private func push(_ section: CarPlaySection, title: String, podcastId: Int? = nil) {
+  private func push(
+    _ section: CarPlaySection, title: String, podcastId: Int? = nil, stationId: Int? = nil
+  ) {
     let shown = ShownList(
-      template: makeListTemplate(section, title: title), section: section, podcastId: podcastId)
+      template: makeListTemplate(section, title: title), section: section,
+      podcastId: podcastId, stationId: stationId)
     pushedLists.append(shown)
     interfaceController.pushTemplate(shown.template, animated: true, completion: nil)
     reload(shown)

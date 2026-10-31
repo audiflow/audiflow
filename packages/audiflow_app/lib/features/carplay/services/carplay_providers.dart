@@ -16,14 +16,15 @@ part 'carplay_providers.g.dart';
 /// `ios/Runner/CarPlayChannel.swift` reads them.
 Map<String, String> carPlayLabels(AppLocalizations l10n) => {
   'upNext': l10n.carUpNextTab,
-  'inProgress': l10n.carInProgressTab,
+  'stations': l10n.carStationsTab,
   'library': l10n.carLibraryTab,
   'downloads': l10n.carDownloadsTab,
   'upNextEmpty': l10n.carUpNextEmpty,
-  'inProgressEmpty': l10n.carInProgressEmpty,
+  'stationsEmpty': l10n.carStationsEmpty,
   'libraryEmpty': l10n.carLibraryEmpty,
   'downloadsEmpty': l10n.carDownloadsEmpty,
   'podcastEmpty': l10n.carPodcastEmpty,
+  'stationEmpty': l10n.carPodcastEmpty,
   'loadFailed': l10n.carLoadFailed,
 };
 

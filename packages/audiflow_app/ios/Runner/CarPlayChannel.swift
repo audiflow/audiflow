@@ -6,16 +6,19 @@ import MediaPlayer
 /// `CarSection` in `lib/features/car/models/car_list_item.dart`.
 enum CarPlaySection: String, CaseIterable {
   case upNext
-  case inProgress
+  case stations
   case library
   case downloads
   /// The episodes of one podcast, opened from `library`.
   case podcast
+  /// The episodes of one station, opened from `stations`.
+  case station
 }
 
 /// One row of a CarPlay list, decoded from Dart's `CarListItem.toMap`.
 struct CarPlayItem {
-  /// Queue item id in `upNext`, podcast id in `library`, episode id elsewhere.
+  /// Queue item id in `upNext`, podcast id in `library`, station id in
+  /// `stations`, episode id elsewhere.
   let id: Int
   let title: String
   let detail: String?
@@ -116,10 +119,12 @@ final class CarPlayChannel {
   func listItems(
     _ section: CarPlaySection,
     podcastId: Int? = nil,
+    stationId: Int? = nil,
     completion: @escaping ([CarPlayItem]?) -> Void
   ) {
     var arguments: [String: Any] = ["section": section.rawValue]
     if let podcastId { arguments["podcastId"] = podcastId }
+    if let stationId { arguments["stationId"] = stationId }
     channel.invokeMethod("listItems", arguments: arguments) { reply in
       guard let rows = reply as? [Any] else {
         completion(nil)
@@ -130,10 +135,16 @@ final class CarPlayChannel {
   }
 
   /// Plays the row `id` of `section`; reports whether playback started.
-  func playItem(_ section: CarPlaySection, id: Int, completion: @escaping (Bool) -> Void) {
-    channel.invokeMethod(
-      "playItem", arguments: ["section": section.rawValue, "id": id]
-    ) { reply in
+  /// A `station` row also names its station, whose list the queue follows.
+  func playItem(
+    _ section: CarPlaySection,
+    id: Int,
+    stationId: Int? = nil,
+    completion: @escaping (Bool) -> Void
+  ) {
+    var arguments: [String: Any] = ["section": section.rawValue, "id": id]
+    if let stationId { arguments["stationId"] = stationId }
+    channel.invokeMethod("playItem", arguments: arguments) { reply in
       completion(!(reply is FlutterError) && !Self.isNotImplemented(reply))
     }
   }

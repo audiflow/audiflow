@@ -11,11 +11,13 @@ import 'car_playback.dart';
 
 /// A parsed Android Auto media id.
 ///
-/// Browsable ids: the audio_service roots, a tab (`upNext`, `inProgress`,
-/// `library`, `downloads`), and `podcast/<podcastId>`. Playable ids:
-/// `queue/<queueItemId>`, `episode/<episodeId>`, and
-/// `podcastEpisode/<episodeId>` for a row of a podcast's own list, which
-/// queues the episodes after it when played.
+/// Browsable ids: the audio_service roots, a tab (`upNext`, `stations`,
+/// `library`, `downloads`), `podcast/<podcastId>`, and
+/// `station/<stationId>`. Playable ids: `queue/<queueItemId>`,
+/// `episode/<episodeId>`, `podcastEpisode/<episodeId>` for a row of a
+/// podcast's own list, and `stationEpisode/<stationId>/<episodeId>` for a
+/// row of a station's list; those two queue the episodes after them when
+/// played.
 sealed class CarMediaId {
   const CarMediaId();
 
@@ -23,19 +25,35 @@ sealed class CarMediaId {
   static const _episodePrefix = 'episode/';
   static const _podcastPrefix = 'podcast/';
   static const _podcastEpisodePrefix = 'podcastEpisode/';
+  static const _stationPrefix = 'station/';
+  static const _stationEpisodePrefix = 'stationEpisode/';
 
   /// The id named by [value], or null for one this build did not issue.
   static CarMediaId? parse(String value) {
     if (value == AudioService.browsableRootId) return const CarRootId();
     if (value == AudioService.recentRootId) return const CarRecentId();
     if (CarSection.byName(value) case final section?) {
-      if (section != CarSection.podcast) return CarTabId(section);
+      // Drill-down lists need their podcast or station id.
+      if (section != CarSection.podcast && section != CarSection.station) {
+        return CarTabId(section);
+      }
     }
     if (_idAfter(_podcastPrefix, value) case final id?) return CarPodcastId(id);
     if (_idAfter(_queuePrefix, value) case final id?) return CarQueueItemId(id);
     if (_idAfter(_episodePrefix, value) case final id?) return CarEpisodeId(id);
     if (_idAfter(_podcastEpisodePrefix, value) case final id?) {
       return CarPodcastEpisodeId(id);
+    }
+    if (_idAfter(_stationPrefix, value) case final id?) return CarStationId(id);
+    if (value.startsWith(_stationEpisodePrefix)) {
+      final parts = value.substring(_stationEpisodePrefix.length).split('/');
+      if (parts.length == 2) {
+        final stationId = int.tryParse(parts[0]);
+        final episodeId = int.tryParse(parts[1]);
+        if (stationId != null && episodeId != null) {
+          return CarStationEpisodeId(stationId, episodeId);
+        }
+      }
     }
     return null;
   }
@@ -51,6 +69,9 @@ sealed class CarMediaId {
   static String episode(int episodeId) => '$_episodePrefix$episodeId';
   static String podcastEpisode(int episodeId) =>
       '$_podcastEpisodePrefix$episodeId';
+  static String station(int stationId) => '$_stationPrefix$stationId';
+  static String stationEpisode(int stationId, int episodeId) =>
+      '$_stationEpisodePrefix$stationId/$episodeId';
 }
 
 /// The browsable root: the tabs.
@@ -88,6 +109,19 @@ final class CarPodcastEpisodeId extends CarMediaId {
   final int episodeId;
 }
 
+final class CarStationId extends CarMediaId {
+  const CarStationId(this.stationId);
+  final int stationId;
+}
+
+/// Carries its station: an episode can be in several stations, and the
+/// queue built when it plays is that station's list.
+final class CarStationEpisodeId extends CarMediaId {
+  const CarStationEpisodeId(this.stationId, this.episodeId);
+  final int stationId;
+  final int episodeId;
+}
+
 /// Answers Android Auto's media browser, which audio_service forwards to
 /// the audio handler (`getChildren`, `subscribeToChildren`,
 /// `playFromMediaId`).
@@ -119,7 +153,7 @@ class CarMediaBrowser {
   /// most four.
   static const tabs = [
     CarSection.upNext,
-    CarSection.inProgress,
+    CarSection.stations,
     CarSection.library,
     CarSection.downloads,
   ];
@@ -153,6 +187,11 @@ class CarMediaBrowser {
           CarSection.podcast,
           podcastId: podcastId,
         ),
+        CarStationId(:final stationId) => _rows(
+          parentMediaId,
+          CarSection.station,
+          stationId: stationId,
+        ),
         _ => Future.value(const <MediaItem>[]),
       };
     } on Object catch (e, stack) {
@@ -180,6 +219,8 @@ class CarMediaBrowser {
       CarPodcastEpisodeId(:final episodeId) => _playback.playPodcastEpisode(
         episodeId,
       ),
+      CarStationEpisodeId(:final stationId, :final episodeId) =>
+        _playback.playStationEpisode(stationId, episodeId),
       _ => Future.value(false),
     };
     if (!await played) _logger.w('Nothing to play for $mediaId');
@@ -210,6 +251,7 @@ class CarMediaBrowser {
     return switch (CarMediaId.parse(parentMediaId)) {
       CarTabId(:final section) => section,
       CarPodcastId() => CarSection.podcast,
+      CarStationId() => CarSection.station,
       // Resumption offers the latest in-progress episode.
       CarRecentId() => CarSection.inProgress,
       _ => null,
@@ -243,26 +285,33 @@ class CarMediaBrowser {
     String parentMediaId,
     CarSection section, {
     int? podcastId,
+    int? stationId,
   }) async {
-    final rows = await _catalog().items(section, podcastId: podcastId);
-    return _toMediaItems(parentMediaId, section, rows);
+    final rows = await _catalog().items(
+      section,
+      podcastId: podcastId,
+      stationId: stationId,
+    );
+    return _toMediaItems(parentMediaId, section, rows, stationId: stationId);
   }
 
   Future<List<MediaItem>> _toMediaItems(
     String parentMediaId,
     CarSection section,
-    List<CarListItem> rows,
-  ) async {
+    List<CarListItem> rows, {
+    int? stationId,
+  }) async {
     final artwork = await _resolveArtwork(parentMediaId, rows);
     return [
       for (final row in rows)
         MediaItem(
-          id: _mediaIdOf(row, section),
+          id: _mediaIdOf(row, section, stationId: stationId),
           title: row.title,
           artist: row.detail,
           displaySubtitle: row.detail,
           artUri: artwork[row.artworkUrl],
-          playable: section != CarSection.library,
+          playable:
+              section != CarSection.library && section != CarSection.stations,
           extras: _progressExtras(row.progress),
         ),
     ];
@@ -276,13 +325,23 @@ class CarMediaBrowser {
     };
   }
 
-  static String _mediaIdOf(CarListItem row, CarSection section) {
+  static String _mediaIdOf(
+    CarListItem row,
+    CarSection section, {
+    int? stationId,
+  }) {
     return switch (section) {
       CarSection.upNext => CarMediaId.queueItem(row.id),
       CarSection.library => CarMediaId.podcast(row.id),
       CarSection.inProgress ||
       CarSection.downloads => CarMediaId.episode(row.id),
       CarSection.podcast => CarMediaId.podcastEpisode(row.id),
+      CarSection.stations => CarMediaId.station(row.id),
+      // Station rows are only listed under their station's id.
+      CarSection.station =>
+        stationId == null
+            ? CarMediaId.episode(row.id)
+            : CarMediaId.stationEpisode(stationId, row.id),
     };
   }
 

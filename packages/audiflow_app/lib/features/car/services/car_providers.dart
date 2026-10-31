@@ -10,6 +10,8 @@ import '../../../l10n/duration_label.dart';
 import '../../library/presentation/controllers/continue_listening_controller.dart';
 import '../../library/presentation/controllers/library_controller.dart';
 import '../../settings/presentation/controllers/locale_controller.dart';
+import '../../station/presentation/controllers/station_list_controller.dart';
+import '../../station/presentation/utils/station_recency.dart';
 import '../../player/services/content_uri_artwork_preparer.dart';
 import '../../player/services/now_playing_artwork_provider.dart';
 import '../models/car_list_item.dart';
@@ -41,9 +43,18 @@ CarCatalog carCatalog(Ref ref) => CarCatalog(
   downloadRepository: ref.watch(downloadRepositoryProvider),
   parentalControlRepository: ref.watch(parentalControlRepositoryProvider),
   loadSubscriptions: () => _readOnce(ref, sortedSubscriptionsProvider.future),
+  stationRepository: ref.watch(stationRepositoryProvider),
+  stationEpisodeRepository: ref.watch(stationEpisodeRepositoryProvider),
+  stationPodcastRepository: ref.watch(stationPodcastRepositoryProvider),
+  loadStations: () async => recentlyPlayedStations(
+    await _readOnce(ref, stationListProvider.future),
+    limit: CarCatalog.itemLimit,
+  ),
   nowPlayingUrl: () => ref.read(nowPlayingControllerProvider)?.episodeUrl,
   formatDuration: (duration) =>
       carAppLocalizations(ref).durationLabel(duration),
+  formatEpisodeCount: (count) =>
+      carAppLocalizations(ref).stationEpisodeCount(count),
 );
 
 /// Reads auto-dispose [provider] while holding a listener, so it is not
@@ -70,12 +81,18 @@ List<ProviderSubscription<Object?>> watchCarListChanges(
     ref.listen(playbackQueueProvider, changes({CarSection.upNext})),
     ref.listen(
       continueListeningEpisodesProvider,
-      // A podcast's episode list shows the same progress bars.
-      changes({CarSection.inProgress, CarSection.podcast}),
+      // Podcast and station episode lists show the same progress bars.
+      changes({CarSection.inProgress, CarSection.podcast, CarSection.station}),
     ),
     ref.listen(
       sortedSubscriptionsProvider,
       changes({CarSection.library, CarSection.podcast}),
+    ),
+    // A station's feed is not watched: the feed is rebuilt in the
+    // background, and an open station list catches up when reopened.
+    ref.listen(
+      stationListProvider,
+      changes({CarSection.stations, CarSection.station}),
     ),
     ref.listen(
       completedDownloadEpisodeIdsProvider,
@@ -135,7 +152,7 @@ Future<CarMediaBrowser> carMediaBrowser(Ref ref) async {
       final l10n = carAppLocalizations(ref);
       return {
         CarSection.upNext: l10n.carUpNextTab,
-        CarSection.inProgress: l10n.carInProgressTab,
+        CarSection.stations: l10n.carStationsTab,
         CarSection.library: l10n.carLibraryTab,
         CarSection.downloads: l10n.carDownloadsTab,
       };

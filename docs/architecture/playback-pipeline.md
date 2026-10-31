@@ -257,7 +257,7 @@ plays rows (`playItem`) through `AudioPlayerController`. Dart sends `ready`
 with the ARB-localized labels at startup and on language change; native shows
 a placeholder root until then. Native sends `connected` / `disconnected`, and
 only while connected does Dart listen to the queue, in-progress, library,
-downloads and now-playing providers, coalescing changes into `invalidate`
+station list, downloads and now-playing providers, coalescing changes into `invalidate`
 messages (500 ms).
 
 ## Android Auto
@@ -270,7 +270,9 @@ FR 19. `AndroidManifest.xml` declares the car application
 CarPlay. Media ids: the tabs by `CarSection` name, `podcast/<id>`
 (browsable), `queue/<queueItemId>`, `episode/<episodeId>` and
 `podcastEpisode/<episodeId>` (playable; a podcast list row, which queues the
-episodes after it);
+episodes after it), `station/<id>` (browsable) and
+`stationEpisode/<stationId>/<episodeId>` (playable; a station list row, which
+queues the station's episodes after it);
 `AudioService.recentRootId` returns the latest in-progress episode for
 playback resumption. Now Playing and its controls are the media session
 audio_service already publishes (Layer 2).

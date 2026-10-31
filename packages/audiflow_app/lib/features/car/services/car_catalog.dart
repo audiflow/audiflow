@@ -18,8 +18,13 @@ class CarCatalog {
     required this._downloadRepository,
     required this._parentalControlRepository,
     required this._loadSubscriptions,
+    required this._stationRepository,
+    required this._stationEpisodeRepository,
+    required this._stationPodcastRepository,
+    required this._loadStations,
     required this._nowPlayingUrl,
     required this._formatDuration,
+    required this._formatEpisodeCount,
   });
 
   /// Rows sent for one list. The head unit shows fewer still (its own
@@ -37,12 +42,22 @@ class CarCatalog {
   final DownloadRepository _downloadRepository;
   final ParentalControlRepository _parentalControlRepository;
   final Future<List<Subscription>> Function() _loadSubscriptions;
+  final StationRepository _stationRepository;
+  final StationEpisodeRepository _stationEpisodeRepository;
+  final StationPodcastRepository _stationPodcastRepository;
+  final Future<List<Station>> Function() _loadStations;
   final String? Function() _nowPlayingUrl;
   final String Function(Duration duration) _formatDuration;
+  final String Function(int count) _formatEpisodeCount;
 
   /// The rows of [section]; [podcastId] picks the podcast for
-  /// [CarSection.podcast].
-  Future<List<CarListItem>> items(CarSection section, {int? podcastId}) async {
+  /// [CarSection.podcast], and [stationId] the station for
+  /// [CarSection.station].
+  Future<List<CarListItem>> items(
+    CarSection section, {
+    int? podcastId,
+    int? stationId,
+  }) async {
     return switch (section) {
       CarSection.upNext => _upNext(),
       CarSection.inProgress => _inProgress(),
@@ -50,6 +65,9 @@ class CarCatalog {
       CarSection.downloads => _downloads(),
       CarSection.podcast =>
         podcastId == null ? const [] : _podcastEpisodes(podcastId),
+      CarSection.stations => _stations(),
+      CarSection.station =>
+        stationId == null ? const [] : _stationEpisodes(stationId),
     };
   }
 
@@ -114,6 +132,73 @@ class CarCatalog {
           artworkUrl: subscription.artworkUrl,
         ),
     ];
+  }
+
+  Future<List<CarListItem>> _stations() async {
+    final stations = await _loadStations();
+    final items = <CarListItem>[];
+    for (final station in stations.take(itemLimit)) {
+      final count = await _stationEpisodeRepository.countByStation(station.id);
+      items.add(
+        CarListItem(
+          id: station.id,
+          title: station.name,
+          detail: _formatEpisodeCount(count),
+          artworkUrl: await _stationArtworkUrl(station.id),
+        ),
+      );
+    }
+    return items;
+  }
+
+  /// The artwork of the station's first podcast, standing in for the
+  /// stacked artwork the phone draws, which a head unit row cannot.
+  Future<String?> _stationArtworkUrl(int stationId) async {
+    final podcasts = await _stationPodcastRepository
+        .watchByStation(stationId)
+        .first;
+    if (podcasts.isEmpty) return null;
+    final first = podcasts.reduce((a, b) => b.sortOrder < a.sortOrder ? b : a);
+    final subscription = await _subscriptionRepository.getById(first.podcastId);
+    return subscription?.artworkUrl;
+  }
+
+  /// The ids of the episodes [CarSection.station] lists for [stationId], in
+  /// list order: what playing one of its rows queues from, as the station
+  /// screen does.
+  Future<List<int>> stationEpisodeIds(int stationId) async {
+    final episodes = await _listedStationEpisodes(stationId);
+    return [for (final episode in episodes) episode.id];
+  }
+
+  /// The station's feed in the order and grouping the station screen uses.
+  /// Its filters are already applied: the feed holds only what passes them.
+  Future<List<Episode>> _listedStationEpisodes(int stationId) async {
+    final station = await _stationRepository.findById(stationId);
+    if (station == null) return const [];
+    final entries = await _stationEpisodeRepository
+        .watchByStation(
+          stationId,
+          limit: itemLimit,
+          ascending: station.episodeSort == StationEpisodeSort.oldest,
+          grouped: station.groupByPodcast,
+        )
+        .first;
+    return _episodesInOrder([
+      for (final entry in entries.take(itemLimit)) entry.episodeId,
+    ]);
+  }
+
+  Future<List<CarListItem>> _stationEpisodes(int stationId) async {
+    final episodes = await _listedStationEpisodes(stationId);
+    final histories = <int, PlaybackHistory>{};
+    for (final podcastId in {for (final e in episodes) e.podcastId}) {
+      histories.addAll(await _historyRepository.getByPodcastId(podcastId));
+    }
+    return _episodeItems(
+      episodes,
+      progressOf: (episode) => _resumeProgress(episode, histories[episode.id]),
+    );
   }
 
   /// The ids of the episodes [CarSection.podcast] lists for [podcastId], in
