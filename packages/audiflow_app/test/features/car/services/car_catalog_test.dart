@@ -297,6 +297,23 @@ void main() {
       check(ids(items)).deepEquals([1]);
     });
 
+    test('podcastEpisodeIds lists the same episodes as the rows', () async {
+      final older = _episode(1);
+      final explicit = _episode(2, explicit: true);
+      final newer = _episode(3);
+      episodeRepository.episodes = [older, explicit, newer];
+      parentalControlRepository.hideExplicit = true;
+
+      final items = await catalog.items(
+        CarSection.podcast,
+        podcastId: podcastA.id,
+      );
+
+      check(
+        await catalog.podcastEpisodeIds(podcastA.id),
+      ).deepEquals(ids(items));
+    });
+
     test('is empty for a podcast that is not subscribed', () async {
       episodeRepository.episodes = [_episode(1, podcastId: 9)];
 

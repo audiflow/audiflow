@@ -129,7 +129,7 @@ Future<CarMediaBrowser> carMediaBrowser(Ref ref) async {
   final changes = CarChangeBatcher(onFlush: (s) => browser.notifyChanged(s));
   browser = CarMediaBrowser(
     catalog: () => ref.read(carCatalogProvider),
-    playback: CarPlayback(ref),
+    playback: CarPlayback(ref, catalog: () => ref.read(carCatalogProvider)),
     artwork: artwork,
     tabTitles: () {
       final l10n = carAppLocalizations(ref);

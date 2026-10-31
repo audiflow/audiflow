@@ -44,7 +44,7 @@ CarPlayBridge carPlayBridge(Ref ref) {
   late final CarPlayBridge bridge;
   bridge = CarPlayBridge(
     catalog: () => ref.read(carCatalogProvider),
-    playback: CarPlayback(ref),
+    playback: CarPlayback(ref, catalog: () => ref.read(carCatalogProvider)),
     labels: () => carPlayLabels(carAppLocalizations(ref)),
     logger: ref.read(namedLoggerProvider('CarPlay')),
     onConnectionChanged: ({required connected}) {

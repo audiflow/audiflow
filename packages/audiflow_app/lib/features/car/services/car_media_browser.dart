@@ -13,13 +13,16 @@ import 'car_playback.dart';
 ///
 /// Browsable ids: the audio_service roots, a tab (`upNext`, `inProgress`,
 /// `library`, `downloads`), and `podcast/<podcastId>`. Playable ids:
-/// `queue/<queueItemId>` and `episode/<episodeId>`.
+/// `queue/<queueItemId>`, `episode/<episodeId>`, and
+/// `podcastEpisode/<episodeId>` for a row of a podcast's own list, which
+/// queues the episodes after it when played.
 sealed class CarMediaId {
   const CarMediaId();
 
   static const _queuePrefix = 'queue/';
   static const _episodePrefix = 'episode/';
   static const _podcastPrefix = 'podcast/';
+  static const _podcastEpisodePrefix = 'podcastEpisode/';
 
   /// The id named by [value], or null for one this build did not issue.
   static CarMediaId? parse(String value) {
@@ -31,6 +34,9 @@ sealed class CarMediaId {
     if (_idAfter(_podcastPrefix, value) case final id?) return CarPodcastId(id);
     if (_idAfter(_queuePrefix, value) case final id?) return CarQueueItemId(id);
     if (_idAfter(_episodePrefix, value) case final id?) return CarEpisodeId(id);
+    if (_idAfter(_podcastEpisodePrefix, value) case final id?) {
+      return CarPodcastEpisodeId(id);
+    }
     return null;
   }
 
@@ -43,6 +49,8 @@ sealed class CarMediaId {
   static String podcast(int podcastId) => '$_podcastPrefix$podcastId';
   static String queueItem(int queueItemId) => '$_queuePrefix$queueItemId';
   static String episode(int episodeId) => '$_episodePrefix$episodeId';
+  static String podcastEpisode(int episodeId) =>
+      '$_podcastEpisodePrefix$episodeId';
 }
 
 /// The browsable root: the tabs.
@@ -72,6 +80,11 @@ final class CarQueueItemId extends CarMediaId {
 
 final class CarEpisodeId extends CarMediaId {
   const CarEpisodeId(this.episodeId);
+  final int episodeId;
+}
+
+final class CarPodcastEpisodeId extends CarMediaId {
+  const CarPodcastEpisodeId(this.episodeId);
   final int episodeId;
 }
 
@@ -164,6 +177,9 @@ class CarMediaBrowser {
         queueItemId,
       ),
       CarEpisodeId(:final episodeId) => _playback.playEpisode(episodeId),
+      CarPodcastEpisodeId(:final episodeId) => _playback.playPodcastEpisode(
+        episodeId,
+      ),
       _ => Future.value(false),
     };
     if (!await played) _logger.w('Nothing to play for $mediaId');
@@ -265,8 +281,8 @@ class CarMediaBrowser {
       CarSection.upNext => CarMediaId.queueItem(row.id),
       CarSection.library => CarMediaId.podcast(row.id),
       CarSection.inProgress ||
-      CarSection.downloads ||
-      CarSection.podcast => CarMediaId.episode(row.id),
+      CarSection.downloads => CarMediaId.episode(row.id),
+      CarSection.podcast => CarMediaId.podcastEpisode(row.id),
     };
   }
 

@@ -268,7 +268,9 @@ FR 19. `AndroidManifest.xml` declares the car application
 `getChildren`, `subscribeToChildren` and `playFromMediaId` to
 `CarMediaBrowser`, which builds `MediaItem`s from the same `CarCatalog` as
 CarPlay. Media ids: the tabs by `CarSection` name, `podcast/<id>`
-(browsable), `queue/<queueItemId>` and `episode/<episodeId>` (playable);
+(browsable), `queue/<queueItemId>`, `episode/<episodeId>` and
+`podcastEpisode/<episodeId>` (playable; a podcast list row, which queues the
+episodes after it);
 `AudioService.recentRootId` returns the latest in-progress episode for
 playback resumption. Now Playing and its controls are the media session
 audio_service already publishes (Layer 2).

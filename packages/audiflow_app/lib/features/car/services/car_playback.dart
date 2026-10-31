@@ -2,6 +2,7 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../queue/services/queue_item_player.dart' as queue_player;
+import 'car_catalog.dart';
 
 /// Speeds the CarPlay playback-rate button steps through, in order.
 ///
@@ -24,21 +25,58 @@ double nextCarSpeed(double current) {
 /// Carries out the playback an in-car row or button asks for, through the
 /// same controller the phone player uses.
 ///
-/// The car plays a tapped episode without rebuilding the queue: the phone's
-/// replace-queue confirmation cannot be asked while driving, and silently
-/// replacing a hand-built queue would lose it.
+/// The queue changes as it does on the phone after "replace the queue" is
+/// confirmed. The car asks nothing: the head unit has no way to add items
+/// to the queue by hand, and a confirmation is one more step for a driver.
 class CarPlayback {
-  CarPlayback(this._ref);
+  CarPlayback(this._ref, {required this._catalog});
 
   final Ref _ref;
 
-  /// Plays episode [episodeId], resuming from its saved position.
-  /// Returns false when the episode no longer exists.
+  /// Read on each play, as `CarPlayBridge` reads it, so a rebuilt catalog
+  /// is picked up.
+  final CarCatalog Function() _catalog;
+
+  /// Plays episode [episodeId] alone, resuming from its saved position, as
+  /// playing from the phone's episode detail does: the queue is cleared so
+  /// a stale one does not continue after it. Used for rows (In Progress,
+  /// Downloads) that are not one podcast's episodes. Returns false when the
+  /// episode no longer exists.
   Future<bool> playEpisode(int episodeId) async {
     final episode = await _ref
         .read(episodeRepositoryProvider)
         .getById(episodeId);
     if (episode == null) return false;
+    await _ref.read(queueServiceProvider).clearQueue();
+    await queue_player.startEpisode(_ref, episode, PlaySource.car);
+    return true;
+  }
+
+  /// Plays episode [episodeId] from its podcast's episode list and queues
+  /// the episodes after it, as tapping a row on podcast detail does: the
+  /// list's episodes in the podcast's effective play order. Returns false
+  /// when the episode no longer exists.
+  Future<bool> playPodcastEpisode(int episodeId) async {
+    final episode = await _ref
+        .read(episodeRepositoryProvider)
+        .getById(episodeId);
+    if (episode == null) return false;
+    final podcastId = episode.podcastId;
+    final siblingIds = await _catalog().podcastEpisodeIds(podcastId);
+    final order = await _ref
+        .read(playOrderPreferenceRepositoryProvider)
+        .resolveForPodcast(podcastId);
+    final subscription = await _ref
+        .read(subscriptionRepositoryProvider)
+        .getById(podcastId);
+    await _ref
+        .read(queueServiceProvider)
+        .createAdhocQueue(
+          startingEpisodeId: episodeId,
+          sourceContext: subscription?.title ?? '',
+          siblingEpisodeIds: siblingIds,
+          effectiveOrder: order,
+        );
     await queue_player.startEpisode(_ref, episode, PlaySource.car);
     return true;
   }

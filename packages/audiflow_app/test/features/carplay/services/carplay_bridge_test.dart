@@ -22,6 +22,7 @@ class _FakeCatalog extends Fake implements CarCatalog {
 
 class _FakePlayback extends Fake implements CarPlayback {
   final playedEpisodes = <int>[];
+  final playedPodcastEpisodes = <int>[];
   final playedQueueItems = <int>[];
   double? nextSpeed = 1.5;
 
@@ -30,6 +31,12 @@ class _FakePlayback extends Fake implements CarPlayback {
   @override
   Future<bool> playEpisode(int episodeId) async {
     playedEpisodes.add(episodeId);
+    return found;
+  }
+
+  @override
+  Future<bool> playPodcastEpisode(int episodeId) async {
+    playedPodcastEpisodes.add(episodeId);
     return found;
   }
 
@@ -152,6 +159,16 @@ void main() {
 
     check(playback.playedQueueItems).deepEquals([11]);
     check(playback.playedEpisodes).deepEquals([22]);
+  });
+
+  test('plays a podcast row with the episodes after it queued', () async {
+    await fromNative('playItem', {
+      'section': CarSection.podcast.name,
+      'id': 33,
+    });
+
+    check(playback.playedPodcastEpisodes).deepEquals([33]);
+    check(playback.playedEpisodes).isEmpty();
   });
 
   test('reports a row that is gone as an error', () async {
