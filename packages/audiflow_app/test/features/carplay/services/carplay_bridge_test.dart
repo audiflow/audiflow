@@ -8,13 +8,17 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:logger/logger.dart';
 
 class _FakeCatalog extends Fake implements CarCatalog {
-  final requests = <(CarSection, int?)>[];
+  final requests = <(CarSection, int?, int?)>[];
   List<CarListItem> rows = const [];
   Object? error;
 
   @override
-  Future<List<CarListItem>> items(CarSection section, {int? podcastId}) async {
-    requests.add((section, podcastId));
+  Future<List<CarListItem>> items(
+    CarSection section, {
+    int? podcastId,
+    int? stationId,
+  }) async {
+    requests.add((section, podcastId, stationId));
     if (error case final e?) throw e;
     return rows;
   }
@@ -23,6 +27,7 @@ class _FakeCatalog extends Fake implements CarCatalog {
 class _FakePlayback extends Fake implements CarPlayback {
   final playedEpisodes = <int>[];
   final playedPodcastEpisodes = <int>[];
+  final playedStationEpisodes = <(int, int)>[];
   final playedQueueItems = <int>[];
   double? nextSpeed = 1.5;
 
@@ -37,6 +42,12 @@ class _FakePlayback extends Fake implements CarPlayback {
   @override
   Future<bool> playPodcastEpisode(int episodeId) async {
     playedPodcastEpisodes.add(episodeId);
+    return found;
+  }
+
+  @override
+  Future<bool> playStationEpisode(int stationId, int episodeId) async {
+    playedStationEpisodes.add((stationId, episodeId));
     return found;
   }
 
@@ -131,8 +142,17 @@ void main() {
       'podcastId': 7,
     });
 
-    check(catalog.requests.single).equals((CarSection.podcast, 7));
+    check(catalog.requests.single).equals((CarSection.podcast, 7, null));
     check(reply).isA<List<Object?>>().deepEquals([item.toMap()]);
+  });
+
+  test('passes the station of a station list', () async {
+    await fromNative('listItems', {
+      'section': CarSection.station.name,
+      'stationId': 4,
+    });
+
+    check(catalog.requests.single).equals((CarSection.station, null, 4));
   });
 
   test('rejects an unknown section', () async {
@@ -171,6 +191,24 @@ void main() {
     check(playback.playedEpisodes).isEmpty();
   });
 
+  test('plays a station row with the episodes after it queued', () async {
+    await fromNative('playItem', {
+      'section': CarSection.station.name,
+      'stationId': 4,
+      'id': 44,
+    });
+
+    check(playback.playedStationEpisodes).deepEquals([(4, 44)]);
+    check(playback.playedEpisodes).isEmpty();
+  });
+
+  test('rejects a station row without its station', () async {
+    await check(
+      fromNative('playItem', {'section': CarSection.station.name, 'id': 44}),
+    ).throws<PlatformException>();
+    check(playback.playedStationEpisodes).isEmpty();
+  });
+
   test('reports a row that is gone as an error', () async {
     playback.found = false;
 
@@ -179,9 +217,12 @@ void main() {
     ).throws<PlatformException>();
   });
 
-  test('rejects playing a podcast row', () async {
+  test('rejects playing a podcast or station row', () async {
     await check(
       fromNative('playItem', {'section': CarSection.library.name, 'id': 1}),
+    ).throws<PlatformException>();
+    await check(
+      fromNative('playItem', {'section': CarSection.stations.name, 'id': 1}),
     ).throws<PlatformException>();
     check(playback.playedEpisodes).isEmpty();
   });

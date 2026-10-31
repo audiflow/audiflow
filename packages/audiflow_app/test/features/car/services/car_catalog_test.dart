@@ -40,6 +40,68 @@ PlaybackHistory _history(
   ..positionMs = positionMs
   ..durationMs = durationMs;
 
+Station _station(int id, String name, {bool oldestFirst = false}) => Station()
+  ..id = id
+  ..name = name
+  ..episodeSort = oldestFirst
+      ? StationEpisodeSort.oldest
+      : StationEpisodeSort.newest
+  ..createdAt = DateTime(2026)
+  ..updatedAt = DateTime(2026);
+
+StationEpisode _stationEpisode(int stationId, int episodeId) => StationEpisode()
+  ..stationId = stationId
+  ..episodeId = episodeId;
+
+StationPodcast _stationPodcast(int stationId, int podcastId, int sortOrder) =>
+    StationPodcast()
+      ..stationId = stationId
+      ..podcastId = podcastId
+      ..sortOrder = sortOrder
+      ..addedAt = DateTime(2026);
+
+class _FakeStationRepository extends Fake implements StationRepository {
+  Map<int, Station> stations = {};
+
+  @override
+  Future<Station?> findById(int id) async => stations[id];
+}
+
+class _FakeStationEpisodeRepository extends Fake
+    implements StationEpisodeRepository {
+  Map<int, List<StationEpisode>> byStation = {};
+  final requests = <({int stationId, bool ascending, bool grouped})>[];
+
+  @override
+  Stream<List<StationEpisode>> watchByStation(
+    int stationId, {
+    int? limit,
+    int? offset,
+    bool ascending = false,
+    bool grouped = false,
+  }) {
+    requests.add((
+      stationId: stationId,
+      ascending: ascending,
+      grouped: grouped,
+    ));
+    return Stream.value(byStation[stationId] ?? const []);
+  }
+
+  @override
+  Future<int> countByStation(int stationId) async =>
+      byStation[stationId]?.length ?? 0;
+}
+
+class _FakeStationPodcastRepository extends Fake
+    implements StationPodcastRepository {
+  Map<int, List<StationPodcast>> byStation = {};
+
+  @override
+  Stream<List<StationPodcast>> watchByStation(int stationId) =>
+      Stream.value(byStation[stationId] ?? const []);
+}
+
 class _FakeQueueService extends Fake implements QueueService {
   PlaybackQueue queue = const PlaybackQueue();
 
@@ -109,6 +171,10 @@ void main() {
   late _FakeDownloadRepository downloadRepository;
   late _FakeParentalControlRepository parentalControlRepository;
   late List<Subscription> sortedSubscriptions;
+  late _FakeStationRepository stationRepository;
+  late _FakeStationEpisodeRepository stationEpisodeRepository;
+  late _FakeStationPodcastRepository stationPodcastRepository;
+  late List<Station> sortedStations;
   String? nowPlayingUrl;
   late CarCatalog catalog;
 
@@ -124,6 +190,10 @@ void main() {
     downloadRepository = _FakeDownloadRepository();
     parentalControlRepository = _FakeParentalControlRepository();
     sortedSubscriptions = [podcastB, podcastA];
+    stationRepository = _FakeStationRepository();
+    stationEpisodeRepository = _FakeStationEpisodeRepository();
+    stationPodcastRepository = _FakeStationPodcastRepository();
+    sortedStations = [];
     nowPlayingUrl = null;
     catalog = CarCatalog(
       queueService: queueService,
@@ -133,8 +203,13 @@ void main() {
       downloadRepository: downloadRepository,
       parentalControlRepository: parentalControlRepository,
       loadSubscriptions: () async => sortedSubscriptions,
+      stationRepository: stationRepository,
+      stationEpisodeRepository: stationEpisodeRepository,
+      stationPodcastRepository: stationPodcastRepository,
+      loadStations: () async => sortedStations,
       nowPlayingUrl: () => nowPlayingUrl,
       formatDuration: (duration) => '${duration.inMinutes}m',
+      formatEpisodeCount: (count) => '$count eps',
     );
   });
 
@@ -332,6 +407,74 @@ void main() {
       );
 
       check(items).length.equals(CarCatalog.itemLimit);
+    });
+  });
+
+  group('stations', () {
+    test(
+      'lists stations in the Library order with count and artwork',
+      () async {
+        final news = _station(1, 'News');
+        final tech = _station(2, 'Tech');
+        sortedStations = [tech, news];
+        stationEpisodeRepository.byStation = {
+          tech.id: [_stationEpisode(2, 10), _stationEpisode(2, 11)],
+        };
+        stationPodcastRepository.byStation = {
+          tech.id: [
+            _stationPodcast(2, podcastA.id, 1),
+            _stationPodcast(2, podcastB.id, 0),
+          ],
+        };
+
+        final items = await catalog.items(CarSection.stations);
+
+        check(ids(items)).deepEquals([tech.id, news.id]);
+        check(items[0])
+          ..has((i) => i.title, 'title').equals('Tech')
+          ..has((i) => i.detail, 'detail').equals('2 eps')
+          // The station's first podcast stands for it, as on its artwork.
+          ..has((i) => i.artworkUrl, 'artworkUrl').equals(podcastB.artworkUrl);
+        check(items[1])
+          ..has((i) => i.detail, 'detail').equals('0 eps')
+          ..has((i) => i.artworkUrl, 'artworkUrl').isNull();
+      },
+    );
+  });
+
+  group('station', () {
+    test('lists the station feed in its own order', () async {
+      final station = _station(5, 'Mix', oldestFirst: true);
+      stationRepository.stations = {station.id: station};
+      episodeRepository.episodes = [
+        _episode(1, podcastId: podcastA.id),
+        _episode(2, podcastId: podcastB.id),
+      ];
+      stationEpisodeRepository.byStation = {
+        station.id: [_stationEpisode(5, 2), _stationEpisode(5, 1)],
+      };
+      historyRepository.byPodcast = {
+        1: _history(1, positionMs: 30000, durationMs: 60000),
+      };
+
+      final items = await catalog.items(
+        CarSection.station,
+        stationId: station.id,
+      );
+
+      check(stationEpisodeRepository.requests.single)
+        ..has((r) => r.ascending, 'ascending').isTrue()
+        ..has((r) => r.grouped, 'grouped').isFalse();
+      check(ids(items)).deepEquals([2, 1]);
+      check(items[0].detail).equals(podcastB.title);
+      check(items[1].progress).equals(0.5);
+      check(await catalog.stationEpisodeIds(station.id)).deepEquals([2, 1]);
+    });
+
+    test('is empty for a station that is gone', () async {
+      check(await catalog.items(CarSection.station, stationId: 9)).isEmpty();
+      check(await catalog.items(CarSection.station)).isEmpty();
+      check(await catalog.stationEpisodeIds(9)).isEmpty();
     });
   });
 }
