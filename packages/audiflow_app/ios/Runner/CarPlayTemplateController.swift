@@ -7,7 +7,7 @@ import UIKit
 /// Downloads). A Library row pushes that podcast's episodes; any episode
 /// row plays and shows the shared Now Playing template. Now Playing itself
 /// is driven by `MPNowPlayingInfoCenter` and `MPRemoteCommandCenter`, which
-/// audio_service keeps in step with the phone player; only the rate button
+/// audio_service keeps in step with the phone player; only the speed button
 /// and the Up Next button are wired here.
 final class CarPlayTemplateController: NSObject {
   private static let tabs: [CarPlaySection] = [.upNext, .inProgress, .library, .downloads]
@@ -106,10 +106,48 @@ final class CarPlayTemplateController: NSObject {
     let nowPlaying = CPNowPlayingTemplate.shared
     nowPlaying.isUpNextButtonEnabled = true
     nowPlaying.upNextTitle = labels.title(of: .upNext)
-    let rate = CPNowPlayingPlaybackRateButton { [weak self] _ in
+    updateSpeedButton()
+  }
+
+  /// Shows the current speed on an image button rather than
+  /// `CPNowPlayingPlaybackRateButton`, which reads "0x" whatever rate is
+  /// published to `MPNowPlayingInfoCenter` (Apple developer forums threads
+  /// 729186 and 773106; reproduced on iOS 27.2).
+  private func updateSpeedButton() {
+    let image = Self.speedImage(
+      channel.controls?.speed ?? 1,
+      scale: interfaceController.carTraitCollection.displayScale)
+    let button = CPNowPlayingImageButton(image: image) { [weak self] _ in
       self?.channel.cycleSpeed()
     }
-    nowPlaying.updateNowPlayingButtons([rate])
+    CPNowPlayingTemplate.shared.updateNowPlayingButtons([button])
+  }
+
+  /// Draws [speed] as "1.5×", sized to fit a Now Playing button.
+  private static func speedImage(_ speed: Double, scale: CGFloat) -> UIImage {
+    let formatter = NumberFormatter()
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.minimumFractionDigits = 0
+    formatter.maximumFractionDigits = 2
+    let text = (formatter.string(from: NSNumber(value: speed)) ?? "1") + "×"
+    let size = CPNowPlayingButtonMaximumImageSize
+    var font = UIFont.systemFont(ofSize: size.height * 0.6, weight: .semibold)
+    // Long values like "1.25×" would overflow the square at full size.
+    let fullWidth = (text as NSString).size(withAttributes: [.font: font]).width
+    if size.width < fullWidth {
+      font = font.withSize(font.pointSize * size.width / fullWidth)
+    }
+    let attributes: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: UIColor.white]
+    let textSize = (text as NSString).size(withAttributes: attributes)
+    let format = UIGraphicsImageRendererFormat()
+    format.scale = scale
+    let image = UIGraphicsImageRenderer(size: size, format: format).image { _ in
+      (text as NSString).draw(
+        at: CGPoint(x: (size.width - textSize.width) / 2, y: (size.height - textSize.height) / 2),
+        withAttributes: attributes)
+    }
+    // Template rendering lets CarPlay tint it like the system buttons.
+    return image.withRenderingMode(.alwaysTemplate)
   }
 
   // MARK: - Loading rows
@@ -199,6 +237,10 @@ extension CarPlayTemplateController: CarPlayChannelDelegate {
 
   func carPlayChannel(_ channel: CarPlayChannel, didInvalidate sections: Set<CarPlaySection>) {
     (tabLists + pushedLists).filter { sections.contains($0.section) }.forEach(reload)
+  }
+
+  func carPlayChannel(_ channel: CarPlayChannel, didUpdate controls: NowPlayingControls) {
+    updateSpeedButton()
   }
 }
 

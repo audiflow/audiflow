@@ -1,5 +1,6 @@
 import Flutter
 import Foundation
+import MediaPlayer
 
 /// A CarPlay list. Raw values are the wire names shared with
 /// `CarSection` in `lib/features/car/models/car_list_item.dart`.
@@ -50,12 +51,33 @@ struct CarPlayLabels {
   var loadFailed: String { values["loadFailed"] ?? "" }
 }
 
+/// The speed and skip intervals Now Playing shows, sent by Dart's
+/// `CarPlayBridge.sendNowPlayingControls`.
+struct NowPlayingControls {
+  let speed: Double
+  let skipForwardSeconds: Int
+  let skipBackwardSeconds: Int
+
+  init?(_ value: Any?) {
+    guard let map = value as? [String: Any],
+      let speed = (map["speed"] as? NSNumber)?.doubleValue,
+      let forward = (map["skipForwardSeconds"] as? NSNumber)?.intValue,
+      let backward = (map["skipBackwardSeconds"] as? NSNumber)?.intValue
+    else { return nil }
+    self.speed = speed
+    skipForwardSeconds = forward
+    skipBackwardSeconds = backward
+  }
+}
+
 /// Receives what Dart sends on `audiflow/carplay`.
 protocol CarPlayChannelDelegate: AnyObject {
   /// Dart started (or restarted, or changed language) with these labels.
   func carPlayChannel(_ channel: CarPlayChannel, didBecomeReadyWith labels: CarPlayLabels)
   /// The data behind these lists changed.
   func carPlayChannel(_ channel: CarPlayChannel, didInvalidate sections: Set<CarPlaySection>)
+  /// The speed or skip intervals changed.
+  func carPlayChannel(_ channel: CarPlayChannel, didUpdate controls: NowPlayingControls)
 }
 
 /// Native end of `audiflow/carplay`; the Dart end is `CarPlayBridge`.
@@ -70,6 +92,9 @@ final class CarPlayChannel {
 
   /// The labels from Dart's last `ready`; nil until Dart is running.
   private(set) var labels: CarPlayLabels?
+
+  /// The last `nowPlayingControls`; nil until Dart sends them.
+  private(set) var controls: NowPlayingControls?
 
   weak var delegate: CarPlayChannelDelegate?
 
@@ -113,8 +138,8 @@ final class CarPlayChannel {
     }
   }
 
-  /// Steps the playback speed. The Now Playing rate button reads the new
-  /// rate from `MPNowPlayingInfoCenter`, which audio_service updates.
+  /// Steps the playback speed. Dart answers the change with
+  /// `nowPlayingControls`, which redraws the speed button.
   func cycleSpeed() {
     channel.invokeMethod("cycleSpeed", arguments: nil)
   }
@@ -133,9 +158,27 @@ final class CarPlayChannel {
       let sections = Set(names.compactMap(CarPlaySection.init(rawValue:)))
       delegate?.carPlayChannel(self, didInvalidate: sections)
       result(nil)
+    case "nowPlayingControls":
+      guard let received = NowPlayingControls(call.arguments) else {
+        result(FlutterError(code: "INVALID_ARGUMENT", message: "Bad controls", details: nil))
+        return
+      }
+      controls = received
+      Self.applySkipIntervals(received)
+      delegate?.carPlayChannel(self, didUpdate: received)
+      result(nil)
     default:
       result(FlutterMethodNotImplemented)
     }
+  }
+
+  /// Labels the skip buttons on CarPlay, the lock screen and Control
+  /// Center. audio_service sets them only from its fixed config; the
+  /// buttons still skip by the app setting, since they call back into Dart.
+  private static func applySkipIntervals(_ controls: NowPlayingControls) {
+    let center = MPRemoteCommandCenter.shared()
+    center.skipForwardCommand.preferredIntervals = [NSNumber(value: controls.skipForwardSeconds)]
+    center.skipBackwardCommand.preferredIntervals = [NSNumber(value: controls.skipBackwardSeconds)]
   }
 
   private static func isNotImplemented(_ reply: Any?) -> Bool {

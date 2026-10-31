@@ -241,9 +241,15 @@ templates).
 Now Playing needs no bridge: `CPNowPlayingTemplate` reads
 `MPNowPlayingInfoCenter` and sends `MPRemoteCommandCenter` commands, both of
 which audio_service (Layer 2) already owns, so car and phone controls hit the
-same `AudiflowAudioHandler`. Only the rate button (`cycleSpeed`, saved through
+same `AudiflowAudioHandler`. Only the speed button (`cycleSpeed`, saved through
 `setSpeed` to the now-playing scope) and the Up Next button are CarPlay
-specific.
+specific. The speed button is a `CPNowPlayingImageButton` drawn with the
+current speed, because `CPNowPlayingPlaybackRateButton` shows "0x" whatever
+rate is published. Dart sends that speed and the skip intervals as
+`nowPlayingControls` on start, on change and whenever playback starts; native
+also writes the intervals to `MPRemoteCommandCenter`'s `preferredIntervals`,
+which audio_service otherwise leaves at its fixed 10 s, so the CarPlay, lock
+screen and Control Center skip buttons show the user's settings.
 
 The lists go over `audiflow/carplay`. Native owns the templates and asks for
 rows (`listItems`); Dart (`CarPlayBridge`, `CarCatalog`) owns the data and

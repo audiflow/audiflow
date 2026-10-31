@@ -33,7 +33,7 @@ Podcasts are heavily listened to while commuting. A podcast player that does not
 
 - Normal case: When the phone connects to CarPlay or Android Auto, Audiflow appears on the head unit with four tabs. **Up Next** lists the queue in play order, without the episode that is playing. **In Progress** lists the most recent partly played episodes (up to 20) with a progress bar. **Library** lists subscribed podcasts in the Library tab's sort order; selecting one opens its episodes, newest first, with duration and a progress bar on partly played ones. **Downloads** lists downloaded episodes, most recently downloaded first. Rows show artwork, and on CarPlay the playing episode is marked (Android Auto has no such marker for browse rows).
 - Selecting an episode plays it from its saved position and opens Now Playing. Selecting an Up Next row jumps the queue to it, as tapping it in the phone's Queue tab does. Selecting an episode anywhere else plays it without changing the queue: the phone's "replace the queue?" question cannot be asked while driving, and silently replacing a queue the user built would lose it.
-- Now Playing shows the same episode, position and state as the phone. Play/pause, skip forward/back (by the user's skip intervals) and the next/previous controls act on the same player, so either screen can be used and the other follows. The rate button steps through 1.0x, 1.2x, 1.5x, 1.8x and 2.0x and back to 1.0x; a speed set on the phone that falls between steps moves to the next step. The speed is saved to the podcast's own audio settings when it has them, otherwise to the global setting, as on the phone (FR 04). The Up Next button opens the queue.
+- Now Playing shows the same episode, position and state as the phone. Play/pause, skip forward/back (by the user's skip intervals) and the next/previous controls act on the same player, so either screen can be used and the other follows. The skip buttons show the user's skip intervals, as the lock screen does. The speed button shows the current speed, also while paused, and steps through 1.0x, 1.2x, 1.5x, 1.8x and 2.0x and back to 1.0x; a speed set on the phone that falls between steps moves to the next step. The speed is saved to the podcast's own audio settings when it has them, otherwise to the global setting, as on the phone (FR 04). The Up Next button opens the queue.
 - Android Auto: the same four tabs and podcast drill-down, shown as lists. Now Playing is Android Auto's own player screen, driven by the same media session as the phone's notification, so play/pause, skip and seek stay in step; the playback-rate button and the Up Next button on Now Playing are CarPlay only. Android Auto's "resume" suggestion offers the most recently played unfinished episode. Partly played rows show their progress on both.
 - Lists follow changes made on the phone or by playback (an episode finishing, a download completing, a new subscription) without being reopened.
 - Edge / failure case: The car can start Audiflow while the app is not running on the phone. On CarPlay the app then starts in the background and the head unit shows the app name until the lists are ready, then shows the tabs; on Android Auto the media service starts the app the same way. On Android Auto, a list opened for the first time may appear before all of its artwork has loaded (at most about two seconds' wait); the images fill in when the list reloads itself. A list that fails to load shows a "couldn't load" message instead of rows on CarPlay, and an empty list on Android Auto; artwork that fails to load leaves the row without an image.
@@ -54,7 +54,7 @@ Podcasts are heavily listened to while commuting. A podcast player that does not
 - No Android Automotive OS (built-in car) build, and no Android Auto search or voice ("play X on Audiflow") support.
 - Lists are capped at 100 rows (and at what the head unit allows), and there is no search, sort or filter on the head unit; the phone remains the place to manage subscriptions, the queue and downloads.
 - No queue editing, downloading, marking played, sleep timer, chapters or transcripts on the head unit. Playback commands from the car (including the steering wheel) reach the same player as lock-screen controls (FR 04).
-- The CarPlay audio entitlement must be granted by Apple and present in the provisioning profiles before CarPlay works on a device. Until then CarPlay exists only in simulator builds; see below.
+- CarPlay works on a device only when the build's provisioning profile carries the CarPlay audio entitlement; see below.
 - Android Auto is not yet in production builds; see below.
 
 ## Android Auto release status
@@ -69,33 +69,21 @@ To ship it:
 
 ## CarPlay entitlement
 
-Status (2026-10-29): not granted. The request (category Audio, `com.apple.developer.carplay-audio`) is filed through https://developer.apple.com/contact/carplay/, which also asks the Account Holder to accept the CarPlay Entitlement Addendum to the Apple Developer Program License Agreement.
+Status (2026-10-30): granted. Apple assigned the "CarPlay Audio App (CarPlay framework)" managed capability (`com.apple.developer.carplay-audio`) to the team, which covers development and distribution. The Account Holder accepted the CarPlay Entitlement Addendum to the Apple Developer Program License Agreement when requesting it through https://developer.apple.com/contact/carplay/.
 
 What the addendum (Rev. 06-08-2026) requires of this app:
 
-- Do not access, or attempt to access, CarPlay APIs before Apple has provided the entitlement, and do not submit a CarPlay app to App Store Connect before Apple has approved it in writing (email counts). A development-only entitlement may come first and does not promise a distribution one.
 - Minimize driver distraction and never require touching the phone while in CarPlay.
 - Audio apps must be primarily for audio playback and must not offer gaming, commerce, social networking, texting, messaging or mapping on the car screen or through car audio; lyrics, web browsers and text-to-speech readers are named as forbidden. Keep transcripts, links and search off the head unit for this reason.
 - Disclose the use of CarPlay APIs in writing when submitting to App Store Connect (App Review notes).
 - Apple may change the terms or revoke the entitlement at any time; the app must be retested with each iOS release.
 
-Until the entitlement is granted, device builds ship without CarPlay while the code stays in:
+`Runner.entitlements` carries the entitlement for every build. Signing a device build therefore needs a provisioning profile generated after the CarPlay capability was enabled on its App ID:
 
-- `RunnerSimulator.entitlements` (simulator builds only, via `CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]`) carries the entitlement; `Runner.entitlements` does not.
-- The Runner build phase "Strip CarPlay scene from device builds" deletes the `CPTemplateApplicationSceneSessionRoleApplication` scene from the built `Info.plist` for every non-simulator build, so iOS never offers the app to a head unit.
-- CarPlay is not tested before the grant. Xcode 27's Device Hub has no simulator CarPlay window, and whether running the CarPlay scene in the simulator counts as accessing CarPlay APIs under the addendum is unconfirmed. After the grant, test with a USB-connected iPhone and Device Hub's CarPlay Simulator, or an aftermarket head unit.
-
-Apple may grant a development entitlement before approving distribution, so the steps come in two stages.
-
-After the development grant:
-
-1. Enable the CarPlay capability on the App IDs `com.reedom.audiflow`, `com.reedom.audiflow.stg` and `com.reedom.audiflow.dev`, regenerate their provisioning profiles, and update the CI secrets holding the stg and prod profiles.
-2. Move the entitlement key into `Runner.entitlements` and delete `RunnerSimulator.entitlements` and the `[sdk=iphonesimulator*]` settings. Narrow the strip build phase to the stg and prod configurations instead of deleting it, so dev builds can be tested on a device while store builds stay without CarPlay.
-
-After Apple approves distribution in writing:
-
-3. Delete the strip build phase.
-4. Mention CarPlay in the App Review notes of the first production submission that includes it.
+- Enable the CarPlay capability on the App IDs `com.reedom.audiflow`, `com.reedom.audiflow.stg` and `com.reedom.audiflow.dev` (Certificates, Identifiers & Profiles > Identifiers > the App ID > Additional Capabilities).
+- Regenerate the manual profiles and replace the CI secrets `IOS_STG_PROVISIONING_PROFILE_BASE64` and `IOS_PROD_PROVISIONING_PROFILE_BASE64`; a profile without the entitlement fails code signing. Xcode's automatic signing refreshes the development profiles by itself.
+- Test with the standalone CarPlay Simulator (the "Additional Tools for Xcode" download at https://developer.apple.com/download/all/, `Hardware/CarPlay Simulator.app`) driving a USB-connected iPhone, or with an aftermarket head unit. Xcode 27's Device Hub has no CarPlay window.
+- Mention CarPlay in the App Review notes of the first production submission that includes it.
 
 ## Traceability
 

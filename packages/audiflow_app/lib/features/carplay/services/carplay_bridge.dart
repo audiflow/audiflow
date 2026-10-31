@@ -13,8 +13,9 @@ import '../../car/services/car_playback.dart';
 ///
 /// The native side owns the templates and asks for their rows; Dart owns
 /// the data. Dart sends `ready` (with the localized labels) whenever it
-/// starts or the language changes, and `invalidate` when a list's data
-/// changes while a head unit is connected. Native sends `connected` and
+/// starts or the language changes, `invalidate` when a list's data
+/// changes while a head unit is connected, and `nowPlayingControls` when
+/// the speed or skip intervals change. Native sends `connected` and
 /// `disconnected`, `listItems`, `playItem`, and `cycleSpeed`.
 class CarPlayBridge {
   CarPlayBridge({
@@ -58,6 +59,21 @@ class CarPlayBridge {
 
   /// Sends `ready` with the current labels; native rebuilds its templates.
   Future<void> announce() => _send('ready', {'labels': _labels()});
+
+  /// Sends the speed and skip intervals that Now Playing shows.
+  ///
+  /// Sent whether or not a head unit is connected: the skip intervals also
+  /// label the lock screen and Control Center buttons, which audio_service
+  /// otherwise fixes at its 10 s default.
+  Future<void> sendNowPlayingControls({
+    required double speed,
+    required int skipForwardSeconds,
+    required int skipBackwardSeconds,
+  }) => _send('nowPlayingControls', {
+    'speed': speed,
+    'skipForwardSeconds': skipForwardSeconds,
+    'skipBackwardSeconds': skipBackwardSeconds,
+  });
 
   /// Asks the native side to reload [sections], if a head unit is connected.
   void invalidate(Set<CarSection> sections) {
