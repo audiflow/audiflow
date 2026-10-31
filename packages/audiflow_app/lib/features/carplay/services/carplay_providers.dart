@@ -28,7 +28,8 @@ Map<String, String> carPlayLabels(AppLocalizations l10n) => {
   'loadFailed': l10n.carLoadFailed,
 };
 
-/// The running CarPlay bridge. Read once at startup on iOS to activate.
+/// The running CarPlay bridge. Listened to at startup on iOS to activate;
+/// a bare read would pause the subscriptions below.
 ///
 /// The list data is watched only while a head unit is connected, so a
 /// phone that never uses CarPlay pays nothing for it.
