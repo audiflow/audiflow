@@ -82,7 +82,7 @@ What the addendum (Rev. 06-08-2026) requires of this app:
 
 - Enable the CarPlay capability on the App IDs `com.reedom.audiflow`, `com.reedom.audiflow.stg` and `com.reedom.audiflow.dev` (Certificates, Identifiers & Profiles > Identifiers > the App ID > Additional Capabilities).
 - Regenerate the manual profiles and replace the CI secrets `IOS_STG_PROVISIONING_PROFILE_BASE64` and `IOS_PROD_PROVISIONING_PROFILE_BASE64`; a profile without the entitlement fails code signing. Xcode's automatic signing refreshes the development profiles by itself.
-- Test with a USB-connected iPhone and Device Hub's CarPlay Simulator, or an aftermarket head unit. Xcode 27's Device Hub has no simulator CarPlay window.
+- Test with the standalone CarPlay Simulator (the "Additional Tools for Xcode" download at https://developer.apple.com/download/all/, `Hardware/CarPlay Simulator.app`) driving a USB-connected iPhone, or with an aftermarket head unit. Xcode 27's Device Hub has no CarPlay window.
 - Mention CarPlay in the App Review notes of the first production submission that includes it.
 
 ## Traceability
