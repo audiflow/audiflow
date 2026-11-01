@@ -3,15 +3,16 @@ import UIKit
 
 /// Builds and refreshes the CarPlay templates for one connected head unit.
 ///
-/// The root is a tab bar of four lists (Up Next, Stations, Library,
-/// Downloads). A Stations row pushes that station's episodes and a Library
+/// The root is a tab bar of three lists (Library, Stations, Downloads).
+/// The queue has no tab: Now Playing's Up Next button opens it, as in other
+/// CarPlay audio apps, and a tab would show the same list twice. A Stations row pushes that station's episodes and a Library
 /// row that podcast's; any episode
 /// row plays and shows the shared Now Playing template. Now Playing itself
 /// is driven by `MPNowPlayingInfoCenter` and `MPRemoteCommandCenter`, which
 /// audio_service keeps in step with the phone player; only the speed button
 /// and the Up Next button are wired here.
 final class CarPlayTemplateController: NSObject {
-  private static let tabs: [CarPlaySection] = [.upNext, .stations, .library, .downloads]
+  private static let tabs: [CarPlaySection] = [.library, .stations, .downloads]
 
   private let interfaceController: CPInterfaceController
   private let channel: CarPlayChannel
