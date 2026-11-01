@@ -1,0 +1,1 @@
+• Subscribing on a podcast's page shows "Subscribed" for a moment before the button closes
