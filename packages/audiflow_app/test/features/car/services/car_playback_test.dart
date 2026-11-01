@@ -101,6 +101,20 @@ class _RecordingPlayer extends StubAudioPlayerController {
   _RecordingPlayer() : super(const PlaybackState.idle());
 
   final urls = <String>[];
+  var resumed = 0;
+
+  /// The episode the player holds, and whether it is playing.
+  String? loadedUrl;
+  bool loadedPlaying = false;
+
+  @override
+  bool isLoaded(String url) => url == loadedUrl;
+
+  @override
+  bool isPlaying(String url) => url == loadedUrl && loadedPlaying;
+
+  @override
+  Future<void> resume() async => resumed++;
 
   @override
   void markPlaySource(PlaySource source) {}
@@ -240,6 +254,43 @@ void main() {
       check(queue.cleared).equals(1);
       check(queue.adhocCalls).isEmpty();
       check(player.urls).deepEquals(['https://example.com/6.mp3']);
+    });
+
+    group('the episode already loaded', () {
+      const url = 'https://example.com/6.mp3';
+
+      test('keeps playing untouched when it is playing', () async {
+        player
+          ..loadedUrl = url
+          ..loadedPlaying = true;
+
+        check(await playback.playPodcastEpisode(6)).isTrue();
+        check(await playback.playEpisode(6)).isTrue();
+        check(await playback.playStationEpisode(3, 6)).isTrue();
+        await pumpEventQueue();
+
+        check(queue.adhocCalls).isEmpty();
+        check(queue.cleared).equals(0);
+        check(player.urls).isEmpty();
+        check(player.resumed).equals(0);
+        check(stations.played).isEmpty();
+      });
+
+      test('resumes when it is paused, keeping the queue', () async {
+        player.loadedUrl = url;
+
+        check(await playback.playPodcastEpisode(6)).isTrue();
+        check(await playback.playEpisode(6)).isTrue();
+        check(await playback.playStationEpisode(3, 6)).isTrue();
+        await pumpEventQueue();
+
+        check(queue.adhocCalls).isEmpty();
+        check(queue.cleared).equals(0);
+        check(player.urls).isEmpty();
+        check(player.resumed).equals(3);
+        // Resuming from a station is a play from it, as on the phone.
+        check(stations.played).deepEquals([3]);
+      });
     });
 
     test('a missing episode changes nothing', () async {

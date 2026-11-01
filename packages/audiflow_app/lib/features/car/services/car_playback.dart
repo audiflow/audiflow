@@ -50,6 +50,7 @@ class CarPlayback {
         .read(episodeRepositoryProvider)
         .getById(episodeId);
     if (episode == null) return false;
+    if (_continueLoaded(episode) != _Continued.no) return true;
     await _ref.read(queueServiceProvider).clearQueue();
     await queue_player.startEpisode(_ref, episode, PlaySource.car);
     return true;
@@ -64,6 +65,7 @@ class CarPlayback {
         .read(episodeRepositoryProvider)
         .getById(episodeId);
     if (episode == null) return false;
+    if (_continueLoaded(episode) != _Continued.no) return true;
     final podcastId = episode.podcastId;
     final siblingIds = await _catalog().podcastEpisodeIds(podcastId);
     final order = await _ref
@@ -98,6 +100,16 @@ class CarPlayback {
         .read(episodeRepositoryProvider)
         .getById(episodeId);
     if (episode == null) return false;
+    switch (_continueLoaded(episode)) {
+      case _Continued.no:
+        break;
+      case _Continued.alreadyPlaying:
+        return true;
+      case _Continued.resumed:
+        // Resuming from a station is a play from it, as on the phone.
+        _recordStationPlay(station);
+        return true;
+    }
     final siblingIds = await _catalog().stationEpisodeIds(stationId);
     await _ref
         .read(queueServiceProvider)
@@ -110,6 +122,21 @@ class CarPlayback {
     await queue_player.startEpisode(_ref, episode, PlaySource.car);
     _recordStationPlay(station);
     return true;
+  }
+
+  /// Leaves [episode] playing, or resumes it when paused, if the player
+  /// already holds it.
+  ///
+  /// Selecting the episode that is on Now Playing must not reload it (an
+  /// audible gap) or rebuild the queue, as on the phone's episode rows.
+  _Continued _continueLoaded(Episode episode) {
+    final controller = _ref.read(audioPlayerControllerProvider.notifier);
+    if (!controller.isLoaded(episode.audioUrl)) return _Continued.no;
+    if (controller.isPlaying(episode.audioUrl)) {
+      return _Continued.alreadyPlaying;
+    }
+    unawaited(controller.resume());
+    return _Continued.resumed;
   }
 
   /// Fire-and-forget, as on the phone: a failed write only leaves the
@@ -158,4 +185,12 @@ class CarPlayback {
         .setSpeed(next, scope: resolved.scope);
     return next;
   }
+}
+
+/// What [CarPlayback] did with an episode the player already holds.
+enum _Continued {
+  /// Not the loaded episode: it must be started.
+  no,
+  alreadyPlaying,
+  resumed,
 }
