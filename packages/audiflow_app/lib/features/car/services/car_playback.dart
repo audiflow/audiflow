@@ -129,14 +129,27 @@ class CarPlayback {
   ///
   /// Selecting the episode that is on Now Playing must not reload it (an
   /// audible gap) or rebuild the queue, as on the phone's episode rows.
+  ///
+  /// Matched by episode id as well as audio URL: two feed entries can share
+  /// an enclosure. A failed load, or an episode parked at its end (where
+  /// resuming would advance the queue), is started again instead.
   _Continued _continueLoaded(Episode episode) {
     final controller = _ref.read(audioPlayerControllerProvider.notifier);
-    if (!controller.isLoaded(episode.audioUrl)) return _Continued.no;
-    if (controller.isPlaying(episode.audioUrl)) {
-      return _Continued.alreadyPlaying;
+    if (controller.currentEpisodeId != episode.id) return _Continued.no;
+    final url = episode.audioUrl;
+    switch (_ref.read(audioPlayerControllerProvider)) {
+      // A pending load goes on: resuming now would play the old source.
+      case PlaybackPlaying(:final episodeUrl) ||
+              PlaybackLoading(:final episodeUrl)
+          when episodeUrl == url:
+        return _Continued.alreadyPlaying;
+      case PlaybackPaused(:final episodeUrl)
+          when episodeUrl == url && !controller.isParkedAtEnd:
+        unawaited(controller.resume());
+        return _Continued.resumed;
+      default:
+        return _Continued.no;
     }
-    unawaited(controller.resume());
-    return _Continued.resumed;
   }
 
   /// Fire-and-forget, as on the phone: a failed write only leaves the
