@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import '../builders/podcast_search_entity_builder.dart';
 import '../builders/search_entity_result.dart';
 import '../exceptions/search_exception.dart';
@@ -206,14 +208,25 @@ class ItunesChartsClient {
   /// and other subtypes for API or response errors.
   Future<Podcast> fetchPodcast(String podcastId) async {
     final response = await _httpClient.get('$lookupBaseUrl?id=$podcastId');
-    final data = response.data;
-    if (data is! Map<String, dynamic>) {
-      throw SearchException.internal(
-        providerId: 'itunes_lookup',
-        message: 'Lookup response is not a JSON object',
-      );
+    return _lookupParser.parseLookupResponse(_decodeLookup(response.data));
+  }
+
+  /// The lookup API serves JSON as `text/javascript`, so Dio hands the
+  /// body over undecoded.
+  Map<String, dynamic> _decodeLookup(Object? raw) {
+    if (raw is Map<String, dynamic>) return raw;
+    if (raw is String) {
+      try {
+        final decoded = jsonDecode(raw);
+        if (decoded is Map<String, dynamic>) return decoded;
+      } on FormatException {
+        // Reported below as a malformed response.
+      }
     }
-    return _lookupParser.parseLookupResponse(data);
+    throw SearchException.internal(
+      providerId: 'itunes_lookup',
+      message: 'Lookup response is not a JSON object',
+    );
   }
 
   /// Closes the client and cleans up resources.

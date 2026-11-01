@@ -24,6 +24,17 @@ class MiniPlayer extends ConsumerStatefulWidget {
   /// Callback when the mini player is tapped.
   final VoidCallback? onTap;
 
+  /// Live progress while audio is loaded, else the restored saved position.
+  ///
+  /// The progress stream reports a zero duration while idle (after a
+  /// restart), which mirrors the player screen's own fallback.
+  static double _progress(PlaybackProgress? live, NowPlayingInfo info) {
+    if (live != null && 0 < live.duration.inMilliseconds) {
+      return live.progress;
+    }
+    return _savedProgress(info);
+  }
+
   /// Computes progress from saved position when live progress is unavailable.
   static double _savedProgress(NowPlayingInfo info) {
     final saved = info.savedPosition;
@@ -90,7 +101,7 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
       ),
       title: nowPlaying.episodeTitle,
       subtitle: nowPlaying.podcastTitle,
-      progress: progress?.progress ?? MiniPlayer._savedProgress(nowPlaying),
+      progress: MiniPlayer._progress(progress, nowPlaying),
       actions: _actions(context, isPlaying: isPlaying, isLoading: isLoading),
     );
   }

@@ -3,14 +3,15 @@ import UIKit
 
 /// Builds and refreshes the CarPlay templates for one connected head unit.
 ///
-/// The root is a tab bar of four lists (Up Next, In Progress, Library,
-/// Downloads). A Library row pushes that podcast's episodes; any episode
+/// The root is a tab bar of four lists (Up Next, Stations, Library,
+/// Downloads). A Stations row pushes that station's episodes and a Library
+/// row that podcast's; any episode
 /// row plays and shows the shared Now Playing template. Now Playing itself
 /// is driven by `MPNowPlayingInfoCenter` and `MPRemoteCommandCenter`, which
-/// audio_service keeps in step with the phone player; only the rate button
+/// audio_service keeps in step with the phone player; only the speed button
 /// and the Up Next button are wired here.
 final class CarPlayTemplateController: NSObject {
-  private static let tabs: [CarPlaySection] = [.upNext, .inProgress, .library, .downloads]
+  private static let tabs: [CarPlaySection] = [.upNext, .stations, .library, .downloads]
 
   private let interfaceController: CPInterfaceController
   private let channel: CarPlayChannel
@@ -21,6 +22,7 @@ final class CarPlayTemplateController: NSObject {
     let template: CPListTemplate
     let section: CarPlaySection
     var podcastId: Int?
+    var stationId: Int?
   }
 
   private var tabLists: [ShownList] = []
@@ -96,7 +98,7 @@ final class CarPlayTemplateController: NSObject {
   private static func tabSymbol(_ section: CarPlaySection) -> String {
     switch section {
     case .upNext: return "list.bullet"
-    case .inProgress: return "clock"
+    case .stations, .station: return "dot.radiowaves.left.and.right"
     case .library, .podcast: return "square.stack"
     case .downloads: return "arrow.down.circle"
     }
@@ -106,10 +108,48 @@ final class CarPlayTemplateController: NSObject {
     let nowPlaying = CPNowPlayingTemplate.shared
     nowPlaying.isUpNextButtonEnabled = true
     nowPlaying.upNextTitle = labels.title(of: .upNext)
-    let rate = CPNowPlayingPlaybackRateButton { [weak self] _ in
+    updateSpeedButton()
+  }
+
+  /// Shows the current speed on an image button rather than
+  /// `CPNowPlayingPlaybackRateButton`, which reads "0x" whatever rate is
+  /// published to `MPNowPlayingInfoCenter` (Apple developer forums threads
+  /// 729186 and 773106; reproduced on iOS 27.2).
+  private func updateSpeedButton() {
+    let image = Self.speedImage(
+      channel.controls?.speed ?? 1,
+      scale: interfaceController.carTraitCollection.displayScale)
+    let button = CPNowPlayingImageButton(image: image) { [weak self] _ in
       self?.channel.cycleSpeed()
     }
-    nowPlaying.updateNowPlayingButtons([rate])
+    CPNowPlayingTemplate.shared.updateNowPlayingButtons([button])
+  }
+
+  /// Draws [speed] as "1.5×", sized to fit a Now Playing button.
+  private static func speedImage(_ speed: Double, scale: CGFloat) -> UIImage {
+    let formatter = NumberFormatter()
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.minimumFractionDigits = 0
+    formatter.maximumFractionDigits = 2
+    let text = (formatter.string(from: NSNumber(value: speed)) ?? "1") + "×"
+    let size = CPNowPlayingButtonMaximumImageSize
+    var font = UIFont.systemFont(ofSize: size.height * 0.6, weight: .semibold)
+    // Long values like "1.25×" would overflow the square at full size.
+    let fullWidth = (text as NSString).size(withAttributes: [.font: font]).width
+    if size.width < fullWidth {
+      font = font.withSize(font.pointSize * size.width / fullWidth)
+    }
+    let attributes: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: UIColor.white]
+    let textSize = (text as NSString).size(withAttributes: attributes)
+    let format = UIGraphicsImageRendererFormat()
+    format.scale = scale
+    let image = UIGraphicsImageRenderer(size: size, format: format).image { _ in
+      (text as NSString).draw(
+        at: CGPoint(x: (size.width - textSize.width) / 2, y: (size.height - textSize.height) / 2),
+        withAttributes: attributes)
+    }
+    // Template rendering lets CarPlay tint it like the system buttons.
+    return image.withRenderingMode(.alwaysTemplate)
   }
 
   // MARK: - Loading rows
@@ -118,7 +158,8 @@ final class CarPlayTemplateController: NSObject {
     let key = ObjectIdentifier(list.template)
     let generation = (requestGenerations[key] ?? 0) + 1
     requestGenerations[key] = generation
-    channel.listItems(list.section, podcastId: list.podcastId) { [weak self] items in
+    channel.listItems(list.section, podcastId: list.podcastId, stationId: list.stationId) {
+      [weak self] items in
       guard let self, self.requestGenerations[key] == generation else { return }
       guard let items else {
         list.template.emptyViewTitleVariants = [self.labels?.loadFailed ?? ""]
@@ -142,7 +183,7 @@ final class CarPlayTemplateController: NSObject {
     if let progress = item.progress {
       row.playbackProgress = CGFloat(min(max(progress, 0), 1))
     }
-    if list.section == .library {
+    if list.section == .library || list.section == .stations {
       row.accessoryType = .disclosureIndicator
     }
     if let url = item.artworkURL, artwork.cachedImage(for: url) == nil {
@@ -158,18 +199,28 @@ final class CarPlayTemplateController: NSObject {
   // MARK: - Selection
 
   private func select(_ item: CarPlayItem, in list: ShownList) {
-    if list.section == .library {
+    switch list.section {
+    case .library:
       push(.podcast, title: item.title, podcastId: item.id)
       return
+    case .stations:
+      push(.station, title: item.title, stationId: item.id)
+      return
+    default:
+      break
     }
-    channel.playItem(list.section, id: item.id) { [weak self] started in
+    channel.playItem(list.section, id: item.id, stationId: list.stationId) {
+      [weak self] started in
       if started { self?.showNowPlaying() }
     }
   }
 
-  private func push(_ section: CarPlaySection, title: String, podcastId: Int? = nil) {
+  private func push(
+    _ section: CarPlaySection, title: String, podcastId: Int? = nil, stationId: Int? = nil
+  ) {
     let shown = ShownList(
-      template: makeListTemplate(section, title: title), section: section, podcastId: podcastId)
+      template: makeListTemplate(section, title: title), section: section,
+      podcastId: podcastId, stationId: stationId)
     pushedLists.append(shown)
     interfaceController.pushTemplate(shown.template, animated: true, completion: nil)
     reload(shown)
@@ -199,6 +250,10 @@ extension CarPlayTemplateController: CarPlayChannelDelegate {
 
   func carPlayChannel(_ channel: CarPlayChannel, didInvalidate sections: Set<CarPlaySection>) {
     (tabLists + pushedLists).filter { sections.contains($0.section) }.forEach(reload)
+  }
+
+  func carPlayChannel(_ channel: CarPlayChannel, didUpdate controls: NowPlayingControls) {
+    updateSpeedButton()
   }
 }
 

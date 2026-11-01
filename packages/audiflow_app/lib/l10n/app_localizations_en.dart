@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -2365,7 +2366,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get carUpNextTab => 'Up Next';
 
   @override
-  String get carInProgressTab => 'In Progress';
+  String get carStationsTab => 'Stations';
 
   @override
   String get carLibraryTab => 'Library';
@@ -2377,7 +2378,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get carUpNextEmpty => 'Nothing up next';
 
   @override
-  String get carInProgressEmpty => 'No episodes in progress';
+  String get carStationsEmpty => 'No stations yet';
 
   @override
   String get carLibraryEmpty => 'No subscriptions yet';

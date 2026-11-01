@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -2230,7 +2231,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get carUpNextTab => '次に再生';
 
   @override
-  String get carInProgressTab => '再生途中';
+  String get carStationsTab => 'ステーション';
 
   @override
   String get carLibraryTab => 'ライブラリ';
@@ -2242,7 +2243,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get carUpNextEmpty => '次に再生するエピソードはありません';
 
   @override
-  String get carInProgressEmpty => '再生途中のエピソードはありません';
+  String get carStationsEmpty => 'ステーションがありません';
 
   @override
   String get carLibraryEmpty => '購読がありません';

@@ -136,7 +136,7 @@ class _StationDetailContentState extends ConsumerState<_StationDetailContent> {
 
   @override
   Widget build(BuildContext context) {
-    final episodesAsync = ref.watch(stationEpisodesProvider(widget.station.id));
+    final rowsAsync = ref.watch(stationEpisodeRowsProvider(widget.station.id));
 
     return Scaffold(
       appBar: AppBar(
@@ -152,8 +152,8 @@ class _StationDetailContentState extends ConsumerState<_StationDetailContent> {
           ),
         ],
       ),
-      body: episodesAsync.when(
-        data: (episodes) => _buildEpisodeList(context, episodes),
+      body: rowsAsync.when(
+        data: (rows) => _buildEpisodeList(context, rows),
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
           child: Text(
@@ -246,27 +246,22 @@ class _StationDetailContentState extends ConsumerState<_StationDetailContent> {
     if (run != null) unawaited(run);
   }
 
-  Widget _buildEpisodeList(
-    BuildContext context,
-    List<StationEpisode> stationEpisodes,
-  ) {
-    if (stationEpisodes.isEmpty) {
+  Widget _buildEpisodeList(BuildContext context, List<StationEpisodeRow> rows) {
+    if (rows.isEmpty) {
       return _buildEmptyState(context);
     }
 
-    final siblingEpisodeIds = stationEpisodes
-        .map((se) => se.episodeId)
-        .toList();
+    final siblingEpisodeIds = rows.map((row) => row.episode.id).toList();
 
     return HapticRefreshIndicator(
       onRefresh: _syncStationFeeds,
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
-        itemCount: stationEpisodes.length,
+        itemCount: rows.length,
         itemBuilder: (context, index) {
           return _StationEpisodeTile(
-            key: ValueKey(stationEpisodes[index].id),
-            stationEpisode: stationEpisodes[index],
+            key: ValueKey(rows[index].stationEpisode.id),
+            row: rows[index],
             stationName: widget.station.name,
             stationId: widget.station.id,
             siblingEpisodeIds: siblingEpisodeIds,
@@ -312,64 +307,43 @@ class _StationDetailContentState extends ConsumerState<_StationDetailContent> {
   }
 }
 
-/// Loads episode and subscription data, then delegates to the shared
-/// [SmartPlaylistEpisodeListTile] which provides full action buttons
-/// (queue, download, share, context menu).
+/// Delegates to the shared [SmartPlaylistEpisodeListTile], which provides
+/// full action buttons (queue, download, share, context menu).
 class _StationEpisodeTile extends ConsumerWidget {
   const _StationEpisodeTile({
-    required this.stationEpisode,
+    required this.row,
     required this.stationName,
     required this.stationId,
     required this.siblingEpisodeIds,
     super.key,
   });
 
-  final StationEpisode stationEpisode;
+  final StationEpisodeRow row;
   final String stationName;
   final int stationId;
   final List<int> siblingEpisodeIds;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final episodeAsync = ref.watch(
-      episodeByIdProvider(stationEpisode.episodeId),
-    );
+    final episode = row.episode;
+    final subscription = row.subscription;
+    final progress = ref.watch(episodeProgressProvider(episode.audioUrl)).value;
 
-    return episodeAsync.when(
-      data: (episode) {
-        if (episode == null) return const SizedBox.shrink();
-
-        final subscriptionAsync = ref.watch(
-          subscriptionByIdProvider(episode.podcastId),
-        );
-        final subscription = subscriptionAsync.value;
-
-        final progress = ref
-            .watch(episodeProgressProvider(episode.audioUrl))
-            .value;
-
-        return SmartPlaylistEpisodeListTile(
-          episode: episode,
-          podcastTitle: subscription?.title ?? stationName,
-          artworkUrl: subscription?.artworkUrl,
-          fallbackThumbnailUrl: subscription?.artworkUrl,
-          progress: progress,
-          siblingEpisodeIds: siblingEpisodeIds,
-          effectiveOrder: AutoPlayOrder.asDisplayed,
-          lastRefreshedAt: subscription?.lastRefreshedAt,
-          itunesId: subscription?.itunesId,
-          feedUrl: subscription?.feedUrl,
-          stationName: stationName,
-          stationId: stationId,
-        );
-      },
-      // Roughly one row tall, so the list does not jump when it resolves.
-      loading: () => const SizedBox(height: _loadingRowHeight),
-      error: (_, _) => const SizedBox.shrink(),
+    return SmartPlaylistEpisodeListTile(
+      episode: episode,
+      podcastTitle: subscription?.title ?? stationName,
+      artworkUrl: subscription?.artworkUrl,
+      fallbackThumbnailUrl: subscription?.artworkUrl,
+      progress: progress,
+      siblingEpisodeIds: siblingEpisodeIds,
+      effectiveOrder: AutoPlayOrder.asDisplayed,
+      lastRefreshedAt: subscription?.lastRefreshedAt,
+      itunesId: subscription?.itunesId,
+      feedUrl: subscription?.feedUrl,
+      stationName: stationName,
+      stationId: stationId,
     );
   }
 }
-
-const double _loadingRowHeight = 160;
 
 enum _StationBatch { download, cancel, resume }

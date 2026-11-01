@@ -241,9 +241,15 @@ templates).
 Now Playing needs no bridge: `CPNowPlayingTemplate` reads
 `MPNowPlayingInfoCenter` and sends `MPRemoteCommandCenter` commands, both of
 which audio_service (Layer 2) already owns, so car and phone controls hit the
-same `AudiflowAudioHandler`. Only the rate button (`cycleSpeed`, saved through
+same `AudiflowAudioHandler`. Only the speed button (`cycleSpeed`, saved through
 `setSpeed` to the now-playing scope) and the Up Next button are CarPlay
-specific.
+specific. The speed button is a `CPNowPlayingImageButton` drawn with the
+current speed, because `CPNowPlayingPlaybackRateButton` shows "0x" whatever
+rate is published. Dart sends that speed and the skip intervals as
+`nowPlayingControls` on start, on change and whenever playback starts; native
+also writes the intervals to `MPRemoteCommandCenter`'s `preferredIntervals`,
+which audio_service otherwise leaves at its fixed 10 s, so the CarPlay, lock
+screen and Control Center skip buttons show the user's settings.
 
 The lists go over `audiflow/carplay`. Native owns the templates and asks for
 rows (`listItems`); Dart (`CarPlayBridge`, `CarCatalog`) owns the data and
@@ -251,7 +257,7 @@ plays rows (`playItem`) through `AudioPlayerController`. Dart sends `ready`
 with the ARB-localized labels at startup and on language change; native shows
 a placeholder root until then. Native sends `connected` / `disconnected`, and
 only while connected does Dart listen to the queue, in-progress, library,
-downloads and now-playing providers, coalescing changes into `invalidate`
+station list, downloads and now-playing providers, coalescing changes into `invalidate`
 messages (500 ms).
 
 ## Android Auto
@@ -262,7 +268,11 @@ FR 19. `AndroidManifest.xml` declares the car application
 `getChildren`, `subscribeToChildren` and `playFromMediaId` to
 `CarMediaBrowser`, which builds `MediaItem`s from the same `CarCatalog` as
 CarPlay. Media ids: the tabs by `CarSection` name, `podcast/<id>`
-(browsable), `queue/<queueItemId>` and `episode/<episodeId>` (playable);
+(browsable), `queue/<queueItemId>`, `episode/<episodeId>` and
+`podcastEpisode/<episodeId>` (playable; a podcast list row, which queues the
+episodes after it), `station/<id>` (browsable) and
+`stationEpisode/<stationId>/<episodeId>` (playable; a station list row, which
+queues the station's episodes after it);
 `AudioService.recentRootId` returns the latest in-progress episode for
 playback resumption. Now Playing and its controls are the media session
 audio_service already publishes (Layer 2).

@@ -10,7 +10,13 @@ enum CarSection {
   downloads,
 
   /// The episodes of one podcast, opened from [library].
-  podcast;
+  podcast,
+
+  /// The user's stations, in the Library's order.
+  stations,
+
+  /// The episodes of one station, opened from [stations].
+  station;
 
   /// The section named [name], or null for a value this build does not know.
   static CarSection? byName(Object? name) {
@@ -33,13 +39,15 @@ final class CarListItem {
   });
 
   /// The queue item id in [CarSection.upNext], the podcast id in
-  /// [CarSection.library], and the episode id everywhere else: the id
+  /// [CarSection.library], the station id in [CarSection.stations], and
+  /// the episode id everywhere else: the id
   /// the native side sends back when the row is tapped.
   final int id;
 
   final String title;
 
-  /// Secondary line: the podcast title, or the duration inside a podcast.
+  /// Secondary line: the podcast title, the duration inside a podcast, or
+  /// a station's episode count.
   final String? detail;
 
   final String? artworkUrl;

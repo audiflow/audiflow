@@ -13,22 +13,40 @@ import 'package:logger/logger.dart';
 
 class _FakeCatalog extends Fake implements CarCatalog {
   final rows = <CarSection, List<CarListItem>>{};
-  final requests = <(CarSection, int?)>[];
+  final requests = <(CarSection, int?, int?)>[];
 
   @override
-  Future<List<CarListItem>> items(CarSection section, {int? podcastId}) async {
-    requests.add((section, podcastId));
+  Future<List<CarListItem>> items(
+    CarSection section, {
+    int? podcastId,
+    int? stationId,
+  }) async {
+    requests.add((section, podcastId, stationId));
     return rows[section] ?? const [];
   }
 }
 
 class _FakePlayback extends Fake implements CarPlayback {
   final playedEpisodes = <int>[];
+  final playedPodcastEpisodes = <int>[];
+  final playedStationEpisodes = <(int, int)>[];
   final playedQueueItems = <int>[];
 
   @override
   Future<bool> playEpisode(int episodeId) async {
     playedEpisodes.add(episodeId);
+    return true;
+  }
+
+  @override
+  Future<bool> playPodcastEpisode(int episodeId) async {
+    playedPodcastEpisodes.add(episodeId);
+    return true;
+  }
+
+  @override
+  Future<bool> playStationEpisode(int stationId, int episodeId) async {
+    playedStationEpisodes.add((stationId, episodeId));
     return true;
   }
 
@@ -71,7 +89,7 @@ class _FakeArtwork implements CarArtworkResolver {
 void main() {
   const tabTitles = {
     CarSection.upNext: 'Up Next',
-    CarSection.inProgress: 'In Progress',
+    CarSection.stations: 'Stations',
     CarSection.library: 'Library',
     CarSection.downloads: 'Downloads',
   };
@@ -117,12 +135,34 @@ void main() {
       check(
         CarMediaId.parse(CarMediaId.episode(6)),
       ).isA<CarEpisodeId>().has((id) => id.episodeId, 'episodeId').equals(6);
+      check(CarMediaId.parse(CarMediaId.podcastEpisode(7)))
+          .isA<CarPodcastEpisodeId>()
+          .has((id) => id.episodeId, 'episodeId')
+          .equals(7);
+      check(
+        CarMediaId.parse(CarMediaId.station(8)),
+      ).isA<CarStationId>().has((id) => id.stationId, 'stationId').equals(8);
+      check(
+          CarMediaId.parse(CarMediaId.stationEpisode(8, 9)),
+        ).isA<CarStationEpisodeId>()
+        ..has((id) => id.stationId, 'stationId').equals(8)
+        ..has((id) => id.episodeId, 'episodeId').equals(9);
       check(CarMediaId.parse(AudioService.browsableRootId)).isA<CarRootId>();
       check(CarMediaId.parse(AudioService.recentRootId)).isA<CarRecentId>();
     });
 
     test('rejects ids it did not issue', () {
-      for (final id in ['', 'podcast', 'podcast/x', 'episode/', 'radio/1']) {
+      for (final id in [
+        '',
+        'podcast',
+        'podcast/x',
+        'episode/',
+        'podcastEpisode/',
+        'station',
+        'stationEpisode/1',
+        'stationEpisode/1/x',
+        'radio/1',
+      ]) {
         check(because: id, CarMediaId.parse(id)).isNull();
       }
     });
@@ -183,8 +223,31 @@ void main() {
         check(podcasts.single)
           ..has((i) => i.id, 'id').equals(CarMediaId.podcast(3))
           ..has((i) => i.playable, 'playable').equals(false);
-        check(catalog.requests.last).equals((CarSection.podcast, 3));
-        check(episodes.single.id).equals(CarMediaId.episode(30));
+        check(catalog.requests.last).equals((CarSection.podcast, 3, null));
+        check(episodes.single.id).equals(CarMediaId.podcastEpisode(30));
+      },
+    );
+
+    test(
+      'lists stations as browsable and their episodes as playable',
+      () async {
+        catalog.rows[CarSection.stations] = [
+          const CarListItem(id: 4, title: 'Station'),
+        ];
+        catalog.rows[CarSection.station] = [
+          const CarListItem(id: 40, title: 'Episode'),
+        ];
+
+        final stations = await browser.getChildren(
+          CarMediaId.tab(CarSection.stations),
+        );
+        final episodes = await browser.getChildren(stations.single.id);
+
+        check(stations.single)
+          ..has((i) => i.id, 'id').equals(CarMediaId.station(4))
+          ..has((i) => i.playable, 'playable').equals(false);
+        check(catalog.requests.last).equals((CarSection.station, null, 4));
+        check(episodes.single.id).equals(CarMediaId.stationEpisode(4, 40));
       },
     );
 
@@ -303,13 +366,18 @@ void main() {
     test('plays queue items and episodes', () async {
       await browser.playFromMediaId(CarMediaId.queueItem(7));
       await browser.playFromMediaId(CarMediaId.episode(8));
+      await browser.playFromMediaId(CarMediaId.podcastEpisode(9));
+      await browser.playFromMediaId(CarMediaId.stationEpisode(4, 10));
 
       check(playback.playedQueueItems).deepEquals([7]);
       check(playback.playedEpisodes).deepEquals([8]);
+      check(playback.playedPodcastEpisodes).deepEquals([9]);
+      check(playback.playedStationEpisodes).deepEquals([(4, 10)]);
     });
 
     test('ignores browsable and unknown ids', () async {
       await browser.playFromMediaId(CarMediaId.podcast(1));
+      await browser.playFromMediaId(CarMediaId.station(1));
       await browser.playFromMediaId('radio/1');
 
       check(playback.playedEpisodes).isEmpty();
@@ -324,6 +392,7 @@ void main() {
         CarMediaId.tab(CarSection.upNext),
         CarMediaId.tab(CarSection.library),
         CarMediaId.podcast(3),
+        CarMediaId.station(4),
         AudioService.recentRootId,
       ]) {
         browser
@@ -332,12 +401,18 @@ void main() {
             .listen((_) => reloaded.add(parent));
       }
 
-      browser.notifyChanged({CarSection.podcast, CarSection.inProgress});
+      browser.notifyChanged({
+        CarSection.podcast,
+        CarSection.station,
+        CarSection.inProgress,
+      });
 
       return pumpEventQueue().then((_) {
-        check(
-          reloaded,
-        ).unorderedEquals([CarMediaId.podcast(3), AudioService.recentRootId]);
+        check(reloaded).unorderedEquals([
+          CarMediaId.podcast(3),
+          CarMediaId.station(4),
+          AudioService.recentRootId,
+        ]);
       });
     });
   });

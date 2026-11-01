@@ -13,8 +13,9 @@ import '../../car/services/car_playback.dart';
 ///
 /// The native side owns the templates and asks for their rows; Dart owns
 /// the data. Dart sends `ready` (with the localized labels) whenever it
-/// starts or the language changes, and `invalidate` when a list's data
-/// changes while a head unit is connected. Native sends `connected` and
+/// starts or the language changes, `invalidate` when a list's data
+/// changes while a head unit is connected, and `nowPlayingControls` when
+/// the speed or skip intervals change. Native sends `connected` and
 /// `disconnected`, `listItems`, `playItem`, and `cycleSpeed`.
 class CarPlayBridge {
   CarPlayBridge({
@@ -58,6 +59,21 @@ class CarPlayBridge {
 
   /// Sends `ready` with the current labels; native rebuilds its templates.
   Future<void> announce() => _send('ready', {'labels': _labels()});
+
+  /// Sends the speed and skip intervals that Now Playing shows.
+  ///
+  /// Sent whether or not a head unit is connected: the skip intervals also
+  /// label the lock screen and Control Center buttons, which audio_service
+  /// otherwise fixes at its 10 s default.
+  Future<void> sendNowPlayingControls({
+    required double speed,
+    required int skipForwardSeconds,
+    required int skipBackwardSeconds,
+  }) => _send('nowPlayingControls', {
+    'speed': speed,
+    'skipForwardSeconds': skipForwardSeconds,
+    'skipBackwardSeconds': skipBackwardSeconds,
+  });
 
   /// Asks the native side to reload [sections], if a head unit is connected.
   void invalidate(Set<CarSection> sections) {
@@ -108,10 +124,12 @@ class CarPlayBridge {
   ) async {
     final section = _section(arguments);
     final podcastId = arguments['podcastId'];
+    final stationId = arguments['stationId'];
     try {
       final items = await _catalog().items(
         section,
         podcastId: podcastId is int ? podcastId : null,
+        stationId: stationId is int ? stationId : null,
       );
       return [for (final item in items) item.toMap()];
     } on Object catch (e, stack) {
@@ -128,14 +146,31 @@ class CarPlayBridge {
     final section = _section(arguments);
     final id = arguments['id'];
     if (id is! int) throw _invalidArgument('id');
-    // A podcast row opens its episode list on the native side; it is
-    // never sent here.
-    if (section == CarSection.library) throw _invalidArgument('section');
+    // A podcast or station row opens its episode list on the native side;
+    // it is never sent here.
+    if (section == CarSection.library || section == CarSection.stations) {
+      throw _invalidArgument('section');
+    }
+    final stationId = switch (arguments['stationId']) {
+      final int value => value,
+      _ when section == CarSection.station => throw _invalidArgument(
+        'stationId',
+      ),
+      _ => null,
+    };
     final bool started;
     try {
-      started = section == CarSection.upNext
-          ? await _playback.playQueueItem(id)
-          : await _playback.playEpisode(id);
+      started = switch (section) {
+        CarSection.upNext => await _playback.playQueueItem(id),
+        // A podcast's or station's own list queues the episodes after the
+        // tapped one.
+        CarSection.podcast => await _playback.playPodcastEpisode(id),
+        CarSection.station => await _playback.playStationEpisode(
+          stationId!,
+          id,
+        ),
+        _ => await _playback.playEpisode(id),
+      };
     } on Object catch (e, stack) {
       _logger.e('Failed to play CarPlay item $id', error: e, stackTrace: stack);
       throw PlatformException(code: 'PLAY_FAILED', message: '$e');
