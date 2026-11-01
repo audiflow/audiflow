@@ -77,28 +77,32 @@ class StationReconciler {
       }
     }
 
-    final current = await _isar.stationEpisodes
-        .filter()
-        .stationIdEqualTo(stationId)
-        .findAll();
-    final currentIds = current.map((e) => e.episodeId).toSet();
-
-    final toInsert = matchingIds.difference(currentIds);
-    final toDelete = currentIds.difference(matchingIds);
-    final toKeep = matchingIds.intersection(currentIds);
-
-    debugPrint(
-      '[Reconciler] reconcileFull: '
-      'matching=${matchingIds.length} '
-      'insert=${toInsert.length} '
-      'delete=${toDelete.length} '
-      'keep=${toKeep.length}',
-    );
-
     final episodeMap = {for (final e in episodes) e.id: e};
-    final currentMap = {for (final e in current) e.episodeId: e};
 
     await _isar.writeTxn(() async {
+      // Read the station's rows inside the write: another pass (feed sync,
+      // playback, the station screen) may have committed rows since the
+      // matching above, and diffing against a stale read inserts duplicates.
+      final current = await _isar.stationEpisodes
+          .filter()
+          .stationIdEqualTo(stationId)
+          .findAll();
+      final currentIds = current.map((e) => e.episodeId).toSet();
+
+      final toInsert = matchingIds.difference(currentIds);
+      final toDelete = currentIds.difference(matchingIds);
+      final toKeep = matchingIds.intersection(currentIds);
+
+      debugPrint(
+        '[Reconciler] reconcileFull: '
+        'matching=${matchingIds.length} '
+        'insert=${toInsert.length} '
+        'delete=${toDelete.length} '
+        'keep=${toKeep.length}',
+      );
+
+      final currentMap = {for (final e in current) e.episodeId: e};
+
       if (toDelete.isNotEmpty) {
         final deleteIds = current
             .where((e) => toDelete.contains(e.episodeId))
@@ -173,14 +177,16 @@ class StationReconciler {
 
       final matches =
           withinLimit && await _matchesConditions(episode, station, now: now);
-      final existing = await _isar.stationEpisodes
-          .filter()
-          .stationIdEqualTo(sp.stationId)
-          .and()
-          .episodeIdEqualTo(episodeId)
-          .findFirst();
 
       await _isar.writeTxn(() async {
+        // Inside the write so an overlapping pass cannot insert the row
+        // between this check and the put.
+        final existing = await _isar.stationEpisodes
+            .filter()
+            .stationIdEqualTo(sp.stationId)
+            .and()
+            .episodeIdEqualTo(episodeId)
+            .findFirst();
         if (matches && existing == null) {
           await _isar.stationEpisodes.put(
             StationEpisode()
@@ -257,50 +263,55 @@ class StationReconciler {
         .findAll();
     final topNIds = topN.map((e) => e.id).toSet();
 
-    // Load all station entries for this station, then filter to this podcast.
-    // We load episode IDs (not full objects) to build the podcast ID set.
-    // TODO(perf): denormalize podcastId onto StationEpisode to query directly.
-    final stationEntries = await _isar.stationEpisodes
-        .filter()
-        .stationIdEqualTo(stationId)
-        .findAll();
-    // Build a set of episode IDs belonging to this podcast via a lightweight
-    // ID-only query, then filter station entries by membership.
-    final podcastEpisodeIds = await _isar.episodes
-        .where()
-        .podcastIdEqualToAnyGuid(sp.podcastId)
-        .idProperty()
-        .findAll();
-    final podcastIdSet = podcastEpisodeIds.toSet();
-    final podcastEntries = stationEntries
-        .where((e) => podcastIdSet.contains(e.episodeId))
-        .toList();
-    final currentEpisodeIds = podcastEntries.map((e) => e.episodeId).toSet();
-
-    // Evict entries no longer in the top N.
-    final toEvict = podcastEntries
-        .where((e) => !topNIds.contains(e.episodeId))
-        .map((e) => e.id)
-        .toList();
-
-    // Backfill episodes in top N that are not yet in the station.
+    // Top-N episodes that pass the attribute filters, whether or not the
+    // station holds them yet.
     final effectiveNow = now ?? DateTime.now();
-    final toBackfill = <StationEpisode>[];
+    final matchingTopN = <Episode>[];
     for (final ep in topN) {
-      if (currentEpisodeIds.contains(ep.id)) continue;
-      if (!await _matchesConditions(ep, station, now: effectiveNow)) continue;
-      toBackfill.add(
-        StationEpisode()
-          ..stationId = stationId
-          ..episodeId = ep.id
-          ..sortKey = ep.publishedAt
-          ..podcastSortKey = sp.sortOrder,
-      );
+      if (await _matchesConditions(ep, station, now: effectiveNow)) {
+        matchingTopN.add(ep);
+      }
     }
 
-    if (toEvict.isEmpty && toBackfill.isEmpty) return;
-
     await _isar.writeTxn(() async {
+      // Diff against the station's rows read inside the write, so an
+      // overlapping pass that already backfilled cannot make this one insert
+      // the same rows again.
+      // TODO(perf): denormalize podcastId onto StationEpisode to query directly.
+      final stationEntries = await _isar.stationEpisodes
+          .filter()
+          .stationIdEqualTo(stationId)
+          .findAll();
+      // Build a set of episode IDs belonging to this podcast via a lightweight
+      // ID-only query, then filter station entries by membership.
+      final podcastEpisodeIds = await _isar.episodes
+          .where()
+          .podcastIdEqualToAnyGuid(sp.podcastId)
+          .idProperty()
+          .findAll();
+      final podcastIdSet = podcastEpisodeIds.toSet();
+      final podcastEntries = stationEntries
+          .where((e) => podcastIdSet.contains(e.episodeId))
+          .toList();
+      final currentEpisodeIds = podcastEntries.map((e) => e.episodeId).toSet();
+
+      // Evict entries no longer in the top N.
+      final toEvict = podcastEntries
+          .where((e) => !topNIds.contains(e.episodeId))
+          .map((e) => e.id)
+          .toList();
+
+      // Backfill episodes in top N that are not yet in the station.
+      final toBackfill = [
+        for (final ep in matchingTopN)
+          if (!currentEpisodeIds.contains(ep.id))
+            StationEpisode()
+              ..stationId = stationId
+              ..episodeId = ep.id
+              ..sortKey = ep.publishedAt
+              ..podcastSortKey = sp.sortOrder,
+      ];
+
       if (toEvict.isNotEmpty) {
         await _isar.stationEpisodes.deleteAll(toEvict);
       }
