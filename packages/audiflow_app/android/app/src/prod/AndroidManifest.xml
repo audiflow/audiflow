@@ -1,0 +1,13 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+  <application>
+    <!-- Android Auto is not yet verified on a head unit (DHU) and the app is
+         not opted in to the Android Auto form factor on Google Play, so
+         production builds do not list the app in Android Auto. Dev and stg
+         keep it for testing. Delete this file once Android Auto ships
+         (docs/fr/19-car-playback.md). -->
+    <meta-data
+      android:name="com.google.android.gms.car.application"
+      tools:node="remove" />
+  </application>
+</manifest>

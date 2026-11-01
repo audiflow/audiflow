@@ -1,3 +1,4 @@
+import '../services/feed_url_variants.dart';
 import '../../monitoring/models/analytics_event.dart';
 import '../models/subscriptions.dart';
 
@@ -34,7 +35,8 @@ abstract class SubscriptionRepository {
   /// Returns whether the user is subscribed to a podcast.
   Future<bool> isSubscribed(String itunesId);
 
-  /// Returns whether the user is subscribed to a podcast by feed URL.
+  /// Returns whether the user is subscribed to a podcast by feed URL,
+  /// stored under either `http` or `https` (see [feedUrlVariants]).
   Future<bool> isSubscribedByFeedUrl(String feedUrl);
 
   /// Returns all subscriptions ordered by subscription date (newest first).

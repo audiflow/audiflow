@@ -16,16 +16,17 @@ import '../controllers/continue_listening_controller.dart';
 class ContinueListeningSection extends ConsumerWidget {
   const ContinueListeningSection({
     required this.onEpisodeTap,
-    required this.podcastIds,
+    required this.podcastArtworkUrls,
     super.key,
   });
 
   final void Function(EpisodeWithProgress episode) onEpisodeTap;
 
-  /// Podcasts the Library can open. Playback history outlives an
-  /// unsubscribe, so episodes of other podcasts are left out rather than
-  /// shown as cards that cannot open.
-  final Set<int> podcastIds;
+  /// Artwork of each podcast the Library can open, keyed by podcast ID.
+  /// Playback history outlives an unsubscribe, so episodes of other
+  /// podcasts are left out rather than shown as cards that cannot open.
+  /// The artwork stands in for episodes that carry no image of their own.
+  final Map<int, String?> podcastArtworkUrls;
 
   static const double _cardWidth = 280;
   static const double _cardHeight = 80;
@@ -33,7 +34,7 @@ class ContinueListeningSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final episodes = (ref.watch(continueListeningEpisodesProvider).value ?? [])
-        .where((item) => podcastIds.contains(item.episode.podcastId))
+        .where((item) => podcastArtworkUrls.containsKey(item.episode.podcastId))
         .toList();
     if (episodes.isEmpty) return const SizedBox.shrink();
     // Two title lines plus the remaining time outgrow the base height at
@@ -68,6 +69,9 @@ class ContinueListeningSection extends ConsumerWidget {
                 height: cardHeight,
                 child: _ContinueListeningCard(
                   episode: episodes[index],
+                  artworkUrl:
+                      episodes[index].episode.imageUrl ??
+                      podcastArtworkUrls[episodes[index].episode.podcastId],
                   onTap: () => onEpisodeTap(episodes[index]),
                 ),
               ),
@@ -81,9 +85,14 @@ class ContinueListeningSection extends ConsumerWidget {
 }
 
 class _ContinueListeningCard extends StatelessWidget {
-  const _ContinueListeningCard({required this.episode, required this.onTap});
+  const _ContinueListeningCard({
+    required this.episode,
+    required this.artworkUrl,
+    required this.onTap,
+  });
 
   final EpisodeWithProgress episode;
+  final String? artworkUrl;
   final VoidCallback onTap;
 
   static const double _artworkSize = 56;
@@ -124,7 +133,7 @@ class _ContinueListeningCard extends StatelessWidget {
   }
 
   Widget _artwork(AppColors colors) {
-    final url = episode.episode.imageUrl;
+    final url = artworkUrl;
     final placeholder = ColoredBox(
       color: colors.surfaceSunken,
       child: Icon(Icons.podcasts, color: colors.inkQuaternary),

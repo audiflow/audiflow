@@ -161,7 +161,9 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
           SliverToBoxAdapter(
             child: ContinueListeningSection(
               onEpisodeTap: (item) => _openEpisode(item, subscriptions),
-              podcastIds: {for (final s in subscriptions) s.id},
+              podcastArtworkUrls: {
+                for (final s in subscriptions) s.id: s.artworkUrl,
+              },
             ),
           ),
           _stationSection(context, stations),

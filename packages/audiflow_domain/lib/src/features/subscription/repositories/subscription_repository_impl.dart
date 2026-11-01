@@ -11,6 +11,7 @@ import '../../parental_control/repositories/parental_control_repository.dart';
 import '../../station/services/station_reconciler_service.dart';
 import '../../subscription/models/subscriptions.dart';
 import '../datasources/local/subscription_local_datasource.dart';
+import '../services/feed_url_variants.dart';
 import 'subscription_repository.dart';
 
 part 'subscription_repository_impl.g.dart';
@@ -156,8 +157,11 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
   }
 
   @override
-  Future<bool> isSubscribedByFeedUrl(String feedUrl) {
-    return _datasource.existsByFeedUrl(feedUrl);
+  Future<bool> isSubscribedByFeedUrl(String feedUrl) async {
+    for (final url in feedUrlVariants(feedUrl)) {
+      if (await _datasource.existsByFeedUrl(url)) return true;
+    }
+    return false;
   }
 
   @override

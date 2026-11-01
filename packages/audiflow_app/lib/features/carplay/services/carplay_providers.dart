@@ -1,0 +1,98 @@
+import 'dart:async';
+
+import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+import '../../../l10n/app_localizations.dart';
+import '../../car/services/car_playback.dart';
+import '../../car/services/car_providers.dart';
+import '../../settings/presentation/controllers/locale_controller.dart';
+import 'carplay_bridge.dart';
+
+part 'carplay_providers.g.dart';
+
+/// The CarPlay strings, keyed as `CarPlayLabels` in
+/// `ios/Runner/CarPlayChannel.swift` reads them.
+Map<String, String> carPlayLabels(AppLocalizations l10n) => {
+  'upNext': l10n.carUpNextTab,
+  'stations': l10n.carStationsTab,
+  'library': l10n.carLibraryTab,
+  'downloads': l10n.carDownloadsTab,
+  'upNextEmpty': l10n.carUpNextEmpty,
+  'stationsEmpty': l10n.carStationsEmpty,
+  'libraryEmpty': l10n.carLibraryEmpty,
+  'downloadsEmpty': l10n.carDownloadsEmpty,
+  'podcastEmpty': l10n.carPodcastEmpty,
+  'stationEmpty': l10n.carPodcastEmpty,
+  'loadFailed': l10n.carLoadFailed,
+};
+
+/// The running CarPlay bridge. Listened to at startup on iOS to activate;
+/// a bare read would pause the subscriptions below.
+///
+/// The list data is watched only while a head unit is connected, so a
+/// phone that never uses CarPlay pays nothing for it.
+@Riverpod(keepAlive: true)
+CarPlayBridge carPlayBridge(Ref ref) {
+  final watchers = <ProviderSubscription<Object?>>[];
+  void stopWatching() {
+    for (final watcher in watchers) {
+      watcher.close();
+    }
+    watchers.clear();
+  }
+
+  late final CarPlayBridge bridge;
+  bridge = CarPlayBridge(
+    catalog: () => ref.read(carCatalogProvider),
+    playback: CarPlayback(ref, catalog: () => ref.read(carCatalogProvider)),
+    labels: () => carPlayLabels(carAppLocalizations(ref)),
+    logger: ref.read(namedLoggerProvider('CarPlay')),
+    onConnectionChanged: ({required connected}) {
+      stopWatching();
+      if (connected) {
+        watchers.addAll(watchCarListChanges(ref, bridge.invalidate));
+      }
+    },
+  )..start();
+
+  ref.listen(localeControllerProvider, (_, _) => bridge.announce());
+  _sendNowPlayingControls(ref, bridge);
+  ref.onDispose(() {
+    stopWatching();
+    bridge.dispose();
+  });
+  return bridge;
+}
+
+/// Keeps the native Now Playing speed and skip intervals in step with the
+/// app settings.
+///
+/// The settings screen signals a skip change by invalidating
+/// [appSettingsRepositoryProvider]. Also resent whenever playback starts:
+/// audio_service rewrites its own skip intervals each time it re-enables
+/// the remote commands, which happens when a session starts.
+void _sendNowPlayingControls(Ref ref, CarPlayBridge bridge) {
+  void send() {
+    final settings = ref.read(appSettingsRepositoryProvider);
+    unawaited(
+      bridge.sendNowPlayingControls(
+        speed: ref.read(nowPlayingSpeedProvider),
+        skipForwardSeconds: settings.getSkipForwardSeconds(),
+        skipBackwardSeconds: settings.getSkipBackwardSeconds(),
+      ),
+    );
+  }
+
+  ref
+    ..listen(nowPlayingSpeedProvider, (_, _) => send())
+    ..listen(appSettingsRepositoryProvider, (_, _) => send())
+    ..listen(
+      audioPlayerControllerProvider.select((s) => s is PlaybackPlaying),
+      (_, playing) {
+        if (playing) send();
+      },
+    );
+  send();
+}

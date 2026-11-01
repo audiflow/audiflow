@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Declares Audiflow to Android Auto as a media app (FR 19). The browse
+     tree and playback come from the audio_service MediaBrowserService. -->
+<automotiveApp>
+  <uses name="media" />
+</automotiveApp>

@@ -1,3 +1,4 @@
+import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_search/audiflow_search.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
@@ -6,9 +7,12 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
+import '../controllers/feed_link_controller.dart';
 import '../controllers/search_controller.dart';
 import '../controllers/search_state.dart';
 import '../widgets/country_picker_sheet.dart';
+import '../widgets/feed_link_panel.dart';
+import '../widgets/feed_url_dialog.dart';
 import '../widgets/podcast_search_result_tile.dart';
 import '../widgets/search_country_chip.dart';
 import '../widgets/search_subscribe_button.dart';
@@ -23,6 +27,10 @@ class SearchScreen extends ConsumerStatefulWidget {
 class _SearchScreenState extends ConsumerState<SearchScreen> {
   final _textController = TextEditingController();
   final _focusNode = FocusNode();
+
+  /// The link the field holds, if its text is one; it is opened rather
+  /// than searched for.
+  FeedLink? _feedLink;
 
   @override
   void initState() {
@@ -51,13 +59,24 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   void _onTextChanged() {
     final value = _textController.value;
-    final isComposing = value.composing.isValid;
-    ref
-        .read(podcastSearchControllerProvider.notifier)
-        .onQueryChanged(value.text, composing: isComposing);
+    final link = parseFeedLink(value.text);
+    if (link != _feedLink) {
+      setState(() => _feedLink = link);
+      ref.read(feedLinkControllerProvider.notifier).reset();
+    }
+    final search = ref.read(podcastSearchControllerProvider.notifier);
+    if (link != null) {
+      search.clear();
+      return;
+    }
+    search.onQueryChanged(value.text, composing: value.composing.isValid);
   }
 
   void _onSearch() {
+    if (_feedLink != null) {
+      _openFeedLink();
+      return;
+    }
     final query = _textController.text;
     if (query.trim().isEmpty) return;
 
@@ -67,6 +86,31 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     ref.read(podcastSearchControllerProvider.notifier).searchImmediate(query);
   }
 
+  Future<void> _openFeedLink() async {
+    final link = _feedLink;
+    if (link == null) return;
+    _focusNode.unfocus();
+    final podcast = await ref
+        .read(feedLinkControllerProvider.notifier)
+        .open(link);
+    // The field may have changed while the link was resolving.
+    if (podcast == null || !mounted || link != _feedLink) return;
+    await context.push(
+      '${AppRoutes.podcastDetail}/${podcast.id}',
+      extra: <String, dynamic>{
+        'podcast': podcast,
+        'subscribeSource': SubscribeSource.feedLink,
+      },
+    );
+  }
+
+  Future<void> _onAddByUrl() async {
+    final text = await FeedUrlDialog.show(context);
+    if (text == null || !mounted) return;
+    _textController.text = text;
+    await _openFeedLink();
+  }
+
   void _onRetry() {
     ref.read(podcastSearchControllerProvider.notifier).retry();
   }
@@ -74,46 +118,52 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(podcastSearchControllerProvider);
+    final feedLinkState = ref.watch(feedLinkControllerProvider);
     final l10n = AppLocalizations.of(context);
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () => _focusNode.unfocus(),
-      child: Scaffold(
-        body: SafeArea(
-          bottom: false,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              LargeTitle(l10n.navSearch),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  Spacing.screenHorizontal,
-                  0,
-                  Spacing.screenHorizontal,
-                  Spacing.sm,
-                ),
-                child: Row(
-                  children: [
-                    Expanded(child: _buildSearchField(l10n)),
-                    const SizedBox(width: Spacing.sm),
-                    SearchCountryChip(
-                      countryCode: ref
-                          .read(podcastSearchControllerProvider.notifier)
-                          .currentCountry,
-                      onTap: _onCountryTap,
-                    ),
-                  ],
-                ),
+    // No screen-wide tap-to-unfocus: the tap that opens the iOS edit menu
+    // would reach it and drop focus before Paste lands. The field's
+    // onTapOutside already hides the keyboard.
+    return Scaffold(
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            LargeTitle(l10n.navSearch),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                Spacing.screenHorizontal,
+                0,
+                Spacing.screenHorizontal,
+                Spacing.sm,
               ),
-              Expanded(
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  child: _buildContent(state),
-                ),
+              child: Row(
+                children: [
+                  Expanded(child: _buildSearchField(l10n)),
+                  const SizedBox(width: Spacing.sm),
+                  SearchCountryChip(
+                    countryCode: ref
+                        .read(podcastSearchControllerProvider.notifier)
+                        .currentCountry,
+                    onTap: _onCountryTap,
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+            Expanded(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                child: _feedLink == null
+                    ? _buildContent(state)
+                    : FeedLinkPanel(
+                        url: _textController.text.trim(),
+                        state: feedLinkState,
+                        onOpen: _openFeedLink,
+                      ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -217,6 +267,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
               ),
+            ),
+            const SizedBox(height: Spacing.lg),
+            TextButton.icon(
+              key: const Key('search_add_by_url'),
+              onPressed: _onAddByUrl,
+              icon: const Icon(Icons.rss_feed_rounded),
+              label: Text(l10n.feedLinkAddByUrl),
             ),
           ],
         ),

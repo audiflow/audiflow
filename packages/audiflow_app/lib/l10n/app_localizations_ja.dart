@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -2225,4 +2226,64 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get episodeDetailAddToEnd => 'キューの最後に追加';
+
+  @override
+  String get carUpNextTab => '次に再生';
+
+  @override
+  String get carStationsTab => 'ステーション';
+
+  @override
+  String get carLibraryTab => 'ライブラリ';
+
+  @override
+  String get carDownloadsTab => 'ダウンロード';
+
+  @override
+  String get carUpNextEmpty => '次に再生するエピソードはありません';
+
+  @override
+  String get carStationsEmpty => 'ステーションがありません';
+
+  @override
+  String get carLibraryEmpty => '購読がありません';
+
+  @override
+  String get carDownloadsEmpty => 'ダウンロード済みのエピソードはありません';
+
+  @override
+  String get carPodcastEmpty => 'エピソードがありません';
+
+  @override
+  String get carLoadFailed => 'リストを読み込めませんでした';
+
+  @override
+  String get feedLinkAddByUrl => 'RSSフィードのURLで追加';
+
+  @override
+  String get feedLinkDialogHint => 'フィードURLまたは番組のリンク';
+
+  @override
+  String get feedLinkDialogInvalid =>
+      'https://example.com/feed.xml のようなリンクを入力してください';
+
+  @override
+  String get feedLinkOpen => '開く';
+
+  @override
+  String get feedLinkPanelTitle => 'このリンクから番組を開く';
+
+  @override
+  String feedLinkErrorUnsupported(String platform) {
+    return '$platform のリンクにはRSSフィードが含まれていません。番組のRSSフィードのURLを貼り付けてください。';
+  }
+
+  @override
+  String get feedLinkErrorNotFound => 'この番組のRSSフィードが見つかりませんでした。';
+
+  @override
+  String get feedLinkErrorNotFeed => 'このリンクはポッドキャストのRSSフィードではありません。';
+
+  @override
+  String get feedLinkErrorServer => 'サーバーからフィードを取得できませんでした。時間をおいてお試しください。';
 }

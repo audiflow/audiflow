@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import '../builders/podcast_search_entity_builder.dart';
 import '../builders/search_entity_result.dart';
 import '../exceptions/search_exception.dart';
+import '../exceptions/status_code.dart';
 import '../models/charts_query.dart';
 import '../models/podcast.dart';
 import '../parsers/feed_response_parser.dart';
@@ -191,15 +194,39 @@ class ItunesChartsClient {
   /// Returns null if lookup fails (allows partial results).
   Future<Podcast?> lookupPodcast(String podcastId) async {
     try {
-      final url = '$lookupBaseUrl?id=$podcastId';
-      final response = await _httpClient.get(url);
-      return _lookupParser.parseLookupResponse(
-        response.data as Map<String, dynamic>,
-      );
+      return await fetchPodcast(podcastId);
     } on Object {
       // Return null for failed lookups to allow partial results
       return null;
     }
+  }
+
+  /// Looks up podcast details by ID, reporting why a lookup failed.
+  ///
+  /// Throws [SearchException]: [StatusCode.notFound] when no podcast has
+  /// [podcastId], [SearchNetworkException] when the API is unreachable,
+  /// and other subtypes for API or response errors.
+  Future<Podcast> fetchPodcast(String podcastId) async {
+    final response = await _httpClient.get('$lookupBaseUrl?id=$podcastId');
+    return _lookupParser.parseLookupResponse(_decodeLookup(response.data));
+  }
+
+  /// The lookup API serves JSON as `text/javascript`, so Dio hands the
+  /// body over undecoded.
+  Map<String, dynamic> _decodeLookup(Object? raw) {
+    if (raw is Map<String, dynamic>) return raw;
+    if (raw is String) {
+      try {
+        final decoded = jsonDecode(raw);
+        if (decoded is Map<String, dynamic>) return decoded;
+      } on FormatException {
+        // Reported below as a malformed response.
+      }
+    }
+    throw SearchException.internal(
+      providerId: 'itunes_lookup',
+      message: 'Lookup response is not a JSON object',
+    );
   }
 
   /// Closes the client and cleans up resources.

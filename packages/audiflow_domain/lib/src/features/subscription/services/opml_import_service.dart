@@ -2,6 +2,7 @@ import '../../monitoring/models/analytics_event.dart';
 import '../models/opml_entry.dart';
 import '../models/opml_import_result.dart';
 import '../repositories/subscription_repository.dart';
+import 'feed_placeholder_id.dart';
 
 /// Orchestrates OPML import: checks duplicates, subscribes,
 /// and collects results.
@@ -29,9 +30,8 @@ class OpmlImportService {
           continue;
         }
 
-        final placeholderId = _generatePlaceholderId(entry.feedUrl);
         await _repository.subscribe(
-          itunesId: placeholderId,
+          itunesId: feedPlaceholderId(entry.feedUrl),
           feedUrl: entry.feedUrl,
           title: entry.title,
           artistName: '',
@@ -48,10 +48,5 @@ class OpmlImportService {
       alreadySubscribed: alreadySubscribed,
       failed: failed,
     );
-  }
-
-  String _generatePlaceholderId(String feedUrl) {
-    final hash = feedUrl.hashCode.toRadixString(16);
-    return 'opml:$hash';
   }
 }
