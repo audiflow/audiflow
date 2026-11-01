@@ -153,8 +153,8 @@ class CarMediaBrowser {
   /// most four.
   static const tabs = [
     CarSection.upNext,
-    CarSection.stations,
     CarSection.library,
+    CarSection.stations,
     CarSection.downloads,
   ];
 

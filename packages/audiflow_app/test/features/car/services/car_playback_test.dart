@@ -101,6 +101,25 @@ class _RecordingPlayer extends StubAudioPlayerController {
   _RecordingPlayer() : super(const PlaybackState.idle());
 
   final urls = <String>[];
+  var resumed = 0;
+
+  /// The episode the player holds.
+  int? loadedEpisodeId;
+  bool parkedAtEnd = false;
+
+  void hold(int episodeId, PlaybackState playbackState) {
+    loadedEpisodeId = episodeId;
+    state = playbackState;
+  }
+
+  @override
+  int? get currentEpisodeId => loadedEpisodeId;
+
+  @override
+  bool get isParkedAtEnd => parkedAtEnd;
+
+  @override
+  Future<void> resume() async => resumed++;
 
   @override
   void markPlaySource(PlaySource source) {}
@@ -190,6 +209,8 @@ void main() {
         ],
       );
       addTearDown(container.dispose);
+      // Built now, so a test can set the player's state before playing.
+      container.read(audioPlayerControllerProvider);
       playback = CarPlayback(
         container.read(_refProvider),
         catalog: () => catalog,
@@ -240,6 +261,77 @@ void main() {
       check(queue.cleared).equals(1);
       check(queue.adhocCalls).isEmpty();
       check(player.urls).deepEquals(['https://example.com/6.mp3']);
+    });
+
+    group('the episode already loaded', () {
+      const url = 'https://example.com/6.mp3';
+
+      Future<void> selectFromEveryList() async {
+        check(await playback.playPodcastEpisode(6)).isTrue();
+        check(await playback.playEpisode(6)).isTrue();
+        check(await playback.playStationEpisode(3, 6)).isTrue();
+        await pumpEventQueue();
+      }
+
+      for (final (name, state) in [
+        ('playing', const PlaybackState.playing(episodeUrl: url)),
+        // The pending load goes on; resuming would play the old source.
+        ('loading', const PlaybackState.loading(episodeUrl: url)),
+      ]) {
+        test('leaves it untouched while $name', () async {
+          player.hold(6, state);
+
+          await selectFromEveryList();
+
+          check(queue.adhocCalls).isEmpty();
+          check(queue.cleared).equals(0);
+          check(player.urls).isEmpty();
+          check(player.resumed).equals(0);
+          check(stations.played).isEmpty();
+        });
+      }
+
+      test('starts it again after a failed load', () async {
+        player.hold(6, const PlaybackState.error(message: 'boom'));
+
+        await selectFromEveryList();
+
+        check(player.urls).length.equals(3);
+        check(player.resumed).equals(0);
+      });
+
+      test('starts it again when parked at its end', () async {
+        // Resuming would advance to the next queued episode instead.
+        player
+          ..hold(6, const PlaybackState.paused(episodeUrl: url))
+          ..parkedAtEnd = true;
+
+        await selectFromEveryList();
+
+        check(player.urls).length.equals(3);
+        check(player.resumed).equals(0);
+      });
+
+      test('treats another episode sharing its audio url as new', () async {
+        player.hold(5, const PlaybackState.playing(episodeUrl: url));
+
+        await selectFromEveryList();
+
+        check(player.urls).length.equals(3);
+      });
+
+      test('resumes when it is paused, keeping the queue', () async {
+        player.hold(6, const PlaybackState.paused(episodeUrl: url));
+
+        await selectFromEveryList();
+
+        check(queue.adhocCalls).isEmpty();
+        check(queue.cleared).equals(0);
+        check(player.urls).isEmpty();
+        check(player.resumed).equals(3);
+        // Resuming from a station is a play from it, as on the phone.
+        check(stations.played).deepEquals([3]);
+      });
     });
 
     test('a missing episode changes nothing', () async {

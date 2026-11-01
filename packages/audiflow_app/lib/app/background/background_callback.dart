@@ -309,6 +309,12 @@ Future<Isar> _acquireBackgroundIsar(String directory, Logger logger) {
     close: (isar) async {
       if (isar.isOpen) await isar.close();
     },
+    // iOS runs the one-off download task on the main engine while the app
+    // is alive, where the foreground app has already opened the database.
+    findOpen: () {
+      final existing = Isar.getInstance(isarInstanceName);
+      return existing != null && existing.isOpen ? existing : null;
+    },
   );
   return lease.acquire();
 }

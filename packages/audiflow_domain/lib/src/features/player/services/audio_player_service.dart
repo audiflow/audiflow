@@ -1053,6 +1053,10 @@ class AudioPlayerController extends _$AudioPlayerController
   bool get _isParkedAtEnd =>
       _player.processingState == ProcessingState.completed;
 
+  /// Whether the loaded episode played to its end and is held there; then
+  /// [resume] advances the queue rather than playing it again.
+  bool get isParkedAtEnd => _isParkedAtEnd;
+
   /// Toggles between play and pause states.
   ///
   /// If audio is playing, it will pause. If paused, it will resume.
