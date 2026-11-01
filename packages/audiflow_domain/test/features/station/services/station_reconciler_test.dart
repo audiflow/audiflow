@@ -285,6 +285,87 @@ void main() {
     });
   });
 
+  // Feed sync, playback history, downloads and the station screen reconcile
+  // independently, so passes over the same station can interleave. Each pass
+  // must read what it writes against inside its own transaction, or two of
+  // them insert the same (station, episode) row and the second write throws
+  // a unique index violation (Sentry AUDIFLOW-5N).
+  group('overlapping passes', () {
+    test('two reconcileEpisode passes add the episode once', () async {
+      final stationId = await putStation(defaultEpisodeLimit: null);
+      await linkPodcast(stationId, 1);
+      final epId = await putEpisode(podcastId: 1, guid: 'ep1');
+
+      await Future.wait([
+        reconciler.reconcileEpisode(epId),
+        reconciler.reconcileEpisode(epId),
+      ]);
+
+      check(await stationEpisodeIds(stationId)).deepEquals([epId]);
+    });
+
+    test('two limited reconcileEpisode passes backfill once', () async {
+      final stationId = await putStation(defaultEpisodeLimit: 2);
+      await linkPodcast(stationId, 1);
+      final ep1 = await putEpisode(
+        podcastId: 1,
+        guid: 'ep1',
+        publishedAt: DateTime(2026, 2, 1),
+      );
+      final ep2 = await putEpisode(
+        podcastId: 1,
+        guid: 'ep2',
+        publishedAt: DateTime(2026, 2, 2),
+      );
+
+      await Future.wait([
+        reconciler.reconcileEpisode(ep1),
+        reconciler.reconcileEpisode(ep2),
+      ]);
+
+      check(await stationEpisodeIds(stationId)).deepEquals([ep1, ep2]);
+    });
+
+    test('reconcileFull and reconcileEpisode add the episode once', () async {
+      final stationId = await putStation();
+      await linkPodcast(stationId, 1);
+      final epId = await putEpisode(
+        podcastId: 1,
+        guid: 'ep1',
+        publishedAt: DateTime(2026, 2, 1),
+      );
+
+      await Future.wait([
+        reconciler.reconcileFull(stationId),
+        reconciler.reconcileEpisode(epId),
+      ]);
+
+      check(await stationEpisodeIds(stationId)).deepEquals([epId]);
+    });
+
+    test('two reconcileFull passes add each episode once', () async {
+      final stationId = await putStation();
+      await linkPodcast(stationId, 1);
+      final ep1 = await putEpisode(
+        podcastId: 1,
+        guid: 'ep1',
+        publishedAt: DateTime(2026, 2, 1),
+      );
+      final ep2 = await putEpisode(
+        podcastId: 1,
+        guid: 'ep2',
+        publishedAt: DateTime(2026, 2, 2),
+      );
+
+      await Future.wait([
+        reconciler.reconcileFull(stationId),
+        reconciler.reconcileFull(stationId),
+      ]);
+
+      check(await stationEpisodeIds(stationId)).deepEquals([ep1, ep2]);
+    });
+  });
+
   group('diff correctness', () {
     test('second reconcileFull is a no-op with unchanged data', () async {
       final stationId = await putStation(hideCompleted: true);
