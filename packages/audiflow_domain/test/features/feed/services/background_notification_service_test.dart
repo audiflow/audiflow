@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
 import 'package:fake_async/fake_async.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -14,13 +15,23 @@ import 'package:flutter_test/flutter_test.dart';
 /// Fake [NotificationsShowDelegate] that records calls and can be configured
 /// to throw on specific call indices.
 class _StubShowDelegate implements NotificationsShowDelegate {
-  _StubShowDelegate({Set<int>? throwOnCallIndices})
-    : _throwOnCallIndices = throwOnCallIndices ?? {};
+  _StubShowDelegate({
+    Set<int>? throwOnCallIndices,
+    this.authorized = true,
+    this.error,
+  }) : _throwOnCallIndices = throwOnCallIndices ?? {};
 
   final Set<int> _throwOnCallIndices;
+  final bool authorized;
+
+  /// Thrown instead of the default failure on [_throwOnCallIndices].
+  final Object? error;
   int _callCount = 0;
   final List<int> showedIds = [];
   final List<NotificationDetails?> shownDetails = [];
+
+  @override
+  Future<bool> isAuthorized() async => authorized;
 
   @override
   Future<void> show({
@@ -33,7 +44,7 @@ class _StubShowDelegate implements NotificationsShowDelegate {
     final index = _callCount;
     _callCount++;
     if (_throwOnCallIndices.contains(index)) {
-      throw Exception('simulated show() failure at index $index');
+      throw error ?? Exception('simulated show() failure at index $index');
     }
     showedIds.add(id);
     shownDetails.add(notificationDetails);
@@ -138,6 +149,100 @@ void main() {
           );
         },
       );
+    });
+
+    group('authorization', () {
+      const episode = NewEpisodeNotification(
+        episodeId: 1,
+        podcastId: 10,
+        podcastTitle: 'Podcast A',
+        episodeTitle: 'Episode 1',
+      );
+      const withArtwork = NewEpisodeNotification(
+        episodeId: 2,
+        podcastId: 10,
+        podcastTitle: 'Podcast A',
+        episodeTitle: 'Episode 2',
+        artworkUrl: 'https://example.com/art.jpg',
+      );
+      // What iOS returns when the user has notifications turned off.
+      final notAuthorized = PlatformException(
+        code: 'Error 2003',
+        message:
+            'Repository could not save notification. '
+            'Source is not authorized.',
+        details: 'UNErrorDomain',
+      );
+
+      test('does not show when notifications are not authorized', () async {
+        final stub = _StubShowDelegate(authorized: false);
+        final service = BackgroundNotificationService(
+          textFormatter: _formatter,
+        );
+
+        await check(
+          service.showPerEpisodeNotificationsViaDelegate(stub, [episode]),
+        ).throws<NotificationsNotAuthorizedException>();
+        check(stub.showedIds).isEmpty();
+      });
+
+      test('reports an iOS not-authorized show error as typed', () async {
+        final stub = _StubShowDelegate(
+          throwOnCallIndices: {0, 1},
+          error: notAuthorized,
+        );
+        final service = BackgroundNotificationService(
+          textFormatter: _formatter,
+        );
+
+        await check(
+          service.showPerEpisodeNotificationsViaDelegate(stub, [
+            episode,
+            episode,
+          ]),
+        ).throws<NotificationsNotAuthorizedException>();
+        // Stops at the first refusal: the rest would be refused too.
+        check(stub._callCount).equals(1);
+      });
+
+      test('does not retry or blame artwork when not authorized', () async {
+        final stub = _StubShowDelegate(
+          throwOnCallIndices: {0, 1},
+          error: notAuthorized,
+        );
+        final failures = <String>[];
+        final service = BackgroundNotificationService(
+          textFormatter: _formatter,
+          artworkFileProvider: (_, id) async => '/tmp/art-$id.png',
+          onArtworkFailure: (url, _) => failures.add(url),
+        );
+
+        await check(
+          service.showPerEpisodeNotificationsViaDelegate(stub, [withArtwork]),
+        ).throws<NotificationsNotAuthorizedException>();
+        check(stub._callCount).equals(1);
+        check(failures).isEmpty();
+      });
+
+      test('keeps other platform errors untyped', () async {
+        final stub = _StubShowDelegate(
+          throwOnCallIndices: {0},
+          error: PlatformException(code: 'Error 101', details: 'UNErrorDomain'),
+        );
+        final service = BackgroundNotificationService(
+          textFormatter: _formatter,
+        );
+
+        await expectLater(
+          service.showPerEpisodeNotificationsViaDelegate(stub, [episode]),
+          throwsA(
+            allOf(
+              isA<Exception>(),
+              isNot(isA<NotificationsNotAuthorizedException>()),
+            ),
+          ),
+        );
+      });
     });
 
     group('artwork', () {
