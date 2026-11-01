@@ -1,0 +1,3 @@
+• CarPlay: browse your Library, Stations and Downloads on the car screen and play from there. Playing an episode from a podcast or a station queues the episodes that follow it, and Now Playing's Up Next button shows the queue
+• CarPlay: Now Playing shows your playback speed, and the skip buttons use your skip intervals; the lock screen and Control Center show them too
+• Subscribing on a podcast's page now shows "Subscribed" for a moment before the button closes, instead of disappearing at once
