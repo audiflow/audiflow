@@ -16,6 +16,7 @@ void main() {
     EpisodeSchema,
     PlaybackHistorySchema,
     DownloadTaskSchema,
+    SubscriptionSchema,
   ];
 
   setUpAll(() async {
@@ -51,7 +52,31 @@ void main() {
     return station.id;
   }
 
-  Future<void> linkPodcast(int stationId, int podcastId) async {
+  Future<void> putSubscription(int podcastId, {bool isCached = false}) async {
+    await isar.writeTxn(
+      () => isar.subscriptions.put(
+        Subscription()
+          ..id = podcastId
+          ..itunesId = 'itunes-$podcastId'
+          ..feedUrl = 'https://example.com/$podcastId.xml'
+          ..title = 'Podcast $podcastId'
+          ..artistName = 'Artist'
+          ..subscribedAt = DateTime(2026, 1, 1)
+          ..isCached = isCached,
+      ),
+    );
+  }
+
+  /// Links [podcastId] to the station, subscribing to it first unless
+  /// [subscribe] is false, since only subscribed podcasts belong to one.
+  Future<void> linkPodcast(
+    int stationId,
+    int podcastId, {
+    bool subscribe = true,
+  }) async {
+    if (subscribe && await isar.subscriptions.get(podcastId) == null) {
+      await putSubscription(podcastId);
+    }
     await isar.writeTxn(
       () => isar.stationPodcasts.put(
         StationPodcast()
@@ -213,6 +238,36 @@ void main() {
       await service.onStationConfigChanged(stationId);
 
       check(await stationEpisodeIds(stationId)).deepEquals([epFav]);
+    });
+
+    // Before unsubscribe demoted the row, it hard-deleted it and left the
+    // station link behind; a resubscribe then got a new podcast id, so the
+    // station kept showing the old id's stale episodes.
+    test('drops links to podcasts that no longer exist', () async {
+      final stationId = await putStation();
+      await linkPodcast(stationId, 1);
+      await linkPodcast(stationId, 2, subscribe: false);
+      final kept = await putEpisode(podcastId: 1, guid: 'kept');
+      await putEpisode(podcastId: 2, guid: 'stale');
+
+      await service.onStationConfigChanged(stationId);
+
+      check(await stationPodcastIdsForStation(stationId)).deepEquals([1]);
+      check(await stationEpisodeIds(stationId)).deepEquals([kept]);
+    });
+
+    test('drops links to podcasts demoted to cached entries', () async {
+      final stationId = await putStation();
+      await linkPodcast(stationId, 1);
+      await putSubscription(2, isCached: true);
+      await linkPodcast(stationId, 2);
+      final kept = await putEpisode(podcastId: 1, guid: 'kept');
+      await putEpisode(podcastId: 2, guid: 'stale');
+
+      await service.onStationConfigChanged(stationId);
+
+      check(await stationPodcastIdsForStation(stationId)).deepEquals([1]);
+      check(await stationEpisodeIds(stationId)).deepEquals([kept]);
     });
   });
 

@@ -8,12 +8,20 @@ part of 'now_playing_artwork_provider.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Prepares local, downscaled artwork files for the system media controls.
+/// Prepares local, downscaled artwork for the system media controls.
+///
+/// On Android the files are handed out as `content:` URIs, which media
+/// hosts outside the app (Android Auto, Android Automotive, System UI) can
+/// open; iOS reads the `file:` URI inside the app.
 
 @ProviderFor(nowPlayingArtworkPreparer)
 final nowPlayingArtworkPreparerProvider = NowPlayingArtworkPreparerProvider._();
 
-/// Prepares local, downscaled artwork files for the system media controls.
+/// Prepares local, downscaled artwork for the system media controls.
+///
+/// On Android the files are handed out as `content:` URIs, which media
+/// hosts outside the app (Android Auto, Android Automotive, System UI) can
+/// open; iOS reads the `file:` URI inside the app.
 
 final class NowPlayingArtworkPreparerProvider
     extends
@@ -23,7 +31,11 @@ final class NowPlayingArtworkPreparerProvider
           NowPlayingArtworkPreparer
         >
     with $Provider<NowPlayingArtworkPreparer> {
-  /// Prepares local, downscaled artwork files for the system media controls.
+  /// Prepares local, downscaled artwork for the system media controls.
+  ///
+  /// On Android the files are handed out as `content:` URIs, which media
+  /// hosts outside the app (Android Auto, Android Automotive, System UI) can
+  /// open; iOS reads the `file:` URI inside the app.
   NowPlayingArtworkPreparerProvider._()
     : super(
         from: null,
@@ -59,4 +71,4 @@ final class NowPlayingArtworkPreparerProvider
 }
 
 String _$nowPlayingArtworkPreparerHash() =>
-    r'75560436dd0feab9cbaa817eedfe04dbc9387b4b';
+    r'45061351961e55a2525c59b86c9a1b45fe1e01ef';

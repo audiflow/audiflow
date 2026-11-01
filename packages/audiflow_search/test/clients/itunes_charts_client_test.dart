@@ -40,6 +40,46 @@ void main() {
       expect(podcast.feedUrl, 'https://example.com/feed.xml');
     });
 
+    // The real lookup API answers with `text/javascript`, which Dio
+    // leaves undecoded.
+    test('returns the podcast from a text/javascript response', () async {
+      server.onGet(
+        url,
+        (s) => s.reply(
+          200,
+          '{"resultCount":1,"results":[{"collectionId":$podcastId,'
+          '"collectionName":"Show","artistName":"Host",'
+          '"feedUrl":"https://example.com/feed.xml"}]}',
+          headers: {
+            Headers.contentTypeHeader: ['text/javascript; charset=utf-8'],
+          },
+        ),
+      );
+
+      final podcast = await client.fetchPodcast(podcastId);
+
+      expect(podcast.id, podcastId);
+      expect(podcast.feedUrl, 'https://example.com/feed.xml');
+    });
+
+    test('throws a SearchException on a malformed text response', () async {
+      server.onGet(
+        url,
+        (s) => s.reply(
+          200,
+          'not json',
+          headers: {
+            Headers.contentTypeHeader: ['text/javascript; charset=utf-8'],
+          },
+        ),
+      );
+
+      await expectLater(
+        client.fetchPodcast(podcastId),
+        throwsA(isA<SearchException>()),
+      );
+    });
+
     test('throws notFound when no podcast has the ID', () async {
       server.onGet(
         url,

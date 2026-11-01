@@ -1,0 +1,5 @@
+• Add a podcast by pasting its RSS feed URL or an Apple Podcasts, Overcast or Castro link into search, or with "Add by RSS feed URL"
+• Continue listening cards fall back to podcast artwork
+• Stations: a podcast unsubscribed and subscribed again no longer sticks on old episodes; add it back to the station
+• Stations: smoother scrolling up
+• After a restart, the mini player shows your progress and the transcript opens where you stopped

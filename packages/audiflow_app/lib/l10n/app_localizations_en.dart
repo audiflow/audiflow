@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -2360,6 +2361,36 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get episodeDetailAddToEnd => 'Add to end of queue';
+
+  @override
+  String get carUpNextTab => 'Up Next';
+
+  @override
+  String get carStationsTab => 'Stations';
+
+  @override
+  String get carLibraryTab => 'Library';
+
+  @override
+  String get carDownloadsTab => 'Downloads';
+
+  @override
+  String get carUpNextEmpty => 'Nothing up next';
+
+  @override
+  String get carStationsEmpty => 'No stations yet';
+
+  @override
+  String get carLibraryEmpty => 'No subscriptions yet';
+
+  @override
+  String get carDownloadsEmpty => 'No downloaded episodes';
+
+  @override
+  String get carPodcastEmpty => 'No episodes';
+
+  @override
+  String get carLoadFailed => 'Couldn\'t load this list';
 
   @override
   String get feedLinkAddByUrl => 'Add by RSS feed URL';
