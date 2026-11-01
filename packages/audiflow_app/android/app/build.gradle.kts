@@ -74,6 +74,19 @@ android {
             }
         }
     }
+
+    // Keep every drawable in the base APK. Density splits carry all copies of
+    // any drawable that has density variants, the unqualified one included,
+    // and the plugins look their icons up by name at runtime (the
+    // notification small icon, audio_service's media action icons). On a
+    // Play pre-launch device the lookup missed the split copies and
+    // notification setup failed (Sentry AUDIFLOW-53). The splits are under
+    // 400 KB in total.
+    bundle {
+        density {
+            enableSplit = false
+        }
+    }
 }
 
 dependencies {

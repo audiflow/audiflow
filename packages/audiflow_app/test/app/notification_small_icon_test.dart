@@ -21,8 +21,16 @@ void main() {
     }
   });
 
-  // The density PNGs ship only in App Bundle density splits; a device that
-  // receives none of them must still resolve the icon from the base APK.
+  // Density splits would hold every copy of the icon, the unqualified one
+  // included; when a device misses them, the name lookup fails (AUDIFLOW-53).
+  test('keeps drawables in the base APK of the App Bundle', () {
+    final gradle = File('android/app/build.gradle.kts').readAsStringSync();
+    final disablesDensitySplit = RegExp(
+      r'bundle\s*\{\s*density\s*\{\s*enableSplit = false',
+    ).hasMatch(gradle);
+    check(disablesDensitySplit).isTrue();
+  });
+
   test('ships a density-independent fallback in the base resources', () {
     final vector = File('$_resDir/drawable/$androidNotificationSmallIcon.xml');
     check(vector.existsSync()).isTrue();
