@@ -2,6 +2,7 @@ import 'package:audio_service/audio_service.dart' hide PlaybackState;
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../car/services/car_providers.dart';
 import '../../podcast_detail/presentation/controllers/podcast_detail_controller.dart';
 import 'audiflow_audio_handler.dart';
 import 'now_playing_artwork_preparer.dart';
@@ -78,6 +79,9 @@ Future<AudiflowAudioHandler> audioHandler(Ref ref) async {
     if (progress == null) return;
     handler.updateDuration(progress.duration);
   });
+
+  // Keep the speed and skip icons in step with the settings.
+  watchNowPlayingControlValues(ref, handler.updateMediaControlValues);
 
   // Invalidate cached episode progress / list views when the player
   // marks an episode as completed, so already-rendered list screens

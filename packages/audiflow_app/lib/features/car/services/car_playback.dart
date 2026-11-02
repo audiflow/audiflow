@@ -7,7 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../queue/services/queue_item_player.dart' as queue_player;
 import 'car_catalog.dart';
 
-/// Speeds the CarPlay playback-rate button steps through, in order.
+/// Speeds the in-car speed buttons step through, in order.
 ///
 /// A short list: each press is one step, and a driver should reach any of
 /// them in a few presses. All are members of `PlaybackSpeedScale.steps`.
