@@ -48,6 +48,13 @@ dependency_overrides:
       url: https://github.com/reedom/isar-community.git
       path: packages/isar_community_generator
       ref: 3.3.2-spm.1
+  # just_audio comes from the reedom fork: it adds a native disk cache for
+  # progressive streams (StreamAudioCache), which upstream has no equivalent of.
+  just_audio:
+    git:
+      url: https://github.com/reedom/just_audio.git
+      path: just_audio
+      ref: 0.10.6-stream-cache.1
   # file_picker's transitive dbus (Linux-only) pins xml ^6; force xml 7 to match
   # audiflow_domain/audiflow_podcast. dbus never runs on iOS/Android.
   xml: ^7.0.1
