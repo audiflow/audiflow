@@ -150,6 +150,41 @@ When an episode has been downloaded:
 - If downloaded: uses local file path (faster start, works offline)
 - If not downloaded: uses remote URL with streaming
 
+## Streamed audio cache
+
+just_audio comes from a fork (`dependency_overrides` in the root `pubspec.yaml`) because neither platform's player exposes a place to add a cache from outside the plugin. The fork adds `StreamAudioCache`; `StreamCacheService` (audiflow_domain) configures it during app bootstrap, before anything can load an episode, because a source only goes through the cache if it was on when the source loaded. No caller of `setUrl` changes: `file:` URIs bypass the cache, so downloads play as before.
+
+`LockCachingAudioSource` was rejected because it fetches the whole file as soon as playback starts, which spends more data than it saves on episodes that are not finished. Measured over one scripted session of seeks and an episode switch (MB newly fetched / MB fetched again, iOS on a simulator, Android on an emulator):
+
+| | Android | iOS |
+|---|---|---|
+| No cache | 14.1 / 20.1 | 72.2 / 59.5 |
+| `LockCachingAudioSource` | 76.8 / 0 | 76.8 / 0 |
+| This cache | 14.3 / 6.2 | 71.7 / 0.1 |
+
+The Android remainder is not requests for stored ranges: every request starts past what is stored. See the note on closed connections below.
+
+| | Android | iOS |
+|---|---|---|
+| Mechanism | Media3 `CacheDataSource` over `SimpleCache` | `AVAssetResourceLoader` delegate with a custom URL scheme |
+| Storage | `<cache>/stream_audio_cache/` (SimpleCache layout) | `Library/Caches/stream_audio_cache/<sha256 of URL>/`: sparse `data` and `meta.plist` with the filled ranges |
+| Eviction | Custom evictor, whole episodes | Same rule over `meta.plist`, every 4 MB written |
+| One stream over the limit | Drops that stream's oldest spans | Stops storing it; playback continues from the network |
+| Failed requests | ExoPlayer's load retry | Resumes from the last delivered byte, up to 4 retries with backoff |
+| `http:` enclosures | Cached under the same cleartext rule as the player | Bypass the cache unless `NSAllowsArbitraryLoads` is set, because `NSURLSession` lacks the media exemption `AVPlayer` has |
+
+Rules shared by both platforms:
+
+- Only bytes the player reads are stored. A range is recorded after its bytes are written, so a crash loses ranges but never claims missing bytes.
+- Each entry remembers an identity from the server: a strong ETag, else Last-Modified, else the total length. A check of the first two bytes runs when a source loads, before the player sees any cached byte, so a replaced file discards its entry cleanly. Offline, or when the check fails, a stored entry is used as is. A check that cannot reach the server is limited to 3 seconds when a stored entry exists.
+- The cache never makes a stream play worse than it does without the cache. A server whose identity changes within one load (dynamic ad insertion per request), or that offers no identity at all, is streamed directly for the rest of the process, and nothing of it is stored. A cache that fails to initialize behaves the same way.
+- A response with a `text/*` content type is never stored and does not affect the entry: it is treated as a temporary failure, because it is usually a captive portal's page.
+- The OS can purge the cache directory at any time. Purged bytes count as not fetched.
+
+`StreamCacheService.sweep` runs on launch and resume from `AppLifecycleObserver`, next to `sweepPlayed`. It removes entries by app-level rules that the native layer cannot judge (finished past the grace period, or with a completed download). It runs there, not when a download completes, because downloads also complete in the background isolate.
+
+Bytes that were sent by the server but not yet read when the player closes a connection are lost, so a seek can still re-fetch a little on Android, where the player keeps connections open and stops reading once its buffer is full.
+
 ## Queue integration
 
 - `QueueService` manages the playback queue (Isar-backed)

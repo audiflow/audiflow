@@ -60,6 +60,7 @@ The queue exists for the complementary reason: once a listener finishes an episo
 - This feature does **not** play audio. Starting, pausing, seeking, background continuation, and interruption handling belong to FR 04 (audio playback). The queue only decides *what* plays next and supplies the next episode; the player consumes it.
 - It does **not** decide play order policy itself — the per-scope play-order cascade that yields the effective order is a separate concern; the queue merely applies the order it is handed.
 - It does **not** parse RSS feeds or discover episodes; it consumes episodes already stored by the feed/subscription features.
+- It does **not** own the streamed-audio cache (FR 04). Cached audio never appears in the download list and does not count as a download, and a download never reuses it: the download fetches its own file, and the episode's cached audio is removed on the next launch or resume after the download completes.
 - Batch "download all" is scoped to station and season/group pages. The podcast detail page, queue-based batch download, and background batch scheduling are out of scope.
 - Schema and config authoring are owned by the external preset editor; this feature only consumes episode data.
 

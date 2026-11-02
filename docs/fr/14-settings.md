@@ -42,6 +42,7 @@ It also serves a secondary audience: audiflow contributors and podcast creators.
 - Hosts general preferences directly: appearance (theme mode, locale, text scale), playback tuning, download policy, feed sync cadence, new-episode notifications, search country, last-selected tab, and privacy/analytics opt-in.
 - Stores some preferences that are changed in place rather than from a settings screen: `showRemainingTime` (default on) records whether the full player's right-hand time label shows remaining time or total duration, and is toggled by tapping that label (FR 04).
 - Provides a Storage & Data screen for cache and database inspection, search-history clearing, OPML import/export, and a guarded full-reset action.
+- The Storage & Data screen's Playback Cache row shows how much of the 250 MB limit the streamed-audio cache (FR 04) uses and clears it after confirmation. An episode loaded in the player keeps its cached audio until the player stops. Downloads are not included or affected. Reset all data clears this cache too.
 - Provides an About screen showing version and build, open-source licenses, feedback, and app-store rating links.
 - Provides a Developer screen that browses all smart playlist presets, links them to their directories in the GitHub repo, and exposes a persisted toggle controlling developer info in episode detail.
 
