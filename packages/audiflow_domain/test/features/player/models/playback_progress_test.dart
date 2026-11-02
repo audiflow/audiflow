@@ -225,5 +225,59 @@ void main() {
         expect(progress.bufferedProgress, 0.0);
       });
     });
+
+    group('knownFraction', () {
+      test('is the progress once a duration is known', () {
+        final progress = PlaybackProgress(
+          position: const Duration(minutes: 1),
+          duration: const Duration(minutes: 4),
+          bufferedPosition: Duration.zero,
+        );
+
+        expect(progress.knownFraction, progress.progress);
+      });
+
+      test('is null while the duration is unknown', () {
+        final progress = PlaybackProgress(
+          position: const Duration(minutes: 1),
+          duration: Duration.zero,
+          bufferedPosition: Duration.zero,
+        );
+
+        expect(progress.knownFraction, isNull);
+      });
+    });
+
+    group('remaining', () {
+      test('is the time left once a duration is known', () {
+        final progress = PlaybackProgress(
+          position: const Duration(minutes: 1),
+          duration: const Duration(minutes: 4),
+          bufferedPosition: Duration.zero,
+        );
+
+        expect(progress.remaining, progress.duration - progress.position);
+      });
+
+      test('never goes negative past the end', () {
+        final progress = PlaybackProgress(
+          position: const Duration(minutes: 5),
+          duration: const Duration(minutes: 4),
+          bufferedPosition: Duration.zero,
+        );
+
+        expect(progress.remaining, Duration.zero);
+      });
+
+      test('is null while the duration is unknown', () {
+        final progress = PlaybackProgress(
+          position: const Duration(minutes: 1),
+          duration: Duration.zero,
+          bufferedPosition: Duration.zero,
+        );
+
+        expect(progress.remaining, isNull);
+      });
+    });
   });
 }

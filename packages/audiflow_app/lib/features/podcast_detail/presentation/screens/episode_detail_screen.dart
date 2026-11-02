@@ -97,6 +97,9 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
     });
   }
 
+  /// Last position read while the player vouched for this episode.
+  PlaybackProgress? _lastLivePosition;
+
   @override
   void dispose() {
     _scrollController.dispose();
@@ -175,23 +178,26 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
     final downloadTask = episodeId != null
         ? ref.watch(episodeDownloadProvider(episodeId)).value
         : null;
-    // Whether this episode is loaded in the player (any state).
-    final isLoadedInPlayer =
+    // While loading, the player may still report the previous episode's
+    // position, so only playing and paused vouch for this episode's.
+    final hasLivePosition =
         enclosureUrl != null &&
         ref
             .watch(audioPlayerControllerProvider)
             .maybeWhen(
               playing: (url) => url == enclosureUrl,
               paused: (url) => url == enclosureUrl,
-              loading: (url) => url == enclosureUrl,
               orElse: () => false,
             );
+    // Whether this episode is loaded in the player (any state).
+    final isLoadedInPlayer = hasLivePosition || isLoading;
 
     return _EpisodeView(
       enclosureUrl: enclosureUrl,
       isPlaying: isPlaying,
       isLoading: isLoading,
       isLoadedInPlayer: isLoadedInPlayer,
+      hasLivePosition: hasLivePosition,
       progress: progress,
       episodeId: episodeId,
       downloadTask: downloadTask,
@@ -310,23 +316,52 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
   }
 
   Widget _buildActions(_EpisodeView view) {
-    final progress = view.progress;
-    final fraction = progress?.progressPercent;
-    final showsLine = view.showsPlayed || ProgressLine.isStarted(fraction);
-    return Column(
-      children: [
-        _buildActionRow(view),
-        if (showsLine)
-          Padding(
-            padding: const EdgeInsets.only(top: Spacing.md),
-            child: EpisodeProgressStatus(
-              fraction: fraction ?? 0,
-              remaining: progress?.remainingDuration,
-              isCompleted: view.showsPlayed,
-            ),
+    return Column(children: [_buildActionRow(view), _buildProgressLine(view)]);
+  }
+
+  /// [EpisodeWithProgress] is only re-read on pause, stop, and completion,
+  /// so while this episode is in the player the line reads the live position.
+  /// Its own Consumer keeps position ticks from rebuilding the whole screen.
+  Widget _buildProgressLine(_EpisodeView view) {
+    return Consumer(
+      builder: (context, ref, _) {
+        final live = _trackLivePosition(view, ref);
+        final saved = view.progress;
+        final fraction = live?.knownFraction ?? saved?.progressPercent;
+        if (!view.showsPlayed && !ProgressLine.isStarted(fraction)) {
+          return const SizedBox.shrink();
+        }
+        return Padding(
+          padding: const EdgeInsets.only(top: Spacing.md),
+          child: EpisodeProgressStatus(
+            fraction: fraction ?? 0,
+            remaining: live?.remaining ?? saved?.remainingDuration,
+            isCompleted: view.showsPlayed,
           ),
-      ],
+        );
+      },
     );
+  }
+
+  /// The position to show instead of the saved one, or null to show saved.
+  ///
+  /// A buffer reports as loading, so the last position is kept through it
+  /// rather than jumping back to the saved one. A first reading of zero is
+  /// not taken: the player reads zero after loading until the start seek
+  /// lands. Once a position has been read, zero is a real rewind.
+  PlaybackProgress? _trackLivePosition(_EpisodeView view, WidgetRef ref) {
+    if (view.showsPlayed || !view.isLoadedInPlayer) {
+      _lastLivePosition = null;
+      return null;
+    }
+    final live = ref.watch(playbackProgressProvider);
+    if (view.hasLivePosition &&
+        live != null &&
+        live.knownFraction != null &&
+        (_lastLivePosition != null || Duration.zero < live.position)) {
+      _lastLivePosition = live;
+    }
+    return _lastLivePosition;
   }
 
   /// Width the queue and download circles take at the row's end,
@@ -749,6 +784,7 @@ class _EpisodeView {
     required this.isPlaying,
     required this.isLoading,
     required this.isLoadedInPlayer,
+    required this.hasLivePosition,
     required this.progress,
     required this.episodeId,
     required this.downloadTask,
@@ -758,6 +794,9 @@ class _EpisodeView {
   final bool isPlaying;
   final bool isLoading;
   final bool isLoadedInPlayer;
+
+  /// Whether the player's position belongs to this episode.
+  final bool hasLivePosition;
   final EpisodeWithProgress? progress;
   final int? episodeId;
   final DownloadTask? downloadTask;

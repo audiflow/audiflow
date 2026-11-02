@@ -6,6 +6,7 @@ import 'package:audiflow_app/features/podcast_detail/presentation/widgets/episod
 import 'package:audiflow_app/features/podcast_detail/presentation/widgets/detail_hero_layout.dart';
 import 'package:audiflow_app/features/podcast_detail/presentation/widgets/episode_detail_actions.dart';
 import 'package:audiflow_app/features/podcast_detail/presentation/widgets/episode_detail_hero.dart';
+import 'package:audiflow_app/features/podcast_detail/presentation/widgets/episode_pill_duration_label.dart';
 import 'package:audiflow_app/features/podcast_detail/presentation/widgets/episode_playback_record.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_app/l10n/app_localizations_en.dart';
@@ -96,6 +97,8 @@ void main() {
     DownloadTask? download,
     DownloadService? downloads,
     Stream<PlaybackHistory?>? histories,
+    PlaybackState? playbackState,
+    Stream<PlaybackProgress>? playback,
   }) {
     return ProviderScope(
       overrides: [
@@ -110,10 +113,14 @@ void main() {
         if (stations != null)
           stationRepositoryProvider.overrideWithValue(stations),
         audioPlayerControllerProvider.overrideWith(
-          () => loaded
+          () => playbackState != null
+              ? _FixedStateAudioPlayerController(playbackState)
+              : loaded
               ? _LoadedAudioPlayerController()
               : _FakeAudioPlayerController(),
         ),
+        if (playback != null)
+          playbackProgressStreamProvider.overrideWith((ref) => playback),
         episodeProgressProvider.overrideWith((ref, url) async => progress),
         episodePlaybackHistoryProvider.overrideWith(
           (ref, episodeId) => histories ?? Stream.value(progress?.history),
@@ -359,6 +366,247 @@ void main() {
       await tester.pumpAndSettle();
 
       check(find.byType(EpisodeProgressStatus).evaluate()).isEmpty();
+    });
+  });
+
+  group('EpisodeDetailScreen live progress', () {
+    late StreamController<PlaybackProgress> playback;
+
+    setUp(() {
+      playback = StreamController<PlaybackProgress>.broadcast();
+      // Not awaited: closing waits on listeners the screen only drops later.
+      addTearDown(() => unawaited(playback.close()));
+    });
+
+    PlaybackProgress tick(int seconds, {int durationSeconds = 1800}) =>
+        PlaybackProgress(
+          position: Duration(seconds: seconds),
+          duration: Duration(seconds: durationSeconds),
+          bufferedPosition: Duration.zero,
+        );
+
+    Future<void> pumpScreen(
+      WidgetTester tester, {
+      required PlaybackState state,
+      EpisodeWithProgress? progress,
+    }) async {
+      await pumpOnPhone(
+        tester,
+        buildTestWidget(
+          progress: progress ?? testInProgressProgress,
+          playbackState: state,
+          playback: playback.stream,
+        ),
+      );
+      // Not pumpAndSettle: the loading pill's spinner never settles.
+      await tester.pump();
+      await tester.pump();
+    }
+
+    Future<void> send(WidgetTester tester, PlaybackProgress value) async {
+      playback.add(value);
+      await tester.pump();
+      await tester.pump();
+    }
+
+    double lineFraction(WidgetTester tester) => tester
+        .widget<EpisodeProgressStatus>(find.byType(EpisodeProgressStatus))
+        .fraction;
+
+    Duration? lineRemaining(WidgetTester tester) => tester
+        .widget<EpisodeProgressStatus>(find.byType(EpisodeProgressStatus))
+        .remaining;
+
+    testWidgets('follows the position while this episode plays', (
+      tester,
+    ) async {
+      await pumpScreen(
+        tester,
+        state: const PlaybackState.playing(episodeUrl: testAudioUrl),
+      );
+
+      final first = tick(900);
+      await send(tester, first);
+      check(lineFraction(tester)).equals(first.knownFraction!);
+      check(lineRemaining(tester)).equals(first.remaining);
+
+      final second = tick(1200);
+      await send(tester, second);
+      check(lineFraction(tester)).equals(second.knownFraction!);
+      check(
+        find
+            .text(
+              l10n.episodePillRemaining(
+                episodePillDurationLabel(second.remaining!, l10n),
+              ),
+            )
+            .evaluate(),
+      ).length.equals(1);
+    });
+
+    testWidgets('shows the line once a first play starts moving', (
+      tester,
+    ) async {
+      await pumpScreen(
+        tester,
+        state: const PlaybackState.playing(episodeUrl: testAudioUrl),
+        progress: testEpisodeWithProgress,
+      );
+      check(find.byType(EpisodeProgressStatus).evaluate()).isEmpty();
+
+      final value = tick(60);
+      await send(tester, value);
+
+      check(lineFraction(tester)).equals(value.knownFraction!);
+    });
+
+    testWidgets('keeps the live position while paused', (tester) async {
+      await pumpScreen(
+        tester,
+        state: const PlaybackState.paused(episodeUrl: testAudioUrl),
+      );
+
+      final value = tick(1200);
+      await send(tester, value);
+
+      check(lineFraction(tester)).equals(value.knownFraction!);
+    });
+
+    testWidgets('ignores the position of another episode', (tester) async {
+      await pumpScreen(
+        tester,
+        state: const PlaybackState.playing(
+          episodeUrl: 'https://example.com/other.mp3',
+        ),
+      );
+
+      await send(tester, tick(1200));
+
+      check(
+        lineFraction(tester),
+      ).equals(testInProgressProgress.progressPercent!);
+    });
+
+    testWidgets('ignores the previous position while this episode loads', (
+      tester,
+    ) async {
+      await pumpScreen(
+        tester,
+        state: const PlaybackState.loading(episodeUrl: testAudioUrl),
+      );
+
+      await send(tester, tick(1200));
+
+      check(
+        lineFraction(tester),
+      ).equals(testInProgressProgress.progressPercent!);
+    });
+
+    testWidgets('keeps the last position while this episode buffers', (
+      tester,
+    ) async {
+      await pumpScreen(
+        tester,
+        state: const PlaybackState.playing(episodeUrl: testAudioUrl),
+      );
+      final value = tick(1200);
+      await send(tester, value);
+
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(EpisodeDetailScreen)),
+      );
+      (container.read(audioPlayerControllerProvider.notifier)
+              as _FixedStateAudioPlayerController)
+          .set(const PlaybackState.loading(episodeUrl: testAudioUrl));
+      await tester.pump();
+
+      check(lineFraction(tester)).equals(value.knownFraction!);
+      check(lineRemaining(tester)).equals(value.remaining);
+    });
+
+    testWidgets('keeps the saved position until the start seek lands', (
+      tester,
+    ) async {
+      await pumpScreen(
+        tester,
+        state: const PlaybackState.playing(episodeUrl: testAudioUrl),
+      );
+
+      await send(tester, tick(0));
+
+      check(
+        lineFraction(tester),
+      ).equals(testInProgressProgress.progressPercent!);
+      check(
+        lineRemaining(tester),
+      ).equals(testInProgressProgress.remainingDuration);
+    });
+
+    testWidgets('a rewind to the start while paused moves the line', (
+      tester,
+    ) async {
+      await pumpScreen(
+        tester,
+        state: const PlaybackState.paused(episodeUrl: testAudioUrl),
+      );
+      await send(tester, tick(1200));
+
+      await send(tester, tick(0));
+
+      check(find.byType(EpisodeProgressStatus).evaluate()).isEmpty();
+    });
+
+    testWidgets('falls back to the saved position until a duration is known', (
+      tester,
+    ) async {
+      await pumpScreen(
+        tester,
+        state: const PlaybackState.playing(episodeUrl: testAudioUrl),
+      );
+
+      await send(tester, tick(5, durationSeconds: 0));
+
+      check(
+        lineFraction(tester),
+      ).equals(testInProgressProgress.progressPercent!);
+      check(
+        lineRemaining(tester),
+      ).equals(testInProgressProgress.remainingDuration);
+    });
+
+    testWidgets('a paused finished listen keeps the played mark', (
+      tester,
+    ) async {
+      await pumpScreen(
+        tester,
+        state: const PlaybackState.paused(episodeUrl: testAudioUrl),
+        progress: testCompletedProgress,
+      );
+
+      await send(tester, tick(600));
+
+      check(find.text(l10n.episodePillCompleted).evaluate()).length.equals(1);
+    });
+
+    testWidgets('a position tick rebuilds the line, not the screen', (
+      tester,
+    ) async {
+      var screenBuilds = 0;
+      debugOnRebuildDirtyWidget = (element, _) {
+        if (element.widget is EpisodeDetailScreen) screenBuilds++;
+      };
+      addTearDown(() => debugOnRebuildDirtyWidget = null);
+      await pumpScreen(
+        tester,
+        state: const PlaybackState.playing(episodeUrl: testAudioUrl),
+      );
+      final builds = screenBuilds;
+
+      final value = tick(1200);
+      await send(tester, value);
+
+      check(lineFraction(tester)).equals(value.knownFraction!);
+      check(screenBuilds).equals(builds);
     });
   });
 
@@ -758,6 +1006,17 @@ class _RecordingStationRepository extends Fake implements StationRepository {
   @override
   Future<void> markPlayed(int id, {required DateTime at}) async =>
       played.add(id);
+}
+
+class _FixedStateAudioPlayerController extends _FakeAudioPlayerController {
+  _FixedStateAudioPlayerController(this._state);
+
+  final PlaybackState _state;
+
+  @override
+  PlaybackState build() => _state;
+
+  void set(PlaybackState next) => state = next;
 }
 
 class _LoadedAudioPlayerController extends _FakeAudioPlayerController {

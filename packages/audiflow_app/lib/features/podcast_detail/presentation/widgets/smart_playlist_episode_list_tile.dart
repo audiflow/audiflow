@@ -124,8 +124,8 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
     final livePlayback = isCurrentEpisode
         ? ref.watch(playbackProgressProvider)
         : null;
-    final liveFraction = _liveFraction(livePlayback);
-    final liveRemaining = _liveRemaining(livePlayback);
+    final liveFraction = livePlayback?.knownFraction;
+    final liveRemaining = livePlayback?.remaining;
 
     return EpisodeCard(
       title: displayTitle ?? episode.title,
@@ -230,19 +230,6 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
       return episodePillDurationLabel(Duration(milliseconds: totalMs), l10n);
     }
     return '';
-  }
-
-  double? _liveFraction(PlaybackProgress? p) {
-    if (p == null) return null;
-    if (p.duration.inMilliseconds <= 0) return null;
-    return p.progress;
-  }
-
-  Duration? _liveRemaining(PlaybackProgress? p) {
-    if (p == null) return null;
-    if (p.duration.inMilliseconds <= 0) return null;
-    final remaining = p.duration - p.position;
-    return remaining.isNegative ? Duration.zero : remaining;
   }
 
   String? _buildDateLabel(AppLocalizations l10n) {
