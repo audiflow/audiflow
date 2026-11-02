@@ -1,5 +1,6 @@
 import 'package:audio_service/audio_service.dart' hide PlaybackState;
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../car/services/car_providers.dart';
@@ -80,8 +81,11 @@ Future<AudiflowAudioHandler> audioHandler(Ref ref) async {
     handler.updateDuration(progress.duration);
   });
 
-  // Keep the speed and skip icons in step with the settings.
-  watchNowPlayingControlValues(ref, handler.updateMediaControlValues);
+  // Keep Android Auto's speed and skip icons in step with the settings. iOS
+  // draws neither: CarPlay gets these values over its own channel.
+  if (defaultTargetPlatform == TargetPlatform.android) {
+    watchNowPlayingControlValues(ref, handler.updateMediaControlValues);
+  }
 
   // Invalidate cached episode progress / list views when the player
   // marks an episode as completed, so already-rendered list screens

@@ -25,4 +25,13 @@ void main() {
     ).readAsStringSync();
     check(keep).contains('@drawable/ic_car_*');
   });
+
+  // An unlistened provider pauses its subscriptions, so with only a read the
+  // speed and skip icons would stop updating when Android Auto launches the
+  // app in the background (the same bug as d731044d for CarPlay).
+  test('main listens to the audio handler rather than only reading it', () {
+    check(
+      File('lib/main.dart').readAsStringSync(),
+    ).contains('container.listen(audioHandlerProvider');
+  });
 }

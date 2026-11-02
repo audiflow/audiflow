@@ -13,8 +13,9 @@ typedef NowPlayingControlValues = ({
   int skipBackwardSeconds,
 });
 
-// The values with a drawable: the choices in the playback settings. A stored
-// value outside them falls back to a plain icon. `tool/generate_car_icons.py`
+// The values with a drawable, which must cover `SkipIntervalChoices` (a test
+// checks). Kept separate so a value without a drawable falls back to a plain
+// icon rather than failing the name lookup. `tool/generate_car_icons.py`
 // generates the drawables and `res/raw/keep.xml` keeps them, because
 // audio_service looks them up by name.
 const _skipForwardIconSeconds = {10, 15, 30, 45, 60};
@@ -24,10 +25,8 @@ const _skipBackwardIconSeconds = {10, 15, 30};
 const _genericSpeedIcon = 'drawable/ic_car_speed';
 
 String _speedIcon(double speed) {
-  // Tolerance as in [nextCarSpeed]: a stored speed may not be the exact double.
-  const epsilon = 1e-9;
   for (final step in carSpeeds) {
-    if ((step - speed).abs() < epsilon) {
+    if ((step - speed).abs() < carSpeedEpsilon) {
       final name = step.toStringAsFixed(1).replaceAll('.', '_');
       return '${_genericSpeedIcon}_$name';
     }
@@ -46,7 +45,8 @@ MediaControl carSpeedControl(double speed) => MediaControl.custom(
 /// Fast forward, with an icon showing [seconds] when one exists.
 ///
 /// Stays a standard action: audio_service turns it into a custom action on
-/// Android 13+ itself, and into a notification button below that.
+/// Android 13+ itself, and into a notification button below that, where
+/// Android Auto draws its own icon instead of this one.
 MediaControl carFastForwardControl(int seconds) =>
     _skipForwardIconSeconds.contains(seconds)
     ? MediaControl.fastForward.copyWith(
@@ -64,17 +64,16 @@ MediaControl carRewindControl(int seconds) =>
 
 /// The control set the media session publishes.
 ///
-/// [values] is null until the settings have been read, which only the first
-/// state, before any session is active, can see. [includeSpeed] is for
-/// Android: CarPlay has its own rate button.
+/// [values] stays null on iOS, where the system draws the buttons and
+/// CarPlay has its own rate button, and on Android until the settings have
+/// been read, before any session is active.
 ///
 /// The system fills its limited slots in this order, so speed comes after
 /// the skip buttons, leaving the phone's media controls as they were, and
-/// before stop, which is the first to give way on Android Auto.
+/// before stop, so that stop is what gives way when the slots run out.
 List<MediaControl> nowPlayingMediaControls({
   required bool playing,
   required NowPlayingControlValues? values,
-  required bool includeSpeed,
 }) {
   return [
     MediaControl.skipToPrevious,
@@ -88,7 +87,7 @@ List<MediaControl> nowPlayingMediaControls({
     else
       carFastForwardControl(values.skipForwardSeconds),
     MediaControl.skipToNext,
-    if (values != null && includeSpeed) carSpeedControl(values.speed),
+    if (values != null) carSpeedControl(values.speed),
     MediaControl.stop,
   ];
 }

@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:audio_service/audio_service.dart' as audio_service;
 import 'package:audio_session/audio_session.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:logger/logger.dart';
@@ -138,6 +137,11 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
   /// produced.
   void _pipePlaybackState() {
     _player.playbackEventStream.map(_transformEvent).listen(playbackState.add);
+    // just_audio emits the event for a speed change before the speed it
+    // reports has changed, so that event still carries the old rate, and the
+    // session would extrapolate the position with it. The replayed current
+    // value is not a change.
+    _player.speedStream.skip(1).listen((_) => _republishPlaybackState());
     // `episode_complete` analytics emit lives in
     // `AudioPlayerController._playerStateListener`'s
     // `ProcessingState.completed` branch — owned by the controller so
@@ -192,7 +196,6 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
       controls: nowPlayingMediaControls(
         playing: playing,
         values: _controlValues,
-        includeSpeed: defaultTargetPlatform == TargetPlatform.android,
       ),
       systemActions: const {
         audio_service.MediaAction.seek,
@@ -351,11 +354,15 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
   /// Republishes the controls for [values], as a speed or skip change on
   /// the phone produces no playback event of its own that would show them.
   ///
-  /// Keeps the published `playing` flag: it can differ from the player's
-  /// during an interruption.
   void updateMediaControlValues(NowPlayingControlValues values) {
     if (_controlValues == values) return;
     _controlValues = values;
+    _republishPlaybackState();
+  }
+
+  /// Publishes the current player values. Keeps the published `playing`
+  /// flag: it can differ from the player's during an interruption.
+  void _republishPlaybackState() {
     final published = playbackState.value;
     playbackState.add(
       _buildPlaybackState(

@@ -287,12 +287,19 @@ without a drawable falls back to the generic speedometer or the plain arrow.
 `audioHandlerProvider` passes the speed and skip intervals to the handler
 through `watchNowPlayingControlValues`, the same source as CarPlay's
 `nowPlayingControls`, and the handler republishes the playback state, as
-those changes produce no player event that would show them. The speed button
-is the `cycleSpeed` custom action, which `AudiflowAudioHandler.customAction`
-sends to `CarPlayback.cycleSpeed`. It is Android only, and sits after
-fast-forward and before stop: Android 13+ gives custom actions limited slots
-in order, and below 13 audio_service leaves custom actions out of the
-notification, so the compact indices still count only the native buttons.
+those changes produce no player event that would show them. The handler also
+republishes on the player's `speedStream`, because just_audio emits the event
+for a speed change before the speed it reports has changed. `main.dart` listens
+to `audioHandlerProvider` rather than only reading it, so these subscriptions
+stay active when the app runs without a screen. The speed button is the
+`cycleSpeed` custom action, which `AudiflowAudioHandler.customAction` sends to
+`CarPlayback.cycleSpeed`. It is Android only (the watcher runs only there, and
+no values means no button), and sits after fast-forward and before stop:
+Android 13+ gives custom actions limited slots in order, and below 13
+audio_service leaves custom actions out of the notification, so the compact
+indices still count only the native buttons. Below 13 audio_service also keeps
+rewind and fast-forward as native actions, so the numbered icons reach only
+the notification, not Android Auto.
 
 Row artwork must be a `content:` URI. `ContentProviderArtworkResolver`
 prepares it with a second `FileNowPlayingArtworkPreparer` (320 px, 300

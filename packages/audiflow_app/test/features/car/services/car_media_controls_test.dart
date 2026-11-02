@@ -61,28 +61,21 @@ void main() {
   });
 
   group('skip controls', () {
-    test('has a distinct existing icon per selectable forward interval', () {
-      const selectable = [10, 15, 30, 45, 60];
-      final icons = [
-        for (final s in selectable) carFastForwardControl(s).androidIcon,
-      ];
+    void checkIcons(List<int> choices, MediaControl Function(int) control) {
+      final icons = [for (final s in choices) control(s).androidIcon];
 
-      check(icons.toSet().length).equals(selectable.length);
+      check(icons.toSet().length).equals(choices.length);
       for (final icon in icons) {
         check(because: icon, _drawableFile(icon).existsSync()).isTrue();
       }
+    }
+
+    test('has a distinct existing icon per forward choice in settings', () {
+      checkIcons(SkipIntervalChoices.forwardSeconds, carFastForwardControl);
     });
 
-    test('has a distinct existing icon per selectable backward interval', () {
-      const selectable = [10, 15, 30];
-      final icons = [
-        for (final s in selectable) carRewindControl(s).androidIcon,
-      ];
-
-      check(icons.toSet().length).equals(selectable.length);
-      for (final icon in icons) {
-        check(because: icon, _drawableFile(icon).existsSync()).isTrue();
-      }
+    test('has a distinct existing icon per backward choice in settings', () {
+      checkIcons(SkipIntervalChoices.backwardSeconds, carRewindControl);
     });
 
     test('falls back to the plain arrows for a value without an icon', () {
@@ -101,15 +94,9 @@ void main() {
       for (final control in controls) control.action,
     ];
 
-    test('puts speed before stop, which is the last to give way', () {
+    test('puts speed before stop, so stop gives way first', () {
       check(
-        actions(
-          nowPlayingMediaControls(
-            playing: true,
-            values: _values,
-            includeSpeed: true,
-          ),
-        ),
+        actions(nowPlayingMediaControls(playing: true, values: _values)),
       ).deepEquals([
         MediaAction.skipToPrevious,
         MediaAction.rewind,
@@ -122,22 +109,14 @@ void main() {
     });
 
     test('shows play while paused, with the speed still on it', () {
-      final controls = nowPlayingMediaControls(
-        playing: false,
-        values: _values,
-        includeSpeed: true,
-      );
+      final controls = nowPlayingMediaControls(playing: false, values: _values);
 
       check(actions(controls)).contains(MediaAction.play);
       check(controls).contains(carSpeedControl(_values.speed));
     });
 
     test('uses the icons for the given values', () {
-      final controls = nowPlayingMediaControls(
-        playing: true,
-        values: _values,
-        includeSpeed: true,
-      );
+      final controls = nowPlayingMediaControls(playing: true, values: _values);
 
       check(controls)
         ..contains(carFastForwardControl(_values.skipForwardSeconds))
@@ -145,24 +124,8 @@ void main() {
         ..contains(carSpeedControl(_values.speed));
     });
 
-    test('leaves the speed out where the car has its own button', () {
-      check(
-        actions(
-          nowPlayingMediaControls(
-            playing: true,
-            values: _values,
-            includeSpeed: false,
-          ),
-        ),
-      ).not((it) => it.contains(MediaAction.custom));
-    });
-
-    test('publishes the plain controls until the values are known', () {
-      final controls = nowPlayingMediaControls(
-        playing: true,
-        values: null,
-        includeSpeed: true,
-      );
+    test('publishes the plain controls without values, as on iOS', () {
+      final controls = nowPlayingMediaControls(playing: true, values: null);
 
       check(controls)
         ..contains(MediaControl.rewind)

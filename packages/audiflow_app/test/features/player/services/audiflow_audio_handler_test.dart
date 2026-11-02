@@ -3,11 +3,11 @@ import 'package:audiflow_app/features/car/services/car_media_controls.dart';
 import 'package:audiflow_app/features/player/services/audiflow_audio_handler.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:just_audio/just_audio.dart' as just_audio;
+import 'package:rxdart/rxdart.dart';
 
 import '../../../helpers/player_stubs.dart';
 
@@ -29,8 +29,15 @@ class _FakeAudioPlayer extends Fake implements just_audio.AudioPlayer {
   @override
   Duration get bufferedPosition => Duration.zero;
 
+  final _speed = BehaviorSubject<double>.seeded(1.0);
+
+  void changeSpeed(double value) => _speed.add(value);
+
   @override
-  double get speed => 1.0;
+  Stream<double> get speedStream => _speed.stream;
+
+  @override
+  double get speed => _speed.value;
 }
 
 class _SpeedRecordingPlayer extends StubAudioPlayerController {
@@ -63,6 +70,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   late _SpeedRecordingPlayer player;
+  late _FakeAudioPlayer audioPlayer;
 
   // audio_session talks to its plugin from the handler's constructor.
   setUp(() {
@@ -74,16 +82,14 @@ void main() {
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(MethodChannel(channel), (_) async => null);
     }
-    debugDefaultTargetPlatformOverride = TargetPlatform.android;
     player = _SpeedRecordingPlayer();
+    audioPlayer = _FakeAudioPlayer();
   });
-
-  tearDown(() => debugDefaultTargetPlatformOverride = null);
 
   AudiflowAudioHandler handler({EffectiveAudioSettings? resolved}) {
     final container = ProviderContainer(
       overrides: [
-        audioPlayerProvider.overrideWithValue(_FakeAudioPlayer()),
+        audioPlayerProvider.overrideWithValue(audioPlayer),
         audioPlayerControllerProvider.overrideWith(() => player),
         nowPlayingAudioSettingsProvider.overrideWithValue(resolved),
       ],
@@ -169,15 +175,14 @@ void main() {
       check(state.queueIndex).equals(3);
       check(state.controls).contains(audio_service.MediaControl.play);
     });
+  });
 
-    test('adds no speed button on iOS, where CarPlay has its own', () {
-      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+  test('publishes the rate the player actually changed to', () async {
+    final subject = handler();
 
-      final subject = handler()..updateMediaControlValues(values);
+    audioPlayer.changeSpeed(1.5);
+    await pumpEventQueue();
 
-      check(
-        subject.playbackState.value.controls.map((c) => c.action),
-      ).not((it) => it.contains(audio_service.MediaAction.custom));
-    });
+    check(subject.playbackState.value.speed).equals(1.5);
   });
 }

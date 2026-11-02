@@ -38,8 +38,11 @@ void main() {
       ],
     );
     addTearDown(container.dispose);
-    container.read(
+    // Listened, as main.dart listens to the audio handler: a bare read would
+    // pause the subscriptions, and these tests must see that.
+    container.listen(
       Provider<void>((ref) => watchNowPlayingControlValues(ref, seen.add)),
+      (_, _) {},
     );
   });
 
@@ -49,21 +52,23 @@ void main() {
     ]);
   });
 
-  test('reports a speed change, as one made on the phone', () {
+  test('reports a speed change, as one made on the phone', () async {
     container.read(_speedProvider.notifier).set(1.5);
-    container.read(nowPlayingSpeedProvider);
+    await container.pump();
 
     check(
       seen.last,
     ).equals((speed: 1.5, skipForwardSeconds: 30, skipBackwardSeconds: 15));
   });
 
-  test('reports a skip change, which the settings screen invalidates', () {
-    forwardSeconds = 45;
-    container
-      ..invalidate(appSettingsRepositoryProvider)
-      ..read(appSettingsRepositoryProvider);
+  test(
+    'reports a skip change, which the settings screen invalidates',
+    () async {
+      forwardSeconds = 45;
+      container.invalidate(appSettingsRepositoryProvider);
+      await container.pump();
 
-    check(seen.last.skipForwardSeconds).equals(45);
-  });
+      check(seen.last.skipForwardSeconds).equals(45);
+    },
+  );
 }

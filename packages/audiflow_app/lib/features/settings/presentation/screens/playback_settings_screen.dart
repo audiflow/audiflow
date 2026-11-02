@@ -1,5 +1,9 @@
 import 'package:audiflow_core/audiflow_core.dart'
-    show AutoPlayOrder, DuckInterruptionBehavior, PlaybackSpeedScale;
+    show
+        AutoPlayOrder,
+        DuckInterruptionBehavior,
+        PlaybackSpeedScale,
+        SkipIntervalChoices;
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart'
     show HapticSelection, HapticToggle, HapticsScope, PlaybackSpeedSlider;
@@ -141,12 +145,9 @@ class _SkipForwardTile extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: SegmentedButton<int>(
-              segments: const [
-                ButtonSegment(value: 10, label: Text('10')),
-                ButtonSegment(value: 15, label: Text('15')),
-                ButtonSegment(value: 30, label: Text('30')),
-                ButtonSegment(value: 45, label: Text('45')),
-                ButtonSegment(value: 60, label: Text('60')),
+              segments: [
+                for (final choice in SkipIntervalChoices.forwardSeconds)
+                  ButtonSegment(value: choice, label: Text('$choice')),
               ],
               selected: {seconds},
               onSelectionChanged: HapticsScope.of(
@@ -183,10 +184,9 @@ class _SkipBackwardTile extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: SegmentedButton<int>(
-              segments: const [
-                ButtonSegment(value: 10, label: Text('10')),
-                ButtonSegment(value: 15, label: Text('15')),
-                ButtonSegment(value: 30, label: Text('30')),
+              segments: [
+                for (final choice in SkipIntervalChoices.backwardSeconds)
+                  ButtonSegment(value: choice, label: Text('$choice')),
               ],
               selected: {seconds},
               onSelectionChanged: HapticsScope.of(
