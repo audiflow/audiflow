@@ -1,10 +1,14 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:audio_service/audio_service.dart' as audio_service;
 import 'package:audiflow_app/features/car/services/car_artwork_resolver.dart';
 import 'package:audiflow_app/features/car/services/car_media_controls.dart';
 import 'package:audiflow_app/features/car/services/car_providers.dart';
 import 'package:audiflow_app/features/player/services/audiflow_audio_handler.dart';
+import 'package:audiflow_app/features/player/services/session_queue_channel.dart';
+import 'package:audiflow_app/features/settings/presentation/controllers/locale_controller.dart';
+import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
 import 'package:fake_async/fake_async.dart';
@@ -46,6 +50,13 @@ class _FakeAudioPlayer extends Fake implements just_audio.AudioPlayer {
   double get speed => _speed.value;
 }
 
+class _EnglishLocale extends LocaleController {
+  static const locale = Locale('en');
+
+  @override
+  Locale? build() => locale;
+}
+
 class _FakeArtworkResolver implements CarArtworkResolver {
   _FakeArtworkResolver(this.uri);
 
@@ -56,6 +67,16 @@ class _FakeArtworkResolver implements CarArtworkResolver {
   Future<Uri?> resolve(String artworkUrl) async {
     requests.add(artworkUrl);
     return uri;
+  }
+}
+
+class _RecordingTitleChannel extends Fake implements SessionQueueChannel {
+  final titles = <String>[];
+
+  @override
+  Future<bool> setTitle(String title) async {
+    titles.add(title);
+    return true;
   }
 }
 
@@ -242,14 +263,18 @@ void main() {
 
     late _FakeQueueService queueService;
     late ProviderContainer container;
+    late _RecordingTitleChannel titleChannel;
 
     AudiflowAudioHandler started(
       FakeAsync async, {
       CarArtworkResolver? resolver,
     }) {
       queueService = _FakeQueueService();
+      titleChannel = _RecordingTitleChannel();
       container = ProviderContainer(
         overrides: [
+          sessionQueueChannelProvider.overrideWithValue(titleChannel),
+          localeControllerProvider.overrideWith(_EnglishLocale.new),
           audioPlayerProvider.overrideWithValue(audioPlayer),
           audioPlayerControllerProvider.overrideWith(() => player),
           nowPlayingAudioSettingsProvider.overrideWithValue(null),
@@ -280,6 +305,16 @@ void main() {
           subject.queue.value.map((item) => item.title),
         ).deepEquals([nowPlaying.episodeTitle, queued.episode.title]);
         check(subject.playbackState.value.queueIndex).equals(0);
+      });
+    });
+
+    test('titles the queue in the app language', () {
+      fakeAsync((async) {
+        started(async);
+
+        check(titleChannel.titles).deepEquals([
+          lookupAppLocalizations(_EnglishLocale.locale).carUpNextTab,
+        ]);
       });
     });
 

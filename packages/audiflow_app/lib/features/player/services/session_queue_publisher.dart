@@ -22,6 +22,7 @@ class SessionQueuePublisher {
   SessionQueuePublisher({
     required this._readQueue,
     required this._readNowPlaying,
+    required this._readTitle,
     required this._publish,
     required this._playQueueItem,
     required this._continueNowPlaying,
@@ -35,7 +36,9 @@ class SessionQueuePublisher {
   /// Null while the queue is loading or failed: the last good list stays.
   final PlaybackQueue? Function() _readQueue;
   final NowPlayingInfo? Function() _readNowPlaying;
-  final void Function(List<MediaItem> items, int? activeIndex) _publish;
+  final String Function() _readTitle;
+  final void Function(List<MediaItem> items, int? activeIndex, String title)
+  _publish;
   final Future<bool> Function(int queueItemId) _playQueueItem;
   final Future<bool> Function(int? episodeId) _continueNowPlaying;
   final Future<Uri?> Function(String artworkUrl) _resolveArtwork;
@@ -70,7 +73,7 @@ class SessionQueuePublisher {
     markChanged();
   }
 
-  /// Records that the queue or the now-playing episode changed.
+  /// Records that the queue, the now-playing episode or the title changed.
   void markChanged() => _changes.add(const {CarSection.upNext});
 
   /// Sends the list at the next change even if it looks the same: a stopped
@@ -113,7 +116,9 @@ class SessionQueuePublisher {
 
   void _publishIfChanged() {
     final items = [for (final entry in _entries) _toMediaItem(entry)];
+    final title = _readTitle();
     final snapshot = [
+      title,
       _activeIndex,
       for (final item in items) (item.id, item.title, item.artist, item.artUri),
     ];
@@ -121,7 +126,7 @@ class SessionQueuePublisher {
       return;
     }
     _published = snapshot;
-    _publish(items, _activeIndex);
+    _publish(items, _activeIndex, title);
   }
 
   Future<void> _fillArtwork(Set<String> urls, int generation) async {

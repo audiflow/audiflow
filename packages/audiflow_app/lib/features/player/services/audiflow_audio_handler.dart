@@ -14,9 +14,11 @@ import '../../car/services/car_media_controls.dart';
 import '../../car/services/car_playback.dart';
 import '../../car/services/car_providers.dart';
 import '../../monitoring/services/sentry_diagnostics.dart';
+import '../../settings/presentation/controllers/locale_controller.dart';
 import 'audio_interruption_handler.dart';
 import 'now_playing_artwork_provider.dart';
 import 'now_playing_media_item_sync.dart';
+import 'session_queue_channel.dart';
 import 'session_queue_publisher.dart';
 
 final _log = Logger(printer: PrefixPrinter(PrettyPrinter(methodCount: 0)));
@@ -522,6 +524,7 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
     final publisher = SessionQueuePublisher(
       readQueue: () => _ref.read(playbackQueueProvider).value,
       readNowPlaying: () => _ref.read(nowPlayingControllerProvider),
+      readTitle: () => carAppLocalizations(_ref).carUpNextTab,
       publish: _publishSessionQueue,
       playQueueItem: _carPlayback.playQueueItem,
       continueNowPlaying: _continueNowPlaying,
@@ -549,6 +552,7 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
         ),
         (_, _) => publisher.markChanged(),
       )
+      ..listen(localeControllerProvider, (_, _) => publisher.markChanged())
       // A browse can arrive while this handler is still being set up.
       ..listen(carBrowsedProvider, (_, browsed) {
         if (browsed) publisher.enableArtwork();
@@ -560,8 +564,11 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
   void _publishSessionQueue(
     List<audio_service.MediaItem> items,
     int? activeIndex,
+    String title,
   ) {
     queue.add(items);
+    // Sent with every list: a stopped service loses it with its session.
+    unawaited(_ref.read(sessionQueueChannelProvider).setTitle(title));
     playbackState.add(
       _buildPlaybackState(
         playing: playbackState.value.playing,

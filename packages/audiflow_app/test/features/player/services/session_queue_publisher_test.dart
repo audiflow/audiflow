@@ -45,8 +45,9 @@ class _Harness {
     publisher = SessionQueuePublisher(
       readQueue: () => queue,
       readNowPlaying: () => nowPlaying,
-      publish: (items, activeIndex) =>
-          publishes.add((items: items, activeIndex: activeIndex)),
+      readTitle: () => title,
+      publish: (items, activeIndex, title) =>
+          publishes.add((items: items, activeIndex: activeIndex, title: title)),
       playQueueItem: (id) async {
         queueItemPlays.add(id);
         return queueItemPlayable;
@@ -69,8 +70,10 @@ class _Harness {
   late final SessionQueuePublisher publisher;
   PlaybackQueue? queue = const PlaybackQueue();
   NowPlayingInfo? nowPlaying;
+  String title = 'Up Next';
   bool queueItemPlayable = true;
-  final publishes = <({List<MediaItem> items, int? activeIndex})>[];
+  final publishes =
+      <({List<MediaItem> items, int? activeIndex, String title})>[];
   final queueItemPlays = <int>[];
   final continues = <int?>[];
   final artworkRequests = <String>[];
@@ -169,6 +172,21 @@ void main() {
 
         check(h.publishes.length).equals(2);
         check(h.publishes.last.items.single.title).equals(retitled.title);
+      });
+    });
+
+    test('sends the title with the list, and a new title alone', () {
+      fakeAsync((async) {
+        final h = _Harness()..queue = PlaybackQueue(adhocItems: [_queued(1)]);
+        h.flush(async);
+        check(h.publishes.single.title).equals(h.title);
+
+        h
+          ..title = '次に再生'
+          ..flush(async);
+
+        check(h.publishes.length).equals(2);
+        check(h.publishes.last.title).equals(h.title);
       });
     });
 
