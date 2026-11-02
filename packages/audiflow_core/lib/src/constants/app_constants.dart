@@ -25,6 +25,10 @@ class AppConstants {
   /// an accidental "mark as played".
   static const Duration playedDownloadGracePeriod = Duration(hours: 24);
 
+  /// Upper limit of the streamed-audio cache, about four hours of a typical
+  /// 128 kbps episode.
+  static const int streamCacheMaxBytes = 250 * 1024 * 1024;
+
   /// Auto-downloads a podcast may receive without being played before its
   /// auto-download pauses. Counting downloads rather than days adapts to
   /// each feed's release cadence.
