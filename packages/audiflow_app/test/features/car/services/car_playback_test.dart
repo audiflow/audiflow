@@ -334,6 +334,42 @@ void main() {
       });
     });
 
+    group('continueEpisode', () {
+      const url = 'https://example.com/6.mp3';
+
+      test('resumes the paused episode', () async {
+        player.hold(6, const PlaybackState.paused(episodeUrl: url));
+
+        check(await playback.continueEpisode(6)).isTrue();
+
+        check(player.resumed).equals(1);
+        check(player.urls).isEmpty();
+      });
+
+      test('leaves the playing episode alone', () async {
+        player.hold(6, const PlaybackState.playing(episodeUrl: url));
+
+        check(await playback.continueEpisode(6)).isTrue();
+
+        check(player.resumed).equals(0);
+        check(player.urls).isEmpty();
+      });
+
+      test('starts a restored episode without touching the queue', () async {
+        check(await playback.continueEpisode(6)).isTrue();
+
+        check(player.urls).deepEquals([url]);
+        check(queue.cleared).equals(0);
+        check(queue.adhocCalls).isEmpty();
+      });
+
+      test('reports an episode that is gone', () async {
+        check(await playback.continueEpisode(99)).isFalse();
+
+        check(player.urls).isEmpty();
+      });
+    });
+
     test('a missing episode changes nothing', () async {
       check(await playback.playPodcastEpisode(99)).isFalse();
       check(await playback.playEpisode(99)).isFalse();

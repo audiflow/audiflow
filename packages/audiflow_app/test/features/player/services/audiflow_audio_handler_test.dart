@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:audio_service/audio_service.dart' as audio_service;
 import 'package:audiflow_app/features/car/services/car_media_controls.dart';
 import 'package:audiflow_app/features/player/services/audiflow_audio_handler.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -12,9 +15,10 @@ import 'package:rxdart/rxdart.dart';
 import '../../../helpers/player_stubs.dart';
 
 class _FakeAudioPlayer extends Fake implements just_audio.AudioPlayer {
+  final events = StreamController<just_audio.PlaybackEvent>.broadcast();
+
   @override
-  Stream<just_audio.PlaybackEvent> get playbackEventStream =>
-      const Stream.empty();
+  Stream<just_audio.PlaybackEvent> get playbackEventStream => events.stream;
 
   @override
   bool get playing => true;
@@ -40,11 +44,25 @@ class _FakeAudioPlayer extends Fake implements just_audio.AudioPlayer {
   double get speed => _speed.value;
 }
 
+class _FakeQueueService extends Fake implements QueueService {
+  final skippedTo = <int>[];
+
+  @override
+  Future<Episode?> skipToItem(int queueItemId) async {
+    skippedTo.add(queueItemId);
+    return null;
+  }
+}
+
 class _SpeedRecordingPlayer extends StubAudioPlayerController {
   _SpeedRecordingPlayer() : super(const PlaybackState.idle());
 
   final calls = <({double speed, AudioSettingsScope scope})>[];
   Object? failure;
+  var resumed = 0;
+
+  @override
+  Future<void> resume() async => resumed++;
 
   @override
   Future<void> setSpeed(
@@ -183,6 +201,117 @@ void main() {
       check(state.queueIndex).equals(3);
       check(state.controls).contains(audio_service.MediaControl.play);
     });
+  });
+
+  group('session queue', () {
+    const flushDelay = Duration(milliseconds: 500);
+    final queued = QueueItemWithEpisode(
+      queueItem: QueueItem()
+        ..id = 11
+        ..episodeId = 2
+        ..position = 0
+        ..addedAt = DateTime(2026),
+      episode: Episode()
+        ..id = 2
+        ..podcastId = 1
+        ..guid = 'g'
+        ..title = 'Up next'
+        ..audioUrl = 'https://example.com/2.mp3',
+    );
+    const nowPlaying = NowPlayingInfo(
+      episodeUrl: 'https://example.com/1.mp3',
+      episodeTitle: 'Playing',
+      podcastTitle: 'Podcast',
+    );
+
+    late _FakeQueueService queueService;
+
+    AudiflowAudioHandler started(FakeAsync async) {
+      queueService = _FakeQueueService();
+      final container = ProviderContainer(
+        overrides: [
+          audioPlayerProvider.overrideWithValue(audioPlayer),
+          audioPlayerControllerProvider.overrideWith(() => player),
+          nowPlayingAudioSettingsProvider.overrideWithValue(null),
+          nowPlayingControllerProvider.overrideWith(
+            () => StubNowPlayingController(nowPlaying),
+          ),
+          playbackQueueProvider.overrideWith(
+            (ref) => Stream.value(PlaybackQueue(manualItems: [queued])),
+          ),
+          queueServiceProvider.overrideWithValue(queueService),
+        ],
+      );
+      addTearDown(container.dispose);
+      final subject = container.read(_handlerProvider)..startSessionQueue();
+      async
+        ..flushMicrotasks()
+        ..elapse(flushDelay);
+      return subject;
+    }
+
+    test('publishes the rows and marks the playing one', () {
+      fakeAsync((async) {
+        final subject = started(async);
+
+        check(
+          subject.queue.value.map((item) => item.title),
+        ).deepEquals([nowPlaying.episodeTitle, queued.episode.title]);
+        check(subject.playbackState.value.queueIndex).equals(0);
+      });
+    });
+
+    test('keeps the queue index when the player reports an event', () {
+      fakeAsync((async) {
+        final subject = started(async);
+
+        audioPlayer.events.add(just_audio.PlaybackEvent(currentIndex: 5));
+        async.flushMicrotasks();
+
+        check(subject.playbackState.value.queueIndex).equals(0);
+      });
+    });
+
+    test('a tap on an up-next row jumps the queue to it', () {
+      fakeAsync((async) {
+        final subject = started(async);
+
+        unawaited(subject.skipToQueueItem(1));
+        async.flushMicrotasks();
+
+        check(queueService.skippedTo).deepEquals([queued.queueItem.id]);
+      });
+    });
+
+    test('a tap on the playing row resumes it', () {
+      fakeAsync((async) {
+        final subject = started(async);
+
+        unawaited(subject.skipToQueueItem(0));
+        async.flushMicrotasks();
+
+        check(player.resumed).equals(1);
+        check(queueService.skippedTo).isEmpty();
+      });
+    });
+  });
+
+  test('leaves the queue alone until the session queue starts', () async {
+    final subject = handler();
+
+    await subject.skipToQueueItem(0);
+
+    check(subject.queue.value).isEmpty();
+    check(player.resumed).equals(0);
+  });
+
+  test('never reports the player index as the queue index', () async {
+    final subject = handler();
+
+    audioPlayer.events.add(just_audio.PlaybackEvent(currentIndex: 5));
+    await pumpEventQueue();
+
+    check(subject.playbackState.value.queueIndex).isNull();
   });
 
   test('publishes the rate the player actually changed to', () async {
