@@ -525,6 +525,10 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
       publish: _publishSessionQueue,
       playQueueItem: _carPlayback.playQueueItem,
       continueNowPlaying: _continueNowPlaying,
+      resolveArtwork: (url) async {
+        final resolver = await _ref.read(carArtworkResolverProvider.future);
+        return resolver.resolve(url);
+      },
       logger: _log,
     );
     _sessionQueue = publisher;
@@ -545,6 +549,10 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
         ),
         (_, _) => publisher.markChanged(),
       )
+      // A browse can arrive while this handler is still being set up.
+      ..listen(carBrowsedProvider, (_, browsed) {
+        if (browsed) publisher.enableArtwork();
+      }, fireImmediately: true)
       ..onDispose(publisher.dispose);
     publisher.markChanged();
   }

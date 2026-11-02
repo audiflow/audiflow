@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audio_service/audio_service.dart';
 import 'package:audiflow_app/features/player/services/session_queue_publisher.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
@@ -32,6 +34,12 @@ NowPlayingInfo _nowPlaying(Episode episode) => NowPlayingInfo(
   episode: episode,
 );
 
+Uri _artUri(String url) => Uri.parse('content://art/${url.hashCode}');
+
+QueueItemWithEpisode _withArt(int queueItemId) => _queued(
+  queueItemId,
+).copyWith(artworkUrl: 'https://example.com/$queueItemId');
+
 class _Harness {
   _Harness() {
     publisher = SessionQueuePublisher(
@@ -47,6 +55,12 @@ class _Harness {
         continues.add(id);
         return true;
       },
+      resolveArtwork: (url) {
+        artworkRequests.add(url);
+        final completer = Completer<Uri?>();
+        artworkCompleters.add((url: url, completer: completer));
+        return completer.future;
+      },
       logger: Logger(level: Level.off),
       delay: _delay,
     );
@@ -59,6 +73,17 @@ class _Harness {
   final publishes = <({List<MediaItem> items, int? activeIndex})>[];
   final queueItemPlays = <int>[];
   final continues = <int?>[];
+  final artworkRequests = <String>[];
+  final artworkCompleters = <({String url, Completer<Uri?> completer})>[];
+
+  /// Answers every open image request and lets the results land.
+  void finishArtwork(FakeAsync async, {Uri? Function(String url)? answer}) {
+    for (final (:url, :completer) in artworkCompleters) {
+      completer.complete((answer ?? _artUri)(url));
+    }
+    artworkCompleters.clear();
+    async.flushMicrotasks();
+  }
 
   /// Reports a change and lets the batcher flush it.
   void flush(FakeAsync async) {
@@ -169,6 +194,119 @@ void main() {
           ..flush(async);
 
         check(h.publishes.length).equals(1);
+      });
+    });
+  });
+
+  group('artwork', () {
+    test('fetches nothing before a head unit browses', () {
+      fakeAsync((async) {
+        final h = _Harness()..queue = PlaybackQueue(adhocItems: [_withArt(1)]);
+
+        h.flush(async);
+
+        check(h.artworkRequests).isEmpty();
+        check(h.publishes.single.items.single.artUri).isNull();
+      });
+    });
+
+    test('sends text first, then fills images in once', () {
+      fakeAsync((async) {
+        final queued = _withArt(1);
+        final h = _Harness()..queue = PlaybackQueue(adhocItems: [queued]);
+
+        h.publisher.enableArtwork();
+        async.elapse(_delay);
+
+        check(h.publishes.single.items.single.artUri).isNull();
+        check(h.artworkRequests).deepEquals([queued.artworkUrl!]);
+
+        h.finishArtwork(async);
+
+        check(h.publishes.length).equals(2);
+        check(
+          h.publishes.last.items.single.artUri,
+        ).equals(_artUri(queued.artworkUrl!));
+      });
+    });
+
+    test('does not publish or retry when images fail', () {
+      fakeAsync((async) {
+        final h = _Harness()..queue = PlaybackQueue(adhocItems: [_withArt(1)]);
+
+        h.publisher.enableArtwork();
+        async.elapse(_delay);
+        h.finishArtwork(async, answer: (_) => null);
+        async.elapse(const Duration(minutes: 1));
+
+        check(h.publishes.length).equals(1);
+        check(h.artworkRequests.length).equals(1);
+      });
+    });
+
+    test('keeps the list when an image request throws', () {
+      fakeAsync((async) {
+        final h = _Harness()..queue = PlaybackQueue(adhocItems: [_withArt(1)]);
+
+        h.publisher.enableArtwork();
+        async.elapse(_delay);
+        h.artworkCompleters.removeLast().completer.completeError(
+          StateError('offline'),
+        );
+        async.flushMicrotasks();
+
+        check(h.publishes.length).equals(1);
+      });
+    });
+
+    test('does not fetch an image twice for overlapping changes', () {
+      fakeAsync((async) {
+        final queued = _withArt(1);
+        final h = _Harness()..queue = PlaybackQueue(adhocItems: [queued]);
+        h.publisher.enableArtwork();
+        async.elapse(_delay);
+
+        h
+          ..queue = PlaybackQueue(adhocItems: [queued, _queued(2)])
+          ..flush(async);
+
+        check(h.artworkRequests).deepEquals([queued.artworkUrl!]);
+      });
+    });
+
+    test('drops images that arrive for a replaced list', () {
+      fakeAsync((async) {
+        final first = _withArt(1);
+        final h = _Harness()..queue = PlaybackQueue(adhocItems: [first]);
+        h.publisher.enableArtwork();
+        async.elapse(_delay);
+        h
+          ..queue = const PlaybackQueue()
+          ..flush(async);
+        final publishesBefore = h.publishes.length;
+
+        h.finishArtwork(async);
+
+        check(h.publishes.length).equals(publishesBefore);
+      });
+    });
+
+    test('keeps known images on later publishes', () {
+      fakeAsync((async) {
+        final queued = _withArt(1);
+        final h = _Harness()..queue = PlaybackQueue(adhocItems: [queued]);
+        h.publisher.enableArtwork();
+        async.elapse(_delay);
+        h.finishArtwork(async);
+
+        h
+          ..queue = PlaybackQueue(adhocItems: [queued, _queued(2)])
+          ..flush(async);
+
+        check(
+          h.publishes.last.items.first.artUri,
+        ).equals(_artUri(queued.artworkUrl!));
+        check(h.artworkRequests.length).equals(1);
       });
     });
   });

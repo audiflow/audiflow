@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:audio_service/audio_service.dart' as audio_service;
+import 'package:audiflow_app/features/car/services/car_artwork_resolver.dart';
 import 'package:audiflow_app/features/car/services/car_media_controls.dart';
+import 'package:audiflow_app/features/car/services/car_providers.dart';
 import 'package:audiflow_app/features/player/services/audiflow_audio_handler.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
@@ -42,6 +44,19 @@ class _FakeAudioPlayer extends Fake implements just_audio.AudioPlayer {
 
   @override
   double get speed => _speed.value;
+}
+
+class _FakeArtworkResolver implements CarArtworkResolver {
+  _FakeArtworkResolver(this.uri);
+
+  final Uri uri;
+  final requests = <String>[];
+
+  @override
+  Future<Uri?> resolve(String artworkUrl) async {
+    requests.add(artworkUrl);
+    return uri;
+  }
 }
 
 class _FakeQueueService extends Fake implements QueueService {
@@ -217,6 +232,7 @@ void main() {
         ..guid = 'g'
         ..title = 'Up next'
         ..audioUrl = 'https://example.com/2.mp3',
+      artworkUrl: 'https://example.com/2.jpg',
     );
     const nowPlaying = NowPlayingInfo(
       episodeUrl: 'https://example.com/1.mp3',
@@ -225,10 +241,14 @@ void main() {
     );
 
     late _FakeQueueService queueService;
+    late ProviderContainer container;
 
-    AudiflowAudioHandler started(FakeAsync async) {
+    AudiflowAudioHandler started(
+      FakeAsync async, {
+      CarArtworkResolver? resolver,
+    }) {
       queueService = _FakeQueueService();
-      final container = ProviderContainer(
+      container = ProviderContainer(
         overrides: [
           audioPlayerProvider.overrideWithValue(audioPlayer),
           audioPlayerControllerProvider.overrideWith(() => player),
@@ -240,6 +260,8 @@ void main() {
             (ref) => Stream.value(PlaybackQueue(manualItems: [queued])),
           ),
           queueServiceProvider.overrideWithValue(queueService),
+          if (resolver != null)
+            carArtworkResolverProvider.overrideWith((ref) async => resolver),
         ],
       );
       addTearDown(container.dispose);
@@ -258,6 +280,23 @@ void main() {
           subject.queue.value.map((item) => item.title),
         ).deepEquals([nowPlaying.episodeTitle, queued.episode.title]);
         check(subject.playbackState.value.queueIndex).equals(0);
+      });
+    });
+
+    test('fetches images only after a head unit browses', () {
+      fakeAsync((async) {
+        final artUri = Uri.parse('content://art/1');
+        final resolver = _FakeArtworkResolver(artUri);
+        final subject = started(async, resolver: resolver);
+        check(resolver.requests).isEmpty();
+
+        container.read(carBrowsedProvider.notifier).mark();
+        async
+          ..elapse(flushDelay)
+          ..flushMicrotasks();
+
+        check(resolver.requests).deepEquals([queued.artworkUrl!]);
+        check(subject.queue.value.last.artUri).equals(artUri);
       });
     });
 

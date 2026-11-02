@@ -149,13 +149,13 @@ class CarBrowserLink {
   Future<CarMediaBrowser> get browser => _subscription.read();
 }
 
-/// Android Auto's media browser. Created on the first browse request.
+/// The artwork resolver shared by browse rows and the session queue, so they
+/// share one cache and one limit on concurrent downloads.
 @Riverpod(keepAlive: true)
-Future<CarMediaBrowser> carMediaBrowser(Ref ref) async {
+Future<CarArtworkResolver> carArtworkResolver(Ref ref) async {
   final authority = await artworkProviderAuthority();
-  // Read, not watched: a rebuild would close the change streams that
-  // audio_service keeps listening to for the life of the process.
-  final artwork = ContentProviderArtworkResolver(
+  // Read, not watched: a rebuild would drop the running-download count.
+  return ContentProviderArtworkResolver(
     preparer: buildArtworkPreparer(
       dio: ref.read(dioProvider),
       cacheDir: ref.read(cacheDirProvider),
@@ -166,6 +166,27 @@ Future<CarMediaBrowser> carMediaBrowser(Ref ref) async {
     ),
     authority: authority,
   );
+}
+
+/// Whether a head unit has browsed since the process started.
+///
+/// Android has no signal for a head unit connecting. Phones that never browse
+/// must not download images nothing shows, so this gates session queue
+/// artwork.
+@Riverpod(keepAlive: true)
+class CarBrowsed extends _$CarBrowsed {
+  @override
+  bool build() => false;
+
+  void mark() => state = true;
+}
+
+/// Android Auto's media browser. Created on the first browse request.
+@Riverpod(keepAlive: true)
+Future<CarMediaBrowser> carMediaBrowser(Ref ref) async {
+  // Read, not watched: a rebuild would close the change streams that
+  // audio_service keeps listening to for the life of the process.
+  final artwork = await ref.read(carArtworkResolverProvider.future);
 
   final watchers = <ProviderSubscription<Object?>>[];
   late final CarMediaBrowser browser;
@@ -184,7 +205,10 @@ Future<CarMediaBrowser> carMediaBrowser(Ref ref) async {
       };
     },
     logger: ref.read(namedLoggerProvider('AndroidAuto')),
-    onFirstBrowse: () => watchers.addAll(watchCarListChanges(ref, changes.add)),
+    onFirstBrowse: () {
+      ref.read(carBrowsedProvider.notifier).mark();
+      watchers.addAll(watchCarListChanges(ref, changes.add));
+    },
   );
   ref.onDispose(() {
     for (final watcher in watchers) {
