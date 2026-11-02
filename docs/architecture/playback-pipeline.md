@@ -81,6 +81,9 @@ URL is published as a fallback, which is the pre-#453 behavior.
 | `nowPlayingControllerProvider` | keepAlive Notifier | Episode metadata for mini player and player screen |
 | `playbackHistoryServiceProvider` | keepAlive | Records completed episodes |
 | `sleepTimerControllerProvider` | keepAlive Notifier | Sleep timer state, countdown, and episode/chapter tracking |
+| `carArtworkResolverProvider` | keepAlive Future | Android Auto artwork resolver shared by browse rows and the session queue |
+| `carBrowsedProvider` | keepAlive Notifier | Whether a head unit has browsed since the process started; gates session queue artwork |
+| `sessionQueueChannelProvider` | keepAlive | Sets the media session's queue title over `audiflow/session_queue` |
 
 ### Layer 4: Presentation (audiflow_app + audiflow_ui)
 
@@ -267,7 +270,9 @@ FR 19. `AndroidManifest.xml` declares the car application
 `MediaBrowserService` the app already runs. `AudiflowAudioHandler` forwards
 `getChildren`, `subscribeToChildren` and `playFromMediaId` to
 `CarMediaBrowser`, which builds `MediaItem`s from the same `CarCatalog` as
-CarPlay. Media ids: the tabs by `CarSection` name, `podcast/<id>`
+CarPlay. The tabs are In Progress, Library, Stations and Downloads. The
+`upNext` id is no longer one of them but still answers, for a host holding it
+from before. Media ids: the sections by `CarSection` name, `podcast/<id>`
 (browsable), `queue/<queueItemId>`, `episode/<episodeId>` and
 `podcastEpisode/<episodeId>` (playable; a podcast list row, which queues the
 episodes after it), `station/<id>` (browsable) and
@@ -309,7 +314,9 @@ nothing. The compact indices are left to audio_service in this
 case, as the number of native buttons differs by Android version. Without
 values (iOS, and Android before the first settings read) the set is unchanged.
 
-Row artwork must be a `content:` URI. `ContentProviderArtworkResolver`
+Row artwork is served as a `content:` URI, which gives the head unit a
+downscaled image and does not depend on how it treats remote URLs.
+`ContentProviderArtworkResolver`
 prepares it with a second `FileNowPlayingArtworkPreparer` (320 px, 300
 entries) under `<cache>/car_artwork/`, and `CarArtworkProvider` (Kotlin,
 exported, read-only) serves files from that folder and from
@@ -326,6 +333,41 @@ one listener on the browser provider for its whole life (`CarBrowserLink`):
 a bare `read` per request would leave the provider unlistened afterwards, and
 Riverpod would then pause the database watches behind those list changes, so
 an open list would only update on the next browse request.
+
+### Session queue
+
+`SessionQueuePublisher` publishes the queue on the media session
+(`AudiflowAudioHandler.startSessionQueue`, Android only: the iOS plugin ignores
+`queue`, and CarPlay has its own list). Android Auto draws its queue button
+from it. `buildSessionQueue` gives the playing episode first, then the up-next
+items, up to `CarCatalog.itemLimit` rows. With nothing up next the list is
+empty, so the button does not open a list of only the playing episode. Changes
+are coalesced by `CarChangeBatcher` and compared with the last snapshot, so the
+Binder call happens only when the list differs. `stop` calls `forgetPublished`,
+because a stopped service loses the session's list and an unchanged list would
+otherwise never be sent again.
+
+audio_service uses a row's position in the list as its queue id, and
+`onSkipToQueueItem` arrives as `skipToQueueItem(index)`. The handler therefore
+resolves the index against the list it published, and republishing keeps
+`queueIndex` in `_transformEvent` so the active row stays marked. Tapping an
+up-next row goes through `CarPlayback.playQueueItem`; tapping the playing row
+goes through `CarPlayback.continueEpisode`, which keeps the queue. A failure is
+reported to Sentry, as a head unit has nowhere to show it.
+
+Row artwork uses the shared `carArtworkResolverProvider`, so the rows reuse the
+browse rows' cache and download limit. Android has no signal for a head unit
+connecting, so `carBrowsedProvider` is set on the first browse request and
+gates the downloads; the phone-only path never prepares artwork. Rows are
+published without artwork at first and republished when it arrives; a generation
+guard drops results for a list that has been replaced.
+
+audio_service has no API for the queue title, which Android Auto shows on its
+queue button. `SessionQueueChannel.kt` (channel `audiflow/session_queue`)
+reaches `AudioService.instance`'s private `mediaSession` by reflection and calls
+`setQueueTitle`; `proguard-rules.pro` keeps those member names for minified
+builds. A failure leaves the host's own label on the button. Remove the channel if
+the plugin gains the API.
 
 ## When to update
 

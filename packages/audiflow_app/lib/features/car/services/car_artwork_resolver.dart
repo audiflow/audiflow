@@ -24,10 +24,10 @@ abstract interface class CarArtworkResolver {
 
 /// Serves artwork through `CarArtworkProvider`.
 ///
-/// Android Auto loads row artwork only from `content:` URIs (it cannot
-/// fetch remote URLs), so the artwork is downloaded and downscaled into
-/// [carArtworkCacheFolder] first, and the provider serves those files by
-/// name. The provider never touches the network itself.
+/// A `content:` URI gives the head unit a downscaled image and does not
+/// depend on how it treats remote URLs, so the artwork is downloaded and
+/// downscaled into [carArtworkCacheFolder] first, and the provider serves
+/// those files by name. The provider never touches the network itself.
 class ContentProviderArtworkResolver implements CarArtworkResolver {
   ContentProviderArtworkResolver({
     required this._preparer,
