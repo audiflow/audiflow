@@ -98,11 +98,9 @@ void main() {
       check(
         actions(nowPlayingMediaControls(playing: true, values: _values)),
       ).deepEquals([
-        MediaAction.skipToPrevious,
         MediaAction.rewind,
         MediaAction.pause,
         MediaAction.fastForward,
-        MediaAction.skipToNext,
         MediaAction.custom,
         MediaAction.stop,
       ]);
@@ -131,6 +129,40 @@ void main() {
         ..contains(MediaControl.rewind)
         ..contains(MediaControl.fastForward);
       check(actions(controls)).not((it) => it.contains(MediaAction.custom));
+    });
+
+    test(
+      'leaves out previous and next, which only repeat the skip buttons',
+      () {
+        check(actions(nowPlayingMediaControls(playing: true, values: _values)))
+          ..not((it) => it.contains(MediaAction.skipToPrevious))
+          ..not((it) => it.contains(MediaAction.skipToNext));
+      },
+    );
+
+    test('keeps previous and next without values, as on iOS', () {
+      check(actions(nowPlayingMediaControls(playing: true, values: null)))
+        ..contains(MediaAction.skipToPrevious)
+        ..contains(MediaAction.skipToNext);
+    });
+  });
+
+  group('nowPlayingCompactActionIndices', () {
+    test('points at previous, play and next without values', () {
+      final controls = nowPlayingMediaControls(playing: true, values: null);
+      final indices = nowPlayingCompactActionIndices(values: null);
+
+      check([for (final i in indices!) controls[i].action]).deepEquals([
+        MediaAction.skipToPrevious,
+        MediaAction.pause,
+        MediaAction.skipToNext,
+      ]);
+    });
+
+    test('leaves the choice to the plugin with values', () {
+      // The native buttons differ per Android version; the plugin's default
+      // of "the first three" gives rewind, play and forward below 13.
+      check(nowPlayingCompactActionIndices(values: _values)).isNull();
     });
   });
 }

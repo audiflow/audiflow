@@ -160,6 +160,14 @@ void main() {
         ..contains(carRewindControl(15));
     });
 
+    test('publishes compact indices matching the new controls', () {
+      final subject = handler()..updateMediaControlValues(values);
+
+      check(
+        subject.playbackState.value.androidCompactActionIndices,
+      ).equals(nowPlayingCompactActionIndices(values: values));
+    });
+
     test('keeps the published playing flag', () {
       // iOS interruptions publish `paused` while just_audio still says it is
       // playing; a settings change must not undo that.

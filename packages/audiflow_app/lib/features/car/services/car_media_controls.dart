@@ -69,25 +69,45 @@ MediaControl carRewindControl(int seconds) =>
 /// been read, before any session is active.
 ///
 /// The system fills its limited slots in this order, so speed comes after
-/// the skip buttons, leaving the phone's media controls as they were, and
-/// before stop, so that stop is what gives way when the slots run out.
+/// the skip buttons and before stop, so that stop is what gives way when the
+/// slots run out.
+///
+/// With [values], previous and next are left out: the handler maps them to
+/// the same skips as rewind and fast forward, and publishing them would only
+/// add two more buttons doing the same thing to Android Auto's row. Hardware
+/// next and previous keys do not depend on them, as audio_service forwards
+/// those keys regardless of the published controls.
 List<MediaControl> nowPlayingMediaControls({
   required bool playing,
   required NowPlayingControlValues? values,
 }) {
+  if (values == null) {
+    return [
+      MediaControl.skipToPrevious,
+      MediaControl.rewind,
+      if (playing) MediaControl.pause else MediaControl.play,
+      MediaControl.fastForward,
+      MediaControl.skipToNext,
+      MediaControl.stop,
+    ];
+  }
   return [
-    MediaControl.skipToPrevious,
-    if (values == null)
-      MediaControl.rewind
-    else
-      carRewindControl(values.skipBackwardSeconds),
+    carRewindControl(values.skipBackwardSeconds),
     if (playing) MediaControl.pause else MediaControl.play,
-    if (values == null)
-      MediaControl.fastForward
-    else
-      carFastForwardControl(values.skipForwardSeconds),
-    MediaControl.skipToNext,
-    if (values != null) carSpeedControl(values.speed),
+    carFastForwardControl(values.skipForwardSeconds),
+    carSpeedControl(values.speed),
     MediaControl.stop,
   ];
 }
+
+/// Which of [nowPlayingMediaControls] the collapsed notification shows.
+///
+/// Null with [values] lets audio_service pick the first three native buttons:
+/// rewind, play and fast forward below Android 13, and just play from 13 on,
+/// where the other controls are custom actions. A fixed list could point past
+/// the end of the shorter native list.
+List<int>? nowPlayingCompactActionIndices({
+  required NowPlayingControlValues? values,
+}) => values == null ? _plainCompactActionIndices : null;
+
+const _plainCompactActionIndices = [0, 2, 4];

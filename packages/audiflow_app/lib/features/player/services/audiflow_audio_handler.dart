@@ -202,7 +202,9 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
         audio_service.MediaAction.seekForward,
         audio_service.MediaAction.seekBackward,
       },
-      androidCompactActionIndices: const [0, 2, 4],
+      androidCompactActionIndices: nowPlayingCompactActionIndices(
+        values: _controlValues,
+      ),
       processingState: switch (_player.processingState) {
         ProcessingState.idle => audio_service.AudioProcessingState.idle,
         ProcessingState.loading => audio_service.AudioProcessingState.loading,
