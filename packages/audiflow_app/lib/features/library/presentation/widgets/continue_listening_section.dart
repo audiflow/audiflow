@@ -116,7 +116,13 @@ class _ContinueListeningCard extends StatelessWidget {
             fraction: episode.progressPercent,
             child: SizedBox.expand(
               child: Padding(
-                padding: const EdgeInsets.all(Spacing.sm + Spacing.xxs),
+                // Artwork and labels are centered in the height, so the
+                // tighter vertical inset moves nothing; it only gives labels
+                // room for fonts that lay out taller than nominal.
+                padding: const EdgeInsets.symmetric(
+                  horizontal: Spacing.sm + Spacing.xxs,
+                  vertical: Spacing.sm,
+                ),
                 child: Row(
                   children: [
                     _artwork(colors),
@@ -162,13 +168,18 @@ class _ContinueListeningCard extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          episode.episode.title,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: AppTextStyles.meta.copyWith(
-            color: colors.ink,
-            fontWeight: FontWeight.w600,
+        // The card height is fixed but line heights depend on the fonts the
+        // title falls back to, so the title yields space rather than pushing
+        // the remaining time out of the card.
+        Flexible(
+          child: Text(
+            episode.episode.title,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: AppTextStyles.meta.copyWith(
+              color: colors.ink,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
         if (remaining != null)

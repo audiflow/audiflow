@@ -29,6 +29,25 @@ Subscription _sub(int id, String title) {
     ..subscribedAt = DateTime(2026, 1, id);
 }
 
+/// Grows only label-sized text, leaving the card's 80px height formula at
+/// its baseline.
+///
+/// Stands in for real fonts whose lines lay out taller than
+/// `fontSize * height` (mixed fallback fonts on a line): the test font's
+/// metrics are fixed, so this is the way to get taller labels in a card
+/// that has not grown.
+class _TallLabelTextScaler extends TextScaler {
+  const _TallLabelTextScaler(this.factor);
+
+  final double factor;
+
+  @override
+  double scale(double fontSize) => fontSize < 14 ? fontSize * factor : fontSize;
+
+  @override
+  double get textScaleFactor => 1;
+}
+
 void main() {
   group('LibraryScreen', () {
     Widget buildTestWidget(ProviderContainer container) {
@@ -310,6 +329,7 @@ void main() {
       List<EpisodeWithProgress> inProgress = const [],
       List<Station> stations = const [],
       double textScale = 1,
+      TextScaler? textScaler,
       GoRouter? router,
     }) async {
       final container = ProviderContainer(
@@ -332,7 +352,7 @@ void main() {
       Widget scaled(BuildContext context, Widget? child) => MediaQuery(
         data: MediaQuery.of(
           context,
-        ).copyWith(textScaler: TextScaler.linear(textScale)),
+        ).copyWith(textScaler: textScaler ?? TextScaler.linear(textScale)),
         child: child!,
       );
       await tester.pumpWidget(
@@ -504,6 +524,57 @@ void main() {
         check(find.text(longTitle).evaluate()).length.equals(1);
       });
     }
+
+    group('continue listening cards with labels taller than nominal', () {
+      final longTitle = List.filled(12, 'Long title').join(' ');
+
+      Future<void> pumpTallLabels(WidgetTester tester, double factor) => pump(
+        tester,
+        inProgress: [inProgressEpisode(title: longTitle)],
+        textScaler: _TallLabelTextScaler(factor),
+      );
+
+      testWidgets('labels 62px tall fit unclipped', (tester) async {
+        // 2 * ceil-ed title lines (42px) + 2px gap + caption (18px).
+        await pumpTallLabels(tester, 1.07);
+        check(tester.takeException()).isNull();
+        check(tester.getSize(find.text(longTitle)).height).equals(42);
+      });
+
+      testWidgets('even taller labels shorten the title, keeping the time', (
+        tester,
+      ) async {
+        await pumpTallLabels(tester, 1.2);
+        check(tester.takeException()).isNull();
+        final card = tester.getRect(
+          find
+              .ancestor(
+                of: find.text(longTitle),
+                matching: find.byType(BottomEdgeProgress),
+              )
+              .first,
+        );
+        final time = tester.getRect(find.textContaining('left'));
+        check(time.bottom).isLessOrEqual(card.bottom);
+      });
+
+      testWidgets('default text keeps the 80px card and centered artwork', (
+        tester,
+      ) async {
+        await pump(tester, inProgress: [inProgressEpisode(title: longTitle)]);
+        final card = find.ancestor(
+          of: find.text(longTitle),
+          matching: find.byType(BottomEdgeProgress),
+        );
+        final rect = tester.getRect(card);
+        check(rect.height).equals(80);
+        final artwork = tester.getRect(
+          find.descendant(of: card, matching: find.byType(ArtworkImage)),
+        );
+        check(artwork.top - rect.top).equals(12);
+        check(artwork.left - rect.left).equals(10);
+      });
+    });
 
     void useScreen(WidgetTester tester, Size size) {
       tester.view.physicalSize = size;
