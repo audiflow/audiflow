@@ -18,4 +18,11 @@ void main() {
       check(keep).contains('@drawable/audio_service_*');
     },
   );
+
+  test('keeps the in-car control icons through resource shrinking', () {
+    final keep = File(
+      'android/app/src/main/res/raw/keep.xml',
+    ).readAsStringSync();
+    check(keep).contains('@drawable/ic_car_*');
+  });
 }
