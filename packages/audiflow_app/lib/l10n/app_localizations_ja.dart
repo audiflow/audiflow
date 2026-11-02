@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -988,6 +987,15 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get opmlFileUnreadable => 'このファイルを読み込めませんでした';
+
+  @override
+  String get opmlImportReadingFile => 'ファイルを読み込んでいます...';
+
+  @override
+  String get opmlPickerFileNotListed => 'ファイルが見つかりませんでしたか?';
+
+  @override
+  String get opmlPickerShowAllFiles => 'すべてのファイルを表示';
 
   @override
   String get opmlNoFeedsFound => 'ファイルにポッドキャストのフィードが見つかりませんでした';
