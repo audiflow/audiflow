@@ -542,6 +542,20 @@ void main() {
       ).equals(testInProgressProgress.remainingDuration);
     });
 
+    testWidgets('a rewind to the start while paused moves the line', (
+      tester,
+    ) async {
+      await pumpScreen(
+        tester,
+        state: const PlaybackState.paused(episodeUrl: testAudioUrl),
+      );
+      await send(tester, tick(1200));
+
+      await send(tester, tick(0));
+
+      check(find.byType(EpisodeProgressStatus).evaluate()).isEmpty();
+    });
+
     testWidgets('falls back to the saved position until a duration is known', (
       tester,
     ) async {

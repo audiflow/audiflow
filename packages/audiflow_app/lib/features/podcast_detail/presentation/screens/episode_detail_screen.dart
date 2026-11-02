@@ -346,8 +346,9 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
   /// The position to show instead of the saved one, or null to show saved.
   ///
   /// A buffer reports as loading, so the last position is kept through it
-  /// rather than jumping back to the saved one. A position of zero is not
-  /// taken: the player reads zero after loading until the start seek lands.
+  /// rather than jumping back to the saved one. A first reading of zero is
+  /// not taken: the player reads zero after loading until the start seek
+  /// lands. Once a position has been read, zero is a real rewind.
   PlaybackProgress? _trackLivePosition(_EpisodeView view, WidgetRef ref) {
     if (view.showsPlayed || !view.isLoadedInPlayer) {
       _lastLivePosition = null;
@@ -357,7 +358,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
     if (view.hasLivePosition &&
         live != null &&
         live.knownFraction != null &&
-        Duration.zero < live.position) {
+        (_lastLivePosition != null || Duration.zero < live.position)) {
       _lastLivePosition = live;
     }
     return _lastLivePosition;
