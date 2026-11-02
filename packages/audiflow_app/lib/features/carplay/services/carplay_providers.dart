@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../l10n/app_localizations.dart';
+import '../../car/services/car_media_controls.dart';
 import '../../car/services/car_playback.dart';
 import '../../car/services/car_providers.dart';
 import '../../settings/presentation/controllers/locale_controller.dart';
@@ -69,30 +70,25 @@ CarPlayBridge carPlayBridge(Ref ref) {
 /// Keeps the native Now Playing speed and skip intervals in step with the
 /// app settings.
 ///
-/// The settings screen signals a skip change by invalidating
-/// [appSettingsRepositoryProvider]. Also resent whenever playback starts:
-/// audio_service rewrites its own skip intervals each time it re-enables
-/// the remote commands, which happens when a session starts.
+/// Also resent whenever playback starts: audio_service rewrites its own skip
+/// intervals each time it re-enables the remote commands, which happens when
+/// a session starts.
 void _sendNowPlayingControls(Ref ref, CarPlayBridge bridge) {
-  void send() {
-    final settings = ref.read(appSettingsRepositoryProvider);
+  void send(NowPlayingControlValues values) {
     unawaited(
       bridge.sendNowPlayingControls(
-        speed: ref.read(nowPlayingSpeedProvider),
-        skipForwardSeconds: settings.getSkipForwardSeconds(),
-        skipBackwardSeconds: settings.getSkipBackwardSeconds(),
+        speed: values.speed,
+        skipForwardSeconds: values.skipForwardSeconds,
+        skipBackwardSeconds: values.skipBackwardSeconds,
       ),
     );
   }
 
-  ref
-    ..listen(nowPlayingSpeedProvider, (_, _) => send())
-    ..listen(appSettingsRepositoryProvider, (_, _) => send())
-    ..listen(
-      audioPlayerControllerProvider.select((s) => s is PlaybackPlaying),
-      (_, playing) {
-        if (playing) send();
-      },
-    );
-  send();
+  ref.listen(
+    audioPlayerControllerProvider.select((s) => s is PlaybackPlaying),
+    (_, playing) {
+      if (playing) send(readNowPlayingControlValues(ref));
+    },
+  );
+  watchNowPlayingControlValues(ref, send);
 }
