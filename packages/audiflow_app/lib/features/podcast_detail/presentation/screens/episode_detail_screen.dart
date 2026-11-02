@@ -97,6 +97,9 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
     });
   }
 
+  /// Last position read while the player vouched for this episode.
+  PlaybackProgress? _lastLivePosition;
+
   @override
   void dispose() {
     _scrollController.dispose();
@@ -175,24 +178,19 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
     final downloadTask = episodeId != null
         ? ref.watch(episodeDownloadProvider(episodeId)).value
         : null;
-    final playback = ref.watch(audioPlayerControllerProvider);
-    // Whether this episode is loaded in the player (any state).
-    final isLoadedInPlayer =
-        enclosureUrl != null &&
-        playback.maybeWhen(
-          playing: (url) => url == enclosureUrl,
-          paused: (url) => url == enclosureUrl,
-          loading: (url) => url == enclosureUrl,
-          orElse: () => false,
-        );
-    // While loading, the player still reports the previous episode's position.
+    // While loading, the player may still report the previous episode's
+    // position, so only playing and paused vouch for this episode's.
     final hasLivePosition =
         enclosureUrl != null &&
-        playback.maybeWhen(
-          playing: (url) => url == enclosureUrl,
-          paused: (url) => url == enclosureUrl,
-          orElse: () => false,
-        );
+        ref
+            .watch(audioPlayerControllerProvider)
+            .maybeWhen(
+              playing: (url) => url == enclosureUrl,
+              paused: (url) => url == enclosureUrl,
+              orElse: () => false,
+            );
+    // Whether this episode is loaded in the player (any state).
+    final isLoadedInPlayer = hasLivePosition || isLoading;
 
     return _EpisodeView(
       enclosureUrl: enclosureUrl,
@@ -321,15 +319,13 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
     return Column(children: [_buildActionRow(view), _buildProgressLine(view)]);
   }
 
-  /// The saved position only changes on pause, stop, and completion, so
-  /// while this episode is in the player the line reads the live position.
+  /// [EpisodeWithProgress] is only re-read on pause, stop, and completion,
+  /// so while this episode is in the player the line reads the live position.
   /// Its own Consumer keeps position ticks from rebuilding the whole screen.
   Widget _buildProgressLine(_EpisodeView view) {
     return Consumer(
       builder: (context, ref, _) {
-        final live = view.hasLivePosition && !view.showsPlayed
-            ? ref.watch(playbackProgressProvider)
-            : null;
+        final live = _trackLivePosition(view, ref);
         final saved = view.progress;
         final fraction = live?.knownFraction ?? saved?.progressPercent;
         if (!view.showsPlayed && !ProgressLine.isStarted(fraction)) {
@@ -345,6 +341,26 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
         );
       },
     );
+  }
+
+  /// The position to show instead of the saved one, or null to show saved.
+  ///
+  /// A buffer reports as loading, so the last position is kept through it
+  /// rather than jumping back to the saved one. A position of zero is not
+  /// taken: the player reads zero after loading until the start seek lands.
+  PlaybackProgress? _trackLivePosition(_EpisodeView view, WidgetRef ref) {
+    if (view.showsPlayed || !view.isLoadedInPlayer) {
+      _lastLivePosition = null;
+      return null;
+    }
+    final live = ref.watch(playbackProgressProvider);
+    if (view.hasLivePosition &&
+        live != null &&
+        live.knownFraction != null &&
+        Duration.zero < live.position) {
+      _lastLivePosition = live;
+    }
+    return _lastLivePosition;
   }
 
   /// Width the queue and download circles take at the row's end,

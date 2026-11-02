@@ -374,7 +374,8 @@ void main() {
 
     setUp(() {
       playback = StreamController<PlaybackProgress>.broadcast();
-      addTearDown(playback.close);
+      // Not awaited: closing waits on listeners the screen only drops later.
+      addTearDown(() => unawaited(playback.close()));
     });
 
     PlaybackProgress tick(int seconds, {int durationSeconds = 1800}) =>
@@ -499,6 +500,46 @@ void main() {
       check(
         lineFraction(tester),
       ).equals(testInProgressProgress.progressPercent!);
+    });
+
+    testWidgets('keeps the last position while this episode buffers', (
+      tester,
+    ) async {
+      await pumpScreen(
+        tester,
+        state: const PlaybackState.playing(episodeUrl: testAudioUrl),
+      );
+      final value = tick(1200);
+      await send(tester, value);
+
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(EpisodeDetailScreen)),
+      );
+      (container.read(audioPlayerControllerProvider.notifier)
+              as _FixedStateAudioPlayerController)
+          .set(const PlaybackState.loading(episodeUrl: testAudioUrl));
+      await tester.pump();
+
+      check(lineFraction(tester)).equals(value.knownFraction!);
+      check(lineRemaining(tester)).equals(value.remaining);
+    });
+
+    testWidgets('keeps the saved position until the start seek lands', (
+      tester,
+    ) async {
+      await pumpScreen(
+        tester,
+        state: const PlaybackState.playing(episodeUrl: testAudioUrl),
+      );
+
+      await send(tester, tick(0));
+
+      check(
+        lineFraction(tester),
+      ).equals(testInProgressProgress.progressPercent!);
+      check(
+        lineRemaining(tester),
+      ).equals(testInProgressProgress.remainingDuration);
     });
 
     testWidgets('falls back to the saved position until a duration is known', (
@@ -960,6 +1001,8 @@ class _FixedStateAudioPlayerController extends _FakeAudioPlayerController {
 
   @override
   PlaybackState build() => _state;
+
+  void set(PlaybackState next) => state = next;
 }
 
 class _LoadedAudioPlayerController extends _FakeAudioPlayerController {
