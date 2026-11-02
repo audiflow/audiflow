@@ -57,4 +57,4 @@ final class DataResetServiceProvider
   }
 }
 
-String _$dataResetServiceHash() => r'f474b3042776f1a850285e77a0b745998a150f91';
+String _$dataResetServiceHash() => r'06d60722b402caa2b5da9eb0a2e234f595a5aa84';

@@ -89,6 +89,7 @@ void main() {
   late SharedPreferencesDataSource preferences;
   late _WriterLog writers;
   late DataResetService service;
+  var streamCacheClears = 0;
 
   DataResetService buildService({
     required DownloadsDirectoryResolver resolveDownloadsDirectory,
@@ -103,6 +104,7 @@ void main() {
         _FakeWriter('feedSync', writers),
       ],
       resolveDownloadsDirectory: resolveDownloadsDirectory,
+      clearStreamCache: () async => streamCacheClears++,
     );
   }
 
@@ -120,6 +122,7 @@ void main() {
     preferences = SharedPreferencesDataSource(
       await SharedPreferences.getInstance(),
     );
+    streamCacheClears = 0;
     writers = _WriterLog(isar, downloadsDir);
     service = buildService(
       resolveDownloadsDirectory: () async => downloadsDir.path,
@@ -147,6 +150,30 @@ void main() {
     }
     return counts;
   }
+
+  test('clears the streamed-audio cache', () async {
+    await service.resetAll();
+
+    check(streamCacheClears).equals(1);
+  });
+
+  test('a failed cache clear leaves downloads in place', () async {
+    final marker = File(p.join(downloadsDir.path, 'episode.mp3'));
+    await marker.writeAsString('audio');
+    final failing = DataResetService(
+      isar: isar,
+      preferences: preferences,
+      playback: _FakePlaybackController(writers),
+      cancelBackgroundTasks: () async {},
+      writers: const [],
+      resolveDownloadsDirectory: () async => downloadsDir.path,
+      clearStreamCache: () async => throw Exception('cache'),
+    );
+
+    await check(failing.resetAll()).throws<Exception>();
+
+    check(await marker.exists()).isTrue();
+  });
 
   group('DataResetService.resetAll', () {
     test('clears every Isar collection', () async {
@@ -191,6 +218,7 @@ void main() {
         cancelBackgroundTasks: () => writers.record('backgroundTasks'),
         writers: [downloads, feedSync],
         resolveDownloadsDirectory: () async => downloadsDir.path,
+        clearStreamCache: () async => streamCacheClears++,
       );
 
       await check(failingService.resetAll()).throws<StateError>();
