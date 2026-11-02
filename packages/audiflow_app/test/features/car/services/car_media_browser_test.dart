@@ -88,7 +88,7 @@ class _FakeArtwork implements CarArtworkResolver {
 
 void main() {
   const tabTitles = {
-    CarSection.upNext: 'Up Next',
+    CarSection.inProgress: 'In Progress',
     CarSection.stations: 'Stations',
     CarSection.library: 'Library',
     CarSection.downloads: 'Downloads',
@@ -169,6 +169,28 @@ void main() {
   });
 
   group('getChildren', () {
+    test('leaves the queue to the Now Playing button', () {
+      check(CarMediaBrowser.tabs).deepEquals([
+        CarSection.inProgress,
+        CarSection.library,
+        CarSection.stations,
+        CarSection.downloads,
+      ]);
+    });
+
+    test('lists unfinished episodes as playable rows', () async {
+      const row = CarListItem(id: 5, title: 'Episode', progress: 0.5);
+      catalog.rows[CarSection.inProgress] = [row];
+
+      final items = await browser.getChildren(
+        CarMediaId.tab(CarSection.inProgress),
+      );
+
+      check(items.single)
+        ..has((i) => i.id, 'id').equals(CarMediaId.episode(row.id))
+        ..has((i) => i.playable, 'playable').equals(true);
+    });
+
     test('lists the tabs under the root', () async {
       final items = await browser.getChildren(AudioService.browsableRootId);
 

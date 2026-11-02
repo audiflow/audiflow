@@ -198,7 +198,7 @@ Future<CarMediaBrowser> carMediaBrowser(Ref ref) async {
     tabTitles: () {
       final l10n = carAppLocalizations(ref);
       return {
-        CarSection.upNext: l10n.carUpNextTab,
+        CarSection.inProgress: l10n.carInProgressTab,
         CarSection.stations: l10n.carStationsTab,
         CarSection.library: l10n.carLibraryTab,
         CarSection.downloads: l10n.carDownloadsTab,

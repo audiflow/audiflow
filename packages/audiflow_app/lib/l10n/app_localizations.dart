@@ -4136,11 +4136,17 @@ abstract class AppLocalizations {
   /// **'Add to end of queue'**
   String get episodeDetailAddToEnd;
 
-  /// In-car (CarPlay, Android Auto) tab listing the playback queue
+  /// CarPlay list of the playback queue, and the title of Android Auto's queue button
   ///
   /// In en, this message translates to:
   /// **'Up Next'**
   String get carUpNextTab;
+
+  /// Android Auto tab listing episodes started but not finished
+  ///
+  /// In en, this message translates to:
+  /// **'In Progress'**
+  String get carInProgressTab;
 
   /// In-car (CarPlay, Android Auto) tab listing the user's stations
   ///
