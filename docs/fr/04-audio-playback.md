@@ -194,6 +194,10 @@ state and resume position stay coherent no matter where the listener touches it.
   show the line full in a neutral color instead of the accent, so orange lines mark only
   episodes the listener can resume; unplayed episodes show none. The line is not animated and simply
   redraws as the row rebuilds on playback ticks.
+- The episode detail's progress line and remaining time follow the same live position while that
+  episode is playing or paused in the player, without waiting for a save. The rest of the screen
+  does not redraw on these ticks. While the episode is still loading, or another episode is in the
+  player, the line keeps the saved position, because the player's position is not this episode's.
 - Durations on episode rows use a single compact format shared app-wide: `{minutes}m` at one
   minute or longer, `0:ss` below one minute. Pill state labels are localized for English and
   Japanese.
