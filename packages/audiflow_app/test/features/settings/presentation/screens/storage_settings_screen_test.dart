@@ -30,6 +30,31 @@ class _FakeGateGuard implements GateGuard {
   }
 }
 
+class _FakeStreamCacheService implements StreamCacheService {
+  _FakeStreamCacheService({this.clearError, this.sizeError});
+
+  final Exception? clearError;
+  final Exception? sizeError;
+  int bytes = 1500000;
+  int clearCalls = 0;
+
+  @override
+  Future<int> size() async {
+    if (sizeError != null) throw sizeError!;
+    return bytes;
+  }
+
+  @override
+  Future<void> clear() async {
+    clearCalls++;
+    if (clearError != null) throw clearError!;
+    bytes = 0;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
 /// Clears the shared preferences the way the real service does, so tests
 /// can observe whether the screen refreshes controllers that cached them.
 class _FakeDataResetService implements DataResetService {
@@ -58,9 +83,15 @@ void main() {
     resetService = _FakeDataResetService(prefs);
   });
 
-  Widget buildTestWidget({_FakeGateGuard? guard}) {
+  Widget buildTestWidget({
+    _FakeGateGuard? guard,
+    _FakeStreamCacheService? streamCache,
+  }) {
     return ProviderScope(
       overrides: [
+        streamCacheServiceProvider.overrideWithValue(
+          streamCache ?? _FakeStreamCacheService(),
+        ),
         sharedPreferencesProvider.overrideWithValue(prefs),
         dataResetServiceProvider.overrideWithValue(resetService),
         gateGuardProvider.overrideWithValue(
@@ -98,8 +129,8 @@ void main() {
         find.text('Clear temporary files and cached images'),
         findsOneWidget,
       );
-      // Three "Clear" buttons: Image Cache, Podcast Cache, Search History
-      expect(find.text('Clear'), findsNWidgets(3));
+      // "Clear" buttons: Image, Podcast, and Playback Cache, Search History
+      expect(find.text('Clear'), findsNWidgets(4));
     });
 
     testWidgets('shows Podcast Cache tile', (tester) async {
@@ -266,6 +297,89 @@ void main() {
 
       expect(find.text('Reset All Data?'), findsNothing);
       expect(find.text('Type RESET to confirm:'), findsNothing);
+    });
+  });
+
+  group('playback cache tile', () {
+    Finder clearButtonOfTile() => find.descendant(
+      of: find.ancestor(
+        of: find.text('Playback Cache'),
+        matching: find.byType(ListTile),
+      ),
+      matching: find.byType(OutlinedButton),
+    );
+
+    Future<void> confirmClear(WidgetTester tester) async {
+      await tester.tap(clearButtonOfTile());
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(FilledButton));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('shows the stored size against the limit', (tester) async {
+      final cache = _FakeStreamCacheService();
+      await tester.pumpWidget(buildTestWidget(streamCache: cache));
+      await tester.pumpAndSettle();
+
+      final used = Formatters.formatBytes(cache.bytes);
+      final limit = Formatters.formatBytes(AppConstants.streamCacheMaxBytes);
+      check(find.textContaining('$used of $limit').evaluate()).isNotEmpty();
+    });
+
+    testWidgets('clears after confirmation and refreshes the size', (
+      tester,
+    ) async {
+      final cache = _FakeStreamCacheService();
+      await tester.pumpWidget(buildTestWidget(streamCache: cache));
+      await tester.pumpAndSettle();
+
+      await confirmClear(tester);
+
+      check(cache.clearCalls).equals(1);
+      check(find.text('Playback cache cleared').evaluate()).isNotEmpty();
+      final empty = Formatters.formatBytes(0);
+      check(find.textContaining('$empty of').evaluate()).isNotEmpty();
+    });
+
+    testWidgets('cancelling keeps the cache', (tester) async {
+      final cache = _FakeStreamCacheService();
+      await tester.pumpWidget(buildTestWidget(streamCache: cache));
+      await tester.pumpAndSettle();
+
+      await tester.tap(clearButtonOfTile());
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(TextButton).last);
+      await tester.pumpAndSettle();
+
+      check(cache.clearCalls).equals(0);
+    });
+
+    testWidgets('does not claim an empty cache when the size is unknown', (
+      tester,
+    ) async {
+      final cache = _FakeStreamCacheService(sizeError: Exception('disk'));
+      await tester.pumpWidget(buildTestWidget(streamCache: cache));
+      await tester.pumpAndSettle();
+
+      final empty = Formatters.formatBytes(0);
+      check(find.textContaining('$empty of').evaluate()).isEmpty();
+      check(
+        find
+            .text('Audio kept while streaming; downloads are not included.')
+            .evaluate(),
+      ).isNotEmpty();
+    });
+
+    testWidgets('reports a failed clear', (tester) async {
+      final cache = _FakeStreamCacheService(clearError: Exception('disk'));
+      await tester.pumpWidget(buildTestWidget(streamCache: cache));
+      await tester.pumpAndSettle();
+
+      await confirmClear(tester);
+
+      check(
+        find.text('Could not clear the playback cache').evaluate(),
+      ).isNotEmpty();
     });
   });
 }
