@@ -94,7 +94,7 @@ void main() {
       for (final control in controls) control.action,
     ];
 
-    test('puts speed before stop, so stop gives way first', () {
+    test('publishes the skips and speed around play', () {
       check(
         actions(nowPlayingMediaControls(playing: true, values: _values)),
       ).deepEquals([
@@ -102,7 +102,6 @@ void main() {
         MediaAction.pause,
         MediaAction.fastForward,
         MediaAction.custom,
-        MediaAction.stop,
       ]);
     });
 
@@ -140,10 +139,20 @@ void main() {
       },
     );
 
-    test('keeps previous and next without values, as on iOS', () {
+    test(
+      'leaves out stop, which would strand the buttons without a source',
+      () {
+        check(
+          actions(nowPlayingMediaControls(playing: true, values: _values)),
+        ).not((it) => it.contains(MediaAction.stop));
+      },
+    );
+
+    test('keeps previous, next and stop without values, as on iOS', () {
       check(actions(nowPlayingMediaControls(playing: true, values: null)))
         ..contains(MediaAction.skipToPrevious)
-        ..contains(MediaAction.skipToNext);
+        ..contains(MediaAction.skipToNext)
+        ..contains(MediaAction.stop);
     });
   });
 

@@ -294,8 +294,7 @@ to `audioHandlerProvider` rather than only reading it, so these subscriptions
 stay active when the app runs without a screen. The speed button is the
 `cycleSpeed` custom action, which `AudiflowAudioHandler.customAction` sends to
 `CarPlayback.cycleSpeed`. It is Android only (the watcher runs only there, and
-no values means no button), and sits after fast-forward and before stop:
-Android 13+ gives custom actions limited slots in order, and below 13
+no values means no button), and sits after fast-forward. Below 13
 audio_service leaves custom actions out of the notification. Below 13
 audio_service also keeps rewind and fast-forward as native actions, so the
 numbered icons reach only the notification, not Android Auto.
@@ -304,7 +303,9 @@ With values, `nowPlayingMediaControls` leaves out previous and next, because
 the handler maps them to the same skips as rewind and fast-forward. Publishing
 them would also keep their action flags set, which makes Android Auto draw both
 buttons. Hardware next and previous keys still arrive through audio_service's
-media button handling. The compact indices are left to audio_service in this
+media button handling. Stop is left out as well: `AudioPlayerController.stop`
+clears the loaded episode, so play and the skips left on the row would do
+nothing. The compact indices are left to audio_service in this
 case, as the number of native buttons differs by Android version. Without
 values (iOS, and Android before the first settings read) the set is unchanged.
 

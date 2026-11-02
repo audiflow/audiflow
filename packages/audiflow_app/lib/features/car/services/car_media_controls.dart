@@ -68,15 +68,14 @@ MediaControl carRewindControl(int seconds) =>
 /// CarPlay has its own rate button, and on Android until the settings have
 /// been read, before any session is active.
 ///
-/// The system fills its limited slots in this order, so speed comes after
-/// the skip buttons and before stop, so that stop is what gives way when the
-/// slots run out.
-///
 /// With [values], previous and next are left out: the handler maps them to
 /// the same skips as rewind and fast forward, and publishing them would only
 /// add two more buttons doing the same thing to Android Auto's row. Hardware
 /// next and previous keys do not depend on them, as audio_service forwards
 /// those keys regardless of the published controls.
+///
+/// Stop is left out too: it unloads the episode, after which play and the
+/// skips on the same row do nothing. Pause already keeps the place.
 List<MediaControl> nowPlayingMediaControls({
   required bool playing,
   required NowPlayingControlValues? values,
@@ -96,7 +95,6 @@ List<MediaControl> nowPlayingMediaControls({
     if (playing) MediaControl.pause else MediaControl.play,
     carFastForwardControl(values.skipForwardSeconds),
     carSpeedControl(values.speed),
-    MediaControl.stop,
   ];
 }
 
