@@ -855,7 +855,9 @@ class AudioPlayerController extends _$AudioPlayerController
       _log.e('[Play] ERROR', error: e, stackTrace: stack);
       // A newer play() or stop() interrupted this load and owns the state.
       if (_playAttempt != attempt) return;
-      _failedLoadStartAt = startAt;
+      // Failing before the URL was set leaves the previous episode loaded, and
+      // the requested position is not that episode's.
+      if (_currentUrl == url) _failedLoadStartAt = startAt;
       _failPlayback('Failed to play audio: $e');
     } finally {
       _isPreparingPlay = false;

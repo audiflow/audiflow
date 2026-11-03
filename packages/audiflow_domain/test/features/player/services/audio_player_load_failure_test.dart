@@ -286,6 +286,27 @@ void main() {
       check(player.seeks).deepEquals([timestamp]);
     });
 
+    test(
+      'a retry of the loaded episode ignores another one\'s position',
+      () async {
+        await controller().play(_url, metadata: _metadata);
+        await pumpEventQueue();
+
+        // The lookup failure leaves the first episode as the one a retry loads.
+        episodes.lookupError = StateError('database closed');
+        await controller().play(
+          'https://example.com/b.mp3',
+          startAt: const Duration(seconds: 90),
+        );
+        await pumpEventQueue();
+        episodes.lookupError = null;
+        await controller().togglePlayPause(_url);
+        await pumpEventQueue();
+
+        check(player.seeks).isEmpty();
+      },
+    );
+
     test('a retry that fails again shows the error again', () async {
       await failLoad();
 
