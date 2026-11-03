@@ -166,6 +166,7 @@ class _ContinueListeningCard extends StatelessWidget {
           episode.episode.title,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
+          strutStyle: _fixedLineHeight(AppTextStyles.meta),
           style: AppTextStyles.meta.copyWith(
             color: colors.ink,
             fontWeight: FontWeight.w600,
@@ -178,6 +179,7 @@ class _ContinueListeningCard extends StatelessWidget {
               l10n.episodePillRemaining(
                 episodePillDurationLabel(remaining, l10n),
               ),
+              strutStyle: _fixedLineHeight(AppTextStyles.caption),
               style: AppTextStyles.tabular(
                 AppTextStyles.caption.copyWith(color: colors.inkTertiary),
               ),
@@ -186,4 +188,11 @@ class _ContinueListeningCard extends StatelessWidget {
       ],
     );
   }
+
+  /// A line mixing fonts (CJK or emoji in a Latin title, or Latin digits in
+  /// a Japanese label) otherwise comes out taller than its style says, since
+  /// each font sits differently around the baseline. The card's height only
+  /// leaves room for lines of the nominal height.
+  StrutStyle _fixedLineHeight(TextStyle style) =>
+      StrutStyle.fromTextStyle(style, forceStrutHeight: true);
 }
