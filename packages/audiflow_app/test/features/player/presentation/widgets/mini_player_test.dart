@@ -1,3 +1,4 @@
+import 'package:audiflow_app/features/player/presentation/controllers/device_offline_provider.dart';
 import 'package:audiflow_app/features/player/presentation/widgets/mini_player.dart';
 import 'package:audiflow_app/features/player/presentation/widgets/sleep_timer_icon_button.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
@@ -317,7 +318,7 @@ void main() {
   });
 
   group('MiniPlayer after a playback failure', () {
-    testWidgets('names the failure and keeps the play button', (tester) async {
+    Future<ProviderContainer> failedContainer({required bool offline}) async {
       SharedPreferences.setMockInitialValues({});
       final prefs = await SharedPreferences.getInstance();
       final container = ProviderContainer(
@@ -340,11 +341,31 @@ void main() {
           playbackProgressProvider.overrideWith((ref) => null),
           sleepTimerTimeLeftProvider.overrideWith((ref) => null),
           nowPlayingSpeedProvider.overrideWith((ref) => 1.0),
+          deviceOfflineProvider.overrideWith((ref) => Stream.value(offline)),
         ],
       );
       addTearDown(container.dispose);
+      return container;
+    }
 
-      await tester.pumpWidget(buildTestWidget(container));
+    testWidgets('says offline rather than failed with no network', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        buildTestWidget(await failedContainer(offline: true)),
+      );
+      await tester.pumpAndSettle();
+
+      final l10n = AppLocalizations.of(tester.element(find.byType(MiniPlayer)));
+      final card = tester.widget<MiniPlayerCard>(find.byType(MiniPlayerCard));
+      check(card.subtitle).equals(l10n.playerLoadFailedOffline);
+      check(card.semanticLabel!).contains(l10n.playerLoadFailedOffline);
+    });
+
+    testWidgets('names the failure and keeps the play button', (tester) async {
+      await tester.pumpWidget(
+        buildTestWidget(await failedContainer(offline: false)),
+      );
       await tester.pumpAndSettle();
 
       final l10n = AppLocalizations.of(tester.element(find.byType(MiniPlayer)));

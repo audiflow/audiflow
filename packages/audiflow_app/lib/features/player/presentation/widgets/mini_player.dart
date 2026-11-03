@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../controllers/device_offline_provider.dart';
 import 'audio_sheet.dart';
 import 'sleep_timer_icon_button.dart';
 
@@ -88,6 +89,11 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
         : playbackState is PlaybackPlaying;
     final isLoading = _isSeeking ? false : playbackState is PlaybackLoading;
     final hasFailed = playbackState is PlaybackError;
+    final failureText = !hasFailed
+        ? null
+        : (ref.watch(deviceOfflineProvider).value ?? false)
+        ? l10n.playerLoadFailedOffline
+        : l10n.playerLoadFailed;
     final nowPlayingLabel = l10n.playerNowPlayingLabel(
       nowPlaying.episodeTitle,
       nowPlaying.podcastTitle,
@@ -97,7 +103,7 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
       // The card's labels are excluded from semantics, so the failure has to
       // be part of this label to reach screen readers.
       semanticLabel: hasFailed
-          ? '$nowPlayingLabel. ${l10n.playerLoadFailed}'
+          ? '$nowPlayingLabel. $failureText'
           : nowPlayingLabel,
       onTap: widget.onTap,
       artwork: MiniPlayerArtwork(
@@ -106,7 +112,7 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
         borderRadius: 0,
       ),
       title: nowPlaying.episodeTitle,
-      subtitle: hasFailed ? l10n.playerLoadFailed : nowPlaying.podcastTitle,
+      subtitle: failureText ?? nowPlaying.podcastTitle,
       subtitleColor: hasFailed ? Theme.of(context).colorScheme.error : null,
       progress: MiniPlayer._progress(progress, nowPlaying),
       actions: _actions(context, isPlaying: isPlaying, isLoading: isLoading),

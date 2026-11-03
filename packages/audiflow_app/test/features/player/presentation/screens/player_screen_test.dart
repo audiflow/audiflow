@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:audiflow_app/features/player/presentation/controllers/device_offline_provider.dart';
 import 'package:audiflow_app/features/player/presentation/screens/player_screen.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
@@ -148,11 +149,33 @@ void main() {
     testWidgets('tells the listener how to retry', (tester) async {
       final container = await _container(
         playback: const PlaybackState.error(message: 'host not found'),
+        extra: [
+          deviceOfflineProvider.overrideWith((ref) => Stream.value(false)),
+        ],
       );
       await tester.pumpWidget(_buildHost(container));
       await _openPlayerSheet(tester);
 
       check(notice(tester)).isNotEmpty();
+    });
+
+    testWidgets('asks the listener to connect when offline', (tester) async {
+      final container = await _container(
+        playback: const PlaybackState.error(message: 'host not found'),
+        extra: [
+          deviceOfflineProvider.overrideWith((ref) => Stream.value(true)),
+        ],
+      );
+      await tester.pumpWidget(_buildHost(container));
+      await _openPlayerSheet(tester);
+
+      final l10n = AppLocalizations.of(
+        tester.element(find.byType(PlayerScreen)),
+      );
+      check(
+        find.text(l10n.playerLoadFailedOfflineRetry).evaluate(),
+      ).isNotEmpty();
+      check(notice(tester)).isEmpty();
     });
 
     testWidgets('shows no notice while paused', (tester) async {

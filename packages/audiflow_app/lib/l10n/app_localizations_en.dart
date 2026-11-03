@@ -742,6 +742,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Couldn\'t play this episode. Tap play to try again.';
 
   @override
+  String get playerLoadFailedOffline => 'You\'re offline';
+
+  @override
+  String get playerLoadFailedOfflineRetry =>
+      'You\'re offline. Connect to the internet, then tap play.';
+
+  @override
   String get playerLoadingLabel => 'Loading';
 
   @override

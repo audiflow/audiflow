@@ -15,6 +15,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
 import '../../helpers/chapter_seek_bar_segments.dart';
 import '../../helpers/playback_time_format.dart';
+import '../controllers/device_offline_provider.dart';
 import '../../helpers/podcast_lookup.dart';
 import '../../../share/presentation/helpers/share_helper.dart';
 import '../../services/audio_route_channel.dart';
@@ -1006,15 +1007,19 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
 
 /// Says that the episode failed and how to retry, above the play button the
 /// retry goes through.
-class _PlaybackFailureNotice extends StatelessWidget {
+class _PlaybackFailureNotice extends ConsumerWidget {
   const _PlaybackFailureNotice();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final isOffline = ref.watch(deviceOfflineProvider).value ?? false;
     return Semantics(
       liveRegion: true,
       child: Text(
-        AppLocalizations.of(context).playerLoadFailedRetry,
+        isOffline
+            ? l10n.playerLoadFailedOfflineRetry
+            : l10n.playerLoadFailedRetry,
         textAlign: TextAlign.center,
         // Ink rather than the error color: this sits on a ground tinted by
         // the artwork, where a fixed red can lose its contrast.
