@@ -338,7 +338,7 @@ void main() {
         started(async);
 
         check(titleChannel.titles).deepEquals([
-          lookupAppLocalizations(_EnglishLocale.locale).carUpNextTab,
+          lookupAppLocalizations(_EnglishLocale.locale).queueTitle,
         ]);
       });
     });

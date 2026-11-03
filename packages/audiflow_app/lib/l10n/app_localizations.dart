@@ -1154,7 +1154,7 @@ abstract class AppLocalizations {
   /// **'iTunes store to search for podcasts'**
   String get searchRegionPickerSubtitle;
 
-  /// Queue screen title
+  /// Queue screen title, and the heading of Android Auto's queue list
   ///
   /// In en, this message translates to:
   /// **'Queue'**
@@ -4136,7 +4136,7 @@ abstract class AppLocalizations {
   /// **'Add to end of queue'**
   String get episodeDetailAddToEnd;
 
-  /// CarPlay list of the playback queue, and the title of Android Auto's queue button
+  /// CarPlay list of the playback queue
   ///
   /// In en, this message translates to:
   /// **'Up Next'**

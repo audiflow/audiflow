@@ -364,7 +364,8 @@ published without artwork at first and republished when it arrives; a generation
 guard drops results for a list that has been replaced.
 
 audio_service has no API for the queue title, which Android Auto shows as the
-queue list's heading. The button itself kept the host's own label ("キュー") on
+queue list's heading. The title is the Queue screen's, not CarPlay's "Up Next",
+because this list starts with the playing episode. The button itself kept the host's own label ("キュー") on
 Android Auto 17.9 with the title set, whether it was sent before or after the
 queue. `SessionQueueChannel.kt` (channel `audiflow/session_queue`)
 reaches `AudioService.instance`'s private `mediaSession` by reflection and calls

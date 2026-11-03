@@ -375,7 +375,7 @@
   "@searchRegionPickerSubtitle": { "description": "Subtitle for region picker" },
 
   "queueTitle": "Queue",
-  "@queueTitle": { "description": "Queue screen title" },
+  "@queueTitle": { "description": "Queue screen title, and the heading of Android Auto's queue list" },
   "queueUpNext": "UP NEXT",
   "@queueUpNext": { "description": "Up next section header" },
   "queueRemove": "Remove from queue",
@@ -1505,7 +1505,7 @@
   "episodeDetailAddToEnd": "Add to end of queue",
   "@episodeDetailAddToEnd": { "description": "Queue choice on episode detail that appends the episode" },
   "carUpNextTab": "Up Next",
-  "@carUpNextTab": { "description": "CarPlay list of the playback queue, and the title of Android Auto's queue button" },
+  "@carUpNextTab": { "description": "CarPlay list of the playback queue" },
   "carInProgressTab": "In Progress",
   "@carInProgressTab": { "description": "Android Auto tab listing episodes started but not finished" },
   "carStationsTab": "Stations",

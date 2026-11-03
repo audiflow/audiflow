@@ -526,7 +526,8 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
     final publisher = SessionQueuePublisher(
       readQueue: () => _ref.read(playbackQueueProvider).value,
       readNowPlaying: () => _ref.read(nowPlayingControllerProvider),
-      readTitle: () => carAppLocalizations(_ref).carUpNextTab,
+      // Not "Up Next": this list starts with the playing episode.
+      readTitle: () => carAppLocalizations(_ref).queueTitle,
       publish: _publishSessionQueue,
       playQueueItem: _carPlayback.playQueueItem,
       continueNowPlaying: _continueNowPlaying,
