@@ -201,6 +201,61 @@ void main() {
     });
   });
 
+  group('LibraryScreen while feeds fill in', () {
+    testWidgets('keeps the rows on screen through each write', (tester) async {
+      // An OPML import writes per feed, and each write makes the sorted list
+      // reload. A frame showing a spinner in place of the rows is a flash.
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final subscriptions = StreamController<List<Subscription>>.broadcast();
+      addTearDown(subscriptions.close);
+      final first = [_sub(1, 'Alpha'), _sub(2, 'Beta')];
+      final container = ProviderContainer(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          librarySubscriptionsProvider.overrideWith(
+            (ref) => subscriptions.stream,
+          ),
+          newestEpisodeDateProvider.overrideWith(
+            (ref, podcastId) => Stream.value(null),
+          ),
+          continueListeningEpisodesProvider.overrideWith(
+            (ref) => Stream.value(const []),
+          ),
+          stationListProvider.overrideWith(
+            (ref) => Stream.value(const <Station>[]),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const LibraryScreen(),
+          ),
+        ),
+      );
+      await tester.pump();
+      subscriptions.add(first);
+      await tester.pump();
+      await tester.pump();
+      await tester.pump();
+      check(find.text('Alpha').evaluate()).isNotEmpty();
+
+      subscriptions.add([...first, _sub(3, 'Gamma')]);
+      // One frame at a time: the flash only exists between emissions.
+      for (var frame = 0; frame < 6; frame++) {
+        await tester.pump();
+        check(find.byType(CircularProgressIndicator).evaluate()).isEmpty();
+        check(find.text('Alpha').evaluate()).isNotEmpty();
+      }
+      check(find.text('Gamma').evaluate()).isNotEmpty();
+    });
+  });
+
   group('LibraryScreen sort menu', () {
     late ProviderContainer container;
 

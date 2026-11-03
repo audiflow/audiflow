@@ -236,6 +236,10 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     AsyncValue<List<Subscription>> sortedSubscriptionsAsync,
   ) {
     return sortedSubscriptionsAsync.when(
+      // Every subscription or episode write reloads this list, once per feed
+      // write during an OPML import or a refresh. Falling back to the spinner
+      // each time would blink the whole list; only the first load shows it.
+      skipLoadingOnReload: true,
       data: (all) {
         final sorted = filterPodcasts(all, _filterController.text);
         if (sorted.isEmpty) {
