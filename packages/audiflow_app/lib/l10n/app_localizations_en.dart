@@ -2391,6 +2391,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get carUpNextTab => 'Up Next';
 
   @override
+  String get carInProgressTab => 'In Progress';
+
+  @override
   String get carStationsTab => 'Stations';
 
   @override

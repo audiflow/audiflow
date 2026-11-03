@@ -222,7 +222,8 @@ class QueueRepositoryImpl implements QueueRepository {
     final episodes = await _episodeDatasource.getByIds(episodeIds);
     final episodeMap = {for (final e in episodes) e.id: e};
 
-    // Fetch subscriptions for all episodes (needed for artwork fallback and itunesId)
+    // Fetch subscriptions for all episodes (needed for artwork fallback,
+    // itunesId, and podcast title)
     final podcastIds = episodes.map((e) => e.podcastId).toSet().toList();
     final subscriptionMap = <int, Subscription>{};
     if (podcastIds.isNotEmpty) {
@@ -249,6 +250,7 @@ class QueueRepositoryImpl implements QueueRepository {
         episode: episode,
         artworkUrl: artworkUrl,
         itunesId: subscription?.itunesId,
+        podcastTitle: subscription?.title,
       );
 
       if (item.isAdhoc) {

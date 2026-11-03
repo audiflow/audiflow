@@ -16,7 +16,8 @@ mixin _$QueueItemWithEpisode {
 
  QueueItem get queueItem; Episode get episode;/// Resolved artwork URL (episode image, falling back to podcast artwork).
  String? get artworkUrl;/// iTunes ID from the parent subscription, used for share links.
- String? get itunesId;
+ String? get itunesId;/// Title of the parent subscription, for rows that mix podcasts.
+ String? get podcastTitle;
 /// Create a copy of QueueItemWithEpisode
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,16 +28,16 @@ $QueueItemWithEpisodeCopyWith<QueueItemWithEpisode> get copyWith => _$QueueItemW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is QueueItemWithEpisode&&(identical(other.queueItem, queueItem) || other.queueItem == queueItem)&&(identical(other.episode, episode) || other.episode == episode)&&(identical(other.artworkUrl, artworkUrl) || other.artworkUrl == artworkUrl)&&(identical(other.itunesId, itunesId) || other.itunesId == itunesId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is QueueItemWithEpisode&&(identical(other.queueItem, queueItem) || other.queueItem == queueItem)&&(identical(other.episode, episode) || other.episode == episode)&&(identical(other.artworkUrl, artworkUrl) || other.artworkUrl == artworkUrl)&&(identical(other.itunesId, itunesId) || other.itunesId == itunesId)&&(identical(other.podcastTitle, podcastTitle) || other.podcastTitle == podcastTitle));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,queueItem,episode,artworkUrl,itunesId);
+int get hashCode => Object.hash(runtimeType,queueItem,episode,artworkUrl,itunesId,podcastTitle);
 
 @override
 String toString() {
-  return 'QueueItemWithEpisode(queueItem: $queueItem, episode: $episode, artworkUrl: $artworkUrl, itunesId: $itunesId)';
+  return 'QueueItemWithEpisode(queueItem: $queueItem, episode: $episode, artworkUrl: $artworkUrl, itunesId: $itunesId, podcastTitle: $podcastTitle)';
 }
 
 
@@ -47,7 +48,7 @@ abstract mixin class $QueueItemWithEpisodeCopyWith<$Res>  {
   factory $QueueItemWithEpisodeCopyWith(QueueItemWithEpisode value, $Res Function(QueueItemWithEpisode) _then) = _$QueueItemWithEpisodeCopyWithImpl;
 @useResult
 $Res call({
- QueueItem queueItem, Episode episode, String? artworkUrl, String? itunesId
+ QueueItem queueItem, Episode episode, String? artworkUrl, String? itunesId, String? podcastTitle
 });
 
 
@@ -64,12 +65,13 @@ class _$QueueItemWithEpisodeCopyWithImpl<$Res>
 
 /// Create a copy of QueueItemWithEpisode
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? queueItem = null,Object? episode = null,Object? artworkUrl = freezed,Object? itunesId = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? queueItem = null,Object? episode = null,Object? artworkUrl = freezed,Object? itunesId = freezed,Object? podcastTitle = freezed,}) {
   return _then(_self.copyWith(
 queueItem: null == queueItem ? _self.queueItem : queueItem // ignore: cast_nullable_to_non_nullable
 as QueueItem,episode: null == episode ? _self.episode : episode // ignore: cast_nullable_to_non_nullable
 as Episode,artworkUrl: freezed == artworkUrl ? _self.artworkUrl : artworkUrl // ignore: cast_nullable_to_non_nullable
 as String?,itunesId: freezed == itunesId ? _self.itunesId : itunesId // ignore: cast_nullable_to_non_nullable
+as String?,podcastTitle: freezed == podcastTitle ? _self.podcastTitle : podcastTitle // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -152,10 +154,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( QueueItem queueItem,  Episode episode,  String? artworkUrl,  String? itunesId)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( QueueItem queueItem,  Episode episode,  String? artworkUrl,  String? itunesId,  String? podcastTitle)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _QueueItemWithEpisode() when $default != null:
-return $default(_that.queueItem,_that.episode,_that.artworkUrl,_that.itunesId);case _:
+return $default(_that.queueItem,_that.episode,_that.artworkUrl,_that.itunesId,_that.podcastTitle);case _:
   return orElse();
 
 }
@@ -173,10 +175,10 @@ return $default(_that.queueItem,_that.episode,_that.artworkUrl,_that.itunesId);c
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( QueueItem queueItem,  Episode episode,  String? artworkUrl,  String? itunesId)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( QueueItem queueItem,  Episode episode,  String? artworkUrl,  String? itunesId,  String? podcastTitle)  $default,) {final _that = this;
 switch (_that) {
 case _QueueItemWithEpisode():
-return $default(_that.queueItem,_that.episode,_that.artworkUrl,_that.itunesId);}
+return $default(_that.queueItem,_that.episode,_that.artworkUrl,_that.itunesId,_that.podcastTitle);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -190,10 +192,10 @@ return $default(_that.queueItem,_that.episode,_that.artworkUrl,_that.itunesId);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( QueueItem queueItem,  Episode episode,  String? artworkUrl,  String? itunesId)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( QueueItem queueItem,  Episode episode,  String? artworkUrl,  String? itunesId,  String? podcastTitle)?  $default,) {final _that = this;
 switch (_that) {
 case _QueueItemWithEpisode() when $default != null:
-return $default(_that.queueItem,_that.episode,_that.artworkUrl,_that.itunesId);case _:
+return $default(_that.queueItem,_that.episode,_that.artworkUrl,_that.itunesId,_that.podcastTitle);case _:
   return null;
 
 }
@@ -205,8 +207,8 @@ return $default(_that.queueItem,_that.episode,_that.artworkUrl,_that.itunesId);c
 
 
 class _QueueItemWithEpisode implements QueueItemWithEpisode {
-  const _QueueItemWithEpisode({required this.queueItem, required this.episode, this.artworkUrl, this.itunesId});
-
+  const _QueueItemWithEpisode({required this.queueItem, required this.episode, this.artworkUrl, this.itunesId, this.podcastTitle});
+  
 
 @override final  QueueItem queueItem;
 @override final  Episode episode;
@@ -214,6 +216,8 @@ class _QueueItemWithEpisode implements QueueItemWithEpisode {
 @override final  String? artworkUrl;
 /// iTunes ID from the parent subscription, used for share links.
 @override final  String? itunesId;
+/// Title of the parent subscription, for rows that mix podcasts.
+@override final  String? podcastTitle;
 
 /// Create a copy of QueueItemWithEpisode
 /// with the given fields replaced by the non-null parameter values.
@@ -225,16 +229,16 @@ _$QueueItemWithEpisodeCopyWith<_QueueItemWithEpisode> get copyWith => __$QueueIt
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _QueueItemWithEpisode&&(identical(other.queueItem, queueItem) || other.queueItem == queueItem)&&(identical(other.episode, episode) || other.episode == episode)&&(identical(other.artworkUrl, artworkUrl) || other.artworkUrl == artworkUrl)&&(identical(other.itunesId, itunesId) || other.itunesId == itunesId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _QueueItemWithEpisode&&(identical(other.queueItem, queueItem) || other.queueItem == queueItem)&&(identical(other.episode, episode) || other.episode == episode)&&(identical(other.artworkUrl, artworkUrl) || other.artworkUrl == artworkUrl)&&(identical(other.itunesId, itunesId) || other.itunesId == itunesId)&&(identical(other.podcastTitle, podcastTitle) || other.podcastTitle == podcastTitle));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,queueItem,episode,artworkUrl,itunesId);
+int get hashCode => Object.hash(runtimeType,queueItem,episode,artworkUrl,itunesId,podcastTitle);
 
 @override
 String toString() {
-  return 'QueueItemWithEpisode(queueItem: $queueItem, episode: $episode, artworkUrl: $artworkUrl, itunesId: $itunesId)';
+  return 'QueueItemWithEpisode(queueItem: $queueItem, episode: $episode, artworkUrl: $artworkUrl, itunesId: $itunesId, podcastTitle: $podcastTitle)';
 }
 
 
@@ -245,7 +249,7 @@ abstract mixin class _$QueueItemWithEpisodeCopyWith<$Res> implements $QueueItemW
   factory _$QueueItemWithEpisodeCopyWith(_QueueItemWithEpisode value, $Res Function(_QueueItemWithEpisode) _then) = __$QueueItemWithEpisodeCopyWithImpl;
 @override @useResult
 $Res call({
- QueueItem queueItem, Episode episode, String? artworkUrl, String? itunesId
+ QueueItem queueItem, Episode episode, String? artworkUrl, String? itunesId, String? podcastTitle
 });
 
 
@@ -262,12 +266,13 @@ class __$QueueItemWithEpisodeCopyWithImpl<$Res>
 
 /// Create a copy of QueueItemWithEpisode
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? queueItem = null,Object? episode = null,Object? artworkUrl = freezed,Object? itunesId = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? queueItem = null,Object? episode = null,Object? artworkUrl = freezed,Object? itunesId = freezed,Object? podcastTitle = freezed,}) {
   return _then(_QueueItemWithEpisode(
 queueItem: null == queueItem ? _self.queueItem : queueItem // ignore: cast_nullable_to_non_nullable
 as QueueItem,episode: null == episode ? _self.episode : episode // ignore: cast_nullable_to_non_nullable
 as Episode,artworkUrl: freezed == artworkUrl ? _self.artworkUrl : artworkUrl // ignore: cast_nullable_to_non_nullable
 as String?,itunesId: freezed == itunesId ? _self.itunesId : itunesId // ignore: cast_nullable_to_non_nullable
+as String?,podcastTitle: freezed == podcastTitle ? _self.podcastTitle : podcastTitle // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -278,8 +283,7 @@ as String?,
 /// @nodoc
 mixin _$PlaybackQueue {
 
-/// Currently playing episode (not in queue items).
- Episode? get currentEpisode;/// Manually added queue items (Play Next / Play Later).
+/// Manually added queue items (Play Next / Play Later).
  List<QueueItemWithEpisode> get manualItems;/// Auto-generated queue items from episode list playback.
  List<QueueItemWithEpisode> get adhocItems;/// Source context for adhoc items (e.g., "Season 2").
  String? get adhocSourceContext;
@@ -293,16 +297,16 @@ $PlaybackQueueCopyWith<PlaybackQueue> get copyWith => _$PlaybackQueueCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PlaybackQueue&&(identical(other.currentEpisode, currentEpisode) || other.currentEpisode == currentEpisode)&&const DeepCollectionEquality().equals(other.manualItems, manualItems)&&const DeepCollectionEquality().equals(other.adhocItems, adhocItems)&&(identical(other.adhocSourceContext, adhocSourceContext) || other.adhocSourceContext == adhocSourceContext));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PlaybackQueue&&const DeepCollectionEquality().equals(other.manualItems, manualItems)&&const DeepCollectionEquality().equals(other.adhocItems, adhocItems)&&(identical(other.adhocSourceContext, adhocSourceContext) || other.adhocSourceContext == adhocSourceContext));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,currentEpisode,const DeepCollectionEquality().hash(manualItems),const DeepCollectionEquality().hash(adhocItems),adhocSourceContext);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(manualItems),const DeepCollectionEquality().hash(adhocItems),adhocSourceContext);
 
 @override
 String toString() {
-  return 'PlaybackQueue(currentEpisode: $currentEpisode, manualItems: $manualItems, adhocItems: $adhocItems, adhocSourceContext: $adhocSourceContext)';
+  return 'PlaybackQueue(manualItems: $manualItems, adhocItems: $adhocItems, adhocSourceContext: $adhocSourceContext)';
 }
 
 
@@ -313,7 +317,7 @@ abstract mixin class $PlaybackQueueCopyWith<$Res>  {
   factory $PlaybackQueueCopyWith(PlaybackQueue value, $Res Function(PlaybackQueue) _then) = _$PlaybackQueueCopyWithImpl;
 @useResult
 $Res call({
- Episode? currentEpisode, List<QueueItemWithEpisode> manualItems, List<QueueItemWithEpisode> adhocItems, String? adhocSourceContext
+ List<QueueItemWithEpisode> manualItems, List<QueueItemWithEpisode> adhocItems, String? adhocSourceContext
 });
 
 
@@ -330,10 +334,9 @@ class _$PlaybackQueueCopyWithImpl<$Res>
 
 /// Create a copy of PlaybackQueue
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? currentEpisode = freezed,Object? manualItems = null,Object? adhocItems = null,Object? adhocSourceContext = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? manualItems = null,Object? adhocItems = null,Object? adhocSourceContext = freezed,}) {
   return _then(_self.copyWith(
-currentEpisode: freezed == currentEpisode ? _self.currentEpisode : currentEpisode // ignore: cast_nullable_to_non_nullable
-as Episode?,manualItems: null == manualItems ? _self.manualItems : manualItems // ignore: cast_nullable_to_non_nullable
+manualItems: null == manualItems ? _self.manualItems : manualItems // ignore: cast_nullable_to_non_nullable
 as List<QueueItemWithEpisode>,adhocItems: null == adhocItems ? _self.adhocItems : adhocItems // ignore: cast_nullable_to_non_nullable
 as List<QueueItemWithEpisode>,adhocSourceContext: freezed == adhocSourceContext ? _self.adhocSourceContext : adhocSourceContext // ignore: cast_nullable_to_non_nullable
 as String?,
@@ -418,10 +421,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Episode? currentEpisode,  List<QueueItemWithEpisode> manualItems,  List<QueueItemWithEpisode> adhocItems,  String? adhocSourceContext)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<QueueItemWithEpisode> manualItems,  List<QueueItemWithEpisode> adhocItems,  String? adhocSourceContext)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PlaybackQueue() when $default != null:
-return $default(_that.currentEpisode,_that.manualItems,_that.adhocItems,_that.adhocSourceContext);case _:
+return $default(_that.manualItems,_that.adhocItems,_that.adhocSourceContext);case _:
   return orElse();
 
 }
@@ -439,10 +442,10 @@ return $default(_that.currentEpisode,_that.manualItems,_that.adhocItems,_that.ad
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Episode? currentEpisode,  List<QueueItemWithEpisode> manualItems,  List<QueueItemWithEpisode> adhocItems,  String? adhocSourceContext)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<QueueItemWithEpisode> manualItems,  List<QueueItemWithEpisode> adhocItems,  String? adhocSourceContext)  $default,) {final _that = this;
 switch (_that) {
 case _PlaybackQueue():
-return $default(_that.currentEpisode,_that.manualItems,_that.adhocItems,_that.adhocSourceContext);}
+return $default(_that.manualItems,_that.adhocItems,_that.adhocSourceContext);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -456,10 +459,10 @@ return $default(_that.currentEpisode,_that.manualItems,_that.adhocItems,_that.ad
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Episode? currentEpisode,  List<QueueItemWithEpisode> manualItems,  List<QueueItemWithEpisode> adhocItems,  String? adhocSourceContext)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<QueueItemWithEpisode> manualItems,  List<QueueItemWithEpisode> adhocItems,  String? adhocSourceContext)?  $default,) {final _that = this;
 switch (_that) {
 case _PlaybackQueue() when $default != null:
-return $default(_that.currentEpisode,_that.manualItems,_that.adhocItems,_that.adhocSourceContext);case _:
+return $default(_that.manualItems,_that.adhocItems,_that.adhocSourceContext);case _:
   return null;
 
 }
@@ -471,11 +474,9 @@ return $default(_that.currentEpisode,_that.manualItems,_that.adhocItems,_that.ad
 
 
 class _PlaybackQueue extends PlaybackQueue {
-  const _PlaybackQueue({this.currentEpisode, final  List<QueueItemWithEpisode> manualItems = const [], final  List<QueueItemWithEpisode> adhocItems = const [], this.adhocSourceContext}): _manualItems = manualItems,_adhocItems = adhocItems,super._();
+  const _PlaybackQueue({final  List<QueueItemWithEpisode> manualItems = const [], final  List<QueueItemWithEpisode> adhocItems = const [], this.adhocSourceContext}): _manualItems = manualItems,_adhocItems = adhocItems,super._();
+  
 
-
-/// Currently playing episode (not in queue items).
-@override final  Episode? currentEpisode;
 /// Manually added queue items (Play Next / Play Later).
  final  List<QueueItemWithEpisode> _manualItems;
 /// Manually added queue items (Play Next / Play Later).
@@ -507,16 +508,16 @@ _$PlaybackQueueCopyWith<_PlaybackQueue> get copyWith => __$PlaybackQueueCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PlaybackQueue&&(identical(other.currentEpisode, currentEpisode) || other.currentEpisode == currentEpisode)&&const DeepCollectionEquality().equals(other._manualItems, _manualItems)&&const DeepCollectionEquality().equals(other._adhocItems, _adhocItems)&&(identical(other.adhocSourceContext, adhocSourceContext) || other.adhocSourceContext == adhocSourceContext));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PlaybackQueue&&const DeepCollectionEquality().equals(other._manualItems, _manualItems)&&const DeepCollectionEquality().equals(other._adhocItems, _adhocItems)&&(identical(other.adhocSourceContext, adhocSourceContext) || other.adhocSourceContext == adhocSourceContext));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,currentEpisode,const DeepCollectionEquality().hash(_manualItems),const DeepCollectionEquality().hash(_adhocItems),adhocSourceContext);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_manualItems),const DeepCollectionEquality().hash(_adhocItems),adhocSourceContext);
 
 @override
 String toString() {
-  return 'PlaybackQueue(currentEpisode: $currentEpisode, manualItems: $manualItems, adhocItems: $adhocItems, adhocSourceContext: $adhocSourceContext)';
+  return 'PlaybackQueue(manualItems: $manualItems, adhocItems: $adhocItems, adhocSourceContext: $adhocSourceContext)';
 }
 
 
@@ -527,7 +528,7 @@ abstract mixin class _$PlaybackQueueCopyWith<$Res> implements $PlaybackQueueCopy
   factory _$PlaybackQueueCopyWith(_PlaybackQueue value, $Res Function(_PlaybackQueue) _then) = __$PlaybackQueueCopyWithImpl;
 @override @useResult
 $Res call({
- Episode? currentEpisode, List<QueueItemWithEpisode> manualItems, List<QueueItemWithEpisode> adhocItems, String? adhocSourceContext
+ List<QueueItemWithEpisode> manualItems, List<QueueItemWithEpisode> adhocItems, String? adhocSourceContext
 });
 
 
@@ -544,10 +545,9 @@ class __$PlaybackQueueCopyWithImpl<$Res>
 
 /// Create a copy of PlaybackQueue
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? currentEpisode = freezed,Object? manualItems = null,Object? adhocItems = null,Object? adhocSourceContext = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? manualItems = null,Object? adhocItems = null,Object? adhocSourceContext = freezed,}) {
   return _then(_PlaybackQueue(
-currentEpisode: freezed == currentEpisode ? _self.currentEpisode : currentEpisode // ignore: cast_nullable_to_non_nullable
-as Episode?,manualItems: null == manualItems ? _self._manualItems : manualItems // ignore: cast_nullable_to_non_nullable
+manualItems: null == manualItems ? _self._manualItems : manualItems // ignore: cast_nullable_to_non_nullable
 as List<QueueItemWithEpisode>,adhocItems: null == adhocItems ? _self._adhocItems : adhocItems // ignore: cast_nullable_to_non_nullable
 as List<QueueItemWithEpisode>,adhocSourceContext: freezed == adhocSourceContext ? _self.adhocSourceContext : adhocSourceContext // ignore: cast_nullable_to_non_nullable
 as String?,

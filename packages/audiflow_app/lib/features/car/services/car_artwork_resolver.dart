@@ -19,15 +19,19 @@ const carArtworkCacheEntryLimit = 300;
 /// Turns a remote artwork URL into a URI Android Auto can load.
 abstract interface class CarArtworkResolver {
   /// The URI for [artworkUrl], or null when the artwork is unavailable.
-  Future<Uri?> resolve(String artworkUrl);
+  ///
+  /// A [background] request waits behind every other: a list on screen waits
+  /// at most a couple of seconds for its images, and must not spend them
+  /// behind up to 100 rows of a queue nobody has opened.
+  Future<Uri?> resolve(String artworkUrl, {bool background = false});
 }
 
 /// Serves artwork through `CarArtworkProvider`.
 ///
-/// Android Auto loads row artwork only from `content:` URIs (it cannot
-/// fetch remote URLs), so the artwork is downloaded and downscaled into
-/// [carArtworkCacheFolder] first, and the provider serves those files by
-/// name. The provider never touches the network itself.
+/// A `content:` URI gives the head unit a downscaled image and does not
+/// depend on how it treats remote URLs, so the artwork is downloaded and
+/// downscaled into [carArtworkCacheFolder] first, and the provider serves
+/// those files by name. The provider never touches the network itself.
 class ContentProviderArtworkResolver implements CarArtworkResolver {
   ContentProviderArtworkResolver({
     required this._preparer,
@@ -46,10 +50,11 @@ class ContentProviderArtworkResolver implements CarArtworkResolver {
 
   int _running = 0;
   final Queue<Completer<void>> _waiting = Queue();
+  final Queue<Completer<void>> _waitingInBackground = Queue();
 
   @override
-  Future<Uri?> resolve(String artworkUrl) async {
-    await _acquire();
+  Future<Uri?> resolve(String artworkUrl, {bool background = false}) async {
+    await _acquire(background ? _waitingInBackground : _waiting);
     try {
       final file = await _preparer.prepare(artworkUrl);
       if (file == null) return null;
@@ -63,20 +68,21 @@ class ContentProviderArtworkResolver implements CarArtworkResolver {
     }
   }
 
-  Future<void> _acquire() async {
+  Future<void> _acquire(Queue<Completer<void>> line) async {
     if (_running < _maxConcurrent) {
       _running++;
       return;
     }
     final turn = Completer<void>();
-    _waiting.add(turn);
+    line.add(turn);
     // The releasing call hands its slot over, so _running is unchanged.
     await turn.future;
   }
 
   void _release() {
-    if (_waiting.isNotEmpty) {
-      _waiting.removeFirst().complete();
+    final line = _waiting.isNotEmpty ? _waiting : _waitingInBackground;
+    if (line.isNotEmpty) {
+      line.removeFirst().complete();
       return;
     }
     _running--;

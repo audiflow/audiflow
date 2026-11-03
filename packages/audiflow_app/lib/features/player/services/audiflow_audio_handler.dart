@@ -14,9 +14,12 @@ import '../../car/services/car_media_controls.dart';
 import '../../car/services/car_playback.dart';
 import '../../car/services/car_providers.dart';
 import '../../monitoring/services/sentry_diagnostics.dart';
+import '../../settings/presentation/controllers/locale_controller.dart';
 import 'audio_interruption_handler.dart';
 import 'now_playing_artwork_provider.dart';
 import 'now_playing_media_item_sync.dart';
+import 'session_queue_channel.dart';
+import 'session_queue_publisher.dart';
 
 final _log = Logger(printer: PrefixPrinter(PrettyPrinter(methodCount: 0)));
 
@@ -178,9 +181,11 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
   }
 
   audio_service.PlaybackState _transformEvent(PlaybackEvent event) {
+    // Not event.currentIndex: the player holds one source at a time, so that
+    // index says nothing about the queue.
     return _buildPlaybackState(
       playing: _player.playing,
-      queueIndex: event.currentIndex,
+      queueIndex: playbackState.valueOrNull?.queueIndex,
     );
   }
 
@@ -201,6 +206,8 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
         audio_service.MediaAction.seek,
         audio_service.MediaAction.seekForward,
         audio_service.MediaAction.seekBackward,
+        // Without it the session says its queue rows cannot be selected.
+        audio_service.MediaAction.skipToQueueItem,
       },
       androidCompactActionIndices: nowPlayingCompactActionIndices(
         values: _controlValues,
@@ -415,6 +422,7 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
   Future<void> stop() async {
     await _interruptionHandler.markUserOverride();
     await _controller.stop();
+    _sessionQueue?.forgetPublished();
     await super.stop();
   }
 
@@ -502,6 +510,112 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
     } on Object catch (e, stack) {
       _log.e(
         '[AudioHandler] Android Auto speed change failed',
+        error: e,
+        stackTrace: stack,
+      );
+      unawaited(Sentry.captureException(e, stackTrace: stack));
+    }
+  }
+
+  // Publishes the queue to the media session. Only Android reads it: the iOS
+  // plugin drops setQueue, and CarPlay builds its Up Next from templates.
+  SessionQueuePublisher? _sessionQueue;
+
+  /// Starts following the queue and the now-playing episode.
+  void startSessionQueue() {
+    final publisher = SessionQueuePublisher(
+      readQueue: () => _ref.read(playbackQueueProvider).value,
+      readNowPlaying: () => _ref.read(nowPlayingControllerProvider),
+      // Not "Up Next": this list starts with the playing episode.
+      readTitle: () => carAppLocalizations(_ref).queueTitle,
+      publish: _publishSessionQueue,
+      playQueueItem: _carPlayback.playQueueItem,
+      continueNowPlaying: _continueNowPlaying,
+      resolveArtwork: (url) async {
+        final resolver = await _ref.read(carArtworkResolverProvider.future);
+        return resolver.resolve(url, background: true);
+      },
+      logger: _log,
+    );
+    _sessionQueue = publisher;
+    _ref
+      ..listen(playbackQueueProvider, (_, next) {
+        if (next case AsyncError(:final error, :final stackTrace)) {
+          _log.e(
+            '[AudioHandler] Session queue read failed',
+            error: error,
+            stackTrace: stackTrace,
+          );
+        }
+        publisher.markChanged();
+      })
+      ..listen(
+        nowPlayingControllerProvider.select(
+          (info) => (
+            info?.episodeTitle,
+            info?.episodeUrl,
+            info?.episode?.id,
+            info?.podcastTitle,
+            info?.artworkUrl,
+          ),
+        ),
+        (_, _) => publisher.markChanged(),
+      )
+      ..listen(localeControllerProvider, (_, _) => publisher.markChanged())
+      // A browse can arrive while this handler is still being set up.
+      ..listen(carBrowsedProvider, (_, browsed) {
+        if (browsed) publisher.enableArtwork();
+      }, fireImmediately: true)
+      ..onDispose(publisher.dispose);
+    publisher.markChanged();
+  }
+
+  void _publishSessionQueue(
+    List<audio_service.MediaItem> items,
+    int? activeIndex,
+    String title,
+  ) {
+    queue.add(items);
+    unawaited(_sendSessionQueueTitle(title));
+    playbackState.add(
+      _buildPlaybackState(
+        playing: playbackState.value.playing,
+        queueIndex: activeIndex,
+      ),
+    );
+  }
+
+  /// Sent with every list: a stopped service loses it with its session.
+  ///
+  /// Android registers the channel with the Activity, so a car starting the
+  /// app with no Activity cannot be sent the title yet. The next flush tries
+  /// again, by which time the phone app may have been opened.
+  Future<void> _sendSessionQueueTitle(String title) async {
+    final sent = await _ref.read(sessionQueueChannelProvider).setTitle(title);
+    if (!sent) _sessionQueue?.forgetPublished();
+  }
+
+  /// The playing row was tapped. An episode with no record has nothing to
+  /// look up, and may have lost it while its audio is still loaded, so it
+  /// only resumes.
+  Future<bool> _continueNowPlaying(int? episodeId) async {
+    if (episodeId != null && await _carPlayback.continueEpisode(episodeId)) {
+      return true;
+    }
+    await _controller.resume();
+    return true;
+  }
+
+  @override
+  Future<void> skipToQueueItem(int index) async {
+    // Nothing above this handler can show a failure to the driver.
+    try {
+      // As in play(): an interruption ending later must not undo this choice.
+      await _interruptionHandler.markUserOverride();
+      await _sessionQueue?.tap(index);
+    } on Object catch (e, stack) {
+      _log.e(
+        '[AudioHandler] Session queue tap failed',
         error: e,
         stackTrace: stack,
       );

@@ -81,10 +81,12 @@ Future<AudiflowAudioHandler> audioHandler(Ref ref) async {
     handler.updateDuration(progress.duration);
   });
 
-  // Keep Android Auto's speed and skip icons in step with the settings. iOS
-  // draws neither: CarPlay gets these values over its own channel.
+  // Keep Android Auto's speed and skip icons in step with the settings, and
+  // publish the queue. iOS uses neither: CarPlay gets these values and its
+  // Up Next list over its own channel.
   if (defaultTargetPlatform == TargetPlatform.android) {
     watchNowPlayingControlValues(ref, handler.updateMediaControlValues);
+    handler.startSessionQueue();
   }
 
   // Invalidate cached episode progress / list views when the player

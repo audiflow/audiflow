@@ -931,6 +931,7 @@
   "episodeDetailOpenPodcast": "番組を開く",
   "episodeDetailAddToEnd": "キューの最後に追加",
   "carUpNextTab": "次に再生",
+  "carInProgressTab": "再生途中",
   "carStationsTab": "ステーション",
   "carLibraryTab": "ライブラリ",
   "carDownloadsTab": "ダウンロード",

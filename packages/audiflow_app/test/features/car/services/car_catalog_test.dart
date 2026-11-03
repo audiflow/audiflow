@@ -225,6 +225,7 @@ void main() {
             ..addedAt = DateTime(2026),
           episode: episode,
           artworkUrl: 'https://example.com/queued-${episode.id}.jpg',
+          podcastTitle: 'Podcast of ${episode.id}',
         );
 
     test('lists queue items in play order by queue item id', () async {
@@ -240,7 +241,7 @@ void main() {
       check(ids(items)).deepEquals([manual.queueItem.id, adhoc.queueItem.id]);
       check(items.first)
         ..has((i) => i.title, 'title').equals(manual.episode.title)
-        ..has((i) => i.detail, 'detail').equals(podcastB.title)
+        ..has((i) => i.detail, 'detail').equals(manual.podcastTitle)
         ..has((i) => i.artworkUrl, 'artworkUrl').equals(manual.artworkUrl);
     });
 

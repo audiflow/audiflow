@@ -11,9 +11,10 @@ import 'car_playback.dart';
 
 /// A parsed Android Auto media id.
 ///
-/// Browsable ids: the audio_service roots, a tab (`upNext`, `stations`,
+/// Browsable ids: the audio_service roots, a tab (`inProgress`, `stations`,
 /// `library`, `downloads`), `podcast/<podcastId>`, and
-/// `station/<stationId>`. Playable ids: `queue/<queueItemId>`,
+/// `station/<stationId>`. `upNext` is no longer a tab, as the queue has its
+/// own button on Now Playing, but a host that kept the id still gets rows. Playable ids: `queue/<queueItemId>`,
 /// `episode/<episodeId>`, `podcastEpisode/<episodeId>` for a row of a
 /// podcast's own list, and `stationEpisode/<stationId>/<episodeId>` for a
 /// row of a station's list; those two queue the episodes after them when
@@ -152,7 +153,7 @@ class CarMediaBrowser {
   /// The tabs, in the order Android Auto shows them. Android Auto shows at
   /// most four.
   static const tabs = [
-    CarSection.upNext,
+    CarSection.inProgress,
     CarSection.library,
     CarSection.stations,
     CarSection.downloads,
