@@ -9,18 +9,12 @@ part of 'stream_cache_service.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(streamCacheService)
-final streamCacheServiceProvider = StreamCacheServiceProvider._();
+@ProviderFor(StreamCacheServiceNotifier)
+final streamCacheServiceProvider = StreamCacheServiceNotifierProvider._();
 
-final class StreamCacheServiceProvider
-    extends
-        $FunctionalProvider<
-          StreamCacheService,
-          StreamCacheService,
-          StreamCacheService
-        >
-    with $Provider<StreamCacheService> {
-  StreamCacheServiceProvider._()
+final class StreamCacheServiceNotifierProvider
+    extends $NotifierProvider<StreamCacheServiceNotifier, StreamCacheService> {
+  StreamCacheServiceNotifierProvider._()
     : super(
         from: null,
         argument: null,
@@ -32,18 +26,11 @@ final class StreamCacheServiceProvider
       );
 
   @override
-  String debugGetCreateSourceHash() => _$streamCacheServiceHash();
+  String debugGetCreateSourceHash() => _$streamCacheServiceNotifierHash();
 
   @$internal
   @override
-  $ProviderElement<StreamCacheService> $createElement(
-    $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
-
-  @override
-  StreamCacheService create(Ref ref) {
-    return streamCacheService(ref);
-  }
+  StreamCacheServiceNotifier create() => StreamCacheServiceNotifier();
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(StreamCacheService value) {
@@ -54,20 +41,40 @@ final class StreamCacheServiceProvider
   }
 }
 
-String _$streamCacheServiceHash() =>
-    r'55c5b64e6c931c197dd83a4e2fb5dbcafe4b33c8';
+String _$streamCacheServiceNotifierHash() =>
+    r'de9612171e07c38a5700a5f41ab483378fc4d4fa';
 
-/// The bytes currently held by the streamed-audio cache.
+abstract class _$StreamCacheServiceNotifier
+    extends $Notifier<StreamCacheService> {
+  StreamCacheService build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<StreamCacheService, StreamCacheService>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<StreamCacheService, StreamCacheService>,
+              StreamCacheService,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
+}
 
-@ProviderFor(streamCacheSize)
+/// The bytes currently held by the streamed-audio cache, kept current while
+/// something shows them.
+
+@ProviderFor(StreamCacheSize)
 final streamCacheSizeProvider = StreamCacheSizeProvider._();
 
-/// The bytes currently held by the streamed-audio cache.
-
+/// The bytes currently held by the streamed-audio cache, kept current while
+/// something shows them.
 final class StreamCacheSizeProvider
-    extends $FunctionalProvider<AsyncValue<int>, int, FutureOr<int>>
-    with $FutureModifier<int>, $FutureProvider<int> {
-  /// The bytes currently held by the streamed-audio cache.
+    extends $AsyncNotifierProvider<StreamCacheSize, int> {
+  /// The bytes currently held by the streamed-audio cache, kept current while
+  /// something shows them.
   StreamCacheSizeProvider._()
     : super(
         from: null,
@@ -84,13 +91,28 @@ final class StreamCacheSizeProvider
 
   @$internal
   @override
-  $FutureProviderElement<int> $createElement($ProviderPointer pointer) =>
-      $FutureProviderElement(pointer);
-
-  @override
-  FutureOr<int> create(Ref ref) {
-    return streamCacheSize(ref);
-  }
+  StreamCacheSize create() => StreamCacheSize();
 }
 
-String _$streamCacheSizeHash() => r'f3fa0ee0ee689b9511e71667c669465b18e50fff';
+String _$streamCacheSizeHash() => r'b9de7c15a7047323e80897f675fe56b7fb2f4061';
+
+/// The bytes currently held by the streamed-audio cache, kept current while
+/// something shows them.
+
+abstract class _$StreamCacheSize extends $AsyncNotifier<int> {
+  FutureOr<int> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<AsyncValue<int>, int>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<int>, int>,
+              AsyncValue<int>,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
+}

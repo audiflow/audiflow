@@ -89,8 +89,8 @@ void main() {
   }) {
     return ProviderScope(
       overrides: [
-        streamCacheServiceProvider.overrideWithValue(
-          streamCache ?? _FakeStreamCacheService(),
+        streamCacheServiceProvider.overrideWithBuild(
+          (_, _) => streamCache ?? _FakeStreamCacheService(),
         ),
         sharedPreferencesProvider.overrideWithValue(prefs),
         dataResetServiceProvider.overrideWithValue(resetService),
@@ -324,6 +324,21 @@ void main() {
       final used = Formatters.formatBytes(cache.bytes);
       final limit = Formatters.formatBytes(AppConstants.streamCacheMaxBytes);
       check(find.textContaining('$used of $limit').evaluate()).isNotEmpty();
+    });
+
+    testWidgets('keeps the size current while the screen stays open', (
+      tester,
+    ) async {
+      final cache = _FakeStreamCacheService();
+      await tester.pumpWidget(buildTestWidget(streamCache: cache));
+      await tester.pumpAndSettle();
+
+      cache.bytes = 90000000;
+      await tester.pump(const Duration(seconds: 10));
+      await tester.pump();
+
+      final used = Formatters.formatBytes(cache.bytes);
+      check(find.textContaining('$used of').evaluate()).isNotEmpty();
     });
 
     testWidgets('clears after confirmation and refreshes the size', (

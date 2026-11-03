@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audiflow_core/audiflow_core.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:logger/logger.dart';
@@ -43,34 +45,56 @@ class _JustAudioStreamCacheStore implements StreamCacheStore {
 }
 
 @Riverpod(keepAlive: true)
-StreamCacheService streamCacheService(Ref ref) {
-  final episodes = ref.watch(episodeRepositoryProvider);
-  final downloads = ref.watch(downloadRepositoryProvider);
-  final histories = ref.watch(playbackHistoryRepositoryProvider);
-  return StreamCacheService(
-    store: const _JustAudioStreamCacheStore(),
-    completedDownloadUrls: () async => [
-      for (final task in await downloads.getByStatus(
-        const DownloadStatus.completed(),
-      ))
-        task.audioUrl,
-    ],
-    finishedEpisodeUrls: (time) async {
-      final finished = await histories.getFinishedBefore(time);
-      if (finished.isEmpty) return const [];
-      final ids = [for (final history in finished) history.episodeId];
-      return [for (final e in await episodes.getByIds(ids)) e.audioUrl];
-    },
-    isPlayerIdle: () =>
-        ref.read(audioPlayerProvider).processingState == ProcessingState.idle,
-    logger: ref.watch(namedLoggerProvider('StreamCache')),
-  );
+class StreamCacheServiceNotifier extends _$StreamCacheServiceNotifier {
+  @override
+  StreamCacheService build() {
+    final episodes = ref.watch(episodeRepositoryProvider);
+    final downloads = ref.watch(downloadRepositoryProvider);
+    final histories = ref.watch(playbackHistoryRepositoryProvider);
+    return StreamCacheService(
+      store: const _JustAudioStreamCacheStore(),
+      completedDownloadUrls: () async => [
+        for (final task in await downloads.getByStatus(
+          const DownloadStatus.completed(),
+        ))
+          task.audioUrl,
+      ],
+      finishedEpisodeUrls: (time) async {
+        final finished = await histories.getFinishedBefore(time);
+        if (finished.isEmpty) return const [];
+        final ids = [for (final history in finished) history.episodeId];
+        return [for (final e in await episodes.getByIds(ids)) e.audioUrl];
+      },
+      isPlayerIdle: () =>
+          ref.read(audioPlayerProvider).processingState == ProcessingState.idle,
+      logger: ref.watch(namedLoggerProvider('StreamCache')),
+    );
+  }
 }
 
-/// The bytes currently held by the streamed-audio cache.
+/// The bytes currently held by the streamed-audio cache, kept current while
+/// something shows them.
 @riverpod
-Future<int> streamCacheSize(Ref ref) =>
-    ref.watch(streamCacheServiceProvider).size();
+class StreamCacheSize extends _$StreamCacheSize {
+  /// The native cache reports no changes, and playback or a sweep can change
+  /// the size while a screen shows it.
+  static const _refreshInterval = Duration(seconds: 10);
+
+  @override
+  Future<int> build() {
+    final service = ref.watch(streamCacheServiceProvider);
+    final timer = Timer.periodic(_refreshInterval, (_) => _refresh(service));
+    ref.onDispose(timer.cancel);
+    return service.size();
+  }
+
+  /// Assigns the result instead of invalidating, which would pass through a
+  /// loading state and blank the displayed size on every refresh.
+  Future<void> _refresh(StreamCacheService service) async {
+    final next = await AsyncValue.guard(service.size);
+    if (ref.mounted) state = next;
+  }
+}
 
 /// Lifecycle of the streamed-audio cache (FR 04).
 ///
@@ -129,12 +153,8 @@ class StreamCacheService {
   /// because downloads can also complete in a background isolate.
   /// Best-effort: the size limit still holds if a removal fails.
   Future<int> sweep() async {
-    final now = _clock();
-    final last = _lastSweep;
-    if (last != null && now.isBefore(last.add(_minSweepInterval))) return 0;
-    _lastSweep = now;
     try {
-      return await _sweep(now);
+      return await _sweep(_clock());
     } catch (e, stack) {
       // Isar reports storage failures as Error subclasses too.
       _logger?.w('Failed to sweep stream cache', error: e, stackTrace: stack);
