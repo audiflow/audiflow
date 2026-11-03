@@ -356,7 +356,8 @@ goes through `CarPlayback.continueEpisode`, which keeps the queue. A failure is
 reported to Sentry, as a head unit has nowhere to show it.
 
 Row artwork uses the shared `carArtworkResolverProvider`, so the rows reuse the
-browse rows' cache and download limit. Android has no signal for a head unit
+browse rows' cache and download limit; their requests wait behind browse
+requests, which have a list on screen waiting. Android has no signal for a head unit
 connecting, so `carBrowsedProvider` is set on the first browse request and
 gates the downloads; the phone-only path never prepares artwork. Rows are
 published without artwork at first and republished when it arrives; a generation
@@ -366,7 +367,9 @@ audio_service has no API for the queue title, which Android Auto shows on its
 queue button. `SessionQueueChannel.kt` (channel `audiflow/session_queue`)
 reaches `AudioService.instance`'s private `mediaSession` by reflection and calls
 `setQueueTitle`; `proguard-rules.pro` keeps those member names for minified
-builds. A failure leaves the host's own label on the button. Remove the channel if
+builds. A failure leaves the host's own label on the button, and the title is sent
+again with the next flush. `MainActivity` registers the channel, so it does not
+exist while a car has started the app with no Activity. Remove the channel if
 the plugin gains the API.
 
 ## When to update

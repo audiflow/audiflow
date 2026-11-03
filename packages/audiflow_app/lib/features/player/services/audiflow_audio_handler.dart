@@ -530,7 +530,7 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
       continueNowPlaying: _continueNowPlaying,
       resolveArtwork: (url) async {
         final resolver = await _ref.read(carArtworkResolverProvider.future);
-        return resolver.resolve(url);
+        return resolver.resolve(url, background: true);
       },
       logger: _log,
     );
@@ -548,7 +548,13 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
       })
       ..listen(
         nowPlayingControllerProvider.select(
-          (info) => (info?.episodeTitle, info?.episodeUrl, info?.episode?.id),
+          (info) => (
+            info?.episodeTitle,
+            info?.episodeUrl,
+            info?.episode?.id,
+            info?.podcastTitle,
+            info?.artworkUrl,
+          ),
         ),
         (_, _) => publisher.markChanged(),
       )
@@ -567,8 +573,7 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
     String title,
   ) {
     queue.add(items);
-    // Sent with every list: a stopped service loses it with its session.
-    unawaited(_ref.read(sessionQueueChannelProvider).setTitle(title));
+    unawaited(_sendSessionQueueTitle(title));
     playbackState.add(
       _buildPlaybackState(
         playing: playbackState.value.playing,
@@ -577,10 +582,23 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
     );
   }
 
+  /// Sent with every list: a stopped service loses it with its session.
+  ///
+  /// Android registers the channel with the Activity, so a car starting the
+  /// app with no Activity cannot be sent the title yet. The next flush tries
+  /// again, by which time the phone app may have been opened.
+  Future<void> _sendSessionQueueTitle(String title) async {
+    final sent = await _ref.read(sessionQueueChannelProvider).setTitle(title);
+    if (!sent) _sessionQueue?.forgetPublished();
+  }
+
   /// The playing row was tapped. An episode with no record has nothing to
-  /// look up, so it only resumes.
+  /// look up, and may have lost it while its audio is still loaded, so it
+  /// only resumes.
   Future<bool> _continueNowPlaying(int? episodeId) async {
-    if (episodeId != null) return _carPlayback.continueEpisode(episodeId);
+    if (episodeId != null && await _carPlayback.continueEpisode(episodeId)) {
+      return true;
+    }
     await _controller.resume();
     return true;
   }

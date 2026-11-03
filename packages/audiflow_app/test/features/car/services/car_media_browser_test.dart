@@ -78,7 +78,7 @@ class _FakeArtwork implements CarArtworkResolver {
   final throwing = <String>{};
 
   @override
-  Future<Uri?> resolve(String artworkUrl) async {
+  Future<Uri?> resolve(String artworkUrl, {bool background = false}) async {
     if (hold) await (_held ??= Completer()).future;
     if (throwing.contains(artworkUrl)) throw StateError('decode failed');
     if (missing.contains(artworkUrl)) return null;

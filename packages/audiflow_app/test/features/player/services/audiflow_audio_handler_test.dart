@@ -60,24 +60,34 @@ class _EnglishLocale extends LocaleController {
 class _FakeArtworkResolver implements CarArtworkResolver {
   _FakeArtworkResolver(this.uri);
 
-  final Uri uri;
+  final Uri? uri;
   final requests = <String>[];
+  final backgroundFlags = <bool>[];
 
   @override
-  Future<Uri?> resolve(String artworkUrl) async {
+  Future<Uri?> resolve(String artworkUrl, {bool background = false}) async {
     requests.add(artworkUrl);
+    backgroundFlags.add(background);
     return uri;
   }
 }
 
 class _RecordingTitleChannel extends Fake implements SessionQueueChannel {
+  _RecordingTitleChannel({this.delivers = true});
+
+  final bool delivers;
   final titles = <String>[];
 
   @override
   Future<bool> setTitle(String title) async {
     titles.add(title);
-    return true;
+    return delivers;
   }
+}
+
+class _EmptyEpisodeRepository extends Fake implements EpisodeRepository {
+  @override
+  Future<Episode?> getById(int id) async => null;
 }
 
 class _FakeQueueService extends Fake implements QueueService {
@@ -268,9 +278,11 @@ void main() {
     AudiflowAudioHandler started(
       FakeAsync async, {
       CarArtworkResolver? resolver,
+      NowPlayingInfo info = nowPlaying,
+      bool titleDelivered = true,
     }) {
       queueService = _FakeQueueService();
-      titleChannel = _RecordingTitleChannel();
+      titleChannel = _RecordingTitleChannel(delivers: titleDelivered);
       container = ProviderContainer(
         overrides: [
           sessionQueueChannelProvider.overrideWithValue(titleChannel),
@@ -279,12 +291,15 @@ void main() {
           audioPlayerControllerProvider.overrideWith(() => player),
           nowPlayingAudioSettingsProvider.overrideWithValue(null),
           nowPlayingControllerProvider.overrideWith(
-            () => StubNowPlayingController(nowPlaying),
+            () => StubNowPlayingController(info),
           ),
           playbackQueueProvider.overrideWith(
             (ref) => Stream.value(PlaybackQueue(manualItems: [queued])),
           ),
           queueServiceProvider.overrideWithValue(queueService),
+          episodeRepositoryProvider.overrideWithValue(
+            _EmptyEpisodeRepository(),
+          ),
           if (resolver != null)
             carArtworkResolverProvider.overrideWith((ref) async => resolver),
         ],
@@ -331,7 +346,66 @@ void main() {
           ..flushMicrotasks();
 
         check(resolver.requests).deepEquals([queued.artworkUrl!]);
+        check(resolver.backgroundFlags).deepEquals([true]);
         check(subject.queue.value.last.artUri).equals(artUri);
+      });
+    });
+
+    test('updates the playing row when its podcast title changes', () {
+      fakeAsync((async) {
+        final subject = started(async);
+        final changed = nowPlaying.copyWith(podcastTitle: 'Renamed');
+
+        container
+            .read(nowPlayingControllerProvider.notifier)
+            .setNowPlaying(changed);
+        async.elapse(flushDelay);
+
+        check(subject.queue.value.first.artist).equals(changed.podcastTitle);
+      });
+    });
+
+    test('fetches the playing row image when its artwork changes', () {
+      fakeAsync((async) {
+        final resolver = _FakeArtworkResolver(Uri.parse('content://art/1'));
+        started(async, resolver: resolver);
+        container.read(carBrowsedProvider.notifier).mark();
+        async.elapse(flushDelay);
+        const artworkUrl = 'https://example.com/1.jpg';
+
+        container
+            .read(nowPlayingControllerProvider.notifier)
+            .updateArtworkUrl(artworkUrl);
+        async.elapse(flushDelay);
+
+        check(resolver.requests).contains(artworkUrl);
+      });
+    });
+
+    test('sends an undelivered title again with the next flush', () {
+      fakeAsync((async) {
+        started(
+          async,
+          resolver: _FakeArtworkResolver(null),
+          titleDelivered: false,
+        );
+        check(titleChannel.titles).length.equals(1);
+
+        container.read(carBrowsedProvider.notifier).mark();
+        async.elapse(flushDelay);
+
+        check(titleChannel.titles).length.isGreaterThan(1);
+      });
+    });
+
+    test('does not send a delivered title again for an unchanged list', () {
+      fakeAsync((async) {
+        started(async, resolver: _FakeArtworkResolver(null));
+
+        container.read(carBrowsedProvider.notifier).mark();
+        async.elapse(flushDelay);
+
+        check(titleChannel.titles).length.equals(1);
       });
     });
 
@@ -354,6 +428,27 @@ void main() {
         async.flushMicrotasks();
 
         check(queueService.skippedTo).deepEquals([queued.queueItem.id]);
+      });
+    });
+
+    test('a tap on the playing row resumes it when its record is gone', () {
+      fakeAsync((async) {
+        final subject = started(
+          async,
+          info: nowPlaying.copyWith(
+            episode: Episode()
+              ..id = 1
+              ..podcastId = 1
+              ..guid = 'gone'
+              ..title = nowPlaying.episodeTitle
+              ..audioUrl = nowPlaying.episodeUrl,
+          ),
+        );
+
+        unawaited(subject.skipToQueueItem(0));
+        async.flushMicrotasks();
+
+        check(player.resumed).equals(1);
       });
     });
 
