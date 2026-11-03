@@ -158,6 +158,7 @@ class AudioPlayerController extends _$AudioPlayerController
   late AudioPlayer _player;
   late Logger _log;
   StreamSubscription<PlayerState>? _stateSubscription;
+  StreamSubscription<PlayerException>? _errorSubscription;
   String? _currentUrl;
   int? _currentEpisodeId;
   bool _isLoadingSource = false;
@@ -289,6 +290,7 @@ class AudioPlayerController extends _$AudioPlayerController
     _player = ref.watch(audioPlayerProvider);
     _log = ref.watch(namedLoggerProvider('AudioPlayer'));
     _listenToPlayerState();
+    _listenToPlayerErrors();
     _listenToProgress();
     ref.onDispose(_cleanup);
     return const PlaybackState.idle();
@@ -334,6 +336,14 @@ class AudioPlayerController extends _$AudioPlayerController
         }
 
         final url = _currentUrl!;
+
+        // A failed load is followed by engine reports that say nothing about
+        // the failure, and they must not hide it from the listener. The
+        // error ends when a new load replaces it, or when audio really plays.
+        if (state is PlaybackError &&
+            !(playing && processingState == ProcessingState.ready)) {
+          return;
+        }
 
         if (processingState == ProcessingState.completed) {
           _log.i('[StateStream] COMPLETED detected, advancing queue...');
@@ -393,7 +403,11 @@ class AudioPlayerController extends _$AudioPlayerController
         } else if (processingState == ProcessingState.loading ||
             processingState == ProcessingState.buffering) {
           state = PlaybackState.loading(episodeUrl: url);
-        } else if (playing) {
+        } else if (processingState == ProcessingState.idle &&
+            _isPreparingPlay) {
+          // The engine is idle until the load in progress reaches it.
+          return;
+        } else if (playing && processingState != ProcessingState.idle) {
           // The stream (not pause()/resume()) drives segment open/close so
           // fade-out, OS interruptions, and lock-screen controls that call
           // just_audio directly are covered too.
@@ -409,6 +423,36 @@ class AudioPlayerController extends _$AudioPlayerController
         _log.e('[StateStream] stream error', error: error, stackTrace: stack);
         state = PlaybackState.error(message: error.toString());
       },
+    );
+  }
+
+  // Mid-playback failures reach only this stream: there is no load or play()
+  // future left to fail. A load in progress reports its own failure through
+  // setUrl, and an error arriving then may belong to the source it replaces.
+  void _listenToPlayerErrors() {
+    _errorSubscription = _player.errorStream.listen((error) {
+      _log.e('[ErrorStream] engine error', error: error);
+      if (_currentUrl == null || _isLoadingSource) return;
+      _failPlayback('Failed to play audio: $error');
+    });
+  }
+
+  /// Enters the error state, stopping what a failure leaves running.
+  ///
+  /// just_audio keeps `playing` true across a failed setUrl when the previous
+  /// episode was playing, and that flag drives the lock screen and
+  /// [togglePlayPause], so a dead player would still present as playing.
+  void _failPlayback(String message) {
+    _closeListenSession(ListenEndReason.stop);
+    state = PlaybackState.error(message: message);
+    unawaited(
+      _player.pause().catchError((Object error, StackTrace stackTrace) {
+        _log.e(
+          '[Play] Stop after failure failed',
+          error: error,
+          stackTrace: stackTrace,
+        );
+      }),
     );
   }
 
@@ -540,6 +584,7 @@ class AudioPlayerController extends _$AudioPlayerController
 
   void _cleanup() {
     _stateSubscription?.cancel();
+    _errorSubscription?.cancel();
     _fadeTimer?.cancel();
     _lifecycleEvents.close();
   }
@@ -793,7 +838,7 @@ class AudioPlayerController extends _$AudioPlayerController
       _log.e('[Play] ERROR', error: e, stackTrace: stack);
       // A newer play() or stop() interrupted this load and owns the state.
       if (_playAttempt != attempt) return;
-      state = PlaybackState.error(message: 'Failed to play audio: $e');
+      _failPlayback('Failed to play audio: $e');
     } finally {
       _isPreparingPlay = false;
     }
@@ -972,7 +1017,8 @@ class AudioPlayerController extends _$AudioPlayerController
   ///
   /// No-op when no audio source is loaded (e.g. after app restart before
   /// the user taps play on an episode). When the loaded episode already
-  /// played to its end, continues with the next queued episode instead.
+  /// played to its end, continues with the next queued episode instead. After
+  /// a playback failure, loads the episode again.
   @override
   Future<void> resume() => _resume();
 
@@ -982,7 +1028,15 @@ class AudioPlayerController extends _$AudioPlayerController
   Future<void> resumeAutomatically() => _resume(automatic: true);
 
   Future<void> _resume({bool automatic = false}) async {
-    if (_currentUrl == null) return;
+    final url = _currentUrl;
+    if (url == null) return;
+    // A failed load leaves nothing to resume: just_audio's play() would only
+    // flip `playing` with no audio behind it. Retrying is the listener's call,
+    // so an interruption ending does not reload on its own.
+    if (state is PlaybackError) {
+      if (!automatic) await play(url);
+      return;
+    }
     if (_isParkedAtEnd) {
       await _advanceQueueOnce();
       return;
@@ -1054,7 +1108,7 @@ class AudioPlayerController extends _$AudioPlayerController
           stackTrace: stackTrace,
         );
         if (_playAttempt != attempt || _currentUrl != url) return;
-        state = PlaybackState.error(message: 'Failed to play audio: $error');
+        _failPlayback('Failed to play audio: $error');
       }),
     );
   }
