@@ -931,8 +931,8 @@ packages:
     dependency: "direct overridden"
     description:
       path: just_audio
-      ref: "0.10.6-stream-cache.1"
-      resolved-ref: "3827d9d55fb8fb9d53e6f47243cedf4cbd31491b"
+      ref: "0.10.6-stream-cache.3"
+      resolved-ref: "9d373d6d0a2c2b6dfe84fa5f37cc961ec72beabd"
       url: "https://github.com/reedom/just_audio.git"
     source: git
     version: "0.10.6"
