@@ -201,6 +201,134 @@ void main() {
     });
   });
 
+  group('LibraryScreen while feeds fill in', () {
+    late StreamController<List<Subscription>> subscriptions;
+
+    /// A Library whose sorted list really reloads on each write: only the
+    /// upstream stream is replaced, not sortedSubscriptionsProvider.
+    Future<void> pump(
+      WidgetTester tester, {
+      required List<Subscription> initial,
+      Stream<DateTime?> Function(int podcastId)? newestDate,
+    }) async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      subscriptions = StreamController<List<Subscription>>.broadcast();
+      addTearDown(subscriptions.close);
+      final container = ProviderContainer(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          librarySubscriptionsProvider.overrideWith(
+            (ref) => subscriptions.stream,
+          ),
+          newestEpisodeDateProvider.overrideWith(
+            (ref, podcastId) =>
+                newestDate?.call(podcastId) ?? Stream.value(null),
+          ),
+          continueListeningEpisodesProvider.overrideWith(
+            (ref) => Stream.value(const []),
+          ),
+          stationListProvider.overrideWith(
+            (ref) => Stream.value(const <Station>[]),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const LibraryScreen(),
+          ),
+        ),
+      );
+      await tester.pump();
+      subscriptions.add(initial);
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('keeps the rows on screen through each write', (tester) async {
+      // An OPML import writes per feed. A frame showing a spinner in place of
+      // the rows is a flash, and it only exists between emissions.
+      final first = [_sub(1, 'Alpha'), _sub(2, 'Beta')];
+      await pump(tester, initial: first);
+      check(find.text('Alpha').evaluate()).isNotEmpty();
+
+      subscriptions.add([...first, _sub(3, 'Gamma')]);
+      await tester.pump();
+      while (tester.binding.hasScheduledFrame) {
+        check(find.byType(CircularProgressIndicator).evaluate()).isEmpty();
+        check(find.text('Alpha').evaluate()).isNotEmpty();
+        await tester.pump();
+      }
+      await tester.pumpAndSettle();
+      check(find.text('Gamma').evaluate()).isNotEmpty();
+    });
+
+    testWidgets('the first podcast does not read as a filter miss', (
+      tester,
+    ) async {
+      // Held open so the reload is still running when the frame is checked,
+      // as it is while Isar answers the new podcast's episode query.
+      final newestDate = StreamController<DateTime?>();
+      addTearDown(newestDate.close);
+      await pump(
+        tester,
+        initial: const [],
+        newestDate: (_) => newestDate.stream,
+      );
+      final l10n = AppLocalizations.of(
+        tester.element(find.byType(LibraryScreen)),
+      );
+
+      subscriptions.add([_sub(1, 'Alpha')]);
+      await tester.pump();
+      await tester.pump();
+      check(find.text(l10n.libraryFilterNoMatch).evaluate()).isEmpty();
+
+      newestDate.add(null);
+      await tester.pumpAndSettle();
+      check(find.text('Alpha').evaluate()).isNotEmpty();
+    });
+
+    testWidgets('a first podcast whose read fails is not a filter miss', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        initial: const [],
+        newestDate: (_) =>
+            Stream<DateTime?>.error(StateError('episode read failed')),
+      );
+      final l10n = AppLocalizations.of(
+        tester.element(find.byType(LibraryScreen)),
+      );
+
+      subscriptions.add([_sub(1, 'Alpha')]);
+      await tester.pumpAndSettle();
+
+      check(find.text(l10n.libraryFilterNoMatch).evaluate()).isEmpty();
+    });
+
+    testWidgets('a failed reload keeps the rows it has', (tester) async {
+      final first = [_sub(1, 'Alpha')];
+      await pump(
+        tester,
+        initial: first,
+        newestDate: (id) => id == 2
+            ? Stream<DateTime?>.error(StateError('episode read failed'))
+            : Stream.value(null),
+      );
+
+      subscriptions.add([...first, _sub(2, 'Beta')]);
+      await tester.pumpAndSettle();
+
+      check(find.text('Alpha').evaluate()).isNotEmpty();
+    });
+  });
+
   group('LibraryScreen sort menu', () {
     late ProviderContainer container;
 
