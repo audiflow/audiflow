@@ -1,14 +1,18 @@
 import 'package:audiflow_domain/audiflow_domain.dart'
     show
         EffectiveThumbnails,
+        PlaybackLoading,
         SmartPlaylistEpisodeData,
         SmartPlaylistGroup,
+        audioPlayerControllerProvider,
+        playbackProgressProvider,
         presetByFeedUrlProvider;
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../controllers/podcast_detail_controller.dart';
 
 /// Formats duration in ms using localized strings.
 String? formatGroupDuration(int? totalMs, AppLocalizations l10n) {
@@ -29,6 +33,7 @@ class SeriesPlayback {
     required this.played,
     required this.total,
     required this.fraction,
+    this.unfinishedShares = const {},
   });
 
   factory SeriesPlayback.of(
@@ -38,21 +43,28 @@ class SeriesPlayback {
     var played = 0;
     var total = 0;
     var progress = 0.0;
+    final unfinishedShares = <String, double>{};
     for (final id in episodeIds) {
       total++;
-      final state = episodes[id]?.progress;
-      if (state == null) continue;
-      if (state.isCompleted) {
+      final data = episodes[id];
+      if (data == null) continue;
+      final state = data.progress;
+      if (state != null && state.isCompleted) {
         played++;
         progress += 1;
-      } else if (state.isInProgress) {
-        progress += (state.progressPercent ?? 0).clamp(0.0, 1.0);
+        continue;
       }
+      final share = state != null && state.isInProgress
+          ? (state.progressPercent ?? 0).clamp(0.0, 1.0)
+          : 0.0;
+      progress += share;
+      unfinishedShares[data.episode.audioUrl] = share;
     }
     return SeriesPlayback(
       played: played,
       total: total,
       fraction: total == 0 ? 0 : progress / total,
+      unfinishedShares: unfinishedShares,
     );
   }
 
@@ -61,6 +73,20 @@ class SeriesPlayback {
 
   /// 0 when nothing has been started, 1 when every episode is played.
   final double fraction;
+
+  /// Saved progress of each episode not yet finished, keyed by audio URL.
+  ///
+  /// A finished episode is left out so that replaying it does not pull the
+  /// line back: it keeps counting as a whole episode.
+  final Map<String, double> unfinishedShares;
+
+  /// [fraction] with episode [url]'s saved share replaced by [live].
+  double fractionWith(String url, double live) {
+    final saved = unfinishedShares[url];
+    if (saved == null) return fraction;
+    final replaced = fraction + (live.clamp(0.0, 1.0) - saved) / total;
+    return replaced.clamp(0.0, 1.0);
+  }
 
   bool get started => 0 < fraction;
   bool get finished => 0 < total && total <= played;
@@ -123,15 +149,15 @@ class InlineGroupCard extends ConsumerWidget {
     final hasThumbnail =
         _resolveShowThumbnail(ref) && group.thumbnailUrl != null;
     final playback = this.playback;
+    // Rows watch only which episode is loaded, so they skip playback ticks.
+    final liveUrl = _liveUrl(ref, playback);
+    final showsStarted = (playback?.started ?? false) || liveUrl != null;
 
     return InkWell(
       onTap: onTap,
-      child: BottomEdgeProgress(
-        fraction: playback != null && playback.started
-            ? playback.fraction
-            : null,
-        completed: playback?.finished ?? false,
-        inset: Spacing.screenHorizontal,
+      child: _SeriesLine(
+        playback: playback,
+        liveUrl: liveUrl,
         child: Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: Spacing.screenHorizontal,
@@ -165,9 +191,9 @@ class InlineGroupCard extends ConsumerWidget {
                     ),
                     if (playback != null)
                       Text(
-                        _status(playback, l10n),
+                        _status(playback, showsStarted, l10n),
                         style: AppTextStyles.caption.copyWith(
-                          color: playback.started
+                          color: showsStarted
                               ? colors.accent
                               : colors.inkTertiary,
                           fontWeight: FontWeight.w600,
@@ -185,9 +211,20 @@ class InlineGroupCard extends ConsumerWidget {
     );
   }
 
-  String _status(SeriesPlayback playback, AppLocalizations l10n) {
+  /// The loaded episode's URL when it counts toward this row's line.
+  String? _liveUrl(WidgetRef ref, SeriesPlayback? playback) {
+    if (playback == null || playback.unfinishedShares.isEmpty) return null;
+    final url = ref.watch(currentPlayingEpisodeUrlProvider);
+    return playback.unfinishedShares.containsKey(url) ? url : null;
+  }
+
+  String _status(
+    SeriesPlayback playback,
+    bool showsStarted,
+    AppLocalizations l10n,
+  ) {
     if (playback.finished) return l10n.seriesStatusPlayed;
-    if (!playback.started) return l10n.seriesStatusUnplayed;
+    if (!showsStarted) return l10n.seriesStatusUnplayed;
     return l10n.seriesStatusPartlyPlayed(playback.played, playback.total);
   }
 
@@ -256,4 +293,70 @@ class YearFilteredInlineGroup {
 
   /// Filtered total duration in ms (for split-by-year).
   final int? totalDurationMs;
+}
+
+/// The bottom-edge line of a series row.
+///
+/// [SeriesPlayback] is saved history, which only changes on a pause, a stop
+/// or a completion, so while [liveUrl] is set the line follows the live
+/// position instead. One widget serves both cases so that the row's content
+/// is not remounted, and its artwork reloaded, when playback starts or stops.
+class _SeriesLine extends ConsumerStatefulWidget {
+  const _SeriesLine({
+    required this.playback,
+    required this.liveUrl,
+    required this.child,
+  });
+
+  final SeriesPlayback? playback;
+  final String? liveUrl;
+  final Widget child;
+
+  @override
+  ConsumerState<_SeriesLine> createState() => _SeriesLineState();
+}
+
+class _SeriesLineState extends ConsumerState<_SeriesLine> {
+  double? _lastLive;
+
+  @override
+  void didUpdateWidget(_SeriesLine oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.liveUrl != widget.liveUrl) _lastLive = null;
+  }
+
+  double? _fraction() {
+    final playback = widget.playback;
+    final url = widget.liveUrl;
+    if (playback == null || url == null) return playback?.fraction;
+
+    final live = ref.watch(playbackProgressProvider);
+    final isLoading = ref.watch(
+      audioPlayerControllerProvider.select((state) => state is PlaybackLoading),
+    );
+    final liveFraction = live?.knownFraction;
+    // A buffer reports as loading, so the last reading is kept through it
+    // rather than jumping back to the saved share. A first reading of zero
+    // is not taken: the player reads zero after loading until the start seek
+    // lands. Once a position has been read, zero is a real rewind.
+    if (!isLoading &&
+        live != null &&
+        liveFraction != null &&
+        (_lastLive != null || Duration.zero < live.position)) {
+      _lastLive = liveFraction;
+    }
+    final last = _lastLive;
+    return last == null ? playback.fraction : playback.fractionWith(url, last);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final fraction = _fraction();
+    return BottomEdgeProgress(
+      fraction: ProgressLine.isStarted(fraction) ? fraction : null,
+      completed: widget.playback?.finished ?? false,
+      inset: Spacing.screenHorizontal,
+      child: widget.child,
+    );
+  }
 }
