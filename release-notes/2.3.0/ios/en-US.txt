@@ -1,3 +1,7 @@
 • CarPlay: browse your Library, Stations and Downloads on the car screen and play from there. Playing an episode from a podcast or a station queues the episodes that follow it, and Now Playing's Up Next button shows the queue
 • CarPlay: Now Playing shows your playback speed, and the skip buttons use your skip intervals; the lock screen and Control Center show them too
+• Streamed episodes are kept in a cache, so seeking back or resuming no longer downloads the same audio again
+• When an episode can't play, the player says so, and says when you're offline; tap play to try again
+• The episode page and series rows now follow along as an episode plays
+• OPML import: the file picker narrows to OPML and XML files, and the Library no longer flickers while feeds are added
 • Subscribing on a podcast's page now shows "Subscribed" for a moment before the button closes, instead of disappearing at once
