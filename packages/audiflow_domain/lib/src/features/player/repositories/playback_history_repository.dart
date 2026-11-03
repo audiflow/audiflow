@@ -85,6 +85,10 @@ abstract class PlaybackHistoryRepository {
   /// Used to restore the mini player on app restart.
   Future<PlaybackHistory?> getLastPlayed();
 
+  /// Episodes whose listen finished at or before [time], replays excluded: a
+  /// replay is still using the episode's audio.
+  Future<List<PlaybackHistory>> getFinishedBefore(DateTime time);
+
   /// Watches episodes that are in progress (for "Continue Listening").
   ///
   /// Returns episodes that have been started and whose current listen is

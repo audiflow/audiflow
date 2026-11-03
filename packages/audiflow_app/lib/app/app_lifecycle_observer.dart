@@ -71,6 +71,10 @@ class _AppLifecycleObserverState extends ConsumerState<AppLifecycleObserver> {
       ref.read(downloadRetentionServiceProvider).sweepPlayed(),
       'while removing played auto downloads',
     );
+    _runUnawaited(
+      ref.read(streamCacheServiceProvider).sweep(),
+      'while removing cached audio of finished episodes',
+    );
   }
 
   /// Fire-and-forget [task], reporting failures instead of dropping them.

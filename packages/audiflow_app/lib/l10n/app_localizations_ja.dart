@@ -323,6 +323,31 @@ class AppLocalizationsJa extends AppLocalizations {
   String get storageCacheCleared => 'キャッシュをクリアしました';
 
   @override
+  String get storageStreamCache => '再生キャッシュ';
+
+  @override
+  String storageStreamCacheSubtitle(String size, String limit) {
+    return '$limit のうち $size を使用中。ストリーミング再生の音声を保存します（ダウンロードは含みません）';
+  }
+
+  @override
+  String get storageStreamCacheSubtitleNoSize =>
+      'ストリーミング再生の音声を保存します（ダウンロードは含みません）';
+
+  @override
+  String get storageClearStreamCacheTitle => '再生キャッシュを消去しますか？';
+
+  @override
+  String get storageClearStreamCacheContent =>
+      'ストリーミング再生で保存した音声は、次に再生するときに取得し直します。ダウンロード済みのエピソードには影響しません。';
+
+  @override
+  String get storageStreamCacheCleared => '再生キャッシュを消去しました';
+
+  @override
+  String get storageStreamCacheClearFailed => '再生キャッシュを消去できませんでした';
+
+  @override
   String get storagePodcastCache => 'ポッドキャストキャッシュ';
 
   @override
