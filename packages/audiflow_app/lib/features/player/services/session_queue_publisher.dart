@@ -96,7 +96,11 @@ class SessionQueuePublisher {
     if (!played) _logger.w('Nothing to play for ${entry.mediaId}');
   }
 
-  void dispose() => _changes.dispose();
+  void dispose() {
+    _changes.dispose();
+    // A download still running would otherwise publish through a dead ref.
+    _generation++;
+  }
 
   void _flush() {
     final queue = _readQueue();

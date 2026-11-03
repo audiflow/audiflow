@@ -309,6 +309,20 @@ void main() {
       });
     });
 
+    test('drops images that arrive after dispose', () {
+      fakeAsync((async) {
+        final h = _Harness()..queue = PlaybackQueue(adhocItems: [_withArt(1)]);
+        h.publisher.enableArtwork();
+        async.elapse(_delay);
+        final publishesBefore = h.publishes.length;
+
+        h.publisher.dispose();
+        h.finishArtwork(async);
+
+        check(h.publishes.length).equals(publishesBefore);
+      });
+    });
+
     test('keeps known images on later publishes', () {
       fakeAsync((async) {
         final queued = _withArt(1);
