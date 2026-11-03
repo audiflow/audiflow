@@ -357,7 +357,11 @@ Future<ProviderContainer> bootstrapAppContainer({
   // episode, and a source only goes through the cache if it was on by then.
   await container.read(streamCacheServiceProvider).configure();
 
-  // Initialize audio service for platform media controls
+  // Initialize audio service for platform media controls. Listened as well
+  // as awaited: Android Auto can launch the app in the background, where no
+  // screen watches the speed, and paused subscriptions would leave the
+  // now-playing controls showing stale values.
+  container.listen(audioHandlerProvider, (_, _) {});
   await container.read(audioHandlerProvider.future);
 
   // Keep the player on the now-playing podcast's audio settings. Listened

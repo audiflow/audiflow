@@ -30,4 +30,15 @@ sealed class PlaybackProgress with _$PlaybackProgress {
     final value = bufferedPosition.inMilliseconds / duration.inMilliseconds;
     return value.clamp(0.0, 1.0);
   }
+
+  /// [progress], or null while the duration is unknown, so a caller can fall
+  /// back to the saved position instead of showing an empty line.
+  double? get knownFraction => duration <= Duration.zero ? null : progress;
+
+  /// Time left, or null while the duration is unknown.
+  Duration? get remaining {
+    if (duration <= Duration.zero) return null;
+    final left = duration - position;
+    return left.isNegative ? Duration.zero : left;
+  }
 }

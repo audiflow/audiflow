@@ -10,6 +10,8 @@ import 'package:rxdart/rxdart.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 import '../../car/services/car_media_browser.dart';
+import '../../car/services/car_media_controls.dart';
+import '../../car/services/car_playback.dart';
 import '../../car/services/car_providers.dart';
 import '../../monitoring/services/sentry_diagnostics.dart';
 import 'audio_interruption_handler.dart';
@@ -53,6 +55,9 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
     artworkPreparer: _ref.read(nowPlayingArtworkPreparerProvider),
     logger: _log,
   );
+
+  /// What the published controls show; see [updateMediaControlValues].
+  NowPlayingControlValues? _controlValues;
 
   /// Completes when the audio session is configured and listeners are active.
   late final Future<void> _sessionReady;
@@ -132,6 +137,11 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
   /// produced.
   void _pipePlaybackState() {
     _player.playbackEventStream.map(_transformEvent).listen(playbackState.add);
+    // just_audio emits the event for a speed change before the speed it
+    // reports has changed, so that event still carries the old rate, and the
+    // session would extrapolate the position with it. The replayed current
+    // value is not a change.
+    _player.speedStream.skip(1).listen((_) => _republishPlaybackState());
     // `episode_complete` analytics emit lives in
     // `AudioPlayerController._playerStateListener`'s
     // `ProcessingState.completed` branch — owned by the controller so
@@ -183,23 +193,18 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
     required int? queueIndex,
   }) {
     return audio_service.PlaybackState(
-      controls: [
-        audio_service.MediaControl.skipToPrevious,
-        audio_service.MediaControl.rewind,
-        if (playing)
-          audio_service.MediaControl.pause
-        else
-          audio_service.MediaControl.play,
-        audio_service.MediaControl.fastForward,
-        audio_service.MediaControl.skipToNext,
-        audio_service.MediaControl.stop,
-      ],
+      controls: nowPlayingMediaControls(
+        playing: playing,
+        values: _controlValues,
+      ),
       systemActions: const {
         audio_service.MediaAction.seek,
         audio_service.MediaAction.seekForward,
         audio_service.MediaAction.seekBackward,
       },
-      androidCompactActionIndices: const [0, 2, 4],
+      androidCompactActionIndices: nowPlayingCompactActionIndices(
+        values: _controlValues,
+      ),
       processingState: switch (_player.processingState) {
         ProcessingState.idle => audio_service.AudioProcessingState.idle,
         ProcessingState.loading => audio_service.AudioProcessingState.loading,
@@ -348,6 +353,27 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
     }
   }
 
+  /// Republishes the controls for [values], as a speed or skip change on
+  /// the phone produces no playback event of its own that would show them.
+  ///
+  void updateMediaControlValues(NowPlayingControlValues values) {
+    if (_controlValues == values) return;
+    _controlValues = values;
+    _republishPlaybackState();
+  }
+
+  /// Publishes the current player values. Keeps the published `playing`
+  /// flag: it can differ from the player's during an interruption.
+  void _republishPlaybackState() {
+    final published = playbackState.value;
+    playbackState.add(
+      _buildPlaybackState(
+        playing: published.playing,
+        queueIndex: published.queueIndex,
+      ),
+    );
+  }
+
   /// Updates the platform media item (lock screen / notification metadata).
   void syncNowPlaying(NowPlayingInfo? info) => _nowPlayingSync.sync(info);
 
@@ -455,6 +481,31 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
       await (await _carBrowser).playFromMediaId(mediaId);
     } on Object catch (e, stack) {
       _logCarBrowserError(e, stack);
+    }
+  }
+
+  late final _carPlayback = CarPlayback(
+    _ref,
+    catalog: () => _ref.read(carCatalogProvider),
+  );
+
+  @override
+  Future<dynamic> customAction(
+    String name, [
+    Map<String, dynamic>? extras,
+  ]) async {
+    if (name != carCycleSpeedAction) return super.customAction(name, extras);
+    // Nothing above this handler can show a failure to the driver; the
+    // button simply keeps its icon.
+    try {
+      await _carPlayback.cycleSpeed();
+    } on Object catch (e, stack) {
+      _log.e(
+        '[AudioHandler] Android Auto speed change failed',
+        error: e,
+        stackTrace: stack,
+      );
+      unawaited(Sentry.captureException(e, stackTrace: stack));
     }
   }
 
