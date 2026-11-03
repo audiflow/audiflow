@@ -39,6 +39,23 @@ class _OpmlImportFlowState extends ConsumerState<OpmlImportFlow> {
 
   final _progress = OverlayPortalController();
 
+  ScaffoldFeatureController<SnackBar, SnackBarClosedReason>? _allFilesOffer;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    // The snackbar lives above this screen, so it survives a tab switch or a
+    // covering route. Tapping it then would land the picker's result on a
+    // navigator the user cannot see. TickerMode is what both of those turn off.
+    if (TickerMode.valuesOf(context).enabled) return;
+
+    // Closing animates the messenger, which cannot rebuild during this build.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _allFilesOffer?.close();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     ref.listen(opmlImportControllerProvider, (_, next) {
@@ -89,7 +106,7 @@ class _OpmlImportFlowState extends ConsumerState<OpmlImportFlow> {
   /// the moment to offer the way out of a filter that hid the wanted file.
   void _offerAllFiles(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    ScaffoldMessenger.of(context).showSnackBar(
+    final offer = ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(l10n.opmlPickerFileNotListed),
         // Cancelling is usually deliberate, so this must not linger until
@@ -103,6 +120,11 @@ class _OpmlImportFlowState extends ConsumerState<OpmlImportFlow> {
         ),
       ),
     );
+    _allFilesOffer = offer;
+    // Closing a finished offer would hide whichever snackbar came after it.
+    offer.closed.whenComplete(() {
+      if (identical(_allFilesOffer, offer)) _allFilesOffer = null;
+    });
   }
 
   Future<void> _start({OpmlPickFilter filter = OpmlPickFilter.opml}) async {
@@ -174,7 +196,7 @@ class _ImportProgress extends StatelessWidget {
               children: [
                 const CircularProgressIndicator(),
                 const SizedBox(width: 24),
-                Text(l10n.opmlImportReadingFile),
+                Flexible(child: Text(l10n.opmlImportReadingFile)),
               ],
             ),
           ),

@@ -138,6 +138,54 @@ void main() {
       check(fake.requestedFilters).deepEquals([OpmlPickFilter.opml]);
     });
 
+    testWidgets('drops the all-files offer when the screen goes out of sight', (
+      tester,
+    ) async {
+      // What the tab shell and a covering route both do to a hidden screen.
+      final visible = ValueNotifier(true);
+      addTearDown(visible.dispose);
+      await tester.pumpApp(
+        Scaffold(
+          body: ValueListenableBuilder(
+            valueListenable: visible,
+            builder: (_, enabled, child) =>
+                TickerMode(enabled: enabled, child: child!),
+            child: OpmlImportFlow(
+              builder: (context, start) =>
+                  ElevatedButton(onPressed: start, child: const Text('Import')),
+            ),
+          ),
+        ),
+        overrides: [opmlImportControllerProvider.overrideWith(() => fake)],
+      );
+      await tester.pumpAndSettle();
+
+      fake.emit(OpmlPickCancelled(filter: OpmlPickFilter.opml));
+      await tester.pumpAndSettle();
+      check(find.byType(SnackBar).evaluate()).isNotEmpty();
+
+      visible.value = false;
+      await tester.pumpAndSettle();
+
+      check(find.byType(SnackBar).evaluate()).isEmpty();
+    });
+
+    testWidgets('keeps the progress message inside its card when narrow', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(240, 640);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await pumpFlow(tester);
+
+      fake.emit(OpmlPickLoading());
+      await tester.pump();
+
+      // A message that cannot wrap reports an overflow as a test exception.
+      check(tester.takeException()).isNull();
+      check(find.text('Reading file...').evaluate()).isNotEmpty();
+    });
+
     testWidgets('does nothing when the unfiltered picker is cancelled', (
       tester,
     ) async {
