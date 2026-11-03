@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:audiflow_app/features/onboarding/presentation/screens/migration_guide_screen.dart';
 import 'package:audiflow_app/features/settings/presentation/controllers/opml_import_controller.dart';
+import 'package:audiflow_app/features/settings/services/opml_file_picker.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter/widgets.dart';
@@ -23,7 +24,10 @@ class _FakeOpmlImportController extends OpmlImportController {
   OpmlPickResult build() => OpmlPickIdle();
 
   @override
-  Future<bool> pickAndParse(BuildContext context) async {
+  Future<bool> pickAndParse(
+    BuildContext context, {
+    OpmlPickFilter filter = OpmlPickFilter.opml,
+  }) async {
     startCount++;
     final inFlight = pending;
     if (inFlight != null) await inFlight;

@@ -1058,6 +1058,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get opmlFileUnreadable => 'Couldn\'t read this file';
 
   @override
+  String get opmlImportReadingFile => 'Reading file...';
+
+  @override
+  String get opmlPickerFileNotListed => 'Didn\'t see your file?';
+
+  @override
+  String get opmlPickerShowAllFiles => 'Show all files';
+
+  @override
   String get opmlNoFeedsFound => 'No podcast feeds found in the file';
 
   @override

@@ -360,6 +360,9 @@
 
   "opmlImportTitle": "ポッドキャストをインポート",
   "opmlFileUnreadable": "このファイルを読み込めませんでした",
+  "opmlImportReadingFile": "ファイルを読み込んでいます...",
+  "opmlPickerFileNotListed": "ファイルが見つかりませんでしたか?",
+  "opmlPickerShowAllFiles": "すべてのファイルを表示",
   "opmlNoFeedsFound": "ファイルにポッドキャストのフィードが見つかりませんでした",
   "opmlAlreadySubscribed": "購読済み",
   "opmlImportSelected": "選択をインポート ({count})",
