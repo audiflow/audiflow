@@ -193,7 +193,7 @@ Rules shared by both platforms:
 - A response with a `text/*` content type is never stored and does not affect the entry: it is treated as a temporary failure, because it is usually a captive portal's page.
 - The OS can purge the cache directory at any time. Purged bytes count as not fetched.
 
-`StreamCacheService.sweep` runs on launch and resume from `AppLifecycleObserver`, next to `sweepPlayed`. It removes entries by app-level rules that the native layer cannot judge (finished past the grace period, or with a completed download). It runs there, not when a download completes, because downloads also complete in the background isolate.
+`StreamCacheService.sweep` runs on launch and resume from `AppLifecycleObserver`, next to `sweepPlayed`. It removes entries by app-level rules that the native layer cannot judge (finished past the grace period, or with a completed download). It runs there, not when a download completes, because downloads also complete in the background isolate. Completed downloads are checked on every sweep. Finished episodes are checked at most once an hour, and a sweep that fails does not use up that hour.
 
 Bytes that were sent by the server but not yet read when the player closes a connection are lost, so a seek can still re-fetch a little on Android, where the player keeps connections open and stops reading once its buffer is full.
 

@@ -176,18 +176,66 @@ void main() {
       check(await service.sweep()).equals(0);
     });
 
-    test('runs at most once within the interval', () async {
-      store.stored = [otherUrl];
+    test(
+      'queries finished episodes at most once within the interval',
+      () async {
+        store.stored = [otherUrl];
+        final service = buildService();
+
+        await service.sweep();
+        clockNow = now.add(const Duration(minutes: 59));
+        await service.sweep();
+        check(finishedQueries).length.equals(1);
+
+        clockNow = now.add(const Duration(hours: 1));
+        await service.sweep();
+        check(finishedQueries).length.equals(2);
+      },
+    );
+
+    test('removes a download completed within the interval', () async {
+      store.stored = [downloadedUrl];
+      final service = buildService();
+
+      check(await service.sweep()).equals(0);
+      completedDownloads = [downloadedUrl];
+      clockNow = now.add(const Duration(minutes: 1));
+
+      check(await service.sweep()).equals(1);
+
+      check(store.removed).deepEquals([downloadedUrl]);
+    });
+
+    test('a failed sweep does not use up the interval', () async {
+      store.stored = [finishedUrl];
+      var fail = true;
+      final service = StreamCacheService(
+        store: store,
+        completedDownloadUrls: () async => const [],
+        finishedEpisodeUrls: (_) async {
+          if (fail) throw StateError('isar');
+          return [finishedUrl];
+        },
+        isPlayerIdle: () => true,
+        clock: () => clockNow,
+      );
+
+      check(await service.sweep()).equals(0);
+      fail = false;
+      clockNow = now.add(const Duration(minutes: 1));
+
+      check(await service.sweep()).equals(1);
+    });
+
+    test('an empty cache does not use up the interval', () async {
       final service = buildService();
 
       await service.sweep();
-      clockNow = now.add(const Duration(minutes: 59));
-      await service.sweep();
-      check(finishedQueries).length.equals(1);
+      store.stored = [finishedUrl];
+      finishedEpisodes = [finishedUrl];
+      clockNow = now.add(const Duration(minutes: 1));
 
-      clockNow = now.add(const Duration(hours: 1));
-      await service.sweep();
-      check(finishedQueries).length.equals(2);
+      check(await service.sweep()).equals(1);
     });
   });
 }

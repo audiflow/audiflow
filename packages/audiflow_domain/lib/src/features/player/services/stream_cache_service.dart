@@ -88,8 +88,9 @@ class StreamCacheService {
   }) : _clock = clock ?? DateTime.now;
 
   /// Listing finished episodes is not free and resume can fire often, while
-  /// nothing here is urgent: the size limit holds in the meantime.
-  static const _minSweepInterval = Duration(hours: 1);
+  /// the grace period makes an hour's delay irrelevant. Completed downloads
+  /// are not throttled: a download makes its cached copy redundant at once.
+  static const _minFinishedCheckInterval = Duration(hours: 1);
 
   final StreamCacheStore _store;
   final Future<List<String>> Function() _completedDownloadUrls;
@@ -97,7 +98,7 @@ class StreamCacheService {
   final bool Function() _isPlayerIdle;
   final Logger? _logger;
   final DateTime Function() _clock;
-  DateTime? _lastSweep;
+  DateTime? _lastFinishedCheck;
 
   /// Turns the cache on. Must run before the first episode loads, because a
   /// source only goes through the cache if it was on when the source loaded.
@@ -144,10 +145,14 @@ class StreamCacheService {
   Future<int> _sweep(DateTime now) async {
     final urls = await _store.urls();
     if (urls.isEmpty) return 0;
+    final last = _lastFinishedCheck;
+    final checkFinished =
+        last == null || !now.isBefore(last.add(_minFinishedCheckInterval));
     final cutoff = now.subtract(AppConstants.playedDownloadGracePeriod);
     final disposable = {
       for (final url in await _completedDownloadUrls()) _cacheKeyOf(url),
-      for (final url in await _finishedEpisodeUrls(cutoff)) _cacheKeyOf(url),
+      if (checkFinished)
+        for (final url in await _finishedEpisodeUrls(cutoff)) _cacheKeyOf(url),
     };
     var removed = 0;
     for (final url in urls) {
@@ -159,6 +164,8 @@ class StreamCacheService {
         _logger?.w('Failed to remove $url', error: e, stackTrace: stack);
       }
     }
+    // Only now: a sweep that failed earlier has to be able to retry.
+    if (checkFinished) _lastFinishedCheck = now;
     return removed;
   }
 
