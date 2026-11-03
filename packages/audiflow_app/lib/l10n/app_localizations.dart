@@ -1970,6 +1970,24 @@ abstract class AppLocalizations {
   /// **'Couldn\'t read this file'**
   String get opmlFileUnreadable;
 
+  /// Progress text while a chosen OPML file is read and parsed
+  ///
+  /// In en, this message translates to:
+  /// **'Reading file...'**
+  String get opmlImportReadingFile;
+
+  /// Snackbar after cancelling the filtered OPML file picker
+  ///
+  /// In en, this message translates to:
+  /// **'Didn\'t see your file?'**
+  String get opmlPickerFileNotListed;
+
+  /// Snackbar action that reopens the OPML file picker without a filter
+  ///
+  /// In en, this message translates to:
+  /// **'Show all files'**
+  String get opmlPickerShowAllFiles;
+
   /// Snackbar when an OPML file contains no podcast feeds
   ///
   /// In en, this message translates to:
