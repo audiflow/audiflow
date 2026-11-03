@@ -323,6 +323,16 @@ void main() {
       });
     });
 
+    test('advertises tapping a queue row to the session', () {
+      fakeAsync((async) {
+        final subject = started(async);
+
+        check(
+          subject.playbackState.value.systemActions,
+        ).contains(audio_service.MediaAction.skipToQueueItem);
+      });
+    });
+
     test('titles the queue in the app language', () {
       fakeAsync((async) {
         started(async);

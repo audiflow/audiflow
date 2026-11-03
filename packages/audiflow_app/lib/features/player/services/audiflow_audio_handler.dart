@@ -206,6 +206,8 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
         audio_service.MediaAction.seek,
         audio_service.MediaAction.seekForward,
         audio_service.MediaAction.seekBackward,
+        // Without it the session says its queue rows cannot be selected.
+        audio_service.MediaAction.skipToQueueItem,
       },
       androidCompactActionIndices: nowPlayingCompactActionIndices(
         values: _controlValues,
