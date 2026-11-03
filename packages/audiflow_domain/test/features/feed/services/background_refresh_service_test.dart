@@ -482,6 +482,10 @@ class FakePlaybackHistoryRepository implements PlaybackHistoryRepository {
   final Map<int, PlaybackHistory> _historyByEpisodeId;
 
   @override
+  Future<List<PlaybackHistory>> getFinishedBefore(DateTime time) async =>
+      const [];
+
+  @override
   Future<Map<int, PlaybackHistory>> getByPodcastId(int podcastId) async =>
       Map.unmodifiable(_historyByEpisodeId);
 

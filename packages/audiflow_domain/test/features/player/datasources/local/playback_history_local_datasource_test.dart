@@ -539,4 +539,40 @@ void main() {
       expect(result.containsKey(4), false);
     });
   });
+
+  group('getFinishedBefore', () {
+    final cutoff = DateTime(2026, 11, 1);
+
+    Future<void> seed(
+      int episodeId, {
+      DateTime? completedAt,
+      bool isReplaying = false,
+    }) async {
+      await isar.writeTxn(
+        () => isar.playbackHistorys.put(
+          PlaybackHistory()
+            ..episodeId = episodeId
+            ..completedAt = completedAt
+            ..isReplaying = isReplaying,
+        ),
+      );
+    }
+
+    test('returns listens finished at or before the time', () async {
+      await seed(1, completedAt: cutoff);
+      await seed(2, completedAt: cutoff.subtract(const Duration(days: 1)));
+
+      final result = await datasource.getFinishedBefore(cutoff);
+
+      expect(result.map((h) => h.episodeId), unorderedEquals([1, 2]));
+    });
+
+    test('skips later, unfinished, and replayed episodes', () async {
+      await seed(1, completedAt: cutoff.add(const Duration(seconds: 1)));
+      await seed(2);
+      await seed(3, completedAt: cutoff, isReplaying: true);
+
+      expect(await datasource.getFinishedBefore(cutoff), isEmpty);
+    });
+  });
 }

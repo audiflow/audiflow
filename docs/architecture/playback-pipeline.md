@@ -150,6 +150,53 @@ When an episode has been downloaded:
 - If downloaded: uses local file path (faster start, works offline)
 - If not downloaded: uses remote URL with streaming
 
+## Streamed audio cache
+
+just_audio comes from a fork (`dependency_overrides` in the root `pubspec.yaml`) because neither platform's player exposes a place to add a cache from outside the plugin. The fork adds `StreamAudioCache`; `StreamCacheService` (audiflow_domain) configures it during app bootstrap, before anything can load an episode, because a source only goes through the cache if it was on when the source loaded. No caller of `setUrl` changes: `file:` URIs bypass the cache, so downloads play as before.
+
+`LockCachingAudioSource` was rejected because it fetches the whole file as soon as playback starts, which spends more data than it saves on episodes that are not finished. Measured over one scripted session of seeks and an episode switch (MB newly fetched / MB fetched again, iOS on a simulator, Android on an emulator):
+
+| | Android | iOS |
+|---|---|---|
+| No cache | 14.1 / 20.1 | 72.2 / 59.5 |
+| `LockCachingAudioSource` | 76.8 / 0 | 76.8 / 0 |
+| Cache only | 14.3 / 6.2 | 71.7 / 0.1 |
+| Cache, read-ahead window and final URL reuse (current) | 40.0 / 7.9 | 71.7 / 0.1 |
+
+The Android remainder is not requests for stored ranges: every request starts past what is stored. See the note on closed connections below.
+
+### Read-ahead window
+
+Most seeks land a few minutes ahead, and a cached range only helps if it was fetched before the seek. `audioPlayerProvider` therefore asks the player to keep `AppConstants.readAheadDuration` (10 minutes) buffered ahead of the position. That bounds what an abandoned episode costs and reduces the need for a second download connection. A far seek uses the player's normal seek on its one connection, so a skipped gap fills only if the listener later plays or seeks into it. Skipping an episode's head or tail is a position decision for the Dart layer and needs nothing here.
+
+- **Android:** ExoPlayer honors the window. It buffers in memory, so `AppConstants.readAheadMaxBytes` (16 MB) stops a high-bitrate episode short of 10 minutes.
+- **iOS:** AVPlayer ignores `preferredForwardBufferDuration` as an upper limit and fetched 32 MB within 45 seconds of a measured load. Its total is no higher than without the cache, but an abandoned episode costs more than on Android. Bounding it would take throttling in the resource loader.
+
+### Final URL reuse
+
+Podcast enclosures often pass through several tracking redirects, which took 2.1 to 2.5 s of a 2.6 to 3.6 s request when measured from a desktop. Each load follows the chain once, in the identity check, and later range requests in that load go straight to the final URL. The cache key stays the original URL, because final URLs are often signed or vary by request. If the final URL cannot be reached, answers with an error status or a `text/*` body, or appears to serve a different file, it is forgotten and the request repeats through the original URL, which covers signed URLs that expire during a long session. The next successful response through the original URL sets the final URL again.
+
+| | Android | iOS |
+|---|---|---|
+| Mechanism | Media3 `CacheDataSource` over `SimpleCache` | `AVAssetResourceLoader` delegate with a custom URL scheme |
+| Storage | `<cache>/stream_audio_cache/` (SimpleCache layout) | `Library/Caches/stream_audio_cache/<sha256 of URL>/`: sparse `data` and `meta.plist` with the filled ranges |
+| Eviction | Custom evictor, whole episodes | Same rule over `meta.plist`, every 4 MB written |
+| One stream over the limit | Drops that stream's oldest spans | Stops storing it; playback continues from the network |
+| Failed requests | ExoPlayer's load retry, except an unstable identity, which switches to direct streaming in place at the current offset because a retry after a failed first request of a seek resumes from the old position and can hang | Resumes from the last delivered byte, up to 4 retries with backoff |
+| `http:` enclosures | Cached under the same cleartext rule as the player | Bypass the cache unless `NSAllowsArbitraryLoads` is set, because `NSURLSession` lacks the media exemption `AVPlayer` has |
+
+Rules shared by both platforms:
+
+- Only bytes the player requests are stored; the cache starts no downloads of its own. A range is recorded after its bytes are written, so a crash loses ranges but never claims missing bytes.
+- Each entry remembers an identity from the server: a strong ETag, else Last-Modified, else the total length. A Last-Modified within 5 seconds of the response's `Date` is ignored, because some CDNs (Triton, seen behind podtrac and omny) send the response time there, so it changes on every request while the bytes do not. A check of the first two bytes runs when a source loads, before the player sees any cached byte, so a replaced file normally discards its entry cleanly. A replacement that keeps the URL, identity, length, and first two bytes goes undetected, and the old bytes stay in use. Offline, or when the check fails, a stored entry is used as is. A check that cannot reach the server is limited to 3 seconds when a stored entry exists.
+- The cache never makes a stream play worse than it does without the cache. A server whose identity changes within one load (dynamic ad insertion per request), or that offers no identity at all, is streamed directly for the rest of the process, and nothing of it is stored. A cache that fails to initialize behaves the same way.
+- A response with a `text/*` content type is never stored and does not affect the entry: it is treated as a temporary failure, because it is usually a captive portal's page.
+- The OS can purge the cache directory at any time. Purged bytes count as not fetched.
+
+`StreamCacheService.sweep` runs on launch and resume from `AppLifecycleObserver`, next to `sweepPlayed`. It removes entries by app-level rules that the native layer cannot judge (finished past the grace period, or with a completed download). It runs there, not when a download completes, because downloads also complete in the background isolate. Completed downloads are checked on every sweep. Finished episodes are checked at most once an hour, and a sweep that fails does not use up that hour.
+
+Bytes that were sent by the server but not yet read when the player closes a connection are lost, so a seek can still re-fetch a little on Android, where the player keeps connections open and stops reading once its buffer is full.
+
 ## Queue integration
 
 - `QueueService` manages the playback queue (Isar-backed)

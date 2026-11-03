@@ -353,6 +353,10 @@ Future<ProviderContainer> bootstrapAppContainer({
     ],
   );
 
+  // Before the audio handler starts: from then on a head unit can load an
+  // episode, and a source only goes through the cache if it was on by then.
+  await container.read(streamCacheServiceProvider).configure();
+
   // Initialize audio service for platform media controls. Listened as well
   // as awaited: Android Auto can launch the app in the background, where no
   // screen watches the speed, and paused subscriptions would leave the

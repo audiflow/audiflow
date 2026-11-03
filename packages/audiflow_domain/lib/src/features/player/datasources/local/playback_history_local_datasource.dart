@@ -219,6 +219,21 @@ class PlaybackHistoryLocalDatasource {
     return results.isEmpty ? null : results.first;
   }
 
+  /// Returns episodes whose listen finished at or before [time], replays
+  /// excluded.
+  Future<List<PlaybackHistory>> getFinishedBefore(DateTime time) {
+    return _isar.playbackHistorys
+        .filter()
+        // Isar sorts null below every date, so LessThan alone would match
+        // episodes that were never finished.
+        .completedAtIsNotNull()
+        .and()
+        .completedAtLessThan(time, include: true)
+        .and()
+        .isReplayingEqualTo(false)
+        .findAll();
+  }
+
   /// Returns episodes that are in progress: started, and their current
   /// listen not finished. Replays of played episodes are included.
   ///

@@ -134,6 +134,7 @@ export 'src/features/player/services/audio_player_service.dart';
 export 'src/features/player/services/chapter_crossing_tracker.dart';
 export 'src/features/player/services/effective_audio_settings_applier.dart';
 export 'src/features/player/services/listen_session_tracker.dart';
+export 'src/features/player/services/stream_cache_service.dart';
 export 'src/features/player/services/now_playing_controller.dart';
 export 'src/features/player/services/player_lifecycle_events.dart';
 export 'src/features/player/services/sleep_timer_service.dart';

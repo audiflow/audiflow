@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -338,6 +337,32 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get storageCacheCleared => 'Cache cleared';
+
+  @override
+  String get storageStreamCache => 'Playback Cache';
+
+  @override
+  String storageStreamCacheSubtitle(String size, String limit) {
+    return '$size of $limit used. Audio kept while streaming; downloads are not included.';
+  }
+
+  @override
+  String get storageStreamCacheSubtitleNoSize =>
+      'Audio kept while streaming; downloads are not included.';
+
+  @override
+  String get storageClearStreamCacheTitle => 'Clear Playback Cache?';
+
+  @override
+  String get storageClearStreamCacheContent =>
+      'Audio kept from streamed episodes will be fetched again when you play them. Downloads are not affected.';
+
+  @override
+  String get storageStreamCacheCleared => 'Playback cache cleared';
+
+  @override
+  String get storageStreamCacheClearFailed =>
+      'Could not clear the playback cache';
 
   @override
   String get storagePodcastCache => 'Podcast Cache';
