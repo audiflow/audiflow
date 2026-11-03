@@ -78,6 +78,19 @@ AudioPlayer audioPlayer(Ref ref) {
   // which manages the remote command center and audio session.
   final player = AudioPlayer(
     handleInterruptions: false,
+    // Read well ahead, so most seeks forward land in audio that is already
+    // here instead of waiting on a new request. The stream cache keeps what
+    // arrives, so it also serves later resumes.
+    audioLoadConfiguration: AudioLoadConfiguration(
+      androidLoadControl: AndroidLoadControl(
+        minBufferDuration: AppConstants.readAheadDuration,
+        maxBufferDuration: AppConstants.readAheadDuration,
+        targetBufferBytes: AppConstants.readAheadMaxBytes,
+      ),
+      darwinLoadControl: DarwinLoadControl(
+        preferredForwardBufferDuration: AppConstants.readAheadDuration,
+      ),
+    ),
     // Effects can only be attached here, at construction.
     audioPipeline: voiceBoost == null
         ? null

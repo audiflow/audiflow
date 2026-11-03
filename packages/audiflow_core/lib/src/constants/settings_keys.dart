@@ -200,3 +200,12 @@ class SettingsDefaults {
   /// Maximum persistable tab index (queue = 2).
   static const int maxPersistableTabIndex = 2;
 }
+
+/// The skip intervals the playback settings offer, in seconds.
+abstract final class SkipIntervalChoices {
+  /// Choices for skipping forward.
+  static const List<int> forwardSeconds = [10, 15, 30, 45, 60];
+
+  /// Choices for skipping backward.
+  static const List<int> backwardSeconds = [10, 15, 30];
+}

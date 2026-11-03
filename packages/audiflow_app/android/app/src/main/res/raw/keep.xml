@@ -4,6 +4,8 @@
      - ic_stat_notification: notification small icon, named from Dart.
      - audio_service_*: media control icons that audio_service resolves with
        getIdentifier(). AGP 9's optimized resource shrinking removes them,
-       and building the media session's custom actions then fails. -->
+       and building the media session's custom actions then fails.
+     - ic_car_*: Android Auto speed and skip icons, named from Dart and
+       resolved the same way. -->
 <resources xmlns:tools="http://schemas.android.com/tools"
-    tools:keep="@drawable/ic_stat_notification,@drawable/audio_service_*" />
+    tools:keep="@drawable/ic_stat_notification,@drawable/audio_service_*,@drawable/ic_car_*" />

@@ -10,6 +10,7 @@ import '../../../common/providers/platform_providers.dart';
 import '../../../common/services/suspendable_writer.dart';
 import '../../download/services/download_file_service.dart';
 import '../../download/services/download_queue_service.dart';
+import '../../player/services/stream_cache_service.dart';
 import '../../feed/services/feed_sync_service.dart';
 import '../../player/services/audio_playback_controller.dart';
 import '../../player/services/audio_player_service.dart';
@@ -38,12 +39,13 @@ DataResetService dataResetService(Ref ref) {
       ref.watch(feedSyncServiceProvider),
     ],
     resolveDownloadsDirectory: fileService.getDownloadsDirectory,
+    clearStreamCache: ref.watch(streamCacheServiceProvider).clearForReset,
   );
 }
 
 /// Returns the app to its initial state: playback is stopped and every
-/// writer is suspended, then every downloaded file, every Isar collection,
-/// and every SharedPreferences key is removed.
+/// writer is suspended, then every downloaded file, the streamed-audio cache,
+/// every Isar collection, and every SharedPreferences key is removed.
 ///
 /// Isar is cleared with [Isar.clear] rather than per collection so a
 /// collection added later cannot drift out of the reset path; the
@@ -56,6 +58,7 @@ class DataResetService {
     required this._cancelBackgroundTasks,
     required this._writers,
     required this._resolveDownloadsDirectory,
+    required this._clearStreamCache,
   });
 
   final Isar _isar;
@@ -66,6 +69,7 @@ class DataResetService {
   /// Foreground services that write to storage, in suspend order.
   final List<SuspendableWriter> _writers;
   final DownloadsDirectoryResolver _resolveDownloadsDirectory;
+  final Future<void> Function() _clearStreamCache;
 
   /// Wipes all local data. Throws on I/O failure so the caller can report
   /// a partial reset instead of claiming success.
@@ -88,6 +92,9 @@ class DataResetService {
       // File deletion is the step most likely to fail, so it runs before
       // the database and preferences are touched; a failure then leaves
       // the parental PIN and consent state intact rather than half-reset.
+      // The cache goes first: losing it costs nothing, while downloads
+      // cannot be brought back if a later step fails.
+      await _clearStreamCache();
       await _deleteDownloads();
       await _isar.writeTxn(() => _isar.clear());
       await _preferences.clear();

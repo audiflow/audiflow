@@ -698,6 +698,48 @@ abstract class AppLocalizations {
   /// **'Cache cleared'**
   String get storageCacheCleared;
 
+  /// Stream cache setting title
+  ///
+  /// In en, this message translates to:
+  /// **'Playback Cache'**
+  String get storageStreamCache;
+
+  /// Stream cache subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'{size} of {limit} used. Audio kept while streaming; downloads are not included.'**
+  String storageStreamCacheSubtitle(String size, String limit);
+
+  /// Stream cache subtitle while the size is unknown
+  ///
+  /// In en, this message translates to:
+  /// **'Audio kept while streaming; downloads are not included.'**
+  String get storageStreamCacheSubtitleNoSize;
+
+  /// Clear stream cache dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Playback Cache?'**
+  String get storageClearStreamCacheTitle;
+
+  /// Clear stream cache dialog content
+  ///
+  /// In en, this message translates to:
+  /// **'Audio kept from streamed episodes will be fetched again when you play them. Downloads are not affected.'**
+  String get storageClearStreamCacheContent;
+
+  /// Stream cache cleared snackbar
+  ///
+  /// In en, this message translates to:
+  /// **'Playback cache cleared'**
+  String get storageStreamCacheCleared;
+
+  /// Stream cache clear failure snackbar
+  ///
+  /// In en, this message translates to:
+  /// **'Could not clear the playback cache'**
+  String get storageStreamCacheClearFailed;
+
   /// Podcast cache setting title
   ///
   /// In en, this message translates to:

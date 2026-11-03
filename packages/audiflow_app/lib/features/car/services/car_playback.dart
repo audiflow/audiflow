@@ -7,20 +7,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../queue/services/queue_item_player.dart' as queue_player;
 import 'car_catalog.dart';
 
-/// Speeds the CarPlay playback-rate button steps through, in order.
+/// Speeds the in-car speed buttons step through, in order.
 ///
 /// A short list: each press is one step, and a driver should reach any of
 /// them in a few presses. All are members of `PlaybackSpeedScale.steps`.
 const carSpeeds = [1.0, 1.2, 1.5, 1.8, 2.0];
 
+/// Tolerance for comparing a stored speed with [carSpeeds], so a stored 1.5
+/// is not treated as just below 1.5.
+const carSpeedEpsilon = 1e-9;
+
 /// The speed after [current] in [carSpeeds], wrapping to the first.
 ///
 /// A speed between steps (set on the phone) moves up to the next step.
 double nextCarSpeed(double current) {
-  // Tolerance so a stored 1.5 is not treated as just below 1.5.
-  const epsilon = 1e-9;
   for (final speed in carSpeeds) {
-    if (current + epsilon < speed) return speed;
+    if (current + carSpeedEpsilon < speed) return speed;
   }
   return carSpeeds.first;
 }

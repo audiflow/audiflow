@@ -1,3 +1,4 @@
+import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -24,6 +25,7 @@ class StorageSettingsScreen extends ConsumerWidget {
         children: [
           _CacheTile(ref: ref),
           _PodcastCacheTile(ref: ref),
+          const _StreamCacheTile(),
           _SearchHistoryTile(context: context),
           const Divider(),
           const _OpmlSection(),
@@ -132,6 +134,85 @@ class _PodcastCacheTile extends StatelessWidget {
             child: Text(l10n.commonClear),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _StreamCacheTile extends ConsumerWidget {
+  const _StreamCacheTile();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    // Loading and a failed read both say nothing about the size: showing 0
+    // would claim an empty cache while the disk may be at the limit.
+    final subtitle = switch (ref.watch(streamCacheSizeProvider)) {
+      AsyncData(:final value) => l10n.storageStreamCacheSubtitle(
+        Formatters.formatBytes(value),
+        Formatters.formatBytes(AppConstants.streamCacheMaxBytes),
+      ),
+      _ => l10n.storageStreamCacheSubtitleNoSize,
+    };
+
+    return ListTile(
+      title: Text(l10n.storageStreamCache),
+      subtitle: Text(subtitle),
+      trailing: OutlinedButton(
+        onPressed: () => _confirmClear(context, ref),
+        child: Text(l10n.commonClear),
+      ),
+    );
+  }
+
+  void _confirmClear(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.storageClearStreamCacheTitle),
+        content: Text(l10n.storageClearStreamCacheContent),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.commonCancel),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              _clear(context, ref);
+            },
+            child: Text(l10n.commonClear),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _clear(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context);
+    // Read up front: clearing up to the whole limit can outlive this screen,
+    // and a WidgetRef cannot be used once the tile has unmounted.
+    final service = ref.read(streamCacheServiceProvider);
+    final logger = ref.read(namedLoggerProvider('StorageSettings'));
+    var cleared = true;
+    try {
+      await service.clear();
+    } on Exception catch (e, stack) {
+      logger.e('Stream cache clear failed', error: e, stackTrace: stack);
+      cleared = false;
+    }
+    if (!context.mounted) return;
+    // After a failure too: part of the cache may be gone.
+    ref.invalidate(streamCacheSizeProvider);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          cleared
+              ? l10n.storageStreamCacheCleared
+              : l10n.storageStreamCacheClearFailed,
+        ),
       ),
     );
   }

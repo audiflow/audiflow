@@ -123,6 +123,21 @@ state and resume position stay coherent no matter where the listener touches it.
 
 - Loads and plays a single podcast episode from a remote stream URL or, transparently, from a
   completed local download when one exists — the listener never chooses the source.
+- Keeps the audio it streams in a bounded disk cache, so seeking back within what was already
+  fetched, and resuming a recently streamed episode, does not download the same bytes again.
+  The player keeps about 10 minutes of audio ready ahead of the position on Android, so a typical
+  forward seek resumes almost at once, and an episode left after a minute has cost about 11 minutes
+  of audio rather than the rest of its file. On iOS the system player decides how far ahead to
+  fetch, and it may fetch far more than 10 minutes. A seek beyond what was fetched
+  streams from the new position, and audio skipped over is fetched only if the listener later
+  reaches it. The limit is 250 MB. When it is reached, whole
+  episodes are removed, least recently used first, never the one loaded in the player. On launch and
+  resume, an episode finished at least 24 hours ago, or one that now has a completed download,
+  loses its cached audio. If the server serves a different file under the same URL, the old bytes
+  are discarded rather than spliced with the new ones. An episode whose server changes the file on
+  every request (dynamic ad insertion), or that the cache cannot handle for any other reason, simply
+  streams as it would without the cache.
+  Cached audio is not a download: partly cached episodes are not offered for offline listening.
 - Exposes playback as a small set of states (idle, loading, playing, paused, error), each
   carrying the episode it refers to, so any surface can show the correct affordance for the
   episode it is displaying.
@@ -194,6 +209,11 @@ state and resume position stay coherent no matter where the listener touches it.
   show the line full in a neutral color instead of the accent, so orange lines mark only
   episodes the listener can resume; unplayed episodes show none. The line is not animated and simply
   redraws as the row rebuilds on playback ticks.
+- The episode detail's progress line and remaining time follow the same live position while that
+  episode is playing or paused in the player, without waiting for a save. The rest of the screen
+  does not redraw on these ticks. A buffer keeps the last position instead of jumping back. While
+  the episode is first loading and seeking to its start, or another episode is in the player, the
+  line keeps the saved position, because the player's position is not this episode's yet.
 - Durations on episode rows use a single compact format shared app-wide: `{minutes}m` at one
   minute or longer, `0:ss` below one minute. Pill state labels are localized for English and
   Japanese.

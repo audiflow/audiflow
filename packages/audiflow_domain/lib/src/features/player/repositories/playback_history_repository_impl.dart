@@ -105,6 +105,11 @@ class PlaybackHistoryRepositoryImpl implements PlaybackHistoryRepository {
   }
 
   @override
+  Future<List<PlaybackHistory>> getFinishedBefore(DateTime time) {
+    return _datasource.getFinishedBefore(time);
+  }
+
+  @override
   Stream<List<PlaybackHistory>> watchInProgress({int limit = 10}) {
     return _datasource.watchInProgress(limit: limit);
   }

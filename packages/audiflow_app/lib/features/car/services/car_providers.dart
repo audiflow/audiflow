@@ -19,6 +19,7 @@ import 'car_artwork_resolver.dart';
 import 'car_catalog.dart';
 import 'car_change_batcher.dart';
 import 'car_media_browser.dart';
+import 'car_media_controls.dart';
 import 'car_playback.dart';
 
 part 'car_providers.g.dart';
@@ -66,6 +67,31 @@ Future<T> _readOnce<T>(Ref ref, ProviderListenable<Future<T>> provider) async {
   } finally {
     subscription.close();
   }
+}
+
+/// The speed and skip intervals Now Playing's controls show right now.
+NowPlayingControlValues readNowPlayingControlValues(Ref ref) {
+  final settings = ref.read(appSettingsRepositoryProvider);
+  return (
+    speed: ref.read(nowPlayingSpeedProvider),
+    skipForwardSeconds: settings.getSkipForwardSeconds(),
+    skipBackwardSeconds: settings.getSkipBackwardSeconds(),
+  );
+}
+
+/// Calls [onChanged] with the current values, and again whenever they change.
+///
+/// The settings screen signals a skip change by invalidating
+/// [appSettingsRepositoryProvider].
+void watchNowPlayingControlValues(
+  Ref ref,
+  void Function(NowPlayingControlValues values) onChanged,
+) {
+  void notify() => onChanged(readNowPlayingControlValues(ref));
+  ref
+    ..listen(nowPlayingSpeedProvider, (_, _) => notify())
+    ..listen(appSettingsRepositoryProvider, (_, _) => notify());
+  notify();
 }
 
 /// Listens to the data behind each in-car list and reports the lists whose
