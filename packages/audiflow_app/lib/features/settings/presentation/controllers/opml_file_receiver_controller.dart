@@ -3,15 +3,13 @@ import 'dart:io';
 import 'package:app_links/app_links.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../services/content_uri_reader.dart';
 import '../utils/opml_read_failure.dart';
 
 part 'opml_file_receiver_controller.g.dart';
-
-const _channel = MethodChannel('com.reedom.audiflow_app/content_resolver');
 
 /// Sealed result type for externally received OPML file.
 sealed class OpmlFileReceiverState {}
@@ -115,20 +113,7 @@ class OpmlFileReceiverController extends _$OpmlFileReceiverController {
 
   /// Reads file content from either a file:// or content:// URI.
   Future<String> _readContent(Uri uri) async {
-    if (uri.scheme == 'content') {
-      try {
-        final result = await _channel.invokeMethod<String>(
-          'readContentUri',
-          uri.toString(),
-        );
-        if (result == null) {
-          throw const FormatException('Failed to read content from URI');
-        }
-        return result;
-      } on PlatformException catch (e) {
-        throw FormatException(e.message ?? 'Failed to read content from URI');
-      }
-    }
+    if (uri.scheme == 'content') return readContentUri(uri.toString());
     return File(uri.toFilePath()).readAsString();
   }
 

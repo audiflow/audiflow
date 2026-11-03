@@ -1027,6 +1027,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get opmlFileUnreadable => 'このファイルを読み込めませんでした';
 
   @override
+  String get opmlImportReadingFile => 'ファイルを読み込んでいます...';
+
+  @override
+  String get opmlPickerFileNotListed => 'ファイルが見つかりませんでしたか?';
+
+  @override
+  String get opmlPickerShowAllFiles => 'すべてのファイルを表示';
+
+  @override
   String get opmlNoFeedsFound => 'ファイルにポッドキャストのフィードが見つかりませんでした';
 
   @override
