@@ -53,6 +53,63 @@ void main() {
     );
     check(clipOf(tester).height).equals(0);
   });
+
+  // A deactivated element stays reachable through its GlobalKey until
+  // finalizeTree, which runs after paint.
+  testWidgets('survives a rebuild that drops the anchor', (tester) async {
+    final anchorKey = GlobalKey();
+    Widget build({required bool withAnchor}) => MaterialApp(
+      theme: AppTheme.light(),
+      home: AnchoredContentBackdrop(
+        anchorKey: anchorKey,
+        child: CustomScrollView(
+          slivers: [
+            const SliverToBoxAdapter(child: SizedBox(height: 150)),
+            if (withAnchor)
+              SliverToBoxAdapter(child: SizedBox(key: anchorKey, height: 40)),
+            const SliverToBoxAdapter(child: SizedBox(height: 60)),
+          ],
+        ),
+      ),
+    );
+
+    await tester.pumpWidget(build(withAnchor: true));
+    check(clipOf(tester).top).equals(150);
+
+    await tester.pumpWidget(build(withAnchor: false));
+    check(tester.takeException()).isNull();
+    check(clipOf(tester).height).equals(0);
+  });
+
+  testWidgets('survives a lazy list dropping the anchor during layout', (
+    tester,
+  ) async {
+    final anchorKey = GlobalKey();
+    final controller = ScrollController();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: AnchoredContentBackdrop(
+          anchorKey: anchorKey,
+          child: ListView(
+            controller: controller,
+            children: [
+              SizedBox(key: anchorKey, height: 40),
+              for (var i = 0; i < 100; i++) const SizedBox(height: 60),
+            ],
+          ),
+        ),
+      ),
+    );
+    check(clipOf(tester).top).equals(0);
+
+    // Far past the cache extent, so the sliver removes the anchor in layout.
+    controller.jumpTo(3000);
+    await tester.pump();
+    check(tester.takeException()).isNull();
+    check(clipOf(tester).height).equals(0);
+  });
 }
 
 /// The textured region, in backdrop coordinates.
