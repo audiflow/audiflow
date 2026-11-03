@@ -321,6 +321,25 @@ void main() {
     });
   });
 
+  group('podcast title', () {
+    test('carries the title of the parent subscription', () async {
+      await repository.addToEnd(1);
+      final queue = await repository.getQueue();
+      final subscription = await isar.subscriptions.get(1);
+
+      expect(queue.manualItems.first.podcastTitle, subscription!.title);
+    });
+
+    test('is null when the subscription is gone', () async {
+      await isar.writeTxn(() => isar.subscriptions.delete(1));
+
+      await repository.addToEnd(1);
+      final queue = await repository.getQueue();
+
+      expect(queue.manualItems.first.podcastTitle, isNull);
+    });
+  });
+
   group('artwork resolution', () {
     test('uses episode imageUrl when available', () async {
       // Add an episode with its own artwork

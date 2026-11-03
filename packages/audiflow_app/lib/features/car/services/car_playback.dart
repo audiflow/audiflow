@@ -154,6 +154,21 @@ class CarPlayback {
     }
   }
 
+  /// Selects episode [episodeId] on Now Playing's own queue row: resumes it
+  /// when paused and leaves it alone when playing. The queue is kept, as
+  /// this episode is not leaving it. A session restored at launch shows the
+  /// episode with no audio loaded, so that one starts from its saved
+  /// position. Returns false when the episode no longer exists.
+  Future<bool> continueEpisode(int episodeId) async {
+    final episode = await _ref
+        .read(episodeRepositoryProvider)
+        .getById(episodeId);
+    if (episode == null) return false;
+    if (_continueLoaded(episode) != _Continued.no) return true;
+    await queue_player.startEpisode(_ref, episode, PlaySource.car);
+    return true;
+  }
+
   /// Fire-and-forget, as on the phone: a failed write only leaves the
   /// Library order stale, and a lost analytics event changes nothing.
   void _recordStationPlay(Station station) {

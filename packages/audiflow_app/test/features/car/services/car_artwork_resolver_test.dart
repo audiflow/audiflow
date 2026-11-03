@@ -80,4 +80,31 @@ void main() {
 
     check(preparer.maxRunning).equals(2);
   });
+
+  test('prepares waiting browse images before background ones', () async {
+    final running = [
+      for (var i = 0; i < 2; i++) 'https://example.com/running$i.jpg',
+    ];
+    const background = 'https://example.com/background.jpg';
+    const browse = 'https://example.com/browse.jpg';
+    final results = [
+      for (final url in running) resolver.resolve(url),
+      resolver.resolve(background, background: true),
+      resolver.resolve(browse),
+    ];
+    await pumpEventQueue();
+
+    preparer.finish(running.first, Uri.file('/cache/0.jpg'));
+    await pumpEventQueue();
+
+    check(preparer.pending.keys).contains(browse);
+    check(preparer.pending.keys).not((it) => it.contains(background));
+
+    preparer
+      ..finish(running.last, Uri.file('/cache/1.jpg'))
+      ..finish(browse, Uri.file('/cache/2.jpg'));
+    await pumpEventQueue();
+    preparer.finish(background, Uri.file('/cache/3.jpg'));
+    await Future.wait(results);
+  });
 }

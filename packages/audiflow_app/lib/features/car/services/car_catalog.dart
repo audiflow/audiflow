@@ -77,13 +77,12 @@ class CarCatalog {
         .upNextItems(nowPlayingUrl: _nowPlayingUrl())
         .take(itemLimit)
         .toList();
-    final podcasts = await _podcastsById(items.map((i) => i.episode));
     return [
       for (final item in items)
         CarListItem(
           id: item.queueItem.id,
           title: item.episode.title,
-          detail: podcasts[item.episode.podcastId]?.title,
+          detail: item.podcastTitle,
           artworkUrl: item.artworkUrl,
         ),
     ];

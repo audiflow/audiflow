@@ -2264,6 +2264,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get carUpNextTab => '次に再生';
 
   @override
+  String get carInProgressTab => '再生途中';
+
+  @override
   String get carStationsTab => 'ステーション';
 
   @override

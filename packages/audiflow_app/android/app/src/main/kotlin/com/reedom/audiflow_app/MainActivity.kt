@@ -19,6 +19,7 @@ class MainActivity : AudioServiceActivity() {
         AudioRouteChannel.register(flutterEngine.dartExecutor.binaryMessenger, this)
         HapticsChannel.register(flutterEngine.dartExecutor.binaryMessenger, this)
         DocumentPickerChannel.register(flutterEngine.dartExecutor.binaryMessenger, this)
+        SessionQueueChannel.register(flutterEngine.dartExecutor.binaryMessenger)
 
         MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,

@@ -38,13 +38,24 @@ class _AnchoredContentBackdropState extends State<AnchoredContentBackdrop> {
   /// The anchor's top edge in backdrop coordinates; infinite (no list
   /// surface) while there is no anchor, e.g. for an empty list.
   double _anchorTop() {
-    final backdrop = _backdropKey.currentContext?.findRenderObject();
-    final anchor = widget.anchorKey.currentContext?.findRenderObject();
-    if (backdrop is! RenderBox || anchor is! RenderBox) return double.infinity;
-    if (!anchor.attached || !anchor.hasSize) return double.infinity;
+    final backdrop = _attachedBoxOf(_backdropKey);
+    final anchor = _attachedBoxOf(widget.anchorKey);
+    if (backdrop == null || anchor == null) return double.infinity;
+    if (!anchor.hasSize) return double.infinity;
     // The anchor is in a sibling subtree, so compare global positions.
     return anchor.localToGlobal(Offset.zero).dy -
         backdrop.localToGlobal(Offset.zero).dy;
+  }
+
+  /// This runs during paint, when a key can still resolve to an element
+  /// deactivated earlier in the frame: GlobalKeys unregister in finalizeTree,
+  /// which runs after paint. findRenderObject() asserts on such an element,
+  /// so read Element.renderObject, whose box is already out of the render
+  /// tree and therefore fails the attached check.
+  RenderBox? _attachedBoxOf(GlobalKey key) {
+    final renderObject = (key.currentContext as Element?)?.renderObject;
+    if (renderObject is! RenderBox || !renderObject.attached) return null;
+    return renderObject;
   }
 
   bool _onChange(Notification _) {

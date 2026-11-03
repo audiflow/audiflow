@@ -17,6 +17,9 @@ sealed class QueueItemWithEpisode with _$QueueItemWithEpisode {
 
     /// iTunes ID from the parent subscription, used for share links.
     String? itunesId,
+
+    /// Title of the parent subscription, for rows that mix podcasts.
+    String? podcastTitle,
   }) = _QueueItemWithEpisode;
 }
 
@@ -24,9 +27,6 @@ sealed class QueueItemWithEpisode with _$QueueItemWithEpisode {
 @freezed
 sealed class PlaybackQueue with _$PlaybackQueue {
   const factory PlaybackQueue({
-    /// Currently playing episode (not in queue items).
-    Episode? currentEpisode,
-
     /// Manually added queue items (Play Next / Play Later).
     @Default([]) List<QueueItemWithEpisode> manualItems,
 
@@ -39,7 +39,7 @@ sealed class PlaybackQueue with _$PlaybackQueue {
 
   const PlaybackQueue._();
 
-  /// Total number of items in queue (excluding current).
+  /// Total number of items in queue.
   int get totalCount => manualItems.length + adhocItems.length;
 
   /// Whether the queue has any items.
