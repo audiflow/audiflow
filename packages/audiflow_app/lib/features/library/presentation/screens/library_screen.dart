@@ -248,6 +248,9 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
         if (all.isEmpty && sortedSubscriptionsAsync.isLoading) {
           return const _PodcastsLoadingSliver();
         }
+        if (all.isEmpty && sortedSubscriptionsAsync.hasError) {
+          return const SliverToBoxAdapter(child: SizedBox.shrink());
+        }
         final sorted = filterPodcasts(all, _filterController.text);
         if (sorted.isEmpty) {
           return SliverToBoxAdapter(

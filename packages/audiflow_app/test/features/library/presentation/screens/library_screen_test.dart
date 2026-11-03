@@ -293,6 +293,25 @@ void main() {
       check(find.text('Alpha').evaluate()).isNotEmpty();
     });
 
+    testWidgets('a first podcast whose read fails is not a filter miss', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        initial: const [],
+        newestDate: (_) =>
+            Stream<DateTime?>.error(StateError('episode read failed')),
+      );
+      final l10n = AppLocalizations.of(
+        tester.element(find.byType(LibraryScreen)),
+      );
+
+      subscriptions.add([_sub(1, 'Alpha')]);
+      await tester.pumpAndSettle();
+
+      check(find.text(l10n.libraryFilterNoMatch).evaluate()).isEmpty();
+    });
+
     testWidgets('a failed reload keeps the rows it has', (tester) async {
       final first = [_sub(1, 'Alpha')];
       await pump(
