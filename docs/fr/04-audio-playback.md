@@ -116,8 +116,15 @@ state and resume position stay coherent no matter where the listener touches it.
   opens. Android 8-10 have no output switcher,
   so the button is hidden there and the row shows only Audio and the sleep timer. Cast
   devices are not offered. The button does not show the current output's name.
-- **Failure case**: If an episode cannot be loaded or played, playback enters an error state
-  rather than appearing stuck; the listener can retry by tapping play again.
+- **Failure case**: If an episode cannot be loaded, or the player reports a failure partway
+  through, playback enters an error state rather than appearing stuck. The mini player shows
+  "Couldn't play this episode" in place of the podcast name, and the full player shows the same
+  message above the play button with a prompt to tap play. With no network at all, both say the
+  device is offline and the full player asks the listener to connect first; the wording follows the
+  connection, so it changes back once they reconnect. The state lasts until a new load: the idle reports the engine sends
+  after a failure do not clear it, and an idle player never counts as playing or opens a listen
+  session. Tapping play in the app loads the episode again from its saved position or the
+  timestamp the failed load asked for, or from where the listener seeks to in the meantime. An audio interruption ending does not retry on its own.
 
 ## Capabilities
 

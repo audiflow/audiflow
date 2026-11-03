@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:audiflow_app/features/player/presentation/controllers/device_offline_provider.dart';
 import 'package:audiflow_app/features/player/presentation/screens/player_screen.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
@@ -32,6 +33,7 @@ const _openDialogKey = Key('open-dialog');
 
 Future<ProviderContainer> _container({
   NowPlayingInfo nowPlaying = _firstEpisode,
+  PlaybackState playback = _paused,
   List<Override> extra = const [],
 }) async {
   SharedPreferences.setMockInitialValues({});
@@ -43,7 +45,9 @@ Future<ProviderContainer> _container({
       nowPlayingControllerProvider.overrideWith(
         () => StubNowPlayingController(nowPlaying),
       ),
-      audioPlayerControllerProvider.overrideWith(_pausedPlayer),
+      audioPlayerControllerProvider.overrideWith(
+        () => StubAudioPlayerController(playback),
+      ),
       appSettingsRepositoryProvider.overrideWithValue(
         StubAppSettingsRepository(),
       ),
@@ -55,8 +59,8 @@ Future<ProviderContainer> _container({
   return container;
 }
 
-StubAudioPlayerController _pausedPlayer() => StubAudioPlayerController(
-  const PlaybackState.paused(episodeUrl: 'https://example.com/first.mp3'),
+const PlaybackState _paused = PlaybackState.paused(
+  episodeUrl: 'https://example.com/first.mp3',
 );
 
 /// Hosts a button that presents [PlayerScreen] as a Cupertino sheet, the
@@ -131,6 +135,54 @@ void main() {
       // The podcast name sits under the episode title, so the header
       // carries no text of its own.
       check(headerTexts.evaluate()).isEmpty();
+    });
+  });
+
+  group('PlayerScreen after a playback failure', () {
+    Iterable<Element> notice(WidgetTester tester) {
+      final l10n = AppLocalizations.of(
+        tester.element(find.byType(PlayerScreen)),
+      );
+      return find.text(l10n.playerLoadFailedRetry).evaluate();
+    }
+
+    testWidgets('tells the listener how to retry', (tester) async {
+      final container = await _container(
+        playback: const PlaybackState.error(message: 'host not found'),
+        extra: [
+          deviceOfflineProvider.overrideWith((ref) => Stream.value(false)),
+        ],
+      );
+      await tester.pumpWidget(_buildHost(container));
+      await _openPlayerSheet(tester);
+
+      check(notice(tester)).isNotEmpty();
+    });
+
+    testWidgets('asks the listener to connect when offline', (tester) async {
+      final container = await _container(
+        playback: const PlaybackState.error(message: 'host not found'),
+        extra: [
+          deviceOfflineProvider.overrideWith((ref) => Stream.value(true)),
+        ],
+      );
+      await tester.pumpWidget(_buildHost(container));
+      await _openPlayerSheet(tester);
+
+      final l10n = AppLocalizations.of(
+        tester.element(find.byType(PlayerScreen)),
+      );
+      check(
+        find.text(l10n.playerLoadFailedOfflineRetry).evaluate(),
+      ).isNotEmpty();
+      check(notice(tester)).isEmpty();
+    });
+
+    testWidgets('shows no notice while paused', (tester) async {
+      await tester.pumpWidget(_buildHost(await _container()));
+      await _openPlayerSheet(tester);
+
+      check(notice(tester)).isEmpty();
     });
   });
 
