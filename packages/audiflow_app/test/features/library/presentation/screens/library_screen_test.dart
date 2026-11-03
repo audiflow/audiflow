@@ -13,6 +13,7 @@ import 'package:audiflow_app/features/library/presentation/widgets/subscription_
 import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -310,6 +311,7 @@ void main() {
       List<EpisodeWithProgress> inProgress = const [],
       List<Station> stations = const [],
       double textScale = 1,
+      ThemeData? theme,
       GoRouter? router,
     }) async {
       final container = ProviderContainer(
@@ -340,6 +342,7 @@ void main() {
           container: container,
           child: router == null
               ? MaterialApp(
+                  theme: theme,
                   localizationsDelegates:
                       AppLocalizations.localizationsDelegates,
                   supportedLocales: AppLocalizations.supportedLocales,
@@ -490,19 +493,73 @@ void main() {
       check(find.text('Halfway episode').evaluate()).isEmpty();
     });
 
-    for (final textScale in [0.85, 1.15]) {
-      testWidgets('continue listening cards fit text at scale $textScale', (
-        tester,
-      ) async {
-        final longTitle = List.filled(12, 'Long title').join(' ');
-        await pump(
-          tester,
-          inProgress: [inProgressEpisode(title: longTitle)],
-          textScale: textScale,
-        );
-        check(tester.takeException()).isNull();
-        check(find.text(longTitle).evaluate()).length.equals(1);
-      });
+    // The scales the appearance settings offer.
+    const supportedTextScales = [0.85, 1.0, 1.15];
+
+    for (final textScale in supportedTextScales) {
+      for (final title in [
+        List.filled(12, 'Long title').join(' '),
+        List.filled(12, '長いタイトル').join(),
+      ]) {
+        testWidgets('continue listening card fits ${title.substring(0, 4)} '
+            'at scale $textScale', (tester) async {
+          await pump(
+            tester,
+            inProgress: [inProgressEpisode(title: title)],
+            textScale: textScale,
+          );
+          check(tester.takeException()).isNull();
+          check(find.text(title).evaluate()).length.equals(1);
+        });
+      }
+
+      testWidgets(
+        'continue listening card fits lines mixing fonts at scale $textScale',
+        (tester) async {
+          // A glyph from a fallback font with other vertical metrics makes
+          // the line taller than its style says, as CJK or emoji in a Latin
+          // title do on a device. The test font alone cannot show this.
+          const fallback = 'FallbackWithOtherMetrics';
+          await tester.runAsync(() async {
+            final loader = FontLoader(fallback)
+              ..addFont(
+                rootBundle.load(
+                  'packages/material_symbols_icons/lib/fonts/'
+                  'MaterialSymbolsOutlined.ttf',
+                ),
+              );
+            await loader.load();
+          });
+          final mixedLine =
+              'Mixed ${String.fromCharCode(Symbols.home.codePoint)}';
+
+          // Guards the premise, so this test cannot pass by no longer
+          // exercising taller lines after a font update.
+          final unforced = TextPainter(
+            text: TextSpan(
+              text: mixedLine,
+              style: AppTextStyles.meta.copyWith(
+                fontFamilyFallback: const [fallback],
+              ),
+            ),
+            textDirection: TextDirection.ltr,
+          )..layout();
+          addTearDown(unforced.dispose);
+          final nominalLine =
+              AppTextStyles.meta.fontSize! * AppTextStyles.meta.height!;
+          check(nominalLine.ceilToDouble()).isLessThan(unforced.height);
+
+          final title = List.filled(12, mixedLine).join(' ');
+          await pump(
+            tester,
+            inProgress: [inProgressEpisode(title: title)],
+            textScale: textScale,
+            theme: ThemeData(fontFamilyFallback: const [fallback]),
+          );
+          check(tester.takeException()).isNull();
+          check(find.text(title).evaluate()).length.equals(1);
+        },
+      );
     }
 
     void useScreen(WidgetTester tester, Size size) {
