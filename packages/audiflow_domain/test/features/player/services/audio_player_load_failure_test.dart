@@ -31,6 +31,7 @@ class _FailingAudioPlayer extends AudioPlayer {
   Object? loadError;
   int loadCalls = 0;
   void Function()? onLoad;
+  final seeks = <Duration?>[];
 
   /// Stands in for a pause that does not take, leaving `playing` true.
   bool ignorePause = false;
@@ -81,6 +82,10 @@ class _FailingAudioPlayer extends AudioPlayer {
   }
 
   @override
+  Future<void> seek(Duration? position, {int? index}) async =>
+      seeks.add(position);
+
+  @override
   Future<void> play() async => report(_processing, playing: true);
 
   @override
@@ -101,8 +106,14 @@ class _FailingAudioPlayer extends AudioPlayer {
 
 /// Knows no episodes, so play() skips history and download lookups.
 class _EmptyEpisodeRepository implements EpisodeRepository {
+  Object? lookupError;
+
   @override
-  Future<Episode?> getByAudioUrl(String audioUrl) async => null;
+  Future<Episode?> getByAudioUrl(String audioUrl) async {
+    final error = lookupError;
+    if (error != null) throw error;
+    return null;
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
@@ -131,6 +142,14 @@ class _NoDownloadService implements DownloadService {
 
 class _RecordingHistoryService implements PlaybackHistoryService {
   int stops = 0;
+  int pauses = 0;
+
+  @override
+  Future<void> onPlaybackPaused(
+    int episodeId,
+    PlaybackProgress progress, {
+    double speed = 1.0,
+  }) async => pauses++;
 
   @override
   Future<void> onPlaybackStopped(
@@ -167,18 +186,20 @@ class _RecordingHistoryRepository implements PlaybackHistoryRepository {
 void main() {
   late _FailingAudioPlayer player;
   late FakeAnalyticsService analytics;
+  late _EmptyEpisodeRepository episodes;
   late ProviderContainer container;
 
   setUp(() {
     player = _FailingAudioPlayer();
     analytics = FakeAnalyticsService();
+    episodes = _EmptyEpisodeRepository();
     container = ProviderContainer(
       overrides: [
         appSettingsRepositoryProvider.overrideWithValue(
           FakeAppSettingsRepository(),
         ),
         analyticsServiceProvider.overrideWithValue(analytics),
-        episodeRepositoryProvider.overrideWithValue(_EmptyEpisodeRepository()),
+        episodeRepositoryProvider.overrideWithValue(episodes),
         audioPlayerProvider.overrideWith((ref) {
           ref.onDispose(player.dispose);
           return player;
@@ -235,6 +256,34 @@ void main() {
 
       check(player.loadCalls).equals(failedLoads + 1);
       check(player.playing).isTrue();
+    });
+
+    test('a load that failed before choosing a URL can be retried', () async {
+      // A lookup failure leaves no URL loaded, so only the tapped one is left.
+      episodes.lookupError = StateError('database closed');
+      await controller().togglePlayPause(_url);
+      await pumpEventQueue();
+      check(state()).isA<PlaybackError>();
+
+      episodes.lookupError = null;
+      await controller().togglePlayPause(_url);
+      await pumpEventQueue();
+
+      check(player.loadCalls).equals(1);
+      check(player.playing).isTrue();
+    });
+
+    test('a retry starts at the position the failed load asked for', () async {
+      const timestamp = Duration(seconds: 90);
+      player.loadError = PlayerException(-1003, 'host not found', 0);
+      await controller().play(_url, metadata: _metadata, startAt: timestamp);
+      await pumpEventQueue();
+
+      player.loadError = null;
+      await controller().togglePlayPause(_url);
+      await pumpEventQueue();
+
+      check(player.seeks).deepEquals([timestamp]);
     });
 
     test('a retry that fails again shows the error again', () async {
@@ -441,6 +490,42 @@ void main() {
       await knownController().seek(const Duration(seconds: 90));
 
       check(historyRepo.saved).deepEquals([90000]);
+    });
+
+    test('a seek replaces the position the failed load asked for', () async {
+      player.loadError = PlayerException(-1003, 'host not found', 0);
+      await knownController().play(
+        _url,
+        metadata: _metadata,
+        startAt: const Duration(seconds: 90),
+      );
+      await pumpEventQueue();
+      await knownController().seek(const Duration(seconds: 30));
+
+      player.loadError = null;
+      await knownController().togglePlayPause(_url);
+      await pumpEventQueue();
+
+      check(player.seeks).not((it) => it.contains(const Duration(seconds: 90)));
+    });
+
+    test('a pause keeps the saved position', () async {
+      // A headphone disconnect pauses whatever the state is.
+      await failKnownLoad();
+
+      await knownController().pause();
+
+      check(history.pauses).equals(0);
+      check(player.playing).isFalse();
+    });
+
+    test('a timed pause keeps the saved position', () async {
+      await failKnownLoad();
+
+      await knownController().pauseAt(const Duration(seconds: 90));
+
+      check(history.pauses).equals(0);
+      check(historyRepo.saved).isEmpty();
     });
 
     test('an automatic seek does not move it', () async {

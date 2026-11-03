@@ -123,8 +123,8 @@ state and resume position stay coherent no matter where the listener touches it.
   device is offline and the full player asks the listener to connect first; the wording follows the
   connection, so it changes back once they reconnect. The state lasts until a new load: the idle reports the engine sends
   after a failure do not clear it, and an idle player never counts as playing or opens a listen
-  session. Tapping play in the app loads the episode again from its saved position, or from where the
-  listener seeks to in the meantime. An audio interruption ending does not retry on its own.
+  session. Tapping play in the app loads the episode again from its saved position or the
+  timestamp the failed load asked for, or from where the listener seeks to in the meantime. An audio interruption ending does not retry on its own.
 
 ## Capabilities
 
