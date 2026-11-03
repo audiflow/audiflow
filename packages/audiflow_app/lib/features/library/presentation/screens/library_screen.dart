@@ -238,9 +238,16 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     return sortedSubscriptionsAsync.when(
       // Every subscription or episode write reloads this list, once per feed
       // write during an OPML import or a refresh. Falling back to the spinner
-      // each time would blink the whole list; only the first load shows it.
+      // each time would blink the whole list, and a failed reload should not
+      // blank rows it already has.
       skipLoadingOnReload: true,
+      skipError: true,
       data: (all) {
+        // The first podcast of an empty Library: the value being reloaded
+        // still has no rows, which is not the filter matching nothing.
+        if (all.isEmpty && sortedSubscriptionsAsync.isLoading) {
+          return const _PodcastsLoadingSliver();
+        }
         final sorted = filterPodcasts(all, _filterController.text);
         if (sorted.isEmpty) {
           return SliverToBoxAdapter(
@@ -251,12 +258,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
         }
         return _podcastList(sorted);
       },
-      loading: () => const SliverToBoxAdapter(
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: Spacing.md),
-          child: Center(child: CircularProgressIndicator()),
-        ),
-      ),
+      loading: () => const _PodcastsLoadingSliver(),
       error: (_, _) => const SliverToBoxAdapter(child: SizedBox.shrink()),
     );
   }
@@ -285,6 +287,20 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
           },
         );
       },
+    );
+  }
+}
+
+class _PodcastsLoadingSliver extends StatelessWidget {
+  const _PodcastsLoadingSliver();
+
+  @override
+  Widget build(BuildContext context) {
+    return const SliverToBoxAdapter(
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: Spacing.md),
+        child: Center(child: CircularProgressIndicator()),
+      ),
     );
   }
 }
