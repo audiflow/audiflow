@@ -16,6 +16,7 @@ const _metadata = NowPlayingInfo(
   podcastTitle: 'Podcast',
   feedUrl: 'https://example.com/feed.xml',
   episodeGuid: 'guid-1',
+  itunesId: '123',
 );
 
 /// Stands in for just_audio around a failed load: the test drives what the
@@ -29,6 +30,10 @@ class _FailingAudioPlayer extends AudioPlayer {
 
   Object? loadError;
   int loadCalls = 0;
+  void Function()? onLoad;
+
+  /// Stands in for a pause that does not take, leaving `playing` true.
+  bool ignorePause = false;
   Duration currentPosition = Duration.zero;
   bool _playing = false;
   ProcessingState _processing = ProcessingState.idle;
@@ -68,6 +73,7 @@ class _FailingAudioPlayer extends AudioPlayer {
     dynamic tag,
   }) async {
     loadCalls++;
+    onLoad?.call();
     final error = loadError;
     if (error != null) throw error;
     _processing = ProcessingState.ready;
@@ -78,7 +84,12 @@ class _FailingAudioPlayer extends AudioPlayer {
   Future<void> play() async => report(_processing, playing: true);
 
   @override
-  Future<void> pause() async => report(_processing, playing: false);
+  Future<void> pause() async {
+    if (!ignorePause) report(_processing, playing: false);
+  }
+
+  @override
+  Future<void> stop() async {}
 
   @override
   Future<void> dispose() async {
@@ -95,6 +106,62 @@ class _EmptyEpisodeRepository implements EpisodeRepository {
 
   @override
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
+class _KnownEpisodeRepository implements EpisodeRepository {
+  @override
+  Future<Episode?> getByAudioUrl(String audioUrl) async => Episode()
+    ..id = 1
+    ..podcastId = 1
+    ..guid = 'guid-1'
+    ..title = 'Episode'
+    ..audioUrl = audioUrl;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
+class _NoDownloadService implements DownloadService {
+  @override
+  Future<String?> getLocalPath(int episodeId) async => null;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
+class _RecordingHistoryService implements PlaybackHistoryService {
+  int stops = 0;
+
+  @override
+  Future<void> onPlaybackStopped(
+    int episodeId,
+    PlaybackProgress progress, {
+    double speed = 1.0,
+  }) async => stops++;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => Future<void>.value();
+}
+
+/// Records saved positions, and runs [onLookup] during a load's setup, after
+/// setUrl has succeeded.
+class _RecordingHistoryRepository implements PlaybackHistoryRepository {
+  final saved = <int>[];
+  void Function()? onLookup;
+
+  @override
+  Future<PlaybackHistory?> getByEpisodeId(int episodeId) async {
+    onLookup?.call();
+    return null;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) {
+    if (invocation.memberName == #saveProgress) {
+      saved.add(invocation.namedArguments[#positionMs] as int);
+    }
+    return Future<void>.value();
+  }
 }
 
 void main() {
@@ -190,6 +257,51 @@ void main() {
       check(state()).isA<PlaybackError>();
     });
 
+    test('an engine report of playing does not end the error', () async {
+      await failLoad();
+
+      player.report(ProcessingState.ready, playing: true);
+      await pumpEventQueue();
+
+      check(state()).isA<PlaybackError>();
+    });
+
+    test(
+      'retrying works even when the engine still reads as playing',
+      () async {
+        player.report(ProcessingState.ready, playing: true);
+        player.ignorePause = true;
+        await failLoad();
+        final failedLoads = player.loadCalls;
+
+        player.loadError = null;
+        await controller().togglePlayPause(_url);
+        await pumpEventQueue();
+
+        check(player.loadCalls).equals(failedLoads + 1);
+      },
+    );
+
+    test('a retry reports the same podcast as the first attempt', () async {
+      await failLoad();
+
+      player.loadError = null;
+      await controller().resume();
+      await pumpEventQueue();
+
+      final started = analytics.events.whereType<EpisodePlayStarted>();
+      check(started.single.podcastId).equals('123');
+    });
+
+    test('interruption marks do not erase the error', () async {
+      await failLoad();
+
+      controller().markPausedByInterruption();
+      check(state()).isA<PlaybackError>();
+      controller().markPlayingByInterruption();
+      check(state()).isA<PlaybackError>();
+    });
+
     test('no listen session opens', () async {
       await failLoad();
 
@@ -234,16 +346,19 @@ void main() {
     test('reported while a new load runs is left to that load', () async {
       await controller().play(_url, metadata: _metadata);
       await pumpEventQueue();
-
-      final load = controller().play(
-        'https://example.com/b.mp3',
-        metadata: _metadata,
+      final states = <PlaybackState>[];
+      final subscription = container.listen(
+        audioPlayerControllerProvider,
+        (_, next) => states.add(next),
       );
-      player.reportError();
-      await load;
+      addTearDown(subscription.close);
+
+      // Fired from inside setUrl, so the source guard is really up.
+      player.onLoad = player.reportError;
+      await controller().play('https://example.com/b.mp3', metadata: _metadata);
       await pumpEventQueue();
 
-      check(state()).not((it) => it.isA<PlaybackError>());
+      check(states.whereType<PlaybackError>()).isEmpty();
     });
 
     test('a load that plays clears the error', () async {
@@ -256,6 +371,93 @@ void main() {
       await pumpEventQueue();
 
       check(state()).isA<PlaybackPlaying>();
+    });
+  });
+
+  group('with a known episode', () {
+    late ProviderContainer known;
+    late _RecordingHistoryService history;
+    late _RecordingHistoryRepository historyRepo;
+
+    setUp(() {
+      history = _RecordingHistoryService();
+      historyRepo = _RecordingHistoryRepository();
+      known = ProviderContainer(
+        overrides: [
+          appSettingsRepositoryProvider.overrideWithValue(
+            FakeAppSettingsRepository(),
+          ),
+          analyticsServiceProvider.overrideWithValue(analytics),
+          episodeRepositoryProvider.overrideWithValue(
+            _KnownEpisodeRepository(),
+          ),
+          downloadServiceProvider.overrideWithValue(_NoDownloadService()),
+          playbackHistoryServiceProvider.overrideWithValue(history),
+          playbackHistoryRepositoryProvider.overrideWithValue(historyRepo),
+          audioPlayerProvider.overrideWith((ref) => player),
+          playbackProgressProvider.overrideWith(
+            (ref) => const PlaybackProgress(
+              position: Duration.zero,
+              duration: Duration(minutes: 10),
+              bufferedPosition: Duration.zero,
+            ),
+          ),
+        ],
+      );
+    });
+
+    tearDown(() => known.dispose());
+
+    AudioPlayerController knownController() =>
+        known.read(audioPlayerControllerProvider.notifier);
+
+    Future<void> failKnownLoad() async {
+      player.loadError = PlayerException(-1003, 'host not found', 0);
+      await knownController().play(_url, metadata: _metadata);
+      await pumpEventQueue();
+    }
+
+    test('leaving a failed episode keeps its saved position', () async {
+      await failKnownLoad();
+
+      await knownController().stop();
+
+      check(history.stops).equals(0);
+    });
+
+    test('a failure during setup does not start the engine', () async {
+      historyRepo.onLookup = player.reportError;
+
+      await knownController().play(_url, metadata: _metadata);
+      await pumpEventQueue();
+
+      check(known.read(audioPlayerControllerProvider)).isA<PlaybackError>();
+      check(player.playing).isFalse();
+    });
+
+    test('a seek moves the saved position a retry resumes from', () async {
+      await failKnownLoad();
+
+      await knownController().seek(const Duration(seconds: 90));
+
+      check(historyRepo.saved).deepEquals([90000]);
+    });
+
+    test('an automatic seek does not move it', () async {
+      await failKnownLoad();
+
+      await knownController().seekAutomatically(const Duration(seconds: 90));
+
+      check(historyRepo.saved).isEmpty();
+    });
+
+    test('skip buttons do nothing', () async {
+      await failKnownLoad();
+
+      await knownController().skipForward();
+      await knownController().skipBackward();
+
+      check(historyRepo.saved).isEmpty();
     });
   });
 }
