@@ -12,8 +12,8 @@ class SessionQueueChannel {
 
   final MethodChannel _channel;
 
-  /// Sets the title of the session's queue. A failure leaves the host's own
-  /// label on the button, so it is not reported as an error.
+  /// Sets the title of the session's queue. A failure only costs the queue
+  /// list its heading, so it is not reported as an error.
   Future<bool> setTitle(String title) async {
     try {
       return await _channel.invokeMethod<bool>('setTitle', title) ?? false;

@@ -363,11 +363,13 @@ gates the downloads; the phone-only path never prepares artwork. Rows are
 published without artwork at first and republished when it arrives; a generation
 guard drops results for a list that has been replaced.
 
-audio_service has no API for the queue title, which Android Auto shows on its
-queue button. `SessionQueueChannel.kt` (channel `audiflow/session_queue`)
+audio_service has no API for the queue title, which Android Auto shows as the
+queue list's heading. The button itself kept the host's own label ("キュー") on
+Android Auto 17.9 with the title set, whether it was sent before or after the
+queue. `SessionQueueChannel.kt` (channel `audiflow/session_queue`)
 reaches `AudioService.instance`'s private `mediaSession` by reflection and calls
 `setQueueTitle`; `proguard-rules.pro` keeps those member names for minified
-builds. A failure leaves the host's own label on the button, and the title is sent
+builds. A failure costs the list its heading, and the title is sent
 again with the next flush. `MainActivity` registers the channel, so it does not
 exist while a car has started the app with no Activity. Remove the channel if
 the plugin gains the API.

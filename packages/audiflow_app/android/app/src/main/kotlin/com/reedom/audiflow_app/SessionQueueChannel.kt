@@ -8,13 +8,13 @@ import io.flutter.plugin.common.MethodChannel
 
 /**
  * Handles `audiflow/session_queue`: sets the media session's queue title,
- * which Android Auto shows on the Now Playing queue button.
+ * which Android Auto shows as the heading of the queue list.
  *
  * audio_service has no call for this, and its service instance and session
  * are not public, so they are reached by name; `proguard-rules.pro` keeps
  * those names in release builds. If a plugin upgrade renames them, the only
- * effect is that Android Auto falls back to its own label, which does not
- * justify keeping a fork of the plugin for one string.
+ * effect is that the list loses its heading, which does not justify keeping
+ * a fork of the plugin for one string.
  */
 object SessionQueueChannel {
     private const val CHANNEL_NAME = "audiflow/session_queue"
