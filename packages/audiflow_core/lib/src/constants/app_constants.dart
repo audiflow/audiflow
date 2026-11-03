@@ -29,6 +29,16 @@ class AppConstants {
   /// 128 kbps episode.
   static const int streamCacheMaxBytes = 250 * 1024 * 1024;
 
+  /// How far ahead of the playback position the player keeps downloading.
+  /// Covers most seeks a listener makes, and bounds what an episode left after
+  /// a minute costs, while an episode shorter than this downloads in full.
+  static const Duration readAheadDuration = Duration(minutes: 10);
+
+  /// Audio the Android player may hold in memory ahead of the playback
+  /// position. The player buffers in RAM, so a high-bitrate episode stops at
+  /// this limit instead of at [readAheadDuration].
+  static const int readAheadMaxBytes = 16 * 1024 * 1024;
+
   /// Auto-downloads a podcast may receive without being played before its
   /// auto-download pauses. Counting downloads rather than days adapts to
   /// each feed's release cadence.
