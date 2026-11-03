@@ -27,6 +27,12 @@ class PickedOpmlFile {
   final Future<String> Function() read;
 }
 
+/// Far above any real OPML file, and low enough that "show all files" picking
+/// a video or backup fails on its own instead of exhausting memory. The Android
+/// read in `MainActivity.kt` uses the same limit.
+@visibleForTesting
+const maxOpmlFileBytes = 16 * 1024 * 1024;
+
 /// Opens the system file picker for OPML import.
 // ignore: one_member_abstracts
 abstract interface class OpmlFilePicker {
@@ -103,7 +109,11 @@ class IosOpmlFilePicker implements OpmlFilePicker {
         throw const FormatException('Picked file has no local path');
       }
       try {
-        return await File(path).readAsString();
+        final onDisk = File(path);
+        if (maxOpmlFileBytes < await onDisk.length()) {
+          throw const FormatException('File is too large to read');
+        }
+        return await onDisk.readAsString();
       } on FileSystemException catch (e) {
         // Includes content that is not UTF-8, which "show all files" makes
         // easy to pick. Android reports the same files as unreadable too.

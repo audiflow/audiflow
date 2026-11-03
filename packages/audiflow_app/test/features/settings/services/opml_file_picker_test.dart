@@ -201,6 +201,17 @@ void main() {
         check(await file.read()).equals('<opml/>');
       });
 
+      test('refuses a file over the size limit without reading it', () async {
+        final file = await pickFileWith(const []);
+        // Sparse, so the test does not actually write the limit to disk.
+        final onDisk = File(
+          '${dir.path}/feeds.opml',
+        ).openSync(mode: FileMode.append)..truncateSync(maxOpmlFileBytes + 1);
+        onDisk.closeSync();
+
+        await check(file.read()).throws<FormatException>();
+      });
+
       test('reports content that is not UTF-8 as unreadable', () async {
         final file = await pickFileWith(const [0xFF, 0xFE, 0x00]);
 
