@@ -735,6 +735,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get playerLoadFailed => 'Couldn\'t play this episode';
+
+  @override
+  String get playerLoadFailedRetry =>
+      'Couldn\'t play this episode. Tap play to try again.';
+
+  @override
   String get playerLoadingLabel => 'Loading';
 
   @override

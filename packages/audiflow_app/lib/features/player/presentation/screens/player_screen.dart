@@ -225,6 +225,10 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
                         onSeekEnd: _endSeek,
                       ),
                       const SizedBox(height: 16),
+                      if (playbackState is PlaybackError) ...[
+                        const _PlaybackFailureNotice(),
+                        const SizedBox(height: 8),
+                      ],
                       _PlayerControls(
                         isPlaying: displayIsPlaying,
                         isLoading: displayIsLoading,
@@ -997,6 +1001,26 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
     }
     final remaining = duration - position;
     return '-${formatPlaybackTime(remaining.isNegative ? Duration.zero : remaining)}';
+  }
+}
+
+/// Says that the episode failed and how to retry, above the play button the
+/// retry goes through.
+class _PlaybackFailureNotice extends StatelessWidget {
+  const _PlaybackFailureNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      liveRegion: true,
+      child: Text(
+        AppLocalizations.of(context).playerLoadFailedRetry,
+        textAlign: TextAlign.center,
+        // Ink rather than the error color: this sits on a ground tinted by
+        // the artwork, where a fixed red can lose its contrast.
+        style: Theme.of(context).textTheme.bodySmall,
+      ),
+    );
   }
 }
 

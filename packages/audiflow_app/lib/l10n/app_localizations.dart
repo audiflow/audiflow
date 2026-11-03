@@ -1412,6 +1412,18 @@ abstract class AppLocalizations {
   /// **'Forward {seconds} seconds'**
   String playerForwardLabel(int seconds);
 
+  /// Mini player subtitle when an episode failed to load or play
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t play this episode'**
+  String get playerLoadFailed;
+
+  /// Full player notice when an episode failed to load or play
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t play this episode. Tap play to try again.'**
+  String get playerLoadFailedRetry;
+
   /// Loading accessibility label
   ///
   /// In en, this message translates to:

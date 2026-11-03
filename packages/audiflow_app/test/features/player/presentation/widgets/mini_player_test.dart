@@ -315,6 +315,46 @@ void main() {
       check(progress).equals(0.5);
     });
   });
+
+  group('MiniPlayer after a playback failure', () {
+    testWidgets('names the failure and keeps the play button', (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final container = ProviderContainer(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          nowPlayingControllerProvider.overrideWith(
+            () => StubNowPlayingController(_nowPlaying),
+          ),
+          audioPlayerControllerProvider.overrideWith(
+            () => StubAudioPlayerController(
+              const PlaybackState.error(message: 'host not found'),
+            ),
+          ),
+          appSettingsRepositoryProvider.overrideWithValue(
+            StubAppSettingsRepository(
+              skipForwardSeconds: 30,
+              skipBackwardSeconds: 10,
+            ),
+          ),
+          playbackProgressProvider.overrideWith((ref) => null),
+          sleepTimerTimeLeftProvider.overrideWith((ref) => null),
+          nowPlayingSpeedProvider.overrideWith((ref) => 1.0),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(buildTestWidget(container));
+      await tester.pumpAndSettle();
+
+      final l10n = AppLocalizations.of(tester.element(find.byType(MiniPlayer)));
+      final card = tester.widget<MiniPlayerCard>(find.byType(MiniPlayerCard));
+
+      check(card.subtitle).equals(l10n.playerLoadFailed);
+      check(card.semanticLabel!).contains(l10n.playerLoadFailed);
+      check(find.byIcon(Symbols.play_arrow).evaluate()).isNotEmpty();
+    });
+  });
 }
 
 /// Controller that transitions state to [PlaybackLoading] during
