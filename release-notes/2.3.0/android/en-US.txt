@@ -1,5 +1,6 @@
-• Streamed episodes are kept in a cache, so seeking back or resuming no longer downloads the same audio again
-• When an episode can't play, the player says so, and says when you're offline; tap play to try again
-• The episode page and series rows now follow along as an episode plays
-• OPML import: the file picker narrows to OPML and XML files, and the Library no longer flickers while feeds are added
+• Android Auto: browse your Library, Stations and Downloads on the car screen and play from there. Now Playing has a speed button
+• Streamed episodes are cached, so seeking back or resuming uses less data
+• When an episode can't play, the player says so; tap play to try again
+• The episode page and series rows follow along as an episode plays
+• OPML import: the file picker narrows to OPML and XML files
 • Subscribing on a podcast's page shows "Subscribed" for a moment before the button closes
