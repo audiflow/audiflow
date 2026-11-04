@@ -714,6 +714,24 @@ void main() {
       expect(fakeSubscriptionRepo.lastUpdatedItunesId, isNull);
     });
 
+    test('fails a stored feed URL with no host without fetching', () async {
+      final sub = _subscription(feedUrl: '', lastRefreshedAt: null);
+      var fetched = false;
+      final executor = buildExecutor(
+        dio: _FakeDio((_) {
+          fetched = true;
+          return _xmlResponse('<rss></rss>');
+        }),
+      );
+
+      final result = await executor.syncFeed(sub);
+
+      check(result.success).isFalse();
+      check(result.skipped).isFalse();
+      check(result.errorMessage).equals('Invalid feed URL');
+      check(fetched).isFalse();
+    });
+
     test('syncs when enough time has elapsed', () async {
       final sub = _subscription(
         lastRefreshedAt: DateTime.now().subtract(const Duration(hours: 2)),

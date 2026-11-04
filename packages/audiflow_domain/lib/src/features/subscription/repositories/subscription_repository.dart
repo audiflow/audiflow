@@ -10,6 +10,9 @@ abstract class SubscriptionRepository {
   ///
   /// Creates a new subscription record with the provided podcast metadata.
   /// Returns the created [Subscription] with auto-generated id.
+  ///
+  /// Throws [SubscriptionException] if [feedUrl] is not fetchable (see
+  /// [isFetchableFeedUrl]).
   Future<Subscription> subscribe({
     required String itunesId,
     required String feedUrl,

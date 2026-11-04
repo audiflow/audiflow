@@ -67,6 +67,27 @@ void main() {
       expect(result[1].feedUrl, 'https://example.com/another.xml');
     });
 
+    test('skips outlines with a blank xmlUrl', () {
+      const xml = '''<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head><title>Test</title></head>
+  <body>
+    <outline text="Empty" xmlUrl="" />
+    <outline text="Blank" xmlUrl="  " />
+    <outline text="Category" xmlUrl="">
+      <outline type="rss"
+        text="Valid Feed"
+        xmlUrl="https://example.com/valid.xml" />
+    </outline>
+  </body>
+</opml>''';
+
+      final result = service.parse(xml);
+
+      expect(result.length, 1);
+      expect(result[0].feedUrl, 'https://example.com/valid.xml');
+    });
+
     test('skips outlines without xmlUrl', () {
       const xml = '''<?xml version="1.0" encoding="UTF-8"?>
 <opml version="2.0">
