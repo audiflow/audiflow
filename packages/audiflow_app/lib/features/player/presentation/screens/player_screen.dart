@@ -15,6 +15,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
 import '../../helpers/chapter_seek_bar_segments.dart';
 import '../../helpers/playback_time_format.dart';
+import '../controllers/device_offline_provider.dart';
 import '../../helpers/podcast_lookup.dart';
 import '../../../share/presentation/helpers/share_helper.dart';
 import '../../services/audio_route_channel.dart';
@@ -225,6 +226,10 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
                         onSeekEnd: _endSeek,
                       ),
                       const SizedBox(height: 16),
+                      if (playbackState is PlaybackError) ...[
+                        const _PlaybackFailureNotice(),
+                        const SizedBox(height: 8),
+                      ],
                       _PlayerControls(
                         isPlaying: displayIsPlaying,
                         isLoading: displayIsLoading,
@@ -997,6 +1002,30 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
     }
     final remaining = duration - position;
     return '-${formatPlaybackTime(remaining.isNegative ? Duration.zero : remaining)}';
+  }
+}
+
+/// Says that the episode failed and how to retry, above the play button the
+/// retry goes through.
+class _PlaybackFailureNotice extends ConsumerWidget {
+  const _PlaybackFailureNotice();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final isOffline = ref.watch(deviceOfflineProvider).value ?? false;
+    return Semantics(
+      liveRegion: true,
+      child: Text(
+        isOffline
+            ? l10n.playerLoadFailedOfflineRetry
+            : l10n.playerLoadFailedRetry,
+        textAlign: TextAlign.center,
+        // Ink rather than the error color: this sits on a ground tinted by
+        // the artwork, where a fixed red can lose its contrast.
+        style: Theme.of(context).textTheme.bodySmall,
+      ),
+    );
   }
 }
 

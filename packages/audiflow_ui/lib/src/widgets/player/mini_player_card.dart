@@ -22,6 +22,7 @@ class MiniPlayerCard extends StatelessWidget {
     this.progress,
     this.onTap,
     this.semanticLabel,
+    this.subtitleColor,
   });
 
   static const double height = 64;
@@ -44,6 +45,9 @@ class MiniPlayerCard extends StatelessWidget {
 
   /// Label for the card as a whole, e.g. "Now playing: title, podcast".
   final String? semanticLabel;
+
+  /// Overrides the subtitle's color, for when it carries a failure notice.
+  final Color? subtitleColor;
 
   @override
   Widget build(BuildContext context) {
@@ -115,7 +119,9 @@ class MiniPlayerCard extends StatelessWidget {
             subtitle,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: AppTextStyles.meta.copyWith(color: colors.inkSecondary),
+            style: AppTextStyles.meta.copyWith(
+              color: subtitleColor ?? colors.inkSecondary,
+            ),
           ),
         ],
       ),

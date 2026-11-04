@@ -708,6 +708,19 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get playerLoadFailed => '再生できませんでした';
+
+  @override
+  String get playerLoadFailedRetry => '再生できませんでした。再生ボタンでもう一度お試しください。';
+
+  @override
+  String get playerLoadFailedOffline => 'オフラインです';
+
+  @override
+  String get playerLoadFailedOfflineRetry =>
+      'オフラインです。インターネットに接続してから、再生ボタンを押してください。';
+
+  @override
   String get playerLoadingLabel => '読み込み中';
 
   @override

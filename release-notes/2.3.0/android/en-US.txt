@@ -1,1 +1,5 @@
+• Streamed episodes are kept in a cache, so seeking back or resuming no longer downloads the same audio again
+• When an episode can't play, the player says so, and says when you're offline; tap play to try again
+• The episode page and series rows now follow along as an episode plays
+• OPML import: the file picker narrows to OPML and XML files, and the Library no longer flickers while feeds are added
 • Subscribing on a podcast's page shows "Subscribed" for a moment before the button closes

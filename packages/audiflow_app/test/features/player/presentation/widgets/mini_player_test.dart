@@ -1,3 +1,4 @@
+import 'package:audiflow_app/features/player/presentation/controllers/device_offline_provider.dart';
 import 'package:audiflow_app/features/player/presentation/widgets/mini_player.dart';
 import 'package:audiflow_app/features/player/presentation/widgets/sleep_timer_icon_button.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
@@ -313,6 +314,66 @@ void main() {
       );
 
       check(progress).equals(0.5);
+    });
+  });
+
+  group('MiniPlayer after a playback failure', () {
+    Future<ProviderContainer> failedContainer({required bool offline}) async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final container = ProviderContainer(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          nowPlayingControllerProvider.overrideWith(
+            () => StubNowPlayingController(_nowPlaying),
+          ),
+          audioPlayerControllerProvider.overrideWith(
+            () => StubAudioPlayerController(
+              const PlaybackState.error(message: 'host not found'),
+            ),
+          ),
+          appSettingsRepositoryProvider.overrideWithValue(
+            StubAppSettingsRepository(
+              skipForwardSeconds: 30,
+              skipBackwardSeconds: 10,
+            ),
+          ),
+          playbackProgressProvider.overrideWith((ref) => null),
+          sleepTimerTimeLeftProvider.overrideWith((ref) => null),
+          nowPlayingSpeedProvider.overrideWith((ref) => 1.0),
+          deviceOfflineProvider.overrideWith((ref) => Stream.value(offline)),
+        ],
+      );
+      addTearDown(container.dispose);
+      return container;
+    }
+
+    testWidgets('says offline rather than failed with no network', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        buildTestWidget(await failedContainer(offline: true)),
+      );
+      await tester.pumpAndSettle();
+
+      final l10n = AppLocalizations.of(tester.element(find.byType(MiniPlayer)));
+      final card = tester.widget<MiniPlayerCard>(find.byType(MiniPlayerCard));
+      check(card.subtitle).equals(l10n.playerLoadFailedOffline);
+      check(card.semanticLabel!).contains(l10n.playerLoadFailedOffline);
+    });
+
+    testWidgets('names the failure and keeps the play button', (tester) async {
+      await tester.pumpWidget(
+        buildTestWidget(await failedContainer(offline: false)),
+      );
+      await tester.pumpAndSettle();
+
+      final l10n = AppLocalizations.of(tester.element(find.byType(MiniPlayer)));
+      final card = tester.widget<MiniPlayerCard>(find.byType(MiniPlayerCard));
+
+      check(card.subtitle).equals(l10n.playerLoadFailed);
+      check(card.semanticLabel!).contains(l10n.playerLoadFailed);
+      check(find.byIcon(Symbols.play_arrow).evaluate()).isNotEmpty();
     });
   });
 }

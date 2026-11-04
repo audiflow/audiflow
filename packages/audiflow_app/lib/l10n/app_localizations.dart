@@ -1412,6 +1412,30 @@ abstract class AppLocalizations {
   /// **'Forward {seconds} seconds'**
   String playerForwardLabel(int seconds);
 
+  /// Mini player subtitle when an episode failed to load or play
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t play this episode'**
+  String get playerLoadFailed;
+
+  /// Full player notice when an episode failed to load or play
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t play this episode. Tap play to try again.'**
+  String get playerLoadFailedRetry;
+
+  /// Mini player subtitle when an episode failed to load and the device has no network
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re offline'**
+  String get playerLoadFailedOffline;
+
+  /// Full player notice when an episode failed to load and the device has no network
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re offline. Connect to the internet, then tap play.'**
+  String get playerLoadFailedOfflineRetry;
+
   /// Loading accessibility label
   ///
   /// In en, this message translates to:
