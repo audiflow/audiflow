@@ -13,6 +13,7 @@ import '../../../common/providers/logger_provider.dart';
 import '../../../common/services/suspendable_writer.dart';
 import '../../../features/subscription/models/subscriptions.dart';
 import '../../../features/subscription/repositories/subscription_repository_impl.dart';
+import '../../../features/subscription/services/feed_url_variants.dart';
 import '../../download/providers/download_providers.dart';
 import '../../download/services/download_queue_service.dart';
 import '../../download/services/download_retention_service.dart';
@@ -275,6 +276,19 @@ class FeedSyncService implements SuspendableWriter {
           podcastId: sub.id,
           success: true,
           skipped: true,
+        );
+      }
+
+      // Older installs can hold such a row, and no sync can repair it. A
+      // warning because each sync would otherwise report the same stored value
+      // as a new error; the listener can still unsubscribe.
+      if (!isFetchableFeedUrl(sub.feedUrl)) {
+        _logger.w('Skipping sync for "${sub.title}": invalid feed URL');
+        return SingleFeedSyncResult(
+          podcastId: sub.id,
+          success: false,
+          skipped: false,
+          errorMessage: 'Invalid feed URL',
         );
       }
 

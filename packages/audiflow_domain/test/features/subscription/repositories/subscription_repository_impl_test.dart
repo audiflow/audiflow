@@ -39,6 +39,21 @@ void main() {
       expect(result.artistName, 'Test Artist');
     });
 
+    for (final feedUrl in ['', 'feeds/show.xml', 'feed://example.com/x']) {
+      test('rejects "$feedUrl" without storing it', () async {
+        await check(
+          repository.subscribe(
+            itunesId: 'itunes-1',
+            feedUrl: feedUrl,
+            title: 'Test Podcast',
+            artistName: 'Test Artist',
+          ),
+        ).throws<SubscriptionException>();
+
+        check(await repository.getSubscriptions()).isEmpty();
+      });
+    }
+
     test('creates subscription with optional fields', () async {
       final result = await repository.subscribe(
         itunesId: 'itunes-1',

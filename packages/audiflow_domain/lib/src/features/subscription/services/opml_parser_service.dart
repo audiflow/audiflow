@@ -97,7 +97,9 @@ class OpmlParserService {
       if (child.name.local != 'outline') continue;
 
       final xmlUrl = child.getAttribute('xmlUrl');
-      if (xmlUrl != null && !seenUrls.contains(xmlUrl)) {
+      // A blank xmlUrl names no feed, the same as a missing one.
+      final hasFeedUrl = xmlUrl != null && xmlUrl.trim().isNotEmpty;
+      if (hasFeedUrl && !seenUrls.contains(xmlUrl)) {
         seenUrls.add(xmlUrl);
         final text = child.getAttribute('text');
         final title = child.getAttribute('title');

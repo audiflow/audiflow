@@ -4,6 +4,7 @@ import 'package:logger/logger.dart';
 import '../../settings/repositories/app_settings_repository.dart';
 import '../../subscription/models/subscriptions.dart';
 import '../../subscription/repositories/subscription_repository.dart';
+import '../../subscription/services/feed_url_variants.dart';
 import '../models/feed_parse_progress.dart';
 import '../models/feed_sync_result.dart';
 import '../repositories/episode_repository.dart';
@@ -91,6 +92,19 @@ class FeedSyncExecutor {
           podcastId: sub.id,
           success: true,
           skipped: true,
+        );
+      }
+
+      // Older installs can hold such a row, and no sync can repair it. A
+      // warning because each sync would otherwise report the same stored value
+      // as a new error; the listener can still unsubscribe.
+      if (!isFetchableFeedUrl(sub.feedUrl)) {
+        _logger?.w('Skipping sync for "${sub.title}": invalid feed URL');
+        return SingleFeedSyncResult(
+          podcastId: sub.id,
+          success: false,
+          skipped: false,
+          errorMessage: 'Invalid feed URL',
         );
       }
 
