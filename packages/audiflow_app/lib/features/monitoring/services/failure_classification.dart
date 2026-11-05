@@ -8,7 +8,7 @@ import 'package:just_audio/just_audio.dart';
 
 /// Whether [error] is an expected runtime condition rather than a defect:
 /// the device is offline or the network stalled, the user cancelled, or a
-/// feed host says the feed is gone.
+/// feed host says the feed is gone or answers with something else entirely.
 ///
 /// These happen routinely and are not actionable, so error monitoring
 /// keeps them out of the issue stream (at most a breadcrumb). Other HTTP

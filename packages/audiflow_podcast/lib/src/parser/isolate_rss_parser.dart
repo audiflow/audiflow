@@ -3,6 +3,7 @@ import 'dart:isolate';
 
 import 'package:xml/xml.dart';
 
+import '../errors/podcast_exception.dart';
 import '../models/episode_identity.dart';
 import '../models/podcast_chapters_link.dart';
 import 'description_chapters_parser.dart';
@@ -144,7 +145,7 @@ class IsolateRssParser {
                       controller.close();
                     }
                   } else if (message is _IsolateError) {
-                    controller.addError(Exception(message.error));
+                    controller.addError(message.toException());
                   }
                 },
                 onDone: () {
@@ -184,7 +185,10 @@ class IsolateRssParser {
         // Sanity check: reject non-RSS documents (e.g. HTML error pages)
         if (!xml.contains('<rss') && !xml.contains('<channel')) {
           params.sendPort.send(
-            const _IsolateError('Input does not appear to be an RSS feed'),
+            const _IsolateError(
+              'Input does not appear to be an RSS feed',
+              isNotAFeed: true,
+            ),
           );
           params.sendPort.send(
             const ParseComplete(totalParsed: 0, stoppedEarly: false),
@@ -752,6 +756,14 @@ class _IsolateParams {
 }
 
 class _IsolateError {
-  const _IsolateError(this.error);
+  const _IsolateError(this.error, {this.isNotAFeed = false});
   final String error;
+
+  /// Whether the input was rejected as not a feed, rather than breaking the
+  /// parser. The first is the host's to fix; the second may be a defect here,
+  /// so only the first becomes a typed failure.
+  final bool isNotAFeed;
+
+  Exception toException() =>
+      isNotAFeed ? PodcastException.notAFeed(error) : Exception(error);
 }
