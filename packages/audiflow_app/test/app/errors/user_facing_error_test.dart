@@ -84,6 +84,7 @@ void main() {
         'Gone',
         statusCode: 410,
       ),
+      'PodcastException.notAFeed': PodcastException.notAFeed('html'),
     };
 
     for (final MapEntry(:key, :value) in feedUnavailableErrors.entries) {

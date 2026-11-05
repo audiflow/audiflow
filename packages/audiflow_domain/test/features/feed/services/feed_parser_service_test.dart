@@ -188,6 +188,41 @@ void main() {
       expect(allMediaMetas.first.transcripts, hasLength(1));
       expect(allMediaMetas.first.transcripts!.first.type, 'text/vtt');
     });
+
+    test('fails with an unavailable feed for an HTML body', () async {
+      await expectLater(
+        service
+            .parseWithProgress(
+              xmlContent: '<html><body>Sign in</body></html>',
+              podcastId: 1,
+              knownGuids: {},
+              onBatchReady: (_, _) async {},
+            )
+            .toList(),
+        throwsA(
+          isA<PodcastException>().having(
+            (e) => e.isFeedUnavailable,
+            'isFeedUnavailable',
+            isTrue,
+          ),
+        ),
+      );
+    });
+  });
+
+  group('parseFromString', () {
+    test('fails with an unavailable feed for an HTML body', () async {
+      await expectLater(
+        service.parseFromString('<html><body>Sign in</body></html>'),
+        throwsA(
+          isA<PodcastException>().having(
+            (e) => e.isFeedUnavailable,
+            'isFeedUnavailable',
+            isTrue,
+          ),
+        ),
+      );
+    });
   });
 
   group('explicit flag', () {

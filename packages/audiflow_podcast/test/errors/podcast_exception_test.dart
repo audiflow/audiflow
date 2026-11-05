@@ -27,5 +27,9 @@ void main() {
       check(PodcastException.network('offline').isFeedUnavailable).isFalse();
       check(PodcastException.parsing('bad xml').isFeedUnavailable).isFalse();
     });
+
+    test('is true for a response that is not a feed', () {
+      check(PodcastException.notAFeed('html').isFeedUnavailable).isTrue();
+    });
   });
 }
