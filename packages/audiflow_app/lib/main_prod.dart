@@ -4,5 +4,5 @@ import 'main.dart' as app;
 
 Future<void> main() => app.appMain(
   flavor: Flavor.prod,
-  presetConfigBaseUrl: 'https://audiflow.github.io/audiflow-preset/assets/v7',
+  presetConfigBaseUrl: 'https://audiflow.github.io/audiflow-preset/assets/v8',
 );
