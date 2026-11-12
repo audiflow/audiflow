@@ -43,12 +43,19 @@ class PresetCacheDatasource {
 
   // -- root meta.json --
 
-  /// Reads cached root meta, or null if not cached.
+  /// Reads cached root meta, or null if not cached or unreadable.
+  ///
+  /// A cache written by an older build (e.g. a v7 root index) is treated
+  /// as absent rather than thrown, since it is only an offline fallback.
   Future<RootMeta?> readRootMeta() async {
     final file = File('$_baseDir/meta.json');
     if (!file.existsSync()) return null;
     final raw = await file.readAsString();
-    return RootMeta.parseJson(raw);
+    try {
+      return RootMeta.parseJson(raw);
+    } on FormatException {
+      return null;
+    }
   }
 
   /// Writes root meta to disk.

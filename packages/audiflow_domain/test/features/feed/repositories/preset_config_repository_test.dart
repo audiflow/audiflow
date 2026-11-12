@@ -46,7 +46,7 @@ void main() {
             'id': 'test',
             'dataVersion': 1,
             'displayName': 'Test',
-            'feedUrlHint': 'test.com',
+            'feedUrlHints': ['test.com'],
             'playlistCount': 1,
           },
         ],
@@ -69,7 +69,7 @@ void main() {
               id: 'cached',
               dataVersion: 1,
               displayName: 'Cached',
-              feedUrlHint: 'cached.com',
+              feedUrlHints: ['cached.com'],
               playlistCount: 1,
             ),
           ],
@@ -104,7 +104,7 @@ void main() {
           id: 'current',
           dataVersion: 2,
           displayName: 'Current',
-          feedUrlHint: 'current.com',
+          feedUrlHints: ['current.com'],
           playlistCount: 1,
         ),
       ]);
@@ -130,7 +130,7 @@ void main() {
           id: 'test',
           dataVersion: 2,
           displayName: 'Test',
-          feedUrlHint: 'test.com',
+          feedUrlHints: ['test.com'],
           playlistCount: 1,
         ),
       ]);
@@ -157,7 +157,7 @@ void main() {
         id: 'test',
         dataVersion: 1,
         displayName: 'Test',
-        feedUrlHint: 'test.com',
+        feedUrlHints: ['test.com'],
         playlistCount: 1,
       );
 
@@ -198,7 +198,7 @@ void main() {
         id: 'test',
         dataVersion: 1,
         displayName: 'Test',
-        feedUrlHint: 'test.com',
+        feedUrlHints: ['test.com'],
         playlistCount: 1,
       );
 
@@ -242,7 +242,7 @@ void main() {
         id: 'test',
         dataVersion: 1,
         displayName: 'Test',
-        feedUrlHint: 'test.com',
+        feedUrlHints: ['test.com'],
         playlistCount: 1,
       );
 
@@ -265,14 +265,14 @@ void main() {
           id: 'coten',
           dataVersion: 1,
           displayName: 'Coten',
-          feedUrlHint: 'anchor.fm/s/8c2088c',
+          feedUrlHints: ['anchor.fm/s/8c2088c'],
           playlistCount: 3,
         ),
         PresetSummary(
           id: 'other',
           dataVersion: 1,
           displayName: 'Other',
-          feedUrlHint: 'other.com',
+          feedUrlHints: ['other.com'],
           playlistCount: 1,
         ),
       ]);
@@ -285,13 +285,37 @@ void main() {
       expect(match!.id, 'coten');
     });
 
+    test('findMatchingPreset matches any of a preset hints', () {
+      repo.setPresetSummaries([
+        PresetSummary(
+          id: 'moved',
+          dataVersion: 1,
+          displayName: 'Moved',
+          feedUrlHints: [
+            'https://new.example.com/rss',
+            'https://old.example.com/rss',
+          ],
+          playlistCount: 1,
+        ),
+      ]);
+
+      expect(
+        repo.findMatchingPreset(null, 'https://new.example.com/rss')?.id,
+        'moved',
+      );
+      expect(
+        repo.findMatchingPreset(null, 'https://old.example.com/rss')?.id,
+        'moved',
+      );
+    });
+
     test('findMatchingPreset returns null when no match', () {
       repo.setPresetSummaries([
         PresetSummary(
           id: 'test',
           dataVersion: 1,
           displayName: 'Test',
-          feedUrlHint: 'test.com',
+          feedUrlHints: ['test.com'],
           playlistCount: 1,
         ),
       ]);
