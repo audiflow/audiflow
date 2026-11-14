@@ -115,6 +115,23 @@ void main() {
       final state = container.read(opmlFileReceiverControllerProvider);
       check(state).isA<OpmlFileReceiverSuccess>();
     });
+
+    test('maps an unreadable file:// URI to unreadableFile', () async {
+      // The OS refusing access (EPERM) or the file being gone both surface
+      // as FileSystemException; neither is an app bug.
+      final tmpDir = Directory.systemTemp.createTempSync('opml_test');
+      addTearDown(() => tmpDir.deleteSync(recursive: true));
+
+      final notifier = container.read(
+        opmlFileReceiverControllerProvider.notifier,
+      );
+      await notifier.handleUriForTest(Uri.file('${tmpDir.path}/missing.opml'));
+      final state = container.read(opmlFileReceiverControllerProvider);
+      check(state)
+          .isA<OpmlFileReceiverError>()
+          .has((it) => it.failure, 'failure')
+          .equals(OpmlReadFailure.unreadableFile);
+    });
   });
 
   group('content:// URI handling', () {

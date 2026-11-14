@@ -105,6 +105,16 @@ class OpmlFileReceiverController extends _$OpmlFileReceiverController {
         stackTrace: stack,
       );
       state = OpmlFileReceiverError(OpmlReadFailure.unreadableFile, error: e);
+    } on FileSystemException catch (e, stack) {
+      // The OS denied access (e.g. a file the sender still owns) or the file
+      // vanished before we read it. The user can act on that, so tell them the
+      // file is unreadable instead of reporting an app error.
+      _logger.w(
+        'Received OPML file could not be opened',
+        error: e,
+        stackTrace: stack,
+      );
+      state = OpmlFileReceiverError(OpmlReadFailure.unreadableFile, error: e);
     } on Exception catch (e, stack) {
       _logger.e('Received OPML file failed', error: e, stackTrace: stack);
       state = OpmlFileReceiverError(OpmlReadFailure.unexpected, error: e);
