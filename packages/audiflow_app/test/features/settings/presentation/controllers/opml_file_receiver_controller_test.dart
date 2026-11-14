@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:audiflow_app/features/settings/presentation/controllers/opml_file_receiver_controller.dart';
 import 'package:audiflow_app/features/settings/presentation/utils/opml_read_failure.dart';
+import 'package:audiflow_app/features/settings/services/shared_file_inbox.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter/services.dart';
@@ -21,6 +22,8 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   late ProviderContainer container;
+  late Directory inboxRoot;
+  late Directory inbox;
 
   const appLinksChannel = MethodChannel('com.llfbandit.app_links/messages');
   const appLinksEvents = EventChannel('com.llfbandit.app_links/events');
@@ -30,6 +33,9 @@ void main() {
       overrides: [
         subscriptionRepositoryProvider.overrideWithValue(
           _TestSubscriptionRepository(),
+        ),
+        sharedFileInboxProvider.overrideWithValue(
+          DirectorySharedFileInbox(() async => inbox),
         ),
       ],
     );
@@ -45,11 +51,14 @@ void main() {
         });
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockStreamHandler(appLinksEvents, _EmptyStreamHandler());
+    inboxRoot = Directory.systemTemp.createTempSync('opml_inbox_test');
+    inbox = Directory('${inboxRoot.path}/Inbox')..createSync();
     container = createContainer();
   });
 
   tearDown(() {
     container.dispose();
+    inboxRoot.deleteSync(recursive: true);
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(appLinksChannel, null);
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -114,6 +123,70 @@ void main() {
       await notifier.handleUriForTest(Uri.file(file.path));
       final state = container.read(opmlFileReceiverControllerProvider);
       check(state).isA<OpmlFileReceiverSuccess>();
+      // Not in the app's inbox, so it belongs to someone else.
+      check(file.existsSync()).isTrue();
+    });
+
+    test('deletes the inbox copy after a successful read', () async {
+      final file = File('${inbox.path}/shared.opml')
+        ..writeAsStringSync(_validOpml);
+
+      final notifier = container.read(
+        opmlFileReceiverControllerProvider.notifier,
+      );
+      await notifier.handleUriForTest(Uri.file(file.path));
+      final state = container.read(opmlFileReceiverControllerProvider);
+      check(state).isA<OpmlFileReceiverSuccess>();
+      check(file.existsSync()).isFalse();
+    });
+
+    test('deletes the inbox copy when it is not valid OPML', () async {
+      final file = File('${inbox.path}/broken.opml')
+        ..writeAsStringSync('not xml');
+
+      final notifier = container.read(
+        opmlFileReceiverControllerProvider.notifier,
+      );
+      await notifier.handleUriForTest(Uri.file(file.path));
+      final state = container.read(opmlFileReceiverControllerProvider);
+      check(state)
+          .isA<OpmlFileReceiverError>()
+          .has((it) => it.failure, 'failure')
+          .equals(OpmlReadFailure.unreadableFile);
+      check(file.existsSync()).isFalse();
+    });
+
+    test('deletes the inbox copy when it lists no feeds', () async {
+      final file = File('${inbox.path}/empty.opml')
+        ..writeAsStringSync('<opml version="1.0"><body/></opml>');
+
+      final notifier = container.read(
+        opmlFileReceiverControllerProvider.notifier,
+      );
+      await notifier.handleUriForTest(Uri.file(file.path));
+      final state = container.read(opmlFileReceiverControllerProvider);
+      check(state)
+          .isA<OpmlFileReceiverError>()
+          .has((it) => it.failure, 'failure')
+          .equals(OpmlReadFailure.noFeeds);
+      check(file.existsSync()).isFalse();
+    });
+
+    test('maps an unreadable file:// URI to unreadableFile', () async {
+      // The OS refusing access (EPERM) or the file being gone both surface
+      // as FileSystemException; neither is an app bug.
+      final tmpDir = Directory.systemTemp.createTempSync('opml_test');
+      addTearDown(() => tmpDir.deleteSync(recursive: true));
+
+      final notifier = container.read(
+        opmlFileReceiverControllerProvider.notifier,
+      );
+      await notifier.handleUriForTest(Uri.file('${tmpDir.path}/missing.opml'));
+      final state = container.read(opmlFileReceiverControllerProvider);
+      check(state)
+          .isA<OpmlFileReceiverError>()
+          .has((it) => it.failure, 'failure')
+          .equals(OpmlReadFailure.unreadableFile);
     });
   });
 

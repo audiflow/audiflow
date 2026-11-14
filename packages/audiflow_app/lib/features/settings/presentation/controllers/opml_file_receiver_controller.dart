@@ -7,6 +7,7 @@ import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../services/content_uri_reader.dart';
+import '../../services/shared_file_inbox.dart';
 import '../utils/opml_read_failure.dart';
 
 part 'opml_file_receiver_controller.g.dart';
@@ -105,6 +106,16 @@ class OpmlFileReceiverController extends _$OpmlFileReceiverController {
         stackTrace: stack,
       );
       state = OpmlFileReceiverError(OpmlReadFailure.unreadableFile, error: e);
+    } on FileSystemException catch (e, stack) {
+      // The OS denied access (e.g. a file the sender still owns) or the file
+      // vanished before we read it. The user can act on that, so tell them the
+      // file is unreadable instead of reporting an app error.
+      _logger.w(
+        'Received OPML file could not be opened',
+        error: e,
+        stackTrace: stack,
+      );
+      state = OpmlFileReceiverError(OpmlReadFailure.unreadableFile, error: e);
     } on Exception catch (e, stack) {
       _logger.e('Received OPML file failed', error: e, stackTrace: stack);
       state = OpmlFileReceiverError(OpmlReadFailure.unexpected, error: e);
@@ -114,7 +125,27 @@ class OpmlFileReceiverController extends _$OpmlFileReceiverController {
   /// Reads file content from either a file:// or content:// URI.
   Future<String> _readContent(Uri uri) async {
     if (uri.scheme == 'content') return readContentUri(uri.toString());
-    return File(uri.toFilePath()).readAsString();
+    final path = uri.toFilePath();
+    try {
+      return await File(path).readAsString();
+    } finally {
+      // The content is in memory (or unreadable) by now, and iOS never
+      // removes the copy it made, so drop it whether or not the import works.
+      await _discardInboxCopy(path);
+    }
+  }
+
+  Future<void> _discardInboxCopy(String path) async {
+    try {
+      await ref.read(sharedFileInboxProvider).discard(path);
+    } on FileSystemException catch (e, stack) {
+      // A leftover copy only wastes space; it must not fail the import.
+      _logger.w(
+        'Could not delete the shared OPML copy',
+        error: e,
+        stackTrace: stack,
+      );
+    }
   }
 
   /// Exposes [_handleUri] for unit testing.
