@@ -51,12 +51,16 @@ final class PresetSummary {
     };
   }
 
-  /// Throws [FormatException] for anything but a list of strings, which
-  /// includes a v7 root index that carries the scalar `feedUrlHint`.
+  /// Throws [FormatException] for anything but a non-empty list of
+  /// non-empty strings, which includes a v7 root index that carries the
+  /// scalar `feedUrlHint`. An empty hint is a substring of every URL, so
+  /// accepting one would match the preset to every podcast.
   static List<String> _parseFeedUrlHints(Object? raw) {
-    if (raw is! List<dynamic> || raw.any((h) => h is! String)) {
+    if (raw is! List<dynamic> ||
+        raw.isEmpty ||
+        raw.any((h) => h is! String || h.isEmpty)) {
       throw const FormatException(
-        'Expected "feedUrlHints" to be a list of strings',
+        'Expected "feedUrlHints" to be a non-empty list of non-empty strings',
       );
     }
     return List.unmodifiable(raw.cast<String>());

@@ -105,7 +105,7 @@ Valid resolver types: `seasonNumber`, `titleClassifier`, `year`, `titleDiscovery
 - Model JSON keys must match `preset_core` models in the editor repo exactly
 - Enum string values must match schema `oneOf`/`enum` definitions
 - Schema conformance tests validate round-trip serialization: `packages/audiflow_domain/test/features/feed/models/schema_conformance_test.dart`
-- Vendored schemas at `packages/audiflow_domain/test/fixtures/` (`playlist-definition.schema.json`, `preset-index.schema.json`, `preset-meta.schema.json`) must be kept in sync with upstream (v7 schema)
+- Vendored schemas at `packages/audiflow_domain/test/fixtures/` (`playlist-definition.schema.json`, `preset-index.schema.json`, `preset-meta.schema.json`) must be kept in sync with upstream (v8 schema)
 
 ## Schema update procedure
 

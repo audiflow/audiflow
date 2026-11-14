@@ -59,15 +59,28 @@ void main() {
         expect(restored.presets[0].id, 'test');
       });
 
-      test('treats a root meta cached by a v7 build as absent', () async {
-        // An app update leaves the old build's cache on disk; an offline
-        // launch must not crash on the scalar feedUrlHint it holds.
+      test('migrates a root meta cached by a v7 build', () async {
+        // An app update leaves the old build's cache on disk. Offline, it is
+        // the only index, and dropping it would evict every cached preset.
         File('${tempDir.path}/preset/meta.json')
           ..createSync(recursive: true)
           ..writeAsStringSync(
             '{"dataVersion":10,"schemaVersion":7,"presets":[{"id":"p",'
             '"dataVersion":1,"displayName":"P","feedUrlHint":"example.com",'
             '"playlistCount":1}]}',
+          );
+        final meta = await datasource.readRootMeta();
+        expect(meta, isNotNull);
+        expect(meta!.presets.single.id, 'p');
+        expect(meta.presets.single.feedUrlHints, ['example.com']);
+      });
+
+      test('treats an unreadable root meta as absent', () async {
+        File('${tempDir.path}/preset/meta.json')
+          ..createSync(recursive: true)
+          ..writeAsStringSync(
+            '{"dataVersion":10,"schemaVersion":7,"presets":[{"id":"p",'
+            '"dataVersion":1,"displayName":"P","playlistCount":1}]}',
           );
         expect(await datasource.readRootMeta(), isNull);
       });

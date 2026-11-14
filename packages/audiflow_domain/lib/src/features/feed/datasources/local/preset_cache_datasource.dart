@@ -45,8 +45,10 @@ class PresetCacheDatasource {
 
   /// Reads cached root meta, or null if not cached or unreadable.
   ///
-  /// A cache written by an older build (e.g. a v7 root index) is treated
-  /// as absent rather than thrown, since it is only an offline fallback.
+  /// A v7 root index cached by an older build is migrated in memory: offline
+  /// it is the only index, and callers reconcile the preset cache against
+  /// it, so dropping it would evict every cached preset. Anything else that
+  /// fails to parse is treated as absent, since the cache is only a fallback.
   Future<RootMeta?> readRootMeta() async {
     final file = File('$_baseDir/meta.json');
     if (!file.existsSync()) return null;
@@ -54,6 +56,24 @@ class PresetCacheDatasource {
     try {
       return RootMeta.parseJson(raw);
     } on FormatException {
+      return _readV7RootMeta(raw);
+    }
+  }
+
+  /// Parses a v7 root index by wrapping each scalar `feedUrlHint` in a
+  /// one-element `feedUrlHints` list. v7 listed a preset once per feed URL;
+  /// the repeated entries share an ID and still match correctly.
+  static RootMeta? _readV7RootMeta(String raw) {
+    try {
+      final data = jsonDecode(raw) as Map<String, dynamic>;
+      final presets = data['presets'] as List<dynamic>;
+      for (final entry in presets.cast<Map<String, dynamic>>()) {
+        final hint = entry.remove('feedUrlHint');
+        if (hint is! String) return null;
+        entry['feedUrlHints'] = [hint];
+      }
+      return RootMeta.parseJson(jsonEncode(data));
+    } on Object {
       return null;
     }
   }

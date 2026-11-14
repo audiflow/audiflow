@@ -61,6 +61,26 @@ void main() {
       );
     });
 
+    for (final (label, hints) in [
+      ('no', <String>[]),
+      ('an empty', ['']),
+    ]) {
+      test('rejects $label feed URL hint', () {
+        // An empty hint is a substring of every URL and would match all
+        // podcasts; the schema requires at least one non-empty hint.
+        expect(
+          () => PresetSummary.fromJson({
+            'id': 'bad',
+            'dataVersion': 1,
+            'displayName': 'Bad',
+            'feedUrlHints': hints,
+            'playlistCount': 1,
+          }),
+          throwsFormatException,
+        );
+      });
+    }
+
     test('serializes to JSON', () {
       final summary = PresetSummary(
         id: 'news',
