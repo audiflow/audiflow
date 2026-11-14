@@ -88,7 +88,7 @@ void main() {
           id: 'test-pattern',
           dataVersion: 2,
           displayName: 'Test Pattern',
-          feedUrlHint: 'example.com',
+          feedUrlHints: ['example.com'],
           playlistCount: 1,
         );
 

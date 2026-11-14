@@ -7,7 +7,7 @@ final class PresetSummary {
     required this.id,
     required this.dataVersion,
     required this.displayName,
-    required this.feedUrlHint,
+    required this.feedUrlHints,
     required this.playlistCount,
   });
 
@@ -16,7 +16,7 @@ final class PresetSummary {
       id: json['id'] as String,
       dataVersion: (json['dataVersion'] as int?) ?? 1,
       displayName: json['displayName'] as String,
-      feedUrlHint: json['feedUrlHint'] as String,
+      feedUrlHints: _parseFeedUrlHints(json['feedUrlHints']),
       playlistCount: json['playlistCount'] as int,
     );
   }
@@ -30,8 +30,12 @@ final class PresetSummary {
   /// Human-readable name for display.
   final String displayName;
 
-  /// Partial feed URL for pre-filtering.
-  final String feedUrlHint;
+  /// Feed URL substrings for pre-filtering, one per feed URL of the
+  /// preset. A podcast that moved feeds matches on any of them.
+  final List<String> feedUrlHints;
+
+  /// Whether any hint is a substring of [feedUrl].
+  bool matchesFeedUrl(String feedUrl) => feedUrlHints.any(feedUrl.contains);
 
   /// Number of playlists in this preset.
   final int playlistCount;
@@ -42,8 +46,23 @@ final class PresetSummary {
       'id': id,
       'dataVersion': dataVersion,
       'displayName': displayName,
-      'feedUrlHint': feedUrlHint,
+      'feedUrlHints': feedUrlHints,
       'playlistCount': playlistCount,
     };
+  }
+
+  /// Throws [FormatException] for anything but a non-empty list of
+  /// non-empty strings, which includes a v7 root index that carries the
+  /// scalar `feedUrlHint`. An empty hint is a substring of every URL, so
+  /// accepting one would match the preset to every podcast.
+  static List<String> _parseFeedUrlHints(Object? raw) {
+    if (raw is! List<dynamic> ||
+        raw.isEmpty ||
+        raw.any((h) => h is! String || h.isEmpty)) {
+      throw const FormatException(
+        'Expected "feedUrlHints" to be a non-empty list of non-empty strings',
+      );
+    }
+    return List.unmodifiable(raw.cast<String>());
   }
 }

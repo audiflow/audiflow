@@ -53,11 +53,13 @@ This document does not cover:
 
 | Environment | Base URL | Source repo |
 |-------------|----------|-------------|
-| Production | `https://audiflow.github.io/audiflow-preset/assets/v7/` | `audiflow-preset` |
-| Staging | `https://audiflow.github.io/audiflow-preset/assets-dev/v7/` | `audiflow-preset` |
-| Development | `https://audiflow.github.io/audiflow-preset/assets-dev/v7/` | `audiflow-preset` |
+| Production | `https://audiflow.github.io/audiflow-preset/assets/v8/` | `audiflow-preset` |
+| Staging | `https://audiflow.github.io/audiflow-preset/assets/v8/` | `audiflow-preset` |
+| Development | `https://audiflow.github.io/audiflow-preset/assets/v8/` | `audiflow-preset` |
 
-All environments use the same GitHub Pages host with different asset paths. The base URL is injected via `presetConfigBaseUrlProvider`. Staging shares the dev asset path because `audiflow-preset` no longer publishes an `assets-stg` channel.
+All environments read the production asset path. The base URL is injected via `presetConfigBaseUrlProvider`. `audiflow-preset` no longer publishes `assets-stg`, and `assets-dev` stopped updating when its `develop` branch was retired, so it has no v8.
+
+The root `meta.json` (schema v8) lists each preset once, with `feedUrlHints` holding one substring per feed URL. A podcast is a candidate for a preset when any hint is a substring of its feed URL, so a podcast that moved feeds matches on either URL.
 
 ## Key files in audiflow_domain
 
@@ -103,7 +105,7 @@ Valid resolver types: `seasonNumber`, `titleClassifier`, `year`, `titleDiscovery
 - Model JSON keys must match `preset_core` models in the editor repo exactly
 - Enum string values must match schema `oneOf`/`enum` definitions
 - Schema conformance tests validate round-trip serialization: `packages/audiflow_domain/test/features/feed/models/schema_conformance_test.dart`
-- Vendored schemas at `packages/audiflow_domain/test/fixtures/` (`playlist-definition.schema.json`, `preset-index.schema.json`, `preset-meta.schema.json`) must be kept in sync with upstream (v7 schema)
+- Vendored schemas at `packages/audiflow_domain/test/fixtures/` (`playlist-definition.schema.json`, `preset-index.schema.json`, `preset-meta.schema.json`) must be kept in sync with upstream (v8 schema)
 
 ## Schema update procedure
 

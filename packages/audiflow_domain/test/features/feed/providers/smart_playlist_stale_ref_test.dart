@@ -14,7 +14,7 @@ PresetSummary _summary(int dataVersion) => PresetSummary(
   id: 'test-pattern',
   dataVersion: dataVersion,
   displayName: 'Test Pattern',
-  feedUrlHint: 'example.com',
+  feedUrlHints: ['example.com'],
   playlistCount: 1,
 );
 
