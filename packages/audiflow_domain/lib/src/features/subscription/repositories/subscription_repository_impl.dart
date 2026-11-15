@@ -65,7 +65,7 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
     // Every way into the library ends here (search, deep links, OPML). A row
     // with an unusable URL could never sync, and nothing could repair it.
     if (!isFetchableFeedUrl(feedUrl)) {
-      throw SubscriptionException('Cannot subscribe: invalid feed URL');
+      throw InvalidFeedUrlException();
     }
 
     final incoming = Subscription()

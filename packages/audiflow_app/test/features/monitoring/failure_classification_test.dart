@@ -54,6 +54,7 @@ void main() {
         'The request timed out.',
         null,
       ),
+      'unfetchable feed url at subscribe': InvalidFeedUrlException(),
     };
     for (final MapEntry(key: name, value: error) in expected.entries) {
       test('treats $name as expected', () {
@@ -74,6 +75,8 @@ void main() {
       'podcast parse failure': PodcastException.parsing('bad xml'),
       'player unsupported file': PlayerException(-11828, 'Cannot Open', null),
       'player android source error': PlayerException(0, 'Source error', null),
+      'other subscription failure': SubscriptionException('write failed'),
+      'subscription not found': SubscriptionNotFoundException('itunes-1'),
     };
     for (final MapEntry(key: name, value: error) in unexpected.entries) {
       test('reports $name', () {

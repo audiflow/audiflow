@@ -48,7 +48,7 @@ void main() {
             title: 'Test Podcast',
             artistName: 'Test Artist',
           ),
-        ).throws<SubscriptionException>();
+        ).throws<InvalidFeedUrlException>();
 
         check(await repository.getSubscriptions()).isEmpty();
       });

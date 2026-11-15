@@ -168,6 +168,16 @@ class SubscriptionException implements Exception {
   String toString() => 'SubscriptionException: $message';
 }
 
+/// Exception thrown when a feed URL cannot be fetched (see
+/// `isFetchableFeedUrl`), so the show cannot be subscribed to.
+///
+/// The URL comes from outside the app (a directory result, a deep link, an
+/// OPML file), so this is a rejected input rather than a defect; error
+/// monitoring treats it as expected.
+class InvalidFeedUrlException extends SubscriptionException {
+  InvalidFeedUrlException() : super('Cannot subscribe: invalid feed URL');
+}
+
 /// Exception thrown when attempting to unsubscribe from a non-existent
 /// subscription.
 class SubscriptionNotFoundException extends SubscriptionException {

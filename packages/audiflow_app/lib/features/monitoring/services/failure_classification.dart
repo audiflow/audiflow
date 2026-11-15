@@ -7,8 +7,9 @@ import 'package:dio/dio.dart';
 import 'package:just_audio/just_audio.dart';
 
 /// Whether [error] is an expected runtime condition rather than a defect:
-/// the device is offline or the network stalled, the user cancelled, or a
-/// feed host says the feed is gone.
+/// the device is offline or the network stalled, the user cancelled, a
+/// feed host says the feed is gone, or a feed URL from outside the app
+/// cannot be fetched.
 ///
 /// These happen routinely and are not actionable, so error monitoring
 /// keeps them out of the issue stream (at most a breadcrumb). Other HTTP
@@ -28,6 +29,9 @@ bool isExpectedFailure(Object error) => switch (error) {
     type == DioExceptionType.cancel ||
         isConnectivityFailure(error) ||
         (cause != null && isExpectedFailure(cause)),
+  // Only the unfetchable-URL rejection: other SubscriptionExceptions, such
+  // as a missing subscription, can point at a real bug.
+  InvalidFeedUrlException() => true,
   // On iOS the code is the NSURLError behind a failed stream load.
   PlayerException(:final code) => _connectivityUrlErrorCodes.contains(code),
   _ => false,
