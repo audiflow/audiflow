@@ -69,10 +69,9 @@ Future<void> appMain({
 
   final prefs = await SharedPreferences.getInstance();
   // Read before the container exists: Sentry and Analytics need it first.
-  // Runs on the main engine, where the device-only store channel lives.
   final installId = await InstallIdRepositoryImpl(
     DeviceScopedIdStore(
-      const MethodChannelDeviceOnlyStore(),
+      DeviceOnlyStore.platform(),
       SharedPreferencesDataSource(prefs),
     ),
   ).getOrCreate();

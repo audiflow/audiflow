@@ -12,8 +12,7 @@ import '../repositories/install_id_repository_impl.dart';
 part 'install_id_providers.g.dart';
 
 @Riverpod(keepAlive: true)
-DeviceOnlyStore deviceOnlyStore(Ref ref) =>
-    const MethodChannelDeviceOnlyStore();
+DeviceOnlyStore deviceOnlyStore(Ref ref) => DeviceOnlyStore.platform();
 
 @Riverpod(keepAlive: true)
 DeviceScopedIdStore deviceScopedIdStore(Ref ref) => DeviceScopedIdStore(

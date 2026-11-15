@@ -29,7 +29,7 @@ class _WriterLog {
       calls.add((
         writer,
         await _isar.subscriptions.count(),
-        await _downloadsDir.exists(),
+        await _hasFiles(_downloadsDir),
       ));
     });
   }
@@ -37,6 +37,9 @@ class _WriterLog {
   /// Completes once every record issued so far has been appended.
   Future<void> settle() => _chain;
 }
+
+Future<bool> _hasFiles(Directory directory) async =>
+    await directory.exists() && !await directory.list().isEmpty;
 
 /// A writer that reports its suspend and resume calls to the log.
 class _FakeWriter implements SuspendableWriter {
@@ -191,6 +194,7 @@ void main() {
 
     test('suspends every writer until storage is cleared', () async {
       await seedEveryCollection(isar);
+      await File(p.join(downloadsDir.path, '1_ep.mp3')).writeAsString('a');
 
       await service.resetAll();
       await writers.settle();
@@ -258,13 +262,18 @@ void main() {
       check(preferences.getString('settings_theme_mode')).equals('dark');
     });
 
-    test('deletes the downloads directory', () async {
+    test('empties the downloads directory but keeps it', () async {
+      // iOS marks the directory itself as excluded from backup at launch;
+      // deleting it would drop that flag for downloads made before the
+      // next launch.
       final file = File(p.join(downloadsDir.path, 'nested', '1_ep.mp3'));
       await file.create(recursive: true);
+      await File(p.join(downloadsDir.path, '2_ep.mp3')).writeAsString('a');
 
       await service.resetAll();
 
-      check(await downloadsDir.exists()).isFalse();
+      check(await downloadsDir.exists()).isTrue();
+      check(await downloadsDir.list().isEmpty).isTrue();
     });
 
     test('succeeds when the downloads directory does not exist', () async {

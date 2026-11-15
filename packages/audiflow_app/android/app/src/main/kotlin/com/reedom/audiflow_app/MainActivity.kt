@@ -40,7 +40,6 @@ class MainActivity : AudioServiceActivity() {
         HapticsChannel.register(flutterEngine.dartExecutor.binaryMessenger, this)
         DocumentPickerChannel.register(flutterEngine.dartExecutor.binaryMessenger, this)
         SessionQueueChannel.register(flutterEngine.dartExecutor.binaryMessenger)
-        DeviceOnlyStoreChannel.register(flutterEngine.dartExecutor.binaryMessenger, applicationContext)
 
         MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
