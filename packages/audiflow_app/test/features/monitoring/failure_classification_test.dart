@@ -44,6 +44,7 @@ void main() {
       'podcast transport failure': PodcastException.network('offline'),
       'podcast feed gone': PodcastException.network('gone', statusCode: 404),
       'podcast feed forbidden': PodcastException.network('x', statusCode: 403),
+      'response that is not a feed': PodcastException.notAFeed('html'),
       'player load while offline': PlayerException(
         -1009,
         'The Internet connection appears to be offline.',

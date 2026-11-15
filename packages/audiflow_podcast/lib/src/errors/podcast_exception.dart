@@ -56,6 +56,16 @@ class PodcastException extends AppException {
     );
   }
 
+  /// Creates a [PodcastException] for a response that is not a feed at all,
+  /// such as the HTML page a host serves in place of a moved feed.
+  factory PodcastException.notAFeed(String message, {String? sourceUrl}) {
+    return PodcastException(
+      message: message,
+      code: _notAFeedCode,
+      sourceUrl: sourceUrl,
+    );
+  }
+
   /// Creates a [PodcastException] for validation-related issues.
   factory PodcastException.validation(
     String message, {
@@ -95,15 +105,19 @@ class PodcastException extends AppException {
   final int? statusCode;
 
   /// Whether the feed host answered that the feed is not there for us
-  /// (moved, removed, or made private), which the app cannot fix.
+  /// (moved, removed, or made private), which the app cannot fix. A 200
+  /// whose body is not a feed says the same thing without the status.
   ///
   /// 408 and 429 are left out: a timeout or rate limit clears up on its
   /// own, so retrying later is the right advice.
   bool get isFeedUnavailable {
+    if (code == _notAFeedCode) return true;
     final status = statusCode;
     if (status == null || status == 408 || status == 429) return false;
     return 400 <= status && status < 500;
   }
+
+  static const _notAFeedCode = 'PODCAST_NOT_A_FEED';
 
   static String _inferCode(PodcastParseError? error) {
     if (error == null) return 'PODCAST_ERROR';

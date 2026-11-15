@@ -15,8 +15,9 @@ enum UserFacingErrorKind {
   /// The device could not reach the server; checking the connection helps.
   network,
 
-  /// The feed host says the feed is gone (moved, removed, or private);
-  /// retrying will not help until the publisher fixes it.
+  /// The feed host says the feed is gone (moved, removed, or private) or
+  /// answers with something that is not a feed; retrying will not help until
+  /// the publisher fixes it.
   feedUnavailable,
 
   /// Anything else; the user can only retry later.

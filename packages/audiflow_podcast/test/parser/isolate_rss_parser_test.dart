@@ -448,5 +448,51 @@ void main() {
         expect(episodes.map((e) => e.guid), ['new']);
       });
     });
+
+    group('rejected input', () {
+      test('reports an HTML page as an unavailable feed', () async {
+        await expectLater(
+          IsolateRssParser.parse(
+            feedXml: '<!DOCTYPE html><html><body>Sign in</body></html>',
+            knownGuids: {},
+          ).toList(),
+          throwsA(
+            isA<PodcastException>().having(
+              (e) => e.isFeedUnavailable,
+              'isFeedUnavailable',
+              isTrue,
+            ),
+          ),
+        );
+      });
+
+      test('parseFeed reports an HTML page as an unavailable feed', () async {
+        await expectLater(
+          IsolateRssParser.parseFeed(feedXml: '<html></html>'),
+          throwsA(
+            isA<PodcastException>().having(
+              (e) => e.isFeedUnavailable,
+              'isFeedUnavailable',
+              isTrue,
+            ),
+          ),
+        );
+      });
+
+      // A feed that breaks the parser may be our bug, so it must stay
+      // distinguishable from a host that sent no feed at all.
+      test('does not report a malformed item as an unavailable feed', () async {
+        await expectLater(
+          IsolateRssParser.parse(
+            feedXml:
+                '<rss version="2.0"><channel><title>Show</title>'
+                '<item><guid>a</guid><title>unclosed</item>'
+                '</channel></rss>',
+            knownGuids: {},
+          ).toList(),
+          throwsA(isNot(isA<PodcastException>())),
+        );
+      });
+    });
   });
 }
