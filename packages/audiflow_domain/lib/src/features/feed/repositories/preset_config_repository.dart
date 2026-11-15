@@ -14,7 +14,7 @@ abstract class PresetConfigRepository {
 
   /// Finds matching preset summary for a podcast.
   ///
-  /// Uses `feedUrlHint` for quick pre-filtering.
+  /// Uses `feedUrlHints` for quick pre-filtering.
   PresetSummary? findMatchingPreset(String? podcastGuid, String feedUrl);
 
   /// Evicts stale presets based on version comparison.

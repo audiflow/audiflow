@@ -34,12 +34,14 @@ class FlavorConfig {
   }
 
   /// Development flavor
+  ///
+  /// Note: audiflow-preset retired its `develop` branch, so `assets-dev`
+  /// no longer updates and has no v8; every flavor reads `assets`.
   static FlavorConfig get dev => FlavorConfig._(
     flavor: Flavor.dev,
     name: 'Development',
     apiBaseUrl: 'https://api-dev.audiflow.example.com',
-    presetConfigBaseUrl:
-        'https://audiflow.github.io/audiflow-preset/assets-dev/v7',
+    presetConfigBaseUrl: 'https://audiflow.github.io/audiflow-preset/assets/v8',
     enableAnalytics: true,
     enableCrashReporting: true,
     enableHttpTracing: true,
@@ -47,14 +49,13 @@ class FlavorConfig {
 
   /// Staging flavor
   ///
-  /// Note: audiflow-preset dropped the `assets-stg` channel; staging now
-  /// consumes the dev preset assets.
+  /// Note: audiflow-preset dropped the `assets-stg` and `assets-dev`
+  /// channels; staging reads the production preset assets.
   static FlavorConfig get stg => FlavorConfig._(
     flavor: Flavor.stg,
     name: 'Staging',
     apiBaseUrl: 'https://api-stg.audiflow.example.com',
-    presetConfigBaseUrl:
-        'https://audiflow.github.io/audiflow-preset/assets-dev/v7',
+    presetConfigBaseUrl: 'https://audiflow.github.io/audiflow-preset/assets/v8',
     enableAnalytics: true,
     enableCrashReporting: true,
     enableHttpTracing: true,
@@ -65,7 +66,7 @@ class FlavorConfig {
     flavor: Flavor.prod,
     name: 'Production',
     apiBaseUrl: 'https://api.audiflow.example.com',
-    presetConfigBaseUrl: 'https://audiflow.github.io/audiflow-preset/assets/v7',
+    presetConfigBaseUrl: 'https://audiflow.github.io/audiflow-preset/assets/v8',
     enableAnalytics: true,
     enableCrashReporting: true,
     enableHttpTracing: false,

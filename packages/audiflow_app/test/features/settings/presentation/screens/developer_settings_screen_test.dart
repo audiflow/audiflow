@@ -114,14 +114,14 @@ void main() {
           id: 'coten_radio',
           dataVersion: 1,
           displayName: 'Coten Radio',
-          feedUrlHint: 'anchor.fm/s/8c2088c',
+          feedUrlHints: ['anchor.fm/s/8c2088c'],
           playlistCount: 3,
         ),
         const PresetSummary(
           id: 'news_connect',
           dataVersion: 1,
           displayName: 'News Connect',
-          feedUrlHint: 'feeds.example.com',
+          feedUrlHints: ['feeds.example.com'],
           playlistCount: 2,
         ),
       ];

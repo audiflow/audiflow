@@ -33,7 +33,7 @@ void main() {
             'id': 'test',
             'dataVersion': 1,
             'displayName': 'Test',
-            'feedUrlHint': 'test.com',
+            'feedUrlHints': ['test.com'],
             'playlistCount': 1,
           },
         ],

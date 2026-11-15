@@ -121,7 +121,7 @@ class PresetConfigRepositoryImpl implements PresetConfigRepository {
   @override
   PresetSummary? findMatchingPreset(String? podcastGuid, String feedUrl) {
     for (final summary in _summaries) {
-      if (feedUrl.contains(summary.feedUrlHint)) {
+      if (summary.matchesFeedUrl(feedUrl)) {
         return summary;
       }
     }
