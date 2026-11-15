@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Backup and device-transfer rules for Android 12+ (docs/architecture/user-data-sync.md).
+     Downloaded audio is excluded: it is re-downloadable, and cloud backup
+     stops backing up the app entirely once its data exceeds 25 MB.
+     getApplicationDocumentsDirectory() maps to <dataDir>/app_flutter. -->
+<data-extraction-rules>
+  <cloud-backup>
+    <exclude domain="root" path="app_flutter/downloads/" />
+  </cloud-backup>
+  <device-transfer>
+    <exclude domain="root" path="app_flutter/downloads/" />
+  </device-transfer>
+</data-extraction-rules>

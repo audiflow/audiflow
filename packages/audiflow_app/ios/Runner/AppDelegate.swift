@@ -43,6 +43,8 @@ import workmanager_apple
       GeneratedPluginRegistrant.register(with: registry)
     }
 
+    excludeDownloadsFromBackup()
+
     let result = super.application(application, didFinishLaunchingWithOptions: launchOptions)
 
     // Claim the UNUserNotificationCenter delegate slot. super.didFinishLaunching
@@ -61,6 +63,31 @@ import workmanager_apple
     UNUserNotificationCenter.current().delegate = self
 
     return result
+  }
+
+  /// Keeps downloaded audio out of iCloud backups and device migration.
+  ///
+  /// The audio is re-downloadable and can be gigabytes, which inflates the
+  /// user's backup; a restored copy would also not match the download rows
+  /// (see docs/architecture/user-data-sync.md). The flag on the directory
+  /// covers every file inside it. This runs on every launch, before Dart
+  /// starts, so the directory is excluded before the first download lands.
+  /// The path must match `DownloadFileService.getDownloadsDirectory`.
+  private func excludeDownloadsFromBackup() {
+    let fileManager = FileManager.default
+    guard
+      let documents = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first
+    else { return }
+    var downloads = documents.appendingPathComponent("downloads", isDirectory: true)
+    do {
+      try fileManager.createDirectory(at: downloads, withIntermediateDirectories: true)
+      var values = URLResourceValues()
+      values.isExcludedFromBackup = true
+      try downloads.setResourceValues(values)
+    } catch {
+      // Not fatal: downloads still work, they are only backed up.
+      NSLog("[AppDelegate] Failed to exclude downloads from backup: \(error)")
+    }
   }
 
   /// Runs the shared engine on first use and returns it, or nil when it
