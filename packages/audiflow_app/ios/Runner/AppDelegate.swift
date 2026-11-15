@@ -107,7 +107,93 @@ import workmanager_apple
       AudioRoutePickerViewFactory.register(with: registrar)
     }
     HapticsChannel.register(with: flutterEngine.binaryMessenger)
+    DeviceOnlyStoreChannel.register(with: flutterEngine.binaryMessenger)
     carPlayChannel = CarPlayChannel(messenger: flutterEngine.binaryMessenger)
     return flutterEngine
+  }
+}
+
+/// Native end of `audiflow/device_only_store` (Dart `MethodChannelDeviceOnlyStore`).
+///
+/// Values live in the Keychain with `AfterFirstUnlockThisDeviceOnly`: they
+/// are excluded from iCloud Keychain, encrypted backups, and device
+/// migration, so a restored or new device never inherits them (see
+/// docs/architecture/user-data-sync.md). They do survive an app uninstall;
+/// the Dart side detects that with a marker in preferences.
+private enum DeviceOnlyStoreChannel {
+  static let channelName = "audiflow/device_only_store"
+  static let service = "com.reedom.audiflow.device_only"
+
+  static func register(with messenger: FlutterBinaryMessenger) {
+    let channel = FlutterMethodChannel(name: channelName, binaryMessenger: messenger)
+    channel.setMethodCallHandler { call, result in
+      guard
+        let args = call.arguments as? [String: Any],
+        let key = args["key"] as? String
+      else {
+        result(FlutterError(code: "INVALID_ARGUMENT", message: "key is required", details: nil))
+        return
+      }
+      switch call.method {
+      case "read":
+        read(key: key, result: result)
+      case "write":
+        guard let value = args["value"] as? String else {
+          result(FlutterError(code: "INVALID_ARGUMENT", message: "value is required", details: nil))
+          return
+        }
+        write(key: key, value: value, result: result)
+      default:
+        result(FlutterMethodNotImplemented)
+      }
+    }
+  }
+
+  private static func baseQuery(key: String) -> [String: Any] {
+    [
+      kSecClass as String: kSecClassGenericPassword,
+      kSecAttrService as String: service,
+      kSecAttrAccount as String: key,
+    ]
+  }
+
+  private static func read(key: String, result: FlutterResult) {
+    var query = baseQuery(key: key)
+    query[kSecReturnData as String] = true
+    query[kSecMatchLimit as String] = kSecMatchLimitOne
+    var item: CFTypeRef?
+    let status = SecItemCopyMatching(query as CFDictionary, &item)
+    switch status {
+    case errSecSuccess:
+      guard let data = item as? Data, let value = String(data: data, encoding: .utf8) else {
+        result(nil)
+        return
+      }
+      result(value)
+    case errSecItemNotFound:
+      result(nil)
+    default:
+      result(keychainError(status))
+    }
+  }
+
+  private static func write(key: String, value: String, result: FlutterResult) {
+    let data = Data(value.utf8)
+    let attributes: [String: Any] = [
+      kSecValueData as String: data,
+      kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly,
+    ]
+    var status = SecItemUpdate(baseQuery(key: key) as CFDictionary, attributes as CFDictionary)
+    if status == errSecItemNotFound {
+      var add = baseQuery(key: key)
+      add.merge(attributes) { _, new in new }
+      status = SecItemAdd(add as CFDictionary, nil)
+    }
+    result(status == errSecSuccess ? nil : keychainError(status))
+  }
+
+  private static func keychainError(_ status: OSStatus) -> FlutterError {
+    let message = SecCopyErrorMessageString(status, nil) as String? ?? "OSStatus \(status)"
+    return FlutterError(code: "KEYCHAIN", message: message, details: Int(status))
   }
 }

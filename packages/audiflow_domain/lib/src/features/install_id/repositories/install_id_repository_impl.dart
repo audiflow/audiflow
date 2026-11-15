@@ -1,25 +1,14 @@
-import 'package:uuid/uuid.dart';
-
-import '../../../common/datasources/shared_preferences_datasource.dart';
+import '../../device_identity/services/device_scoped_id_store.dart';
 import 'install_id_repository.dart';
 
+/// Keeps the install id in device-only storage, so a backup restored on a
+/// new device does not carry it over (docs/architecture/user-data-sync.md).
 class InstallIdRepositoryImpl implements InstallIdRepository {
-  InstallIdRepositoryImpl(this._ds, {Uuid? uuid})
-    : _uuid = uuid ?? const Uuid();
+  InstallIdRepositoryImpl(this._ids);
 
-  static const _key = 'analytics.install_id';
-
-  final SharedPreferencesDataSource _ds;
-  final Uuid _uuid;
+  final DeviceScopedIdStore _ids;
 
   @override
-  Future<String> getOrCreate() async {
-    final existing = _ds.getString(_key);
-    if (existing != null && existing.isNotEmpty) {
-      return existing;
-    }
-    final generated = _uuid.v4();
-    await _ds.setString(_key, generated);
-    return generated;
-  }
+  Future<String> getOrCreate() =>
+      _ids.getOrCreate(DeviceScopedIdStore.installIdKey);
 }

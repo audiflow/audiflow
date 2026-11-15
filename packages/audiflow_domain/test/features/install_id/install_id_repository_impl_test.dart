@@ -3,40 +3,47 @@ import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+class _MemoryDeviceOnlyStore implements DeviceOnlyStore {
+  final values = <String, String>{};
+
+  @override
+  Future<String?> read(String key) async => values[key];
+
+  @override
+  Future<void> write(String key, String value) async => values[key] = value;
+}
+
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues(<String, Object>{});
   });
 
   group('InstallIdRepositoryImpl', () {
-    test('getOrCreate generates and persists a UUID on first call', () async {
+    test('stores the install id in device-only storage, not prefs', () async {
       final prefs = await SharedPreferences.getInstance();
-      final repo = InstallIdRepositoryImpl(SharedPreferencesDataSource(prefs));
+      final store = _MemoryDeviceOnlyStore();
+      final repo = InstallIdRepositoryImpl(
+        DeviceScopedIdStore(store, SharedPreferencesDataSource(prefs)),
+      );
 
       final id = await repo.getOrCreate();
 
       check(id).length.equals(36);
-      check(prefs.getString('analytics.install_id')).equals(id);
+      check(store.values[DeviceScopedIdStore.installIdKey]).equals(id);
+      check(prefs.getString('analytics.install_id')).isNull();
     });
 
-    test('returns the same UUID on subsequent calls', () async {
+    test('differs from the device id', () async {
       final prefs = await SharedPreferences.getInstance();
-      final repo = InstallIdRepositoryImpl(SharedPreferencesDataSource(prefs));
+      final ids = DeviceScopedIdStore(
+        _MemoryDeviceOnlyStore(),
+        SharedPreferencesDataSource(prefs),
+      );
 
-      final first = await repo.getOrCreate();
-      final second = await repo.getOrCreate();
+      final installId = await InstallIdRepositoryImpl(ids).getOrCreate();
+      final deviceId = await DeviceIdRepositoryImpl(ids).getOrCreate();
 
-      check(second).equals(first);
-    });
-
-    test('returns existing UUID if one is already persisted', () async {
-      SharedPreferences.setMockInitialValues(<String, Object>{
-        'analytics.install_id': 'existing-uuid',
-      });
-      final prefs = await SharedPreferences.getInstance();
-      final repo = InstallIdRepositoryImpl(SharedPreferencesDataSource(prefs));
-
-      check(await repo.getOrCreate()).equals('existing-uuid');
+      check(installId).not((it) => it.equals(deviceId));
     });
   });
 }
