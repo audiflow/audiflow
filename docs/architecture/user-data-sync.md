@@ -97,7 +97,7 @@ Every user-state field carries its own HLC timestamp.
 | `SyncedSetting` | setting key | Synced `SettingsKeys` entries (moved from SharedPreferences) | Value. Kept in Isar so a setting change and its op share one transaction |
 | `OutboxOp` | opId (ULID) | new | Unsent ops. Pending ops for the same field are coalesced into the latest. Deleted on ack |
 | `OpaqueField` | (entity, key, fieldId) | new | Fields from future app versions, stored uninterpreted |
-| `SyncMeta` | single row | new | Copy of `deviceId`, HLC state, server cursor, tombstone horizon, migration version |
+| `SyncMeta` | single row | new | Copy of `deviceId`, `historyId`, HLC state, server cursor, tombstone horizon, migration version |
 
 No op log is kept forever anywhere: a device holds the current state and the unsent ops. `StationEpisode` stays derived. `DownloadTask` stays device-scoped, switching to episodeKey and a path relative to the downloads directory.
 
@@ -111,7 +111,11 @@ Ordering uses a Hybrid Logical Clock: 48-bit wall-clock milliseconds, a 16-bit l
 | Play count, completion count, total listened time | Per-device grow-only counters, summed for display | LWW would lose listening done on one of two devices |
 | Subscriptions, station members, queue membership | LWW element set with add and remove timestamps; removals kept as tombstones | An old device must not resurrect an unsubscribed podcast |
 | Queue order | Fractional-index `rank`, LWW per element | Moving one item rewrites only that item; concurrent moves converge |
-| Tombstones | Kept 90 days, then purged. Each device records the purge horizon (`SyncMeta.tombstoneHorizon`, an HLC). An incoming set element that is unknown locally and was added before the horizon is treated as deleted | A device offline longer than that refetches from a snapshot instead of diffs. The horizon keeps an old backup or a long-offline device from resurrecting items whose tombstones are gone |
+| Tombstones | Kept 90 days, then purged. Each device records the purge horizon (`SyncMeta.tombstoneHorizon`, an HLC). The horizon applies only to data from the same history (see below): there, an incoming set element that is unknown locally and was added before the horizon is treated as deleted. Data from an independent history merges as a plain union | A device offline longer than that refetches from a snapshot instead of diffs. Within one history, absence before the horizon means deleted, so an old backup or a long-offline device cannot resurrect items whose tombstones are gone. Across independent histories absence means nothing, so valid items are kept |
+
+### Histories
+
+A `historyId` (random) names one lineage of user data. It is created when a device starts with empty data, and is inherited by every copy of that data: OS restore and continuity snapshot, a manual restore into an empty database, and joining a sync account (which adopts the account's `historyId`; the first device's becomes the account's). Snapshots and sync frames carry it. When a device with data merges data of another `historyId` (for example, a backup from a separate installation), the merge is a plain union and the local `historyId` stays.
 
 ## Efficiency over ten years
 
@@ -144,7 +148,7 @@ Authentication (which account) is separate from decryption (reading data). An ac
 ```sql
 -- Per Durable Object SQLite, plus a small sign-in lookup table
 account(
-  accountId  BLOB PRIMARY KEY,  -- derived from the sync key
+  accountId  BLOB PRIMARY KEY,  -- random, fixed for the account's lifetime
   createdAt  INTEGER)
 auth_method(
   accountId, kind,      -- 'sync_key' | 'apple' | 'google'
@@ -160,7 +164,8 @@ op(seq PRIMARY KEY, entityHash, fieldId,
    hlc, deviceId, frame BLOB)  -- ciphertext
 ```
 
-- **Sync key:** 256 random bits, passed to other devices by QR code and shown as a printable recovery code. HKDF derives the accountId, an authentication secret, and the key-wrapping key. Because the accountId comes from the key, no lookup table is needed.
+- **Account address:** `accountId` is random, created with the account, and never changes. The QR code and the recovery code carry it together with the sync key, so the Worker routes to the Durable Object without a lookup table, and rotating the sync key does not move the account.
+- **Sync key:** 256 random bits, passed to other devices by QR code and shown as a printable recovery code. HKDF derives an authentication secret and the key-wrapping key from it.
 - **Data key:** random, created once per account. Ops are encrypted with it; copies wrapped by each device key or the recovery code live in `key_wrap`.
 - **Future Apple / Google sign-in:** add an `auth_method` row and a `sub` to accountId lookup (D1 or KV) in the Worker. Sign-in then identifies the account, but does not decrypt: the data key still comes from Keychain, Block Store, or the recovery code. If sign-in alone should decrypt, pick a wrap such as passkey PRF at that time; the schema does not change.
 - **Stolen device:** the sync key is shared by all devices, so revoking a device must replace every secret derived from it, not only the data key. Revocation, run from a remaining device:

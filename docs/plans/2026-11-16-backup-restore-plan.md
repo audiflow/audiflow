@@ -32,7 +32,7 @@ This plan builds:
 |--------|----------|-------|
 | `PodcastUserState` | Yes | Subscriptions, URL aliases, all per-podcast settings. Show title and artwork URL added for display |
 | `EpisodeUserState` | Yes | Position, completion, favorite, per-device counters. Locator (guid, audioUrl, publishedAt), title, and duration added for display. No descriptions |
-| `QueueEntry`, `StationState`, `StationMember` | Yes | Including tombstones, so restoring an old backup does not resurrect deleted items. For backups older than the 90-day tombstone retention, the merge applies the local tombstone horizon (see the architecture merge rules) |
+| `QueueEntry`, `StationState`, `StationMember` | Yes | Including tombstones, so restoring an old backup does not resurrect deleted items. For backups older than the 90-day tombstone retention from the same history, the merge applies the local tombstone horizon; backups from an independent history merge as a plain union (see the architecture merge rules) |
 | `SyncedSetting` | Yes | Synced settings only (D3) |
 | `OpaqueField` | Yes | Unknown future fields are exported as is |
 | Catalog (episodes, feeds, transcripts, chapters) | No | Refetched from feeds after restore |
@@ -48,6 +48,7 @@ Header, one JSON line:
 { "format": "audiflow-backup",
   "formatVersion": 1,
   "createdAt": "2026-11-15T10:00:00Z",
+  "historyId": "...",
   "app": { "version": "2.x.y", "platform": "ios" },
   "counts": { "podcasts": 52, "episodes": 3810, "queue": 14, "stations": 3 },
   "payloadSha256": "..." }
@@ -127,7 +128,8 @@ Rules:
 - Broken files: fixtures for truncated, sha256 mismatch, version 99, and missing fields each produce the right failure, and Isar is never written.
 - Rollback: an exception mid-merge leaves the original data intact.
 - Reset then relaunch: after `resetAll`, no snapshot remains and restore detection does nothing.
-- Old backup: restoring a backup older than the tombstone horizon does not bring back items deleted since.
+- Old backup, same history: restoring a backup older than the tombstone horizon does not bring back items deleted since.
+- Other installation's backup: items unknown locally are kept even when added before the local horizon.
 - A v1 fixture file lives in the repository and must keep reading in future versions.
 - Unknown fields: `OpaqueField` survives export and restore.
 - Widget tests for the confirmation screen and the PIN check.
