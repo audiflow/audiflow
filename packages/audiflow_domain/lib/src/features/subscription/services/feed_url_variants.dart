@@ -6,8 +6,15 @@
 bool isFetchableFeedUrl(String feedUrl) {
   final uri = Uri.tryParse(feedUrl);
   if (uri == null || uri.host.isEmpty) return false;
-  // Uri parses any digits as the port, so 65536 and up get through it.
-  if (uri.port < 0 || 65535 < uri.port) return false;
+  // Uri parses any digits as the port, so 65536 and up get through it, and
+  // reading a port too long for an int throws instead.
+  final int port;
+  try {
+    port = uri.port;
+  } on FormatException {
+    return false;
+  }
+  if (port < 0 || 65535 < port) return false;
   return uri.isScheme('http') || uri.isScheme('https');
 }
 

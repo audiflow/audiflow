@@ -45,6 +45,7 @@ void main() {
       'http://[broken',
       'https://example.com:65536/feed.xml',
       'https://example.com:99999/feed.xml',
+      'https://example.com:999999999999999999999999999999/feed.xml',
     ]) {
       test('rejects "$url"', () => check(isFetchableFeedUrl(url)).isFalse());
     }
