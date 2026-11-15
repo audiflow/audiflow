@@ -516,10 +516,12 @@ class DownloadService {
     if (completed.isEmpty) return;
 
     final currentDir = await _fileService.getDownloadsDirectory();
+    final removedEpisodeIds = <int>[];
     for (final task in completed) {
       if (task.localPath == null) {
         _logger.w('Orphaned download record (no path): ${task.id}');
         await _repository.delete(task.id);
+        removedEpisodeIds.add(task.episodeId);
         continue;
       }
 
@@ -540,8 +542,11 @@ class DownloadService {
       } else {
         _logger.w('Orphaned download record: ${task.id}');
         await _repository.delete(task.id);
+        removedEpisodeIds.add(task.episodeId);
       }
     }
+    // Downloaded-only stations must drop the episodes that lost their audio.
+    if (removedEpisodeIds.isNotEmpty) await _tryReconcileAll(removedEpisodeIds);
   }
 
   /// Validates all downloads on app startup.
