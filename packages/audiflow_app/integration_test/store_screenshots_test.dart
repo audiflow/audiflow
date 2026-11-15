@@ -128,8 +128,7 @@ Future<ProviderContainer> _bootContainer() async {
   final prefs = await SharedPreferences.getInstance();
 
   return bootstrapAppContainer(
-    presetConfigBaseUrl:
-        'https://audiflow.github.io/audiflow-preset/assets-dev/v7',
+    presetConfigBaseUrl: 'https://audiflow.github.io/audiflow-preset/assets/v8',
     prefs: prefs,
     firebaseAnalytics: null,
     databaseDirectory: await _freshDatabaseDirectory(),

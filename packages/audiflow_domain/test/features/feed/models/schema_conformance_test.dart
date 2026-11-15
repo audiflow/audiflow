@@ -218,24 +218,24 @@ void main() {
       expect(schemaValues, containsAll(['title', 'description']));
     });
 
-    test(r'playlist-definition schema has v7 $id', () {
+    test(r'playlist-definition schema has v8 $id', () {
       expect(
         schema[r'$id'],
-        equals('https://audiflow.app/schema/v7/playlist-definition.json'),
+        equals('https://audiflow.app/schema/v8/playlist-definition.json'),
       );
     });
 
-    test(r'preset-index schema has v7 $id', () {
+    test(r'preset-index schema has v8 $id', () {
       expect(
         presetIndexSchema[r'$id'],
-        equals('https://audiflow.app/schema/v7/preset-index.json'),
+        equals('https://audiflow.app/schema/v8/preset-index.json'),
       );
     });
 
-    test(r'preset-meta schema has v7 $id', () {
+    test(r'preset-meta schema has v8 $id', () {
       expect(
         presetMetaSchema[r'$id'],
-        equals('https://audiflow.app/schema/v7/preset-meta.json'),
+        equals('https://audiflow.app/schema/v8/preset-meta.json'),
       );
     });
   });
@@ -248,20 +248,23 @@ void main() {
     }
 
     test('minimal RootMeta round-trips', () {
-      final meta = RootMeta(dataVersion: 1, schemaVersion: 7, presets: []);
+      final meta = RootMeta(dataVersion: 1, schemaVersion: 8, presets: []);
       expect(validatePresetIndex(meta.toJson()), isEmpty);
     });
 
     test('full RootMeta with presets round-trips', () {
       final meta = RootMeta(
         dataVersion: 5,
-        schemaVersion: 7,
+        schemaVersion: 8,
         presets: [
           PresetSummary(
             id: 'coten_radio',
             dataVersion: 2,
             displayName: 'Coten Radio',
-            feedUrlHint: 'anchor.fm/s/8c2088c',
+            feedUrlHints: [
+              'anchor.fm/s/8c2088c',
+              'https://alt-feed.example.com/rss',
+            ],
             playlistCount: 3,
           ),
         ],

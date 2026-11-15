@@ -11,7 +11,7 @@ const _summary = PresetSummary(
   id: 'test-pattern',
   dataVersion: 1,
   displayName: 'Test Pattern',
-  feedUrlHint: 'example.com',
+  feedUrlHints: ['example.com'],
   playlistCount: 1,
 );
 
@@ -246,7 +246,7 @@ void main() {
           id: 'test-pattern',
           dataVersion: 2,
           displayName: 'Test Pattern',
-          feedUrlHint: 'example.com',
+          feedUrlHints: ['example.com'],
           playlistCount: 1,
         );
       };

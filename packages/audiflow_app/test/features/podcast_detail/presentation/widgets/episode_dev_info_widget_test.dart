@@ -18,7 +18,7 @@ class _FakePresetConfigRepository implements PresetConfigRepository {
   @override
   PresetSummary? findMatchingPreset(String? podcastGuid, String feedUrl) {
     for (final s in summaries) {
-      if (feedUrl.contains(s.feedUrlHint)) return s;
+      if (s.matchesFeedUrl(feedUrl)) return s;
     }
     return null;
   }
@@ -125,7 +125,7 @@ void main() {
           id: 'coten_radio',
           dataVersion: 1,
           displayName: 'Coten Radio',
-          feedUrlHint: 'anchor.fm/s/8c2088c',
+          feedUrlHints: ['anchor.fm/s/8c2088c'],
           playlistCount: 3,
         ),
       ];

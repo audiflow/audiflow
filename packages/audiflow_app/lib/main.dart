@@ -56,7 +56,7 @@ final firebaseAnalyticsObserverProvider = Provider<FirebaseAnalyticsObserver?>(
 Future<void> appMain({
   required Flavor flavor,
   String presetConfigBaseUrl =
-      'https://audiflow.github.io/audiflow-preset/assets-dev/v7',
+      'https://audiflow.github.io/audiflow-preset/assets/v8',
 }) async {
   WidgetsFlutterBinding.ensureInitialized();
 
