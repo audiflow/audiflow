@@ -1019,6 +1019,49 @@ void main() {
     });
   });
 
+  group('reconcileCompletedFiles', () {
+    test('removes completed downloads whose file is gone', () async {
+      // A device restored from a backup carries the download rows but not
+      // the audio, which is excluded from backup.
+      final completed = [
+        _task(id: 1, localPath: '/downloads/kept.mp3', status: 3),
+        _task(id: 2, localPath: '/other-device/downloads/gone.mp3', status: 3),
+      ];
+      when(
+        mockRepository.getByStatus(const DownloadStatus.completed()),
+      ).thenAnswer((_) async => completed);
+      when(
+        mockFileService.fileExists('/downloads/kept.mp3'),
+      ).thenAnswer((_) async => true);
+      when(
+        mockFileService.fileExists('/other-device/downloads/gone.mp3'),
+      ).thenAnswer((_) async => false);
+      when(
+        mockFileService.fileExists('/downloads/gone.mp3'),
+      ).thenAnswer((_) async => false);
+      when(mockRepository.delete(2)).thenAnswer((_) async {});
+
+      await service.reconcileCompletedFiles();
+
+      verifyNever(mockRepository.delete(1));
+      verify(mockRepository.delete(2)).called(1);
+    });
+
+    test('leaves in-flight downloads and the queue alone', () async {
+      // At launch a background worker may still own a downloading task.
+      when(
+        mockRepository.getByStatus(const DownloadStatus.completed()),
+      ).thenAnswer((_) async => []);
+
+      await service.reconcileCompletedFiles();
+
+      verifyNever(
+        mockRepository.getByStatus(const DownloadStatus.downloading()),
+      );
+      verifyNever(mockQueueService.startQueue());
+    });
+  });
+
   group('getTotalStorageUsed', () {
     test('delegates to repository', () async {
       // Arrange
