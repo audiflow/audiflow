@@ -565,6 +565,22 @@ void main() {
       check(loggedError()).identicalTo(error);
     });
 
+    for (final feedUrl in ['', 'feeds/show.xml', 'feed://example.com/x']) {
+      test('fails "$feedUrl" without a fetch or an error report', () async {
+        final sub = _subscription(feedUrl: feedUrl, lastRefreshedAt: null);
+
+        final result = await service.syncFeed(sub);
+
+        check(result.success).isFalse();
+        check(result.skipped).isFalse();
+        check(result.errorMessage).equals('Invalid feed URL');
+        verifyNever(dioGet());
+        final levels = logOutput.events.map((event) => event.level).toList();
+        check(levels).not((it) => it.contains(Level.error));
+        check(levels).contains(Level.warning);
+      });
+    }
+
     test('updates lastRefreshedAt after successful sync', () async {
       // Arrange
       final sub = _subscription(itunesId: 'itunes-42', lastRefreshedAt: null);

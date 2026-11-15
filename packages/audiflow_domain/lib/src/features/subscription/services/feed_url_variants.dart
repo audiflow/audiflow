@@ -1,3 +1,23 @@
+/// Whether a feed can be fetched from [feedUrl]: an `http` or `https` address
+/// with a host and a valid port.
+///
+/// Anything else, such as an empty or relative URL, can only fail in the HTTP
+/// client, so it must neither be stored nor be sent there.
+bool isFetchableFeedUrl(String feedUrl) {
+  final uri = Uri.tryParse(feedUrl);
+  if (uri == null || uri.host.isEmpty) return false;
+  // Uri parses any digits as the port, so 65536 and up get through it, and
+  // reading a port too long for an int throws instead.
+  final int port;
+  try {
+    port = uri.port;
+  } on FormatException {
+    return false;
+  }
+  if (port < 0 || 65535 < port) return false;
+  return uri.isScheme('http') || uri.isScheme('https');
+}
+
 /// [feedUrl] followed by the same URL under the other of `http` and
 /// `https`.
 ///
