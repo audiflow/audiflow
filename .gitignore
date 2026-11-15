@@ -77,3 +77,6 @@ packages/audiflow_app/ios/config/prod/GoogleService-Info.plist
 # Isar native binary and lock files (downloaded/created by tests)
 libisar.dylib
 *.isar-lck
+
+# Local Lavish review pages (design/plan drafts, not shipped)
+.lavish/
