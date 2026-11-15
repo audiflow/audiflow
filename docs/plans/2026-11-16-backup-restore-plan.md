@@ -32,7 +32,7 @@ This plan builds:
 |--------|----------|-------|
 | `PodcastUserState` | Yes | Subscriptions, URL aliases, all per-podcast settings. Show title and artwork URL added for display |
 | `EpisodeUserState` | Yes | Position, completion, favorite, per-device counters. Locator (guid, audioUrl, publishedAt), title, and duration added for display. No descriptions |
-| `QueueEntry`, `StationState`, `StationMember` | Yes | Including tombstones, so restoring an old backup does not resurrect deleted items |
+| `QueueEntry`, `StationState`, `StationMember` | Yes | Including tombstones, so restoring an old backup does not resurrect deleted items. For backups older than the 90-day tombstone retention, the merge applies the local tombstone horizon (see the architecture merge rules) |
 | `SyncedSetting` | Yes | Synced settings only (D3) |
 | `OpaqueField` | Yes | Unknown future fields are exported as is |
 | Catalog (episodes, feeds, transcripts, chapters) | No | Refetched from feeds after restore |
@@ -60,6 +60,7 @@ repeated PodcastState  podcasts
 repeated EpisodeState  episodes
 repeated QueueEntry    queue
 repeated StationState  stations
+repeated StationMember station_members
 repeated Setting       settings
 repeated OpaqueField   opaque
 (every field carries its HLC)
@@ -88,6 +89,7 @@ Rules:
 - To restore from a clean state, reset all data first; the screen says so.
 - Phase B first stops playback and suspends writers, the same way `DataResetService.resetAll` does. User state and outbox are written in one `writeTxn`.
 - On a device with sync enabled, fields changed by the merge land in the outbox and reach other devices.
+- `DataResetService.resetAll` also deletes the automatic snapshot file while writers are suspended. Otherwise the next launch sees an empty database with a snapshot and restores the data the user just reset.
 
 ## Failures
 
@@ -124,6 +126,8 @@ Rules:
 - Merge: two states with mixed old and new fields converge regardless of order (property test).
 - Broken files: fixtures for truncated, sha256 mismatch, version 99, and missing fields each produce the right failure, and Isar is never written.
 - Rollback: an exception mid-merge leaves the original data intact.
+- Reset then relaunch: after `resetAll`, no snapshot remains and restore detection does nothing.
+- Old backup: restoring a backup older than the tombstone horizon does not bring back items deleted since.
 - A v1 fixture file lives in the repository and must keep reading in future versions.
 - Unknown fields: `OpaqueField` survives export and restore.
 - Widget tests for the confirmation screen and the PIN check.
