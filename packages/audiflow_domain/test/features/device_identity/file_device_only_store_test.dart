@@ -48,9 +48,7 @@ void main() {
     });
 
     test('rejects a key that could escape the directory', () async {
-      await check(
-        store.write('../outside', 'x'),
-      ).throws<ArgumentError>();
+      await check(store.write('../outside', 'x')).throws<ArgumentError>();
     });
   });
 }

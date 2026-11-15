@@ -17,9 +17,7 @@ class _MemoryDeviceOnlyStore implements DeviceOnlyStore {
 }
 
 void main() {
-  testWidgets('a reset gives the running app a new install id', (
-    tester,
-  ) async {
+  testWidgets('a reset gives the running app a new install id', (tester) async {
     SharedPreferences.setMockInitialValues(<String, Object>{});
     final prefs = await SharedPreferences.getInstance();
     final container = ProviderContainer(
