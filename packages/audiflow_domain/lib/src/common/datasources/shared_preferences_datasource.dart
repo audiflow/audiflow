@@ -13,6 +13,9 @@ class SharedPreferencesDataSource {
   /// Get string value
   String? getString(String key) => _prefs.getString(key);
 
+  /// The value stored under [key], whatever its type; null if none.
+  Object? get(String key) => _prefs.get(key);
+
   /// Set string value
   Future<bool> setString(String key, String value) =>
       _prefs.setString(key, value);

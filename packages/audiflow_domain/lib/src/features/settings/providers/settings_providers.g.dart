@@ -8,14 +8,14 @@ part of 'settings_providers.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Provides a singleton [AppSettingsRepository] backed by
-/// SharedPreferences.
+/// Provides a singleton [AppSettingsRepository]: synced settings in Isar,
+/// device-scoped ones in SharedPreferences.
 
 @ProviderFor(appSettingsRepository)
 final appSettingsRepositoryProvider = AppSettingsRepositoryProvider._();
 
-/// Provides a singleton [AppSettingsRepository] backed by
-/// SharedPreferences.
+/// Provides a singleton [AppSettingsRepository]: synced settings in Isar,
+/// device-scoped ones in SharedPreferences.
 
 final class AppSettingsRepositoryProvider
     extends
@@ -25,8 +25,8 @@ final class AppSettingsRepositoryProvider
           AppSettingsRepository
         >
     with $Provider<AppSettingsRepository> {
-  /// Provides a singleton [AppSettingsRepository] backed by
-  /// SharedPreferences.
+  /// Provides a singleton [AppSettingsRepository]: synced settings in Isar,
+  /// device-scoped ones in SharedPreferences.
   AppSettingsRepositoryProvider._()
     : super(
         from: null,
@@ -62,4 +62,4 @@ final class AppSettingsRepositoryProvider
 }
 
 String _$appSettingsRepositoryHash() =>
-    r'a06e8170091da9472918539892fb659de129e078';
+    r'3e4d2cdef9646eb48edf212f1b63bc4cfd9c7751';
