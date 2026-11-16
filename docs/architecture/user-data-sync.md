@@ -11,7 +11,7 @@ refs:
 ---
 # User Data: Device Continuity and Sync
 
-Status: accepted design, being implemented (M0 and M1 landed). Work is split into migration steps M0 to M7 (see [Migration steps](#migration-steps)). Tracking: #773 (M0, done), #777 (M1), #778 (M2), #779 (M3), #780 (M4), #718 (M5), #781 (M6), #782 (M7).
+Status: accepted design, being implemented (M0 to M2 landed). Work is split into migration steps M0 to M7 (see [Migration steps](#migration-steps)). Tracking: #773 (M0, done), #777 (M1, done), #778 (M2), #779 (M3), #780 (M4), #718 (M5), #781 (M6), #782 (M7).
 
 ## Goals
 
@@ -108,6 +108,8 @@ No op log is kept forever anywhere: a device holds the current state and the uns
 
 Ordering uses a Hybrid Logical Clock: 48-bit wall-clock milliseconds, a 16-bit logical counter, and `deviceId` as the tie-breaker. Causally related changes stay ordered even with skewed clocks. A remote HLC more than 24 hours in the future is clamped, so a device with a broken clock cannot win forever. All rules are pure functions in `audiflow_domain`, verified with property tests.
 
+The clock is `Hlc` in `audiflow_domain` (`features/user_state/models/hlc.dart`). `send` stamps a local event and never moves backwards, even when the wall clock is set back; `receive` merges a remote stamp after clamping it to 24 hours past local time; `compareVersions` breaks ties by `deviceId`. The writer's `deviceId` is not part of the stored value: local writes are all this device's, so it is attached where data leaves the device. `SyncMeta.hlc` stores the latest stamp packed into 64 bits (millis high, counter low).
+
 | Target | Rule | Why |
 |--------|------|-----|
 | Position, `completedAt`, favorite, settings | Per-field last-writer-wins | The last listening wins. Max-position would skip what the user rewound to hear again |
@@ -193,6 +195,8 @@ SyncTransport: Noop (sync off) | WebSocket relay | snapshot
 Relay (per account): assigns seq, stores, compacts, fans out, presence in memory
 ```
 
+- `UserStateStore.write` (`features/user_state/services/user_state_store.dart`) runs its body in one `writeTxn` that also advances the clock in `SyncMeta`, and hands the body the `Hlc` stamp. The store holds no state of its own: the clock is read inside the transaction, which Isar serializes across isolates, so any number of instances (each datasource creates one) issue strictly increasing stamps.
+- Since M2, every write to a user state collection goes through it: subscriptions (including cache eviction), playback history, favorites, queue, stations and their podcast links, view, play order, and audio preferences, and parental control. Catalog writes (episodes, smart playlists, transcripts, chapters, `StationEpisode`) and downloads use `writeTxn` directly. Synced settings still live in SharedPreferences and move into the store with M3.
 - State and op are written in the same transaction, so one never exists without the other.
 - Applying a received op is an ordinary Isar write. Existing Riverpod watchers update the UI, so sync needs no UI code of its own.
 - The continuity snapshot, the manual backup (#718), and the initial sync download are the same compacted snapshot. Restore is always a merge; "replace" means reset all data, then merge.
@@ -215,7 +219,7 @@ Receiving:
 
 ## Migration steps
 
-`isar_community` handles added fields automatically but has no data-rewriting migrations. A `DataMigrationRunner` runs idempotent steps in order at launch, before providers start, and records progress in `SyncMeta.schemaVersion`. Each step is one PR, and the app ships in a working state after every step.
+`isar_community` handles added fields automatically but has no data-rewriting migrations. A `DataMigrationRunner` runs idempotent steps in order at launch, before providers start, and records progress in `SyncMeta.schemaVersion`. Both entry points open the database with `openAppDatabase`, which runs the runner (`features/user_state/services/data_migration_runner.dart`, steps in `dataMigrationSteps`) before returning; a failing step closes the database and is rethrown, earlier steps stay recorded, and the failed one reruns on the next launch. The runner also creates `SyncMeta` with a new `historyId` when it is missing: on first launch, and after "Reset All Data", which clears every collection including `SyncMeta` (the first user state write after a reset creates it if it comes before the next launch). Each step is one PR, and the app ships in a working state after every step.
 
 | Step | Content |
 |------|---------|
