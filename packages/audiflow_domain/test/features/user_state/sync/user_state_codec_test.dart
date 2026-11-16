@@ -44,6 +44,17 @@ void main() {
       check(() => encodeValue(const [1])).throws<ArgumentError>();
     });
 
+    test('rejects a value with the wrong wire type', () {
+      // Field 2 (double) sent as a varint.
+      check(
+        () => decodeValue(Uint8List.fromList([0x10, 0x00])),
+      ).throws<FormatException>();
+      // Field 3 (string) sent as a varint.
+      check(
+        () => decodeValue(Uint8List.fromList([0x18, 0x01])),
+      ).throws<FormatException>();
+    });
+
     test('rejects truncated input', () {
       final bytes = encodeValue('Morning');
       check(
@@ -124,7 +135,11 @@ void main() {
   });
 
   group('registry', () {
-    test('ids are unique within each entity', () {
+    test('ids and names are unique within each entity', () {
+      for (final MapEntry(key: entity, value: ids)
+          in UserStateEntities.declaredIds.entries) {
+        check(because: entity, ids.toSet()).length.equals(ids.length);
+      }
       for (final MapEntry(key: entity, value: fields)
           in UserStateEntities.registry.entries) {
         check(
@@ -132,6 +147,18 @@ void main() {
           fields.values.toSet(),
         ).length.equals(fields.length);
       }
+    });
+
+    test('composite keys cannot collide', () {
+      final keys = [
+        compositeKey(['pk', 'a|b', 'c']),
+        compositeKey(['pk', 'a', 'b|c']),
+        compositeKey(['pk', 'a', null]),
+        compositeKey(['pk', 'a', '']),
+        compositeKey(['pk', 'a', '~']),
+        compositeKey(['pk', '1:a', null]),
+      ];
+      check(keys.toSet()).length.equals(keys.length);
     });
 
     // Pins every fieldId. Adding a field adds a line here; changing or

@@ -42,6 +42,12 @@ class EntitySpec<T> {
   }
 }
 
+/// A key made of several parts, unambiguous whatever the parts contain:
+/// each is length-prefixed, and null is written as `~`, distinct from an
+/// empty string (`0:`).
+String compositeKey(List<String?> parts) =>
+    parts.map((p) => p == null ? '~' : '${p.length}:$p').join('|');
+
 /// A per-device counter entry of an episode.
 typedef EpisodeCounterRow = ({String episodeKey, EpisodePlayCounters counters});
 
@@ -147,7 +153,7 @@ abstract final class UserStateEntities {
 
   static final playOrder = EntitySpec<PlayOrderRow>(
     'playOrder',
-    (r) => '${r.podcastKey}|${r.entry.playlistId}|${r.entry.groupId ?? ''}',
+    (r) => compositeKey([r.podcastKey, r.entry.playlistId, r.entry.groupId]),
     [FieldSpec(1, 'order', (r) => r.entry.order, hlc: (r) => r.entry.hlc)],
   );
 
@@ -213,7 +219,7 @@ abstract final class UserStateEntities {
   /// Grow-only, merged by maximum per device, so no HLC.
   static final episodeCounter = EntitySpec<EpisodeCounterRow>(
     'episodeCounter',
-    (r) => '${r.episodeKey}|${r.counters.deviceId}',
+    (r) => compositeKey([r.episodeKey, r.counters.deviceId]),
     [
       FieldSpec(1, 'playCount', (r) => r.counters.playCount),
       FieldSpec(2, 'completedCount', (r) => r.counters.completedCount),
@@ -316,7 +322,7 @@ abstract final class UserStateEntities {
 
   static final stationMember = EntitySpec<StationMember>(
     'stationMember',
-    (r) => '${r.stationId}|${r.podcastKey}',
+    (r) => compositeKey([r.stationId, r.podcastKey]),
     [
       FieldSpec(
         1,
@@ -346,6 +352,22 @@ abstract final class UserStateEntities {
     _ids(stationMember),
     _ids(setting),
   ]);
+
+  /// Every entity's fieldIds as declared, duplicates included, so a test
+  /// can catch a reused id before [registry] folds it away.
+  static final Map<String, List<int>> declaredIds = Map.fromEntries([
+    _declared(podcast),
+    _declared(playOrder),
+    _declared(episode),
+    _declared(episodeCounter),
+    _declared(queueEntry),
+    _declared(station),
+    _declared(stationMember),
+    _declared(setting),
+  ]);
+
+  static MapEntry<String, List<int>> _declared<T>(EntitySpec<T> spec) =>
+      MapEntry(spec.name, [for (final f in spec.fields) f.id]);
 
   static MapEntry<String, Map<int, String>> _ids<T>(EntitySpec<T> spec) =>
       MapEntry(spec.name, {for (final f in spec.fields) f.id: f.name});

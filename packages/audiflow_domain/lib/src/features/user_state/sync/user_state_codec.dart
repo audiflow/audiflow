@@ -34,23 +34,38 @@ Uint8List encodeValue(Object? value) {
   return w.takeBytes();
 }
 
-/// Decodes a Value message; DateTimes come back in UTC.
+/// Decodes a Value message; DateTimes come back in UTC. Throws
+/// [FormatException] when a value has the wrong wire type.
 Object? decodeValue(Uint8List bytes) {
   for (final field in readMessage(bytes)) {
     switch (field.fieldNumber) {
       case _intValue:
+        _expect(field, WireType.varint);
         return field.asSint;
       case _doubleValue:
+        _expect(field, WireType.fixed64);
         return field.asDouble;
       case _stringValue:
+        _expect(field, WireType.lengthDelimited);
+        // Malformed UTF-8 throws FormatException too.
         return field.asString;
       case _boolValue:
+        _expect(field, WireType.varint);
         return field.asBool;
       case _timeValue:
+        _expect(field, WireType.varint);
         return DateTime.fromMicrosecondsSinceEpoch(field.asSint, isUtc: true);
     }
   }
   return null;
+}
+
+void _expect(ProtoField field, int wireType) {
+  if (field.wireType == wireType) return;
+  throw FormatException(
+    'value field ${field.fieldNumber} has wire type ${field.wireType}, '
+    'expected $wireType',
+  );
 }
 
 /// The entity message holding just [field] of [row].
