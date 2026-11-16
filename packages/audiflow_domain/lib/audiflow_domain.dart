@@ -315,10 +315,14 @@ export 'src/features/parental_control/providers/parental_control_providers.dart'
 // User state (sync-ready data model)
 export 'src/features/user_state/models/episode_user_state.dart';
 export 'src/features/user_state/models/hlc.dart';
+export 'src/features/user_state/models/podcast_user_state.dart';
 export 'src/features/user_state/models/stable_keys.dart';
 export 'src/features/user_state/models/sync_meta.dart';
 export 'src/features/user_state/services/data_migration_runner.dart';
 export 'src/features/user_state/services/episode_user_state_access.dart';
 export 'src/features/user_state/services/episode_user_state_backfill.dart';
+export 'src/features/user_state/services/podcast_user_state_access.dart';
+export 'src/features/user_state/services/podcast_user_state_backfill.dart';
 export 'src/features/user_state/services/sync_meta_access.dart';
 export 'src/features/user_state/services/user_state_store.dart';
+export 'src/features/user_state/services/watch_query.dart';

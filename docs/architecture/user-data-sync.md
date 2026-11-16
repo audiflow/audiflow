@@ -102,7 +102,7 @@ Every user-state field carries its own HLC timestamp.
 | `OpaqueField` | (entity, key, fieldId) | new | Fields from future app versions, stored uninterpreted |
 | `SyncMeta` | single row | new | Copy of `deviceId`, `historyId`, HLC state, server cursor, tombstone horizon, migration version |
 
-M3 lands in five PRs, one source at a time (plan in #779): `EpisodeUserState` (M3a), `PodcastUserState`, `QueueEntry`, `StationState` and `StationMember`, then `SyncedSetting`. Each switches at the datasource layer:
+M3 lands in PRs, one source at a time (plan in #779): `EpisodeUserState` (M3a), the per-podcast preferences in `PodcastUserState` (M3b), the subscription fields of `PodcastUserState` (M3c), `QueueEntry` (M3d), `StationState` and `StationMember` (M3e), then `SyncedSetting` (M3f). Each switches at the datasource layer:
 
 - The datasource writes the old row and the new keyed row in one `UserStateStore.write`, and reads the new row, mapped back to the model its callers already use (for example `PlaybackHistory` by local episode id). Repositories and everything above them are unchanged.
 - An episode or podcast without a stable key yet keeps using the old row. `assignStableKeys` copies its state into the new collection in the transaction that keys it, so keyed entities always have their state in the new collection. A `DataMigrationStep` per source copies existing data at launch.
@@ -111,6 +111,8 @@ M3 lands in five PRs, one source at a time (plan in #779): `EpisodeUserState` (M
 - Per-device counters are attributed to `SyncMeta.deviceId`, a copy of the id in device-only storage that the foreground launch records (`openAppDatabase(deviceId:)`).
 
 As built for M3a: `EpisodeUserState` (`features/user_state/models/episode_user_state.dart`) replaces `PlaybackHistory` and `Episode.isFavorited`/`favoritedAt`, behind `PlaybackHistoryLocalDatasource`, the favorite repository, the station reconciler's completed and favorite filters, and cache eviction (which treats any `EpisodeUserState` of the podcast as listener data). `EpisodeUserStateAccess` holds the mapping; `EpisodeUserStateBackfill` is migration step 1.
+
+As built for M3b: `PodcastUserState` (`features/user_state/models/podcast_user_state.dart`) replaces `PodcastViewPreference` (including the podcast play order), `PodcastAudioPreference`, `SmartPlaylistUserPreference`, `SmartPlaylistGroupUserPreference`, and `PodcastParentalFlags`, behind their datasources. Each old row maps to a section with a `has*` flag and timestamp, so a deleted row is a stamped removal rather than a missing row; playlist and group play orders are entries whose cleared order stays as a null. `PodcastUserStateAccess` holds the mapping; `PodcastUserStateBackfill` is migration step 2. `ParentalControlSettings` (PIN, lockout) stays device-scoped.
 
 No op log is kept forever anywhere: a device holds the current state and the unsent ops. `StationEpisode` stays derived. `DownloadTask` stays device-scoped, switching to episodeKey and a path relative to the downloads directory.
 

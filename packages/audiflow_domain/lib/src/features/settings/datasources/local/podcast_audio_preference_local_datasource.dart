@@ -1,9 +1,13 @@
 import 'package:isar_community/isar.dart';
 
-import '../../models/podcast_audio_preference.dart';
+import '../../../user_state/models/podcast_user_state.dart';
+import '../../../user_state/services/podcast_user_state_access.dart';
 import '../../../user_state/services/user_state_store.dart';
+import '../../models/podcast_audio_preference.dart';
 
-/// Local datasource for [PodcastAudioPreference] rows using Isar.
+/// Local datasource for per-podcast audio overrides.
+///
+/// The override lives in [PodcastUserState]; see [PodcastUserStateAccess].
 class PodcastAudioPreferenceLocalDatasource {
   PodcastAudioPreferenceLocalDatasource(this._isar);
 
@@ -11,36 +15,33 @@ class PodcastAudioPreferenceLocalDatasource {
 
   /// User state writes go through the store; see [UserStateStore].
   late final _store = UserStateStore(_isar);
+  late final _access = PodcastUserStateAccess(_isar);
 
-  /// Returns the override row for [podcastId], or null when none exists.
+  /// Returns the override for [podcastId], or null when none exists.
   Future<PodcastAudioPreference?> get(int podcastId) {
-    return _isar.podcastAudioPreferences.getByPodcastId(podcastId);
+    return _access.audio(podcastId);
   }
 
-  /// Creates or replaces the override row for [podcastId].
+  /// Creates or replaces the override for [podcastId].
   Future<void> upsert(
     int podcastId, {
     required double speed,
     required bool skipSilence,
     required bool voiceBoost,
   }) async {
-    await _store.write((_) async {
-      final existing = await _isar.podcastAudioPreferences.getByPodcastId(
-        podcastId,
-      );
+    await _store.write((txn) async {
       final pref =
-          (existing ?? (PodcastAudioPreference()..podcastId = podcastId))
+          (await _access.audio(podcastId) ??
+                (PodcastAudioPreference()..podcastId = podcastId))
             ..speed = speed
             ..skipSilence = skipSilence
             ..voiceBoost = voiceBoost;
-      await _isar.podcastAudioPreferences.put(pref);
+      await _access.saveAudio(podcastId, pref, txn);
     });
   }
 
-  /// Deletes the override row for [podcastId], if any.
+  /// Removes the override for [podcastId], if any.
   Future<void> delete(int podcastId) async {
-    await _store.write(
-      (_) => _isar.podcastAudioPreferences.deleteByPodcastId(podcastId),
-    );
+    await _store.write((txn) => _access.saveAudio(podcastId, null, txn));
   }
 }

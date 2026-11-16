@@ -7,6 +7,7 @@ import '../../../user_state/models/episode_user_state.dart';
 import '../../../user_state/services/episode_user_state_access.dart';
 import '../../models/playback_history.dart';
 import '../../../user_state/services/user_state_store.dart';
+import '../../../user_state/services/watch_query.dart';
 
 /// Local datasource for playback history operations using Isar.
 ///
@@ -33,11 +34,11 @@ class PlaybackHistoryLocalDatasource {
   /// first play. Emits the current value immediately, then after writes
   /// that change it.
   Stream<PlaybackHistory?> watchByEpisodeId(int episodeId) {
-    return _watch<PlaybackHistory?>(
+    return watchQuery<PlaybackHistory?>(
       triggers: [
         _isar.playbackHistorys.where().episodeIdEqualTo(episodeId).watchLazy(),
         // The episode's key is not known synchronously, so any state write
-        // re-reads; [_watch] drops the unchanged results.
+        // re-reads; [watchQuery] drops the unchanged results.
         _isar.episodeUserStates.watchLazy(),
         // Keying the episode can switch it to keyed state already stored.
         _isar.episodes.where().idEqualTo(episodeId).watchLazy(),
@@ -367,7 +368,7 @@ class PlaybackHistoryLocalDatasource {
 
   /// Watches episodes that are in progress.
   Stream<List<PlaybackHistory>> watchInProgress({int limit = 10}) {
-    return _watch<List<PlaybackHistory>>(
+    return watchQuery<List<PlaybackHistory>>(
       triggers: [
         _isar.playbackHistorys.watchLazy(),
         _isar.episodeUserStates.watchLazy(),
@@ -424,62 +425,6 @@ class PlaybackHistoryLocalDatasource {
     if (at == null) return bt == null ? 0 : 1;
     if (bt == null) return -1;
     return bt.compareTo(at);
-  }
-
-  /// Emits [load]'s result on listen and again after each event of
-  /// [triggers], skipping a result [same] as the one before.
-  ///
-  /// The triggers are subscribed before the first load, so a write that
-  /// lands while it runs is not missed. Loads run one at a time, in order.
-  static Stream<T> _watch<T>({
-    required List<Stream<void>> triggers,
-    required Future<T> Function() load,
-    required bool Function(T a, T b) same,
-  }) {
-    late final StreamController<T> controller;
-    final subscriptions = <StreamSubscription<void>>[];
-    var pending = Future<void>.value();
-    var active = false;
-    var hasLast = false;
-    late T last;
-
-    void refresh() {
-      pending = pending.then((_) async {
-        if (!active) return;
-        try {
-          final value = await load();
-          // Cancelled while loading: nobody listens any more.
-          if (!active) return;
-          if (hasLast && same(last, value)) return;
-          hasLast = true;
-          last = value;
-          controller.add(value);
-        } on Object catch (error, stack) {
-          if (active) controller.addError(error, stack);
-        }
-      });
-    }
-
-    controller = StreamController<T>(
-      onListen: () {
-        active = true;
-        for (final trigger in triggers) {
-          subscriptions.add(
-            trigger.listen((_) => refresh(), onError: controller.addError),
-          );
-        }
-        refresh();
-      },
-      onCancel: () async {
-        // Before awaiting, so refreshes queued behind a running load skip.
-        active = false;
-        for (final sub in subscriptions) {
-          await sub.cancel();
-        }
-        subscriptions.clear();
-      },
-    );
-    return controller.stream;
   }
 }
 
