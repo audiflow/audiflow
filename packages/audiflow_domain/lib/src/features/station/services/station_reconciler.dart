@@ -4,7 +4,7 @@ import 'package:isar_community/isar.dart';
 import '../../download/models/download_status.dart';
 import '../../download/models/download_task.dart';
 import '../../feed/models/episode.dart';
-import '../../player/models/playback_history.dart';
+import '../../user_state/services/episode_user_state_access.dart';
 import '../models/station.dart';
 import '../models/station_duration_filter.dart';
 import '../models/station_episode.dart';
@@ -339,7 +339,8 @@ class StationReconciler {
     if (station.filterDownloaded && !await _isDownloaded(episode.id)) {
       return false;
     }
-    if (station.filterFavorited && !episode.isFavorited) {
+    if (station.filterFavorited &&
+        !await EpisodeUserStateAccess(_isar).isFavorited(episode)) {
       return false;
     }
     if (station.durationFilter != null) {
@@ -356,10 +357,7 @@ class StationReconciler {
   }
 
   Future<bool> _isCompleted(int episodeId) async {
-    final history = await _isar.playbackHistorys
-        .filter()
-        .episodeIdEqualTo(episodeId)
-        .findFirst();
+    final history = await EpisodeUserStateAccess(_isar).history(episodeId);
     return history != null && history.completedAt != null;
   }
 

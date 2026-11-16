@@ -2,6 +2,7 @@ import 'package:isar_community/isar.dart';
 import 'package:logger/logger.dart';
 
 import '../models/sync_meta.dart';
+import 'episode_user_state_backfill.dart';
 import 'sync_meta_access.dart';
 
 /// One data-rewriting migration, run once at launch.
@@ -21,8 +22,8 @@ abstract interface class DataMigrationStep {
   Future<void> run(Isar isar);
 }
 
-/// The app's migration steps, in order. Empty until a step needs one.
-const List<DataMigrationStep> dataMigrationSteps = [];
+/// The app's migration steps, in order.
+const List<DataMigrationStep> dataMigrationSteps = [EpisodeUserStateBackfill()];
 
 /// Runs the pending [DataMigrationStep]s in order, before providers start.
 class DataMigrationRunner {
@@ -31,12 +32,17 @@ class DataMigrationRunner {
     required List<DataMigrationStep> steps,
     this._logger,
     this._createHistoryId,
+    this._deviceId,
   }) : _steps = _validated(steps);
 
   final Isar _isar;
   final List<DataMigrationStep> _steps;
   final Logger? _logger;
   final String Function()? _createHistoryId;
+
+  /// This device's id, recorded in [SyncMeta] when it has none; null in the
+  /// background, where device-only storage is not read.
+  final String? _deviceId;
 
   static List<DataMigrationStep> _validated(List<DataMigrationStep> steps) {
     for (var i = 1; i < steps.length; i++) {
@@ -64,9 +70,18 @@ class DataMigrationRunner {
   /// before each step to skip work the other one finished, and a record
   /// only ever raises the version, so a slower runner cannot lower it.
   Future<void> run() async {
-    await _isar.writeTxn(
-      () => loadOrCreateSyncMeta(_isar, createHistoryId: _createHistoryId),
-    );
+    await _isar.writeTxn(() async {
+      final meta = await loadOrCreateSyncMeta(
+        _isar,
+        createHistoryId: _createHistoryId,
+      );
+      final deviceId = _deviceId;
+      // Only filled in, never replaced: a differing id means this data was
+      // restored from another device, which restore detection (M5) handles.
+      if (deviceId != null && meta.deviceId == null) {
+        await _isar.syncMetas.put(meta..deviceId = deviceId);
+      }
+    });
     for (final step in _steps) {
       if (step.version <= await _recordedVersion()) continue;
       _logger?.i('Running data migration ${step.version} (${step.name})');

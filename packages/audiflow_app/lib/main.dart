@@ -256,7 +256,16 @@ Future<ProviderContainer> bootstrapAppContainer({
   );
   final Isar isar;
   try {
-    isar = await openAppDatabase(directory: dirPath, logger: isarOpenLogger);
+    isar = await openAppDatabase(
+      directory: dirPath,
+      // Read before the container exists, since Isar is one of its
+      // overrides; the id store never throws.
+      deviceId: await DeviceScopedIdStore(
+        DeviceOnlyStore.platform(),
+        SharedPreferencesDataSource(prefs),
+      ).getOrCreate(DeviceScopedIdStore.deviceIdKey),
+      logger: isarOpenLogger,
+    );
     Sentry.addBreadcrumb(
       Breadcrumb(message: 'Isar opened', category: 'database'),
     );

@@ -7,6 +7,7 @@ import '../../feed/models/podcast_view_preference.dart';
 import '../../feed/models/smart_playlist_groups.dart';
 import '../../feed/models/smart_playlists.dart';
 import '../../player/models/playback_history.dart';
+import '../../user_state/models/episode_user_state.dart';
 import '../models/subscriptions.dart';
 import '../repositories/subscription_repository.dart';
 import '../../user_state/services/user_state_store.dart';
@@ -96,7 +97,7 @@ class PodcastCacheEvictionService {
     final evictable = <Subscription>[];
     for (final sub in cached) {
       final episodeIds = await _episodeIdsOf(sub.id);
-      if (!await _holdsListenerData(episodeIds)) evictable.add(sub);
+      if (!await _holdsListenerData(sub, episodeIds)) evictable.add(sub);
     }
     return evictable;
   }
@@ -109,7 +110,20 @@ class PodcastCacheEvictionService {
         .findAll();
   }
 
-  Future<bool> _holdsListenerData(List<int> episodeIds) async {
+  Future<bool> _holdsListenerData(
+    Subscription sub,
+    List<int> episodeIds,
+  ) async {
+    // Keyed user state outlives catalog rows, so it is checked by podcast
+    // rather than through the episodes still stored.
+    final podcastKey = sub.podcastKey;
+    if (podcastKey != null) {
+      final states = await _isar.episodeUserStates
+          .where()
+          .podcastKeyEqualTo(podcastKey)
+          .count();
+      if (0 < states) return true;
+    }
     if (episodeIds.isEmpty) return false;
     final histories = await _isar.playbackHistorys.getAllByEpisodeId(
       episodeIds,
@@ -132,7 +146,9 @@ class PodcastCacheEvictionService {
       // Re-check inside the transaction so no write can land in between.
       final current = await _isar.subscriptions.get(id);
       if (current == null || !current.isCached) return false;
-      if (await _holdsListenerData(await _episodeIdsOf(id))) return false;
+      if (await _holdsListenerData(current, await _episodeIdsOf(id))) {
+        return false;
+      }
 
       // Delete episodes
       await _isar.episodes.filter().podcastIdEqualTo(id).deleteAll();

@@ -46,8 +46,8 @@ void main() {
   });
 
   test('stamps each write with a new clock value and stores it', () async {
-    final first = await store().write((stamp) async => stamp);
-    final second = await store().write((stamp) async => stamp);
+    final first = await store().write((txn) async => txn.stamp);
+    final second = await store().write((txn) async => txn.stamp);
 
     check(first).equals(const Hlc(1000, 0));
     check(second).equals(const Hlc(1000, 1));
@@ -58,17 +58,37 @@ void main() {
   test(
     'keeps the clock monotonic across instances and a clock set back',
     () async {
-      final first = await store().write((stamp) async => stamp);
+      final first = await store().write((txn) async => txn.stamp);
       now = 10;
 
       final second = await UserStateStore(
         isar,
         nowMillis: () => now,
-      ).write((stamp) async => stamp);
+      ).write((txn) async => txn.stamp);
 
       check(first.compareTo(second)).equals(-1);
     },
   );
+
+  test('hands the body the recorded device id', () async {
+    await isar.writeTxn(
+      () => isar.syncMetas.put(
+        SyncMeta()
+          ..historyId = 'h'
+          ..deviceId = 'device-a',
+      ),
+    );
+
+    final deviceId = await store().write((txn) async => txn.deviceId);
+
+    check(deviceId).equals('device-a');
+  });
+
+  test('uses the unknown device id before one is recorded', () async {
+    final deviceId = await store().write((txn) async => txn.deviceId);
+
+    check(deviceId).equals(UserStateTxn.unknownDeviceId);
+  });
 
   test('creates the history on the first write and keeps it', () async {
     await store().write((_) async {});

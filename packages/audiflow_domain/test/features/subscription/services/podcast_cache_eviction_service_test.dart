@@ -222,6 +222,32 @@ void main() {
       expect(histories, hasLength(1));
     });
 
+    test('keeps stale cached podcasts whose keyed state outlived the '
+        'catalog', () async {
+      final staleDate = DateTime.now().subtract(const Duration(days: 10));
+      final sub = await createCached('stale', lastAccessedAt: staleDate);
+      await isar.writeTxn(() async {
+        await isar.subscriptions.put(sub..podcastKey = 'pk');
+        // No episode row: the state is for an episode not fetched yet.
+        await isar.episodeUserStates.put(
+          EpisodeUserState()
+            ..episodeKey = 'ek'
+            ..podcastKey = 'pk'
+            ..favoritedAt = DateTime(2026)
+            ..favoritedAtHlc = 1,
+        );
+      });
+
+      service = PodcastCacheEvictionService(
+        subscriptionRepository: subscriptionRepo,
+        isar: isar,
+        logger: logger,
+      );
+
+      expect(await service.evict(), 0);
+      expect(await subscriptionRepo.getById(sub.id), isNotNull);
+    });
+
     test('skips an entry subscribed to after the pass listed it', () async {
       final staleDate = DateTime.now().subtract(const Duration(days: 10));
       final sub = await createCached('stale', lastAccessedAt: staleDate);

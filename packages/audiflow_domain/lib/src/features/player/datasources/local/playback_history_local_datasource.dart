@@ -1,12 +1,20 @@
+import 'dart:async';
+
 import 'package:isar_community/isar.dart';
 
 import '../../../feed/models/episode.dart';
+import '../../../user_state/models/episode_user_state.dart';
+import '../../../user_state/services/episode_user_state_access.dart';
 import '../../models/playback_history.dart';
 import '../../../user_state/services/user_state_store.dart';
 
 /// Local datasource for playback history operations using Isar.
 ///
-/// Provides CRUD operations for tracking episode playback progress.
+/// Playback state lives in [EpisodeUserState], keyed by the episode's
+/// stable key; the old [PlaybackHistory] rows keep being written for one
+/// release so a rollback still finds them. This class keeps speaking
+/// [PlaybackHistory] by local episode id, so callers did not change; see
+/// [EpisodeUserStateAccess] for how the two are kept in step.
 class PlaybackHistoryLocalDatasource {
   PlaybackHistoryLocalDatasource(this._isar);
 
@@ -14,32 +22,34 @@ class PlaybackHistoryLocalDatasource {
 
   /// User state writes go through the store; see [UserStateStore].
   late final _store = UserStateStore(_isar);
+  late final _access = EpisodeUserStateAccess(_isar);
 
   /// Returns playback history for an episode, or null if not found.
   Future<PlaybackHistory?> getByEpisodeId(int episodeId) {
-    return _isar.playbackHistorys.getByEpisodeId(episodeId);
+    return _access.history(episodeId);
   }
 
   /// Watches playback history for an episode, emitting null until the
-  /// first play. Emits the current value immediately, then after writes.
+  /// first play. Emits the current value immediately, then after writes
+  /// that change it.
   Stream<PlaybackHistory?> watchByEpisodeId(int episodeId) {
-    return _isar.playbackHistorys
-        .where()
-        .episodeIdEqualTo(episodeId)
-        .watch(fireImmediately: true)
-        .map((results) => results.firstOrNull);
+    return _watch<PlaybackHistory?>(
+      triggers: [
+        _isar.playbackHistorys.where().episodeIdEqualTo(episodeId).watchLazy(),
+        // The episode's key is not known synchronously, so any state write
+        // re-reads; [_watch] drops the unchanged results.
+        _isar.episodeUserStates.watchLazy(),
+      ],
+      load: () => getByEpisodeId(episodeId),
+      same: (a, b) => a == null || b == null ? a == b : sameHistory(a, b),
+    );
   }
 
   /// Upserts playback history (insert or update on conflict).
   Future<void> upsert(PlaybackHistory history) async {
-    await _store.write((_) async {
-      final existing = await _isar.playbackHistorys.getByEpisodeId(
-        history.episodeId,
-      );
-      if (existing != null) {
-        history.id = existing.id;
-      }
-      await _isar.playbackHistorys.put(history);
+    await _store.write((txn) async {
+      final slot = await _access.loadSlot(history.episodeId);
+      await _access.saveHistory(slot, history, txn);
     });
   }
 
@@ -59,8 +69,9 @@ class PlaybackHistoryLocalDatasource {
     int realtimeDeltaMs = 0,
   }) async {
     final now = DateTime.now();
-    await _store.write((_) async {
-      final existing = await _isar.playbackHistorys.getByEpisodeId(episodeId);
+    await _store.write((txn) async {
+      final slot = await _access.loadSlot(episodeId);
+      final existing = slot.history;
 
       if (existing == null) {
         final history = PlaybackHistory()
@@ -72,7 +83,7 @@ class PlaybackHistoryLocalDatasource {
           ..playCount = 1
           ..totalListenedMs = listenedDeltaMs
           ..totalRealtimeMs = realtimeDeltaMs;
-        await _isar.playbackHistorys.put(history);
+        await _access.saveHistory(slot, history, txn);
       } else {
         existing.positionMs = positionMs;
         if (durationMs != null) {
@@ -82,7 +93,7 @@ class PlaybackHistoryLocalDatasource {
         existing.lastPlayedAt = now;
         existing.totalListenedMs = existing.totalListenedMs + listenedDeltaMs;
         existing.totalRealtimeMs = existing.totalRealtimeMs + realtimeDeltaMs;
-        await _isar.playbackHistorys.put(existing);
+        await _access.saveHistory(slot, existing, txn);
       }
     });
   }
@@ -104,10 +115,11 @@ class PlaybackHistoryLocalDatasource {
   /// Atomic read-then-write inside a single transaction.
   Future<bool> _markCompleted(int episodeId, {required bool skipPlayed}) async {
     final now = DateTime.now();
-    return _store.write((_) async {
-      final existing = await _isar.playbackHistorys.getByEpisodeId(episodeId);
+    return _store.write((txn) async {
+      final slot = await _access.loadSlot(episodeId);
+      final existing = slot.history;
       if (existing == null) {
-        await _isar.playbackHistorys.put(_firstCompletion(episodeId, now));
+        await _access.saveHistory(slot, _firstCompletion(episodeId, now), txn);
         return true;
       }
       if (existing.isPlayed && skipPlayed) return false;
@@ -115,7 +127,7 @@ class PlaybackHistoryLocalDatasource {
         existing.completedCount = existing.completedCount + 1;
       }
       _closeListen(existing, now);
-      await _isar.playbackHistorys.put(existing);
+      await _access.saveHistory(slot, existing, txn);
       return true;
     });
   }
@@ -129,10 +141,11 @@ class PlaybackHistoryLocalDatasource {
   /// Atomic read-then-write inside a single transaction.
   Future<bool> finishListen(int episodeId) async {
     final now = DateTime.now();
-    return _store.write((_) async {
-      final existing = await _isar.playbackHistorys.getByEpisodeId(episodeId);
+    return _store.write((txn) async {
+      final slot = await _access.loadSlot(episodeId);
+      final existing = slot.history;
       if (existing == null) {
-        await _isar.playbackHistorys.put(_firstCompletion(episodeId, now));
+        await _access.saveHistory(slot, _firstCompletion(episodeId, now), txn);
         return true;
       }
       if (existing.isListenFinished) return false;
@@ -140,7 +153,7 @@ class PlaybackHistoryLocalDatasource {
         existing.completedCount = existing.completedCount + 1;
       }
       _closeListen(existing, now);
-      await _isar.playbackHistorys.put(existing);
+      await _access.saveHistory(slot, existing, txn);
       return true;
     });
   }
@@ -164,14 +177,17 @@ class PlaybackHistoryLocalDatasource {
 
   /// Marks an episode as unplayed (removes completedAt and ends any replay).
   Future<void> markIncomplete(int episodeId) async {
-    final existing = await getByEpisodeId(episodeId);
-    if (existing == null) return;
+    await _store.write((txn) async {
+      final slot = await _access.loadSlot(episodeId);
+      final existing = slot.history;
+      if (existing == null) return;
 
-    existing
-      ..completedAt = null
-      ..isReplaying = false
-      ..isReplayFromStart = false;
-    await _store.write((_) => _isar.playbackHistorys.put(existing));
+      existing
+        ..completedAt = null
+        ..isReplaying = false
+        ..isReplayFromStart = false;
+      await _access.saveHistory(slot, existing, txn);
+    });
   }
 
   /// Opens a replay of a played episode at [positionMs]. [fromStart]
@@ -188,8 +204,9 @@ class PlaybackHistoryLocalDatasource {
     required int positionMs,
     required bool fromStart,
   }) async {
-    await _store.write((_) async {
-      final existing = await _isar.playbackHistorys.getByEpisodeId(episodeId);
+    await _store.write((txn) async {
+      final slot = await _access.loadSlot(episodeId);
+      final existing = slot.history;
       if (existing == null || !existing.isPlayed) return;
 
       if (existing.isReplaying) {
@@ -204,17 +221,20 @@ class PlaybackHistoryLocalDatasource {
           ..positionMs = positionMs
           ..lastPlayedAt = DateTime.now();
       }
-      await _isar.playbackHistorys.put(existing);
+      await _access.saveHistory(slot, existing, txn);
     });
   }
 
   /// Increments play count (called when starting from beginning).
   Future<void> incrementPlayCount(int episodeId) async {
-    final existing = await getByEpisodeId(episodeId);
-    if (existing == null) return;
+    await _store.write((txn) async {
+      final slot = await _access.loadSlot(episodeId);
+      final existing = slot.history;
+      if (existing == null) return;
 
-    existing.playCount = existing.playCount + 1;
-    await _store.write((_) => _isar.playbackHistorys.put(existing));
+      existing.playCount = existing.playCount + 1;
+      await _access.saveHistory(slot, existing, txn);
+    });
   }
 
   /// Returns the most recently played in-progress episode, or null.
@@ -225,9 +245,11 @@ class PlaybackHistoryLocalDatasource {
 
   /// Returns episodes whose listen finished at or before [time], replays
   /// excluded.
-  Future<List<PlaybackHistory>> getFinishedBefore(DateTime time) {
-    return _isar.playbackHistorys
+  Future<List<PlaybackHistory>> getFinishedBefore(DateTime time) async {
+    final states = await _isar.episodeUserStates
         .filter()
+        .hasPlaybackEqualTo(true)
+        .and()
         // Isar sorts null below every date, so LessThan alone would match
         // episodes that were never finished.
         .completedAtIsNotNull()
@@ -236,31 +258,57 @@ class PlaybackHistoryLocalDatasource {
         .and()
         .isReplayingEqualTo(false)
         .findAll();
+    final legacy = await _isar.playbackHistorys
+        .filter()
+        .completedAtIsNotNull()
+        .and()
+        .completedAtLessThan(time, include: true)
+        .and()
+        .isReplayingEqualTo(false)
+        .findAll();
+    return _access.resolve(states: states, legacy: legacy);
   }
 
   /// Returns episodes that are in progress: started, and their current
   /// listen not finished. Replays of played episodes are included.
   ///
   /// Ordered by lastPlayedAt descending, limited to [limit] items.
-  Future<List<PlaybackHistory>> getInProgress({int limit = 10}) {
-    return _inProgressQuery(limit).findAll();
-  }
-
-  /// Watches episodes that are in progress.
-  Stream<List<PlaybackHistory>> watchInProgress({int limit = 10}) {
-    return _inProgressQuery(limit).watch(fireImmediately: true);
-  }
-
-  /// Mirrors [PlaybackHistoryStatus.isInProgress] as an Isar query.
-  Query<PlaybackHistory> _inProgressQuery(int limit) {
-    return _isar.playbackHistorys
+  Future<List<PlaybackHistory>> getInProgress({int limit = 10}) async {
+    // Mirrors [PlaybackHistoryStatus.isInProgress]. Not limited in the
+    // query: rows whose episode is missing are dropped afterwards.
+    final states = await _isar.episodeUserStates
+        .filter()
+        .hasPlaybackEqualTo(true)
+        .and()
+        .positionMsGreaterThan(0)
+        .and()
+        .group((q) => q.completedAtIsNull().or().isReplayingEqualTo(true))
+        .findAll();
+    final legacy = await _isar.playbackHistorys
         .filter()
         .positionMsGreaterThan(0)
         .and()
         .group((q) => q.completedAtIsNull().or().isReplayingEqualTo(true))
-        .sortByLastPlayedAtDesc()
-        .limit(limit)
-        .build();
+        .findAll();
+    final resolved = await _access.resolve(states: states, legacy: legacy);
+    resolved.sort(_byLastPlayedDesc);
+    return resolved.take(limit).toList();
+  }
+
+  /// Watches episodes that are in progress.
+  Stream<List<PlaybackHistory>> watchInProgress({int limit = 10}) {
+    return _watch<List<PlaybackHistory>>(
+      triggers: [
+        _isar.playbackHistorys.watchLazy(),
+        _isar.episodeUserStates.watchLazy(),
+      ],
+      load: () => getInProgress(limit: limit),
+      same: (a, b) =>
+          a.length == b.length &&
+          [
+            for (var i = 0; i < a.length; i++) sameHistory(a[i], b[i]),
+          ].every((same) => same),
+    );
   }
 
   /// Returns true if the episode is played (see [PlaybackHistoryStatus]).
@@ -277,17 +325,77 @@ class PlaybackHistoryLocalDatasource {
         .filter()
         .podcastIdEqualTo(podcastId)
         .findAll();
+    if (episodes.isEmpty) return {};
 
-    final episodeIds = episodes.map((e) => e.id).toList();
-    if (episodeIds.isEmpty) return {};
+    final keys = [for (final e in episodes) ?e.episodeKey];
+    final states = [
+      for (final s in await _isar.episodeUserStates.getAllByEpisodeKey(keys))
+        if (s != null && s.hasPlayback) s,
+    ];
+    final legacy = [
+      for (final h in await _isar.playbackHistorys.getAllByEpisodeId(
+        episodes.map((e) => e.id).toList(),
+      ))
+        ?h,
+    ];
+    final resolved = await _access.resolve(states: states, legacy: legacy);
+    return {for (final h in resolved) h.episodeId: h};
+  }
 
-    final result = <int, PlaybackHistory>{};
-    for (final episodeId in episodeIds) {
-      final history = await _isar.playbackHistorys.getByEpisodeId(episodeId);
-      if (history != null) {
-        result[episodeId] = history;
-      }
+  static int _byLastPlayedDesc(PlaybackHistory a, PlaybackHistory b) {
+    final at = a.lastPlayedAt;
+    final bt = b.lastPlayedAt;
+    if (at == null) return bt == null ? 0 : 1;
+    if (bt == null) return -1;
+    return bt.compareTo(at);
+  }
+
+  /// Emits [load]'s result on listen and again after each event of
+  /// [triggers], skipping a result [same] as the one before.
+  ///
+  /// The triggers are subscribed before the first load, so a write that
+  /// lands while it runs is not missed. Loads run one at a time, in order.
+  static Stream<T> _watch<T>({
+    required List<Stream<void>> triggers,
+    required Future<T> Function() load,
+    required bool Function(T a, T b) same,
+  }) {
+    late final StreamController<T> controller;
+    final subscriptions = <StreamSubscription<void>>[];
+    var pending = Future<void>.value();
+    var hasLast = false;
+    late T last;
+
+    void refresh() {
+      pending = pending.then((_) async {
+        if (controller.isClosed) return;
+        try {
+          final value = await load();
+          if (hasLast && same(last, value)) return;
+          hasLast = true;
+          last = value;
+          if (!controller.isClosed) controller.add(value);
+        } on Object catch (error, stack) {
+          if (!controller.isClosed) controller.addError(error, stack);
+        }
+      });
     }
-    return result;
+
+    controller = StreamController<T>(
+      onListen: () {
+        for (final trigger in triggers) {
+          subscriptions.add(
+            trigger.listen((_) => refresh(), onError: controller.addError),
+          );
+        }
+        refresh();
+      },
+      onCancel: () async {
+        for (final sub in subscriptions) {
+          await sub.cancel();
+        }
+      },
+    );
+    return controller.stream;
   }
 }
