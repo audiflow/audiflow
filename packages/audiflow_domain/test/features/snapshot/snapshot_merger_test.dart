@@ -363,6 +363,89 @@ void main() {
     ).equals(1200);
   });
 
+  test('a wrong type is damaged even where the local value wins', () async {
+    await seed(isar);
+    final file = fileOf({
+      'setting': [
+        rowOf('settings_playback_speed', {1: ('3.0', hlc(500))}),
+      ],
+      // podcastKey has no clock and the episode exists, so it never applies.
+      'episode': [
+        rowOf('ek', {1: (42, null)}),
+      ],
+    }, historyId: 'h1');
+
+    await check(merger().merge(file)).throws<DamagedSnapshot>();
+    check(
+      (await isar.syncedSettings.getByKey('settings_playback_speed'))!.value,
+    ).equals('1.25');
+  });
+
+  test('a key with a missing required part is damaged', () async {
+    for (final file in [
+      fileOf({
+        'stationMember': [
+          rowOf(compositeKey(['s1', null]), {1: (3, hlc(10))}),
+        ],
+      }),
+      fileOf({
+        'playOrder': [
+          rowOf(compositeKey(['pk', null, null]), {1: ('x', hlc(10))}),
+        ],
+      }),
+    ]) {
+      await check(merger().merge(file)).throws<DamagedSnapshot>();
+    }
+  });
+
+  group('unknown fields', () {
+    SnapshotFile withUnknown(String value, int clock) => fileOf({
+      'setting': [
+        SnapshotRow(
+          'k',
+          (ProtoWriter()..writeBytes(99, encodeValue(value, hlc: clock)))
+              .takeBytes(),
+        ),
+      ],
+    });
+
+    test('converge on equal clocks whichever merges first', () async {
+      final a = withUnknown('a', hlc(70));
+      final b = withUnknown('b', hlc(70));
+      final other = await openTestIsar(isarSchemas);
+      addTearDown(() => other.close(deleteFromDisk: true));
+
+      await merger().merge(a);
+      await merger().merge(b);
+      await merger(other).merge(b);
+      await merger(other).merge(a);
+
+      final here = (await isar.opaqueFields.where().findAll()).single;
+      final there = (await other.opaqueFields.where().findAll()).single;
+      check(here.payload).deepEquals(there.payload);
+    });
+
+    test('land in the outbox', () async {
+      await merger().merge(withUnknown('a', hlc(70)));
+
+      final op = (await isar.outboxOps.where().findAll()).single;
+      check(op.entity).equals('setting');
+      check(op.fieldId).equals(99);
+      check(op.hlc).equals(hlc(70));
+    });
+
+    test('have their clocks clamped and observed', () async {
+      final future = now + const Duration(days: 30).inMilliseconds;
+      await merger().merge(withUnknown('a', hlc(future)));
+
+      final field = (await isar.opaqueFields.where().findAll()).single;
+      final limit = hlc(now + Hlc.maxDrift.inMilliseconds);
+      check(field.hlc).equals(limit);
+      final meta = (await isar.syncMetas.get(SyncMeta.singletonId))!;
+      check(limit < meta.hlc).isTrue();
+    });
+  });
+
   test('a new row missing a required field is damaged', () async {
     final file = fileOf({
       'queueEntry': [

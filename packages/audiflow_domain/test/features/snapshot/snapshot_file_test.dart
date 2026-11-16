@@ -118,6 +118,13 @@ void main() {
       check(() => readSnapshotFile(altered)).throws<DamagedSnapshot>();
     });
 
+    test('rejects a body that expands past the limit', () {
+      check(() => readSnapshotFile(sampleFile(), maxBodyBytes: 8))
+          .throws<DamagedSnapshot>()
+          .has((e) => e.location, 'location')
+          .equals('payload size');
+    });
+
     test('rejects a body that is valid gzip but not a snapshot', () {
       final payload = Uint8List.fromList(gzip.encode([0x0f, 0xff]));
       final bytes = sampleFile();

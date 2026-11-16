@@ -81,7 +81,11 @@ List<String?> splitCompositeKey(String key, int count) {
       i += 1;
     } else {
       final colon = key.indexOf(':', i);
-      final length = colon < 0 ? null : int.tryParse(key.substring(i, colon));
+      final digits = colon < 0 ? '' : key.substring(i, colon);
+      // Digits only: int.tryParse would also take a sign.
+      final length = RegExp(r'^[0-9]+$').hasMatch(digits)
+          ? int.parse(digits)
+          : null;
       final end = length == null ? -1 : colon + 1 + length;
       if (length == null || key.length < end) {
         throw FormatException('not a composite key', key, i);

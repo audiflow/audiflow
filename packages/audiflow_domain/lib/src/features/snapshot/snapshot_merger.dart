@@ -4,13 +4,13 @@ import 'package:isar_community/isar.dart';
 
 import '../user_state/models/episode_user_state.dart';
 import '../user_state/models/hlc.dart';
+import '../user_state/models/outbox_op.dart';
 import '../user_state/models/podcast_user_state.dart';
 import '../user_state/models/queue_entry.dart';
 import '../user_state/models/station_state.dart';
 import '../user_state/models/sync_meta.dart';
 import '../user_state/models/synced_setting.dart';
 import '../user_state/services/user_state_store.dart';
-import '../user_state/sync/opaque_fields.dart';
 import '../user_state/sync/proto_wire.dart';
 import '../user_state/sync/user_state_codec.dart';
 import '../user_state/sync/user_state_fields.dart';
@@ -196,18 +196,18 @@ class _MergeRun {
           isSet: true,
         );
       case 'stationMember':
-        final [stationId, podcastKey] = _split(entity, key, 2);
+        final [stationId!, podcastKey!] = _split(entity, key, 2, required: 2);
         await _merge(
           UserStateEntities.stationMember,
           key,
           decoded,
           find: (_) => _isar.stationMembers.getByStationIdPodcastKey(
-            stationId!,
-            podcastKey!,
+            stationId,
+            podcastKey,
           ),
           create: () => StationMember()
-            ..stationId = stationId!
-            ..podcastKey = podcastKey!,
+            ..stationId = stationId
+            ..podcastKey = podcastKey,
           put: _isar.stationMembers.put,
           isSet: true,
         );
@@ -242,7 +242,13 @@ class _MergeRun {
     final existing = await find(key);
     if (existing == null && isSet && _gonePastHorizon(decoded)) return;
     final row = existing ?? create();
-    final changed = _apply(spec, row, decoded, isNew: existing == null);
+    final changed = _apply(
+      spec,
+      row,
+      decoded,
+      isNew: existing == null,
+      scratch: create(),
+    );
     if (changed.isEmpty) return;
     _requireComplete(spec, row);
     await put(row);
@@ -251,14 +257,20 @@ class _MergeRun {
   }
 
   Future<void> _mergePlayOrder(String key, DecodedEntity decoded) async {
-    final [podcastKey, playlistId, groupId] = _split('playOrder', key, 3);
+    // groupId is null for a playlist's own order.
+    final [podcastKey!, playlistId!, groupId] = _split(
+      'playOrder',
+      key,
+      3,
+      required: 2,
+    );
     final parent =
-        await _isar.podcastUserStates.getByPodcastKey(podcastKey!) ??
+        await _isar.podcastUserStates.getByPodcastKey(podcastKey) ??
         (PodcastUserState()..podcastKey = podcastKey);
     final entry = parent.playOrders.firstWhere(
       (e) => e.playlistId == playlistId && e.groupId == groupId,
       orElse: () => PlayOrderEntry()
-        ..playlistId = playlistId!
+        ..playlistId = playlistId
         ..groupId = groupId,
     );
     final isNew = !parent.playOrders.contains(entry);
@@ -268,6 +280,7 @@ class _MergeRun {
       row,
       decoded,
       isNew: isNew,
+      scratch: (podcastKey: podcastKey, entry: PlayOrderEntry()),
     );
     if (changed.isEmpty) return;
     if (isNew) parent.playOrders = [...parent.playOrders, entry];
@@ -277,14 +290,19 @@ class _MergeRun {
   }
 
   Future<void> _mergeCounter(String key, DecodedEntity decoded) async {
-    final [episodeKey, deviceId] = _split('episodeCounter', key, 2);
-    final parent = await _isar.episodeUserStates.getByEpisodeKey(episodeKey!);
+    final [episodeKey!, deviceId!] = _split(
+      'episodeCounter',
+      key,
+      2,
+      required: 2,
+    );
+    final parent = await _isar.episodeUserStates.getByEpisodeKey(episodeKey);
     // A counter always travels with its episode; without one there is no
     // podcast to attach it to.
     if (parent == null) throw const DamagedSnapshot('episodeCounter parent');
     final counters = parent.counters.firstWhere(
       (c) => c.deviceId == deviceId,
-      orElse: () => EpisodePlayCounters()..deviceId = deviceId!,
+      orElse: () => EpisodePlayCounters()..deviceId = deviceId,
     );
     final isNew = !parent.counters.contains(counters);
     final row = (episodeKey: episodeKey, counters: counters);
@@ -293,6 +311,7 @@ class _MergeRun {
       row,
       decoded,
       isNew: isNew,
+      scratch: (episodeKey: episodeKey, counters: EpisodePlayCounters()),
     );
     if (changed.isEmpty) return;
     if (isNew) parent.counters = [...parent.counters, counters];
@@ -303,11 +322,15 @@ class _MergeRun {
 
   /// Applies the fields of [incoming] that win over [row]'s; returns their
   /// ids.
+  ///
+  /// [scratch] is a throwaway row every incoming value is first checked
+  /// against.
   Set<int> _apply<T>(
     EntitySpec<T> spec,
     T row,
     DecodedEntity incoming, {
     required bool isNew,
+    required T scratch,
   }) {
     // Several fields can share one clock; each decides against the clock
     // as it was before this merge touched it.
@@ -315,6 +338,11 @@ class _MergeRun {
       for (final f in spec.fields)
         if (f.hlc != null) f.id: f.hlc!(row),
     };
+    // Every value must fit its field, whether or not it wins here, so a
+    // damaged snapshot fails the same way on every device.
+    for (final MapEntry(key: id, value: value) in incoming.known.entries) {
+      _set(spec, spec.field(id)!, scratch, value);
+    }
     final changed = <int>{};
     for (final MapEntry(key: id, value: value) in incoming.known.entries) {
       final field = spec.field(id)!;
@@ -351,10 +379,11 @@ class _MergeRun {
 
   /// Newer clock wins. Equal clocks (two devices in one millisecond) pick
   /// the larger encoded value, so every device settles on the same one.
-  static bool _wins(int hlc, Object? value, int localHlc, Object? local) {
+  static bool _wins(int hlc, Object? value, int localHlc, Object? local) =>
+      _newer(hlc, encodeValue(value), localHlc, encodeValue(local));
+
+  static bool _newer(int hlc, List<int> a, int localHlc, List<int> b) {
     if (hlc != localHlc) return localHlc < hlc;
-    final a = encodeValue(value);
-    final b = encodeValue(local);
     for (var i = 0; i < a.length && i < b.length; i++) {
       if (a[i] != b[i]) return b[i] < a[i];
     }
@@ -405,13 +434,29 @@ class _MergeRun {
     List<ProtoField> unknown,
   ) async {
     for (final field in unknown) {
-      await keepUnknownFields(
-        _isar,
-        entity: entity,
-        key: key,
-        hlc: _opaqueHlc(field),
-        fields: [field],
+      final hlc = Hlc.unpack(_opaqueHlc(field)).clampedTo(now).packed;
+      if (maxHlc < hlc) maxHlc = hlc;
+      // The value bytes stay as received; only the stored clock is clamped.
+      final payload = field.encode();
+      final existing = await _isar.opaqueFields.getByEntityKeyFieldId(
+        entity,
+        key,
+        field.fieldNumber,
       );
+      if (existing != null &&
+          !_newer(hlc, payload, existing.hlc, existing.payload)) {
+        continue;
+      }
+      await _isar.opaqueFields.put(
+        (existing ?? OpaqueField())
+          ..entity = entity
+          ..key = key
+          ..fieldId = field.fieldNumber
+          ..hlc = hlc
+          ..payload = payload,
+      );
+      _txn.addOpaqueOp(entity, key, field.fieldNumber, hlc, payload);
+      changedRows++;
     }
   }
 
@@ -425,12 +470,23 @@ class _MergeRun {
     }
   }
 
-  static List<String?> _split(String entity, String key, int count) {
+  /// The parts of [key]; the first [required] of them must not be null.
+  static List<String?> _split(
+    String entity,
+    String key,
+    int count, {
+    required int required,
+  }) {
+    final List<String?> parts;
     try {
-      return splitCompositeKey(key, count);
+      parts = splitCompositeKey(key, count);
     } on FormatException {
       throw DamagedSnapshot('$entity key');
     }
+    if (parts.take(required).contains(null)) {
+      throw DamagedSnapshot('$entity key');
+    }
+    return parts;
   }
 
   static String? _string(Object? value, String entity) {

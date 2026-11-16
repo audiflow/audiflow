@@ -190,7 +190,16 @@ void main() {
           splitCompositeKey(compositeKey(parts), parts.length),
         ).deepEquals(parts);
       }
-      for (final bad in ['', 'pk', '2:pk', '2:pk|', '9:a|1:b', '1:a1:b']) {
+      for (final bad in [
+        '',
+        'pk',
+        '2:pk',
+        '2:pk|',
+        '9:a|1:b',
+        '1:a1:b',
+        '-1:a|1:b',
+        '+1:a|1:b',
+      ]) {
         check(() => splitCompositeKey(bad, 2)).throws<FormatException>();
       }
     });

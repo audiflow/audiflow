@@ -114,6 +114,10 @@ const currentSnapshotFormatVersion = 1;
 // A header is small; a first line longer than this is not one.
 const _maxHeaderBytes = 64 * 1024;
 
+/// Most bytes a body may expand to. Ten years of use is 1 to 2 MB; the cap
+/// stops a small crafted file from expanding until memory runs out.
+const maxSnapshotBodyBytes = 256 * 1024 * 1024;
+
 /// A read snapshot file.
 class SnapshotFile {
   SnapshotFile(this.header, this.body);
@@ -154,14 +158,19 @@ Uint8List encodeSnapshotFile({
 SnapshotHeader readSnapshotHeader(Uint8List bytes) => _split(bytes).header;
 
 /// Reads and checks all of [bytes]. Throws [SnapshotReadFailure].
-SnapshotFile readSnapshotFile(Uint8List bytes) {
+///
+/// A body that expands past [maxBodyBytes] counts as damaged.
+SnapshotFile readSnapshotFile(
+  Uint8List bytes, {
+  int maxBodyBytes = maxSnapshotBodyBytes,
+}) {
   final (:header, :payload) = _split(bytes);
   if (sha256.convert(payload).toString() != header.payloadSha256) {
     throw const DamagedSnapshot('payload checksum');
   }
-  final List<int> raw;
+  final Uint8List raw;
   try {
-    raw = gzip.decode(payload);
+    raw = _gunzip(payload, maxBodyBytes);
   } on FormatException {
     throw const DamagedSnapshot('payload compression');
   } on FileSystemException {
@@ -169,10 +178,41 @@ SnapshotFile readSnapshotFile(Uint8List bytes) {
     throw const DamagedSnapshot('payload compression');
   }
   try {
-    return SnapshotFile(header, SnapshotBody.decode(Uint8List.fromList(raw)));
+    return SnapshotFile(header, SnapshotBody.decode(raw));
   } on FormatException {
     throw const DamagedSnapshot('payload contents');
   }
+}
+
+/// Decompresses in chunks, stopping as soon as the output passes [limit].
+Uint8List _gunzip(Uint8List payload, int limit) {
+  final out = _LimitedSink(limit);
+  final input = gzip.decoder.startChunkedConversion(out);
+  const chunk = 64 * 1024;
+  for (var start = 0; start < payload.length; start += chunk) {
+    final end = payload.length < start + chunk ? payload.length : start + chunk;
+    input.add(Uint8List.sublistView(payload, start, end));
+  }
+  input.close();
+  return out.bytes.takeBytes();
+}
+
+class _LimitedSink implements Sink<List<int>> {
+  _LimitedSink(this._limit);
+
+  final int _limit;
+  final bytes = BytesBuilder(copy: false);
+
+  @override
+  void add(List<int> data) {
+    if (_limit < bytes.length + data.length) {
+      throw const DamagedSnapshot('payload size');
+    }
+    bytes.add(data);
+  }
+
+  @override
+  void close() {}
 }
 
 ({SnapshotHeader header, Uint8List payload}) _split(Uint8List bytes) {

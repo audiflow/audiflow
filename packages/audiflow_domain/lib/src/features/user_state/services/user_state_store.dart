@@ -47,6 +47,25 @@ class UserStateTxn {
   /// they arrived with, so the change reaches other devices.
   void touchMerged<T>(EntitySpec<T> entity, T row, Set<int> fieldIds) =>
       _touched.add(_Touched<T>(entity, row, only: fieldIds));
+
+  final List<OutboxOp> _opaqueOps = [];
+
+  /// Reports that a merge stored a field this version does not know, as
+  /// [payload] (the field in wire form), so it reaches other devices too.
+  void addOpaqueOp(
+    String entity,
+    String key,
+    int fieldId,
+    int hlc,
+    List<int> payload,
+  ) => _opaqueOps.add(
+    OutboxOp()
+      ..entity = entity
+      ..key = key
+      ..fieldId = fieldId
+      ..hlc = hlc
+      ..payload = payload,
+  );
 }
 
 class _Touched<T> {
@@ -139,19 +158,21 @@ class UserStateStore {
   }
 
   Future<void> _writeOps(UserStateTxn txn) async {
-    if (txn._touched.isEmpty) return;
+    if (txn._touched.isEmpty && txn._opaqueOps.isEmpty) return;
     final stamp = txn.stamp.packed;
-    for (final touched in txn._touched) {
-      for (final op in touched.ops(stamp, _newOpId)) {
-        // Coalesce: the newer change of a field replaces its pending op.
-        final pending = await _isar.outboxOps.getByEntityKeyFieldId(
-          op.entity,
-          op.key,
-          op.fieldId,
-        );
-        if (pending != null) op.id = pending.id;
-        await _isar.outboxOps.put(op);
-      }
+    final ops = [
+      for (final touched in txn._touched) ...touched.ops(stamp, _newOpId),
+      for (final op in txn._opaqueOps) op..opId = _newOpId(),
+    ];
+    for (final op in ops) {
+      // Coalesce: the newer change of a field replaces its pending op.
+      final pending = await _isar.outboxOps.getByEntityKeyFieldId(
+        op.entity,
+        op.key,
+        op.fieldId,
+      );
+      if (pending != null) op.id = pending.id;
+      await _isar.outboxOps.put(op);
     }
     final excess = await _isar.outboxOps.count() - _outboxCap;
     if (excess <= 0) return;
