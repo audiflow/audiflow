@@ -114,6 +114,8 @@ As built for M3a: `EpisodeUserState` (`features/user_state/models/episode_user_s
 
 As built for M3b: `PodcastUserState` (`features/user_state/models/podcast_user_state.dart`) replaces `PodcastViewPreference` (including the podcast play order), `PodcastAudioPreference`, `SmartPlaylistUserPreference`, `SmartPlaylistGroupUserPreference`, and `PodcastParentalFlags`, behind their datasources. Each old row maps to a section with a `has*` flag and timestamp, so a deleted row is a stamped removal rather than a missing row; playlist and group play orders are entries whose cleared order stays as a null. `PodcastUserStateAccess` holds the mapping; `PodcastUserStateBackfill` is migration step 2. `ParentalControlSettings` (PIN, lockout) stays device-scoped.
 
+As built for M3c: `PodcastUserState` also holds the user fields of `Subscription`: subscribed (with `subscribedAt`), the feed URL and iTunes id another device needs to fetch the feed, auto-download, and the keep count. `SubscriptionLocalDatasource` records them on every write of the row, stamping only fields that changed, so device-scoped writes (last access, HTTP validators, auto-download activity) leave the state alone. Unlike the other sources, the `Subscription` row keeps these fields: the app queries and sorts on them, so the row stays the local copy and M6 writes merged remote state back into it. Unsubscribing and deleting the row are stamped `subscribed = false`. Migration step 3 reruns the section-wise copy for this section.
+
 No op log is kept forever anywhere: a device holds the current state and the unsent ops. `StationEpisode` stays derived. `DownloadTask` stays device-scoped, switching to episodeKey and a path relative to the downloads directory.
 
 ## Merge rules

@@ -12,13 +12,13 @@ import 'user_state_store.dart';
 /// they get one (`assignStableKeys`). Sections the new row already holds
 /// are left alone, so the step can be interrupted and run again.
 class PodcastUserStateBackfill implements DataMigrationStep {
-  const PodcastUserStateBackfill({this.batchSize = 100});
+  const PodcastUserStateBackfill({this.version = 2, this.batchSize = 100});
 
   /// Podcasts copied per transaction.
   final int batchSize;
 
   @override
-  int get version => 2;
+  final int version;
 
   @override
   String get name => 'podcast user state';

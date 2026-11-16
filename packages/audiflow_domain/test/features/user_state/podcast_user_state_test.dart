@@ -6,6 +6,7 @@ import 'package:audiflow_domain/src/features/parental_control/datasources/local/
 import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart' hide expect;
 import 'package:isar_community/isar.dart';
+import 'package:logger/logger.dart';
 
 import '../../helpers/isar_test_helper.dart';
 
@@ -214,6 +215,209 @@ void main() {
     });
   });
 
+  group('subscription', () {
+    test('user field writes are recorded on the keyed state', () async {
+      final sub = await putPodcast();
+      final ds = SubscriptionLocalDatasource(isar);
+
+      await ds.updateAutoDownload(sub.id, autoDownload: true);
+      await ds.updateAutoDownloadKeepCount(sub.id, 3);
+
+      final s = await state();
+      check(s!.subscribed).isTrue();
+      check(s.subscribedAt!.isAtSameMomentAs(sub.subscribedAt)).isTrue();
+      check(s.feedUrl).equals(sub.feedUrl);
+      check(s.itunesId).equals(sub.itunesId);
+      check(s.autoDownload).isTrue();
+      check(s.autoDownloadKeepCount).equals(3);
+      check(s.autoDownloadHlc).not((it) => it.equals(0));
+    });
+
+    test('device-scoped writes leave the state alone', () async {
+      final sub = await putPodcast();
+      final ds = SubscriptionLocalDatasource(isar);
+      await ds.updateAutoDownload(sub.id, autoDownload: true);
+      final before = (await state())!;
+
+      await ds.updateLastAccessed(sub.id, DateTime(2026, 6));
+      await ds.updateHttpCacheHeaders(sub.id, etag: 'e');
+      await ds.recordAutoDownloads(
+        sub.id,
+        2,
+        pauseThreshold: 10,
+        at: DateTime(2026, 6),
+      );
+
+      final after = (await state())!;
+      check(after.subscribedHlc).equals(before.subscribedHlc);
+      check(after.autoDownloadHlc).equals(before.autoDownloadHlc);
+      check(after.feedUrlHlc).equals(before.feedUrlHlc);
+    });
+
+    test('unsubscribe, resubscribe, and delete are stamped', () async {
+      final sub = await putPodcast();
+      final ds = SubscriptionLocalDatasource(isar);
+      await ds.updateAutoDownload(sub.id, autoDownload: false);
+      final first = (await state())!.subscribedHlc;
+
+      await ds.demoteToCached(sub.itunesId);
+      final demoted = (await state())!;
+      check(demoted.subscribed).isFalse();
+      check(
+        Hlc.unpack(first).compareTo(Hlc.unpack(demoted.subscribedHlc)),
+      ).equals(-1);
+
+      await ds.promoteToSubscribed(sub.itunesId);
+      check((await state())!.subscribed).isTrue();
+
+      await ds.deleteById(sub.id);
+      check((await state())!.subscribed).isFalse();
+    });
+
+    test('a podcast without a key gets no state until keyed', () async {
+      final sub = await putPodcast(podcastKey: null);
+      final ds = SubscriptionLocalDatasource(isar);
+      await ds.updateAutoDownload(sub.id, autoDownload: true);
+      check(await isar.podcastUserStates.count()).equals(0);
+
+      await ds.assignStableKeys(sub.id);
+
+      final s = await state(podcastKeyFor(feedUrl: sub.feedUrl));
+      check(s!.subscribed).isTrue();
+      check(s.autoDownload).isTrue();
+    });
+
+    test('a recreated row takes up the choices its key kept', () async {
+      final sub = await putPodcast(podcastKey: null);
+      final ds = SubscriptionLocalDatasource(isar);
+      await ds.assignStableKeys(sub.id);
+      await ds.updateAutoDownload(sub.id, autoDownload: true);
+      await ds.updateAutoDownloadKeepCount(sub.id, 4);
+      final kept = (await state(podcastKeyFor(feedUrl: sub.feedUrl)))!;
+      // Unsubscribed and evicted: the row is gone, the state stays.
+      await ds.deleteById(sub.id);
+
+      final again = await ds.getOrCreateCached(
+        itunesId: sub.itunesId,
+        feedUrl: sub.feedUrl,
+        title: 'Show',
+        artistName: 'Artist',
+      );
+      await ds.assignStableKeys(again.id);
+
+      final row = (await ds.getById(again.id))!;
+      check(row.autoDownload).isTrue();
+      check(row.autoDownloadKeepCount).equals(4);
+      final s = (await state(podcastKeyFor(feedUrl: sub.feedUrl)))!;
+      check(s.autoDownload).isTrue();
+      check(s.autoDownloadKeepCount).equals(4);
+      check(s.autoDownloadHlc).equals(kept.autoDownloadHlc);
+      check(s.autoDownloadKeepCountHlc).equals(kept.autoDownloadKeepCountHlc);
+    });
+
+    test(
+      'upgrading from step 2 adds the subscription and keeps the rest',
+      () async {
+        final sub = await putPodcast();
+        // A state row as step 2 left it, before the subscription section.
+        await isar.writeTxn(() async {
+          await isar.syncMetas.put(
+            SyncMeta()
+              ..historyId = 'h'
+              ..schemaVersion = 2,
+          );
+          await isar.podcastUserStates.put(
+            PodcastUserState()
+              ..podcastKey = 'pk'
+              ..hasView = true
+              ..hasViewHlc = 7
+              ..viewMode = 'seasons'
+              ..viewModeHlc = 7,
+          );
+        });
+
+        await DataMigrationRunner(isar, steps: dataMigrationSteps).run();
+
+        final s = (await state())!;
+        check(s.subscribed).isTrue();
+        check(s.feedUrl).equals(sub.feedUrl);
+        check(s.subscribedHlc).not((it) => it.equals(0));
+        check(s.viewMode).equals('seasons');
+        check(s.viewModeHlc).equals(7);
+        check(s.hasViewHlc).equals(7);
+        check(
+          (await isar.syncMetas.get(SyncMeta.singletonId))!.schemaVersion,
+        ).equals(3);
+      },
+    );
+
+    test('a choice made before keying wins over the kept one', () async {
+      final sub = await putPodcast(podcastKey: null);
+      final ds = SubscriptionLocalDatasource(isar);
+      await ds.assignStableKeys(sub.id);
+      await ds.updateAutoDownloadKeepCount(sub.id, 4);
+      await ds.deleteById(sub.id);
+      final again = await ds.getOrCreateCached(
+        itunesId: sub.itunesId,
+        feedUrl: sub.feedUrl,
+        title: 'Show',
+        artistName: 'Artist',
+      );
+      // Changed before the next feed parse keys the row.
+      await ds.updateAutoDownloadKeepCount(again.id, 2);
+
+      await ds.assignStableKeys(again.id);
+
+      check((await ds.getById(again.id))!.autoDownloadKeepCount).equals(2);
+      final s = (await state(podcastKeyFor(feedUrl: sub.feedUrl)))!;
+      check(s.autoDownloadKeepCount).equals(2);
+    });
+
+    test('a difference only in feed credentials is still logged', () async {
+      final sub = await putPodcast();
+      await SubscriptionLocalDatasource(
+        isar,
+      ).updateAutoDownload(sub.id, autoDownload: false);
+      await isar.writeTxn(
+        () => isar.subscriptions.put(sub..feedUrl = '${sub.feedUrl}?token=new'),
+      );
+      final output = _CapturingOutput();
+      final access = PodcastUserStateAccess(
+        isar,
+        logger: Logger(output: output, printer: SimplePrinter()),
+      );
+
+      await access.compareSubscription(sub);
+
+      final lines = output.events.expand((e) => e.lines).join('\n');
+      check(lines).contains('subscription differs');
+      check(lines).not((it) => it.contains('token=new'));
+    });
+
+    test('compare logs keep feed credentials out', () {
+      check(
+        redactFeedUrl('https://user:pw@example.com:8443/feed.xml?token=t'),
+      ).equals('https://***@example.com:8443/feed.xml?***');
+      check(
+        redactFeedUrl('https://example.com/feed'),
+      ).equals('https://example.com/feed');
+    });
+
+    test('the backfill copies the subscription of keyed podcasts', () async {
+      await putPodcast();
+      final sub = (await isar.subscriptions.where().findFirst())!;
+      await isar.writeTxn(
+        () => isar.subscriptions.put(sub..autoDownloadKeepCount = 5),
+      );
+
+      await const PodcastUserStateBackfill(version: 3).run(isar);
+
+      final s = await state();
+      check(s!.subscribed).isTrue();
+      check(s.autoDownloadKeepCount).equals(5);
+    });
+  });
+
   group('play order per playlist and group', () {
     test('set, read, and clear keep a stamped entry', () async {
       final sub = await putPodcast();
@@ -398,4 +602,11 @@ void main() {
       check(s.playOrders).length.equals(2);
     });
   });
+}
+
+class _CapturingOutput extends LogOutput {
+  final List<OutputEvent> events = [];
+
+  @override
+  void output(OutputEvent event) => events.add(event);
 }

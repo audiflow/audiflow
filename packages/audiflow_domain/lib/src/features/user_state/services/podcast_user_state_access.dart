@@ -45,6 +45,71 @@ class PodcastUserStateAccess {
         (PodcastUserState()..podcastKey = key);
   }
 
+  // -- Subscription --
+
+  /// Records the user fields of [sub] on its state row, after [sub] was
+  /// written. Does nothing for a podcast without a key. Must run inside
+  /// [UserStateStore.write].
+  Future<void> saveSubscription(Subscription sub, UserStateTxn txn) async {
+    final key = sub.podcastKey;
+    if (key == null) return;
+    final state =
+        await _isar.podcastUserStates.getByPodcastKey(key) ??
+        (PodcastUserState()..podcastKey = key);
+    if (!applySubscription(state, sub, txn)) return;
+    await _isar.podcastUserStates.put(state);
+  }
+
+  /// Fills [sub]'s auto-download choices from the subscription section its
+  /// key already has, so a catalog row recreated after an eviction, or keyed
+  /// for the first time on this device, takes them up instead of stamping
+  /// its defaults over them. Only fields still at their defaults are
+  /// filled: a choice made on the row before it was keyed is newer. Call
+  /// before [saveSubscription].
+  Future<void> restoreSubscriptionChoices(Subscription sub) async {
+    final key = sub.podcastKey;
+    if (key == null) return;
+    final state = await _isar.podcastUserStates.getByPodcastKey(key);
+    if (state == null || state.subscribedHlc == 0) return;
+    if (!sub.autoDownload) sub.autoDownload = state.autoDownload;
+    sub.autoDownloadKeepCount ??= state.autoDownloadKeepCount;
+  }
+
+  /// Records that [sub] is gone from this device: it no longer subscribes.
+  /// Must run inside [UserStateStore.write].
+  Future<void> saveSubscriptionRemoved(
+    Subscription sub,
+    UserStateTxn txn,
+  ) async {
+    final key = sub.podcastKey;
+    if (key == null) return;
+    final state = await _isar.podcastUserStates.getByPodcastKey(key);
+    if (state == null || !state.subscribed) return;
+    state
+      ..subscribed = false
+      ..subscribedHlc = txn.stamp.packed;
+    await _isar.podcastUserStates.put(state);
+  }
+
+  /// Logs, in debug builds, when [sub]'s user fields differ from its state
+  /// row.
+  Future<void> compareSubscription(Subscription sub) async {
+    if (!kDebugMode) return;
+    final key = sub.podcastKey;
+    if (key == null) return;
+    final state = await _isar.podcastUserStates.getByPodcastKey(key);
+    if (state == null || state.subscribedHlc == 0) return;
+    // Compared in full; logged without the feed URL's credentials.
+    if (describeSubscription(sub) == describeSubscriptionState(state)) return;
+    // The redacted strings can be equal, so they are not compared again.
+    _report(
+      'subscription',
+      sub.id,
+      describeSubscription(sub, redact: true),
+      describeSubscriptionState(state, redact: true),
+    );
+  }
+
   // -- View --
 
   /// The view preference of [podcastId], or null when none is set.
@@ -277,6 +342,9 @@ class PodcastUserStateAccess {
     final state = existing ?? (PodcastUserState()..podcastKey = key);
     var changed = false;
 
+    if (state.subscribedHlc == 0) {
+      changed = applySubscription(state, sub, txn) || changed;
+    }
     if (state.hasViewHlc == 0) {
       final view = await _isar.podcastViewPreferences.getByPodcastId(sub.id);
       if (view != null) {
@@ -327,7 +395,12 @@ class PodcastUserStateAccess {
   }
 
   void _compare(String section, int podcastId, String legacy, String current) {
-    if (!kDebugMode || legacy == current) return;
+    if (legacy == current) return;
+    _report(section, podcastId, legacy, current);
+  }
+
+  void _report(String section, int podcastId, String legacy, String current) {
+    if (!kDebugMode) return;
     _logger.w(
       'PodcastUserState $section differs for podcast $podcastId: '
       'old $legacy, new $current',
@@ -346,6 +419,80 @@ PlayOrderEntry? _entryOf(
     }
   }
   return null;
+}
+
+/// Records the user fields of [sub] on [state], stamping what changed.
+/// Returns whether anything changed.
+bool applySubscription(
+  PodcastUserState state,
+  Subscription sub,
+  UserStateTxn txn,
+) {
+  final stamp = txn.stamp.packed;
+  var changed = false;
+  final subscribed = !sub.isCached;
+  if (state.subscribed != subscribed ||
+      !_sameMoment(state.subscribedAt, sub.subscribedAt) ||
+      state.subscribedHlc == 0) {
+    state
+      ..subscribed = subscribed
+      ..subscribedAt = sub.subscribedAt
+      ..subscribedHlc = stamp;
+    changed = true;
+  }
+  if (state.feedUrl != sub.feedUrl) {
+    state
+      ..feedUrl = sub.feedUrl
+      ..feedUrlHlc = stamp;
+    changed = true;
+  }
+  if (state.itunesId != sub.itunesId) {
+    state
+      ..itunesId = sub.itunesId
+      ..itunesIdHlc = stamp;
+    changed = true;
+  }
+  if (state.autoDownload != sub.autoDownload) {
+    state
+      ..autoDownload = sub.autoDownload
+      ..autoDownloadHlc = stamp;
+    changed = true;
+  }
+  if (state.autoDownloadKeepCount != sub.autoDownloadKeepCount) {
+    state
+      ..autoDownloadKeepCount = sub.autoDownloadKeepCount
+      ..autoDownloadKeepCountHlc = stamp;
+    changed = true;
+  }
+  return changed;
+}
+
+// DateTime equality also compares isUtc, which a round trip can change.
+bool _sameMoment(DateTime? a, DateTime? b) =>
+    a == null ? b == null : (b != null && a.isAtSameMomentAs(b));
+
+/// The user fields of [s] as one string. With [redact], the feed URL loses
+/// its user info and query, where a private feed keeps its credentials.
+String describeSubscription(Subscription s, {bool redact = false}) =>
+    '${!s.isCached}|${s.subscribedAt.toUtc()}|'
+    '${redact ? redactFeedUrl(s.feedUrl) : s.feedUrl}|${s.itunesId}|'
+    '${s.autoDownload}|${s.autoDownloadKeepCount}';
+
+/// [describeSubscription] for a state row.
+String describeSubscriptionState(PodcastUserState s, {bool redact = false}) =>
+    '${s.subscribed}|${s.subscribedAt?.toUtc()}|'
+    '${redact ? redactFeedUrl(s.feedUrl) : s.feedUrl}|${s.itunesId}|'
+    '${s.autoDownload}|${s.autoDownloadKeepCount}';
+
+/// [url] without user info and query, for logs.
+String? redactFeedUrl(String? url) {
+  if (url == null) return null;
+  final uri = Uri.tryParse(url);
+  if (uri == null) return '<unparsable>';
+  final userInfo = uri.userInfo.isEmpty ? '' : '***@';
+  final query = uri.hasQuery ? '?***' : '';
+  final port = uri.hasPort ? ':${uri.port}' : '';
+  return '${uri.scheme}://$userInfo${uri.host}$port${uri.path}$query';
 }
 
 /// The view preference [state] describes, or null when it has none.

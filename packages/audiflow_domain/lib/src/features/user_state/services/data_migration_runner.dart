@@ -27,6 +27,9 @@ abstract interface class DataMigrationStep {
 const List<DataMigrationStep> dataMigrationSteps = [
   EpisodeUserStateBackfill(),
   PodcastUserStateBackfill(),
+  // Runs the copy again for the subscription section added after step 2.
+  // Sections already copied are skipped.
+  PodcastUserStateBackfill(version: 3),
 ];
 
 /// Runs the pending [DataMigrationStep]s in order, before providers start.
