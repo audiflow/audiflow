@@ -88,6 +88,13 @@ void main() {
     check(
       (await row(SleepTimerPreferencesDatasource.lastMinutesKey))!.value,
     ).equals('45');
+    check(
+      (await row(SleepTimerPreferencesDatasource.lastEpisodesKey))!.value,
+    ).equals('2');
+
+    // Reads come from Isar, not the SharedPreferences copy.
+    await prefs.setInt(SleepTimerPreferencesDatasource.lastMinutesKey, 5);
+    await prefs.setInt(SleepTimerPreferencesDatasource.lastEpisodesKey, 9);
     check(sleep.getLastMinutes()).equals(45);
     check(sleep.getLastEpisodes()).equals(2);
   });
