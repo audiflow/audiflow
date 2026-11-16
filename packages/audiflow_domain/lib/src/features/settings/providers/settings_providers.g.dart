@@ -8,6 +8,59 @@ part of 'settings_providers.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// The database holding the synced settings. The app overrides it with
+/// the opened database; left null (as in tests that only stub
+/// SharedPreferences), every setting stays in SharedPreferences.
+
+@ProviderFor(syncedSettingsIsar)
+final syncedSettingsIsarProvider = SyncedSettingsIsarProvider._();
+
+/// The database holding the synced settings. The app overrides it with
+/// the opened database; left null (as in tests that only stub
+/// SharedPreferences), every setting stays in SharedPreferences.
+
+final class SyncedSettingsIsarProvider
+    extends $FunctionalProvider<Isar?, Isar?, Isar?>
+    with $Provider<Isar?> {
+  /// The database holding the synced settings. The app overrides it with
+  /// the opened database; left null (as in tests that only stub
+  /// SharedPreferences), every setting stays in SharedPreferences.
+  SyncedSettingsIsarProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'syncedSettingsIsarProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$syncedSettingsIsarHash();
+
+  @$internal
+  @override
+  $ProviderElement<Isar?> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  Isar? create(Ref ref) {
+    return syncedSettingsIsar(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(Isar? value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<Isar?>(value),
+    );
+  }
+}
+
+String _$syncedSettingsIsarHash() =>
+    r'e43b16f9766e6010c775a1b623e33a871266c7db';
+
 /// Provides a singleton [AppSettingsRepository]: synced settings in Isar,
 /// device-scoped ones in SharedPreferences.
 

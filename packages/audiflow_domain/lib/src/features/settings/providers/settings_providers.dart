@@ -1,4 +1,3 @@
-import 'package:riverpod/riverpod.dart';
 import 'package:isar_community/isar.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -12,7 +11,8 @@ part 'settings_providers.g.dart';
 /// The database holding the synced settings. The app overrides it with
 /// the opened database; left null (as in tests that only stub
 /// SharedPreferences), every setting stays in SharedPreferences.
-final syncedSettingsIsarProvider = Provider<Isar?>((ref) => null);
+@Riverpod(keepAlive: true)
+Isar? syncedSettingsIsar(Ref ref) => null;
 
 /// Provides a singleton [AppSettingsRepository]: synced settings in Isar,
 /// device-scoped ones in SharedPreferences.

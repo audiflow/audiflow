@@ -136,4 +136,19 @@ void main() {
     await repository.setAutoDownloadKeepCount(5);
     check(repository.getAutoDownloadKeepCount()).equals(5);
   });
+
+  test('an int setting stored as a whole double reads as an int', () async {
+    await start();
+    // JSON from another platform may write 5 as 5.0.
+    await isar.writeTxn(
+      () => isar.syncedSettings.put(
+        SyncedSetting()
+          ..key = SettingsKeys.autoDownloadKeepCount
+          ..value = '5.0'
+          ..hlc = 1,
+      ),
+    );
+
+    check(repository.getAutoDownloadKeepCount()).equals(5);
+  });
 }
