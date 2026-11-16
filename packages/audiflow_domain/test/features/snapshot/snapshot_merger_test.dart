@@ -502,6 +502,18 @@ void main() {
       check(op.payload).deepEquals(pending.payload);
     });
 
+    test('that are not Value messages still export', () async {
+      final odd = (ProtoWriter()..writeBytes(99, [0xff])).takeBytes();
+      await merger().merge(
+        fileOf({
+          'setting': [SnapshotRow('k', odd)],
+        }),
+      );
+
+      final exported = await SnapshotExporter(isar).export();
+      check(exported.body.sections['setting']!.single.fields).deepEquals(odd);
+    });
+
     test('land in the outbox', () async {
       await merger().merge(withUnknown('a', hlc(70)));
 

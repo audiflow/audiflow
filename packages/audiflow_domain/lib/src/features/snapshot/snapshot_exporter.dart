@@ -134,17 +134,23 @@ class SnapshotExporter {
   /// [field]'s payload with its clock appended to the Value message, so a
   /// restore keeps the newer of two copies. Appending merges into the
   /// message as protobuf defines; a payload that is not a Value goes as is.
+  ///
+  /// Never throws: unknown data a merge accepted must not block a backup.
   static List<int> _withHlc(OpaqueField field) {
-    final parsed = readMessage(Uint8List.fromList(field.payload));
-    if (parsed.length != 1 ||
-        parsed.single.wireType != WireType.lengthDelimited) {
+    try {
+      final parsed = readMessage(Uint8List.fromList(field.payload));
+      if (parsed.length != 1 ||
+          parsed.single.wireType != WireType.lengthDelimited) {
+        return field.payload;
+      }
+      final value = ProtoWriter()
+        ..writeRaw(withoutHlc(parsed.single.raw))
+        ..writeRaw(encodeValue(null, hlc: field.hlc));
+      return (ProtoWriter()..writeBytes(field.fieldId, value.takeBytes()))
+          .takeBytes();
+    } on FormatException {
       return field.payload;
     }
-    final value = ProtoWriter()
-      ..writeRaw(withoutHlc(parsed.single.raw))
-      ..writeRaw(encodeValue(null, hlc: field.hlc));
-    return (ProtoWriter()..writeBytes(field.fieldId, value.takeBytes()))
-        .takeBytes();
   }
 }
 
