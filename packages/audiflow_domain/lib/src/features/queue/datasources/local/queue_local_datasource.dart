@@ -60,18 +60,26 @@ class QueueLocalDatasource {
   }
 
   /// Gets all queue items ordered by position.
-  Future<List<QueueItem>> getAll() async {
-    final items = await _isar.queueItems.where().sortByPosition().findAll();
-    await _entries.compare(items);
-    return items;
+  ///
+  /// Ties break on [QueueItem.entryId], as entries break them (see
+  /// `QueueEntry.rank`), so both describe the same order.
+  Future<List<QueueItem>> getAll() {
+    // One read transaction, so a write between the two reads cannot show
+    // up as a mismatch.
+    return _isar.txn(() async {
+      final items = await _ordered().findAll();
+      await _entries.compare(items);
+      return items;
+    });
   }
 
-  /// Watches all queue items ordered by position.
+  /// Watches all queue items ordered by position, ties as in [getAll].
   Stream<List<QueueItem>> watchAll() {
-    return _isar.queueItems.where().sortByPosition().watch(
-      fireImmediately: true,
-    );
+    return _ordered().watch(fireImmediately: true);
   }
+
+  QueryBuilder<QueueItem, QueueItem, QAfterSortBy> _ordered() =>
+      _isar.queueItems.where().sortByPosition().thenByEntryId();
 
   /// Gets the maximum position value in the queue.
   ///

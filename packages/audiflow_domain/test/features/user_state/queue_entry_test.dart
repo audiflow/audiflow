@@ -113,6 +113,34 @@ void main() {
     check(after.first.rank).equals(rankForPosition(95));
   });
 
+  test('tied positions read in the order the entries describe', () async {
+    final sub = await putPodcast(podcastKey: null);
+    final a = await putEpisode(sub, 'a', keyed: false);
+    final b = await putEpisode(sub, 'b', keyed: false);
+    final c = await putEpisode(sub, 'c', keyed: false);
+    // Inserted first but keyed last, so its entry id is the newest.
+    await queue.insert(item(a, 5));
+    await isar.writeTxn(() async {
+      await isar.episodes.put(b..episodeKey = 'ek-b');
+      await isar.episodes.put(c..episodeKey = 'ek-c');
+    });
+    await queue.insert(item(b, 5));
+    await queue.insert(item(c, 5));
+
+    await SubscriptionLocalDatasource(isar).assignStableKeys(sub.id);
+
+    final items = await queue.getAll();
+    final entries = await live();
+    check(entries).length.equals(3);
+    check(
+      items.map((i) => i.entryId),
+    ).deepEquals(entries.map((e) => e.entryId));
+    final watched = await queue.watchAll().first;
+    check(
+      watched.map((i) => i.entryId),
+    ).deepEquals(entries.map((e) => e.entryId));
+  });
+
   test('deletes leave stamped tombstones', () async {
     final sub = await putPodcast();
     final a = await putEpisode(sub, 'a');
