@@ -106,15 +106,24 @@ void main() {
     );
   }
 
+  // Tall enough that the lazy list builds every section down to the
+  // danger zone.
+  Future<void> pumpScreen(WidgetTester tester, Widget widget) async {
+    tester.view.physicalSize = const Size(800, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(widget);
+  }
+
   group('StorageSettingsScreen', () {
     testWidgets('renders without errors', (tester) async {
-      await tester.pumpWidget(buildTestWidget());
+      await pumpScreen(tester, buildTestWidget());
 
       expect(find.byType(StorageSettingsScreen), findsOneWidget);
     });
 
     testWidgets('displays AppBar with Storage & Data title', (tester) async {
-      await tester.pumpWidget(buildTestWidget());
+      await pumpScreen(tester, buildTestWidget());
 
       final appBar = tester.widget<AppBar>(find.byType(AppBar));
       final title = appBar.title! as Text;
@@ -122,7 +131,7 @@ void main() {
     });
 
     testWidgets('shows Image Cache tile', (tester) async {
-      await tester.pumpWidget(buildTestWidget());
+      await pumpScreen(tester, buildTestWidget());
 
       expect(find.text('Image Cache'), findsOneWidget);
       expect(
@@ -134,7 +143,7 @@ void main() {
     });
 
     testWidgets('shows Podcast Cache tile', (tester) async {
-      await tester.pumpWidget(buildTestWidget());
+      await pumpScreen(tester, buildTestWidget());
 
       expect(find.text('Podcast Cache'), findsOneWidget);
       expect(
@@ -144,18 +153,19 @@ void main() {
     });
 
     testWidgets('shows Search History tile', (tester) async {
-      await tester.pumpWidget(buildTestWidget());
+      await pumpScreen(tester, buildTestWidget());
 
       expect(find.text('Search History'), findsOneWidget);
       expect(find.text('Clear search suggestions'), findsOneWidget);
     });
 
     testWidgets('shows OPML export and import tiles', (tester) async {
-      await tester.pumpWidget(buildTestWidget());
+      await pumpScreen(tester, buildTestWidget());
 
       expect(find.text('Export Subscriptions'), findsOneWidget);
       expect(find.text('Save subscriptions as OPML file'), findsOneWidget);
-      expect(find.text('Export'), findsOneWidget);
+      // One for OPML, one for the backup.
+      expect(find.text('Export'), findsNWidgets(2));
 
       expect(find.text('Import Subscriptions'), findsOneWidget);
       expect(find.text('Import from OPML file'), findsOneWidget);
@@ -163,7 +173,7 @@ void main() {
     });
 
     testWidgets('shows Danger Zone section', (tester) async {
-      await tester.pumpWidget(buildTestWidget());
+      await pumpScreen(tester, buildTestWidget());
 
       expect(find.text('Danger Zone'), findsOneWidget);
       expect(find.text('Reset All Data'), findsOneWidget);
@@ -176,7 +186,7 @@ void main() {
     testWidgets('tapping image cache Clear shows confirmation dialog', (
       tester,
     ) async {
-      await tester.pumpWidget(buildTestWidget());
+      await pumpScreen(tester, buildTestWidget());
 
       // Tap the first "Clear" button (Image Cache)
       await tester.tap(find.text('Clear').first);
@@ -188,16 +198,33 @@ void main() {
     });
 
     testWidgets('Export button is present and tappable', (tester) async {
-      await tester.pumpWidget(buildTestWidget());
+      await pumpScreen(tester, buildTestWidget());
 
-      final exportButton = find.widgetWithText(OutlinedButton, 'Export');
+      final exportButton = find.descendant(
+        of: find.widgetWithText(ListTile, 'Export Subscriptions'),
+        matching: find.widgetWithText(OutlinedButton, 'Export'),
+      );
       expect(exportButton, findsOneWidget);
+    });
+
+    testWidgets('shows the backup export tile', (tester) async {
+      await pumpScreen(tester, buildTestWidget());
+
+      final tile = find.widgetWithText(ListTile, 'Export Backup');
+      expect(tile, findsOneWidget);
+      expect(
+        find.descendant(
+          of: tile,
+          matching: find.widgetWithText(OutlinedButton, 'Export'),
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('tapping Reset All Data shows confirmation dialog', (
       tester,
     ) async {
-      await tester.pumpWidget(buildTestWidget());
+      await pumpScreen(tester, buildTestWidget());
 
       await tester.tap(find.text('Reset All Data'));
       await tester.pumpAndSettle();
@@ -209,7 +236,7 @@ void main() {
     testWidgets('Reset button is disabled until RESET is typed', (
       tester,
     ) async {
-      await tester.pumpWidget(buildTestWidget());
+      await pumpScreen(tester, buildTestWidget());
 
       await tester.tap(find.text('Reset All Data'));
       await tester.pumpAndSettle();
@@ -232,7 +259,7 @@ void main() {
     });
 
     testWidgets('confirming reset runs the data reset service', (tester) async {
-      await tester.pumpWidget(buildTestWidget());
+      await pumpScreen(tester, buildTestWidget());
 
       await tester.tap(find.text('Reset All Data'));
       await tester.pumpAndSettle();
@@ -248,7 +275,7 @@ void main() {
     testWidgets('confirming reset refreshes controllers that cached prefs', (
       tester,
     ) async {
-      await tester.pumpWidget(buildTestWidget());
+      await pumpScreen(tester, buildTestWidget());
       final container = ProviderScope.containerOf(
         tester.element(find.byType(StorageSettingsScreen)),
       );
@@ -276,7 +303,7 @@ void main() {
       'tapping Reset All Data consults the parental control gate with resetData reason',
       (tester) async {
         final guard = _FakeGateGuard(allows: true);
-        await tester.pumpWidget(buildTestWidget(guard: guard));
+        await pumpScreen(tester, buildTestWidget(guard: guard));
 
         await tester.tap(find.text('Reset All Data'));
         await tester.pumpAndSettle();
@@ -290,7 +317,7 @@ void main() {
       tester,
     ) async {
       final guard = _FakeGateGuard(allows: false);
-      await tester.pumpWidget(buildTestWidget(guard: guard));
+      await pumpScreen(tester, buildTestWidget(guard: guard));
 
       await tester.tap(find.text('Reset All Data'));
       await tester.pumpAndSettle();
@@ -318,7 +345,7 @@ void main() {
 
     testWidgets('shows the stored size against the limit', (tester) async {
       final cache = _FakeStreamCacheService();
-      await tester.pumpWidget(buildTestWidget(streamCache: cache));
+      await pumpScreen(tester, buildTestWidget(streamCache: cache));
       await tester.pumpAndSettle();
 
       final used = Formatters.formatBytes(cache.bytes);
@@ -330,7 +357,7 @@ void main() {
       tester,
     ) async {
       final cache = _FakeStreamCacheService();
-      await tester.pumpWidget(buildTestWidget(streamCache: cache));
+      await pumpScreen(tester, buildTestWidget(streamCache: cache));
       await tester.pumpAndSettle();
 
       cache.bytes = 90000000;
@@ -345,7 +372,7 @@ void main() {
       tester,
     ) async {
       final cache = _FakeStreamCacheService();
-      await tester.pumpWidget(buildTestWidget(streamCache: cache));
+      await pumpScreen(tester, buildTestWidget(streamCache: cache));
       await tester.pumpAndSettle();
 
       await confirmClear(tester);
@@ -358,7 +385,7 @@ void main() {
 
     testWidgets('cancelling keeps the cache', (tester) async {
       final cache = _FakeStreamCacheService();
-      await tester.pumpWidget(buildTestWidget(streamCache: cache));
+      await pumpScreen(tester, buildTestWidget(streamCache: cache));
       await tester.pumpAndSettle();
 
       await tester.tap(clearButtonOfTile());
@@ -373,7 +400,7 @@ void main() {
       tester,
     ) async {
       final cache = _FakeStreamCacheService(sizeError: Exception('disk'));
-      await tester.pumpWidget(buildTestWidget(streamCache: cache));
+      await pumpScreen(tester, buildTestWidget(streamCache: cache));
       await tester.pumpAndSettle();
 
       final empty = Formatters.formatBytes(0);
@@ -387,7 +414,7 @@ void main() {
 
     testWidgets('reports a failed clear', (tester) async {
       final cache = _FakeStreamCacheService(clearError: Exception('disk'));
-      await tester.pumpWidget(buildTestWidget(streamCache: cache));
+      await pumpScreen(tester, buildTestWidget(streamCache: cache));
       await tester.pumpAndSettle();
 
       await confirmClear(tester);

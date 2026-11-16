@@ -6,12 +6,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../parental_control/domain/gate_guard.dart';
 import '../../../parental_control/providers/gate_guard_provider.dart';
+import '../controllers/backup_export_controller.dart';
 import '../controllers/opml_export_controller.dart';
 import '../controllers/runtime_reset.dart';
 import '../widgets/opml_import_flow.dart';
 
 /// Screen for managing storage and data: cache, search history,
-/// OPML import/export, and full data reset.
+/// OPML import/export, backup, and full data reset.
 class StorageSettingsScreen extends ConsumerWidget {
   const StorageSettingsScreen({super.key});
 
@@ -29,6 +30,8 @@ class StorageSettingsScreen extends ConsumerWidget {
           _SearchHistoryTile(context: context),
           const Divider(),
           const _OpmlSection(),
+          const Divider(),
+          const _BackupExportTile(),
           const Divider(),
           _DangerZoneSection(context: context, ref: ref),
         ],
@@ -301,6 +304,40 @@ class _ExportTile extends ConsumerWidget {
       trailing: OutlinedButton(
         onPressed: () =>
             ref.read(opmlExportControllerProvider.notifier).export(),
+        child: Text(l10n.storageExport),
+      ),
+    );
+  }
+}
+
+class _BackupExportTile extends ConsumerWidget {
+  const _BackupExportTile();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final state = ref.watch(backupExportControllerProvider);
+
+    ref.listen(backupExportControllerProvider, (_, next) {
+      final message = switch (next) {
+        BackupExportSuccess() => l10n.storageBackupExportSuccess,
+        BackupExportError() => l10n.storageBackupExportError,
+        _ => null,
+      };
+      if (message != null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
+      }
+    });
+
+    return ListTile(
+      title: Text(l10n.storageBackupExportTitle),
+      subtitle: Text(l10n.storageBackupExportSubtitle),
+      trailing: OutlinedButton(
+        onPressed: state is BackupExportLoading
+            ? null
+            : () => ref.read(backupExportControllerProvider.notifier).export(),
         child: Text(l10n.storageExport),
       ),
     );

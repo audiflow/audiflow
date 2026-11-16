@@ -416,6 +416,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get storageExportError => 'Export failed';
 
   @override
+  String get storageBackupExportTitle => 'Export Backup';
+
+  @override
+  String get storageBackupExportSubtitle =>
+      'Save subscriptions, progress, queue, stations, and settings to a file';
+
+  @override
+  String get storageBackupExportSuccess => 'Backup exported';
+
+  @override
+  String get storageBackupExportError =>
+      'Could not create the backup. Your data was not changed';
+
+  @override
   String get storageImportTitle => 'Import Subscriptions';
 
   @override
