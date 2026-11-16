@@ -156,6 +156,31 @@ void main() {
     check(await isar.outboxOps.count()).equals(0);
   });
 
+  test('the cap drops by HLC, not by op id', () async {
+    // Ids that sort backwards, as UUIDv7 ids can within one millisecond
+    // or after the wall clock moved back.
+    var next = 1000000;
+    final store = UserStateStore(
+      isar,
+      outboxCap: 6,
+      newOpId: () => '${next--}',
+    );
+
+    for (var i = 0; i < 12; i++) {
+      await store.write((txn) async {
+        final row = SyncedSetting()
+          ..key = 'k$i'
+          ..value = '$i'
+          ..hlc = txn.stamp.packed;
+        await isar.syncedSettings.put(row);
+        txn.touch(UserStateEntities.setting, row);
+      });
+    }
+
+    final ops = await isar.outboxOps.where().findAll();
+    check(ops.map((o) => o.key).toSet()).deepEquals({'k9', 'k10', 'k11'});
+  });
+
   test('the outbox drops its oldest ops past the cap', () async {
     final store = UserStateStore(isar, outboxCap: 5);
 

@@ -51,13 +51,13 @@ class _Touched<T> {
   final T row;
 
   /// The ops for the fields stamped [stamp], and those without a clock.
-  Iterable<OutboxOp> ops(int stamp, Uuid uuid) sync* {
+  Iterable<OutboxOp> ops(int stamp, String Function() newOpId) sync* {
     final key = entity.key(row);
     for (final field in entity.fields) {
       final hlc = field.hlc?.call(row);
       if (hlc != null && hlc != stamp) continue;
       yield OutboxOp()
-        ..opId = uuid.v7()
+        ..opId = newOpId()
         ..entity = entity.name
         ..key = key
         ..fieldId = field.id
@@ -72,15 +72,17 @@ class UserStateStore {
     this._isar, {
     int Function()? nowMillis,
     this._createHistoryId,
-    Uuid? uuid,
+    String Function()? newOpId,
     this._outboxCap = outboxCap,
   }) : _nowMillis = nowMillis ?? _wallClock,
-       _uuid = uuid ?? const Uuid();
+       _newOpId = newOpId ?? const Uuid().v7;
 
   final Isar _isar;
   final int Function() _nowMillis;
   final String Function()? _createHistoryId;
-  final Uuid _uuid;
+
+  /// A UUIDv7 by default.
+  final String Function() _newOpId;
   final int _outboxCap;
 
   /// Most ops the outbox keeps; past it the oldest are dropped. Nothing
@@ -128,7 +130,7 @@ class UserStateStore {
     if (txn._touched.isEmpty) return;
     final stamp = txn.stamp.packed;
     for (final touched in txn._touched) {
-      for (final op in touched.ops(stamp, _uuid)) {
+      for (final op in touched.ops(stamp, _newOpId)) {
         // Coalesce: the newer change of a field replaces its pending op.
         final pending = await _isar.outboxOps.getByEntityKeyFieldId(
           op.entity,
@@ -141,9 +143,12 @@ class UserStateStore {
     }
     final excess = await _isar.outboxOps.count() - _outboxCap;
     if (excess <= 0) return;
+    // Oldest by HLC: UUIDv7 ids from one millisecond, or written after the
+    // wall clock moved back, do not sort in write order. Equal HLCs come
+    // from one write, so which of them goes first does not matter.
     final oldest = await _isar.outboxOps
         .where()
-        .sortByOpId()
+        .sortByHlc()
         .limit(excess)
         .idProperty()
         .findAll();

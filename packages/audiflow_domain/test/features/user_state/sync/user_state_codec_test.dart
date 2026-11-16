@@ -55,6 +55,12 @@ void main() {
       ).throws<FormatException>();
     });
 
+    test('the last occurrence of a repeated value wins', () {
+      check(
+        decodeValue(Uint8List.fromList([0x08, 0x02, 0x08, 0x04])),
+      ).equals(2);
+    });
+
     test('rejects truncated input', () {
       final bytes = encodeValue('Morning');
       check(
@@ -124,6 +130,18 @@ void main() {
       final again = readMessage(rebuilt.takeBytes());
       check(decodeValue(again[0].raw)).equals('future');
       check(again[1].asInt).equals(7);
+    });
+
+    test('a value of a type this version does not know is kept', () {
+      // A later Value type (field 9) inside a registered field.
+      final future = ProtoWriter()..writeInt(9, 1);
+      final w = ProtoWriter()
+        ..writeBytes(3, future.takeBytes())
+        ..writeBytes(4, encodeValue(null));
+      final decoded = decodeEntity('episode', w.takeBytes());
+
+      check(decoded.known).deepEquals({4: null});
+      check(decoded.unknown.map((f) => f.fieldNumber)).deepEquals([3]);
     });
 
     test('an entity this version does not know is all unknown', () {

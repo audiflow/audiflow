@@ -36,29 +36,45 @@ Uint8List encodeValue(Object? value) {
 
 /// Decodes a Value message; DateTimes come back in UTC. Throws
 /// [FormatException] when a value has the wrong wire type.
+///
+/// As protobuf requires, the last occurrence wins when a value repeats.
 Object? decodeValue(Uint8List bytes) {
+  Object? value;
   for (final field in readMessage(bytes)) {
     switch (field.fieldNumber) {
       case _intValue:
         _expect(field, WireType.varint);
-        return field.asSint;
+        value = field.asSint;
       case _doubleValue:
         _expect(field, WireType.fixed64);
-        return field.asDouble;
+        value = field.asDouble;
       case _stringValue:
         _expect(field, WireType.lengthDelimited);
         // Malformed UTF-8 throws FormatException too.
-        return field.asString;
+        value = field.asString;
       case _boolValue:
         _expect(field, WireType.varint);
-        return field.asBool;
+        value = field.asBool;
       case _timeValue:
         _expect(field, WireType.varint);
-        return DateTime.fromMicrosecondsSinceEpoch(field.asSint, isUtc: true);
+        value = DateTime.fromMicrosecondsSinceEpoch(field.asSint, isUtc: true);
     }
   }
-  return null;
+  return value;
 }
+
+const _valueFields = {
+  _intValue,
+  _doubleValue,
+  _stringValue,
+  _boolValue,
+  _timeValue,
+};
+
+/// Whether a Value message uses a field number (a value type) this version
+/// does not know.
+bool _hasUnknownValueType(Uint8List bytes) =>
+    readMessage(bytes).any((f) => !_valueFields.contains(f.fieldNumber));
 
 void _expect(ProtoField field, int wireType) {
   if (field.wireType == wireType) return;
@@ -84,15 +100,17 @@ class DecodedEntity {
 }
 
 /// Splits an entity message of [entity] by what [UserStateEntities]
-/// knows. A fieldId this version does not know, or an entity it does not
-/// know at all, lands in [DecodedEntity.unknown].
+/// knows. A fieldId this version does not know, an entity it does not know
+/// at all, or a value of a type it does not know lands in
+/// [DecodedEntity.unknown].
 DecodedEntity decodeEntity(String entity, Uint8List bytes) {
   final ids = UserStateEntities.registry[entity] ?? const <int, String>{};
   final known = <int, Object?>{};
   final unknown = <ProtoField>[];
   for (final field in readMessage(bytes)) {
     if (ids.containsKey(field.fieldNumber) &&
-        field.wireType == WireType.lengthDelimited) {
+        field.wireType == WireType.lengthDelimited &&
+        !_hasUnknownValueType(field.raw)) {
       known[field.fieldNumber] = decodeValue(field.raw);
     } else {
       unknown.add(field);
