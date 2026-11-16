@@ -80,8 +80,13 @@ const StationSchema = CollectionSchema(
       name: r'sortOrder',
       type: IsarType.long,
     ),
-    r'updatedAt': PropertySchema(
+    r'stationId': PropertySchema(
       id: 13,
+      name: r'stationId',
+      type: IsarType.string,
+    ),
+    r'updatedAt': PropertySchema(
+      id: 14,
       name: r'updatedAt',
       type: IsarType.dateTime,
     ),
@@ -92,7 +97,21 @@ const StationSchema = CollectionSchema(
   deserialize: _stationDeserialize,
   deserializeProp: _stationDeserializeProp,
   idName: r'id',
-  indexes: {},
+  indexes: {
+    r'stationId': IndexSchema(
+      id: 4702835299779894007,
+      name: r'stationId',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'stationId',
+          type: IndexType.hash,
+          caseSensitive: true,
+        ),
+      ],
+    ),
+  },
   links: {},
   embeddedSchemas: {r'StationDurationFilter': StationDurationFilterSchema},
 
@@ -123,6 +142,12 @@ int _stationEstimateSize(
   bytesCount += 3 + object.episodeSortType.length * 3;
   bytesCount += 3 + object.name.length * 3;
   bytesCount += 3 + object.podcastSortType.length * 3;
+  {
+    final value = object.stationId;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   return bytesCount;
 }
 
@@ -150,7 +175,8 @@ void _stationSerialize(
   writer.writeString(offsets[10], object.podcastSortType);
   writer.writeLong(offsets[11], object.publishedWithinDays);
   writer.writeLong(offsets[12], object.sortOrder);
-  writer.writeDateTime(offsets[13], object.updatedAt);
+  writer.writeString(offsets[13], object.stationId);
+  writer.writeDateTime(offsets[14], object.updatedAt);
 }
 
 Station _stationDeserialize(
@@ -178,7 +204,8 @@ Station _stationDeserialize(
   object.podcastSortType = reader.readString(offsets[10]);
   object.publishedWithinDays = reader.readLongOrNull(offsets[11]);
   object.sortOrder = reader.readLong(offsets[12]);
-  object.updatedAt = reader.readDateTime(offsets[13]);
+  object.stationId = reader.readStringOrNull(offsets[13]);
+  object.updatedAt = reader.readDateTime(offsets[14]);
   return object;
 }
 
@@ -221,6 +248,8 @@ P _stationDeserializeProp<P>(
     case 12:
       return (reader.readLong(offset)) as P;
     case 13:
+      return (reader.readStringOrNull(offset)) as P;
+    case 14:
       return (reader.readDateTime(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -313,6 +342,81 @@ extension StationQueryWhere on QueryBuilder<Station, Station, QWhereClause> {
           includeUpper: includeUpper,
         ),
       );
+    });
+  }
+
+  QueryBuilder<Station, Station, QAfterWhereClause> stationIdIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(indexName: r'stationId', value: [null]),
+      );
+    });
+  }
+
+  QueryBuilder<Station, Station, QAfterWhereClause> stationIdIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'stationId',
+          lower: [null],
+          includeLower: false,
+          upper: [],
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Station, Station, QAfterWhereClause> stationIdEqualTo(
+    String? stationId,
+  ) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(indexName: r'stationId', value: [stationId]),
+      );
+    });
+  }
+
+  QueryBuilder<Station, Station, QAfterWhereClause> stationIdNotEqualTo(
+    String? stationId,
+  ) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'stationId',
+                lower: [],
+                upper: [stationId],
+                includeUpper: false,
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'stationId',
+                lower: [stationId],
+                includeLower: false,
+                upper: [],
+              ),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'stationId',
+                lower: [stationId],
+                includeLower: false,
+                upper: [],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'stationId',
+                lower: [],
+                upper: [stationId],
+                includeUpper: false,
+              ),
+            );
+      }
     });
   }
 }
@@ -1213,6 +1317,168 @@ extension StationQueryFilter
     });
   }
 
+  QueryBuilder<Station, Station, QAfterFilterCondition> stationIdIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'stationId'),
+      );
+    });
+  }
+
+  QueryBuilder<Station, Station, QAfterFilterCondition> stationIdIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'stationId'),
+      );
+    });
+  }
+
+  QueryBuilder<Station, Station, QAfterFilterCondition> stationIdEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'stationId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Station, Station, QAfterFilterCondition> stationIdGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'stationId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Station, Station, QAfterFilterCondition> stationIdLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'stationId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Station, Station, QAfterFilterCondition> stationIdBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'stationId',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Station, Station, QAfterFilterCondition> stationIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'stationId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Station, Station, QAfterFilterCondition> stationIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'stationId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Station, Station, QAfterFilterCondition> stationIdContains(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'stationId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Station, Station, QAfterFilterCondition> stationIdMatches(
+    String pattern, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'stationId',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Station, Station, QAfterFilterCondition> stationIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'stationId', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<Station, Station, QAfterFilterCondition> stationIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'stationId', value: ''),
+      );
+    });
+  }
+
   QueryBuilder<Station, Station, QAfterFilterCondition> updatedAtEqualTo(
     DateTime value,
   ) {
@@ -1432,6 +1698,18 @@ extension StationQuerySortBy on QueryBuilder<Station, Station, QSortBy> {
     });
   }
 
+  QueryBuilder<Station, Station, QAfterSortBy> sortByStationId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'stationId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Station, Station, QAfterSortBy> sortByStationIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'stationId', Sort.desc);
+    });
+  }
+
   QueryBuilder<Station, Station, QAfterSortBy> sortByUpdatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'updatedAt', Sort.asc);
@@ -1603,6 +1881,18 @@ extension StationQuerySortThenBy
     });
   }
 
+  QueryBuilder<Station, Station, QAfterSortBy> thenByStationId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'stationId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Station, Station, QAfterSortBy> thenByStationIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'stationId', Sort.desc);
+    });
+  }
+
   QueryBuilder<Station, Station, QAfterSortBy> thenByUpdatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'updatedAt', Sort.asc);
@@ -1702,6 +1992,14 @@ extension StationQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Station, Station, QDistinct> distinctByStationId({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'stationId', caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<Station, Station, QDistinct> distinctByUpdatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'updatedAt');
@@ -1793,6 +2091,12 @@ extension StationQueryProperty
   QueryBuilder<Station, int, QQueryOperations> sortOrderProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'sortOrder');
+    });
+  }
+
+  QueryBuilder<Station, String?, QQueryOperations> stationIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'stationId');
     });
   }
 

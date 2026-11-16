@@ -10,6 +10,11 @@ part 'station.g.dart';
 class Station {
   Id id = Isar.autoIncrement;
 
+  /// The id of this station's `StationState`, the copy that syncs. Set on
+  /// the first write; null only for rows from before it existed.
+  @Index()
+  String? stationId;
+
   late String name;
   int sortOrder = 0;
 

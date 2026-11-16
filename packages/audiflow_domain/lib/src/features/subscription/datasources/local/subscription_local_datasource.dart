@@ -5,6 +5,7 @@ import '../../../user_state/models/stable_keys.dart';
 import '../../../user_state/services/episode_user_state_access.dart';
 import '../../../user_state/services/podcast_user_state_access.dart';
 import '../../../user_state/services/queue_entry_access.dart';
+import '../../../user_state/services/station_state_access.dart';
 import '../../models/subscriptions.dart';
 import '../../../user_state/services/user_state_store.dart';
 
@@ -208,6 +209,8 @@ class SubscriptionLocalDatasource {
       final existing = await _isar.subscriptions.get(id);
       if (existing == null) return false;
       await _podcastState.saveSubscriptionRemoved(existing, txn);
+      // Recorded now: once the row is gone, its links have no key to name.
+      await StationStateAccess(_isar).removePodcast(existing, txn);
       return _isar.subscriptions.delete(id);
     });
   }
@@ -353,6 +356,7 @@ class SubscriptionLocalDatasource {
       await _save(existing, txn);
       // As for the episodes below: reads switch to the keyed state now.
       await _podcastState.copyLegacy(existing, txn);
+      await StationStateAccess(_isar).copyLegacy(existing, txn);
 
       final unkeyed = await _isar.episodes
           .where()

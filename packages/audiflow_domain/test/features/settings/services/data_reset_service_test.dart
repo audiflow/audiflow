@@ -427,6 +427,12 @@ Future<void> _seedStations(Isar isar) async {
 Future<void> _seedUserStateMeta(Isar isar) async {
   await isar.syncMetas.put(SyncMeta()..historyId = 'before-reset');
   await isar.podcastUserStates.put(PodcastUserState()..podcastKey = 'pk');
+  await isar.stationStates.put(StationState()..stationId = 's');
+  await isar.stationMembers.put(
+    StationMember()
+      ..stationId = 's'
+      ..podcastKey = 'pk',
+  );
   await isar.queueEntrys.put(
     QueueEntry()
       ..entryId = 'e'
