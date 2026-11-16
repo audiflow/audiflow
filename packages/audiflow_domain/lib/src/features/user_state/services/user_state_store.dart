@@ -1,7 +1,11 @@
 import 'package:isar_community/isar.dart';
+import 'package:uuid/uuid.dart';
 
 import '../models/hlc.dart';
+import '../models/outbox_op.dart';
 import '../models/sync_meta.dart';
+import '../sync/user_state_codec.dart';
+import '../sync/user_state_fields.dart';
 import 'sync_meta_access.dart';
 
 /// The one entry point for writes to user state.
@@ -9,8 +13,9 @@ import 'sync_meta_access.dart';
 /// Each write runs in one Isar write transaction that also advances the
 /// clock in [SyncMeta], and hands the body a [UserStateTxn] carrying the
 /// [Hlc] stamp for that change.
-/// Later steps write per-field timestamps and outbox ops from the stamp
-/// inside the same transaction, so a change never exists without them.
+/// Rows the body changes are reported with [UserStateTxn.touch]; before
+/// the transaction commits, the store writes an [OutboxOp] for each field
+/// this write stamped, so a change never exists without its op.
 ///
 /// The store keeps no state of its own: the clock lives in [SyncMeta] and
 /// is read inside the transaction, which Isar serializes across isolates.
@@ -18,7 +23,7 @@ import 'sync_meta_access.dart';
 /// increasing stamps, and a datasource can create its own.
 /// What a [UserStateStore.write] body needs to record its change.
 class UserStateTxn {
-  const UserStateTxn({required this.stamp, required this.deviceId});
+  UserStateTxn({required this.stamp, required this.deviceId});
 
   /// Stamps every field this write changes.
   final Hlc stamp;
@@ -30,15 +35,62 @@ class UserStateTxn {
   /// Counters written before the device id is known. They still count in
   /// every sum; restore detection (M5) settles who wrote them.
   static const unknownDeviceId = '';
+
+  final List<_Touched<Object?>> _touched = [];
+
+  /// Reports that [row] of [entity] was written in this transaction, so
+  /// the fields this write stamped get their ops.
+  void touch<T>(EntitySpec<T> entity, T row) =>
+      _touched.add(_Touched<T>(entity, row));
+}
+
+class _Touched<T> {
+  _Touched(this.entity, this.row);
+
+  final EntitySpec<T> entity;
+  final T row;
+
+  /// The ops for the fields stamped [stamp], and those without a clock.
+  Iterable<OutboxOp> ops(int stamp, String Function() newOpId) sync* {
+    final key = entity.key(row);
+    for (final field in entity.fields) {
+      final hlc = field.hlc?.call(row);
+      if (hlc != null && hlc != stamp) continue;
+      yield OutboxOp()
+        ..opId = newOpId()
+        ..entity = entity.name
+        ..key = key
+        ..fieldId = field.id
+        ..hlc = hlc ?? stamp
+        ..payload = encodeField(field, row);
+    }
+  }
 }
 
 class UserStateStore {
-  UserStateStore(this._isar, {int Function()? nowMillis, this._createHistoryId})
-    : _nowMillis = nowMillis ?? _wallClock;
+  UserStateStore(
+    this._isar, {
+    int Function()? nowMillis,
+    this._createHistoryId,
+    String Function()? newOpId,
+    this._outboxCap = outboxCap,
+  }) : _nowMillis = nowMillis ?? _wallClock,
+       _newOpId = newOpId ?? const Uuid().v7;
 
   final Isar _isar;
   final int Function() _nowMillis;
   final String Function()? _createHistoryId;
+
+  /// A UUIDv7 by default.
+  final String Function() _newOpId;
+  final int _outboxCap;
+
+  /// Most ops the outbox keeps; past it the oldest are dropped. Nothing
+  /// sends ops before sync exists (M6), and turning sync on first uploads a
+  /// full snapshot, so a dropped op loses nothing. Coalescing already keeps
+  /// one op per changed field; the cap bounds a long-lived install that
+  /// never syncs.
+  static const outboxCap = 5000;
 
   static int _wallClock() => DateTime.now().millisecondsSinceEpoch;
 
@@ -48,7 +100,14 @@ class UserStateStore {
   ///
   /// A failure in [body] rolls back the clock advance with the rest of the
   /// transaction.
-  Future<T> write<T>(Future<T> Function(UserStateTxn txn) body) {
+  ///
+  /// With [recordOps] false the touched rows get no ops: for copies of
+  /// existing data (migration steps), which the first sync's snapshot
+  /// carries.
+  Future<T> write<T>(
+    Future<T> Function(UserStateTxn txn) body, {
+    bool recordOps = true,
+  }) {
     return _isar.writeTxn(() async {
       final meta = await loadOrCreateSyncMeta(
         _isar,
@@ -57,12 +116,42 @@ class UserStateStore {
       final stamp = Hlc.unpack(meta.hlc).send(_nowMillis());
       meta.hlc = stamp.packed;
       await _isar.syncMetas.put(meta);
-      return body(
-        UserStateTxn(
-          stamp: stamp,
-          deviceId: meta.deviceId ?? UserStateTxn.unknownDeviceId,
-        ),
+      final txn = UserStateTxn(
+        stamp: stamp,
+        deviceId: meta.deviceId ?? UserStateTxn.unknownDeviceId,
       );
+      final result = await body(txn);
+      if (recordOps) await _writeOps(txn);
+      return result;
     });
+  }
+
+  Future<void> _writeOps(UserStateTxn txn) async {
+    if (txn._touched.isEmpty) return;
+    final stamp = txn.stamp.packed;
+    for (final touched in txn._touched) {
+      for (final op in touched.ops(stamp, _newOpId)) {
+        // Coalesce: the newer change of a field replaces its pending op.
+        final pending = await _isar.outboxOps.getByEntityKeyFieldId(
+          op.entity,
+          op.key,
+          op.fieldId,
+        );
+        if (pending != null) op.id = pending.id;
+        await _isar.outboxOps.put(op);
+      }
+    }
+    final excess = await _isar.outboxOps.count() - _outboxCap;
+    if (excess <= 0) return;
+    // Oldest by HLC: UUIDv7 ids from one millisecond, or written after the
+    // wall clock moved back, do not sort in write order. Equal HLCs come
+    // from one write, so which of them goes first does not matter.
+    final oldest = await _isar.outboxOps
+        .where()
+        .sortByHlc()
+        .limit(excess)
+        .idProperty()
+        .findAll();
+    await _isar.outboxOps.deleteAll(oldest);
   }
 }

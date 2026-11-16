@@ -10,6 +10,7 @@ import '../../parental_control/models/podcast_parental_flags.dart';
 import '../../settings/models/podcast_audio_preference.dart';
 import '../../subscription/models/subscriptions.dart';
 import '../models/podcast_user_state.dart';
+import '../sync/user_state_fields.dart';
 import 'user_state_store.dart';
 
 /// Reads and writes [PodcastUserState] in the shape of the per-podcast
@@ -57,7 +58,7 @@ class PodcastUserStateAccess {
         await _isar.podcastUserStates.getByPodcastKey(key) ??
         (PodcastUserState()..podcastKey = key);
     if (!applySubscription(state, sub, txn)) return;
-    await _isar.podcastUserStates.put(state);
+    await _putState(state, txn);
   }
 
   /// Fills [sub]'s auto-download choices from the subscription section its
@@ -88,7 +89,7 @@ class PodcastUserStateAccess {
     state
       ..subscribed = false
       ..subscribedHlc = txn.stamp.packed;
-    await _isar.podcastUserStates.put(state);
+    await _putState(state, txn);
   }
 
   /// Logs, in debug builds, when [sub]'s user fields differ from its state
@@ -142,7 +143,7 @@ class PodcastUserStateAccess {
     final state = await _stateForWrite(podcastId);
     if (state == null) return;
     applyView(state, pref, txn);
-    await _isar.podcastUserStates.put(state);
+    await _putState(state, txn);
   }
 
   // -- Audio --
@@ -180,7 +181,7 @@ class PodcastUserStateAccess {
     final state = await _stateForWrite(podcastId);
     if (state == null) return;
     applyAudio(state, pref, txn);
-    await _isar.podcastUserStates.put(state);
+    await _putState(state, txn);
   }
 
   // -- Parental flags --
@@ -222,7 +223,7 @@ class PodcastUserStateAccess {
     final state = await _stateForWrite(podcastId);
     if (state == null) return;
     applyParental(state, flags, txn);
-    await _isar.podcastUserStates.put(state);
+    await _putState(state, txn);
   }
 
   // The column is named itunesId, but every caller stores Subscription.id.
@@ -267,7 +268,7 @@ class PodcastUserStateAccess {
     final state = await _stateForWrite(podcastId);
     if (state == null) return;
     applyPlayOrder(state, playlistId, groupId, order, txn);
-    await _isar.podcastUserStates.put(state);
+    await _putState(state, txn);
   }
 
   Future<String?> _legacyPlayOrder(
@@ -391,7 +392,7 @@ class PodcastUserStateAccess {
       changed = true;
     }
 
-    if (changed) await _isar.podcastUserStates.put(state);
+    if (changed) await _putState(state, txn);
   }
 
   void _compare(String section, int podcastId, String legacy, String current) {
@@ -405,6 +406,18 @@ class PodcastUserStateAccess {
       'PodcastUserState $section differs for podcast $podcastId: '
       'old $legacy, new $current',
     );
+  }
+
+  /// Puts [state] and reports it, with its play orders, for ops.
+  Future<void> _putState(PodcastUserState state, UserStateTxn txn) async {
+    await _isar.podcastUserStates.put(state);
+    txn.touch(UserStateEntities.podcast, state);
+    for (final entry in state.playOrders) {
+      txn.touch(UserStateEntities.playOrder, (
+        podcastKey: state.podcastKey,
+        entry: entry,
+      ));
+    }
   }
 }
 

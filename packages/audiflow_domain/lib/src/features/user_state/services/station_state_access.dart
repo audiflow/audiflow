@@ -5,6 +5,7 @@ import '../../station/models/station.dart';
 import '../../station/models/station_podcast.dart';
 import '../../subscription/models/subscriptions.dart';
 import '../models/station_state.dart';
+import '../sync/user_state_fields.dart';
 import 'user_state_store.dart';
 
 /// Keeps [StationState] and [StationMember] in step with the `Station` and
@@ -36,6 +37,7 @@ class StationStateAccess {
             ..createdAt = station.createdAt);
       if (applyStation(state, station, txn)) {
         await _isar.stationStates.put(state);
+        txn.touch(UserStateEntities.station, state);
       }
     }
   }
@@ -53,6 +55,7 @@ class StationStateAccess {
           ..deleted = true
           ..deletedHlc = stamp,
       );
+      txn.touch(UserStateEntities.station, state);
     }
     final members = await _isar.stationMembers
         .filter()
@@ -65,6 +68,9 @@ class StationStateAccess {
         ..deletedHlc = stamp;
     }
     await _isar.stationMembers.putAll(members);
+    for (final member in members) {
+      txn.touch(UserStateEntities.stationMember, member);
+    }
   }
 
   /// Puts [links] and records each on its member. Must run inside
@@ -87,6 +93,7 @@ class StationStateAccess {
             ..addedAt = links[i].addedAt);
       if (applyMember(member, links[i], txn)) {
         await _isar.stationMembers.put(member);
+        txn.touch(UserStateEntities.stationMember, member);
       }
     }
   }
@@ -117,6 +124,7 @@ class StationStateAccess {
           ..deleted = true
           ..deletedHlc = stamp,
       );
+      txn.touch(UserStateEntities.stationMember, member);
     }
   }
 

@@ -52,7 +52,8 @@ class EpisodeUserStateBackfill implements DataMigrationStep {
           if (episode == null) continue;
           await access.copyLegacy(episode, txn);
         }
-      });
+        // Existing data travels with the first sync's snapshot instead.
+      }, recordOps: false);
     }
   }
 }

@@ -30,6 +30,7 @@ import '../../features/user_state/models/episode_user_state.dart';
 import '../../features/user_state/models/podcast_user_state.dart';
 import '../../features/user_state/models/queue_entry.dart';
 import '../../features/user_state/models/station_state.dart';
+import '../../features/user_state/models/outbox_op.dart';
 import '../../features/user_state/models/synced_setting.dart';
 import '../../features/user_state/models/sync_meta.dart';
 import '../../features/user_state/services/data_migration_runner.dart';
@@ -66,6 +67,8 @@ const List<CollectionSchema<dynamic>> isarSchemas = [
   StationStateSchema,
   StationMemberSchema,
   SyncedSettingSchema,
+  OutboxOpSchema,
+  OpaqueFieldSchema,
 ];
 
 /// Name of the app's Isar instance, shared by every entry point.
