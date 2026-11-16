@@ -39,6 +39,8 @@ class PlaybackHistoryLocalDatasource {
         // The episode's key is not known synchronously, so any state write
         // re-reads; [_watch] drops the unchanged results.
         _isar.episodeUserStates.watchLazy(),
+        // Keying the episode can switch it to keyed state already stored.
+        _isar.episodes.where().idEqualTo(episodeId).watchLazy(),
       ],
       load: () => getByEpisodeId(episodeId),
       same: (a, b) => a == null || b == null ? a == b : sameHistory(a, b),
@@ -245,7 +247,10 @@ class PlaybackHistoryLocalDatasource {
 
   /// Returns episodes whose listen finished at or before [time], replays
   /// excluded.
-  Future<List<PlaybackHistory>> getFinishedBefore(DateTime time) async {
+  Future<List<PlaybackHistory>> getFinishedBefore(DateTime time) =>
+      _isar.txn(() => _finishedBefore(time));
+
+  Future<List<PlaybackHistory>> _finishedBefore(DateTime time) async {
     final states = await _isar.episodeUserStates
         .filter()
         .hasPlaybackEqualTo(true)
@@ -273,7 +278,14 @@ class PlaybackHistoryLocalDatasource {
   /// listen not finished. Replays of played episodes are included.
   ///
   /// Ordered by lastPlayedAt descending, limited to [limit] items.
-  Future<List<PlaybackHistory>> getInProgress({int limit = 10}) async {
+  ///
+  /// Reads in one read transaction, so every page and the resolution see
+  /// the same snapshot and a write in between cannot shift rows across
+  /// pages.
+  Future<List<PlaybackHistory>> getInProgress({int limit = 10}) =>
+      _isar.txn(() => _inProgress(limit));
+
+  Future<List<PlaybackHistory>> _inProgress(int limit) async {
     // Mirrors [PlaybackHistoryStatus.isInProgress]. Both collections are
     // read newest first in pages, since rows whose episode is missing are
     // dropped only after resolving; reading stops once the newest [limit]
@@ -381,7 +393,10 @@ class PlaybackHistoryLocalDatasource {
   /// Returns all playback histories for episodes in a podcast.
   ///
   /// Queries episodes by podcastId first, then fetches their histories.
-  Future<Map<int, PlaybackHistory>> getByPodcastId(int podcastId) async {
+  Future<Map<int, PlaybackHistory>> getByPodcastId(int podcastId) =>
+      _isar.txn(() => _byPodcastId(podcastId));
+
+  Future<Map<int, PlaybackHistory>> _byPodcastId(int podcastId) async {
     final episodes = await _isar.episodes
         .filter()
         .podcastIdEqualTo(podcastId)
@@ -424,26 +439,30 @@ class PlaybackHistoryLocalDatasource {
     late final StreamController<T> controller;
     final subscriptions = <StreamSubscription<void>>[];
     var pending = Future<void>.value();
+    var active = false;
     var hasLast = false;
     late T last;
 
     void refresh() {
       pending = pending.then((_) async {
-        if (controller.isClosed) return;
+        if (!active) return;
         try {
           final value = await load();
+          // Cancelled while loading: nobody listens any more.
+          if (!active) return;
           if (hasLast && same(last, value)) return;
           hasLast = true;
           last = value;
-          if (!controller.isClosed) controller.add(value);
+          controller.add(value);
         } on Object catch (error, stack) {
-          if (!controller.isClosed) controller.addError(error, stack);
+          if (active) controller.addError(error, stack);
         }
       });
     }
 
     controller = StreamController<T>(
       onListen: () {
+        active = true;
         for (final trigger in triggers) {
           subscriptions.add(
             trigger.listen((_) => refresh(), onError: controller.addError),
@@ -452,9 +471,12 @@ class PlaybackHistoryLocalDatasource {
         refresh();
       },
       onCancel: () async {
+        // Before awaiting, so refreshes queued behind a running load skip.
+        active = false;
         for (final sub in subscriptions) {
           await sub.cancel();
         }
+        subscriptions.clear();
       },
     );
     return controller.stream;

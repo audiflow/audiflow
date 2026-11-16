@@ -259,11 +259,12 @@ Future<ProviderContainer> bootstrapAppContainer({
     isar = await openAppDatabase(
       directory: dirPath,
       // Read before the container exists, since Isar is one of its
-      // overrides; the id store never throws.
+      // overrides. Null when device-only storage fails, so a session-only
+      // id is never recorded and a later launch tries again.
       deviceId: await DeviceScopedIdStore(
         DeviceOnlyStore.platform(),
         SharedPreferencesDataSource(prefs),
-      ).getOrCreate(DeviceScopedIdStore.deviceIdKey),
+      ).getDurable(DeviceScopedIdStore.deviceIdKey),
       logger: isarOpenLogger,
     );
     Sentry.addBreadcrumb(

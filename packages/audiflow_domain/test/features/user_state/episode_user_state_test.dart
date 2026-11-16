@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart' hide expect;
@@ -287,15 +289,23 @@ void main() {
             ..lastPlayedAt = DateTime(2026, 3),
         ),
       );
-      final emitted = history
-          .watchInProgress()
-          .map((list) => list.length)
-          .take(2)
-          .toList();
+      final lengths = <int>[];
+      final first = Completer<void>();
+      final second = Completer<void>();
+      final subscription = history.watchInProgress().listen((list) {
+        lengths.add(list.length);
+        if (lengths.length == 1) first.complete();
+        if (lengths.length == 2) second.complete();
+      });
+      addTearDown(subscription.cancel);
+      // The episode must arrive after the first result, or both results
+      // would be equal and the second never emitted.
+      await first.future;
 
       await putEpisode(await putPodcast(), 'late');
+      await second.future;
 
-      check(await emitted).deepEquals([0, 1]);
+      check(lengths).deepEquals([0, 1]);
     });
   });
 

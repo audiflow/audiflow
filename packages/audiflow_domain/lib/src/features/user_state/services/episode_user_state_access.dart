@@ -130,7 +130,8 @@ class EpisodeUserStateAccess {
   ///
   /// New rows whose episode is not in the catalog are left out: the state
   /// is kept for when the episode arrives, but there is no local id to
-  /// report it under.
+  /// report it under. Callers read [states], [legacy], and this resolution
+  /// in one read transaction, so all of them see the same snapshot.
   Future<List<PlaybackHistory>> resolve({
     required List<EpisodeUserState> states,
     required List<PlaybackHistory> legacy,
@@ -140,8 +141,7 @@ class EpisodeUserStateAccess {
     final byKey = await _episodesByKey(states.map((s) => s.episodeKey));
     for (final state in states) {
       final episode = byKey[state.episodeKey];
-      if (episode == null) continue;
-      covered.add(episode.id);
+      if (episode == null || !covered.add(episode.id)) continue;
       result.add(historyFromState(state, episode.id));
     }
 
