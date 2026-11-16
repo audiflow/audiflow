@@ -13,6 +13,8 @@ import 'background/background_task_registrar.dart';
 /// - On resume: syncs feeds where 1+ hour has elapsed since last refresh.
 /// - On launch and resume: removes played auto downloads past their grace
 ///   period.
+/// - On launch: drops download records whose file is gone (for example
+///   after a restore to a new device, which carries no audio).
 class AppLifecycleObserver extends ConsumerStatefulWidget {
   const AppLifecycleObserver({required this.child, super.key});
 
@@ -45,6 +47,10 @@ class _AppLifecycleObserverState extends ConsumerState<AppLifecycleObserver> {
   void _onLaunch() {
     _syncFeeds(forceRefresh: true);
     _sweepPlayedDownloads();
+    _runUnawaited(
+      ref.read(downloadServiceProvider).reconcileCompletedFiles(),
+      'while removing downloads whose file is missing',
+    );
   }
 
   void _onResume() {

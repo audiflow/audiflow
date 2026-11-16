@@ -105,9 +105,14 @@ class DataResetService {
     }
   }
 
+  /// Deletes every file under the downloads directory, keeping the
+  /// directory itself: iOS marks it as excluded from backup at launch, and
+  /// a re-created directory would lack that flag until the next launch.
   Future<void> _deleteDownloads() async {
     final directory = Directory(await _resolveDownloadsDirectory());
     if (!await directory.exists()) return;
-    await directory.delete(recursive: true);
+    await for (final entry in directory.list(followLinks: false)) {
+      await entry.delete(recursive: true);
+    }
   }
 }

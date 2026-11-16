@@ -499,28 +499,32 @@ class DownloadService {
     return null;
   }
 
-  /// Validates all downloads on app startup.
+  /// Drops completed download records whose file no longer exists.
   ///
-  /// - Removes orphaned records (file missing)
-  /// - Resumes interrupted downloads
-  Future<void> validateDownloads() async {
-    _logger.i('Validating downloads...');
-
-    // Check completed downloads have valid files
+  /// Downloaded audio is excluded from OS backups, so a device restored
+  /// from a backup (or migrated to a new phone) has the records without the
+  /// files; without this, those episodes would show as downloaded.
+  /// A stale absolute path (the iOS container path changes on restore) is
+  /// first retried against the current downloads directory by file name.
+  ///
+  /// Touches only completed tasks: at launch, a background worker may still
+  /// own a downloading task.
+  Future<void> reconcileCompletedFiles() async {
     final completed = await _repository.getByStatus(
       const DownloadStatus.completed(),
     );
+    if (completed.isEmpty) return;
 
     final currentDir = await _fileService.getDownloadsDirectory();
+    final removedEpisodeIds = <int>[];
     for (final task in completed) {
       if (task.localPath == null) {
         _logger.w('Orphaned download record (no path): ${task.id}');
         await _repository.delete(task.id);
+        removedEpisodeIds.add(task.episodeId);
         continue;
       }
 
-      // Try stored path first, then reconstruct from current directory
-      // in case the iOS container UUID changed.
       final storedPath = task.localPath!;
       if (await _fileService.fileExists(storedPath)) continue;
 
@@ -538,8 +542,21 @@ class DownloadService {
       } else {
         _logger.w('Orphaned download record: ${task.id}');
         await _repository.delete(task.id);
+        removedEpisodeIds.add(task.episodeId);
       }
     }
+    // Downloaded-only stations must drop the episodes that lost their audio.
+    if (removedEpisodeIds.isNotEmpty) await _tryReconcileAll(removedEpisodeIds);
+  }
+
+  /// Validates all downloads on app startup.
+  ///
+  /// - Removes orphaned records (file missing), see [reconcileCompletedFiles]
+  /// - Resumes interrupted downloads
+  Future<void> validateDownloads() async {
+    _logger.i('Validating downloads...');
+
+    await reconcileCompletedFiles();
 
     // Resume any interrupted downloads
     final downloading = await _repository.getByStatus(

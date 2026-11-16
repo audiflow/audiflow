@@ -53,8 +53,8 @@ On iOS, Keychain items whose accessibility does not include `ThisDeviceOnly` mig
 | Isar database | No | Moved to Application Support with `isExcludedFromBackup` (C1) | Excluded (easily exceeds 25 MB) |
 | Downloaded audio | No | `isExcludedFromBackup` | Excluded |
 | Sync key | Yes | Keychain, `AfterFirstUnlock`, synchronizable (C2) | Block Store with cloud backup enabled |
-| `deviceId` | Must not | Keychain, `ThisDeviceOnly` | `noBackupFilesDir` |
-| Install ID, analytics identifiers | Must not | Keychain, `ThisDeviceOnly` | `noBackupFilesDir` |
+| `deviceId` | Must not | Keychain, `ThisDeviceOnly` | `files/device_only_store/`, excluded by the backup rules |
+| Install ID, analytics identifiers | Must not | Keychain, `ThisDeviceOnly` | `files/device_only_store/`, excluded by the backup rules |
 | Synced settings | Yes | Isar user state, included in the snapshot | same |
 | Device-scoped settings | Yes | SharedPreferences (backed up, as today) | SharedPreferences (included in backup rules) |
 

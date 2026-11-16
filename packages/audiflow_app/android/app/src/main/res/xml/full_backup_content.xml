@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Auto Backup rules for Android 11 and below; keep in sync with
+     data_extraction_rules.xml. -->
+<full-backup-content>
+  <exclude domain="root" path="app_flutter/downloads/" />
+  <exclude domain="file" path="device_only_store/" />
+</full-backup-content>

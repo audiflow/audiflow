@@ -1019,6 +1019,117 @@ void main() {
     });
   });
 
+  group('reconcileCompletedFiles', () {
+    test('removes completed downloads whose file is gone', () async {
+      // A device restored from a backup carries the download rows but not
+      // the audio, which is excluded from backup.
+      final completed = [
+        _task(id: 1, localPath: '/downloads/kept.mp3', status: 3),
+        _task(id: 2, localPath: '/other-device/downloads/gone.mp3', status: 3),
+      ];
+      when(
+        mockRepository.getByStatus(const DownloadStatus.completed()),
+      ).thenAnswer((_) async => completed);
+      when(
+        mockFileService.fileExists('/downloads/kept.mp3'),
+      ).thenAnswer((_) async => true);
+      when(
+        mockFileService.fileExists('/other-device/downloads/gone.mp3'),
+      ).thenAnswer((_) async => false);
+      when(
+        mockFileService.fileExists('/downloads/gone.mp3'),
+      ).thenAnswer((_) async => false);
+      when(mockRepository.delete(2)).thenAnswer((_) async {});
+
+      await service.reconcileCompletedFiles();
+
+      verifyNever(mockRepository.delete(1));
+      verify(mockRepository.delete(2)).called(1);
+    });
+
+    test('reconciles stations once for the removed episodes', () async {
+      // A downloaded-only station must drop episodes that lost their audio.
+      final reconciler = _RecordingReconciler();
+      service = DownloadService(
+        repository: mockRepository,
+        queueService: mockQueueService,
+        fileService: mockFileService,
+        episodeRepository: mockEpisodeRepo,
+        subscriptionRepository: mockSubscriptionRepo,
+        logger: Logger(level: Level.off),
+        getWifiOnly: () => false,
+        getBatchDownloadLimit: () => 0,
+        reconcilerService: reconciler,
+      );
+      when(
+        mockRepository.getByStatus(const DownloadStatus.completed()),
+      ).thenAnswer(
+        (_) async => [
+          _task(id: 1, episodeId: 10, localPath: '/downloads/a.mp3', status: 3),
+          _task(id: 2, episodeId: 20, localPath: '/downloads/b.mp3', status: 3),
+          _task(id: 3, episodeId: 30, status: 3), // no path
+        ],
+      );
+      when(
+        mockFileService.fileExists('/downloads/a.mp3'),
+      ).thenAnswer((_) async => true);
+      when(
+        mockFileService.fileExists('/downloads/b.mp3'),
+      ).thenAnswer((_) async => false);
+      when(mockRepository.delete(any)).thenAnswer((_) async {});
+
+      await service.reconcileCompletedFiles();
+
+      check(reconciler.single).isEmpty();
+      check(reconciler.batches).deepEquals([
+        [20, 30],
+      ]);
+    });
+
+    test('does not reconcile stations when nothing was removed', () async {
+      final reconciler = _RecordingReconciler();
+      service = DownloadService(
+        repository: mockRepository,
+        queueService: mockQueueService,
+        fileService: mockFileService,
+        episodeRepository: mockEpisodeRepo,
+        subscriptionRepository: mockSubscriptionRepo,
+        logger: Logger(level: Level.off),
+        getWifiOnly: () => false,
+        getBatchDownloadLimit: () => 0,
+        reconcilerService: reconciler,
+      );
+      when(
+        mockRepository.getByStatus(const DownloadStatus.completed()),
+      ).thenAnswer(
+        (_) async => [
+          _task(id: 1, episodeId: 10, localPath: '/downloads/a.mp3', status: 3),
+        ],
+      );
+      when(
+        mockFileService.fileExists('/downloads/a.mp3'),
+      ).thenAnswer((_) async => true);
+
+      await service.reconcileCompletedFiles();
+
+      check(reconciler.batches).isEmpty();
+    });
+
+    test('leaves in-flight downloads and the queue alone', () async {
+      // At launch a background worker may still own a downloading task.
+      when(
+        mockRepository.getByStatus(const DownloadStatus.completed()),
+      ).thenAnswer((_) async => []);
+
+      await service.reconcileCompletedFiles();
+
+      verifyNever(
+        mockRepository.getByStatus(const DownloadStatus.downloading()),
+      );
+      verifyNever(mockQueueService.startQueue());
+    });
+  });
+
   group('getTotalStorageUsed', () {
     test('delegates to repository', () async {
       // Arrange

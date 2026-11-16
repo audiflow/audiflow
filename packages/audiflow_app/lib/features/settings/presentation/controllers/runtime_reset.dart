@@ -1,5 +1,6 @@
 import 'package:audiflow_domain/audiflow_domain.dart'
     show
+        deviceScopedIdStoreProvider,
         playbackEffectsSettingsControllerProvider,
         playbackSpeedSettingsControllerProvider,
         podcastAudioOverrideControllerProvider;
@@ -35,6 +36,9 @@ void applyRuntimeReset(BuildContext context, WidgetRef ref) {
     ..invalidate(onboardingCompletionControllerProvider)
     ..invalidate(playbackSpeedSettingsControllerProvider)
     ..invalidate(playbackEffectsSettingsControllerProvider)
-    ..invalidate(podcastAudioOverrideControllerProvider);
+    ..invalidate(podcastAudioOverrideControllerProvider)
+    // Its cached ids belong to the install that was just reset; the
+    // rebuilt store sees the cleared marker and generates new ones.
+    ..invalidate(deviceScopedIdStoreProvider);
   GoRouter.maybeOf(context)?.go(AppRoutes.consent);
 }

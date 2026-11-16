@@ -68,8 +68,12 @@ Future<void> appMain({
   FlavorConfig.initialize(flavorConfig);
 
   final prefs = await SharedPreferences.getInstance();
+  // Read before the container exists: Sentry and Analytics need it first.
   final installId = await InstallIdRepositoryImpl(
-    SharedPreferencesDataSource(prefs),
+    DeviceScopedIdStore(
+      DeviceOnlyStore.platform(),
+      SharedPreferencesDataSource(prefs),
+    ),
   ).getOrCreate();
 
   FirebaseAnalytics? firebaseAnalytics;
