@@ -3,6 +3,7 @@ import 'package:isar_community/isar.dart';
 import '../../../feed/models/episode.dart';
 import '../../../user_state/models/stable_keys.dart';
 import '../../models/subscriptions.dart';
+import '../../../user_state/services/user_state_store.dart';
 
 /// Local datasource for subscription operations using Isar.
 ///
@@ -12,11 +13,14 @@ class SubscriptionLocalDatasource {
 
   final Isar _isar;
 
+  /// User state writes go through the store; see [UserStateStore].
+  late final _store = UserStateStore(_isar);
+
   /// Inserts a new subscription into the database.
   ///
   /// Returns the inserted [Subscription] with its auto-generated id.
   Future<Subscription> insert(Subscription subscription) async {
-    await _isar.writeTxn(() async {
+    await _store.write((_) async {
       await _isar.subscriptions.put(subscription);
     });
     return subscription;
@@ -31,7 +35,7 @@ class SubscriptionLocalDatasource {
   /// a cached entry.
   Future<Subscription?> promoteCached(int id, Subscription incoming) {
     // Read inside the transaction, as in [updateLastAccessed].
-    return _isar.writeTxn(() async {
+    return _store.write((_) async {
       final existing = await _isar.subscriptions.get(id);
       if (existing == null || !existing.isCached) return null;
       // Validators from another feed must not be sent to this one: a
@@ -70,7 +74,7 @@ class SubscriptionLocalDatasource {
   /// subscription exists for [itunesId].
   Future<Subscription?> demoteToCached(String itunesId) {
     // Read inside the transaction, as in [updateLastAccessed].
-    return _isar.writeTxn(() async {
+    return _store.write((_) async {
       final existing = await _isar.subscriptions.getByItunesId(itunesId);
       if (existing == null || existing.isCached) return null;
       existing
@@ -140,7 +144,7 @@ class SubscriptionLocalDatasource {
       ..isCached = true
       ..lastAccessedAt = DateTime.now();
 
-    await _isar.writeTxn(() async {
+    await _store.write((_) async {
       await _isar.subscriptions.put(subscription);
     });
     return subscription;
@@ -152,7 +156,7 @@ class SubscriptionLocalDatasource {
   /// Returns the updated subscription, or null if not found.
   Future<Subscription?> promoteToSubscribed(String itunesId) {
     // Read inside the transaction, as in [updateLastAccessed].
-    return _isar.writeTxn(() async {
+    return _store.write((_) async {
       final existing = await _isar.subscriptions.getByItunesId(itunesId);
       if (existing == null) return null;
       existing
@@ -169,7 +173,7 @@ class SubscriptionLocalDatasource {
   /// by the time the whole object is put back, undoing a feed refresh
   /// that committed in between.
   Future<void> updateLastAccessed(int id, DateTime timestamp) {
-    return _isar.writeTxn(() async {
+    return _store.write((_) async {
       final existing = await _isar.subscriptions.get(id);
       if (existing == null) return;
       existing.lastAccessedAt = timestamp;
@@ -189,7 +193,7 @@ class SubscriptionLocalDatasource {
 
   /// Deletes a subscription by its database ID.
   Future<bool> deleteById(int id) async {
-    return _isar.writeTxn(() => _isar.subscriptions.delete(id));
+    return _store.write((_) => _isar.subscriptions.delete(id));
   }
 
   /// Returns a subscription by its iTunes ID, or null if not found.
@@ -235,7 +239,7 @@ class SubscriptionLocalDatasource {
   /// Returns 1 if updated, 0 if not found.
   Future<int> updateLastRefreshed(String itunesId, DateTime timestamp) {
     // Read inside the transaction, as in [updateLastAccessed].
-    return _isar.writeTxn(() async {
+    return _store.write((_) async {
       final existing = await _isar.subscriptions.getByItunesId(itunesId);
       if (existing == null) return 0;
       existing.lastRefreshedAt = timestamp;
@@ -249,7 +253,7 @@ class SubscriptionLocalDatasource {
   /// Does nothing if no subscription is found for the given [id].
   Future<void> updateDescription(int id, String? description) {
     // Read inside the transaction, as in [updateLastAccessed].
-    return _isar.writeTxn(() async {
+    return _store.write((_) async {
       final existing = await _isar.subscriptions.get(id);
       if (existing == null) return;
       existing.description = description;
@@ -266,7 +270,7 @@ class SubscriptionLocalDatasource {
     String? websiteUrl, {
     required DateTime syncedAt,
   }) {
-    return _isar.writeTxn(() async {
+    return _store.write((_) async {
       final existing = await _isar.subscriptions.get(id);
       if (existing == null) return;
       existing
@@ -292,7 +296,7 @@ class SubscriptionLocalDatasource {
     String? description,
     DateTime? syncedAt,
   }) {
-    return _isar.writeTxn(() async {
+    return _store.write((_) async {
       final existing = await _isar.subscriptions.get(id);
       if (existing == null) return;
 
@@ -315,7 +319,7 @@ class SubscriptionLocalDatasource {
   /// without a key once its podcast has one. Does nothing if no
   /// subscription is found for [id].
   Future<void> assignStableKeys(int id, {String? podcastGuid}) {
-    return _isar.writeTxn(() async {
+    return _store.write((_) async {
       final existing = await _isar.subscriptions.get(id);
       if (existing == null) return;
       final podcastKey =
@@ -344,7 +348,7 @@ class SubscriptionLocalDatasource {
   ///
   /// Does nothing if no subscription is found for the given [id].
   Future<void> updateAutoDownload(int id, {required bool autoDownload}) {
-    return _isar.writeTxn(() async {
+    return _store.write((_) async {
       final existing = await _isar.subscriptions.get(id);
       if (existing == null) return;
       existing.autoDownload = autoDownload;
@@ -363,7 +367,7 @@ class SubscriptionLocalDatasource {
     required int pauseThreshold,
     required DateTime at,
   }) {
-    return _isar.writeTxn(() async {
+    return _store.write((_) async {
       final existing = await _isar.subscriptions.get(id);
       if (existing == null) return false;
       existing.autoDownloadsSinceLastPlay += count;
@@ -379,7 +383,7 @@ class SubscriptionLocalDatasource {
   /// Clears the inactivity pause and count. Skips the write when there is
   /// nothing to clear, since this runs on every playback start.
   Future<void> resetAutoDownloadActivity(int id) {
-    return _isar.writeTxn(() async {
+    return _store.write((_) async {
       final existing = await _isar.subscriptions.get(id);
       if (existing == null) return;
       if (existing.autoDownloadsSinceLastPlay == 0 &&
@@ -402,7 +406,7 @@ class SubscriptionLocalDatasource {
   Future<void> updateAutoDownloadKeepCount(int id, int? keepCount) {
     // Read inside the transaction so a concurrent sync's writes to the same
     // subscription are not overwritten with a stale copy.
-    return _isar.writeTxn(() async {
+    return _store.write((_) async {
       final existing = await _isar.subscriptions.get(id);
       if (existing == null) return;
       existing.autoDownloadKeepCount = keepCount;
@@ -421,7 +425,7 @@ class SubscriptionLocalDatasource {
     // Read inside the transaction, as in [updateLastAccessed]: a feed
     // sync writes the validators right after it may have assigned the
     // stable key.
-    return _isar.writeTxn(() async {
+    return _store.write((_) async {
       final existing = await _isar.subscriptions.get(id);
       if (existing == null) return;
       existing
@@ -435,7 +439,7 @@ class SubscriptionLocalDatasource {
   /// next feed sync performs unconditional requests.
   Future<void> clearAllHttpCacheHeaders() {
     // Read inside the transaction, as in [updateLastAccessed].
-    return _isar.writeTxn(() async {
+    return _store.write((_) async {
       final all = await _isar.subscriptions.where().findAll();
       if (all.isEmpty) return;
       for (final sub in all) {

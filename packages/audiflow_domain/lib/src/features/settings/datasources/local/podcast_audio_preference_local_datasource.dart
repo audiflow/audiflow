@@ -1,12 +1,16 @@
 import 'package:isar_community/isar.dart';
 
 import '../../models/podcast_audio_preference.dart';
+import '../../../user_state/services/user_state_store.dart';
 
 /// Local datasource for [PodcastAudioPreference] rows using Isar.
 class PodcastAudioPreferenceLocalDatasource {
   PodcastAudioPreferenceLocalDatasource(this._isar);
 
   final Isar _isar;
+
+  /// User state writes go through the store; see [UserStateStore].
+  late final _store = UserStateStore(_isar);
 
   /// Returns the override row for [podcastId], or null when none exists.
   Future<PodcastAudioPreference?> get(int podcastId) {
@@ -20,7 +24,7 @@ class PodcastAudioPreferenceLocalDatasource {
     required bool skipSilence,
     required bool voiceBoost,
   }) async {
-    await _isar.writeTxn(() async {
+    await _store.write((_) async {
       final existing = await _isar.podcastAudioPreferences.getByPodcastId(
         podcastId,
       );
@@ -35,8 +39,8 @@ class PodcastAudioPreferenceLocalDatasource {
 
   /// Deletes the override row for [podcastId], if any.
   Future<void> delete(int podcastId) async {
-    await _isar.writeTxn(
-      () => _isar.podcastAudioPreferences.deleteByPodcastId(podcastId),
+    await _store.write(
+      (_) => _isar.podcastAudioPreferences.deleteByPodcastId(podcastId),
     );
   }
 }

@@ -5,6 +5,7 @@ import 'package:audiflow_domain/src/features/parental_control/models/parental_co
 import 'package:audiflow_domain/src/features/parental_control/models/podcast_parental_flags.dart';
 import 'package:audiflow_domain/src/features/parental_control/repositories/parental_control_repository_impl.dart';
 import 'package:audiflow_domain/src/features/parental_control/services/pin_hasher.dart';
+import 'package:audiflow_domain/src/features/user_state/models/sync_meta.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar_community/isar.dart';
@@ -328,7 +329,11 @@ void main() {
 
         // Reopen with same directory and name.
         final isar2 = await Isar.open(
-          [ParentalControlSettingsSchema, PodcastParentalFlagsSchema],
+          [
+            ParentalControlSettingsSchema,
+            PodcastParentalFlagsSchema,
+            SyncMetaSchema,
+          ],
           directory: dirPath!,
           name: name,
         );

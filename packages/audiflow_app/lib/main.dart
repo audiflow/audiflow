@@ -256,7 +256,7 @@ Future<ProviderContainer> bootstrapAppContainer({
   );
   final Isar isar;
   try {
-    isar = await openIsarWithRecovery(
+    isar = await openAppDatabase(
       directory: dirPath,
       logger: isarOpenLogger,
     );

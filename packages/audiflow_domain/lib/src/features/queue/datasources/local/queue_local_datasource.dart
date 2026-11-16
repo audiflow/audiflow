@@ -1,6 +1,7 @@
 import 'package:isar_community/isar.dart';
 
 import '../../models/queue_item.dart';
+import '../../../user_state/services/user_state_store.dart';
 
 /// Local datasource for queue item persistence using Isar.
 ///
@@ -11,9 +12,12 @@ class QueueLocalDatasource {
 
   final Isar _isar;
 
+  /// User state writes go through the store; see [UserStateStore].
+  late final _store = UserStateStore(_isar);
+
   /// Inserts a new queue item. Returns the inserted item's ID.
   Future<int> insert(QueueItem item) async {
-    await _isar.writeTxn(() => _isar.queueItems.put(item));
+    await _store.write((_) => _isar.queueItems.put(item));
     return item.id;
   }
 
@@ -28,7 +32,7 @@ class QueueLocalDatasource {
     required int spacing,
   }) async {
     if (episodeIds.isEmpty) return;
-    await _isar.writeTxn(() async {
+    await _store.write((_) async {
       final firstPosition = atFront
           ? await getMinPosition() - spacing * episodeIds.length
           : await getMaxPosition() + spacing;
@@ -84,7 +88,7 @@ class QueueLocalDatasource {
     if (item == null) return 0;
 
     item.position = newPosition;
-    await _isar.writeTxn(() => _isar.queueItems.put(item));
+    await _store.write((_) => _isar.queueItems.put(item));
     return 1;
   }
 
@@ -92,27 +96,27 @@ class QueueLocalDatasource {
   ///
   /// Returns 1 if deleted, 0 if not found.
   Future<int> deleteById(int id) async {
-    final deleted = await _isar.writeTxn(() => _isar.queueItems.delete(id));
+    final deleted = await _store.write((_) => _isar.queueItems.delete(id));
     return deleted ? 1 : 0;
   }
 
   /// Deletes all queue items.
   Future<int> deleteAll() async {
-    await _isar.writeTxn(() => _isar.queueItems.clear());
+    await _store.write((_) => _isar.queueItems.clear());
     return 0;
   }
 
   /// Deletes all adhoc queue items.
   Future<int> deleteAllAdhoc() {
-    return _isar.writeTxn(
-      () => _isar.queueItems.filter().isAdhocEqualTo(true).deleteAll(),
+    return _store.write(
+      (_) => _isar.queueItems.filter().isAdhocEqualTo(true).deleteAll(),
     );
   }
 
   /// Deletes all manual (non-adhoc) queue items.
   Future<int> deleteAllManual() {
-    return _isar.writeTxn(
-      () => _isar.queueItems.filter().isAdhocEqualTo(false).deleteAll(),
+    return _store.write(
+      (_) => _isar.queueItems.filter().isAdhocEqualTo(false).deleteAll(),
     );
   }
 
@@ -132,7 +136,7 @@ class QueueLocalDatasource {
     for (final item in items) {
       item.position = item.position + delta;
     }
-    await _isar.writeTxn(() => _isar.queueItems.putAll(items));
+    await _store.write((_) => _isar.queueItems.putAll(items));
   }
 
   /// Shifts positions of items at or after a given position.
@@ -145,6 +149,6 @@ class QueueLocalDatasource {
     for (final item in items) {
       item.position = item.position + delta;
     }
-    await _isar.writeTxn(() => _isar.queueItems.putAll(items));
+    await _store.write((_) => _isar.queueItems.putAll(items));
   }
 }

@@ -1,12 +1,16 @@
 import 'package:isar_community/isar.dart';
 
 import '../../models/podcast_view_preference.dart';
+import '../../../user_state/services/user_state_store.dart';
 
 /// Local datasource for podcast view preferences using Isar.
 class PodcastViewPreferenceLocalDatasource {
   PodcastViewPreferenceLocalDatasource(this._isar);
 
   final Isar _isar;
+
+  /// User state writes go through the store; see [UserStateStore].
+  late final _store = UserStateStore(_isar);
 
   /// Gets preference for a podcast, returns null if not set.
   Future<PodcastViewPreference?> getPreference(int podcastId) {
@@ -24,7 +28,7 @@ class PodcastViewPreferenceLocalDatasource {
 
   /// Upserts preference (insert or update on conflict).
   Future<void> upsertPreference(PodcastViewPreference pref) async {
-    await _isar.writeTxn(() async {
+    await _store.write((_) async {
       final existing = await _isar.podcastViewPreferences.getByPodcastId(
         pref.podcastId,
       );
@@ -37,8 +41,8 @@ class PodcastViewPreferenceLocalDatasource {
 
   /// Deletes preference for a podcast.
   Future<int> deletePreference(int podcastId) {
-    return _isar.writeTxn(
-      () => _isar.podcastViewPreferences
+    return _store.write(
+      (_) => _isar.podcastViewPreferences
           .filter()
           .podcastIdEqualTo(podcastId)
           .deleteAll(),

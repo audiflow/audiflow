@@ -5,6 +5,19 @@ import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart' hide expect;
 import 'package:isar_community/isar.dart';
 
+import '../../helpers/isar_test_helper.dart';
+
+class _FailingStep implements DataMigrationStep {
+  @override
+  int get version => 1;
+
+  @override
+  String get name => 'failing';
+
+  @override
+  Future<void> run(Isar isar) async => throw StateError('step failed');
+}
+
 class _FakeIsar implements Isar {
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -139,5 +152,37 @@ void main() {
 
     check(result).identicalTo(isar);
     check(dbFile.existsSync()).isFalse();
+  });
+
+  group('openAppDatabase', () {
+    setUpAll(() async {
+      await Isar.initializeIsarCore(download: true);
+    });
+
+    test('runs data migrations before returning the database', () async {
+      final isar = await openAppDatabase(
+        directory: directory.path,
+        steps: const [],
+        opener: () => openTestIsar([]),
+      );
+      addTearDown(() => isar.close(deleteFromDisk: true));
+
+      final meta = await isar.syncMetas.get(SyncMeta.singletonId);
+      check(meta).isNotNull();
+    });
+
+    test('closes the database and rethrows when a migration fails', () async {
+      late Isar opened;
+
+      await check(
+        openAppDatabase(
+          directory: directory.path,
+          steps: [_FailingStep()],
+          opener: () async => opened = await openTestIsar([]),
+        ),
+      ).throws<StateError>();
+
+      check(opened.isOpen).isFalse();
+    });
   });
 }

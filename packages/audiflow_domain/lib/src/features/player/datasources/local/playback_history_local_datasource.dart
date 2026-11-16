@@ -2,6 +2,7 @@ import 'package:isar_community/isar.dart';
 
 import '../../../feed/models/episode.dart';
 import '../../models/playback_history.dart';
+import '../../../user_state/services/user_state_store.dart';
 
 /// Local datasource for playback history operations using Isar.
 ///
@@ -10,6 +11,9 @@ class PlaybackHistoryLocalDatasource {
   PlaybackHistoryLocalDatasource(this._isar);
 
   final Isar _isar;
+
+  /// User state writes go through the store; see [UserStateStore].
+  late final _store = UserStateStore(_isar);
 
   /// Returns playback history for an episode, or null if not found.
   Future<PlaybackHistory?> getByEpisodeId(int episodeId) {
@@ -28,7 +32,7 @@ class PlaybackHistoryLocalDatasource {
 
   /// Upserts playback history (insert or update on conflict).
   Future<void> upsert(PlaybackHistory history) async {
-    await _isar.writeTxn(() async {
+    await _store.write((_) async {
       final existing = await _isar.playbackHistorys.getByEpisodeId(
         history.episodeId,
       );
@@ -55,7 +59,7 @@ class PlaybackHistoryLocalDatasource {
     int realtimeDeltaMs = 0,
   }) async {
     final now = DateTime.now();
-    await _isar.writeTxn(() async {
+    await _store.write((_) async {
       final existing = await _isar.playbackHistorys.getByEpisodeId(episodeId);
 
       if (existing == null) {
@@ -100,7 +104,7 @@ class PlaybackHistoryLocalDatasource {
   /// Atomic read-then-write inside a single transaction.
   Future<bool> _markCompleted(int episodeId, {required bool skipPlayed}) async {
     final now = DateTime.now();
-    return _isar.writeTxn(() async {
+    return _store.write((_) async {
       final existing = await _isar.playbackHistorys.getByEpisodeId(episodeId);
       if (existing == null) {
         await _isar.playbackHistorys.put(_firstCompletion(episodeId, now));
@@ -125,7 +129,7 @@ class PlaybackHistoryLocalDatasource {
   /// Atomic read-then-write inside a single transaction.
   Future<bool> finishListen(int episodeId) async {
     final now = DateTime.now();
-    return _isar.writeTxn(() async {
+    return _store.write((_) async {
       final existing = await _isar.playbackHistorys.getByEpisodeId(episodeId);
       if (existing == null) {
         await _isar.playbackHistorys.put(_firstCompletion(episodeId, now));
@@ -167,7 +171,7 @@ class PlaybackHistoryLocalDatasource {
       ..completedAt = null
       ..isReplaying = false
       ..isReplayFromStart = false;
-    await _isar.writeTxn(() => _isar.playbackHistorys.put(existing));
+    await _store.write((_) => _isar.playbackHistorys.put(existing));
   }
 
   /// Opens a replay of a played episode at [positionMs]. [fromStart]
@@ -184,7 +188,7 @@ class PlaybackHistoryLocalDatasource {
     required int positionMs,
     required bool fromStart,
   }) async {
-    await _isar.writeTxn(() async {
+    await _store.write((_) async {
       final existing = await _isar.playbackHistorys.getByEpisodeId(episodeId);
       if (existing == null || !existing.isPlayed) return;
 
@@ -210,7 +214,7 @@ class PlaybackHistoryLocalDatasource {
     if (existing == null) return;
 
     existing.playCount = existing.playCount + 1;
-    await _isar.writeTxn(() => _isar.playbackHistorys.put(existing));
+    await _store.write((_) => _isar.playbackHistorys.put(existing));
   }
 
   /// Returns the most recently played in-progress episode, or null.
