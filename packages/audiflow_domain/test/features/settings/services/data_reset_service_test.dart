@@ -429,6 +429,19 @@ Future<void> _seedUserStateMeta(Isar isar) async {
   await isar.podcastUserStates.put(PodcastUserState()..podcastKey = 'pk');
   await isar.stationStates.put(StationState()..stationId = 's');
   await isar.syncedSettings.put(SyncedSetting()..key = 'k');
+  await isar.outboxOps.put(
+    OutboxOp()
+      ..opId = 'o'
+      ..entity = 'e'
+      ..key = 'k'
+      ..fieldId = 1,
+  );
+  await isar.opaqueFields.put(
+    OpaqueField()
+      ..entity = 'e'
+      ..key = 'k'
+      ..fieldId = 1,
+  );
   await isar.stationMembers.put(
     StationMember()
       ..stationId = 's'

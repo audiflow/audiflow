@@ -42,7 +42,8 @@ class PodcastUserStateBackfill implements DataMigrationStep {
           if (sub == null) continue;
           await access.copyLegacy(sub, txn);
         }
-      });
+        // Existing data travels with the first sync's snapshot instead.
+      }, recordOps: false);
     }
   }
 }

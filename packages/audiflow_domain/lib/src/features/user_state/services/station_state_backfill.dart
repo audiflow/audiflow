@@ -31,6 +31,7 @@ class StationStateBackfill implements DataMigrationStep {
         await isar.stationPodcasts.where().findAll(),
         txn,
       );
-    });
+      // Existing data travels with the first sync's snapshot instead.
+    }, recordOps: false);
   }
 }

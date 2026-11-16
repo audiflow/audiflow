@@ -7,6 +7,7 @@ import '../../feed/models/episode.dart';
 import '../../player/models/playback_history.dart';
 import '../../subscription/models/subscriptions.dart';
 import '../models/episode_user_state.dart';
+import '../sync/user_state_fields.dart';
 import 'user_state_store.dart';
 
 /// Reads and writes [EpisodeUserState] in the shape of the models callers
@@ -83,7 +84,7 @@ class EpisodeUserStateAccess {
     final state = slot.state ?? await _newState(slot.episode);
     if (state == null) return;
     applyHistory(state, history, txn);
-    await _isar.episodeUserStates.put(state);
+    await _putState(state, txn);
   }
 
   /// Writes the favorite of [episode]; must run inside
@@ -97,7 +98,7 @@ class EpisodeUserStateAccess {
         await _newState(episode);
     if (state == null) return;
     applyFavorite(state, episode.favoritedAt, txn);
-    await _isar.episodeUserStates.put(state);
+    await _putState(state, txn);
   }
 
   /// Copies the old user state of [episode] into its new row unless that
@@ -122,7 +123,7 @@ class EpisodeUserStateAccess {
     if (needsFavorite) {
       applyFavorite(state, episode.favoritedAt ?? DateTime.now(), txn);
     }
-    await _isar.episodeUserStates.put(state);
+    await _putState(state, txn);
   }
 
   /// Resolves new rows to their catalog episodes and merges in the old
@@ -196,6 +197,19 @@ class EpisodeUserStateAccess {
       'EpisodeUserState differs from PlaybackHistory for episode $episodeId: '
       'old ${describeHistory(a)}, new ${describeHistory(b)}',
     );
+  }
+
+  /// Puts [state] and reports it, with this device's counters, for ops.
+  Future<void> _putState(EpisodeUserState state, UserStateTxn txn) async {
+    await _isar.episodeUserStates.put(state);
+    txn.touch(UserStateEntities.episode, state);
+    for (final counters in state.counters) {
+      if (counters.deviceId != txn.deviceId) continue;
+      txn.touch(UserStateEntities.episodeCounter, (
+        episodeKey: state.episodeKey,
+        counters: counters,
+      ));
+    }
   }
 }
 

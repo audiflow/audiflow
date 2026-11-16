@@ -7,6 +7,7 @@ import '../../../common/providers/logger_provider.dart';
 import '../../feed/models/episode.dart';
 import '../../queue/models/queue_item.dart';
 import '../models/queue_entry.dart';
+import '../sync/user_state_fields.dart';
 import 'user_state_store.dart';
 
 /// Keeps [QueueEntry] in step with the `QueueItem` rows the queue reads.
@@ -55,6 +56,7 @@ class QueueEntryAccess {
           ..deleted = true
           ..deletedHlc = stamp,
       );
+      txn.touch(UserStateEntities.queueEntry, entry);
     }
   }
 
@@ -110,7 +112,10 @@ class QueueEntryAccess {
           ..entryId = entryId
           ..episodeKey = key
           ..addedAt = item.addedAt);
-    if (applyItem(entry, item, txn)) await _isar.queueEntrys.put(entry);
+    if (applyItem(entry, item, txn)) {
+      await _isar.queueEntrys.put(entry);
+      txn.touch(UserStateEntities.queueEntry, entry);
+    }
   }
 }
 

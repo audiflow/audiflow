@@ -5,6 +5,7 @@ import 'package:isar_community/isar.dart';
 
 import '../../../common/datasources/shared_preferences_datasource.dart';
 import '../models/synced_setting.dart';
+import '../sync/user_state_fields.dart';
 import 'user_state_store.dart';
 
 /// The settings storage the settings repository reads and writes.
@@ -95,7 +96,8 @@ class SyncedSettingsStore {
             ..hlc = txn.stamp.packed,
         );
       }
-    });
+      // Existing values travel with the first sync's snapshot instead.
+    }, recordOps: false);
   }
 
   T? _read<T>(String key, T? Function(String) legacy, T? Function(Object?) as) {
@@ -125,6 +127,7 @@ class SyncedSettingsStore {
           ..present = present
           ..hlc = txn.stamp.packed,
       );
+      txn.touch(UserStateEntities.setting, row);
     });
   }
 

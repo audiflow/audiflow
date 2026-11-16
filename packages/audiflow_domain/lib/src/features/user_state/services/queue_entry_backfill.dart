@@ -26,6 +26,7 @@ class QueueEntryBackfill implements DataMigrationStep {
     await UserStateStore(isar).write((txn) async {
       final items = await isar.queueItems.where().findAll();
       await QueueEntryAccess(isar).saveAll(items, txn);
-    });
+      // Existing data travels with the first sync's snapshot instead.
+    }, recordOps: false);
   }
 }
