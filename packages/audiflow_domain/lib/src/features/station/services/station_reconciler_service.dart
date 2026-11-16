@@ -6,6 +6,7 @@ import '../../feed/models/episode.dart';
 import '../../subscription/models/subscriptions.dart';
 import '../models/station_podcast.dart';
 import 'station_reconciler.dart';
+import '../../user_state/services/station_state_access.dart';
 import '../../user_state/services/user_state_store.dart';
 
 part 'station_reconciler_service.g.dart';
@@ -72,7 +73,7 @@ class StationReconcilerService {
   Future<void> _pruneUnsubscribedPodcasts(int stationId) {
     // Read inside the transaction so a resubscribe committing between the
     // check and the delete cannot lose its station link.
-    return _store.write((_) async {
+    return _store.write((txn) async {
       final links = await _isar.stationPodcasts
           .filter()
           .stationIdEqualTo(stationId)
@@ -81,12 +82,13 @@ class StationReconcilerService {
       final subscriptions = await _isar.subscriptions.getAll(
         links.map((link) => link.podcastId).toList(),
       );
-      final staleIds = [
+      final stale = [
         for (var i = 0; i < links.length; i++)
-          if (subscriptions[i]?.isCached ?? true) links[i].id,
+          if (subscriptions[i]?.isCached ?? true) links[i],
       ];
-      if (staleIds.isEmpty) return;
-      await _isar.stationPodcasts.deleteAll(staleIds);
+      if (stale.isEmpty) return;
+      await StationStateAccess(_isar).removeMembers(stale, txn);
+      await _isar.stationPodcasts.deleteAll([for (final l in stale) l.id]);
     });
   }
 
@@ -97,19 +99,18 @@ class StationReconcilerService {
   /// runs full reconciliation for each affected station so that orphaned
   /// [StationEpisode] rows are also cleaned up.
   Future<void> onSubscriptionRemoved(int podcastId) async {
-    // Capture affected stations before deleting the link rows.
-    final stationPodcasts = await _isar.stationPodcasts
-        .filter()
-        .podcastIdEqualTo(podcastId)
-        .findAll();
-    final affectedStationIds = stationPodcasts
-        .map((sp) => sp.stationId)
-        .toSet();
-
-    // Remove the podcast-to-station links in a single transaction.
-    await _store.write((_) async {
-      final ids = stationPodcasts.map((sp) => sp.id).toList();
-      await _isar.stationPodcasts.deleteAll(ids);
+    // Read and remove the podcast-to-station links in one transaction,
+    // keeping the affected stations for the reconcile below.
+    final affectedStationIds = await _store.write((txn) async {
+      final stationPodcasts = await _isar.stationPodcasts
+          .filter()
+          .podcastIdEqualTo(podcastId)
+          .findAll();
+      await StationStateAccess(_isar).removeMembers(stationPodcasts, txn);
+      await _isar.stationPodcasts.deleteAll([
+        for (final sp in stationPodcasts) sp.id,
+      ]);
+      return {for (final sp in stationPodcasts) sp.stationId};
     });
 
     // Full reconciliation for each affected station cleans up StationEpisode.

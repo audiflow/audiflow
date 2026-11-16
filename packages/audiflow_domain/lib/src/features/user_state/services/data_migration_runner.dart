@@ -5,6 +5,7 @@ import '../models/sync_meta.dart';
 import 'episode_user_state_backfill.dart';
 import 'podcast_user_state_backfill.dart';
 import 'queue_entry_backfill.dart';
+import 'station_state_backfill.dart';
 import 'sync_meta_access.dart';
 
 /// One data-rewriting migration, run once at launch.
@@ -32,6 +33,7 @@ const List<DataMigrationStep> dataMigrationSteps = [
   // Sections already copied are skipped.
   PodcastUserStateBackfill(version: 3),
   QueueEntryBackfill(),
+  StationStateBackfill(),
 ];
 
 /// Runs the pending [DataMigrationStep]s in order, before providers start.
