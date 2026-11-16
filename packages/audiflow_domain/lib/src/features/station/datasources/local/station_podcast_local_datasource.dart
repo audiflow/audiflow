@@ -1,6 +1,7 @@
 import 'package:isar_community/isar.dart';
 
 import '../../models/station_podcast.dart';
+import '../../../user_state/services/user_state_store.dart';
 
 /// Local datasource for [StationPodcast] Isar operations.
 class StationPodcastLocalDatasource {
@@ -8,12 +9,15 @@ class StationPodcastLocalDatasource {
 
   final Isar _isar;
 
+  /// User state writes go through the store; see [UserStateStore].
+  late final _store = UserStateStore(_isar);
+
   /// Inserts a station–podcast link.
   ///
   /// No-op if the (stationId, podcastId) pair already exists, preserving
   /// the original [addedAt] timestamp.
   Future<void> insert(StationPodcast sp) async {
-    await _isar.writeTxn(() async {
+    await _store.write((_) async {
       final existing = await _isar.stationPodcasts
           .filter()
           .stationIdEqualTo(sp.stationId)
@@ -27,7 +31,7 @@ class StationPodcastLocalDatasource {
 
   /// Updates an existing station-podcast link (sortOrder, episodeLimit).
   Future<void> update(StationPodcast sp) async {
-    await _isar.writeTxn(() => _isar.stationPodcasts.put(sp));
+    await _store.write((_) => _isar.stationPodcasts.put(sp));
   }
 
   /// Returns all links for [stationId].
@@ -43,8 +47,8 @@ class StationPodcastLocalDatasource {
 
   /// Deletes the link for a specific [stationId] + [podcastId] pair.
   Future<void> delete(int stationId, int podcastId) async {
-    await _isar.writeTxn(
-      () => _isar.stationPodcasts
+    await _store.write(
+      (_) => _isar.stationPodcasts
           .filter()
           .stationIdEqualTo(stationId)
           .and()
@@ -55,8 +59,8 @@ class StationPodcastLocalDatasource {
 
   /// Deletes all links for [stationId].
   Future<void> deleteAllForStation(int stationId) async {
-    await _isar.writeTxn(
-      () => _isar.stationPodcasts
+    await _store.write(
+      (_) => _isar.stationPodcasts
           .filter()
           .stationIdEqualTo(stationId)
           .deleteAll(),

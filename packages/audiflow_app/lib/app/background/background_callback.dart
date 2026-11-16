@@ -305,7 +305,7 @@ BackgroundIsarLease<Isar>? _isarLease;
 
 Future<Isar> _acquireBackgroundIsar(String directory, Logger logger) {
   final lease = _isarLease ??= BackgroundIsarLease<Isar>(
-    open: () => openIsarWithRecovery(directory: directory, logger: logger),
+    open: () => openAppDatabase(directory: directory, logger: logger),
     close: (isar) async {
       if (isar.isOpen) await isar.close();
     },

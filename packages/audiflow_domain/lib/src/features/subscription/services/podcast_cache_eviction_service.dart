@@ -9,6 +9,7 @@ import '../../feed/models/smart_playlists.dart';
 import '../../player/models/playback_history.dart';
 import '../models/subscriptions.dart';
 import '../repositories/subscription_repository.dart';
+import '../../user_state/services/user_state_store.dart';
 
 /// Evicts stale cached podcast subscriptions to limit storage.
 ///
@@ -27,6 +28,9 @@ class PodcastCacheEvictionService {
 
   final SubscriptionRepository _subscriptionRepo;
   final Isar _isar;
+
+  /// User state writes go through the store; see [UserStateStore].
+  late final _store = UserStateStore(_isar);
   final Logger _logger;
 
   /// Maximum age before a cached subscription is evicted.
@@ -124,7 +128,7 @@ class PodcastCacheEvictionService {
       '${subscription.title} (id=$id)',
     );
 
-    return _isar.writeTxn(() async {
+    return _store.write((_) async {
       // Re-check inside the transaction so no write can land in between.
       final current = await _isar.subscriptions.get(id);
       if (current == null || !current.isCached) return false;

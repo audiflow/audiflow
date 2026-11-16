@@ -6,6 +6,7 @@ import '../../feed/models/episode.dart';
 import '../../subscription/models/subscriptions.dart';
 import '../models/station_podcast.dart';
 import 'station_reconciler.dart';
+import '../../user_state/services/user_state_store.dart';
 
 part 'station_reconciler_service.g.dart';
 
@@ -23,6 +24,9 @@ class StationReconcilerService {
       _reconciler = StationReconciler(isar: isar);
 
   final Isar _isar;
+
+  /// User state writes go through the store; see [UserStateStore].
+  late final _store = UserStateStore(_isar);
   final StationReconciler _reconciler;
 
   /// Called when an episode's state changes (playback, download, favorite).
@@ -68,7 +72,7 @@ class StationReconcilerService {
   Future<void> _pruneUnsubscribedPodcasts(int stationId) {
     // Read inside the transaction so a resubscribe committing between the
     // check and the delete cannot lose its station link.
-    return _isar.writeTxn(() async {
+    return _store.write((_) async {
       final links = await _isar.stationPodcasts
           .filter()
           .stationIdEqualTo(stationId)
@@ -103,7 +107,7 @@ class StationReconcilerService {
         .toSet();
 
     // Remove the podcast-to-station links in a single transaction.
-    await _isar.writeTxn(() async {
+    await _store.write((_) async {
       final ids = stationPodcasts.map((sp) => sp.id).toList();
       await _isar.stationPodcasts.deleteAll(ids);
     });

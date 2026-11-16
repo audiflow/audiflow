@@ -2,15 +2,19 @@ import 'package:isar_community/isar.dart';
 
 import '../../models/parental_control_settings.dart';
 import '../../models/podcast_parental_flags.dart';
+import '../../../user_state/services/user_state_store.dart';
 
 class ParentalControlLocalDataSource {
   ParentalControlLocalDataSource({required this._isar});
 
   final Isar _isar;
 
+  /// User state writes go through the store; see [UserStateStore].
+  late final _store = UserStateStore(_isar);
+
   /// Returns the singleton settings row, creating it atomically if absent.
   Future<ParentalControlSettings> getSettings() async {
-    return _isar.writeTxn(() async {
+    return _store.write((_) async {
       final existing = await _isar.parentalControlSettings.get(0);
       if (existing != null) return existing;
       final fresh = ParentalControlSettings()..id = 0;
@@ -26,7 +30,7 @@ class ParentalControlLocalDataSource {
   Future<ParentalControlSettings> updateSettings(
     ParentalControlSettings Function(ParentalControlSettings) mutate,
   ) async {
-    return _isar.writeTxn(() async {
+    return _store.write((_) async {
       final current =
           await _isar.parentalControlSettings.get(0) ??
           (ParentalControlSettings()..id = 0);
@@ -42,7 +46,7 @@ class ParentalControlLocalDataSource {
   /// Prefer [updateSettings] for read-modify-write operations; this method
   /// is provided for callers that already hold the full settings object.
   Future<void> saveSettings(ParentalControlSettings settings) async {
-    await _isar.writeTxn(() async {
+    await _store.write((_) async {
       settings.id = 0;
       await _isar.parentalControlSettings.put(settings);
     });
@@ -65,7 +69,7 @@ class ParentalControlLocalDataSource {
     required int itunesId,
     required bool hide,
   }) async {
-    await _isar.writeTxn(() async {
+    await _store.write((_) async {
       final existing = await _isar.podcastParentalFlags
           .filter()
           .itunesIdEqualTo(itunesId)
@@ -77,7 +81,7 @@ class ParentalControlLocalDataSource {
   }
 
   Future<void> pruneFlagsFor(int itunesId) async {
-    await _isar.writeTxn(() async {
+    await _store.write((_) async {
       await _isar.podcastParentalFlags
           .filter()
           .itunesIdEqualTo(itunesId)

@@ -313,4 +313,9 @@ export 'src/features/parental_control/services/pin_hasher.dart';
 export 'src/features/parental_control/providers/parental_control_providers.dart';
 
 // User state (sync-ready data model)
+export 'src/features/user_state/models/hlc.dart';
 export 'src/features/user_state/models/stable_keys.dart';
+export 'src/features/user_state/models/sync_meta.dart';
+export 'src/features/user_state/services/data_migration_runner.dart';
+export 'src/features/user_state/services/sync_meta_access.dart';
+export 'src/features/user_state/services/user_state_store.dart';

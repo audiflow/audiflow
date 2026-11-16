@@ -3,6 +3,7 @@ import 'package:isar_community/isar.dart';
 import '../../models/podcast_view_preference.dart';
 import '../../models/smart_playlist_group_user_preference.dart';
 import '../../models/smart_playlist_user_preference.dart';
+import '../../../user_state/services/user_state_store.dart';
 
 /// Local datasource for per-scope play order preferences using Isar.
 ///
@@ -13,6 +14,9 @@ class PlayOrderPreferenceLocalDatasource {
   PlayOrderPreferenceLocalDatasource(this._isar);
 
   final Isar _isar;
+
+  /// User state writes go through the store; see [UserStateStore].
+  late final _store = UserStateStore(_isar);
 
   // -- Podcast level (PodcastViewPreference) --
 
@@ -27,7 +31,7 @@ class PlayOrderPreferenceLocalDatasource {
   /// When [order] is null, clears only the autoPlayOrder field
   /// without deleting the whole record (it has other fields).
   Future<void> setPodcastPlayOrder(int podcastId, String? order) async {
-    await _isar.writeTxn(() async {
+    await _store.write((_) async {
       final existing = await _isar.podcastViewPreferences.getByPodcastId(
         podcastId,
       );
@@ -55,7 +59,7 @@ class PlayOrderPreferenceLocalDatasource {
     String playlistId,
     String? order,
   ) async {
-    await _isar.writeTxn(() async {
+    await _store.write((_) async {
       if (order == null) {
         await _isar.smartPlaylistUserPreferences.deleteByPodcastIdPlaylistId(
           podcastId,
@@ -98,7 +102,7 @@ class PlayOrderPreferenceLocalDatasource {
     String groupId,
     String? order,
   ) async {
-    await _isar.writeTxn(() async {
+    await _store.write((_) async {
       if (order == null) {
         await _isar.smartPlaylistGroupUserPreferences
             .deleteByPodcastIdPlaylistIdGroupId(podcastId, playlistId, groupId);
