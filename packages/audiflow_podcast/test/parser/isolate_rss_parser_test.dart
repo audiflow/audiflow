@@ -539,6 +539,42 @@ void main() {
         expect(await podcastGuid('<podcast:guid>  </podcast:guid>'), isNull);
       });
 
+      test('reads a channel guid placed between items', () async {
+        expect(
+          await podcastGuid(
+            '',
+            tail:
+                '<podcast:guid>between</podcast:guid>'
+                '<item><guid>e2</guid><title>E2</title></item>',
+          ),
+          'between',
+        );
+      });
+
+      test('ignores the tag quoted in CDATA show notes', () async {
+        expect(
+          await podcastGuid(
+            '<description><![CDATA[Use <podcast:guid>quoted</podcast:guid>]]>'
+            '</description><podcast:guid>real</podcast:guid>',
+          ),
+          'real',
+        );
+      });
+
+      test('reads a guid wrapped in CDATA', () async {
+        expect(
+          await podcastGuid('<podcast:guid><![CDATA[ABC]]></podcast:guid>'),
+          'abc',
+        );
+      });
+
+      test('ignores a guid inside a comment', () async {
+        expect(
+          await podcastGuid('<!-- <podcast:guid>old</podcast:guid> -->'),
+          isNull,
+        );
+      });
+
       test('does not take the item guid for the channel guid', () async {
         expect(await podcastGuid('<guid>not-a-channel-guid</guid>'), isNull);
       });

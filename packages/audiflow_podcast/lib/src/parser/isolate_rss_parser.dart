@@ -196,7 +196,7 @@ class IsolateRssParser {
           return;
         }
         // Valid RSS with no items — emit metadata only
-        params.sendPort.send(_parseMetadataFromString(xml));
+        params.sendPort.send(_parseMetadataFromString(xml, fullXml: xml));
         params.sendPort.send(
           const ParseComplete(totalParsed: 0, stoppedEarly: false),
         );
@@ -209,7 +209,9 @@ class IsolateRssParser {
       // practice and the items are never scanned for it.
       final lastItemEnd = xml.lastIndexOf('</item>');
       final trailer = lastItemEnd == -1 ? '' : xml.substring(lastItemEnd);
-      params.sendPort.send(_parseMetadataFromString(header, trailer: trailer));
+      params.sendPort.send(
+        _parseMetadataFromString(header, trailer: trailer, fullXml: xml),
+      );
 
       // --- Episodes: scan for <item>...</item> blocks incrementally ---
       var parsedCount = 0;
@@ -330,6 +332,7 @@ class IsolateRssParser {
   static ParsedPodcastMeta _parseMetadataFromString(
     String headerXml, {
     String trailer = '',
+    String fullXml = '',
   }) {
     final title = _extractTagText(headerXml, 'title') ?? 'Untitled Podcast';
 
@@ -347,18 +350,38 @@ class IsolateRssParser {
       // The channel <link> precedes <image> (whose own <link> repeats it)
       // in the header; `atom:link` is not matched by this tag name.
       link: _channelLink(headerXml) ?? _channelLink(trailer),
-      podcastGuid: _podcastGuid(headerXml) ?? _podcastGuid(trailer),
+      podcastGuid:
+          _podcastGuid(headerXml) ??
+          _podcastGuid(trailer) ??
+          _podcastGuidBetweenItems(fullXml),
     );
   }
 
   /// The channel `<podcast:guid>` (Podcasting 2.0), lowercased: it is a
   /// UUID, and feeds differ only in how they case it.
+  ///
+  /// Searched with comments and markup-carrying CDATA removed, so show
+  /// notes that quote the tag cannot stand in for it. The first parse
+  /// fixes the podcast's stable key from this value, so a miss is
+  /// permanent.
   static String? _podcastGuid(String xml) {
     if (xml.isEmpty) return null;
-    return _extractTagText(
-      xml.replaceAll(_commentRe, ''),
-      'podcast:guid',
-    )?.toLowerCase();
+    final channelOnly = xml
+        .replaceAll(_commentRe, '')
+        .replaceAllMapped(
+          _cdataRe,
+          // A guid wrapped in CDATA holds no markup and is kept.
+          (m) => m[1]!.contains('<') ? '' : m[0]!,
+        );
+    return _extractTagText(channelOnly, 'podcast:guid')?.toLowerCase();
+  }
+
+  /// [_podcastGuid] for a channel that places it between two items.
+  /// Scanning the whole feed is costly, so it runs only when the tag
+  /// appears somewhere outside the header and trailer.
+  static String? _podcastGuidBetweenItems(String fullXml) {
+    if (!fullXml.contains('podcast:guid')) return null;
+    return _podcastGuid(fullXml.replaceAll(_itemRe, ''));
   }
 
   /// Lightweight tag text extraction using regex, no DOM allocation.
@@ -379,6 +402,8 @@ class IsolateRssParser {
   }
 
   static final _commentRe = RegExp(r'<!--[\s\S]*?-->');
+  static final _cdataRe = RegExp(r'<!\[CDATA\[([\s\S]*?)\]\]>');
+  static final _itemRe = RegExp(r'<item\b[\s\S]*?</item>');
   static final _nestedLinkOwnerRe = RegExp(
     r'<(image|textInput)\b[\s\S]*?</\1>',
     caseSensitive: false,

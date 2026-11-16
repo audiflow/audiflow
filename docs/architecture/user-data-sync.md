@@ -75,7 +75,7 @@ Quick Start and Android device transfer run when the user decides to switch, so 
 **podcastKey**
 
 - Use `podcast:guid` (Podcasting 2.0) when the feed declares it (`isolate_rss_parser.dart` reads it into `ParsedPodcastMeta.podcastGuid`).
-- Otherwise, hash the feed URL normalized by `normalizeFeedUrlForKey` (scheme, host case, default port, fragment, and trailing slash ignored).
+- Otherwise, hash the feed URL normalized by `normalizeFeedUrlForKey` (scheme, host case, default port, fragment, and trailing slash ignored; credentials kept, since private feeds tell subscribers apart by them).
 - The key is assigned by the first feed parse (`SubscriptionMetadataUpdater` calls `assignStableKeys`), since a subscription is usually created from search before its feed is read, and is never recomputed. If the feed moves later, the key stays and the new URL is kept as an alias. A subscription without a key skips conditional requests until a parse assigns one.
 - When the same show is registered under two keys (one device saw the guid first, another the URL), a `merge-into` op joins them.
 

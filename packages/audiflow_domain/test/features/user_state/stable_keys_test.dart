@@ -72,6 +72,7 @@ void main() {
       'https://example.com/feed.xml?id=2',
       'https://example.com:8443/feed.xml',
       'https://www.example.com/feed.xml',
+      'https://alice:token@example.com/feed.xml',
     ];
     for (final url in otherFeeds) {
       test('keeps $url apart from the canonical URL', () {
@@ -81,6 +82,42 @@ void main() {
         );
       });
     }
+  });
+
+  test('keeps private feeds of different subscribers apart', () {
+    check(podcastKeyFor(feedUrl: 'https://alice:t@example.com/feed')).not(
+      (it) =>
+          it.equals(podcastKeyFor(feedUrl: 'https://bob:t@example.com/feed')),
+    );
+  });
+
+  // Stored keys must never change: these pin the derivation, so an edit to
+  // a prefix, separator, hash slice, or encoding fails here instead of
+  // silently re-keying new rows.
+  group('fixed derivation', () {
+    test('podcast key from a guid', () {
+      check(
+        podcastKeyFor(
+          podcastGuid: '917393e3-1b1e-5cef-ace4-edaa54e1f810',
+          feedUrl: 'https://example.com/feed.xml',
+        ),
+      ).equals('89ouogm7H_a2z9LsJ_c7gA');
+    });
+
+    test('podcast key from a feed URL', () {
+      check(
+        podcastKeyFor(feedUrl: 'https://example.com/feed.xml'),
+      ).equals('Bam9njDlhFKHwGhI78EtPg');
+    });
+
+    test('episode key', () {
+      check(
+        episodeKeyFor(
+          podcastKeyFor(feedUrl: 'https://example.com/feed.xml'),
+          'guid-1',
+        ),
+      ).equals('kooNKserrqHlXIP_1zltHg');
+    });
   });
 
   group('episodeKeyFor', () {

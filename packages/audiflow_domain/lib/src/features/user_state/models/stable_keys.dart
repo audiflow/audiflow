@@ -40,8 +40,9 @@ String episodeKeyFor(String podcastKey, String storageGuid) =>
 
 /// [feedUrl] reduced to what identifies the feed: hosts move between
 /// `http` and `https` and add or drop default ports and trailing slashes
-/// without the feed changing. The path and query stay as they are, since
-/// servers may treat their case as significant.
+/// without the feed changing. The path, query, and any credentials stay as
+/// they are: servers may treat path case as significant, and private feeds
+/// tell subscribers apart by the credentials alone.
 String normalizeFeedUrlForKey(String feedUrl) {
   final trimmed = feedUrl.trim();
   final uri = Uri.tryParse(trimmed);
@@ -56,7 +57,8 @@ String normalizeFeedUrlForKey(String feedUrl) {
     path = path.substring(0, path.length - 1);
   }
   final query = uri.hasQuery ? '?${uri.query}' : '';
-  return '${uri.host.toLowerCase()}$port$path$query';
+  final userInfo = uri.userInfo.isEmpty ? '' : '${uri.userInfo}@';
+  return '$userInfo${uri.host.toLowerCase()}$port$path$query';
 }
 
 String _key(String input) {
