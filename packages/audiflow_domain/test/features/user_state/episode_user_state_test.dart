@@ -203,6 +203,102 @@ void main() {
     });
   });
 
+  group('in-progress paging', () {
+    Future<void> putOrphans(int count, DateTime newest) => isar.writeTxn(
+      () => isar.episodeUserStates.putAll([
+        for (var i = 0; i < count; i++)
+          EpisodeUserState()
+            ..episodeKey = 'orphan-$i'
+            ..podcastKey = 'pk'
+            ..hasPlayback = true
+            ..positionMs = 100
+            ..lastPlayedAt = newest.subtract(Duration(minutes: i)),
+      ]),
+    );
+
+    Future<void> putLegacyAt(int episodeId, DateTime at) => isar.writeTxn(
+      () => isar.playbackHistorys.put(
+        PlaybackHistory()
+          ..episodeId = episodeId
+          ..positionMs = 100
+          ..lastPlayedAt = at,
+      ),
+    );
+
+    test('reads past pages of hidden rows to fill the limit', () async {
+      final sub = await putPodcast();
+      final visible = await putEpisode(sub, 'v');
+      await history.updateProgress(episodeId: visible.id, positionMs: 1000);
+      await isar.writeTxn(() async {
+        final state = await stateOf('ek-v');
+        await isar.episodeUserStates.put(
+          state!..lastPlayedAt = DateTime(2026, 1, 1),
+        );
+      });
+      // More hidden rows than one page, all newer than the visible one.
+      await putOrphans(50, DateTime(2026, 6));
+
+      final inProgress = await history.getInProgress(limit: 1);
+
+      check(inProgress.map((h) => h.episodeId)).deepEquals([visible.id]);
+    });
+
+    test('orders across both collections beyond the first page', () async {
+      final plainSub = await putPodcast(podcastKey: null);
+      final plain = <Episode>[];
+      for (var i = 0; i < 25; i++) {
+        final e = await putEpisode(plainSub, 'p$i', keyed: false);
+        plain.add(e);
+        // Old rows, newest first: p0 at day 25 down to p24 at day 1.
+        await putLegacyAt(e.id, DateTime(2026, 1, 25 - i));
+      }
+      // Hidden keyed rows push the keyed pager to page through.
+      await putOrphans(30, DateTime(2026, 3));
+      final keyedSub = await putPodcast();
+      final keyed = await putEpisode(keyedSub, 'k');
+      await history.updateProgress(episodeId: keyed.id, positionMs: 1000);
+      await isar.writeTxn(() async {
+        final state = await stateOf('ek-k');
+        // Between p2 (day 23) and p3 (day 22).
+        await isar.episodeUserStates.put(
+          state!..lastPlayedAt = DateTime(2026, 1, 22, 12),
+        );
+      });
+
+      final inProgress = await history.getInProgress(limit: 5);
+
+      check(inProgress.map((h) => h.episodeId)).deepEquals([
+        plain[0].id,
+        plain[1].id,
+        plain[2].id,
+        keyed.id,
+        plain[3].id,
+      ]);
+    });
+
+    test('watching emits again when a hidden episode arrives', () async {
+      await isar.writeTxn(
+        () => isar.episodeUserStates.put(
+          EpisodeUserState()
+            ..episodeKey = 'ek-late'
+            ..podcastKey = 'pk'
+            ..hasPlayback = true
+            ..positionMs = 100
+            ..lastPlayedAt = DateTime(2026, 3),
+        ),
+      );
+      final emitted = history
+          .watchInProgress()
+          .map((list) => list.length)
+          .take(2)
+          .toList();
+
+      await putEpisode(await putPodcast(), 'late');
+
+      check(await emitted).deepEquals([0, 1]);
+    });
+  });
+
   group('favorites', () {
     test('toggle writes the keyed state and reads it back', () async {
       final episode = await putEpisode(await putPodcast(), 'g1');

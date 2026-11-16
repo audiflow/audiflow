@@ -274,25 +274,83 @@ class PlaybackHistoryLocalDatasource {
   ///
   /// Ordered by lastPlayedAt descending, limited to [limit] items.
   Future<List<PlaybackHistory>> getInProgress({int limit = 10}) async {
-    // Mirrors [PlaybackHistoryStatus.isInProgress]. Not limited in the
-    // query: rows whose episode is missing are dropped afterwards.
-    final states = await _isar.episodeUserStates
-        .filter()
-        .hasPlaybackEqualTo(true)
-        .and()
-        .positionMsGreaterThan(0)
-        .and()
-        .group((q) => q.completedAtIsNull().or().isReplayingEqualTo(true))
-        .findAll();
-    final legacy = await _isar.playbackHistorys
-        .filter()
-        .positionMsGreaterThan(0)
-        .and()
-        .group((q) => q.completedAtIsNull().or().isReplayingEqualTo(true))
-        .findAll();
-    final resolved = await _access.resolve(states: states, legacy: legacy);
-    resolved.sort(_byLastPlayedDesc);
-    return resolved.take(limit).toList();
+    // Mirrors [PlaybackHistoryStatus.isInProgress]. Both collections are
+    // read newest first in pages, since rows whose episode is missing are
+    // dropped only after resolving; reading stops once the newest [limit]
+    // visible rows are known.
+    final pageSize = limit < 10 ? 20 : limit * 2;
+    final states = _Pager<EpisodeUserState>(
+      pageSize,
+      (offset) => _isar.episodeUserStates
+          .filter()
+          .hasPlaybackEqualTo(true)
+          .and()
+          .positionMsGreaterThan(0)
+          .and()
+          .group((q) => q.completedAtIsNull().or().isReplayingEqualTo(true))
+          .sortByLastPlayedAtDesc()
+          .offset(offset)
+          .limit(pageSize)
+          .findAll(),
+      (state) => state.lastPlayedAt,
+    );
+    final legacy = _Pager<PlaybackHistory>(
+      pageSize,
+      (offset) => _isar.playbackHistorys
+          .filter()
+          .positionMsGreaterThan(0)
+          .and()
+          .group((q) => q.completedAtIsNull().or().isReplayingEqualTo(true))
+          .sortByLastPlayedAtDesc()
+          .offset(offset)
+          .limit(pageSize)
+          .findAll(),
+      (history) => history.lastPlayedAt,
+    );
+    while (true) {
+      await states.next();
+      await legacy.next();
+      final resolved = await _access.resolve(
+        states: states.rows,
+        legacy: legacy.rows,
+      );
+      resolved.sort(_byLastPlayedDesc);
+      final done = states.isDone && legacy.isDone;
+      if (done || limit <= _settledCount(resolved, [states, legacy])) {
+        return resolved.take(limit).toList();
+      }
+    }
+  }
+
+  /// How many of [sorted] are known to be among the newest: rows strictly
+  /// newer than anything an unfinished pager could still return.
+  static int _settledCount(
+    List<PlaybackHistory> sorted,
+    List<_Pager<Object>> pagers,
+  ) {
+    DateTime? frontier;
+    var frontierIsNull = false;
+    for (final pager in pagers) {
+      if (pager.isDone) continue;
+      final last = pager.lastSortValue;
+      if (last == null) {
+        frontierIsNull = true;
+        continue;
+      }
+      final current = frontier;
+      if (current == null || current.isBefore(last)) frontier = last;
+    }
+    final newest = frontier;
+    if (newest == null) {
+      // Unread rows can only have no lastPlayedAt, which sorts last.
+      return frontierIsNull
+          ? sorted.where((h) => h.lastPlayedAt != null).length
+          : sorted.length;
+    }
+    return sorted.where((h) {
+      final at = h.lastPlayedAt;
+      return at != null && newest.isBefore(at);
+    }).length;
   }
 
   /// Watches episodes that are in progress.
@@ -301,6 +359,9 @@ class PlaybackHistoryLocalDatasource {
       triggers: [
         _isar.playbackHistorys.watchLazy(),
         _isar.episodeUserStates.watchLazy(),
+        // Keyed state shows only once its episode is in the catalog, so a
+        // feed bringing the episode back changes the result too.
+        _isar.episodes.watchLazy(),
       ],
       load: () => getInProgress(limit: limit),
       same: (a, b) =>
@@ -397,5 +458,26 @@ class PlaybackHistoryLocalDatasource {
       },
     );
     return controller.stream;
+  }
+}
+
+/// Reads one query page by page, keeping every row read so far.
+class _Pager<T> {
+  _Pager(this._pageSize, this._fetch, this._sortValue);
+
+  final int _pageSize;
+  final Future<List<T>> Function(int offset) _fetch;
+  final DateTime? Function(T row) _sortValue;
+  final rows = <T>[];
+  var isDone = false;
+
+  /// The sort value of the last row read, the newest any unread row can be.
+  DateTime? get lastSortValue => rows.isEmpty ? null : _sortValue(rows.last);
+
+  Future<void> next() async {
+    if (isDone) return;
+    final page = await _fetch(rows.length);
+    rows.addAll(page);
+    if (page.length < _pageSize) isDone = true;
   }
 }

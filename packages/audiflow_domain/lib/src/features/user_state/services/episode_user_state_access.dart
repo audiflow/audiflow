@@ -1,8 +1,8 @@
-import 'dart:developer' as developer;
-
 import 'package:flutter/foundation.dart';
 import 'package:isar_community/isar.dart';
+import 'package:logger/logger.dart';
 
+import '../../../common/providers/logger_provider.dart';
 import '../../feed/models/episode.dart';
 import '../../player/models/playback_history.dart';
 import '../../subscription/models/subscriptions.dart';
@@ -18,9 +18,13 @@ import 'user_state_store.dart';
 /// podcast has no stable key (not parsed since keys were introduced), or,
 /// defensively, one keyed without its state having been copied.
 class EpisodeUserStateAccess {
-  const EpisodeUserStateAccess(this._isar);
+  EpisodeUserStateAccess(this._isar, {Logger? logger})
+    : _logger = logger ?? _compareLogger;
 
   final Isar _isar;
+  final Logger _logger;
+
+  static final _compareLogger = NamedLogger('UserStateCompare');
 
   /// The playback history of [episodeId], from the new row when it has
   /// playback, otherwise from the old one.
@@ -188,10 +192,9 @@ class EpisodeUserStateAccess {
 
   void _reportMismatch(int episodeId, PlaybackHistory a, PlaybackHistory b) {
     if (!kDebugMode || sameHistory(a, b)) return;
-    developer.log(
+    _logger.w(
       'EpisodeUserState differs from PlaybackHistory for episode $episodeId: '
       'old ${describeHistory(a)}, new ${describeHistory(b)}',
-      name: 'UserStateCompare',
     );
   }
 }
