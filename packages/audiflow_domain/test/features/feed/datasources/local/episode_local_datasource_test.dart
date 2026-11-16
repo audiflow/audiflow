@@ -1091,4 +1091,82 @@ void main() {
       expect(result.autoDownloadEnqueued, isFalse);
     });
   });
+
+  group('episode keys', () {
+    const podcastKey = 'podcast-key-000000000';
+
+    Future<void> keyPodcast() async {
+      await isar.writeTxn(() async {
+        final sub = (await isar.subscriptions.get(1))!..podcastKey = podcastKey;
+        await isar.subscriptions.put(sub);
+      });
+    }
+
+    Future<List<String?>> storedKeys() async => [
+      for (final row in await isar.episodes.where().findAll()) row.episodeKey,
+    ];
+
+    test('stays null while the podcast has no key', () async {
+      await datasource.upsertAll([
+        makeEpisode(guid: 'g1', title: 'E1', audioUrl: 'https://e/1.mp3'),
+      ]);
+
+      expect(await storedKeys(), [null]);
+    });
+
+    test('keys new episodes of a keyed podcast by storage guid', () async {
+      await keyPodcast();
+
+      await datasource.upsertAll([
+        makeEpisode(guid: 'g1', title: 'E1', audioUrl: 'https://e/1.mp3'),
+        makeEpisode(
+          guid: 'g1',
+          title: 'Reused guid',
+          audioUrl: 'https://e/2.mp3',
+          publishedAt: DateTime.utc(2024),
+        ),
+      ]);
+
+      final rows = await isar.episodes.where().findAll();
+      final byGuid = {for (final row in rows) row.guid: row.episodeKey};
+      expect(byGuid, {
+        'g1': episodeKeyFor(podcastKey, 'g1'),
+        duplicateGuidKey('g1', 'https://e/2.mp3'): episodeKeyFor(
+          podcastKey,
+          duplicateGuidKey('g1', 'https://e/2.mp3'),
+        ),
+      });
+    });
+
+    test('keys an episode stored with upsert', () async {
+      await keyPodcast();
+
+      await datasource.upsert(
+        makeEpisode(guid: 'g1', title: 'E1', audioUrl: 'https://e/1.mp3'),
+      );
+
+      expect(await storedKeys(), [episodeKeyFor(podcastKey, 'g1')]);
+    });
+
+    test('keeps the stored key on refresh', () async {
+      await keyPodcast();
+      await datasource.upsertAll([
+        makeEpisode(guid: 'g1', title: 'E1', audioUrl: 'https://e/1.mp3'),
+      ]);
+      await isar.writeTxn(() async {
+        final row = (await isar.episodes.where().findFirst())!
+          ..episodeKey = 'assigned-earlier';
+        await isar.episodes.put(row);
+      });
+
+      await datasource.upsertAll([
+        makeEpisode(guid: 'g1', title: 'E1 v2', audioUrl: 'https://e/1.mp3'),
+      ]);
+      await datasource.upsert(
+        makeEpisode(guid: 'g1', title: 'E1 v3', audioUrl: 'https://e/1.mp3'),
+      );
+
+      expect(await storedKeys(), ['assigned-earlier']);
+    });
+  });
 }

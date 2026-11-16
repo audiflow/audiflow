@@ -2,6 +2,8 @@ import 'package:audiflow_podcast/audiflow_podcast.dart'
     show duplicateGuidKey, duplicateGuidSeparator, guidOfStorageKey;
 import 'package:isar_community/isar.dart';
 
+import '../../../subscription/models/subscriptions.dart';
+import '../../../user_state/models/stable_keys.dart';
 import '../../models/episode.dart';
 
 /// Local datasource for episode operations using Isar.
@@ -25,6 +27,7 @@ class EpisodeLocalDatasource {
       if (existing != null) {
         _keepAppState(episode, existing);
       }
+      await _assignEpisodeKeys([episode]);
       await _isar.episodes.put(episode);
     });
     return episode.id;
@@ -45,8 +48,29 @@ class EpisodeLocalDatasource {
       for (final episode in episodes) {
         batch.claim(episode, await _storedSiblings(episode, batch));
       }
+      await _assignEpisodeKeys(batch.episodes);
       await _isar.episodes.putAll(batch.episodes);
     });
+  }
+
+  /// Keys each of [episodes] that has none from its storage guid, once its
+  /// podcast has a key; until then `assignStableKeys` keys them along with
+  /// the podcast. Runs after [_FeedItemBatch.claim], which settles the
+  /// storage guid. Must run inside a write transaction.
+  Future<void> _assignEpisodeKeys(List<Episode> episodes) async {
+    final podcastKeys = <int, String?>{};
+    for (final episode in episodes) {
+      if (episode.episodeKey != null) continue;
+      final podcastId = episode.podcastId;
+      if (!podcastKeys.containsKey(podcastId)) {
+        podcastKeys[podcastId] = (await _isar.subscriptions.get(
+          podcastId,
+        ))?.podcastKey;
+      }
+      final podcastKey = podcastKeys[podcastId];
+      if (podcastKey == null) continue;
+      episode.episodeKey = episodeKeyFor(podcastKey, episode.guid);
+    }
   }
 
   /// Stored rows created from feed items with [episode]'s guid: the row
@@ -345,6 +369,8 @@ class _FeedItemBatch {
 void _keepAppState(Episode incoming, Episode existing) {
   incoming
     ..id = existing.id
+    // Never recomputed: other devices know the episode by it.
+    ..episodeKey = existing.episodeKey
     ..isFavorited = existing.isFavorited
     ..favoritedAt = existing.favoritedAt
     ..autoDownloadEnqueued = existing.autoDownloadEnqueued;

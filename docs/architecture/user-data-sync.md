@@ -11,7 +11,7 @@ refs:
 ---
 # User Data: Device Continuity and Sync
 
-Status: accepted design, not yet implemented. Work is split into migration steps M0 to M7 (see [Migration steps](#migration-steps)). Tracking: #773 (M0), #718 (M5).
+Status: accepted design, being implemented (M0 and M1 landed). Work is split into migration steps M0 to M7 (see [Migration steps](#migration-steps)). Tracking: #773 (M0, done), #777 (M1), #778 (M2), #779 (M3), #780 (M4), #718 (M5), #781 (M6), #782 (M7).
 
 ## Goals
 
@@ -74,14 +74,17 @@ Quick Start and Android device transfer run when the user decides to switch, so 
 
 **podcastKey**
 
-- Use `podcast:guid` (Podcasting 2.0) when the feed declares it. The parser does not read it today (`isolate_rss_parser.dart` reads only item `guid`); M1 adds it.
-- Otherwise, hash the normalized feed URL at subscription time. If the feed moves later, the key stays and the new URL is kept as an alias.
+- Use `podcast:guid` (Podcasting 2.0) when the feed declares it (`isolate_rss_parser.dart` reads it into `ParsedPodcastMeta.podcastGuid`).
+- Otherwise, hash the feed URL normalized by `normalizeFeedUrlForKey` (scheme, host case, default port, fragment, and trailing slash ignored; credentials kept, since private feeds tell subscribers apart by them).
+- The key is assigned by the first feed parse (`SubscriptionMetadataUpdater` calls `assignStableKeys`), since a subscription is usually created from search before its feed is read, and is never recomputed. If the feed moves later, the key stays and the new URL is kept as an alias. A subscription without a key skips conditional requests until a parse assigns one.
 - When the same show is registered under two keys (one device saw the guid first, another the URL), a `merge-into` op joins them.
 
 **episodeKey**
 
-- Hash of `podcastKey` plus the raw item guid. Without a guid, fall back to the enclosure URL, as `isolate_rss_parser.dart` already does.
+- Hash of `podcastKey` plus the episode's storage guid: the item guid, or the enclosure URL for an item without one, as `isolate_rss_parser.dart` already does. An item that reuses another item's guid is stored under a duplicate-guid key (guid plus enclosure URL), so it gets a distinct key; which of those items holds the plain guid can still differ between devices, which the locator below resolves.
+- Assigned when the episode is stored and its podcast has a key; `assignStableKeys` keys a podcast's existing episodes in the same transaction as the podcast. Never recomputed, even when the storage guid is rewritten.
 - The current `Episode.guid` is a storage key influenced by each device's fetch history (`_FeedItemBatch.claim` in `episode_local_datasource.dart`). Two devices that fetched at different times can store the same episode under different keys, so it cannot be the sync key.
+- Keys are `podcastKeyFor` / `episodeKeyFor` in `audiflow_domain` (`features/user_state/models/stable_keys.dart`): the first 128 bits of SHA-256 over a typed, versioned input, base64url without padding.
 - Ops also carry a locator `{guid, audioUrl, publishedAt}`. When the key is unknown, the receiver searches the same way `_bestMatch` does and records the found key as an alias.
 
 ## Local storage (Isar)

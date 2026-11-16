@@ -1,5 +1,7 @@
 import 'package:isar_community/isar.dart';
 
+import '../../../feed/models/episode.dart';
+import '../../../user_state/models/stable_keys.dart';
 import '../../models/subscriptions.dart';
 
 /// Local datasource for subscription operations using Isar.
@@ -148,15 +150,17 @@ class SubscriptionLocalDatasource {
   ///
   /// Sets [isCached] to false and updates [subscribedAt].
   /// Returns the updated subscription, or null if not found.
-  Future<Subscription?> promoteToSubscribed(String itunesId) async {
-    final existing = await getByItunesId(itunesId);
-    if (existing == null) return null;
-
-    existing
-      ..isCached = false
-      ..subscribedAt = DateTime.now();
-    await _isar.writeTxn(() => _isar.subscriptions.put(existing));
-    return existing;
+  Future<Subscription?> promoteToSubscribed(String itunesId) {
+    // Read inside the transaction, as in [updateLastAccessed].
+    return _isar.writeTxn(() async {
+      final existing = await _isar.subscriptions.getByItunesId(itunesId);
+      if (existing == null) return null;
+      existing
+        ..isCached = false
+        ..subscribedAt = DateTime.now();
+      await _isar.subscriptions.put(existing);
+      return existing;
+    });
   }
 
   /// Updates the [lastAccessedAt] timestamp for a subscription.
@@ -302,6 +306,40 @@ class SubscriptionLocalDatasource {
     });
   }
 
+  /// Records the channel [podcastGuid] from a feed parse and gives the
+  /// subscription, and each of its episodes, a stable key if it has none.
+  ///
+  /// A key already assigned is kept, so a feed that moves or starts
+  /// declaring a guid keeps the key other devices know it by. The podcast
+  /// and its episodes are keyed in one transaction, so no episode is left
+  /// without a key once its podcast has one. Does nothing if no
+  /// subscription is found for [id].
+  Future<void> assignStableKeys(int id, {String? podcastGuid}) {
+    return _isar.writeTxn(() async {
+      final existing = await _isar.subscriptions.get(id);
+      if (existing == null) return;
+      final podcastKey =
+          existing.podcastKey ??
+          podcastKeyFor(podcastGuid: podcastGuid, feedUrl: existing.feedUrl);
+      existing
+        ..podcastGuid = podcastGuid ?? existing.podcastGuid
+        ..podcastKey = podcastKey;
+      await _isar.subscriptions.put(existing);
+
+      final unkeyed = await _isar.episodes
+          .where()
+          .podcastIdEqualToAnyGuid(id)
+          .filter()
+          .episodeKeyIsNull()
+          .findAll();
+      if (unkeyed.isEmpty) return;
+      for (final episode in unkeyed) {
+        episode.episodeKey = episodeKeyFor(podcastKey, episode.guid);
+      }
+      await _isar.episodes.putAll(unkeyed);
+    });
+  }
+
   /// Updates the auto-download setting for a subscription.
   ///
   /// Does nothing if no subscription is found for the given [id].
@@ -379,27 +417,33 @@ class SubscriptionLocalDatasource {
     int id, {
     String? etag,
     String? lastModified,
-  }) async {
-    final existing = await _isar.subscriptions.get(id);
-    if (existing == null) return;
-
-    existing
-      ..httpEtag = etag
-      ..httpLastModified = lastModified;
-    await _isar.writeTxn(() => _isar.subscriptions.put(existing));
+  }) {
+    // Read inside the transaction, as in [updateLastAccessed]: a feed
+    // sync writes the validators right after it may have assigned the
+    // stable key.
+    return _isar.writeTxn(() async {
+      final existing = await _isar.subscriptions.get(id);
+      if (existing == null) return;
+      existing
+        ..httpEtag = etag
+        ..httpLastModified = lastModified;
+      await _isar.subscriptions.put(existing);
+    });
   }
 
   /// Clears HTTP cache headers on all subscriptions so the
   /// next feed sync performs unconditional requests.
-  Future<void> clearAllHttpCacheHeaders() async {
-    final all = await _isar.subscriptions.where().findAll();
-    if (all.isEmpty) return;
-
-    for (final sub in all) {
-      sub
-        ..httpEtag = null
-        ..httpLastModified = null;
-    }
-    await _isar.writeTxn(() => _isar.subscriptions.putAll(all));
+  Future<void> clearAllHttpCacheHeaders() {
+    // Read inside the transaction, as in [updateLastAccessed].
+    return _isar.writeTxn(() async {
+      final all = await _isar.subscriptions.where().findAll();
+      if (all.isEmpty) return;
+      for (final sub in all) {
+        sub
+          ..httpEtag = null
+          ..httpLastModified = null;
+      }
+      await _isar.subscriptions.putAll(all);
+    });
   }
 }

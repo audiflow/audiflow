@@ -91,19 +91,29 @@ const SubscriptionSchema = CollectionSchema(
       name: r'lastRefreshedAt',
       type: IsarType.dateTime,
     ),
-    r'subscribedAt': PropertySchema(
+    r'podcastGuid': PropertySchema(
       id: 18,
+      name: r'podcastGuid',
+      type: IsarType.string,
+    ),
+    r'podcastKey': PropertySchema(
+      id: 19,
+      name: r'podcastKey',
+      type: IsarType.string,
+    ),
+    r'subscribedAt': PropertySchema(
+      id: 20,
       name: r'subscribedAt',
       type: IsarType.dateTime,
     ),
-    r'title': PropertySchema(id: 19, name: r'title', type: IsarType.string),
+    r'title': PropertySchema(id: 21, name: r'title', type: IsarType.string),
     r'websiteSyncedAt': PropertySchema(
-      id: 20,
+      id: 22,
       name: r'websiteSyncedAt',
       type: IsarType.dateTime,
     ),
     r'websiteUrl': PropertySchema(
-      id: 21,
+      id: 23,
       name: r'websiteUrl',
       type: IsarType.string,
     ),
@@ -123,6 +133,19 @@ const SubscriptionSchema = CollectionSchema(
       properties: [
         IndexPropertySchema(
           name: r'itunesId',
+          type: IndexType.hash,
+          caseSensitive: true,
+        ),
+      ],
+    ),
+    r'podcastKey': IndexSchema(
+      id: -7454521677690852339,
+      name: r'podcastKey',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'podcastKey',
           type: IndexType.hash,
           caseSensitive: true,
         ),
@@ -172,6 +195,18 @@ int _subscriptionEstimateSize(
     }
   }
   bytesCount += 3 + object.itunesId.length * 3;
+  {
+    final value = object.podcastGuid;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.podcastKey;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   bytesCount += 3 + object.title.length * 3;
   {
     final value = object.websiteUrl;
@@ -206,10 +241,12 @@ void _subscriptionSerialize(
   writer.writeString(offsets[15], object.itunesId);
   writer.writeDateTime(offsets[16], object.lastAccessedAt);
   writer.writeDateTime(offsets[17], object.lastRefreshedAt);
-  writer.writeDateTime(offsets[18], object.subscribedAt);
-  writer.writeString(offsets[19], object.title);
-  writer.writeDateTime(offsets[20], object.websiteSyncedAt);
-  writer.writeString(offsets[21], object.websiteUrl);
+  writer.writeString(offsets[18], object.podcastGuid);
+  writer.writeString(offsets[19], object.podcastKey);
+  writer.writeDateTime(offsets[20], object.subscribedAt);
+  writer.writeString(offsets[21], object.title);
+  writer.writeDateTime(offsets[22], object.websiteSyncedAt);
+  writer.writeString(offsets[23], object.websiteUrl);
 }
 
 Subscription _subscriptionDeserialize(
@@ -238,10 +275,12 @@ Subscription _subscriptionDeserialize(
   object.itunesId = reader.readString(offsets[15]);
   object.lastAccessedAt = reader.readDateTimeOrNull(offsets[16]);
   object.lastRefreshedAt = reader.readDateTimeOrNull(offsets[17]);
-  object.subscribedAt = reader.readDateTime(offsets[18]);
-  object.title = reader.readString(offsets[19]);
-  object.websiteSyncedAt = reader.readDateTimeOrNull(offsets[20]);
-  object.websiteUrl = reader.readStringOrNull(offsets[21]);
+  object.podcastGuid = reader.readStringOrNull(offsets[18]);
+  object.podcastKey = reader.readStringOrNull(offsets[19]);
+  object.subscribedAt = reader.readDateTime(offsets[20]);
+  object.title = reader.readString(offsets[21]);
+  object.websiteSyncedAt = reader.readDateTimeOrNull(offsets[22]);
+  object.websiteUrl = reader.readStringOrNull(offsets[23]);
   return object;
 }
 
@@ -289,12 +328,16 @@ P _subscriptionDeserializeProp<P>(
     case 17:
       return (reader.readDateTimeOrNull(offset)) as P;
     case 18:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 19:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 20:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 21:
+      return (reader.readString(offset)) as P;
+    case 22:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 23:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -501,6 +544,82 @@ extension SubscriptionQueryWhere
                 indexName: r'itunesId',
                 lower: [],
                 upper: [itunesId],
+                includeUpper: false,
+              ),
+            );
+      }
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterWhereClause>
+  podcastKeyIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(indexName: r'podcastKey', value: [null]),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterWhereClause>
+  podcastKeyIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'podcastKey',
+          lower: [null],
+          includeLower: false,
+          upper: [],
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterWhereClause> podcastKeyEqualTo(
+    String? podcastKey,
+  ) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(indexName: r'podcastKey', value: [podcastKey]),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterWhereClause>
+  podcastKeyNotEqualTo(String? podcastKey) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'podcastKey',
+                lower: [],
+                upper: [podcastKey],
+                includeUpper: false,
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'podcastKey',
+                lower: [podcastKey],
+                includeLower: false,
+                upper: [],
+              ),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'podcastKey',
+                lower: [podcastKey],
+                includeLower: false,
+                upper: [],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'podcastKey',
+                lower: [],
+                upper: [podcastKey],
                 includeUpper: false,
               ),
             );
@@ -2306,6 +2425,324 @@ extension SubscriptionQueryFilter
   }
 
   QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  podcastGuidIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'podcastGuid'),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  podcastGuidIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'podcastGuid'),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  podcastGuidEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'podcastGuid',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  podcastGuidGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'podcastGuid',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  podcastGuidLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'podcastGuid',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  podcastGuidBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'podcastGuid',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  podcastGuidStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'podcastGuid',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  podcastGuidEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'podcastGuid',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  podcastGuidContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'podcastGuid',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  podcastGuidMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'podcastGuid',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  podcastGuidIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'podcastGuid', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  podcastGuidIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'podcastGuid', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  podcastKeyIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'podcastKey'),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  podcastKeyIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'podcastKey'),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  podcastKeyEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'podcastKey',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  podcastKeyGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'podcastKey',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  podcastKeyLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'podcastKey',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  podcastKeyBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'podcastKey',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  podcastKeyStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'podcastKey',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  podcastKeyEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'podcastKey',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  podcastKeyContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'podcastKey',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  podcastKeyMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'podcastKey',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  podcastKeyIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'podcastKey', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  podcastKeyIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'podcastKey', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
   subscribedAtEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -2984,6 +3421,32 @@ extension SubscriptionQuerySortBy
     });
   }
 
+  QueryBuilder<Subscription, Subscription, QAfterSortBy> sortByPodcastGuid() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'podcastGuid', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterSortBy>
+  sortByPodcastGuidDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'podcastGuid', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterSortBy> sortByPodcastKey() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'podcastKey', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterSortBy>
+  sortByPodcastKeyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'podcastKey', Sort.desc);
+    });
+  }
+
   QueryBuilder<Subscription, Subscription, QAfterSortBy> sortBySubscribedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'subscribedAt', Sort.asc);
@@ -3287,6 +3750,32 @@ extension SubscriptionQuerySortThenBy
     });
   }
 
+  QueryBuilder<Subscription, Subscription, QAfterSortBy> thenByPodcastGuid() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'podcastGuid', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterSortBy>
+  thenByPodcastGuidDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'podcastGuid', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterSortBy> thenByPodcastKey() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'podcastKey', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterSortBy>
+  thenByPodcastKeyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'podcastKey', Sort.desc);
+    });
+  }
+
   QueryBuilder<Subscription, Subscription, QAfterSortBy> thenBySubscribedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'subscribedAt', Sort.asc);
@@ -3475,6 +3964,22 @@ extension SubscriptionQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Subscription, Subscription, QDistinct> distinctByPodcastGuid({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'podcastGuid', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QDistinct> distinctByPodcastKey({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'podcastKey', caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<Subscription, Subscription, QDistinct> distinctBySubscribedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'subscribedAt');
@@ -3626,6 +4131,18 @@ extension SubscriptionQueryProperty
   lastRefreshedAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'lastRefreshedAt');
+    });
+  }
+
+  QueryBuilder<Subscription, String?, QQueryOperations> podcastGuidProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'podcastGuid');
+    });
+  }
+
+  QueryBuilder<Subscription, String?, QQueryOperations> podcastKeyProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'podcastKey');
     });
   }
 

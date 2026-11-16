@@ -10,6 +10,16 @@ class Subscription {
   late String itunesId;
 
   late String feedUrl;
+
+  /// Names this podcast identically on every device; see
+  /// `podcastKeyFor`. Assigned on the first feed parse and never changed,
+  /// so a feed that moves keeps it. Null until then.
+  @Index()
+  String? podcastKey;
+
+  /// The channel `<podcast:guid>` from the latest parse, lowercased; null
+  /// when the feed declares none or has not been parsed since it was read.
+  String? podcastGuid;
   late String title;
   late String artistName;
   String? artworkUrl;

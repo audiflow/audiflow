@@ -13,6 +13,12 @@ class _FakeSubscriptionRepository implements SubscriptionRepository {
   String? storedWebsite;
   DateTime? websiteSyncedAt;
   int websiteWrites = 0;
+  final keyAssignments = <(int, String?)>[];
+
+  @override
+  Future<void> assignStableKeys(int id, {String? podcastGuid}) async {
+    keyAssignments.add((id, podcastGuid));
+  }
 
   @override
   Future<void> updateWebsiteUrl(
@@ -54,6 +60,8 @@ Subscription _subscription({
   String? websiteUrl,
   DateTime? websiteSyncedAt,
   DateTime? channelTextSyncedAt,
+  String? podcastKey = 'assigned-key',
+  String? podcastGuid,
 }) {
   return Subscription()
     ..id = id
@@ -67,6 +75,8 @@ Subscription _subscription({
     ..websiteUrl = websiteUrl
     ..websiteSyncedAt = websiteSyncedAt
     ..channelTextSyncedAt = channelTextSyncedAt
+    ..podcastKey = podcastKey
+    ..podcastGuid = podcastGuid
     ..genres = ''
     ..explicit = false
     ..subscribedAt = DateTime.now();
@@ -303,8 +313,56 @@ void main() {
     });
   });
 
+  group('SubscriptionMetadataUpdater stable keys', () {
+    const meta = FeedMetaReady(
+      title: 'Test Podcast',
+      description: '',
+      podcastGuid: 'abc',
+    );
+
+    test('assigns keys to a subscription without one', () async {
+      await updater.applyFeedMeta(_subscription(id: 7, podcastKey: null), meta);
+
+      check(repository.keyAssignments).deepEquals([(7, 'abc')]);
+    });
+
+    test('assigns keys without a guid when the feed has none', () async {
+      await updater.apply(_subscription(id: 7, podcastKey: null));
+
+      check(repository.keyAssignments).deepEquals([(7, null)]);
+    });
+
+    test('records a guid the stored one does not match', () async {
+      await updater.applyFeedMeta(_subscription(id: 7), meta);
+
+      check(repository.keyAssignments).deepEquals([(7, 'abc')]);
+    });
+
+    test('writes nothing once the key and guid are stored', () async {
+      await updater.applyFeedMeta(_subscription(podcastGuid: 'abc'), meta);
+      await updater.apply(_subscription());
+
+      check(repository.keyAssignments).isEmpty();
+    });
+  });
+
   group('SubscriptionMetadataUpdater.needsChannelBackfill', () {
     final synced = DateTime(2026);
+
+    test('is true until the podcast has a stable key', () {
+      // Subscriptions made before keys existed only 304 on refresh, so
+      // they would never parse the channel to get one otherwise.
+      check(
+        SubscriptionMetadataUpdater.needsChannelBackfill(
+          _subscription(
+            feedMetadataSyncedAt: synced,
+            websiteSyncedAt: synced,
+            channelTextSyncedAt: synced,
+            podcastKey: null,
+          ),
+        ),
+      ).isTrue();
+    });
 
     test('is true until the website has been read', () {
       // Subscriptions made before the website was stored only 304 on

@@ -297,6 +297,10 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
   }
 
   @override
+  Future<void> assignStableKeys(int id, {String? podcastGuid}) =>
+      _datasource.assignStableKeys(id, podcastGuid: podcastGuid);
+
+  @override
   Future<void> updateFeedMetadata(
     int id, {
     String? artworkUrl,

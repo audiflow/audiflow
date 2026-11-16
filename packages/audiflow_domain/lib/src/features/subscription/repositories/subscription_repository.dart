@@ -127,6 +127,11 @@ abstract class SubscriptionRepository {
     required DateTime syncedAt,
   });
 
+  /// Records the channel `<podcast:guid>` read by a feed parse (null when
+  /// the feed declares none) and gives the subscription and its episodes
+  /// a stable key if they have none. An assigned key never changes.
+  Future<void> assignStableKeys(int id, {String? podcastGuid});
+
   /// Updates the podcast metadata a feed refresh parsed from the RSS channel.
   ///
   /// Only non-null arguments are written; a null argument leaves the stored

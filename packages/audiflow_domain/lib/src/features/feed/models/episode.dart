@@ -10,6 +10,12 @@ class Episode {
   late int podcastId;
 
   late String guid;
+
+  /// Names this episode identically on every device; see `episodeKeyFor`.
+  /// Assigned once the podcast has a key and never changed afterwards,
+  /// even when the storage [guid] is rewritten. Null until then.
+  @Index()
+  String? episodeKey;
   late String title;
   String? description;
   late String audioUrl;

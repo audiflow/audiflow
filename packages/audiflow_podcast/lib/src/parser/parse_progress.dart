@@ -17,6 +17,7 @@ final class ParsedPodcastMeta extends ParseProgress {
     this.imageUrl,
     this.language,
     this.link,
+    this.podcastGuid,
   });
 
   final String title;
@@ -27,6 +28,10 @@ final class ParsedPodcastMeta extends ParseProgress {
 
   /// The show's website from the channel `<link>`.
   final String? link;
+
+  /// The channel `<podcast:guid>`, lowercased; null when the feed declares
+  /// none.
+  final String? podcastGuid;
 }
 
 /// Emitted for each episode parsed.

@@ -51,6 +51,7 @@ class SubscriptionMetadataUpdater {
       author: meta.author,
       description: meta.description,
       link: meta.link,
+      podcastGuid: meta.podcastGuid,
     );
   }
 
@@ -61,7 +62,15 @@ class SubscriptionMetadataUpdater {
     String? author,
     String? description,
     String? link,
+    String? podcastGuid,
   }) async {
+    // The first parse fixes the podcast's stable key; later parses only
+    // record a guid that changed. The guid is never cleared: a feed that
+    // drops it is still the same show.
+    if (sub.podcastKey == null ||
+        (podcastGuid != null && podcastGuid != sub.podcastGuid)) {
+      await _repository.assignStableKeys(sub.id, podcastGuid: podcastGuid);
+    }
     // Kept apart from the other fields: older rows have no website, and a
     // channel that drops its <link> must not erase a stored one.
     final website = _changedValue(link, sub.websiteUrl);
@@ -124,11 +133,14 @@ class SubscriptionMetadataUpdater {
       _isBlank(sub.artworkUrl) && sub.feedMetadataSyncedAt == null;
 
   /// Whether [sub] must parse its feed to fill channel metadata it lacks:
-  /// the artwork (see [needsArtworkBackfill]), a website it has never
+  /// a stable key, which the first parse assigns from the channel
+  /// `<podcast:guid>`; the artwork (see [needsArtworkBackfill]), a website
+  /// it has never
   /// read, or channel text an older version stored undecoded (see
   /// [needsChannelTextBackfill]). Callers skip conditional request headers
   /// while this is true.
   static bool needsChannelBackfill(Subscription sub) =>
+      sub.podcastKey == null ||
       needsArtworkBackfill(sub) ||
       sub.websiteSyncedAt == null ||
       needsChannelTextBackfill(sub);

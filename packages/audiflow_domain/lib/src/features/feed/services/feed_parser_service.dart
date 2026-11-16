@@ -122,6 +122,7 @@ class FeedParserService {
         author: result.meta.author,
         language: result.meta.language,
         link: result.meta.link,
+        podcastGuid: result.meta.podcastGuid,
         images: result.meta.imageUrl != null
             ? [PodcastImage(url: result.meta.imageUrl!)]
             : [],
@@ -235,6 +236,7 @@ class FeedParserService {
           :final imageUrl,
           :final author,
           :final link,
+          :final podcastGuid,
         ):
           _logger?.d('Parsed metadata: $title');
           yield FeedMetaReady(
@@ -243,6 +245,7 @@ class FeedParserService {
             imageUrl: imageUrl,
             author: author,
             link: link,
+            podcastGuid: podcastGuid,
           );
 
         case ParsedEpisode(
