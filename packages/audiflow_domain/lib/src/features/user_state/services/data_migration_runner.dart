@@ -57,18 +57,27 @@ class DataMigrationRunner {
   /// Each completed step is recorded before the next starts, so a failure
   /// keeps the earlier ones done; the failing step is rethrown and runs
   /// again from the start on the next launch.
+  ///
+  /// The foreground app and a background task can open the database at the
+  /// same moment and run the same pending step together. Steps are
+  /// idempotent, so that is safe; the runner rereads the recorded version
+  /// before each step to skip work the other one finished, and a record
+  /// only ever raises the version, so a slower runner cannot lower it.
   Future<void> run() async {
-    final meta = await _isar.writeTxn(
+    await _isar.writeTxn(
       () => loadOrCreateSyncMeta(_isar, createHistoryId: _createHistoryId),
     );
-    var version = meta.schemaVersion;
     for (final step in _steps) {
-      if (step.version <= version) continue;
+      if (step.version <= await _recordedVersion()) continue;
       _logger?.i('Running data migration ${step.version} (${step.name})');
       await step.run(_isar);
       await _record(step.version);
-      version = step.version;
     }
+  }
+
+  Future<int> _recordedVersion() async {
+    final meta = await _isar.syncMetas.get(SyncMeta.singletonId);
+    return meta?.schemaVersion ?? 0;
   }
 
   Future<void> _record(int version) {
@@ -77,6 +86,7 @@ class DataMigrationRunner {
         _isar,
         createHistoryId: _createHistoryId,
       );
+      if (version <= meta.schemaVersion) return;
       meta.schemaVersion = version;
       await _isar.syncMetas.put(meta);
     });

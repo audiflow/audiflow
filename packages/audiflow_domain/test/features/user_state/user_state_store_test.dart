@@ -1,5 +1,6 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
-import 'package:flutter_test/flutter_test.dart';
+import 'package:checks/checks.dart';
+import 'package:flutter_test/flutter_test.dart' hide expect;
 import 'package:isar_community/isar.dart';
 
 import '../../helpers/isar_test_helper.dart';
@@ -40,18 +41,18 @@ void main() {
       return 42;
     });
 
-    expect(result, 42);
-    expect(await isar.subscriptions.count(), 1);
+    check(result).equals(42);
+    check(await isar.subscriptions.count()).equals(1);
   });
 
   test('stamps each write with a new clock value and stores it', () async {
     final first = await store().write((stamp) async => stamp);
     final second = await store().write((stamp) async => stamp);
 
-    expect(first, const Hlc(1000, 0));
-    expect(second, const Hlc(1000, 1));
+    check(first).equals(const Hlc(1000, 0));
+    check(second).equals(const Hlc(1000, 1));
     final meta = await isar.syncMetas.get(SyncMeta.singletonId);
-    expect(Hlc.unpack(meta!.hlc), second);
+    check(Hlc.unpack(meta!.hlc)).equals(second);
   });
 
   test(
@@ -65,7 +66,7 @@ void main() {
         nowMillis: () => now,
       ).write((stamp) async => stamp);
 
-      expect(first.compareTo(second), -1);
+      check(first.compareTo(second)).equals(-1);
     },
   );
 
@@ -77,26 +78,25 @@ void main() {
     ).write((_) async {});
 
     final meta = await isar.syncMetas.get(SyncMeta.singletonId);
-    expect(meta?.historyId, 'history-1');
+    check(meta?.historyId).equals('history-1');
   });
 
   test('a failing body rolls back the clock advance', () async {
     await store().write((_) async {});
 
-    await expectLater(
+    await check(
       store().write<void>((_) async => throw StateError('boom')),
-      throwsStateError,
-    );
+    ).throws<StateError>();
 
     final meta = await isar.syncMetas.get(SyncMeta.singletonId);
-    expect(Hlc.unpack(meta!.hlc), const Hlc(1000, 0));
+    check(Hlc.unpack(meta!.hlc)).equals(const Hlc(1000, 0));
   });
 
   test('newHistoryId is 22 base64url characters and random', () {
     final a = newHistoryId();
     final b = newHistoryId();
 
-    expect(a, matches(RegExp(r'^[A-Za-z0-9_-]{22}$')));
-    expect(a, isNot(b));
+    check(a).matchesPattern(RegExp(r'^[A-Za-z0-9_-]{22}$'));
+    check(a).not((it) => it.equals(b));
   });
 }

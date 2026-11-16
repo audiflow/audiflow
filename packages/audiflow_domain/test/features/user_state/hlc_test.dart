@@ -1,7 +1,8 @@
 import 'dart:math';
 
 import 'package:audiflow_domain/audiflow_domain.dart';
-import 'package:flutter_test/flutter_test.dart';
+import 'package:checks/checks.dart';
+import 'package:flutter_test/flutter_test.dart' hide expect;
 
 /// Property tests run each rule over many seeded random cases, so a failure
 /// is reproducible from the seed in its reason.
@@ -17,8 +18,8 @@ void main() {
         final a = Hlc(_base + random.nextInt(_day), random.nextInt(0x10000));
         final b = Hlc(_base + random.nextInt(_day), random.nextInt(0x10000));
 
-        expect(Hlc.unpack(a.packed), a, reason: 'seed $seed');
-        expect(Hlc.unpack(b.packed), b, reason: 'seed $seed');
+        check(because: 'seed $seed', Hlc.unpack(a.packed)).equals(a);
+        check(because: 'seed $seed', Hlc.unpack(b.packed)).equals(b);
       }
     });
 
@@ -26,9 +27,9 @@ void main() {
       const top = Hlc(Hlc.maxMillis, Hlc.maxCounter);
       const high = Hlc(0x800000000000, 1);
 
-      expect(Hlc.unpack(top.packed), top);
-      expect(Hlc.unpack(high.packed), high);
-      expect(high.compareTo(top), -1);
+      check(Hlc.unpack(top.packed)).equals(top);
+      check(Hlc.unpack(high.packed)).equals(high);
+      check(high.compareTo(top)).equals(-1);
     });
   });
 
@@ -42,20 +43,25 @@ void main() {
           // Mostly forward, sometimes back by up to an hour.
           now += random.nextInt(2000) - (random.nextInt(10) == 0 ? 3600000 : 0);
           final next = clock.send(now);
-          expect(clock.compareTo(next), -1, reason: 'seed $seed step $i');
+          check(
+            because: 'seed $seed step $i',
+            clock.compareTo(next),
+          ).equals(-1);
           clock = next;
         }
       }
     });
 
     test('follows the wall clock when it is ahead', () {
-      expect(const Hlc(_base, 7).send(_base + 5), const Hlc(_base + 5, 0));
+      check(
+        const Hlc(_base, 7).send(_base + 5),
+      ).equals(const Hlc(_base + 5, 0));
     });
 
     test('borrows the next millisecond when the counter is full', () {
       const full = Hlc(_base, Hlc.maxCounter);
 
-      expect(full.send(_base), const Hlc(_base + 1, 0));
+      check(full.send(_base)).equals(const Hlc(_base + 1, 0));
     });
   });
 
@@ -72,8 +78,8 @@ void main() {
 
         final next = local.receive(remote, now);
 
-        expect(local.compareTo(next), -1, reason: 'seed $seed');
-        expect(remote.compareTo(next), -1, reason: 'seed $seed');
+        check(because: 'seed $seed', local.compareTo(next)).equals(-1);
+        check(because: 'seed $seed', remote.compareTo(next)).equals(-1);
       }
     });
 
@@ -98,7 +104,10 @@ void main() {
               ? clocks[device].send(now)
               : clocks[device].receive(seen, now).send(now);
           if (seen != null) {
-            expect(seen.compareTo(next), -1, reason: 'seed $seed step $i');
+            check(
+              because: 'seed $seed step $i',
+              seen.compareTo(next),
+            ).equals(-1);
           }
           clocks[device] = next;
           lastSent = next;
@@ -112,24 +121,23 @@ void main() {
 
       final next = Hlc.zero.receive(broken, now);
 
-      expect(next.millis, now + _day);
-      expect(next.compareTo(broken), -1);
+      check(next.millis).equals(now + _day);
+      check(next.compareTo(broken)).equals(-1);
     });
 
     test('accepts a remote timestamp less than a day ahead as is', () {
       const now = _base;
       const ahead = Hlc(now + _day - 1, 3);
 
-      expect(Hlc.zero.receive(ahead, now), const Hlc(now + _day - 1, 4));
+      check(Hlc.zero.receive(ahead, now)).equals(const Hlc(now + _day - 1, 4));
     });
   });
 
   group('compareVersions', () {
     test('later timestamps win regardless of device', () {
-      expect(
-        compareVersions(const Hlc(2, 0), 'a', const Hlc(1, 9), 'z'),
-        isPositive,
-      );
+      check(
+        compareVersions(const Hlc(2, 0), 'a', const Hlc(1, 9), 'z').sign,
+      ).equals(1);
     });
 
     test('breaks ties by device and agrees from both sides', () {
@@ -142,8 +150,8 @@ void main() {
         final ab = compareVersions(stamp, a, stamp, b);
         final ba = compareVersions(stamp, b, stamp, a);
 
-        expect(ab, isNot(0), reason: 'seed $seed');
-        expect(ab.sign, -ba.sign, reason: 'seed $seed');
+        check(because: 'seed $seed', ab).not((it) => it.equals(0));
+        check(because: 'seed $seed', ab.sign).equals(-ba.sign);
       }
     });
   });

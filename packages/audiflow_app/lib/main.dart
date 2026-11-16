@@ -256,10 +256,7 @@ Future<ProviderContainer> bootstrapAppContainer({
   );
   final Isar isar;
   try {
-    isar = await openAppDatabase(
-      directory: dirPath,
-      logger: isarOpenLogger,
-    );
+    isar = await openAppDatabase(directory: dirPath, logger: isarOpenLogger);
     Sentry.addBreadcrumb(
       Breadcrumb(message: 'Isar opened', category: 'database'),
     );
