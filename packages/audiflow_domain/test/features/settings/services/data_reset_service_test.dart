@@ -426,6 +426,11 @@ Future<void> _seedStations(Isar isar) async {
 // Clearing it is what makes the next launch start a new history.
 Future<void> _seedUserStateMeta(Isar isar) async {
   await isar.syncMetas.put(SyncMeta()..historyId = 'before-reset');
+  await isar.episodeUserStates.put(
+    EpisodeUserState()
+      ..episodeKey = 'episode-key'
+      ..podcastKey = 'podcast-key',
+  );
 }
 
 Future<void> _seedParentalControl(Isar isar) async {

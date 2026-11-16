@@ -2,6 +2,7 @@ import 'package:isar_community/isar.dart';
 
 import '../../../feed/models/episode.dart';
 import '../../../user_state/models/stable_keys.dart';
+import '../../../user_state/services/episode_user_state_access.dart';
 import '../../models/subscriptions.dart';
 import '../../../user_state/services/user_state_store.dart';
 
@@ -319,7 +320,7 @@ class SubscriptionLocalDatasource {
   /// without a key once its podcast has one. Does nothing if no
   /// subscription is found for [id].
   Future<void> assignStableKeys(int id, {String? podcastGuid}) {
-    return _store.write((_) async {
+    return _store.write((txn) async {
       final existing = await _isar.subscriptions.get(id);
       if (existing == null) return;
       final podcastKey =
@@ -341,6 +342,12 @@ class SubscriptionLocalDatasource {
         episode.episodeKey = episodeKeyFor(podcastKey, episode.guid);
       }
       await _isar.episodes.putAll(unkeyed);
+      // From here on reads of these episodes use their keyed user state,
+      // so it must hold what the old rows recorded.
+      final access = EpisodeUserStateAccess(_isar);
+      for (final episode in unkeyed) {
+        await access.copyLegacy(episode, txn);
+      }
     });
   }
 

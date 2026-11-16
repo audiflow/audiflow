@@ -152,6 +152,26 @@ void main() {
     check((await meta())?.historyId).equals('first');
   });
 
+  test('records the device id once and never replaces it', () async {
+    await DataMigrationRunner(isar, steps: const [], deviceId: 'a').run();
+    await DataMigrationRunner(isar, steps: const [], deviceId: 'b').run();
+    await DataMigrationRunner(isar, steps: const []).run();
+
+    check((await meta())?.deviceId).equals('a');
+  });
+
+  test(
+    'records the device id on a later launch when the first had none',
+    () async {
+      await DataMigrationRunner(isar, steps: const []).run();
+      check((await meta())?.deviceId).isNull();
+
+      await DataMigrationRunner(isar, steps: const [], deviceId: 'a').run();
+
+      check((await meta())?.deviceId).equals('a');
+    },
+  );
+
   test('starts a new history after every collection is cleared', () async {
     await DataMigrationRunner(
       isar,

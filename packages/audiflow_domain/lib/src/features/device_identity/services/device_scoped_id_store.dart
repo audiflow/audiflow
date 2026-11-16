@@ -35,6 +35,7 @@ class DeviceScopedIdStore {
   final Uuid _uuid;
   final Logger? _logger;
   final _pending = <String, Future<String>>{};
+  final _durable = <String, Future<String?>>{};
 
   /// Returns the id stored under [key], generating and storing one when
   /// this install has none.
@@ -44,17 +45,31 @@ class DeviceScopedIdStore {
   /// crash reporting keep working.
   Future<String> getOrCreate(String key) => _pending[key] ??= _resolve(key);
 
-  Future<String> _resolve(String key) async {
+  /// Returns the id stored under [key], generating and storing one when
+  /// this install has none, or null when device-only storage fails.
+  ///
+  /// For callers that keep the id elsewhere, such as `SyncMeta.deviceId`:
+  /// unlike [getOrCreate] it never hands out a session-only id, which
+  /// would outlive the session in that copy.
+  Future<String?> getDurable(String key) => _durable[key] ??= _tryRead(key);
+
+  Future<String?> _tryRead(String key) async {
     try {
       return await _readOrCreate(key);
     } on Exception catch (error) {
       _logger?.w('Device-only storage unavailable for $key: $error');
-      final legacy = key == installIdKey
-          ? _prefs.getString(legacyInstallIdPrefsKey)
-          : null;
-      if (legacy != null && legacy.isNotEmpty) return legacy;
-      return _uuid.v4();
+      return null;
     }
+  }
+
+  Future<String> _resolve(String key) async {
+    final durable = await getDurable(key);
+    if (durable != null) return durable;
+    final legacy = key == installIdKey
+        ? _prefs.getString(legacyInstallIdPrefsKey)
+        : null;
+    if (legacy != null && legacy.isNotEmpty) return legacy;
+    return _uuid.v4();
   }
 
   Future<String> _readOrCreate(String key) async {

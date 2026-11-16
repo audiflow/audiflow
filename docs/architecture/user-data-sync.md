@@ -11,7 +11,7 @@ refs:
 ---
 # User Data: Device Continuity and Sync
 
-Status: accepted design, being implemented (M0 to M2 landed). Work is split into migration steps M0 to M7 (see [Migration steps](#migration-steps)). Tracking: #773 (M0, done), #777 (M1, done), #778 (M2), #779 (M3), #780 (M4), #718 (M5), #781 (M6), #782 (M7).
+Status: accepted design, being implemented (M0 to M2 landed; M3 in progress). Work is split into migration steps M0 to M7 (see [Migration steps](#migration-steps)). Tracking: #773 (M0, done), #777 (M1, done), #778 (M2, done), #779 (M3), #780 (M4), #718 (M5), #781 (M6), #782 (M7).
 
 ## Goals
 
@@ -101,6 +101,16 @@ Every user-state field carries its own HLC timestamp.
 | `OutboxOp` | opId (ULID) | new | Unsent ops. Pending ops for the same field are coalesced into the latest. Deleted on ack |
 | `OpaqueField` | (entity, key, fieldId) | new | Fields from future app versions, stored uninterpreted |
 | `SyncMeta` | single row | new | Copy of `deviceId`, `historyId`, HLC state, server cursor, tombstone horizon, migration version |
+
+M3 lands in five PRs, one source at a time (plan in #779): `EpisodeUserState` (M3a), `PodcastUserState`, `QueueEntry`, `StationState` and `StationMember`, then `SyncedSetting`. Each switches at the datasource layer:
+
+- The datasource writes the old row and the new keyed row in one `UserStateStore.write`, and reads the new row, mapped back to the model its callers already use (for example `PlaybackHistory` by local episode id). Repositories and everything above them are unchanged.
+- An episode or podcast without a stable key yet keeps using the old row. `assignStableKeys` copies its state into the new collection in the transaction that keys it, so keyed entities always have their state in the new collection. A `DataMigrationStep` per source copies existing data at launch.
+- New rows whose episode is missing from the catalog are kept and hidden from reads. Fetching the feed for them waits for M6, where such state can first arrive from another device.
+- Debug builds compare the old and new rows on each single-row read and log differences under `UserStateCompare`.
+- Per-device counters are attributed to `SyncMeta.deviceId`, a copy of the id in device-only storage that the foreground launch records (`openAppDatabase(deviceId:)`).
+
+As built for M3a: `EpisodeUserState` (`features/user_state/models/episode_user_state.dart`) replaces `PlaybackHistory` and `Episode.isFavorited`/`favoritedAt`, behind `PlaybackHistoryLocalDatasource`, the favorite repository, the station reconciler's completed and favorite filters, and cache eviction (which treats any `EpisodeUserState` of the podcast as listener data). `EpisodeUserStateAccess` holds the mapping; `EpisodeUserStateBackfill` is migration step 1.
 
 No op log is kept forever anywhere: a device holds the current state and the unsent ops. `StationEpisode` stays derived. `DownloadTask` stays device-scoped, switching to episodeKey and a path relative to the downloads directory.
 

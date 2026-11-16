@@ -17,14 +17,19 @@ const SyncMetaSchema = CollectionSchema(
   name: r'SyncMeta',
   id: 7779218425528899915,
   properties: {
-    r'historyId': PropertySchema(
+    r'deviceId': PropertySchema(
       id: 0,
+      name: r'deviceId',
+      type: IsarType.string,
+    ),
+    r'historyId': PropertySchema(
+      id: 1,
       name: r'historyId',
       type: IsarType.string,
     ),
-    r'hlc': PropertySchema(id: 1, name: r'hlc', type: IsarType.long),
+    r'hlc': PropertySchema(id: 2, name: r'hlc', type: IsarType.long),
     r'schemaVersion': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'schemaVersion',
       type: IsarType.long,
     ),
@@ -51,6 +56,12 @@ int _syncMetaEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
+  {
+    final value = object.deviceId;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   bytesCount += 3 + object.historyId.length * 3;
   return bytesCount;
 }
@@ -61,9 +72,10 @@ void _syncMetaSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeString(offsets[0], object.historyId);
-  writer.writeLong(offsets[1], object.hlc);
-  writer.writeLong(offsets[2], object.schemaVersion);
+  writer.writeString(offsets[0], object.deviceId);
+  writer.writeString(offsets[1], object.historyId);
+  writer.writeLong(offsets[2], object.hlc);
+  writer.writeLong(offsets[3], object.schemaVersion);
 }
 
 SyncMeta _syncMetaDeserialize(
@@ -73,10 +85,11 @@ SyncMeta _syncMetaDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = SyncMeta();
-  object.historyId = reader.readString(offsets[0]);
-  object.hlc = reader.readLong(offsets[1]);
+  object.deviceId = reader.readStringOrNull(offsets[0]);
+  object.historyId = reader.readString(offsets[1]);
+  object.hlc = reader.readLong(offsets[2]);
   object.id = id;
-  object.schemaVersion = reader.readLong(offsets[2]);
+  object.schemaVersion = reader.readLong(offsets[3]);
   return object;
 }
 
@@ -88,10 +101,12 @@ P _syncMetaDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 1:
-      return (reader.readLong(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 2:
+      return (reader.readLong(offset)) as P;
+    case 3:
       return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -190,6 +205,168 @@ extension SyncMetaQueryWhere on QueryBuilder<SyncMeta, SyncMeta, QWhereClause> {
 
 extension SyncMetaQueryFilter
     on QueryBuilder<SyncMeta, SyncMeta, QFilterCondition> {
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition> deviceIdIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'deviceId'),
+      );
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition> deviceIdIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'deviceId'),
+      );
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition> deviceIdEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'deviceId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition> deviceIdGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'deviceId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition> deviceIdLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'deviceId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition> deviceIdBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'deviceId',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition> deviceIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'deviceId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition> deviceIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'deviceId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition> deviceIdContains(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'deviceId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition> deviceIdMatches(
+    String pattern, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'deviceId',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition> deviceIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'deviceId', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition> deviceIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'deviceId', value: ''),
+      );
+    });
+  }
+
   QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition> historyIdEqualTo(
     String value, {
     bool caseSensitive = true,
@@ -518,6 +695,18 @@ extension SyncMetaQueryLinks
     on QueryBuilder<SyncMeta, SyncMeta, QFilterCondition> {}
 
 extension SyncMetaQuerySortBy on QueryBuilder<SyncMeta, SyncMeta, QSortBy> {
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> sortByDeviceId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deviceId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> sortByDeviceIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deviceId', Sort.desc);
+    });
+  }
+
   QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> sortByHistoryId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'historyId', Sort.asc);
@@ -557,6 +746,18 @@ extension SyncMetaQuerySortBy on QueryBuilder<SyncMeta, SyncMeta, QSortBy> {
 
 extension SyncMetaQuerySortThenBy
     on QueryBuilder<SyncMeta, SyncMeta, QSortThenBy> {
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> thenByDeviceId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deviceId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> thenByDeviceIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deviceId', Sort.desc);
+    });
+  }
+
   QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> thenByHistoryId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'historyId', Sort.asc);
@@ -608,6 +809,14 @@ extension SyncMetaQuerySortThenBy
 
 extension SyncMetaQueryWhereDistinct
     on QueryBuilder<SyncMeta, SyncMeta, QDistinct> {
+  QueryBuilder<SyncMeta, SyncMeta, QDistinct> distinctByDeviceId({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'deviceId', caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<SyncMeta, SyncMeta, QDistinct> distinctByHistoryId({
     bool caseSensitive = true,
   }) {
@@ -634,6 +843,12 @@ extension SyncMetaQueryProperty
   QueryBuilder<SyncMeta, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<SyncMeta, String?, QQueryOperations> deviceIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'deviceId');
     });
   }
 

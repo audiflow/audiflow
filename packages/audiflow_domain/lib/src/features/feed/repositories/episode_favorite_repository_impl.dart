@@ -5,6 +5,7 @@ import '../../../common/providers/database_provider.dart';
 import '../../station/services/station_reconciler_service.dart';
 import '../models/episode.dart';
 import 'episode_favorite_repository.dart';
+import '../../user_state/services/episode_user_state_access.dart';
 import '../../user_state/services/user_state_store.dart';
 
 part 'episode_favorite_repository_impl.g.dart';
@@ -36,12 +37,17 @@ class EpisodeFavoriteRepositoryImpl implements EpisodeFavoriteRepository {
     // Read inside the transaction: a snapshot taken outside it could be
     // stale by the time it is put back, undoing a feed refresh or the
     // stable key assigned in between.
-    final found = await _store.write((_) async {
+    final found = await _store.write((txn) async {
       final episode = await _isar.episodes.get(episodeId);
       if (episode == null) return false;
-      episode.isFavorited = !episode.isFavorited;
-      episode.favoritedAt = episode.isFavorited ? DateTime.now() : null;
+      final access = EpisodeUserStateAccess(_isar);
+      final favorited = !await access.isFavorited(episode);
+      // The old fields keep being written for one release (rollback).
+      episode
+        ..isFavorited = favorited
+        ..favoritedAt = favorited ? DateTime.now() : null;
       await _isar.episodes.put(episode);
+      await access.saveFavorite(episode, txn);
       return true;
     });
     if (!found) return;

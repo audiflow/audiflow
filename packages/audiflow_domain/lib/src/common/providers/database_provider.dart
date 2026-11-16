@@ -26,6 +26,7 @@ import '../../features/parental_control/models/podcast_parental_flags.dart';
 import '../../features/transcript/models/episode_chapter.dart';
 import '../../features/transcript/models/episode_transcript.dart';
 import '../../features/transcript/models/transcript_segment_table.dart';
+import '../../features/user_state/models/episode_user_state.dart';
 import '../../features/user_state/models/sync_meta.dart';
 import '../../features/user_state/services/data_migration_runner.dart';
 
@@ -55,6 +56,7 @@ const List<CollectionSchema<dynamic>> isarSchemas = [
   PodcastParentalFlagsSchema,
   PodcastAudioPreferenceSchema,
   SyncMetaSchema,
+  EpisodeUserStateSchema,
 ];
 
 /// Name of the app's Isar instance, shared by every entry point.
@@ -139,11 +141,15 @@ Future<Isar> openIsarWithRecovery({
 /// Opens the app database and runs pending data migrations, for every entry
 /// point (foreground and background) before any provider reads it.
 ///
+/// [deviceId] is this device's id from device-only storage, recorded in
+/// `SyncMeta` when it has none; the background passes null.
+///
 /// A migration failure closes the database and rethrows, so the caller
 /// reports it like an open failure instead of running on half-migrated
 /// data; the failed step runs again on the next launch.
 Future<Isar> openAppDatabase({
   required String directory,
+  String? deviceId,
   Logger? logger,
   bool inspector = false,
   List<DataMigrationStep> steps = dataMigrationSteps,
@@ -156,7 +162,12 @@ Future<Isar> openAppDatabase({
     opener: opener,
   );
   try {
-    await DataMigrationRunner(isar, steps: steps, logger: logger).run();
+    await DataMigrationRunner(
+      isar,
+      steps: steps,
+      logger: logger,
+      deviceId: deviceId,
+    ).run();
   } catch (e, stack) {
     logger?.e('Data migration failed', error: e, stackTrace: stack);
     if (isar.isOpen) await isar.close();

@@ -147,6 +147,34 @@ void main() {
       check(second).equals(first);
     });
 
+    test(
+      'a durable read is null while storage fails and then recovers',
+      () async {
+        store.fail = true;
+        final failing = await (await build()).getDurable(
+          DeviceScopedIdStore.deviceIdKey,
+        );
+        store.fail = false;
+
+        final recovered = await (await build()).getDurable(
+          DeviceScopedIdStore.deviceIdKey,
+        );
+
+        check(failing).isNull();
+        check(recovered).isNotNull().length.equals(36);
+        check(store.values[DeviceScopedIdStore.deviceIdKey]).equals(recovered);
+      },
+    );
+
+    test('a durable read and getOrCreate agree on one id', () async {
+      final ids = await build();
+
+      final durable = await ids.getDurable(DeviceScopedIdStore.deviceIdKey);
+      final id = await ids.getOrCreate(DeviceScopedIdStore.deviceIdKey);
+
+      check(id).equals(durable!);
+    });
+
     test('falls back to the legacy install id when storage fails', () async {
       SharedPreferences.setMockInitialValues(<String, Object>{
         'analytics.install_id': 'legacy-id',
