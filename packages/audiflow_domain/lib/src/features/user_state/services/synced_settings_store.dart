@@ -4,6 +4,7 @@ import 'package:audiflow_core/audiflow_core.dart';
 import 'package:isar_community/isar.dart';
 
 import '../../../common/datasources/shared_preferences_datasource.dart';
+import '../../player/datasources/local/sleep_timer_preferences_datasource.dart';
 import '../models/synced_setting.dart';
 import '../sync/user_state_fields.dart';
 import 'user_state_store.dart';
@@ -22,9 +23,10 @@ class SyncedSettingsStore {
 
   late final _store = _isar == null ? null : UserStateStore(_isar);
 
-  /// The settings that follow the listener to other devices. The rest
-  /// (appearance, haptics, audio focus, network and download limits, feed
-  /// sync schedule, last tab, privacy consent) depend on the device.
+  /// The settings that follow the listener to other devices: the
+  /// listening-related ones (backup-restore plan, decision D3). The rest
+  /// (appearance, haptics, network and download limits, feed sync
+  /// schedule, last tab, privacy consent) depend on the device.
   static const Set<String> syncedKeys = {
     SettingsKeys.playbackSpeed,
     SettingsKeys.recentPlaybackSpeeds,
@@ -33,6 +35,7 @@ class SyncedSettingsStore {
     SettingsKeys.autoCompleteThreshold,
     SettingsKeys.continuousPlayback,
     SettingsKeys.autoPlayOrder,
+    SettingsKeys.duckInterruptionBehavior,
     SettingsKeys.showRemainingTime,
     SettingsKeys.skipSilence,
     SettingsKeys.voiceBoost,
@@ -40,6 +43,8 @@ class SyncedSettingsStore {
     SettingsKeys.autoDownloadKeepCount,
     SettingsKeys.notifyNewEpisodes,
     SettingsKeys.searchCountry,
+    SleepTimerPreferencesDatasource.lastMinutesKey,
+    SleepTimerPreferencesDatasource.lastEpisodesKey,
   };
 
   String? getString(String key) => _read(key, _prefs.getString, _asString);
