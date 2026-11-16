@@ -286,6 +286,79 @@ void main() {
       check(s.autoDownload).isTrue();
     });
 
+    test('a recreated row takes up the choices its key kept', () async {
+      final sub = await putPodcast(podcastKey: null);
+      final ds = SubscriptionLocalDatasource(isar);
+      await ds.assignStableKeys(sub.id);
+      await ds.updateAutoDownload(sub.id, autoDownload: true);
+      await ds.updateAutoDownloadKeepCount(sub.id, 4);
+      final kept = (await state(podcastKeyFor(feedUrl: sub.feedUrl)))!;
+      // Unsubscribed and evicted: the row is gone, the state stays.
+      await ds.deleteById(sub.id);
+
+      final again = await ds.getOrCreateCached(
+        itunesId: sub.itunesId,
+        feedUrl: sub.feedUrl,
+        title: 'Show',
+        artistName: 'Artist',
+      );
+      await ds.assignStableKeys(again.id);
+
+      final row = (await ds.getById(again.id))!;
+      check(row.autoDownload).isTrue();
+      check(row.autoDownloadKeepCount).equals(4);
+      final s = (await state(podcastKeyFor(feedUrl: sub.feedUrl)))!;
+      check(s.autoDownload).isTrue();
+      check(s.autoDownloadKeepCount).equals(4);
+      check(s.autoDownloadHlc).equals(kept.autoDownloadHlc);
+      check(s.autoDownloadKeepCountHlc).equals(kept.autoDownloadKeepCountHlc);
+    });
+
+    test(
+      'upgrading from step 2 adds the subscription and keeps the rest',
+      () async {
+        final sub = await putPodcast();
+        // A state row as step 2 left it, before the subscription section.
+        await isar.writeTxn(() async {
+          await isar.syncMetas.put(
+            SyncMeta()
+              ..historyId = 'h'
+              ..schemaVersion = 2,
+          );
+          await isar.podcastUserStates.put(
+            PodcastUserState()
+              ..podcastKey = 'pk'
+              ..hasView = true
+              ..hasViewHlc = 7
+              ..viewMode = 'seasons'
+              ..viewModeHlc = 7,
+          );
+        });
+
+        await DataMigrationRunner(isar, steps: dataMigrationSteps).run();
+
+        final s = (await state())!;
+        check(s.subscribed).isTrue();
+        check(s.feedUrl).equals(sub.feedUrl);
+        check(s.subscribedHlc).not((it) => it.equals(0));
+        check(s.viewMode).equals('seasons');
+        check(s.viewModeHlc).equals(7);
+        check(s.hasViewHlc).equals(7);
+        check(
+          (await isar.syncMetas.get(SyncMeta.singletonId))!.schemaVersion,
+        ).equals(3);
+      },
+    );
+
+    test('compare logs keep feed credentials out', () {
+      check(
+        redactFeedUrl('https://user:pw@example.com:8443/feed.xml?token=t'),
+      ).equals('https://***@example.com:8443/feed.xml?***');
+      check(
+        redactFeedUrl('https://example.com/feed'),
+      ).equals('https://example.com/feed');
+    });
+
     test('the backfill copies the subscription of keyed podcasts', () async {
       await putPodcast();
       final sub = (await isar.subscriptions.where().findFirst())!;

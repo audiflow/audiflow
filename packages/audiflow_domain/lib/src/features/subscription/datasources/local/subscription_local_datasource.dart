@@ -345,6 +345,10 @@ class SubscriptionLocalDatasource {
       existing
         ..podcastGuid = podcastGuid ?? existing.podcastGuid
         ..podcastKey = podcastKey;
+      // The key may already carry choices, from before an eviction or from
+      // another device; they win over this row's defaults. Whether the user
+      // subscribes is the row's, and is recorded as a change.
+      await _podcastState.restoreSubscriptionChoices(existing);
       await _save(existing, txn);
       // As for the episodes below: reads switch to the keyed state now.
       await _podcastState.copyLegacy(existing, txn);

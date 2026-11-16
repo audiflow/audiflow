@@ -60,6 +60,20 @@ class PodcastUserStateAccess {
     await _isar.podcastUserStates.put(state);
   }
 
+  /// Fills [sub]'s auto-download choices from the subscription section its
+  /// key already has, so a catalog row recreated after an eviction, or keyed
+  /// for the first time on this device, takes them up instead of stamping
+  /// its defaults over them. Call before [saveSubscription].
+  Future<void> restoreSubscriptionChoices(Subscription sub) async {
+    final key = sub.podcastKey;
+    if (key == null) return;
+    final state = await _isar.podcastUserStates.getByPodcastKey(key);
+    if (state == null || state.subscribedHlc == 0) return;
+    sub
+      ..autoDownload = state.autoDownload
+      ..autoDownloadKeepCount = state.autoDownloadKeepCount;
+  }
+
   /// Records that [sub] is gone from this device: it no longer subscribes.
   /// Must run inside [UserStateStore.write].
   Future<void> saveSubscriptionRemoved(
@@ -84,11 +98,13 @@ class PodcastUserStateAccess {
     if (key == null) return;
     final state = await _isar.podcastUserStates.getByPodcastKey(key);
     if (state == null || state.subscribedHlc == 0) return;
+    // Compared in full; logged without the feed URL's credentials.
+    if (describeSubscription(sub) == describeSubscriptionState(state)) return;
     _compare(
       'subscription',
       sub.id,
-      describeSubscription(sub),
-      describeSubscriptionState(state),
+      describeSubscription(sub, redact: true),
+      describeSubscriptionState(state, redact: true),
     );
   }
 
@@ -448,13 +464,29 @@ bool applySubscription(
 bool _sameMoment(DateTime? a, DateTime? b) =>
     a == null ? b == null : (b != null && a.isAtSameMomentAs(b));
 
-String describeSubscription(Subscription s) =>
-    '${!s.isCached}|${s.subscribedAt.toUtc()}|${s.feedUrl}|${s.itunesId}|'
+/// The user fields of [s] as one string. With [redact], the feed URL loses
+/// its user info and query, where a private feed keeps its credentials.
+String describeSubscription(Subscription s, {bool redact = false}) =>
+    '${!s.isCached}|${s.subscribedAt.toUtc()}|'
+    '${redact ? redactFeedUrl(s.feedUrl) : s.feedUrl}|${s.itunesId}|'
     '${s.autoDownload}|${s.autoDownloadKeepCount}';
 
-String describeSubscriptionState(PodcastUserState s) =>
-    '${s.subscribed}|${s.subscribedAt?.toUtc()}|${s.feedUrl}|${s.itunesId}|'
+/// [describeSubscription] for a state row.
+String describeSubscriptionState(PodcastUserState s, {bool redact = false}) =>
+    '${s.subscribed}|${s.subscribedAt?.toUtc()}|'
+    '${redact ? redactFeedUrl(s.feedUrl) : s.feedUrl}|${s.itunesId}|'
     '${s.autoDownload}|${s.autoDownloadKeepCount}';
+
+/// [url] without user info and query, for logs.
+String? redactFeedUrl(String? url) {
+  if (url == null) return null;
+  final uri = Uri.tryParse(url);
+  if (uri == null) return '<unparsable>';
+  final userInfo = uri.userInfo.isEmpty ? '' : '***@';
+  final query = uri.hasQuery ? '?***' : '';
+  final port = uri.hasPort ? ':${uri.port}' : '';
+  return '${uri.scheme}://$userInfo${uri.host}$port${uri.path}$query';
+}
 
 /// The view preference [state] describes, or null when it has none.
 PodcastViewPreference? viewFromState(PodcastUserState state, int podcastId) {
