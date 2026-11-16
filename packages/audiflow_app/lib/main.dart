@@ -270,6 +270,12 @@ Future<ProviderContainer> bootstrapAppContainer({
     Sentry.addBreadcrumb(
       Breadcrumb(message: 'Isar opened', category: 'database'),
     );
+    // Synced settings move into Isar; the copy cannot be a migration step,
+    // which has no access to SharedPreferences.
+    await SyncedSettingsStore(
+      SharedPreferencesDataSource(prefs),
+      isar: isar,
+    ).copyFromPreferences(prefs.getKeys());
   } on IsarError catch (e, stack) {
     // Schema-mismatch errors are recovered inside openIsarWithRecovery
     // by deleting the database; reaching this catch means the recovery
@@ -328,6 +334,7 @@ Future<ProviderContainer> bootstrapAppContainer({
     observers: [?errorMonitor?.providerObserver],
     overrides: [
       isarProvider.overrideWithValue(isar),
+      syncedSettingsIsarProvider.overrideWithValue(isar),
       dioProvider.overrideWithValue(dio),
       cacheDirProvider.overrideWithValue(cacheDir.path),
       sharedPreferencesProvider.overrideWithValue(prefs),

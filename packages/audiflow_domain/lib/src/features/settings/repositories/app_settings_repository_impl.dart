@@ -3,15 +3,24 @@ import 'dart:convert';
 import 'package:audiflow_core/audiflow_core.dart';
 import 'package:flutter/material.dart';
 
+import 'package:isar_community/isar.dart';
+
 import '../../../common/datasources/shared_preferences_datasource.dart';
+import '../../user_state/services/synced_settings_store.dart';
 import 'app_settings_repository.dart';
 
-/// SharedPreferences-backed implementation of [AppSettingsRepository].
+/// Implementation of [AppSettingsRepository] over [SyncedSettingsStore]:
+/// synced settings in Isar, device-scoped ones in SharedPreferences.
 class AppSettingsRepositoryImpl implements AppSettingsRepository {
-  /// Creates a repository backed by [dataSource].
-  const AppSettingsRepositoryImpl(this._ds);
+  /// Creates a repository backed by [dataSource], and by [isar] for the
+  /// synced settings. Without [isar], every setting is read from and
+  /// written to SharedPreferences.
+  AppSettingsRepositoryImpl(
+    SharedPreferencesDataSource dataSource, {
+    Isar? isar,
+  }) : _ds = SyncedSettingsStore(dataSource, isar: isar);
 
-  final SharedPreferencesDataSource _ds;
+  final SyncedSettingsStore _ds;
 
   // -- Appearance --
 
