@@ -347,7 +347,7 @@ void main() {
         check(s.hasViewHlc).equals(7);
         check(
           (await isar.syncMetas.get(SyncMeta.singletonId))!.schemaVersion,
-        ).equals(3);
+        ).equals(dataMigrationSteps.last.version);
       },
     );
 

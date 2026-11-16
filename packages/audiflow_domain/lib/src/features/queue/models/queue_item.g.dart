@@ -22,15 +22,16 @@ const QueueItemSchema = CollectionSchema(
       name: r'addedAt',
       type: IsarType.dateTime,
     ),
+    r'entryId': PropertySchema(id: 1, name: r'entryId', type: IsarType.string),
     r'episodeId': PropertySchema(
-      id: 1,
+      id: 2,
       name: r'episodeId',
       type: IsarType.long,
     ),
-    r'isAdhoc': PropertySchema(id: 2, name: r'isAdhoc', type: IsarType.bool),
-    r'position': PropertySchema(id: 3, name: r'position', type: IsarType.long),
+    r'isAdhoc': PropertySchema(id: 3, name: r'isAdhoc', type: IsarType.bool),
+    r'position': PropertySchema(id: 4, name: r'position', type: IsarType.long),
     r'sourceContext': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'sourceContext',
       type: IsarType.string,
     ),
@@ -68,6 +69,19 @@ const QueueItemSchema = CollectionSchema(
         ),
       ],
     ),
+    r'entryId': IndexSchema(
+      id: 3733379884318738402,
+      name: r'entryId',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'entryId',
+          type: IndexType.hash,
+          caseSensitive: true,
+        ),
+      ],
+    ),
   },
   links: {},
   embeddedSchemas: {},
@@ -85,6 +99,12 @@ int _queueItemEstimateSize(
 ) {
   var bytesCount = offsets.last;
   {
+    final value = object.entryId;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
     final value = object.sourceContext;
     if (value != null) {
       bytesCount += 3 + value.length * 3;
@@ -100,10 +120,11 @@ void _queueItemSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeDateTime(offsets[0], object.addedAt);
-  writer.writeLong(offsets[1], object.episodeId);
-  writer.writeBool(offsets[2], object.isAdhoc);
-  writer.writeLong(offsets[3], object.position);
-  writer.writeString(offsets[4], object.sourceContext);
+  writer.writeString(offsets[1], object.entryId);
+  writer.writeLong(offsets[2], object.episodeId);
+  writer.writeBool(offsets[3], object.isAdhoc);
+  writer.writeLong(offsets[4], object.position);
+  writer.writeString(offsets[5], object.sourceContext);
 }
 
 QueueItem _queueItemDeserialize(
@@ -114,11 +135,12 @@ QueueItem _queueItemDeserialize(
 ) {
   final object = QueueItem();
   object.addedAt = reader.readDateTime(offsets[0]);
-  object.episodeId = reader.readLong(offsets[1]);
+  object.entryId = reader.readStringOrNull(offsets[1]);
+  object.episodeId = reader.readLong(offsets[2]);
   object.id = id;
-  object.isAdhoc = reader.readBool(offsets[2]);
-  object.position = reader.readLong(offsets[3]);
-  object.sourceContext = reader.readStringOrNull(offsets[4]);
+  object.isAdhoc = reader.readBool(offsets[3]);
+  object.position = reader.readLong(offsets[4]);
+  object.sourceContext = reader.readStringOrNull(offsets[5]);
   return object;
 }
 
@@ -132,12 +154,14 @@ P _queueItemDeserializeProp<P>(
     case 0:
       return (reader.readDateTime(offset)) as P;
     case 1:
-      return (reader.readLong(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 2:
-      return (reader.readBool(offset)) as P;
-    case 3:
       return (reader.readLong(offset)) as P;
+    case 3:
+      return (reader.readBool(offset)) as P;
     case 4:
+      return (reader.readLong(offset)) as P;
+    case 5:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -460,6 +484,81 @@ extension QueueItemQueryWhere
       );
     });
   }
+
+  QueryBuilder<QueueItem, QueueItem, QAfterWhereClause> entryIdIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(indexName: r'entryId', value: [null]),
+      );
+    });
+  }
+
+  QueryBuilder<QueueItem, QueueItem, QAfterWhereClause> entryIdIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'entryId',
+          lower: [null],
+          includeLower: false,
+          upper: [],
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<QueueItem, QueueItem, QAfterWhereClause> entryIdEqualTo(
+    String? entryId,
+  ) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(indexName: r'entryId', value: [entryId]),
+      );
+    });
+  }
+
+  QueryBuilder<QueueItem, QueueItem, QAfterWhereClause> entryIdNotEqualTo(
+    String? entryId,
+  ) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'entryId',
+                lower: [],
+                upper: [entryId],
+                includeUpper: false,
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'entryId',
+                lower: [entryId],
+                includeLower: false,
+                upper: [],
+              ),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'entryId',
+                lower: [entryId],
+                includeLower: false,
+                upper: [],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'entryId',
+                lower: [],
+                upper: [entryId],
+                includeUpper: false,
+              ),
+            );
+      }
+    });
+  }
 }
 
 extension QueueItemQueryFilter
@@ -519,6 +618,169 @@ extension QueueItemQueryFilter
           upper: upper,
           includeUpper: includeUpper,
         ),
+      );
+    });
+  }
+
+  QueryBuilder<QueueItem, QueueItem, QAfterFilterCondition> entryIdIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'entryId'),
+      );
+    });
+  }
+
+  QueryBuilder<QueueItem, QueueItem, QAfterFilterCondition> entryIdIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'entryId'),
+      );
+    });
+  }
+
+  QueryBuilder<QueueItem, QueueItem, QAfterFilterCondition> entryIdEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'entryId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<QueueItem, QueueItem, QAfterFilterCondition> entryIdGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'entryId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<QueueItem, QueueItem, QAfterFilterCondition> entryIdLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'entryId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<QueueItem, QueueItem, QAfterFilterCondition> entryIdBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'entryId',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<QueueItem, QueueItem, QAfterFilterCondition> entryIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'entryId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<QueueItem, QueueItem, QAfterFilterCondition> entryIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'entryId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<QueueItem, QueueItem, QAfterFilterCondition> entryIdContains(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'entryId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<QueueItem, QueueItem, QAfterFilterCondition> entryIdMatches(
+    String pattern, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'entryId',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<QueueItem, QueueItem, QAfterFilterCondition> entryIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'entryId', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<QueueItem, QueueItem, QAfterFilterCondition>
+  entryIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'entryId', value: ''),
       );
     });
   }
@@ -887,6 +1149,18 @@ extension QueueItemQuerySortBy on QueryBuilder<QueueItem, QueueItem, QSortBy> {
     });
   }
 
+  QueryBuilder<QueueItem, QueueItem, QAfterSortBy> sortByEntryId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'entryId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<QueueItem, QueueItem, QAfterSortBy> sortByEntryIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'entryId', Sort.desc);
+    });
+  }
+
   QueryBuilder<QueueItem, QueueItem, QAfterSortBy> sortByEpisodeId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'episodeId', Sort.asc);
@@ -947,6 +1221,18 @@ extension QueueItemQuerySortThenBy
   QueryBuilder<QueueItem, QueueItem, QAfterSortBy> thenByAddedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'addedAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<QueueItem, QueueItem, QAfterSortBy> thenByEntryId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'entryId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<QueueItem, QueueItem, QAfterSortBy> thenByEntryIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'entryId', Sort.desc);
     });
   }
 
@@ -1019,6 +1305,14 @@ extension QueueItemQueryWhereDistinct
     });
   }
 
+  QueryBuilder<QueueItem, QueueItem, QDistinct> distinctByEntryId({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'entryId', caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<QueueItem, QueueItem, QDistinct> distinctByEpisodeId() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'episodeId');
@@ -1060,6 +1354,12 @@ extension QueueItemQueryProperty
   QueryBuilder<QueueItem, DateTime, QQueryOperations> addedAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'addedAt');
+    });
+  }
+
+  QueryBuilder<QueueItem, String?, QQueryOperations> entryIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'entryId');
     });
   }
 

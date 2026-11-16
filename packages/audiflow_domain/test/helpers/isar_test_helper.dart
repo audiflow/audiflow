@@ -20,6 +20,8 @@ Future<Isar> openTestIsar(List<CollectionSchema<dynamic>> schemas) async {
       SubscriptionSchema,
       PlaybackHistorySchema,
       PodcastUserStateSchema,
+      QueueEntrySchema,
+      QueueItemSchema,
       PodcastViewPreferenceSchema,
       PodcastAudioPreferenceSchema,
       PodcastParentalFlagsSchema,
