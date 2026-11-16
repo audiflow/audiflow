@@ -3,6 +3,7 @@ import 'package:logger/logger.dart';
 
 import '../models/sync_meta.dart';
 import 'episode_user_state_backfill.dart';
+import 'podcast_user_state_backfill.dart';
 import 'sync_meta_access.dart';
 
 /// One data-rewriting migration, run once at launch.
@@ -23,7 +24,10 @@ abstract interface class DataMigrationStep {
 }
 
 /// The app's migration steps, in order.
-const List<DataMigrationStep> dataMigrationSteps = [EpisodeUserStateBackfill()];
+const List<DataMigrationStep> dataMigrationSteps = [
+  EpisodeUserStateBackfill(),
+  PodcastUserStateBackfill(),
+];
 
 /// Runs the pending [DataMigrationStep]s in order, before providers start.
 class DataMigrationRunner {

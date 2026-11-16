@@ -2,6 +2,10 @@ import 'package:isar_community/isar.dart';
 
 import '../../models/parental_control_settings.dart';
 import '../../models/podcast_parental_flags.dart';
+import '../../../subscription/models/subscriptions.dart';
+import '../../../user_state/models/podcast_user_state.dart';
+import '../../../user_state/services/podcast_user_state_access.dart';
+import '../../../user_state/services/watch_query.dart';
 import '../../../user_state/services/user_state_store.dart';
 
 class ParentalControlLocalDataSource {
@@ -11,6 +15,7 @@ class ParentalControlLocalDataSource {
 
   /// User state writes go through the store; see [UserStateStore].
   late final _store = UserStateStore(_isar);
+  late final _access = PodcastUserStateAccess(_isar);
 
   /// Returns the singleton settings row, creating it atomically if absent.
   Future<ParentalControlSettings> getSettings() async {
@@ -58,42 +63,42 @@ class ParentalControlLocalDataSource {
         .asyncMap((s) async => s ?? await getSettings());
   }
 
+  // The flags are addressed by Subscription.id, under the old column name.
+
   Future<PodcastParentalFlags?> getFlags(int itunesId) {
-    return _isar.podcastParentalFlags
-        .filter()
-        .itunesIdEqualTo(itunesId)
-        .findFirst();
+    return _access.parental(itunesId);
   }
 
   Future<void> setHideExplicit({
     required int itunesId,
     required bool hide,
   }) async {
-    await _store.write((_) async {
-      final existing = await _isar.podcastParentalFlags
-          .filter()
-          .itunesIdEqualTo(itunesId)
-          .findFirst();
-      final row = existing ?? (PodcastParentalFlags()..itunesId = itunesId);
+    await _store.write((txn) async {
+      final row =
+          await _access.parental(itunesId) ??
+          (PodcastParentalFlags()..itunesId = itunesId);
       row.hideExplicitEpisodes = hide;
-      await _isar.podcastParentalFlags.put(row);
+      await _access.saveParental(itunesId, row, txn);
     });
   }
 
   Future<void> pruneFlagsFor(int itunesId) async {
-    await _store.write((_) async {
-      await _isar.podcastParentalFlags
-          .filter()
-          .itunesIdEqualTo(itunesId)
-          .deleteAll();
-    });
+    await _store.write((txn) => _access.saveParental(itunesId, null, txn));
   }
 
   Stream<bool> watchHideExplicit(int itunesId) {
-    return _isar.podcastParentalFlags
-        .filter()
-        .itunesIdEqualTo(itunesId)
-        .watch(fireImmediately: true)
-        .map((rows) => rows.isNotEmpty && rows.first.hideExplicitEpisodes);
+    return watchQuery<bool>(
+      triggers: [
+        _isar.podcastParentalFlags
+            .filter()
+            .itunesIdEqualTo(itunesId)
+            .watchLazy(),
+        _isar.podcastUserStates.watchLazy(),
+        _isar.subscriptions.where().idEqualTo(itunesId).watchLazy(),
+      ],
+      load: () async =>
+          (await _access.parental(itunesId))?.hideExplicitEpisodes ?? false,
+      same: (a, b) => a == b,
+    );
   }
 }

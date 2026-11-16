@@ -1,15 +1,15 @@
 import 'package:isar_community/isar.dart';
 
-import '../../models/podcast_view_preference.dart';
-import '../../models/smart_playlist_group_user_preference.dart';
-import '../../models/smart_playlist_user_preference.dart';
+import '../../../user_state/models/podcast_user_state.dart';
+import '../../../user_state/services/podcast_user_state_access.dart';
 import '../../../user_state/services/user_state_store.dart';
+import '../../models/podcast_view_preference.dart';
 
-/// Local datasource for per-scope play order preferences using Isar.
+/// Local datasource for per-scope play order preferences.
 ///
-/// Wraps Isar operations for three scope levels: podcast, playlist,
-/// and group. Each scope stores the raw string representation of
-/// [AutoPlayOrder].
+/// Three scope levels: podcast, playlist, and group. Each stores the raw
+/// string representation of `AutoPlayOrder`. The values live in
+/// [PodcastUserState]; see [PodcastUserStateAccess].
 class PlayOrderPreferenceLocalDatasource {
   PlayOrderPreferenceLocalDatasource(this._isar);
 
@@ -17,108 +17,69 @@ class PlayOrderPreferenceLocalDatasource {
 
   /// User state writes go through the store; see [UserStateStore].
   late final _store = UserStateStore(_isar);
+  late final _access = PodcastUserStateAccess(_isar);
 
-  // -- Podcast level (PodcastViewPreference) --
+  // -- Podcast level (stored with the view preference) --
 
-  /// Reads the autoPlayOrder from [PodcastViewPreference].
+  /// Reads the podcast-level play order.
   Future<String?> getPodcastPlayOrder(int podcastId) async {
-    final pref = await _isar.podcastViewPreferences.getByPodcastId(podcastId);
+    final pref = await _access.view(podcastId);
     return pref?.autoPlayOrder;
   }
 
-  /// Upserts [PodcastViewPreference] with the given autoPlayOrder.
+  /// Sets the podcast-level play order.
   ///
-  /// When [order] is null, clears only the autoPlayOrder field
-  /// without deleting the whole record (it has other fields).
+  /// When [order] is null, clears only the play order, keeping the rest of
+  /// the view preference.
   Future<void> setPodcastPlayOrder(int podcastId, String? order) async {
-    await _store.write((_) async {
-      final existing = await _isar.podcastViewPreferences.getByPodcastId(
-        podcastId,
-      );
-      final pref = existing ?? (PodcastViewPreference()..podcastId = podcastId);
+    await _store.write((txn) async {
+      final pref =
+          await _access.view(podcastId) ??
+          (PodcastViewPreference()..podcastId = podcastId);
       pref.autoPlayOrder = order;
-      await _isar.podcastViewPreferences.put(pref);
+      await _access.saveView(podcastId, pref, txn);
     });
   }
 
-  // -- Playlist level (SmartPlaylistUserPreference) --
+  // -- Playlist level --
 
-  /// Reads autoPlayOrder for a specific playlist within a podcast.
-  Future<String?> getPlaylistPlayOrder(int podcastId, String playlistId) async {
-    final pref = await _isar.smartPlaylistUserPreferences
-        .getByPodcastIdPlaylistId(podcastId, playlistId);
-    return pref?.autoPlayOrder;
+  /// Reads the play order for a specific playlist within a podcast.
+  Future<String?> getPlaylistPlayOrder(int podcastId, String playlistId) {
+    return _access.playOrder(podcastId, playlistId);
   }
 
-  /// Sets or clears autoPlayOrder for a playlist.
-  ///
-  /// When [order] is null, deletes the record entirely (the
-  /// collection only stores autoPlayOrder).
+  /// Sets or clears (null) the play order for a playlist.
   Future<void> setPlaylistPlayOrder(
     int podcastId,
     String playlistId,
     String? order,
   ) async {
-    await _store.write((_) async {
-      if (order == null) {
-        await _isar.smartPlaylistUserPreferences.deleteByPodcastIdPlaylistId(
-          podcastId,
-          playlistId,
-        );
-        return;
-      }
-
-      final existing = await _isar.smartPlaylistUserPreferences
-          .getByPodcastIdPlaylistId(podcastId, playlistId);
-      final pref =
-          existing ??
-          (SmartPlaylistUserPreference()
-            ..podcastId = podcastId
-            ..playlistId = playlistId);
-      pref.autoPlayOrder = order;
-      await _isar.smartPlaylistUserPreferences.put(pref);
-    });
+    await _store.write(
+      (txn) => _access.savePlayOrder(podcastId, playlistId, null, order, txn),
+    );
   }
 
-  // -- Group level (SmartPlaylistGroupUserPreference) --
+  // -- Group level --
 
-  /// Reads autoPlayOrder for a specific group within a playlist.
+  /// Reads the play order for a specific group within a playlist.
   Future<String?> getGroupPlayOrder(
     int podcastId,
     String playlistId,
     String groupId,
-  ) async {
-    final pref = await _isar.smartPlaylistGroupUserPreferences
-        .getByPodcastIdPlaylistIdGroupId(podcastId, playlistId, groupId);
-    return pref?.autoPlayOrder;
+  ) {
+    return _access.playOrder(podcastId, playlistId, groupId: groupId);
   }
 
-  /// Sets or clears autoPlayOrder for a group.
-  ///
-  /// When [order] is null, deletes the record entirely.
+  /// Sets or clears (null) the play order for a group.
   Future<void> setGroupPlayOrder(
     int podcastId,
     String playlistId,
     String groupId,
     String? order,
   ) async {
-    await _store.write((_) async {
-      if (order == null) {
-        await _isar.smartPlaylistGroupUserPreferences
-            .deleteByPodcastIdPlaylistIdGroupId(podcastId, playlistId, groupId);
-        return;
-      }
-
-      final existing = await _isar.smartPlaylistGroupUserPreferences
-          .getByPodcastIdPlaylistIdGroupId(podcastId, playlistId, groupId);
-      final pref =
-          existing ??
-          (SmartPlaylistGroupUserPreference()
-            ..podcastId = podcastId
-            ..playlistId = playlistId
-            ..groupId = groupId);
-      pref.autoPlayOrder = order;
-      await _isar.smartPlaylistGroupUserPreferences.put(pref);
-    });
+    await _store.write(
+      (txn) =>
+          _access.savePlayOrder(podcastId, playlistId, groupId, order, txn),
+    );
   }
 }

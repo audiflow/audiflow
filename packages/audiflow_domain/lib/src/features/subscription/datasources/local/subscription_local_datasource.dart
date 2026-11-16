@@ -3,6 +3,7 @@ import 'package:isar_community/isar.dart';
 import '../../../feed/models/episode.dart';
 import '../../../user_state/models/stable_keys.dart';
 import '../../../user_state/services/episode_user_state_access.dart';
+import '../../../user_state/services/podcast_user_state_access.dart';
 import '../../models/subscriptions.dart';
 import '../../../user_state/services/user_state_store.dart';
 
@@ -330,6 +331,8 @@ class SubscriptionLocalDatasource {
         ..podcastGuid = podcastGuid ?? existing.podcastGuid
         ..podcastKey = podcastKey;
       await _isar.subscriptions.put(existing);
+      // As for the episodes below: reads switch to the keyed state now.
+      await PodcastUserStateAccess(_isar).copyLegacy(existing, txn);
 
       final unkeyed = await _isar.episodes
           .where()
