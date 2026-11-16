@@ -129,6 +129,91 @@ void main() {
     });
   });
 
+  group('watching follows the keyed state', () {
+    /// Collects [stream] and lets the test wait for the nth value.
+    ({List<T> values, Future<void> Function(int) waitFor}) collect<T>(
+      Stream<T> stream,
+    ) {
+      final values = <T>[];
+      final waiters = <int, Completer<void>>{};
+      final subscription = stream.listen((v) {
+        values.add(v);
+        waiters.remove(values.length)?.complete();
+      });
+      addTearDown(subscription.cancel);
+      return (
+        values: values,
+        waitFor: (n) {
+          if (n <= values.length) return Future.value();
+          return (waiters[n] = Completer<void>()).future;
+        },
+      );
+    }
+
+    test('a change to the keyed state alone re-reads', () async {
+      final sub = await putPodcast();
+      await views.upsertPreference(PodcastViewPreference()..podcastId = sub.id);
+      await parental.setHideExplicit(itunesId: sub.id, hide: false);
+      final view = collect(views.watchPreference(sub.id));
+      final hide = collect(parental.watchHideExplicit(sub.id));
+      await view.waitFor(1);
+      await hide.waitFor(1);
+
+      // As a change arriving from another device would land.
+      final s = await state();
+      await isar.writeTxn(
+        () => isar.podcastUserStates.put(
+          s!
+            ..viewMode = 'grid'
+            ..hideExplicitEpisodes = true,
+        ),
+      );
+      await view.waitFor(2);
+      await hide.waitFor(2);
+
+      check(
+        view.values.map((p) => p?.viewMode),
+      ).deepEquals(['episodes', 'grid']);
+      check(hide.values).deepEquals([false, true]);
+    });
+
+    test('assigning the key switches to keyed state already stored', () async {
+      final sub = await putPodcast(podcastKey: null);
+      await views.upsertPreference(
+        PodcastViewPreference()
+          ..podcastId = sub.id
+          ..viewMode = 'seasons',
+      );
+      await parental.setHideExplicit(itunesId: sub.id, hide: false);
+      // Keyed state that is already there, for example from another device.
+      await isar.writeTxn(
+        () => isar.podcastUserStates.put(
+          PodcastUserState()
+            ..podcastKey = podcastKeyFor(feedUrl: sub.feedUrl)
+            ..hasView = true
+            ..hasViewHlc = 1
+            ..viewMode = 'grid'
+            ..hasParental = true
+            ..hasParentalHlc = 1
+            ..hideExplicitEpisodes = true,
+        ),
+      );
+      final view = collect(views.watchPreference(sub.id));
+      final hide = collect(parental.watchHideExplicit(sub.id));
+      await view.waitFor(1);
+      await hide.waitFor(1);
+
+      await SubscriptionLocalDatasource(isar).assignStableKeys(sub.id);
+      await view.waitFor(2);
+      await hide.waitFor(2);
+
+      check(
+        view.values.map((p) => p?.viewMode),
+      ).deepEquals(['seasons', 'grid']);
+      check(hide.values).deepEquals([false, true]);
+    });
+  });
+
   group('play order per playlist and group', () {
     test('set, read, and clear keep a stamped entry', () async {
       final sub = await putPodcast();
