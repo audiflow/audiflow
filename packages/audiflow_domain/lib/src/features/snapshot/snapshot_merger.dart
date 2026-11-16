@@ -89,6 +89,12 @@ class SnapshotMerger {
           meta.hlc,
         ).receive(Hlc.unpack(run.maxHlc), _nowMillis()).packed;
       }
+      // Raised after the merge, not before: the snapshot's own rows are live
+      // in its source, however old their clocks.
+      final horizon = file.header.tombstoneHorizon;
+      if (run.sameHistory && meta.tombstoneHorizon < horizon) {
+        meta.tombstoneHorizon = horizon;
+      }
       await _isar.syncMetas.put(meta);
       return SnapshotMergeResult(
         changedRows: run.changedRows,
@@ -436,8 +442,9 @@ class _MergeRun {
     for (final field in unknown) {
       final hlc = Hlc.unpack(_opaqueHlc(field)).clampedTo(now).packed;
       if (maxHlc < hlc) maxHlc = hlc;
-      // The value bytes stay as received; only the stored clock is clamped.
-      final payload = field.encode();
+      // The clock lives in OpaqueField.hlc (clamped); the value bytes stay
+      // as received, minus a clock copy that would make equal fields differ.
+      final payload = _normalized(field);
       final existing = await _isar.opaqueFields.getByEntityKeyFieldId(
         entity,
         key,
@@ -457,6 +464,16 @@ class _MergeRun {
       );
       _txn.addOpaqueOp(entity, key, field.fieldNumber, hlc, payload);
       changedRows++;
+    }
+  }
+
+  static List<int> _normalized(ProtoField field) {
+    if (field.wireType != WireType.lengthDelimited) return field.encode();
+    try {
+      final value = withoutHlc(field.raw);
+      return (ProtoWriter()..writeBytes(field.fieldNumber, value)).takeBytes();
+    } on FormatException {
+      return field.encode();
     }
   }
 

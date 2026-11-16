@@ -171,7 +171,12 @@ class UserStateStore {
         op.key,
         op.fieldId,
       );
-      if (pending != null) op.id = pending.id;
+      if (pending != null) {
+        // A merge can bring an older clock than a pending local change of
+        // the same field; that change must still go out.
+        if (op.hlc < pending.hlc) continue;
+        op.id = pending.id;
+      }
       await _isar.outboxOps.put(op);
     }
     final excess = await _isar.outboxOps.count() - _outboxCap;

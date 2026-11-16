@@ -37,6 +37,7 @@ void main() {
         appVersion: '2.3.0',
         platform: 'ios',
         counts: exported.counts,
+        tombstoneHorizon: exported.tombstoneHorizon,
       ),
     );
   }
@@ -328,6 +329,28 @@ void main() {
       check(await isar.queueEntrys.getByEntryId('gone')).isNull();
     });
 
+    test('a restored copy inherits the horizon', () async {
+      final source = await openTestIsar(isarSchemas);
+      addTearDown(() => source.close(deleteFromDisk: true));
+      await seed(source);
+      await source.writeTxn(() async {
+        final meta = (await source.syncMetas.get(SyncMeta.singletonId))!
+          ..tombstoneHorizon = hlc(60);
+        await source.syncMetas.put(meta);
+      });
+
+      final file = await exportFrom(source);
+      check(file.header.tombstoneHorizon).equals(hlc(60));
+      await merger().merge(file);
+      check(
+        (await isar.syncMetas.get(SyncMeta.singletonId))!.tombstoneHorizon,
+      ).equals(hlc(60));
+
+      // An older backup of the same history cannot bring the entry back.
+      await merger().merge(fileOf(oldEntry, historyId: 'h1'));
+      check(await isar.queueEntrys.getByEntryId('gone')).isNull();
+    });
+
     test('another history: the element is kept', () async {
       await seed(isar);
       await setHorizon(hlc(60));
@@ -423,6 +446,60 @@ void main() {
       final here = (await isar.opaqueFields.where().findAll()).single;
       final there = (await other.opaqueFields.where().findAll()).single;
       check(here.payload).deepEquals(there.payload);
+    });
+
+    test('stay the same bytes through export and merge', () async {
+      await merger().merge(withUnknown('a', hlc(70)));
+      final first = (await isar.opaqueFields.where().findAll()).single.payload;
+
+      final other = await openTestIsar(isarSchemas);
+      addTearDown(() => other.close(deleteFromDisk: true));
+      await merger(other).merge(await exportFrom(isar));
+      await other.writeTxn(() => other.outboxOps.clear());
+      // Back and forth again: nothing is new.
+      check(
+        (await merger(other).merge(await exportFrom(isar))).changedRows,
+      ).equals(0);
+      check(await other.outboxOps.count()).equals(0);
+      final copied =
+          (await other.opaqueFields.where().findAll()).single.payload;
+      check(copied).deepEquals(first);
+    });
+
+    test('never replace a newer pending change of the field', () async {
+      // A local change of setting k, waiting to be sent.
+      await UserStateStore(isar, nowMillis: () => now).write((txn) async {
+        final row = SyncedSetting()
+          ..key = 'k'
+          ..value = '"local"'
+          ..hlc = txn.stamp.packed;
+        await isar.syncedSettings.put(row);
+        txn.touch(UserStateEntities.setting, row);
+      });
+      Future<OutboxOp> valueOp() async =>
+          (await isar.outboxOps.where().findAll()).singleWhere(
+            (o) => o.fieldId == 1,
+          );
+      final pending = await valueOp();
+
+      // An older value of field 1 in a type this version does not know.
+      final future = ProtoWriter()
+        ..writeInt(9, 1)
+        ..writeInt(15, hlc(70));
+      await merger().merge(
+        fileOf({
+          'setting': [
+            SnapshotRow(
+              'k',
+              (ProtoWriter()..writeBytes(1, future.takeBytes())).takeBytes(),
+            ),
+          ],
+        }),
+      );
+
+      final op = await valueOp();
+      check(op.hlc).equals(pending.hlc);
+      check(op.payload).deepEquals(pending.payload);
     });
 
     test('land in the outbox', () async {

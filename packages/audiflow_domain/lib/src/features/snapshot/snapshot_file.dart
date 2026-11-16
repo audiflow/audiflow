@@ -82,6 +82,7 @@ class SnapshotHeader {
     required this.platform,
     required this.counts,
     required this.payloadSha256,
+    this.tombstoneHorizon = 0,
   });
 
   final int formatVersion;
@@ -94,6 +95,10 @@ class SnapshotHeader {
   /// Hex sha256 of the gzip-compressed body.
   final String payloadSha256;
 
+  /// The source's `SyncMeta.tombstoneHorizon`. Optional in the file (0 when
+  /// absent): files written before it existed read the same.
+  final int tombstoneHorizon;
+
   Map<String, Object?> toJson() => {
     'format': snapshotFormat,
     'formatVersion': formatVersion,
@@ -102,6 +107,7 @@ class SnapshotHeader {
     'app': {'version': appVersion, 'platform': platform},
     'counts': counts.toJson(),
     'payloadSha256': payloadSha256,
+    if (tombstoneHorizon != 0) 'tombstoneHorizon': tombstoneHorizon,
   };
 }
 
@@ -135,6 +141,7 @@ Uint8List encodeSnapshotFile({
   required String appVersion,
   required String platform,
   required SnapshotCounts counts,
+  int tombstoneHorizon = 0,
 }) {
   final payload = Uint8List.fromList(gzip.encode(body.encode()));
   final header = SnapshotHeader(
@@ -145,6 +152,7 @@ Uint8List encodeSnapshotFile({
     platform: platform,
     counts: counts,
     payloadSha256: sha256.convert(payload).toString(),
+    tombstoneHorizon: tombstoneHorizon,
   );
   final out = BytesBuilder(copy: false)
     ..add(utf8.encode(jsonEncode(header.toJson())))
@@ -254,6 +262,7 @@ SnapshotHeader _header(Map<String, Object?> json, int version) {
     platform: _string(app, 'platform', 'header.app'),
     counts: SnapshotCounts.fromJson(counts),
     payloadSha256: _string(json, 'payloadSha256', 'header'),
+    tombstoneHorizon: _optionalInt(json, 'tombstoneHorizon', 'header'),
   );
 }
 
@@ -261,6 +270,11 @@ String _string(Map<String, Object?> json, String key, String at) {
   final v = json[key];
   if (v is String) return v;
   throw DamagedSnapshot('$at.$key');
+}
+
+int _optionalInt(Map<String, Object?> json, String key, String at) {
+  if (!json.containsKey(key)) return 0;
+  return _int(json, key, at);
 }
 
 int _int(Map<String, Object?> json, String key, String at) {

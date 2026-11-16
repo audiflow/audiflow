@@ -70,6 +70,16 @@ Object? decodeValue(Uint8List bytes) {
   return value;
 }
 
+/// [bytes] (a Value message) without the HLC it carries, so a stored copy
+/// is the same bytes whichever snapshot or op it came from.
+Uint8List withoutHlc(Uint8List bytes) {
+  final w = ProtoWriter();
+  for (final field in readMessage(bytes)) {
+    if (field.fieldNumber != _hlcValue) w.writeRaw(field.encode());
+  }
+  return w.takeBytes();
+}
+
 /// The packed HLC a Value message carries, or null when it has none.
 int? decodeHlc(Uint8List bytes) {
   int? hlc;

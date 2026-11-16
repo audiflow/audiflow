@@ -18,11 +18,19 @@ import 'snapshot_file.dart';
 
 /// A snapshot of this device's user state, ready to write to a file.
 class ExportedSnapshot {
-  ExportedSnapshot(this.body, this.counts, this.historyId);
+  ExportedSnapshot(
+    this.body,
+    this.counts,
+    this.historyId, {
+    this.tombstoneHorizon = 0,
+  });
 
   final SnapshotBody body;
   final SnapshotCounts counts;
   final String historyId;
+
+  /// Goes into the header, so a copy keeps blocking purged deletions.
+  final int tombstoneHorizon;
 }
 
 /// Builds the snapshot every copy of user data uses: the manual backup, the
@@ -89,6 +97,7 @@ class SnapshotExporter {
           stations: stations.where((s) => !s.deleted).length,
         ),
         meta?.historyId ?? '',
+        tombstoneHorizon: meta?.tombstoneHorizon ?? 0,
       );
     });
   }
@@ -132,7 +141,7 @@ class SnapshotExporter {
       return field.payload;
     }
     final value = ProtoWriter()
-      ..writeRaw(parsed.single.raw)
+      ..writeRaw(withoutHlc(parsed.single.raw))
       ..writeRaw(encodeValue(null, hlc: field.hlc));
     return (ProtoWriter()..writeBytes(field.fieldId, value.takeBytes()))
         .takeBytes();
