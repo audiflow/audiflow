@@ -56,6 +56,7 @@ final class FeedMetaReady extends FeedParseProgress {
     this.imageUrl,
     this.author,
     this.link,
+    this.podcastGuid,
   });
 
   final String title;
@@ -65,6 +66,10 @@ final class FeedMetaReady extends FeedParseProgress {
 
   /// The show's website from the channel `<link>`.
   final String? link;
+
+  /// The channel `<podcast:guid>`, lowercased; null when the feed declares
+  /// none.
+  final String? podcastGuid;
 }
 
 /// Emitted when a batch of episodes has been stored.

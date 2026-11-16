@@ -494,5 +494,54 @@ void main() {
         );
       });
     });
+
+    group('podcast:guid', () {
+      Future<String?> podcastGuid(String channelXml, {String tail = ''}) async {
+        final xml =
+            '<?xml version="1.0" encoding="UTF-8"?>'
+            '<rss version="2.0" '
+            'xmlns:podcast="https://podcastindex.org/namespace/1.0">'
+            '<channel><title>Show</title>$channelXml'
+            '<item><guid>e1</guid><title>E1</title></item>$tail'
+            '</channel></rss>';
+        final meta = await IsolateRssParser.parse(
+          feedXml: xml,
+          knownGuids: {},
+        ).firstWhere((event) => event is ParsedPodcastMeta);
+        return (meta as ParsedPodcastMeta).podcastGuid;
+      }
+
+      test('is null when the channel declares none', () async {
+        expect(await podcastGuid(''), isNull);
+      });
+
+      test('reads the channel guid, trimmed and lowercased', () async {
+        expect(
+          await podcastGuid(
+            '<podcast:guid> 917393E3-1B1E-5CEF-ACE4-EDAA54E1F810 '
+            '</podcast:guid>',
+          ),
+          '917393e3-1b1e-5cef-ace4-edaa54e1f810',
+        );
+      });
+
+      test('reads a channel guid placed after the items', () async {
+        expect(
+          await podcastGuid(
+            '',
+            tail: '<podcast:guid>abc-def</podcast:guid>',
+          ),
+          'abc-def',
+        );
+      });
+
+      test('ignores a blank guid', () async {
+        expect(await podcastGuid('<podcast:guid>  </podcast:guid>'), isNull);
+      });
+
+      test('does not take the item guid for the channel guid', () async {
+        expect(await podcastGuid('<guid>not-a-channel-guid</guid>'), isNull);
+      });
+    });
   });
 }

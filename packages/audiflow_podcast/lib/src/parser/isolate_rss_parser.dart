@@ -347,7 +347,18 @@ class IsolateRssParser {
       // The channel <link> precedes <image> (whose own <link> repeats it)
       // in the header; `atom:link` is not matched by this tag name.
       link: _channelLink(headerXml) ?? _channelLink(trailer),
+      podcastGuid: _podcastGuid(headerXml) ?? _podcastGuid(trailer),
     );
+  }
+
+  /// The channel `<podcast:guid>` (Podcasting 2.0), lowercased: it is a
+  /// UUID, and feeds differ only in how they case it.
+  static String? _podcastGuid(String xml) {
+    if (xml.isEmpty) return null;
+    return _extractTagText(
+      xml.replaceAll(_commentRe, ''),
+      'podcast:guid',
+    )?.toLowerCase();
   }
 
   /// Lightweight tag text extraction using regex, no DOM allocation.

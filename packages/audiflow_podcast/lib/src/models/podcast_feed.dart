@@ -28,6 +28,7 @@ class PodcastFeed extends PodcastEntity {
     this.type,
     this.isComplete,
     this.newFeedUrl,
+    this.podcastGuid,
   });
 
   /// Factory constructor that creates a PodcastFeed from a map of parsed data.
@@ -148,6 +149,7 @@ class PodcastFeed extends PodcastEntity {
     String? type,
     bool? isComplete,
     String? newFeedUrl,
+    String? podcastGuid,
   }) {
     // Use fallback for empty title (many feeds don't include it)
     final effectiveTitle = title.trim().isEmpty
@@ -210,6 +212,7 @@ class PodcastFeed extends PodcastEntity {
       type: normalizedType,
       isComplete: isComplete,
       newFeedUrl: _trimOrNull(newFeedUrl),
+      podcastGuid: _trimOrNull(podcastGuid)?.toLowerCase(),
     );
   }
 
@@ -284,6 +287,9 @@ class PodcastFeed extends PodcastEntity {
 
   /// New feed URL for migration.
   final String? newFeedUrl;
+
+  /// The channel `<podcast:guid>` (Podcasting 2.0), lowercased.
+  final String? podcastGuid;
 
   /// Returns the primary image for the podcast (largest available).
   PodcastImage? get primaryImage {
@@ -414,7 +420,8 @@ class PodcastFeed extends PodcastEntity {
           ttl == other.ttl &&
           type == other.type &&
           isComplete == other.isComplete &&
-          newFeedUrl == other.newFeedUrl;
+          newFeedUrl == other.newFeedUrl &&
+          podcastGuid == other.podcastGuid;
 
   @override
   int get hashCode =>
@@ -441,7 +448,8 @@ class PodcastFeed extends PodcastEntity {
       ttl.hashCode ^
       type.hashCode ^
       isComplete.hashCode ^
-      newFeedUrl.hashCode;
+      newFeedUrl.hashCode ^
+      podcastGuid.hashCode;
 
   @override
   String toString() {
