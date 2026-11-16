@@ -7,8 +7,9 @@ part 'podcast_user_state.g.dart';
 ///
 /// Replaces `PodcastViewPreference`, `PodcastAudioPreference`, the
 /// smart playlist and group play order rows, and `PodcastParentalFlags`,
-/// which point at the podcast by local id. The subscription fields join in
-/// a later step.
+/// which point at the podcast by local id, and holds the user fields of
+/// `Subscription`. The `Subscription` row keeps those fields as a local copy
+/// that the app queries and sorts on; this row is what syncs.
 ///
 /// Each value carries the [Hlc] of its last change (`*Hlc`, packed). Each
 /// old row maps to a section whose `has*` flag says whether the row would
@@ -20,6 +21,31 @@ class PodcastUserState {
 
   @Index(unique: true)
   late String podcastKey;
+
+  // -- Subscription (user fields of Subscription) --
+
+  /// Whether the user subscribes. False also for a podcast only cached for
+  /// browsing, and after an unsubscribe; [subscribedHlc] tells which.
+  bool subscribed = false;
+  int subscribedHlc = 0;
+
+  /// When the user last subscribed; stamped with [subscribedHlc].
+  DateTime? subscribedAt;
+
+  /// Where the feed was last read from, so another device can fetch it.
+  String? feedUrl;
+  int feedUrlHlc = 0;
+
+  /// The directory id the podcast was found under.
+  String? itunesId;
+  int itunesIdHlc = 0;
+
+  bool autoDownload = false;
+  int autoDownloadHlc = 0;
+
+  /// Null follows the global setting.
+  int? autoDownloadKeepCount;
+  int autoDownloadKeepCountHlc = 0;
 
   // -- View (PodcastViewPreference) --
 

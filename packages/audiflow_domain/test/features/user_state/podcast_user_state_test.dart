@@ -214,6 +214,93 @@ void main() {
     });
   });
 
+  group('subscription', () {
+    test('user field writes are recorded on the keyed state', () async {
+      final sub = await putPodcast();
+      final ds = SubscriptionLocalDatasource(isar);
+
+      await ds.updateAutoDownload(sub.id, autoDownload: true);
+      await ds.updateAutoDownloadKeepCount(sub.id, 3);
+
+      final s = await state();
+      check(s!.subscribed).isTrue();
+      check(s.subscribedAt!.isAtSameMomentAs(sub.subscribedAt)).isTrue();
+      check(s.feedUrl).equals(sub.feedUrl);
+      check(s.itunesId).equals(sub.itunesId);
+      check(s.autoDownload).isTrue();
+      check(s.autoDownloadKeepCount).equals(3);
+      check(s.autoDownloadHlc).not((it) => it.equals(0));
+    });
+
+    test('device-scoped writes leave the state alone', () async {
+      final sub = await putPodcast();
+      final ds = SubscriptionLocalDatasource(isar);
+      await ds.updateAutoDownload(sub.id, autoDownload: true);
+      final before = (await state())!;
+
+      await ds.updateLastAccessed(sub.id, DateTime(2026, 6));
+      await ds.updateHttpCacheHeaders(sub.id, etag: 'e');
+      await ds.recordAutoDownloads(
+        sub.id,
+        2,
+        pauseThreshold: 10,
+        at: DateTime(2026, 6),
+      );
+
+      final after = (await state())!;
+      check(after.subscribedHlc).equals(before.subscribedHlc);
+      check(after.autoDownloadHlc).equals(before.autoDownloadHlc);
+      check(after.feedUrlHlc).equals(before.feedUrlHlc);
+    });
+
+    test('unsubscribe, resubscribe, and delete are stamped', () async {
+      final sub = await putPodcast();
+      final ds = SubscriptionLocalDatasource(isar);
+      await ds.updateAutoDownload(sub.id, autoDownload: false);
+      final first = (await state())!.subscribedHlc;
+
+      await ds.demoteToCached(sub.itunesId);
+      final demoted = (await state())!;
+      check(demoted.subscribed).isFalse();
+      check(
+        Hlc.unpack(first).compareTo(Hlc.unpack(demoted.subscribedHlc)),
+      ).equals(-1);
+
+      await ds.promoteToSubscribed(sub.itunesId);
+      check((await state())!.subscribed).isTrue();
+
+      await ds.deleteById(sub.id);
+      check((await state())!.subscribed).isFalse();
+    });
+
+    test('a podcast without a key gets no state until keyed', () async {
+      final sub = await putPodcast(podcastKey: null);
+      final ds = SubscriptionLocalDatasource(isar);
+      await ds.updateAutoDownload(sub.id, autoDownload: true);
+      check(await isar.podcastUserStates.count()).equals(0);
+
+      await ds.assignStableKeys(sub.id);
+
+      final s = await state(podcastKeyFor(feedUrl: sub.feedUrl));
+      check(s!.subscribed).isTrue();
+      check(s.autoDownload).isTrue();
+    });
+
+    test('the backfill copies the subscription of keyed podcasts', () async {
+      await putPodcast();
+      final sub = (await isar.subscriptions.where().findFirst())!;
+      await isar.writeTxn(
+        () => isar.subscriptions.put(sub..autoDownloadKeepCount = 5),
+      );
+
+      await const PodcastUserStateBackfill(version: 3).run(isar);
+
+      final s = await state();
+      check(s!.subscribed).isTrue();
+      check(s.autoDownloadKeepCount).equals(5);
+    });
+  });
+
   group('play order per playlist and group', () {
     test('set, read, and clear keep a stamped entry', () async {
       final sub = await putPodcast();

@@ -45,6 +45,53 @@ class PodcastUserStateAccess {
         (PodcastUserState()..podcastKey = key);
   }
 
+  // -- Subscription --
+
+  /// Records the user fields of [sub] on its state row, after [sub] was
+  /// written. Does nothing for a podcast without a key. Must run inside
+  /// [UserStateStore.write].
+  Future<void> saveSubscription(Subscription sub, UserStateTxn txn) async {
+    final key = sub.podcastKey;
+    if (key == null) return;
+    final state =
+        await _isar.podcastUserStates.getByPodcastKey(key) ??
+        (PodcastUserState()..podcastKey = key);
+    if (!applySubscription(state, sub, txn)) return;
+    await _isar.podcastUserStates.put(state);
+  }
+
+  /// Records that [sub] is gone from this device: it no longer subscribes.
+  /// Must run inside [UserStateStore.write].
+  Future<void> saveSubscriptionRemoved(
+    Subscription sub,
+    UserStateTxn txn,
+  ) async {
+    final key = sub.podcastKey;
+    if (key == null) return;
+    final state = await _isar.podcastUserStates.getByPodcastKey(key);
+    if (state == null || !state.subscribed) return;
+    state
+      ..subscribed = false
+      ..subscribedHlc = txn.stamp.packed;
+    await _isar.podcastUserStates.put(state);
+  }
+
+  /// Logs, in debug builds, when [sub]'s user fields differ from its state
+  /// row.
+  Future<void> compareSubscription(Subscription sub) async {
+    if (!kDebugMode) return;
+    final key = sub.podcastKey;
+    if (key == null) return;
+    final state = await _isar.podcastUserStates.getByPodcastKey(key);
+    if (state == null || state.subscribedHlc == 0) return;
+    _compare(
+      'subscription',
+      sub.id,
+      describeSubscription(sub),
+      describeSubscriptionState(state),
+    );
+  }
+
   // -- View --
 
   /// The view preference of [podcastId], or null when none is set.
@@ -277,6 +324,9 @@ class PodcastUserStateAccess {
     final state = existing ?? (PodcastUserState()..podcastKey = key);
     var changed = false;
 
+    if (state.subscribedHlc == 0) {
+      changed = applySubscription(state, sub, txn) || changed;
+    }
     if (state.hasViewHlc == 0) {
       final view = await _isar.podcastViewPreferences.getByPodcastId(sub.id);
       if (view != null) {
@@ -347,6 +397,64 @@ PlayOrderEntry? _entryOf(
   }
   return null;
 }
+
+/// Records the user fields of [sub] on [state], stamping what changed.
+/// Returns whether anything changed.
+bool applySubscription(
+  PodcastUserState state,
+  Subscription sub,
+  UserStateTxn txn,
+) {
+  final stamp = txn.stamp.packed;
+  var changed = false;
+  final subscribed = !sub.isCached;
+  if (state.subscribed != subscribed ||
+      !_sameMoment(state.subscribedAt, sub.subscribedAt) ||
+      state.subscribedHlc == 0) {
+    state
+      ..subscribed = subscribed
+      ..subscribedAt = sub.subscribedAt
+      ..subscribedHlc = stamp;
+    changed = true;
+  }
+  if (state.feedUrl != sub.feedUrl) {
+    state
+      ..feedUrl = sub.feedUrl
+      ..feedUrlHlc = stamp;
+    changed = true;
+  }
+  if (state.itunesId != sub.itunesId) {
+    state
+      ..itunesId = sub.itunesId
+      ..itunesIdHlc = stamp;
+    changed = true;
+  }
+  if (state.autoDownload != sub.autoDownload) {
+    state
+      ..autoDownload = sub.autoDownload
+      ..autoDownloadHlc = stamp;
+    changed = true;
+  }
+  if (state.autoDownloadKeepCount != sub.autoDownloadKeepCount) {
+    state
+      ..autoDownloadKeepCount = sub.autoDownloadKeepCount
+      ..autoDownloadKeepCountHlc = stamp;
+    changed = true;
+  }
+  return changed;
+}
+
+// DateTime equality also compares isUtc, which a round trip can change.
+bool _sameMoment(DateTime? a, DateTime? b) =>
+    a == null ? b == null : (b != null && a.isAtSameMomentAs(b));
+
+String describeSubscription(Subscription s) =>
+    '${!s.isCached}|${s.subscribedAt.toUtc()}|${s.feedUrl}|${s.itunesId}|'
+    '${s.autoDownload}|${s.autoDownloadKeepCount}';
+
+String describeSubscriptionState(PodcastUserState s) =>
+    '${s.subscribed}|${s.subscribedAt?.toUtc()}|${s.feedUrl}|${s.itunesId}|'
+    '${s.autoDownload}|${s.autoDownloadKeepCount}';
 
 /// The view preference [state] describes, or null when it has none.
 PodcastViewPreference? viewFromState(PodcastUserState state, int podcastId) {

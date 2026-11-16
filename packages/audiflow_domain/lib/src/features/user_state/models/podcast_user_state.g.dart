@@ -17,139 +17,190 @@ const PodcastUserStateSchema = CollectionSchema(
   name: r'PodcastUserState',
   id: -8538216616646919909,
   properties: {
-    r'autoPlayOrder': PropertySchema(
+    r'autoDownload': PropertySchema(
       id: 0,
+      name: r'autoDownload',
+      type: IsarType.bool,
+    ),
+    r'autoDownloadHlc': PropertySchema(
+      id: 1,
+      name: r'autoDownloadHlc',
+      type: IsarType.long,
+    ),
+    r'autoDownloadKeepCount': PropertySchema(
+      id: 2,
+      name: r'autoDownloadKeepCount',
+      type: IsarType.long,
+    ),
+    r'autoDownloadKeepCountHlc': PropertySchema(
+      id: 3,
+      name: r'autoDownloadKeepCountHlc',
+      type: IsarType.long,
+    ),
+    r'autoPlayOrder': PropertySchema(
+      id: 4,
       name: r'autoPlayOrder',
       type: IsarType.string,
     ),
     r'autoPlayOrderHlc': PropertySchema(
-      id: 1,
+      id: 5,
       name: r'autoPlayOrderHlc',
       type: IsarType.long,
     ),
     r'episodeFilter': PropertySchema(
-      id: 2,
+      id: 6,
       name: r'episodeFilter',
       type: IsarType.string,
     ),
     r'episodeFilterHlc': PropertySchema(
-      id: 3,
+      id: 7,
       name: r'episodeFilterHlc',
       type: IsarType.long,
     ),
     r'episodeSortOrder': PropertySchema(
-      id: 4,
+      id: 8,
       name: r'episodeSortOrder',
       type: IsarType.string,
     ),
     r'episodeSortOrderHlc': PropertySchema(
-      id: 5,
+      id: 9,
       name: r'episodeSortOrderHlc',
       type: IsarType.long,
     ),
-    r'hasAudio': PropertySchema(id: 6, name: r'hasAudio', type: IsarType.bool),
+    r'feedUrl': PropertySchema(id: 10, name: r'feedUrl', type: IsarType.string),
+    r'feedUrlHlc': PropertySchema(
+      id: 11,
+      name: r'feedUrlHlc',
+      type: IsarType.long,
+    ),
+    r'hasAudio': PropertySchema(id: 12, name: r'hasAudio', type: IsarType.bool),
     r'hasAudioHlc': PropertySchema(
-      id: 7,
+      id: 13,
       name: r'hasAudioHlc',
       type: IsarType.long,
     ),
     r'hasParental': PropertySchema(
-      id: 8,
+      id: 14,
       name: r'hasParental',
       type: IsarType.bool,
     ),
     r'hasParentalHlc': PropertySchema(
-      id: 9,
+      id: 15,
       name: r'hasParentalHlc',
       type: IsarType.long,
     ),
-    r'hasView': PropertySchema(id: 10, name: r'hasView', type: IsarType.bool),
+    r'hasView': PropertySchema(id: 16, name: r'hasView', type: IsarType.bool),
     r'hasViewHlc': PropertySchema(
-      id: 11,
+      id: 17,
       name: r'hasViewHlc',
       type: IsarType.long,
     ),
     r'hideExplicitEpisodes': PropertySchema(
-      id: 12,
+      id: 18,
       name: r'hideExplicitEpisodes',
       type: IsarType.bool,
     ),
     r'hideExplicitEpisodesHlc': PropertySchema(
-      id: 13,
+      id: 19,
       name: r'hideExplicitEpisodesHlc',
       type: IsarType.long,
     ),
+    r'itunesId': PropertySchema(
+      id: 20,
+      name: r'itunesId',
+      type: IsarType.string,
+    ),
+    r'itunesIdHlc': PropertySchema(
+      id: 21,
+      name: r'itunesIdHlc',
+      type: IsarType.long,
+    ),
     r'playOrders': PropertySchema(
-      id: 14,
+      id: 22,
       name: r'playOrders',
       type: IsarType.objectList,
 
       target: r'PlayOrderEntry',
     ),
     r'podcastKey': PropertySchema(
-      id: 15,
+      id: 23,
       name: r'podcastKey',
       type: IsarType.string,
     ),
     r'seasonSortField': PropertySchema(
-      id: 16,
+      id: 24,
       name: r'seasonSortField',
       type: IsarType.string,
     ),
     r'seasonSortFieldHlc': PropertySchema(
-      id: 17,
+      id: 25,
       name: r'seasonSortFieldHlc',
       type: IsarType.long,
     ),
     r'seasonSortOrder': PropertySchema(
-      id: 18,
+      id: 26,
       name: r'seasonSortOrder',
       type: IsarType.string,
     ),
     r'seasonSortOrderHlc': PropertySchema(
-      id: 19,
+      id: 27,
       name: r'seasonSortOrderHlc',
       type: IsarType.long,
     ),
     r'selectedPlaylistId': PropertySchema(
-      id: 20,
+      id: 28,
       name: r'selectedPlaylistId',
       type: IsarType.string,
     ),
     r'selectedPlaylistIdHlc': PropertySchema(
-      id: 21,
+      id: 29,
       name: r'selectedPlaylistIdHlc',
       type: IsarType.long,
     ),
     r'skipSilence': PropertySchema(
-      id: 22,
+      id: 30,
       name: r'skipSilence',
       type: IsarType.bool,
     ),
     r'skipSilenceHlc': PropertySchema(
-      id: 23,
+      id: 31,
       name: r'skipSilenceHlc',
       type: IsarType.long,
     ),
-    r'speed': PropertySchema(id: 24, name: r'speed', type: IsarType.double),
-    r'speedHlc': PropertySchema(id: 25, name: r'speedHlc', type: IsarType.long),
+    r'speed': PropertySchema(id: 32, name: r'speed', type: IsarType.double),
+    r'speedHlc': PropertySchema(id: 33, name: r'speedHlc', type: IsarType.long),
+    r'subscribed': PropertySchema(
+      id: 34,
+      name: r'subscribed',
+      type: IsarType.bool,
+    ),
+    r'subscribedAt': PropertySchema(
+      id: 35,
+      name: r'subscribedAt',
+      type: IsarType.dateTime,
+    ),
+    r'subscribedHlc': PropertySchema(
+      id: 36,
+      name: r'subscribedHlc',
+      type: IsarType.long,
+    ),
     r'viewMode': PropertySchema(
-      id: 26,
+      id: 37,
       name: r'viewMode',
       type: IsarType.string,
     ),
     r'viewModeHlc': PropertySchema(
-      id: 27,
+      id: 38,
       name: r'viewModeHlc',
       type: IsarType.long,
     ),
     r'voiceBoost': PropertySchema(
-      id: 28,
+      id: 39,
       name: r'voiceBoost',
       type: IsarType.bool,
     ),
     r'voiceBoostHlc': PropertySchema(
-      id: 29,
+      id: 40,
       name: r'voiceBoostHlc',
       type: IsarType.long,
     ),
@@ -198,6 +249,18 @@ int _podcastUserStateEstimateSize(
   }
   bytesCount += 3 + object.episodeFilter.length * 3;
   bytesCount += 3 + object.episodeSortOrder.length * 3;
+  {
+    final value = object.feedUrl;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.itunesId;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   bytesCount += 3 + object.playOrders.length * 3;
   {
     final offsets = allOffsets[PlayOrderEntry]!;
@@ -229,41 +292,52 @@ void _podcastUserStateSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeString(offsets[0], object.autoPlayOrder);
-  writer.writeLong(offsets[1], object.autoPlayOrderHlc);
-  writer.writeString(offsets[2], object.episodeFilter);
-  writer.writeLong(offsets[3], object.episodeFilterHlc);
-  writer.writeString(offsets[4], object.episodeSortOrder);
-  writer.writeLong(offsets[5], object.episodeSortOrderHlc);
-  writer.writeBool(offsets[6], object.hasAudio);
-  writer.writeLong(offsets[7], object.hasAudioHlc);
-  writer.writeBool(offsets[8], object.hasParental);
-  writer.writeLong(offsets[9], object.hasParentalHlc);
-  writer.writeBool(offsets[10], object.hasView);
-  writer.writeLong(offsets[11], object.hasViewHlc);
-  writer.writeBool(offsets[12], object.hideExplicitEpisodes);
-  writer.writeLong(offsets[13], object.hideExplicitEpisodesHlc);
+  writer.writeBool(offsets[0], object.autoDownload);
+  writer.writeLong(offsets[1], object.autoDownloadHlc);
+  writer.writeLong(offsets[2], object.autoDownloadKeepCount);
+  writer.writeLong(offsets[3], object.autoDownloadKeepCountHlc);
+  writer.writeString(offsets[4], object.autoPlayOrder);
+  writer.writeLong(offsets[5], object.autoPlayOrderHlc);
+  writer.writeString(offsets[6], object.episodeFilter);
+  writer.writeLong(offsets[7], object.episodeFilterHlc);
+  writer.writeString(offsets[8], object.episodeSortOrder);
+  writer.writeLong(offsets[9], object.episodeSortOrderHlc);
+  writer.writeString(offsets[10], object.feedUrl);
+  writer.writeLong(offsets[11], object.feedUrlHlc);
+  writer.writeBool(offsets[12], object.hasAudio);
+  writer.writeLong(offsets[13], object.hasAudioHlc);
+  writer.writeBool(offsets[14], object.hasParental);
+  writer.writeLong(offsets[15], object.hasParentalHlc);
+  writer.writeBool(offsets[16], object.hasView);
+  writer.writeLong(offsets[17], object.hasViewHlc);
+  writer.writeBool(offsets[18], object.hideExplicitEpisodes);
+  writer.writeLong(offsets[19], object.hideExplicitEpisodesHlc);
+  writer.writeString(offsets[20], object.itunesId);
+  writer.writeLong(offsets[21], object.itunesIdHlc);
   writer.writeObjectList<PlayOrderEntry>(
-    offsets[14],
+    offsets[22],
     allOffsets,
     PlayOrderEntrySchema.serialize,
     object.playOrders,
   );
-  writer.writeString(offsets[15], object.podcastKey);
-  writer.writeString(offsets[16], object.seasonSortField);
-  writer.writeLong(offsets[17], object.seasonSortFieldHlc);
-  writer.writeString(offsets[18], object.seasonSortOrder);
-  writer.writeLong(offsets[19], object.seasonSortOrderHlc);
-  writer.writeString(offsets[20], object.selectedPlaylistId);
-  writer.writeLong(offsets[21], object.selectedPlaylistIdHlc);
-  writer.writeBool(offsets[22], object.skipSilence);
-  writer.writeLong(offsets[23], object.skipSilenceHlc);
-  writer.writeDouble(offsets[24], object.speed);
-  writer.writeLong(offsets[25], object.speedHlc);
-  writer.writeString(offsets[26], object.viewMode);
-  writer.writeLong(offsets[27], object.viewModeHlc);
-  writer.writeBool(offsets[28], object.voiceBoost);
-  writer.writeLong(offsets[29], object.voiceBoostHlc);
+  writer.writeString(offsets[23], object.podcastKey);
+  writer.writeString(offsets[24], object.seasonSortField);
+  writer.writeLong(offsets[25], object.seasonSortFieldHlc);
+  writer.writeString(offsets[26], object.seasonSortOrder);
+  writer.writeLong(offsets[27], object.seasonSortOrderHlc);
+  writer.writeString(offsets[28], object.selectedPlaylistId);
+  writer.writeLong(offsets[29], object.selectedPlaylistIdHlc);
+  writer.writeBool(offsets[30], object.skipSilence);
+  writer.writeLong(offsets[31], object.skipSilenceHlc);
+  writer.writeDouble(offsets[32], object.speed);
+  writer.writeLong(offsets[33], object.speedHlc);
+  writer.writeBool(offsets[34], object.subscribed);
+  writer.writeDateTime(offsets[35], object.subscribedAt);
+  writer.writeLong(offsets[36], object.subscribedHlc);
+  writer.writeString(offsets[37], object.viewMode);
+  writer.writeLong(offsets[38], object.viewModeHlc);
+  writer.writeBool(offsets[39], object.voiceBoost);
+  writer.writeLong(offsets[40], object.voiceBoostHlc);
 }
 
 PodcastUserState _podcastUserStateDeserialize(
@@ -273,44 +347,55 @@ PodcastUserState _podcastUserStateDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = PodcastUserState();
-  object.autoPlayOrder = reader.readStringOrNull(offsets[0]);
-  object.autoPlayOrderHlc = reader.readLong(offsets[1]);
-  object.episodeFilter = reader.readString(offsets[2]);
-  object.episodeFilterHlc = reader.readLong(offsets[3]);
-  object.episodeSortOrder = reader.readString(offsets[4]);
-  object.episodeSortOrderHlc = reader.readLong(offsets[5]);
-  object.hasAudio = reader.readBool(offsets[6]);
-  object.hasAudioHlc = reader.readLong(offsets[7]);
-  object.hasParental = reader.readBool(offsets[8]);
-  object.hasParentalHlc = reader.readLong(offsets[9]);
-  object.hasView = reader.readBool(offsets[10]);
-  object.hasViewHlc = reader.readLong(offsets[11]);
-  object.hideExplicitEpisodes = reader.readBool(offsets[12]);
-  object.hideExplicitEpisodesHlc = reader.readLong(offsets[13]);
+  object.autoDownload = reader.readBool(offsets[0]);
+  object.autoDownloadHlc = reader.readLong(offsets[1]);
+  object.autoDownloadKeepCount = reader.readLongOrNull(offsets[2]);
+  object.autoDownloadKeepCountHlc = reader.readLong(offsets[3]);
+  object.autoPlayOrder = reader.readStringOrNull(offsets[4]);
+  object.autoPlayOrderHlc = reader.readLong(offsets[5]);
+  object.episodeFilter = reader.readString(offsets[6]);
+  object.episodeFilterHlc = reader.readLong(offsets[7]);
+  object.episodeSortOrder = reader.readString(offsets[8]);
+  object.episodeSortOrderHlc = reader.readLong(offsets[9]);
+  object.feedUrl = reader.readStringOrNull(offsets[10]);
+  object.feedUrlHlc = reader.readLong(offsets[11]);
+  object.hasAudio = reader.readBool(offsets[12]);
+  object.hasAudioHlc = reader.readLong(offsets[13]);
+  object.hasParental = reader.readBool(offsets[14]);
+  object.hasParentalHlc = reader.readLong(offsets[15]);
+  object.hasView = reader.readBool(offsets[16]);
+  object.hasViewHlc = reader.readLong(offsets[17]);
+  object.hideExplicitEpisodes = reader.readBool(offsets[18]);
+  object.hideExplicitEpisodesHlc = reader.readLong(offsets[19]);
   object.id = id;
+  object.itunesId = reader.readStringOrNull(offsets[20]);
+  object.itunesIdHlc = reader.readLong(offsets[21]);
   object.playOrders =
       reader.readObjectList<PlayOrderEntry>(
-        offsets[14],
+        offsets[22],
         PlayOrderEntrySchema.deserialize,
         allOffsets,
         PlayOrderEntry(),
       ) ??
       [];
-  object.podcastKey = reader.readString(offsets[15]);
-  object.seasonSortField = reader.readString(offsets[16]);
-  object.seasonSortFieldHlc = reader.readLong(offsets[17]);
-  object.seasonSortOrder = reader.readString(offsets[18]);
-  object.seasonSortOrderHlc = reader.readLong(offsets[19]);
-  object.selectedPlaylistId = reader.readStringOrNull(offsets[20]);
-  object.selectedPlaylistIdHlc = reader.readLong(offsets[21]);
-  object.skipSilence = reader.readBoolOrNull(offsets[22]);
-  object.skipSilenceHlc = reader.readLong(offsets[23]);
-  object.speed = reader.readDouble(offsets[24]);
-  object.speedHlc = reader.readLong(offsets[25]);
-  object.viewMode = reader.readString(offsets[26]);
-  object.viewModeHlc = reader.readLong(offsets[27]);
-  object.voiceBoost = reader.readBoolOrNull(offsets[28]);
-  object.voiceBoostHlc = reader.readLong(offsets[29]);
+  object.podcastKey = reader.readString(offsets[23]);
+  object.seasonSortField = reader.readString(offsets[24]);
+  object.seasonSortFieldHlc = reader.readLong(offsets[25]);
+  object.seasonSortOrder = reader.readString(offsets[26]);
+  object.seasonSortOrderHlc = reader.readLong(offsets[27]);
+  object.selectedPlaylistId = reader.readStringOrNull(offsets[28]);
+  object.selectedPlaylistIdHlc = reader.readLong(offsets[29]);
+  object.skipSilence = reader.readBoolOrNull(offsets[30]);
+  object.skipSilenceHlc = reader.readLong(offsets[31]);
+  object.speed = reader.readDouble(offsets[32]);
+  object.speedHlc = reader.readLong(offsets[33]);
+  object.subscribed = reader.readBool(offsets[34]);
+  object.subscribedAt = reader.readDateTimeOrNull(offsets[35]);
+  object.subscribedHlc = reader.readLong(offsets[36]);
+  object.viewMode = reader.readString(offsets[37]);
+  object.viewModeHlc = reader.readLong(offsets[38]);
+  object.voiceBoost = reader.readBoolOrNull(offsets[39]);
+  object.voiceBoostHlc = reader.readLong(offsets[40]);
   return object;
 }
 
@@ -322,27 +407,27 @@ P _podcastUserStateDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 1:
       return (reader.readLong(offset)) as P;
     case 2:
-      return (reader.readString(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 3:
       return (reader.readLong(offset)) as P;
     case 4:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 5:
       return (reader.readLong(offset)) as P;
     case 6:
-      return (reader.readBool(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 7:
       return (reader.readLong(offset)) as P;
     case 8:
-      return (reader.readBool(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 9:
       return (reader.readLong(offset)) as P;
     case 10:
-      return (reader.readBool(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 11:
       return (reader.readLong(offset)) as P;
     case 12:
@@ -350,6 +435,22 @@ P _podcastUserStateDeserializeProp<P>(
     case 13:
       return (reader.readLong(offset)) as P;
     case 14:
+      return (reader.readBool(offset)) as P;
+    case 15:
+      return (reader.readLong(offset)) as P;
+    case 16:
+      return (reader.readBool(offset)) as P;
+    case 17:
+      return (reader.readLong(offset)) as P;
+    case 18:
+      return (reader.readBool(offset)) as P;
+    case 19:
+      return (reader.readLong(offset)) as P;
+    case 20:
+      return (reader.readStringOrNull(offset)) as P;
+    case 21:
+      return (reader.readLong(offset)) as P;
+    case 22:
       return (reader.readObjectList<PlayOrderEntry>(
                 offset,
                 PlayOrderEntrySchema.deserialize,
@@ -358,26 +459,10 @@ P _podcastUserStateDeserializeProp<P>(
               ) ??
               [])
           as P;
-    case 15:
-      return (reader.readString(offset)) as P;
-    case 16:
-      return (reader.readString(offset)) as P;
-    case 17:
-      return (reader.readLong(offset)) as P;
-    case 18:
-      return (reader.readString(offset)) as P;
-    case 19:
-      return (reader.readLong(offset)) as P;
-    case 20:
-      return (reader.readStringOrNull(offset)) as P;
-    case 21:
-      return (reader.readLong(offset)) as P;
-    case 22:
-      return (reader.readBoolOrNull(offset)) as P;
     case 23:
-      return (reader.readLong(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 24:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 25:
       return (reader.readLong(offset)) as P;
     case 26:
@@ -385,8 +470,30 @@ P _podcastUserStateDeserializeProp<P>(
     case 27:
       return (reader.readLong(offset)) as P;
     case 28:
-      return (reader.readBoolOrNull(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 29:
+      return (reader.readLong(offset)) as P;
+    case 30:
+      return (reader.readBoolOrNull(offset)) as P;
+    case 31:
+      return (reader.readLong(offset)) as P;
+    case 32:
+      return (reader.readDouble(offset)) as P;
+    case 33:
+      return (reader.readLong(offset)) as P;
+    case 34:
+      return (reader.readBool(offset)) as P;
+    case 35:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 36:
+      return (reader.readLong(offset)) as P;
+    case 37:
+      return (reader.readString(offset)) as P;
+    case 38:
+      return (reader.readLong(offset)) as P;
+    case 39:
+      return (reader.readBoolOrNull(offset)) as P;
+    case 40:
       return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -603,6 +710,204 @@ extension PodcastUserStateQueryWhere
 
 extension PodcastUserStateQueryFilter
     on QueryBuilder<PodcastUserState, PodcastUserState, QFilterCondition> {
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  autoDownloadEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'autoDownload', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  autoDownloadHlcEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'autoDownloadHlc', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  autoDownloadHlcGreaterThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'autoDownloadHlc',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  autoDownloadHlcLessThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'autoDownloadHlc',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  autoDownloadHlcBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'autoDownloadHlc',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  autoDownloadKeepCountIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'autoDownloadKeepCount'),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  autoDownloadKeepCountIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'autoDownloadKeepCount'),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  autoDownloadKeepCountEqualTo(int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'autoDownloadKeepCount',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  autoDownloadKeepCountGreaterThan(int? value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'autoDownloadKeepCount',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  autoDownloadKeepCountLessThan(int? value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'autoDownloadKeepCount',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  autoDownloadKeepCountBetween(
+    int? lower,
+    int? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'autoDownloadKeepCount',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  autoDownloadKeepCountHlcEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'autoDownloadKeepCountHlc',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  autoDownloadKeepCountHlcGreaterThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'autoDownloadKeepCountHlc',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  autoDownloadKeepCountHlcLessThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'autoDownloadKeepCountHlc',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  autoDownloadKeepCountHlcBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'autoDownloadKeepCountHlc',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
   QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
   autoPlayOrderIsNull() {
     return QueryBuilder.apply(this, (query) {
@@ -1210,6 +1515,220 @@ extension PodcastUserStateQueryFilter
   }
 
   QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  feedUrlIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'feedUrl'),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  feedUrlIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'feedUrl'),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  feedUrlEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'feedUrl',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  feedUrlGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'feedUrl',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  feedUrlLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'feedUrl',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  feedUrlBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'feedUrl',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  feedUrlStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'feedUrl',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  feedUrlEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'feedUrl',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  feedUrlContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'feedUrl',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  feedUrlMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'feedUrl',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  feedUrlIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'feedUrl', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  feedUrlIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'feedUrl', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  feedUrlHlcEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'feedUrlHlc', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  feedUrlHlcGreaterThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'feedUrlHlc',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  feedUrlHlcLessThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'feedUrlHlc',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  feedUrlHlcBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'feedUrlHlc',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
   hasAudioEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -1517,6 +2036,220 @@ extension PodcastUserStateQueryFilter
       return query.addFilterCondition(
         FilterCondition.between(
           property: r'id',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  itunesIdIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'itunesId'),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  itunesIdIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'itunesId'),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  itunesIdEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'itunesId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  itunesIdGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'itunesId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  itunesIdLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'itunesId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  itunesIdBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'itunesId',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  itunesIdStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'itunesId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  itunesIdEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'itunesId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  itunesIdContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'itunesId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  itunesIdMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'itunesId',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  itunesIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'itunesId', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  itunesIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'itunesId', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  itunesIdHlcEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'itunesIdHlc', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  itunesIdHlcGreaterThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'itunesIdHlc',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  itunesIdHlcLessThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'itunesIdHlc',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  itunesIdHlcBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'itunesIdHlc',
           lower: lower,
           includeLower: includeLower,
           upper: upper,
@@ -2542,6 +3275,143 @@ extension PodcastUserStateQueryFilter
   }
 
   QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  subscribedEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'subscribed', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  subscribedAtIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'subscribedAt'),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  subscribedAtIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'subscribedAt'),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  subscribedAtEqualTo(DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'subscribedAt', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  subscribedAtGreaterThan(DateTime? value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'subscribedAt',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  subscribedAtLessThan(DateTime? value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'subscribedAt',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  subscribedAtBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'subscribedAt',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  subscribedHlcEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'subscribedHlc', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  subscribedHlcGreaterThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'subscribedHlc',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  subscribedHlcLessThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'subscribedHlc',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
+  subscribedHlcBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'subscribedHlc',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterFilterCondition>
   viewModeEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -2836,6 +3706,62 @@ extension PodcastUserStateQueryLinks
 extension PodcastUserStateQuerySortBy
     on QueryBuilder<PodcastUserState, PodcastUserState, QSortBy> {
   QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
+  sortByAutoDownload() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'autoDownload', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
+  sortByAutoDownloadDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'autoDownload', Sort.desc);
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
+  sortByAutoDownloadHlc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'autoDownloadHlc', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
+  sortByAutoDownloadHlcDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'autoDownloadHlc', Sort.desc);
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
+  sortByAutoDownloadKeepCount() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'autoDownloadKeepCount', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
+  sortByAutoDownloadKeepCountDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'autoDownloadKeepCount', Sort.desc);
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
+  sortByAutoDownloadKeepCountHlc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'autoDownloadKeepCountHlc', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
+  sortByAutoDownloadKeepCountHlcDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'autoDownloadKeepCountHlc', Sort.desc);
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
   sortByAutoPlayOrder() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'autoPlayOrder', Sort.asc);
@@ -2916,6 +3842,34 @@ extension PodcastUserStateQuerySortBy
   sortByEpisodeSortOrderHlcDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'episodeSortOrderHlc', Sort.desc);
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
+  sortByFeedUrl() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'feedUrl', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
+  sortByFeedUrlDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'feedUrl', Sort.desc);
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
+  sortByFeedUrlHlc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'feedUrlHlc', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
+  sortByFeedUrlHlcDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'feedUrlHlc', Sort.desc);
     });
   }
 
@@ -3028,6 +3982,34 @@ extension PodcastUserStateQuerySortBy
   sortByHideExplicitEpisodesHlcDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'hideExplicitEpisodesHlc', Sort.desc);
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
+  sortByItunesId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'itunesId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
+  sortByItunesIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'itunesId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
+  sortByItunesIdHlc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'itunesIdHlc', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
+  sortByItunesIdHlcDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'itunesIdHlc', Sort.desc);
     });
   }
 
@@ -3185,6 +4167,48 @@ extension PodcastUserStateQuerySortBy
   }
 
   QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
+  sortBySubscribed() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'subscribed', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
+  sortBySubscribedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'subscribed', Sort.desc);
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
+  sortBySubscribedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'subscribedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
+  sortBySubscribedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'subscribedAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
+  sortBySubscribedHlc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'subscribedHlc', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
+  sortBySubscribedHlcDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'subscribedHlc', Sort.desc);
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
   sortByViewMode() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'viewMode', Sort.asc);
@@ -3243,6 +4267,62 @@ extension PodcastUserStateQuerySortBy
 
 extension PodcastUserStateQuerySortThenBy
     on QueryBuilder<PodcastUserState, PodcastUserState, QSortThenBy> {
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
+  thenByAutoDownload() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'autoDownload', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
+  thenByAutoDownloadDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'autoDownload', Sort.desc);
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
+  thenByAutoDownloadHlc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'autoDownloadHlc', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
+  thenByAutoDownloadHlcDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'autoDownloadHlc', Sort.desc);
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
+  thenByAutoDownloadKeepCount() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'autoDownloadKeepCount', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
+  thenByAutoDownloadKeepCountDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'autoDownloadKeepCount', Sort.desc);
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
+  thenByAutoDownloadKeepCountHlc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'autoDownloadKeepCountHlc', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
+  thenByAutoDownloadKeepCountHlcDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'autoDownloadKeepCountHlc', Sort.desc);
+    });
+  }
+
   QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
   thenByAutoPlayOrder() {
     return QueryBuilder.apply(this, (query) {
@@ -3324,6 +4404,34 @@ extension PodcastUserStateQuerySortThenBy
   thenByEpisodeSortOrderHlcDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'episodeSortOrderHlc', Sort.desc);
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
+  thenByFeedUrl() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'feedUrl', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
+  thenByFeedUrlDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'feedUrl', Sort.desc);
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
+  thenByFeedUrlHlc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'feedUrlHlc', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
+  thenByFeedUrlHlcDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'feedUrlHlc', Sort.desc);
     });
   }
 
@@ -3449,6 +4557,34 @@ extension PodcastUserStateQuerySortThenBy
   thenByIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.desc);
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
+  thenByItunesId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'itunesId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
+  thenByItunesIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'itunesId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
+  thenByItunesIdHlc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'itunesIdHlc', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
+  thenByItunesIdHlcDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'itunesIdHlc', Sort.desc);
     });
   }
 
@@ -3606,6 +4742,48 @@ extension PodcastUserStateQuerySortThenBy
   }
 
   QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
+  thenBySubscribed() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'subscribed', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
+  thenBySubscribedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'subscribed', Sort.desc);
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
+  thenBySubscribedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'subscribedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
+  thenBySubscribedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'subscribedAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
+  thenBySubscribedHlc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'subscribedHlc', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
+  thenBySubscribedHlcDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'subscribedHlc', Sort.desc);
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QAfterSortBy>
   thenByViewMode() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'viewMode', Sort.asc);
@@ -3665,6 +4843,34 @@ extension PodcastUserStateQuerySortThenBy
 extension PodcastUserStateQueryWhereDistinct
     on QueryBuilder<PodcastUserState, PodcastUserState, QDistinct> {
   QueryBuilder<PodcastUserState, PodcastUserState, QDistinct>
+  distinctByAutoDownload() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'autoDownload');
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QDistinct>
+  distinctByAutoDownloadHlc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'autoDownloadHlc');
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QDistinct>
+  distinctByAutoDownloadKeepCount() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'autoDownloadKeepCount');
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QDistinct>
+  distinctByAutoDownloadKeepCountHlc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'autoDownloadKeepCountHlc');
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QDistinct>
   distinctByAutoPlayOrder({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(
@@ -3712,6 +4918,20 @@ extension PodcastUserStateQueryWhereDistinct
   distinctByEpisodeSortOrderHlc() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'episodeSortOrderHlc');
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QDistinct>
+  distinctByFeedUrl({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'feedUrl', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QDistinct>
+  distinctByFeedUrlHlc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'feedUrlHlc');
     });
   }
 
@@ -3768,6 +4988,20 @@ extension PodcastUserStateQueryWhereDistinct
   distinctByHideExplicitEpisodesHlc() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'hideExplicitEpisodesHlc');
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QDistinct>
+  distinctByItunesId({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'itunesId', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QDistinct>
+  distinctByItunesIdHlc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'itunesIdHlc');
     });
   }
 
@@ -3858,6 +5092,27 @@ extension PodcastUserStateQueryWhereDistinct
   }
 
   QueryBuilder<PodcastUserState, PodcastUserState, QDistinct>
+  distinctBySubscribed() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'subscribed');
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QDistinct>
+  distinctBySubscribedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'subscribedAt');
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QDistinct>
+  distinctBySubscribedHlc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'subscribedHlc');
+    });
+  }
+
+  QueryBuilder<PodcastUserState, PodcastUserState, QDistinct>
   distinctByViewMode({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'viewMode', caseSensitive: caseSensitive);
@@ -3891,6 +5146,34 @@ extension PodcastUserStateQueryProperty
   QueryBuilder<PodcastUserState, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<PodcastUserState, bool, QQueryOperations>
+  autoDownloadProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'autoDownload');
+    });
+  }
+
+  QueryBuilder<PodcastUserState, int, QQueryOperations>
+  autoDownloadHlcProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'autoDownloadHlc');
+    });
+  }
+
+  QueryBuilder<PodcastUserState, int?, QQueryOperations>
+  autoDownloadKeepCountProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'autoDownloadKeepCount');
+    });
+  }
+
+  QueryBuilder<PodcastUserState, int, QQueryOperations>
+  autoDownloadKeepCountHlcProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'autoDownloadKeepCountHlc');
     });
   }
 
@@ -3933,6 +5216,18 @@ extension PodcastUserStateQueryProperty
   episodeSortOrderHlcProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'episodeSortOrderHlc');
+    });
+  }
+
+  QueryBuilder<PodcastUserState, String?, QQueryOperations> feedUrlProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'feedUrl');
+    });
+  }
+
+  QueryBuilder<PodcastUserState, int, QQueryOperations> feedUrlHlcProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'feedUrlHlc');
     });
   }
 
@@ -3984,6 +5279,18 @@ extension PodcastUserStateQueryProperty
   hideExplicitEpisodesHlcProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'hideExplicitEpisodesHlc');
+    });
+  }
+
+  QueryBuilder<PodcastUserState, String?, QQueryOperations> itunesIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'itunesId');
+    });
+  }
+
+  QueryBuilder<PodcastUserState, int, QQueryOperations> itunesIdHlcProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'itunesIdHlc');
     });
   }
 
@@ -4066,6 +5373,26 @@ extension PodcastUserStateQueryProperty
   QueryBuilder<PodcastUserState, int, QQueryOperations> speedHlcProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'speedHlc');
+    });
+  }
+
+  QueryBuilder<PodcastUserState, bool, QQueryOperations> subscribedProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'subscribed');
+    });
+  }
+
+  QueryBuilder<PodcastUserState, DateTime?, QQueryOperations>
+  subscribedAtProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'subscribedAt');
+    });
+  }
+
+  QueryBuilder<PodcastUserState, int, QQueryOperations>
+  subscribedHlcProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'subscribedHlc');
     });
   }
 
