@@ -13,7 +13,7 @@ void main() {
   });
 
   setUp(() async {
-    isar = await openTestIsar([SubscriptionSchema]);
+    isar = await openTestIsar([SubscriptionSchema, EpisodeSchema]);
     datasource = SubscriptionLocalDatasource(isar);
   });
 
@@ -315,6 +315,91 @@ void main() {
       expect(stored?.artistName, 'A & B');
       expect(stored?.feedMetadataSyncedAt, syncedAt);
       expect(stored?.channelTextSyncedAt, syncedAt);
+    });
+  });
+
+  group('assignStableKeys', () {
+    Future<Episode> putEpisode(int podcastId, String guid) async {
+      final episode = Episode()
+        ..podcastId = podcastId
+        ..guid = guid
+        ..title = guid
+        ..audioUrl = 'https://example.com/$guid.mp3';
+      await isar.writeTxn(() => isar.episodes.put(episode));
+      return episode;
+    }
+
+    test('keys the podcast by its guid when the feed declares one', () async {
+      final sub = await datasource.insert(makeSubscription());
+
+      await datasource.assignStableKeys(sub.id, podcastGuid: 'abc');
+
+      final stored = await isar.subscriptions.get(sub.id);
+      expect(stored?.podcastGuid, 'abc');
+      expect(
+        stored?.podcastKey,
+        podcastKeyFor(podcastGuid: 'abc', feedUrl: sub.feedUrl),
+      );
+    });
+
+    test('keys the podcast by its feed URL without a guid', () async {
+      final sub = await datasource.insert(makeSubscription());
+
+      await datasource.assignStableKeys(sub.id);
+
+      final stored = await isar.subscriptions.get(sub.id);
+      expect(stored?.podcastKey, podcastKeyFor(feedUrl: sub.feedUrl));
+    });
+
+    test('never changes a key once assigned', () async {
+      final sub = await datasource.insert(makeSubscription());
+      await datasource.assignStableKeys(sub.id);
+
+      await datasource.assignStableKeys(sub.id, podcastGuid: 'later');
+
+      final stored = await isar.subscriptions.get(sub.id);
+      expect(stored?.podcastKey, podcastKeyFor(feedUrl: sub.feedUrl));
+      expect(stored?.podcastGuid, 'later');
+    });
+
+    test('keys the podcast episodes that have no key', () async {
+      final sub = await datasource.insert(makeSubscription());
+      final other = await datasource.insert(
+        makeSubscription(itunesId: 'itunes-2', feedUrl: 'https://b.example/f'),
+      );
+      final first = await putEpisode(sub.id, 'g1');
+      final second = await putEpisode(sub.id, 'g2');
+      final foreign = await putEpisode(other.id, 'g1');
+
+      await datasource.assignStableKeys(sub.id);
+
+      final podcastKey = podcastKeyFor(feedUrl: sub.feedUrl);
+      expect(
+        (await isar.episodes.get(first.id))?.episodeKey,
+        episodeKeyFor(podcastKey, 'g1'),
+      );
+      expect(
+        (await isar.episodes.get(second.id))?.episodeKey,
+        episodeKeyFor(podcastKey, 'g2'),
+      );
+      expect((await isar.episodes.get(foreign.id))?.episodeKey, isNull);
+    });
+
+    test('keeps an episode key already assigned', () async {
+      final sub = await datasource.insert(makeSubscription());
+      final episode = await putEpisode(sub.id, 'g1');
+      episode.episodeKey = 'existing';
+      await isar.writeTxn(() => isar.episodes.put(episode));
+
+      await datasource.assignStableKeys(sub.id);
+
+      expect((await isar.episodes.get(episode.id))?.episodeKey, 'existing');
+    });
+
+    test('does nothing for a missing subscription', () async {
+      await datasource.assignStableKeys(42, podcastGuid: 'abc');
+
+      expect(await isar.subscriptions.count(), 0);
     });
   });
 }

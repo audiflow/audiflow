@@ -71,7 +71,11 @@ void main() {
   });
 
   setUp(() async {
-    isar = await openTestIsar([EpisodeSchema, EpisodeChapterSchema]);
+    isar = await openTestIsar([
+      SubscriptionSchema,
+      EpisodeSchema,
+      EpisodeChapterSchema,
+    ]);
     chapterDatasource = ChapterLocalDatasource(isar);
     episodeDatasource = EpisodeLocalDatasource(isar);
     http = _FakeHttpAdapter();

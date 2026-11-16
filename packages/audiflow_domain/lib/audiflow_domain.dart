@@ -311,3 +311,6 @@ export 'src/features/parental_control/services/parental_control_gate.dart';
 export 'src/features/parental_control/services/parental_control_policy.dart';
 export 'src/features/parental_control/services/pin_hasher.dart';
 export 'src/features/parental_control/providers/parental_control_providers.dart';
+
+// User state (sync-ready data model)
+export 'src/features/user_state/models/stable_keys.dart';

@@ -390,6 +390,19 @@ class MockSubscriptionRepository extends _i1.Mock
           as _i11.Future<void>);
 
   @override
+  _i11.Future<void> assignStableKeys(int? id, {String? podcastGuid}) =>
+      (super.noSuchMethod(
+            Invocation.method(
+              #assignStableKeys,
+              [id],
+              {#podcastGuid: podcastGuid},
+            ),
+            returnValue: _i11.Future<void>.value(),
+            returnValueForMissingStub: _i11.Future<void>.value(),
+          )
+          as _i11.Future<void>);
+
+  @override
   _i11.Future<void> updateFeedMetadata(
     int? id, {
     String? artworkUrl,
@@ -815,6 +828,23 @@ class MockAppSettingsRepository extends _i1.Mock
   ) =>
       (super.noSuchMethod(
             Invocation.method(#setDuckInterruptionBehavior, [behavior]),
+            returnValue: _i11.Future<void>.value(),
+            returnValueForMissingStub: _i11.Future<void>.value(),
+          )
+          as _i11.Future<void>);
+
+  @override
+  _i21.HapticFeedbackLevel getHapticFeedbackLevel() =>
+      (super.noSuchMethod(
+            Invocation.method(#getHapticFeedbackLevel, []),
+            returnValue: _i21.HapticFeedbackLevel.on,
+          )
+          as _i21.HapticFeedbackLevel);
+
+  @override
+  _i11.Future<void> setHapticFeedbackLevel(_i21.HapticFeedbackLevel? level) =>
+      (super.noSuchMethod(
+            Invocation.method(#setHapticFeedbackLevel, [level]),
             returnValue: _i11.Future<void>.value(),
             returnValueForMissingStub: _i11.Future<void>.value(),
           )

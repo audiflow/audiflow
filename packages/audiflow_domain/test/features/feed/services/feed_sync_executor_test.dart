@@ -154,6 +154,9 @@ class _FakeSubscriptionRepository implements SubscriptionRepository {
       throw UnimplementedError();
 
   @override
+  Future<void> assignStableKeys(int id, {String? podcastGuid}) async {}
+
+  @override
   Future<void> updateWebsiteUrl(
     int id,
     String? websiteUrl, {
@@ -598,6 +601,9 @@ Subscription _subscription({
   // False for a subscription that predates the stored website, which also
   // turns off conditional requests.
   bool websiteRead = true,
+  // A key for a subscription parsed since stable keys exist; null for
+  // one that predates them, which also turns off conditional requests.
+  String? podcastKey = 'assigned-key',
 }) {
   return Subscription()
     ..id = id
@@ -609,6 +615,7 @@ Subscription _subscription({
     ..description = description
     ..feedMetadataSyncedAt = feedMetadataSyncedAt
     ..websiteSyncedAt = websiteRead ? DateTime(2026) : null
+    ..podcastKey = podcastKey
     ..genres = ''
     ..explicit = false
     ..subscribedAt = DateTime.now()
@@ -981,6 +988,23 @@ void main() {
         lastRefreshedAt: null,
         httpEtag: '"abc123"',
         websiteRead: false,
+      );
+
+      final dio = _NotModifiedDio();
+      final executor = buildExecutor(dio: dio);
+
+      await executor.syncFeed(sub);
+
+      expect(dio.lastRequestHeaders?['If-None-Match'], isNull);
+    });
+
+    test('asks unconditionally until the podcast has a stable key', () async {
+      // Otherwise a podcast subscribed before keys existed gets 304s
+      // forever and never parses its channel to get one.
+      final sub = _subscription(
+        lastRefreshedAt: null,
+        httpEtag: '"abc123"',
+        podcastKey: null,
       );
 
       final dio = _NotModifiedDio();

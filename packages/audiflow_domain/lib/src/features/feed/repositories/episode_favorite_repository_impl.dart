@@ -29,13 +29,18 @@ class EpisodeFavoriteRepositoryImpl implements EpisodeFavoriteRepository {
 
   @override
   Future<void> toggleFavorite(int episodeId) async {
-    final episode = await _isar.episodes.get(episodeId);
-    if (episode == null) return;
-
-    episode.isFavorited = !episode.isFavorited;
-    episode.favoritedAt = episode.isFavorited ? DateTime.now() : null;
-
-    await _isar.writeTxn(() => _isar.episodes.put(episode));
+    // Read inside the transaction: a snapshot taken outside it could be
+    // stale by the time it is put back, undoing a feed refresh or the
+    // stable key assigned in between.
+    final found = await _isar.writeTxn(() async {
+      final episode = await _isar.episodes.get(episodeId);
+      if (episode == null) return false;
+      episode.isFavorited = !episode.isFavorited;
+      episode.favoritedAt = episode.isFavorited ? DateTime.now() : null;
+      await _isar.episodes.put(episode);
+      return true;
+    });
+    if (!found) return;
 
     // Best-effort station reconciliation.
     try {

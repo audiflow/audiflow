@@ -258,6 +258,7 @@ Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
         author: result.podcast.author,
         description: result.podcast.description,
         link: result.podcast.link,
+        podcastGuid: result.podcast.podcastGuid,
       );
 
       final episodeRepo = ref.read(episodeRepositoryProvider);

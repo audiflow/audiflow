@@ -132,6 +132,10 @@ class FakeSubscriptionRepository implements SubscriptionRepository {
   }) => throw UnimplementedError();
 
   @override
+  Future<void> assignStableKeys(int id, {String? podcastGuid}) =>
+      throw UnimplementedError();
+
+  @override
   Future<void> updateFeedMetadata(
     int id, {
     String? artworkUrl,
