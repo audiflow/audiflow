@@ -6,6 +6,7 @@ import 'package:audiflow_domain/src/features/parental_control/datasources/local/
 import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart' hide expect;
 import 'package:isar_community/isar.dart';
+import 'package:logger/logger.dart';
 
 import '../../helpers/isar_test_helper.dart';
 
@@ -350,6 +351,49 @@ void main() {
       },
     );
 
+    test('a choice made before keying wins over the kept one', () async {
+      final sub = await putPodcast(podcastKey: null);
+      final ds = SubscriptionLocalDatasource(isar);
+      await ds.assignStableKeys(sub.id);
+      await ds.updateAutoDownloadKeepCount(sub.id, 4);
+      await ds.deleteById(sub.id);
+      final again = await ds.getOrCreateCached(
+        itunesId: sub.itunesId,
+        feedUrl: sub.feedUrl,
+        title: 'Show',
+        artistName: 'Artist',
+      );
+      // Changed before the next feed parse keys the row.
+      await ds.updateAutoDownloadKeepCount(again.id, 2);
+
+      await ds.assignStableKeys(again.id);
+
+      check((await ds.getById(again.id))!.autoDownloadKeepCount).equals(2);
+      final s = (await state(podcastKeyFor(feedUrl: sub.feedUrl)))!;
+      check(s.autoDownloadKeepCount).equals(2);
+    });
+
+    test('a difference only in feed credentials is still logged', () async {
+      final sub = await putPodcast();
+      await SubscriptionLocalDatasource(
+        isar,
+      ).updateAutoDownload(sub.id, autoDownload: false);
+      await isar.writeTxn(
+        () => isar.subscriptions.put(sub..feedUrl = '${sub.feedUrl}?token=new'),
+      );
+      final output = _CapturingOutput();
+      final access = PodcastUserStateAccess(
+        isar,
+        logger: Logger(output: output, printer: SimplePrinter()),
+      );
+
+      await access.compareSubscription(sub);
+
+      final lines = output.events.expand((e) => e.lines).join('\n');
+      check(lines).contains('subscription differs');
+      check(lines).not((it) => it.contains('token=new'));
+    });
+
     test('compare logs keep feed credentials out', () {
       check(
         redactFeedUrl('https://user:pw@example.com:8443/feed.xml?token=t'),
@@ -558,4 +602,11 @@ void main() {
       check(s.playOrders).length.equals(2);
     });
   });
+}
+
+class _CapturingOutput extends LogOutput {
+  final List<OutputEvent> events = [];
+
+  @override
+  void output(OutputEvent event) => events.add(event);
 }

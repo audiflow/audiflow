@@ -63,15 +63,16 @@ class PodcastUserStateAccess {
   /// Fills [sub]'s auto-download choices from the subscription section its
   /// key already has, so a catalog row recreated after an eviction, or keyed
   /// for the first time on this device, takes them up instead of stamping
-  /// its defaults over them. Call before [saveSubscription].
+  /// its defaults over them. Only fields still at their defaults are
+  /// filled: a choice made on the row before it was keyed is newer. Call
+  /// before [saveSubscription].
   Future<void> restoreSubscriptionChoices(Subscription sub) async {
     final key = sub.podcastKey;
     if (key == null) return;
     final state = await _isar.podcastUserStates.getByPodcastKey(key);
     if (state == null || state.subscribedHlc == 0) return;
-    sub
-      ..autoDownload = state.autoDownload
-      ..autoDownloadKeepCount = state.autoDownloadKeepCount;
+    if (!sub.autoDownload) sub.autoDownload = state.autoDownload;
+    sub.autoDownloadKeepCount ??= state.autoDownloadKeepCount;
   }
 
   /// Records that [sub] is gone from this device: it no longer subscribes.
@@ -100,7 +101,8 @@ class PodcastUserStateAccess {
     if (state == null || state.subscribedHlc == 0) return;
     // Compared in full; logged without the feed URL's credentials.
     if (describeSubscription(sub) == describeSubscriptionState(state)) return;
-    _compare(
+    // The redacted strings can be equal, so they are not compared again.
+    _report(
       'subscription',
       sub.id,
       describeSubscription(sub, redact: true),
@@ -393,7 +395,12 @@ class PodcastUserStateAccess {
   }
 
   void _compare(String section, int podcastId, String legacy, String current) {
-    if (!kDebugMode || legacy == current) return;
+    if (legacy == current) return;
+    _report(section, podcastId, legacy, current);
+  }
+
+  void _report(String section, int podcastId, String legacy, String current) {
+    if (!kDebugMode) return;
     _logger.w(
       'PodcastUserState $section differs for podcast $podcastId: '
       'old $legacy, new $current',
