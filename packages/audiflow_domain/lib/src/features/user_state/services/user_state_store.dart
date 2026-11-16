@@ -42,20 +42,32 @@ class UserStateTxn {
   /// the fields this write stamped get their ops.
   void touch<T>(EntitySpec<T> entity, T row) =>
       _touched.add(_Touched<T>(entity, row));
+
+  /// Reports that a merge changed [fieldIds] of [row], keeping the clocks
+  /// they arrived with, so the change reaches other devices.
+  void touchMerged<T>(EntitySpec<T> entity, T row, Set<int> fieldIds) =>
+      _touched.add(_Touched<T>(entity, row, only: fieldIds));
 }
 
 class _Touched<T> {
-  _Touched(this.entity, this.row);
+  _Touched(this.entity, this.row, {this.only});
 
   final EntitySpec<T> entity;
   final T row;
+
+  /// The fields a merge changed; null for a local write, whose changed
+  /// fields are the ones stamped with its HLC.
+  final Set<int>? only;
 
   /// The ops for the fields stamped [stamp], and those without a clock.
   Iterable<OutboxOp> ops(int stamp, String Function() newOpId) sync* {
     final key = entity.key(row);
     for (final field in entity.fields) {
       final hlc = field.hlc?.call(row);
-      if (hlc != null && hlc != stamp) continue;
+      final changed = only == null
+          ? hlc == null || hlc == stamp
+          : only!.contains(field.id);
+      if (!changed) continue;
       yield OutboxOp()
         ..opId = newOpId()
         ..entity = entity.name

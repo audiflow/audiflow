@@ -11,10 +11,15 @@ const _stringValue = 3;
 const _boolValue = 4;
 const _timeValue = 5;
 
+/// The field's packed HLC, carried in snapshots, where every field travels
+/// with its clock. Ops carry theirs on the op instead.
+const _hlcValue = 15;
+
 /// Encodes [value] (null, int, double, bool, String, or DateTime) as a
-/// Value message.
-Uint8List encodeValue(Object? value) {
+/// Value message, with its packed [hlc] when given.
+Uint8List encodeValue(Object? value, {int? hlc}) {
   final w = ProtoWriter();
+  if (hlc != null) w.writeInt(_hlcValue, hlc);
   switch (value) {
     case null:
       break;
@@ -58,9 +63,22 @@ Object? decodeValue(Uint8List bytes) {
       case _timeValue:
         _expect(field, WireType.varint);
         value = DateTime.fromMicrosecondsSinceEpoch(field.asSint, isUtc: true);
+      case _hlcValue:
+        _expect(field, WireType.varint);
     }
   }
   return value;
+}
+
+/// The packed HLC a Value message carries, or null when it has none.
+int? decodeHlc(Uint8List bytes) {
+  int? hlc;
+  for (final field in readMessage(bytes)) {
+    if (field.fieldNumber != _hlcValue) continue;
+    _expect(field, WireType.varint);
+    hlc = field.asInt;
+  }
+  return hlc;
 }
 
 const _valueFields = {
@@ -69,6 +87,7 @@ const _valueFields = {
   _stringValue,
   _boolValue,
   _timeValue,
+  _hlcValue,
 };
 
 /// Whether a Value message uses a field number (a value type) this version
@@ -93,10 +112,13 @@ Uint8List encodeField<T>(FieldSpec<T> field, T row) {
 /// An entity message split into the fields this version knows (decoded
 /// values by fieldId) and those it does not (kept in wire form).
 class DecodedEntity {
-  DecodedEntity(this.known, this.unknown);
+  DecodedEntity(this.known, this.unknown, {this.hlcs = const {}});
 
   final Map<int, Object?> known;
   final List<ProtoField> unknown;
+
+  /// The HLC each known field carried, where it carried one (snapshots).
+  final Map<int, int> hlcs;
 }
 
 /// Splits an entity message of [entity] by what [UserStateEntities]
@@ -106,15 +128,18 @@ class DecodedEntity {
 DecodedEntity decodeEntity(String entity, Uint8List bytes) {
   final ids = UserStateEntities.registry[entity] ?? const <int, String>{};
   final known = <int, Object?>{};
+  final hlcs = <int, int>{};
   final unknown = <ProtoField>[];
   for (final field in readMessage(bytes)) {
     if (ids.containsKey(field.fieldNumber) &&
         field.wireType == WireType.lengthDelimited &&
         !_hasUnknownValueType(field.raw)) {
       known[field.fieldNumber] = decodeValue(field.raw);
+      final hlc = decodeHlc(field.raw);
+      if (hlc != null) hlcs[field.fieldNumber] = hlc;
     } else {
       unknown.add(field);
     }
   }
-  return DecodedEntity(known, unknown);
+  return DecodedEntity(known, unknown, hlcs: hlcs);
 }
