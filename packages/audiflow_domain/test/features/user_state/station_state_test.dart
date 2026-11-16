@@ -137,6 +137,47 @@ void main() {
     ).isTrue();
   });
 
+  test('deleting the subscription records its members removed', () async {
+    final s = await stations.insert(newStation('S'));
+    final p = await putPodcast('p');
+    await links.insert(link(s, p));
+
+    // As SubscriptionRepositoryImpl.deleteById: the row goes first.
+    await SubscriptionLocalDatasource(isar).deleteById(p.id);
+    await StationReconcilerService(isar: isar).onSubscriptionRemoved(p.id);
+
+    check(
+      (await isar.stationMembers.where().findAll()).single.deleted,
+    ).isTrue();
+    check(await isar.stationPodcasts.count()).equals(0);
+  });
+
+  test('a member shared by two subscriptions stays while one links', () async {
+    final s = await stations.insert(newStation('S'));
+    final p = await putPodcast('p');
+    // Another feed URL declaring the same podcast.
+    final twin = Subscription()
+      ..itunesId = 'it-twin'
+      ..feedUrl = 'https://mirror.example.com/p'
+      ..title = 'p'
+      ..artistName = 'Artist'
+      ..subscribedAt = DateTime(2026)
+      ..podcastKey = 'pk-p';
+    await isar.writeTxn(() => isar.subscriptions.put(twin));
+    await links.insert(link(s, p));
+    await links.insert(link(s, twin));
+
+    await links.delete(s.id, p.id);
+    check(
+      (await isar.stationMembers.where().findAll()).single.deleted,
+    ).isFalse();
+
+    await links.delete(s.id, twin.id);
+    check(
+      (await isar.stationMembers.where().findAll()).single.deleted,
+    ).isTrue();
+  });
+
   test('a link to an unkeyed podcast is recorded when keyed', () async {
     final s = await stations.insert(newStation('S'));
     final p = await putPodcast('p', keyed: false);

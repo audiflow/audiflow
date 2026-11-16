@@ -92,14 +92,21 @@ class StationStateAccess {
   }
 
   /// Marks the members of [links] removed; the caller deletes the rows.
-  /// Must run inside [UserStateStore.write].
+  /// A member another remaining link still maps to (two subscriptions can
+  /// share a podcast key) stays. Must run inside [UserStateStore.write].
   Future<void> removeMembers(
     List<StationPodcast> links,
     UserStateTxn txn,
   ) async {
     final stamp = txn.stamp.packed;
-    for (final key in await _memberKeys(links)) {
+    final removed = {for (final l in links) l.id};
+    final keys = await _memberKeys(links);
+    for (var i = 0; i < links.length; i++) {
+      final key = keys[i];
       if (key == null) continue;
+      if (await _stillLinked(links[i].stationId, key.podcastKey, removed)) {
+        continue;
+      }
       final member = await _isar.stationMembers.getByStationIdPodcastKey(
         key.stationId,
         key.podcastKey,
@@ -111,6 +118,37 @@ class StationStateAccess {
           ..deletedHlc = stamp,
       );
     }
+  }
+
+  /// Marks every member of [sub]'s podcast removed, before [sub]'s row is
+  /// deleted and its key can no longer be looked up. Members another
+  /// subscription with the same key still links to stay. Must run inside
+  /// [UserStateStore.write].
+  Future<void> removePodcast(Subscription sub, UserStateTxn txn) async {
+    if (sub.podcastKey == null) return;
+    final links = await _isar.stationPodcasts
+        .filter()
+        .podcastIdEqualTo(sub.id)
+        .findAll();
+    await removeMembers(links, txn);
+  }
+
+  Future<bool> _stillLinked(
+    int localStationId,
+    String podcastKey,
+    Set<int> removed,
+  ) async {
+    final others = await _isar.stationPodcasts
+        .filter()
+        .stationIdEqualTo(localStationId)
+        .findAll();
+    final remaining = [
+      for (final l in others)
+        if (!removed.contains(l.id)) l.podcastId,
+    ];
+    if (remaining.isEmpty) return false;
+    final subs = await _isar.subscriptions.getAll(remaining);
+    return subs.any((sub) => sub?.podcastKey == podcastKey);
   }
 
   /// Records the station links of [sub], now that it has a key.

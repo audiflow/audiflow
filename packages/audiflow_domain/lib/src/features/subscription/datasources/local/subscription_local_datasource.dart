@@ -209,6 +209,8 @@ class SubscriptionLocalDatasource {
       final existing = await _isar.subscriptions.get(id);
       if (existing == null) return false;
       await _podcastState.saveSubscriptionRemoved(existing, txn);
+      // Recorded now: once the row is gone, its links have no key to name.
+      await StationStateAccess(_isar).removePodcast(existing, txn);
       return _isar.subscriptions.delete(id);
     });
   }
