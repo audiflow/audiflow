@@ -2,6 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/datasources/shared_preferences_datasource.dart';
 import '../../../common/providers/platform_providers.dart';
+import '../../settings/providers/settings_providers.dart';
 import '../datasources/local/sleep_timer_preferences_datasource.dart';
 
 part 'sleep_timer_providers.g.dart';
@@ -11,5 +12,8 @@ part 'sleep_timer_providers.g.dart';
 @Riverpod(keepAlive: true)
 SleepTimerPreferencesDatasource sleepTimerPreferencesDatasource(Ref ref) {
   final prefs = ref.watch(sharedPreferencesProvider);
-  return SleepTimerPreferencesDatasource(SharedPreferencesDataSource(prefs));
+  return SleepTimerPreferencesDatasource(
+    SharedPreferencesDataSource(prefs),
+    isar: ref.watch(syncedSettingsIsarProvider),
+  );
 }

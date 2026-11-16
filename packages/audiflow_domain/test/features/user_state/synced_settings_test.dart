@@ -71,6 +71,34 @@ void main() {
     check(repository.getSkipBackwardSeconds()).equals(20);
   });
 
+  test('interruption behavior and sleep timer values sync', () async {
+    await start();
+    final sleep = SleepTimerPreferencesDatasource(
+      SharedPreferencesDataSource(prefs),
+      isar: isar,
+    );
+
+    await repository.setDuckInterruptionBehavior(
+      DuckInterruptionBehavior.values.last,
+    );
+    await sleep.setLastMinutes(45);
+    await sleep.setLastEpisodes(2);
+
+    check(await row(SettingsKeys.duckInterruptionBehavior)).isNotNull();
+    check(
+      (await row(SleepTimerPreferencesDatasource.lastMinutesKey))!.value,
+    ).equals('45');
+    check(
+      (await row(SleepTimerPreferencesDatasource.lastEpisodesKey))!.value,
+    ).equals('2');
+
+    // Reads come from Isar, not the SharedPreferences copy.
+    await prefs.setInt(SleepTimerPreferencesDatasource.lastMinutesKey, 5);
+    await prefs.setInt(SleepTimerPreferencesDatasource.lastEpisodesKey, 9);
+    check(sleep.getLastMinutes()).equals(45);
+    check(sleep.getLastEpisodes()).equals(2);
+  });
+
   test('device-scoped settings stay out of Isar', () async {
     await start();
 
