@@ -1,9 +1,12 @@
+import 'dart:typed_data';
+
 import 'package:isar_community/isar.dart';
 import 'package:uuid/uuid.dart';
 
 import '../models/hlc.dart';
 import '../models/outbox_op.dart';
 import '../models/sync_meta.dart';
+import '../sync/proto_wire.dart';
 import '../sync/user_state_codec.dart';
 import '../sync/user_state_fields.dart';
 import 'sync_meta_access.dart';
@@ -175,6 +178,12 @@ class UserStateStore {
         // A merge can bring an older clock than a pending local change of
         // the same field; that change must still go out.
         if (op.hlc < pending.hlc) continue;
+        // Equal clocks: the larger value wins, as in a merge, whether each
+        // side is a known field or one kept opaque.
+        if (op.hlc == pending.hlc &&
+            !_sortsAbove(op.payload, pending.payload)) {
+          continue;
+        }
         op.id = pending.id;
       }
       await _isar.outboxOps.put(op);
@@ -191,5 +200,26 @@ class UserStateStore {
         .idProperty()
         .findAll();
     await _isar.outboxOps.deleteAll(oldest);
+  }
+
+  /// Whether field [a] carries a larger value than [b], comparing the Value
+  /// bytes as a merge does (field tag and length aside).
+  static bool _sortsAbove(List<int> a, List<int> b) {
+    final x = _valueBytes(a);
+    final y = _valueBytes(b);
+    for (var i = 0; i < x.length && i < y.length; i++) {
+      if (x[i] != y[i]) return y[i] < x[i];
+    }
+    return y.length < x.length;
+  }
+
+  static List<int> _valueBytes(List<int> field) {
+    try {
+      final parsed = readMessage(Uint8List.fromList(field));
+      if (parsed.length == 1) return parsed.single.raw;
+    } on FormatException {
+      // Compared as is below.
+    }
+    return field;
   }
 }

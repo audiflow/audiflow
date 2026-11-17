@@ -502,6 +502,61 @@ void main() {
       check(op.payload).deepEquals(pending.payload);
     });
 
+    group('at the clock of a pending change', () {
+      late OutboxOp pending;
+      Future<OutboxOp> valueOp() async =>
+          (await isar.outboxOps.where().findAll()).singleWhere(
+            (o) => o.fieldId == 1,
+          );
+
+      setUp(() async {
+        await UserStateStore(isar, nowMillis: () => now).write((txn) async {
+          final row = SyncedSetting()
+            ..key = 'k'
+            ..value = '"local"'
+            ..hlc = txn.stamp.packed;
+          await isar.syncedSettings.put(row);
+          txn.touch(UserStateEntities.setting, row);
+        });
+        pending = await valueOp();
+      });
+
+      Future<void> mergeUnknown(ProtoWriter value) => merger().merge(
+        fileOf({
+          'setting': [
+            SnapshotRow(
+              'k',
+              (ProtoWriter()..writeBytes(
+                    1,
+                    (value..writeInt(15, pending.hlc)).takeBytes(),
+                  ))
+                  .takeBytes(),
+            ),
+          ],
+        }),
+      );
+
+      test('keep the pending change when its value sorts higher', () async {
+        // Int field 1 sorts below the string "local" (field 3).
+        await mergeUnknown(
+          ProtoWriter()
+            ..writeInt(1, 0)
+            ..writeInt(9, 1),
+        );
+
+        final op = await valueOp();
+        check(op.payload).deepEquals(pending.payload);
+      });
+
+      test('replace the pending change when theirs sorts higher', () async {
+        await mergeUnknown(ProtoWriter()..writeInt(9, 1));
+
+        final op = await valueOp();
+        check(op.hlc).equals(pending.hlc);
+        check(op.payload).not((p) => p.deepEquals(pending.payload));
+      });
+    });
+
     test('that are not Value messages still export', () async {
       final odd = (ProtoWriter()..writeBytes(99, [0xff])).takeBytes();
       await merger().merge(
