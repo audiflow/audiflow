@@ -14,6 +14,7 @@ enum GateReason {
   parentalSettings,
   developerSettings,
   resetData,
+  restoreBackup,
 }
 
 /// Maps an app-layer [GateReason] to the domain-layer [UnlockReason] used for
@@ -26,6 +27,7 @@ UnlockReason gateReasonToUnlock(GateReason r) => switch (r) {
   GateReason.parentalSettings => UnlockReason.parentalSettings,
   GateReason.developerSettings => UnlockReason.developerSettings,
   GateReason.resetData => UnlockReason.resetData,
+  GateReason.restoreBackup => UnlockReason.restoreBackup,
 };
 
 abstract class GateGuard {

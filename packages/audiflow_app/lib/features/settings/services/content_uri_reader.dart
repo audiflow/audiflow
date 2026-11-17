@@ -19,3 +19,22 @@ Future<String> readContentUri(String uri) async {
     throw FormatException(e.message ?? 'Failed to read content from URI');
   }
 }
+
+/// Reads a `content://` URI as bytes, for binary files such as a backup.
+///
+/// Throws [FormatException] like [readContentUri].
+Future<Uint8List> readContentUriBytes(String uri) async {
+  const channel = MethodChannel(contentResolverChannelName);
+  try {
+    final content = await channel.invokeMethod<Uint8List>(
+      'readContentUriBytes',
+      uri,
+    );
+    if (content == null) {
+      throw const FormatException('Failed to read content from URI');
+    }
+    return content;
+  } on PlatformException catch (e) {
+    throw FormatException(e.message ?? 'Failed to read content from URI');
+  }
+}

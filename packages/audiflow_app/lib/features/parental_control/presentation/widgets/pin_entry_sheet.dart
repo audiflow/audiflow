@@ -38,6 +38,8 @@ class _PinEntrySheetState extends ConsumerState<PinEntrySheet> {
       GateReason.developerSettings =>
         l10n.parentalControlPinEntryReasonDeveloperSettings,
       GateReason.resetData => l10n.parentalControlPinEntryReasonResetData,
+      GateReason.restoreBackup =>
+        l10n.parentalControlPinEntryReasonRestoreBackup,
     };
   }
 

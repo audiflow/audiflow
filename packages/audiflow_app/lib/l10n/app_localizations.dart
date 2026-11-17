@@ -866,6 +866,114 @@ abstract class AppLocalizations {
   /// **'Could not create the backup. Your data was not changed'**
   String get storageBackupExportError;
 
+  /// Title of the tile that restores user data from a backup file
+  ///
+  /// In en, this message translates to:
+  /// **'Restore from Backup'**
+  String get storageBackupRestoreTitle;
+
+  /// Subtitle of the backup restore tile
+  ///
+  /// In en, this message translates to:
+  /// **'Merge a backup file into this device'**
+  String get storageBackupRestoreSubtitle;
+
+  /// Button that picks a backup file to restore
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get storageBackupRestore;
+
+  /// Error when the picked file is not a backup
+  ///
+  /// In en, this message translates to:
+  /// **'This is not an Audiflow backup file'**
+  String get storageBackupNotABackup;
+
+  /// Error when the backup file is truncated or fails its checksum
+  ///
+  /// In en, this message translates to:
+  /// **'The backup file is damaged'**
+  String get storageBackupDamaged;
+
+  /// Error when the backup format is newer than this app
+  ///
+  /// In en, this message translates to:
+  /// **'This file was made by a newer version of Audiflow. Please update the app'**
+  String get storageBackupTooNew;
+
+  /// Error when the picked file could not be read at all
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read the file'**
+  String get storageBackupUnreadable;
+
+  /// Title of the screen that confirms a restore
+  ///
+  /// In en, this message translates to:
+  /// **'Restore Backup'**
+  String get backupRestoreConfirmTitle;
+
+  /// When and where the backup was made
+  ///
+  /// In en, this message translates to:
+  /// **'Created {date} on {platform}'**
+  String backupRestoreCreated(String date, String platform);
+
+  /// Podcast count in a backup
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 podcast} other{{count} podcasts}}'**
+  String backupRestorePodcasts(int count);
+
+  /// Episode count in a backup
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 episode with progress} other{{count} episodes with progress}}'**
+  String backupRestoreEpisodes(int count);
+
+  /// Queue count in a backup
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 queued episode} other{{count} queued episodes}}'**
+  String backupRestoreQueue(int count);
+
+  /// Station count in a backup
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 station} other{{count} stations}}'**
+  String backupRestoreStations(int count);
+
+  /// Explains that restore merges rather than replaces
+  ///
+  /// In en, this message translates to:
+  /// **'Restoring merges the backup into this device. Anything changed here more recently than the backup stays. To start from the backup alone, reset all data first.'**
+  String get backupRestoreMergeNote;
+
+  /// Button that starts the restore
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get backupRestoreAction;
+
+  /// Snackbar after a successful restore
+  ///
+  /// In en, this message translates to:
+  /// **'Backup restored. Podcasts update as their feeds load'**
+  String get backupRestoreSuccess;
+
+  /// Snackbar when the merge failed and rolled back
+  ///
+  /// In en, this message translates to:
+  /// **'Restore failed. Your data was not changed'**
+  String get backupRestoreFailed;
+
+  /// PIN sheet headline when restoring a backup
+  ///
+  /// In en, this message translates to:
+  /// **'Restore from a backup'**
+  String get parentalControlPinEntryReasonRestoreBackup;
+
   /// Import subscriptions setting title
   ///
   /// In en, this message translates to:

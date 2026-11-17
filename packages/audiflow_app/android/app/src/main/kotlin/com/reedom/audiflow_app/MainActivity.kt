@@ -14,7 +14,14 @@ import java.io.InputStream
 // the same process. The iOS read in opml_file_picker.dart uses the same limit.
 private const val MAX_CONTENT_URI_BYTES = 16 * 1024 * 1024
 
-private fun InputStream.readTextWithin(maxBytes: Int): String {
+// Far above any real backup (gzip of user state, no catalog). The Dart side
+// in backup_file_picker.dart uses the same limit on iOS.
+private const val MAX_BACKUP_BYTES = 64 * 1024 * 1024
+
+private fun InputStream.readTextWithin(maxBytes: Int): String =
+    readBytesWithin(maxBytes).toString(Charsets.UTF_8)
+
+private fun InputStream.readBytesWithin(maxBytes: Int): ByteArray {
     val out = ByteArrayOutputStream()
     val chunk = ByteArray(DEFAULT_BUFFER_SIZE)
     while (true) {
@@ -23,7 +30,7 @@ private fun InputStream.readTextWithin(maxBytes: Int): String {
         if (maxBytes - out.size() < read) throw IOException("File is too large to read")
         out.write(chunk, 0, read)
     }
-    return out.toString(Charsets.UTF_8.name())
+    return out.toByteArray()
 }
 
 class MainActivity : AudioServiceActivity() {
@@ -46,17 +53,22 @@ class MainActivity : AudioServiceActivity() {
             "com.reedom.audiflow_app/content_resolver",
         ).setMethodCallHandler { call, result ->
             when (call.method) {
-                "readContentUri" -> {
+                "readContentUri", "readContentUriBytes" -> {
                     val uriString = call.arguments as? String
                     if (uriString == null) {
                         result.error("INVALID_ARGUMENT", "URI is required", null)
                         return@setMethodCallHandler
                     }
+                    val asBytes = call.method == "readContentUriBytes"
                     Thread {
                         try {
                             val uri = Uri.parse(uriString)
-                            val content = contentResolver.openInputStream(uri)?.use {
-                                it.readTextWithin(MAX_CONTENT_URI_BYTES)
+                            val content: Any? = contentResolver.openInputStream(uri)?.use {
+                                if (asBytes) {
+                                    it.readBytesWithin(MAX_BACKUP_BYTES)
+                                } else {
+                                    it.readTextWithin(MAX_CONTENT_URI_BYTES)
+                                }
                             }
                             if (content != null) {
                                 runOnUiThread { result.success(content) }
