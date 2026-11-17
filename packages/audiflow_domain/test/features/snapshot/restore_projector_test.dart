@@ -632,9 +632,10 @@ void main() {
 
     test('keeps positions in the ranks\' number space', () async {
       await put(() async {
+        // The projection resolves episodes by key alone.
         await isar.episodes.putAll([
-          episode(podcastId, 'x', 'ekx'),
-          episode(podcastId, 'y', 'eky'),
+          episode(1, 'x', 'ekx'),
+          episode(1, 'y', 'eky'),
         ]);
         await isar.queueEntrys.putAll([
           QueueEntry()
