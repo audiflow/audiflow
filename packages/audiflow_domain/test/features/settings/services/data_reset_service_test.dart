@@ -5,6 +5,7 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar_community/isar.dart';
+import 'package:logger/logger.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -92,7 +93,10 @@ void main() {
   late SharedPreferencesDataSource preferences;
   late _WriterLog writers;
   late DataResetService service;
+  late Directory supportDir;
   var streamCacheClears = 0;
+
+  String snapshotPath() => p.join(supportDir.path, continuitySnapshotFileName);
 
   DataResetService buildService({
     required DownloadsDirectoryResolver resolveDownloadsDirectory,
@@ -107,6 +111,7 @@ void main() {
         _FakeWriter('feedSync', writers),
       ],
       resolveDownloadsDirectory: resolveDownloadsDirectory,
+      resolveContinuitySnapshotPath: () async => snapshotPath(),
       clearStreamCache: () async => streamCacheClears++,
     );
   }
@@ -118,6 +123,7 @@ void main() {
   setUp(() async {
     isar = await openTestIsar(isarSchemas);
     downloadsDir = await Directory.systemTemp.createTemp('audiflow_dl_');
+    supportDir = await Directory.systemTemp.createTemp('audiflow_support_');
     SharedPreferences.setMockInitialValues({
       'settings_theme_mode': 'dark',
       'analytics.install_id': 'abc',
@@ -140,6 +146,7 @@ void main() {
     if (await downloadsDir.exists()) {
       await downloadsDir.delete(recursive: true);
     }
+    if (await supportDir.exists()) await supportDir.delete(recursive: true);
   });
 
   Future<Map<String, int>> countPerCollection() async {
@@ -170,6 +177,7 @@ void main() {
       cancelBackgroundTasks: () async {},
       writers: const [],
       resolveDownloadsDirectory: () async => downloadsDir.path,
+      resolveContinuitySnapshotPath: () async => snapshotPath(),
       clearStreamCache: () async => throw Exception('cache'),
     );
 
@@ -222,6 +230,7 @@ void main() {
         cancelBackgroundTasks: () => writers.record('backgroundTasks'),
         writers: [downloads, feedSync],
         resolveDownloadsDirectory: () async => downloadsDir.path,
+        resolveContinuitySnapshotPath: () async => snapshotPath(),
         clearStreamCache: () async => streamCacheClears++,
       );
 
@@ -282,6 +291,79 @@ void main() {
       await service.resetAll();
 
       check(await downloadsDir.exists()).isFalse();
+    });
+
+    test('deletes the continuity snapshot', () async {
+      await File(snapshotPath()).writeAsString('snapshot');
+
+      await service.resetAll();
+
+      check(await File(snapshotPath()).exists()).isFalse();
+    });
+
+    test('succeeds when there is no continuity snapshot', () async {
+      await service.resetAll();
+
+      check(await File(snapshotPath()).exists()).isFalse();
+    });
+
+    test('a failed snapshot removal leaves the database untouched', () async {
+      await seedEveryCollection(isar);
+      final blockedService = DataResetService(
+        isar: isar,
+        preferences: preferences,
+        playback: _FakePlaybackController(writers),
+        cancelBackgroundTasks: () async {},
+        writers: const [],
+        resolveDownloadsDirectory: () async => downloadsDir.path,
+        resolveContinuitySnapshotPath: () async =>
+            throw const FileSystemException('boom'),
+        clearStreamCache: () async {},
+      );
+
+      await check(blockedService.resetAll()).throws<FileSystemException>();
+
+      check(await isar.subscriptions.count()).equals(1);
+    });
+
+    test('a relaunch after the reset restores nothing', () async {
+      // Without the removal, the next launch would see an empty database
+      // next to a snapshot and bring back what the user just reset.
+      await seedEveryCollection(isar);
+      await isar.writeTxn(
+        () => isar.podcastUserStates.put(
+          PodcastUserState()
+            ..podcastKey = 'pk2'
+            ..subscribed = true
+            ..subscribedHlc = 1 << 20,
+        ),
+      );
+      final backup = await buildBackupFile(
+        isar,
+        now: _now,
+        appVersion: '2.3.0',
+        platform: 'ios',
+      );
+      await File(snapshotPath()).writeAsBytes(backup.bytes);
+
+      await service.resetAll();
+      final detector = RestoreDetector(
+        isar: isar,
+        resolveSnapshotPath: () async => snapshotPath(),
+        restoreService: BackupRestoreService(
+          isar: isar,
+          stopPlayback: () async {},
+          cancelBackgroundTasks: () async {},
+          writers: const [],
+          syncFeeds: (_) async {},
+          onStationChanged: (_) async {},
+          logger: Logger(level: Level.off),
+        ),
+        logger: Logger(level: Level.off),
+      );
+
+      check(await detector.restoreIfEmpty()).isFalse();
+      check(await isar.podcastUserStates.count()).equals(0);
     });
 
     test('clears every SharedPreferences key', () async {

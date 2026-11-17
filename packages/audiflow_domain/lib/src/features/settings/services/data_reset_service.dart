@@ -14,6 +14,8 @@ import '../../player/services/stream_cache_service.dart';
 import '../../feed/services/feed_sync_service.dart';
 import '../../player/services/audio_playback_controller.dart';
 import '../../player/services/audio_player_service.dart';
+import '../../snapshot/auto_snapshot_scheduler.dart';
+import '../../snapshot/continuity_snapshot.dart';
 
 part 'data_reset_service.g.dart';
 
@@ -37,15 +39,18 @@ DataResetService dataResetService(Ref ref) {
     writers: [
       ref.watch(downloadQueueServiceProvider),
       ref.watch(feedSyncServiceProvider),
+      ref.watch(autoSnapshotSchedulerProvider),
     ],
     resolveDownloadsDirectory: fileService.getDownloadsDirectory,
+    resolveContinuitySnapshotPath: ref.watch(continuitySnapshotPathProvider),
     clearStreamCache: ref.watch(streamCacheServiceProvider).clearForReset,
   );
 }
 
 /// Returns the app to its initial state: playback is stopped and every
 /// writer is suspended, then every downloaded file, the streamed-audio cache,
-/// every Isar collection, and every SharedPreferences key is removed.
+/// the continuity snapshot, every Isar collection, and every
+/// SharedPreferences key is removed.
 ///
 /// Isar is cleared with [Isar.clear] rather than per collection so a
 /// collection added later cannot drift out of the reset path; the
@@ -58,6 +63,7 @@ class DataResetService {
     required this._cancelBackgroundTasks,
     required this._writers,
     required this._resolveDownloadsDirectory,
+    required this._resolveContinuitySnapshotPath,
     required this._clearStreamCache,
   });
 
@@ -69,6 +75,7 @@ class DataResetService {
   /// Foreground services that write to storage, in suspend order.
   final List<SuspendableWriter> _writers;
   final DownloadsDirectoryResolver _resolveDownloadsDirectory;
+  final ContinuitySnapshotPathResolver _resolveContinuitySnapshotPath;
   final Future<void> Function() _clearStreamCache;
 
   /// Wipes all local data. Throws on I/O failure so the caller can report
@@ -96,6 +103,10 @@ class DataResetService {
       // cannot be brought back if a later step fails.
       await _clearStreamCache();
       await _deleteDownloads();
+      // Otherwise the next launch sees an empty database next to a
+      // snapshot and restores the data the user just reset. Before the
+      // database, so a failure here leaves the data whole.
+      await _deleteContinuitySnapshot();
       await _isar.writeTxn(() => _isar.clear());
       await _preferences.clear();
     } finally {
@@ -103,6 +114,11 @@ class DataResetService {
         writer.resume();
       }
     }
+  }
+
+  Future<void> _deleteContinuitySnapshot() async {
+    final file = File(await _resolveContinuitySnapshotPath());
+    if (await file.exists()) await file.delete();
   }
 
   /// Deletes every file under the downloads directory, keeping the
