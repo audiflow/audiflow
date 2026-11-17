@@ -179,6 +179,31 @@ void main() {
       check(keys.toSet()).length.equals(keys.length);
     });
 
+    test('composite keys split back into their parts', () {
+      for (final parts in [
+        ['pk', 'a|b', 'c'],
+        ['pk', '', null],
+        ['pk', '~', '1:a'],
+        [null, 'x', ''],
+      ]) {
+        check(
+          splitCompositeKey(compositeKey(parts), parts.length),
+        ).deepEquals(parts);
+      }
+      for (final bad in [
+        '',
+        'pk',
+        '2:pk',
+        '2:pk|',
+        '9:a|1:b',
+        '1:a1:b',
+        '-1:a|1:b',
+        '+1:a|1:b',
+      ]) {
+        check(() => splitCompositeKey(bad, 2)).throws<FormatException>();
+      }
+    });
+
     // Pins every fieldId. Adding a field adds a line here; changing or
     // removing one breaks older apps and peers, so a fieldId is retired,
     // never reused: keep its line and comment it as retired instead.
@@ -257,6 +282,7 @@ void main() {
           4: 'deleted',
         },
         'setting': {1: 'value', 2: 'present'},
+        'podcastInfo': {1: 'title', 2: 'artistName', 3: 'artworkUrl'},
       });
     });
   });

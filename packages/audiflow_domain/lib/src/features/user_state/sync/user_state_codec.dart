@@ -11,10 +11,15 @@ const _stringValue = 3;
 const _boolValue = 4;
 const _timeValue = 5;
 
+/// The field's packed HLC, carried in snapshots, where every field travels
+/// with its clock. Ops carry theirs on the op instead.
+const _hlcValue = 15;
+
 /// Encodes [value] (null, int, double, bool, String, or DateTime) as a
-/// Value message.
-Uint8List encodeValue(Object? value) {
+/// Value message, with its packed [hlc] when given.
+Uint8List encodeValue(Object? value, {int? hlc}) {
   final w = ProtoWriter();
+  if (hlc != null) w.writeInt(_hlcValue, hlc);
   switch (value) {
     case null:
       break;
@@ -58,9 +63,57 @@ Object? decodeValue(Uint8List bytes) {
       case _timeValue:
         _expect(field, WireType.varint);
         value = DateTime.fromMicrosecondsSinceEpoch(field.asSint, isUtc: true);
+      case _hlcValue:
+        _expect(field, WireType.varint);
     }
   }
   return value;
+}
+
+/// [bytes] (a Value message) without the HLC it carries, so a stored copy
+/// is the same bytes whichever snapshot or op it came from.
+/// Whether [a] sorts above [b] byte by byte, a longer run winning a shared
+/// prefix: the tie-break for values whose clocks are equal.
+bool sortsAbove(List<int> a, List<int> b) {
+  for (var i = 0; i < a.length && i < b.length; i++) {
+    if (a[i] != b[i]) return b[i] < a[i];
+  }
+  return b.length < a.length;
+}
+
+/// The Value bytes of a field in wire form, without its tag and length, so
+/// a known field and one kept opaque compare the same way. Anything that
+/// is not one length-delimited field comes back as is.
+List<int> fieldValueBytes(List<int> field) {
+  try {
+    final parsed = readMessage(Uint8List.fromList(field));
+    if (parsed.length == 1 &&
+        parsed.single.wireType == WireType.lengthDelimited) {
+      return parsed.single.raw;
+    }
+  } on FormatException {
+    // Not a field; compared as is.
+  }
+  return field;
+}
+
+Uint8List withoutHlc(Uint8List bytes) {
+  final w = ProtoWriter();
+  for (final field in readMessage(bytes)) {
+    if (field.fieldNumber != _hlcValue) w.writeRaw(field.encode());
+  }
+  return w.takeBytes();
+}
+
+/// The packed HLC a Value message carries, or null when it has none.
+int? decodeHlc(Uint8List bytes) {
+  int? hlc;
+  for (final field in readMessage(bytes)) {
+    if (field.fieldNumber != _hlcValue) continue;
+    _expect(field, WireType.varint);
+    hlc = field.asInt;
+  }
+  return hlc;
 }
 
 const _valueFields = {
@@ -69,6 +122,7 @@ const _valueFields = {
   _stringValue,
   _boolValue,
   _timeValue,
+  _hlcValue,
 };
 
 /// Whether a Value message uses a field number (a value type) this version
@@ -93,10 +147,13 @@ Uint8List encodeField<T>(FieldSpec<T> field, T row) {
 /// An entity message split into the fields this version knows (decoded
 /// values by fieldId) and those it does not (kept in wire form).
 class DecodedEntity {
-  DecodedEntity(this.known, this.unknown);
+  DecodedEntity(this.known, this.unknown, {this.hlcs = const {}});
 
   final Map<int, Object?> known;
   final List<ProtoField> unknown;
+
+  /// The HLC each known field carried, where it carried one (snapshots).
+  final Map<int, int> hlcs;
 }
 
 /// Splits an entity message of [entity] by what [UserStateEntities]
@@ -106,15 +163,18 @@ class DecodedEntity {
 DecodedEntity decodeEntity(String entity, Uint8List bytes) {
   final ids = UserStateEntities.registry[entity] ?? const <int, String>{};
   final known = <int, Object?>{};
+  final hlcs = <int, int>{};
   final unknown = <ProtoField>[];
   for (final field in readMessage(bytes)) {
     if (ids.containsKey(field.fieldNumber) &&
         field.wireType == WireType.lengthDelimited &&
         !_hasUnknownValueType(field.raw)) {
       known[field.fieldNumber] = decodeValue(field.raw);
+      final hlc = decodeHlc(field.raw);
+      if (hlc != null) hlcs[field.fieldNumber] = hlc;
     } else {
       unknown.add(field);
     }
   }
-  return DecodedEntity(known, unknown);
+  return DecodedEntity(known, unknown, hlcs: hlcs);
 }

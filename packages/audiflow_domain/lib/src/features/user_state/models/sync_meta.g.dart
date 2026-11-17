@@ -33,6 +33,11 @@ const SyncMetaSchema = CollectionSchema(
       name: r'schemaVersion',
       type: IsarType.long,
     ),
+    r'tombstoneHorizon': PropertySchema(
+      id: 4,
+      name: r'tombstoneHorizon',
+      type: IsarType.long,
+    ),
   },
 
   estimateSize: _syncMetaEstimateSize,
@@ -76,6 +81,7 @@ void _syncMetaSerialize(
   writer.writeString(offsets[1], object.historyId);
   writer.writeLong(offsets[2], object.hlc);
   writer.writeLong(offsets[3], object.schemaVersion);
+  writer.writeLong(offsets[4], object.tombstoneHorizon);
 }
 
 SyncMeta _syncMetaDeserialize(
@@ -90,6 +96,7 @@ SyncMeta _syncMetaDeserialize(
   object.hlc = reader.readLong(offsets[2]);
   object.id = id;
   object.schemaVersion = reader.readLong(offsets[3]);
+  object.tombstoneHorizon = reader.readLong(offsets[4]);
   return object;
 }
 
@@ -107,6 +114,8 @@ P _syncMetaDeserializeProp<P>(
     case 2:
       return (reader.readLong(offset)) as P;
     case 3:
+      return (reader.readLong(offset)) as P;
+    case 4:
       return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -686,6 +695,61 @@ extension SyncMetaQueryFilter
       );
     });
   }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
+  tombstoneHorizonEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'tombstoneHorizon', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
+  tombstoneHorizonGreaterThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'tombstoneHorizon',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
+  tombstoneHorizonLessThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'tombstoneHorizon',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
+  tombstoneHorizonBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'tombstoneHorizon',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
 }
 
 extension SyncMetaQueryObject
@@ -740,6 +804,18 @@ extension SyncMetaQuerySortBy on QueryBuilder<SyncMeta, SyncMeta, QSortBy> {
   QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> sortBySchemaVersionDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'schemaVersion', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> sortByTombstoneHorizon() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'tombstoneHorizon', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> sortByTombstoneHorizonDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'tombstoneHorizon', Sort.desc);
     });
   }
 }
@@ -805,6 +881,18 @@ extension SyncMetaQuerySortThenBy
       return query.addSortBy(r'schemaVersion', Sort.desc);
     });
   }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> thenByTombstoneHorizon() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'tombstoneHorizon', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> thenByTombstoneHorizonDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'tombstoneHorizon', Sort.desc);
+    });
+  }
 }
 
 extension SyncMetaQueryWhereDistinct
@@ -834,6 +922,12 @@ extension SyncMetaQueryWhereDistinct
   QueryBuilder<SyncMeta, SyncMeta, QDistinct> distinctBySchemaVersion() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'schemaVersion');
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QDistinct> distinctByTombstoneHorizon() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'tombstoneHorizon');
     });
   }
 }
@@ -867,6 +961,12 @@ extension SyncMetaQueryProperty
   QueryBuilder<SyncMeta, int, QQueryOperations> schemaVersionProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'schemaVersion');
+    });
+  }
+
+  QueryBuilder<SyncMeta, int, QQueryOperations> tombstoneHorizonProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'tombstoneHorizon');
     });
   }
 }

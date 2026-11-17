@@ -42,20 +42,51 @@ class UserStateTxn {
   /// the fields this write stamped get their ops.
   void touch<T>(EntitySpec<T> entity, T row) =>
       _touched.add(_Touched<T>(entity, row));
+
+  /// Reports that a merge changed [fieldIds] of [row], keeping the clocks
+  /// they arrived with, so the change reaches other devices.
+  void touchMerged<T>(EntitySpec<T> entity, T row, Set<int> fieldIds) =>
+      _touched.add(_Touched<T>(entity, row, only: fieldIds));
+
+  final List<OutboxOp> _opaqueOps = [];
+
+  /// Reports that a merge stored a field this version does not know, as
+  /// [payload] (the field in wire form), so it reaches other devices too.
+  void addOpaqueOp(
+    String entity,
+    String key,
+    int fieldId,
+    int hlc,
+    List<int> payload,
+  ) => _opaqueOps.add(
+    OutboxOp()
+      ..entity = entity
+      ..key = key
+      ..fieldId = fieldId
+      ..hlc = hlc
+      ..payload = payload,
+  );
 }
 
 class _Touched<T> {
-  _Touched(this.entity, this.row);
+  _Touched(this.entity, this.row, {this.only});
 
   final EntitySpec<T> entity;
   final T row;
+
+  /// The fields a merge changed; null for a local write, whose changed
+  /// fields are the ones stamped with its HLC.
+  final Set<int>? only;
 
   /// The ops for the fields stamped [stamp], and those without a clock.
   Iterable<OutboxOp> ops(int stamp, String Function() newOpId) sync* {
     final key = entity.key(row);
     for (final field in entity.fields) {
       final hlc = field.hlc?.call(row);
-      if (hlc != null && hlc != stamp) continue;
+      final changed = only == null
+          ? hlc == null || hlc == stamp
+          : only!.contains(field.id);
+      if (!changed) continue;
       yield OutboxOp()
         ..opId = newOpId()
         ..entity = entity.name
@@ -127,19 +158,35 @@ class UserStateStore {
   }
 
   Future<void> _writeOps(UserStateTxn txn) async {
-    if (txn._touched.isEmpty) return;
+    if (txn._touched.isEmpty && txn._opaqueOps.isEmpty) return;
     final stamp = txn.stamp.packed;
-    for (final touched in txn._touched) {
-      for (final op in touched.ops(stamp, _newOpId)) {
-        // Coalesce: the newer change of a field replaces its pending op.
-        final pending = await _isar.outboxOps.getByEntityKeyFieldId(
-          op.entity,
-          op.key,
-          op.fieldId,
-        );
-        if (pending != null) op.id = pending.id;
-        await _isar.outboxOps.put(op);
+    final ops = [
+      for (final touched in txn._touched) ...touched.ops(stamp, _newOpId),
+      for (final op in txn._opaqueOps) op..opId = _newOpId(),
+    ];
+    for (final op in ops) {
+      // Coalesce: the newer change of a field replaces its pending op.
+      final pending = await _isar.outboxOps.getByEntityKeyFieldId(
+        op.entity,
+        op.key,
+        op.fieldId,
+      );
+      if (pending != null) {
+        // A merge can bring an older clock than a pending local change of
+        // the same field; that change must still go out.
+        if (op.hlc < pending.hlc) continue;
+        // Equal clocks: the larger value wins, as in a merge, whether each
+        // side is a known field or one kept opaque.
+        if (op.hlc == pending.hlc &&
+            !sortsAbove(
+              fieldValueBytes(op.payload),
+              fieldValueBytes(pending.payload),
+            )) {
+          continue;
+        }
+        op.id = pending.id;
       }
+      await _isar.outboxOps.put(op);
     }
     final excess = await _isar.outboxOps.count() - _outboxCap;
     if (excess <= 0) return;

@@ -4,8 +4,7 @@ part 'sync_meta.g.dart';
 
 /// The single row of bookkeeping for this device's copy of the user data.
 ///
-/// Fields for the server cursor and the tombstone horizon join when the
-/// steps that use them land.
+/// The server cursor joins when sync (M6) lands.
 @collection
 class SyncMeta {
   /// The only row's id.
@@ -29,6 +28,11 @@ class SyncMeta {
   /// Stored rather than kept in memory so the clock stays monotonic across
   /// restarts and across isolates writing the same database.
   int hlc = 0;
+
+  /// The HLC up to which tombstones were purged, as `Hlc.packed`; 0 while
+  /// none has been. Within one history, a set element unknown here and
+  /// added before it was deleted, and its tombstone is gone.
+  int tombstoneHorizon = 0;
 
   /// The last `DataMigrationStep.version` that completed.
   int schemaVersion = 0;
