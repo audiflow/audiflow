@@ -414,6 +414,72 @@ class AppLocalizationsJa extends AppLocalizations {
   String get storageBackupExportError => 'バックアップを作成できませんでした。データは変更されていません';
 
   @override
+  String get storageBackupRestoreTitle => 'バックアップから復元';
+
+  @override
+  String get storageBackupRestoreSubtitle => 'バックアップファイルをこの端末に統合します';
+
+  @override
+  String get storageBackupRestore => '復元';
+
+  @override
+  String get storageBackupNotABackup => 'Audiflow のバックアップファイルではありません';
+
+  @override
+  String get storageBackupDamaged => 'バックアップファイルが壊れています';
+
+  @override
+  String get storageBackupTooNew =>
+      '新しいバージョンの Audiflow で作られたファイルです。アプリを更新してください';
+
+  @override
+  String get storageBackupUnreadable => 'ファイルを読み込めませんでした';
+
+  @override
+  String get backupRestoreConfirmTitle => 'バックアップを復元';
+
+  @override
+  String backupRestoreCreated(String date, String platform) {
+    return '$dateに$platformで作成';
+  }
+
+  @override
+  String backupRestorePodcasts(int count) {
+    return 'ポッドキャスト $count件';
+  }
+
+  @override
+  String backupRestoreEpisodes(int count) {
+    return '再生記録のあるエピソード $count件';
+  }
+
+  @override
+  String backupRestoreQueue(int count) {
+    return 'キューのエピソード $count件';
+  }
+
+  @override
+  String backupRestoreStations(int count) {
+    return 'ステーション $count件';
+  }
+
+  @override
+  String get backupRestoreMergeNote =>
+      '復元すると、バックアップの内容がこの端末に統合されます。バックアップより後にこの端末で変更した内容はそのまま残ります。バックアップの内容だけにしたい場合は、先にすべてのデータをリセットしてください。';
+
+  @override
+  String get backupRestoreAction => '復元';
+
+  @override
+  String get backupRestoreSuccess => '復元しました。フィードを読み込むとポッドキャストが更新されます';
+
+  @override
+  String get backupRestoreFailed => '復元を完了できませんでした。もう一度お試しください';
+
+  @override
+  String get parentalControlPinEntryReasonRestoreBackup => 'バックアップから復元';
+
+  @override
   String get storageImportTitle => '購読をインポート';
 
   @override

@@ -36,6 +36,7 @@ import '../features/parental_control/presentation/screens/parental_control_setti
 import '../features/parental_control/presentation/screens/pin_change_screen.dart';
 import '../features/parental_control/presentation/screens/pin_setup_screen.dart';
 import '../features/settings/presentation/screens/settings_screen.dart';
+import '../features/settings/presentation/screens/backup_restore_confirm_screen.dart';
 import '../features/settings/presentation/screens/storage_settings_screen.dart';
 import '../features/settings/presentation/screens/design_gallery_screen.dart';
 import '../features/settings/presentation/screens/haptics_catalog_screen.dart';
@@ -79,6 +80,7 @@ class AppRoutes {
   static const String settingsDownloads = '/settings/downloads';
   static const String settingsFeedSync = '/settings/feed-sync';
   static const String settingsStorage = '/settings/storage';
+  static const String settingsStorageRestore = '/settings/storage/restore';
   static const String settingsAbout = '/settings/about';
   static const String settingsDeveloper = '/settings/developer';
   static const String settingsDesignGallery =
@@ -401,6 +403,19 @@ GoRouter createAppRouter({
                   materialRoute(
                     path: 'storage',
                     builder: (context, state) => const StorageSettingsScreen(),
+                    routes: [
+                      materialRoute(
+                        path: 'restore',
+                        // The file is validated in memory and passed along;
+                        // a link without it has nothing to confirm.
+                        builder: (context, state) => switch (state.extra) {
+                          final SnapshotFile file => BackupRestoreConfirmScreen(
+                            file: file,
+                          ),
+                          _ => const StorageSettingsScreen(),
+                        },
+                      ),
+                    ],
                   ),
                   materialRoute(
                     path: 'about',

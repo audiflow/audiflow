@@ -441,6 +441,99 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not create the backup. Your data was not changed';
 
   @override
+  String get storageBackupRestoreTitle => 'Restore from Backup';
+
+  @override
+  String get storageBackupRestoreSubtitle =>
+      'Merge a backup file into this device';
+
+  @override
+  String get storageBackupRestore => 'Restore';
+
+  @override
+  String get storageBackupNotABackup => 'This is not an Audiflow backup file';
+
+  @override
+  String get storageBackupDamaged => 'The backup file is damaged';
+
+  @override
+  String get storageBackupTooNew =>
+      'This file was made by a newer version of Audiflow. Please update the app';
+
+  @override
+  String get storageBackupUnreadable => 'Could not read the file';
+
+  @override
+  String get backupRestoreConfirmTitle => 'Restore Backup';
+
+  @override
+  String backupRestoreCreated(String date, String platform) {
+    return 'Created $date on $platform';
+  }
+
+  @override
+  String backupRestorePodcasts(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count podcasts',
+      one: '1 podcast',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String backupRestoreEpisodes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count episodes with progress',
+      one: '1 episode with progress',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String backupRestoreQueue(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count queued episodes',
+      one: '1 queued episode',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String backupRestoreStations(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count stations',
+      one: '1 station',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get backupRestoreMergeNote =>
+      'Restoring merges the backup into this device. Anything changed here more recently than the backup stays. To start from the backup alone, reset all data first.';
+
+  @override
+  String get backupRestoreAction => 'Restore';
+
+  @override
+  String get backupRestoreSuccess =>
+      'Backup restored. Podcasts update as their feeds load';
+
+  @override
+  String get backupRestoreFailed => 'Restore did not finish. Try again';
+
+  @override
+  String get parentalControlPinEntryReasonRestoreBackup =>
+      'Restore from a backup';
+
+  @override
   String get storageImportTitle => 'Import Subscriptions';
 
   @override

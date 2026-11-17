@@ -161,6 +161,13 @@ const _rankWidth = 11;
 String rankForPosition(int position) =>
     (position + _rankOffset).toRadixString(36).padLeft(_rankWidth, '0');
 
+/// The position [rank] was made from by [rankForPosition], or null for a
+/// rank in another form.
+int? positionForRank(String rank) {
+  final value = int.tryParse(rank, radix: 36);
+  return value == null ? null : value - _rankOffset;
+}
+
 String describeItem(QueueItem item) =>
     '${rankForPosition(item.position)}|${item.isAdhoc}|${item.sourceContext}';
 

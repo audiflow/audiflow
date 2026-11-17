@@ -221,6 +221,20 @@ void main() {
       );
     });
 
+    testWidgets('shows the backup restore tile', (tester) async {
+      await pumpScreen(tester, buildTestWidget());
+
+      final tile = find.widgetWithText(ListTile, 'Restore from Backup');
+      expect(tile, findsOneWidget);
+      expect(
+        find.descendant(
+          of: tile,
+          matching: find.widgetWithText(OutlinedButton, 'Restore'),
+        ),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('tapping Reset All Data shows confirmation dialog', (
       tester,
     ) async {

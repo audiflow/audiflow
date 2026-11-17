@@ -28,13 +28,18 @@ const SyncMetaSchema = CollectionSchema(
       type: IsarType.string,
     ),
     r'hlc': PropertySchema(id: 2, name: r'hlc', type: IsarType.long),
-    r'schemaVersion': PropertySchema(
+    r'queueProjectionPending': PropertySchema(
       id: 3,
+      name: r'queueProjectionPending',
+      type: IsarType.bool,
+    ),
+    r'schemaVersion': PropertySchema(
+      id: 4,
       name: r'schemaVersion',
       type: IsarType.long,
     ),
     r'tombstoneHorizon': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'tombstoneHorizon',
       type: IsarType.long,
     ),
@@ -80,8 +85,9 @@ void _syncMetaSerialize(
   writer.writeString(offsets[0], object.deviceId);
   writer.writeString(offsets[1], object.historyId);
   writer.writeLong(offsets[2], object.hlc);
-  writer.writeLong(offsets[3], object.schemaVersion);
-  writer.writeLong(offsets[4], object.tombstoneHorizon);
+  writer.writeBool(offsets[3], object.queueProjectionPending);
+  writer.writeLong(offsets[4], object.schemaVersion);
+  writer.writeLong(offsets[5], object.tombstoneHorizon);
 }
 
 SyncMeta _syncMetaDeserialize(
@@ -95,8 +101,9 @@ SyncMeta _syncMetaDeserialize(
   object.historyId = reader.readString(offsets[1]);
   object.hlc = reader.readLong(offsets[2]);
   object.id = id;
-  object.schemaVersion = reader.readLong(offsets[3]);
-  object.tombstoneHorizon = reader.readLong(offsets[4]);
+  object.queueProjectionPending = reader.readBool(offsets[3]);
+  object.schemaVersion = reader.readLong(offsets[4]);
+  object.tombstoneHorizon = reader.readLong(offsets[5]);
   return object;
 }
 
@@ -114,8 +121,10 @@ P _syncMetaDeserializeProp<P>(
     case 2:
       return (reader.readLong(offset)) as P;
     case 3:
-      return (reader.readLong(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 4:
+      return (reader.readLong(offset)) as P;
+    case 5:
       return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -639,6 +648,18 @@ extension SyncMetaQueryFilter
     });
   }
 
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
+  queueProjectionPendingEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'queueProjectionPending',
+          value: value,
+        ),
+      );
+    });
+  }
+
   QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition> schemaVersionEqualTo(
     int value,
   ) {
@@ -795,6 +816,20 @@ extension SyncMetaQuerySortBy on QueryBuilder<SyncMeta, SyncMeta, QSortBy> {
     });
   }
 
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy>
+  sortByQueueProjectionPending() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'queueProjectionPending', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy>
+  sortByQueueProjectionPendingDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'queueProjectionPending', Sort.desc);
+    });
+  }
+
   QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> sortBySchemaVersion() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'schemaVersion', Sort.asc);
@@ -870,6 +905,20 @@ extension SyncMetaQuerySortThenBy
     });
   }
 
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy>
+  thenByQueueProjectionPending() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'queueProjectionPending', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy>
+  thenByQueueProjectionPendingDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'queueProjectionPending', Sort.desc);
+    });
+  }
+
   QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> thenBySchemaVersion() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'schemaVersion', Sort.asc);
@@ -919,6 +968,13 @@ extension SyncMetaQueryWhereDistinct
     });
   }
 
+  QueryBuilder<SyncMeta, SyncMeta, QDistinct>
+  distinctByQueueProjectionPending() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'queueProjectionPending');
+    });
+  }
+
   QueryBuilder<SyncMeta, SyncMeta, QDistinct> distinctBySchemaVersion() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'schemaVersion');
@@ -955,6 +1011,13 @@ extension SyncMetaQueryProperty
   QueryBuilder<SyncMeta, int, QQueryOperations> hlcProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'hlc');
+    });
+  }
+
+  QueryBuilder<SyncMeta, bool, QQueryOperations>
+  queueProjectionPendingProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'queueProjectionPending');
     });
   }
 

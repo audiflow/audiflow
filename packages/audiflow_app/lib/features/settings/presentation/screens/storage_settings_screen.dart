@@ -2,11 +2,14 @@ import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../../routing/app_router.dart';
 import '../../../parental_control/domain/gate_guard.dart';
 import '../../../parental_control/providers/gate_guard_provider.dart';
 import '../controllers/backup_export_controller.dart';
+import '../controllers/backup_restore_controller.dart';
 import '../controllers/opml_export_controller.dart';
 import '../controllers/runtime_reset.dart';
 import '../widgets/opml_import_flow.dart';
@@ -32,6 +35,7 @@ class StorageSettingsScreen extends ConsumerWidget {
           const _OpmlSection(),
           const Divider(),
           const _BackupExportTile(),
+          const _BackupRestoreTile(),
           const Divider(),
           _DangerZoneSection(context: context, ref: ref),
         ],
@@ -343,6 +347,60 @@ class _BackupExportTile extends ConsumerWidget {
         child: Text(l10n.storageExport),
       ),
     );
+  }
+}
+
+class _BackupRestoreTile extends ConsumerStatefulWidget {
+  const _BackupRestoreTile();
+
+  @override
+  ConsumerState<_BackupRestoreTile> createState() => _BackupRestoreTileState();
+}
+
+class _BackupRestoreTileState extends ConsumerState<_BackupRestoreTile> {
+  bool _picking = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    return ListTile(
+      title: Text(l10n.storageBackupRestoreTitle),
+      subtitle: Text(l10n.storageBackupRestoreSubtitle),
+      trailing: OutlinedButton(
+        onPressed: _picking ? null : _pick,
+        child: Text(l10n.storageBackupRestore),
+      ),
+    );
+  }
+
+  Future<void> _pick() async {
+    setState(() => _picking = true);
+    final BackupPickOutcome outcome;
+    try {
+      outcome = await ref.read(backupRestoreControllerProvider.notifier).pick();
+    } finally {
+      if (mounted) setState(() => _picking = false);
+    }
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
+    switch (outcome) {
+      case BackupPickCancelled():
+        return;
+      case BackupPickFailed(:final failure):
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(switch (failure) {
+              BackupPickFailure.notABackup => l10n.storageBackupNotABackup,
+              BackupPickFailure.damaged => l10n.storageBackupDamaged,
+              BackupPickFailure.tooNew => l10n.storageBackupTooNew,
+              BackupPickFailure.unreadable => l10n.storageBackupUnreadable,
+            }),
+          ),
+        );
+      case BackupPicked(:final file):
+        await context.push(AppRoutes.settingsStorageRestore, extra: file);
+    }
   }
 }
 

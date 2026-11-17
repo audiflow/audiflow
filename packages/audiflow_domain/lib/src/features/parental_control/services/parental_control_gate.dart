@@ -20,6 +20,7 @@ enum UnlockReason {
   parentalSettings,
   developerSettings,
   resetData,
+  restoreBackup,
   unspecified,
 }
 

@@ -8,6 +8,7 @@ import 'package:dio/dio.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../common/providers/database_provider.dart';
 import '../../../common/providers/http_client_provider.dart';
 import '../../../common/providers/logger_provider.dart';
 import '../../../common/services/suspendable_writer.dart';
@@ -18,6 +19,7 @@ import '../../download/providers/download_providers.dart';
 import '../../download/services/download_queue_service.dart';
 import '../../download/services/download_retention_service.dart';
 import '../../station/repositories/station_podcast_repository_impl.dart';
+import '../../snapshot/restore_projector.dart';
 import '../../station/services/station_reconciler_service.dart';
 import '../models/episode.dart';
 import '../models/feed_parse_progress.dart';
@@ -663,6 +665,9 @@ class FeedSyncService implements SuspendableWriter {
 
     final workerCount = min(_maxConcurrentFeedSyncs, subscriptions.length);
     await Future.wait([for (var i = 0; i < workerCount; i++) drainQueue()]);
+    if (results.any((r) => r.success) && !cancelToken.isCancelled) {
+      await _projectRestoredQueue();
+    }
 
     return FeedSyncResult(
       totalCount: results.length,
@@ -670,6 +675,22 @@ class FeedSyncService implements SuspendableWriter {
       skipCount: results.where((r) => r.skipped).length,
       errorCount: results.where((r) => !r.success && !r.skipped).length,
     );
+  }
+
+  /// Adds queue entries a restore left out once their episodes exist: the
+  /// restore projects the queue only once, and a feed that failed then
+  /// brings its episodes in a later sync.
+  Future<void> _projectRestoredQueue() async {
+    try {
+      await RestoreProjector(_ref.read(isarProvider)).projectQueueIfPending();
+    } on Object catch (e, stack) {
+      // Isar throws Error; a failed projection must not fail the sync.
+      _logger.w(
+        'Restored queue projection failed',
+        error: e,
+        stackTrace: stack,
+      );
+    }
   }
 
   /// A sync that [suspend] stopped before it wrote anything.
