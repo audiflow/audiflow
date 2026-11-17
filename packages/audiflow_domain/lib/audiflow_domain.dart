@@ -333,6 +333,7 @@ export 'src/features/user_state/services/station_state_access.dart';
 export 'src/features/user_state/services/station_state_backfill.dart';
 export 'src/features/user_state/services/synced_settings_store.dart';
 export 'src/features/snapshot/backup_file.dart';
+export 'src/features/snapshot/backup_restore_service.dart';
 export 'src/features/snapshot/restore_projector.dart';
 export 'src/features/snapshot/snapshot_body.dart';
 export 'src/features/snapshot/snapshot_exporter.dart';
