@@ -36,4 +36,8 @@ class SyncMeta {
 
   /// The last `DataMigrationStep.version` that completed.
   int schemaVersion = 0;
+
+  /// A restore left queue entries out because their episodes were not
+  /// fetched yet; the next feed sync projects the queue again.
+  bool queueProjectionPending = false;
 }

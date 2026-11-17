@@ -1,24 +1,28 @@
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:audiflow_app/features/settings/presentation/controllers/backup_restore_controller.dart';
 import 'package:audiflow_app/features/settings/services/backup_file_picker.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar_community/isar.dart';
 import 'package:logger/logger.dart';
 
 class _FakePicker implements BackupFilePicker {
-  _FakePicker(this.bytes);
+  _FakePicker(this.bytes, {this.error});
+
+  final Object? error;
 
   /// Null means the user cancelled.
   final Future<Uint8List> Function()? bytes;
 
   @override
-  Future<PickedBackupFile?> pick() async =>
-      bytes == null ? null : PickedBackupFile(bytes!);
+  Future<PickedBackupFile?> pick() async {
+    if (error != null) throw error!;
+    return bytes == null ? null : PickedBackupFile(bytes!);
+  }
 }
 
 void main() {
@@ -114,6 +118,17 @@ void main() {
     final outcome = await pickWith(
       () async => throw const FormatException('gone'),
     );
+
+    check(outcome)
+        .isA<BackupPickFailed>()
+        .has((o) => o.failure, 'failure')
+        .equals(BackupPickFailure.unreadable);
+  });
+
+  test('a picker that cannot open is unreadable', () async {
+    final outcome = await containerWith(
+      _FakePicker(null, error: PlatformException(code: 'NO_ACTIVITY')),
+    ).read(backupRestoreControllerProvider.notifier).pick();
 
     check(outcome)
         .isA<BackupPickFailed>()

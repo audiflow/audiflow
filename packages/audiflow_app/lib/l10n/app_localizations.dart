@@ -962,10 +962,10 @@ abstract class AppLocalizations {
   /// **'Backup restored. Podcasts update as their feeds load'**
   String get backupRestoreSuccess;
 
-  /// Snackbar when the merge failed and rolled back
+  /// Snackbar when the restore failed; retrying the same file is safe
   ///
   /// In en, this message translates to:
-  /// **'Restore failed. Your data was not changed'**
+  /// **'Restore did not finish. Try again'**
   String get backupRestoreFailed;
 
   /// PIN sheet headline when restoring a backup

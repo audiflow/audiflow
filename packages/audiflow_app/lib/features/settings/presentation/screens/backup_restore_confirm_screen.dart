@@ -31,6 +31,11 @@ class BackupRestoreConfirmScreen extends ConsumerWidget {
       final messenger = ScaffoldMessenger.of(context);
       switch (next) {
         case BackupRestoreDone():
+          // These cache synced settings the merge may have changed.
+          ref
+            ..invalidate(playbackSpeedSettingsControllerProvider)
+            ..invalidate(playbackEffectsSettingsControllerProvider)
+            ..invalidate(podcastAudioOverrideControllerProvider);
           messenger.showSnackBar(
             SnackBar(content: Text(l10n.backupRestoreSuccess)),
           );

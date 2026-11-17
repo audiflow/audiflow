@@ -2,8 +2,10 @@ import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../../routing/app_router.dart';
 import '../../../parental_control/domain/gate_guard.dart';
 import '../../../parental_control/providers/gate_guard_provider.dart';
 import '../controllers/backup_export_controller.dart';
@@ -11,7 +13,6 @@ import '../controllers/backup_restore_controller.dart';
 import '../controllers/opml_export_controller.dart';
 import '../controllers/runtime_reset.dart';
 import '../widgets/opml_import_flow.dart';
-import 'backup_restore_confirm_screen.dart';
 
 /// Screen for managing storage and data: cache, search history,
 /// OPML import/export, backup, and full data reset.
@@ -398,11 +399,7 @@ class _BackupRestoreTileState extends ConsumerState<_BackupRestoreTile> {
           ),
         );
       case BackupPicked(:final file):
-        await Navigator.of(context).push(
-          MaterialPageRoute<void>(
-            builder: (_) => BackupRestoreConfirmScreen(file: file),
-          ),
-        );
+        await context.push(AppRoutes.settingsStorageRestore, extra: file);
     }
   }
 }

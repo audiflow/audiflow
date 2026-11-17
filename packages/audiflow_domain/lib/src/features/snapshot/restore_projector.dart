@@ -11,6 +11,7 @@ import '../subscription/services/feed_placeholder_id.dart';
 import '../user_state/models/podcast_user_state.dart';
 import '../user_state/models/queue_entry.dart';
 import '../user_state/models/station_state.dart';
+import '../user_state/models/sync_meta.dart';
 import 'snapshot_merger.dart';
 
 /// What [RestoreProjector.projectLibrary] leaves for the caller to finish.
@@ -56,12 +57,15 @@ class RestoreProjector {
     });
   }
 
-  /// Projects the queue in its own write transaction.
+  /// Projects the queue in its own write transaction, and returns how many
+  /// entries it left out.
   ///
   /// Run after the feeds are fetched: an entry names its episode by key,
   /// which an episode gets only from a feed parse. Entries whose episode
-  /// is not here yet are left out, and a later run adds them.
-  Future<void> projectQueue() => _isar.writeTxn(() async {
+  /// is not here yet are left out, and [SyncMeta.queueProjectionPending]
+  /// asks the next feed sync to run [projectQueueIfPending].
+  Future<int> projectQueue() => _isar.writeTxn(() async {
+    var skipped = 0;
     final entries = await _isar.queueEntrys.where().findAll();
     final removed = {
       for (final e in entries)
@@ -81,7 +85,10 @@ class RestoreProjector {
           .where()
           .episodeKeyEqualTo(entry.episodeKey)
           .findFirst();
-      if (episode == null) continue;
+      if (episode == null) {
+        skipped++;
+        continue;
+      }
       final existing = byEntry[entry.entryId];
       final item = existing ?? (QueueItem()..entryId = entry.entryId);
       item
@@ -109,7 +116,21 @@ class RestoreProjector {
       for (final item in ordered)
         if (before[item.id] != _describeItem(item)) item,
     ]);
+    final meta = await _isar.syncMetas.get(SyncMeta.singletonId);
+    final pending = 0 < skipped;
+    if (meta != null && meta.queueProjectionPending != pending) {
+      await _isar.syncMetas.put(meta..queueProjectionPending = pending);
+    }
+    return skipped;
   });
+
+  /// Runs [projectQueue] again when a restore left entries out, so they
+  /// appear once a later feed sync brings their episodes.
+  Future<void> projectQueueIfPending() async {
+    final meta = await _isar.syncMetas.get(SyncMeta.singletonId);
+    if (meta == null || !meta.queueProjectionPending) return;
+    await projectQueue();
+  }
 
   Future<List<String>> _projectSubscriptions(
     Map<String, SnapshotPodcastInfo> podcastInfo,
@@ -141,6 +162,9 @@ class RestoreProjector {
       // guid) need not match the one the episodes and stations use.
       sub
         ..podcastKey ??= state.podcastKey
+        // The merged URL wins over the row's: after a feed moves, the old
+        // URL may no longer serve, and a later write would stamp it back.
+        ..feedUrl = feedUrl
         ..isCached = false
         ..autoDownload = state.autoDownload
         ..autoDownloadKeepCount = state.autoDownloadKeepCount;
@@ -344,7 +368,7 @@ class RestoreProjector {
   // one of them changed. Times compare as instants: Isar reads them back
   // in local time.
   static String _describeSubscription(Subscription s) =>
-      '${s.podcastKey}|${s.isCached}|${s.autoDownload}|'
+      '${s.podcastKey}|${s.feedUrl}|${s.isCached}|${s.autoDownload}|'
       '${s.autoDownloadKeepCount}|${_micros(s.subscribedAt)}';
 
   static String _describeStation(Station s) =>

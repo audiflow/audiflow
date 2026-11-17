@@ -142,6 +142,15 @@ void main() {
     check(await isar.subscriptions.count()).equals(1);
   });
 
+  test('a second restore while one runs is refused', () async {
+    final file = service().read(await backupWithOnePodcast());
+    final shared = service();
+
+    final first = shared.restore(file);
+    await check(shared.restore(file)).throws<StateError>();
+    await first;
+  });
+
   test('writers resume even when the merge fails', () async {
     final file = service().read(await backupWithOnePodcast());
     await isar.close();

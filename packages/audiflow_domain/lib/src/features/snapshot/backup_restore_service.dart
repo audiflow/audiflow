@@ -84,9 +84,24 @@ class BackupRestoreService {
   SnapshotFile read(Uint8List bytes) => readSnapshotFile(bytes);
 
   /// Merges [file] into this device's data and puts the result in the rows
-  /// the app reads. Throws when the merge fails; the merge then rolled back
-  /// and nothing changed.
+  /// the app reads. Throws when either step fails. A failed merge rolls
+  /// back; a failed projection leaves the merge in place, and restoring the
+  /// same file again merges nothing new and projects again.
   Future<BackupRestoreResult> restore(SnapshotFile file) async {
+    // The service outlives any one screen: a second restore started from a
+    // new confirmation would resume the writers under the first one.
+    if (_restoring) throw StateError('A backup restore is already running');
+    _restoring = true;
+    try {
+      return await _restore(file);
+    } finally {
+      _restoring = false;
+    }
+  }
+
+  bool _restoring = false;
+
+  Future<BackupRestoreResult> _restore(SnapshotFile file) async {
     // Playback stops first: its progress ticker would otherwise write the
     // current episode's position over the restored one.
     await _stopPlayback();

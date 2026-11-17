@@ -135,9 +135,7 @@ void main() {
     );
   });
 
-  testWidgets('a failed restore stays and says nothing changed', (
-    tester,
-  ) async {
+  testWidgets('a failed restore stays and asks to try again', (tester) async {
     await pump(
       tester,
       guard: _FakeGateGuard(allows: true),
@@ -148,9 +146,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(BackupRestoreConfirmScreen), findsOneWidget);
-    expect(
-      find.text('Restore failed. Your data was not changed'),
-      findsOneWidget,
-    );
+    expect(find.text('Restore did not finish. Try again'), findsOneWidget);
   });
 }

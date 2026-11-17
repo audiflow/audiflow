@@ -152,7 +152,7 @@
   "backupRestoreMergeNote": "復元すると、バックアップの内容がこの端末に統合されます。バックアップより後にこの端末で変更した内容はそのまま残ります。バックアップの内容だけにしたい場合は、先にすべてのデータをリセットしてください。",
   "backupRestoreAction": "復元",
   "backupRestoreSuccess": "復元しました。フィードを読み込むとポッドキャストが更新されます",
-  "backupRestoreFailed": "復元できませんでした。データは変更されていません",
+  "backupRestoreFailed": "復元を完了できませんでした。もう一度お試しください",
   "parentalControlPinEntryReasonRestoreBackup": "バックアップから復元",
   "storageImportTitle": "購読をインポート",
   "storageImportSubtitle": "OPMLファイルからインポート",

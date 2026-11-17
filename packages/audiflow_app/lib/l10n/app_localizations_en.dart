@@ -527,7 +527,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Backup restored. Podcasts update as their feeds load';
 
   @override
-  String get backupRestoreFailed => 'Restore failed. Your data was not changed';
+  String get backupRestoreFailed => 'Restore did not finish. Try again';
 
   @override
   String get parentalControlPinEntryReasonRestoreBackup =>

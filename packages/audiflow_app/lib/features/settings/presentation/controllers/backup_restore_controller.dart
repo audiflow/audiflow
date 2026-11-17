@@ -1,4 +1,5 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:flutter/services.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../services/backup_file_picker.dart';
@@ -54,7 +55,15 @@ class BackupRestoreController extends _$BackupRestoreController {
     final picker = ref.read(backupFilePickerProvider);
     final service = ref.read(backupRestoreServiceProvider);
     final logger = ref.read(namedLoggerProvider('BackupRestore'));
-    final picked = await picker.pick();
+    final PickedBackupFile? picked;
+    try {
+      picked = await picker.pick();
+    } on PlatformException catch (e) {
+      // No document picker on this device, or none that can open; the
+      // user still needs a message.
+      logger.w('Backup picker failed: ${e.code}');
+      return BackupPickFailed(BackupPickFailure.unreadable);
+    }
     if (picked == null) return BackupPickCancelled();
     try {
       return BackupPicked(service.read(await picked.read()));

@@ -474,7 +474,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get backupRestoreSuccess => '復元しました。フィードを読み込むとポッドキャストが更新されます';
 
   @override
-  String get backupRestoreFailed => '復元できませんでした。データは変更されていません';
+  String get backupRestoreFailed => '復元を完了できませんでした。もう一度お試しください';
 
   @override
   String get parentalControlPinEntryReasonRestoreBackup => 'バックアップから復元';

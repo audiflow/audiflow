@@ -154,6 +154,26 @@ void main() {
       check(sub.subscribedAt.isAtSameMomentAs(now)).isTrue();
     });
 
+    test('moves a keyed row to the merged feed url', () async {
+      await put(() async {
+        await isar.subscriptions.put(
+          subscription('7', 'https://old.example/feed')..podcastKey = 'k',
+        );
+        await isar.podcastUserStates.put(
+          subscribedState('k', 'https://new.example/feed'),
+        );
+      });
+
+      final result = await projector().projectLibrary(
+        podcastInfo: const {},
+        now: now,
+      );
+
+      final sub = (await isar.subscriptions.where().findFirst())!;
+      check(sub.feedUrl).equals('https://new.example/feed');
+      check(result.feedUrls).deepEquals(['https://new.example/feed']);
+    });
+
     test('promotes a cached row found by feed url and keys it', () async {
       await put(() async {
         await isar.subscriptions.put(
@@ -570,6 +590,39 @@ void main() {
       final items = await isar.queueItems.where().sortByPosition().findAll();
       check(items.map((i) => i.entryId)).deepEquals(['q-a', 'q-b', 'q-late']);
       check(items.map((i) => i.position)).deepEquals([0, 1, 2]);
+    });
+
+    test('leaves a retry for entries it skipped', () async {
+      await seedQueue();
+      await put(() => isar.syncMetas.put(SyncMeta()..historyId = 'h'));
+
+      check(await projector().projectQueue()).equals(1);
+      check(
+        (await isar.syncMetas.get(
+          SyncMeta.singletonId,
+        ))!.queueProjectionPending,
+      ).isTrue();
+
+      await put(
+        () => isar.episodes.put(episode(podcastId, 'late', 'ek-not-fetched')),
+      );
+      await projector().projectQueueIfPending();
+
+      check(await isar.queueItems.count()).equals(3);
+      check(
+        (await isar.syncMetas.get(
+          SyncMeta.singletonId,
+        ))!.queueProjectionPending,
+      ).isFalse();
+    });
+
+    test('does nothing more when no retry is pending', () async {
+      await seedQueue();
+      await put(() => isar.syncMetas.put(SyncMeta()..historyId = 'h'));
+
+      await projector().projectQueueIfPending();
+
+      check(await isar.queueItems.count()).equals(0);
     });
 
     test('breaks equal ranks by entry id', () async {
