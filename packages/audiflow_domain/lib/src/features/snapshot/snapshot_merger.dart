@@ -390,10 +390,7 @@ class _MergeRun {
 
   static bool _newer(int hlc, List<int> a, int localHlc, List<int> b) {
     if (hlc != localHlc) return localHlc < hlc;
-    for (var i = 0; i < a.length && i < b.length; i++) {
-      if (a[i] != b[i]) return b[i] < a[i];
-    }
-    return b.length < a.length;
+    return sortsAbove(a, b);
   }
 
   static void _set<T>(
@@ -451,7 +448,12 @@ class _MergeRun {
         field.fieldNumber,
       );
       if (existing != null &&
-          !_newer(hlc, payload, existing.hlc, existing.payload)) {
+          !_newer(
+            hlc,
+            fieldValueBytes(payload),
+            existing.hlc,
+            fieldValueBytes(existing.payload),
+          )) {
         continue;
       }
       await _isar.opaqueFields.put(

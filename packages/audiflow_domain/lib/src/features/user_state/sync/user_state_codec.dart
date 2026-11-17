@@ -72,6 +72,31 @@ Object? decodeValue(Uint8List bytes) {
 
 /// [bytes] (a Value message) without the HLC it carries, so a stored copy
 /// is the same bytes whichever snapshot or op it came from.
+/// Whether [a] sorts above [b] byte by byte, a longer run winning a shared
+/// prefix: the tie-break for values whose clocks are equal.
+bool sortsAbove(List<int> a, List<int> b) {
+  for (var i = 0; i < a.length && i < b.length; i++) {
+    if (a[i] != b[i]) return b[i] < a[i];
+  }
+  return b.length < a.length;
+}
+
+/// The Value bytes of a field in wire form, without its tag and length, so
+/// a known field and one kept opaque compare the same way. Anything that
+/// is not one length-delimited field comes back as is.
+List<int> fieldValueBytes(List<int> field) {
+  try {
+    final parsed = readMessage(Uint8List.fromList(field));
+    if (parsed.length == 1 &&
+        parsed.single.wireType == WireType.lengthDelimited) {
+      return parsed.single.raw;
+    }
+  } on FormatException {
+    // Not a field; compared as is.
+  }
+  return field;
+}
+
 Uint8List withoutHlc(Uint8List bytes) {
   final w = ProtoWriter();
   for (final field in readMessage(bytes)) {

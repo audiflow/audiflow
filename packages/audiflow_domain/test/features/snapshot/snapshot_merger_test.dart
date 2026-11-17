@@ -557,6 +557,32 @@ void main() {
       });
     });
 
+    test('keep the stored value and its pending op in step', () async {
+      // Whole fields, these sort the other way round: the length of the
+      // int Value (3 bytes) beats the empty string's (2 bytes), while its
+      // first Value byte (field 9) loses to the string's (field 10).
+      SnapshotFile unknownValue(void Function(ProtoWriter) write) {
+        final value = ProtoWriter();
+        write(value);
+        value.writeInt(15, hlc(70));
+        return fileOf({
+          'setting': [
+            SnapshotRow(
+              'k',
+              (ProtoWriter()..writeBytes(99, value.takeBytes())).takeBytes(),
+            ),
+          ],
+        });
+      }
+
+      await merger().merge(unknownValue((w) => w.writeString(10, '')));
+      await merger().merge(unknownValue((w) => w.writeInt(9, 1000)));
+
+      final stored = (await isar.opaqueFields.where().findAll()).single;
+      final op = (await isar.outboxOps.where().findAll()).single;
+      check(op.payload).deepEquals(stored.payload);
+    });
+
     test('that are not Value messages still export', () async {
       final odd = (ProtoWriter()..writeBytes(99, [0xff])).takeBytes();
       await merger().merge(
