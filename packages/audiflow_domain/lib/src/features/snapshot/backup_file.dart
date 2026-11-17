@@ -15,15 +15,26 @@ String backupFileName(DateTime now) {
   return 'audiflow-$date.$backupFileExtension';
 }
 
-/// Builds a manual backup of this device's user data, ready to save.
-Future<Uint8List> buildBackupFile(
+/// A manual backup, ready to save.
+class BackupFile {
+  BackupFile(this.bytes, {this.unkeyedPodcasts = 0});
+
+  final Uint8List bytes;
+
+  /// Subscribed podcasts the file could not include (see
+  /// [ExportedSnapshot.unkeyedPodcasts]), so the user can be told.
+  final int unkeyedPodcasts;
+}
+
+/// Builds a manual backup of this device's user data.
+Future<BackupFile> buildBackupFile(
   Isar isar, {
   required DateTime now,
   required String appVersion,
   required String platform,
 }) async {
   final exported = await SnapshotExporter(isar).export();
-  return encodeSnapshotFile(
+  final bytes = encodeSnapshotFile(
     body: exported.body,
     createdAt: now,
     historyId: exported.historyId,
@@ -32,4 +43,5 @@ Future<Uint8List> buildBackupFile(
     counts: exported.counts,
     tombstoneHorizon: exported.tombstoneHorizon,
   );
+  return BackupFile(bytes, unkeyedPodcasts: exported.unkeyedPodcasts);
 }

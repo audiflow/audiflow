@@ -426,6 +426,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get storageBackupExportSuccess => 'Backup exported';
 
   @override
+  String storageBackupExportPartial(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count podcasts were',
+      one: '1 podcast was',
+    );
+    return 'Backup exported. $_temp0 left out because its feed has not loaded yet; refresh it and export again';
+  }
+
+  @override
   String get storageBackupExportError =>
       'Could not create the backup. Your data was not changed';
 

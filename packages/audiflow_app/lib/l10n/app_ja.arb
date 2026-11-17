@@ -134,6 +134,7 @@
   "storageBackupExportTitle": "バックアップを書き出す",
   "storageBackupExportSubtitle": "購読、再生位置、キュー、ステーション、設定をファイルに保存します",
   "storageBackupExportSuccess": "バックアップを書き出しました",
+  "storageBackupExportPartial": "バックアップを書き出しました。フィードをまだ読み込めていないため、{count}件のポッドキャストは含まれていません。更新してから再度書き出してください",
   "storageBackupExportError": "バックアップを作成できませんでした。データは変更されていません",
   "storageImportTitle": "購読をインポート",
   "storageImportSubtitle": "OPMLファイルからインポート",

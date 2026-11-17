@@ -23,6 +23,7 @@ class ExportedSnapshot {
     this.counts,
     this.historyId, {
     this.tombstoneHorizon = 0,
+    this.unkeyedPodcasts = 0,
   });
 
   final SnapshotBody body;
@@ -31,6 +32,11 @@ class ExportedSnapshot {
 
   /// Goes into the header, so a copy keeps blocking purged deletions.
   final int tombstoneHorizon;
+
+  /// Subscribed podcasts left out because they have no `podcastKey` yet:
+  /// a key comes with the first feed parse, so a feed that has not been
+  /// read since the upgrade (offline, or gone) has no user state to copy.
+  final int unkeyedPodcasts;
 }
 
 /// Builds the snapshot every copy of user data uses: the manual backup, the
@@ -87,6 +93,11 @@ class SnapshotExporter {
         (sections[entity] ??= []).add(SnapshotRow(key, _concat(fields)));
       }
 
+      final unkeyed = await _isar.subscriptions
+          .filter()
+          .podcastKeyIsNull()
+          .isCachedEqualTo(false)
+          .count();
       final meta = await _isar.syncMetas.get(SyncMeta.singletonId);
       return ExportedSnapshot(
         SnapshotBody(sections),
@@ -98,6 +109,7 @@ class SnapshotExporter {
         ),
         meta?.historyId ?? '',
         tombstoneHorizon: meta?.tombstoneHorizon ?? 0,
+        unkeyedPodcasts: unkeyed,
       );
     });
   }

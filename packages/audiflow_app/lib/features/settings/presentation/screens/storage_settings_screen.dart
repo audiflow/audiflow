@@ -320,6 +320,8 @@ class _BackupExportTile extends ConsumerWidget {
 
     ref.listen(backupExportControllerProvider, (_, next) {
       final message = switch (next) {
+        BackupExportSuccess(:final unkeyedPodcasts) when 0 < unkeyedPodcasts =>
+          l10n.storageBackupExportPartial(unkeyedPodcasts),
         BackupExportSuccess() => l10n.storageBackupExportSuccess,
         BackupExportError() => l10n.storageBackupExportError,
         _ => null,

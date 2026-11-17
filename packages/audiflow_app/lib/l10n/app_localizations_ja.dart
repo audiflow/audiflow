@@ -406,6 +406,11 @@ class AppLocalizationsJa extends AppLocalizations {
   String get storageBackupExportSuccess => 'バックアップを書き出しました';
 
   @override
+  String storageBackupExportPartial(int count) {
+    return 'バックアップを書き出しました。フィードをまだ読み込めていないため、$count件のポッドキャストは含まれていません。更新してから再度書き出してください';
+  }
+
+  @override
   String get storageBackupExportError => 'バックアップを作成できませんでした。データは変更されていません';
 
   @override

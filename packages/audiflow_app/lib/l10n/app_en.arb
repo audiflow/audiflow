@@ -270,6 +270,8 @@
   "@storageBackupExportSubtitle": { "description": "Subtitle of the backup export tile" },
   "storageBackupExportSuccess": "Backup exported",
   "@storageBackupExportSuccess": { "description": "Snackbar after the backup file was shared or saved" },
+  "storageBackupExportPartial": "Backup exported. {count, plural, =1{1 podcast was} other{{count} podcasts were}} left out because its feed has not loaded yet; refresh it and export again",
+  "@storageBackupExportPartial": { "description": "Snackbar after export when some subscribed podcasts had no stable key yet and were left out", "placeholders": { "count": { "type": "int" } } },
   "storageBackupExportError": "Could not create the backup. Your data was not changed",
   "@storageBackupExportError": { "description": "Snackbar when building or sharing the backup file failed" },
   "storageImportTitle": "Import Subscriptions",

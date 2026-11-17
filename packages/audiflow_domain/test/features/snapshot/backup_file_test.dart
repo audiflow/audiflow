@@ -42,13 +42,13 @@ void main() {
         );
       });
 
-      final bytes = await buildBackupFile(
+      final backup = await buildBackupFile(
         isar,
         now: DateTime.utc(2026, 11, 15),
         appVersion: '2.3.0',
         platform: 'android',
       );
-      final file = readSnapshotFile(bytes);
+      final file = readSnapshotFile(backup.bytes);
 
       check(file.header.historyId).equals('h1');
       check(file.header.tombstoneHorizon).equals(9);
@@ -56,6 +56,35 @@ void main() {
       check(file.header.appVersion).equals('2.3.0');
       check(file.header.counts.podcasts).equals(1);
       check(file.body.sections['podcast']!.single.key).equals('pk');
+      check(backup.unkeyedPodcasts).equals(0);
+    });
+
+    test('counts subscriptions it could not include', () async {
+      Subscription sub(String id, {String? key, bool cached = false}) =>
+          Subscription()
+            ..itunesId = id
+            ..feedUrl = 'https://example.com/$id.xml'
+            ..podcastKey = key
+            ..title = id
+            ..artistName = ''
+            ..subscribedAt = DateTime.utc(2026)
+            ..isCached = cached;
+      await isar.writeTxn(
+        () => isar.subscriptions.putAll([
+          sub('keyed', key: 'pk'),
+          sub('unkeyed'),
+          sub('cached', cached: true),
+        ]),
+      );
+
+      final backup = await buildBackupFile(
+        isar,
+        now: DateTime.utc(2026, 11, 15),
+        appVersion: '2.3.0',
+        platform: 'ios',
+      );
+
+      check(backup.unkeyedPodcasts).equals(1);
     });
   });
 }

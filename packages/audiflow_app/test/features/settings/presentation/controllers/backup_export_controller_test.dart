@@ -13,7 +13,7 @@ class _FakeSharer implements BackupSharer {
   _FakeSharer({this.sent = true, this.error});
 
   final bool sent;
-  final Exception? error;
+  final Object? error;
   Uint8List? bytes;
   String? fileName;
 
@@ -101,5 +101,50 @@ void main() {
     check(
       container.read(backupExportControllerProvider),
     ).isA<BackupExportError>();
+  });
+
+  test('an Isar error becomes an error state too', () async {
+    final container = containerWith(_FakeSharer(error: IsarError('full')));
+
+    await container.read(backupExportControllerProvider.notifier).export();
+
+    check(
+      container.read(backupExportControllerProvider),
+    ).isA<BackupExportError>();
+  });
+
+  test('reports podcasts the file left out', () async {
+    await isar.writeTxn(
+      () => isar.subscriptions.put(
+        Subscription()
+          ..itunesId = 'x'
+          ..feedUrl = 'https://example.com/x.xml'
+          ..title = 'x'
+          ..artistName = ''
+          ..subscribedAt = DateTime.utc(2026),
+      ),
+    );
+    final container = containerWith(_FakeSharer());
+
+    await container.read(backupExportControllerProvider.notifier).export();
+
+    final state = container.read(backupExportControllerProvider);
+    check(state)
+        .isA<BackupExportSuccess>()
+        .has((s) => s.unkeyedPodcasts, 'unkeyedPodcasts')
+        .equals(1);
+  });
+
+  test('leaving the screen mid-export stops quietly', () async {
+    final sharer = _FakeSharer();
+    final container = containerWith(sharer);
+
+    final export = container
+        .read(backupExportControllerProvider.notifier)
+        .export();
+    container.dispose();
+    await export;
+
+    check(sharer.bytes).isNull();
   });
 }

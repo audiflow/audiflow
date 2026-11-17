@@ -24,8 +24,10 @@ class SystemBackupSharer implements BackupSharer {
   Future<bool> share(Uint8List bytes, String fileName) async {
     final dir = await getTemporaryDirectory();
     final file = File('${dir.path}/$fileName');
-    await file.writeAsBytes(bytes, flush: true);
     try {
+      // Inside the try, so a write that fails partway (a full disk) is
+      // cleaned up too.
+      await file.writeAsBytes(bytes, flush: true);
       final result = await SharePlus.instance.share(
         ShareParams(files: [XFile(file.path)]),
       );
@@ -47,7 +49,12 @@ class BackupExportIdle extends BackupExportState {}
 
 class BackupExportLoading extends BackupExportState {}
 
-class BackupExportSuccess extends BackupExportState {}
+class BackupExportSuccess extends BackupExportState {
+  BackupExportSuccess({this.unkeyedPodcasts = 0});
+
+  /// Subscribed podcasts the file left out; see [BackupFile].
+  final int unkeyedPodcasts;
+}
 
 class BackupExportError extends BackupExportState {
   BackupExportError(this.error);
@@ -66,23 +73,31 @@ class BackupExportController extends _$BackupExportController {
   Future<void> export({DateTime? now}) async {
     if (state is BackupExportLoading) return;
     state = BackupExportLoading();
+    // Read before the first await: leaving the screen disposes this
+    // controller, and a disposed ref can no longer read.
+    final isar = ref.read(isarProvider);
+    final appVersion = ref.read(packageInfoProvider).version;
+    final sharer = ref.read(backupSharerProvider);
+    final logger = ref.read(namedLoggerProvider('BackupExport'));
     try {
       final at = now ?? DateTime.now();
-      final bytes = await buildBackupFile(
-        ref.read(isarProvider),
+      final backup = await buildBackupFile(
+        isar,
         now: at,
-        appVersion: ref.read(packageInfoProvider).version,
+        appVersion: appVersion,
         platform: Platform.isIOS ? 'ios' : 'android',
       );
-      final sent = await ref
-          .read(backupSharerProvider)
-          .share(bytes, backupFileName(at));
+      // Nobody is left to share with once the screen is gone.
       if (!ref.mounted) return;
-      state = sent ? BackupExportSuccess() : BackupExportIdle();
-    } on Exception catch (e, stack) {
-      ref
-          .read(namedLoggerProvider('BackupExport'))
-          .e('Backup export failed', error: e, stackTrace: stack);
+      final sent = await sharer.share(backup.bytes, backupFileName(at));
+      if (!ref.mounted) return;
+      state = sent
+          ? BackupExportSuccess(unkeyedPodcasts: backup.unkeyedPodcasts)
+          : BackupExportIdle();
+    } on Object catch (e, stack) {
+      // IsarError extends Error, not Exception; a narrower clause would
+      // leave the button stuck in loading.
+      logger.e('Backup export failed', error: e, stackTrace: stack);
       if (ref.mounted) state = BackupExportError(e);
     }
   }
