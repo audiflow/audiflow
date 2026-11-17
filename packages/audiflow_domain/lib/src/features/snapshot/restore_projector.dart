@@ -12,6 +12,7 @@ import '../user_state/models/podcast_user_state.dart';
 import '../user_state/models/queue_entry.dart';
 import '../user_state/models/station_state.dart';
 import '../user_state/models/sync_meta.dart';
+import '../user_state/services/queue_entry_access.dart' show positionForRank;
 import 'snapshot_merger.dart';
 
 /// What [RestoreProjector.projectLibrary] leaves for the caller to finish.
@@ -80,6 +81,7 @@ class RestoreProjector {
     final before = {for (final item in items) item.id: _describeItem(item)};
 
     final projected = <QueueItem>[];
+    final ranks = <String>[];
     for (final entry in live) {
       final episode = await _isar.episodes
           .where()
@@ -97,16 +99,29 @@ class RestoreProjector {
         ..sourceContext = entry.sourceContext
         ..addedAt = entry.addedAt ?? existing?.addedAt ?? DateTime.now();
       projected.add(item);
+      ranks.add(entry.rank);
     }
     final kept = projected.toSet();
     final leftovers = [
       for (final item in items)
         if (!kept.contains(item) && !removed.contains(item.entryId)) item,
     ];
-    final ordered = [...projected, ...leftovers];
-    for (var i = 0; i < ordered.length; i++) {
-      ordered[i].position = i;
+    // Positions come from the ranks, not a fresh count: a later queue edit
+    // saves the edited item's rank from its position, so the two must stay
+    // in one number space or the next projection would undo the edit. Ties
+    // (equal ranks from two devices) and ranks of another form take the
+    // next free position.
+    var last = -1;
+    for (var i = 0; i < projected.length; i++) {
+      var position = positionForRank(ranks[i]) ?? last + 1;
+      if (position <= last) position = last + 1;
+      projected[i].position = position;
+      last = position;
     }
+    for (final item in leftovers) {
+      item.position = ++last;
+    }
+    final ordered = [...projected, ...leftovers];
 
     await _isar.queueItems.deleteAll([
       for (final item in items)
@@ -158,6 +173,7 @@ class RestoreProjector {
             now,
           );
       final before = existing == null ? null : _describeSubscription(existing);
+      final oldUrl = existing?.feedUrl;
       // The state's key verbatim: a key derived here again (say from a
       // guid) need not match the one the episodes and stations use.
       sub
@@ -170,6 +186,13 @@ class RestoreProjector {
         ..autoDownloadKeepCount = state.autoDownloadKeepCount;
       final subscribedAt = state.subscribedAt;
       if (subscribedAt != null) sub.subscribedAt = subscribedAt;
+      if (oldUrl != null && oldUrl != feedUrl) {
+        // Validators of the old URL; sent to the new one, a 304 would skip
+        // the parse, as promoteCached also avoids.
+        sub
+          ..httpEtag = null
+          ..httpLastModified = null;
+      }
       if (before != _describeSubscription(sub)) {
         await _isar.subscriptions.put(sub);
       }

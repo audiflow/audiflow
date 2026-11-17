@@ -157,7 +157,10 @@ void main() {
     test('moves a keyed row to the merged feed url', () async {
       await put(() async {
         await isar.subscriptions.put(
-          subscription('7', 'https://old.example/feed')..podcastKey = 'k',
+          subscription('7', 'https://old.example/feed')
+            ..podcastKey = 'k'
+            ..httpEtag = 'old-etag'
+            ..httpLastModified = 'yesterday',
         );
         await isar.podcastUserStates.put(
           subscribedState('k', 'https://new.example/feed'),
@@ -171,6 +174,8 @@ void main() {
 
       final sub = (await isar.subscriptions.where().findFirst())!;
       check(sub.feedUrl).equals('https://new.example/feed');
+      check(sub.httpEtag).isNull();
+      check(sub.httpLastModified).isNull();
       check(result.feedUrls).deepEquals(['https://new.example/feed']);
     });
 
@@ -623,6 +628,32 @@ void main() {
       await projector().projectQueueIfPending();
 
       check(await isar.queueItems.count()).equals(0);
+    });
+
+    test('keeps positions in the ranks\' number space', () async {
+      await put(() async {
+        await isar.episodes.putAll([
+          episode(podcastId, 'x', 'ekx'),
+          episode(podcastId, 'y', 'eky'),
+        ]);
+        await isar.queueEntrys.putAll([
+          QueueEntry()
+            ..entryId = 'q-x'
+            ..episodeKey = 'ekx'
+            ..rank = rankForPosition(10)
+            ..addedAt = DateTime.utc(2026),
+          QueueEntry()
+            ..entryId = 'q-y'
+            ..episodeKey = 'eky'
+            ..rank = rankForPosition(20)
+            ..addedAt = DateTime.utc(2026),
+        ]);
+      });
+
+      await projector().projectQueue();
+
+      final items = await isar.queueItems.where().sortByPosition().findAll();
+      check(items.map((i) => i.position)).deepEquals([10, 20]);
     });
 
     test('breaks equal ranks by entry id', () async {
