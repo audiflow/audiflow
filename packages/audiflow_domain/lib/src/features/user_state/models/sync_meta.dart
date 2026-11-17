@@ -40,4 +40,8 @@ class SyncMeta {
   /// A restore left queue entries out because their episodes were not
   /// fetched yet; the next feed sync projects the queue again.
   bool queueProjectionPending = false;
+
+  /// [hlc] as it was when the continuity snapshot was last written; 0 when
+  /// none was. The snapshot is rewritten only once [hlc] has moved on.
+  int lastSnapshotHlc = 0;
 }
