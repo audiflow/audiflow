@@ -836,6 +836,36 @@ abstract class AppLocalizations {
   /// **'Export failed'**
   String get storageExportError;
 
+  /// Title of the tile that saves a backup of all user data to a file
+  ///
+  /// In en, this message translates to:
+  /// **'Export Backup'**
+  String get storageBackupExportTitle;
+
+  /// Subtitle of the backup export tile
+  ///
+  /// In en, this message translates to:
+  /// **'Save subscriptions, progress, queue, stations, and settings to a file'**
+  String get storageBackupExportSubtitle;
+
+  /// Snackbar after the backup file was shared or saved
+  ///
+  /// In en, this message translates to:
+  /// **'Backup exported'**
+  String get storageBackupExportSuccess;
+
+  /// Snackbar after export when some subscribed podcasts had no stable key yet and were left out
+  ///
+  /// In en, this message translates to:
+  /// **'Backup exported. {count, plural, =1{1 podcast was} other{{count} podcasts were}} left out because its feed has not loaded yet; refresh it and export again'**
+  String storageBackupExportPartial(int count);
+
+  /// Snackbar when building or sharing the backup file failed
+  ///
+  /// In en, this message translates to:
+  /// **'Could not create the backup. Your data was not changed'**
+  String get storageBackupExportError;
+
   /// Import subscriptions setting title
   ///
   /// In en, this message translates to:

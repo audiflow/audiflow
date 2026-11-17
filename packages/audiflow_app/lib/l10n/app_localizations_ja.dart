@@ -397,6 +397,23 @@ class AppLocalizationsJa extends AppLocalizations {
   String get storageExportError => 'エクスポートに失敗しました';
 
   @override
+  String get storageBackupExportTitle => 'バックアップを書き出す';
+
+  @override
+  String get storageBackupExportSubtitle => '購読、再生位置、キュー、ステーション、設定をファイルに保存します';
+
+  @override
+  String get storageBackupExportSuccess => 'バックアップを書き出しました';
+
+  @override
+  String storageBackupExportPartial(int count) {
+    return 'バックアップを書き出しました。フィードをまだ読み込めていないため、$count件のポッドキャストは含まれていません。更新してから再度書き出してください';
+  }
+
+  @override
+  String get storageBackupExportError => 'バックアップを作成できませんでした。データは変更されていません';
+
+  @override
   String get storageImportTitle => '購読をインポート';
 
   @override
