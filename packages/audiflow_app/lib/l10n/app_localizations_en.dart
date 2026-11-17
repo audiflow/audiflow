@@ -530,6 +530,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backupRestoreFailed => 'Restore did not finish. Try again';
 
   @override
+  String get continuityRestoreNotice =>
+      'Your data was carried over from your previous device';
+
+  @override
   String get parentalControlPinEntryReasonRestoreBackup =>
       'Restore from a backup';
 

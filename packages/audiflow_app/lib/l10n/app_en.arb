@@ -308,6 +308,8 @@
   "@backupRestoreSuccess": {"description": "Snackbar after a successful restore"},
   "backupRestoreFailed": "Restore did not finish. Try again",
   "@backupRestoreFailed": {"description": "Snackbar when the restore failed; retrying the same file is safe"},
+  "continuityRestoreNotice": "Your data was carried over from your previous device",
+  "@continuityRestoreNotice": {"description": "Shown once at launch after the app restored the data the OS carried over from the previous device"},
   "parentalControlPinEntryReasonRestoreBackup": "Restore from a backup",
   "@parentalControlPinEntryReasonRestoreBackup": {"description": "PIN sheet headline when restoring a backup"},
   "storageImportTitle": "Import Subscriptions",

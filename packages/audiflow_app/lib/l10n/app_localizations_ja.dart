@@ -477,6 +477,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get backupRestoreFailed => '復元を完了できませんでした。もう一度お試しください';
 
   @override
+  String get continuityRestoreNotice => '以前のデバイスからデータを引き継ぎました';
+
+  @override
   String get parentalControlPinEntryReasonRestoreBackup => 'バックアップから復元';
 
   @override

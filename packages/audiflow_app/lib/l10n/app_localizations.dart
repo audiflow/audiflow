@@ -968,6 +968,12 @@ abstract class AppLocalizations {
   /// **'Restore did not finish. Try again'**
   String get backupRestoreFailed;
 
+  /// Shown once at launch after the app restored the data the OS carried over from the previous device
+  ///
+  /// In en, this message translates to:
+  /// **'Your data was carried over from your previous device'**
+  String get continuityRestoreNotice;
+
   /// PIN sheet headline when restoring a backup
   ///
   /// In en, this message translates to:

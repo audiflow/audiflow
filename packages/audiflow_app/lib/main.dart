@@ -23,6 +23,8 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:workmanager/workmanager.dart';
 
 import 'app/app_lifecycle_observer.dart';
+import 'app/backup/continuity_restore_notice_banner.dart';
+import 'app/backup/database_backup_exclusion.dart';
 import 'app/app_locale.dart';
 import 'app/notification/notification_tap_handler.dart';
 import 'app/background/background_callback.dart';
@@ -293,6 +295,13 @@ Future<ProviderContainer> bootstrapAppContainer({
     );
     rethrow;
   }
+  // iOS only: Android keeps the database out of backups through its backup
+  // rules, which need no runtime call.
+  if (defaultTargetPlatform == TargetPlatform.iOS) {
+    await DatabaseBackupExclusion(
+      logger: isarOpenLogger,
+    ).excludeDatabase(dirPath);
+  }
   final dio = Dio(
     BaseOptions(
       connectTimeout: const Duration(seconds: 30),
@@ -381,6 +390,13 @@ Future<ProviderContainer> bootstrapAppContainer({
   // now-playing controls showing stale values.
   container.listen(audioHandlerProvider, (_, _) {});
   await container.read(audioHandlerProvider.future);
+
+  // After the audio handler, which the restore stops playback through, and
+  // before anything below reads user data: a device just migrated by the
+  // OS has the continuity snapshot but an empty database.
+  if (await container.read(restoreDetectorProvider).restoreIfEmpty()) {
+    container.read(continuityRestoreNoticeProvider).raise();
+  }
 
   // Keep the player on the now-playing podcast's audio settings. Listened
   // rather than read: an unlistened provider pauses its subscriptions.
@@ -659,7 +675,11 @@ class _MyAppState extends ConsumerState<MyApp> {
           builder: (context, child) => ThemedSystemUiOverlay(
             child: IntlLocaleSync(
               child: ForceUpdateGate(
-                child: ReviewPromptGate(child: OpmlFileReceiver(child: child!)),
+                child: ReviewPromptGate(
+                  child: ContinuityRestoreNoticeBanner(
+                    child: OpmlFileReceiver(child: child!),
+                  ),
+                ),
               ),
             ),
           ),
