@@ -235,30 +235,40 @@ bool _isSchemaMismatchError(String message) {
   return lower.contains('schema') || lower.contains('migration');
 }
 
+/// The files of the Isar database [name] in [directory]: the database and
+/// its lock file, everything named `$name.isar*`. Empty when [directory]
+/// does not exist.
+///
+/// Listed rather than built from known suffixes, so a lock file name that
+/// changes with the Isar version is still covered. Used to drop the database
+/// on schema recovery and to keep it out of the iOS backup.
+Future<List<File>> isarDatabaseFiles({
+  required String directory,
+  String name = isarInstanceName,
+}) async {
+  final dir = Directory(directory);
+  if (!await dir.exists()) return const [];
+  final prefix = '$name.isar';
+  return dir
+      .list()
+      .where((entity) => entity is File)
+      .cast<File>()
+      .where((file) => p.basename(file.path).startsWith(prefix))
+      .toList();
+}
+
 Future<void> _deleteIsarFiles({
   required String directory,
   required String name,
   Logger? logger,
 }) async {
-  final dir = Directory(directory);
-  if (!await dir.exists()) {
-    return;
-  }
-
   try {
-    final prefix = '$name.isar';
-    await for (final entity in dir.list()) {
-      if (entity is! File) {
-        continue;
-      }
-
-      final fileName = p.basename(entity.path);
-      if (fileName.startsWith(prefix)) {
-        try {
-          await entity.delete();
-        } on FileSystemException {
-          // Ignore per-file failures; recovery will retry opening Isar.
-        }
+    final files = await isarDatabaseFiles(directory: directory, name: name);
+    for (final file in files) {
+      try {
+        await file.delete();
+      } on FileSystemException {
+        // Ignore per-file failures; recovery will retry opening Isar.
       }
     }
   } on FileSystemException catch (e, stack) {
