@@ -1,0 +1,11 @@
+{
+  // The relay for opt-in sync (docs/plans/2026-11-20-sync-plan.md).
+  // Deploying needs the owner's Cloudflare account; nothing here deploys.
+  "name": "audiflow-relay",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "durable_objects": {
+    "bindings": [{ "name": "ACCOUNT", "class_name": "AccountRelay" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["AccountRelay"] }]
+}
