@@ -149,13 +149,98 @@ void main() {
     check(await detector().restoreIfEmpty()).isTrue();
   });
 
-  test('ignores a damaged file and keeps it', () async {
+  File retained() => File(p.join(dir.path, retainedSnapshotFileName));
+
+  test('moves a damaged file aside instead of deleting it', () async {
     await seedLaunchState();
     await snapshot().writeAsString('not a snapshot');
 
     check(await detector().restoreIfEmpty()).isFalse();
-    check(await snapshot().exists()).isTrue();
+    // The next snapshot the scheduler writes cannot replace it there.
+    check(await snapshot().exists()).isFalse();
+    check(await retained().readAsString()).equals('not a snapshot');
     check(log).isEmpty();
+  });
+
+  test('keeps the first file moved aside', () async {
+    await seedLaunchState();
+    await retained().writeAsString('first');
+    await snapshot().writeAsString('second');
+
+    check(await detector().restoreIfEmpty()).isFalse();
+    check(await retained().readAsString()).equals('first');
+  });
+
+  test('merges a file moved aside once it reads, into data', () async {
+    await writeSnapshotOfOnePodcast();
+    await snapshot().rename(retained().path);
+    await isar.writeTxn(() async {
+      await isar.syncMetas.put(SyncMeta()..historyId = 'new-device');
+      await isar.episodeUserStates.put(
+        EpisodeUserState()
+          ..episodeKey = 'ek'
+          ..podcastKey = 'other',
+      );
+    });
+
+    check(await detector().restoreIfEmpty()).isTrue();
+    check(await isar.podcastUserStates.count()).equals(1);
+    check(await isar.episodeUserStates.count()).equals(1);
+    check(await retained().exists()).isFalse();
+  });
+
+  test('a file moved aside that still fails to read stays', () async {
+    await seedLaunchState();
+    await retained().writeAsString('not a snapshot');
+
+    check(await detector().restoreIfEmpty()).isFalse();
+    check(await retained().exists()).isTrue();
+  });
+
+  test('finishes a launch restore a crash cut short', () async {
+    // The merge committed, then the app died before the library rebuilt:
+    // the data no longer looks empty, but the mark is still set.
+    await writeSnapshotOfOnePodcast();
+    await isar.writeTxn(() async {
+      await isar.syncMetas.put(
+        SyncMeta()
+          ..historyId = 'old-device'
+          ..continuityRestorePending = true,
+      );
+      await isar.episodeUserStates.put(
+        EpisodeUserState()
+          ..episodeKey = 'ek'
+          ..podcastKey = 'pk',
+      );
+    });
+
+    check(await detector().restoreIfEmpty()).isTrue();
+    check(await isar.subscriptions.count()).equals(1);
+    final meta = await isar.syncMetas.get(SyncMeta.singletonId);
+    check(meta!.continuityRestorePending).isFalse();
+  });
+
+  test('clears the mark once the restore finished', () async {
+    await seedLaunchState();
+    await writeSnapshotOfOnePodcast();
+
+    check(await detector().restoreIfEmpty()).isTrue();
+    final meta = await isar.syncMetas.get(SyncMeta.singletonId);
+    check(meta!.continuityRestorePending).isFalse();
+  });
+
+  test('clears a stale mark when the snapshot is gone', () async {
+    await isar.writeTxn(
+      () => isar.syncMetas.put(
+        SyncMeta()
+          ..historyId = 'h'
+          ..continuityRestorePending = true,
+      ),
+    );
+
+    check(await detector().restoreIfEmpty()).isFalse();
+    final meta = await isar.syncMetas.get(SyncMeta.singletonId);
+    check(meta!.continuityRestorePending).isFalse();
   });
 
   test('does nothing without a snapshot file', () async {

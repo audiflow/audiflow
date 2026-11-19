@@ -621,6 +621,23 @@ void main() {
       ).isFalse();
     });
 
+    test('a library projection leaves the queue step pending', () async {
+      // A queue step that throws or never runs (app killed during the
+      // feed refetch) is then retried by the next feed sync.
+      await seedQueue();
+      await put(() => isar.syncMetas.put(SyncMeta()..historyId = 'h'));
+
+      await projector().projectLibrary(podcastInfo: const {});
+      check(
+        (await isar.syncMetas.get(
+          SyncMeta.singletonId,
+        ))!.queueProjectionPending,
+      ).isTrue();
+
+      await projector().projectQueueIfPending();
+      check(await isar.queueItems.count()).equals(2);
+    });
+
     test('does nothing more when no retry is pending', () async {
       await seedQueue();
       await put(() => isar.syncMetas.put(SyncMeta()..historyId = 'h'));

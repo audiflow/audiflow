@@ -3,10 +3,12 @@ import 'dart:io';
 
 import 'package:isar_community/isar.dart';
 import 'package:logger/logger.dart';
+import 'package:path/path.dart' as p;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../common/providers/database_provider.dart';
 import '../../common/providers/logger_provider.dart';
+import '../user_state/models/sync_meta.dart';
 import 'backup_restore_service.dart';
 import 'continuity_snapshot.dart';
 import 'snapshot_file.dart';
@@ -54,6 +56,9 @@ class ContinuityRestoreNotice {
 /// Runs without asking: the OS restored the user's own data. It must run
 /// after the data migrations and before anything reads user data.
 ///
+/// A snapshot it cannot read is moved aside rather than deleted, and merged
+/// on a later launch once an updated app can read it.
+///
 /// The `deviceId` half of restore detection (a database copied from
 /// another device) arrives with sync in M6; nothing here compares ids.
 class RestoreDetector {
@@ -70,7 +75,8 @@ class RestoreDetector {
   final Logger _logger;
 
   /// Restores the snapshot if the database holds no user data and a
-  /// readable snapshot exists. Returns whether it restored. Never throws:
+  /// readable snapshot exists, or finishes a launch restore that a crash cut
+  /// short. Returns whether the "carried over" notice is due. Never throws:
   /// launch goes on with whatever the database holds.
   ///
   /// The feed refetch after the restore keeps running in the background;
@@ -86,24 +92,76 @@ class RestoreDetector {
   }
 
   Future<bool> _restoreIfEmpty() async {
-    if (!await hasNoUserData(_isar)) return false;
     final file = File(await _resolveSnapshotPath());
-    if (!await file.exists()) return false;
+    final retained = File(p.join(file.parent.path, retainedSnapshotFileName));
+    final recovered = await _recoverRetained(retained);
+    final pending = await _isPending();
+    if (!pending && !await hasNoUserData(_isar)) return recovered;
+    if (!await file.exists()) {
+      if (pending) await _setPending(false);
+      return recovered;
+    }
     final SnapshotFile snapshot;
     try {
       snapshot = readSnapshotFile(await file.readAsBytes());
     } on SnapshotReadFailure catch (e) {
-      // Kept, not deleted: the file may be the only copy of the user's
-      // data, and a later version may read what this one cannot.
       _logger.w('Continuity snapshot unreadable, not restoring: $e');
-      return false;
+      await _retain(file, retained);
+      if (pending) await _setPending(false);
+      return recovered;
     }
-    if (_carriesNothing(snapshot.header.counts)) return false;
+    // A snapshot of settings alone is never written (the scheduler skips a
+    // database without user data), so this is not worth a restore that
+    // would rerun on every launch.
+    if (!pending && _carriesNothing(snapshot.header.counts)) return recovered;
+    // Marked before the merge and cleared once the library is rebuilt: the
+    // two commit separately, and a retry merges nothing new.
+    await _setPending(true);
     final result = await restoreService.restore(snapshot);
+    await _setPending(false);
     unawaited(result.postProcessing);
     _logger.i('Restored continuity snapshot (${result.changedRows} rows)');
     return true;
   }
+
+  /// Merges a snapshot an earlier launch could not read, once this version
+  /// can, and drops it. Into data that is no longer empty: the merge keeps
+  /// whatever changed here since, so the user's older data only fills in.
+  Future<bool> _recoverRetained(File retained) async {
+    if (!await retained.exists()) return false;
+    final SnapshotFile snapshot;
+    try {
+      snapshot = readSnapshotFile(await retained.readAsBytes());
+    } on SnapshotReadFailure catch (e) {
+      _logger.w('Retained snapshot still unreadable: $e');
+      return false;
+    }
+    final result = await restoreService.restore(snapshot);
+    await retained.delete();
+    unawaited(result.postProcessing);
+    _logger.i('Recovered retained snapshot (${result.changedRows} rows)');
+    return !_carriesNothing(snapshot.header.counts);
+  }
+
+  /// Moves an unreadable snapshot aside, so the next snapshot does not
+  /// replace what may be the only copy of the user's data. The first one
+  /// moved aside stays: it predates anything this device wrote.
+  Future<void> _retain(File file, File retained) async {
+    if (await retained.exists()) return;
+    await file.rename(retained.path);
+  }
+
+  Future<bool> _isPending() async =>
+      (await _isar.syncMetas.get(
+        SyncMeta.singletonId,
+      ))?.continuityRestorePending ??
+      false;
+
+  Future<void> _setPending(bool pending) => _isar.writeTxn(() async {
+    final meta = await _isar.syncMetas.get(SyncMeta.singletonId);
+    if (meta == null || meta.continuityRestorePending == pending) return;
+    await _isar.syncMetas.put(meta..continuityRestorePending = pending);
+  });
 
   /// A snapshot written before any podcast, episode, queue, or station
   /// existed has nothing worth telling the user about.

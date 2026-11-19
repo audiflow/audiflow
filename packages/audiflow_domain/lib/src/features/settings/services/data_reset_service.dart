@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:isar_community/isar.dart';
+import 'package:path/path.dart' as p;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/datasources/shared_preferences_datasource.dart';
@@ -116,9 +117,14 @@ class DataResetService {
     }
   }
 
+  /// Deletes the snapshot and any unreadable one moved aside next to it,
+  /// which a later version would otherwise merge back in.
   Future<void> _deleteContinuitySnapshot() async {
     final file = File(await _resolveContinuitySnapshotPath());
-    if (await file.exists()) await file.delete();
+    final retained = File(p.join(file.parent.path, retainedSnapshotFileName));
+    for (final f in [file, retained]) {
+      if (await f.exists()) await f.delete();
+    }
   }
 
   /// Deletes every file under the downloads directory, keeping the

@@ -17,6 +17,13 @@ part 'continuity_snapshot.g.dart';
 /// (docs/architecture/user-data-sync.md, "Device continuity").
 const continuitySnapshotFileName = 'continuity.$backupFileExtension';
 
+/// Name the launch restore moves an unreadable continuity snapshot to.
+///
+/// Out of the scheduler's way: the next snapshot would replace the file at
+/// [continuitySnapshotFileName], and the unreadable one may be the only copy
+/// of the user's data, readable by a later app version.
+const retainedSnapshotFileName = 'continuity-retained.$backupFileExtension';
+
 /// Resolves the absolute path of the continuity snapshot.
 ///
 /// Injected as a function so the services stay free of `path_provider`,

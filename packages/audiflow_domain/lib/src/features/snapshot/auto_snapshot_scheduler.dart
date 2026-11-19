@@ -93,10 +93,20 @@ class AutoSnapshotScheduler implements SuspendableWriter {
 
   /// Writes the snapshot if it is due. Never throws: a failed snapshot is
   /// logged and retried on the next backgrounding.
-  Future<AutoSnapshotOutcome> onBackground() async {
+  Future<AutoSnapshotOutcome> onBackground() => _start(onlyIfMissing: false);
+
+  /// Writes the snapshot at launch when there is none yet. Never throws.
+  ///
+  /// The database is kept out of OS backups from the first launch of a
+  /// version with snapshots, so until a snapshot exists a backup or device
+  /// transfer would carry no user data at all; waiting for the first
+  /// backgrounding would leave that gap open.
+  Future<AutoSnapshotOutcome> onLaunch() => _start(onlyIfMissing: true);
+
+  Future<AutoSnapshotOutcome> _start({required bool onlyIfMissing}) async {
     if (_suspended) return AutoSnapshotOutcome.suspended;
     if (_inFlight != null) return AutoSnapshotOutcome.busy;
-    final run = _run();
+    final run = _run(onlyIfMissing: onlyIfMissing);
     _inFlight = run;
     try {
       return await run;
@@ -105,9 +115,9 @@ class AutoSnapshotScheduler implements SuspendableWriter {
     }
   }
 
-  Future<AutoSnapshotOutcome> _run() async {
+  Future<AutoSnapshotOutcome> _run({required bool onlyIfMissing}) async {
     try {
-      return await _writeIfDue();
+      return await _writeIfDue(onlyIfMissing: onlyIfMissing);
     } on Object catch (e, stack) {
       // IsarError extends Error, so a narrower clause would let it escape
       // into the lifecycle callback.
@@ -116,8 +126,11 @@ class AutoSnapshotScheduler implements SuspendableWriter {
     }
   }
 
-  Future<AutoSnapshotOutcome> _writeIfDue() async {
+  Future<AutoSnapshotOutcome> _writeIfDue({required bool onlyIfMissing}) async {
     final now = _clock();
+    if (onlyIfMissing && await File(await _resolveSnapshotPath()).exists()) {
+      return AutoSnapshotOutcome.unchanged;
+    }
     final last = _lastWrittenAt;
     if (last != null && now.isBefore(last.add(minInterval))) {
       return AutoSnapshotOutcome.tooSoon;

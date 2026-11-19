@@ -272,12 +272,6 @@ Future<ProviderContainer> bootstrapAppContainer({
     Sentry.addBreadcrumb(
       Breadcrumb(message: 'Isar opened', category: 'database'),
     );
-    // Synced settings move into Isar; the copy cannot be a migration step,
-    // which has no access to SharedPreferences.
-    await SyncedSettingsStore(
-      SharedPreferencesDataSource(prefs),
-      isar: isar,
-    ).copyFromPreferences(prefs.getKeys());
   } on IsarError catch (e, stack) {
     // Schema-mismatch errors are recovered inside openIsarWithRecovery
     // by deleting the database; reaching this catch means the recovery
@@ -397,6 +391,22 @@ Future<ProviderContainer> bootstrapAppContainer({
   if (await container.read(restoreDetectorProvider).restoreIfEmpty()) {
     container.read(continuityRestoreNoticeProvider).raise();
   }
+
+  // Synced settings move into Isar; the copy cannot be a migration step,
+  // which has no access to SharedPreferences. After the restore: a copied
+  // key gets a fresh clock, so copied first, preferences the OS carried
+  // over (older than the snapshot when a manual restore changed settings
+  // without writing them back) would beat the restored values. Keys the
+  // restore filled are skipped; reads fall back to preferences until then.
+  await SyncedSettingsStore(
+    SharedPreferencesDataSource(prefs),
+    isar: isar,
+  ).copyFromPreferences(prefs.getKeys());
+
+  // The database stays out of OS backups, so until a snapshot exists a
+  // backup would carry no user data. Not awaited: an export would hold the
+  // first frame.
+  unawaited(container.read(autoSnapshotSchedulerProvider).onLaunch());
 
   // Keep the player on the now-playing podcast's audio settings. Listened
   // rather than read: an unlistened provider pauses its subscriptions.

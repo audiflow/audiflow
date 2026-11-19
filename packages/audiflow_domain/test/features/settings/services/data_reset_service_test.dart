@@ -301,6 +301,15 @@ void main() {
       check(await File(snapshotPath()).exists()).isFalse();
     });
 
+    test('deletes an unreadable snapshot moved aside', () async {
+      final retained = File(p.join(supportDir.path, retainedSnapshotFileName));
+      await retained.writeAsString('from a newer version');
+
+      await service.resetAll();
+
+      check(await retained.exists()).isFalse();
+    });
+
     test('succeeds when there is no continuity snapshot', () async {
       await service.resetAll();
 

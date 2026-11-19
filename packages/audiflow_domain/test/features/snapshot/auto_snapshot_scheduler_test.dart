@@ -118,6 +118,32 @@ void main() {
     check(await File(target()).exists()).isTrue();
   });
 
+  group('onLaunch', () {
+    test('writes when there is no snapshot yet', () async {
+      await seed(hlc: 7);
+
+      check(await scheduler().onLaunch()).equals(AutoSnapshotOutcome.written);
+      check(await File(target()).exists()).isTrue();
+    });
+
+    test('leaves an existing snapshot for the next backgrounding', () async {
+      await seed(hlc: 7);
+      await File(target()).writeAsString('older');
+      await seed(hlc: 9);
+
+      check(await scheduler().onLaunch()).equals(AutoSnapshotOutcome.unchanged);
+      check(await File(target()).readAsString()).equals('older');
+    });
+
+    test('writes nothing for a database without user data', () async {
+      await isar.writeTxn(
+        () => isar.syncMetas.put(SyncMeta()..historyId = 'h1'),
+      );
+
+      check(await scheduler().onLaunch()).equals(AutoSnapshotOutcome.empty);
+    });
+  });
+
   test('writes nothing for a database without user data', () async {
     await isar.writeTxn(
       () => isar.syncMetas.put(

@@ -54,6 +54,13 @@ class RestoreProjector {
     return _isar.writeTxn(() async {
       final feedUrls = await _projectSubscriptions(podcastInfo, at);
       final stationIds = await _projectStations(at);
+      // Set with the library, cleared by a queue projection that leaves
+      // nothing out: a queue step that fails or never runs (app killed
+      // during the feed refetch) is then retried by the next feed sync.
+      final meta = await _isar.syncMetas.get(SyncMeta.singletonId);
+      if (meta != null && !meta.queueProjectionPending) {
+        await _isar.syncMetas.put(meta..queueProjectionPending = true);
+      }
       return RestoreProjection(feedUrls: feedUrls, stationIds: stationIds);
     });
   }
