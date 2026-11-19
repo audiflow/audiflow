@@ -285,7 +285,7 @@ Receiving:
 | M6 | Relay and sync: QR pairing, recovery code, opt-in sync, realtime position, presence |
 | M7 | Cleanup: remove `PlaybackHistory`, `QueueItem`, old settings collections, and user fields on `Subscription` and `Episode` |
 
-The M5 implementation plan is in [`docs/plans/2026-11-16-backup-restore-plan.md`](../plans/2026-11-16-backup-restore-plan.md).
+The M5 implementation plan is in [`docs/plans/2026-11-16-backup-restore-plan.md`](../plans/2026-11-16-backup-restore-plan.md). The M6 plan is in [`docs/plans/2026-11-20-sync-plan.md`](../plans/2026-11-20-sync-plan.md); its decision P1 replaces the relay's per-op `op` table above with opaque frames and compacted snapshots.
 
 ## Risks
 
