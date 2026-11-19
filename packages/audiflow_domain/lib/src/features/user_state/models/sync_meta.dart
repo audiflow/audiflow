@@ -55,8 +55,13 @@ class SyncMeta {
   /// the `seq` the snapshot it merged covers; 0 before sync was on.
   int serverCursor = 0;
 
-  /// The outbox cap dropped pending ops. While sync is off the first
-  /// upload sends the whole state anyway; once enrolled, the next
-  /// connection sends the whole state again so nothing dropped is lost.
-  bool outboxOverflowed = false;
+  /// Requests to send the whole state, and the last request sent. A
+  /// request is pending while [fullStateSent] is below
+  /// [fullStateRequested]. The outbox cap raises it when it drops ops, and
+  /// creating or joining raises it, so a resend interrupted by the app
+  /// stopping is done again on the next connection. The engine records the
+  /// request it exported only once the relay holds every frame, so a drop
+  /// during the resend stays pending.
+  int fullStateRequested = 0;
+  int fullStateSent = 0;
 }

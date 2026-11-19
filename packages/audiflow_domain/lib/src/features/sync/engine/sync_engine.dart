@@ -46,6 +46,9 @@ class SyncEngine {
     int Function()? nowMillis,
     this.maxOpsPerFrame = 500,
     this.maxRowsPerFrame = 500,
+    this.maxFrameBytes = 700 * 1024,
+    this.maxFramesPerPush = 100,
+    this.maxPushBytes = 5 * 1024 * 1024,
   }) : _nowMillis = nowMillis ?? _wallClock,
        _cipher = SyncCipher(_session.credentials.accountId) {
     // A failure nobody awaited yet must not surface as an unhandled error;
@@ -72,6 +75,13 @@ class SyncEngine {
   /// Rows per frame when the whole state goes out.
   final int maxRowsPerFrame;
 
+  /// Sealed bytes per frame and per push, and frames per push: below the
+  /// relay's limits (1 MB and 8 MB of base64url, 100 frames), since
+  /// base64url adds a third.
+  final int maxFrameBytes;
+  final int maxFramesPerPush;
+  final int maxPushBytes;
+
   static int _wallClock() => DateTime.now().millisecondsSinceEpoch;
   static const _uuid = Uuid();
 
@@ -96,6 +106,10 @@ class SyncEngine {
   /// and clock when sent, and whether it carries the whole state. One push
   /// at a time keeps the frames in outbox order.
   ({Set<String> clientIds, Map<int, int> ops, bool fullState})? _inFlight;
+
+  /// A whole-state send in progress: the pushes not yet sent, the ops
+  /// pending at the export, and the request it answers.
+  ({List<List<PushFrame>> pushes, Map<int, int> ops, int request})? _fullState;
 
   /// A snapshot upload is waiting for `stored`; sends wait with it, so the
   /// relay compacts before anything newer lands.
@@ -161,6 +175,7 @@ class SyncEngine {
     _logger.w('Sync session ended: ${failure.code}');
     _closed = true;
     _inFlight = null;
+    _fullState = null;
     _snapshotPending = false;
     await _outboxWatch?.cancel();
     await _messages?.cancel();
@@ -209,8 +224,8 @@ class SyncEngine {
     switch (message) {
       case Welcome():
         await _onWelcome(message);
-      case Frames(:final frames):
-        await _onFrames(frames);
+      case Frames(:final frames, :final more):
+        await _onFrames(frames, more: more);
       case Pushed(:final seqs):
         await _onPushed(seqs);
       case SnapshotStored():
@@ -240,6 +255,9 @@ class SyncEngine {
       changed = true;
     }
     if (changed) _onSessionChanged?.call(_session);
+    // Recorded before anything is sent, so a stop before the relay holds
+    // the whole state sends it again on the next connection (plan P9).
+    if (_opening != SyncOpening.resume) await _requestFullState();
     final snapshot = welcome.snapshot;
     // Joining merges it even at the same cursor: a snapshot of a new account
     // covers seq 0.
@@ -279,7 +297,7 @@ class SyncEngine {
     await _setCursor(snapshot.coversSeq);
   }
 
-  Future<void> _onFrames(List<RelayFrame> frames) async {
+  Future<void> _onFrames(List<RelayFrame> frames, {required bool more}) async {
     if (!_welcomed) throw const SyncRelayFailure(RelayError.invalid);
     for (final frame in frames) {
       if (frame.seq <= (await _meta())!.serverCursor) continue;
@@ -290,12 +308,12 @@ class SyncEngine {
       }
       await _setCursor(frame.seq);
     }
-    if (_caughtUp) return;
+    if (_caughtUp || more) return;
     _caughtUp = true;
-    // After joining, or when the outbox cap dropped ops, only the whole
-    // state carries everything.
-    final overflowed = (await _meta())?.outboxOverflowed ?? false;
-    if (_opening != SyncOpening.resume || overflowed) {
+    // After creating or joining, or when the outbox cap dropped ops, only
+    // the whole state carries everything.
+    final meta = (await _meta())!;
+    if (meta.fullStateSent < meta.fullStateRequested) {
       await _pushFullState();
     } else {
       await _flush();
@@ -412,11 +430,13 @@ class SyncEngine {
     for (final seq in acked) {
       if (seq == (await _meta())!.serverCursor + 1) await _setCursor(seq);
     }
-    if (inFlight.fullState) {
-      await _uploadSnapshot();
-    } else {
-      await _flush();
-    }
+    if (!inFlight.fullState) return _flush();
+    final fullState = _fullState!;
+    if (fullState.pushes.isNotEmpty) return _sendFullStatePush();
+    _fullState = null;
+    await _deleteSent(fullState.ops);
+    await _recordFullStateSent(fullState.request);
+    await _uploadSnapshot();
   }
 
   Future<void> _flush() async {
@@ -470,13 +490,7 @@ class SyncEngine {
   /// outbox cap dropped ops. The compacted snapshot follows once the relay
   /// has them all.
   Future<void> _pushFullState() async {
-    // Cleared before the export: an overflow during it is set again and
-    // handled by the next connection.
-    await _isar.writeTxn(() async {
-      final meta = await _isar.syncMetas.get(SyncMeta.singletonId);
-      if (meta == null || !meta.outboxOverflowed) return;
-      await _isar.syncMetas.put(meta..outboxOverflowed = false);
-    });
+    final request = (await _meta())!.fullStateRequested;
     final pending = await _isar.outboxOps.where().findAll();
     final exported = await SnapshotExporter(_isar).export();
     final historyId = (await _meta())?.historyId ?? '';
@@ -487,32 +501,98 @@ class SyncEngine {
     ];
     final frames = <PushFrame>[];
     for (var start = 0; start < rows.length; start += maxRowsPerFrame) {
-      final sections = <String, List<SnapshotRow>>{};
-      for (final (entity, row) in rows.skip(start).take(maxRowsPerFrame)) {
-        (sections[entity] ??= []).add(row);
-      }
-      final frame = SyncFrame(
-        historyId: historyId,
-        deviceId: _session.device.deviceId,
-        sections: sections,
-      );
-      frames.add(
-        PushFrame(
-          clientId: _uuid.v7(),
-          blob: await _seal(frame.encode(), SealPurpose.frame),
+      frames.addAll(
+        await _sealRows(
+          rows.skip(start).take(maxRowsPerFrame).toList(),
+          historyId,
         ),
       );
     }
-    if (frames.isEmpty) return _uploadSnapshot();
+    if (frames.isEmpty) {
+      await _recordFullStateSent(request);
+      return _uploadSnapshot();
+    }
     // The ops pending at the export are in these frames; ones changed
     // since keep a newer clock and stay for the next send.
-    _inFlight = (
-      clientIds: {for (final f in frames) f.clientId},
+    _fullState = (
+      pushes: _splitPushes(frames),
       ops: {for (final o in pending) o.id: o.hlc},
+      request: request,
+    );
+    await _sendFullStatePush();
+  }
+
+  /// Seals [rows] as one frame, halving it until it fits the relay's
+  /// frame limit. A single row too large goes as is and the relay refuses
+  /// it, which ends the session with a logged failure.
+  Future<List<PushFrame>> _sealRows(
+    List<(String, SnapshotRow)> rows,
+    String historyId,
+  ) async {
+    final sections = <String, List<SnapshotRow>>{};
+    for (final (entity, row) in rows) {
+      (sections[entity] ??= []).add(row);
+    }
+    final frame = SyncFrame(
+      historyId: historyId,
+      deviceId: _session.device.deviceId,
+      sections: sections,
+    );
+    final blob = await _seal(frame.encode(), SealPurpose.frame);
+    if (blob.length <= maxFrameBytes || rows.length == 1) {
+      return [PushFrame(clientId: _uuid.v7(), blob: blob)];
+    }
+    final half = rows.length ~/ 2;
+    return [
+      ...await _sealRows(rows.sublist(0, half), historyId),
+      ...await _sealRows(rows.sublist(half), historyId),
+    ];
+  }
+
+  /// Groups frames into pushes within the relay's per-push limits.
+  List<List<PushFrame>> _splitPushes(List<PushFrame> frames) {
+    final pushes = <List<PushFrame>>[];
+    var current = <PushFrame>[];
+    var bytes = 0;
+    for (final f in frames) {
+      final full =
+          maxFramesPerPush <= current.length ||
+          maxPushBytes < bytes + f.blob.length;
+      if (current.isNotEmpty && full) {
+        pushes.add(current);
+        current = [];
+        bytes = 0;
+      }
+      current.add(f);
+      bytes += f.blob.length;
+    }
+    if (current.isNotEmpty) pushes.add(current);
+    return pushes;
+  }
+
+  /// Sends the next push of the whole state; one at a time, like any push.
+  Future<void> _sendFullStatePush() async {
+    final push = _fullState!.pushes.removeAt(0);
+    _inFlight = (
+      clientIds: {for (final f in push) f.clientId},
+      ops: const {},
       fullState: true,
     );
-    _transport.send(PushFrames(frames));
+    _transport.send(PushFrames(push));
   }
+
+  Future<void> _requestFullState() => _isar.writeTxn(() async {
+    final meta = await _isar.syncMetas.get(SyncMeta.singletonId);
+    if (meta == null) return;
+    await _isar.syncMetas.put(meta..fullStateRequested += 1);
+  });
+
+  /// Marks [request] done; a request raised since stays pending.
+  Future<void> _recordFullStateSent(int request) => _isar.writeTxn(() async {
+    final meta = await _isar.syncMetas.get(SyncMeta.singletonId);
+    if (meta == null || request <= meta.fullStateSent) return;
+    await _isar.syncMetas.put(meta..fullStateSent = request);
+  });
 
   /// Uploads a compacted snapshot covering the cursor, which the relay
   /// keeps in place of the frames it covers, so a later device starts from

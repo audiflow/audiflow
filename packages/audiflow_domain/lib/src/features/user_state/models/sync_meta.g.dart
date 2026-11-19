@@ -27,39 +27,44 @@ const SyncMetaSchema = CollectionSchema(
       name: r'deviceId',
       type: IsarType.string,
     ),
-    r'historyId': PropertySchema(
+    r'fullStateRequested': PropertySchema(
       id: 2,
+      name: r'fullStateRequested',
+      type: IsarType.long,
+    ),
+    r'fullStateSent': PropertySchema(
+      id: 3,
+      name: r'fullStateSent',
+      type: IsarType.long,
+    ),
+    r'historyId': PropertySchema(
+      id: 4,
       name: r'historyId',
       type: IsarType.string,
     ),
-    r'hlc': PropertySchema(id: 3, name: r'hlc', type: IsarType.long),
+    r'hlc': PropertySchema(id: 5, name: r'hlc', type: IsarType.long),
     r'lastSnapshotHlc': PropertySchema(
-      id: 4,
+      id: 6,
       name: r'lastSnapshotHlc',
       type: IsarType.long,
     ),
-    r'outboxOverflowed': PropertySchema(
-      id: 5,
-      name: r'outboxOverflowed',
-      type: IsarType.bool,
-    ),
     r'queueProjectionPending': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'queueProjectionPending',
       type: IsarType.bool,
     ),
     r'schemaVersion': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'schemaVersion',
       type: IsarType.long,
     ),
     r'serverCursor': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'serverCursor',
       type: IsarType.long,
     ),
     r'tombstoneHorizon': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'tombstoneHorizon',
       type: IsarType.long,
     ),
@@ -104,14 +109,15 @@ void _syncMetaSerialize(
 ) {
   writer.writeBool(offsets[0], object.continuityRestorePending);
   writer.writeString(offsets[1], object.deviceId);
-  writer.writeString(offsets[2], object.historyId);
-  writer.writeLong(offsets[3], object.hlc);
-  writer.writeLong(offsets[4], object.lastSnapshotHlc);
-  writer.writeBool(offsets[5], object.outboxOverflowed);
-  writer.writeBool(offsets[6], object.queueProjectionPending);
-  writer.writeLong(offsets[7], object.schemaVersion);
-  writer.writeLong(offsets[8], object.serverCursor);
-  writer.writeLong(offsets[9], object.tombstoneHorizon);
+  writer.writeLong(offsets[2], object.fullStateRequested);
+  writer.writeLong(offsets[3], object.fullStateSent);
+  writer.writeString(offsets[4], object.historyId);
+  writer.writeLong(offsets[5], object.hlc);
+  writer.writeLong(offsets[6], object.lastSnapshotHlc);
+  writer.writeBool(offsets[7], object.queueProjectionPending);
+  writer.writeLong(offsets[8], object.schemaVersion);
+  writer.writeLong(offsets[9], object.serverCursor);
+  writer.writeLong(offsets[10], object.tombstoneHorizon);
 }
 
 SyncMeta _syncMetaDeserialize(
@@ -123,15 +129,16 @@ SyncMeta _syncMetaDeserialize(
   final object = SyncMeta();
   object.continuityRestorePending = reader.readBool(offsets[0]);
   object.deviceId = reader.readStringOrNull(offsets[1]);
-  object.historyId = reader.readString(offsets[2]);
-  object.hlc = reader.readLong(offsets[3]);
+  object.fullStateRequested = reader.readLong(offsets[2]);
+  object.fullStateSent = reader.readLong(offsets[3]);
+  object.historyId = reader.readString(offsets[4]);
+  object.hlc = reader.readLong(offsets[5]);
   object.id = id;
-  object.lastSnapshotHlc = reader.readLong(offsets[4]);
-  object.outboxOverflowed = reader.readBool(offsets[5]);
-  object.queueProjectionPending = reader.readBool(offsets[6]);
-  object.schemaVersion = reader.readLong(offsets[7]);
-  object.serverCursor = reader.readLong(offsets[8]);
-  object.tombstoneHorizon = reader.readLong(offsets[9]);
+  object.lastSnapshotHlc = reader.readLong(offsets[6]);
+  object.queueProjectionPending = reader.readBool(offsets[7]);
+  object.schemaVersion = reader.readLong(offsets[8]);
+  object.serverCursor = reader.readLong(offsets[9]);
+  object.tombstoneHorizon = reader.readLong(offsets[10]);
   return object;
 }
 
@@ -147,20 +154,22 @@ P _syncMetaDeserializeProp<P>(
     case 1:
       return (reader.readStringOrNull(offset)) as P;
     case 2:
-      return (reader.readString(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 3:
       return (reader.readLong(offset)) as P;
     case 4:
-      return (reader.readLong(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 5:
-      return (reader.readBool(offset)) as P;
-    case 6:
-      return (reader.readBool(offset)) as P;
-    case 7:
       return (reader.readLong(offset)) as P;
+    case 6:
+      return (reader.readLong(offset)) as P;
+    case 7:
+      return (reader.readBool(offset)) as P;
     case 8:
       return (reader.readLong(offset)) as P;
     case 9:
+      return (reader.readLong(offset)) as P;
+    case 10:
       return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -429,6 +438,118 @@ extension SyncMetaQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         FilterCondition.greaterThan(property: r'deviceId', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
+  fullStateRequestedEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'fullStateRequested', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
+  fullStateRequestedGreaterThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'fullStateRequested',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
+  fullStateRequestedLessThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'fullStateRequested',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
+  fullStateRequestedBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'fullStateRequested',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition> fullStateSentEqualTo(
+    int value,
+  ) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'fullStateSent', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
+  fullStateSentGreaterThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'fullStateSent',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition> fullStateSentLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'fullStateSent',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition> fullStateSentBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'fullStateSent',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
       );
     });
   }
@@ -752,15 +873,6 @@ extension SyncMetaQueryFilter
   }
 
   QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
-  outboxOverflowedEqualTo(bool value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'outboxOverflowed', value: value),
-      );
-    });
-  }
-
-  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
   queueProjectionPendingEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -975,6 +1087,31 @@ extension SyncMetaQuerySortBy on QueryBuilder<SyncMeta, SyncMeta, QSortBy> {
     });
   }
 
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> sortByFullStateRequested() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fullStateRequested', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy>
+  sortByFullStateRequestedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fullStateRequested', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> sortByFullStateSent() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fullStateSent', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> sortByFullStateSentDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fullStateSent', Sort.desc);
+    });
+  }
+
   QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> sortByHistoryId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'historyId', Sort.asc);
@@ -1008,18 +1145,6 @@ extension SyncMetaQuerySortBy on QueryBuilder<SyncMeta, SyncMeta, QSortBy> {
   QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> sortByLastSnapshotHlcDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastSnapshotHlc', Sort.desc);
-    });
-  }
-
-  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> sortByOutboxOverflowed() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'outboxOverflowed', Sort.asc);
-    });
-  }
-
-  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> sortByOutboxOverflowedDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'outboxOverflowed', Sort.desc);
     });
   }
 
@@ -1102,6 +1227,31 @@ extension SyncMetaQuerySortThenBy
     });
   }
 
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> thenByFullStateRequested() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fullStateRequested', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy>
+  thenByFullStateRequestedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fullStateRequested', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> thenByFullStateSent() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fullStateSent', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> thenByFullStateSentDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fullStateSent', Sort.desc);
+    });
+  }
+
   QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> thenByHistoryId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'historyId', Sort.asc);
@@ -1147,18 +1297,6 @@ extension SyncMetaQuerySortThenBy
   QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> thenByLastSnapshotHlcDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastSnapshotHlc', Sort.desc);
-    });
-  }
-
-  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> thenByOutboxOverflowed() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'outboxOverflowed', Sort.asc);
-    });
-  }
-
-  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> thenByOutboxOverflowedDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'outboxOverflowed', Sort.desc);
     });
   }
 
@@ -1230,6 +1368,18 @@ extension SyncMetaQueryWhereDistinct
     });
   }
 
+  QueryBuilder<SyncMeta, SyncMeta, QDistinct> distinctByFullStateRequested() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'fullStateRequested');
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QDistinct> distinctByFullStateSent() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'fullStateSent');
+    });
+  }
+
   QueryBuilder<SyncMeta, SyncMeta, QDistinct> distinctByHistoryId({
     bool caseSensitive = true,
   }) {
@@ -1247,12 +1397,6 @@ extension SyncMetaQueryWhereDistinct
   QueryBuilder<SyncMeta, SyncMeta, QDistinct> distinctByLastSnapshotHlc() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'lastSnapshotHlc');
-    });
-  }
-
-  QueryBuilder<SyncMeta, SyncMeta, QDistinct> distinctByOutboxOverflowed() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'outboxOverflowed');
     });
   }
 
@@ -1303,6 +1447,18 @@ extension SyncMetaQueryProperty
     });
   }
 
+  QueryBuilder<SyncMeta, int, QQueryOperations> fullStateRequestedProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'fullStateRequested');
+    });
+  }
+
+  QueryBuilder<SyncMeta, int, QQueryOperations> fullStateSentProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'fullStateSent');
+    });
+  }
+
   QueryBuilder<SyncMeta, String, QQueryOperations> historyIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'historyId');
@@ -1318,12 +1474,6 @@ extension SyncMetaQueryProperty
   QueryBuilder<SyncMeta, int, QQueryOperations> lastSnapshotHlcProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'lastSnapshotHlc');
-    });
-  }
-
-  QueryBuilder<SyncMeta, bool, QQueryOperations> outboxOverflowedProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'outboxOverflowed');
     });
   }
 

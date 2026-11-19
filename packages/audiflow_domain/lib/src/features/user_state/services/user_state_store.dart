@@ -201,8 +201,8 @@ class UserStateStore {
         .findAll();
     await _isar.outboxOps.deleteAll(oldest);
     final meta = await _isar.syncMetas.get(SyncMeta.singletonId);
-    if (meta != null && !meta.outboxOverflowed) {
-      await _isar.syncMetas.put(meta..outboxOverflowed = true);
+    if (meta != null) {
+      await _isar.syncMetas.put(meta..fullStateRequested += 1);
     }
   }
 }

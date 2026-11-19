@@ -17,6 +17,16 @@ class InMemoryRelay {
 
   int _tokens = 0;
 
+  /// Mirrors the relay's push limit; a larger push is refused.
+  int maxFramesPerPush = 100;
+
+  /// Frames per catch-up message; a longer catch-up sets `more`.
+  int catchUpPage = 1 << 30;
+
+  /// When set, pushes are stored and fanned out but never acknowledged, as
+  /// when the connection drops before the ack arrives.
+  bool holdAcks = false;
+
   final _open = <InMemoryTransport>{};
 
   InMemoryTransport connect() {
@@ -88,6 +98,9 @@ class InMemoryRelay {
         if (account == null) {
           return from._deliver(const RelayError(RelayError.unauthorized));
         }
+        if (maxFramesPerPush < frames.length) {
+          return from._deliver(const RelayError(RelayError.invalid));
+        }
         final acks = <String, int>{};
         for (final f in frames) {
           final frame = RelayFrame(
@@ -101,7 +114,7 @@ class InMemoryRelay {
             if (other != from) other._deliver(Frames([frame]));
           }
         }
-        from._deliver(Pushed(acks));
+        if (!holdAcks) from._deliver(Pushed(acks));
       case UploadSnapshot(:final snapshot):
         final account = from._account;
         if (account == null) {
@@ -144,7 +157,17 @@ class InMemoryRelay {
       ),
     );
     final after = sendSnapshot ? snapshot.coversSeq : cursor;
-    from._deliver(Frames([...account.frames.where((f) => after < f.seq)]));
+    final backlog = [...account.frames.where((f) => after < f.seq)];
+    var start = 0;
+    do {
+      final end = backlog.length < start + catchUpPage
+          ? backlog.length
+          : start + catchUpPage;
+      from._deliver(
+        Frames(backlog.sublist(start, end), more: end < backlog.length),
+      );
+      start = end;
+    } while (start < backlog.length);
   }
 
   static bool _equal(List<int> a, List<int> b) {

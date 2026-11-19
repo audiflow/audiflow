@@ -281,7 +281,7 @@ sealed class RelayMessage {
       ),
       'frames' => Frames([
         for (final f in _list(json, 'frames')) RelayFrame.fromJson(_object(f)),
-      ]),
+      ], more: json['more'] == true),
       'pushed' => Pushed({
         for (final a in _list(json, 'acks'))
           _string(_object(a), 'clientId'): _int(_object(a), 'seq'),
@@ -326,13 +326,17 @@ class Welcome extends RelayMessage {
   };
 }
 
-/// Frames in `seq` order. After a `welcome`, the first one is the catch-up
+/// Frames in `seq` order. After a `welcome`, the catch-up comes first
 /// (possibly empty): everything after the cursor, the device's own frames
-/// included, since an acknowledgement may have been lost.
+/// included, since an acknowledgement may have been lost. A long one is
+/// split over several messages; all but the last set [more].
 class Frames extends RelayMessage {
-  const Frames(this.frames);
+  const Frames(this.frames, {this.more = false});
 
   final List<RelayFrame> frames;
+
+  /// More catch-up follows in the next message.
+  final bool more;
 
   @override
   String get type => 'frames';
@@ -340,6 +344,7 @@ class Frames extends RelayMessage {
   @override
   Map<String, Object?> get fields => {
     'frames': [for (final f in frames) f.toJson()],
+    if (more) 'more': true,
   };
 }
 

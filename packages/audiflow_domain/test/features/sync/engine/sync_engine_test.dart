@@ -36,6 +36,8 @@ class _Device {
     SyncOpening opening, {
     SyncCredentials? credentials,
     int maxOpsPerFrame = 500,
+    int maxRowsPerFrame = 500,
+    int maxFramesPerPush = 100,
   }) async {
     if (opening != SyncOpening.resume) {
       session = SyncSession(
@@ -59,6 +61,8 @@ class _Device {
       logger: Logger(level: Level.off),
       nowMillis: () => now,
       maxOpsPerFrame: maxOpsPerFrame,
+      maxRowsPerFrame: maxRowsPerFrame,
+      maxFramesPerPush: maxFramesPerPush,
     );
     await e.connect(opening);
   }
@@ -342,18 +346,19 @@ void main() {
       await b.goOffline();
       b.now += 1000;
       await b.setPosition('ek-dropped', 555);
-      // What the cap does: the op is gone, the mark is set.
+      // What the cap does: the op is gone, a resend is requested.
       await b.isar.writeTxn(() async {
         await b.isar.outboxOps.clear();
         final meta = (await b.isar.syncMetas.get(SyncMeta.singletonId))!;
-        await b.isar.syncMetas.put(meta..outboxOverflowed = true);
+        await b.isar.syncMetas.put(meta..fullStateRequested += 1);
       });
 
       await b.connect(relay, SyncOpening.resume);
       await settle();
 
       check(await a.position('ek-dropped')).equals(555);
-      check((await b.meta()).outboxOverflowed).isFalse();
+      final meta = await b.meta();
+      check(meta.fullStateSent).equals(meta.fullStateRequested);
     },
   );
 
@@ -388,6 +393,65 @@ void main() {
     await settle();
 
     await check(done).throws<SyncRelayFailure>();
+  });
+
+  test('a whole-state send cut short goes again next time', () async {
+    await a.connect(relay, SyncOpening.create, credentials: credentials);
+    await settle();
+    await b.setPosition('ek-join', 444);
+    relay.holdAcks = true;
+    await b.connect(relay, SyncOpening.join, credentials: credentials);
+    await settle();
+    await b.goOffline();
+    check(
+      (await b.meta()).fullStateSent,
+    ).isLessThan((await b.meta()).fullStateRequested);
+
+    relay.holdAcks = false;
+    await b.connect(relay, SyncOpening.resume);
+    await settle();
+
+    final meta = await b.meta();
+    check(meta.fullStateSent).equals(meta.fullStateRequested);
+    check(relay.snapshotOf(credentials.accountIdText)).isNotNull();
+  });
+
+  test('the whole state goes in pushes within the relay limit', () async {
+    for (var i = 0; i < 5; i++) {
+      await b.setPosition('ek-$i', i * 10);
+    }
+    relay.maxFramesPerPush = 2;
+    await a.connect(relay, SyncOpening.create, credentials: credentials);
+    await settle();
+    await b.connect(
+      relay,
+      SyncOpening.join,
+      credentials: credentials,
+      maxRowsPerFrame: 1,
+      maxFramesPerPush: 2,
+    );
+    await settle();
+
+    for (var i = 0; i < 5; i++) {
+      check(await a.position('ek-$i')).equals(i * 10);
+    }
+  });
+
+  test('connect waits for the whole catch-up', () async {
+    await pair();
+    await b.goOffline();
+    for (var i = 0; i < 4; i++) {
+      a.now += 1000;
+      await a.setPosition('ek-c$i', 100 + i);
+      await settle();
+    }
+    relay.catchUpPage = 1;
+
+    await b.connect(relay, SyncOpening.resume);
+
+    for (var i = 0; i < 4; i++) {
+      check(await b.position('ek-c$i')).equals(100 + i);
+    }
   });
 
   group('dropBeatenOps', () {
