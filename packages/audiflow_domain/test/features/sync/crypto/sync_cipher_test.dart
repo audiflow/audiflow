@@ -29,6 +29,15 @@ void main() {
       check(base64Url.encode(keys.wrapKey)).equals(_pinnedWrapKey);
     });
 
+    test('rejects a missing or cut sync key', () async {
+      await check(
+        SyncKeyDerivation.derive(Uint8List(0)),
+      ).throws<ArgumentError>();
+      await check(
+        SyncKeyDerivation.derive(Uint8List(31)),
+      ).throws<ArgumentError>();
+    });
+
     test('the verifier is a hash of the auth secret', () async {
       final keys = await SyncKeyDerivation.derive(syncKey);
       final verifier = SyncKeyDerivation.authVerifier(keys.authSecret);
@@ -54,6 +63,32 @@ void main() {
         keyFor: (v) => v == 3 ? key : null,
       );
       check(opened).deepEquals(payload);
+    });
+
+    test('rejects a key version the header cannot hold', () async {
+      await check(
+        cipher.seal(
+          key: key,
+          keyVersion: SyncCipher.maxKeyVersion + 1,
+          purpose: SealPurpose.frame,
+          plaintext: payload,
+        ),
+      ).throws<ArgumentError>();
+    });
+
+    test('keeps its account when the caller reuses the buffer', () async {
+      final buffer = Uint8List.fromList(accountId);
+      final own = SyncCipher(buffer);
+      final sealed = await own.seal(
+        key: key,
+        keyVersion: 1,
+        purpose: SealPurpose.frame,
+        plaintext: payload,
+      );
+      buffer[0] ^= 0xFF;
+      check(
+        await own.open(sealed, purpose: SealPurpose.frame, keyFor: (_) => key),
+      ).deepEquals(payload);
     });
 
     test('never reuses a nonce', () async {
@@ -198,6 +233,18 @@ void main() {
       check(opened.syncKey).deepEquals(syncKey);
       check(opened.dataKey.key).deepEquals(dataKey);
       check(opened.dataKey.version).equals(5);
+    });
+
+    test('a device wrap rejects a sync key of the wrong length', () async {
+      final recipient = await DeviceKeyPair.generate();
+      await check(
+        KeyWraps.sealDeviceWrap(
+          cipher,
+          recipientPublicKey: recipient.publicKey,
+          syncKey: Uint8List(31),
+          keys: DataKey(dataKey, version: 1),
+        ),
+      ).throws<ArgumentError>();
     });
 
     test('a device wrap does not open for another device', () async {

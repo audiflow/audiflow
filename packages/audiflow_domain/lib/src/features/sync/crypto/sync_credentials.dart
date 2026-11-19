@@ -13,18 +13,16 @@ import 'package:meta/meta.dart';
 /// user has not shown yet.
 @immutable
 class SyncCredentials {
-  SyncCredentials({required this.accountId, required this.syncKey}) {
-    if (accountId.length != accountIdLength) {
-      throw ArgumentError.value(accountId.length, 'accountId', 'length');
-    }
-    if (syncKey.length != syncKeyLength) {
-      throw ArgumentError.value(syncKey.length, 'syncKey', 'length');
-    }
-  }
+  /// Copies both buffers, so a caller reusing them cannot change the
+  /// account this names.
+  SyncCredentials({required List<int> accountId, required List<int> syncKey})
+    : accountId = _frozen(accountId, accountIdLength, 'accountId'),
+      syncKey = _frozen(syncKey, syncKeyLength, 'syncKey');
 
-  /// A new account: random id, random 256-bit sync key.
-  factory SyncCredentials.generate([Random? random]) {
-    final rng = random ?? Random.secure();
+  /// A new account: random id, random 256-bit sync key, always from the
+  /// secure generator.
+  factory SyncCredentials.generate() {
+    final rng = Random.secure();
     Uint8List bytes(int n) =>
         Uint8List.fromList(List.generate(n, (_) => rng.nextInt(256)));
     return SyncCredentials(
@@ -33,13 +31,22 @@ class SyncCredentials {
     );
   }
 
+  static Uint8List _frozen(List<int> bytes, int length, String name) {
+    if (bytes.length != length) {
+      throw ArgumentError.value(bytes.length, name, 'length');
+    }
+    return Uint8List.fromList(bytes).asUnmodifiableView();
+  }
+
   static const accountIdLength = 16;
   static const syncKeyLength = 32;
 
   /// Routes to the account's Durable Object; fixed for the account's life.
+  /// Read-only.
   final Uint8List accountId;
 
   /// Shared by every device of the account; replaced by a revocation.
+  /// Read-only.
   final Uint8List syncKey;
 
   /// The account id as the relay addresses it.

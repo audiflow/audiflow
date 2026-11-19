@@ -33,6 +33,10 @@ abstract final class SyncKeyDerivation {
   static final _hkdf = Hkdf(hmac: Hmac.sha256(), outputLength: 32);
 
   static Future<DerivedSyncKeys> derive(Uint8List syncKey) async {
+    // HKDF accepts any input; a missing or cut key would still derive.
+    if (syncKey.length != SyncCipher.keyLength) {
+      throw ArgumentError.value(syncKey.length, 'syncKey', 'length');
+    }
     Future<Uint8List> expand(String info) async {
       final key = await _hkdf.deriveKey(
         secretKey: SecretKey(syncKey),
@@ -75,7 +79,9 @@ enum SealPurpose {
 /// purpose, the account, the algorithm, and the key version, so none of
 /// them can be swapped without the tag failing.
 class SyncCipher {
-  SyncCipher(this._accountId);
+  /// Copies [accountId], so a caller reusing the buffer cannot change the
+  /// associated data between sealing and opening.
+  SyncCipher(List<int> accountId) : _accountId = Uint8List.fromList(accountId);
 
   final Uint8List _accountId;
 
@@ -84,6 +90,7 @@ class SyncCipher {
   static const _nonceLength = 24;
   static const _tagLength = 16;
   static const keyLength = 32;
+  static const maxKeyVersion = 0xFFFFFFFF;
   static final _aead = Xchacha20.poly1305Aead();
   static final _random = Random.secure();
 
@@ -104,6 +111,10 @@ class SyncCipher {
     required SealPurpose purpose,
     required List<int> plaintext,
   }) async {
+    // The header holds 32 bits; a larger version would be cut silently.
+    if (keyVersion < 0 || maxKeyVersion < keyVersion) {
+      throw ArgumentError.value(keyVersion, 'keyVersion', 'out of range');
+    }
     final nonce = _randomBytes(_nonceLength);
     final box = await _aead.encrypt(
       plaintext,
@@ -273,6 +284,11 @@ abstract final class KeyWraps {
     required Uint8List syncKey,
     required DataKey keys,
   }) async {
+    // Checked before sealing: a wrong length authenticates but the
+    // recipient rejects it, after it was already published.
+    if (syncKey.length != SyncCipher.keyLength) {
+      throw ArgumentError.value(syncKey.length, 'syncKey', 'length');
+    }
     final ephemeral = await DeviceKeyPair.generate();
     final key = await _sharedKey(
       ephemeral,

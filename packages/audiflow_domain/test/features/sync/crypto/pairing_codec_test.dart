@@ -20,6 +20,14 @@ void main() {
       check(a.syncKey).not((it) => it.deepEquals(b.syncKey));
     });
 
+    test('copies its inputs and exposes them read-only', () {
+      final id = Uint8List.fromList(List.generate(16, (i) => i));
+      final c = SyncCredentials(accountId: id, syncKey: Uint8List(32));
+      id[0] = 99;
+      check(c.accountId[0]).equals(0);
+      check(() => c.syncKey[0] = 1).throws<UnsupportedError>();
+    });
+
     test('rejects ids and keys of the wrong length', () {
       check(
         () => SyncCredentials(accountId: Uint8List(15), syncKey: Uint8List(32)),
