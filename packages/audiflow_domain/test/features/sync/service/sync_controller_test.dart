@@ -7,7 +7,7 @@ import 'package:logger/logger.dart';
 import '../../../helpers/in_memory_relay.dart';
 import '../../../helpers/isar_test_helper.dart';
 
-class _MemoryStore implements SyncSecretStore {
+class _MemoryStore implements SyncKeyStore {
   SyncCredentials? credentials;
   StoredSyncDevice? device;
 

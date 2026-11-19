@@ -353,7 +353,7 @@ export 'src/features/sync/engine/sync_transport.dart';
 export 'src/features/sync/protocol/sync_messages.dart';
 export 'src/features/sync/service/sync_controller.dart';
 export 'src/features/sync/service/sync_providers.dart';
-export 'src/features/sync/storage/sync_secret_store.dart';
+export 'src/features/sync/storage/sync_key_store.dart';
 export 'src/features/sync/transport/web_socket_transport.dart';
 export 'src/features/user_state/sync/opaque_fields.dart';
 export 'src/features/user_state/sync/proto_wire.dart';

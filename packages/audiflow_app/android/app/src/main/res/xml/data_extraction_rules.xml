@@ -10,7 +10,7 @@
      included. The rules take no wildcards, so each file is named.
      device_only_store/ holds the install id and device id, which must never
      reach another device (FileDeviceOnlyStore).
-     FlutterSecureStorage.xml holds the sync secrets (SecureSyncSecretStore),
+     FlutterSecureStorage.xml holds the sync secrets (SecureSyncKeyStore),
      encrypted with Android Keystore keys that no backup carries, so a
      restored copy could not be read. -->
 <data-extraction-rules>

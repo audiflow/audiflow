@@ -8,7 +8,7 @@ import '../../../common/providers/platform_providers.dart';
 import '../../feed/services/feed_sync_service.dart';
 import '../../install_id/providers/install_id_providers.dart';
 import '../../station/services/station_reconciler_service.dart';
-import '../storage/sync_secret_store.dart';
+import '../storage/sync_key_store.dart';
 import '../transport/web_socket_transport.dart';
 import 'sync_controller.dart';
 
@@ -27,7 +27,7 @@ Uri? syncRelayUrl(Ref ref) {
 }
 
 @Riverpod(keepAlive: true)
-SyncSecretStore syncSecretStore(Ref ref) => SecureSyncSecretStore();
+SyncKeyStore syncKeyStore(Ref ref) => SecureSyncKeyStore();
 
 /// The app's [SyncController]. The app calls `load` at startup and
 /// `setActive` as it moves between foreground, playing, and background.
@@ -37,7 +37,7 @@ SyncController syncController(Ref ref) {
   final reconciler = ref.watch(stationReconcilerServiceProvider);
   final controller = SyncController(
     isar: ref.watch(isarProvider),
-    store: ref.watch(syncSecretStoreProvider),
+    store: ref.watch(syncKeyStoreProvider),
     relayUrl: ref.watch(syncRelayUrlProvider),
     deviceId: ref.watch(deviceIdRepositoryProvider).getOrCreate,
     // A generic name until the device list lets the user rename it.

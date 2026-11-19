@@ -9,7 +9,7 @@ import '../engine/sync_engine.dart';
 import '../engine/sync_session.dart';
 import '../engine/sync_transport.dart';
 import '../protocol/sync_messages.dart';
-import '../storage/sync_secret_store.dart';
+import '../storage/sync_key_store.dart';
 
 /// Where sync stands on this device.
 enum SyncPhase {
@@ -81,7 +81,7 @@ class SyncController {
   }) : _retryDelay = retryDelay ?? defaultRetryDelay;
 
   final Isar _isar;
-  final SyncSecretStore _store;
+  final SyncKeyStore _store;
   final Uri? _relayUrl;
   final Future<String> Function() _deviceId;
   final String _deviceName;

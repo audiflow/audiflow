@@ -53,47 +53,46 @@ final class SyncRelayUrlProvider extends $FunctionalProvider<Uri?, Uri?, Uri?>
 
 String _$syncRelayUrlHash() => r'b8a2ea5d44cd960a50162543a27226e71842f0c7';
 
-@ProviderFor(syncSecretStore)
-final syncSecretStoreProvider = SyncSecretStoreProvider._();
+@ProviderFor(syncKeyStore)
+final syncKeyStoreProvider = SyncKeyStoreProvider._();
 
-final class SyncSecretStoreProvider
-    extends
-        $FunctionalProvider<SyncSecretStore, SyncSecretStore, SyncSecretStore>
-    with $Provider<SyncSecretStore> {
-  SyncSecretStoreProvider._()
+final class SyncKeyStoreProvider
+    extends $FunctionalProvider<SyncKeyStore, SyncKeyStore, SyncKeyStore>
+    with $Provider<SyncKeyStore> {
+  SyncKeyStoreProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'syncSecretStoreProvider',
+        name: r'syncKeyStoreProvider',
         isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$syncSecretStoreHash();
+  String debugGetCreateSourceHash() => _$syncKeyStoreHash();
 
   @$internal
   @override
-  $ProviderElement<SyncSecretStore> $createElement($ProviderPointer pointer) =>
+  $ProviderElement<SyncKeyStore> $createElement($ProviderPointer pointer) =>
       $ProviderElement(pointer);
 
   @override
-  SyncSecretStore create(Ref ref) {
-    return syncSecretStore(ref);
+  SyncKeyStore create(Ref ref) {
+    return syncKeyStore(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(SyncSecretStore value) {
+  Override overrideWithValue(SyncKeyStore value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<SyncSecretStore>(value),
+      providerOverride: $SyncValueProvider<SyncKeyStore>(value),
     );
   }
 }
 
-String _$syncSecretStoreHash() => r'bace6ad6e935a2c401c9eefcd24b984cb9765d4d';
+String _$syncKeyStoreHash() => r'b840502edc2495997dcd36914a9681d84a43419e';
 
 /// The app's [SyncController]. The app calls `load` at startup and
 /// `setActive` as it moves between foreground, playing, and background.
@@ -142,4 +141,4 @@ final class SyncControllerProvider
   }
 }
 
-String _$syncControllerHash() => r'36dcc3ffda889c97a5caa1000385d693f43521c1';
+String _$syncControllerHash() => r'f113108b20bb2d0c21dab63c6b73d9cc9cafdb2e';

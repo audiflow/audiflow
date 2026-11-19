@@ -97,7 +97,7 @@ class StoredSyncDevice {
 /// The credentials (account id and sync key) may follow the user to a new
 /// device through the platform's own encrypted channel; everything in
 /// [StoredSyncDevice] stays on this one.
-abstract interface class SyncSecretStore {
+abstract interface class SyncKeyStore {
   Future<SyncCredentials?> readCredentials();
   Future<void> writeCredentials(SyncCredentials credentials);
   Future<StoredSyncDevice?> readDevice();
@@ -107,7 +107,7 @@ abstract interface class SyncSecretStore {
   Future<void> clear();
 }
 
-/// [SyncSecretStore] on `flutter_secure_storage`.
+/// [SyncKeyStore] on `flutter_secure_storage`.
 ///
 /// iOS: the Keychain, readable after the first unlock so background
 /// playback can sync. The credentials are synchronizable, so iCloud
@@ -118,8 +118,8 @@ abstract interface class SyncSecretStore {
 /// backup rules exclude the storage file, since a restored copy could not
 /// be decrypted without those keys. Carrying the credentials to a new
 /// phone through Block Store comes separately.
-class SecureSyncSecretStore implements SyncSecretStore {
-  SecureSyncSecretStore([this._storage = const FlutterSecureStorage()]);
+class SecureSyncKeyStore implements SyncKeyStore {
+  SecureSyncKeyStore([this._storage = const FlutterSecureStorage()]);
 
   final FlutterSecureStorage _storage;
 
