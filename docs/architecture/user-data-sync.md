@@ -232,6 +232,8 @@ op(seq PRIMARY KEY, entityHash, fieldId,
 
   Enrolling a device needs the current sync key, so a revoked device cannot re-enroll under a new `deviceId`.
 
+As built for M6a (`audiflow_domain/.../features/sync/crypto/`): `SyncCredentials` holds the 16-byte `accountId` and the 32-byte sync key; `PairingCodec` encodes them as the QR payload `audiflow-sync:1:<base64url>` and as an 80-character Crockford base32 recovery code with a 16-bit checksum (case, separators, and O/I/L look-alikes are forgiven). `SyncKeyDerivation` derives `authSecret` and `wrapKey` with HKDF-SHA256 (empty salt, pinned by a test against an independent computation), and `authVerifier` is SHA-256 of `authSecret`: by the protocol contract, what the relay stores for enrollment (the relay itself lands in M6c). `SyncCipher` seals with XChaCha20-Poly1305 as algId, key version, nonce, ciphertext, and tag, binding format, purpose (frame, snapshot, presence, sync wrap, device wrap), account, algorithm, and key version into the associated data. `KeyWraps` seals the data key under `wrapKey`, and the sync key plus data key to a device's X25519 public key (`DeviceKeyPair`): an ephemeral key pair, HKDF-SHA256 over the shared secret and both public keys, then the same AEAD, with the ephemeral public key leading the blob.
+
 ## Write path and sync engine
 
 ```

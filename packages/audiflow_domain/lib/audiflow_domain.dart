@@ -342,6 +342,10 @@ export 'src/features/snapshot/snapshot_body.dart';
 export 'src/features/snapshot/snapshot_exporter.dart';
 export 'src/features/snapshot/snapshot_file.dart';
 export 'src/features/snapshot/snapshot_merger.dart';
+
+// Sync
+export 'src/features/sync/crypto/sync_cipher.dart';
+export 'src/features/sync/crypto/sync_credentials.dart';
 export 'src/features/user_state/sync/opaque_fields.dart';
 export 'src/features/user_state/sync/proto_wire.dart';
 export 'src/features/user_state/sync/user_state_codec.dart';
