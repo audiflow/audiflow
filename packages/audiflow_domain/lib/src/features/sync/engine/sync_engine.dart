@@ -336,9 +336,10 @@ class SyncEngine {
       await _open(snapshot.blob, SealPurpose.snapshot),
     );
     // Joining adopts the account's history (plan P9), so its tombstones
-    // and horizon apply here from now on. The horizon is the account's:
-    // this device's old one belongs to another history and would drop
-    // live rows of this one.
+    // and horizon apply here from now on. The old horizon belongs to
+    // another history and would drop live rows of this one, so it resets;
+    // the merge then raises it to the account's, after the snapshot's own
+    // rows are in (they are live however old their clocks).
     if (_opening == SyncOpening.join && file.header.historyId.isNotEmpty) {
       await _isar.writeTxn(() async {
         final meta = await _isar.syncMetas.get(SyncMeta.singletonId);
@@ -346,7 +347,7 @@ class SyncEngine {
         await _isar.syncMetas.put(
           meta
             ..historyId = file.header.historyId
-            ..tombstoneHorizon = file.header.tombstoneHorizon,
+            ..tombstoneHorizon = 0,
         );
       });
     }

@@ -505,6 +505,34 @@ void main() {
     check(meta.tombstoneHorizon).equals((await a.meta()).tombstoneHorizon);
   });
 
+  test('joining keeps live rows older than the account horizon', () async {
+    await a.setSubscribed('pk-old', subscribed: true);
+    await a.connect(relay, SyncOpening.create, credentials: credentials);
+    await settle();
+    // The account purged tombstones past the subscription's clock; its
+    // snapshot still carries the live subscription.
+    await a.isar.writeTxn(() async {
+      final meta = (await a.isar.syncMetas.get(SyncMeta.singletonId))!;
+      await a.isar.syncMetas.put(meta..tombstoneHorizon = 1 << 60);
+    });
+    await a.goOffline();
+    await a.connect(relay, SyncOpening.resume);
+    await a.setPosition('ek-touch', 1);
+    await a.isar.writeTxn(() async {
+      await a.isar.outboxOps.clear();
+      final meta = (await a.isar.syncMetas.get(SyncMeta.singletonId))!;
+      await a.isar.syncMetas.put(meta..fullStateRequested += 1);
+    });
+    await settle();
+    check(relay.snapshotOf(credentials.accountIdText)).isNotNull();
+
+    await b.connect(relay, SyncOpening.join, credentials: credentials);
+    await settle();
+
+    check(await b.subscribed('pk-old')).equals(true);
+    check((await b.meta()).tombstoneHorizon).equals(1 << 60);
+  });
+
   test('a transport error ends the session', () async {
     await pair();
     final done = a.engine!.done;
