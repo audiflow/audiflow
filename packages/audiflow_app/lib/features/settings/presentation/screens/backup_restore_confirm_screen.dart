@@ -1,3 +1,4 @@
+import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -51,36 +52,48 @@ class BackupRestoreConfirmScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.backupRestoreConfirmTitle)),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Text(
-            l10n.backupRestoreCreated(created, _platformName(header.platform)),
-            style: theme.textTheme.titleMedium,
+      // A phone-width column on tablets, like the settings screen: a full
+      // iPad width stretches the button and the lines past reading length.
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxWidth: LayoutConstants.contentMaxWidth,
           ),
-          const SizedBox(height: 16),
-          Text(l10n.backupRestorePodcasts(counts.podcasts)),
-          Text(l10n.backupRestoreEpisodes(counts.episodes)),
-          Text(l10n.backupRestoreQueue(counts.queue)),
-          Text(l10n.backupRestoreStations(counts.stations)),
-          const SizedBox(height: 24),
-          Text(
-            l10n.backupRestoreMergeNote,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              Text(
+                l10n.backupRestoreCreated(
+                  created,
+                  _platformName(header.platform),
+                ),
+                style: theme.textTheme.titleMedium,
+              ),
+              const SizedBox(height: 16),
+              Text(l10n.backupRestorePodcasts(counts.podcasts)),
+              Text(l10n.backupRestoreEpisodes(counts.episodes)),
+              Text(l10n.backupRestoreQueue(counts.queue)),
+              Text(l10n.backupRestoreStations(counts.stations)),
+              const SizedBox(height: 24),
+              Text(
+                l10n.backupRestoreMergeNote,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 24),
+              FilledButton(
+                onPressed: running ? null : () => _restore(context, ref),
+                child: running
+                    ? const SizedBox.square(
+                        dimension: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(l10n.backupRestoreAction),
+              ),
+            ],
           ),
-          const SizedBox(height: 24),
-          FilledButton(
-            onPressed: running ? null : () => _restore(context, ref),
-            child: running
-                ? const SizedBox.square(
-                    dimension: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Text(l10n.backupRestoreAction),
-          ),
-        ],
+        ),
       ),
     );
   }
