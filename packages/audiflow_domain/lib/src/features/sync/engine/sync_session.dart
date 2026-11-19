@@ -44,8 +44,27 @@ enum SyncOpening { create, join, resume }
 class SyncRelayFailure implements Exception {
   const SyncRelayFailure(this.code);
 
-  /// One of the `RelayError` codes.
+  /// One of the `RelayError` codes, or one of the engine's own below.
   final String code;
+
+  /// The connection closed or errored.
+  static const closed = 'closed';
+
+  /// Resuming without a token: the device has not enrolled.
+  static const notEnrolled = 'notEnrolled';
+
+  /// Joining found no snapshot yet: the creating device has not finished
+  /// its first upload, so the account's history is unknown. Retry later.
+  static const accountNotReady = 'accountNotReady';
+
+  /// A received frame could not be opened or merged. The cursor stays
+  /// before it, so nothing it carried is skipped; retrying may succeed
+  /// once a key arrives (M6g), else it needs attention.
+  static const unreadableFrame = 'unreadableFrame';
+
+  /// A local step failed (a database error); the outbox and cursor are
+  /// intact, so a new connection retries.
+  static const internal = 'internal';
 
   @override
   String toString() => 'SyncRelayFailure: $code';

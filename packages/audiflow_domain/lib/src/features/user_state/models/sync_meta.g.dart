@@ -109,14 +109,14 @@ void _syncMetaSerialize(
 ) {
   writer.writeBool(offsets[0], object.continuityRestorePending);
   writer.writeString(offsets[1], object.deviceId);
-  writer.writeLong(offsets[2], object.fullStateRequested);
-  writer.writeLong(offsets[3], object.fullStateSent);
+  writer.writeLong(offsets[2], object.storedFullStateRequested);
+  writer.writeLong(offsets[3], object.storedFullStateSent);
   writer.writeString(offsets[4], object.historyId);
   writer.writeLong(offsets[5], object.hlc);
-  writer.writeLong(offsets[6], object.lastSnapshotHlc);
+  writer.writeLong(offsets[6], object.storedLastSnapshotHlc);
   writer.writeBool(offsets[7], object.queueProjectionPending);
   writer.writeLong(offsets[8], object.schemaVersion);
-  writer.writeLong(offsets[9], object.serverCursor);
+  writer.writeLong(offsets[9], object.storedServerCursor);
   writer.writeLong(offsets[10], object.tombstoneHorizon);
 }
 
@@ -129,15 +129,15 @@ SyncMeta _syncMetaDeserialize(
   final object = SyncMeta();
   object.continuityRestorePending = reader.readBool(offsets[0]);
   object.deviceId = reader.readStringOrNull(offsets[1]);
-  object.fullStateRequested = reader.readLong(offsets[2]);
-  object.fullStateSent = reader.readLong(offsets[3]);
+  object.storedFullStateRequested = reader.readLongOrNull(offsets[2]);
+  object.storedFullStateSent = reader.readLongOrNull(offsets[3]);
   object.historyId = reader.readString(offsets[4]);
   object.hlc = reader.readLong(offsets[5]);
   object.id = id;
-  object.lastSnapshotHlc = reader.readLong(offsets[6]);
+  object.storedLastSnapshotHlc = reader.readLongOrNull(offsets[6]);
   object.queueProjectionPending = reader.readBool(offsets[7]);
   object.schemaVersion = reader.readLong(offsets[8]);
-  object.serverCursor = reader.readLong(offsets[9]);
+  object.storedServerCursor = reader.readLongOrNull(offsets[9]);
   object.tombstoneHorizon = reader.readLong(offsets[10]);
   return object;
 }
@@ -154,21 +154,21 @@ P _syncMetaDeserializeProp<P>(
     case 1:
       return (reader.readStringOrNull(offset)) as P;
     case 2:
-      return (reader.readLong(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 3:
-      return (reader.readLong(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 4:
       return (reader.readString(offset)) as P;
     case 5:
       return (reader.readLong(offset)) as P;
     case 6:
-      return (reader.readLong(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 7:
       return (reader.readBool(offset)) as P;
     case 8:
       return (reader.readLong(offset)) as P;
     case 9:
-      return (reader.readLong(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 10:
       return (reader.readLong(offset)) as P;
     default:
@@ -443,7 +443,25 @@ extension SyncMetaQueryFilter
   }
 
   QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
-  fullStateRequestedEqualTo(int value) {
+  storedFullStateRequestedIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'fullStateRequested'),
+      );
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
+  storedFullStateRequestedIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'fullStateRequested'),
+      );
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
+  storedFullStateRequestedEqualTo(int? value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         FilterCondition.equalTo(property: r'fullStateRequested', value: value),
@@ -452,7 +470,7 @@ extension SyncMetaQueryFilter
   }
 
   QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
-  fullStateRequestedGreaterThan(int value, {bool include = false}) {
+  storedFullStateRequestedGreaterThan(int? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         FilterCondition.greaterThan(
@@ -465,7 +483,7 @@ extension SyncMetaQueryFilter
   }
 
   QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
-  fullStateRequestedLessThan(int value, {bool include = false}) {
+  storedFullStateRequestedLessThan(int? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         FilterCondition.lessThan(
@@ -478,9 +496,9 @@ extension SyncMetaQueryFilter
   }
 
   QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
-  fullStateRequestedBetween(
-    int lower,
-    int upper, {
+  storedFullStateRequestedBetween(
+    int? lower,
+    int? upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
@@ -497,9 +515,26 @@ extension SyncMetaQueryFilter
     });
   }
 
-  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition> fullStateSentEqualTo(
-    int value,
-  ) {
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
+  storedFullStateSentIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'fullStateSent'),
+      );
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
+  storedFullStateSentIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'fullStateSent'),
+      );
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
+  storedFullStateSentEqualTo(int? value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         FilterCondition.equalTo(property: r'fullStateSent', value: value),
@@ -508,7 +543,7 @@ extension SyncMetaQueryFilter
   }
 
   QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
-  fullStateSentGreaterThan(int value, {bool include = false}) {
+  storedFullStateSentGreaterThan(int? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         FilterCondition.greaterThan(
@@ -520,10 +555,8 @@ extension SyncMetaQueryFilter
     });
   }
 
-  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition> fullStateSentLessThan(
-    int value, {
-    bool include = false,
-  }) {
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
+  storedFullStateSentLessThan(int? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         FilterCondition.lessThan(
@@ -535,9 +568,10 @@ extension SyncMetaQueryFilter
     });
   }
 
-  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition> fullStateSentBetween(
-    int lower,
-    int upper, {
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
+  storedFullStateSentBetween(
+    int? lower,
+    int? upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
@@ -818,7 +852,25 @@ extension SyncMetaQueryFilter
   }
 
   QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
-  lastSnapshotHlcEqualTo(int value) {
+  storedLastSnapshotHlcIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'lastSnapshotHlc'),
+      );
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
+  storedLastSnapshotHlcIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'lastSnapshotHlc'),
+      );
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
+  storedLastSnapshotHlcEqualTo(int? value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         FilterCondition.equalTo(property: r'lastSnapshotHlc', value: value),
@@ -827,7 +879,7 @@ extension SyncMetaQueryFilter
   }
 
   QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
-  lastSnapshotHlcGreaterThan(int value, {bool include = false}) {
+  storedLastSnapshotHlcGreaterThan(int? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         FilterCondition.greaterThan(
@@ -840,7 +892,7 @@ extension SyncMetaQueryFilter
   }
 
   QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
-  lastSnapshotHlcLessThan(int value, {bool include = false}) {
+  storedLastSnapshotHlcLessThan(int? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         FilterCondition.lessThan(
@@ -853,9 +905,9 @@ extension SyncMetaQueryFilter
   }
 
   QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
-  lastSnapshotHlcBetween(
-    int lower,
-    int upper, {
+  storedLastSnapshotHlcBetween(
+    int? lower,
+    int? upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
@@ -941,9 +993,26 @@ extension SyncMetaQueryFilter
     });
   }
 
-  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition> serverCursorEqualTo(
-    int value,
-  ) {
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
+  storedServerCursorIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'serverCursor'),
+      );
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
+  storedServerCursorIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'serverCursor'),
+      );
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
+  storedServerCursorEqualTo(int? value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         FilterCondition.equalTo(property: r'serverCursor', value: value),
@@ -952,7 +1021,7 @@ extension SyncMetaQueryFilter
   }
 
   QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
-  serverCursorGreaterThan(int value, {bool include = false}) {
+  storedServerCursorGreaterThan(int? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         FilterCondition.greaterThan(
@@ -964,10 +1033,8 @@ extension SyncMetaQueryFilter
     });
   }
 
-  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition> serverCursorLessThan(
-    int value, {
-    bool include = false,
-  }) {
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
+  storedServerCursorLessThan(int? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         FilterCondition.lessThan(
@@ -979,9 +1046,10 @@ extension SyncMetaQueryFilter
     });
   }
 
-  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition> serverCursorBetween(
-    int lower,
-    int upper, {
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
+  storedServerCursorBetween(
+    int? lower,
+    int? upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
@@ -1087,26 +1155,28 @@ extension SyncMetaQuerySortBy on QueryBuilder<SyncMeta, SyncMeta, QSortBy> {
     });
   }
 
-  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> sortByFullStateRequested() {
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy>
+  sortByStoredFullStateRequested() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'fullStateRequested', Sort.asc);
     });
   }
 
   QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy>
-  sortByFullStateRequestedDesc() {
+  sortByStoredFullStateRequestedDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'fullStateRequested', Sort.desc);
     });
   }
 
-  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> sortByFullStateSent() {
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> sortByStoredFullStateSent() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'fullStateSent', Sort.asc);
     });
   }
 
-  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> sortByFullStateSentDesc() {
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy>
+  sortByStoredFullStateSentDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'fullStateSent', Sort.desc);
     });
@@ -1136,13 +1206,14 @@ extension SyncMetaQuerySortBy on QueryBuilder<SyncMeta, SyncMeta, QSortBy> {
     });
   }
 
-  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> sortByLastSnapshotHlc() {
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> sortByStoredLastSnapshotHlc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastSnapshotHlc', Sort.asc);
     });
   }
 
-  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> sortByLastSnapshotHlcDesc() {
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy>
+  sortByStoredLastSnapshotHlcDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastSnapshotHlc', Sort.desc);
     });
@@ -1174,13 +1245,14 @@ extension SyncMetaQuerySortBy on QueryBuilder<SyncMeta, SyncMeta, QSortBy> {
     });
   }
 
-  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> sortByServerCursor() {
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> sortByStoredServerCursor() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'serverCursor', Sort.asc);
     });
   }
 
-  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> sortByServerCursorDesc() {
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy>
+  sortByStoredServerCursorDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'serverCursor', Sort.desc);
     });
@@ -1227,26 +1299,28 @@ extension SyncMetaQuerySortThenBy
     });
   }
 
-  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> thenByFullStateRequested() {
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy>
+  thenByStoredFullStateRequested() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'fullStateRequested', Sort.asc);
     });
   }
 
   QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy>
-  thenByFullStateRequestedDesc() {
+  thenByStoredFullStateRequestedDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'fullStateRequested', Sort.desc);
     });
   }
 
-  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> thenByFullStateSent() {
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> thenByStoredFullStateSent() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'fullStateSent', Sort.asc);
     });
   }
 
-  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> thenByFullStateSentDesc() {
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy>
+  thenByStoredFullStateSentDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'fullStateSent', Sort.desc);
     });
@@ -1288,13 +1362,14 @@ extension SyncMetaQuerySortThenBy
     });
   }
 
-  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> thenByLastSnapshotHlc() {
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> thenByStoredLastSnapshotHlc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastSnapshotHlc', Sort.asc);
     });
   }
 
-  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> thenByLastSnapshotHlcDesc() {
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy>
+  thenByStoredLastSnapshotHlcDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastSnapshotHlc', Sort.desc);
     });
@@ -1326,13 +1401,14 @@ extension SyncMetaQuerySortThenBy
     });
   }
 
-  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> thenByServerCursor() {
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> thenByStoredServerCursor() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'serverCursor', Sort.asc);
     });
   }
 
-  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> thenByServerCursorDesc() {
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy>
+  thenByStoredServerCursorDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'serverCursor', Sort.desc);
     });
@@ -1368,13 +1444,14 @@ extension SyncMetaQueryWhereDistinct
     });
   }
 
-  QueryBuilder<SyncMeta, SyncMeta, QDistinct> distinctByFullStateRequested() {
+  QueryBuilder<SyncMeta, SyncMeta, QDistinct>
+  distinctByStoredFullStateRequested() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'fullStateRequested');
     });
   }
 
-  QueryBuilder<SyncMeta, SyncMeta, QDistinct> distinctByFullStateSent() {
+  QueryBuilder<SyncMeta, SyncMeta, QDistinct> distinctByStoredFullStateSent() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'fullStateSent');
     });
@@ -1394,7 +1471,8 @@ extension SyncMetaQueryWhereDistinct
     });
   }
 
-  QueryBuilder<SyncMeta, SyncMeta, QDistinct> distinctByLastSnapshotHlc() {
+  QueryBuilder<SyncMeta, SyncMeta, QDistinct>
+  distinctByStoredLastSnapshotHlc() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'lastSnapshotHlc');
     });
@@ -1413,7 +1491,7 @@ extension SyncMetaQueryWhereDistinct
     });
   }
 
-  QueryBuilder<SyncMeta, SyncMeta, QDistinct> distinctByServerCursor() {
+  QueryBuilder<SyncMeta, SyncMeta, QDistinct> distinctByStoredServerCursor() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'serverCursor');
     });
@@ -1447,13 +1525,14 @@ extension SyncMetaQueryProperty
     });
   }
 
-  QueryBuilder<SyncMeta, int, QQueryOperations> fullStateRequestedProperty() {
+  QueryBuilder<SyncMeta, int?, QQueryOperations>
+  storedFullStateRequestedProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'fullStateRequested');
     });
   }
 
-  QueryBuilder<SyncMeta, int, QQueryOperations> fullStateSentProperty() {
+  QueryBuilder<SyncMeta, int?, QQueryOperations> storedFullStateSentProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'fullStateSent');
     });
@@ -1471,7 +1550,8 @@ extension SyncMetaQueryProperty
     });
   }
 
-  QueryBuilder<SyncMeta, int, QQueryOperations> lastSnapshotHlcProperty() {
+  QueryBuilder<SyncMeta, int?, QQueryOperations>
+  storedLastSnapshotHlcProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'lastSnapshotHlc');
     });
@@ -1490,7 +1570,7 @@ extension SyncMetaQueryProperty
     });
   }
 
-  QueryBuilder<SyncMeta, int, QQueryOperations> serverCursorProperty() {
+  QueryBuilder<SyncMeta, int?, QQueryOperations> storedServerCursorProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'serverCursor');
     });

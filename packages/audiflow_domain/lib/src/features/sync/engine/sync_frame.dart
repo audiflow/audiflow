@@ -140,7 +140,10 @@ Future<void> dropBeatenOps(
   Iterable<ReceivedField> fields, {
   required int nowMillis,
 }) => isar.writeTxn(() async {
-  for (final f in fields) {
+  // A field sent twice in a row merges as its last occurrence, so only
+  // that one decides.
+  final effective = {for (final f in fields) (f.entity, f.key, f.fieldId): f};
+  for (final f in effective.values) {
     if (f.entity == UserStateEntities.episodeCounter.name) continue;
     final op = await isar.outboxOps.getByEntityKeyFieldId(
       f.entity,

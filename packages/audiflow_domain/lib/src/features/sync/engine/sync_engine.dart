@@ -14,6 +14,7 @@ import '../../snapshot/snapshot_merger.dart';
 import '../../station/models/station.dart';
 import '../../user_state/models/outbox_op.dart';
 import '../../user_state/models/sync_meta.dart';
+import '../../user_state/services/sync_meta_access.dart';
 import '../../user_state/sync/user_state_fields.dart';
 import '../crypto/sync_cipher.dart';
 import '../protocol/sync_messages.dart';
@@ -49,7 +50,9 @@ class SyncEngine {
     this.maxFrameBytes = 700 * 1024,
     this.maxFramesPerPush = 100,
     this.maxPushBytes = 5 * 1024 * 1024,
-  }) : _nowMillis = nowMillis ?? _wallClock,
+  }) : assert(0 < maxOpsPerFrame && 0 < maxRowsPerFrame),
+       assert(0 < maxFrameBytes && 0 < maxFramesPerPush && 0 < maxPushBytes),
+       _nowMillis = nowMillis ?? _wallClock,
        _cipher = SyncCipher(_session.credentials.accountId) {
     // A failure nobody awaited yet must not surface as an unhandled error;
     // a later listener on [done] still sees it.
@@ -83,6 +86,27 @@ class SyncEngine {
   final int maxPushBytes;
 
   static int _wallClock() => DateTime.now().millisecondsSinceEpoch;
+
+  /// Send order of entities: a row's parent goes first, since a receiver
+  /// rejects a counter whose episode it has never seen, and frames merge
+  /// in order.
+  static final _entityRank = {
+    for (final (i, e) in [
+      UserStateEntities.podcast,
+      UserStateEntities.podcastInfo,
+      UserStateEntities.playOrder,
+      UserStateEntities.episode,
+      UserStateEntities.episodeCounter,
+      UserStateEntities.queueEntry,
+      UserStateEntities.station,
+      UserStateEntities.stationMember,
+      UserStateEntities.setting,
+    ].indexed)
+      e.name: i,
+  };
+
+  static int _rankOf(String entity) =>
+      _entityRank[entity] ?? _entityRank.length;
   static const _uuid = Uuid();
 
   /// Episode fields that station filters read (favorites only, hide
@@ -128,12 +152,23 @@ class SyncEngine {
     _opening = opening;
     _messages = _transport.messages.listen(
       (message) => _enqueue(() => _handle(message)),
+      onError: (Object e, StackTrace stack) {
+        _logger.w('Sync transport failed', error: e, stackTrace: stack);
+        _enqueue(() async {
+          throw const SyncRelayFailure(SyncRelayFailure.closed);
+        });
+      },
       onDone: () => _enqueue(() async {
-        throw const SyncRelayFailure('closed');
+        throw const SyncRelayFailure(SyncRelayFailure.closed);
       }),
     );
     _outboxWatch = _isar.outboxOps.watchLazy().listen((_) => _enqueue(_flush));
-    _enqueue(() async => _transport.send(await _openingMessage(opening)));
+    _enqueue(() async {
+      // Every later step reads it; a first launch writes it before sync
+      // can be turned on, but a reset may have cleared it.
+      await _isar.writeTxn(() => loadOrCreateSyncMeta(_isar));
+      _transport.send(await _openingMessage(opening));
+    });
     return _ready.future;
   }
 
@@ -147,11 +182,19 @@ class SyncEngine {
     await _outboxWatch?.cancel();
     await _messages?.cancel();
     await _queue;
-    await _transport.close();
     if (!_ready.isCompleted) {
-      _ready.completeError(const SyncRelayFailure('closed'));
+      _ready.completeError(const SyncRelayFailure(SyncRelayFailure.closed));
     }
     if (!_done.isCompleted) _done.complete();
+    await _closeTransport();
+  }
+
+  Future<void> _closeTransport() async {
+    try {
+      await _transport.close();
+    } on Object catch (e, stack) {
+      _logger.w('Sync transport close failed', error: e, stackTrace: stack);
+    }
   }
 
   void _enqueue(Future<void> Function() step) {
@@ -162,8 +205,11 @@ class SyncEngine {
       } on SyncRelayFailure catch (e) {
         await _fail(e);
       } on Object catch (e, stack) {
-        // IsarError extends Error; one bad step must not stop the queue.
+        // IsarError extends Error. A failed step can leave a push waiting
+        // or a merge half projected, so the session ends; the outbox and
+        // cursor only move once a step succeeds, so reconnecting retries.
         _logger.e('Sync step failed', error: e, stackTrace: stack);
+        await _fail(const SyncRelayFailure(SyncRelayFailure.internal));
       }
     });
   }
@@ -177,11 +223,16 @@ class SyncEngine {
     _inFlight = null;
     _fullState = null;
     _snapshotPending = false;
-    await _outboxWatch?.cancel();
-    await _messages?.cancel();
-    await _transport.close();
+    // Completed first: nothing below may keep a caller waiting.
     if (!_ready.isCompleted) _ready.completeError(failure);
     if (!_done.isCompleted) _done.completeError(failure);
+    try {
+      await _outboxWatch?.cancel();
+      await _messages?.cancel();
+    } on Object catch (e, stack) {
+      _logger.w('Sync cleanup failed', error: e, stackTrace: stack);
+    }
+    await _closeTransport();
   }
 
   Future<ClientMessage> _openingMessage(SyncOpening opening) async {
@@ -210,7 +261,9 @@ class SyncEngine {
         );
       case SyncOpening.resume:
         final token = _session.token;
-        if (token == null) throw const SyncRelayFailure('notEnrolled');
+        if (token == null) {
+          throw const SyncRelayFailure(SyncRelayFailure.notEnrolled);
+        }
         return Hello(
           accountId: _session.accountId,
           deviceId: _session.device.deviceId,
@@ -241,10 +294,6 @@ class SyncEngine {
       throw const SyncRelayFailure(RelayError.tooOld);
     }
     var changed = false;
-    if (welcome.token case final token?) {
-      _session.token = token;
-      changed = true;
-    }
     if (_session.dataKey == null) {
       final keys = await SyncKeyDerivation.derive(_session.syncKey);
       _session.dataKey = await KeyWraps.openSyncWrap(
@@ -254,11 +303,15 @@ class SyncEngine {
       );
       changed = true;
     }
-    if (changed) _onSessionChanged?.call(_session);
+    final snapshot = welcome.snapshot;
+    // Without the snapshot a joining device cannot learn the account's
+    // history, and its own would spread with its upload.
+    if (_opening == SyncOpening.join && snapshot == null) {
+      throw const SyncRelayFailure(SyncRelayFailure.accountNotReady);
+    }
     // Recorded before anything is sent, so a stop before the relay holds
     // the whole state sends it again on the next connection (plan P9).
     if (_opening != SyncOpening.resume) await _requestFullState();
-    final snapshot = welcome.snapshot;
     // Joining merges it even at the same cursor: a snapshot of a new account
     // covers seq 0.
     if (snapshot != null &&
@@ -266,6 +319,15 @@ class SyncEngine {
             (await _meta())!.serverCursor < snapshot.coversSeq)) {
       await _mergeSnapshot(snapshot);
     }
+    // Handed out last: the caller stores the session, and a device with a
+    // stored token resumes. A stop before this point joins again, which
+    // repeats the history adoption and the snapshot merge; the relay
+    // re-enrolls the same device.
+    if (welcome.token case final token?) {
+      _session.token = token;
+      changed = true;
+    }
+    if (changed) _onSessionChanged?.call(_session);
     _welcomed = true;
   }
 
@@ -274,15 +336,22 @@ class SyncEngine {
       await _open(snapshot.blob, SealPurpose.snapshot),
     );
     // Joining adopts the account's history (plan P9), so its tombstones
-    // and horizon apply here from now on.
+    // and horizon apply here from now on. The horizon is the account's:
+    // this device's old one belongs to another history and would drop
+    // live rows of this one.
     if (_opening == SyncOpening.join && file.header.historyId.isNotEmpty) {
       await _isar.writeTxn(() async {
         final meta = await _isar.syncMetas.get(SyncMeta.singletonId);
-        if (meta == null) return;
-        await _isar.syncMetas.put(meta..historyId = file.header.historyId);
+        if (meta == null || meta.historyId == file.header.historyId) return;
+        await _isar.syncMetas.put(
+          meta
+            ..historyId = file.header.historyId
+            ..tombstoneHorizon = file.header.tombstoneHorizon,
+        );
       });
     }
-    final merged = await _merger.mergeSections(
+    final now = _nowMillis();
+    final merged = await _mergerAt(now).mergeSections(
       file.body.sections,
       historyId: file.header.historyId,
       tombstoneHorizon: file.header.tombstoneHorizon,
@@ -291,7 +360,7 @@ class SyncEngine {
     await dropBeatenOps(
       _isar,
       receivedFields(file.body.sections),
-      nowMillis: _nowMillis(),
+      nowMillis: now,
     );
     await _project(file.body.sections, merged, wholeLibrary: true);
     await _setCursor(snapshot.coversSeq);
@@ -324,27 +393,29 @@ class SyncEngine {
   Future<void> _mergeFrame(RelayFrame relayed) async {
     final SyncFrame frame;
     final SnapshotMergeResult merged;
+    // The merge clamps clocks against this time; cleanup must use the same
+    // cutoff, or a local write made meanwhile could look beaten.
+    final now = _nowMillis();
     try {
       frame = SyncFrame.decode(await _open(relayed.blob, SealPurpose.frame));
-      merged = await _merger.mergeSections(
+      merged = await _mergerAt(now).mergeSections(
         frame.sections,
         historyId: frame.historyId,
         recordOps: false,
       );
-    } on SyncCryptoFailure catch (e) {
-      // Skipped, not retried: the cursor moves on so one frame cannot stall
-      // sync, and the next compacted snapshot carries its state.
+    } on Object catch (e) {
+      if (e is! SyncCryptoFailure &&
+          e is! SnapshotReadFailure &&
+          e is! FormatException) {
+        rethrow;
+      }
+      // Not skipped: the cursor stays before the frame, so a snapshot this
+      // device uploads never claims to cover what it did not merge.
       _logger.w('Sync frame ${relayed.seq} unreadable: $e');
-      return;
-    } on SnapshotReadFailure catch (e) {
-      _logger.w('Sync frame ${relayed.seq} rejected: $e');
-      return;
-    } on FormatException catch (e) {
-      _logger.w('Sync frame ${relayed.seq} malformed: ${e.message}');
-      return;
+      throw const SyncRelayFailure(SyncRelayFailure.unreadableFrame);
     }
     final fields = receivedFields(frame.sections).toList();
-    await dropBeatenOps(_isar, fields, nowMillis: _nowMillis());
+    await dropBeatenOps(_isar, fields, nowMillis: now);
     final stationsAffected = fields.any(
       (f) =>
           f.entity == UserStateEntities.episode.name &&
@@ -358,7 +429,8 @@ class SyncEngine {
     );
   }
 
-  SnapshotMerger get _merger => SnapshotMerger(_isar, nowMillis: _nowMillis);
+  SnapshotMerger _mergerAt(int now) =>
+      SnapshotMerger(_isar, nowMillis: () => now);
 
   /// Turns merged state into the rows the app reads. Position, progress,
   /// favorites, and settings are read from the state itself and need none;
@@ -441,47 +513,59 @@ class SyncEngine {
 
   Future<void> _flush() async {
     if (!_caughtUp || _inFlight != null || _snapshotPending) return;
-    final ops = _takeWholeRows(
+    // The cap may have dropped ops while connected; only the whole state
+    // carries what they changed.
+    final meta = (await _meta())!;
+    if (meta.fullStateSent < meta.fullStateRequested) return _pushFullState();
+    var rows = _takeWholeRows(
       await _isar.outboxOps.where().sortByOpId().findAll(),
     );
-    if (ops.isEmpty) return;
-    final frame = SyncFrame.fromOps(
-      ops,
-      historyId: (await _meta())?.historyId ?? '',
-      deviceId: _session.device.deviceId,
-    );
-    final clientId = _uuid.v7();
-    _inFlight = (
-      clientIds: {clientId},
-      ops: {for (final o in ops) o.id: o.hlc},
-      fullState: false,
-    );
-    _transport.send(
-      PushFrames([
-        PushFrame(
-          clientId: clientId,
-          blob: await _seal(frame.encode(), SealPurpose.frame),
-        ),
-      ]),
-    );
+    if (rows.isEmpty) return;
+    while (true) {
+      final ops = rows.expand((r) => r).toList();
+      final frame = SyncFrame.fromOps(
+        ops,
+        historyId: meta.historyId,
+        deviceId: _session.device.deviceId,
+      );
+      final blob = await _seal(frame.encode(), SealPurpose.frame);
+      // Halved until it fits the relay's frame limit; a single row too
+      // large goes as is, and the relay's refusal ends the session.
+      if (maxFrameBytes < blob.length && 1 < rows.length) {
+        rows = rows.sublist(0, rows.length ~/ 2);
+        continue;
+      }
+      final clientId = _uuid.v7();
+      _inFlight = (
+        clientIds: {clientId},
+        ops: {for (final o in ops) o.id: o.hlc},
+        fullState: false,
+      );
+      _transport.send(PushFrames([PushFrame(clientId: clientId, blob: blob)]));
+      return;
+    }
   }
 
-  /// The oldest rows' ops, each row complete: a receiver that has never
-  /// seen a row needs its required fields (an episode's podcastKey) in the
-  /// same frame, or it rejects the frame.
-  List<OutboxOp> _takeWholeRows(List<OutboxOp> ops) {
+  /// The oldest rows' ops, each row complete and parents first: a
+  /// receiver that has never seen a row needs its required fields (an
+  /// episode's podcastKey) in the same frame, and an episode before its
+  /// counters, or it rejects them.
+  List<List<OutboxOp>> _takeWholeRows(List<OutboxOp> ops) {
     final byRow = <(String, String), List<OutboxOp>>{};
     for (final op in ops) {
       (byRow[(op.entity, op.key)] ??= []).add(op);
     }
-    final taken = <OutboxOp>[];
+    final taken = <List<OutboxOp>>[];
+    var count = 0;
     for (final row in byRow.values) {
-      if (taken.isNotEmpty && maxOpsPerFrame <= taken.length + row.length) {
-        break;
-      }
-      taken.addAll(row);
+      if (taken.isNotEmpty && maxOpsPerFrame <= count + row.length) break;
+      taken.add(row);
+      count += row.length;
     }
-    return taken;
+    // Stable, so rows of one entity keep their outbox order.
+    return taken..sort(
+      (a, b) => _rankOf(a.first.entity).compareTo(_rankOf(b.first.entity)),
+    );
   }
 
   /// Sends the whole state as frames: after creating or joining, so
@@ -494,20 +578,20 @@ class SyncEngine {
     final pending = await _isar.outboxOps.where().findAll();
     final exported = await SnapshotExporter(_isar).export();
     final historyId = (await _meta())?.historyId ?? '';
-    final rows = [
-      for (final MapEntry(key: entity, value: list)
-          in exported.body.sections.entries)
-        for (final row in list) (entity, row),
-    ];
+    final units = _units(exported.body.sections);
     final frames = <PushFrame>[];
-    for (var start = 0; start < rows.length; start += maxRowsPerFrame) {
-      frames.addAll(
-        await _sealRows(
-          rows.skip(start).take(maxRowsPerFrame).toList(),
-          historyId,
-        ),
-      );
+    var batch = <List<(String, SnapshotRow)>>[];
+    var count = 0;
+    for (final unit in units) {
+      if (batch.isNotEmpty && maxRowsPerFrame < count + unit.length) {
+        frames.addAll(await _sealRows(batch, historyId));
+        batch = [];
+        count = 0;
+      }
+      batch.add(unit);
+      count += unit.length;
     }
+    if (batch.isNotEmpty) frames.addAll(await _sealRows(batch, historyId));
     if (frames.isEmpty) {
       await _recordFullStateSent(request);
       return _uploadSnapshot();
@@ -522,15 +606,47 @@ class SyncEngine {
     await _sendFullStatePush();
   }
 
-  /// Seals [rows] as one frame, halving it until it fits the relay's
-  /// frame limit. A single row too large goes as is and the relay refuses
+  /// The exported rows in send order, in units a frame never splits: a
+  /// podcast with its details, so a device seeing the podcast first titles
+  /// it right; parents before children otherwise (see [_entityRank]).
+  List<List<(String, SnapshotRow)>> _units(
+    Map<String, List<SnapshotRow>> sections,
+  ) {
+    final info = {
+      for (final row in sections[UserStateEntities.podcastInfo.name] ?? [])
+        row.key: row,
+    };
+    final entities = sections.keys.toList()
+      ..sort((a, b) => _rankOf(a).compareTo(_rankOf(b)));
+    final units = <List<(String, SnapshotRow)>>[];
+    for (final entity in entities) {
+      if (entity == UserStateEntities.podcastInfo.name) continue;
+      for (final row in sections[entity]!) {
+        final details = entity == UserStateEntities.podcast.name
+            ? info.remove(row.key)
+            : null;
+        units.add([
+          (entity, row),
+          if (details != null) (UserStateEntities.podcastInfo.name, details),
+        ]);
+      }
+    }
+    // Details without a podcast row, kept for completeness.
+    for (final row in info.values) {
+      units.add([(UserStateEntities.podcastInfo.name, row)]);
+    }
+    return units;
+  }
+
+  /// Seals [units] as one frame, halving it until it fits the relay's
+  /// frame limit. A single unit too large goes as is and the relay refuses
   /// it, which ends the session with a logged failure.
   Future<List<PushFrame>> _sealRows(
-    List<(String, SnapshotRow)> rows,
+    List<List<(String, SnapshotRow)>> units,
     String historyId,
   ) async {
     final sections = <String, List<SnapshotRow>>{};
-    for (final (entity, row) in rows) {
+    for (final (entity, row) in units.expand((u) => u)) {
       (sections[entity] ??= []).add(row);
     }
     final frame = SyncFrame(
@@ -539,13 +655,13 @@ class SyncEngine {
       sections: sections,
     );
     final blob = await _seal(frame.encode(), SealPurpose.frame);
-    if (blob.length <= maxFrameBytes || rows.length == 1) {
+    if (blob.length <= maxFrameBytes || units.length == 1) {
       return [PushFrame(clientId: _uuid.v7(), blob: blob)];
     }
-    final half = rows.length ~/ 2;
+    final half = units.length ~/ 2;
     return [
-      ...await _sealRows(rows.sublist(0, half), historyId),
-      ...await _sealRows(rows.sublist(half), historyId),
+      ...await _sealRows(units.sublist(0, half), historyId),
+      ...await _sealRows(units.sublist(half), historyId),
     ];
   }
 

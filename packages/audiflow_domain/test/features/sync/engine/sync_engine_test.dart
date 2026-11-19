@@ -114,6 +114,16 @@ class _Device {
       (await isar.syncMetas.get(SyncMeta.singletonId))!;
 }
 
+/// The code [session] failed with, or null when it did not fail.
+Future<String?> _failureCode(Future<void> session) async {
+  try {
+    await session;
+    return null;
+  } on SyncRelayFailure catch (e) {
+    return e.code;
+  }
+}
+
 void main() {
   late InMemoryRelay relay;
   late _Device a;
@@ -454,6 +464,107 @@ void main() {
     }
   });
 
+  test('an unreadable frame ends the session before the cursor', () async {
+    await pair();
+    final before = (await b.meta()).serverCursor;
+    final done = b.engine!.done;
+
+    relay.inject(credentials.accountIdText, 'device-x', Uint8List(40));
+    await settle();
+
+    check(await _failureCode(done)).equals(SyncRelayFailure.unreadableFrame);
+    check((await b.meta()).serverCursor).equals(before);
+  });
+
+  test('joining before the account has a snapshot is retried', () async {
+    await a.setPosition('ek-a', 1);
+    relay.holdAcks = true;
+    await a.connect(relay, SyncOpening.create, credentials: credentials);
+    await settle();
+
+    final joining = b.connect(
+      relay,
+      SyncOpening.join,
+      credentials: credentials,
+    );
+
+    check(await _failureCode(joining)).equals(SyncRelayFailure.accountNotReady);
+    check(b.session.token).isNull();
+  });
+
+  test('joining takes the account horizon with its history', () async {
+    await b.isar.writeTxn(() async {
+      final meta = (await b.isar.syncMetas.get(SyncMeta.singletonId))!;
+      await b.isar.syncMetas.put(meta..tombstoneHorizon = 1 << 60);
+    });
+
+    await pair();
+
+    final meta = await b.meta();
+    check(meta.historyId).equals((await a.meta()).historyId);
+    check(meta.tombstoneHorizon).equals((await a.meta()).tombstoneHorizon);
+  });
+
+  test('a transport error ends the session', () async {
+    await pair();
+    final done = a.engine!.done;
+
+    a.transport!.fail(StateError('socket'));
+    await settle();
+
+    check(await _failureCode(done)).equals(SyncRelayFailure.closed);
+  });
+
+  test('a podcast and its details travel in one frame', () async {
+    await a.connect(relay, SyncOpening.create, credentials: credentials);
+    await settle();
+    await b.setSubscribed('pk2', subscribed: true);
+    await b.isar.writeTxn(
+      () => b.isar.subscriptions.put(
+        Subscription()
+          ..itunesId = '2'
+          ..feedUrl = 'https://example.com/pk2.xml'
+          ..title = 'Show Two'
+          ..artistName = 'Host'
+          ..subscribedAt = DateTime.utc(2026)
+          ..podcastKey = 'pk2',
+      ),
+    );
+
+    await b.connect(
+      relay,
+      SyncOpening.join,
+      credentials: credentials,
+      maxRowsPerFrame: 1,
+    );
+    await settle();
+
+    final sub = await a.isar.subscriptions
+        .filter()
+        .podcastKeyEqualTo('pk2')
+        .findFirst();
+    check(sub).isNotNull().has((s) => s.title, 'title').equals('Show Two');
+  });
+
+  test('metadata from before sync reads its new counters as 0', () async {
+    await a.isar.writeTxn(() async {
+      final meta = (await a.isar.syncMetas.get(SyncMeta.singletonId))!;
+      await a.isar.syncMetas.put(
+        meta
+          ..storedServerCursor = null
+          ..storedFullStateRequested = null
+          ..storedFullStateSent = null
+          ..storedLastSnapshotHlc = null,
+      );
+    });
+
+    final meta = await a.meta();
+    check(meta.serverCursor).equals(0);
+    check(meta.fullStateRequested).equals(0);
+    check(meta.fullStateSent).equals(0);
+    check(meta.lastSnapshotHlc).equals(0);
+  });
+
   group('dropBeatenOps', () {
     Future<void> putOp(String entity, int hlc) => a.isar.writeTxn(
       () => a.isar.outboxOps.put(
@@ -479,6 +590,25 @@ void main() {
     test('keeps a newer local op', () async {
       await putOp('episode', 30);
       await dropBeatenOps(a.isar, [field('episode', 20)], nowMillis: a.now);
+      check(await a.isar.outboxOps.count()).equals(1);
+    });
+
+    test('only the last occurrence of a field decides', () async {
+      await putOp('episode', 20);
+      await a.isar.writeTxn(() async {
+        final op = (await a.isar.outboxOps.where().findFirst())!;
+        await a.isar.outboxOps.put(op..payload = [5]);
+      });
+      ReceivedField at(int byte) => (
+        entity: 'episode',
+        key: 'k',
+        fieldId: 1,
+        hlc: 20,
+        value: Uint8List.fromList([byte]),
+      );
+      // 9 would beat the pending 5; the later 1 does not, and it is the one
+      // the merge keeps.
+      await dropBeatenOps(a.isar, [at(9), at(1)], nowMillis: a.now);
       check(await a.isar.outboxOps.count()).equals(1);
     });
 

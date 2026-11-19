@@ -21,7 +21,13 @@ class InMemoryRelay {
   int maxFramesPerPush = 100;
 
   /// Frames per catch-up message; a longer catch-up sets `more`.
-  int catchUpPage = 1 << 30;
+  int get catchUpPage => _catchUpPage;
+  set catchUpPage(int value) {
+    if (value <= 0) throw RangeError.value(value, 'catchUpPage');
+    _catchUpPage = value;
+  }
+
+  int _catchUpPage = 1 << 30;
 
   /// When set, pushes are stored and fanned out but never acknowledged, as
   /// when the connection drops before the ack arrives.
@@ -40,6 +46,21 @@ class InMemoryRelay {
   Future<void> disconnectAll() async {
     for (final t in _open.toList()) {
       await t.close();
+    }
+  }
+
+  /// Stores [blob] as the next frame of [accountId] from [deviceId] and
+  /// fans it out, as a misbehaving device's push would.
+  void inject(String accountId, String deviceId, Uint8List blob) {
+    final account = _accounts[accountId]!;
+    final frame = RelayFrame(
+      seq: ++account.head,
+      deviceId: deviceId,
+      blob: blob,
+    );
+    account.frames.add(frame);
+    for (final c in account.connections) {
+      c._deliver(Frames([frame]));
     }
   }
 
@@ -221,6 +242,11 @@ class InMemoryTransport implements SyncTransport {
     });
   }
 
+  /// Fails the message stream, as a socket error does.
+  void fail(Object error) {
+    if (!_closed) _controller.addError(error);
+  }
+
   void _deliver(RelayMessage message) {
     if (_closed) return;
     final text = message.encode();
@@ -236,6 +262,8 @@ class InMemoryTransport implements SyncTransport {
     _closed = true;
     _account?.connections.remove(this);
     _relay._open.remove(this);
-    await _controller.close();
+    // Not awaited: a single-subscription stream's close completes only
+    // once a listener takes the done event, and none may be listening.
+    unawaited(_controller.close());
   }
 }
