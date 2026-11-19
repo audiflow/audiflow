@@ -11,6 +11,8 @@ export const MAX_MESSAGE_CHARS = 8 * 1024 * 1024;
 /** Largest sealed frame, as base64url characters. */
 export const MAX_FRAME_CHARS = 1024 * 1024;
 export const MAX_FRAMES_PER_PUSH = 100;
+/** Largest catch-up message sent; a longer backlog goes in several. */
+export const MAX_CATCH_UP_CHARS = 4 * 1024 * 1024;
 
 export interface DeviceInfo {
   deviceId: string;
@@ -78,7 +80,22 @@ function str(v: unknown, max = 4096): string {
 
 function b64(v: unknown, max = 4096): string {
   const s = str(v, max);
-  if (!BASE64URL.test(s)) throw new Invalid();
+  // A length of 1 mod 4 cannot encode whole bytes, and atob would throw
+  // outside the parser.
+  if (!BASE64URL.test(s) || s.length % 4 === 1) throw new Invalid();
+  return s;
+}
+
+/** A 32-byte key, secret, or token: exactly 43 base64url characters. */
+function key32(v: unknown): string {
+  const s = b64(v, 43);
+  if (s.length !== 43) throw new Invalid();
+  return s;
+}
+
+function accountId(v: unknown): string {
+  const s = str(v, 22);
+  if (!isAccountId(s)) throw new Invalid();
   return s;
 }
 
@@ -102,7 +119,7 @@ function device(v: unknown): DeviceInfo {
     deviceId: str(d.deviceId, 64),
     name: str(d.name, 128),
     platform: str(d.platform, 16),
-    publicKey: b64(d.publicKey, 64),
+    publicKey: key32(d.publicKey),
   };
 }
 
@@ -114,25 +131,25 @@ export function parseClientMessage(text: string): ClientMessage | null {
       case 'create':
         return {
           type: 'create',
-          accountId: str(m.accountId, 22),
-          authVerifier: b64(m.authVerifier, 64),
+          accountId: accountId(m.accountId),
+          authVerifier: key32(m.authVerifier),
           syncWrap: b64(m.syncWrap, 256),
           device: device(m.device),
         };
       case 'enroll':
         return {
           type: 'enroll',
-          accountId: str(m.accountId, 22),
-          authSecret: b64(m.authSecret, 64),
+          accountId: accountId(m.accountId),
+          authSecret: key32(m.authSecret),
           device: device(m.device),
         };
       case 'hello':
         return {
           type: 'hello',
           protocolVersion: int(m.protocolVersion),
-          accountId: str(m.accountId, 22),
+          accountId: accountId(m.accountId),
           deviceId: str(m.deviceId, 64),
-          token: b64(m.token, 64),
+          token: key32(m.token),
           cursor: int(m.cursor),
         };
       case 'push': {

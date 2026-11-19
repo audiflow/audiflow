@@ -5,6 +5,7 @@ import {
   type ClientMessage,
   type DeviceInfo,
   type ErrorCode,
+  MAX_CATCH_UP_CHARS,
   MAX_MESSAGE_CHARS,
   MIN_PROTOCOL_VERSION,
   decodeBase64Url,
@@ -14,13 +15,17 @@ import {
 
 /** What a socket is, kept across hibernation. */
 interface Attachment {
+  /** Where the connection comes from, to count its failed attempts. */
+  source: string;
   deviceId?: string;
 }
 
-/** Attempts to open a session per account and minute. */
-const MAX_OPENINGS_PER_MINUTE = 60;
-/** Wrong sync keys per account and hour before enrolling is refused. */
+/** Failed resumes and creates per source and minute. */
+const MAX_FAILED_OPENINGS_PER_MINUTE = 30;
+/** Wrong sync keys per source and hour before enrolling is refused. */
 const MAX_FAILED_ENROLLS_PER_HOUR = 10;
+/** Frames read per page while catching a device up. */
+const CATCH_UP_PAGE = 200;
 
 /**
  * One account: orders, stores, and fans out sealed frames, and keeps the
@@ -34,11 +39,14 @@ export class AccountRelay extends DurableObject<Env> {
   private readonly sql: SqlStorage;
 
   /**
-   * In memory only: a hibernated or evicted object starts counting again,
-   * which bounds abuse per wake-up rather than exactly.
+   * Failed attempts by source. Only failures count, so a stranger who
+   * knows the account id cannot lock its devices out; and the 256-bit
+   * sync key makes guessing hopeless anyway, so the limits only bound
+   * load. In memory only: a hibernated or evicted object starts counting
+   * again, which bounds abuse per wake-up rather than exactly.
    */
-  private readonly openings: number[] = [];
-  private readonly failedEnrolls: number[] = [];
+  private readonly failedOpenings = new Map<string, number[]>();
+  private readonly failedEnrolls = new Map<string, number[]>();
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
@@ -80,7 +88,8 @@ export class AccountRelay extends DurableObject<Env> {
     }
     const pair = new WebSocketPair();
     this.ctx.acceptWebSocket(pair[1]);
-    pair[1].serializeAttachment({} satisfies Attachment);
+    const source = request.headers.get('CF-Connecting-IP') ?? 'unknown';
+    pair[1].serializeAttachment({ source } satisfies Attachment);
     return new Response(null, { status: 101, webSocket: pair[0] });
   }
 
@@ -115,8 +124,14 @@ export class AccountRelay extends DurableObject<Env> {
     ws: WebSocket,
     m: Extract<ClientMessage, { type: 'create' }>,
   ): Promise<void> {
-    if (!this.allowOpening()) return this.error(ws, 'rateLimited');
-    if (this.account() !== null) return this.error(ws, 'exists');
+    const source = this.source(ws);
+    if (!this.withinBudget(this.failedOpenings, source, MINUTE, MAX_FAILED_OPENINGS_PER_MINUTE)) {
+      return this.error(ws, 'rateLimited');
+    }
+    if (this.account() !== null) {
+      recordFailure(this.failedOpenings, source);
+      return this.error(ws, 'exists');
+    }
     this.sql.exec(
       'INSERT INTO account (id, account_id, verifier, sync_wrap, created_at) VALUES (1, ?, ?, ?, ?)',
       m.accountId,
@@ -132,15 +147,18 @@ export class AccountRelay extends DurableObject<Env> {
     ws: WebSocket,
     m: Extract<ClientMessage, { type: 'enroll' }>,
   ): Promise<void> {
-    if (!this.allowOpening()) return this.error(ws, 'rateLimited');
-    if (!this.allowEnrollAttempt()) return this.error(ws, 'rateLimited');
-    const account = this.account();
-    if (account === null || account.account_id !== m.accountId) {
-      return this.error(ws, 'unauthorized');
+    const source = this.source(ws);
+    if (!this.withinBudget(this.failedEnrolls, source, HOUR, MAX_FAILED_ENROLLS_PER_HOUR)) {
+      return this.error(ws, 'rateLimited');
     }
+    const account = this.account();
     const verifier = await sha256(decodeBase64Url(m.authSecret));
-    if (!timingSafeEqual(verifier, decodeBase64Url(account.verifier))) {
-      this.failedEnrolls.push(Date.now());
+    if (
+      account === null ||
+      account.account_id !== m.accountId ||
+      !timingSafeEqual(verifier, decodeBase64Url(account.verifier))
+    ) {
+      recordFailure(this.failedEnrolls, source);
       return this.error(ws, 'unauthorized');
     }
     const existing = this.device(m.device.deviceId);
@@ -155,20 +173,26 @@ export class AccountRelay extends DurableObject<Env> {
     ws: WebSocket,
     m: Extract<ClientMessage, { type: 'hello' }>,
   ): Promise<void> {
-    if (!this.allowOpening()) return this.error(ws, 'rateLimited');
     if (m.protocolVersion < MIN_PROTOCOL_VERSION) {
       return this.error(ws, 'tooOld');
     }
+    const source = this.source(ws);
+    if (!this.withinBudget(this.failedOpenings, source, MINUTE, MAX_FAILED_OPENINGS_PER_MINUTE)) {
+      return this.error(ws, 'rateLimited');
+    }
     const account = this.account();
     const device = this.device(m.deviceId);
-    if (account === null || account.account_id !== m.accountId || device === null) {
+    const presented = await sha256(decodeBase64Url(m.token));
+    if (
+      account === null ||
+      account.account_id !== m.accountId ||
+      device === null ||
+      !timingSafeEqual(presented, decodeBase64Url(device.token_hash))
+    ) {
+      recordFailure(this.failedOpenings, source);
       return this.error(ws, 'unauthorized');
     }
     if (device.revoked_at !== null) return this.error(ws, 'revoked');
-    const presented = await sha256(decodeBase64Url(m.token));
-    if (!timingSafeEqual(presented, decodeBase64Url(device.token_hash))) {
-      return this.error(ws, 'unauthorized');
-    }
     this.admit(ws, m.deviceId, { cursor: m.cursor, token: null });
   }
 
@@ -230,7 +254,7 @@ export class AccountRelay extends DurableObject<Env> {
     deviceId: string,
     opts: { cursor: number; token: string | null },
   ): void {
-    ws.serializeAttachment({ deviceId } satisfies Attachment);
+    ws.serializeAttachment({ source: this.source(ws), deviceId } satisfies Attachment);
     const account = this.account()!;
     const snapshot = this.snapshot();
     const sendSnapshot =
@@ -259,15 +283,44 @@ export class AccountRelay extends DurableObject<Env> {
         devices,
       }),
     );
-    const after = sendSnapshot ? snapshot.covers_seq : opts.cursor;
-    const frames = this.sql
-      .exec<{ seq: number; device_id: string; blob: string }>(
-        'SELECT seq, device_id, blob FROM frame WHERE ? < seq ORDER BY seq',
-        after,
-      )
-      .toArray()
-      .map((f) => ({ seq: f.seq, deviceId: f.device_id, blob: f.blob }));
-    send(ws, JSON.stringify({ type: 'frames', frames }));
+    this.sendCatchUp(ws, sendSnapshot ? snapshot.covers_seq : opts.cursor);
+  }
+
+  /**
+   * Sends every frame after [after] in seq order, paged from storage and
+   * split into messages of at most [MAX_CATCH_UP_CHARS], so a long backlog
+   * never sits in memory whole. Always sends at least one (possibly empty)
+   * message. Storage calls are synchronous, so no push interleaves.
+   */
+  private sendCatchUp(ws: WebSocket, after: number): void {
+    let batch: { seq: number; deviceId: string; blob: string }[] = [];
+    let chars = 0;
+    let sent = false;
+    const flush = () => {
+      send(ws, JSON.stringify({ type: 'frames', frames: batch }));
+      batch = [];
+      chars = 0;
+      sent = true;
+    };
+    let cursor = after;
+    for (;;) {
+      const page = this.sql
+        .exec<{ seq: number; device_id: string; blob: string }>(
+          'SELECT seq, device_id, blob FROM frame WHERE ? < seq ORDER BY seq LIMIT ?',
+          cursor,
+          CATCH_UP_PAGE,
+        )
+        .toArray();
+      for (const f of page) {
+        const size = f.blob.length + 64;
+        if (batch.length !== 0 && MAX_CATCH_UP_CHARS < chars + size) flush();
+        batch.push({ seq: f.seq, deviceId: f.device_id, blob: f.blob });
+        chars += size;
+        cursor = f.seq;
+      }
+      if (page.length < CATCH_UP_PAGE) break;
+    }
+    if (batch.length !== 0 || !sent) flush();
   }
 
   /** Registers or re-enrolls [device] and returns its new token. */
@@ -295,13 +348,26 @@ export class AccountRelay extends DurableObject<Env> {
     send(ws, JSON.stringify({ type: 'error', code }));
   }
 
-  private allowOpening(): boolean {
-    return admitWithin(this.openings, 60_000, MAX_OPENINGS_PER_MINUTE);
+  private source(ws: WebSocket): string {
+    const a = ws.deserializeAttachment() as Attachment | null;
+    return a?.source ?? 'unknown';
   }
 
-  private allowEnrollAttempt(): boolean {
-    prune(this.failedEnrolls, 3_600_000);
-    return this.failedEnrolls.length < MAX_FAILED_ENROLLS_PER_HOUR;
+  /** Whether [source] has failures left in the window; prunes old ones. */
+  private withinBudget(
+    failures: Map<string, number[]>,
+    source: string,
+    windowMs: number,
+    max: number,
+  ): boolean {
+    const times = failures.get(source);
+    if (times === undefined) return true;
+    prune(times, windowMs);
+    if (times.length === 0) {
+      failures.delete(source);
+      return true;
+    }
+    return times.length < max;
   }
 
   private account() {
@@ -362,9 +428,11 @@ function prune(times: number[], windowMs: number): void {
   while (times.length !== 0 && times[0]! < cutoff) times.shift();
 }
 
-function admitWithin(times: number[], windowMs: number, max: number): boolean {
-  prune(times, windowMs);
-  if (max <= times.length) return false;
-  times.push(Date.now());
-  return true;
+function recordFailure(failures: Map<string, number[]>, source: string): void {
+  const times = failures.get(source);
+  if (times === undefined) failures.set(source, [Date.now()]);
+  else times.push(Date.now());
 }
+
+const MINUTE = 60_000;
+const HOUR = 3_600_000;

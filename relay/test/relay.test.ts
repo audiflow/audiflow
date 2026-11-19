@@ -19,9 +19,9 @@ class Client {
     });
   }
 
-  static async open(account: string): Promise<Client> {
+  static async open(account: string, source = '192.0.2.1'): Promise<Client> {
     const res = await SELF.fetch(`https://relay.test/v1/connect?account=${account}`, {
-      headers: { Upgrade: 'websocket' },
+      headers: { Upgrade: 'websocket', 'CF-Connecting-IP': source },
     });
     expect(res.status).toBe(101);
     const ws = res.webSocket!;
@@ -252,5 +252,77 @@ describe('relay', () => {
       headers: { Upgrade: 'websocket' },
     });
     expect(res.status).toBe(400);
+  });
+
+  it("a stranger's failures do not lock out the account's devices", async () => {
+    const acct = await newAccount();
+    const { token } = await create(acct);
+    const stranger = await Client.open(acct.accountId, '198.51.100.7');
+    for (let i = 0; i < 10; i++) {
+      stranger.send({
+        type: 'enroll',
+        protocolVersion: 1,
+        accountId: acct.accountId,
+        authSecret: encodeBase64Url(randomBytes(32)),
+        device: device('M'),
+      });
+      await stranger.next();
+    }
+    for (let i = 0; i < 30; i++) {
+      stranger.send({
+        type: 'hello',
+        protocolVersion: 1,
+        accountId: acct.accountId,
+        deviceId: 'A',
+        token: encodeBase64Url(randomBytes(32)),
+        cursor: 0,
+      });
+      await stranger.next();
+    }
+
+    const { welcome } = await enroll(acct, 'B');
+    expect(welcome.type).toBe('welcome');
+    const a = await Client.open(acct.accountId);
+    a.send({ type: 'hello', protocolVersion: 1, accountId: acct.accountId, deviceId: 'A', token, cursor: 0 });
+    expect((await a.next()).type).toBe('welcome');
+  });
+
+  it('rejects credentials of the wrong length', async () => {
+    const acct = await newAccount();
+    await create(acct);
+    const c = await Client.open(acct.accountId);
+    c.send({ type: 'enroll', protocolVersion: 1, accountId: acct.accountId, authSecret: 'A', device: device('M') });
+    expect(await c.next()).toEqual({ type: 'error', code: 'invalid' });
+    c.send({ type: 'hello', protocolVersion: 1, accountId: acct.accountId, deviceId: 'A', token: 'AAAA', cursor: 0 });
+    expect(await c.next()).toEqual({ type: 'error', code: 'invalid' });
+  });
+
+  it('splits a long catch-up into several messages in seq order', async () => {
+    const acct = await newAccount();
+    const { a } = await create(acct);
+    // 12 frames of ~0.9 MB: more than one 4 MB message.
+    const blob = 'A'.repeat(900_000);
+    for (let i = 0; i < 3; i++) {
+      a.send({
+        type: 'push',
+        frames: Array.from({ length: 4 }, (_, j) => ({ clientId: `c${i}-${j}`, blob })),
+      });
+      await a.next();
+    }
+
+    const { c, welcome, frames } = await enroll(acct, 'B');
+    expect(welcome.type).toBe('welcome');
+    const seqs: number[] = [];
+    let messages = 0;
+    let m = frames;
+    for (;;) {
+      expect(m.type).toBe('frames');
+      messages++;
+      seqs.push(...(m.frames as { seq: number }[]).map((f) => f.seq));
+      if (seqs.length === 12) break;
+      m = await c.next();
+    }
+    expect(1 < messages).toBe(true);
+    expect(seqs).toEqual(Array.from({ length: 12 }, (_, i) => i + 1));
   });
 });
