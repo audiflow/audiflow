@@ -3,5 +3,7 @@
      data_extraction_rules.xml. -->
 <full-backup-content>
   <exclude domain="root" path="app_flutter/downloads/" />
+  <exclude domain="root" path="app_flutter/audiflow.isar" />
+  <exclude domain="root" path="app_flutter/audiflow.isar-lck" />
   <exclude domain="file" path="device_only_store/" />
 </full-backup-content>

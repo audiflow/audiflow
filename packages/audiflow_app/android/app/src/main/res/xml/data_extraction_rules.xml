@@ -3,15 +3,24 @@
      Downloaded audio is excluded: it is re-downloadable, and cloud backup
      stops backing up the app entirely once its data exceeds 25 MB.
      getApplicationDocumentsDirectory() maps to <dataDir>/app_flutter.
+     The Isar database (audiflow.isar and its lock file audiflow.isar-lck)
+     is excluded too (decision C1): it easily exceeds 25 MB, and the
+     continuity snapshot in files/ (getApplicationSupportDirectory(),
+     continuity.audiflow-backup) carries the user data instead and stays
+     included. The rules take no wildcards, so each file is named.
      device_only_store/ holds the install id and device id, which must never
      reach another device (FileDeviceOnlyStore). -->
 <data-extraction-rules>
   <cloud-backup>
     <exclude domain="root" path="app_flutter/downloads/" />
+    <exclude domain="root" path="app_flutter/audiflow.isar" />
+    <exclude domain="root" path="app_flutter/audiflow.isar-lck" />
     <exclude domain="file" path="device_only_store/" />
   </cloud-backup>
   <device-transfer>
     <exclude domain="root" path="app_flutter/downloads/" />
+    <exclude domain="root" path="app_flutter/audiflow.isar" />
+    <exclude domain="root" path="app_flutter/audiflow.isar-lck" />
     <exclude domain="file" path="device_only_store/" />
   </device-transfer>
 </data-extraction-rules>

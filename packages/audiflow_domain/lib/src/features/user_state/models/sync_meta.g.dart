@@ -17,29 +17,39 @@ const SyncMetaSchema = CollectionSchema(
   name: r'SyncMeta',
   id: 7779218425528899915,
   properties: {
-    r'deviceId': PropertySchema(
+    r'continuityRestorePending': PropertySchema(
       id: 0,
+      name: r'continuityRestorePending',
+      type: IsarType.bool,
+    ),
+    r'deviceId': PropertySchema(
+      id: 1,
       name: r'deviceId',
       type: IsarType.string,
     ),
     r'historyId': PropertySchema(
-      id: 1,
+      id: 2,
       name: r'historyId',
       type: IsarType.string,
     ),
-    r'hlc': PropertySchema(id: 2, name: r'hlc', type: IsarType.long),
+    r'hlc': PropertySchema(id: 3, name: r'hlc', type: IsarType.long),
+    r'lastSnapshotHlc': PropertySchema(
+      id: 4,
+      name: r'lastSnapshotHlc',
+      type: IsarType.long,
+    ),
     r'queueProjectionPending': PropertySchema(
-      id: 3,
+      id: 5,
       name: r'queueProjectionPending',
       type: IsarType.bool,
     ),
     r'schemaVersion': PropertySchema(
-      id: 4,
+      id: 6,
       name: r'schemaVersion',
       type: IsarType.long,
     ),
     r'tombstoneHorizon': PropertySchema(
-      id: 5,
+      id: 7,
       name: r'tombstoneHorizon',
       type: IsarType.long,
     ),
@@ -82,12 +92,14 @@ void _syncMetaSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeString(offsets[0], object.deviceId);
-  writer.writeString(offsets[1], object.historyId);
-  writer.writeLong(offsets[2], object.hlc);
-  writer.writeBool(offsets[3], object.queueProjectionPending);
-  writer.writeLong(offsets[4], object.schemaVersion);
-  writer.writeLong(offsets[5], object.tombstoneHorizon);
+  writer.writeBool(offsets[0], object.continuityRestorePending);
+  writer.writeString(offsets[1], object.deviceId);
+  writer.writeString(offsets[2], object.historyId);
+  writer.writeLong(offsets[3], object.hlc);
+  writer.writeLong(offsets[4], object.lastSnapshotHlc);
+  writer.writeBool(offsets[5], object.queueProjectionPending);
+  writer.writeLong(offsets[6], object.schemaVersion);
+  writer.writeLong(offsets[7], object.tombstoneHorizon);
 }
 
 SyncMeta _syncMetaDeserialize(
@@ -97,13 +109,15 @@ SyncMeta _syncMetaDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = SyncMeta();
-  object.deviceId = reader.readStringOrNull(offsets[0]);
-  object.historyId = reader.readString(offsets[1]);
-  object.hlc = reader.readLong(offsets[2]);
+  object.continuityRestorePending = reader.readBool(offsets[0]);
+  object.deviceId = reader.readStringOrNull(offsets[1]);
+  object.historyId = reader.readString(offsets[2]);
+  object.hlc = reader.readLong(offsets[3]);
   object.id = id;
-  object.queueProjectionPending = reader.readBool(offsets[3]);
-  object.schemaVersion = reader.readLong(offsets[4]);
-  object.tombstoneHorizon = reader.readLong(offsets[5]);
+  object.lastSnapshotHlc = reader.readLong(offsets[4]);
+  object.queueProjectionPending = reader.readBool(offsets[5]);
+  object.schemaVersion = reader.readLong(offsets[6]);
+  object.tombstoneHorizon = reader.readLong(offsets[7]);
   return object;
 }
 
@@ -115,16 +129,20 @@ P _syncMetaDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readStringOrNull(offset)) as P;
-    case 1:
-      return (reader.readString(offset)) as P;
-    case 2:
-      return (reader.readLong(offset)) as P;
-    case 3:
       return (reader.readBool(offset)) as P;
+    case 1:
+      return (reader.readStringOrNull(offset)) as P;
+    case 2:
+      return (reader.readString(offset)) as P;
+    case 3:
+      return (reader.readLong(offset)) as P;
     case 4:
       return (reader.readLong(offset)) as P;
     case 5:
+      return (reader.readBool(offset)) as P;
+    case 6:
+      return (reader.readLong(offset)) as P;
+    case 7:
       return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -223,6 +241,18 @@ extension SyncMetaQueryWhere on QueryBuilder<SyncMeta, SyncMeta, QWhereClause> {
 
 extension SyncMetaQueryFilter
     on QueryBuilder<SyncMeta, SyncMeta, QFilterCondition> {
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
+  continuityRestorePendingEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'continuityRestorePending',
+          value: value,
+        ),
+      );
+    });
+  }
+
   QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition> deviceIdIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -649,6 +679,61 @@ extension SyncMetaQueryFilter
   }
 
   QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
+  lastSnapshotHlcEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'lastSnapshotHlc', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
+  lastSnapshotHlcGreaterThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'lastSnapshotHlc',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
+  lastSnapshotHlcLessThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'lastSnapshotHlc',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
+  lastSnapshotHlcBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'lastSnapshotHlc',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
   queueProjectionPendingEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -780,6 +865,20 @@ extension SyncMetaQueryLinks
     on QueryBuilder<SyncMeta, SyncMeta, QFilterCondition> {}
 
 extension SyncMetaQuerySortBy on QueryBuilder<SyncMeta, SyncMeta, QSortBy> {
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy>
+  sortByContinuityRestorePending() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'continuityRestorePending', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy>
+  sortByContinuityRestorePendingDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'continuityRestorePending', Sort.desc);
+    });
+  }
+
   QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> sortByDeviceId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'deviceId', Sort.asc);
@@ -813,6 +912,18 @@ extension SyncMetaQuerySortBy on QueryBuilder<SyncMeta, SyncMeta, QSortBy> {
   QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> sortByHlcDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'hlc', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> sortByLastSnapshotHlc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastSnapshotHlc', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> sortByLastSnapshotHlcDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastSnapshotHlc', Sort.desc);
     });
   }
 
@@ -857,6 +968,20 @@ extension SyncMetaQuerySortBy on QueryBuilder<SyncMeta, SyncMeta, QSortBy> {
 
 extension SyncMetaQuerySortThenBy
     on QueryBuilder<SyncMeta, SyncMeta, QSortThenBy> {
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy>
+  thenByContinuityRestorePending() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'continuityRestorePending', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy>
+  thenByContinuityRestorePendingDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'continuityRestorePending', Sort.desc);
+    });
+  }
+
   QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> thenByDeviceId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'deviceId', Sort.asc);
@@ -905,6 +1030,18 @@ extension SyncMetaQuerySortThenBy
     });
   }
 
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> thenByLastSnapshotHlc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastSnapshotHlc', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> thenByLastSnapshotHlcDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastSnapshotHlc', Sort.desc);
+    });
+  }
+
   QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy>
   thenByQueueProjectionPending() {
     return QueryBuilder.apply(this, (query) {
@@ -946,6 +1083,13 @@ extension SyncMetaQuerySortThenBy
 
 extension SyncMetaQueryWhereDistinct
     on QueryBuilder<SyncMeta, SyncMeta, QDistinct> {
+  QueryBuilder<SyncMeta, SyncMeta, QDistinct>
+  distinctByContinuityRestorePending() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'continuityRestorePending');
+    });
+  }
+
   QueryBuilder<SyncMeta, SyncMeta, QDistinct> distinctByDeviceId({
     bool caseSensitive = true,
   }) {
@@ -965,6 +1109,12 @@ extension SyncMetaQueryWhereDistinct
   QueryBuilder<SyncMeta, SyncMeta, QDistinct> distinctByHlc() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'hlc');
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QDistinct> distinctByLastSnapshotHlc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'lastSnapshotHlc');
     });
   }
 
@@ -996,6 +1146,13 @@ extension SyncMetaQueryProperty
     });
   }
 
+  QueryBuilder<SyncMeta, bool, QQueryOperations>
+  continuityRestorePendingProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'continuityRestorePending');
+    });
+  }
+
   QueryBuilder<SyncMeta, String?, QQueryOperations> deviceIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'deviceId');
@@ -1011,6 +1168,12 @@ extension SyncMetaQueryProperty
   QueryBuilder<SyncMeta, int, QQueryOperations> hlcProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'hlc');
+    });
+  }
+
+  QueryBuilder<SyncMeta, int, QQueryOperations> lastSnapshotHlcProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'lastSnapshotHlc');
     });
   }
 

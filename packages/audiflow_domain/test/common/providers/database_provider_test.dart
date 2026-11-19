@@ -154,6 +154,39 @@ void main() {
     check(dbFile.existsSync()).isFalse();
   });
 
+  group('isarDatabaseFiles', () {
+    setUpAll(() async {
+      await Isar.initializeIsarCore(download: true);
+    });
+
+    test('lists the database and its lock file, nothing else', () async {
+      dbFile.deleteSync();
+      File(
+        '${directory.path}/continuity.audiflow-backup',
+      ).writeAsStringSync('');
+      final isar = await Isar.open(
+        isarSchemas,
+        directory: directory.path,
+        name: isarInstanceName,
+      );
+      addTearDown(isar.close);
+
+      final names = (await isarDatabaseFiles(
+        directory: directory.path,
+      )).map((file) => file.uri.pathSegments.last).toList()..sort();
+
+      check(names).deepEquals(['audiflow.isar', 'audiflow.isar-lck']);
+    });
+
+    test('is empty when the directory does not exist', () async {
+      final files = await isarDatabaseFiles(
+        directory: '${directory.path}/missing',
+      );
+
+      check(files).isEmpty();
+    });
+  });
+
   group('openAppDatabase', () {
     setUpAll(() async {
       await Isar.initializeIsarCore(download: true);

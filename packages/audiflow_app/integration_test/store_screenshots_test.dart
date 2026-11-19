@@ -126,13 +126,19 @@ Future<ProviderContainer> _bootContainer() async {
     SettingsKeys.searchCountry: _scenario.searchCountry,
   });
   final prefs = await SharedPreferences.getInstance();
+  final databaseDirectory = await _freshDatabaseDirectory();
 
   return bootstrapAppContainer(
     presetConfigBaseUrl: 'https://audiflow.github.io/audiflow-preset/assets/v8',
     prefs: prefs,
     firebaseAnalytics: null,
-    databaseDirectory: await _freshDatabaseDirectory(),
+    databaseDirectory: databaseDirectory,
     overrides: [
+      // The device's own continuity snapshot would fill the fresh database
+      // with whatever the simulator last used.
+      continuitySnapshotPathProvider.overrideWithValue(
+        () async => '$databaseDirectory/$continuitySnapshotFileName',
+      ),
       reviewPromptForegroundCheckProvider.overrideWithValue(() => false),
       forceUpdateRepositoryProvider.overrideWithValue(NoUpdateRepository()),
       feedSyncServiceProvider.overrideWith(TrackedFeedSyncService.new),

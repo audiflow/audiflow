@@ -108,8 +108,58 @@ import workmanager_apple
     }
     HapticsChannel.register(with: flutterEngine.binaryMessenger)
     DeviceOnlyStoreChannel.register(with: flutterEngine.binaryMessenger)
+    BackupExclusionChannel.register(with: flutterEngine.binaryMessenger)
     carPlayChannel = CarPlayChannel(messenger: flutterEngine.binaryMessenger)
     return flutterEngine
+  }
+}
+
+/// Native end of `audiflow/backup_exclusion` (Dart `DatabaseBackupExclusion`).
+///
+/// Marks the Isar database files `isExcludedFromBackup` (decision C1 in
+/// docs/architecture/user-data-sync.md): the continuity snapshot in
+/// Application Support carries the user data to a new device instead.
+/// Dart sends the paths after it opens the database, because Isar creates
+/// the files on first open and schema recovery re-creates them; fixed paths
+/// set here at launch would miss both until the next launch.
+private enum BackupExclusionChannel {
+  static let channelName = "audiflow/backup_exclusion"
+
+  static func register(with messenger: FlutterBinaryMessenger) {
+    let channel = FlutterMethodChannel(name: channelName, binaryMessenger: messenger)
+    channel.setMethodCallHandler { call, result in
+      guard call.method == "exclude" else {
+        result(FlutterMethodNotImplemented)
+        return
+      }
+      guard let paths = call.arguments as? [String] else {
+        result(FlutterError(code: "INVALID_ARGUMENT", message: "paths are required", details: nil))
+        return
+      }
+      exclude(paths: paths, result: result)
+    }
+  }
+
+  private static func exclude(paths: [String], result: FlutterResult) {
+    // Only files of this app: the channel must not become a way to flag
+    // arbitrary paths.
+    let home = URL(fileURLWithPath: NSHomeDirectory()).standardizedFileURL.path + "/"
+    for path in paths {
+      var url = URL(fileURLWithPath: path).standardizedFileURL
+      guard url.path.hasPrefix(home) else {
+        result(FlutterError(code: "INVALID_ARGUMENT", message: "path outside the app container", details: nil))
+        return
+      }
+      do {
+        var values = URLResourceValues()
+        values.isExcludedFromBackup = true
+        try url.setResourceValues(values)
+      } catch {
+        result(FlutterError(code: "IO", message: error.localizedDescription, details: nil))
+        return
+      }
+    }
+    result(nil)
   }
 }
 

@@ -14,6 +14,7 @@ import '../user_state/services/user_state_store.dart';
 import '../user_state/sync/proto_wire.dart';
 import '../user_state/sync/user_state_codec.dart';
 import '../user_state/sync/user_state_fields.dart';
+import 'continuity_snapshot.dart';
 import 'snapshot_body.dart';
 import 'snapshot_file.dart';
 
@@ -71,7 +72,7 @@ class SnapshotMerger {
       final incomingHistory = file.header.historyId;
       // A manual restore into an empty database inherits the backup's
       // history. Settings do not count: launch copies them in on its own.
-      if (incomingHistory.isNotEmpty && await _hasNoUserData()) {
+      if (incomingHistory.isNotEmpty && await hasNoUserState(_isar)) {
         meta.historyId = incomingHistory;
       }
       final run = _MergeRun(
@@ -103,12 +104,6 @@ class SnapshotMerger {
       );
     });
   }
-
-  Future<bool> _hasNoUserData() async =>
-      await _isar.podcastUserStates.count() == 0 &&
-      await _isar.episodeUserStates.count() == 0 &&
-      await _isar.queueEntrys.count() == 0 &&
-      await _isar.stationStates.count() == 0;
 }
 
 class _MergeRun {

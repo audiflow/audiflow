@@ -11,7 +11,7 @@ refs:
 ---
 # User Data: Device Continuity and Sync
 
-Status: accepted design, being implemented (M0 to M2 landed; M3 in progress). Work is split into migration steps M0 to M7 (see [Migration steps](#migration-steps)). Tracking: #773 (M0, done), #777 (M1, done), #778 (M2, done), #779 (M3), #780 (M4), #718 (M5), #781 (M6), #782 (M7).
+Status: accepted design, being implemented (M0 to M5 landed). Work is split into migration steps M0 to M7 (see [Migration steps](#migration-steps)). Tracking: #773 (M0, done), #777 (M1, done), #778 (M2, done), #779 (M3), #780 (M4), #718 (M5), #781 (M6), #782 (M7).
 
 ## Goals
 
@@ -50,13 +50,23 @@ On iOS, Keychain items whose accessibility does not include `ThisDeviceOnly` mig
 | Item | Carried over | iOS | Android |
 |------|--------------|-----|---------|
 | User state snapshot | Yes | Application Support (backed up) | Only this file is included via `data_extraction_rules.xml` (fits the 25 MB cloud cap) |
-| Isar database | No | Moved to Application Support with `isExcludedFromBackup` (C1) | Excluded (easily exceeds 25 MB) |
+| Isar database | No | Stays in Documents, marked `isExcludedFromBackup` (C1) | Excluded (easily exceeds 25 MB) |
 | Downloaded audio | No | `isExcludedFromBackup` | Excluded |
 | Sync key | Yes | Keychain, `AfterFirstUnlock`, synchronizable (C2) | Block Store with cloud backup enabled |
 | `deviceId` | Must not | Keychain, `ThisDeviceOnly` | `files/device_only_store/`, excluded by the backup rules |
 | Install ID, analytics identifiers | Must not | Keychain, `ThisDeviceOnly` | `files/device_only_store/`, excluded by the backup rules |
 | Synced settings | Yes | Isar user state, included in the snapshot | same |
 | Device-scoped settings | Yes | SharedPreferences (backed up, as today) | SharedPreferences (included in backup rules) |
+
+### Continuity snapshot (as built for M5)
+
+The snapshot is `<Application Support>/continuity.audiflow-backup`, the same file format as a manual backup (`buildBackupFile`). Application Support is backed up on iOS and is the `file` domain on Android, which the backup rules keep.
+
+- **C1 on iOS**: the Isar database stays where it was (`Documents/audiflow.isar` and its lock file `audiflow.isar-lck`; moving it would be a data migration of file locations) and is marked `isExcludedFromBackup`. Dart lists the files with `isarDatabaseFiles` right after `openAppDatabase` and sends them over the `audiflow/backup_exclusion` channel in `AppDelegate.swift` (`DatabaseBackupExclusion` in the app). The call runs after the open, not from Swift for fixed paths at launch, because Isar creates the files on first open and schema recovery re-creates them; both would otherwise stay in the backup until the next launch. The flag is set again on every launch. The channel only accepts paths inside the app container.
+- **C1 on Android**: `data_extraction_rules.xml` (cloud backup and device transfer) and `full_backup_content.xml` exclude `app_flutter/audiflow.isar` and `app_flutter/audiflow.isar-lck` by name, since the rules take no wildcards.
+- **Writing** (`AutoSnapshotScheduler`): see [When the snapshot is written](#when-the-snapshot-is-written).
+- **Restoring** (`RestoreDetector`): see [Restore detection](#restore-detection).
+- **Reset**: "Reset All Data" deletes the snapshot while writers are suspended, before the database is cleared, and the scheduler is one of the suspended writers so a write in flight cannot bring the file back.
 
 ### Restore detection
 
@@ -66,9 +76,13 @@ At launch, compare `SyncMeta.deviceId` in Isar with the `deviceId` in device-onl
 - If Isar is empty and a snapshot exists (the state right after a device migration on either platform), merge the snapshot automatically without asking, and show "Your data was carried over from your previous device". The OS restored the user's own data, so no confirmation is needed.
 - If the sync key came back from Keychain or Block Store, sync stays enabled; the device only re-registers with the relay as a new device.
 
+As built in M5, only the empty-database half exists. `RestoreDetector.restoreIfEmpty` runs in `bootstrapAppContainer` after the data migrations and the audio handler start (the restore stops playback through it) and before anything else reads user data. The database counts as empty when it has no `PodcastUserState`, `EpisodeUserState`, `QueueEntry`, or `StationState` row and no subscribed (not cached) `Subscription` (`hasNoUserData`); the last covers a podcast subscribed from search whose feed was not parsed yet, which has no user state row. `SyncMeta` and `SyncedSetting` do not count: launch creates the first, and copies the second from preferences (which the OS restores) only after the restore, since a copied key gets a fresh clock and would otherwise beat the restored value. A snapshot whose header counts are all zero is skipped (the scheduler never writes one, so a restore of it would rerun on every launch). The restore goes through `BackupRestoreService`, feed refetch continues in the background, and `ContinuityRestoreNotice` (a one-shot in-memory flag) makes the app show "Your data was carried over from your previous device" once. `SyncMeta.continuityRestorePending` is set before the merge and cleared once the library is rebuilt: the two commit separately, so a launch that finds the mark restores again even though the data no longer looks empty. The library projection also sets `SyncMeta.queueProjectionPending`, so a queue step that fails or never runs is retried by the next feed sync. A file that fails to read is moved to `continuity-retained.audiflow-backup` (the first one moved there stays), out of the scheduler's way; each launch tries it again and merges it, into whatever data exists by then, once an updated app can read it. "Reset All Data" deletes both files. Launch continues on any failure. The `deviceId` comparison is not built yet: M0 only records the device-only id in `SyncMeta.deviceId` when it is missing, and the comparison belongs to M6, where it drops the sync cursor.
+
 ### When the snapshot is written
 
 Quick Start and Android device transfer run when the user decides to switch, so a daily snapshot is often stale. Write the snapshot when the app goes to the background and something changed, at most once every 15 minutes. Write to a temporary file and rename it, so a crash never leaves a broken snapshot. Expected size is 1 to 2 MB after ten years of use. Cross-platform migration is not possible through OS mechanisms; it uses the manual backup file (#718) or sync.
+
+As built (`AutoSnapshotScheduler`): `AppLifecycleObserver` calls `onBackground` when the app is hidden. "Changed" means `SyncMeta.hlc` differs from `SyncMeta.lastSnapshotHlc`, the clock read just before the last successful export (a change landing during an export is in the file but not in the recorded clock, so the next backgrounding writes again). A missing file also counts as changed, and launch calls `onLaunch`, which writes only when the file is missing: the database is out of OS backups from the first launch of this version, so an upgraded install must not wait for its first backgrounding to have a snapshot. A database with no user data writes nothing. The 15-minute rule uses the time of the last successful write, kept in memory; a failed write is retried on the next backgrounding. The file is written as `continuity.audiflow-backup.tmp` in the same directory, flushed, and renamed over the target. Failures are logged and never thrown.
 
 ## Stable keys
 

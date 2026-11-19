@@ -153,6 +153,7 @@
   "backupRestoreAction": "復元",
   "backupRestoreSuccess": "復元しました。フィードを読み込むとポッドキャストが更新されます",
   "backupRestoreFailed": "復元を完了できませんでした。もう一度お試しください",
+  "continuityRestoreNotice": "以前のデバイスからデータを引き継ぎました",
   "parentalControlPinEntryReasonRestoreBackup": "バックアップから復元",
   "storageImportTitle": "購読をインポート",
   "storageImportSubtitle": "OPMLファイルからインポート",

@@ -15,6 +15,7 @@ import 'background/background_task_registrar.dart';
 ///   period.
 /// - On launch: drops download records whose file is gone (for example
 ///   after a restore to a new device, which carries no audio).
+/// - On hide: writes the continuity snapshot when it is due.
 class AppLifecycleObserver extends ConsumerStatefulWidget {
   const AppLifecycleObserver({required this.child, super.key});
 
@@ -63,9 +64,12 @@ class _AppLifecycleObserverState extends ConsumerState<AppLifecycleObserver> {
   /// Schedules a background download task when the app moves to background
   /// so iOS can continue processing pending downloads via BGProcessingTask.
   /// Also re-locks the parental control gate so restricted content is
-  /// protected the next time the user opens the app.
+  /// protected the next time the user opens the app, and refreshes the
+  /// continuity snapshot: the user may be about to move to a new phone.
   void _onHide() {
     ref.read(parentalControlGateProvider.notifier).lock();
+    // Never throws; the scheduler logs its own failures.
+    unawaited(ref.read(autoSnapshotSchedulerProvider).onBackground());
     _runUnawaited(
       _scheduleBackgroundDownloads(),
       'while scheduling background downloads on app hide',
