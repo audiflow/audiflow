@@ -200,4 +200,27 @@ void main() {
     check(ops).length.equals(5);
     check(ops.map((o) => o.key).toSet()).deepEquals({'k5', 'k6', 'k7'});
   });
+
+  test('dropping past the cap requests a whole-state send', () async {
+    final store = UserStateStore(isar, outboxCap: 5);
+    Future<void> write(int i) => store.write((txn) async {
+      final row = SyncedSetting()
+        ..key = 'k$i'
+        ..value = '$i'
+        ..hlc = txn.stamp.packed;
+      await isar.syncedSettings.put(row);
+      txn.touch(UserStateEntities.setting, row);
+    });
+    Future<bool> overflowed() async {
+      final meta = (await isar.syncMetas.get(SyncMeta.singletonId))!;
+      return meta.fullStateSent < meta.fullStateRequested;
+    }
+
+    await write(0);
+    check(await overflowed()).isFalse();
+    for (var i = 1; i < 4; i++) {
+      await write(i);
+    }
+    check(await overflowed()).isTrue();
+  });
 }

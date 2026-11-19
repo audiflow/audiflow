@@ -200,5 +200,9 @@ class UserStateStore {
         .idProperty()
         .findAll();
     await _isar.outboxOps.deleteAll(oldest);
+    final meta = await _isar.syncMetas.get(SyncMeta.singletonId);
+    if (meta != null) {
+      await _isar.syncMetas.put(meta..fullStateRequested += 1);
+    }
   }
 }

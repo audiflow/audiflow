@@ -290,14 +290,16 @@ export class AccountRelay extends DurableObject<Env> {
    * Sends every frame after [after] in seq order, paged from storage and
    * split into messages of at most [MAX_CATCH_UP_CHARS], so a long backlog
    * never sits in memory whole. Always sends at least one (possibly empty)
-   * message. Storage calls are synchronous, so no push interleaves.
+   * message; all but the last carry `more: true`. Storage calls are synchronous, so no push interleaves.
    */
   private sendCatchUp(ws: WebSocket, after: number): void {
     let batch: { seq: number; deviceId: string; blob: string }[] = [];
     let chars = 0;
     let sent = false;
-    const flush = () => {
-      send(ws, JSON.stringify({ type: 'frames', frames: batch }));
+    // Every message but the last says more follows, so a device knows
+    // when it has caught up.
+    const flush = (more: boolean) => {
+      send(ws, JSON.stringify({ type: 'frames', frames: batch, ...(more ? { more: true } : {}) }));
       batch = [];
       chars = 0;
       sent = true;
@@ -313,14 +315,14 @@ export class AccountRelay extends DurableObject<Env> {
         .toArray();
       for (const f of page) {
         const size = f.blob.length + 64;
-        if (batch.length !== 0 && MAX_CATCH_UP_CHARS < chars + size) flush();
+        if (batch.length !== 0 && MAX_CATCH_UP_CHARS < chars + size) flush(true);
         batch.push({ seq: f.seq, deviceId: f.device_id, blob: f.blob });
         chars += size;
         cursor = f.seq;
       }
       if (page.length < CATCH_UP_PAGE) break;
     }
-    if (batch.length !== 0 || !sent) flush();
+    if (batch.length !== 0 || !sent) flush(false);
   }
 
   /** Registers or re-enrolls [device] and returns its new token. */

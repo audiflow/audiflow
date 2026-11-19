@@ -43,11 +43,51 @@ class SyncMeta {
 
   /// [hlc] as it was when the continuity snapshot was last written; 0 when
   /// none was. The snapshot is rewritten only once [hlc] has moved on.
-  int lastSnapshotHlc = 0;
+  @ignore
+  int get lastSnapshotHlc => storedLastSnapshotHlc ?? 0;
+  set lastSnapshotHlc(int value) => storedLastSnapshotHlc = value;
+
+  // The `stored*` fields below came after the collection shipped. Isar
+  // reads a non-null int missing from an older row as its null sentinel
+  // (the smallest int64), not 0, so they are stored nullable and read
+  // through a getter that defaults to 0. Not for use elsewhere.
+
+  @Name('lastSnapshotHlc')
+  int? storedLastSnapshotHlc;
 
   /// A launch restore of the continuity snapshot started and has not yet
   /// rebuilt the library. The merge commits before the rebuild, so without
   /// this mark a crash between the two leaves data that no longer looks
   /// empty, and no later launch would restore again.
   bool continuityRestorePending = false;
+
+  /// The relay `seq` up to which this device has merged every frame, or
+  /// the `seq` the snapshot it merged covers; 0 before sync was on.
+  @ignore
+  int get serverCursor => storedServerCursor ?? 0;
+  set serverCursor(int value) => storedServerCursor = value;
+
+  @Name('serverCursor')
+  int? storedServerCursor;
+
+  /// Requests to send the whole state, and the last request sent. A
+  /// request is pending while [fullStateSent] is below
+  /// [fullStateRequested]. The outbox cap raises it when it drops ops, and
+  /// creating or joining raises it, so a resend interrupted by the app
+  /// stopping is done again on the next connection. The engine records the
+  /// request it exported only once the relay holds every frame, so a drop
+  /// during the resend stays pending.
+  @ignore
+  int get fullStateRequested => storedFullStateRequested ?? 0;
+  set fullStateRequested(int value) => storedFullStateRequested = value;
+
+  @ignore
+  int get fullStateSent => storedFullStateSent ?? 0;
+  set fullStateSent(int value) => storedFullStateSent = value;
+
+  @Name('fullStateRequested')
+  int? storedFullStateRequested;
+
+  @Name('fullStateSent')
+  int? storedFullStateSent;
 }

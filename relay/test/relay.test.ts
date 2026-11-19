@@ -319,7 +319,11 @@ describe('relay', () => {
       expect(m.type).toBe('frames');
       messages++;
       seqs.push(...(m.frames as { seq: number }[]).map((f) => f.seq));
-      if (seqs.length === 12) break;
+      if (seqs.length === 12) {
+        expect(m.more).toBeUndefined();
+        break;
+      }
+      expect(m.more).toBe(true);
       m = await c.next();
     }
     expect(1 < messages).toBe(true);

@@ -178,3 +178,27 @@ DecodedEntity decodeEntity(String entity, Uint8List bytes) {
   }
   return DecodedEntity(known, unknown, hlcs: hlcs);
 }
+
+/// A field in wire form ([payload], as an op or an opaque field stores it)
+/// with its packed [hlc] appended to the Value message, the way snapshot
+/// rows and sync frames carry it, so a merge keeps the newer of two copies.
+/// Appending merges into the message as protobuf defines; a payload that is
+/// not one Value field goes as is.
+///
+/// Never throws: unknown data a merge accepted must not block a backup or
+/// a send.
+List<int> fieldWithHlc(int fieldId, List<int> payload, int hlc) {
+  try {
+    final parsed = readMessage(Uint8List.fromList(payload));
+    if (parsed.length != 1 ||
+        parsed.single.wireType != WireType.lengthDelimited) {
+      return payload;
+    }
+    final value = ProtoWriter()
+      ..writeRaw(withoutHlc(parsed.single.raw))
+      ..writeRaw(encodeValue(null, hlc: hlc));
+    return (ProtoWriter()..writeBytes(fieldId, value.takeBytes())).takeBytes();
+  } on FormatException {
+    return payload;
+  }
+}
