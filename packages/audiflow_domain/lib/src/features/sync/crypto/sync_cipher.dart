@@ -196,9 +196,50 @@ class DeviceSecrets {
   final DataKey dataKey;
 }
 
+/// A device's X25519 key pair. The private key never leaves device-only
+/// storage; the public key is registered with the relay, so any other
+/// device of the account can seal a device wrap to it (plan P3).
+class DeviceKeyPair {
+  const DeviceKeyPair._(this.privateKey, this.publicKey);
+
+  static final _x25519 = X25519();
+
+  static Future<DeviceKeyPair> generate() async =>
+      _from(await _x25519.newKeyPair());
+
+  /// Rebuilds the pair from the stored private key.
+  static Future<DeviceKeyPair> fromPrivateKey(Uint8List privateKey) async {
+    if (privateKey.length != SyncCipher.keyLength) {
+      throw ArgumentError.value(privateKey.length, 'privateKey', 'length');
+    }
+    return _from(await _x25519.newKeyPairFromSeed(privateKey));
+  }
+
+  static Future<DeviceKeyPair> _from(SimpleKeyPair pair) async {
+    final data = await pair.extract();
+    return DeviceKeyPair._(
+      Uint8List.fromList(data.bytes),
+      Uint8List.fromList(data.publicKey.bytes),
+    );
+  }
+
+  final Uint8List privateKey;
+  final Uint8List publicKey;
+
+  SimpleKeyPairData get _pair => SimpleKeyPairData(
+    privateKey,
+    publicKey: SimplePublicKey(publicKey, type: KeyPairType.x25519),
+    type: KeyPairType.x25519,
+  );
+}
+
 /// The data key sealed for whoever holds the sync key, and the sync key and
-/// data key sealed for one device (plan P3).
+/// data key sealed to one device's public key (plan P3).
 abstract final class KeyWraps {
+  static final _x25519 = X25519();
+  static final _hkdf = Hkdf(hmac: Hmac.sha256(), outputLength: 32);
+  static const _publicKeyLength = 32;
+
   static Future<Uint8List> sealSyncWrap(
     SyncCipher cipher, {
     required Uint8List wrapKey,
@@ -223,27 +264,51 @@ abstract final class KeyWraps {
     return _dataKey(key, SyncCipher.keyVersionOf(blob));
   }
 
+  /// Seals the secrets to [recipientPublicKey] with a fresh ephemeral key,
+  /// whose public half leads the blob. Only the holder of the matching
+  /// private key can open it, so the relay storing it learns nothing.
   static Future<Uint8List> sealDeviceWrap(
     SyncCipher cipher, {
-    required Uint8List deviceKey,
+    required Uint8List recipientPublicKey,
     required Uint8List syncKey,
     required DataKey keys,
-  }) => cipher.seal(
-    key: deviceKey,
-    keyVersion: keys.version,
-    purpose: SealPurpose.deviceWrap,
-    plaintext: [...syncKey, ...keys.key],
-  );
+  }) async {
+    final ephemeral = await DeviceKeyPair.generate();
+    final key = await _sharedKey(
+      ephemeral,
+      remote: recipientPublicKey,
+      ephemeralPublic: ephemeral.publicKey,
+      recipientPublic: recipientPublicKey,
+    );
+    final sealed = await cipher.seal(
+      key: key,
+      keyVersion: keys.version,
+      purpose: SealPurpose.deviceWrap,
+      plaintext: [...syncKey, ...keys.key],
+    );
+    return Uint8List.fromList([...ephemeral.publicKey, ...sealed]);
+  }
 
   static Future<DeviceSecrets> openDeviceWrap(
     SyncCipher cipher, {
-    required Uint8List deviceKey,
+    required DeviceKeyPair keyPair,
     required Uint8List blob,
   }) async {
+    if (blob.length < _publicKeyLength) {
+      throw const SyncCryptoFailure('truncated');
+    }
+    final ephemeralPublic = Uint8List.sublistView(blob, 0, _publicKeyLength);
+    final sealed = Uint8List.sublistView(blob, _publicKeyLength);
+    final key = await _sharedKey(
+      keyPair,
+      remote: ephemeralPublic,
+      ephemeralPublic: ephemeralPublic,
+      recipientPublic: keyPair.publicKey,
+    );
     final clear = await cipher.open(
-      blob,
+      sealed,
       purpose: SealPurpose.deviceWrap,
-      keyFor: (_) => deviceKey,
+      keyFor: (_) => key,
     );
     if (clear.length != 2 * SyncCipher.keyLength) {
       throw const SyncCryptoFailure('device wrap has the wrong length');
@@ -252,9 +317,35 @@ abstract final class KeyWraps {
       syncKey: Uint8List.fromList(clear.sublist(0, SyncCipher.keyLength)),
       dataKey: _dataKey(
         Uint8List.fromList(clear.sublist(SyncCipher.keyLength)),
-        SyncCipher.keyVersionOf(blob),
+        SyncCipher.keyVersionOf(sealed),
       ),
     );
+  }
+
+  /// Both public keys go into the derivation, so a wrap cannot be passed
+  /// off as sealed to another device or by another ephemeral key.
+  static Future<Uint8List> _sharedKey(
+    DeviceKeyPair own, {
+    required Uint8List remote,
+    required Uint8List ephemeralPublic,
+    required Uint8List recipientPublic,
+  }) async {
+    if (remote.length != _publicKeyLength) {
+      throw const SyncCryptoFailure('public key has the wrong length');
+    }
+    final shared = await _x25519.sharedSecretKey(
+      keyPair: own._pair,
+      remotePublicKey: SimplePublicKey(remote, type: KeyPairType.x25519),
+    );
+    final derived = await _hkdf.deriveKey(
+      secretKey: shared,
+      info: [
+        ...utf8.encode('audiflow-sync device wrap v1'),
+        ...ephemeralPublic,
+        ...recipientPublic,
+      ],
+    );
+    return Uint8List.fromList(await derived.extractBytes());
   }
 
   static DataKey _dataKey(Uint8List key, int version) {

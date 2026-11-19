@@ -179,17 +179,20 @@ void main() {
       check(opened.version).equals(2);
     });
 
-    test('a device wrap carries the sync key and the data key', () async {
-      final deviceKey = SyncCipher.generateKey();
+    test('a device wrap opens with the recipient private key', () async {
+      final recipient = await DeviceKeyPair.generate();
       final blob = await KeyWraps.sealDeviceWrap(
         cipher,
-        deviceKey: deviceKey,
+        recipientPublicKey: recipient.publicKey,
         syncKey: syncKey,
         keys: DataKey(dataKey, version: 5),
       );
+      // The stored private key alone rebuilds the pair.
+      final restored = await DeviceKeyPair.fromPrivateKey(recipient.privateKey);
+      check(restored.publicKey).deepEquals(recipient.publicKey);
       final opened = await KeyWraps.openDeviceWrap(
         cipher,
-        deviceKey: deviceKey,
+        keyPair: restored,
         blob: blob,
       );
       check(opened.syncKey).deepEquals(syncKey);
@@ -197,10 +200,40 @@ void main() {
       check(opened.dataKey.version).equals(5);
     });
 
-    test('a device wrap does not open as a sync key wrap', () async {
+    test('a device wrap does not open for another device', () async {
+      final recipient = await DeviceKeyPair.generate();
+      final other = await DeviceKeyPair.generate();
       final blob = await KeyWraps.sealDeviceWrap(
         cipher,
-        deviceKey: wrapKey,
+        recipientPublicKey: recipient.publicKey,
+        syncKey: syncKey,
+        keys: DataKey(dataKey, version: 1),
+      );
+      await check(
+        KeyWraps.openDeviceWrap(cipher, keyPair: other, blob: blob),
+      ).throws<SyncCryptoFailure>();
+    });
+
+    test('a device wrap with a swapped ephemeral key fails', () async {
+      final recipient = await DeviceKeyPair.generate();
+      final blob = await KeyWraps.sealDeviceWrap(
+        cipher,
+        recipientPublicKey: recipient.publicKey,
+        syncKey: syncKey,
+        keys: DataKey(dataKey, version: 1),
+      );
+      final swapped = Uint8List.fromList(blob)
+        ..setRange(0, 32, (await DeviceKeyPair.generate()).publicKey);
+      await check(
+        KeyWraps.openDeviceWrap(cipher, keyPair: recipient, blob: swapped),
+      ).throws<SyncCryptoFailure>();
+    });
+
+    test('a device wrap does not open as a sync key wrap', () async {
+      final recipient = await DeviceKeyPair.generate();
+      final blob = await KeyWraps.sealDeviceWrap(
+        cipher,
+        recipientPublicKey: recipient.publicKey,
         syncKey: syncKey,
         keys: DataKey(dataKey, version: 1),
       );
