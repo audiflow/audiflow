@@ -346,6 +346,11 @@ export 'src/features/snapshot/snapshot_merger.dart';
 // Sync
 export 'src/features/sync/crypto/sync_cipher.dart';
 export 'src/features/sync/crypto/sync_credentials.dart';
+export 'src/features/sync/engine/sync_engine.dart';
+export 'src/features/sync/engine/sync_frame.dart';
+export 'src/features/sync/engine/sync_session.dart';
+export 'src/features/sync/engine/sync_transport.dart';
+export 'src/features/sync/protocol/sync_messages.dart';
 export 'src/features/user_state/sync/opaque_fields.dart';
 export 'src/features/user_state/sync/proto_wire.dart';
 export 'src/features/user_state/sync/user_state_codec.dart';

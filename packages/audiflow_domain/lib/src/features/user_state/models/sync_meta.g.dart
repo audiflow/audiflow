@@ -48,8 +48,13 @@ const SyncMetaSchema = CollectionSchema(
       name: r'schemaVersion',
       type: IsarType.long,
     ),
-    r'tombstoneHorizon': PropertySchema(
+    r'serverCursor': PropertySchema(
       id: 7,
+      name: r'serverCursor',
+      type: IsarType.long,
+    ),
+    r'tombstoneHorizon': PropertySchema(
+      id: 8,
       name: r'tombstoneHorizon',
       type: IsarType.long,
     ),
@@ -99,7 +104,8 @@ void _syncMetaSerialize(
   writer.writeLong(offsets[4], object.lastSnapshotHlc);
   writer.writeBool(offsets[5], object.queueProjectionPending);
   writer.writeLong(offsets[6], object.schemaVersion);
-  writer.writeLong(offsets[7], object.tombstoneHorizon);
+  writer.writeLong(offsets[7], object.serverCursor);
+  writer.writeLong(offsets[8], object.tombstoneHorizon);
 }
 
 SyncMeta _syncMetaDeserialize(
@@ -117,7 +123,8 @@ SyncMeta _syncMetaDeserialize(
   object.lastSnapshotHlc = reader.readLong(offsets[4]);
   object.queueProjectionPending = reader.readBool(offsets[5]);
   object.schemaVersion = reader.readLong(offsets[6]);
-  object.tombstoneHorizon = reader.readLong(offsets[7]);
+  object.serverCursor = reader.readLong(offsets[7]);
+  object.tombstoneHorizon = reader.readLong(offsets[8]);
   return object;
 }
 
@@ -143,6 +150,8 @@ P _syncMetaDeserializeProp<P>(
     case 6:
       return (reader.readLong(offset)) as P;
     case 7:
+      return (reader.readLong(offset)) as P;
+    case 8:
       return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -802,6 +811,63 @@ extension SyncMetaQueryFilter
     });
   }
 
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition> serverCursorEqualTo(
+    int value,
+  ) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'serverCursor', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
+  serverCursorGreaterThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'serverCursor',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition> serverCursorLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'serverCursor',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition> serverCursorBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'serverCursor',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
   QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
   tombstoneHorizonEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
@@ -953,6 +1019,18 @@ extension SyncMetaQuerySortBy on QueryBuilder<SyncMeta, SyncMeta, QSortBy> {
     });
   }
 
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> sortByServerCursor() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'serverCursor', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> sortByServerCursorDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'serverCursor', Sort.desc);
+    });
+  }
+
   QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> sortByTombstoneHorizon() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'tombstoneHorizon', Sort.asc);
@@ -1068,6 +1146,18 @@ extension SyncMetaQuerySortThenBy
     });
   }
 
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> thenByServerCursor() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'serverCursor', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> thenByServerCursorDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'serverCursor', Sort.desc);
+    });
+  }
+
   QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> thenByTombstoneHorizon() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'tombstoneHorizon', Sort.asc);
@@ -1131,6 +1221,12 @@ extension SyncMetaQueryWhereDistinct
     });
   }
 
+  QueryBuilder<SyncMeta, SyncMeta, QDistinct> distinctByServerCursor() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'serverCursor');
+    });
+  }
+
   QueryBuilder<SyncMeta, SyncMeta, QDistinct> distinctByTombstoneHorizon() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'tombstoneHorizon');
@@ -1187,6 +1283,12 @@ extension SyncMetaQueryProperty
   QueryBuilder<SyncMeta, int, QQueryOperations> schemaVersionProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'schemaVersion');
+    });
+  }
+
+  QueryBuilder<SyncMeta, int, QQueryOperations> serverCursorProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'serverCursor');
     });
   }
 

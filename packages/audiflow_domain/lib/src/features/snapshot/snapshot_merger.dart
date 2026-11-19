@@ -65,11 +65,27 @@ class SnapshotMerger {
 
   static int _wallClock() => DateTime.now().millisecondsSinceEpoch;
 
-  Future<SnapshotMergeResult> merge(SnapshotFile file) {
+  Future<SnapshotMergeResult> merge(SnapshotFile file) => mergeSections(
+    file.body.sections,
+    historyId: file.header.historyId,
+    tombstoneHorizon: file.header.tombstoneHorizon,
+  );
+
+  /// Merges rows in the snapshot body layout, from a file or a sync frame,
+  /// under the same rules as [merge].
+  ///
+  /// With [recordOps] false the merge queues nothing to send: for data that
+  /// came from the relay, which already holds it.
+  Future<SnapshotMergeResult> mergeSections(
+    Map<String, List<SnapshotRow>> sections, {
+    required String historyId,
+    int tombstoneHorizon = 0,
+    bool recordOps = true,
+  }) {
     final store = UserStateStore(_isar, nowMillis: _nowMillis);
-    return store.write((txn) async {
+    return store.write(recordOps: recordOps, (txn) async {
       final meta = (await _isar.syncMetas.get(SyncMeta.singletonId))!;
-      final incomingHistory = file.header.historyId;
+      final incomingHistory = historyId;
       // A manual restore into an empty database inherits the backup's
       // history. Settings do not count: launch copies them in on its own.
       if (incomingHistory.isNotEmpty && await hasNoUserState(_isar)) {
@@ -82,7 +98,7 @@ class SnapshotMerger {
         sameHistory: meta.historyId == incomingHistory,
         horizon: meta.tombstoneHorizon,
       );
-      await run.mergeAll(file.body.sections);
+      await run.mergeAll(sections);
 
       // Later local changes must sort after everything merged in.
       if (0 < run.maxHlc) {
@@ -92,9 +108,8 @@ class SnapshotMerger {
       }
       // Raised after the merge, not before: the snapshot's own rows are live
       // in its source, however old their clocks.
-      final horizon = file.header.tombstoneHorizon;
-      if (run.sameHistory && meta.tombstoneHorizon < horizon) {
-        meta.tombstoneHorizon = horizon;
+      if (run.sameHistory && meta.tombstoneHorizon < tombstoneHorizon) {
+        meta.tombstoneHorizon = tombstoneHorizon;
       }
       await _isar.syncMetas.put(meta);
       return SnapshotMergeResult(

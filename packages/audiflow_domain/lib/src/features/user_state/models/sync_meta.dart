@@ -50,4 +50,8 @@ class SyncMeta {
   /// this mark a crash between the two leaves data that no longer looks
   /// empty, and no later launch would restore again.
   bool continuityRestorePending = false;
+
+  /// The relay `seq` up to which this device has merged every frame, or
+  /// the `seq` the snapshot it merged covers; 0 before sync was on.
+  int serverCursor = 0;
 }
