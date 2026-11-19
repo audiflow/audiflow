@@ -94,9 +94,13 @@ class RestoreDetector {
   Future<bool> _restoreIfEmpty() async {
     final file = File(await _resolveSnapshotPath());
     final retained = File(p.join(file.parent.path, retainedSnapshotFileName));
-    final recovered = await _recoverRetained(retained);
+    // Decided before the retained file is merged: that merge fills the
+    // database, and the current snapshot, newer than the retained one,
+    // must still be restored after it.
     final pending = await _isPending();
-    if (!pending && !await hasNoUserData(_isar)) return recovered;
+    final needsCurrent = pending || await hasNoUserData(_isar);
+    final recovered = await _recoverRetained(retained);
+    if (!needsCurrent) return recovered;
     if (!await file.exists()) {
       if (pending) await _setPending(false);
       return recovered;

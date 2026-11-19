@@ -189,6 +189,33 @@ void main() {
     check(await retained().exists()).isFalse();
   });
 
+  test('restores the current snapshot after a file moved aside', () async {
+    // Both files came over with the device move into an empty database.
+    await writeSnapshotOfOnePodcast();
+    await snapshot().rename(retained().path);
+    await source.writeTxn(
+      () => source.stationStates.put(
+        StationState()
+          ..stationId = '0190a0b0-0000-7000-8000-000000000001'
+          ..name = 'Mix'
+          ..nameHlc = 1 << 21,
+      ),
+    );
+    final current = await buildBackupFile(
+      source,
+      now: now,
+      appVersion: '2.3.0',
+      platform: 'ios',
+    );
+    await snapshot().writeAsBytes(current.bytes);
+    await seedLaunchState();
+
+    check(await detector().restoreIfEmpty()).isTrue();
+    check(await isar.podcastUserStates.count()).equals(1);
+    check(await isar.stationStates.count()).equals(1);
+    check(await retained().exists()).isFalse();
+  });
+
   test('a file moved aside that still fails to read stays', () async {
     await seedLaunchState();
     await retained().writeAsString('not a snapshot');
