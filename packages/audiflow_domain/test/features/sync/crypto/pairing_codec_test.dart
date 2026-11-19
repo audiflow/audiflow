@@ -83,6 +83,13 @@ void main() {
       ).throws<FormatException>();
     });
 
+    test('rejects an extra trailing character', () {
+      final code = PairingCodec.encodeRecoveryCode(credentials);
+      check(
+        () => PairingCodec.decodeRecoveryCode('${code}0'),
+      ).throws<FormatException>();
+    });
+
     test('rejects a short or foreign code', () {
       final code = PairingCodec.encodeRecoveryCode(credentials);
       check(

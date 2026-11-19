@@ -67,6 +67,10 @@ abstract final class PairingCodec {
   static const _checksumLength = 2;
   static const _groupLength = 4;
 
+  /// Characters in a recovery code, separators not counted: 50 bytes of
+  /// credentials and checksum, 5 bits per character.
+  static const recoveryCodeLength = 80;
+
   /// Crockford base32: no I, L, O, or U, so a hand-copied code has fewer
   /// look-alikes.
   static const _alphabet = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
@@ -114,10 +118,12 @@ abstract final class PairingCodec {
         .replaceAll(RegExp(r'[\s-]'), '')
         .replaceAll('O', '0')
         .replaceAll(RegExp('[IL]'), '1');
-    final bytes = _fromBase32(cleaned);
-    if (bytes.length != _payloadLength + _checksumLength) {
+    // Checked on the characters, not the decoded bytes: the last five bits
+    // of an extra character would be dropped and still decode.
+    if (cleaned.length != recoveryCodeLength) {
       throw const FormatException('Recovery code has the wrong length');
     }
+    final bytes = _fromBase32(cleaned);
     final payload = Uint8List.sublistView(bytes, 0, _payloadLength);
     if (!_equal(
       Uint8List.sublistView(bytes, _payloadLength),
