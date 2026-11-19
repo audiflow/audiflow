@@ -11,6 +11,7 @@ import '../../snapshot/snapshot_body.dart';
 import '../../snapshot/snapshot_exporter.dart';
 import '../../snapshot/snapshot_file.dart';
 import '../../snapshot/snapshot_merger.dart';
+import '../../station/models/station.dart';
 import '../../user_state/models/outbox_op.dart';
 import '../../user_state/models/sync_meta.dart';
 import '../../user_state/sync/user_state_fields.dart';
@@ -26,6 +27,11 @@ import 'sync_transport.dart';
 /// Everything runs one step at a time on a serial queue, so a merge never
 /// races a send over the same outbox rows. A received frame merges with
 /// the snapshot rules, then the rows the app reads are projected again.
+///
+/// One engine serves one connection. When the relay refuses a request or
+/// the connection drops, [done] completes with the [SyncRelayFailure] and
+/// the engine stops; the caller connects a new one, and the outbox and the
+/// cursor carry over.
 class SyncEngine {
   SyncEngine({
     required this._isar,
@@ -35,17 +41,23 @@ class SyncEngine {
     required this._appVersion,
     required this._platform,
     required this._logger,
+    this._onStationChanged,
     this._onSessionChanged,
     int Function()? nowMillis,
     this.maxOpsPerFrame = 500,
     this.maxRowsPerFrame = 500,
   }) : _nowMillis = nowMillis ?? _wallClock,
-       _cipher = SyncCipher(_session.credentials.accountId);
+       _cipher = SyncCipher(_session.credentials.accountId) {
+    // A failure nobody awaited yet must not surface as an unhandled error;
+    // a later listener on [done] still sees it.
+    unawaited(_done.future.then<void>((_) {}, onError: (_) {}));
+  }
 
   final Isar _isar;
   final SyncSession _session;
   final SyncTransport _transport;
   final Future<void> Function(List<String> feedUrls) _syncFeeds;
+  final Future<void> Function(int stationId)? _onStationChanged;
   final String _appVersion;
   final String _platform;
   final Logger _logger;
@@ -54,18 +66,27 @@ class SyncEngine {
   final SyncCipher _cipher;
 
   /// Ops per frame: bounds a frame's size after a long offline stretch.
+  /// A row's ops are never split, so a frame can go over by one row.
   final int maxOpsPerFrame;
 
-  /// Rows per frame when the whole state goes out after creating or joining.
+  /// Rows per frame when the whole state goes out.
   final int maxRowsPerFrame;
 
   static int _wallClock() => DateTime.now().millisecondsSinceEpoch;
   static const _uuid = Uuid();
 
+  /// Episode fields that station filters read (favorites only, hide
+  /// completed), so a received change of them rebuilds station lists.
+  static final _stationFilterFields = {
+    for (final f in UserStateEntities.episode.fields)
+      if (f.name == 'favoritedAt' || f.name == 'completedAt') f.id,
+  };
+
   Future<void> _queue = Future.value();
   StreamSubscription<RelayMessage>? _messages;
   StreamSubscription<void>? _outboxWatch;
-  Completer<void>? _ready;
+  final _ready = Completer<void>();
+  final _done = Completer<void>();
   SyncOpening _opening = SyncOpening.resume;
   bool _welcomed = false;
   bool _caughtUp = false;
@@ -76,9 +97,14 @@ class SyncEngine {
   /// at a time keeps the frames in outbox order.
   ({Set<String> clientIds, Map<int, int> ops, bool fullState})? _inFlight;
 
-  /// The snapshot upload waiting for `stored`, with the outbox ops it
-  /// carries.
-  Map<int, int>? _snapshotOps;
+  /// A snapshot upload is waiting for `stored`; sends wait with it, so the
+  /// relay compacts before anything newer lands.
+  bool _snapshotPending = false;
+
+  /// Completes when the session ends: normally after [close], with a
+  /// [SyncRelayFailure] when the relay refused something or the connection
+  /// dropped.
+  Future<void> get done => _done.future;
 
   /// Opens the connection and returns once this device has caught up:
   /// the account's snapshot and every frame after the cursor are merged,
@@ -86,14 +112,15 @@ class SyncEngine {
   /// relay refuses.
   Future<void> connect(SyncOpening opening) {
     _opening = opening;
-    final ready = _ready = Completer<void>();
     _messages = _transport.messages.listen(
       (message) => _enqueue(() => _handle(message)),
-      onDone: () => _fail(const SyncRelayFailure('closed')),
+      onDone: () => _enqueue(() async {
+        throw const SyncRelayFailure('closed');
+      }),
     );
     _outboxWatch = _isar.outboxOps.watchLazy().listen((_) => _enqueue(_flush));
     _enqueue(() async => _transport.send(await _openingMessage(opening)));
-    return ready.future;
+    return _ready.future;
   }
 
   /// Runs once every step queued so far has finished; for tests and for a
@@ -101,11 +128,16 @@ class SyncEngine {
   Future<void> settle() => _queue;
 
   Future<void> close() async {
+    if (_closed) return;
     _closed = true;
     await _outboxWatch?.cancel();
     await _messages?.cancel();
     await _queue;
     await _transport.close();
+    if (!_ready.isCompleted) {
+      _ready.completeError(const SyncRelayFailure('closed'));
+    }
+    if (!_done.isCompleted) _done.complete();
   }
 
   void _enqueue(Future<void> Function() step) {
@@ -114,7 +146,7 @@ class SyncEngine {
       try {
         await step();
       } on SyncRelayFailure catch (e) {
-        _fail(e);
+        await _fail(e);
       } on Object catch (e, stack) {
         // IsarError extends Error; one bad step must not stop the queue.
         _logger.e('Sync step failed', error: e, stackTrace: stack);
@@ -122,9 +154,19 @@ class SyncEngine {
     });
   }
 
-  void _fail(SyncRelayFailure failure) {
-    final ready = _ready;
-    if (ready != null && !ready.isCompleted) ready.completeError(failure);
+  /// Ends the session: a push left waiting would block every later send,
+  /// and the relay keeps the frames it acknowledged, so a new connection
+  /// resumes from the cursor and sends the outbox again.
+  Future<void> _fail(SyncRelayFailure failure) async {
+    _logger.w('Sync session ended: ${failure.code}');
+    _closed = true;
+    _inFlight = null;
+    _snapshotPending = false;
+    await _outboxWatch?.cancel();
+    await _messages?.cancel();
+    await _transport.close();
+    if (!_ready.isCompleted) _ready.completeError(failure);
+    if (!_done.isCompleted) _done.completeError(failure);
   }
 
   Future<ClientMessage> _openingMessage(SyncOpening opening) async {
@@ -158,7 +200,7 @@ class SyncEngine {
           accountId: _session.accountId,
           deviceId: _session.device.deviceId,
           token: token,
-          cursor: await _cursor(),
+          cursor: (await _meta())?.serverCursor ?? 0,
         );
     }
   }
@@ -172,7 +214,8 @@ class SyncEngine {
       case Pushed(:final seqs):
         await _onPushed(seqs);
       case SnapshotStored():
-        await _onSnapshotStored();
+        _snapshotPending = false;
+        await _flush();
       case RelayError(:final code):
         throw SyncRelayFailure(code);
     }
@@ -202,7 +245,7 @@ class SyncEngine {
     // covers seq 0.
     if (snapshot != null &&
         (_opening == SyncOpening.join ||
-            await _cursor() < snapshot.coversSeq)) {
+            (await _meta())!.serverCursor < snapshot.coversSeq)) {
       await _mergeSnapshot(snapshot);
     }
     _welcomed = true;
@@ -221,21 +264,25 @@ class SyncEngine {
         await _isar.syncMetas.put(meta..historyId = file.header.historyId);
       });
     }
-    await SnapshotMerger(_isar, nowMillis: _nowMillis).mergeSections(
+    final merged = await _merger.mergeSections(
       file.body.sections,
       historyId: file.header.historyId,
       tombstoneHorizon: file.header.tombstoneHorizon,
       recordOps: false,
     );
-    await dropBeatenOps(_isar, receivedFields(file.body.sections));
-    await _project(file.body.sections, wholeLibrary: true);
+    await dropBeatenOps(
+      _isar,
+      receivedFields(file.body.sections),
+      nowMillis: _nowMillis(),
+    );
+    await _project(file.body.sections, merged, wholeLibrary: true);
     await _setCursor(snapshot.coversSeq);
   }
 
   Future<void> _onFrames(List<RelayFrame> frames) async {
     if (!_welcomed) throw const SyncRelayFailure(RelayError.invalid);
     for (final frame in frames) {
-      if (frame.seq <= await _cursor()) continue;
+      if (frame.seq <= (await _meta())!.serverCursor) continue;
       // Its own frames come back in a catch-up after a lost ack; their
       // content is already here.
       if (frame.deviceId != _session.device.deviceId) {
@@ -243,23 +290,25 @@ class SyncEngine {
       }
       await _setCursor(frame.seq);
     }
-    if (!_caughtUp) {
-      _caughtUp = true;
-      if (_opening == SyncOpening.resume) {
-        await _flush();
-      } else {
-        await _pushFullState();
-      }
-      final ready = _ready;
-      if (ready != null && !ready.isCompleted) ready.complete();
+    if (_caughtUp) return;
+    _caughtUp = true;
+    // After joining, or when the outbox cap dropped ops, only the whole
+    // state carries everything.
+    final overflowed = (await _meta())?.outboxOverflowed ?? false;
+    if (_opening != SyncOpening.resume || overflowed) {
+      await _pushFullState();
+    } else {
+      await _flush();
     }
+    if (!_ready.isCompleted) _ready.complete();
   }
 
   Future<void> _mergeFrame(RelayFrame relayed) async {
     final SyncFrame frame;
+    final SnapshotMergeResult merged;
     try {
       frame = SyncFrame.decode(await _open(relayed.blob, SealPurpose.frame));
-      await SnapshotMerger(_isar, nowMillis: _nowMillis).mergeSections(
+      merged = await _merger.mergeSections(
         frame.sections,
         historyId: frame.historyId,
         recordOps: false,
@@ -276,15 +325,31 @@ class SyncEngine {
       _logger.w('Sync frame ${relayed.seq} malformed: ${e.message}');
       return;
     }
-    await dropBeatenOps(_isar, receivedFields(frame.sections));
-    await _project(frame.sections, wholeLibrary: false);
+    final fields = receivedFields(frame.sections).toList();
+    await dropBeatenOps(_isar, fields, nowMillis: _nowMillis());
+    final stationsAffected = fields.any(
+      (f) =>
+          f.entity == UserStateEntities.episode.name &&
+          _stationFilterFields.contains(f.fieldId),
+    );
+    await _project(
+      frame.sections,
+      merged,
+      wholeLibrary: false,
+      stationsAffected: stationsAffected,
+    );
   }
 
+  SnapshotMerger get _merger => SnapshotMerger(_isar, nowMillis: _nowMillis);
+
   /// Turns merged state into the rows the app reads. Position, progress,
-  /// favorites, and settings are read from the state itself and need none.
+  /// favorites, and settings are read from the state itself and need none;
+  /// station lists filtered on favorites or completion are rebuilt.
   Future<void> _project(
-    Map<String, List<SnapshotRow>> sections, {
+    Map<String, List<SnapshotRow>> sections,
+    SnapshotMergeResult merged, {
     required bool wholeLibrary,
+    bool stationsAffected = false,
   }) async {
     final projector = RestoreProjector(_isar);
     final library =
@@ -292,14 +357,38 @@ class SyncEngine {
         sections.containsKey(UserStateEntities.podcast.name) ||
         sections.containsKey(UserStateEntities.station.name) ||
         sections.containsKey(UserStateEntities.stationMember.name);
+    final stationIds = <int>{};
     if (library) {
-      final projection = await projector.projectLibrary(podcastInfo: const {});
+      final projection = await projector.projectLibrary(
+        podcastInfo: merged.podcastInfo,
+      );
+      stationIds.addAll(projection.stationIds);
       if (projection.feedUrls.isNotEmpty) {
         unawaited(_fetchFeeds(projection.feedUrls));
       }
     }
     if (library || sections.containsKey(UserStateEntities.queueEntry.name)) {
       await projector.projectQueue();
+    }
+    if (stationsAffected) {
+      stationIds.addAll(await _isar.stations.where().idProperty().findAll());
+    }
+    await _reconcileStations(stationIds);
+  }
+
+  Future<void> _reconcileStations(Set<int> ids) async {
+    final reconcile = _onStationChanged;
+    if (reconcile == null) return;
+    for (final id in ids) {
+      try {
+        await reconcile(id);
+      } on Object catch (e, stack) {
+        _logger.w(
+          'Station reconcile after sync failed',
+          error: e,
+          stackTrace: stack,
+        );
+      }
     }
   }
 
@@ -321,7 +410,7 @@ class SyncEngine {
     // Frames from others before these arrived ahead of the ack, in seq
     // order; a gap means some did not, and the next catch-up brings them.
     for (final seq in acked) {
-      if (seq == await _cursor() + 1) await _setCursor(seq);
+      if (seq == (await _meta())!.serverCursor + 1) await _setCursor(seq);
     }
     if (inFlight.fullState) {
       await _uploadSnapshot();
@@ -330,25 +419,15 @@ class SyncEngine {
     }
   }
 
-  Future<void> _onSnapshotStored() async {
-    final ops = _snapshotOps;
-    _snapshotOps = null;
-    if (ops != null) await _deleteSent(ops);
-    await _flush();
-  }
-
   Future<void> _flush() async {
-    // Ops the snapshot upload carries would go out twice.
-    if (!_caughtUp || _inFlight != null || _snapshotOps != null) return;
-    final ops = await _isar.outboxOps
-        .where()
-        .sortByOpId()
-        .limit(maxOpsPerFrame)
-        .findAll();
+    if (!_caughtUp || _inFlight != null || _snapshotPending) return;
+    final ops = _takeWholeRows(
+      await _isar.outboxOps.where().sortByOpId().findAll(),
+    );
     if (ops.isEmpty) return;
     final frame = SyncFrame.fromOps(
       ops,
-      historyId: await _historyId(),
+      historyId: (await _meta())?.historyId ?? '',
       deviceId: _session.device.deviceId,
     );
     final clientId = _uuid.v7();
@@ -367,20 +446,46 @@ class SyncEngine {
     );
   }
 
-  /// Sends the whole state as frames after creating or joining: devices
-  /// already online merge it like any change, and nothing the outbox
-  /// dropped while sync was off is lost (plan P9). The compacted snapshot
-  /// follows once the relay has them all.
+  /// The oldest rows' ops, each row complete: a receiver that has never
+  /// seen a row needs its required fields (an episode's podcastKey) in the
+  /// same frame, or it rejects the frame.
+  List<OutboxOp> _takeWholeRows(List<OutboxOp> ops) {
+    final byRow = <(String, String), List<OutboxOp>>{};
+    for (final op in ops) {
+      (byRow[(op.entity, op.key)] ??= []).add(op);
+    }
+    final taken = <OutboxOp>[];
+    for (final row in byRow.values) {
+      if (taken.isNotEmpty && maxOpsPerFrame <= taken.length + row.length) {
+        break;
+      }
+      taken.addAll(row);
+    }
+    return taken;
+  }
+
+  /// Sends the whole state as frames: after creating or joining, so
+  /// devices already online merge it like any change and nothing the
+  /// outbox dropped while sync was off is lost (plan P9), and after the
+  /// outbox cap dropped ops. The compacted snapshot follows once the relay
+  /// has them all.
   Future<void> _pushFullState() async {
+    // Cleared before the export: an overflow during it is set again and
+    // handled by the next connection.
+    await _isar.writeTxn(() async {
+      final meta = await _isar.syncMetas.get(SyncMeta.singletonId);
+      if (meta == null || !meta.outboxOverflowed) return;
+      await _isar.syncMetas.put(meta..outboxOverflowed = false);
+    });
     final pending = await _isar.outboxOps.where().findAll();
     final exported = await SnapshotExporter(_isar).export();
-    final historyId = await _historyId();
-    final frames = <PushFrame>[];
+    final historyId = (await _meta())?.historyId ?? '';
     final rows = [
       for (final MapEntry(key: entity, value: list)
           in exported.body.sections.entries)
         for (final row in list) (entity, row),
     ];
+    final frames = <PushFrame>[];
     for (var start = 0; start < rows.length; start += maxRowsPerFrame) {
       final sections = <String, List<SnapshotRow>>{};
       for (final (entity, row) in rows.skip(start).take(maxRowsPerFrame)) {
@@ -399,6 +504,8 @@ class SyncEngine {
       );
     }
     if (frames.isEmpty) return _uploadSnapshot();
+    // The ops pending at the export are in these frames; ones changed
+    // since keep a newer clock and stay for the next send.
     _inFlight = (
       clientIds: {for (final f in frames) f.clientId},
       ops: {for (final o in pending) o.id: o.hlc},
@@ -409,20 +516,21 @@ class SyncEngine {
 
   /// Uploads a compacted snapshot covering the cursor, which the relay
   /// keeps in place of the frames it covers, so a later device starts from
-  /// one file.
+  /// one file. It deletes no ops: a change made after the full-state
+  /// export is in the snapshot but has reached no device yet, so it still
+  /// goes out as a frame.
   Future<void> _uploadSnapshot() async {
-    final pending = await _isar.outboxOps.where().findAll();
     final backup = await buildBackupFile(
       _isar,
       now: DateTime.fromMillisecondsSinceEpoch(_nowMillis(), isUtc: true),
       appVersion: _appVersion,
       platform: _platform,
     );
-    _snapshotOps = {for (final o in pending) o.id: o.hlc};
+    _snapshotPending = true;
     _transport.send(
       UploadSnapshot(
         RelaySnapshot(
-          coversSeq: await _cursor(),
+          coversSeq: (await _meta())?.serverCursor ?? 0,
           blob: await _seal(backup.bytes, SealPurpose.snapshot),
         ),
       ),
@@ -458,11 +566,7 @@ class SyncEngine {
     );
   }
 
-  Future<int> _cursor() async =>
-      (await _isar.syncMetas.get(SyncMeta.singletonId))?.serverCursor ?? 0;
-
-  Future<String> _historyId() async =>
-      (await _isar.syncMetas.get(SyncMeta.singletonId))?.historyId ?? '';
+  Future<SyncMeta?> _meta() => _isar.syncMetas.get(SyncMeta.singletonId);
 
   Future<void> _setCursor(int seq) => _isar.writeTxn(() async {
     final meta = await _isar.syncMetas.get(SyncMeta.singletonId);

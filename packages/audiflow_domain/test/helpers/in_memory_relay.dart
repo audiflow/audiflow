@@ -17,7 +17,21 @@ class InMemoryRelay {
 
   int _tokens = 0;
 
-  InMemoryTransport connect() => InMemoryTransport._(this);
+  final _open = <InMemoryTransport>{};
+
+  InMemoryTransport connect() {
+    final t = InMemoryTransport._(this);
+    _open.add(t);
+    return t;
+  }
+
+  /// Drops every connection from the relay's side, as a relay restart or
+  /// network loss does.
+  Future<void> disconnectAll() async {
+    for (final t in _open.toList()) {
+      await t.close();
+    }
+  }
 
   /// Frames the relay stores for [accountId], for checks.
   List<RelayFrame> framesOf(String accountId) =>
@@ -198,6 +212,7 @@ class InMemoryTransport implements SyncTransport {
     if (_closed) return;
     _closed = true;
     _account?.connections.remove(this);
+    _relay._open.remove(this);
     await _controller.close();
   }
 }

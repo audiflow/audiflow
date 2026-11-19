@@ -35,6 +35,7 @@ class _Device {
     InMemoryRelay relay,
     SyncOpening opening, {
     SyncCredentials? credentials,
+    int maxOpsPerFrame = 500,
   }) async {
     if (opening != SyncOpening.resume) {
       session = SyncSession(
@@ -57,6 +58,7 @@ class _Device {
       platform: 'ios',
       logger: Logger(level: Level.off),
       nowMillis: () => now,
+      maxOpsPerFrame: maxOpsPerFrame,
     );
     await e.connect(opening);
   }
@@ -307,5 +309,121 @@ void main() {
 
     check(relay.framesOf(credentials.accountIdText)).isEmpty();
     check(relay.snapshotOf(credentials.accountIdText)).isNotNull();
+  });
+
+  test('a frame never splits a row', () async {
+    await pair();
+    await a.goOffline();
+    // An episode B has never seen: its row needs podcastKey alongside.
+    a.now += 1000;
+    await a.setPosition('ek-new', 900);
+    await a.connect(relay, SyncOpening.resume, maxOpsPerFrame: 2);
+    await settle();
+
+    check(await b.position('ek-new')).equals(900);
+  });
+
+  test('an edit right after joining still reaches the others', () async {
+    await a.connect(relay, SyncOpening.create, credentials: credentials);
+    await settle();
+    await b.connect(relay, SyncOpening.join, credentials: credentials);
+    // Before the full-state frames are acknowledged and the snapshot goes.
+    b.now += 1000;
+    await b.setPosition('ek-late', 321);
+    await settle();
+
+    check(await a.position('ek-late')).equals(321);
+  });
+
+  test(
+    'after the outbox cap dropped ops, the whole state goes again',
+    () async {
+      await pair();
+      await b.goOffline();
+      b.now += 1000;
+      await b.setPosition('ek-dropped', 555);
+      // What the cap does: the op is gone, the mark is set.
+      await b.isar.writeTxn(() async {
+        await b.isar.outboxOps.clear();
+        final meta = (await b.isar.syncMetas.get(SyncMeta.singletonId))!;
+        await b.isar.syncMetas.put(meta..outboxOverflowed = true);
+      });
+
+      await b.connect(relay, SyncOpening.resume);
+      await settle();
+
+      check(await a.position('ek-dropped')).equals(555);
+      check((await b.meta()).outboxOverflowed).isFalse();
+    },
+  );
+
+  test('a joining device titles podcasts from the snapshot', () async {
+    await a.setSubscribed('pk1', subscribed: true);
+    await a.isar.writeTxn(
+      () => a.isar.subscriptions.put(
+        Subscription()
+          ..itunesId = '1'
+          ..feedUrl = 'https://example.com/pk1.xml'
+          ..title = 'Show One'
+          ..artistName = 'Host'
+          ..subscribedAt = DateTime.utc(2026)
+          ..podcastKey = 'pk1',
+      ),
+    );
+
+    await pair();
+
+    final sub = await b.isar.subscriptions
+        .filter()
+        .podcastKeyEqualTo('pk1')
+        .findFirst();
+    check(sub).isNotNull().has((s) => s.title, 'title').equals('Show One');
+  });
+
+  test('a dropped connection ends the session with a failure', () async {
+    await pair();
+    final done = a.engine!.done;
+
+    await relay.disconnectAll();
+    await settle();
+
+    await check(done).throws<SyncRelayFailure>();
+  });
+
+  group('dropBeatenOps', () {
+    Future<void> putOp(String entity, int hlc) => a.isar.writeTxn(
+      () => a.isar.outboxOps.put(
+        OutboxOp()
+          ..opId = 'op-$entity'
+          ..entity = entity
+          ..key = 'k'
+          ..fieldId = 1
+          ..hlc = hlc
+          ..payload = [],
+      ),
+    );
+
+    ReceivedField field(String entity, int hlc) =>
+        (entity: entity, key: 'k', fieldId: 1, hlc: hlc, value: Uint8List(0));
+
+    test('drops an op an incoming newer clock beats', () async {
+      await putOp('episode', 10);
+      await dropBeatenOps(a.isar, [field('episode', 20)], nowMillis: a.now);
+      check(await a.isar.outboxOps.count()).equals(0);
+    });
+
+    test('keeps a newer local op', () async {
+      await putOp('episode', 30);
+      await dropBeatenOps(a.isar, [field('episode', 20)], nowMillis: a.now);
+      check(await a.isar.outboxOps.count()).equals(1);
+    });
+
+    test('keeps counter ops, which merge by maximum', () async {
+      await putOp(UserStateEntities.episodeCounter.name, 10);
+      await dropBeatenOps(a.isar, [
+        field(UserStateEntities.episodeCounter.name, 20),
+      ], nowMillis: a.now);
+      check(await a.isar.outboxOps.count()).equals(1);
+    });
   });
 }

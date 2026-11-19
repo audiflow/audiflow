@@ -3,9 +3,11 @@ import 'dart:typed_data';
 import 'package:isar_community/isar.dart';
 
 import '../../snapshot/snapshot_body.dart';
+import '../../user_state/models/hlc.dart';
 import '../../user_state/models/outbox_op.dart';
 import '../../user_state/sync/proto_wire.dart';
 import '../../user_state/sync/user_state_codec.dart';
+import '../../user_state/sync/user_state_fields.dart';
 
 /// One batch of ops as a sync frame carries it, before sealing (plan P5).
 ///
@@ -125,23 +127,32 @@ typedef ReceivedField = ({
   Uint8List value,
 });
 
-/// Removes pending ops that received [fields] beat, by the merge rule:
-/// an older clock, or an equal one whose value does not sort above. They
-/// would lose at every receiver, so sending them only costs traffic. A
-/// local change newer than what arrived stays and goes out.
-Future<void> dropBeatenOps(Isar isar, Iterable<ReceivedField> fields) =>
-    isar.writeTxn(() async {
-      for (final f in fields) {
-        final op = await isar.outboxOps.getByEntityKeyFieldId(
-          f.entity,
-          f.key,
-          f.fieldId,
-        );
-        if (op == null) continue;
-        final beaten =
-            op.hlc < f.hlc ||
-            (op.hlc == f.hlc &&
-                !sortsAbove(fieldValueBytes(op.payload), f.value));
-        if (beaten) await isar.outboxOps.delete(op.id);
-      }
-    });
+/// Removes pending ops that received [fields] beat under the merge rules:
+/// an older clock than the incoming one (clamped to [Hlc.maxDrift] ahead,
+/// as the merge clamps it), or an equal one whose value does not sort
+/// above. They would lose at every receiver, so sending them only costs
+/// traffic. A local change newer than what arrived stays and goes out.
+///
+/// Grow-only counters merge by maximum, not by clock, so their pending ops
+/// always stay: a larger local count must still reach the others.
+Future<void> dropBeatenOps(
+  Isar isar,
+  Iterable<ReceivedField> fields, {
+  required int nowMillis,
+}) => isar.writeTxn(() async {
+  for (final f in fields) {
+    if (f.entity == UserStateEntities.episodeCounter.name) continue;
+    final op = await isar.outboxOps.getByEntityKeyFieldId(
+      f.entity,
+      f.key,
+      f.fieldId,
+    );
+    if (op == null) continue;
+    final incoming = Hlc.unpack(f.hlc).clampedTo(nowMillis).packed;
+    final beaten =
+        op.hlc < incoming ||
+        (op.hlc == incoming &&
+            !sortsAbove(fieldValueBytes(op.payload), f.value));
+    if (beaten) await isar.outboxOps.delete(op.id);
+  }
+});

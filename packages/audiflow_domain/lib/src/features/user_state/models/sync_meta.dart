@@ -54,4 +54,9 @@ class SyncMeta {
   /// The relay `seq` up to which this device has merged every frame, or
   /// the `seq` the snapshot it merged covers; 0 before sync was on.
   int serverCursor = 0;
+
+  /// The outbox cap dropped pending ops. While sync is off the first
+  /// upload sends the whole state anyway; once enrolled, the next
+  /// connection sends the whole state again so nothing dropped is lost.
+  bool outboxOverflowed = false;
 }

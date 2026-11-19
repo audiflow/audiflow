@@ -38,23 +38,28 @@ const SyncMetaSchema = CollectionSchema(
       name: r'lastSnapshotHlc',
       type: IsarType.long,
     ),
-    r'queueProjectionPending': PropertySchema(
+    r'outboxOverflowed': PropertySchema(
       id: 5,
+      name: r'outboxOverflowed',
+      type: IsarType.bool,
+    ),
+    r'queueProjectionPending': PropertySchema(
+      id: 6,
       name: r'queueProjectionPending',
       type: IsarType.bool,
     ),
     r'schemaVersion': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'schemaVersion',
       type: IsarType.long,
     ),
     r'serverCursor': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'serverCursor',
       type: IsarType.long,
     ),
     r'tombstoneHorizon': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'tombstoneHorizon',
       type: IsarType.long,
     ),
@@ -102,10 +107,11 @@ void _syncMetaSerialize(
   writer.writeString(offsets[2], object.historyId);
   writer.writeLong(offsets[3], object.hlc);
   writer.writeLong(offsets[4], object.lastSnapshotHlc);
-  writer.writeBool(offsets[5], object.queueProjectionPending);
-  writer.writeLong(offsets[6], object.schemaVersion);
-  writer.writeLong(offsets[7], object.serverCursor);
-  writer.writeLong(offsets[8], object.tombstoneHorizon);
+  writer.writeBool(offsets[5], object.outboxOverflowed);
+  writer.writeBool(offsets[6], object.queueProjectionPending);
+  writer.writeLong(offsets[7], object.schemaVersion);
+  writer.writeLong(offsets[8], object.serverCursor);
+  writer.writeLong(offsets[9], object.tombstoneHorizon);
 }
 
 SyncMeta _syncMetaDeserialize(
@@ -121,10 +127,11 @@ SyncMeta _syncMetaDeserialize(
   object.hlc = reader.readLong(offsets[3]);
   object.id = id;
   object.lastSnapshotHlc = reader.readLong(offsets[4]);
-  object.queueProjectionPending = reader.readBool(offsets[5]);
-  object.schemaVersion = reader.readLong(offsets[6]);
-  object.serverCursor = reader.readLong(offsets[7]);
-  object.tombstoneHorizon = reader.readLong(offsets[8]);
+  object.outboxOverflowed = reader.readBool(offsets[5]);
+  object.queueProjectionPending = reader.readBool(offsets[6]);
+  object.schemaVersion = reader.readLong(offsets[7]);
+  object.serverCursor = reader.readLong(offsets[8]);
+  object.tombstoneHorizon = reader.readLong(offsets[9]);
   return object;
 }
 
@@ -148,10 +155,12 @@ P _syncMetaDeserializeProp<P>(
     case 5:
       return (reader.readBool(offset)) as P;
     case 6:
-      return (reader.readLong(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 7:
       return (reader.readLong(offset)) as P;
     case 8:
+      return (reader.readLong(offset)) as P;
+    case 9:
       return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -743,6 +752,15 @@ extension SyncMetaQueryFilter
   }
 
   QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
+  outboxOverflowedEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'outboxOverflowed', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterFilterCondition>
   queueProjectionPendingEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -993,6 +1011,18 @@ extension SyncMetaQuerySortBy on QueryBuilder<SyncMeta, SyncMeta, QSortBy> {
     });
   }
 
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> sortByOutboxOverflowed() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'outboxOverflowed', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> sortByOutboxOverflowedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'outboxOverflowed', Sort.desc);
+    });
+  }
+
   QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy>
   sortByQueueProjectionPending() {
     return QueryBuilder.apply(this, (query) {
@@ -1120,6 +1150,18 @@ extension SyncMetaQuerySortThenBy
     });
   }
 
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> thenByOutboxOverflowed() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'outboxOverflowed', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy> thenByOutboxOverflowedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'outboxOverflowed', Sort.desc);
+    });
+  }
+
   QueryBuilder<SyncMeta, SyncMeta, QAfterSortBy>
   thenByQueueProjectionPending() {
     return QueryBuilder.apply(this, (query) {
@@ -1208,6 +1250,12 @@ extension SyncMetaQueryWhereDistinct
     });
   }
 
+  QueryBuilder<SyncMeta, SyncMeta, QDistinct> distinctByOutboxOverflowed() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'outboxOverflowed');
+    });
+  }
+
   QueryBuilder<SyncMeta, SyncMeta, QDistinct>
   distinctByQueueProjectionPending() {
     return QueryBuilder.apply(this, (query) {
@@ -1270,6 +1318,12 @@ extension SyncMetaQueryProperty
   QueryBuilder<SyncMeta, int, QQueryOperations> lastSnapshotHlcProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'lastSnapshotHlc');
+    });
+  }
+
+  QueryBuilder<SyncMeta, bool, QQueryOperations> outboxOverflowedProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'outboxOverflowed');
     });
   }
 
