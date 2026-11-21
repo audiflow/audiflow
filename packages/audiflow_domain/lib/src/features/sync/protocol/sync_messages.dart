@@ -276,7 +276,10 @@ sealed class RelayMessage {
 
   String encode() => jsonEncode(toJson());
 
-  /// Throws [FormatException] for anything but a version 1 message.
+  /// Throws [FormatException] for anything but a version 1 message. A
+  /// type this version does not know decodes as [UnknownRelayMessage]: a
+  /// newer relay may add messages within the version, and a session must
+  /// not end over one.
   static RelayMessage decode(String text) {
     final json = _object(jsonDecode(text));
     return switch (json['type']) {
@@ -305,9 +308,20 @@ sealed class RelayMessage {
         blob: decodeBytes(json['blob']),
       ),
       'error' => RelayError(_string(json, 'code')),
-      final other => throw FormatException('unknown message type', other),
+      final String other => UnknownRelayMessage(other),
+      final other => throw FormatException('message type missing', other),
     };
   }
+}
+
+class UnknownRelayMessage extends RelayMessage {
+  const UnknownRelayMessage(this.type);
+
+  @override
+  final String type;
+
+  @override
+  Map<String, Object?> get fields => const {};
 }
 
 class Welcome extends RelayMessage {

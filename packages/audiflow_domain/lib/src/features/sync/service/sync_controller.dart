@@ -293,21 +293,25 @@ class SyncController {
   /// the episode or play state changed, on a seek, and every
   /// [presenceRefresh] while playing.
   void setPresence(SyncPresence? presence) {
+    final previous = _localPresence;
     _localPresence = presence;
     final engine = _engine;
     if (engine == null || _status.phase != SyncPhase.connected) return;
     if (presence == null) {
-      // Stopped: say so once, as paused, so the others drop it.
+      // Stopped: say so once, as paused, so the others drop it. The last
+      // local position, not the last sent one: a throttled update is newer.
       final sent = _sentPresence;
       if (sent == null || !sent.playing) return;
+      final last = previous ?? sent;
       _sendPresence(
         engine,
         SyncPresence(
-          episodeKey: sent.episodeKey,
-          positionMs: sent.positionMs,
-          durationMs: sent.durationMs,
+          episodeKey: last.episodeKey,
+          positionMs: last.positionMs,
+          durationMs: last.durationMs,
           playing: false,
           sentAt: _nowMillis(),
+          speed: last.speed,
         ),
       );
       return;
@@ -328,7 +332,7 @@ class SyncController {
     }
     final elapsed = presence.sentAt - sent.sentAt;
     if (presenceRefresh.inMilliseconds <= elapsed) return true;
-    final expected = sent.positionMs + elapsed;
+    final expected = sent.positionMs + (elapsed * sent.speed).round();
     return _seekToleranceMs < (presence.positionMs - expected).abs();
   }
 
@@ -476,6 +480,9 @@ class SyncController {
       _onFailure(SyncRelayFailure.closed, credentials);
     } finally {
       if (identical(_engine, engine)) _engine = null;
+      // Another device's presence is only known while connected; a retry
+      // gap must not show it as still playing.
+      if (engine != null) _clearPresences();
       // The engine closes its transport; one opened without an engine
       // would stay open.
       if (engine == null) await _closeQuietly(transport);

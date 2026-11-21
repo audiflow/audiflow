@@ -10,12 +10,17 @@ class SyncPresence {
     required this.durationMs,
     required this.playing,
     required this.sentAt,
+    this.speed = 1.0,
   });
 
   final String episodeKey;
   final int positionMs;
   final int durationMs;
   final bool playing;
+
+  /// Playback rate, so the position can be told apart from a seek and
+  /// advanced between refreshes.
+  final double speed;
 
   /// Sender's wall clock (ms), so a receiver can advance the position
   /// while playing and drop a presence that stopped being refreshed.
@@ -29,6 +34,7 @@ class SyncPresence {
       'durationMs': durationMs,
       'playing': playing,
       'sentAt': sentAt,
+      'speed': speed,
     }),
   );
 
@@ -47,6 +53,7 @@ class SyncPresence {
       'durationMs': final int durationMs,
       'playing': final bool playing,
       'sentAt': final int sentAt,
+      'speed': final num speed,
     }) {
       return SyncPresence(
         episodeKey: episodeKey,
@@ -54,6 +61,7 @@ class SyncPresence {
         durationMs: durationMs,
         playing: playing,
         sentAt: sentAt,
+        speed: speed.toDouble(),
       );
     }
     throw const FormatException('presence malformed');
@@ -66,11 +74,12 @@ class SyncPresence {
       other.positionMs == positionMs &&
       other.durationMs == durationMs &&
       other.playing == playing &&
-      other.sentAt == sentAt;
+      other.sentAt == sentAt &&
+      other.speed == speed;
 
   @override
   int get hashCode =>
-      Object.hash(episodeKey, positionMs, durationMs, playing, sentAt);
+      Object.hash(episodeKey, positionMs, durationMs, playing, sentAt, speed);
 }
 
 /// Another device's presence as this one received it.

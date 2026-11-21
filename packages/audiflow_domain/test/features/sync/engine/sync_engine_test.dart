@@ -265,6 +265,31 @@ void main() {
       check(await b.subscribed('pk2')).equals(true);
     });
 
+    test('drain keeps going until every push is acknowledged', () async {
+      await a.connect(
+        relay,
+        SyncOpening.create,
+        credentials: credentials,
+        maxOpsPerFrame: 1,
+      );
+      await settle();
+      await b.connect(relay, SyncOpening.join, credentials: credentials);
+      await settle();
+      for (var i = 0; i < 3; i++) {
+        a.now += 1000;
+        await a.setPosition('ek-d$i', 1000 + i);
+      }
+      // Ops written behind a push still in flight wait for its ack.
+      await a.engine!.drain();
+      await a.goOffline();
+      await settle();
+
+      check(await a.outbox()).equals(0);
+      for (var i = 0; i < 3; i++) {
+        check(await b.position('ek-d$i')).equals(1000 + i);
+      }
+    });
+
     test('drain sends the waiting position before closing', () async {
       await playing();
 
@@ -308,6 +333,17 @@ void main() {
       final sent = relay.received.single;
       check(sent).contains('"type":"presence"');
       check(sent).not((s) => s.contains('ek1'));
+    });
+
+    test('a message type from a newer relay is ignored', () async {
+      await pair();
+
+      relay.injectRaw(credentials.accountIdText, '{"type":"future-thing"}');
+      a.now += 1000;
+      await a.setSubscribed('pk4', subscribed: true);
+      await settle();
+
+      check(await b.subscribed('pk4')).equals(true);
     });
 
     test('an unreadable presence is ignored', () async {

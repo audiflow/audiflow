@@ -214,6 +214,51 @@ void main() {
       check(b.presences.single.presence.playing).isFalse();
     });
 
+    test('stopping sends the latest position, not the last sent', () async {
+      a.setPresence(at(0));
+      now += 5000;
+      a.setPresence(at(5000));
+      await drain();
+      a.setPresence(null);
+      await drain();
+
+      check(b.presences.single.presence)
+        ..has((p) => p.positionMs, 'positionMs').equals(5000)
+        ..has((p) => p.playing, 'playing').isFalse();
+    });
+
+    test('fast playback is not mistaken for a seek', () async {
+      SyncPresence fast(int positionMs) => SyncPresence(
+        episodeKey: 'ek1',
+        positionMs: positionMs,
+        durationMs: 3600000,
+        playing: true,
+        sentAt: now,
+        speed: 2,
+      );
+      a.setPresence(fast(0));
+      now += 5000;
+      a.setPresence(fast(10000));
+
+      check(await presencesSent()).equals(1);
+    });
+
+    test('a dropped connection drops what others play', () async {
+      a.setPresence(at(0));
+      await drain();
+      check(b.presences).isNotEmpty();
+      final seen = <int>[];
+      final sub = b.presenceChanges.listen((p) => seen.add(p.length));
+      addTearDown(sub.cancel);
+
+      // Both reconnect at once and A sends its presence again, so the
+      // retry gap shows as an empty list in between.
+      await relay.disconnectAll();
+      await drain();
+
+      check(seen).contains(0);
+    });
+
     test('a presence not refreshed expires', () async {
       a.setPresence(at(0));
       await drain();

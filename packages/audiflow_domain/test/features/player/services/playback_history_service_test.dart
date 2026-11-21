@@ -323,18 +323,43 @@ void main() {
       when(mockRepository.markCompleted(any)).thenAnswer((_) async {});
     });
 
-    test('fires on pause, stop, seek, and marking played', () async {
+    test('fires on pause, stop, and marking played', () async {
       await service.onPlaybackPaused(1, progress);
       await service.onPlaybackStopped(1, progress);
+      await service.markCompleted(1);
+
+      check(urgent).equals(3);
+    });
+
+    test('a small seek is saved and sent on the next update', () async {
+      await service.onProgressUpdate(1, progress);
       await service.onSeeked(
         1,
         from: const Duration(seconds: 30),
-        to: const Duration(minutes: 10),
+        to: const Duration(seconds: 31),
         duration: const Duration(minutes: 30),
       );
-      await service.markCompleted(1);
+      check(urgent).equals(0);
 
-      check(urgent).equals(4);
+      await service.onProgressUpdate(
+        1,
+        PlaybackProgress(
+          position: const Duration(seconds: 31),
+          duration: const Duration(minutes: 30),
+          bufferedPosition: const Duration(seconds: 35),
+        ),
+      );
+
+      check(urgent).equals(1);
+      verify(
+        mockRepository.saveProgress(
+          episodeId: 1,
+          positionMs: 31000,
+          durationMs: anyNamed('durationMs'),
+          listenedDeltaMs: anyNamed('listenedDeltaMs'),
+          realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
+        ),
+      ).called(1);
     });
 
     test('a steady progress save waits', () async {

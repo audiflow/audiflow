@@ -72,6 +72,14 @@ class InMemoryRelay {
     }
   }
 
+  /// Delivers [text] as is to every connection of [accountId], as a newer
+  /// relay's message would arrive.
+  void injectRaw(String accountId, String text) {
+    for (final c in _accounts[accountId]!.connections) {
+      c._deliverRaw(text);
+    }
+  }
+
   /// Frames the relay stores for [accountId], for checks.
   List<RelayFrame> framesOf(String accountId) =>
       List.of(_accounts[accountId]!.frames);
@@ -264,9 +272,10 @@ class InMemoryTransport implements SyncTransport {
     if (!_closed) _controller.addError(error);
   }
 
-  void _deliver(RelayMessage message) {
+  void _deliver(RelayMessage message) => _deliverRaw(message.encode());
+
+  void _deliverRaw(String text) {
     if (_closed) return;
-    final text = message.encode();
     scheduleMicrotask(() {
       if (!_closed) _controller.add(RelayMessage.decode(text));
     });

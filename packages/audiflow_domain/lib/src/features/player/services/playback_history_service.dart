@@ -65,10 +65,13 @@ class PlaybackHistoryService {
   final ReviewPromptTrigger? _reviewPromptTrigger;
   final AutoDownloadPauseService? _autoDownloadPause;
 
-  /// Called just before a save the other devices should get at once
+  /// Called right after a save the other devices should get at once
   /// (pause, stop, seek, completion); steady progress saves wait for the
   /// sync interval instead.
   final void Function()? _onUrgentSave;
+
+  /// A seek happened since the last progress save.
+  bool _seekPending = false;
 
   /// Injectable clock for testing.
   final DateTime Function() _clock;
@@ -144,8 +147,9 @@ class PlaybackHistoryService {
     required Duration to,
     required Duration duration,
   }) async {
-    // The next progress update saves the new position.
-    _onUrgentSave?.call();
+    // The next progress update saves the new position however small the
+    // jump, and sends it at once.
+    _seekPending = true;
     if (to < from) {
       await _reopenListenBelowThreshold(
         episodeId,
@@ -219,9 +223,11 @@ class PlaybackHistoryService {
     // the previous episode during track transitions.
     if (durationMs == 0) return;
 
-    // Throttle saves to every 5 seconds
+    // Throttle saves to every 5 seconds, except the one after a seek.
     final delta = (positionMs - _session.lastSavedPositionMs).abs();
-    if (delta < saveIntervalMs) return;
+    final seeked = _seekPending;
+    if (delta < saveIntervalMs && !seeked) return;
+    _seekPending = false;
 
     final now = _clock();
     final durations = _computeListenDurations(
@@ -239,6 +245,7 @@ class PlaybackHistoryService {
       listenedDeltaMs: durations.listenedMs,
       realtimeDeltaMs: durations.realtimeMs,
     );
+    if (seeked) _onUrgentSave?.call();
 
     // Accumulate into the app-wide review-prompt counter.
     if (0 < durations.listenedMs) {
@@ -288,7 +295,6 @@ class PlaybackHistoryService {
       at: now,
     );
 
-    _onUrgentSave?.call();
     await _repository.saveProgress(
       episodeId: episodeId,
       positionMs: progress.position.inMilliseconds,
@@ -296,6 +302,8 @@ class PlaybackHistoryService {
       listenedDeltaMs: durations.listenedMs,
       realtimeDeltaMs: durations.realtimeMs,
     );
+    // After the write commits, so the flush that sends it is urgent.
+    _onUrgentSave?.call();
     if (!_progressSaved.isClosed) _progressSaved.add(episodeId);
 
     if (0 < durations.listenedMs) {
@@ -323,7 +331,6 @@ class PlaybackHistoryService {
       speed: speed,
     );
 
-    _onUrgentSave?.call();
     await _repository.saveProgress(
       episodeId: episodeId,
       positionMs: progress.position.inMilliseconds,
@@ -331,6 +338,8 @@ class PlaybackHistoryService {
       listenedDeltaMs: durations.listenedMs,
       realtimeDeltaMs: durations.realtimeMs,
     );
+    // After the write commits, so the flush that sends it is urgent.
+    _onUrgentSave?.call();
     if (!_progressSaved.isClosed) _progressSaved.add(episodeId);
 
     if (0 < durations.listenedMs) {
@@ -342,20 +351,21 @@ class PlaybackHistoryService {
     _reviewPromptTrigger?.cancel();
 
     _session = const _ListenSession.none();
+    _seekPending = false;
   }
 
   /// Manually marks an episode as completed, which finishes its listen.
   /// Marking a played episode does not count another completion.
   Future<void> markCompleted(int episodeId) async {
-    _onUrgentSave?.call();
     await _repository.markCompleted(episodeId);
+    _onUrgentSave?.call();
     await _tryReconcile(episodeId);
   }
 
   /// Manually marks an episode as incomplete.
   Future<void> markIncomplete(int episodeId) async {
-    _onUrgentSave?.call();
     await _repository.markIncomplete(episodeId);
+    _onUrgentSave?.call();
     await _tryReconcile(episodeId);
   }
 

@@ -159,8 +159,14 @@ class SyncEngine {
   int _urgentUntil = 0;
   Timer? _steadyTimer;
 
-  /// Completes when the push in flight is acknowledged, for [drain].
-  Completer<void>? _acked;
+  /// Completes when the relay acknowledges a push or stores a snapshot,
+  /// for [drain].
+  Completer<void>? _progress;
+
+  void _completeProgress() {
+    _progress?.complete();
+    _progress = null;
+  }
 
   Future<void> _queue = Future.value();
   StreamSubscription<RelayMessage>? _messages;
@@ -249,19 +255,39 @@ class SyncEngine {
 
   /// Sends what is pending and waits, up to [timeout], for the relay to
   /// acknowledge it: before closing as the app goes to the background.
+  ///
+  /// One deadline covers the whole call: queued steps, each push and its
+  /// acknowledgement, and the pushes an acknowledgement lets go. It returns
+  /// early once nothing is waiting for the relay.
   Future<void> drain({Duration timeout = const Duration(seconds: 3)}) async {
     if (_closed) return;
-    sendSoon();
-    await _queue;
-    final acked = _inFlight == null ? null : (_acked ??= Completer<void>());
-    if (acked == null) return;
-    await acked.future.timeout(timeout, onTimeout: () {});
+    final deadline = _nowMillis() + timeout.inMilliseconds;
+    // Steady changes must not wait for their interval meanwhile.
+    _urgentUntil = deadline;
+    _enqueue(_flush);
+    final stopwatch = Stopwatch()..start();
+    Duration left() => timeout - stopwatch.elapsed;
+    while (!_closed && Duration.zero < left()) {
+      final queued = await _queue
+          .then((_) => true)
+          .timeout(left(), onTimeout: () => false);
+      if (!queued || _closed) return;
+      // Nothing sent and nothing on its way: whatever is left cannot go
+      // now (not caught up yet), so waiting would only spin.
+      if (_inFlight == null && !_snapshotPending) return;
+      final progress = _progress ??= Completer<void>();
+      final moved = await progress.future
+          .then((_) => true)
+          .timeout(left(), onTimeout: () => false);
+      if (!moved) return;
+    }
   }
 
   Future<void> close() async {
     if (_closed) return;
     _closed = true;
     _steadyTimer?.cancel();
+    _completeProgress();
     await _outboxWatch?.cancel();
     await _messages?.cancel();
     await _queue;
@@ -304,6 +330,7 @@ class SyncEngine {
     _logger.w('Sync session ended: ${failure.code}');
     _closed = true;
     _steadyTimer?.cancel();
+    _completeProgress();
     _inFlight = null;
     _fullState = null;
     _snapshotPending = false;
@@ -367,7 +394,11 @@ class SyncEngine {
         await _onPushed(seqs);
       case SnapshotStored():
         _snapshotPending = false;
+        _completeProgress();
         await _flush();
+      case UnknownRelayMessage(:final type):
+        // A newer relay's message this version cannot use.
+        _logger.d('Ignoring relay message $type');
       case PresenceUpdate(:final deviceId, :final blob):
         await _onPresenceUpdate(deviceId, blob);
       case RelayError(:final code):
@@ -598,8 +629,7 @@ class SyncEngine {
     final acked = [for (final id in inFlight.clientIds) ?seqs[id]]..sort();
     if (acked.length != inFlight.clientIds.length) return;
     _inFlight = null;
-    _acked?.complete();
-    _acked = null;
+    _completeProgress();
     await _deleteSent(inFlight.ops);
     // Frames from others before these arrived ahead of the ack, in seq
     // order; a gap means some did not, and the next catch-up brings them.
