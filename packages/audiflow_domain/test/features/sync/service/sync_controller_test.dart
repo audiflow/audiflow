@@ -152,6 +152,10 @@ void main() {
     await reach(b, SyncPhase.connected);
 
     check(storeB.device).isNotNull().has((d) => d.token, 'token').isNotNull();
+    check(
+      b.devices.map((d) => d.deviceId).toSet(),
+    ).deepEquals({'device-a', 'device-b'});
+    check(b.deviceId).equals('device-b');
   });
 
   test('a later launch resumes with the stored token', () async {
@@ -307,6 +311,19 @@ void main() {
     check(
       (await isarB.syncMetas.get(SyncMeta.singletonId))!.serverCursor,
     ).equals(0);
+  });
+
+  test('a second setup while one runs is refused', () async {
+    final store = _MemoryStore();
+    final c = controller(await newIsar('a'), store);
+    await c.load();
+
+    final first = c.turnOn();
+    await check(c.join(SyncCredentials.generate())).throws<StateError>();
+    await first;
+
+    check(store.synced).length.equals(1);
+    check(c.credentials!.accountIdText).equals(store.synced.keys.single);
   });
 
   test('active again while closing reconnects', () async {

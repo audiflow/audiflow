@@ -38,6 +38,9 @@ import '../features/parental_control/presentation/screens/pin_setup_screen.dart'
 import '../features/settings/presentation/screens/settings_screen.dart';
 import '../features/settings/presentation/screens/backup_restore_confirm_screen.dart';
 import '../features/settings/presentation/screens/storage_settings_screen.dart';
+import '../features/sync/presentation/screens/sync_add_device_screen.dart';
+import '../features/sync/presentation/screens/sync_join_screen.dart';
+import '../features/sync/presentation/screens/sync_settings_screen.dart';
 import '../features/settings/presentation/screens/design_gallery_screen.dart';
 import '../features/settings/presentation/screens/haptics_catalog_screen.dart';
 import '../features/settings/presentation/screens/developer_settings_screen.dart';
@@ -79,6 +82,9 @@ class AppRoutes {
   static const String settingsPlayback = '/settings/playback';
   static const String settingsDownloads = '/settings/downloads';
   static const String settingsFeedSync = '/settings/feed-sync';
+  static const String settingsDeviceSync = '/settings/device-sync';
+  static const String settingsDeviceSyncAdd = '/settings/device-sync/add';
+  static const String settingsDeviceSyncJoin = '/settings/device-sync/join';
   static const String settingsStorage = '/settings/storage';
   static const String settingsStorageRestore = '/settings/storage/restore';
   static const String settingsAbout = '/settings/about';
@@ -399,6 +405,21 @@ GoRouter createAppRouter({
                   materialRoute(
                     path: 'feed-sync',
                     builder: (context, state) => const FeedSyncSettingsScreen(),
+                  ),
+                  materialRoute(
+                    path: 'device-sync',
+                    builder: (context, state) => const SyncSettingsScreen(),
+                    routes: [
+                      materialRoute(
+                        path: 'add',
+                        builder: (context, state) =>
+                            const SyncAddDeviceScreen(),
+                      ),
+                      materialRoute(
+                        path: 'join',
+                        builder: (context, state) => const SyncJoinScreen(),
+                      ),
+                    ],
                   ),
                   materialRoute(
                     path: 'storage',

@@ -68,6 +68,8 @@ class SyncController {
   }
 
   final _statusController = StreamController<SyncStatus>.broadcast();
+  final _devicesController = StreamController<List<SyncDevice>>.broadcast();
+  List<SyncDevice> _devices = const [];
   late SyncStatus _status = SyncStatus(
     _relayUrl == null ? SyncPhase.unavailable : SyncPhase.off,
   );
@@ -86,6 +88,16 @@ class SyncController {
   Future<void>? _loading;
 
   SyncStatus get status => _status;
+
+  /// The account's devices as the relay listed them on the last
+  /// connection; empty while sync is off or before the first one.
+  List<SyncDevice> get devices => _devices;
+
+  /// [devices] as they change.
+  Stream<List<SyncDevice>> get deviceChanges => _devicesController.stream;
+
+  /// This device's id within the account, to mark it in [devices].
+  String? get deviceId => isOn ? _device!.deviceId : null;
 
   /// [status] as it changes.
   Stream<SyncStatus> get statusChanges => _statusController.stream;
@@ -149,7 +161,24 @@ class SyncController {
   Future<void> join(SyncCredentials credentials) =>
       _enable(credentials, SyncOpening.join);
 
-  Future<void> _enable(SyncCredentials credentials, SyncOpening opening) async {
+  Future<void>? _enabling;
+
+  Future<void> _enable(SyncCredentials credentials, SyncOpening opening) {
+    // Two setups at once would store one account's credentials while the
+    // other's engine runs.
+    if (_enabling != null) {
+      return Future.error(StateError('sync is already being set up'));
+    }
+    return _enabling = _enableOnce(
+      credentials,
+      opening,
+    ).whenComplete(() => _enabling = null);
+  }
+
+  Future<void> _enableOnce(
+    SyncCredentials credentials,
+    SyncOpening opening,
+  ) async {
     if (_relayUrl == null) throw StateError('sync is unavailable');
     // Its restore would otherwise overwrite this enrollment.
     await load();
@@ -200,6 +229,7 @@ class SyncController {
     await _store.deleteDevice();
     await _store.writeOptedOut(optedOut: true);
     await _resetCursor();
+    _setDevices(const []);
     _setStatus(const SyncStatus(SyncPhase.off));
   }
 
@@ -229,6 +259,7 @@ class SyncController {
     _active = false;
     await _stop();
     await _statusController.close();
+    await _devicesController.close();
   }
 
   Future<void> _stop() async {
@@ -279,6 +310,7 @@ class SyncController {
         platform: _platform,
         logger: _logger,
         onSessionChanged: _saveSession,
+        onDevices: _setDevices,
       );
       // Turned off or backgrounded while opening.
       if (!_wanted(credentials)) {
@@ -358,6 +390,11 @@ class SyncController {
     if (meta == null) return;
     await _isar.syncMetas.put(meta..serverCursor = 0);
   });
+
+  void _setDevices(List<SyncDevice> devices) {
+    _devices = List.unmodifiable(devices);
+    if (!_devicesController.isClosed) _devicesController.add(_devices);
+  }
 
   void _setStatus(SyncStatus status) {
     if (_status == status) return;

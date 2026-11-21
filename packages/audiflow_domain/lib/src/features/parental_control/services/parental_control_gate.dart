@@ -21,6 +21,7 @@ enum UnlockReason {
   developerSettings,
   resetData,
   restoreBackup,
+  syncJoin,
   unspecified,
 }
 

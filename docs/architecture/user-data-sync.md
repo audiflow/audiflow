@@ -270,7 +270,8 @@ As built for M6d part 1 (`features/sync/storage/`, `transport/`, `service/`):
   - It connects while `setActive(true)`; `AppLifecycleObserver` keeps that true while the app is in the foreground or playing (P10). Coming active again while a connection is closing reconnects.
   - Transient failures (`closed`, `internal`, `accountNotReady`, `rateLimited`, and any socket error) are retried after 2 s, doubling up to 5 minutes. Refusals stop in `SyncPhase.failed` until `onForeground`.
   - A device with no record of its own, or one from another install, joins the account its record names, else the credentials stored last, unless it opted out.
-  - The relay URL is the build-time define `SYNC_RELAY_URL`; without it the phase is `unavailable`, and the Settings screens (M6d part 2) hide sync.
+  - The relay URL is the build-time define `SYNC_RELAY_URL`; without it the phase is `unavailable`, and Settings hides sync.
+As built for M6d part 2 (`audiflow_app/lib/features/sync/`): Settings > Sync Across Devices (`/settings/device-sync`). While off it offers Turn On Sync (a new account from this device's library) and Join from Another Device (`/join`: scan the QR code with `mobile_scanner`, or type the recovery code). While on it shows the status, with the reason when the relay refused the device, Add a Device (`/add`: the QR code via `qr_flutter`, and the recovery code behind a tap), the device list from the last `welcome`, and Turn Off Sync on This Device. Each change asks for confirmation first.
 - Known gap: a `create` cut short after the relay accepted it but before the token was stored leaves an account without a snapshot. Retrying `create` then returns `exists`, and the device stops in `failed` until sync is turned off and on again.
 
 ## Realtime playback position

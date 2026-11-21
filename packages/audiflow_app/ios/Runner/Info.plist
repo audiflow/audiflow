@@ -57,6 +57,8 @@
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Scan the sync QR code shown on your other device</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Microphone access for voice commands</string>
 	<key>NSPhotoLibraryUsageDescription</key>

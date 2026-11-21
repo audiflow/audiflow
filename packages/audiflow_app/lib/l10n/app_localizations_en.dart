@@ -538,6 +538,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Restore from a backup';
 
   @override
+  String get parentalControlPinEntryReasonSyncJoin =>
+      'Join sync from another device';
+
+  @override
   String get storageImportTitle => 'Import Subscriptions';
 
   @override
@@ -2596,4 +2600,153 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get feedLinkErrorServer =>
       'The server couldn\'t return the feed. Try again later.';
+
+  @override
+  String get settingsDeviceSyncTitle => 'Sync Across Devices';
+
+  @override
+  String get settingsDeviceSyncSubtitle =>
+      'Library and progress on all your devices';
+
+  @override
+  String get syncIntro =>
+      'Keep subscriptions, play progress, the queue, and stations the same on all your devices. Everything is encrypted on the device; the sync server can\'t read it.';
+
+  @override
+  String get syncTurnOn => 'Turn On Sync';
+
+  @override
+  String get syncTurnOnSubtitle => 'Start with this device\'s library';
+
+  @override
+  String get syncJoin => 'Join from Another Device';
+
+  @override
+  String get syncJoinSubtitle => 'Scan a QR code or enter a recovery code';
+
+  @override
+  String get syncStatusHeader => 'Status';
+
+  @override
+  String get syncStatusOff => 'Off';
+
+  @override
+  String get syncStatusIdle => 'On';
+
+  @override
+  String get syncStatusConnecting => 'Connecting…';
+
+  @override
+  String get syncStatusConnected => 'Up to date';
+
+  @override
+  String get syncStatusRetrying => 'Can\'t reach the sync server. Retrying…';
+
+  @override
+  String get syncStatusFailed => 'Stopped';
+
+  @override
+  String get syncFailedRemoved =>
+      'This device was removed from sync. Turn sync off, then join again.';
+
+  @override
+  String get syncFailedTooOld => 'Update Audiflow to keep syncing.';
+
+  @override
+  String get syncFailedSetup =>
+      'Setup didn\'t finish. Turn sync off, then on again.';
+
+  @override
+  String get syncFailedUnreadable =>
+      'A change from another device couldn\'t be read. Update Audiflow on all your devices.';
+
+  @override
+  String get syncFailedOther =>
+      'Sync stopped. It tries again when you next open the app.';
+
+  @override
+  String get syncAddDevice => 'Add a Device';
+
+  @override
+  String get syncAddDeviceSubtitle => 'Show the QR code and recovery code';
+
+  @override
+  String get syncDevicesHeader => 'Devices';
+
+  @override
+  String get syncDevicesEmpty => 'The list appears once this device connects.';
+
+  @override
+  String get syncThisDevice => 'This device';
+
+  @override
+  String get syncTurnOff => 'Turn Off Sync on This Device';
+
+  @override
+  String get syncTurnOffTitle => 'Turn off sync?';
+
+  @override
+  String get syncTurnOffContent =>
+      'This device stops syncing and keeps its library as it is. Your other devices keep syncing.';
+
+  @override
+  String get syncTurnOffAction => 'Turn Off';
+
+  @override
+  String get syncActionFailed => 'Couldn\'t change sync. Try again.';
+
+  @override
+  String get syncQrInstructions =>
+      'On the other device, open Settings > Sync Across Devices > Join from Another Device and scan this code.';
+
+  @override
+  String get syncRecoveryCodeHeader => 'Recovery Code';
+
+  @override
+  String get syncRecoveryCodeShow => 'Show Recovery Code';
+
+  @override
+  String get syncRecoveryCodeWarning =>
+      'Anyone with this code or the QR code can read your synced data. Write it down and keep it private: it brings your library back if you lose all your devices.';
+
+  @override
+  String get syncJoinTitle => 'Join Sync';
+
+  @override
+  String get syncScanInstructions =>
+      'Scan the QR code shown on your other device under Add a Device.';
+
+  @override
+  String get syncScanInvalid => 'That isn\'t an Audiflow sync code.';
+
+  @override
+  String get syncCameraUnavailable =>
+      'The camera isn\'t available. Allow camera access in Settings, or enter the recovery code.';
+
+  @override
+  String get syncEnterCode => 'Enter Recovery Code';
+
+  @override
+  String get syncEnterCodeHint => 'XXXX-XXXX-…';
+
+  @override
+  String get syncEnterCodeInvalid =>
+      'That code doesn\'t check out. Check each character and try again.';
+
+  @override
+  String get syncJoinConfirmTitle => 'Join sync?';
+
+  @override
+  String get syncJoinConfirmContent =>
+      'This device\'s library merges with your other devices\'. Where they differ, the newer change wins, so podcasts unsubscribed on another device are unsubscribed here too.';
+
+  @override
+  String get syncJoinAction => 'Join';
+
+  @override
+  String get syncTurnOnConfirmTitle => 'Turn on sync?';
+
+  @override
+  String get syncTurnOnConfirmContent =>
+      'A new sync starts with this device\'s library. If another device already syncs, join it instead.';
 }
