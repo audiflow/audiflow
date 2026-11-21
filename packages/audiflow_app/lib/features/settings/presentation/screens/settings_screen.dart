@@ -26,7 +26,7 @@ class SettingsScreen extends ConsumerWidget {
     // Checked first: a build without a relay never builds the controller.
     final syncPhase = ref.watch(syncRelayUrlProvider) == null
         ? SyncPhase.unavailable
-        : ref.watch(syncStatusProvider).value?.phase ?? SyncPhase.off;
+        : ref.watch(syncStatusProvider).phase;
 
     SettingsRow row(IconData icon, String title, String subtitle, String path) {
       return SettingsRow(

@@ -538,6 +538,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Restore from a backup';
 
   @override
+  String get parentalControlPinEntryReasonSyncJoin =>
+      'Join sync from another device';
+
+  @override
   String get storageImportTitle => 'Import Subscriptions';
 
   @override
@@ -2734,7 +2738,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get syncJoinConfirmContent =>
-      'This device\'s library merges with your other devices\'. Nothing is deleted.';
+      'This device\'s library merges with your other devices\'. Where they differ, the newer change wins, so podcasts unsubscribed on another device are unsubscribed here too.';
 
   @override
   String get syncJoinAction => 'Join';

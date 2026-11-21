@@ -32,16 +32,20 @@ Future<bool> runSyncAction(
   WidgetRef ref,
   Future<void> Function(SyncController controller) action,
 ) async {
+  // Read up front: the screen, and with it ref, may be gone by the time
+  // the change fails.
+  final controller = ref.read(syncControllerProvider);
+  final logger = ref.read(namedLoggerProvider('SyncSettings'));
   final messenger = ScaffoldMessenger.of(context);
   final message = AppLocalizations.of(context).syncActionFailed;
   try {
-    await action(ref.read(syncControllerProvider));
+    await action(controller);
     return true;
   } on Object catch (e, stack) {
-    ref
-        .read(namedLoggerProvider('SyncSettings'))
-        .e('Sync change failed', error: e, stackTrace: stack);
-    messenger.showSnackBar(SnackBar(content: Text(message)));
+    logger.e('Sync change failed', error: e, stackTrace: stack);
+    if (context.mounted) {
+      messenger.showSnackBar(SnackBar(content: Text(message)));
+    }
     return false;
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
@@ -8,6 +10,8 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
+import '../../../parental_control/domain/gate_guard.dart';
+import '../../../parental_control/providers/gate_guard_provider.dart';
 import '../widgets/sync_labels.dart';
 
 /// Builds the camera view; calls `onCode` with each scanned QR payload.
@@ -32,67 +36,87 @@ class SyncJoinScreen extends ConsumerStatefulWidget {
 }
 
 class _SyncJoinScreenState extends ConsumerState<SyncJoinScreen> {
-  // One confirmation at a time; the camera keeps reporting the same code.
+  // Held from the first scan or the code dialog until the join ends, so
+  // the camera cannot open a second confirmation over either.
   bool _busy = false;
-  String? _lastInvalid;
+
+  // The camera reports a code for as long as it stays in view: one already
+  // refused or declined is ignored rather than asked about again. Typing
+  // the code, or reopening the screen, still joins with it.
+  final _ignored = <String>{};
 
   Future<void> _onScanned(String text) async {
-    if (_busy || text == _lastInvalid) return;
+    if (_busy || _ignored.contains(text)) return;
     final SyncCredentials credentials;
     try {
       credentials = PairingCodec.decodeQr(text);
     } on FormatException {
-      _lastInvalid = text;
+      _ignored.add(text);
       final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(l10n.syncScanInvalid)));
       return;
     }
-    await _join(credentials);
+    await _guarded(() async {
+      if (!await _join(credentials)) _ignored.add(text);
+    });
   }
 
   Future<void> _enterCode() async {
     if (_busy) return;
-    final credentials = await showDialog<SyncCredentials>(
-      context: context,
-      builder: (_) => const _RecoveryCodeDialog(),
-    );
-    if (credentials == null || !mounted) return;
-    await _join(credentials);
+    await _guarded(() async {
+      final credentials = await showDialog<SyncCredentials>(
+        context: context,
+        builder: (_) => const _RecoveryCodeDialog(),
+      );
+      if (credentials == null || !mounted) return;
+      await _join(credentials);
+    });
   }
 
-  Future<void> _join(SyncCredentials credentials) async {
+  Future<void> _guarded(Future<void> Function() body) async {
     _busy = true;
     try {
-      final l10n = AppLocalizations.of(context);
-      final confirmed = await showDialog<bool>(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-          title: Text(l10n.syncJoinConfirmTitle),
-          content: Text(l10n.syncJoinConfirmContent),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, false),
-              child: Text(l10n.commonCancel),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(dialogContext, true),
-              child: Text(l10n.syncJoinAction),
-            ),
-          ],
-        ),
-      );
-      if (!(confirmed ?? false) || !mounted) return;
-      final joined = await runSyncAction(
-        context,
-        ref,
-        (c) => c.join(credentials),
-      );
-      if (joined && mounted) context.go(AppRoutes.settingsDeviceSync);
+      await body();
     } finally {
       _busy = false;
     }
+  }
+
+  /// Whether the join went ahead.
+  Future<bool> _join(SyncCredentials credentials) async {
+    // Joining rewrites subscriptions from the account, like a restore.
+    final allowed = await ref
+        .read(gateGuardProvider)
+        .requireUnlock(context, reason: GateReason.syncJoin);
+    if (!allowed || !mounted) return false;
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.syncJoinConfirmTitle),
+        content: Text(l10n.syncJoinConfirmContent),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(l10n.commonCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(l10n.syncJoinAction),
+          ),
+        ],
+      ),
+    );
+    if (!(confirmed ?? false) || !mounted) return false;
+    final joined = await runSyncAction(
+      context,
+      ref,
+      (c) => c.join(credentials),
+    );
+    if (joined && mounted) context.go(AppRoutes.settingsDeviceSync);
+    return joined;
   }
 
   @override
@@ -158,15 +182,37 @@ class _CameraScanner extends StatefulWidget {
   State<_CameraScanner> createState() => _CameraScannerState();
 }
 
-class _CameraScannerState extends State<_CameraScanner> {
+class _CameraScannerState extends State<_CameraScanner>
+    with WidgetsBindingObserver {
   final _controller = MobileScannerController(
     formats: const [BarcodeFormat.qrCode],
   );
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
   void dispose() {
-    _controller.dispose();
+    WidgetsBinding.instance.removeObserver(this);
+    unawaited(_controller.dispose());
     super.dispose();
+  }
+
+  // With its own controller the scanner does not restart by itself: after
+  // the user allows the camera in system Settings and comes back, start it
+  // again. Only after a failed start, so a running camera is left alone.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+    if (_controller.value.error == null) return;
+    unawaited(
+      _controller.start().catchError((Object _) {
+        // Still unavailable: the error view stays.
+      }),
+    );
   }
 
   @override

@@ -161,7 +161,24 @@ class SyncController {
   Future<void> join(SyncCredentials credentials) =>
       _enable(credentials, SyncOpening.join);
 
-  Future<void> _enable(SyncCredentials credentials, SyncOpening opening) async {
+  Future<void>? _enabling;
+
+  Future<void> _enable(SyncCredentials credentials, SyncOpening opening) {
+    // Two setups at once would store one account's credentials while the
+    // other's engine runs.
+    if (_enabling != null) {
+      return Future.error(StateError('sync is already being set up'));
+    }
+    return _enabling = _enableOnce(
+      credentials,
+      opening,
+    ).whenComplete(() => _enabling = null);
+  }
+
+  Future<void> _enableOnce(
+    SyncCredentials credentials,
+    SyncOpening opening,
+  ) async {
     if (_relayUrl == null) throw StateError('sync is unavailable');
     // Its restore would otherwise overwrite this enrollment.
     await load();

@@ -483,6 +483,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get parentalControlPinEntryReasonRestoreBackup => 'バックアップから復元';
 
   @override
+  String get parentalControlPinEntryReasonSyncJoin => 'ほかの端末の同期に参加';
+
+  @override
   String get storageImportTitle => '購読をインポート';
 
   @override
@@ -2552,7 +2555,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get syncJoinConfirmContent =>
-      'この端末のライブラリが、ほかの端末のライブラリと統合されます。削除されるものはありません。';
+      'この端末のライブラリが、ほかの端末のライブラリと統合されます。内容が違うところは新しい変更が優先されるため、ほかの端末で登録を解除した番組は、この端末でも解除されます。';
 
   @override
   String get syncJoinAction => '参加する';

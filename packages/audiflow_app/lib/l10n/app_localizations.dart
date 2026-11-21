@@ -980,6 +980,12 @@ abstract class AppLocalizations {
   /// **'Restore from a backup'**
   String get parentalControlPinEntryReasonRestoreBackup;
 
+  /// PIN sheet headline when joining device sync
+  ///
+  /// In en, this message translates to:
+  /// **'Join sync from another device'**
+  String get parentalControlPinEntryReasonSyncJoin;
+
   /// Import subscriptions setting title
   ///
   /// In en, this message translates to:
@@ -4733,7 +4739,7 @@ abstract class AppLocalizations {
   /// Body of the join confirmation
   ///
   /// In en, this message translates to:
-  /// **'This device\'s library merges with your other devices\'. Nothing is deleted.'**
+  /// **'This device\'s library merges with your other devices\'. Where they differ, the newer change wins, so podcasts unsubscribed on another device are unsubscribed here too.'**
   String get syncJoinConfirmContent;
 
   /// Confirms joining

@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:audiflow_app/features/parental_control/domain/gate_guard.dart';
+import 'package:audiflow_app/features/parental_control/providers/gate_guard_provider.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +10,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:isar_community/isar.dart';
 import 'package:logger/logger.dart';
+
+class FakeGateGuard implements GateGuard {
+  bool allow = true;
+  final reasons = <GateReason>[];
+
+  @override
+  Future<bool> requireUnlock(
+    BuildContext context, {
+    required GateReason reason,
+  }) async {
+    reasons.add(reason);
+    return allow;
+  }
+}
 
 class MemorySyncKeyStore implements SyncKeyStore {
   final synced = <String, SyncCredentials>{};
@@ -81,6 +97,7 @@ class SyncHarness {
 
   final Isar isar;
   final MemorySyncKeyStore store;
+  final gate = FakeGateGuard();
   final SyncController controller;
   final Directory _dir;
 
@@ -96,6 +113,7 @@ class SyncHarness {
         Uri.parse('https://relay.example.com'),
       ),
       syncControllerProvider.overrideWithValue(controller),
+      gateGuardProvider.overrideWithValue(gate),
     ],
     child: MaterialApp.router(
       localizationsDelegates: AppLocalizations.localizationsDelegates,

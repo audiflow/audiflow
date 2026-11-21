@@ -20,8 +20,7 @@ class SyncSettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final controller = ref.watch(syncControllerProvider);
-    final status = ref.watch(syncStatusProvider).value ?? controller.status;
+    final status = ref.watch(syncStatusProvider);
     final on = switch (status.phase) {
       SyncPhase.unavailable || SyncPhase.off => false,
       _ => true,
@@ -77,7 +76,7 @@ class SyncSettingsScreen extends ConsumerWidget {
   ) {
     final l10n = AppLocalizations.of(context);
     final controller = ref.watch(syncControllerProvider);
-    final devices = ref.watch(syncDevicesProvider).value ?? controller.devices;
+    final devices = ref.watch(syncDevicesProvider);
     final ownId = controller.deviceId;
     final failure = status.phase == SyncPhase.failed
         ? syncFailureText(l10n, status.failure)

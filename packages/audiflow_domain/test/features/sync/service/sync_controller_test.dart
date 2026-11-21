@@ -313,6 +313,19 @@ void main() {
     ).equals(0);
   });
 
+  test('a second setup while one runs is refused', () async {
+    final store = _MemoryStore();
+    final c = controller(await newIsar('a'), store);
+    await c.load();
+
+    final first = c.turnOn();
+    await check(c.join(SyncCredentials.generate())).throws<StateError>();
+    await first;
+
+    check(store.synced).length.equals(1);
+    check(c.credentials!.accountIdText).equals(store.synced.keys.single);
+  });
+
   test('active again while closing reconnects', () async {
     final c = controller(await newIsar('a'), _MemoryStore());
     await c.load();

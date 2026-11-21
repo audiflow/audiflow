@@ -1,6 +1,7 @@
 import 'package:audiflow_app/features/sync/presentation/screens/sync_add_device_screen.dart';
 import 'package:audiflow_app/features/sync/presentation/screens/sync_join_screen.dart';
 import 'package:audiflow_app/features/sync/presentation/screens/sync_settings_screen.dart';
+import 'package:audiflow_app/features/parental_control/domain/gate_guard.dart';
 import 'package:audiflow_app/routing/app_router.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
@@ -12,6 +13,8 @@ import 'sync_test_harness.dart';
 
 void main() {
   late SyncHarness harness;
+  // The join screen's scanner callback, standing in for the camera.
+  late ValueChanged<String> scan;
 
   setUpAll(SyncHarness.initializeIsar);
   setUp(() async => harness = await SyncHarness.open());
@@ -25,8 +28,12 @@ void main() {
         GoRoute(path: 'add', builder: (_, _) => const SyncAddDeviceScreen()),
         GoRoute(
           path: 'join',
-          builder: (_, _) =>
-              SyncJoinScreen(scannerBuilder: (_, _) => const SizedBox()),
+          builder: (_, _) => SyncJoinScreen(
+            scannerBuilder: (_, onCode) {
+              scan = onCode;
+              return const SizedBox();
+            },
+          ),
         ),
       ],
     ),
@@ -137,5 +144,44 @@ void main() {
 
     check(harness.controller.credentials).equals(credentials);
     check(find.byType(SyncSettingsScreen).evaluate()).isNotEmpty();
+  });
+
+  testWidgets('a declined scan is not asked about again', (tester) async {
+    final code = PairingCodec.encodeQr(SyncCredentials.generate());
+    await pumpAt(tester, AppRoutes.settingsDeviceSyncJoin);
+
+    scan(code);
+    await tester.pumpAndSettle();
+    check(find.text('Join sync?').evaluate()).isNotEmpty();
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+
+    scan(code);
+    await tester.pumpAndSettle();
+    check(find.text('Join sync?').evaluate()).isEmpty();
+  });
+
+  testWidgets('scans wait while the code dialog is open', (tester) async {
+    await pumpAt(tester, AppRoutes.settingsDeviceSyncJoin);
+
+    await tester.tap(find.text('Enter Recovery Code'));
+    await tester.pumpAndSettle();
+    scan(PairingCodec.encodeQr(SyncCredentials.generate()));
+    await tester.pumpAndSettle();
+
+    check(find.text('Join sync?').evaluate()).isEmpty();
+    check(find.byType(TextField).evaluate()).isNotEmpty();
+  });
+
+  testWidgets('a locked Restricted Mode blocks joining', (tester) async {
+    harness.gate.allow = false;
+    await pumpAt(tester, AppRoutes.settingsDeviceSyncJoin);
+
+    scan(PairingCodec.encodeQr(SyncCredentials.generate()));
+    await tester.pumpAndSettle();
+
+    check(harness.gate.reasons).deepEquals([GateReason.syncJoin]);
+    check(find.text('Join sync?').evaluate()).isEmpty();
+    check(harness.controller.isOn).isFalse();
   });
 }

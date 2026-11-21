@@ -11,12 +11,14 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('SettingsScreen', () {
-    Widget buildTestWidget({List<Override> extra = const []}) {
+    Widget buildTestWidget({Uri? relay, List<Override> extra = const []}) {
       return ProviderScope(
         overrides: [
           // Restricted mode off: all cards including Developer are visible.
           isRestrictedModeOnProvider.overrideWith((ref) => false),
           isUnlockedProvider.overrideWith((ref) => true),
+          // No relay unless a test says otherwise, whatever the build sets.
+          syncRelayUrlProvider.overrideWithValue(relay),
           ...extra,
         ],
         child: MaterialApp(
@@ -56,17 +58,14 @@ void main() {
       await withTallSurface(tester, () async {
         await tester.pumpWidget(
           buildTestWidget(
+            relay: Uri.parse('https://relay.example.com'),
             extra: [
-              syncRelayUrlProvider.overrideWithValue(
-                Uri.parse('https://relay.example.com'),
-              ),
-              syncStatusProvider.overrideWith(
-                (ref) => Stream.value(const SyncStatus(SyncPhase.connected)),
+              syncStatusProvider.overrideWithBuild(
+                (ref, notifier) => const SyncStatus(SyncPhase.connected),
               ),
             ],
           ),
         );
-        await tester.pump();
 
         check(find.text('Sync Across Devices').evaluate()).isNotEmpty();
         check(find.text('Up to date').evaluate()).isNotEmpty();
