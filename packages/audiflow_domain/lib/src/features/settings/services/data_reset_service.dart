@@ -17,6 +17,7 @@ import '../../player/services/audio_playback_controller.dart';
 import '../../player/services/audio_player_service.dart';
 import '../../snapshot/auto_snapshot_scheduler.dart';
 import '../../snapshot/continuity_snapshot.dart';
+import '../../sync/service/sync_providers.dart';
 
 part 'data_reset_service.g.dart';
 
@@ -45,6 +46,7 @@ DataResetService dataResetService(Ref ref) {
     resolveDownloadsDirectory: fileService.getDownloadsDirectory,
     resolveContinuitySnapshotPath: ref.watch(continuitySnapshotPathProvider),
     clearStreamCache: ref.watch(streamCacheServiceProvider).clearForReset,
+    turnOffSync: ref.watch(syncControllerProvider).turnOff,
   );
 }
 
@@ -66,6 +68,7 @@ class DataResetService {
     required this._resolveDownloadsDirectory,
     required this._resolveContinuitySnapshotPath,
     required this._clearStreamCache,
+    required this._turnOffSync,
   });
 
   final Isar _isar;
@@ -79,6 +82,10 @@ class DataResetService {
   final ContinuitySnapshotPathResolver _resolveContinuitySnapshotPath;
   final Future<void> Function() _clearStreamCache;
 
+  /// Stops sync and drops this device's enrollment, so the cleared data is
+  /// not downloaded again from the account. Other devices keep syncing.
+  final Future<void> Function() _turnOffSync;
+
   /// Wipes all local data. Throws on I/O failure so the caller can report
   /// a partial reset instead of claiming success.
   ///
@@ -91,6 +98,9 @@ class DataResetService {
   Future<void> resetAll() async {
     await _playback.stop();
     await _cancelBackgroundTasks();
+    // First: a connected engine would keep merging into the database
+    // being cleared.
+    await _turnOffSync();
     // Suspending happens inside the try so a writer that fails to suspend
     // does not strand the ones suspended before it.
     try {

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:isar_community/isar.dart';
 import 'package:logger/logger.dart';
 
+import '../../user_state/models/sync_meta.dart';
 import '../crypto/sync_cipher.dart';
 import '../crypto/sync_credentials.dart';
 import '../engine/sync_engine.dart';
@@ -10,60 +11,17 @@ import '../engine/sync_session.dart';
 import '../engine/sync_transport.dart';
 import '../protocol/sync_messages.dart';
 import '../storage/sync_key_store.dart';
-
-/// Where sync stands on this device.
-enum SyncPhase {
-  /// This build has no relay to sync with.
-  unavailable,
-
-  /// Sync is off on this device.
-  off,
-
-  /// Sync is on but no connection is wanted (the app is in the background
-  /// and not playing, plan P10).
-  idle,
-
-  /// Opening the connection and catching up.
-  connecting,
-
-  /// Caught up; changes flow both ways.
-  connected,
-
-  /// The connection failed and is retried after a pause.
-  retrying,
-
-  /// The relay refused this device; retried only when the app next comes
-  /// to the foreground. [SyncStatus.failure] says why.
-  failed,
-}
-
-class SyncStatus {
-  const SyncStatus(this.phase, {this.failure});
-
-  final SyncPhase phase;
-
-  /// The [SyncRelayFailure.code] behind [SyncPhase.retrying] or
-  /// [SyncPhase.failed].
-  final String? failure;
-
-  @override
-  bool operator ==(Object other) =>
-      other is SyncStatus && other.phase == phase && other.failure == failure;
-
-  @override
-  int get hashCode => Object.hash(phase, failure);
-
-  @override
-  String toString() => 'SyncStatus($phase, $failure)';
-}
+import 'sync_status.dart';
 
 /// Turns sync on and off on this device and keeps one engine connected
 /// while the app wants it (plan P10).
 ///
-/// It owns the secrets: it creates them on [turnOn], stores what the relay
-/// hands out, and forgets them on [turnOff]. A device whose stored record
-/// belongs to another install (see [StoredSyncDevice.deviceId]) but whose
-/// credentials arrived (iCloud Keychain) joins again on its own.
+/// It owns this device's enrollment: it creates it on [turnOn] or [join],
+/// stores what the relay hands out, and drops it on [turnOff]. A device
+/// whose enrollment belongs to another install (see
+/// [StoredSyncDevice.deviceId]), or that has none while credentials
+/// arrived from another device (iCloud Keychain), joins on its own unless
+/// sync was turned off here.
 class SyncController {
   SyncController({
     required this._isar,
@@ -95,7 +53,7 @@ class SyncController {
   final Duration Function(int attempt) _retryDelay;
 
   /// Failures a later attempt may get past on its own.
-  static final _transient = {
+  static const _transient = {
     SyncRelayFailure.closed,
     SyncRelayFailure.internal,
     SyncRelayFailure.accountNotReady,
@@ -119,8 +77,9 @@ class SyncController {
   SyncOpening _opening = SyncOpening.resume;
   bool _active = false;
   bool _loaded = false;
-  SyncEngine? _engine;
+  bool _disposed = false;
   Future<void>? _running;
+  SyncEngine? _engine;
   Timer? _retry;
   int _attempt = 0;
   Future<void> _saving = Future.value();
@@ -132,37 +91,51 @@ class SyncController {
 
   /// The account's credentials while sync is on, to show as a QR code or
   /// recovery code on this device.
-  SyncCredentials? get credentials => _credentials;
+  SyncCredentials? get credentials => isOn ? _credentials : null;
 
-  bool get isOn => _credentials != null;
+  bool get isOn => _credentials != null && _device != null;
 
-  /// Reads the stored secrets. Call once at startup before anything else.
+  /// Reads this device's enrollment. Call once at startup; nothing
+  /// connects before it has finished.
   Future<void> load() async {
-    if (_loaded) return;
-    _loaded = true;
-    if (_relayUrl == null) return;
+    if (_loaded || _relayUrl == null) return;
     try {
-      _credentials = await _store.readCredentials();
-      _device = await _store.readDevice();
+      await _restore();
     } on Object catch (e, stack) {
-      // Unreadable secrets cannot be repaired; sync stays off until the
-      // user turns it on or joins again.
-      _logger.e('Sync secrets unreadable', error: e, stackTrace: stack);
+      // Unreadable keys cannot be repaired; sync stays off until the user
+      // turns it on or joins again.
+      _logger.e('Sync keys unreadable', error: e, stackTrace: stack);
       _credentials = null;
       _device = null;
     }
-    if (_credentials == null) return;
-    final currentId = await _deviceId();
-    final device = _device;
-    if (device == null ||
-        device.deviceId != currentId ||
-        device.token == null) {
-      // Credentials without this install's enrollment: join with them.
-      _device = null;
-      _opening = SyncOpening.join;
-    }
-    _setStatus(const SyncStatus(SyncPhase.idle));
+    // Set last: a kick before this point would see half-restored state.
+    _loaded = true;
+    if (isOn) _setStatus(const SyncStatus(SyncPhase.idle));
     _kick();
+  }
+
+  Future<void> _restore() async {
+    if (await _store.readOptedOut()) return;
+    final stored = await _store.readDevice();
+    final currentId = await _deviceId();
+    if (stored != null && stored.deviceId == currentId) {
+      final credentials = await _store.readCredentials(stored.accountId);
+      if (credentials == null) return;
+      _credentials = credentials;
+      _device = stored;
+      _opening = stored.token != null
+          ? SyncOpening.resume
+          : (stored.pendingOpening ?? SyncOpening.join);
+      return;
+    }
+    // Another install's record, or none: join the account it names, else
+    // the one set up last on the user's other devices.
+    final named = stored == null
+        ? null
+        : await _store.readCredentials(stored.accountId);
+    final credentials = named ?? await _store.readLatestCredentials();
+    if (credentials == null) return;
+    await _enroll(credentials, SyncOpening.join);
   }
 
   /// Starts a new account with this device's data and connects.
@@ -177,22 +150,45 @@ class SyncController {
     if (_relayUrl == null) throw StateError('sync is unavailable');
     if (isOn) throw StateError('sync is already on');
     await _store.writeCredentials(credentials);
-    _credentials = credentials;
-    _device = null;
-    _opening = opening;
+    await _store.writeOptedOut(optedOut: false);
+    await _enroll(credentials, opening);
     _attempt = 0;
     _setStatus(const SyncStatus(SyncPhase.idle));
     _kick();
   }
 
-  /// Stops syncing and forgets this device's secrets. The relay still
-  /// lists the device until another one revokes it (M6g).
+  /// Makes a new enrollment record before anything reaches the relay, so
+  /// the key pair it registers is the one kept, and a new account is
+  /// still created after a restart.
+  Future<void> _enroll(SyncCredentials credentials, SyncOpening opening) async {
+    final device = StoredSyncDevice(
+      accountId: credentials.accountIdText,
+      deviceId: await _deviceId(),
+      name: _deviceName,
+      platform: _platform,
+      privateKey: (await DeviceKeyPair.generate()).privateKey,
+      pendingOpening: opening,
+    );
+    await _store.writeDevice(device);
+    // The cursor counts another account's frames, or none at all.
+    await _resetCursor();
+    _credentials = credentials;
+    _device = device;
+    _opening = opening;
+  }
+
+  /// Stops syncing on this device and drops its enrollment. The account's
+  /// credentials stay for the user's other devices. The relay still lists
+  /// this device until another one revokes it (M6g).
   Future<void> turnOff() async {
     _credentials = null;
     _device = null;
     await _stop();
-    await _store.clear();
-    if (_relayUrl != null) _setStatus(const SyncStatus(SyncPhase.off));
+    if (_relayUrl == null) return;
+    await _store.deleteDevice();
+    await _store.writeOptedOut(optedOut: true);
+    await _resetCursor();
+    _setStatus(const SyncStatus(SyncPhase.off));
   }
 
   /// Whether the app wants a connection now: in the foreground, or
@@ -201,15 +197,23 @@ class SyncController {
     if (_active == active) return;
     _active = active;
     if (active) {
-      // Coming back is a fresh start for a refused or waiting device.
-      if (_status.phase == SyncPhase.failed) _attempt = 0;
       _kick();
     } else {
       unawaited(_stop());
     }
   }
 
+  /// The app came to the foreground: a refused device tries once more.
+  /// Separate from [setActive], which playback can hold true throughout.
+  void onForeground() {
+    if (_status.phase != SyncPhase.failed) return;
+    _attempt = 0;
+    _setStatus(const SyncStatus(SyncPhase.idle));
+    _kick();
+  }
+
   Future<void> dispose() async {
+    _disposed = true;
     _active = false;
     await _stop();
     await _statusController.close();
@@ -220,32 +224,39 @@ class SyncController {
     _retry = null;
     await _engine?.close();
     await _running;
-    if (isOn) _setStatus(const SyncStatus(SyncPhase.idle));
+    // A connection restarted meanwhile (active again) keeps its status.
+    if (isOn && _running == null && _retry == null) {
+      _setStatus(const SyncStatus(SyncPhase.idle));
+    }
   }
 
   void _kick() {
-    if (!_loaded || !_active || !isOn || _running != null || _retry != null) {
-      return;
-    }
-    _running = _run().whenComplete(() => _running = null);
+    if (_disposed || !_loaded || !_active || !isOn) return;
+    if (_running != null || _retry != null) return;
+    if (_status.phase == SyncPhase.failed) return;
+    _running = _run().whenComplete(() {
+      _running = null;
+      // Wanted again while the last connection was closing.
+      _kick();
+    });
   }
 
   Future<void> _run() async {
     final relayUrl = _relayUrl!;
     final credentials = _credentials!;
+    final device = _device!;
     _setStatus(const SyncStatus(SyncPhase.connecting));
+    SyncTransport? transport;
     SyncEngine? engine;
     try {
-      final device = _device ?? await _newDevice();
-      final transport = await _openTransport(
-        relayUrl,
-        credentials.accountIdText,
-      );
+      // Before the socket opens, so a damaged record opens nothing.
+      final syncDevice = await device.toSyncDevice();
+      transport = await _openTransport(relayUrl, credentials.accountIdText);
       engine = SyncEngine(
         isar: _isar,
         session: SyncSession(
           credentials: credentials,
-          device: await device.toSyncDevice(),
+          device: syncDevice,
           token: device.token,
           dataKey: device.dataKey,
         ),
@@ -258,14 +269,13 @@ class SyncController {
         onSessionChanged: _saveSession,
       );
       // Turned off or backgrounded while opening.
-      if (!_active || !identical(credentials, _credentials)) {
+      if (!_wanted(credentials)) {
         await engine.close();
         return;
       }
       _engine = engine;
       await engine.connect(_opening);
       await _saving;
-      _opening = SyncOpening.resume;
       _attempt = 0;
       _setStatus(const SyncStatus(SyncPhase.connected));
       await engine.done;
@@ -277,12 +287,26 @@ class SyncController {
       _onFailure(SyncRelayFailure.closed, credentials);
     } finally {
       if (identical(_engine, engine)) _engine = null;
+      // The engine closes its transport; one opened without an engine
+      // would stay open.
+      if (engine == null) await _closeQuietly(transport);
+    }
+  }
+
+  bool _wanted(SyncCredentials credentials) =>
+      _active && !_disposed && identical(credentials, _credentials);
+
+  Future<void> _closeQuietly(SyncTransport? transport) async {
+    try {
+      await transport?.close();
+    } on Object catch (e, stack) {
+      _logger.w('Sync transport close failed', error: e, stackTrace: stack);
     }
   }
 
   void _onFailure(String code, SyncCredentials credentials) {
     // A stop or turn-off ends the engine on purpose; that is no failure.
-    if (!_active || !identical(credentials, _credentials)) return;
+    if (!_wanted(credentials)) return;
     if (_transient.contains(code)) {
       final delay = _retryDelay(_attempt++);
       _setStatus(SyncStatus(SyncPhase.retrying, failure: code));
@@ -296,37 +320,32 @@ class SyncController {
     }
   }
 
-  Future<StoredSyncDevice> _newDevice() async {
-    final keyPair = await DeviceKeyPair.generate();
-    final device = StoredSyncDevice(
-      deviceId: await _deviceId(),
-      name: _deviceName,
-      platform: _platform,
-      privateKey: keyPair.privateKey,
-    );
-    // Stored before the relay sees its public key, so the key pair it
-    // registers is the one kept.
-    await _store.writeDevice(device);
-    return _device = device;
-  }
-
   void _saveSession(SyncSession session) {
     final device = _device;
-    if (device == null) return;
-    final updated = device.copyWith(
+    if (device == null || session.token == null) return;
+    final updated = device.enrolled(
       token: session.token,
       dataKey: session.dataKey,
     );
     _device = updated;
+    // Holding a token, the next attempt resumes even if this one drops
+    // before catching up.
+    _opening = SyncOpening.resume;
     _saving = _saving.then((_) => _store.writeDevice(updated)).catchError((
       Object e,
       StackTrace stack,
     ) {
       // The next launch joins again with the credentials, so this is
       // recoverable; keep going on the token held in memory.
-      _logger.e('Sync session not stored', error: e, stackTrace: stack);
+      _logger.e('Sync enrollment not stored', error: e, stackTrace: stack);
     });
   }
+
+  Future<void> _resetCursor() => _isar.writeTxn(() async {
+    final meta = await _isar.syncMetas.get(SyncMeta.singletonId);
+    if (meta == null) return;
+    await _isar.syncMetas.put(meta..serverCursor = 0);
+  });
 
   void _setStatus(SyncStatus status) {
     if (_status == status) return;

@@ -7,15 +7,30 @@ import 'package:logger/logger.dart';
 import '../../../helpers/in_memory_relay.dart';
 import '../../../helpers/isar_test_helper.dart';
 
+/// One device's key store. [synced] stands in for the credentials that
+/// iCloud Keychain shares between stores built on the same map.
 class _MemoryStore implements SyncKeyStore {
-  SyncCredentials? credentials;
+  _MemoryStore([Map<String, (SyncCredentials, int)>? synced])
+    : synced = synced ?? {};
+
+  final Map<String, (SyncCredentials, int)> synced;
   StoredSyncDevice? device;
+  bool optedOut = false;
+  int _clock = 0;
 
   @override
-  Future<SyncCredentials?> readCredentials() async => credentials;
+  Future<SyncCredentials?> readCredentials(String accountId) async =>
+      synced[accountId]?.$1;
 
   @override
-  Future<void> writeCredentials(SyncCredentials c) async => credentials = c;
+  Future<SyncCredentials?> readLatestCredentials() async {
+    final all = synced.values.toList()..sort((a, b) => a.$2.compareTo(b.$2));
+    return all.lastOrNull?.$1;
+  }
+
+  @override
+  Future<void> writeCredentials(SyncCredentials c) async =>
+      synced[c.accountIdText] = (c, ++_clock + synced.length);
 
   @override
   Future<StoredSyncDevice?> readDevice() async => device;
@@ -24,10 +39,14 @@ class _MemoryStore implements SyncKeyStore {
   Future<void> writeDevice(StoredSyncDevice d) async => device = d;
 
   @override
-  Future<void> clear() async {
-    credentials = null;
-    device = null;
-  }
+  Future<void> deleteDevice() async => device = null;
+
+  @override
+  Future<bool> readOptedOut() async => optedOut;
+
+  @override
+  Future<void> writeOptedOut({required bool optedOut}) async =>
+      this.optedOut = optedOut;
 }
 
 void main() {
@@ -112,7 +131,7 @@ void main() {
     await c.turnOn();
     await reach(c, SyncPhase.connected);
 
-    check(store.credentials).isNotNull();
+    check(store.synced).length.equals(1);
     check(store.device).isNotNull()
       ..has((d) => d.token, 'token').isNotNull()
       ..has((d) => d.dataKey, 'dataKey').isNotNull();
@@ -165,8 +184,9 @@ void main() {
     // As iCloud Keychain brings the credentials, and a device record of
     // the old install, to a reinstalled app with a new device id.
     final store = _MemoryStore()
-      ..credentials = a.credentials
+      ..synced[a.credentials!.accountIdText] = (a.credentials!, 1)
       ..device = StoredSyncDevice(
+        accountId: a.credentials!.accountIdText,
         deviceId: 'old-install',
         name: 'old',
         platform: 'ios',
@@ -181,6 +201,126 @@ void main() {
 
     check(relay.received.first).contains('"type":"enroll"');
     check(store.device!.deviceId).equals('device-b');
+  });
+
+  test('a new install joins the account its other devices share', () async {
+    final synced = <String, (SyncCredentials, int)>{};
+    final a = controller(await newIsar('a'), _MemoryStore(synced));
+    await a.load();
+    a.setActive(true);
+    await a.turnOn();
+    await reach(a, SyncPhase.connected);
+
+    final b = controller(
+      await newIsar('b'),
+      _MemoryStore(synced),
+      deviceId: 'device-b',
+    );
+    await b.load();
+    b.setActive(true);
+    await reach(b, SyncPhase.connected);
+
+    check(b.credentials!.accountIdText).equals(a.credentials!.accountIdText);
+  });
+
+  test('turning off on one device leaves the others on', () async {
+    final synced = <String, (SyncCredentials, int)>{};
+    final storeA = _MemoryStore(synced);
+    final isarA = await newIsar('a');
+    final a = controller(isarA, storeA);
+    await a.load();
+    a.setActive(true);
+    await a.turnOn();
+    await reach(a, SyncPhase.connected);
+    final storeB = _MemoryStore(synced);
+    final b = controller(await newIsar('b'), storeB, deviceId: 'device-b');
+    await b.load();
+    b.setActive(true);
+    await reach(b, SyncPhase.connected);
+
+    await b.turnOff();
+
+    check(synced).length.equals(1);
+    check(storeB.optedOut).isTrue();
+    // A starts again and still resumes.
+    await a.dispose();
+    controllers.remove(a);
+    final again = controller(isarA, storeA);
+    await again.load();
+    again.setActive(true);
+    await reach(again, SyncPhase.connected);
+  });
+
+  test('a device that turned sync off stays off', () async {
+    final synced = <String, (SyncCredentials, int)>{};
+    final a = controller(await newIsar('a'), _MemoryStore(synced));
+    await a.load();
+    a.setActive(true);
+    await a.turnOn();
+    await reach(a, SyncPhase.connected);
+
+    final b = controller(
+      await newIsar('b'),
+      _MemoryStore(synced)..optedOut = true,
+      deviceId: 'device-b',
+    );
+    await b.load();
+
+    check(b.status.phase).equals(SyncPhase.off);
+    check(b.isOn).isFalse();
+  });
+
+  test('a new account survives a restart before reaching the relay', () async {
+    final store = _MemoryStore();
+    final isar = await newIsar('a');
+    final first = controller(isar, store);
+    await first.load();
+    // Inactive: nothing is sent before the app stops.
+    await first.turnOn();
+    await first.dispose();
+    controllers.remove(first);
+
+    final again = controller(isar, store);
+    await again.load();
+    again.setActive(true);
+    await reach(again, SyncPhase.connected);
+
+    check(relay.received.first).contains('"type":"create"');
+  });
+
+  test('joining starts from cursor 0', () async {
+    final isarB = await newIsar('b');
+    await isarB.writeTxn(() async {
+      final meta = (await isarB.syncMetas.get(SyncMeta.singletonId))!;
+      await isarB.syncMetas.put(meta..serverCursor = 100);
+    });
+    final a = controller(await newIsar('a'), _MemoryStore());
+    await a.load();
+    a.setActive(true);
+    await a.turnOn();
+    await reach(a, SyncPhase.connected);
+
+    final b = controller(isarB, _MemoryStore(), deviceId: 'device-b');
+    await b.load();
+    await b.join(a.credentials!);
+
+    check(
+      (await isarB.syncMetas.get(SyncMeta.singletonId))!.serverCursor,
+    ).equals(0);
+  });
+
+  test('active again while closing reconnects', () async {
+    final c = controller(await newIsar('a'), _MemoryStore());
+    await c.load();
+    c.setActive(true);
+    await c.turnOn();
+    await reach(c, SyncPhase.connected);
+
+    c
+      ..setActive(false)
+      ..setActive(true);
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+    await reach(c, SyncPhase.connected);
   });
 
   test('a dropped connection is retried', () async {
@@ -228,6 +368,10 @@ void main() {
     await reach(b, SyncPhase.failed);
 
     check(b.status.failure).equals(RelayError.unauthorized);
+
+    // Playback can keep it active; coming to the foreground retries.
+    b.onForeground();
+    await reach(b, SyncPhase.failed);
   });
 
   test('turning off forgets the secrets', () async {
@@ -241,8 +385,8 @@ void main() {
     await c.turnOff();
 
     check(c.status.phase).equals(SyncPhase.off);
-    check(store.credentials).isNull();
     check(store.device).isNull();
+    check(store.optedOut).isTrue();
     check(c.isOn).isFalse();
   });
 }

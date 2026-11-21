@@ -6,6 +6,7 @@ void main() {
   test('a stored device round-trips', () async {
     final pair = await DeviceKeyPair.generate();
     final device = StoredSyncDevice(
+      accountId: 'acct',
       deviceId: 'd1',
       name: 'Phone',
       platform: 'ios',
@@ -17,6 +18,7 @@ void main() {
     final back = StoredSyncDevice.decode(device.encode());
 
     check(back.deviceId).equals('d1');
+    check(back.accountId).equals('acct');
     check(back.privateKey).deepEquals(pair.privateKey);
     check(back.token).equals('tok');
     check(back.dataKey!.version).equals(3);
@@ -26,6 +28,7 @@ void main() {
 
   test('a device before enrollment has no token or data key', () async {
     final device = StoredSyncDevice(
+      accountId: 'acct',
       deviceId: 'd1',
       name: 'Phone',
       platform: 'android',
@@ -38,6 +41,34 @@ void main() {
     check(back.dataKey).isNull();
   });
 
+  test('a pending opening survives the round trip', () async {
+    final device = StoredSyncDevice(
+      accountId: 'acct',
+      deviceId: 'd1',
+      name: 'Phone',
+      platform: 'ios',
+      privateKey: (await DeviceKeyPair.generate()).privateKey,
+      pendingOpening: SyncOpening.create,
+    );
+
+    final back = StoredSyncDevice.decode(device.encode());
+
+    check(back.pendingOpening).equals(SyncOpening.create);
+    check(back.enrolled(token: 't').pendingOpening).isNull();
+  });
+
+  test('a private key of the wrong length is a format error', () {
+    check(
+      () => StoredSyncDevice(
+        accountId: 'acct',
+        deviceId: 'd1',
+        name: 'Phone',
+        platform: 'ios',
+        privateKey: const [],
+      ),
+    ).throws<FormatException>();
+  });
+
   test('anything else is a format error', () {
     check(() => StoredSyncDevice.decode('[]')).throws<FormatException>();
     check(
@@ -47,6 +78,7 @@ void main() {
 
   test('toString keeps the secrets out', () async {
     final device = StoredSyncDevice(
+      accountId: 'acct',
       deviceId: 'd1',
       name: 'Phone',
       platform: 'ios',

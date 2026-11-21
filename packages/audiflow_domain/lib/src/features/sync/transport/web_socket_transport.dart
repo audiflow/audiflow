@@ -13,6 +13,11 @@ import '../protocol/sync_messages.dart';
 class WebSocketTransport implements SyncTransport {
   WebSocketTransport._(this._channel);
 
+  /// How long the WebSocket upgrade may take before the attempt fails and
+  /// is retried; a server that accepts but never answers would otherwise
+  /// hold the connection, and a turn-off waiting on it, forever.
+  static const connectTimeout = Duration(seconds: 20);
+
   /// Opens a connection for [accountId] to the relay at [relayUrl] (an
   /// `https://` or `wss://` base URL). Completes once the socket is open;
   /// throws when it cannot be.
@@ -20,20 +25,35 @@ class WebSocketTransport implements SyncTransport {
     Uri relayUrl,
     String accountId, {
     WebSocketChannel Function(Uri uri)? open,
+    Duration timeout = connectTimeout,
   }) async {
     final uri = connectUri(relayUrl, accountId);
     final channel = (open ?? WebSocketChannel.connect)(uri);
-    await channel.ready;
+    try {
+      await channel.ready.timeout(timeout);
+    } on Object {
+      unawaited(channel.sink.close().catchError((Object _) {}));
+      rethrow;
+    }
     return WebSocketTransport._(channel);
   }
 
+  /// Hosts a cleartext relay may run on: the developer's machine, as the
+  /// device or the Android emulator reaches it. Anywhere else the device
+  /// token and the enrollment secret would travel unencrypted.
+  static const _localHosts = {'localhost', '127.0.0.1', '::1', '10.0.2.2'};
+
   /// The connect endpoint for [accountId] under [relayUrl]; `https` becomes
-  /// `wss` and `http` (a local relay) becomes `ws`.
+  /// `wss`, and `http` becomes `ws` for a local relay only.
   static Uri connectUri(Uri relayUrl, String accountId) {
     final scheme = switch (relayUrl.scheme) {
       'https' || 'wss' => 'wss',
-      'http' || 'ws' => 'ws',
-      final other => throw ArgumentError.value(other, 'relayUrl', 'scheme'),
+      'http' || 'ws' when _localHosts.contains(relayUrl.host) => 'ws',
+      final other => throw ArgumentError.value(
+        relayUrl,
+        'relayUrl',
+        'needs https, or http to a local relay ($other)',
+      ),
     };
     final base = relayUrl.path.endsWith('/')
         ? relayUrl.path.substring(0, relayUrl.path.length - 1)
@@ -55,10 +75,16 @@ class WebSocketTransport implements SyncTransport {
           sink.addError(const FormatException('binary relay message'));
           return;
         }
+        // Any decode failure, a wrongly typed field (TypeError) included,
+        // goes down the stream: thrown here it would escape as an
+        // uncaught error and the session would not end.
         try {
           sink.add(RelayMessage.decode(data));
-        } on FormatException catch (e) {
-          sink.addError(e);
+        } on Object catch (e, stack) {
+          sink.addError(
+            e is FormatException ? e : FormatException('$e'),
+            stack,
+          );
         }
       },
     ),

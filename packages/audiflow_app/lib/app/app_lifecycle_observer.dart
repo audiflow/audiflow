@@ -64,6 +64,9 @@ class _AppLifecycleObserverState extends ConsumerState<AppLifecycleObserver> {
   void _onResume() {
     _foreground = true;
     _updateSyncActivity();
+    // Playback may have kept sync active all along; a refused device
+    // still gets its retry on coming back.
+    ref.read(syncControllerProvider).onForeground();
     _syncFeeds(forceRefresh: false);
     _updateBackgroundRegistration();
     _processPendingDownloads();
@@ -102,13 +105,10 @@ class _AppLifecycleObserverState extends ConsumerState<AppLifecycleObserver> {
   /// Playback keeps it connected in the background, so a position change
   /// reaches the user's other devices (plan P10).
   void _startSync() {
-    _playing = ref
-        .read(audioPlayerProvider)
-        .playingStream
-        .listen((playing) {
-          _isPlaying = playing;
-          _updateSyncActivity();
-        });
+    _playing = ref.read(audioPlayerProvider).playingStream.listen((playing) {
+      _isPlaying = playing;
+      _updateSyncActivity();
+    });
     _runUnawaited(
       ref.read(syncControllerProvider).load().then((_) {
         if (mounted) _updateSyncActivity();
