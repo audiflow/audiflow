@@ -186,31 +186,71 @@ class SecureSyncKeyStore implements SyncKeyStore {
   @override
   Future<SyncCredentials?> readCredentials(String accountId) async {
     final key = '$credentialsKeyPrefix$accountId';
-    final text =
-        await _storage.read(key: key, iOptions: _synced) ??
-        (await _readBackup())[key];
+    final local = await _storage.read(key: key, iOptions: _synced);
+    final backedUp = await _reconcile();
+    final text = local ?? backedUp[key];
     if (text == null) return null;
-    return _StoredCredentials.decode(text).credentials;
+    final credentials = _StoredCredentials.decode(text).credentials;
+    if (local == null) await _keepLocally(key, text);
+    return credentials;
   }
 
   @override
   Future<SyncCredentials?> readLatestCredentials() async {
-    final all = [
-      ...(await _storage.readAll(iOptions: _synced)).entries,
-      ...(await _readBackup()).entries,
-    ];
+    final local = await _storage.readAll(iOptions: _synced);
+    final backedUp = await _reconcile();
+    final all = [...local.entries, ...backedUp.entries];
+    MapEntry<String, String>? latestEntry;
     _StoredCredentials? latest;
-    for (final MapEntry(:key, :value) in all) {
-      if (!key.startsWith(credentialsKeyPrefix)) continue;
+    for (final entry in all) {
+      if (!entry.key.startsWith(credentialsKeyPrefix)) continue;
       final _StoredCredentials stored;
       try {
-        stored = _StoredCredentials.decode(value);
+        stored = _StoredCredentials.decode(entry.value);
       } on FormatException {
         continue;
       }
-      if (latest == null || latest.storedAt < stored.storedAt) latest = stored;
+      if (latest == null || latest.storedAt < stored.storedAt) {
+        latest = stored;
+        latestEntry = entry;
+      }
+    }
+    if (latestEntry != null && !local.containsKey(latestEntry.key)) {
+      await _keepLocally(latestEntry.key, latestEntry.value);
     }
     return latest?.credentials;
+  }
+
+  // Restored from the backup: kept locally too, unchanged (storedAt
+  // included), so later launches need the backup no more.
+  Future<void> _keepLocally(String key, String text) =>
+      _storage.write(key: key, value: text, iOptions: _synced);
+
+  bool _reconciled = false;
+
+  /// Reads the backup and, once per launch, copies to it any local
+  /// credentials it lacks: those stored before the backup existed (an
+  /// app upgrade) or whose backup write failed. Returns the backup's
+  /// entries; empty without one or when it cannot be read.
+  Future<Map<String, String>> _reconcile() async {
+    final backedUp = await _readBackup();
+    final backup = _backup;
+    if (_reconciled || backup == null) return backedUp;
+    _reconciled = true;
+    final local = await _storage.readAll(iOptions: _synced);
+    for (final MapEntry(:key, :value) in local.entries) {
+      if (!key.startsWith(credentialsKeyPrefix)) continue;
+      if (backedUp[key] == value) continue;
+      try {
+        await backup.write(key, value);
+      } on Object catch (e, stack) {
+        _onBackupError?.call(e, stack);
+        // Unavailable now; the next launch tries again.
+        _reconciled = false;
+        break;
+      }
+    }
+    return backedUp;
   }
 
   @override

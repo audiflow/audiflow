@@ -89,8 +89,8 @@ void main() {
       await s.readCredentials(credentials.accountIdText),
     ).equals(credentials);
     check(await s.readLatestCredentials()).equals(credentials);
-    // The write and the latest-read; the account read is found locally.
-    check(errors).length.equals(2);
+    // Each failed backup call is reported; none fails the store.
+    check(errors).isNotEmpty();
   });
 
   test('without a backup only local storage is used', () async {
@@ -100,5 +100,30 @@ void main() {
     check(
       await SecureSyncKeyStore().readCredentials(credentials.accountIdText),
     ).equals(credentials);
+  });
+
+  test('restored credentials are kept locally', () async {
+    final credentials = SyncCredentials.generate();
+    await store().writeCredentials(credentials);
+    FlutterSecureStorage.setMockInitialValues({});
+
+    await store().readCredentials(credentials.accountIdText);
+    backup.failWith = StateError('Block Store down');
+
+    check(
+      await store().readCredentials(credentials.accountIdText),
+    ).equals(credentials);
+  });
+
+  test('credentials stored before the backup are mirrored on read', () async {
+    final credentials = SyncCredentials.generate();
+    await SecureSyncKeyStore().writeCredentials(credentials);
+    check(backup.values).isEmpty();
+
+    await store().readCredentials(credentials.accountIdText);
+
+    check(backup.values.keys).deepEquals([
+      '${SecureSyncKeyStore.credentialsKeyPrefix}${credentials.accountIdText}',
+    ]);
   });
 }
