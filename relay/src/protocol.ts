@@ -8,6 +8,8 @@ export const MIN_PROTOCOL_VERSION = 1;
 
 /** Largest message accepted: a compacted snapshot of a heavy user. */
 export const MAX_MESSAGE_CHARS = 8 * 1024 * 1024;
+/** Largest sealed presence: a few fields, never the library. */
+export const MAX_PRESENCE_CHARS = 4 * 1024;
 /** Largest sealed frame, as base64url characters. */
 export const MAX_FRAME_CHARS = 1024 * 1024;
 export const MAX_FRAMES_PER_PUSH = 100;
@@ -39,7 +41,8 @@ export type ClientMessage =
       cursor: number;
     }
   | { type: 'push'; frames: { clientId: string; blob: string }[] }
-  | { type: 'snapshot'; coversSeq: number; blob: string };
+  | { type: 'snapshot'; coversSeq: number; blob: string }
+  | { type: 'presence'; blob: string };
 
 export type ErrorCode =
   | 'unauthorized'
@@ -170,6 +173,8 @@ export function parseClientMessage(text: string): ClientMessage | null {
           coversSeq: int(m.coversSeq),
           blob: b64(m.blob, MAX_MESSAGE_CHARS),
         };
+      case 'presence':
+        return { type: 'presence', blob: b64(m.blob, MAX_PRESENCE_CHARS) };
       default:
         return null;
     }

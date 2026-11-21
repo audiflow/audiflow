@@ -19,6 +19,7 @@ import '../../user_state/sync/user_state_fields.dart';
 import '../crypto/sync_cipher.dart';
 import '../protocol/sync_messages.dart';
 import 'sync_frame.dart';
+import 'sync_presence.dart';
 import 'sync_session.dart';
 import 'sync_transport.dart';
 
@@ -45,7 +46,9 @@ class SyncEngine {
     this._onStationChanged,
     this._onSessionChanged,
     this._onDevices,
+    this._onPresence,
     int Function()? nowMillis,
+    this.steadyInterval = const Duration(seconds: 30),
     this.maxOpsPerFrame = 500,
     this.maxRowsPerFrame = 500,
     this.maxFrameBytes = 700 * 1024,
@@ -74,6 +77,14 @@ class SyncEngine {
 
   /// The account's devices as the relay lists them on `welcome`.
   final void Function(List<SyncDevice> devices)? _onDevices;
+
+  /// Another device's presence, opened and decoded.
+  final void Function(String deviceId, SyncPresence presence)? _onPresence;
+
+  /// How often changes made only by playing (position, listened time) go
+  /// out. Anything else goes at once, as does everything after
+  /// [sendSoon] (design doc, Realtime playback position).
+  final Duration steadyInterval;
   final int Function() _nowMillis;
   final SyncCipher _cipher;
 
@@ -121,6 +132,35 @@ class SyncEngine {
     for (final f in UserStateEntities.episode.fields)
       if (f.name == 'favoritedAt' || f.name == 'completedAt') f.id,
   };
+
+  /// Episode and counter fields that playing rewrites every few seconds,
+  /// with the fields that have no clock: every write of a row carries
+  /// them (a row's identity, such as an episode's podcastKey).
+  static final _steadyFields = {
+    for (final f in UserStateEntities.episode.fields)
+      if (f.hlc == null ||
+          const {
+            'hasPlayback',
+            'positionMs',
+            'durationMs',
+            'lastPlayedAt',
+          }.contains(f.name))
+        (UserStateEntities.episode.name, f.id),
+    for (final f in UserStateEntities.episodeCounter.fields)
+      if (f.hlc == null || const {'listenedMs', 'realtimeMs'}.contains(f.name))
+        (UserStateEntities.episodeCounter.name, f.id),
+  };
+
+  /// When the last push went out, by [_nowMillis].
+  int? _lastPushAt;
+
+  /// Until when steady changes go at once, by [_nowMillis]: set by
+  /// [sendSoon], long enough for the save that follows a pause to land.
+  int _urgentUntil = 0;
+  Timer? _steadyTimer;
+
+  /// Completes when the push in flight is acknowledged, for [drain].
+  Completer<void>? _acked;
 
   Future<void> _queue = Future.value();
   StreamSubscription<RelayMessage>? _messages;
@@ -182,9 +222,46 @@ class SyncEngine {
   /// clean shutdown.
   Future<void> settle() => _queue;
 
+  /// Sends pending changes at once, steady ones included, and keeps doing
+  /// so for a moment: called on pause, seek, stop, and completion, around
+  /// the save they cause.
+  void sendSoon() {
+    if (_closed) return;
+    _urgentUntil = _nowMillis() + _urgentWindowMs;
+    _enqueue(_flush);
+  }
+
+  static const _urgentWindowMs = 2000;
+
+  /// Live-session [SyncPresence] for the other online devices. Dropped
+  /// before the session is ready; a presence is only worth its moment.
+  void sendPresence(SyncPresence presence) {
+    if (_closed) return;
+    _enqueue(() async {
+      if (!_caughtUp) return;
+      final blob = await _seal(
+        Uint8List.fromList(presence.encode()),
+        SealPurpose.presence,
+      );
+      _transport.send(SendPresence(blob));
+    });
+  }
+
+  /// Sends what is pending and waits, up to [timeout], for the relay to
+  /// acknowledge it: before closing as the app goes to the background.
+  Future<void> drain({Duration timeout = const Duration(seconds: 3)}) async {
+    if (_closed) return;
+    sendSoon();
+    await _queue;
+    final acked = _inFlight == null ? null : (_acked ??= Completer<void>());
+    if (acked == null) return;
+    await acked.future.timeout(timeout, onTimeout: () {});
+  }
+
   Future<void> close() async {
     if (_closed) return;
     _closed = true;
+    _steadyTimer?.cancel();
     await _outboxWatch?.cancel();
     await _messages?.cancel();
     await _queue;
@@ -226,6 +303,7 @@ class SyncEngine {
   Future<void> _fail(SyncRelayFailure failure) async {
     _logger.w('Sync session ended: ${failure.code}');
     _closed = true;
+    _steadyTimer?.cancel();
     _inFlight = null;
     _fullState = null;
     _snapshotPending = false;
@@ -290,6 +368,8 @@ class SyncEngine {
       case SnapshotStored():
         _snapshotPending = false;
         await _flush();
+      case PresenceUpdate(:final deviceId, :final blob):
+        await _onPresenceUpdate(deviceId, blob);
       case RelayError(:final code):
         throw SyncRelayFailure(code);
     }
@@ -498,12 +578,28 @@ class SyncEngine {
     }
   }
 
+  Future<void> _onPresenceUpdate(String deviceId, Uint8List blob) async {
+    if (deviceId == _session.device.deviceId) return;
+    final SyncPresence presence;
+    try {
+      presence = SyncPresence.decode(await _open(blob, SealPurpose.presence));
+    } on Object catch (e) {
+      if (e is! SyncCryptoFailure && e is! FormatException) rethrow;
+      // Not worth the session: a newer app's presence, or a damaged one.
+      _logger.w('Unreadable presence from $deviceId', error: e);
+      return;
+    }
+    _onPresence?.call(deviceId, presence);
+  }
+
   Future<void> _onPushed(Map<String, int> seqs) async {
     final inFlight = _inFlight;
     if (inFlight == null) return;
     final acked = [for (final id in inFlight.clientIds) ?seqs[id]]..sort();
     if (acked.length != inFlight.clientIds.length) return;
     _inFlight = null;
+    _acked?.complete();
+    _acked = null;
     await _deleteSent(inFlight.ops);
     // Frames from others before these arrived ahead of the ack, in seq
     // order; a gap means some did not, and the next catch-up brings them.
@@ -525,9 +621,10 @@ class SyncEngine {
     // carries what they changed.
     final meta = (await _meta())!;
     if (meta.fullStateSent < meta.fullStateRequested) return _pushFullState();
-    var rows = _takeWholeRows(
-      await _isar.outboxOps.where().sortByOpId().findAll(),
-    );
+    final pending = await _isar.outboxOps.where().sortByOpId().findAll();
+    if (pending.isEmpty) return;
+    if (_waitForSteady(pending)) return;
+    var rows = _takeWholeRows(pending);
     if (rows.isEmpty) return;
     while (true) {
       final ops = rows.expand((r) => r).toList();
@@ -550,8 +647,28 @@ class SyncEngine {
         fullState: false,
       );
       _transport.send(PushFrames([PushFrame(clientId: clientId, blob: blob)]));
+      _lastPushAt = _nowMillis();
       return;
     }
+  }
+
+  /// Whether [pending] holds only changes that playing makes every few
+  /// seconds and the last push was too recent for them; if so, a flush is
+  /// scheduled for when [steadyInterval] has passed.
+  bool _waitForSteady(List<OutboxOp> pending) {
+    final now = _nowMillis();
+    final last = _lastPushAt;
+    if (last == null || now < _urgentUntil) return false;
+    final due = last + steadyInterval.inMilliseconds;
+    if (due <= now) return false;
+    if (!pending.every((o) => _steadyFields.contains((o.entity, o.fieldId)))) {
+      return false;
+    }
+    _steadyTimer?.cancel();
+    _steadyTimer = Timer(Duration(milliseconds: due - now), () {
+      _enqueue(_flush);
+    });
+    return true;
   }
 
   /// The oldest rows' ops, each row complete and parents first: a

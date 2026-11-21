@@ -194,6 +194,29 @@ describe('relay', () => {
     });
   });
 
+  it('forwards presence to the other devices without storing it', async () => {
+    const acct = await newAccount();
+    const { a } = await create(acct);
+    const { c: b } = await enroll(acct, 'B');
+
+    a.send({ type: 'presence', blob: 'UFJFUw' });
+
+    expect(await b.next()).toEqual({ type: 'presence', deviceId: 'A', blob: 'UFJFUw' });
+    // Not kept: a device connecting later catches up on nothing.
+    const { frames } = await enroll(acct, 'C');
+    expect(frames).toEqual({ type: 'frames', frames: [] });
+  });
+
+  it('refuses presence before a session opens', async () => {
+    const acct = await newAccount();
+    await create(acct);
+    const c = await Client.open(acct.accountId);
+
+    c.send({ type: 'presence', blob: 'UFJFUw' });
+
+    expect(await c.next()).toEqual({ type: 'error', code: 'unauthorized' });
+  });
+
   it('catches a device up from its cursor', async () => {
     const acct = await newAccount();
     const { a, token } = await create(acct);

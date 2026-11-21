@@ -117,6 +117,8 @@ export class AccountRelay extends DurableObject<Env> {
         return this.onPush(ws, m.frames);
       case 'snapshot':
         return this.onSnapshot(ws, m.coversSeq, m.blob);
+      case 'presence':
+        return this.onPresence(ws, m.blob);
     }
   }
 
@@ -225,6 +227,19 @@ export class AccountRelay extends DurableObject<Env> {
       if (other !== ws && this.authed(other) !== null) send(other, fanout);
     }
     send(ws, JSON.stringify({ type: 'pushed', acks }));
+  }
+
+  /**
+   * Passes "playing X at 12:34" on to the account's other connected
+   * devices. Never stored: it only matters while both are online.
+   */
+  private onPresence(ws: WebSocket, blob: string): void {
+    const deviceId = this.authed(ws);
+    if (deviceId === null) return this.error(ws, 'unauthorized');
+    const text = JSON.stringify({ type: 'presence', deviceId, blob });
+    for (const other of this.ctx.getWebSockets()) {
+      if (other !== ws && this.authed(other) !== null) send(other, text);
+    }
   }
 
   private onSnapshot(ws: WebSocket, coversSeq: number, blob: string): void {

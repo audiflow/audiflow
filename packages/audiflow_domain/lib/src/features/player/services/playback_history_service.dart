@@ -8,6 +8,7 @@ import '../../review_prompt/repositories/review_prompt_repository.dart';
 import '../../review_prompt/services/review_prompt_trigger.dart';
 import '../../settings/providers/settings_providers.dart';
 import '../../station/services/station_reconciler_service.dart';
+import '../../sync/service/sync_providers.dart';
 import '../models/playback_history.dart';
 import '../models/playback_progress.dart';
 import '../repositories/playback_history_repository.dart';
@@ -30,6 +31,11 @@ PlaybackHistoryService playbackHistoryService(Ref ref) {
     reviewPromptRepository: reviewPromptRepository,
     reviewPromptTrigger: reviewPromptTrigger,
     autoDownloadPause: ref.watch(autoDownloadPauseServiceProvider),
+    // Read lazily: a build without a relay never creates the controller.
+    onUrgentSave: () {
+      if (ref.read(syncRelayUrlProvider) == null) return;
+      ref.read(syncControllerProvider).sendSoon();
+    },
   );
   ref.onDispose(service.dispose);
   return service;
@@ -48,6 +54,7 @@ class PlaybackHistoryService {
     this._reviewPromptRepository,
     this._reviewPromptTrigger,
     this._autoDownloadPause,
+    this._onUrgentSave,
     DateTime Function()? clock,
   }) : _clock = clock ?? DateTime.now;
 
@@ -57,6 +64,11 @@ class PlaybackHistoryService {
   final ReviewPromptRepository? _reviewPromptRepository;
   final ReviewPromptTrigger? _reviewPromptTrigger;
   final AutoDownloadPauseService? _autoDownloadPause;
+
+  /// Called just before a save the other devices should get at once
+  /// (pause, stop, seek, completion); steady progress saves wait for the
+  /// sync interval instead.
+  final void Function()? _onUrgentSave;
 
   /// Injectable clock for testing.
   final DateTime Function() _clock;
@@ -132,6 +144,8 @@ class PlaybackHistoryService {
     required Duration to,
     required Duration duration,
   }) async {
+    // The next progress update saves the new position.
+    _onUrgentSave?.call();
     if (to < from) {
       await _reopenListenBelowThreshold(
         episodeId,
@@ -248,6 +262,8 @@ class PlaybackHistoryService {
   /// playing out its tail, also after an automatic rewind, is left alone.
   Future<void> _finishListen(int episodeId) async {
     if (!await _repository.finishListen(episodeId)) return;
+    // Saved already; the completion goes out with the urgent window.
+    _onUrgentSave?.call();
     if (!_progressSaved.isClosed) _progressSaved.add(episodeId);
     await _tryReconcile(episodeId);
   }
@@ -272,6 +288,7 @@ class PlaybackHistoryService {
       at: now,
     );
 
+    _onUrgentSave?.call();
     await _repository.saveProgress(
       episodeId: episodeId,
       positionMs: progress.position.inMilliseconds,
@@ -306,6 +323,7 @@ class PlaybackHistoryService {
       speed: speed,
     );
 
+    _onUrgentSave?.call();
     await _repository.saveProgress(
       episodeId: episodeId,
       positionMs: progress.position.inMilliseconds,
@@ -329,12 +347,14 @@ class PlaybackHistoryService {
   /// Manually marks an episode as completed, which finishes its listen.
   /// Marking a played episode does not count another completion.
   Future<void> markCompleted(int episodeId) async {
+    _onUrgentSave?.call();
     await _repository.markCompleted(episodeId);
     await _tryReconcile(episodeId);
   }
 
   /// Manually marks an episode as incomplete.
   Future<void> markIncomplete(int episodeId) async {
+    _onUrgentSave?.call();
     await _repository.markIncomplete(episodeId);
     await _tryReconcile(episodeId);
   }

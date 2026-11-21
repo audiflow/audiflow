@@ -131,6 +131,7 @@ sealed class ClientMessage {
           ),
       ]),
       'snapshot' => UploadSnapshot(RelaySnapshot.fromJson(json)),
+      'presence' => SendPresence(decodeBytes(json['blob'])),
       final other => throw FormatException('unknown message type', other),
     };
   }
@@ -237,6 +238,18 @@ class PushFrames extends ClientMessage {
   };
 }
 
+class SendPresence extends ClientMessage {
+  const SendPresence(this.blob);
+
+  final Uint8List blob;
+
+  @override
+  String get type => 'presence';
+
+  @override
+  Map<String, Object?> get fields => {'blob': encodeBytes(blob)};
+}
+
 class UploadSnapshot extends ClientMessage {
   const UploadSnapshot(this.snapshot);
 
@@ -287,6 +300,10 @@ sealed class RelayMessage {
           _string(_object(a), 'clientId'): _int(_object(a), 'seq'),
       }),
       'stored' => SnapshotStored(_int(json, 'coversSeq')),
+      'presence' => PresenceUpdate(
+        deviceId: _string(json, 'deviceId'),
+        blob: decodeBytes(json['blob']),
+      ),
       'error' => RelayError(_string(json, 'code')),
       final other => throw FormatException('unknown message type', other),
     };
@@ -378,6 +395,22 @@ class SnapshotStored extends RelayMessage {
 
   @override
   Map<String, Object?> get fields => {'coversSeq': coversSeq};
+}
+
+class PresenceUpdate extends RelayMessage {
+  const PresenceUpdate({required this.deviceId, required this.blob});
+
+  final String deviceId;
+  final Uint8List blob;
+
+  @override
+  String get type => 'presence';
+
+  @override
+  Map<String, Object?> get fields => {
+    'deviceId': deviceId,
+    'blob': encodeBytes(blob),
+  };
 }
 
 class RelayError extends RelayMessage {

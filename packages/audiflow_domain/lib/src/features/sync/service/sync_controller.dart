@@ -7,6 +7,7 @@ import '../../user_state/models/sync_meta.dart';
 import '../crypto/sync_cipher.dart';
 import '../crypto/sync_credentials.dart';
 import '../engine/sync_engine.dart';
+import '../engine/sync_presence.dart';
 import '../engine/sync_session.dart';
 import '../engine/sync_transport.dart';
 import '../protocol/sync_messages.dart';
@@ -36,7 +37,13 @@ class SyncController {
     required this._openTransport,
     this._onStationChanged,
     Duration Function(int attempt)? retryDelay,
-  }) : _retryDelay = retryDelay ?? defaultRetryDelay;
+    int Function()? nowMillis,
+    this.presenceLifetime = const Duration(seconds: 75),
+  }) : _retryDelay = retryDelay ?? defaultRetryDelay,
+       _nowMillis = nowMillis ?? _wallClock;
+
+  static int _wallClock() => DateTime.now().millisecondsSinceEpoch;
+  final int Function() _nowMillis;
 
   final Isar _isar;
   final SyncKeyStore _store;
@@ -241,8 +248,130 @@ class SyncController {
     if (active) {
       _kick();
     } else {
-      unawaited(_stop());
+      // Going to the background: what is pending goes first.
+      unawaited(_stop(drain: true));
     }
+  }
+
+  /// Sends pending changes at once: on pause, seek, stop, and completion
+  /// (design doc, Realtime playback position). Otherwise changes made only
+  /// by playing go every 30 seconds.
+  void sendSoon() => _engine?.sendSoon();
+
+  // -- Presence -------------------------------------------------------
+
+  /// How often a playing presence is sent again.
+  static const presenceRefresh = Duration(seconds: 30);
+
+  /// How long a received presence lasts without a refresh: two missed
+  /// refreshes and a margin, so one lost message does not blink it out.
+  final Duration presenceLifetime;
+
+  /// A jump this far from where the last presence put the playhead reads
+  /// as a seek and is sent at once.
+  static const _seekToleranceMs = 3000;
+
+  SyncPresence? _localPresence;
+  SyncPresence? _sentPresence;
+  final _remote = <String, RemotePresence>{};
+  final _presenceController =
+      StreamController<List<RemotePresence>>.broadcast();
+  Timer? _presenceExpiry;
+
+  /// What the account's other online devices are playing, freshest first.
+  List<RemotePresence> get presences => List.unmodifiable(
+    _remote.values.toList()
+      ..sort((a, b) => b.receivedAt.compareTo(a.receivedAt)),
+  );
+
+  /// [presences] as they change.
+  Stream<List<RemotePresence>> get presenceChanges =>
+      _presenceController.stream;
+
+  /// What this device plays now, or null when nothing. Call on every
+  /// playback change and progress save; it goes to the other devices when
+  /// the episode or play state changed, on a seek, and every
+  /// [presenceRefresh] while playing.
+  void setPresence(SyncPresence? presence) {
+    _localPresence = presence;
+    final engine = _engine;
+    if (engine == null || _status.phase != SyncPhase.connected) return;
+    if (presence == null) {
+      // Stopped: say so once, as paused, so the others drop it.
+      final sent = _sentPresence;
+      if (sent == null || !sent.playing) return;
+      _sendPresence(
+        engine,
+        SyncPresence(
+          episodeKey: sent.episodeKey,
+          positionMs: sent.positionMs,
+          durationMs: sent.durationMs,
+          playing: false,
+          sentAt: _nowMillis(),
+        ),
+      );
+      return;
+    }
+    if (!_presenceWorthSending(presence)) return;
+    _sendPresence(engine, presence);
+  }
+
+  bool _presenceWorthSending(SyncPresence presence) {
+    final sent = _sentPresence;
+    if (sent == null ||
+        sent.episodeKey != presence.episodeKey ||
+        sent.playing != presence.playing) {
+      return true;
+    }
+    if (!presence.playing) {
+      return (presence.positionMs - sent.positionMs).abs() != 0;
+    }
+    final elapsed = presence.sentAt - sent.sentAt;
+    if (presenceRefresh.inMilliseconds <= elapsed) return true;
+    final expected = sent.positionMs + elapsed;
+    return _seekToleranceMs < (presence.positionMs - expected).abs();
+  }
+
+  void _sendPresence(SyncEngine engine, SyncPresence presence) {
+    _sentPresence = presence;
+    engine.sendPresence(presence);
+  }
+
+  void _onRemotePresence(String deviceId, SyncPresence presence) {
+    _remote[deviceId] = RemotePresence(
+      deviceId: deviceId,
+      presence: presence,
+      receivedAt: _nowMillis(),
+    );
+    _schedulePresenceExpiry();
+    _emitPresences();
+  }
+
+  void _schedulePresenceExpiry() {
+    _presenceExpiry?.cancel();
+    if (_remote.isEmpty) return;
+    final oldest = _remote.values
+        .map((r) => r.receivedAt)
+        .reduce((a, b) => a < b ? a : b);
+    final due = oldest + presenceLifetime.inMilliseconds - _nowMillis();
+    _presenceExpiry = Timer(Duration(milliseconds: due < 0 ? 0 : due), () {
+      final cutoff = _nowMillis() - presenceLifetime.inMilliseconds;
+      _remote.removeWhere((_, r) => r.receivedAt <= cutoff);
+      _schedulePresenceExpiry();
+      _emitPresences();
+    });
+  }
+
+  void _clearPresences() {
+    _sentPresence = null;
+    _presenceExpiry?.cancel();
+    if (_remote.isEmpty) return;
+    _remote.clear();
+    _emitPresences();
+  }
+
+  void _emitPresences() {
+    if (!_presenceController.isClosed) _presenceController.add(presences);
   }
 
   /// The app came to the foreground: a refused device tries once more.
@@ -260,12 +389,23 @@ class SyncController {
     await _stop();
     await _statusController.close();
     await _devicesController.close();
+    await _presenceController.close();
   }
 
-  Future<void> _stop() async {
+  Future<void> _stop({bool drain = false}) async {
     _retry?.cancel();
     _retry = null;
+    final engine = _engine;
+    if (drain && engine != null) {
+      try {
+        await engine.drain();
+      } on Object catch (e, stack) {
+        _logger.w('Sync drain failed', error: e, stackTrace: stack);
+      }
+    }
     await _engine?.close();
+    // Another device's presence is only known while connected.
+    _clearPresences();
     await _running;
     // A connection restarted meanwhile (active again) keeps its status.
     if (isOn && _running == null && _retry == null) {
@@ -311,6 +451,7 @@ class SyncController {
         logger: _logger,
         onSessionChanged: _saveSession,
         onDevices: _setDevices,
+        onPresence: _onRemotePresence,
       );
       // Turned off or backgrounded while opening.
       if (!_wanted(credentials)) {
@@ -322,6 +463,10 @@ class SyncController {
       await _saving;
       _attempt = 0;
       _setStatus(const SyncStatus(SyncPhase.connected));
+      // The others learn what plays here as soon as this device is back.
+      _sentPresence = null;
+      final local = _localPresence;
+      if (local != null) _sendPresence(engine, local);
       await engine.done;
     } on SyncRelayFailure catch (e) {
       _onFailure(e.code, credentials);

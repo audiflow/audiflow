@@ -88,6 +88,8 @@ void main() {
     _MemoryStore store, {
     String deviceId = 'device-a',
     bool noRelay = false,
+    int Function()? nowMillis,
+    Duration presenceLifetime = const Duration(seconds: 75),
   }) {
     final c = SyncController(
       isar: isar,
@@ -101,6 +103,8 @@ void main() {
       logger: Logger(level: Level.off),
       openTransport: (_, _) async => relay.connect(),
       retryDelay: (_) => Duration.zero,
+      nowMillis: nowMillis,
+      presenceLifetime: presenceLifetime,
     );
     controllers.add(c);
     return c;
@@ -112,6 +116,139 @@ void main() {
         .firstWhere((s) => s.phase == phase)
         .timeout(const Duration(seconds: 5));
   }
+
+  group('presence', () {
+    var now = 1000000;
+    late SyncController a;
+    late SyncController b;
+
+    SyncPresence at(int positionMs, {bool playing = true, String ek = 'ek1'}) =>
+        SyncPresence(
+          episodeKey: ek,
+          positionMs: positionMs,
+          durationMs: 3600000,
+          playing: playing,
+          sentAt: now,
+        );
+
+    Future<void> drain() async {
+      for (var i = 0; i < 20; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 2));
+      }
+    }
+
+    Future<int> presencesSent() async {
+      await drain();
+      return relay.received.where((m) => m.contains('"presence"')).length;
+    }
+
+    setUp(() async {
+      now = 1000000;
+      a = controller(await newIsar('a'), _MemoryStore(), nowMillis: () => now);
+      await a.load();
+      a.setActive(true);
+      await a.turnOn();
+      await reach(a, SyncPhase.connected);
+      b = controller(
+        await newIsar('b'),
+        _MemoryStore(),
+        deviceId: 'device-b',
+        nowMillis: () => now,
+        presenceLifetime: const Duration(milliseconds: 100),
+      );
+      await b.load();
+      b.setActive(true);
+      await b.join(a.credentials!);
+      await reach(b, SyncPhase.connected);
+      relay.received.clear();
+    });
+
+    test('what one device plays reaches the other', () async {
+      a.setPresence(at(754000));
+      await drain();
+
+      check(b.presences).length.equals(1);
+      check(b.presences.single)
+        ..has((p) => p.deviceId, 'deviceId').equals('device-a')
+        ..has((p) => p.presence, 'presence').equals(at(754000));
+      check(a.presences).isEmpty();
+    });
+
+    test(
+      'steady progress is sent every 30 seconds, not on each save',
+      () async {
+        a.setPresence(at(0));
+        for (var i = 1; i <= 5; i++) {
+          now += 5000;
+          a.setPresence(at(i * 5000));
+        }
+        check(await presencesSent()).equals(1);
+
+        now += 5000;
+        a.setPresence(at(30000));
+        check(await presencesSent()).equals(2);
+      },
+    );
+
+    test('a seek, a pause, and another episode go at once', () async {
+      a.setPresence(at(0));
+      now += 5000;
+      a.setPresence(at(600000));
+      now += 1000;
+      a.setPresence(at(601000, playing: false));
+      now += 1000;
+      a.setPresence(at(0, ek: 'ek2'));
+
+      check(await presencesSent()).equals(4);
+    });
+
+    test('stopping tells the others once', () async {
+      a.setPresence(at(0));
+      await drain();
+      a
+        ..setPresence(null)
+        ..setPresence(null);
+      await drain();
+
+      check(await presencesSent()).equals(2);
+      check(b.presences.single.presence.playing).isFalse();
+    });
+
+    test('a presence not refreshed expires', () async {
+      a.setPresence(at(0));
+      await drain();
+      check(b.presences).length.equals(1);
+
+      now += 100;
+      await Future<void>.delayed(const Duration(milliseconds: 150));
+
+      check(b.presences).isEmpty();
+    });
+
+    test('going inactive drops what others play', () async {
+      a.setPresence(at(0));
+      await drain();
+      check(b.presences).isNotEmpty();
+
+      b.setActive(false);
+      await drain();
+
+      check(b.presences).isEmpty();
+    });
+
+    test('reconnecting sends what plays here again', () async {
+      a.setPresence(at(0));
+      await drain();
+      a.setActive(false);
+      await drain();
+      relay.received.clear();
+
+      a.setActive(true);
+      await reach(a, SyncPhase.connected);
+
+      check(await presencesSent()).equals(1);
+    });
+  });
 
   test('without a relay sync is unavailable and stays so', () async {
     final c = controller(await newIsar('a'), _MemoryStore(), noRelay: true);
