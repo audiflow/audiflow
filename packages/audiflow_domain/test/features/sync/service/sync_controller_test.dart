@@ -152,6 +152,10 @@ void main() {
     await reach(b, SyncPhase.connected);
 
     check(storeB.device).isNotNull().has((d) => d.token, 'token').isNotNull();
+    check(
+      b.devices.map((d) => d.deviceId).toSet(),
+    ).deepEquals({'device-a', 'device-b'});
+    check(b.deviceId).equals('device-b');
   });
 
   test('a later launch resumes with the stored token', () async {

@@ -2421,4 +2421,146 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get feedLinkErrorServer => 'サーバーからフィードを取得できませんでした。時間をおいてお試しください。';
+
+  @override
+  String get settingsDeviceSyncTitle => '端末間の同期';
+
+  @override
+  String get settingsDeviceSyncSubtitle => 'ほかの端末とライブラリを共有';
+
+  @override
+  String get syncIntro =>
+      '登録中の番組、再生位置、キュー、ステーションをすべての端末で揃えます。データは端末で暗号化されるため、同期サーバーからは読めません。';
+
+  @override
+  String get syncTurnOn => '同期をオンにする';
+
+  @override
+  String get syncTurnOnSubtitle => 'この端末のライブラリから始める';
+
+  @override
+  String get syncJoin => 'ほかの端末の同期に参加';
+
+  @override
+  String get syncJoinSubtitle => 'QR コードか復元コードで参加';
+
+  @override
+  String get syncStatusHeader => '状態';
+
+  @override
+  String get syncStatusOff => 'オフ';
+
+  @override
+  String get syncStatusIdle => 'オン';
+
+  @override
+  String get syncStatusConnecting => '接続中…';
+
+  @override
+  String get syncStatusConnected => '最新の状態';
+
+  @override
+  String get syncStatusRetrying => '同期サーバーに接続できません。再試行しています…';
+
+  @override
+  String get syncStatusFailed => '停止中';
+
+  @override
+  String get syncFailedRemoved => 'この端末は同期から外されました。同期をオフにしてから、もう一度参加してください。';
+
+  @override
+  String get syncFailedTooOld => '同期を続けるには Audiflow をアップデートしてください。';
+
+  @override
+  String get syncFailedSetup => '設定が完了していません。同期をオフにしてから、もう一度オンにしてください。';
+
+  @override
+  String get syncFailedUnreadable =>
+      'ほかの端末からの変更を読み込めませんでした。すべての端末で Audiflow をアップデートしてください。';
+
+  @override
+  String get syncFailedOther => '同期が停止しました。次にアプリを開いたときに再試行します。';
+
+  @override
+  String get syncAddDevice => '端末を追加';
+
+  @override
+  String get syncAddDeviceSubtitle => 'QR コードと復元コードを表示';
+
+  @override
+  String get syncDevicesHeader => '端末';
+
+  @override
+  String get syncDevicesEmpty => 'この端末が接続すると一覧が表示されます。';
+
+  @override
+  String get syncThisDevice => 'この端末';
+
+  @override
+  String get syncTurnOff => 'この端末の同期をオフにする';
+
+  @override
+  String get syncTurnOffTitle => '同期をオフにしますか？';
+
+  @override
+  String get syncTurnOffContent => 'この端末は同期を停止し、ライブラリはそのまま残ります。ほかの端末の同期は続きます。';
+
+  @override
+  String get syncTurnOffAction => 'オフにする';
+
+  @override
+  String get syncActionFailed => '同期の設定を変更できませんでした。もう一度お試しください。';
+
+  @override
+  String get syncQrInstructions =>
+      '追加する端末で「設定 > 端末間の同期 > ほかの端末の同期に参加」を開き、このコードを読み取ってください。';
+
+  @override
+  String get syncRecoveryCodeHeader => '復元コード';
+
+  @override
+  String get syncRecoveryCodeShow => '復元コードを表示';
+
+  @override
+  String get syncRecoveryCodeWarning =>
+      'このコードや QR コードを知っている人は、同期中のデータを読めます。書き留めて人に見せないでください。すべての端末をなくしたときにライブラリを取り戻せます。';
+
+  @override
+  String get syncJoinTitle => '同期に参加';
+
+  @override
+  String get syncScanInstructions => 'ほかの端末の「端末を追加」に表示された QR コードを読み取ってください。';
+
+  @override
+  String get syncScanInvalid => 'Audiflow の同期用コードではありません。';
+
+  @override
+  String get syncCameraUnavailable =>
+      'カメラを使えません。設定アプリでカメラへのアクセスを許可するか、復元コードを入力してください。';
+
+  @override
+  String get syncEnterCode => '復元コードを入力';
+
+  @override
+  String get syncEnterCodeHint => 'XXXX-XXXX-…';
+
+  @override
+  String get syncEnterCodeInvalid => 'コードが正しくありません。1 文字ずつ確認して、もう一度入力してください。';
+
+  @override
+  String get syncJoinConfirmTitle => '同期に参加しますか？';
+
+  @override
+  String get syncJoinConfirmContent =>
+      'この端末のライブラリが、ほかの端末のライブラリと統合されます。削除されるものはありません。';
+
+  @override
+  String get syncJoinAction => '参加する';
+
+  @override
+  String get syncTurnOnConfirmTitle => '同期をオンにしますか？';
+
+  @override
+  String get syncTurnOnConfirmContent =>
+      'この端末のライブラリで新しく同期を始めます。ほかの端末ですでに同期している場合は、そちらに参加してください。';
 }

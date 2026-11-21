@@ -44,6 +44,7 @@ class SyncEngine {
     required this._logger,
     this._onStationChanged,
     this._onSessionChanged,
+    this._onDevices,
     int Function()? nowMillis,
     this.maxOpsPerFrame = 500,
     this.maxRowsPerFrame = 500,
@@ -70,6 +71,9 @@ class SyncEngine {
   final String _platform;
   final Logger _logger;
   final void Function(SyncSession session)? _onSessionChanged;
+
+  /// The account's devices as the relay lists them on `welcome`.
+  final void Function(List<SyncDevice> devices)? _onDevices;
   final int Function() _nowMillis;
   final SyncCipher _cipher;
 
@@ -330,6 +334,7 @@ class SyncEngine {
       changed = true;
     }
     if (changed) _onSessionChanged?.call(_session);
+    _onDevices?.call(welcome.devices);
     _welcomed = true;
   }
 

@@ -8,6 +8,8 @@ import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
+import '../../../sync/presentation/controllers/sync_view_providers.dart';
+import '../../../sync/presentation/widgets/sync_labels.dart';
 
 /// Main settings screen (redesign 4.8): a large title over three grouped
 /// sections of category rows, each with an icon tile, title, one-line
@@ -21,6 +23,10 @@ class SettingsScreen extends ConsumerWidget {
     final restricted = ref.watch(isRestrictedModeOnProvider);
     final unlocked = ref.watch(isUnlockedProvider);
     final hideDeveloper = restricted && !unlocked;
+    // Checked first: a build without a relay never builds the controller.
+    final syncPhase = ref.watch(syncRelayUrlProvider) == null
+        ? SyncPhase.unavailable
+        : ref.watch(syncStatusProvider).value?.phase ?? SyncPhase.off;
 
     SettingsRow row(IconData icon, String title, String subtitle, String path) {
       return SettingsRow(
@@ -78,6 +84,16 @@ class SettingsScreen extends ConsumerWidget {
                 ]),
                 const SizedBox(height: Spacing.lg),
                 group([
+                  // Builds without a relay have nothing to sync with.
+                  if (syncPhase != SyncPhase.unavailable)
+                    row(
+                      Symbols.devices,
+                      l10n.settingsDeviceSyncTitle,
+                      syncPhase == SyncPhase.off
+                          ? l10n.settingsDeviceSyncSubtitle
+                          : syncPhaseLabel(l10n, syncPhase),
+                      AppRoutes.settingsDeviceSync,
+                    ),
                   row(
                     Symbols.storage,
                     l10n.settingsStorageTitle,

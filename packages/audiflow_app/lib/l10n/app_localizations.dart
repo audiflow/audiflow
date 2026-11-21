@@ -4483,6 +4483,276 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The server couldn\'t return the feed. Try again later.'**
   String get feedLinkErrorServer;
+
+  /// Settings row for syncing the library between the user's devices
+  ///
+  /// In en, this message translates to:
+  /// **'Sync Across Devices'**
+  String get settingsDeviceSyncTitle;
+
+  /// Subtitle of the device sync settings row
+  ///
+  /// In en, this message translates to:
+  /// **'Library and progress on all your devices'**
+  String get settingsDeviceSyncSubtitle;
+
+  /// Explains device sync on its settings screen while sync is off
+  ///
+  /// In en, this message translates to:
+  /// **'Keep subscriptions, play progress, the queue, and stations the same on all your devices. Everything is encrypted on the device; the sync server can\'t read it.'**
+  String get syncIntro;
+
+  /// Starts a new sync account with this device's library
+  ///
+  /// In en, this message translates to:
+  /// **'Turn On Sync'**
+  String get syncTurnOn;
+
+  /// Subtitle of the turn on sync row
+  ///
+  /// In en, this message translates to:
+  /// **'Start with this device\'s library'**
+  String get syncTurnOnSubtitle;
+
+  /// Joins the sync account another device already uses
+  ///
+  /// In en, this message translates to:
+  /// **'Join from Another Device'**
+  String get syncJoin;
+
+  /// Subtitle of the join row
+  ///
+  /// In en, this message translates to:
+  /// **'Scan a QR code or enter a recovery code'**
+  String get syncJoinSubtitle;
+
+  /// Header of the sync status section
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get syncStatusHeader;
+
+  /// Sync phase: off
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get syncStatusOff;
+
+  /// Sync phase: on, not connected because the app is in the background
+  ///
+  /// In en, this message translates to:
+  /// **'On'**
+  String get syncStatusIdle;
+
+  /// Sync phase: connecting and catching up
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting…'**
+  String get syncStatusConnecting;
+
+  /// Sync phase: connected and caught up
+  ///
+  /// In en, this message translates to:
+  /// **'Up to date'**
+  String get syncStatusConnected;
+
+  /// Sync phase: a connection failed and is retried
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t reach the sync server. Retrying…'**
+  String get syncStatusRetrying;
+
+  /// Sync phase: the server refused this device
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped'**
+  String get syncStatusFailed;
+
+  /// Why sync stopped: the device is no longer enrolled
+  ///
+  /// In en, this message translates to:
+  /// **'This device was removed from sync. Turn sync off, then join again.'**
+  String get syncFailedRemoved;
+
+  /// Why sync stopped: the app version is too old
+  ///
+  /// In en, this message translates to:
+  /// **'Update Audiflow to keep syncing.'**
+  String get syncFailedTooOld;
+
+  /// Why sync stopped: creating the account was cut short
+  ///
+  /// In en, this message translates to:
+  /// **'Setup didn\'t finish. Turn sync off, then on again.'**
+  String get syncFailedSetup;
+
+  /// Why sync stopped: a frame could not be decrypted or decoded
+  ///
+  /// In en, this message translates to:
+  /// **'A change from another device couldn\'t be read. Update Audiflow on all your devices.'**
+  String get syncFailedUnreadable;
+
+  /// Why sync stopped: any other refusal
+  ///
+  /// In en, this message translates to:
+  /// **'Sync stopped. It tries again when you next open the app.'**
+  String get syncFailedOther;
+
+  /// Opens the QR code for another device to scan
+  ///
+  /// In en, this message translates to:
+  /// **'Add a Device'**
+  String get syncAddDevice;
+
+  /// Subtitle of the add device row
+  ///
+  /// In en, this message translates to:
+  /// **'Show the QR code and recovery code'**
+  String get syncAddDeviceSubtitle;
+
+  /// Header of the list of synced devices
+  ///
+  /// In en, this message translates to:
+  /// **'Devices'**
+  String get syncDevicesHeader;
+
+  /// Shown when the device list is not known yet
+  ///
+  /// In en, this message translates to:
+  /// **'The list appears once this device connects.'**
+  String get syncDevicesEmpty;
+
+  /// Marks the current device in the device list
+  ///
+  /// In en, this message translates to:
+  /// **'This device'**
+  String get syncThisDevice;
+
+  /// Stops sync on this device only
+  ///
+  /// In en, this message translates to:
+  /// **'Turn Off Sync on This Device'**
+  String get syncTurnOff;
+
+  /// Title of the turn off confirmation
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off sync?'**
+  String get syncTurnOffTitle;
+
+  /// Body of the turn off confirmation
+  ///
+  /// In en, this message translates to:
+  /// **'This device stops syncing and keeps its library as it is. Your other devices keep syncing.'**
+  String get syncTurnOffContent;
+
+  /// Confirms turning sync off
+  ///
+  /// In en, this message translates to:
+  /// **'Turn Off'**
+  String get syncTurnOffAction;
+
+  /// Snackbar when turning sync on, off, or joining fails locally
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t change sync. Try again.'**
+  String get syncActionFailed;
+
+  /// How to use the QR code
+  ///
+  /// In en, this message translates to:
+  /// **'On the other device, open Settings > Sync Across Devices > Join from Another Device and scan this code.'**
+  String get syncQrInstructions;
+
+  /// Header of the recovery code section
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery Code'**
+  String get syncRecoveryCodeHeader;
+
+  /// Reveals the recovery code
+  ///
+  /// In en, this message translates to:
+  /// **'Show Recovery Code'**
+  String get syncRecoveryCodeShow;
+
+  /// Warning under the recovery code
+  ///
+  /// In en, this message translates to:
+  /// **'Anyone with this code or the QR code can read your synced data. Write it down and keep it private: it brings your library back if you lose all your devices.'**
+  String get syncRecoveryCodeWarning;
+
+  /// Title of the join screen
+  ///
+  /// In en, this message translates to:
+  /// **'Join Sync'**
+  String get syncJoinTitle;
+
+  /// How to scan
+  ///
+  /// In en, this message translates to:
+  /// **'Scan the QR code shown on your other device under Add a Device.'**
+  String get syncScanInstructions;
+
+  /// Snackbar when a scanned QR code is not a sync code
+  ///
+  /// In en, this message translates to:
+  /// **'That isn\'t an Audiflow sync code.'**
+  String get syncScanInvalid;
+
+  /// Shown when the scanner cannot start
+  ///
+  /// In en, this message translates to:
+  /// **'The camera isn\'t available. Allow camera access in Settings, or enter the recovery code.'**
+  String get syncCameraUnavailable;
+
+  /// Opens recovery code entry
+  ///
+  /// In en, this message translates to:
+  /// **'Enter Recovery Code'**
+  String get syncEnterCode;
+
+  /// Hint text in the recovery code field
+  ///
+  /// In en, this message translates to:
+  /// **'XXXX-XXXX-…'**
+  String get syncEnterCodeHint;
+
+  /// Error under the recovery code field
+  ///
+  /// In en, this message translates to:
+  /// **'That code doesn\'t check out. Check each character and try again.'**
+  String get syncEnterCodeInvalid;
+
+  /// Title of the join confirmation
+  ///
+  /// In en, this message translates to:
+  /// **'Join sync?'**
+  String get syncJoinConfirmTitle;
+
+  /// Body of the join confirmation
+  ///
+  /// In en, this message translates to:
+  /// **'This device\'s library merges with your other devices\'. Nothing is deleted.'**
+  String get syncJoinConfirmContent;
+
+  /// Confirms joining
+  ///
+  /// In en, this message translates to:
+  /// **'Join'**
+  String get syncJoinAction;
+
+  /// Title of the turn on confirmation
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on sync?'**
+  String get syncTurnOnConfirmTitle;
+
+  /// Body of the turn on confirmation
+  ///
+  /// In en, this message translates to:
+  /// **'A new sync starts with this device\'s library. If another device already syncs, join it instead.'**
+  String get syncTurnOnConfirmContent;
 }
 
 class _AppLocalizationsDelegate

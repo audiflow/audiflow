@@ -1,20 +1,23 @@
 import 'package:audiflow_app/features/settings/presentation/screens/settings_screen.dart';
+import 'package:audiflow_app/features/sync/presentation/controllers/sync_view_providers.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('SettingsScreen', () {
-    Widget buildTestWidget() {
+    Widget buildTestWidget({List<Override> extra = const []}) {
       return ProviderScope(
         overrides: [
           // Restricted mode off: all cards including Developer are visible.
           isRestrictedModeOnProvider.overrideWith((ref) => false),
           isUnlockedProvider.overrideWith((ref) => true),
+          ...extra,
         ],
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -39,6 +42,35 @@ void main() {
       await tester.pumpWidget(buildTestWidget());
 
       check(find.byType(SettingsScreen).evaluate()).length.equals(1);
+    });
+
+    testWidgets('device sync is hidden without a relay', (tester) async {
+      await withTallSurface(tester, () async {
+        await tester.pumpWidget(buildTestWidget());
+
+        check(find.text('Sync Across Devices').evaluate()).isEmpty();
+      });
+    });
+
+    testWidgets('device sync shows its status with a relay', (tester) async {
+      await withTallSurface(tester, () async {
+        await tester.pumpWidget(
+          buildTestWidget(
+            extra: [
+              syncRelayUrlProvider.overrideWithValue(
+                Uri.parse('https://relay.example.com'),
+              ),
+              syncStatusProvider.overrideWith(
+                (ref) => Stream.value(const SyncStatus(SyncPhase.connected)),
+              ),
+            ],
+          ),
+        );
+        await tester.pump();
+
+        check(find.text('Sync Across Devices').evaluate()).isNotEmpty();
+        check(find.text('Up to date').evaluate()).isNotEmpty();
+      });
     });
 
     testWidgets('shows a large Settings title', (tester) async {
