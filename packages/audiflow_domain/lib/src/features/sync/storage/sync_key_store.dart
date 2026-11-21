@@ -7,6 +7,7 @@ import '../crypto/sync_cipher.dart';
 import '../crypto/sync_credentials.dart';
 import '../engine/sync_session.dart';
 import '../protocol/sync_messages.dart';
+import 'sync_key_backup.dart';
 
 /// What this device holds about its own enrollment: everything that must
 /// never leave it (plan P8).
@@ -156,9 +157,19 @@ abstract interface class SyncKeyStore {
 /// be decrypted without those keys. Carrying the credentials to a new
 /// phone through Block Store comes separately.
 class SecureSyncKeyStore implements SyncKeyStore {
-  SecureSyncKeyStore([this._storage = const FlutterSecureStorage()]);
+  SecureSyncKeyStore({
+    this._storage = const FlutterSecureStorage(),
+    this._backup,
+    this._onBackupError,
+  });
 
   final FlutterSecureStorage _storage;
+
+  /// Mirrors the credentials, so a new install finds them when its own
+  /// storage is empty. Best effort: without Play services, backup, or a
+  /// screen lock it fails, and sync still works on this device.
+  final SyncKeyBackup? _backup;
+  final void Function(Object error, StackTrace stack)? _onBackupError;
 
   static const credentialsKeyPrefix = 'audiflow_sync_account_';
   static const deviceKey = 'audiflow_sync_device';
@@ -174,40 +185,101 @@ class SecureSyncKeyStore implements SyncKeyStore {
 
   @override
   Future<SyncCredentials?> readCredentials(String accountId) async {
-    final text = await _storage.read(
-      key: '$credentialsKeyPrefix$accountId',
-      iOptions: _synced,
-    );
+    final key = '$credentialsKeyPrefix$accountId';
+    final local = await _storage.read(key: key, iOptions: _synced);
+    final backedUp = await _reconcile();
+    final text = local ?? backedUp[key];
     if (text == null) return null;
-    return _StoredCredentials.decode(text).credentials;
+    final credentials = _StoredCredentials.decode(text).credentials;
+    if (local == null) await _keepLocally(key, text);
+    return credentials;
   }
 
   @override
   Future<SyncCredentials?> readLatestCredentials() async {
-    final all = await _storage.readAll(iOptions: _synced);
+    final local = await _storage.readAll(iOptions: _synced);
+    final backedUp = await _reconcile();
+    final all = [...local.entries, ...backedUp.entries];
+    MapEntry<String, String>? latestEntry;
     _StoredCredentials? latest;
-    for (final MapEntry(:key, :value) in all.entries) {
-      if (!key.startsWith(credentialsKeyPrefix)) continue;
+    for (final entry in all) {
+      if (!entry.key.startsWith(credentialsKeyPrefix)) continue;
       final _StoredCredentials stored;
       try {
-        stored = _StoredCredentials.decode(value);
+        stored = _StoredCredentials.decode(entry.value);
       } on FormatException {
         continue;
       }
-      if (latest == null || latest.storedAt < stored.storedAt) latest = stored;
+      if (latest == null || latest.storedAt < stored.storedAt) {
+        latest = stored;
+        latestEntry = entry;
+      }
+    }
+    if (latestEntry != null && !local.containsKey(latestEntry.key)) {
+      await _keepLocally(latestEntry.key, latestEntry.value);
     }
     return latest?.credentials;
   }
 
+  // Restored from the backup: kept locally too, unchanged (storedAt
+  // included), so later launches need the backup no more.
+  Future<void> _keepLocally(String key, String text) =>
+      _storage.write(key: key, value: text, iOptions: _synced);
+
+  bool _reconciled = false;
+
+  /// Reads the backup and, once per launch, copies to it any local
+  /// credentials it lacks: those stored before the backup existed (an
+  /// app upgrade) or whose backup write failed. Returns the backup's
+  /// entries; empty without one or when it cannot be read.
+  Future<Map<String, String>> _reconcile() async {
+    final backedUp = await _readBackup();
+    final backup = _backup;
+    if (_reconciled || backup == null) return backedUp;
+    _reconciled = true;
+    final local = await _storage.readAll(iOptions: _synced);
+    for (final MapEntry(:key, :value) in local.entries) {
+      if (!key.startsWith(credentialsKeyPrefix)) continue;
+      if (backedUp[key] == value) continue;
+      try {
+        await backup.write(key, value);
+      } on Object catch (e, stack) {
+        _onBackupError?.call(e, stack);
+        // Unavailable now; the next launch tries again.
+        _reconciled = false;
+        break;
+      }
+    }
+    return backedUp;
+  }
+
   @override
-  Future<void> writeCredentials(SyncCredentials credentials) => _storage.write(
-    key: '$credentialsKeyPrefix${credentials.accountIdText}',
-    value: _StoredCredentials(
+  Future<void> writeCredentials(SyncCredentials credentials) async {
+    final key = '$credentialsKeyPrefix${credentials.accountIdText}';
+    final value = _StoredCredentials(
       credentials,
       DateTime.now().millisecondsSinceEpoch,
-    ).encode(),
-    iOptions: _synced,
-  );
+    ).encode();
+    await _storage.write(key: key, value: value, iOptions: _synced);
+    final backup = _backup;
+    if (backup == null) return;
+    try {
+      await backup.write(key, value);
+    } on Object catch (e, stack) {
+      _onBackupError?.call(e, stack);
+    }
+  }
+
+  Future<Map<String, String>> _readBackup() async {
+    final backup = _backup;
+    if (backup == null) return const {};
+    try {
+      return await backup.readAll();
+    } on Object catch (e, stack) {
+      _onBackupError?.call(e, stack);
+      return const {};
+    }
+  }
 
   @override
   Future<StoredSyncDevice?> readDevice() async {

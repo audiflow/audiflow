@@ -92,7 +92,7 @@ final class SyncKeyStoreProvider
   }
 }
 
-String _$syncKeyStoreHash() => r'b840502edc2495997dcd36914a9681d84a43419e';
+String _$syncKeyStoreHash() => r'560b646a637d93f7de5155a309a0f53c5af50065';
 
 /// The app's [SyncController]. The app calls `load` at startup and
 /// `setActive` as it moves between foreground, playing, and background.
