@@ -93,6 +93,8 @@ dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
     // SystemOutputSwitcherDialogController opens the system output picker.
     implementation("androidx.mediarouter:mediarouter:1.8.1")
+    // Block Store carries the sync key to a new phone (BlockStoreChannel).
+    implementation("com.google.android.gms:play-services-auth-blockstore:16.4.0")
 }
 
 kotlin {

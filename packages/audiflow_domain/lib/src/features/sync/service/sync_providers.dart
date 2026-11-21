@@ -8,6 +8,7 @@ import '../../../common/providers/platform_providers.dart';
 import '../../feed/services/feed_sync_service.dart';
 import '../../install_id/providers/install_id_providers.dart';
 import '../../station/services/station_reconciler_service.dart';
+import '../storage/sync_key_backup.dart';
 import '../storage/sync_key_store.dart';
 import '../transport/web_socket_transport.dart';
 import 'sync_controller.dart';
@@ -27,7 +28,15 @@ Uri? syncRelayUrl(Ref ref) {
 }
 
 @Riverpod(keepAlive: true)
-SyncKeyStore syncKeyStore(Ref ref) => SecureSyncKeyStore();
+SyncKeyStore syncKeyStore(Ref ref) {
+  final logger = ref.watch(namedLoggerProvider('SyncKeys'));
+  return SecureSyncKeyStore(
+    // iOS needs no backup: the synchronizable Keychain item travels.
+    backup: Platform.isAndroid ? const BlockStoreSyncKeyBackup() : null,
+    onBackupError: (e, stack) =>
+        logger.w('Block Store unavailable', error: e, stackTrace: stack),
+  );
+}
 
 /// The app's [SyncController]. The app calls `load` at startup and
 /// `setActive` as it moves between foreground, playing, and background.

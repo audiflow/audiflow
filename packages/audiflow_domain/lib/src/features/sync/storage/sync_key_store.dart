@@ -7,6 +7,7 @@ import '../crypto/sync_cipher.dart';
 import '../crypto/sync_credentials.dart';
 import '../engine/sync_session.dart';
 import '../protocol/sync_messages.dart';
+import 'sync_key_backup.dart';
 
 /// What this device holds about its own enrollment: everything that must
 /// never leave it (plan P8).
@@ -156,9 +157,19 @@ abstract interface class SyncKeyStore {
 /// be decrypted without those keys. Carrying the credentials to a new
 /// phone through Block Store comes separately.
 class SecureSyncKeyStore implements SyncKeyStore {
-  SecureSyncKeyStore([this._storage = const FlutterSecureStorage()]);
+  SecureSyncKeyStore({
+    this._storage = const FlutterSecureStorage(),
+    this._backup,
+    this._onBackupError,
+  });
 
   final FlutterSecureStorage _storage;
+
+  /// Mirrors the credentials, so a new install finds them when its own
+  /// storage is empty. Best effort: without Play services, backup, or a
+  /// screen lock it fails, and sync still works on this device.
+  final SyncKeyBackup? _backup;
+  final void Function(Object error, StackTrace stack)? _onBackupError;
 
   static const credentialsKeyPrefix = 'audiflow_sync_account_';
   static const deviceKey = 'audiflow_sync_device';
@@ -174,19 +185,22 @@ class SecureSyncKeyStore implements SyncKeyStore {
 
   @override
   Future<SyncCredentials?> readCredentials(String accountId) async {
-    final text = await _storage.read(
-      key: '$credentialsKeyPrefix$accountId',
-      iOptions: _synced,
-    );
+    final key = '$credentialsKeyPrefix$accountId';
+    final text =
+        await _storage.read(key: key, iOptions: _synced) ??
+        (await _readBackup())[key];
     if (text == null) return null;
     return _StoredCredentials.decode(text).credentials;
   }
 
   @override
   Future<SyncCredentials?> readLatestCredentials() async {
-    final all = await _storage.readAll(iOptions: _synced);
+    final all = [
+      ...(await _storage.readAll(iOptions: _synced)).entries,
+      ...(await _readBackup()).entries,
+    ];
     _StoredCredentials? latest;
-    for (final MapEntry(:key, :value) in all.entries) {
+    for (final MapEntry(:key, :value) in all) {
       if (!key.startsWith(credentialsKeyPrefix)) continue;
       final _StoredCredentials stored;
       try {
@@ -200,14 +214,32 @@ class SecureSyncKeyStore implements SyncKeyStore {
   }
 
   @override
-  Future<void> writeCredentials(SyncCredentials credentials) => _storage.write(
-    key: '$credentialsKeyPrefix${credentials.accountIdText}',
-    value: _StoredCredentials(
+  Future<void> writeCredentials(SyncCredentials credentials) async {
+    final key = '$credentialsKeyPrefix${credentials.accountIdText}';
+    final value = _StoredCredentials(
       credentials,
       DateTime.now().millisecondsSinceEpoch,
-    ).encode(),
-    iOptions: _synced,
-  );
+    ).encode();
+    await _storage.write(key: key, value: value, iOptions: _synced);
+    final backup = _backup;
+    if (backup == null) return;
+    try {
+      await backup.write(key, value);
+    } on Object catch (e, stack) {
+      _onBackupError?.call(e, stack);
+    }
+  }
+
+  Future<Map<String, String>> _readBackup() async {
+    final backup = _backup;
+    if (backup == null) return const {};
+    try {
+      return await backup.readAll();
+    } on Object catch (e, stack) {
+      _onBackupError?.call(e, stack);
+      return const {};
+    }
+  }
 
   @override
   Future<StoredSyncDevice?> readDevice() async {
