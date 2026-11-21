@@ -19,6 +19,7 @@ class _Device {
   int now = DateTime.utc(2026, 11, 20).millisecondsSinceEpoch;
   late SyncSession session;
   SyncEngine? engine;
+  final presences = <(String, SyncPresence)>[];
   InMemoryTransport? transport;
 
   UserStateStore get _store => UserStateStore(isar, nowMillis: () => now);
@@ -38,6 +39,7 @@ class _Device {
     int maxOpsPerFrame = 500,
     int maxRowsPerFrame = 500,
     int maxFramesPerPush = 100,
+    Duration steadyInterval = const Duration(seconds: 30),
   }) async {
     if (opening != SyncOpening.resume) {
       session = SyncSession(
@@ -63,6 +65,8 @@ class _Device {
       maxOpsPerFrame: maxOpsPerFrame,
       maxRowsPerFrame: maxRowsPerFrame,
       maxFramesPerPush: maxFramesPerPush,
+      steadyInterval: steadyInterval,
+      onPresence: (deviceId, p) => presences.add((deviceId, p)),
     );
     await e.connect(opening);
   }
@@ -194,6 +198,171 @@ void main() {
     check(await a.position('ek-b')).equals(777);
   });
 
+  group('pacing', () {
+    // The episode exists on both sides, so later saves change only the
+    // steady fields.
+    Future<void> playing() async {
+      await pair();
+      a.now += 1000;
+      await a.setPosition('ek1', 1000);
+      await settle();
+      check(await b.position('ek1')).equals(1000);
+    }
+
+    test('a position saved while playing waits for the interval', () async {
+      await playing();
+
+      a.now += 5000;
+      await a.setPosition('ek1', 6000);
+      await settle();
+
+      check(await b.position('ek1')).equals(1000);
+      check(await a.outbox()).not((n) => n.equals(0));
+    });
+
+    test('sendSoon sends the position at once', () async {
+      await playing();
+
+      a.now += 5000;
+      a.engine!.sendSoon();
+      await a.setPosition('ek1', 6000);
+      await settle();
+
+      check(await b.position('ek1')).equals(6000);
+    });
+
+    test('the waiting position goes once the interval passes', () async {
+      await a.connect(
+        relay,
+        SyncOpening.create,
+        credentials: credentials,
+        steadyInterval: const Duration(milliseconds: 40),
+      );
+      await settle();
+      await b.connect(relay, SyncOpening.join, credentials: credentials);
+      await settle();
+      a.now += 1000;
+      await a.setPosition('ek1', 1000);
+      await settle();
+
+      a.now += 10;
+      await a.setPosition('ek1', 2000);
+      await settle();
+      a.now += 40;
+      await Future<void>.delayed(const Duration(milliseconds: 80));
+      await settle();
+
+      check(await b.position('ek1')).equals(2000);
+    });
+
+    test('any other change goes at once', () async {
+      await playing();
+
+      a.now += 5000;
+      await a.setSubscribed('pk2', subscribed: true);
+      await settle();
+
+      check(await b.subscribed('pk2')).equals(true);
+    });
+
+    test('drain keeps going until every push is acknowledged', () async {
+      await a.connect(
+        relay,
+        SyncOpening.create,
+        credentials: credentials,
+        maxOpsPerFrame: 1,
+      );
+      await settle();
+      await b.connect(relay, SyncOpening.join, credentials: credentials);
+      await settle();
+      for (var i = 0; i < 3; i++) {
+        a.now += 1000;
+        await a.setPosition('ek-d$i', 1000 + i);
+      }
+      // Ops written behind a push still in flight wait for its ack.
+      await a.engine!.drain();
+      await a.goOffline();
+      await settle();
+
+      check(await a.outbox()).equals(0);
+      for (var i = 0; i < 3; i++) {
+        check(await b.position('ek-d$i')).equals(1000 + i);
+      }
+    });
+
+    test('drain sends the waiting position before closing', () async {
+      await playing();
+
+      a.now += 5000;
+      await a.setPosition('ek1', 6000);
+      await settle();
+      await a.engine!.drain();
+      await settle();
+
+      check(await b.position('ek1')).equals(6000);
+    });
+  });
+
+  group('presence', () {
+    const playingAt = SyncPresence(
+      episodeKey: 'ek1',
+      positionMs: 754000,
+      durationMs: 3600000,
+      playing: true,
+      sentAt: 1700000000000,
+    );
+
+    test('reaches the other device and is not stored', () async {
+      await pair();
+
+      a.engine!.sendPresence(playingAt);
+      await settle();
+
+      check(b.presences).deepEquals([('device-A', playingAt)]);
+      check(a.presences).isEmpty();
+      check(relay.framesOf(credentials.accountIdText)).isEmpty();
+    });
+
+    test('the relay sees only a sealed blob', () async {
+      await pair();
+      relay.received.clear();
+
+      a.engine!.sendPresence(playingAt);
+      await settle();
+
+      final sent = relay.received.single;
+      check(sent).contains('"type":"presence"');
+      check(sent).not((s) => s.contains('ek1'));
+    });
+
+    test('a message type from a newer relay is ignored', () async {
+      await pair();
+
+      relay.injectRaw(credentials.accountIdText, '{"type":"future-thing"}');
+      a.now += 1000;
+      await a.setSubscribed('pk4', subscribed: true);
+      await settle();
+
+      check(await b.subscribed('pk4')).equals(true);
+    });
+
+    test('an unreadable presence is ignored', () async {
+      await pair();
+
+      relay.injectPresence(
+        credentials.accountIdText,
+        'device-X',
+        Uint8List.fromList(List.filled(64, 7)),
+      );
+      a.now += 1000;
+      await a.setSubscribed('pk3', subscribed: true);
+      await settle();
+
+      check(b.presences).isEmpty();
+      check(await b.subscribed('pk3')).equals(true);
+    });
+  });
+
   test('a live edit reaches the other device', () async {
     await pair();
 
@@ -261,6 +430,8 @@ void main() {
 
     for (var i = 1; i <= 3; i++) {
       a.now += 1000;
+      // Not about pacing: each save goes as it is made.
+      a.engine!.sendSoon();
       await a.setPosition('ek$i', i * 1000);
       await settle();
     }
@@ -452,6 +623,8 @@ void main() {
     await b.goOffline();
     for (var i = 0; i < 4; i++) {
       a.now += 1000;
+      // Not about pacing: each save goes as it is made.
+      a.engine!.sendSoon();
       await a.setPosition('ek-c$i', 100 + i);
       await settle();
     }

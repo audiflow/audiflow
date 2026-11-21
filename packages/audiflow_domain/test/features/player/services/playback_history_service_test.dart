@@ -295,6 +295,102 @@ void main() {
     });
   });
 
+  group('onUrgentSave', () {
+    late int urgent;
+    final progress = PlaybackProgress(
+      position: const Duration(seconds: 30),
+      duration: const Duration(minutes: 30),
+      bufferedPosition: const Duration(seconds: 35),
+    );
+
+    setUp(() {
+      urgent = 0;
+      service = PlaybackHistoryService(
+        mockRepository,
+        getCompletionThreshold: () => 0.95,
+        clock: clock,
+        onUrgentSave: () => urgent++,
+      );
+      when(
+        mockRepository.saveProgress(
+          episodeId: anyNamed('episodeId'),
+          positionMs: anyNamed('positionMs'),
+          durationMs: anyNamed('durationMs'),
+          listenedDeltaMs: anyNamed('listenedDeltaMs'),
+          realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
+        ),
+      ).thenAnswer((_) async {});
+      when(mockRepository.markCompleted(any)).thenAnswer((_) async {});
+    });
+
+    test('fires on pause, stop, and marking played', () async {
+      await service.onPlaybackPaused(1, progress);
+      await service.onPlaybackStopped(1, progress);
+      await service.markCompleted(1);
+
+      check(urgent).equals(3);
+    });
+
+    test('a small seek is saved and sent on the next update', () async {
+      await service.onProgressUpdate(1, progress);
+      await service.onSeeked(
+        1,
+        from: const Duration(seconds: 30),
+        to: const Duration(seconds: 31),
+        duration: const Duration(minutes: 30),
+      );
+      check(urgent).equals(0);
+
+      await service.onProgressUpdate(
+        1,
+        PlaybackProgress(
+          position: const Duration(seconds: 31),
+          duration: const Duration(minutes: 30),
+          bufferedPosition: const Duration(seconds: 35),
+        ),
+      );
+
+      check(urgent).equals(1);
+      verify(
+        mockRepository.saveProgress(
+          episodeId: 1,
+          positionMs: 31000,
+          durationMs: anyNamed('durationMs'),
+          listenedDeltaMs: anyNamed('listenedDeltaMs'),
+          realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
+        ),
+      ).called(1);
+    });
+
+    test('a steady progress save waits', () async {
+      await service.onProgressUpdate(1, progress);
+
+      check(urgent).equals(0);
+    });
+
+    test('fires once when a listen passes the threshold', () async {
+      when(mockRepository.finishListen(any)).thenAnswer((_) async => true);
+      final tail = PlaybackProgress(
+        position: const Duration(minutes: 29),
+        duration: const Duration(minutes: 30),
+        bufferedPosition: const Duration(minutes: 29),
+      );
+      await service.onProgressUpdate(1, tail);
+      when(mockRepository.finishListen(any)).thenAnswer((_) async => false);
+      now = now.add(const Duration(seconds: 6));
+      await service.onProgressUpdate(
+        1,
+        PlaybackProgress(
+          position: const Duration(minutes: 29, seconds: 6),
+          duration: const Duration(minutes: 30),
+          bufferedPosition: const Duration(minutes: 29, seconds: 6),
+        ),
+      );
+
+      check(urgent).equals(1);
+    });
+  });
+
   group('progressSaved', () {
     final progress = PlaybackProgress(
       position: const Duration(seconds: 30),

@@ -348,6 +348,7 @@ export 'src/features/sync/crypto/sync_cipher.dart';
 export 'src/features/sync/crypto/sync_credentials.dart';
 export 'src/features/sync/engine/sync_engine.dart';
 export 'src/features/sync/engine/sync_frame.dart';
+export 'src/features/sync/engine/sync_presence.dart';
 export 'src/features/sync/engine/sync_session.dart';
 export 'src/features/sync/engine/sync_transport.dart';
 export 'src/features/sync/protocol/sync_messages.dart';

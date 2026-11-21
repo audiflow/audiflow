@@ -64,6 +64,22 @@ class InMemoryRelay {
     }
   }
 
+  /// Sends [blob] as a presence from [deviceId] to every connection of
+  /// [accountId].
+  void injectPresence(String accountId, String deviceId, Uint8List blob) {
+    for (final c in _accounts[accountId]!.connections) {
+      c._deliver(PresenceUpdate(deviceId: deviceId, blob: blob));
+    }
+  }
+
+  /// Delivers [text] as is to every connection of [accountId], as a newer
+  /// relay's message would arrive.
+  void injectRaw(String accountId, String text) {
+    for (final c in _accounts[accountId]!.connections) {
+      c._deliverRaw(text);
+    }
+  }
+
   /// Frames the relay stores for [accountId], for checks.
   List<RelayFrame> framesOf(String accountId) =>
       List.of(_accounts[accountId]!.frames);
@@ -148,6 +164,15 @@ class InMemoryRelay {
           account.frames.removeWhere((f) => f.seq <= snapshot.coversSeq);
         }
         from._deliver(SnapshotStored(snapshot.coversSeq));
+      case SendPresence(:final blob):
+        final account = from._account;
+        if (account == null) {
+          return from._deliver(const RelayError(RelayError.unauthorized));
+        }
+        final update = PresenceUpdate(deviceId: from._deviceId!, blob: blob);
+        for (final c in account.connections) {
+          if (c != from) c._deliver(update);
+        }
     }
   }
 
@@ -247,9 +272,10 @@ class InMemoryTransport implements SyncTransport {
     if (!_closed) _controller.addError(error);
   }
 
-  void _deliver(RelayMessage message) {
+  void _deliver(RelayMessage message) => _deliverRaw(message.encode());
+
+  void _deliverRaw(String text) {
     if (_closed) return;
-    final text = message.encode();
     scheduleMicrotask(() {
       if (!_closed) _controller.add(RelayMessage.decode(text));
     });
