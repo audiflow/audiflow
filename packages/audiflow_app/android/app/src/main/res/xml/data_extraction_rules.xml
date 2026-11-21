@@ -9,18 +9,23 @@
      continuity.audiflow-backup) carries the user data instead and stays
      included. The rules take no wildcards, so each file is named.
      device_only_store/ holds the install id and device id, which must never
-     reach another device (FileDeviceOnlyStore). -->
+     reach another device (FileDeviceOnlyStore).
+     FlutterSecureStorage.xml holds the sync secrets (SecureSyncKeyStore),
+     encrypted with Android Keystore keys that no backup carries, so a
+     restored copy could not be read. -->
 <data-extraction-rules>
   <cloud-backup>
     <exclude domain="root" path="app_flutter/downloads/" />
     <exclude domain="root" path="app_flutter/audiflow.isar" />
     <exclude domain="root" path="app_flutter/audiflow.isar-lck" />
     <exclude domain="file" path="device_only_store/" />
+    <exclude domain="sharedpref" path="FlutterSecureStorage.xml" />
   </cloud-backup>
   <device-transfer>
     <exclude domain="root" path="app_flutter/downloads/" />
     <exclude domain="root" path="app_flutter/audiflow.isar" />
     <exclude domain="root" path="app_flutter/audiflow.isar-lck" />
     <exclude domain="file" path="device_only_store/" />
+    <exclude domain="sharedpref" path="FlutterSecureStorage.xml" />
   </device-transfer>
 </data-extraction-rules>

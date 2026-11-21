@@ -388,6 +388,7 @@ class RelayError extends RelayMessage {
   static const tooOld = 'tooOld';
   static const invalid = 'invalid';
   static const exists = 'exists';
+  static const rateLimited = 'rateLimited';
 
   final String code;
 

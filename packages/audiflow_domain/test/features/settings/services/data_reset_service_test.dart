@@ -95,6 +95,7 @@ void main() {
   late DataResetService service;
   late Directory supportDir;
   var streamCacheClears = 0;
+  var turnedOff = 0;
 
   String snapshotPath() => p.join(supportDir.path, continuitySnapshotFileName);
 
@@ -102,6 +103,7 @@ void main() {
     required DownloadsDirectoryResolver resolveDownloadsDirectory,
   }) {
     return DataResetService(
+      turnOffSync: () async => turnedOff++,
       isar: isar,
       preferences: preferences,
       playback: _FakePlaybackController(writers),
@@ -132,6 +134,7 @@ void main() {
       await SharedPreferences.getInstance(),
     );
     streamCacheClears = 0;
+    turnedOff = 0;
     writers = _WriterLog(isar, downloadsDir);
     service = buildService(
       resolveDownloadsDirectory: () async => downloadsDir.path,
@@ -161,6 +164,12 @@ void main() {
     return counts;
   }
 
+  test('turns sync off before clearing anything', () async {
+    await service.resetAll();
+
+    check(turnedOff).equals(1);
+  });
+
   test('clears the streamed-audio cache', () async {
     await service.resetAll();
 
@@ -171,6 +180,7 @@ void main() {
     final marker = File(p.join(downloadsDir.path, 'episode.mp3'));
     await marker.writeAsString('audio');
     final failing = DataResetService(
+      turnOffSync: () async => turnedOff++,
       isar: isar,
       preferences: preferences,
       playback: _FakePlaybackController(writers),
@@ -224,6 +234,7 @@ void main() {
       final feedSync = _FakeWriter('feedSync', writers)
         ..suspendFailure = StateError('sync broke');
       final failingService = DataResetService(
+        turnOffSync: () async => turnedOff++,
         isar: isar,
         preferences: preferences,
         playback: _FakePlaybackController(writers),
@@ -319,6 +330,7 @@ void main() {
     test('a failed snapshot removal leaves the database untouched', () async {
       await seedEveryCollection(isar);
       final blockedService = DataResetService(
+        turnOffSync: () async => turnedOff++,
         isar: isar,
         preferences: preferences,
         playback: _FakePlaybackController(writers),

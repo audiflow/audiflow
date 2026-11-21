@@ -16,6 +16,8 @@ import 'background/background_task_registrar.dart';
 /// - On launch: drops download records whose file is gone (for example
 ///   after a restore to a new device, which carries no audio).
 /// - On hide: writes the continuity snapshot when it is due.
+/// - Throughout: keeps sync connected while the app is in the foreground
+///   or playing, and disconnected otherwise (plan P10).
 class AppLifecycleObserver extends ConsumerStatefulWidget {
   const AppLifecycleObserver({required this.child, super.key});
 
@@ -28,6 +30,9 @@ class AppLifecycleObserver extends ConsumerStatefulWidget {
 
 class _AppLifecycleObserverState extends ConsumerState<AppLifecycleObserver> {
   late final AppLifecycleListener _lifecycleListener;
+  StreamSubscription<bool>? _playing;
+  bool _foreground = true;
+  bool _isPlaying = false;
 
   @override
   void initState() {
@@ -42,10 +47,12 @@ class _AppLifecycleObserverState extends ConsumerState<AppLifecycleObserver> {
   @override
   void dispose() {
     _lifecycleListener.dispose();
+    unawaited(_playing?.cancel());
     super.dispose();
   }
 
   void _onLaunch() {
+    _startSync();
     _syncFeeds(forceRefresh: true);
     _sweepPlayedDownloads();
     _runUnawaited(
@@ -55,6 +62,11 @@ class _AppLifecycleObserverState extends ConsumerState<AppLifecycleObserver> {
   }
 
   void _onResume() {
+    _foreground = true;
+    _updateSyncActivity();
+    // Playback may have kept sync active all along; a refused device
+    // still gets its retry on coming back.
+    ref.read(syncControllerProvider).onForeground();
     _syncFeeds(forceRefresh: false);
     _updateBackgroundRegistration();
     _processPendingDownloads();
@@ -67,6 +79,8 @@ class _AppLifecycleObserverState extends ConsumerState<AppLifecycleObserver> {
   /// protected the next time the user opens the app, and refreshes the
   /// continuity snapshot: the user may be about to move to a new phone.
   void _onHide() {
+    _foreground = false;
+    _updateSyncActivity();
     ref.read(parentalControlGateProvider.notifier).lock();
     // Never throws; the scheduler logs its own failures.
     unawaited(ref.read(autoSnapshotSchedulerProvider).onBackground());
@@ -85,6 +99,26 @@ class _AppLifecycleObserverState extends ConsumerState<AppLifecycleObserver> {
       ref.read(streamCacheServiceProvider).sweep(),
       'while removing cached audio of finished episodes',
     );
+  }
+
+  /// Loads the sync secrets, then connects while the app is active.
+  /// Playback keeps it connected in the background, so a position change
+  /// reaches the user's other devices (plan P10).
+  void _startSync() {
+    _playing = ref.read(audioPlayerProvider).playingStream.listen((playing) {
+      _isPlaying = playing;
+      _updateSyncActivity();
+    });
+    _runUnawaited(
+      ref.read(syncControllerProvider).load().then((_) {
+        if (mounted) _updateSyncActivity();
+      }),
+      'while loading sync',
+    );
+  }
+
+  void _updateSyncActivity() {
+    ref.read(syncControllerProvider).setActive(_foreground || _isPlaying);
   }
 
   /// Fire-and-forget [task], reporting failures instead of dropping them.
