@@ -83,6 +83,7 @@ class SyncController {
   Timer? _retry;
   int _attempt = 0;
   Future<void> _saving = Future.value();
+  Future<void>? _loading;
 
   SyncStatus get status => _status;
 
@@ -97,8 +98,10 @@ class SyncController {
 
   /// Reads this device's enrollment. Call once at startup; nothing
   /// connects before it has finished.
-  Future<void> load() async {
-    if (_loaded || _relayUrl == null) return;
+  Future<void> load() => _loading ??= _load();
+
+  Future<void> _load() async {
+    if (_relayUrl == null) return;
     try {
       await _restore();
     } on Object catch (e, stack) {
@@ -148,6 +151,8 @@ class SyncController {
 
   Future<void> _enable(SyncCredentials credentials, SyncOpening opening) async {
     if (_relayUrl == null) throw StateError('sync is unavailable');
+    // Its restore would otherwise overwrite this enrollment.
+    await load();
     if (isOn) throw StateError('sync is already on');
     await _store.writeCredentials(credentials);
     await _store.writeOptedOut(optedOut: false);
@@ -169,6 +174,9 @@ class SyncController {
       privateKey: (await DeviceKeyPair.generate()).privateKey,
       pendingOpening: opening,
     );
+    // A token write still queued from an earlier session must not land
+    // over this record.
+    await _saving;
     await _store.writeDevice(device);
     // The cursor counts another account's frames, or none at all.
     await _resetCursor();
@@ -181,10 +189,14 @@ class SyncController {
   /// credentials stay for the user's other devices. The relay still lists
   /// this device until another one revokes it (M6g).
   Future<void> turnOff() async {
+    // A startup restore still running would bring the enrollment back.
+    await load();
     _credentials = null;
     _device = null;
     await _stop();
     if (_relayUrl == null) return;
+    // A queued token write would bring the deleted record back.
+    await _saving;
     await _store.deleteDevice();
     await _store.writeOptedOut(optedOut: true);
     await _resetCursor();

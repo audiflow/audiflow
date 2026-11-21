@@ -323,6 +323,28 @@ void main() {
     await reach(c, SyncPhase.connected);
   });
 
+  test('turning off during the startup load stays off', () async {
+    final store = _MemoryStore();
+    final isar = await newIsar('a');
+    final first = controller(isar, store);
+    await first.load();
+    first.setActive(true);
+    await first.turnOn();
+    await reach(first, SyncPhase.connected);
+    await first.dispose();
+    controllers.remove(first);
+
+    final again = controller(isar, store)..setActive(true);
+    final loading = again.load();
+    await again.turnOff();
+    await loading;
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+
+    check(again.isOn).isFalse();
+    check(again.status.phase).equals(SyncPhase.off);
+    check(store.device).isNull();
+  });
+
   test('a dropped connection is retried', () async {
     final c = controller(await newIsar('a'), _MemoryStore());
     await c.load();

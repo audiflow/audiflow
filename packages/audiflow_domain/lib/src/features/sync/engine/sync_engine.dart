@@ -57,6 +57,8 @@ class SyncEngine {
     // A failure nobody awaited yet must not surface as an unhandled error;
     // a later listener on [done] still sees it.
     unawaited(_done.future.then<void>((_) {}, onError: (_) {}));
+    // Likewise for an engine closed before [connect] was called.
+    unawaited(_ready.future.then<void>((_) {}, onError: (_) {}));
   }
 
   final Isar _isar;
