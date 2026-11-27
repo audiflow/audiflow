@@ -12,8 +12,10 @@ import '../../snapshot/snapshot_exporter.dart';
 import '../../snapshot/snapshot_file.dart';
 import '../../snapshot/snapshot_merger.dart';
 import '../../station/models/station.dart';
+import '../../subscription/models/subscriptions.dart';
 import '../../user_state/models/outbox_op.dart';
 import '../../user_state/models/sync_meta.dart';
+import '../../user_state/services/key_reconciler.dart';
 import '../../user_state/services/sync_meta_access.dart';
 import '../../user_state/sync/user_state_fields.dart';
 import '../crypto/sync_cipher.dart';
@@ -475,18 +477,19 @@ class SyncEngine {
       });
     }
     final now = _nowMillis();
+    final reconciler = KeyReconciler(_isar);
+    final sections = await reconciler.translate(file.body.sections);
     final merged = await _mergerAt(now).mergeSections(
-      file.body.sections,
+      sections,
       historyId: file.header.historyId,
       tombstoneHorizon: file.header.tombstoneHorizon,
       recordOps: false,
     );
-    await dropBeatenOps(
-      _isar,
-      receivedFields(file.body.sections),
-      nowMillis: now,
-    );
-    await _project(file.body.sections, merged, wholeLibrary: true);
+    await dropBeatenOps(_isar, receivedFields(sections), nowMillis: now);
+    // The whole account arrived; any show or episode in it may be one this
+    // device keys differently.
+    final joined = await reconciler.reconcile();
+    await _project(sections, merged, joined, wholeLibrary: true);
     await _setCursor(snapshot.coversSeq);
   }
 
@@ -520,13 +523,14 @@ class SyncEngine {
     // The merge clamps clocks against this time; cleanup must use the same
     // cutoff, or a local write made meanwhile could look beaten.
     final now = _nowMillis();
+    final reconciler = KeyReconciler(_isar);
+    final Map<String, List<SnapshotRow>> sections;
     try {
       frame = SyncFrame.decode(await _open(relayed.blob, SealPurpose.frame));
-      merged = await _mergerAt(now).mergeSections(
-        frame.sections,
-        historyId: frame.historyId,
-        recordOps: false,
-      );
+      sections = await reconciler.translate(frame.sections);
+      merged = await _mergerAt(
+        now,
+      ).mergeSections(sections, historyId: frame.historyId, recordOps: false);
     } on Object catch (e) {
       if (e is! SyncCryptoFailure &&
           e is! SnapshotReadFailure &&
@@ -538,16 +542,21 @@ class SyncEngine {
       _logger.w('Sync frame ${relayed.seq} unreadable: $e');
       throw const SyncRelayFailure(SyncRelayFailure.unreadableFrame);
     }
-    final fields = receivedFields(frame.sections).toList();
+    final fields = receivedFields(sections).toList();
     await dropBeatenOps(_isar, fields, nowMillis: now);
+    final joined = await reconciler.reconcile(
+      podcastKeys: _keysOf(sections, UserStateEntities.podcast),
+      episodeKeys: _keysOf(sections, UserStateEntities.episode),
+    );
     final stationsAffected = fields.any(
       (f) =>
           f.entity == UserStateEntities.episode.name &&
           _stationFilterFields.contains(f.fieldId),
     );
     await _project(
-      frame.sections,
+      sections,
       merged,
+      joined,
       wholeLibrary: false,
       stationsAffected: stationsAffected,
     );
@@ -556,18 +565,25 @@ class SyncEngine {
   SnapshotMerger _mergerAt(int now) =>
       SnapshotMerger(_isar, nowMillis: () => now);
 
+  static Set<String> _keysOf<T>(
+    Map<String, List<SnapshotRow>> sections,
+    EntitySpec<T> spec,
+  ) => {for (final row in sections[spec.name] ?? const []) row.key};
+
   /// Turns merged state into the rows the app reads. Position, progress,
   /// favorites, and settings are read from the state itself and need none;
   /// station lists filtered on favorites or completion are rebuilt.
   Future<void> _project(
     Map<String, List<SnapshotRow>> sections,
-    SnapshotMergeResult merged, {
+    SnapshotMergeResult merged,
+    KeyReconcileResult joined, {
     required bool wholeLibrary,
     bool stationsAffected = false,
   }) async {
     final projector = RestoreProjector(_isar);
     final library =
         wholeLibrary ||
+        joined.podcastsJoined ||
         sections.containsKey(UserStateEntities.podcast.name) ||
         sections.containsKey(UserStateEntities.station.name) ||
         sections.containsKey(UserStateEntities.stationMember.name);
@@ -581,17 +597,22 @@ class SyncEngine {
         unawaited(_fetchFeeds(projection.feedUrls));
       }
     }
-    if (library || sections.containsKey(UserStateEntities.queueEntry.name)) {
+    if (library ||
+        joined.queueChanged ||
+        sections.containsKey(UserStateEntities.queueEntry.name)) {
       await projector.projectQueue();
     }
-    if (stationsAffected) {
+    // A joined episode's favorite or completion now counts for its local
+    // row, which station filters read.
+    if (stationsAffected || joined.episodeKeys.isNotEmpty) {
       stationIds.addAll(await _isar.stations.where().idProperty().findAll());
     }
     await _reconcileStations(stationIds);
-    final episodes = sections[UserStateEntities.episode.name];
-    if (episodes != null && episodes.isNotEmpty) {
-      _onEpisodesMerged?.call({for (final r in episodes) r.key});
-    }
+    final episodeKeys = {
+      ..._keysOf(sections, UserStateEntities.episode),
+      ...joined.episodeKeys,
+    };
+    if (episodeKeys.isNotEmpty) _onEpisodesMerged?.call(episodeKeys);
   }
 
   Future<void> _reconcileStations(Set<int> ids) async {
@@ -615,6 +636,40 @@ class SyncEngine {
       await _syncFeeds(urls);
     } on Object catch (e, stack) {
       _logger.w('Feed fetch after sync failed', error: e, stackTrace: stack);
+      return;
+    }
+    if (_closed) return;
+    // The fetched episodes may be ones that state from another device
+    // names by other keys.
+    _enqueue(() => _joinAfterFetch(urls));
+  }
+
+  Future<void> _joinAfterFetch(List<String> urls) async {
+    try {
+      final keys = <String>{};
+      for (final url in urls) {
+        final subs = await _isar.subscriptions
+            .filter()
+            .feedUrlEqualTo(url)
+            .findAll();
+        keys.addAll([for (final s in subs) ?s.podcastKey]);
+      }
+      if (keys.isEmpty) return;
+      final joined = await KeyReconciler(_isar).reconcile(podcastKeys: keys);
+      if (joined.isEmpty) return;
+      await _project(
+        const {},
+        const SnapshotMergeResult(
+          changedRows: 0,
+          sameHistory: true,
+          podcastInfo: {},
+        ),
+        joined,
+        wholeLibrary: false,
+      );
+    } on Object catch (e, stack) {
+      // Not worth the session: the next merge or fetch tries again.
+      _logger.w('Key join after fetch failed', error: e, stackTrace: stack);
     }
   }
 

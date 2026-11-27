@@ -89,6 +89,9 @@ void main() {
       check(state.counters.single.playCount).equals(1);
       check(state.counters.single.listenedMs).equals(1000);
       check(state.counters.single.realtimeMs).equals(800);
+      // So a device keying the episode differently can find it.
+      check(state.locatorGuid).equals('g1');
+      check(state.locatorAudioUrl).equals('https://example.com/g1.mp3');
     });
 
     test('stamp only the fields that changed', () async {

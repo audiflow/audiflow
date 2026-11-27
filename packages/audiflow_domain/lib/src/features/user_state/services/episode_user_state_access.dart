@@ -188,7 +188,10 @@ class EpisodeUserStateAccess {
     if (podcastKey == null) return null;
     return EpisodeUserState()
       ..episodeKey = key
-      ..podcastKey = podcastKey;
+      ..podcastKey = podcastKey
+      ..locatorGuid = episode.guid
+      ..locatorAudioUrl = episode.audioUrl
+      ..locatorPublishedAt = episode.publishedAt;
   }
 
   void _reportMismatch(int episodeId, PlaybackHistory a, PlaybackHistory b) {

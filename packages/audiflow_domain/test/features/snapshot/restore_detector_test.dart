@@ -14,6 +14,7 @@ void main() {
   late Isar isar;
   late Directory dir;
   late List<String> log;
+  late BackupRestoreService restoreService;
   final now = DateTime.utc(2026, 11, 17);
 
   setUpAll(() async {
@@ -25,9 +26,21 @@ void main() {
     isar = await openTestIsar(isarSchemas);
     dir = await Directory.systemTemp.createTemp('audiflow_detect_');
     log = [];
+    restoreService = BackupRestoreService(
+      isar: isar,
+      stopPlayback: () async => log.add('stop'),
+      cancelBackgroundTasks: () async {},
+      writers: const [],
+      syncFeeds: (urls) async => log.add('sync'),
+      onStationChanged: (_) async {},
+      logger: Logger(level: Level.off),
+      nowMillis: () => now.millisecondsSinceEpoch,
+    );
   });
 
   tearDown(() async {
+    // A restore leaves its feed fetch and key join running.
+    await restoreService.idle;
     await source.close(deleteFromDisk: true);
     await isar.close(deleteFromDisk: true);
     if (await dir.exists()) await dir.delete(recursive: true);
@@ -38,16 +51,7 @@ void main() {
   RestoreDetector detector() => RestoreDetector(
     isar: isar,
     resolveSnapshotPath: () async => snapshot().path,
-    restoreService: BackupRestoreService(
-      isar: isar,
-      stopPlayback: () async => log.add('stop'),
-      cancelBackgroundTasks: () async {},
-      writers: const [],
-      syncFeeds: (urls) async => log.add('sync'),
-      onStationChanged: (_) async {},
-      logger: Logger(level: Level.off),
-      nowMillis: () => now.millisecondsSinceEpoch,
-    ),
+    restoreService: restoreService,
     logger: Logger(level: Level.off),
   );
 

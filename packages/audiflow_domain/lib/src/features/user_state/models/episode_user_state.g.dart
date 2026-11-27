@@ -99,23 +99,38 @@ const EpisodeUserStateSchema = CollectionSchema(
       name: r'lastPlayedAtHlc',
       type: IsarType.long,
     ),
-    r'podcastKey': PropertySchema(
+    r'locatorAudioUrl': PropertySchema(
       id: 16,
+      name: r'locatorAudioUrl',
+      type: IsarType.string,
+    ),
+    r'locatorGuid': PropertySchema(
+      id: 17,
+      name: r'locatorGuid',
+      type: IsarType.string,
+    ),
+    r'locatorPublishedAt': PropertySchema(
+      id: 18,
+      name: r'locatorPublishedAt',
+      type: IsarType.dateTime,
+    ),
+    r'podcastKey': PropertySchema(
+      id: 19,
       name: r'podcastKey',
       type: IsarType.string,
     ),
     r'positionHlc': PropertySchema(
-      id: 17,
+      id: 20,
       name: r'positionHlc',
       type: IsarType.long,
     ),
     r'positionMs': PropertySchema(
-      id: 18,
+      id: 21,
       name: r'positionMs',
       type: IsarType.long,
     ),
     r'replayHlc': PropertySchema(
-      id: 19,
+      id: 22,
       name: r'replayHlc',
       type: IsarType.long,
     ),
@@ -182,6 +197,18 @@ int _episodeUserStateEstimateSize(
     }
   }
   bytesCount += 3 + object.episodeKey.length * 3;
+  {
+    final value = object.locatorAudioUrl;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.locatorGuid;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   bytesCount += 3 + object.podcastKey.length * 3;
   return bytesCount;
 }
@@ -213,10 +240,13 @@ void _episodeUserStateSerialize(
   writer.writeBool(offsets[13], object.isReplaying);
   writer.writeDateTime(offsets[14], object.lastPlayedAt);
   writer.writeLong(offsets[15], object.lastPlayedAtHlc);
-  writer.writeString(offsets[16], object.podcastKey);
-  writer.writeLong(offsets[17], object.positionHlc);
-  writer.writeLong(offsets[18], object.positionMs);
-  writer.writeLong(offsets[19], object.replayHlc);
+  writer.writeString(offsets[16], object.locatorAudioUrl);
+  writer.writeString(offsets[17], object.locatorGuid);
+  writer.writeDateTime(offsets[18], object.locatorPublishedAt);
+  writer.writeString(offsets[19], object.podcastKey);
+  writer.writeLong(offsets[20], object.positionHlc);
+  writer.writeLong(offsets[21], object.positionMs);
+  writer.writeLong(offsets[22], object.replayHlc);
 }
 
 EpisodeUserState _episodeUserStateDeserialize(
@@ -250,10 +280,13 @@ EpisodeUserState _episodeUserStateDeserialize(
   object.isReplaying = reader.readBool(offsets[13]);
   object.lastPlayedAt = reader.readDateTimeOrNull(offsets[14]);
   object.lastPlayedAtHlc = reader.readLong(offsets[15]);
-  object.podcastKey = reader.readString(offsets[16]);
-  object.positionHlc = reader.readLong(offsets[17]);
-  object.positionMs = reader.readLong(offsets[18]);
-  object.replayHlc = reader.readLong(offsets[19]);
+  object.locatorAudioUrl = reader.readStringOrNull(offsets[16]);
+  object.locatorGuid = reader.readStringOrNull(offsets[17]);
+  object.locatorPublishedAt = reader.readDateTimeOrNull(offsets[18]);
+  object.podcastKey = reader.readString(offsets[19]);
+  object.positionHlc = reader.readLong(offsets[20]);
+  object.positionMs = reader.readLong(offsets[21]);
+  object.replayHlc = reader.readLong(offsets[22]);
   return object;
 }
 
@@ -304,12 +337,18 @@ P _episodeUserStateDeserializeProp<P>(
     case 15:
       return (reader.readLong(offset)) as P;
     case 16:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 17:
-      return (reader.readLong(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 18:
-      return (reader.readLong(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 19:
+      return (reader.readString(offset)) as P;
+    case 20:
+      return (reader.readLong(offset)) as P;
+    case 21:
+      return (reader.readLong(offset)) as P;
+    case 22:
       return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1550,6 +1589,397 @@ extension EpisodeUserStateQueryFilter
   }
 
   QueryBuilder<EpisodeUserState, EpisodeUserState, QAfterFilterCondition>
+  locatorAudioUrlIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'locatorAudioUrl'),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, EpisodeUserState, QAfterFilterCondition>
+  locatorAudioUrlIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'locatorAudioUrl'),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, EpisodeUserState, QAfterFilterCondition>
+  locatorAudioUrlEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'locatorAudioUrl',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, EpisodeUserState, QAfterFilterCondition>
+  locatorAudioUrlGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'locatorAudioUrl',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, EpisodeUserState, QAfterFilterCondition>
+  locatorAudioUrlLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'locatorAudioUrl',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, EpisodeUserState, QAfterFilterCondition>
+  locatorAudioUrlBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'locatorAudioUrl',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, EpisodeUserState, QAfterFilterCondition>
+  locatorAudioUrlStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'locatorAudioUrl',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, EpisodeUserState, QAfterFilterCondition>
+  locatorAudioUrlEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'locatorAudioUrl',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, EpisodeUserState, QAfterFilterCondition>
+  locatorAudioUrlContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'locatorAudioUrl',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, EpisodeUserState, QAfterFilterCondition>
+  locatorAudioUrlMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'locatorAudioUrl',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, EpisodeUserState, QAfterFilterCondition>
+  locatorAudioUrlIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'locatorAudioUrl', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, EpisodeUserState, QAfterFilterCondition>
+  locatorAudioUrlIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'locatorAudioUrl', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, EpisodeUserState, QAfterFilterCondition>
+  locatorGuidIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'locatorGuid'),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, EpisodeUserState, QAfterFilterCondition>
+  locatorGuidIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'locatorGuid'),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, EpisodeUserState, QAfterFilterCondition>
+  locatorGuidEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'locatorGuid',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, EpisodeUserState, QAfterFilterCondition>
+  locatorGuidGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'locatorGuid',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, EpisodeUserState, QAfterFilterCondition>
+  locatorGuidLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'locatorGuid',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, EpisodeUserState, QAfterFilterCondition>
+  locatorGuidBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'locatorGuid',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, EpisodeUserState, QAfterFilterCondition>
+  locatorGuidStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'locatorGuid',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, EpisodeUserState, QAfterFilterCondition>
+  locatorGuidEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'locatorGuid',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, EpisodeUserState, QAfterFilterCondition>
+  locatorGuidContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'locatorGuid',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, EpisodeUserState, QAfterFilterCondition>
+  locatorGuidMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'locatorGuid',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, EpisodeUserState, QAfterFilterCondition>
+  locatorGuidIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'locatorGuid', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, EpisodeUserState, QAfterFilterCondition>
+  locatorGuidIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'locatorGuid', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, EpisodeUserState, QAfterFilterCondition>
+  locatorPublishedAtIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'locatorPublishedAt'),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, EpisodeUserState, QAfterFilterCondition>
+  locatorPublishedAtIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'locatorPublishedAt'),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, EpisodeUserState, QAfterFilterCondition>
+  locatorPublishedAtEqualTo(DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'locatorPublishedAt', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, EpisodeUserState, QAfterFilterCondition>
+  locatorPublishedAtGreaterThan(DateTime? value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'locatorPublishedAt',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, EpisodeUserState, QAfterFilterCondition>
+  locatorPublishedAtLessThan(DateTime? value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'locatorPublishedAt',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, EpisodeUserState, QAfterFilterCondition>
+  locatorPublishedAtBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'locatorPublishedAt',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, EpisodeUserState, QAfterFilterCondition>
   podcastKeyEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -2082,6 +2512,48 @@ extension EpisodeUserStateQuerySortBy
   }
 
   QueryBuilder<EpisodeUserState, EpisodeUserState, QAfterSortBy>
+  sortByLocatorAudioUrl() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'locatorAudioUrl', Sort.asc);
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, EpisodeUserState, QAfterSortBy>
+  sortByLocatorAudioUrlDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'locatorAudioUrl', Sort.desc);
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, EpisodeUserState, QAfterSortBy>
+  sortByLocatorGuid() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'locatorGuid', Sort.asc);
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, EpisodeUserState, QAfterSortBy>
+  sortByLocatorGuidDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'locatorGuid', Sort.desc);
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, EpisodeUserState, QAfterSortBy>
+  sortByLocatorPublishedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'locatorPublishedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, EpisodeUserState, QAfterSortBy>
+  sortByLocatorPublishedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'locatorPublishedAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, EpisodeUserState, QAfterSortBy>
   sortByPodcastKey() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'podcastKey', Sort.asc);
@@ -2364,6 +2836,48 @@ extension EpisodeUserStateQuerySortThenBy
   }
 
   QueryBuilder<EpisodeUserState, EpisodeUserState, QAfterSortBy>
+  thenByLocatorAudioUrl() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'locatorAudioUrl', Sort.asc);
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, EpisodeUserState, QAfterSortBy>
+  thenByLocatorAudioUrlDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'locatorAudioUrl', Sort.desc);
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, EpisodeUserState, QAfterSortBy>
+  thenByLocatorGuid() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'locatorGuid', Sort.asc);
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, EpisodeUserState, QAfterSortBy>
+  thenByLocatorGuidDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'locatorGuid', Sort.desc);
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, EpisodeUserState, QAfterSortBy>
+  thenByLocatorPublishedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'locatorPublishedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, EpisodeUserState, QAfterSortBy>
+  thenByLocatorPublishedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'locatorPublishedAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, EpisodeUserState, QAfterSortBy>
   thenByPodcastKey() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'podcastKey', Sort.asc);
@@ -2528,6 +3042,30 @@ extension EpisodeUserStateQueryWhereDistinct
   }
 
   QueryBuilder<EpisodeUserState, EpisodeUserState, QDistinct>
+  distinctByLocatorAudioUrl({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(
+        r'locatorAudioUrl',
+        caseSensitive: caseSensitive,
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, EpisodeUserState, QDistinct>
+  distinctByLocatorGuid({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'locatorGuid', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, EpisodeUserState, QDistinct>
+  distinctByLocatorPublishedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'locatorPublishedAt');
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, EpisodeUserState, QDistinct>
   distinctByPodcastKey({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'podcastKey', caseSensitive: caseSensitive);
@@ -2669,6 +3207,27 @@ extension EpisodeUserStateQueryProperty
   lastPlayedAtHlcProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'lastPlayedAtHlc');
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, String?, QQueryOperations>
+  locatorAudioUrlProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'locatorAudioUrl');
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, String?, QQueryOperations>
+  locatorGuidProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'locatorGuid');
+    });
+  }
+
+  QueryBuilder<EpisodeUserState, DateTime?, QQueryOperations>
+  locatorPublishedAtProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'locatorPublishedAt');
     });
   }
 
