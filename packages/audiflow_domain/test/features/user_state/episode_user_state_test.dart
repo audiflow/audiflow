@@ -94,6 +94,27 @@ void main() {
       check(state.locatorAudioUrl).equals('https://example.com/g1.mp3');
     });
 
+    test('fill the locator of a row made without one', () async {
+      final episode = await putEpisode(await putPodcast(), 'g1');
+      await isar.writeTxn(
+        () => isar.episodeUserStates.put(
+          EpisodeUserState()
+            ..episodeKey = 'ek-g1'
+            ..podcastKey = 'pk',
+        ),
+      );
+
+      await history.updateProgress(
+        episodeId: episode.id,
+        positionMs: 1200,
+        durationMs: 60000,
+        listenedDeltaMs: 1000,
+        realtimeDeltaMs: 800,
+      );
+
+      check((await stateOf('ek-g1'))?.locatorGuid).equals('g1');
+    });
+
     test('stamp only the fields that changed', () async {
       final episode = await putEpisode(await putPodcast(), 'g1');
       await history.updateProgress(

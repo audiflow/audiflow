@@ -135,13 +135,16 @@ class BackupRestoreService {
         writer.resume();
       }
     }
-    final postProcessing = _idle = _postProcess(projector, projection);
+    final postProcessing = _postProcess(projector, projection);
+    // A second restore can start while this one's post-processing runs;
+    // idle waits for both.
+    _idle = Future.wait([_idle, postProcessing]);
     return BackupRestoreResult(merged.changedRows, postProcessing);
   }
 
   Future<void> _idle = Future.value();
 
-  /// Completes once the last restore's post-processing has finished, for
+  /// Completes once every restore's post-processing has finished, for
   /// callers that leave it running and must not close the database under
   /// it (tests).
   Future<void> get idle => _idle;

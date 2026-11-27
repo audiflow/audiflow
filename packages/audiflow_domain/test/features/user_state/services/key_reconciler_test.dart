@@ -102,6 +102,9 @@ void main() {
     setUp(() async {
       isar = await openTestIsar(isarSchemas);
       reconciler = KeyReconciler(isar);
+      await isar.writeTxn(
+        () => isar.syncMetas.put(SyncMeta()..historyId = 'h'),
+      );
       podcastId = await isar.writeTxn(
         () => isar.subscriptions.put(
           Subscription()
@@ -181,6 +184,12 @@ void main() {
       final result = await reconciler.reconcile();
 
       check(result.queueChanged).isTrue();
+      // Kept until the queue is projected again, in case that fails.
+      check(
+        (await isar.syncMetas.get(
+          SyncMeta.singletonId,
+        ))?.queueProjectionPending,
+      ).equals(true);
       check(
         (await isar.queueEntrys.getByEntryId('q1'))?.episodeKey,
       ).equals('local');

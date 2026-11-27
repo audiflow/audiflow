@@ -11,6 +11,7 @@ import '../models/queue_entry.dart';
 import '../models/station_state.dart';
 import '../models/stable_keys.dart';
 import '../models/sync_key_alias.dart';
+import '../models/sync_meta.dart';
 import '../sync/user_state_codec.dart';
 import '../sync/user_state_fields.dart';
 
@@ -57,6 +58,13 @@ class KeyReconciler {
   /// [sections] with every row key this device knows under another name
   /// rewritten to it; run before merging received rows.
   ///
+  /// An episode row whose key names a different episode here is moved off
+  /// that key too: which of two items sharing a guid holds the plain guid
+  /// depends on each device's fetch history, so two devices can give one
+  /// key to different episodes. Its locator then picks the local episode,
+  /// or, when none matches, a key of its own that stays hidden until
+  /// [reconcile] finds the episode.
+  ///
   /// Keys inside field values (an episode's podcastKey, a queue entry's
   /// episodeKey) are rewritten after the merge, by [reconcile].
   Future<Map<String, List<SnapshotRow>>> translate(
@@ -66,15 +74,16 @@ class KeyReconciler {
     // that follows reports it.
     if (!_isar.isOpen) return sections;
     final aliases = await _isar.syncKeyAlias.where().findAll();
-    if (aliases.isEmpty) return sections;
     final podcasts = {
       for (final a in aliases)
         if (a.kind == SyncKeyAlias.podcast) a.foreignKey: a.localKey,
     };
+    final episodeAliases = _episodesOf(aliases);
     final episodes = {
-      for (final a in aliases)
-        if (a.kind == SyncKeyAlias.episode) a.foreignKey: a.localKey,
+      ...episodeAliases,
+      ...await _episodesKeyedOtherwise(sections, aliases: episodeAliases),
     };
+    if (podcasts.isEmpty && episodes.isEmpty) return sections;
     String part(String key, int count, int index, Map<String, String> map) {
       final List<String?> parts;
       try {
@@ -106,6 +115,99 @@ class KeyReconciler {
         ],
     };
   }
+
+  static Map<String, String> _episodesOf(List<SyncKeyAlias> aliases) => {
+    for (final a in aliases)
+      if (a.kind == SyncKeyAlias.episode) a.foreignKey: a.localKey,
+  };
+
+  /// Received episode keys that name a different episode here, mapped to
+  /// the local key their locator finds, or to a key of their own.
+  ///
+  /// The row's counters travel in the same sections under the same key, so
+  /// they follow it.
+  Future<Map<String, String>> _episodesKeyedOtherwise(
+    Map<String, List<SnapshotRow>> sections, {
+    required Map<String, String> aliases,
+  }) async {
+    final rows = sections[UserStateEntities.episode.name] ?? const [];
+    final locators = <String, EpisodeUserState>{};
+    for (final row in rows) {
+      final locator = _locatorOf(row);
+      if (locator == null) continue;
+      locators[aliases[row.key] ?? row.key] = locator;
+    }
+    if (locators.isEmpty) return {};
+    final local = await _isar.episodes
+        .where()
+        .anyOf(locators.keys, (q, key) => q.episodeKeyEqualTo(key))
+        .findAll();
+    final moved = <String, String>{};
+    for (final episode in local) {
+      final key = episode.episodeKey!;
+      final locator = locators[key]!;
+      if (_couldBe(episode, locator)) continue;
+      final siblings = await _isar.episodes
+          .filter()
+          .podcastIdEqualTo(episode.podcastId)
+          .episodeKeyIsNotNull()
+          .findAll();
+      final match = locateEpisode(
+        siblings.where((e) => e.id != episode.id),
+        locator,
+      );
+      final received = rows.firstWhere((r) => (aliases[r.key] ?? r.key) == key);
+      moved[received.key] = match?.episodeKey ?? _ownKey(key, locator);
+    }
+    return moved;
+  }
+
+  /// The locator a received episode row carries; null for a row from an
+  /// app before M6f, or one that does not decode (the merge reports it).
+  static EpisodeUserState? _locatorOf(SnapshotRow row) {
+    final Map<int, Object?> known;
+    try {
+      known = decodeEntity(UserStateEntities.episode.name, row.fields).known;
+    } on FormatException {
+      return null;
+    }
+    final guid = known[11];
+    final audioUrl = known[12];
+    final publishedAt = known[13];
+    if (guid is! String? || audioUrl is! String?) return null;
+    if (publishedAt is! DateTime?) return null;
+    if (guid == null && audioUrl == null) return null;
+    return EpisodeUserState()
+      ..episodeKey = row.key
+      ..podcastKey = ''
+      ..locatorGuid = guid
+      ..locatorAudioUrl = audioUrl
+      ..locatorPublishedAt = publishedAt;
+  }
+
+  /// Whether [locator] may describe [episode]: the same enclosure, or the
+  /// same guid and, when both know it, the same publish date.
+  static bool _couldBe(Episode episode, EpisodeUserState locator) {
+    if (locator.locatorAudioUrl == episode.audioUrl) return true;
+    final guid = locator.locatorGuid;
+    if (guid != null &&
+        guidOfStorageKey(guid) != guidOfStorageKey(episode.guid)) {
+      return false;
+    }
+    final date = locator.locatorPublishedAt;
+    final local = episode.publishedAt;
+    if (date == null || local == null) return true;
+    return date.isAtSameMomentAs(local);
+  }
+
+  /// A key for another device's episode that this device does not have
+  /// under that name: unknown here, so the row stays hidden and is joined
+  /// once its episode turns up.
+  static String _ownKey(String key, EpisodeUserState locator) => compositeKey([
+    'elsewhere',
+    key,
+    locator.locatorAudioUrl ?? locator.locatorGuid,
+  ]);
 
   /// Joins rows under foreign keys to the local ones, in one transaction.
   ///
@@ -192,12 +294,41 @@ class _Run {
   /// of a new episode row, the episode of a new queue entry.
   Future<void> applyAliases() async {
     final aliases = await _isar.syncKeyAlias.where().findAll();
-    for (final alias in aliases) {
-      if (alias.kind == SyncKeyAlias.podcast) {
-        await _movePodcastOfEpisodes(alias.foreignKey, alias.localKey);
-      } else {
-        await _moveQueueEntries(alias.foreignKey, alias.localKey);
-      }
+    final podcasts = {
+      for (final a in aliases)
+        if (a.kind == SyncKeyAlias.podcast) a.foreignKey: a.localKey,
+    };
+    final episodes = {
+      for (final a in aliases)
+        if (a.kind == SyncKeyAlias.episode) a.foreignKey: a.localKey,
+    };
+    // One query per kind: this runs on every received frame, and almost
+    // always finds nothing.
+    final stray = podcasts.isEmpty
+        ? const <String>{}
+        : {
+            for (final s
+                in await _isar.episodeUserStates
+                    .where()
+                    .anyOf(podcasts.keys, (q, k) => q.podcastKeyEqualTo(k))
+                    .findAll())
+              s.podcastKey,
+          };
+    for (final key in stray) {
+      await _movePodcastOfEpisodes(key, podcasts[key]!);
+    }
+    final queued = episodes.isEmpty
+        ? const <String>{}
+        : {
+            for (final e
+                in await _isar.queueEntrys
+                    .where()
+                    .anyOf(episodes.keys, (q, k) => q.episodeKeyEqualTo(k))
+                    .findAll())
+              e.episodeKey,
+          };
+    for (final key in queued) {
+      await _moveQueueEntries(key, episodes[key]!);
     }
   }
 
@@ -395,6 +526,12 @@ class _Run {
     }
     await _isar.queueEntrys.putAll(entries);
     _queueChanged = true;
+    // Kept until a projection completes, so one that fails after this
+    // commit is retried even though the next pass finds nothing to join.
+    final meta = await _isar.syncMetas.get(SyncMeta.singletonId);
+    if (meta != null && !meta.queueProjectionPending) {
+      await _isar.syncMetas.put(meta..queueProjectionPending = true);
+    }
   }
 
   // -- Shared --

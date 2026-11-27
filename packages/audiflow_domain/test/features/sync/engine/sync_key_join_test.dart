@@ -53,14 +53,16 @@ class _Device {
     int podcastId, {
     required String episodeKey,
     required String guid,
+    String audioUrl = 'https://example.com/e1.mp3',
+    DateTime? publishedAt,
   }) => isar.writeTxn(
     () => isar.episodes.put(
       Episode()
         ..podcastId = podcastId
         ..guid = guid
         ..title = 'Episode'
-        ..audioUrl = 'https://example.com/e1.mp3'
-        ..publishedAt = _published
+        ..audioUrl = audioUrl
+        ..publishedAt = publishedAt ?? _published
         ..episodeKey = episodeKey,
     ),
   );
@@ -286,6 +288,50 @@ void main() {
       final sub = await b.isar.subscriptions.where().findFirst();
       check(sub).isNotNull().has((s) => s.isCached, 'isCached').isTrue();
     });
+  });
+
+  test('one key naming different episodes stays apart', () async {
+    // The feed reuses guid g1 for two items. A got X first, B got Y first,
+    // so each device gave its plain-guid key to a different item.
+    const x = 'https://example.com/x.mp3';
+    const y = 'https://example.com/y.mp3';
+    final early = DateTime.utc(2026, 10);
+    final podA = await a.addShow('pk');
+    await a.addEpisode(
+      podA,
+      episodeKey: 'ek-plain',
+      guid: 'g1',
+      audioUrl: x,
+      publishedAt: early,
+    );
+    await a.addEpisode(
+      podA,
+      episodeKey: 'ek-dup',
+      guid: duplicateGuidKey('g1', y),
+      audioUrl: y,
+    );
+    final podB = await b.addShow('pk');
+    await b.addEpisode(podB, episodeKey: 'ek-plain', guid: 'g1', audioUrl: y);
+    await b.addEpisode(
+      podB,
+      episodeKey: 'ek-dup',
+      guid: duplicateGuidKey('g1', x),
+      audioUrl: x,
+      publishedAt: early,
+    );
+    // B has listened to Y.
+    await b.setPosition('pk', 'ek-plain', 1000);
+
+    // A listens to X.
+    await a.setPosition('pk', 'ek-plain', 4000);
+    await pair();
+
+    // X's position reached B's X, and B's Y kept its own.
+    check(await b.position('ek-dup')).equals(4000);
+    check(await b.position('ek-plain')).equals(1000);
+    // And the other way round on A.
+    check(await a.position('ek-dup')).equals(1000);
+    check(await a.position('ek-plain')).equals(4000);
   });
 
   test('an episode fetched after its state arrived is joined', () async {
