@@ -4,13 +4,16 @@ import type { Env } from './index';
 import {
   type ClientMessage,
   type DeviceInfo,
+  DEVICE_WRAP_OFFSET,
   type ErrorCode,
+  type RevokeRefusal,
   MAX_CATCH_UP_CHARS,
   MAX_MESSAGE_CHARS,
   MIN_PROTOCOL_VERSION,
   decodeBase64Url,
   encodeBase64Url,
   parseClientMessage,
+  sealedKeyVersion,
 } from './protocol';
 
 /** What a socket is, kept across hibernation. */
@@ -29,8 +32,9 @@ const CATCH_UP_PAGE = 200;
 
 /**
  * One account: orders, stores, and fans out sealed frames, and keeps the
- * latest compacted snapshot (plan P1). It reads routing fields only; every
- * value it stores is ciphertext it cannot open (plan S3).
+ * latest compacted snapshot (plan P1). It reads routing fields and the clear
+ * key version of sealed blobs only; every value it stores is ciphertext it
+ * cannot open (plan S3).
  *
  * Sockets use the hibernation API, so an idle account costs nothing while
  * its devices stay connected.
@@ -65,6 +69,7 @@ export class AccountRelay extends DurableObject<Env> {
         name TEXT NOT NULL,
         platform TEXT NOT NULL,
         public_key TEXT NOT NULL,
+        tag TEXT NOT NULL,
         token_hash TEXT NOT NULL,
         added_at INTEGER NOT NULL,
         revoked_at INTEGER
@@ -72,6 +77,10 @@ export class AccountRelay extends DurableObject<Env> {
       CREATE TABLE IF NOT EXISTS frame (
         seq INTEGER PRIMARY KEY,
         device_id TEXT NOT NULL,
+        blob TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS device_wrap (
+        device_id TEXT PRIMARY KEY,
         blob TEXT NOT NULL
       );
       CREATE TABLE IF NOT EXISTS snapshot (
@@ -119,6 +128,8 @@ export class AccountRelay extends DurableObject<Env> {
         return this.onSnapshot(ws, m.coversSeq, m.blob);
       case 'presence':
         return this.onPresence(ws, m.blob);
+      case 'revoke':
+        return this.onRevoke(ws, m);
     }
   }
 
@@ -204,6 +215,9 @@ export class AccountRelay extends DurableObject<Env> {
   ): void {
     const deviceId = this.authed(ws);
     if (deviceId === null) return this.error(ws, 'unauthorized');
+    if (!frames.every((f) => this.isCurrentKey(f.blob))) {
+      return this.error(ws, 'rekeyed');
+    }
     const acks: { clientId: string; seq: number }[] = [];
     const stored: { seq: number; deviceId: string; blob: string }[] = [];
     this.ctx.storage.transactionSync(() => {
@@ -236,6 +250,7 @@ export class AccountRelay extends DurableObject<Env> {
   private onPresence(ws: WebSocket, blob: string): void {
     const deviceId = this.authed(ws);
     if (deviceId === null) return this.error(ws, 'unauthorized');
+    if (!this.isCurrentKey(blob)) return this.error(ws, 'rekeyed');
     const text = JSON.stringify({ type: 'presence', deviceId, blob });
     for (const other of this.ctx.getWebSockets()) {
       if (other !== ws && this.authed(other) !== null) send(other, text);
@@ -245,6 +260,7 @@ export class AccountRelay extends DurableObject<Env> {
   private onSnapshot(ws: WebSocket, coversSeq: number, blob: string): void {
     if (this.authed(ws) === null) return this.error(ws, 'unauthorized');
     if (this.head() < coversSeq) return this.error(ws, 'invalid');
+    if (!this.isCurrentKey(blob)) return this.error(ws, 'rekeyed');
     this.ctx.storage.transactionSync(() => {
       const current = this.snapshot();
       // An older snapshot than the one held changes nothing.
@@ -257,6 +273,128 @@ export class AccountRelay extends DurableObject<Env> {
       this.sql.exec('DELETE FROM frame WHERE seq <= ?', coversSeq);
     });
     send(ws, JSON.stringify({ type: 'stored', coversSeq }));
+  }
+
+  /**
+   * Removes a device from the account (plan P2, P3). The sender rotated the
+   * sync key and the data key: the new verifier locks out enrolling with
+   * the old sync key, and each remaining device gets the new keys sealed
+   * to its public key. The snapshot re-seals the whole state at the head
+   * under the new data key, so after this nothing stored needs a retired
+   * key, and a device catching up holds only the new one.
+   *
+   * The revoked device keeps its token hash but is marked revoked, so it
+   * hears `revoked` rather than `unauthorized` and can say why. Every other
+   * connected device is told `rekeyed` and dropped: it reconnects and finds
+   * its device wrap in `welcome`.
+   */
+  private onRevoke(
+    ws: WebSocket,
+    m: Extract<ClientMessage, { type: 'revoke' }>,
+  ): void {
+    const sender = this.authed(ws);
+    if (sender === null) return this.error(ws, 'unauthorized');
+    // A revoked device's socket is detached before it closes; this guards
+    // any other path that would leave one attached.
+    if (this.device(sender)?.revoked_at !== null) return this.error(ws, 'revoked');
+    const account = this.account()!;
+    const current = sealedKeyVersion(account.sync_wrap);
+    const next = sealedKeyVersion(m.newSyncWrap);
+    // Malformed rather than stale: a client that gets these wrong has a
+    // bug, and a retry would only repeat it.
+    if (current === null || next === null || next <= current) {
+      return this.error(ws, 'invalid');
+    }
+    const sealedUnderNext =
+      sealedKeyVersion(m.snapshot.blob) === next &&
+      [...m.deviceWraps.values()].every(
+        (w) => sealedKeyVersion(w, DEVICE_WRAP_OFFSET) === next,
+      );
+    if (!sealedUnderNext) return this.error(ws, 'invalid');
+
+    const target = this.device(m.deviceId);
+    if (m.deviceId === sender || target === null || target.revoked_at !== null) {
+      return this.refuseRevoke(ws, m.deviceId, 'unknownDevice');
+    }
+    const remaining = this.sql
+      .exec<{ device_id: string }>(
+        'SELECT device_id FROM device WHERE revoked_at IS NULL AND device_id != ?',
+        m.deviceId,
+      )
+      .toArray()
+      .map((d) => d.device_id);
+    const covered = (byDevice: Map<string, string>) =>
+      remaining.length === byDevice.size && remaining.every((id) => byDevice.has(id));
+    if (!covered(m.deviceWraps) || !covered(m.deviceTags)) {
+      // With the current list, so the sender can seal for it and retry.
+      send(
+        ws,
+        JSON.stringify({
+          type: 'revoked',
+          deviceId: m.deviceId,
+          refused: 'devicesChanged' satisfies RevokeRefusal,
+          devices: this.listedDevices(),
+        }),
+      );
+      return;
+    }
+    if (m.snapshot.coversSeq !== account.head) {
+      return this.refuseRevoke(ws, m.deviceId, 'behind');
+    }
+
+    this.ctx.storage.transactionSync(() => {
+      this.sql.exec(
+        'UPDATE device SET revoked_at = ? WHERE device_id = ?',
+        Date.now(),
+        m.deviceId,
+      );
+      this.sql.exec(
+        'UPDATE account SET verifier = ?, sync_wrap = ? WHERE id = 1',
+        m.newAuthVerifier,
+        m.newSyncWrap,
+      );
+      for (const [deviceId, tag] of m.deviceTags) {
+        this.sql.exec('UPDATE device SET tag = ? WHERE device_id = ?', tag, deviceId);
+      }
+      // Wraps of an earlier revocation carry retired keys.
+      this.sql.exec('DELETE FROM device_wrap');
+      for (const [deviceId, blob] of m.deviceWraps) {
+        this.sql.exec(
+          'INSERT INTO device_wrap (device_id, blob) VALUES (?, ?)',
+          deviceId,
+          blob,
+        );
+      }
+      this.sql.exec(
+        'INSERT INTO snapshot (id, covers_seq, blob) VALUES (1, ?, ?) ON CONFLICT (id) DO UPDATE SET covers_seq = excluded.covers_seq, blob = excluded.blob',
+        m.snapshot.coversSeq,
+        m.snapshot.blob,
+      );
+      this.sql.exec('DELETE FROM frame WHERE seq <= ?', m.snapshot.coversSeq);
+    });
+
+    send(ws, JSON.stringify({ type: 'revoked', deviceId: m.deviceId }));
+    for (const other of this.ctx.getWebSockets()) {
+      if (other === ws) continue;
+      const id = this.authed(other);
+      if (id === null) continue;
+      this.error(other, id === m.deviceId ? 'revoked' : 'rekeyed');
+      // Detached first: a closing socket may still deliver messages, and
+      // none of them may act as the device any more.
+      other.serializeAttachment({ source: this.source(other) } satisfies Attachment);
+      close(other);
+    }
+  }
+
+  private refuseRevoke(ws: WebSocket, deviceId: string, refused: RevokeRefusal): void {
+    send(ws, JSON.stringify({ type: 'revoked', deviceId, refused }));
+  }
+
+  /** Whether [blob] is sealed under the account's current data key. */
+  private isCurrentKey(blob: string): boolean {
+    const account = this.account();
+    if (account === null) return false;
+    return sealedKeyVersion(blob) === sealedKeyVersion(account.sync_wrap);
   }
 
   /**
@@ -274,17 +412,10 @@ export class AccountRelay extends DurableObject<Env> {
     const snapshot = this.snapshot();
     const sendSnapshot =
       snapshot !== null && (opts.token !== null || opts.cursor < snapshot.covers_seq);
-    const devices = this.sql
-      .exec<{ device_id: string; name: string; platform: string; public_key: string }>(
-        'SELECT device_id, name, platform, public_key FROM device WHERE revoked_at IS NULL ORDER BY added_at',
-      )
-      .toArray()
-      .map((d) => ({
-        deviceId: d.device_id,
-        name: d.name,
-        platform: d.platform,
-        publicKey: d.public_key,
-      }));
+    const devices = this.listedDevices();
+    const deviceWrap = this.sql
+      .exec<{ blob: string }>('SELECT blob FROM device_wrap WHERE device_id = ?', deviceId)
+      .toArray()[0]?.blob;
     send(
       ws,
       JSON.stringify({
@@ -292,6 +423,8 @@ export class AccountRelay extends DurableObject<Env> {
         minProtocolVersion: MIN_PROTOCOL_VERSION,
         ...(opts.token === null ? {} : { token: opts.token }),
         syncWrap: account.sync_wrap,
+        // Left by a revocation; a device already holding its keys ignores it.
+        ...(deviceWrap === undefined ? {} : { deviceWrap }),
         ...(sendSnapshot
           ? { snapshot: { coversSeq: snapshot.covers_seq, blob: snapshot.blob } }
           : {}),
@@ -340,16 +473,33 @@ export class AccountRelay extends DurableObject<Env> {
     if (batch.length !== 0 || !sent) flush(false);
   }
 
+  /** The devices `welcome` lists: every one not revoked. */
+  private listedDevices(): DeviceInfo[] {
+    return this.sql
+      .exec<{ device_id: string; name: string; platform: string; public_key: string; tag: string }>(
+        'SELECT device_id, name, platform, public_key, tag FROM device WHERE revoked_at IS NULL ORDER BY added_at',
+      )
+      .toArray()
+      .map((d) => ({
+        deviceId: d.device_id,
+        name: d.name,
+        platform: d.platform,
+        publicKey: d.public_key,
+        tag: d.tag,
+      }));
+  }
+
   /** Registers or re-enrolls [device] and returns its new token. */
   private async addDevice(device: DeviceInfo): Promise<string> {
     const token = encodeBase64Url(crypto.getRandomValues(new Uint8Array(32)));
     const hash = encodeBase64Url(await sha256(decodeBase64Url(token)));
     this.sql.exec(
-      'INSERT INTO device (device_id, name, platform, public_key, token_hash, added_at) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT (device_id) DO UPDATE SET name = excluded.name, platform = excluded.platform, public_key = excluded.public_key, token_hash = excluded.token_hash',
+      'INSERT INTO device (device_id, name, platform, public_key, tag, token_hash, added_at) VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT (device_id) DO UPDATE SET name = excluded.name, platform = excluded.platform, public_key = excluded.public_key, tag = excluded.tag, token_hash = excluded.token_hash',
       device.deviceId,
       device.name,
       device.platform,
       device.publicKey,
+      device.tag,
       hash,
       Date.now(),
     );
@@ -428,6 +578,14 @@ function send(ws: WebSocket, text: string): void {
     ws.send(text);
   } catch {
     // A socket closing under us; its device catches up on reconnect.
+  }
+}
+
+function close(ws: WebSocket): void {
+  try {
+    ws.close(1000, 'closed by the relay');
+  } catch {
+    // Already closing.
   }
 }
 

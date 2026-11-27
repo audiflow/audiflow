@@ -22,6 +22,7 @@ class SyncDevice {
     required this.name,
     required this.platform,
     required this.publicKey,
+    this.tag,
   });
 
   factory SyncDevice.fromJson(Map<String, Object?> json) => SyncDevice(
@@ -29,6 +30,7 @@ class SyncDevice {
     name: _string(json, 'name'),
     platform: _string(json, 'platform'),
     publicKey: decodeBytes(json['publicKey']),
+    tag: json['tag'] == null ? null : decodeBytes(json['tag']),
   );
 
   final String deviceId;
@@ -36,11 +38,26 @@ class SyncDevice {
   final String platform;
   final Uint8List publicKey;
 
+  /// `SyncKeyDerivation.deviceTag` of [deviceId] and [publicKey] under the
+  /// current sync key: proof the device was registered by a holder of the
+  /// key, which the relay cannot forge. Null on this device's own record
+  /// until the engine registers it.
+  final Uint8List? tag;
+
+  SyncDevice withTag(Uint8List tag) => SyncDevice(
+    deviceId: deviceId,
+    name: name,
+    platform: platform,
+    publicKey: publicKey,
+    tag: tag,
+  );
+
   Map<String, Object?> toJson() => {
     'deviceId': deviceId,
     'name': name,
     'platform': platform,
     'publicKey': encodeBytes(publicKey),
+    if (tag case final t?) 'tag': encodeBytes(t),
   };
 }
 
@@ -132,6 +149,14 @@ sealed class ClientMessage {
       ]),
       'snapshot' => UploadSnapshot(RelaySnapshot.fromJson(json)),
       'presence' => SendPresence(decodeBytes(json['blob'])),
+      'revoke' => RevokeDevice(
+        deviceId: _string(json, 'deviceId'),
+        newAuthVerifier: decodeBytes(json['newAuthVerifier']),
+        newSyncWrap: decodeBytes(json['newSyncWrap']),
+        deviceWraps: _bytesMap(json, 'deviceWraps'),
+        deviceTags: _bytesMap(json, 'deviceTags'),
+        snapshot: RelaySnapshot.fromJson(_object(json['snapshot'])),
+      ),
       final other => throw FormatException('unknown message type', other),
     };
   }
@@ -262,6 +287,50 @@ class UploadSnapshot extends ClientMessage {
   Map<String, Object?> get fields => snapshot.toJson();
 }
 
+/// Removes [deviceId] from the account, from a remaining device (plan P2,
+/// P3). It carries the rotated secrets: the verifier and sync key wrap of
+/// the new sync key, the new keys sealed to each remaining device (the
+/// sender's own included, so a sender that never hears back recovers them
+/// on its next connection), each remaining device's tag under the new
+/// sync key, and the whole state at the head sealed under the new data
+/// key, so nothing the relay keeps needs a retired key.
+class RevokeDevice extends ClientMessage {
+  const RevokeDevice({
+    required this.deviceId,
+    required this.newAuthVerifier,
+    required this.newSyncWrap,
+    required this.deviceWraps,
+    required this.deviceTags,
+    required this.snapshot,
+  });
+
+  final String deviceId;
+  final Uint8List newAuthVerifier;
+  final Uint8List newSyncWrap;
+  final Map<String, Uint8List> deviceWraps;
+  final Map<String, Uint8List> deviceTags;
+  final RelaySnapshot snapshot;
+
+  @override
+  String get type => 'revoke';
+
+  @override
+  Map<String, Object?> get fields => {
+    'deviceId': deviceId,
+    'newAuthVerifier': encodeBytes(newAuthVerifier),
+    'newSyncWrap': encodeBytes(newSyncWrap),
+    'deviceWraps': {
+      for (final MapEntry(:key, :value) in deviceWraps.entries)
+        key: encodeBytes(value),
+    },
+    'deviceTags': {
+      for (final MapEntry(:key, :value) in deviceTags.entries)
+        key: encodeBytes(value),
+    },
+    'snapshot': snapshot.toJson(),
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Relay to client
 
@@ -287,6 +356,9 @@ sealed class RelayMessage {
         minProtocolVersion: _int(json, 'minProtocolVersion'),
         token: json['token'] as String?,
         syncWrap: decodeBytes(json['syncWrap']),
+        deviceWrap: json['deviceWrap'] == null
+            ? null
+            : decodeBytes(json['deviceWrap']),
         snapshot: json['snapshot'] == null
             ? null
             : RelaySnapshot.fromJson(_object(json['snapshot'])),
@@ -306,6 +378,16 @@ sealed class RelayMessage {
       'presence' => PresenceUpdate(
         deviceId: _string(json, 'deviceId'),
         blob: decodeBytes(json['blob']),
+      ),
+      'revoked' => RevokeResult(
+        deviceId: _string(json, 'deviceId'),
+        refused: json['refused'] as String?,
+        devices: json['devices'] == null
+            ? null
+            : [
+                for (final d in _list(json, 'devices'))
+                  SyncDevice.fromJson(_object(d)),
+              ],
       ),
       'error' => RelayError(_string(json, 'code')),
       final String other => UnknownRelayMessage(other),
@@ -329,6 +411,7 @@ class Welcome extends RelayMessage {
     this.minProtocolVersion = syncProtocolVersion,
     this.token,
     required this.syncWrap,
+    this.deviceWrap,
     this.snapshot,
     this.devices = const [],
   });
@@ -338,6 +421,10 @@ class Welcome extends RelayMessage {
   /// Issued after `create` or `enroll`; every later `hello` presents it.
   final String? token;
   final Uint8List syncWrap;
+
+  /// The keys a revocation sealed to this device's public key; present
+  /// from the revocation on, and ignored once this device holds them.
+  final Uint8List? deviceWrap;
 
   /// Sent after `enroll`, and after `hello` when its cursor is older than
   /// what the snapshot covers.
@@ -352,6 +439,7 @@ class Welcome extends RelayMessage {
     'minProtocolVersion': minProtocolVersion,
     'token': ?token,
     'syncWrap': encodeBytes(syncWrap),
+    if (deviceWrap case final w?) 'deviceWrap': encodeBytes(w),
     if (snapshot case final s?) 'snapshot': s.toJson(),
     'devices': [for (final d in devices) d.toJson()],
   };
@@ -427,6 +515,38 @@ class PresenceUpdate extends RelayMessage {
   };
 }
 
+/// The answer to [RevokeDevice]: applied when [refused] is null, else one
+/// of the refusal codes below, and nothing changed.
+class RevokeResult extends RelayMessage {
+  const RevokeResult({required this.deviceId, this.refused, this.devices});
+
+  /// The snapshot does not cover the head: frames are on their way.
+  static const behind = 'behind';
+
+  /// The wraps miss a remaining device: one enrolled meanwhile.
+  static const devicesChanged = 'devicesChanged';
+
+  /// No such device, the sender itself, or one already revoked.
+  static const unknownDevice = 'unknownDevice';
+
+  final String deviceId;
+  final String? refused;
+
+  /// The devices now listed, with [devicesChanged], so a retry seals the
+  /// keys for them.
+  final List<SyncDevice>? devices;
+
+  @override
+  String get type => 'revoked';
+
+  @override
+  Map<String, Object?> get fields => {
+    'deviceId': deviceId,
+    'refused': ?refused,
+    if (devices case final d?) 'devices': [for (final x in d) x.toJson()],
+  };
+}
+
 class RelayError extends RelayMessage {
   const RelayError(this.code);
 
@@ -436,6 +556,10 @@ class RelayError extends RelayMessage {
   static const invalid = 'invalid';
   static const exists = 'exists';
   static const rateLimited = 'rateLimited';
+
+  /// Sealed under a data key a revocation replaced; a new connection
+  /// brings the new one in `welcome`.
+  static const rekeyed = 'rekeyed';
 
   final String code;
 
@@ -468,3 +592,8 @@ int _int(Map<String, Object?> json, String key) {
   if (value is int) return value;
   throw FormatException('expected an integer', key);
 }
+
+Map<String, Uint8List> _bytesMap(Map<String, Object?> json, String key) => {
+  for (final MapEntry(:key, :value) in _object(json[key]).entries)
+    key: decodeBytes(value),
+};

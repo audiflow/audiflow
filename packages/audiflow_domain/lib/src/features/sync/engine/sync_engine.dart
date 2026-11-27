@@ -19,6 +19,7 @@ import '../../user_state/services/key_reconciler.dart';
 import '../../user_state/services/sync_meta_access.dart';
 import '../../user_state/sync/user_state_fields.dart';
 import '../crypto/sync_cipher.dart';
+import '../crypto/sync_credentials.dart';
 import '../protocol/sync_messages.dart';
 import 'sync_frame.dart';
 import 'sync_presence.dart';
@@ -198,6 +199,18 @@ class SyncEngine {
   /// relay compacts before anything newer lands.
   bool _snapshotPending = false;
 
+  /// The account's devices as the last `welcome` listed them, less any
+  /// this device revoked since: who a revocation seals the new keys to.
+  List<SyncDevice> _devices = const [];
+
+  /// A revocation asked for and not yet answered; sends wait while it is.
+  _Revocation? _revocation;
+
+  /// Refusals (behind the head, a device list that changed) before a
+  /// revocation gives up: each means something arrived first, so the next
+  /// try usually lands.
+  static const _maxRevokeRetries = 3;
+
   /// Completes when the session ends: normally after [close], with a
   /// [SyncRelayFailure] when the relay refused something or the connection
   /// dropped.
@@ -251,7 +264,9 @@ class SyncEngine {
   void sendPresence(SyncPresence presence) {
     if (_closed) return;
     _enqueue(() async {
-      if (!_caughtUp) return;
+      // Sealed under the key a revocation in flight retires, the relay
+      // would refuse it and end the session.
+      if (!_caughtUp || _revocation?.sent != null) return;
       final blob = await _seal(
         Uint8List.fromList(presence.encode()),
         SealPurpose.presence,
@@ -290,9 +305,32 @@ class SyncEngine {
     }
   }
 
+  /// Removes [deviceId] from the account and rotates the sync key and the
+  /// data key, so the removed device can neither read what follows nor
+  /// enroll again; the recovery code changes with the sync key. It waits
+  /// until nothing is on its way to the relay, as the state it sends along
+  /// must cover the head, and holds back sends meanwhile.
+  ///
+  /// Throws [SyncRevokeFailure] when the relay refused, and
+  /// [SyncRelayFailure] when the session ended first. In that case the
+  /// revocation may still have applied; the next connection shows it, in
+  /// the device list and in this device's own wrap.
+  Future<void> revoke(String deviceId) {
+    if (_closed) {
+      return Future.error(const SyncRelayFailure(SyncRelayFailure.closed));
+    }
+    if (_revocation != null) {
+      return Future.error(StateError('a revocation is in progress'));
+    }
+    final revocation = _revocation = _Revocation(deviceId);
+    _enqueue(_tryRevoke);
+    return revocation.done.future;
+  }
+
   Future<void> close() async {
     if (_closed) return;
     _closed = true;
+    _endRevocation(const SyncRelayFailure(SyncRelayFailure.closed));
     _steadyTimer?.cancel();
     _completeProgress();
     await _outboxWatch?.cancel();
@@ -336,6 +374,7 @@ class SyncEngine {
   Future<void> _fail(SyncRelayFailure failure) async {
     _logger.w('Sync session ended: ${failure.code}');
     _closed = true;
+    _endRevocation(failure);
     _steadyTimer?.cancel();
     _completeProgress();
     _inFlight = null;
@@ -369,13 +408,13 @@ class SyncEngine {
             wrapKey: keys.wrapKey,
             keys: dataKey,
           ),
-          device: _session.device,
+          device: _tagged(keys),
         );
       case SyncOpening.join:
         return EnrollDevice(
           accountId: _session.accountId,
           authSecret: keys.authSecret,
-          device: _session.device,
+          device: _tagged(keys),
         );
       case SyncOpening.resume:
         final token = _session.token;
@@ -389,6 +428,18 @@ class SyncEngine {
           cursor: (await _meta())?.serverCursor ?? 0,
         );
     }
+  }
+
+  /// This device with its tag under the sync key [keys] came from.
+  SyncDevice _tagged(DerivedSyncKeys keys) {
+    final device = _session.device;
+    return device.withTag(
+      SyncKeyDerivation.deviceTag(
+        keys.tagKey,
+        deviceId: device.deviceId,
+        publicKey: device.publicKey,
+      ),
+    );
   }
 
   Future<void> _handle(RelayMessage message) async {
@@ -408,6 +459,8 @@ class SyncEngine {
         _logger.d('Ignoring relay message $type');
       case PresenceUpdate(:final deviceId, :final blob):
         await _onPresenceUpdate(deviceId, blob);
+      case RevokeResult():
+        await _onRevokeResult(message);
       case RelayError(:final code):
         throw SyncRelayFailure(code);
     }
@@ -418,6 +471,11 @@ class SyncEngine {
       throw const SyncRelayFailure(RelayError.tooOld);
     }
     var changed = false;
+    // Before the sync key wrap: after a revocation this device's sync key
+    // no longer opens it.
+    if (welcome.deviceWrap case final wrap?) {
+      changed = await _adoptDeviceWrap(wrap);
+    }
     if (_session.dataKey == null) {
       final keys = await SyncKeyDerivation.derive(_session.syncKey);
       _session.dataKey = await KeyWraps.openSyncWrap(
@@ -452,8 +510,229 @@ class SyncEngine {
       changed = true;
     }
     if (changed) _onSessionChanged?.call(_session);
-    _onDevices?.call(welcome.devices);
+    _devices = List.unmodifiable(welcome.devices);
+    _onDevices?.call(_devices);
     _welcomed = true;
+  }
+
+  /// Takes the keys a revocation sealed to this device, unless it holds
+  /// them already. A sync key that differs at the same version is taken
+  /// too: storing the rotated credentials failed after the revocation.
+  ///
+  /// The wrap is bound to the sync key it replaced, so it opens only with
+  /// that key: one the relay made up does not, and neither does the wrap
+  /// this device already took (it then holds the new sync key). A device
+  /// that missed two revocations holds a key older than the one the wrap
+  /// is bound to; it has to join again with the new recovery code.
+  ///
+  /// A wrap that does not open changes nothing: frames under the new key
+  /// then fail to open and the session ends as [SyncRelayFailure.unreadableFrame].
+  Future<bool> _adoptDeviceWrap(Uint8List wrap) async {
+    final keyPair = _session.keyPair;
+    if (keyPair == null) return false;
+    final held = _session.dataKey;
+    // The version is in the clear header after the ephemeral public key;
+    // an older wrap than the keys held is left unopened.
+    if (held != null &&
+        _wrapHeaderLength <= wrap.length &&
+        SyncCipher.keyVersionOf(Uint8List.sublistView(wrap, 32)) <
+            held.version) {
+      return false;
+    }
+    final DeviceSecrets secrets;
+    try {
+      secrets = await KeyWraps.openDeviceWrap(
+        _cipher,
+        keyPair: keyPair,
+        rekeyKey: (await SyncKeyDerivation.derive(_session.syncKey)).rekeyKey,
+        blob: wrap,
+      );
+    } on SyncCryptoFailure catch (e) {
+      // Expected once this device took the wrap: it holds the new key.
+      _logger.d('Device wrap not opened', error: e);
+      return false;
+    }
+    if (held != null) {
+      if (secrets.dataKey.version < held.version) return false;
+      if (secrets.dataKey.version == held.version &&
+          _sameBytes(secrets.syncKey, _session.syncKey)) {
+        return false;
+      }
+    }
+    _session
+      ..credentials = SyncCredentials(
+        accountId: _session.credentials.accountId,
+        syncKey: secrets.syncKey,
+      )
+      ..dataKey = secrets.dataKey;
+    return true;
+  }
+
+  /// The ephemeral public key and the sealed header of a device wrap.
+  static const _wrapHeaderLength = 32 + 5;
+
+  static bool _sameBytes(List<int> a, List<int> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+
+  /// Sends the revocation once nothing else is on its way: then the
+  /// cursor is the head, unless frames from others are still arriving,
+  /// which the relay answers with [RevokeResult.behind].
+  Future<void> _tryRevoke() async {
+    final revocation = _revocation;
+    if (revocation == null || revocation.sent != null) return;
+    if (!_caughtUp ||
+        _inFlight != null ||
+        _snapshotPending ||
+        _fullState != null) {
+      return;
+    }
+    final target = revocation.deviceId;
+    if (target == _session.device.deviceId ||
+        !_devices.any((d) => d.deviceId == target)) {
+      _endRevocation(const SyncRevokeFailure(RevokeResult.unknownDevice));
+      return;
+    }
+    final current = await SyncKeyDerivation.derive(_session.syncKey);
+    final remaining = [
+      for (final d in _devices)
+        if (d.deviceId != target) d,
+    ];
+    // The relay lists the devices; one it made up has no valid tag, and
+    // sealing the new keys to it would hand them to the relay.
+    for (final d in remaining) {
+      final expected = SyncKeyDerivation.deviceTag(
+        current.tagKey,
+        deviceId: d.deviceId,
+        publicKey: d.publicKey,
+      );
+      final tag = d.tag;
+      if (tag == null || !_sameBytes(tag, expected)) {
+        _logger.w('Device ${d.deviceId} has no valid tag');
+        _endRevocation(
+          const SyncRevokeFailure(SyncRevokeFailure.untrustedDevice),
+        );
+        return;
+      }
+    }
+    final credentials = SyncCredentials(
+      accountId: _session.credentials.accountId,
+      syncKey: SyncCipher.generateKey(),
+    );
+    final dataKey = DataKey(
+      SyncCipher.generateKey(),
+      version: _session.dataKey!.version + 1,
+    );
+    final keys = await SyncKeyDerivation.derive(credentials.syncKey);
+    final deviceWraps = <String, Uint8List>{
+      for (final d in remaining)
+        d.deviceId: await KeyWraps.sealDeviceWrap(
+          _cipher,
+          recipientPublicKey: d.publicKey,
+          rekeyKey: current.rekeyKey,
+          syncKey: credentials.syncKey,
+          keys: dataKey,
+        ),
+    };
+    final deviceTags = <String, Uint8List>{
+      for (final d in remaining)
+        d.deviceId: SyncKeyDerivation.deviceTag(
+          keys.tagKey,
+          deviceId: d.deviceId,
+          publicKey: d.publicKey,
+        ),
+    };
+    final backup = await buildBackupFile(
+      _isar,
+      now: DateTime.fromMillisecondsSinceEpoch(_nowMillis(), isUtc: true),
+      appVersion: _appVersion,
+      platform: _platform,
+    );
+    final message = RevokeDevice(
+      deviceId: target,
+      newAuthVerifier: SyncKeyDerivation.authVerifier(keys.authSecret),
+      newSyncWrap: await KeyWraps.sealSyncWrap(
+        _cipher,
+        wrapKey: keys.wrapKey,
+        keys: dataKey,
+      ),
+      deviceWraps: deviceWraps,
+      deviceTags: deviceTags,
+      snapshot: RelaySnapshot(
+        coversSeq: (await _meta())?.serverCursor ?? 0,
+        blob: await _seal(backup.bytes, SealPurpose.snapshot, key: dataKey),
+      ),
+    );
+    // A step above may have been outrun by a close.
+    if (_closed || !identical(_revocation, revocation)) return;
+    revocation.sent = (
+      credentials: credentials,
+      dataKey: dataKey,
+      tags: deviceTags,
+    );
+    _transport.send(message);
+  }
+
+  Future<void> _onRevokeResult(RevokeResult result) async {
+    final revocation = _revocation;
+    final sent = revocation?.sent;
+    if (revocation == null ||
+        sent == null ||
+        revocation.deviceId != result.deviceId) {
+      return;
+    }
+    switch (result.refused) {
+      case null:
+        _session
+          ..credentials = sent.credentials
+          ..dataKey = sent.dataKey;
+        _onSessionChanged?.call(_session);
+        // Tagged under the new sync key, for a later revocation.
+        _devices = List.unmodifiable([
+          for (final d in _devices)
+            if (d.deviceId != revocation.deviceId)
+              switch (sent.tags[d.deviceId]) {
+                final tag? => d.withTag(tag),
+                null => d,
+              },
+        ]);
+        _onDevices?.call(_devices);
+        _endRevocation(null);
+      case RevokeResult.behind when revocation.retries < _maxRevokeRetries:
+        // The frames that put the head ahead arrived before this answer.
+        revocation
+          ..retries += 1
+          ..sent = null;
+        return _tryRevoke();
+      case RevokeResult.devicesChanged
+          when revocation.retries < _maxRevokeRetries && result.devices != null:
+        // A device enrolled meanwhile: seal the keys for it too.
+        _devices = List.unmodifiable(result.devices!);
+        _onDevices?.call(_devices);
+        revocation
+          ..retries += 1
+          ..sent = null;
+        return _tryRevoke();
+      case final String code:
+        _endRevocation(SyncRevokeFailure(code));
+    }
+    await _flush();
+  }
+
+  /// Answers the caller of [revoke]: with [error], or done when null.
+  void _endRevocation(Object? error) {
+    final revocation = _revocation;
+    if (revocation == null) return;
+    _revocation = null;
+    if (error == null) {
+      revocation.done.complete();
+    } else {
+      revocation.done.completeError(error);
+    }
   }
 
   Future<void> _mergeSnapshot(RelaySnapshot snapshot) async {
@@ -504,7 +783,9 @@ class SyncEngine {
       }
       await _setCursor(frame.seq);
     }
-    if (_caughtUp || more) return;
+    // A revocation refused for being behind waits for these.
+    if (_caughtUp) return _tryRevoke();
+    if (more) return;
     _caughtUp = true;
     // After creating or joining, or when the outbox cap dropped ops, only
     // the whole state carries everything.
@@ -710,6 +991,9 @@ class SyncEngine {
   }
 
   Future<void> _flush() async {
+    // Its snapshot must cover the head, so nothing goes out before it, and
+    // what it rotates away would seal anything sent after.
+    if (_revocation != null) return _tryRevoke();
     if (!_caughtUp || _inFlight != null || _snapshotPending) return;
     // The cap may have dropped ops while connected; only the whole state
     // carries what they changed.
@@ -962,8 +1246,12 @@ class SyncEngine {
     ]);
   });
 
-  Future<Uint8List> _seal(Uint8List plaintext, SealPurpose purpose) {
-    final dataKey = _session.dataKey!;
+  Future<Uint8List> _seal(
+    Uint8List plaintext,
+    SealPurpose purpose, {
+    DataKey? key,
+  }) {
+    final dataKey = key ?? _session.dataKey!;
     return _cipher.seal(
       key: dataKey.key,
       keyVersion: dataKey.version,
@@ -988,4 +1276,21 @@ class SyncEngine {
     if (meta == null || seq <= meta.serverCursor) return;
     await _isar.syncMetas.put(meta..serverCursor = seq);
   });
+}
+
+/// A revocation from [SyncEngine.revoke] until the relay answers.
+class _Revocation {
+  _Revocation(this.deviceId);
+
+  final String deviceId;
+  final done = Completer<void>();
+
+  /// The secrets it rotates to, and the remaining devices' new tags, once
+  /// sent.
+  ({SyncCredentials credentials, DataKey dataKey, Map<String, Uint8List> tags})?
+  sent;
+
+  /// Refusals retried so far: behind the head, or a device list that
+  /// changed.
+  int retries = 0;
 }
