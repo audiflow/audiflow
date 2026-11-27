@@ -68,7 +68,13 @@ async function sha256(bytes: Uint8Array): Promise<Uint8Array> {
 }
 
 function device(id: string) {
-  return { deviceId: id, name: id, platform: 'ios', publicKey: encodeBase64Url(randomBytes(32)) };
+  return {
+    deviceId: id,
+    name: id,
+    platform: 'ios',
+    publicKey: encodeBase64Url(randomBytes(32)),
+    tag: encodeBase64Url(randomBytes(32)),
+  };
 }
 
 async function newAccount() {
@@ -405,6 +411,7 @@ describe('relay', () => {
         newAuthVerifier: keys.newAuthVerifier,
         newSyncWrap: keys.newSyncWrap,
         deviceWraps: Object.fromEntries(wrapsFor.map((id) => [id, sealed(`keys for ${id}`, version, 32)])),
+        deviceTags: Object.fromEntries(wrapsFor.map((id) => [id, encodeBase64Url(randomBytes(32))])),
         snapshot: { coversSeq: opts.coversSeq ?? 0, blob: sealed('state', version) },
       };
     }
@@ -445,7 +452,10 @@ describe('relay', () => {
       // B was behind the snapshot: it gets the state, and no retired frame.
       expect(welcome.snapshot).toEqual(message.snapshot);
       expect(await b2.next()).toEqual({ type: 'frames', frames: [] });
-      expect((welcome.devices as { deviceId: string }[]).map((d) => d.deviceId)).toEqual(['A', 'B']);
+      const listed = welcome.devices as { deviceId: string; tag: string }[];
+      expect(listed.map((d) => d.deviceId)).toEqual(['A', 'B']);
+      // Tagged under the new sync key now.
+      expect(listed.map((d) => d.tag)).toEqual([message.deviceTags.A, message.deviceTags.B]);
 
       // The new sync key enrolls a new device.
       const d = await Client.open(acct.accountId);
@@ -486,7 +496,10 @@ describe('relay', () => {
     it('refuses wraps that miss a remaining device', async () => {
       const { a } = await threeDevices();
       a.send(revokeMessage(await rotated(), 'C', ['A']));
-      expect(await a.next()).toEqual({ type: 'revoked', deviceId: 'C', refused: 'devicesChanged' });
+      const refusal = await a.next();
+      expect(refusal).toMatchObject({ type: 'revoked', deviceId: 'C', refused: 'devicesChanged' });
+      // The current list goes along, for the retry.
+      expect((refusal.devices as { deviceId: string }[]).map((d) => d.deviceId)).toEqual(['A', 'B', 'C']);
     });
 
     it('refuses to revoke itself or a device it does not know', async () => {
@@ -505,6 +518,29 @@ describe('relay', () => {
       // Wraps sealed under another version than the new sync wrap.
       a.send(revokeMessage(await rotated(), 'C', ['A', 'B'], { version: 3 }));
       expect(await a.next()).toEqual({ type: 'error', code: 'invalid' });
+    });
+
+    it('refuses wraps whose tags miss a remaining device', async () => {
+      const { a } = await threeDevices();
+      const message = revokeMessage(await rotated(), 'C', ['A', 'B']);
+      delete (message.deviceTags as Record<string, string>).B;
+      a.send(message);
+      expect(await a.next()).toMatchObject({ type: 'revoked', refused: 'devicesChanged' });
+    });
+
+    it('rejects a device registered without a tag', async () => {
+      const acct = await newAccount();
+      const x = await Client.open(acct.accountId);
+      const { tag: _, ...untagged } = device('X');
+      x.send({
+        type: 'create',
+        protocolVersion: 1,
+        accountId: acct.accountId,
+        authVerifier: acct.authVerifier,
+        syncWrap: acct.syncWrap,
+        device: untagged,
+      });
+      expect(await x.next()).toEqual({ type: 'error', code: 'invalid' });
     });
 
     it('refuses a revocation before a session opens', async () => {

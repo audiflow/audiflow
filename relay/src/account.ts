@@ -69,6 +69,7 @@ export class AccountRelay extends DurableObject<Env> {
         name TEXT NOT NULL,
         platform TEXT NOT NULL,
         public_key TEXT NOT NULL,
+        tag TEXT NOT NULL,
         token_hash TEXT NOT NULL,
         added_at INTEGER NOT NULL,
         revoked_at INTEGER
@@ -293,6 +294,9 @@ export class AccountRelay extends DurableObject<Env> {
   ): void {
     const sender = this.authed(ws);
     if (sender === null) return this.error(ws, 'unauthorized');
+    // A revoked device's socket is detached before it closes; this guards
+    // any other path that would leave one attached.
+    if (this.device(sender)?.revoked_at !== null) return this.error(ws, 'revoked');
     const account = this.account()!;
     const current = sealedKeyVersion(account.sync_wrap);
     const next = sealedKeyVersion(m.newSyncWrap);
@@ -319,10 +323,21 @@ export class AccountRelay extends DurableObject<Env> {
       )
       .toArray()
       .map((d) => d.device_id);
-    const covered =
-      remaining.length === m.deviceWraps.size &&
-      remaining.every((id) => m.deviceWraps.has(id));
-    if (!covered) return this.refuseRevoke(ws, m.deviceId, 'devicesChanged');
+    const covered = (byDevice: Map<string, string>) =>
+      remaining.length === byDevice.size && remaining.every((id) => byDevice.has(id));
+    if (!covered(m.deviceWraps) || !covered(m.deviceTags)) {
+      // With the current list, so the sender can seal for it and retry.
+      send(
+        ws,
+        JSON.stringify({
+          type: 'revoked',
+          deviceId: m.deviceId,
+          refused: 'devicesChanged' satisfies RevokeRefusal,
+          devices: this.listedDevices(),
+        }),
+      );
+      return;
+    }
     if (m.snapshot.coversSeq !== account.head) {
       return this.refuseRevoke(ws, m.deviceId, 'behind');
     }
@@ -338,6 +353,9 @@ export class AccountRelay extends DurableObject<Env> {
         m.newAuthVerifier,
         m.newSyncWrap,
       );
+      for (const [deviceId, tag] of m.deviceTags) {
+        this.sql.exec('UPDATE device SET tag = ? WHERE device_id = ?', tag, deviceId);
+      }
       // Wraps of an earlier revocation carry retired keys.
       this.sql.exec('DELETE FROM device_wrap');
       for (const [deviceId, blob] of m.deviceWraps) {
@@ -361,6 +379,9 @@ export class AccountRelay extends DurableObject<Env> {
       const id = this.authed(other);
       if (id === null) continue;
       this.error(other, id === m.deviceId ? 'revoked' : 'rekeyed');
+      // Detached first: a closing socket may still deliver messages, and
+      // none of them may act as the device any more.
+      other.serializeAttachment({ source: this.source(other) } satisfies Attachment);
       close(other);
     }
   }
@@ -391,17 +412,7 @@ export class AccountRelay extends DurableObject<Env> {
     const snapshot = this.snapshot();
     const sendSnapshot =
       snapshot !== null && (opts.token !== null || opts.cursor < snapshot.covers_seq);
-    const devices = this.sql
-      .exec<{ device_id: string; name: string; platform: string; public_key: string }>(
-        'SELECT device_id, name, platform, public_key FROM device WHERE revoked_at IS NULL ORDER BY added_at',
-      )
-      .toArray()
-      .map((d) => ({
-        deviceId: d.device_id,
-        name: d.name,
-        platform: d.platform,
-        publicKey: d.public_key,
-      }));
+    const devices = this.listedDevices();
     const deviceWrap = this.sql
       .exec<{ blob: string }>('SELECT blob FROM device_wrap WHERE device_id = ?', deviceId)
       .toArray()[0]?.blob;
@@ -462,16 +473,33 @@ export class AccountRelay extends DurableObject<Env> {
     if (batch.length !== 0 || !sent) flush(false);
   }
 
+  /** The devices `welcome` lists: every one not revoked. */
+  private listedDevices(): DeviceInfo[] {
+    return this.sql
+      .exec<{ device_id: string; name: string; platform: string; public_key: string; tag: string }>(
+        'SELECT device_id, name, platform, public_key, tag FROM device WHERE revoked_at IS NULL ORDER BY added_at',
+      )
+      .toArray()
+      .map((d) => ({
+        deviceId: d.device_id,
+        name: d.name,
+        platform: d.platform,
+        publicKey: d.public_key,
+        tag: d.tag,
+      }));
+  }
+
   /** Registers or re-enrolls [device] and returns its new token. */
   private async addDevice(device: DeviceInfo): Promise<string> {
     const token = encodeBase64Url(crypto.getRandomValues(new Uint8Array(32)));
     const hash = encodeBase64Url(await sha256(decodeBase64Url(token)));
     this.sql.exec(
-      'INSERT INTO device (device_id, name, platform, public_key, token_hash, added_at) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT (device_id) DO UPDATE SET name = excluded.name, platform = excluded.platform, public_key = excluded.public_key, token_hash = excluded.token_hash',
+      'INSERT INTO device (device_id, name, platform, public_key, tag, token_hash, added_at) VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT (device_id) DO UPDATE SET name = excluded.name, platform = excluded.platform, public_key = excluded.public_key, tag = excluded.tag, token_hash = excluded.token_hash',
       device.deviceId,
       device.name,
       device.platform,
       device.publicKey,
+      device.tag,
       hash,
       Date.now(),
     );

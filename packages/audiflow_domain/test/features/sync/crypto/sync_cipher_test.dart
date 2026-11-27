@@ -27,6 +27,27 @@ void main() {
       final keys = await SyncKeyDerivation.derive(syncKey);
       check(base64Url.encode(keys.authSecret)).equals(_pinnedAuthSecret);
       check(base64Url.encode(keys.wrapKey)).equals(_pinnedWrapKey);
+      check(base64Url.encode(keys.tagKey)).equals(_pinnedTagKey);
+      check(base64Url.encode(keys.rekeyKey)).equals(_pinnedRekeyKey);
+    });
+
+    test('pins the device tag, which every device must agree on', () async {
+      final keys = await SyncKeyDerivation.derive(syncKey);
+      final publicKey = Uint8List.fromList(List.generate(32, (i) => 100 + i));
+      final tag = SyncKeyDerivation.deviceTag(
+        keys.tagKey,
+        deviceId: 'device-a',
+        publicKey: publicKey,
+      );
+      check(base64Url.encode(tag)).equals(_pinnedDeviceTag);
+      // Another device id or key gives another tag.
+      check(
+        SyncKeyDerivation.deviceTag(
+          keys.tagKey,
+          deviceId: 'device-b',
+          publicKey: publicKey,
+        ),
+      ).not((it) => it.deepEquals(tag));
     });
 
     test('rejects a missing or cut sync key', () async {
@@ -198,6 +219,7 @@ void main() {
     final wrapKey = Uint8List.fromList(List.generate(32, (i) => 7 * i));
     final dataKey = Uint8List.fromList(List.generate(32, (i) => 100 + i));
     final syncKey = Uint8List.fromList(List.generate(32, (i) => 50 + i));
+    final rekeyKey = Uint8List.fromList(List.generate(32, (i) => 9 + i));
 
     test('the sync key wrap carries the data key', () async {
       final blob = await KeyWraps.sealSyncWrap(
@@ -219,6 +241,7 @@ void main() {
       final blob = await KeyWraps.sealDeviceWrap(
         cipher,
         recipientPublicKey: recipient.publicKey,
+        rekeyKey: rekeyKey,
         syncKey: syncKey,
         keys: DataKey(dataKey, version: 5),
       );
@@ -228,6 +251,7 @@ void main() {
       final opened = await KeyWraps.openDeviceWrap(
         cipher,
         keyPair: restored,
+        rekeyKey: rekeyKey,
         blob: blob,
       );
       check(opened.syncKey).deepEquals(syncKey);
@@ -241,6 +265,7 @@ void main() {
         KeyWraps.sealDeviceWrap(
           cipher,
           recipientPublicKey: recipient.publicKey,
+          rekeyKey: rekeyKey,
           syncKey: Uint8List(31),
           keys: DataKey(dataKey, version: 1),
         ),
@@ -253,11 +278,17 @@ void main() {
       final blob = await KeyWraps.sealDeviceWrap(
         cipher,
         recipientPublicKey: recipient.publicKey,
+        rekeyKey: rekeyKey,
         syncKey: syncKey,
         keys: DataKey(dataKey, version: 1),
       );
       await check(
-        KeyWraps.openDeviceWrap(cipher, keyPair: other, blob: blob),
+        KeyWraps.openDeviceWrap(
+          cipher,
+          keyPair: other,
+          rekeyKey: rekeyKey,
+          blob: blob,
+        ),
       ).throws<SyncCryptoFailure>();
     });
 
@@ -266,13 +297,40 @@ void main() {
       final blob = await KeyWraps.sealDeviceWrap(
         cipher,
         recipientPublicKey: recipient.publicKey,
+        rekeyKey: rekeyKey,
         syncKey: syncKey,
         keys: DataKey(dataKey, version: 1),
       );
       final swapped = Uint8List.fromList(blob)
         ..setRange(0, 32, (await DeviceKeyPair.generate()).publicKey);
       await check(
-        KeyWraps.openDeviceWrap(cipher, keyPair: recipient, blob: swapped),
+        KeyWraps.openDeviceWrap(
+          cipher,
+          keyPair: recipient,
+          rekeyKey: rekeyKey,
+          blob: swapped,
+        ),
+      ).throws<SyncCryptoFailure>();
+    });
+
+    test('a device wrap opens only with the sync key it replaces', () async {
+      // Only devices of the account hold it: a relay that knows every
+      // public key still cannot make a wrap a device accepts.
+      final recipient = await DeviceKeyPair.generate();
+      final blob = await KeyWraps.sealDeviceWrap(
+        cipher,
+        recipientPublicKey: recipient.publicKey,
+        rekeyKey: rekeyKey,
+        syncKey: syncKey,
+        keys: DataKey(dataKey, version: 1),
+      );
+      await check(
+        KeyWraps.openDeviceWrap(
+          cipher,
+          keyPair: recipient,
+          rekeyKey: Uint8List(32),
+          blob: blob,
+        ),
       ).throws<SyncCryptoFailure>();
     });
 
@@ -281,6 +339,7 @@ void main() {
       final blob = await KeyWraps.sealDeviceWrap(
         cipher,
         recipientPublicKey: recipient.publicKey,
+        rekeyKey: rekeyKey,
         syncKey: syncKey,
         keys: DataKey(dataKey, version: 1),
       );
@@ -296,3 +355,7 @@ void main() {
 // would no longer authenticate to, or read, the same account.
 const _pinnedAuthSecret = 'I1800h2IUOhCQFJismprt1BolX3Wq1zNbi8j3r41yk0=';
 const _pinnedWrapKey = 'borGTeBYWeH5xYKUBqQZGDFiFFQlS46Yj42evhv1BgA=';
+const _pinnedTagKey = 'BftFKxE3k2FmWsrkLveiUOQjTgfGPGzevBcqV0hai4U=';
+const _pinnedRekeyKey = 'VSNrBSIaHIaUsB2D0KifGNmMpU6ovGEi4d3NgS8s3w4=';
+// HMAC-SHA256 under the tag key over 'device-a', 0x00, bytes 100..131.
+const _pinnedDeviceTag = 'K6re71qN7k6Zd8PeBEsFniJkiM9kMBFcyD2_gXcnoz4=';

@@ -80,6 +80,19 @@ class InMemoryRelay {
     }
   }
 
+  /// Lists [device] for [accountId] as if it had enrolled, as a relay that
+  /// makes one up would.
+  void injectDevice(String accountId, SyncDevice device) {
+    _accounts[accountId]!.devices[device.deviceId] = _Device(device);
+  }
+
+  /// Hands [blob] to [deviceId] as its device wrap in every later
+  /// `welcome`, as a relay forging one would.
+  void injectDeviceWrap(String accountId, String deviceId, Uint8List blob) {
+    final account = _accounts[accountId]!;
+    account.deviceWraps = {...account.deviceWraps, deviceId: blob};
+  }
+
   /// Frames the relay stores for [accountId], for checks.
   List<RelayFrame> framesOf(String accountId) =>
       List.of(_accounts[accountId]!.frames);
@@ -220,13 +233,26 @@ class InMemoryRelay {
         if (!d.revoked && d != target) d.info.deviceId,
     };
     if (remaining.length != m.deviceWraps.length ||
-        !remaining.every(m.deviceWraps.containsKey)) {
-      return from._deliver(refuse(RevokeResult.devicesChanged));
+        !remaining.every(m.deviceWraps.containsKey) ||
+        remaining.length != m.deviceTags.length ||
+        !remaining.every(m.deviceTags.containsKey)) {
+      return from._deliver(
+        RevokeResult(
+          deviceId: m.deviceId,
+          refused: RevokeResult.devicesChanged,
+          devices: account.listed,
+        ),
+      );
     }
     if (m.snapshot.coversSeq != account.head) {
       return from._deliver(refuse(RevokeResult.behind));
     }
     target.revoked = true;
+    for (final d in account.devices.values) {
+      if (m.deviceTags[d.info.deviceId] case final tag?) {
+        d.info = d.info.withTag(tag);
+      }
+    }
     account
       ..verifier = m.newAuthVerifier
       ..syncWrap = m.newSyncWrap
@@ -256,6 +282,9 @@ class InMemoryRelay {
     required bool issueToken,
   }) {
     final record = account.devices[device.deviceId] ??= _Device(device);
+    // Enrolling again registers the device as it is now, as the relay's
+    // upsert does.
+    if (issueToken) record.info = device;
     if (issueToken) record.token = 'token-${++_tokens}';
     from
       .._account = account
@@ -272,10 +301,7 @@ class InMemoryRelay {
         syncWrap: account.syncWrap,
         deviceWrap: account.deviceWraps[device.deviceId],
         snapshot: sendSnapshot ? snapshot : null,
-        devices: [
-          for (final d in account.devices.values)
-            if (!d.revoked) d.info,
-        ],
+        devices: account.listed,
       ),
     );
     final after = sendSnapshot ? snapshot.coversSeq : cursor;
@@ -310,6 +336,12 @@ class _Account {
 
   int get keyVersion => SyncCipher.keyVersionOf(syncWrap);
 
+  /// What `welcome` lists: every device not revoked.
+  List<SyncDevice> get listed => [
+    for (final d in devices.values)
+      if (!d.revoked) d.info,
+  ];
+
   /// Whether [blob] is sealed under the current data key; tests that
   /// inject hand-made blobs too short to name one pass.
   bool isCurrent(Uint8List blob) =>
@@ -324,7 +356,7 @@ class _Account {
 class _Device {
   _Device(this.info);
 
-  final SyncDevice info;
+  SyncDevice info;
   String? token;
   bool revoked = false;
 }

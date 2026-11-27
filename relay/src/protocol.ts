@@ -25,6 +25,8 @@ export interface DeviceInfo {
   name: string;
   platform: string;
   publicKey: string;
+  /** HMAC under the sync key; the relay stores and lists it, never checks it. */
+  tag: string;
 }
 
 export type ClientMessage =
@@ -54,6 +56,8 @@ export type ClientMessage =
       newSyncWrap: string;
       /** One per remaining device, the sender's own included. */
       deviceWraps: Map<string, string>;
+      /** Each remaining device's tag under the new sync key. */
+      deviceTags: Map<string, string>;
       /** The state at the head, sealed under the new data key. */
       snapshot: { coversSeq: number; blob: string };
     };
@@ -166,7 +170,21 @@ function device(v: unknown): DeviceInfo {
     name: str(d.name, 128),
     platform: str(d.platform, 16),
     publicKey: key32(d.publicKey),
+    tag: key32(d.tag),
   };
+}
+
+/**
+ * A per-device object as a Map (so a device id of "__proto__" stays data),
+ * or null when empty or longer than any account.
+ */
+function byDevice(v: unknown, value: (v: unknown) => string): Map<string, string> | null {
+  const o = obj(v);
+  const ids = Object.keys(o);
+  if (ids.length === 0 || MAX_DEVICE_WRAPS < ids.length) return null;
+  const out = new Map<string, string>();
+  for (const id of ids) out.set(str(id, 64), value(o[id]));
+  return out;
 }
 
 /** Parses one client message; null for anything malformed. */
@@ -219,14 +237,9 @@ export function parseClientMessage(text: string): ClientMessage | null {
       case 'presence':
         return { type: 'presence', blob: b64(m.blob, MAX_PRESENCE_CHARS) };
       case 'revoke': {
-        const wraps = obj(m.deviceWraps);
-        const ids = Object.keys(wraps);
-        if (ids.length === 0 || MAX_DEVICE_WRAPS < ids.length) return null;
-        // A Map, not an object: a device id of "__proto__" must stay data.
-        const deviceWraps = new Map<string, string>();
-        for (const id of ids) {
-          deviceWraps.set(str(id, 64), b64(wraps[id], MAX_DEVICE_WRAP_CHARS));
-        }
+        const deviceWraps = byDevice(m.deviceWraps, (v) => b64(v, MAX_DEVICE_WRAP_CHARS));
+        const deviceTags = byDevice(m.deviceTags, key32);
+        if (deviceWraps === null || deviceTags === null) return null;
         const snapshot = obj(m.snapshot);
         return {
           type: 'revoke',
@@ -234,6 +247,7 @@ export function parseClientMessage(text: string): ClientMessage | null {
           newAuthVerifier: key32(m.newAuthVerifier),
           newSyncWrap: b64(m.newSyncWrap, 256),
           deviceWraps,
+          deviceTags,
           snapshot: {
             coversSeq: int(snapshot.coversSeq),
             blob: b64(snapshot.blob, MAX_MESSAGE_CHARS),

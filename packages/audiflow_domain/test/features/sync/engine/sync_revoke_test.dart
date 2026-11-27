@@ -308,4 +308,73 @@ void main() {
     check(await b.podcastKeys()).contains('pk-from-b');
     check(relay.revocations).equals(1);
   });
+
+  group('against a relay that forges', () {
+    test('a device wrap it made up is not taken', () async {
+      await pairAll();
+      await b.goOffline();
+      // The relay knows B's public key, but not the sync key the wrap
+      // must be bound to.
+      final forged = await KeyWraps.sealDeviceWrap(
+        SyncCipher(credentials.accountId),
+        recipientPublicKey: b.session!.device.publicKey,
+        rekeyKey: SyncCipher.generateKey(),
+        syncKey: SyncCipher.generateKey(),
+        keys: DataKey(SyncCipher.generateKey(), version: 2),
+      );
+      relay.injectDeviceWrap(credentials.accountIdText, b.deviceId, forged);
+
+      await b.connect(relay, SyncOpening.resume);
+      await settle();
+
+      check(b.session!.credentials).equals(credentials);
+      check(b.session!.dataKey!.version).equals(1);
+    });
+
+    test('a device it made up gets no keys', () async {
+      await pairAll();
+      relay.injectDevice(
+        credentials.accountIdText,
+        SyncDevice(
+          deviceId: 'device-Z',
+          name: 'Z',
+          platform: 'ios',
+          publicKey: (await DeviceKeyPair.generate()).publicKey,
+          tag: SyncCipher.generateKey(),
+        ),
+      );
+      await a.goOffline();
+      await a.connect(relay, SyncOpening.resume);
+      await settle();
+
+      await check(a.engine!.revoke(c.deviceId)).throws<SyncRevokeFailure>(
+        (it) => it
+            .has((f) => f.code, 'code')
+            .equals(SyncRevokeFailure.untrustedDevice),
+      );
+      check(relay.revocations).equals(0);
+      check(a.session!.credentials).equals(credentials);
+    });
+  });
+
+  test('a device that enrolled meanwhile gets the keys too', () async {
+    await pairAll();
+    final d = _Device('D', await openTestIsar(isarSchemas));
+    addTearDown(() async {
+      await d.goOffline();
+      await d.isar.close(deleteFromDisk: true);
+    });
+    await d.seedMeta();
+    // A, connected before D, does not list it.
+    await d.connect(relay, SyncOpening.join, credentials: credentials);
+    await settle();
+
+    await a.engine!.revoke(c.deviceId);
+    await settle();
+    check(relay.revocations).equals(1);
+
+    await d.connect(relay, SyncOpening.resume);
+    await settle();
+    check(d.session!.credentials).equals(a.session!.credentials);
+  });
 }

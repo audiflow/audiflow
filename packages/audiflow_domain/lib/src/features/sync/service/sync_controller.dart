@@ -90,6 +90,10 @@ class SyncController {
   /// connection of an earlier one must not retry or report: comparing
   /// credentials would not do, as a revocation replaces them mid-run.
   int _enrollment = 0;
+
+  /// Rotated credentials not yet stored: each later save tries again,
+  /// since a comparison with [_credentials] no longer tells.
+  SyncCredentials? _unstoredCredentials;
   SyncOpening _opening = SyncOpening.resume;
   bool _active = false;
   bool _loaded = false;
@@ -228,6 +232,7 @@ class SyncController {
     _device = device;
     _opening = opening;
     _enrollment++;
+    _unstoredCredentials = null;
   }
 
   /// Stops syncing on this device and drops its enrollment. The account's
@@ -239,6 +244,7 @@ class SyncController {
     _credentials = null;
     _device = null;
     _enrollment++;
+    _unstoredCredentials = null;
     await _stop();
     if (_relayUrl == null) return;
     // A queued token write would bring the deleted record back.
@@ -483,7 +489,11 @@ class SyncController {
         appVersion: _appVersion(),
         platform: _platform,
         logger: _logger,
-        onSessionChanged: _saveSession,
+        // A step the engine of an earlier enrollment still has queued must
+        // not overwrite the current one.
+        onSessionChanged: (session) {
+          if (enrollment == _enrollment) _saveSession(session);
+        },
         onDevices: _setDevices,
         onPresence: _onRemotePresence,
         onEpisodesMerged: _onEpisodesMerged,
@@ -559,22 +569,30 @@ class SyncController {
     _device = updated;
     // A revocation rotated the sync key: the QR code and recovery code
     // show the new one from now on.
-    final rotated = session.credentials != _credentials;
-    final credentials = session.credentials;
-    if (rotated) _credentials = credentials;
+    if (session.credentials != _credentials) {
+      _credentials = session.credentials;
+      _unstoredCredentials = session.credentials;
+    }
     // Holding a token, the next attempt resumes even if this one drops
     // before catching up.
     _opening = SyncOpening.resume;
     _saving = _saving
         .then((_) async {
-          if (rotated) await _store.writeCredentials(credentials);
+          // Read when the write runs: a newer rotation queued since wins.
+          final credentials = _unstoredCredentials;
+          if (credentials != null) {
+            await _store.writeCredentials(credentials);
+            if (identical(_unstoredCredentials, credentials)) {
+              _unstoredCredentials = null;
+            }
+          }
           await _store.writeDevice(updated);
         })
         .catchError((Object e, StackTrace stack) {
           // The next launch joins again with the credentials, so this is
           // recoverable; keep going on the token held in memory. Rotated
-          // credentials that were not stored come back from this device's
-          // wrap on the next connection.
+          // credentials that were not stored are tried again with the next
+          // save.
           _logger.e('Sync enrollment not stored', error: e, stackTrace: stack);
         });
   }

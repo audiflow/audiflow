@@ -78,10 +78,15 @@ class SyncRelayFailure implements Exception {
   String toString() => 'SyncRelayFailure: $code';
 }
 
-/// The relay refused a revocation; nothing changed. [code] is one of the
-/// `RevokeResult` refusal codes.
+/// A revocation was refused; nothing changed. [code] is one of the
+/// `RevokeResult` refusal codes, or [untrustedDevice].
 class SyncRevokeFailure implements Exception {
   const SyncRevokeFailure(this.code);
+
+  /// A listed device has no valid tag under the sync key: the relay may
+  /// have made it up, so no keys are sealed to it. Not one of the relay's
+  /// codes; the engine refuses before sending.
+  static const untrustedDevice = 'untrustedDevice';
 
   final String code;
 

@@ -20,13 +20,27 @@ class SyncCryptoFailure implements Exception {
 /// The secrets a sync key yields (plan P2, P3). Both sides of every device
 /// derive the same values, so the derivation is pinned by a test.
 class DerivedSyncKeys {
-  const DerivedSyncKeys({required this.authSecret, required this.wrapKey});
+  const DerivedSyncKeys({
+    required this.authSecret,
+    required this.wrapKey,
+    required this.tagKey,
+    required this.rekeyKey,
+  });
 
   /// Sent once, over TLS, to enroll a device.
   final Uint8List authSecret;
 
   /// Opens the sync key wrap of the data key.
   final Uint8List wrapKey;
+
+  /// Tags each device the relay lists ([SyncKeyDerivation.deviceTag]), so
+  /// a revocation seals the new keys only to devices of the account, not
+  /// to one the relay made up.
+  final Uint8List tagKey;
+
+  /// Binds the device wraps of a revocation to the sync key it replaces,
+  /// so only a device of the account can make one a device accepts.
+  final Uint8List rekeyKey;
 }
 
 abstract final class SyncKeyDerivation {
@@ -48,8 +62,24 @@ abstract final class SyncKeyDerivation {
     return DerivedSyncKeys(
       authSecret: await expand('audiflow-sync auth v1'),
       wrapKey: await expand('audiflow-sync wrap v1'),
+      tagKey: await expand('audiflow-sync device tag v1'),
+      rekeyKey: await expand('audiflow-sync rekey v1'),
     );
   }
+
+  /// HMAC-SHA256 under [tagKey] of [deviceId], a zero byte, and
+  /// [publicKey]: a device proves with it, when it registers, that it
+  /// holds the sync key, and the relay cannot make one up.
+  static Uint8List deviceTag(
+    Uint8List tagKey, {
+    required String deviceId,
+    required List<int> publicKey,
+  }) => Uint8List.fromList(
+    hash.Hmac(
+      hash.sha256,
+      tagKey,
+    ).convert([...utf8.encode(deviceId), 0, ...publicKey]).bytes,
+  );
 
   /// What the relay stores to check [DerivedSyncKeys.authSecret]: a leaked
   /// relay database then does not let anyone enroll.
@@ -278,9 +308,14 @@ abstract final class KeyWraps {
   /// Seals the secrets to [recipientPublicKey] with a fresh ephemeral key,
   /// whose public half leads the blob. Only the holder of the matching
   /// private key can open it, so the relay storing it learns nothing.
+  ///
+  /// [rekeyKey] comes from the sync key being replaced, which every device
+  /// of the account holds and the relay does not: without it the relay,
+  /// which knows every public key, could seal keys of its own choosing.
   static Future<Uint8List> sealDeviceWrap(
     SyncCipher cipher, {
     required Uint8List recipientPublicKey,
+    required Uint8List rekeyKey,
     required Uint8List syncKey,
     required DataKey keys,
   }) async {
@@ -292,6 +327,7 @@ abstract final class KeyWraps {
     final ephemeral = await DeviceKeyPair.generate();
     final key = await _sharedKey(
       ephemeral,
+      rekeyKey: rekeyKey,
       remote: recipientPublicKey,
       ephemeralPublic: ephemeral.publicKey,
       recipientPublic: recipientPublicKey,
@@ -308,6 +344,7 @@ abstract final class KeyWraps {
   static Future<DeviceSecrets> openDeviceWrap(
     SyncCipher cipher, {
     required DeviceKeyPair keyPair,
+    required Uint8List rekeyKey,
     required Uint8List blob,
   }) async {
     if (blob.length < _publicKeyLength) {
@@ -317,6 +354,7 @@ abstract final class KeyWraps {
     final sealed = Uint8List.sublistView(blob, _publicKeyLength);
     final key = await _sharedKey(
       keyPair,
+      rekeyKey: rekeyKey,
       remote: ephemeralPublic,
       ephemeralPublic: ephemeralPublic,
       recipientPublic: keyPair.publicKey,
@@ -342,6 +380,7 @@ abstract final class KeyWraps {
   /// off as sealed to another device or by another ephemeral key.
   static Future<Uint8List> _sharedKey(
     DeviceKeyPair own, {
+    required Uint8List rekeyKey,
     required Uint8List remote,
     required Uint8List ephemeralPublic,
     required Uint8List recipientPublic,
@@ -355,6 +394,8 @@ abstract final class KeyWraps {
     );
     final derived = await _hkdf.deriveKey(
       secretKey: shared,
+      // The salt: a wrap opens only for a holder of the replaced sync key.
+      nonce: rekeyKey,
       info: [
         ...utf8.encode('audiflow-sync device wrap v1'),
         ...ephemeralPublic,
