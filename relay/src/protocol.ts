@@ -15,6 +15,10 @@ export const MAX_FRAME_CHARS = 1024 * 1024;
 export const MAX_FRAMES_PER_PUSH = 100;
 /** Largest catch-up message sent; a longer backlog goes in several. */
 export const MAX_CATCH_UP_CHARS = 4 * 1024 * 1024;
+/** Most devices a revocation re-keys; an account far past it is abuse. */
+export const MAX_DEVICE_WRAPS = 64;
+/** Largest sealed device wrap: ephemeral key, header, nonce, two keys, tag. */
+export const MAX_DEVICE_WRAP_CHARS = 512;
 
 export interface DeviceInfo {
   deviceId: string;
@@ -42,7 +46,17 @@ export type ClientMessage =
     }
   | { type: 'push'; frames: { clientId: string; blob: string }[] }
   | { type: 'snapshot'; coversSeq: number; blob: string }
-  | { type: 'presence'; blob: string };
+  | { type: 'presence'; blob: string }
+  | {
+      type: 'revoke';
+      deviceId: string;
+      newAuthVerifier: string;
+      newSyncWrap: string;
+      /** One per remaining device, the sender's own included. */
+      deviceWraps: Map<string, string>;
+      /** The state at the head, sealed under the new data key. */
+      snapshot: { coversSeq: number; blob: string };
+    };
 
 export type ErrorCode =
   | 'unauthorized'
@@ -50,7 +64,18 @@ export type ErrorCode =
   | 'tooOld'
   | 'invalid'
   | 'exists'
-  | 'rateLimited';
+  | 'rateLimited'
+  /** Sealed under a data key a revocation replaced; reconnect for the new one. */
+  | 'rekeyed';
+
+/** Why a well-formed revocation was not applied; the sender may retry. */
+export type RevokeRefusal =
+  /** The snapshot does not cover the head: frames are on their way to it. */
+  | 'behind'
+  /** The wraps do not match the remaining devices: one enrolled meanwhile. */
+  | 'devicesChanged'
+  /** No such device, the sender itself, or one already revoked. */
+  | 'unknownDevice';
 
 const BASE64URL = /^[A-Za-z0-9_-]*$/;
 
@@ -72,6 +97,24 @@ export function encodeBase64Url(bytes: Uint8Array): string {
   let binary = '';
   for (const b of bytes) binary += String.fromCharCode(b);
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+/** Sealed bytes start with algId (1 byte) and keyVersion (4, big endian). */
+const SEALED_HEADER = 5;
+/** A device wrap leads with the ephemeral X25519 public key. */
+export const DEVICE_WRAP_OFFSET = 32;
+
+/**
+ * The key version a sealed blob names, read from its clear header at
+ * [offset] bytes; null when the blob is too short to hold one. The relay
+ * cannot open the blob, but it can refuse one sealed under a retired key.
+ */
+export function sealedKeyVersion(blob: string, offset = 0): number | null {
+  const need = offset + SEALED_HEADER;
+  const chars = Math.ceil(need / 3) * 4;
+  const bytes = decodeBase64Url(blob.slice(0, chars));
+  if (bytes.length < need) return null;
+  return new DataView(bytes.buffer, bytes.byteOffset).getUint32(offset + 1);
 }
 
 class Invalid extends Error {}
@@ -175,6 +218,28 @@ export function parseClientMessage(text: string): ClientMessage | null {
         };
       case 'presence':
         return { type: 'presence', blob: b64(m.blob, MAX_PRESENCE_CHARS) };
+      case 'revoke': {
+        const wraps = obj(m.deviceWraps);
+        const ids = Object.keys(wraps);
+        if (ids.length === 0 || MAX_DEVICE_WRAPS < ids.length) return null;
+        // A Map, not an object: a device id of "__proto__" must stay data.
+        const deviceWraps = new Map<string, string>();
+        for (const id of ids) {
+          deviceWraps.set(str(id, 64), b64(wraps[id], MAX_DEVICE_WRAP_CHARS));
+        }
+        const snapshot = obj(m.snapshot);
+        return {
+          type: 'revoke',
+          deviceId: str(m.deviceId, 64),
+          newAuthVerifier: key32(m.newAuthVerifier),
+          newSyncWrap: b64(m.newSyncWrap, 256),
+          deviceWraps,
+          snapshot: {
+            coversSeq: int(snapshot.coversSeq),
+            blob: b64(snapshot.blob, MAX_MESSAGE_CHARS),
+          },
+        };
+      }
       default:
         return null;
     }

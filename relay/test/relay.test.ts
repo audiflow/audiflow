@@ -48,6 +48,21 @@ function randomBytes(n: number): Uint8Array {
   return crypto.getRandomValues(new Uint8Array(n));
 }
 
+/**
+ * Bytes laid out as a client seals them: algId, keyVersion (big endian),
+ * then [body]; the relay reads only the header. [prefix] bytes lead, as
+ * the ephemeral public key of a device wrap does.
+ */
+function sealed(body: string, version = 1, prefix = 0): string {
+  const text = new TextEncoder().encode(body);
+  const out = new Uint8Array(prefix + 5 + text.length);
+  out.set(randomBytes(prefix), 0);
+  out[prefix] = 1;
+  new DataView(out.buffer).setUint32(prefix + 1, version);
+  out.set(text, prefix + 5);
+  return encodeBase64Url(out);
+}
+
 async function sha256(bytes: Uint8Array): Promise<Uint8Array> {
   return new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));
 }
@@ -63,7 +78,7 @@ async function newAccount() {
     accountId,
     authSecret: encodeBase64Url(authSecret),
     authVerifier: encodeBase64Url(await sha256(authSecret)),
-    syncWrap: encodeBase64Url(randomBytes(72)),
+    syncWrap: sealed('wrap'),
   };
 }
 
@@ -97,6 +112,11 @@ async function enroll(acct: Awaited<ReturnType<typeof newAccount>>, id: string) 
   const frames = await c.next();
   return { c, welcome, frames };
 }
+
+const A1 = sealed('frame A');
+const B1 = sealed('frame B');
+const PRES = sealed('presence');
+const SNAP = sealed('snapshot');
 
 describe('relay', () => {
   it('creates an account and issues a token', async () => {
@@ -176,13 +196,13 @@ describe('relay', () => {
     const { a } = await create(acct);
     const { c: b } = await enroll(acct, 'B');
 
-    a.send({ type: 'push', frames: [{ clientId: 'c1', blob: 'AAAA' }, { clientId: 'c2', blob: 'BBBB' }] });
+    a.send({ type: 'push', frames: [{ clientId: 'c1', blob: A1 }, { clientId: 'c2', blob: B1 }] });
 
     expect(await b.next()).toEqual({
       type: 'frames',
       frames: [
-        { seq: 1, deviceId: 'A', blob: 'AAAA' },
-        { seq: 2, deviceId: 'A', blob: 'BBBB' },
+        { seq: 1, deviceId: 'A', blob: A1 },
+        { seq: 2, deviceId: 'A', blob: B1 },
       ],
     });
     expect(await a.next()).toEqual({
@@ -199,9 +219,9 @@ describe('relay', () => {
     const { a } = await create(acct);
     const { c: b } = await enroll(acct, 'B');
 
-    a.send({ type: 'presence', blob: 'UFJFUw' });
+    a.send({ type: 'presence', blob: PRES });
 
-    expect(await b.next()).toEqual({ type: 'presence', deviceId: 'A', blob: 'UFJFUw' });
+    expect(await b.next()).toEqual({ type: 'presence', deviceId: 'A', blob: PRES });
     // Not kept: a device connecting later catches up on nothing.
     const { frames } = await enroll(acct, 'C');
     expect(frames).toEqual({ type: 'frames', frames: [] });
@@ -212,7 +232,7 @@ describe('relay', () => {
     await create(acct);
     const c = await Client.open(acct.accountId);
 
-    c.send({ type: 'presence', blob: 'UFJFUw' });
+    c.send({ type: 'presence', blob: PRES });
 
     expect(await c.next()).toEqual({ type: 'error', code: 'unauthorized' });
   });
@@ -220,7 +240,7 @@ describe('relay', () => {
   it('catches a device up from its cursor', async () => {
     const acct = await newAccount();
     const { a, token } = await create(acct);
-    a.send({ type: 'push', frames: [{ clientId: 'c1', blob: 'AAAA' }, { clientId: 'c2', blob: 'BBBB' }] });
+    a.send({ type: 'push', frames: [{ clientId: 'c1', blob: A1 }, { clientId: 'c2', blob: B1 }] });
     await a.next();
 
     const again = await Client.open(acct.accountId);
@@ -228,28 +248,28 @@ describe('relay', () => {
     await again.next();
     expect(await again.next()).toEqual({
       type: 'frames',
-      frames: [{ seq: 2, deviceId: 'A', blob: 'BBBB' }],
+      frames: [{ seq: 2, deviceId: 'A', blob: B1 }],
     });
   });
 
   it('keeps a snapshot in place of the frames it covers', async () => {
     const acct = await newAccount();
     const { a } = await create(acct);
-    a.send({ type: 'push', frames: [{ clientId: 'c1', blob: 'AAAA' }, { clientId: 'c2', blob: 'BBBB' }] });
+    a.send({ type: 'push', frames: [{ clientId: 'c1', blob: A1 }, { clientId: 'c2', blob: B1 }] });
     await a.next();
 
-    a.send({ type: 'snapshot', coversSeq: 1, blob: 'SNAP' });
+    a.send({ type: 'snapshot', coversSeq: 1, blob: SNAP });
     expect(await a.next()).toEqual({ type: 'stored', coversSeq: 1 });
 
     const { welcome, frames } = await enroll(acct, 'B');
-    expect(welcome.snapshot).toEqual({ coversSeq: 1, blob: 'SNAP' });
-    expect(frames).toEqual({ type: 'frames', frames: [{ seq: 2, deviceId: 'A', blob: 'BBBB' }] });
+    expect(welcome.snapshot).toEqual({ coversSeq: 1, blob: SNAP });
+    expect(frames).toEqual({ type: 'frames', frames: [{ seq: 2, deviceId: 'A', blob: B1 }] });
   });
 
   it('refuses a snapshot ahead of the frames it claims to cover', async () => {
     const acct = await newAccount();
     const { a } = await create(acct);
-    a.send({ type: 'snapshot', coversSeq: 5, blob: 'SNAP' });
+    a.send({ type: 'snapshot', coversSeq: 5, blob: SNAP });
     expect(await a.next()).toEqual({ type: 'error', code: 'invalid' });
   });
 
@@ -257,7 +277,7 @@ describe('relay', () => {
     const acct = await newAccount();
     await create(acct);
     const stranger = await Client.open(acct.accountId);
-    stranger.send({ type: 'push', frames: [{ clientId: 'c1', blob: 'AAAA' }] });
+    stranger.send({ type: 'push', frames: [{ clientId: 'c1', blob: A1 }] });
     expect(await stranger.next()).toEqual({ type: 'error', code: 'unauthorized' });
   });
 
@@ -324,7 +344,7 @@ describe('relay', () => {
     const acct = await newAccount();
     const { a } = await create(acct);
     // 12 frames of ~0.9 MB: more than one 4 MB message.
-    const blob = 'A'.repeat(900_000);
+    const blob = sealed('A'.repeat(675_000));
     for (let i = 0; i < 3; i++) {
       a.send({
         type: 'push',
@@ -351,5 +371,147 @@ describe('relay', () => {
     }
     expect(1 < messages).toBe(true);
     expect(seqs).toEqual(Array.from({ length: 12 }, (_, i) => i + 1));
+  });
+
+  describe('revoke', () => {
+    /** A creates, B and C enroll; returns their sockets and tokens. */
+    async function threeDevices() {
+      const acct = await newAccount();
+      const { a } = await create(acct);
+      const b = await enroll(acct, 'B');
+      const c = await enroll(acct, 'C');
+      return { acct, a, b: b.c, bToken: b.welcome.token as string, c: c.c, cToken: c.welcome.token as string };
+    }
+
+    async function rotated() {
+      const secret = randomBytes(32);
+      return {
+        authSecret: encodeBase64Url(secret),
+        newAuthVerifier: encodeBase64Url(await sha256(secret)),
+        newSyncWrap: sealed('wrap 2', 2),
+      };
+    }
+
+    function revokeMessage(
+      keys: Awaited<ReturnType<typeof rotated>>,
+      target: string,
+      wrapsFor: string[],
+      opts: { coversSeq?: number; version?: number } = {},
+    ) {
+      const version = opts.version ?? 2;
+      return {
+        type: 'revoke',
+        deviceId: target,
+        newAuthVerifier: keys.newAuthVerifier,
+        newSyncWrap: keys.newSyncWrap,
+        deviceWraps: Object.fromEntries(wrapsFor.map((id) => [id, sealed(`keys for ${id}`, version, 32)])),
+        snapshot: { coversSeq: opts.coversSeq ?? 0, blob: sealed('state', version) },
+      };
+    }
+
+    it('drops the device, re-keys the others, and locks out the old sync key', async () => {
+      const { acct, a, b, bToken, c, cToken } = await threeDevices();
+      a.send({ type: 'push', frames: [{ clientId: 'c1', blob: A1 }] });
+      expect((await a.next()).type).toBe('pushed');
+      expect((await b.next()).type).toBe('frames');
+      expect((await c.next()).type).toBe('frames');
+      const keys = await rotated();
+      const message = revokeMessage(keys, 'C', ['A', 'B'], { coversSeq: 1 });
+      a.send(message);
+
+      expect(await a.next()).toEqual({ type: 'revoked', deviceId: 'C' });
+      expect(await c.next()).toEqual({ type: 'error', code: 'revoked' });
+      expect(await b.next()).toEqual({ type: 'error', code: 'rekeyed' });
+
+      // The revoked device hears why, on resuming and on enrolling again.
+      const c2 = await Client.open(acct.accountId);
+      c2.send({ type: 'hello', protocolVersion: 1, accountId: acct.accountId, deviceId: 'C', token: cToken, cursor: 0 });
+      expect(await c2.next()).toEqual({ type: 'error', code: 'revoked' });
+      const c3 = await Client.open(acct.accountId);
+      c3.send({ type: 'enroll', protocolVersion: 1, accountId: acct.accountId, authSecret: keys.authSecret, device: device('C') });
+      expect(await c3.next()).toEqual({ type: 'error', code: 'revoked' });
+
+      // The old sync key no longer enrolls anyone.
+      const stranger = await Client.open(acct.accountId, '192.0.2.9');
+      stranger.send({ type: 'enroll', protocolVersion: 1, accountId: acct.accountId, authSecret: acct.authSecret, device: device('D') });
+      expect(await stranger.next()).toEqual({ type: 'error', code: 'unauthorized' });
+
+      // A remaining device finds its wrap and the re-sealed state.
+      const b2 = await Client.open(acct.accountId);
+      b2.send({ type: 'hello', protocolVersion: 1, accountId: acct.accountId, deviceId: 'B', token: bToken, cursor: 0 });
+      const welcome = await b2.next();
+      expect(welcome.deviceWrap).toBe(message.deviceWraps.B);
+      expect(welcome.syncWrap).toBe(keys.newSyncWrap);
+      // B was behind the snapshot: it gets the state, and no retired frame.
+      expect(welcome.snapshot).toEqual(message.snapshot);
+      expect(await b2.next()).toEqual({ type: 'frames', frames: [] });
+      expect((welcome.devices as { deviceId: string }[]).map((d) => d.deviceId)).toEqual(['A', 'B']);
+
+      // The new sync key enrolls a new device.
+      const d = await Client.open(acct.accountId);
+      d.send({ type: 'enroll', protocolVersion: 1, accountId: acct.accountId, authSecret: keys.authSecret, device: device('D') });
+      const dWelcome = await d.next();
+      expect(dWelcome.type).toBe('welcome');
+      expect(dWelcome.deviceWrap).toBeUndefined();
+    });
+
+    it('refuses what a retired data key sealed', async () => {
+      const { a } = await threeDevices();
+      a.send(revokeMessage(await rotated(), 'C', ['A', 'B']));
+      expect((await a.next()).type).toBe('revoked');
+
+      a.send({ type: 'push', frames: [{ clientId: 'c1', blob: A1 }] });
+      expect(await a.next()).toEqual({ type: 'error', code: 'rekeyed' });
+      a.send({ type: 'snapshot', coversSeq: 0, blob: SNAP });
+      expect(await a.next()).toEqual({ type: 'error', code: 'rekeyed' });
+      a.send({ type: 'presence', blob: PRES });
+      expect(await a.next()).toEqual({ type: 'error', code: 'rekeyed' });
+
+      a.send({ type: 'push', frames: [{ clientId: 'c2', blob: sealed('new', 2) }] });
+      expect((await a.next()).type).toBe('pushed');
+    });
+
+    it('refuses a snapshot that does not cover the head', async () => {
+      const { a, b } = await threeDevices();
+      a.send({ type: 'push', frames: [{ clientId: 'c1', blob: A1 }] });
+      expect((await a.next()).type).toBe('pushed');
+      a.send(revokeMessage(await rotated(), 'C', ['A', 'B'], { coversSeq: 0 }));
+      expect(await a.next()).toEqual({ type: 'revoked', deviceId: 'C', refused: 'behind' });
+      // Nothing changed: B still pushes under the current key.
+      expect((await b.next()).type).toBe('frames');
+      b.send({ type: 'push', frames: [{ clientId: 'c2', blob: B1 }] });
+      expect((await b.next()).type).toBe('pushed');
+    });
+
+    it('refuses wraps that miss a remaining device', async () => {
+      const { a } = await threeDevices();
+      a.send(revokeMessage(await rotated(), 'C', ['A']));
+      expect(await a.next()).toEqual({ type: 'revoked', deviceId: 'C', refused: 'devicesChanged' });
+    });
+
+    it('refuses to revoke itself or a device it does not know', async () => {
+      const { a } = await threeDevices();
+      a.send(revokeMessage(await rotated(), 'A', ['B', 'C']));
+      expect(await a.next()).toEqual({ type: 'revoked', deviceId: 'A', refused: 'unknownDevice' });
+      a.send(revokeMessage(await rotated(), 'Z', ['A', 'B', 'C']));
+      expect(await a.next()).toEqual({ type: 'revoked', deviceId: 'Z', refused: 'unknownDevice' });
+    });
+
+    it('rejects a revocation that does not move the key version on', async () => {
+      const { a } = await threeDevices();
+      const keys = { ...(await rotated()), newSyncWrap: sealed('wrap 1', 1) };
+      a.send(revokeMessage(keys, 'C', ['A', 'B'], { version: 1 }));
+      expect(await a.next()).toEqual({ type: 'error', code: 'invalid' });
+      // Wraps sealed under another version than the new sync wrap.
+      a.send(revokeMessage(await rotated(), 'C', ['A', 'B'], { version: 3 }));
+      expect(await a.next()).toEqual({ type: 'error', code: 'invalid' });
+    });
+
+    it('refuses a revocation before a session opens', async () => {
+      const { acct } = await threeDevices();
+      const s = await Client.open(acct.accountId);
+      s.send(revokeMessage(await rotated(), 'C', ['A', 'B']));
+      expect(await s.next()).toEqual({ type: 'error', code: 'unauthorized' });
+    });
   });
 });

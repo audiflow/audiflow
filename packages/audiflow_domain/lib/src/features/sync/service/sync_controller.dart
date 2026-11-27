@@ -65,6 +65,8 @@ class SyncController {
     SyncRelayFailure.internal,
     SyncRelayFailure.accountNotReady,
     RelayError.rateLimited,
+    // Another device revoked one; the new keys wait in the next welcome.
+    RelayError.rekeyed,
   };
 
   /// 2 s, doubling to at most 5 minutes.
@@ -83,6 +85,11 @@ class SyncController {
 
   SyncCredentials? _credentials;
   StoredSyncDevice? _device;
+
+  /// Changes whenever the enrollment does (set up, turned off). A
+  /// connection of an earlier one must not retry or report: comparing
+  /// credentials would not do, as a revocation replaces them mid-run.
+  int _enrollment = 0;
   SyncOpening _opening = SyncOpening.resume;
   bool _active = false;
   bool _loaded = false;
@@ -129,6 +136,7 @@ class SyncController {
       _logger.e('Sync keys unreadable', error: e, stackTrace: stack);
       _credentials = null;
       _device = null;
+      _enrollment++;
     }
     // Set last: a kick before this point would see half-restored state.
     _loaded = true;
@@ -219,16 +227,18 @@ class SyncController {
     _credentials = credentials;
     _device = device;
     _opening = opening;
+    _enrollment++;
   }
 
   /// Stops syncing on this device and drops its enrollment. The account's
   /// credentials stay for the user's other devices. The relay still lists
-  /// this device until another one revokes it (M6g).
+  /// this device until another one revokes it ([revokeDevice]).
   Future<void> turnOff() async {
     // A startup restore still running would bring the enrollment back.
     await load();
     _credentials = null;
     _device = null;
+    _enrollment++;
     await _stop();
     if (_relayUrl == null) return;
     // A queued token write would bring the deleted record back.
@@ -444,18 +454,26 @@ class SyncController {
     final relayUrl = _relayUrl!;
     final credentials = _credentials!;
     final device = _device!;
+    final enrollment = _enrollment;
     _setStatus(const SyncStatus(SyncPhase.connecting));
     SyncTransport? transport;
     SyncEngine? engine;
     try {
       // Before the socket opens, so a damaged record opens nothing.
-      final syncDevice = await device.toSyncDevice();
+      final keyPair = await DeviceKeyPair.fromPrivateKey(device.privateKey);
+      final syncDevice = SyncDevice(
+        deviceId: device.deviceId,
+        name: device.name,
+        platform: device.platform,
+        publicKey: keyPair.publicKey,
+      );
       transport = await _openTransport(relayUrl, credentials.accountIdText);
       engine = SyncEngine(
         isar: _isar,
         session: SyncSession(
           credentials: credentials,
           device: syncDevice,
+          keyPair: keyPair,
           token: device.token,
           dataKey: device.dataKey,
         ),
@@ -471,7 +489,7 @@ class SyncController {
         onEpisodesMerged: _onEpisodesMerged,
       );
       // Turned off or backgrounded while opening.
-      if (!_wanted(credentials)) {
+      if (!_wanted(enrollment)) {
         await engine.close();
         return;
       }
@@ -486,11 +504,11 @@ class SyncController {
       if (local != null) _sendPresence(engine, local);
       await engine.done;
     } on SyncRelayFailure catch (e) {
-      _onFailure(e.code, credentials);
+      _onFailure(e.code, enrollment);
     } on Object catch (e, stack) {
       // No socket, DNS failure, or a storage error: worth another try.
       _logger.w('Sync connection failed', error: e, stackTrace: stack);
-      _onFailure(SyncRelayFailure.closed, credentials);
+      _onFailure(SyncRelayFailure.closed, enrollment);
     } finally {
       if (identical(_engine, engine)) _engine = null;
       // Another device's presence is only known while connected; a retry
@@ -502,8 +520,8 @@ class SyncController {
     }
   }
 
-  bool _wanted(SyncCredentials credentials) =>
-      _active && !_disposed && identical(credentials, _credentials);
+  bool _wanted(int enrollment) =>
+      _active && !_disposed && isOn && enrollment == _enrollment;
 
   Future<void> _closeQuietly(SyncTransport? transport) async {
     try {
@@ -513,9 +531,9 @@ class SyncController {
     }
   }
 
-  void _onFailure(String code, SyncCredentials credentials) {
+  void _onFailure(String code, int enrollment) {
     // A stop or turn-off ends the engine on purpose; that is no failure.
-    if (!_wanted(credentials)) return;
+    if (!_wanted(enrollment)) return;
     if (_transient.contains(code)) {
       final delay = _retryDelay(_attempt++);
       _setStatus(SyncStatus(SyncPhase.retrying, failure: code));
@@ -532,22 +550,50 @@ class SyncController {
   void _saveSession(SyncSession session) {
     final device = _device;
     if (device == null || session.token == null) return;
+    // Not this session's enrollment: turned off, or set up anew.
+    if (session.credentials.accountIdText != device.accountId) return;
     final updated = device.enrolled(
       token: session.token,
       dataKey: session.dataKey,
     );
     _device = updated;
+    // A revocation rotated the sync key: the QR code and recovery code
+    // show the new one from now on.
+    final rotated = session.credentials != _credentials;
+    final credentials = session.credentials;
+    if (rotated) _credentials = credentials;
     // Holding a token, the next attempt resumes even if this one drops
     // before catching up.
     _opening = SyncOpening.resume;
-    _saving = _saving.then((_) => _store.writeDevice(updated)).catchError((
-      Object e,
-      StackTrace stack,
-    ) {
-      // The next launch joins again with the credentials, so this is
-      // recoverable; keep going on the token held in memory.
-      _logger.e('Sync enrollment not stored', error: e, stackTrace: stack);
-    });
+    _saving = _saving
+        .then((_) async {
+          if (rotated) await _store.writeCredentials(credentials);
+          await _store.writeDevice(updated);
+        })
+        .catchError((Object e, StackTrace stack) {
+          // The next launch joins again with the credentials, so this is
+          // recoverable; keep going on the token held in memory. Rotated
+          // credentials that were not stored come back from this device's
+          // wrap on the next connection.
+          _logger.e('Sync enrollment not stored', error: e, stackTrace: stack);
+        });
+  }
+
+  /// Removes [deviceId] from the account: a lost or sold device. The sync
+  /// key and data key rotate, so the removed device reads nothing from now
+  /// on and cannot join again, and the QR code and recovery code change;
+  /// the other devices pick up the new keys as they connect.
+  ///
+  /// Needs a connection. Throws [StateError] without one, [SyncRevokeFailure]
+  /// when the relay refused (try again), and [SyncRelayFailure] when the
+  /// connection dropped meanwhile.
+  Future<void> revokeDevice(String deviceId) async {
+    final engine = _engine;
+    if (engine == null || _status.phase != SyncPhase.connected) {
+      throw StateError('sync is not connected');
+    }
+    await engine.revoke(deviceId);
+    await _saving;
   }
 
   Future<void> _resetCursor() => _isar.writeTxn(() async {

@@ -138,6 +138,9 @@ class InMemoryRelay {
         if (maxFramesPerPush < frames.length) {
           return from._deliver(const RelayError(RelayError.invalid));
         }
+        if (!frames.every((f) => account.isCurrent(f.blob))) {
+          return from._deliver(const RelayError(RelayError.rekeyed));
+        }
         final acks = <String, int>{};
         for (final f in frames) {
           final frame = RelayFrame(
@@ -157,6 +160,9 @@ class InMemoryRelay {
         if (account == null) {
           return from._deliver(const RelayError(RelayError.unauthorized));
         }
+        if (!account.isCurrent(snapshot.blob)) {
+          return from._deliver(const RelayError(RelayError.rekeyed));
+        }
         final current = account.snapshot;
         if (snapshot.coversSeq <= account.head &&
             (current == null || current.coversSeq <= snapshot.coversSeq)) {
@@ -169,10 +175,76 @@ class InMemoryRelay {
         if (account == null) {
           return from._deliver(const RelayError(RelayError.unauthorized));
         }
+        if (!account.isCurrent(blob)) {
+          return from._deliver(const RelayError(RelayError.rekeyed));
+        }
         final update = PresenceUpdate(deviceId: from._deviceId!, blob: blob);
         for (final c in account.connections) {
           if (c != from) c._deliver(update);
         }
+      case RevokeDevice():
+        _revoke(from, message);
+    }
+  }
+
+  /// Counts revocations the relay applied, for checks.
+  int revocations = 0;
+
+  /// When set, a revocation applies but its answer is lost, as when the
+  /// connection drops right after.
+  bool dropRevokeResults = false;
+
+  void _revoke(InMemoryTransport from, RevokeDevice m) {
+    final account = from._account;
+    if (account == null) {
+      return from._deliver(const RelayError(RelayError.unauthorized));
+    }
+    final next = SyncCipher.keyVersionOf(m.newSyncWrap);
+    final sealedUnderNext =
+        account.keyVersion < next &&
+        SyncCipher.keyVersionOf(m.snapshot.blob) == next &&
+        m.deviceWraps.values.every(
+          (w) => SyncCipher.keyVersionOf(w.sublist(32)) == next,
+        );
+    if (!sealedUnderNext) {
+      return from._deliver(const RelayError(RelayError.invalid));
+    }
+    RevokeResult refuse(String code) =>
+        RevokeResult(deviceId: m.deviceId, refused: code);
+    final target = account.devices[m.deviceId];
+    if (m.deviceId == from._deviceId || target == null || target.revoked) {
+      return from._deliver(refuse(RevokeResult.unknownDevice));
+    }
+    final remaining = {
+      for (final d in account.devices.values)
+        if (!d.revoked && d != target) d.info.deviceId,
+    };
+    if (remaining.length != m.deviceWraps.length ||
+        !remaining.every(m.deviceWraps.containsKey)) {
+      return from._deliver(refuse(RevokeResult.devicesChanged));
+    }
+    if (m.snapshot.coversSeq != account.head) {
+      return from._deliver(refuse(RevokeResult.behind));
+    }
+    target.revoked = true;
+    account
+      ..verifier = m.newAuthVerifier
+      ..syncWrap = m.newSyncWrap
+      ..snapshot = m.snapshot
+      ..deviceWraps = Map.of(m.deviceWraps);
+    account.frames.removeWhere((f) => f.seq <= m.snapshot.coversSeq);
+    revocations++;
+    if (!dropRevokeResults) from._deliver(RevokeResult(deviceId: m.deviceId));
+    for (final other in account.connections.toList()) {
+      if (other == from) continue;
+      other._deliver(
+        RelayError(
+          other._deviceId == m.deviceId
+              ? RelayError.revoked
+              : RelayError.rekeyed,
+        ),
+      );
+      unawaited(other._closeAfterDelivery());
     }
   }
 
@@ -198,8 +270,12 @@ class InMemoryRelay {
       Welcome(
         token: issueToken ? record.token : null,
         syncWrap: account.syncWrap,
+        deviceWrap: account.deviceWraps[device.deviceId],
         snapshot: sendSnapshot ? snapshot : null,
-        devices: [for (final d in account.devices.values) d.info],
+        devices: [
+          for (final d in account.devices.values)
+            if (!d.revoked) d.info,
+        ],
       ),
     );
     final after = sendSnapshot ? snapshot.coversSeq : cursor;
@@ -228,8 +304,16 @@ class InMemoryRelay {
 class _Account {
   _Account({required this.verifier, required this.syncWrap});
 
-  final List<int> verifier;
-  final Uint8List syncWrap;
+  List<int> verifier;
+  Uint8List syncWrap;
+  Map<String, Uint8List> deviceWraps = const {};
+
+  int get keyVersion => SyncCipher.keyVersionOf(syncWrap);
+
+  /// Whether [blob] is sealed under the current data key; tests that
+  /// inject hand-made blobs too short to name one pass.
+  bool isCurrent(Uint8List blob) =>
+      blob.length < 5 || SyncCipher.keyVersionOf(blob) == keyVersion;
   final devices = <String, _Device>{};
   final frames = <RelayFrame>[];
   RelaySnapshot? snapshot;
@@ -279,6 +363,13 @@ class InMemoryTransport implements SyncTransport {
     scheduleMicrotask(() {
       if (!_closed) _controller.add(RelayMessage.decode(text));
     });
+  }
+
+  /// Closes once what was delivered before has arrived, as a socket the
+  /// relay closes after a last message does.
+  Future<void> _closeAfterDelivery() async {
+    await Future<void>.delayed(Duration.zero);
+    await close();
   }
 
   /// Drops the connection, as going offline does.

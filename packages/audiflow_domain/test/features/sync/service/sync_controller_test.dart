@@ -610,4 +610,95 @@ void main() {
     check(store.optedOut).isTrue();
     check(c.isOn).isFalse();
   });
+
+  group('revoking a device', () {
+    Future<SyncController> joined(
+      _MemoryStore store,
+      String id,
+      SyncController from,
+    ) async {
+      final c = controller(await newIsar(id), store, deviceId: id);
+      await c.load();
+      c.setActive(true);
+      await c.join(from.credentials!);
+      await reach(c, SyncPhase.connected);
+      return c;
+    }
+
+    test('rotates and stores the keys and cuts the device off', () async {
+      final storeA = _MemoryStore();
+      final isarA = await newIsar('a');
+      final a = controller(isarA, storeA);
+      await a.load();
+      a.setActive(true);
+      await a.turnOn();
+      await reach(a, SyncPhase.connected);
+      final before = a.credentials!;
+      final b = await joined(_MemoryStore(), 'device-b', a);
+      // A learns of B on its next welcome.
+      a.setActive(false);
+      await reach(a, SyncPhase.idle);
+      a.setActive(true);
+      await reach(a, SyncPhase.connected);
+
+      await a.revokeDevice('device-b');
+
+      final after = a.credentials!;
+      check(after).not((it) => it.equals(before));
+      check(after.accountIdText).equals(before.accountIdText);
+      check(storeA.synced[after.accountIdText]?.$1).equals(after);
+      check(storeA.device!.dataKey!.version).equals(2);
+      check(a.devices.map((d) => d.deviceId)).deepEquals(['device-a']);
+      await reach(b, SyncPhase.failed);
+      check(b.status.failure).equals(RelayError.revoked);
+
+      // A later launch resumes on the rotated keys.
+      await a.dispose();
+      controllers.remove(a);
+      final again = controller(isarA, storeA);
+      await again.load();
+      again.setActive(true);
+      await reach(again, SyncPhase.connected);
+      check(again.credentials).equals(after);
+    });
+
+    test('a remaining device takes the new keys and stays connected', () async {
+      final a = controller(await newIsar('a'), _MemoryStore());
+      await a.load();
+      a.setActive(true);
+      await a.turnOn();
+      await reach(a, SyncPhase.connected);
+      await joined(_MemoryStore(), 'device-b', a);
+      final storeC = _MemoryStore();
+      final c = await joined(storeC, 'device-c', a);
+      a.setActive(false);
+      await reach(a, SyncPhase.idle);
+      a.setActive(true);
+      await reach(a, SyncPhase.connected);
+
+      await a.revokeDevice('device-b');
+
+      // Dropped with rekeyed, C reconnects and opens its device wrap.
+      bool rekeyed() =>
+          c.credentials == a.credentials &&
+          c.status.phase == SyncPhase.connected;
+      if (!rekeyed()) {
+        await c.statusChanges
+            .firstWhere((_) => rekeyed())
+            .timeout(const Duration(seconds: 5));
+      }
+      check(
+        storeC.synced[a.credentials!.accountIdText]?.$1,
+      ).equals(a.credentials);
+      check(storeC.device!.dataKey!.version).equals(2);
+    });
+
+    test('needs a connection', () async {
+      final a = controller(await newIsar('a'), _MemoryStore());
+      await a.load();
+      await a.turnOn();
+
+      await check(a.revokeDevice('device-b')).throws<StateError>();
+    });
+  });
 }

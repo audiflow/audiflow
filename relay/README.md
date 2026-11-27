@@ -1,6 +1,6 @@
 # audiflow relay
 
-The relay for opt-in sync: a Cloudflare Worker with one Durable Object per account. It orders, stores, and fans out sealed frames and keeps the latest compacted snapshot. Every value it holds is ciphertext; it reads routing fields only.
+The relay for opt-in sync: a Cloudflare Worker with one Durable Object per account. It orders, stores, and fans out sealed frames and keeps the latest compacted snapshot. Every value it holds is ciphertext; it reads routing fields only, and the clear key version in each sealed blob's header, to refuse one sealed under a key a revocation retired.
 
 Design: [`docs/architecture/user-data-sync.md`](../docs/architecture/user-data-sync.md) and [`docs/plans/2026-11-20-sync-plan.md`](../docs/plans/2026-11-20-sync-plan.md) (protocol P6). The Dart side of the protocol is `packages/audiflow_domain/lib/src/features/sync/protocol/sync_messages.dart`; the two must agree field for field.
 
