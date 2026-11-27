@@ -243,6 +243,9 @@ void main() {
           8: 'firstPlayedAt',
           9: 'lastPlayedAt',
           10: 'favoritedAt',
+          11: 'locatorGuid',
+          12: 'locatorAudioUrl',
+          13: 'locatorPublishedAt',
         },
         'episodeCounter': {
           1: 'playCount',

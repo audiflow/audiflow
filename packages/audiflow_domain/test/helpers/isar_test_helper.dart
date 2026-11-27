@@ -26,6 +26,7 @@ Future<Isar> openTestIsar(List<CollectionSchema<dynamic>> schemas) async {
       SyncedSettingSchema,
       OutboxOpSchema,
       OpaqueFieldSchema,
+      SyncKeyAliasSchema,
       StationSchema,
       StationPodcastSchema,
       QueueItemSchema,

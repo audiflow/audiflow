@@ -12,6 +12,7 @@ import '../download/services/download_queue_service.dart';
 import '../feed/services/feed_sync_service.dart';
 import '../player/services/audio_player_service.dart';
 import '../station/services/station_reconciler_service.dart';
+import '../user_state/services/key_reconciler.dart';
 import 'restore_projector.dart';
 import 'snapshot_file.dart';
 import 'snapshot_merger.dart';
@@ -115,7 +116,14 @@ class BackupRestoreService {
       for (final writer in _writers) {
         await writer.suspend();
       }
-      merged = await SnapshotMerger(_isar, nowMillis: _nowMillis).merge(file);
+      final reconciler = KeyReconciler(_isar);
+      merged = await SnapshotMerger(_isar, nowMillis: _nowMillis).mergeSections(
+        await reconciler.translate(file.body.sections),
+        historyId: file.header.historyId,
+        tombstoneHorizon: file.header.tombstoneHorizon,
+      );
+      // Another device's backup may key some shows or episodes otherwise.
+      await reconciler.reconcile();
       // A separate transaction from the merge: if it fails, running the
       // restore again merges nothing new and projects again.
       projection = await projector.projectLibrary(
@@ -127,11 +135,19 @@ class BackupRestoreService {
         writer.resume();
       }
     }
-    return BackupRestoreResult(
-      merged.changedRows,
-      _postProcess(projector, projection),
-    );
+    final postProcessing = _postProcess(projector, projection);
+    // A second restore can start while this one's post-processing runs;
+    // idle waits for both.
+    _idle = Future.wait([_idle, postProcessing]);
+    return BackupRestoreResult(merged.changedRows, postProcessing);
   }
+
+  Future<void> _idle = Future.value();
+
+  /// Completes once every restore's post-processing has finished, for
+  /// callers that leave it running and must not close the database under
+  /// it (tests).
+  Future<void> get idle => _idle;
 
   /// Runs after the writers resume: a suspended feed sync writes nothing.
   Future<void> _postProcess(
@@ -148,6 +164,14 @@ class BackupRestoreService {
         error: e,
         stackTrace: stack,
       );
+    }
+    // The fetched episodes may be ones the backup keys otherwise.
+    if (projection.feedUrls.isNotEmpty) {
+      try {
+        await KeyReconciler(_isar).reconcile();
+      } on Object catch (e, stack) {
+        _logger.w('Key join after restore failed', error: e, stackTrace: stack);
+      }
     }
     // Queue entries name episodes by key, which only fetched feeds carry.
     try {

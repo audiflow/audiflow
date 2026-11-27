@@ -41,6 +41,9 @@ class _FakeService implements BackupRestoreService {
     if (error != null) throw error!;
     return BackupRestoreResult(1, Future.value());
   }
+
+  @override
+  Future<void> get idle => Future.value();
 }
 
 void main() {

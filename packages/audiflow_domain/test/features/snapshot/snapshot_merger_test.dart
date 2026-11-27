@@ -262,6 +262,27 @@ void main() {
     check(episode.counters.single.listenedMs).equals(9000);
   });
 
+  test('a locator fills a row made without one, never replaces it', () async {
+    await seed(isar);
+    await merger().merge(
+      fileOf({
+        'episode': [
+          rowOf('ek', {1: ('pk', null), 11: ('g1', null)}),
+        ],
+      }, historyId: 'h1'),
+    );
+    await merger().merge(
+      fileOf({
+        'episode': [
+          rowOf('ek', {1: ('pk', null), 11: ('g2', null)}),
+        ],
+      }, historyId: 'h1'),
+    );
+
+    final episode = (await isar.episodeUserStates.getByEpisodeKey('ek'))!;
+    check(episode.locatorGuid).equals('g1');
+  });
+
   test('merged fields land in the outbox with their own clocks', () async {
     await seed(isar);
     await isar.writeTxn(() => isar.outboxOps.clear());

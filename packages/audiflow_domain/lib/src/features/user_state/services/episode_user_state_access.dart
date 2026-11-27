@@ -188,7 +188,10 @@ class EpisodeUserStateAccess {
     if (podcastKey == null) return null;
     return EpisodeUserState()
       ..episodeKey = key
-      ..podcastKey = podcastKey;
+      ..podcastKey = podcastKey
+      ..locatorGuid = episode.guid
+      ..locatorAudioUrl = episode.audioUrl
+      ..locatorPublishedAt = episode.publishedAt;
   }
 
   void _reportMismatch(int episodeId, PlaybackHistory a, PlaybackHistory b) {
@@ -201,6 +204,20 @@ class EpisodeUserStateAccess {
 
   /// Puts [state] and reports it, with this device's counters, for ops.
   Future<void> _putState(EpisodeUserState state, UserStateTxn txn) async {
+    // A row made before its catalog episode (merged from another device)
+    // or before M6f has none; this write sends it.
+    if (state.locatorGuid == null) {
+      final episode = await _isar.episodes
+          .where()
+          .episodeKeyEqualTo(state.episodeKey)
+          .findFirst();
+      if (episode != null) {
+        state
+          ..locatorGuid = episode.guid
+          ..locatorAudioUrl = episode.audioUrl
+          ..locatorPublishedAt = episode.publishedAt;
+      }
+    }
     await _isar.episodeUserStates.put(state);
     txn.touch(UserStateEntities.episode, state);
     for (final counters in state.counters) {

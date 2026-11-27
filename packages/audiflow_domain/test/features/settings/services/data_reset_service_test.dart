@@ -545,6 +545,12 @@ Future<void> _seedUserStateMeta(Isar isar) async {
       ..key = 'k'
       ..fieldId = 1,
   );
+  await isar.syncKeyAlias.put(
+    SyncKeyAlias()
+      ..kind = SyncKeyAlias.episode
+      ..foreignKey = 'f'
+      ..localKey = 'l',
+  );
   await isar.stationMembers.put(
     StationMember()
       ..stationId = 's'

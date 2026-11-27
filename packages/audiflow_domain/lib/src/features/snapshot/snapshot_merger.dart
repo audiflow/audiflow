@@ -374,8 +374,9 @@ class _MergeRun {
         continue;
       }
       if (field.hlc == null) {
-        // Set once, when the row is created.
-        if (isNew) {
+        // Set once, when the row is created, or filled in when a row made
+        // before the field existed lacks it (an episode's locator).
+        if (isNew || (field.value(row) == null && value != null)) {
           _set(spec, field, row, value);
           changed.add(id);
         }

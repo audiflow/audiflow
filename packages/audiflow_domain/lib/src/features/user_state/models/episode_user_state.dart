@@ -59,6 +59,18 @@ class EpisodeUserState {
 
   /// One entry per device that played this episode.
   List<EpisodePlayCounters> counters = [];
+
+  // -- Locator: how another device finds this episode when it keys it
+  // differently (design doc, "episodeKey"). Taken from the catalog episode
+  // when the row is made, and never changed by a clock.
+
+  /// The episode's storage guid (see `Episode.guid`).
+  String? locatorGuid;
+
+  /// The enclosure URL.
+  String? locatorAudioUrl;
+
+  DateTime? locatorPublishedAt;
 }
 
 /// Grow-only totals one device contributed to an episode.

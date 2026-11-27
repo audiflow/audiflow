@@ -2,6 +2,7 @@ import 'package:isar_community/isar.dart';
 import 'package:logger/logger.dart';
 
 import '../models/sync_meta.dart';
+import 'episode_locator_backfill.dart';
 import 'episode_user_state_backfill.dart';
 import 'podcast_user_state_backfill.dart';
 import 'queue_entry_backfill.dart';
@@ -34,6 +35,7 @@ const List<DataMigrationStep> dataMigrationSteps = [
   PodcastUserStateBackfill(version: 3),
   QueueEntryBackfill(),
   StationStateBackfill(),
+  EpisodeLocatorBackfill(),
 ];
 
 /// Runs the pending [DataMigrationStep]s in order, before providers start.

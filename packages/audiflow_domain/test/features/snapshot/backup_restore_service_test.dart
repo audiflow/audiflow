@@ -110,6 +110,8 @@ void main() {
         .podcastKeyEqualTo('pk')
         .findFirst();
     check(sub).isNotNull().has((s) => s.isCached, 'isCached').isFalse();
+    // Still writing; tearDown must not close the database under it.
+    await result.postProcessing;
   });
 
   test(
@@ -148,7 +150,7 @@ void main() {
 
     final first = shared.restore(file);
     await check(shared.restore(file)).throws<StateError>();
-    await first;
+    await (await first).postProcessing;
   });
 
   test('writers resume even when the merge fails', () async {
