@@ -374,6 +374,17 @@ class SyncController {
     _emitPresences();
   }
 
+  final _episodesMergedController = StreamController<Set<String>>.broadcast();
+
+  /// The episodeKeys each merged change from another device touched.
+  Stream<Set<String>> get episodesMerged => _episodesMergedController.stream;
+
+  void _onEpisodesMerged(Set<String> keys) {
+    if (!_episodesMergedController.isClosed) {
+      _episodesMergedController.add(keys);
+    }
+  }
+
   void _emitPresences() {
     if (!_presenceController.isClosed) _presenceController.add(presences);
   }
@@ -394,6 +405,7 @@ class SyncController {
     await _statusController.close();
     await _devicesController.close();
     await _presenceController.close();
+    await _episodesMergedController.close();
   }
 
   Future<void> _stop({bool drain = false}) async {
@@ -456,6 +468,7 @@ class SyncController {
         onSessionChanged: _saveSession,
         onDevices: _setDevices,
         onPresence: _onRemotePresence,
+        onEpisodesMerged: _onEpisodesMerged,
       );
       // Turned off or backgrounded while opening.
       if (!_wanted(credentials)) {

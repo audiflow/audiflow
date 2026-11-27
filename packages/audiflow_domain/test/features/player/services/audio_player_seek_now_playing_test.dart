@@ -136,4 +136,32 @@ void main() {
       check(history.savedPositionsMs).isEmpty();
     });
   });
+
+  group('adoptSyncedPosition without loaded audio', () {
+    test('moves the shown position without saving it again', () async {
+      final container = makeContainer(_restored());
+
+      await container
+          .read(audioPlayerControllerProvider.notifier)
+          .adoptSyncedPosition(1, const Duration(minutes: 7));
+
+      check(
+        container.read(nowPlayingControllerProvider)?.savedPosition,
+      ).equals(const Duration(minutes: 7));
+      // The merge stored it; saving would stamp it again as this device's.
+      check(history.savedPositionsMs).isEmpty();
+    });
+
+    test('leaves another episode alone', () async {
+      final container = makeContainer(_restored());
+
+      await container
+          .read(audioPlayerControllerProvider.notifier)
+          .adoptSyncedPosition(2, const Duration(minutes: 7));
+
+      check(
+        container.read(nowPlayingControllerProvider)?.savedPosition,
+      ).equals(const Duration(minutes: 1));
+    });
+  });
 }

@@ -105,6 +105,8 @@ class _AppLifecycleObserverState extends ConsumerState<AppLifecycleObserver> {
   /// Playback keeps it connected in the background, so a position change
   /// reaches the user's other devices (plan P10).
   void _startSync() {
+    // Synced positions reach the player; nothing without a relay.
+    ref.read(syncPlaybackBridgeProvider);
     _playing = ref.read(audioPlayerProvider).playingStream.listen((playing) {
       _isPlaying = playing;
       _updateSyncActivity();

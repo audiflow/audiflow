@@ -20,6 +20,7 @@ class _Device {
   late SyncSession session;
   SyncEngine? engine;
   final presences = <(String, SyncPresence)>[];
+  final merged = <Set<String>>[];
   InMemoryTransport? transport;
 
   UserStateStore get _store => UserStateStore(isar, nowMillis: () => now);
@@ -67,6 +68,7 @@ class _Device {
       maxFramesPerPush: maxFramesPerPush,
       steadyInterval: steadyInterval,
       onPresence: (deviceId, p) => presences.add((deviceId, p)),
+      onEpisodesMerged: merged.add,
     );
     await e.connect(opening);
   }
@@ -363,6 +365,21 @@ void main() {
     });
   });
 
+  test('a merged episode change is reported after it is stored', () async {
+    await pair();
+    b.merged.clear();
+
+    a.now += 1000;
+    a.engine!.sendSoon();
+    await a.setPosition('ek9', 9000);
+    await settle();
+
+    check(b.merged).deepEquals([
+      {'ek9'},
+    ]);
+    check(a.merged).isEmpty();
+  });
+
   test('a live edit reaches the other device', () async {
     await pair();
 
@@ -448,12 +465,14 @@ void main() {
     await a.setSubscribed('pk1', subscribed: true);
     await pair();
     a.now += 1000;
-    await a.setPosition('ek1', 1234);
+    // ':' is outside base64url, so ciphertext cannot contain the key by
+    // chance, as a bare 'ek1' sometimes did.
+    await a.setPosition('ek:1', 1234);
     await settle();
 
     final seen = relay.received.join('\n');
     check(seen).not((it) => it.contains('example.com'));
-    check(seen).not((it) => it.contains('ek1'));
+    check(seen).not((it) => it.contains('ek:1'));
     check(seen).not(
       (it) => it.contains(
         base64Url.encode(credentials.syncKey).replaceAll('=', ''),

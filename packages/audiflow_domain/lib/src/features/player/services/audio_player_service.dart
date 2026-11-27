@@ -1259,6 +1259,42 @@ class AudioPlayerController extends _$AudioPlayerController
     await _saveSeekWithoutAudio(position);
   }
 
+  /// Takes [position], a newer position another device synced for
+  /// [episodeId], when that episode is the now-playing one and is not
+  /// playing here (design doc, Realtime playback position).
+  ///
+  /// Paused, the player moves there on its own account, so the seek bar
+  /// follows and the listen is not reopened. Before audio is loaded only
+  /// the shown position moves: the merge already stored it, and the next
+  /// play() starts there. Playing here, nothing changes; this device's
+  /// next save is newer and wins.
+  Future<void> adoptSyncedPosition(int episodeId, Duration position) async {
+    final nowPlaying = ref.read(nowPlayingControllerProvider);
+    if (nowPlaying == null || nowPlaying.episode?.id != episodeId) return;
+    if (_currentUrl == null) {
+      ref
+          .read(nowPlayingControllerProvider.notifier)
+          .setNowPlaying(nowPlaying.copyWith(savedPosition: position));
+      return;
+    }
+    if (state is! PlaybackPaused || _currentEpisodeId != episodeId) return;
+    if ((_player.position - position).abs() <= _syncedPositionTolerance) {
+      return;
+    }
+    await _seekLoaded(
+      position,
+      automatic: true,
+      // Playback may start, or another episode load, while the seek waits
+      // for the duration; the synced position is then no longer wanted.
+      stillWanted: () =>
+          state is PlaybackPaused && _currentEpisodeId == episodeId,
+    );
+  }
+
+  /// Below this the synced position is this device's own, give or take
+  /// the save interval's rounding.
+  static const _syncedPositionTolerance = Duration(milliseconds: 1500);
+
   Future<void> _saveSeekWithoutAudio(Duration position) async {
     final nowPlaying = ref.read(nowPlayingControllerProvider);
     if (nowPlaying == null) return;
@@ -1329,7 +1365,11 @@ class AudioPlayerController extends _$AudioPlayerController
   Future<void> seekAutomatically(Duration position) =>
       _seekLoaded(position, automatic: true);
 
-  Future<void> _seekLoaded(Duration position, {bool automatic = false}) async {
+  Future<void> _seekLoaded(
+    Duration position, {
+    bool automatic = false,
+    bool Function()? stillWanted,
+  }) async {
     if (_currentUrl == null) return;
     // A failed source cannot seek, so this moves the place a retry resumes
     // from, as a seek before any audio is loaded does.
@@ -1345,6 +1385,9 @@ class AudioPlayerController extends _$AudioPlayerController
     final episodeId = _currentEpisodeId;
     final duration = _player.duration ?? await _awaitDuration();
     if (duration == null) return;
+    if (stillWanted != null && (_playAttempt != attempt || !stillWanted())) {
+      return;
+    }
 
     // Capture the from-position before the just_audio call moves it.
     final fromPosition = _player.position;

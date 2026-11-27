@@ -47,6 +47,7 @@ class SyncEngine {
     this._onSessionChanged,
     this._onDevices,
     this._onPresence,
+    this._onEpisodesMerged,
     int Function()? nowMillis,
     this.steadyInterval = const Duration(seconds: 30),
     this.maxOpsPerFrame = 500,
@@ -80,6 +81,10 @@ class SyncEngine {
 
   /// Another device's presence, opened and decoded.
   final void Function(String deviceId, SyncPresence presence)? _onPresence;
+
+  /// The episodeKeys of rows another device's changes reached, after they
+  /// are stored, so a paused player can take the newer position.
+  final void Function(Set<String> episodeKeys)? _onEpisodesMerged;
 
   /// How often changes made only by playing (position, listened time) go
   /// out. Anything else goes at once, as does everything after
@@ -583,6 +588,10 @@ class SyncEngine {
       stationIds.addAll(await _isar.stations.where().idProperty().findAll());
     }
     await _reconcileStations(stationIds);
+    final episodes = sections[UserStateEntities.episode.name];
+    if (episodes != null && episodes.isNotEmpty) {
+      _onEpisodesMerged?.call({for (final r in episodes) r.key});
+    }
   }
 
   Future<void> _reconcileStations(Set<int> ids) async {
