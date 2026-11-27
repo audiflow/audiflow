@@ -465,12 +465,14 @@ void main() {
     await a.setSubscribed('pk1', subscribed: true);
     await pair();
     a.now += 1000;
-    await a.setPosition('ek1', 1234);
+    // ':' is outside base64url, so ciphertext cannot contain the key by
+    // chance, as a bare 'ek1' sometimes did.
+    await a.setPosition('ek:1', 1234);
     await settle();
 
     final seen = relay.received.join('\n');
     check(seen).not((it) => it.contains('example.com'));
-    check(seen).not((it) => it.contains('ek1'));
+    check(seen).not((it) => it.contains('ek:1'));
     check(seen).not(
       (it) => it.contains(
         base64Url.encode(credentials.syncKey).replaceAll('=', ''),
