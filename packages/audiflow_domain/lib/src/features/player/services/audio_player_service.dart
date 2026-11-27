@@ -1259,6 +1259,35 @@ class AudioPlayerController extends _$AudioPlayerController
     await _saveSeekWithoutAudio(position);
   }
 
+  /// Takes [position], a newer position another device synced for
+  /// [episodeId], when that episode is the now-playing one and is not
+  /// playing here (design doc, Realtime playback position).
+  ///
+  /// Paused, the player moves there on its own account, so the seek bar
+  /// follows and the listen is not reopened. Before audio is loaded only
+  /// the shown position moves: the merge already stored it, and the next
+  /// play() starts there. Playing here, nothing changes; this device's
+  /// next save is newer and wins.
+  Future<void> adoptSyncedPosition(int episodeId, Duration position) async {
+    final nowPlaying = ref.read(nowPlayingControllerProvider);
+    if (nowPlaying == null || nowPlaying.episode?.id != episodeId) return;
+    if (_currentUrl == null) {
+      ref
+          .read(nowPlayingControllerProvider.notifier)
+          .setNowPlaying(nowPlaying.copyWith(savedPosition: position));
+      return;
+    }
+    if (state is! PlaybackPaused || _currentEpisodeId != episodeId) return;
+    if ((_player.position - position).abs() <= _syncedPositionTolerance) {
+      return;
+    }
+    await seekAutomatically(position);
+  }
+
+  /// Below this the synced position is this device's own, give or take
+  /// the save interval's rounding.
+  static const _syncedPositionTolerance = Duration(milliseconds: 1500);
+
   Future<void> _saveSeekWithoutAudio(Duration position) async {
     final nowPlaying = ref.read(nowPlayingControllerProvider);
     if (nowPlaying == null) return;

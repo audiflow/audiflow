@@ -20,6 +20,7 @@ class _Device {
   late SyncSession session;
   SyncEngine? engine;
   final presences = <(String, SyncPresence)>[];
+  final merged = <Set<String>>[];
   InMemoryTransport? transport;
 
   UserStateStore get _store => UserStateStore(isar, nowMillis: () => now);
@@ -67,6 +68,7 @@ class _Device {
       maxFramesPerPush: maxFramesPerPush,
       steadyInterval: steadyInterval,
       onPresence: (deviceId, p) => presences.add((deviceId, p)),
+      onEpisodesMerged: merged.add,
     );
     await e.connect(opening);
   }
@@ -361,6 +363,21 @@ void main() {
       check(b.presences).isEmpty();
       check(await b.subscribed('pk3')).equals(true);
     });
+  });
+
+  test('a merged episode change is reported after it is stored', () async {
+    await pair();
+    b.merged.clear();
+
+    a.now += 1000;
+    a.engine!.sendSoon();
+    await a.setPosition('ek9', 9000);
+    await settle();
+
+    check(b.merged).deepEquals([
+      {'ek9'},
+    ]);
+    check(a.merged).isEmpty();
   });
 
   test('a live edit reaches the other device', () async {
